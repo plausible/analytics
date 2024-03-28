@@ -198,6 +198,7 @@
 - regex: 'Faraday(?: v(\d+[\.\d]+))?'
   name: 'Faraday'
   version: '$1'
+  url: 'https://github.com/lostisland/faraday'
 
 - regex: '(?:Go-http-client|Go )/?(?:(\d+[\.\d]+))?(?: package http)?'
   name: 'Go-http-client'
@@ -520,3 +521,48 @@
 - regex: 'AppleCoreMedia/1\.0\.0'
   name: 'iOS Application'
   version: ''
+
+- regex: 'cpp-httplib(?:/(\d+[\.\d]+))?'
+  name: 'cpp-httplib'
+  version: '$1'
+  url: 'https://github.com/yhirose/cpp-httplib'
+
+- regex: 'Definitely-Not-Requests'
+  name: 'Requests'
+  version: ''
+  url: 'https://github.com/psf/requests'
+
+- regex: 'Stealer ([\d\.]+)'
+  name: 'Stealer'
+  version: '$1'
+  url: 'https://github.com/hotrush/stealer/'
+
+- regex: 'Mandrill-PHP(?:/(\d+[\.\d]+))?'
+  name: 'Mandrill PHP'
+  version: '$1'
+  url: 'https://bitbucket.org/mailchimp/mandrill-api-php/src/master/'
+
+- regex: 'babashka.http-client(?:/(\d+[\.\d]+))?'
+  name: 'Babashka HTTP Client'
+  version: '$1'
+  url: 'https://github.com/babashka/http-client'
+
+- regex: 'http.rb(?:/(\d+[\.\d]+))?'
+  name: 'http.rb'
+  version: '$1'
+  url: 'https://github.com/httprb/http'
+
+- regex: 'node-superagent(?:/(\d+[\.\d]+))?'
+  name: 'superagent'
+  version: '$1'
+  url: 'https://github.com/ladjs/superagent'
+
+- regex: 'CakePHP'
+  name: 'CakePHP'
+  version: ''
+  url: 'https://www.cakephp.org/'
+
+- regex: 'request.js'
+  name: 'request'
+  version: ''
+  url: 'https://github.com/request/request'

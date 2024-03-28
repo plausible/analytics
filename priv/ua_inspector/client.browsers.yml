@@ -5,6 +5,82 @@
 # @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
 ###############
 
+# Quick Search TV (https://play.google.com/store/apps/details?id=com.aospstudio.tvsearch)
+- regex: 'Quick Search TV(?:/(?:Wild Moon Edition )?(\d+[\.\d]+))?'
+  name: 'Quick Search TV'
+  version: '$1'
+
+# Skye (https://innatical.com/)
+- regex: 'Skye/(\d+\.[\.\d]+)'
+  name: 'Skye'
+  version: '$1'
+  engine:
+    default: 'Blink'
+
+# VD Browser (vpn.video.downloader)
+- regex: 'VD/\d+'
+  name: 'VD Browser'
+  version: ''
+  engine:
+    default: 'Blink'
+
+# SecureX (https://play.google.com/store/apps/details?id=com.securex.browser)
+- regex: '\[(?:HB/29|PB/(?:66|81))\]'
+  name: 'SecureX'
+  version: ''
+  engine:
+    default: 'Blink'
+
+# HotBrowser (https://play.google.com/store/apps/details?id=com.hotsurf.browser)
+- regex: '\[HS/\d+\]'
+  name: 'HotBrowser'
+  version: ''
+  engine:
+    default: 'Blink'
+
+# Proxy Browser (https://play.google.com/store/apps/details?id=proxy.browser.unblock.sites.proxybrowser.unblocksites)
+- regex: '\[PB/\d+\]'
+  name: 'Proxy Browser'
+  version: ''
+  engine:
+    default: 'Blink'
+
+# Onion Browser (https://apps.apple.com/us/app/onion-browser/id519296448)
+- regex: '^Normalized (?:iPad|iPhone) \(iOS Safari\)'
+  name: 'Onion Browser'
+  version: ''
+  engine:
+    default: 'WebKit'
+
+# fGet (https://apps.apple.com/us/app/fget-file-manager-browser/id1582654012)
+- regex: 'fGet/'
+  name: 'fGet'
+  version: ''
+
+# Nuviu (https://www.nuviu-browser.com/)
+- regex: 'Nuviu/(?:(\d+[\.\d]+))?'
+  name: 'Nuviu'
+  version: '$1'
+
+# DoCoMo (https://play.google.com/store/apps/details?id=com.airfind.browser)
+- regex: 'DoCoMo/(?:(\d+[\.\d]+))?'
+  name: 'DoCoMo'
+  version: '$1'
+
+# Airfind Secure Browser (https://play.google.com/store/apps/details?id=com.airfind.browser)
+- regex: 'com.airfind.browser/(?:(\d+[\.\d]+))?'
+  name: 'Airfind Secure Browser'
+  version: '$1'
+  engine:
+    default: 'Blink'
+
+# Arc (https://arc.net/)
+- regex: 'ArcMobile2/.+CFNetwork'
+  name: 'Arc'
+  version: ''
+  engine:
+    default: 'WebKit'
+
 # Nuanti Meta (http://meta.nuanti.com/)
 - regex: 'Nuanti(?:Meta)?/(\d+\.[\.\d]+)'
   name: 'Nuanti Meta'
@@ -119,6 +195,11 @@
   version: '$1'
   engine:
     default: 'Blink'
+- regex: 'Lilo/.+CFNetwork'
+  name: 'Lilo'
+  version: ''
+  engine:
+    default: 'WebKit'
 
 # Lexi Browser (https://play.google.com/store/apps/details?id=com.lexi.browser)
 - regex: 'lexi/(\d+[\.\d]+)'
@@ -302,7 +383,7 @@
   name: 'Edge WebView'
   version: '$1'
   engine:
-    default: 'WebKit'
+    default: 'Blink'
 
 # Mandarin (https://mandarin-browser.com/)
 - regex: 'Mandarin Browser/(\d+[\.\d]+)'
@@ -850,7 +931,7 @@
   name: 'Firefox Reality'
   version: ''
 
-# AVG Secure Browser (https://www.avg.com/en-us/secure-browser)
+# AVG Secure Browser (https://www.avg.com/en-us/secure-browser | https://play.google.com/store/apps/details?id=com.avg.android.secure.browser)
 - regex: 'AVG(?:/(\d+[\.\d]+))?'
   name: 'AVG Secure Browser'
   version: '$1'
@@ -858,6 +939,11 @@
     default: 'WebKit'
     versions:
       28: 'Blink'
+- regex: 'AT/(\d+[\.\d]+)'
+  name: 'AVG Secure Browser'
+  version: '$1'
+  engine:
+    default: 'Blink'
 
 # START Internet Browser (https://play.google.com/store/apps/details?id=fyi.start.web.browser)
 - regex: 'Start/(?:(\d+[\.\d]+))?'
@@ -1111,11 +1197,16 @@
   version: '$1'
   engine:
     default: 'WebKit'
+- regex: 'Chrome/.*QwantMobile(?:/(\d+[\.\d]+))?'
+  name: 'Qwant Mobile'
+  version: '$1'
+  engine:
+    default: 'Blink'
 - regex: 'QwantMobile(?:/(\d+[\.\d]+))?'
   name: 'Qwant Mobile'
   version: '$1'
   engine:
-    default: 'Gecko'
+    default: '' # multiple (Gecko on Android, WebKit on iOS)
 - regex: 'Qwant/(\d+[\.\d]+)'
   name: 'Qwant Mobile'
   version: '$1'
@@ -1186,7 +1277,7 @@
   name: 'Sailfish Browser'
   version: '$1'
   engine:
-    default: 'Gecko'
+    default: ''
 
 # IceCat
 - regex: 'IceCat(?:/(\d+[\.\d]+))?'
@@ -1719,7 +1810,7 @@
     default: '' # multi engine
 
 #Comodo Dragon
-- regex: '(?:Comodo[ _])?Dragon(?!fruit)(?:/(\d+[\.\d]+))?'
+- regex: '(?:Comodo[ _])?Dragon/(\d+[\.\d]+)'
   name: 'Comodo Dragon'
   version: '$1'
   engine:
@@ -1832,7 +1923,7 @@
   engine:
     default: 'WebKit'
     versions:
-      '4.5': 'Blink'
+      '4.2': 'Blink'
 - regex: '(?:Maxthon(?:%20Browser)?|MxBrowser(?:-inhouse|-iPhone)?|MXiOS)[ /](\d+[\.\d]+)?'
   name: 'Maxthon'
   version: '$1'
@@ -1868,7 +1959,7 @@
     versions:
       28: 'Blink'
 
-- regex: 'Iron(?:/(\d+[\.\d]+))?'
+- regex: 'Iron/(\d+[\.\d]+)'
   name: 'Iron'
   version: '$1'
   engine:
@@ -1976,14 +2067,14 @@
   name: 'Streamy'
   version: '$1'
   engine:
-    default: 'WebKit'
+    default: ''
 
 #Isivioo (Android version is Chrome based)
 - regex: 'isivioo'
   name: 'Isivioo'
   version: ''
   engine:
-    default: 'WebKit'
+    default: ''
 
 #UC Browser
 - regex: 'UC[ ]?Browser(?:[ /]?(\d+[\.\d]+))?'
@@ -2032,12 +2123,12 @@
   name: 'Web Explorer'
   version: '$1'
   engine:
-    default: 'WebKit'
+    default: 'Blink'
 - regex: 'webexplorer/(\d+)'
   name: 'Web Explorer'
   version: '$1'
   engine:
-    default: 'WebKit'
+    default: ''
 
 # Seznam Browser
 - regex: 'Chrome.+SznProhlizec/(\d+[\.\d]+)'
@@ -2193,28 +2284,28 @@
   name: 'Quark'
   version: '$1'
   engine:
-    default: 'WebKit'
+    default: 'Blink'
 
 # Monument Browser
 - regex: 'MonumentBrowser(?:/(\d+[\.\d]+))?'
   name: 'Monument Browser'
   version: '$1'
   engine:
-    default: 'WebKit'
+    default: 'Blink'
 
 # Blue Browser
 - regex: 'BlueBrowser(?:/(\d+[\.\d]+))?'
   name: 'Blue Browser'
   version: '$1'
   engine:
-    default: 'WebKit'
+    default: 'Blink'
 
 # Japan Browser (https://play.google.com/store/apps/details?id=com.japan.browser.anti.blokir)
 - regex: 'JAPAN Browser(?:/(\d+[\.\d]+))?'
   name: 'Japan Browser'
   version: '$1'
   engine:
-    default: 'WebKit'
+    default: 'Blink'
 
 - regex: 'OpenFin/(?:(\d+[\.\d]+))'
   name: 'OpenFin'
