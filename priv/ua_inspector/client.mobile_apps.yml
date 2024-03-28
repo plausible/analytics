@@ -171,9 +171,39 @@
   name: '$1'
   version: '$2'
 
+# Signal uses WhatsApp user agent
+- regex: 'WhatsApp(?:/2)?$'
+  name: 'Signal'
+  version: ''
+
+# WhatsApp Business
+- regex: 'WhatsApp/([\d\.]+).+CloudAPI'
+  name: 'WhatsApp Business'
+  version: '$1'
+
 # WhatsApp
-- regex: 'WhatsApp(?:[ /]([\d\.]+))?'
+- regex: 'WhatsApp(?:Electron|\-app|\-linux-app)?(?:[ /]([\d\.]+))?'
   name: 'WhatsApp'
+  version: '$1'
+
+# WhatsApp+2
+- regex: 'YoWhatsApp2Plus(?:/(\d+[\.\d]+))?'
+  name: 'WhatsApp+2'
+  version: '$1'
+
+# FM WhatsApp
+- regex: 'YoFMWhatsApp(?:/(\d+[\.\d]+))?'
+  name: 'FM WhatsApp'
+  version: '$1'
+
+# GBWhatsApp
+- regex: '(?:Yo)?GBWhatsApp(?:/(\d+[\.\d]+))?'
+  name: 'GBWhatsApp'
+  version: '$1'
+
+# Yo WhatsApp
+- regex: 'YoYoWhatsApp(?:/(\d+[\.\d]+))?'
+  name: 'Yo WhatsApp'
   version: '$1'
 
 # Line
@@ -469,7 +499,7 @@
   version: '$1'
 
 # TikTok (https://apps.apple.com/app/id835599320 | https://play.google.com/store/apps/details?id=com.zhiliaoapp.musically)
-- regex: '(?:TikTok[/ ]|musical_ly_|AppName/musical_ly app_version/)(\d+\.(?:[\.\d]+))?'
+- regex: '(?:TikTok[/ ]|com.zhiliaoapp.musically|musical_ly_|AppName/musical_ly app_version/)(\d+\.(?:[\.\d]+))?'
   name: 'TikTok'
   version: '$1'
 
@@ -1086,11 +1116,6 @@
   name: 'Focus Keeper'
   version: '$1'
 
-# Quick Search TV (https://play.google.com/store/apps/details?id=com.aospstudio.tvsearch)
-- regex: 'Quick Search TV/(\d+\.[\.\d]+)'
-  name: 'Quick Search TV'
-  version: '$1'
-
 # Microsoft Store (https://www.microsoft.com/en-us/store/apps/windows)
 - regex: 'WindowsStoreSDK'
   name: 'Microsoft Store'
@@ -1112,7 +1137,7 @@
   version: '$1'
 
 # Microsoft Bing Search (https://play.google.com/store/apps/details?id=com.microsoft.bing | https://apps.apple.com/us/app/microsoft-bing-search/id345323231)
-- regex: 'BingSapphire/(\d+\.[\.\d]+)'
+- regex: '(?:Bing)?Sapphire/(\d+\.[\.\d]+)'
   name: 'Microsoft Bing Search'
   version: '$1'
 
@@ -1132,7 +1157,7 @@
   version: '$1'
 
 # F-Secure SAFE (https://apps.apple.com/app/f-secure-safe/id572847748)
-- regex: 'FSCDCSafe (\d+\.[\.\d]+)'
+- regex: 'FSCDCSafe[ /](\d+\.[\.\d]+)'
   name: 'F-Secure SAFE'
   version: '$1'
 
@@ -1383,20 +1408,9 @@
   name: 'Amazon Music'
   version: '$1'
 
-
 # Klarna (https://apps.apple.com/us/app/klarna-shop-now-pay-later/id1115120118)
-- regex: 'Klarna/(\d+\.[.\d]+)'
+- regex: 'Klarna/(\d+\.[.\d]+)?'
   name: 'Klarna'
-  version: '$1'
-
-# WhatsApp+2
-- regex: 'YoWhatsApp2Plus(?:/(\d+[\.\d]+))?'
-  name: 'WhatsApp+2'
-  version: '$1'
-
-# GBWhatsApp
-- regex: 'GBWhatsApp(?:/(\d+[\.\d]+))?'
-  name: 'GBWhatsApp'
   version: '$1'
 
 # R (https://www.r-project.org/)
@@ -2181,11 +2195,6 @@
   name: 'NPR One'
   version: '$1'
 
-# unsure what this is, but is used quite a bit
-- regex: 'Trackable/([\d\.]+)'
-  name: 'Trackable'
-  version: '$1'
-
 - regex: 'Uforia/([\d\.]+)'
   name: 'Uforia'
   version: '$1'
@@ -2194,7 +2203,7 @@
   name: 'L.A. Times'
   version: ''
 
-- regex: '(?:^NYT(?: |%20)?Audio|nytios)/([\d.]+)'
+- regex: '(?:^NYT(?: |%20)?Audio(?:-iOS)?|nytios)/([\d.]+)'
   name: 'The New York Times'
   version: '$1'
 
@@ -2213,3 +2222,63 @@
 - regex: 'IPTV/([\d\.]+)'
   name: 'IPTV'
   version: '$1'
+
+# IPTV Pro (https://play.google.com/store/apps/details?id=ru.iptvremote.android.iptv.pro)
+- regex: 'IPTV Pro/([\d\.]+)'
+  name: 'IPTV Pro'
+  version: '$1'
+
+# MetaMask (https://apps.apple.com/us/app/metamask-blockchain-wallet/id1438144202)
+- regex: 'MetaMask/'
+  name: 'MetaMask'
+  version: ''
+
+# +Simple (https://play.google.com/store/apps/details?id=com.massimple.nacion.gcba.es)
+- regex: '\+Simple Browser'
+  name: '+Simple'
+  version: ''
+
+# Bitwarden (https://bitwarden.com/)
+- regex: 'Bitwarden_Mobile/([\d\.]+)'
+  name: 'Bitwarden'
+  version: '$1'
+
+# MX Player (https://play.google.com/store/apps/details?id=com.mxtech.videoplayer.ad)
+- regex: 'MXPlayer/([\d\.]+)'
+  name: 'MX Player'
+  version: '$1'
+
+# HistoryHound
+- regex: 'HistoryHound/([\d\.]+)'
+  name: 'HistoryHound'
+  version: '$1'
+
+# Quicksilver (https://qsapp.com/)
+- regex: 'Quicksilver'
+  name: 'Quicksilver'
+  version: ''
+
+# CamScanner (https://play.google.com/store/apps/details?id=com.intsig.camscanner)
+- regex: 'CamScanner/([\d\.]+)'
+  name: 'CamScanner'
+  version: '$1'
+
+# OBS Studio (https://obsproject.com/)
+- regex: 'OBS/(\d+[\.\d]+)'
+  name: 'OBS Studio'
+  version: '$1'
+
+# XSplit Broadcaster (https://www.xsplit.com/broadcaster)
+- regex: 'XSplitBroadcaster/(\d+[\.\d]+)'
+  name: 'XSplit Broadcaster'
+  version: '$1'
+
+# Twitch Studio (https://www.twitch.tv/broadcast/studio)
+- regex: 'twitch-desktop-electron-platform.*spotlight/(\d+[\.\d]+)'
+  name: 'Twitch Studio'
+  version: '$1'
+
+# Stream Master (https://www.lovense.com/stream-master)
+- regex: 'Stream Master$'
+  name: 'Stream Master'
+  version: ''
