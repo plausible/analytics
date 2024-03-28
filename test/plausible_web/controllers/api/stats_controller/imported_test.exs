@@ -93,7 +93,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
             "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
           )
 
-        assert %{"plot" => plot, "imported_source" => "Google Analytics"} =
+        assert %{"plot" => plot, "imports_exist" => true} =
                  json_response(conn, 200)
 
         assert Enum.count(plot) == 31
@@ -142,7 +142,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
             "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true&interval=week"
           )
 
-        assert %{"plot" => plot, "imported_source" => "Google Analytics"} =
+        assert %{"plot" => plot, "imports_exist" => true} =
                  json_response(conn, 200)
 
         assert Enum.count(plot) == 5

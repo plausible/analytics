@@ -70,7 +70,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imported_source" => "Google Analytics", "with_imported" => true} =
+      assert %{"plot" => plot, "imports_exist" => true, "with_imported" => true} =
                json_response(conn, 200)
 
       assert plot == [2] ++ List.duplicate(0, 23)
@@ -137,7 +137,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imported_source" => "Google Analytics", "with_imported" => true} =
+      assert %{"plot" => plot, "imports_exist" => true, "with_imported" => true} =
                json_response(conn, 200)
 
       assert Enum.count(plot) == 31
@@ -158,7 +158,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imported_source" => "Google Analytics", "with_imported" => true} =
+      assert %{"plot" => plot, "imports_exist" => true, "with_imported" => true} =
                json_response(conn, 200)
 
       assert Enum.count(plot) == 31
@@ -1027,7 +1027,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{
                "plot" => plot,
                "comparison_plot" => comparison_plot,
-               "imported_source" => "Google Analytics",
+               "imports_exist" => true,
                "with_imported" => true
              } = json_response(conn, 200)
 
@@ -1084,7 +1084,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{
                "plot" => plot,
                "comparison_plot" => comparison_plot,
-               "imported_source" => "Google Analytics",
+               "imports_exist" => true,
                "with_imported" => false
              } = json_response(conn, 200)
 
@@ -1114,7 +1114,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{
                "plot" => this_week_plot,
                "comparison_plot" => last_week_plot,
-               "imported_source" => "Google Analytics",
+               "imports_exist" => true,
                "with_imported" => false
              } = json_response(conn, 200)
 

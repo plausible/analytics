@@ -60,6 +60,65 @@ defmodule Plausible.ImportedTest do
     end
   end
 
+  describe "get_imports_date_range/1" do
+    test "returns empty when there are no imports" do
+      site = insert(:site)
+
+      assert %{start_date: nil, end_date: nil} = Imported.get_imports_date_range(site)
+    end
+
+    test "returns empty when only incomplete or failed imports are present" do
+      site =
+        insert(:site)
+        |> Plausible.Site.start_import(
+          ~D[2020-04-01],
+          ~D[2022-06-22],
+          "Google Analytics",
+          "error"
+        )
+        |> Repo.update!()
+
+      _import1 = insert(:site_import, site: site, status: :pending)
+      _import2 = insert(:site_import, site: site, status: :importing)
+      _import3 = insert(:site_import, site: site, status: :failed)
+      _rogue_import = insert(:site_import, site: build(:site), status: :completed)
+
+      assert %{start_date: nil, end_date: nil} = Imported.get_imports_date_range(site)
+    end
+
+    test "returns start and end dates considering all imports" do
+      site =
+        insert(:site)
+        |> Plausible.Site.start_import(
+          ~D[2020-04-01],
+          ~D[2022-06-22],
+          "Google Analytics",
+          "ok"
+        )
+        |> Repo.update!()
+
+      _import1 =
+        insert(:site_import,
+          site: site,
+          start_date: ~D[2020-04-02],
+          end_date: ~D[2022-06-22],
+          status: :completed,
+          legacy: true
+        )
+
+      _import2 =
+        insert(:site_import,
+          site: site,
+          start_date: ~D[2022-06-22],
+          end_date: ~D[2024-01-08],
+          status: :completed
+        )
+
+      assert %{start_date: ~D[2020-04-01], end_date: ~D[2024-01-08]} =
+               Imported.get_imports_date_range(site)
+    end
+  end
+
   describe "check_dates/3" do
     test "crops dates from both ends when overlapping with existing import and native stats" do
       site = insert(:site)
