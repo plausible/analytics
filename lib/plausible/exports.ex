@@ -69,7 +69,7 @@ defmodule Plausible.Exports do
     }
   end
 
-  Plausible.on_full_build do
+  Plausible.on_ee do
     defp sampled(table) do
       Plausible.Stats.Sampling.add_query_hint(from(table))
     end

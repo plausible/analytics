@@ -64,7 +64,7 @@ defmodule Plausible.Site.Memberships.Invitations do
     :ok
   end
 
-  on_full_build do
+  on_ee do
     @spec ensure_can_take_ownership(Site.t(), Auth.User.t()) ::
             :ok | {:error, Quota.over_limits_error() | :no_plan}
     def ensure_can_take_ownership(site, new_owner) do

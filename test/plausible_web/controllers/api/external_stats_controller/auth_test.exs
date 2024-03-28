@@ -67,7 +67,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
   end
 
   describe "super admin access" do
-    @describetag :full_build_only
+    @describetag :ee_only
     setup %{user: user} do
       patch_env(:super_admin_user_ids, [user.id])
     end

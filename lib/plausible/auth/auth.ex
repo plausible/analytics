@@ -57,7 +57,7 @@ defmodule Plausible.Auth do
     )
   end
 
-  on_full_build do
+  on_ee do
     def is_super_admin?(nil), do: false
     def is_super_admin?(%Plausible.Auth.User{id: id}), do: is_super_admin?(id)
 

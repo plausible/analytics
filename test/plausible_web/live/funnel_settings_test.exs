@@ -1,9 +1,9 @@
 defmodule PlausibleWeb.Live.FunnelSettingsTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible
-  @moduletag :full_build_only
+  @moduletag :ee_only
 
-  on_full_build do
+  on_ee do
     import Phoenix.LiveViewTest
     import Plausible.Test.Support.HTML
 

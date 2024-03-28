@@ -51,7 +51,7 @@ defmodule Plausible.Site.CacheTest do
       refute Cache.get("site3.example.com", cache_name: test, force?: true)
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "cache caches revenue goals", %{test: test} do
       {:ok, _} =
         Supervisor.start_link(
@@ -83,7 +83,7 @@ defmodule Plausible.Site.CacheTest do
              ] = Enum.sort_by(cached_goals, & &1.event_name)
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "cache caches revenue goals with event refresh", %{test: test} do
       {:ok, _} =
         Supervisor.start_link(

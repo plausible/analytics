@@ -4,7 +4,7 @@ defmodule Plausible.Billing.QuotaTest do
   alias Plausible.Billing.{Quota, Plans}
   alias Plausible.Billing.Feature.{Goals, Props, StatsAPI}
 
-  on_full_build do
+  on_ee do
     alias Plausible.Billing.Feature.Funnels
     alias Plausible.Billing.Feature.RevenueGoals
   end
@@ -17,7 +17,7 @@ defmodule Plausible.Billing.QuotaTest do
   @v4_1m_plan_id "857101"
 
   describe "site_limit/1" do
-    @describetag :full_build_only
+    @describetag :ee_only
 
     test "returns 50 when user is on an old plan" do
       user_on_v1 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
@@ -386,7 +386,7 @@ defmodule Plausible.Billing.QuotaTest do
   end
 
   describe "team_member_limit/1" do
-    @describetag :full_build_only
+    @describetag :ee_only
     test "returns unlimited when user is on an old plan" do
       user_on_v1 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
       user_on_v2 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
@@ -458,7 +458,7 @@ defmodule Plausible.Billing.QuotaTest do
       assert [Props] == Quota.features_usage(user)
     end
 
-    on_full_build do
+    on_ee do
       test "returns [Funnels] when user/site uses funnels" do
         user = insert(:user)
         site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
@@ -488,7 +488,7 @@ defmodule Plausible.Billing.QuotaTest do
       assert [StatsAPI] == Quota.features_usage(user)
     end
 
-    on_full_build do
+    on_ee do
       test "returns multiple features" do
         user = insert(:user)
 
@@ -522,7 +522,7 @@ defmodule Plausible.Billing.QuotaTest do
   end
 
   describe "allowed_features_for/1" do
-    on_full_build do
+    on_ee do
       test "users with expired trials have no access to subscription features" do
         user = insert(:user, trial_expiry_date: ~D[2023-01-01])
         assert [Goals] == Quota.allowed_features_for(user)
@@ -544,7 +544,7 @@ defmodule Plausible.Billing.QuotaTest do
       assert [Goals, Props, StatsAPI] == Quota.allowed_features_for(user)
     end
 
-    on_full_build do
+    on_ee do
       test "returns the enterprise plan features" do
         user = insert(:user)
 

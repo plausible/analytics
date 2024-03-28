@@ -87,7 +87,7 @@ defmodule Plausible.Site.AdminTest do
                action.(conn, [site], %{"email" => current_owner.email})
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "new owner's plan must accommodate the transferred site", %{
       conn: conn,
       transfer_direct_action: action

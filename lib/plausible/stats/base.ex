@@ -44,7 +44,7 @@ defmodule Plausible.Stats.Base do
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )
 
-    on_full_build do
+    on_ee do
       q = Plausible.Stats.Sampling.add_query_hint(q, query)
     end
 
@@ -147,7 +147,7 @@ defmodule Plausible.Stats.Base do
         from s in q, where: s.start >= ^first_datetime and s.start < ^last_datetime
       end
 
-    on_full_build do
+    on_ee do
       sessions_q = Plausible.Stats.Sampling.add_query_hint(sessions_q, query)
     end
 
@@ -237,7 +237,7 @@ defmodule Plausible.Stats.Base do
     }
   end
 
-  on_full_build do
+  on_ee do
     defp select_event_metric(:total_revenue) do
       %{total_revenue: Plausible.Stats.Goal.Revenue.total_revenue_query()}
     end

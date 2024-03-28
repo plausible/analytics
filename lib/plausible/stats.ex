@@ -31,7 +31,7 @@ defmodule Plausible.Stats do
     CurrentVisitors.current_visitors(site)
   end
 
-  on_full_build do
+  on_ee do
     def funnel(site, query, funnel) do
       include_sentry_replay_info()
       Plausible.Stats.Funnel.funnel(site, query, funnel)

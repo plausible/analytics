@@ -1,9 +1,9 @@
 defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible
-  @moduletag :full_build_only
+  @moduletag :ee_only
 
-  on_full_build do
+  on_ee do
     @user_id 123
     @other_user_id 456
 

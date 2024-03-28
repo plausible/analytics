@@ -3,7 +3,7 @@ defmodule PlausibleWeb.AdminAuthControllerTest do
   alias Plausible.Release
 
   describe "GET /" do
-    @describetag :small_build_only
+    @describetag :ce_build_only
     test "disable registration", %{conn: conn} do
       insert(:user)
       patch_config(disable_registration: true)

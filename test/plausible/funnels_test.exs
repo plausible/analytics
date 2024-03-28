@@ -1,10 +1,10 @@
 defmodule Plausible.FunnelsTest do
   use Plausible.DataCase
-  @moduletag :full_build_only
+  @moduletag :ee_only
 
   use Plausible
 
-  on_full_build do
+  on_ee do
     alias Plausible.Goals
     alias Plausible.Funnels
     alias Plausible.Stats

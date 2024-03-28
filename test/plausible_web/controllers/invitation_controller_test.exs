@@ -85,7 +85,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert new_owner_membership.role == :owner
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "fails when new owner has no plan", %{conn: conn, user: user} do
       old_owner = insert(:user)
       site = insert(:site, members: [old_owner])
@@ -101,7 +101,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
                "No existing subscription"
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "fails when new owner's plan is unsuitable", %{conn: conn, user: user} do
       old_owner = insert(:user)
       site = insert(:site, members: [old_owner])

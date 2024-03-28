@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.Live.ChoosePlanTest do
   use PlausibleWeb.ConnCase, async: true
-  @moduletag :full_build_only
+  @moduletag :ee_only
 
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML

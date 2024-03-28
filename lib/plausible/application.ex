@@ -7,7 +7,7 @@ defmodule Plausible.Application do
   require Logger
 
   def start(_type, _args) do
-    on_full_build(do: Plausible.License.ensure_valid_license())
+    on_ee(do: Plausible.License.ensure_valid_license())
 
     children = [
       Plausible.Cache.Stats,
