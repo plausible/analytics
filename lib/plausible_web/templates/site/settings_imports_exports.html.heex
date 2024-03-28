@@ -50,4 +50,15 @@
       Export to CSV
     </PlausibleWeb.Components.Generic.button>
   </div>
+
+  <%= on_full_build do %>
+  <% else %>
+    <%= live_render(@conn, PlausibleWeb.Live.LocalExports,
+      session: %{
+        "site_id" => @site.id,
+        "domain" => @site.domain,
+        "user_role" => @current_user_role
+      }
+    ) %>
+  <% end %>
 </div>

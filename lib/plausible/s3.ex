@@ -89,20 +89,10 @@ defmodule Plausible.S3 do
   def export_upload_multipart(stream, s3_bucket, s3_path, filename, config_overrides \\ []) do
     config = ExAws.Config.new(:s3)
 
-    encoded_filename = URI.encode(filename)
-    disposition = ~s[attachment; filename="#{encoded_filename}"]
-
-    disposition =
-      if encoded_filename != filename do
-        disposition <> "; filename*=utf-8''#{encoded_filename}"
-      else
-        disposition
-      end
-
     # 5 MiB is the smallest chunk size AWS S3 supports
     chunk_into_parts(stream, 5 * 1024 * 1024)
     |> ExAws.S3.upload(s3_bucket, s3_path,
-      content_disposition: disposition,
+      content_disposition: Plausible.Exports.content_disposition(filename),
       content_type: "application/zip"
     )
     |> ExAws.request!(config_overrides)
