@@ -711,17 +711,20 @@ defmodule PlausibleWeb.SiteController do
   end
 
   on_full_build do
-    # TODO
-    # def download_s3_export(conn, %{"file" => file}) do
-    # end
   else
-    def download_local_export(conn, %{"file" => file}) do
+    def download_local_export(conn, _params) do
       site = conn.assigns.site
-      exports_dir = Plausible.Exports.local_dir(site.id)
-      export_path = Path.join(exports_dir, file)
+      export_path = Plausible.Exports.local_export_file(site.id)
 
       if File.exists?(export_path) do
-        content_disposition = Plausible.Exports.content_disposition(file)
+        local_created_on =
+          File.stat!(export_path, time: :posix).ctime
+          |> DateTime.from_unix!()
+          |> Plausible.Timezones.to_datetime_in_timezone(site.timezone)
+          |> DateTime.to_date()
+
+        archive_filename = Plausible.Exports.archive_filename(site.domain, local_created_on)
+        content_disposition = Plausible.Exports.content_disposition(archive_filename)
 
         conn
         |> put_resp_content_type("application/zip")

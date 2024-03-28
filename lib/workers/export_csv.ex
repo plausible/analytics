@@ -47,7 +47,8 @@ defmodule Plausible.Workers.ExportCSV do
   defp perform_s3_export(ch, queries, args) do
     %{
       "s3_bucket" => s3_bucket,
-      "s3_path" => s3_path
+      "s3_path" => s3_path,
+      "archive_filename" => archive_filename
     } = args
 
     s3_config_overrides = s3_config_overrides(args)
@@ -57,7 +58,12 @@ defmodule Plausible.Workers.ExportCSV do
       fn conn ->
         conn
         |> Exports.stream_archive(queries, format: "CSVWithNames")
-        |> Plausible.S3.export_upload_multipart(s3_bucket, s3_path, s3_config_overrides)
+        |> Plausible.S3.export_upload_multipart(
+          s3_bucket,
+          s3_path,
+          archive_filename,
+          s3_config_overrides
+        )
       end,
       timeout: :infinity
     )

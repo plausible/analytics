@@ -51,7 +51,7 @@ defmodule Plausible.S3 do
   """
   def import_presign_upload(site_id, filename) do
     config = ExAws.Config.new(:s3)
-    s3_path = Path.join(to_string(site_id), filename)
+    s3_path = Path.join(Integer.to_string(site_id), filename)
     bucket = imports_bucket()
     {:ok, presigned_url} = ExAws.S3.presigned_url(config, :put, bucket, s3_path)
     %{s3_url: extract_s3_url(presigned_url), presigned_url: presigned_url}
@@ -81,12 +81,15 @@ defmodule Plausible.S3 do
 
   In the current implementation the bucket always goes into the path component.
   """
-  @spec export_upload_multipart(Enumerable.t(), String.t(), Path.t(), keyword) ::
+  @spec export_upload_multipart(Enumerable.t(), String.t(), Path.t(), String.t(), keyword) ::
           :ok
-  def export_upload_multipart(stream, s3_bucket, s3_path, config_overrides \\ []) do
+  def export_upload_multipart(stream, s3_bucket, s3_path, filename, config_overrides \\ []) do
     # 5 MiB is the smallest chunk size AWS S3 supports
     chunk_into_parts(stream, 5 * 1024 * 1024)
-    |> ExAws.S3.upload(s3_bucket, s3_path, content_type: "application/zip")
+    |> ExAws.S3.upload(s3_bucket, s3_path,
+      content_disposition: Plausible.Exports.content_disposition(filename),
+      content_type: "application/zip"
+    )
     |> ExAws.request!(config_overrides)
 
     :ok

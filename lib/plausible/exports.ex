@@ -3,7 +3,7 @@ defmodule Plausible.Exports do
   Contains functions to export data for events and sessions as Zip archives.
   """
 
-  require Plausible
+  use Plausible
   import Ecto.Query
 
   # TODO make configurable via app env to avoid dialyzer warnings and simplify tests
@@ -23,20 +23,19 @@ defmodule Plausible.Exports do
       "end_date" => date_range.last
     }
 
-    archive_filename = archive_filename(site.domain, date_range.first, date_range.last)
-
     # TODO or just url :: s3://bucket/path | file:://path
     extra_args =
       case @storage do
         "s3" ->
           %{
             "s3_bucket" => Plausible.S3.exports_bucket(),
-            "s3_path" => "/#{site.id}/#{archive_filename}"
+            "s3_path" => s3_export_object(site.id),
+            "archive_filename" => archive_filename(site.domain, date_range)
           }
 
         "local" ->
           %{
-            "local_path" => Path.join(local_dir(site.id), archive_filename)
+            "local_path" => local_export_file(site.id)
           }
       end
 
@@ -92,30 +91,22 @@ defmodule Plausible.Exports do
   end
 
   @doc """
-  Renders filename for the Zip archive containing the exported CSV files.
-
-  Examples:
-
-      iex> archive_filename("plausible.io", ~D[2021-01-01], ~D[2024-12-31])
-      "plausible_io_20210101_20241231.zip"
-
-      iex> archive_filename("Bücher.example", ~D[2021-01-01], ~D[2024-12-31])
-      "Bücher_example_20210101_20241231.zip"
-
+  TODO
   """
-  def archive_filename(domain, min_date, max_date) do
-    name =
-      Enum.join(
-        [
-          String.replace(domain, ".", "_"),
-          Calendar.strftime(min_date, "%Y%m%d"),
-          Calendar.strftime(max_date, "%Y%m%d")
-        ],
-        "_"
-      )
-
-    name <> ".zip"
+  def archive_filename(domain, %Date.Range{first: start_date, last: end_date}) do
+    format_domain(domain) <>
+      "-" <>
+      format_date(start_date) <>
+      "-" <>
+      format_date(end_date) <> ".zip"
   end
+
+  def archive_filename(domain, %Date{} = end_date) do
+    format_domain(domain) <> "-" <> format_date(end_date) <> ".zip"
+  end
+
+  defp format_domain(domain), do: String.replace(domain, ".", "_")
+  defp format_date(date), do: Calendar.strftime(date, "%Y%m%d")
 
   @doc ~S"""
   Safely renders content disposition for an arbitrary filename.
@@ -124,9 +115,6 @@ defmodule Plausible.Exports do
 
       iex> content_disposition("Plausible.zip")
       "attachment; filename=\"Plausible.zip\""
-
-      iex> content_disposition(archive_filename("plausible.io", ~D[2021-01-01], ~D[2024-12-31]))
-      "attachment; filename=\"plausible_io_20210101_20241231.zip\""
 
       iex> content_disposition("ウェブサイトのエクスポート_それから現在まで.zip")
       "attachment; filename=\"%E3%82%A6%E3%82%A7%E3%83%96%E3%82%B5%E3%82%A4%E3%83%88%E3%81%AE%E3%82%A8%E3%82%AF%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%88_%E3%81%9D%E3%82%8C%E3%81%8B%E3%82%89%E7%8F%BE%E5%9C%A8%E3%81%BE%E3%81%A7.zip\"; filename*=utf-8''%E3%82%A6%E3%82%A7%E3%83%96%E3%82%B5%E3%82%A4%E3%83%88%E3%81%AE%E3%82%A8%E3%82%AF%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%88_%E3%81%9D%E3%82%8C%E3%81%8B%E3%82%89%E7%8F%BE%E5%9C%A8%E3%81%BE%E3%81%A7.zip"
@@ -143,120 +131,30 @@ defmodule Plausible.Exports do
     end
   end
 
-  @doc ~S"""
-  Returns local directory for CSV exports storage.
+  @doc false
+  def s3_export_object(site_id), do: Integer.to_string(site_id)
+
+  @doc """
+  Returns local path for CSV exports storage.
 
   Builds upon `$PERSISTENT_CACHE_DIR` (if set) and falls back to /tmp
 
   Examples:
 
-      iex> local_dir = local_dir(_site_id = 37)
-      iex> String.ends_with?(local_dir, "/plausible-exports/37")
+      iex> path = local_export_file(_site_id = 37)
+      iex> String.ends_with?(path, "/plausible-exports/37")
       true
 
   """
-  def local_dir(site_id) do
+  def local_export_file(site_id) do
     persistent_cache_dir = Application.get_env(:plausible, :persistent_cache_dir)
 
     Path.join([
       persistent_cache_dir || System.tmp_dir!(),
       "plausible-exports",
-      i(site_id)
+      Integer.to_string(site_id)
     ])
   end
-
-  @doc """
-  Generates a random path for the export. The random part is nested in `local_dir/1`.
-
-  Example:
-
-      random_file(_site_id = 37)
-      /tmp/plausible-exports/37/1711500789-932639561109-1
-
-  """
-  def random_file(site_id) do
-    sec = :os.system_time(:second)
-    rand = :rand.uniform(999_999_999_999)
-    scheduler_id = :erlang.system_info(:scheduler_id)
-    Path.join(local_dir(site_id), i(sec) <> "-" <> i(rand) <> "-" <> i(scheduler_id))
-  end
-
-  @compile {:inline, i: 1}
-  defp i(integer), do: Integer.to_string(integer)
-
-  defmodule LocalExport do
-    @moduledoc false
-    defstruct [:state, :path, :job_id, :size, :last_error]
-
-    @type t :: %__MODULE__{
-            state: String.t(),
-            path: Path.t(),
-            job_id: non_neg_integer() | nil,
-            size: non_neg_integer() | nil,
-            last_error: String.t() | nil
-          }
-  end
-
-  @doc "Lists both in progress and completed exports"
-  @spec list_local_exports(pos_integer) :: [LocalExport.t()]
-  def list_local_exports(site_id) do
-    import Ecto.Query, only: [from: 2]
-
-    local_dir = local_dir(site_id)
-
-    completed =
-      if File.exists?(local_dir) do
-        local_dir
-        |> File.ls!()
-        |> Enum.map(fn file ->
-          path = Path.join(local_dir, file)
-          %LocalExport{state: "completed", path: path, size: File.stat!(path).size}
-        end)
-      else
-        []
-      end
-
-    completed_paths = MapSet.new(completed, & &1.path)
-
-    jobs_q =
-      from j in Oban.Job,
-        where: [worker: "Plausible.Workers.ExportCSVLocal"],
-        where: j.args["site_id"] == ^site_id,
-        where: j.state not in ["completed", "cancelled"],
-        order_by: [asc: :id]
-
-    in_progress =
-      jobs_q
-      |> Plausible.Repo.all()
-      |> Enum.map(fn job ->
-        %Oban.Job{
-          id: job_id,
-          state: state,
-          errors: errors,
-          args: %{"local_path" => path}
-        } = job
-
-        last_error =
-          if last_error = List.last(errors) do
-            Map.fetch!(last_error, "error")
-          end
-
-        %LocalExport{state: state, path: path, job_id: job_id, last_error: last_error}
-      end)
-      |> Enum.reject(&MapSet.member?(completed_paths, &1.path))
-
-    Enum.sort_by(completed ++ in_progress, & &1.path)
-  end
-
-  @oban_channel __MODULE__
-  @doc false
-  def oban_notify(site_id) do
-    Oban.Notifier.notify(Oban, @oban_channel, %{"site_id" => site_id})
-  end
-
-  # TODO subscribe only for site id
-  @doc "Subscribes for export job updates"
-  def oban_listen, do: Oban.Notifier.listen([@oban_channel])
 
   @doc """
   Builds Ecto queries to export data from `events_v2` and `sessions_v2`
@@ -281,30 +179,39 @@ defmodule Plausible.Exports do
       name <> extname
     end
 
-    # TODO limit export queries to the provided date range (if provided)
-
     %{
-      filename.("imported_visitors") => export_visitors_q(site_id),
-      filename.("imported_sources") => export_sources_q(site_id),
+      filename.("imported_visitors") => export_visitors_q(site_id, date_range),
+      filename.("imported_sources") => export_sources_q(site_id, date_range),
       # NOTE: this query can result in `MEMORY_LIMIT_EXCEEDED` error
-      filename.("imported_pages") => export_pages_q(site_id),
-      filename.("imported_entry_pages") => export_entry_pages_q(site_id),
-      filename.("imported_exit_pages") => export_exit_pages_q(site_id),
-      filename.("imported_locations") => export_locations_q(site_id),
-      filename.("imported_devices") => export_devices_q(site_id),
-      filename.("imported_browsers") => export_browsers_q(site_id),
-      filename.("imported_operating_systems") => export_operating_systems_q(site_id)
+      filename.("imported_pages") => export_pages_q(site_id, date_range),
+      filename.("imported_entry_pages") => export_entry_pages_q(site_id, date_range),
+      filename.("imported_exit_pages") => export_exit_pages_q(site_id, date_range),
+      filename.("imported_locations") => export_locations_q(site_id, date_range),
+      filename.("imported_devices") => export_devices_q(site_id, date_range),
+      filename.("imported_browsers") => export_browsers_q(site_id, date_range),
+      filename.("imported_operating_systems") => export_operating_systems_q(site_id, date_range)
     }
   end
 
-  Plausible.on_full_build do
-    defp sampled(table) do
-      Plausible.Stats.Sampling.add_query_hint(from(table))
+  on_full_build do
+    defp sampled(table, date_range) do
+      from(table)
+      |> Plausible.Stats.Sampling.add_query_hint()
+      |> limit_date_range(date_range)
     end
   else
-    defp sampled(table) do
-      table
+    defp sampled(table, date_range) do
+      limit_date_range(table, date_range)
     end
+  end
+
+  defp limit_date_range(query, nil), do: query
+
+  defp limit_date_range(query, date_range) do
+    from t in query,
+      where:
+        selected_as(:date) >= ^date_range.first and
+          selected_as(:date) <= ^date_range.last
   end
 
   defmacrop date(timestamp) do
@@ -346,10 +253,9 @@ defmodule Plausible.Exports do
     end
   end
 
-  @spec export_visitors_q(pos_integer) :: Ecto.Query.t()
-  def export_visitors_q(site_id) do
+  def export_visitors_q(site_id, date_range \\ nil) do
     visitors_sessions_q =
-      from s in sampled("sessions_v2"),
+      from s in sampled("sessions_v2", date_range),
         where: s.site_id == ^site_id,
         group_by: selected_as(:date),
         select: %{
@@ -362,7 +268,7 @@ defmodule Plausible.Exports do
         }
 
     visitors_events_q =
-      from e in sampled("events_v2"),
+      from e in sampled("events_v2", date_range),
         where: e.site_id == ^site_id,
         group_by: selected_as(:date),
         select: %{
@@ -394,9 +300,8 @@ defmodule Plausible.Exports do
       ]
   end
 
-  @spec export_sources_q(pos_integer) :: Ecto.Query.t()
-  def export_sources_q(site_id) do
-    from s in sampled("sessions_v2"),
+  def export_sources_q(site_id, date_range \\ nil) do
+    from s in sampled("sessions_v2", date_range),
       where: s.site_id == ^site_id,
       group_by: [
         selected_as(:date),
@@ -421,10 +326,9 @@ defmodule Plausible.Exports do
       ]
   end
 
-  @spec export_pages_q(pos_integer) :: Ecto.Query.t()
-  def export_pages_q(site_id) do
+  def export_pages_q(site_id, date_range \\ nil) do
     window_q =
-      from e in sampled("events_v2"),
+      from e in sampled("events_v2", date_range),
         where: e.site_id == ^site_id,
         select: %{
           timestamp: e.timestamp,
@@ -465,9 +369,8 @@ defmodule Plausible.Exports do
       ]
   end
 
-  @spec export_entry_pages_q(pos_integer) :: Ecto.Query.t()
-  def export_entry_pages_q(site_id) do
-    from s in sampled("sessions_v2"),
+  def export_entry_pages_q(site_id, date_range \\ nil) do
+    from s in sampled("sessions_v2", date_range),
       where: s.site_id == ^site_id,
       group_by: [selected_as(:date), s.entry_page],
       order_by: selected_as(:date),
@@ -484,9 +387,8 @@ defmodule Plausible.Exports do
       ]
   end
 
-  @spec export_exit_pages_q(pos_integer) :: Ecto.Query.t()
-  def export_exit_pages_q(site_id) do
-    from s in sampled("sessions_v2"),
+  def export_exit_pages_q(site_id, date_range \\ nil) do
+    from s in sampled("sessions_v2", date_range),
       where: s.site_id == ^site_id,
       group_by: [selected_as(:date), s.exit_page],
       order_by: selected_as(:date),
@@ -501,9 +403,8 @@ defmodule Plausible.Exports do
       ]
   end
 
-  @spec export_locations_q(pos_integer) :: Ecto.Query.t()
-  def export_locations_q(site_id) do
-    from s in sampled("sessions_v2"),
+  def export_locations_q(site_id, date_range \\ nil) do
+    from s in sampled("sessions_v2", date_range),
       where: s.site_id == ^site_id,
       where: s.city_geoname_id != 0 and s.country_code != "\0\0" and s.country_code != "ZZ",
       group_by: [selected_as(:date), s.country_code, selected_as(:region), s.city_geoname_id],
@@ -520,9 +421,8 @@ defmodule Plausible.Exports do
       ]
   end
 
-  @spec export_devices_q(pos_integer) :: Ecto.Query.t()
-  def export_devices_q(site_id) do
-    from s in sampled("sessions_v2"),
+  def export_devices_q(site_id, date_range \\ nil) do
+    from s in sampled("sessions_v2", date_range),
       where: s.site_id == ^site_id,
       group_by: [selected_as(:date), s.screen_size],
       order_by: selected_as(:date),
@@ -536,9 +436,8 @@ defmodule Plausible.Exports do
       ]
   end
 
-  @spec export_browsers_q(pos_integer) :: Ecto.Query.t()
-  def export_browsers_q(site_id) do
-    from s in sampled("sessions_v2"),
+  def export_browsers_q(site_id, date_range \\ nil) do
+    from s in sampled("sessions_v2", date_range),
       where: s.site_id == ^site_id,
       group_by: [selected_as(:date), s.browser],
       order_by: selected_as(:date),
@@ -552,9 +451,8 @@ defmodule Plausible.Exports do
       ]
   end
 
-  @spec export_operating_systems_q(pos_integer) :: Ecto.Query.t()
-  def export_operating_systems_q(site_id) do
-    from s in sampled("sessions_v2"),
+  def export_operating_systems_q(site_id, date_range \\ nil) do
+    from s in sampled("sessions_v2", date_range),
       where: s.site_id == ^site_id,
       group_by: [selected_as(:date), s.operating_system],
       order_by: selected_as(:date),
