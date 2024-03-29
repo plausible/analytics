@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.Live.CSVExport do
   @moduledoc """
-  LiveView allowing scheduling, watching, downloading, and deleting local exports.
+  LiveView allowing scheduling, watching, downloading, and deleting S3 and local exports.
   """
   use PlausibleWeb, :live_view
   use Phoenix.HTML
@@ -9,11 +9,17 @@ defmodule PlausibleWeb.Live.CSVExport do
   alias Plausible.Exports
 
   @impl true
-  def mount(_params, %{"site_id" => site_id, "domain" => domain, "user_role" => role}, socket) do
+  def mount(_params, session, socket) do
+    %{
+      "site_id" => site_id,
+      "site_timezone" => site_timezone,
+      "site_domain" => site_domain
+    } = session
+
     socket =
       socket
-      |> assign(site_id: site_id, domain: domain, can_delete?: role in [:owner, :admin])
-      |> fetch_local_export()
+      |> assign(site: %{id: site_id, domain: site_domain, timezone: site_timezone})
+      |> fetch_export()
 
     if connected?(socket) do
       Exports.oban_listen()
@@ -22,9 +28,29 @@ defmodule PlausibleWeb.Live.CSVExport do
     {:ok, socket}
   end
 
-  defp fetch_local_export(socket) do
-    %{site_id: site_id, site_timezone: site_timezone} = socket.assigns
-    local_path = Plausible.Exports.local_export_file(site_id)
+  defp fetch_export(socket) do
+    %{site: %{id: site_id}} = socket.assigns
+    s3_bucket = Plausible.S3.exports_bucket()
+    s3_key = Exports.s3_export_object(site_id)
+
+    s3_export =
+      case ExAws.request!(ExAws.S3.head_object(s3_bucket, s3_key)) do
+        %{status: 404} ->
+          nil
+
+        %{headers: headers} ->
+          size = nil
+          created_on = nil
+          download_url = nil
+          %{size: size, created_on: created_on, download_url: download_url}
+      end
+
+    assign(socket, export: s3_export)
+  end
+
+  defp fetch_export(socket) do
+    %{site: %{id: site_id, timezone: site_timezone}} = socket.assigns
+    local_path = Exports.local_export_file(site_id)
 
     local_export =
       if File.exists?(local_path) do
@@ -39,30 +65,7 @@ defmodule PlausibleWeb.Live.CSVExport do
         %{size: size, created_on: local_created_on}
       end
 
-    assign(socket, local_export: local_export)
-  end
-
-  def csv_export(conn, _params) do
-    %{site: site, current_user: user} = conn.assigns
-
-    conn =
-      if date_range = Plausible.Exports.date_range(site.id) do
-        # TODO use site.stats_start_date for date_range?
-        case Plausible.Exports.schedule_export(site, user, date_range) do
-          {:ok, _job} ->
-            put_flash(conn, :success, "EXPORT SCHEDULED")
-
-          {:error, :already_scheduled} ->
-            put_flash(conn, :error, "ANOTHER EXPORT ALREADY SCHEDULED")
-
-          {:error, :rate_limit} ->
-            put_flash(conn, :error, "EXPORT NOT SCHEDULED. TOO MANY TODAY")
-        end
-      else
-        put_flash(conn, :error, "NO DATA TO EXPORT")
-      end
-
-    redirect(conn, external: Routes.site_path(conn, :settings_imports_exports, site.domain))
+    assign(socket, export: local_export)
   end
 
   @impl true
@@ -173,6 +176,30 @@ defmodule PlausibleWeb.Live.CSVExport do
       </ul>
     <% end %> --%>
     """
+  end
+
+  @impl true
+  def handle_event("export", _params, socket) do
+    %{site: site, current_user: user} = conn.assigns
+
+    socket =
+      if date_range = Exports.date_range(site.id) do
+        # TODO use site.stats_start_date for date_range?
+        case Exports.schedule_export(site, user, date_range) do
+          {:ok, _job} ->
+            put_flash(socket, :success, "EXPORT SCHEDULED")
+
+          {:error, :already_scheduled} ->
+            put_flash(socket, :error, "ANOTHER EXPORT ALREADY SCHEDULED")
+
+          {:error, :rate_limit} ->
+            put_flash(socket, :error, "EXPORT NOT SCHEDULED. TOO MANY TODAY")
+        end
+      else
+        put_flash(socket, :error, "NO DATA TO EXPORT")
+      end
+
+    redirect(socket, external: Routes.site_path(socket, :settings_imports_exports, site.domain))
   end
 
   @impl true
