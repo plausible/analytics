@@ -36,9 +36,13 @@ defmodule Plausible.Workers.ExportAnalytics do
       |> Keyword.replace!(:pool_size, 1)
       |> Ch.start_link()
 
-    case storage do
-      "s3" -> perform_s3_export(ch, queries, args)
-      "local" -> perform_local_export(ch, queries, args)
+    try do
+      case storage do
+        "s3" -> perform_s3_export(ch, queries, args)
+        "local" -> perform_local_export(ch, queries, args)
+      end
+    after
+      Exports.oban_notify(site_id)
     end
 
     :ok

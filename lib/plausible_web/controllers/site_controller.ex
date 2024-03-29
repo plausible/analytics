@@ -713,19 +713,15 @@ defmodule PlausibleWeb.SiteController do
   on_full_build do
   else
     def download_local_export(conn, _params) do
+      alias Plausible.Exports
+
       site = conn.assigns.site
-      export_path = Plausible.Exports.local_export_file(site.id)
+      export_path = Exports.local_export_file(site.id)
 
       if File.exists?(export_path) do
-        # TODO
-        local_created_on =
-          File.stat!(export_path, time: :posix).ctime
-          |> DateTime.from_unix!()
-          |> Plausible.Timezones.to_datetime_in_timezone(site.timezone)
-          |> DateTime.to_date()
-
-        archive_filename = Plausible.Exports.archive_filename(site.domain, local_created_on)
-        content_disposition = Plausible.Exports.content_disposition(archive_filename)
+        local_created_on = Exports.local_export_date(export_path, site.timezone)
+        archive_filename = Exports.archive_filename(site.domain, local_created_on)
+        content_disposition = Exports.content_disposition(archive_filename)
 
         conn
         |> put_resp_content_type("application/zip")
@@ -737,38 +733,6 @@ defmodule PlausibleWeb.SiteController do
         |> redirect(external: Routes.site_path(conn, :settings_imports_exports, site.domain))
       end
     end
-  end
-
-  on_full_build do
-    defp schedule_export(conn, site, user, date_range) do
-      # TODO make rate limit configurable via env
-      case Plausible.Exports.schedule_export_rate_limit(site, user, date_range, _max = 5) do
-        {:ok, _job} ->
-          put_flash(conn, :success, "EXPORT SCHEDULED")
-
-        {:error, :rate_limit} ->
-          put_flash(conn, :error, "EXPORT NOT SCHEDULED. TOO MANY TODAY")
-      end
-    end
-  else
-    defp schedule_export(conn, site, user, date_range) do
-      Plausible.Exports.schedule_export!(site, user, date_range)
-      put_flash(conn, :success, "EXPORT SCHEDULED")
-    end
-  end
-
-  def csv_export(conn, _params) do
-    %{site: site, current_user: user} = conn.assigns
-
-    conn =
-      if date_range = Plausible.Exports.date_range(site.id) do
-        # TODO use site.stats_start_date for date_range?
-        schedule_export(conn, site, user, date_range)
-      else
-        put_flash(conn, :error, "NO DATA TO EXPORT")
-      end
-
-    redirect(conn, external: Routes.site_path(conn, :settings_imports_exports, site.domain))
   end
 
   def csv_import(conn, _params) do

@@ -156,6 +156,13 @@ defmodule Plausible.Exports do
     ])
   end
 
+  def local_export_date(export_path, timezone) do
+    File.stat!(export_path, time: :posix).ctime
+    |> DateTime.from_unix!()
+    |> Plausible.Timezones.to_datetime_in_timezone(timezone)
+    |> DateTime.to_date()
+  end
+
   @doc """
   Builds Ecto queries to export data from `events_v2` and `sessions_v2`
   tables  into the format of `imported_*` tables for a website.

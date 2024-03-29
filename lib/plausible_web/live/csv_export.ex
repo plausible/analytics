@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.LocalExport do
+defmodule PlausibleWeb.Live.CSVExport do
   @moduledoc """
   LiveView allowing scheduling, watching, downloading, and deleting local exports.
   """
@@ -15,9 +15,9 @@ defmodule PlausibleWeb.Live.LocalExport do
       |> assign(site_id: site_id, domain: domain, can_delete?: role in [:owner, :admin])
       |> fetch_local_export()
 
-    # if connected?(socket) do
-    #   Exports.oban_listen()
-    # end
+    if connected?(socket) do
+      Exports.oban_listen()
+    end
 
     {:ok, socket}
   end
@@ -28,6 +28,7 @@ defmodule PlausibleWeb.Live.LocalExport do
 
     local_export =
       if File.exists?(local_path) do
+        # TODO
         %File.Stat{size: size, ctime: ctime} = File.stat!(local_path, time: :posix)
 
         local_created_on =
@@ -41,6 +42,29 @@ defmodule PlausibleWeb.Live.LocalExport do
     assign(socket, local_export: local_export)
   end
 
+  def csv_export(conn, _params) do
+    %{site: site, current_user: user} = conn.assigns
+
+    conn =
+      if date_range = Plausible.Exports.date_range(site.id) do
+        # TODO use site.stats_start_date for date_range?
+        case Plausible.Exports.schedule_export(site, user, date_range) do
+          {:ok, _job} ->
+            put_flash(conn, :success, "EXPORT SCHEDULED")
+
+          {:error, :already_scheduled} ->
+            put_flash(conn, :error, "ANOTHER EXPORT ALREADY SCHEDULED")
+
+          {:error, :rate_limit} ->
+            put_flash(conn, :error, "EXPORT NOT SCHEDULED. TOO MANY TODAY")
+        end
+      else
+        put_flash(conn, :error, "NO DATA TO EXPORT")
+      end
+
+    redirect(conn, external: Routes.site_path(conn, :settings_imports_exports, site.domain))
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -49,6 +73,16 @@ defmodule PlausibleWeb.Live.LocalExport do
         Existing Exports
       </h3>
     </header>
+
+    <div class="mt-4">
+    <PlausibleWeb.Components.Generic.button
+      data-method="post"
+      data-to={"/#{URI.encode_www_form(@site.domain)}/settings/export"}
+      data-csrf={Plug.CSRFProtection.get_csrf_token()}
+    >
+      Export to CSV
+    </PlausibleWeb.Components.Generic.button>
+    </div>
 
     <%= if Enum.empty?(@local_exports) do %>
       <div class="text-gray-800 dark:text-gray-200 text-center mt-8 mb-12">

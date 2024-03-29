@@ -31,7 +31,9 @@
   <%= live_render(@conn, PlausibleWeb.Live.ImportsExportsSettings,
     session: %{"domain" => @site.domain}
   ) %>
+</div>
 
+<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
   <header class="relative border-b border-gray-200 pb-4">
     <h2 class="mt-8 text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
       Export Data
@@ -41,24 +43,11 @@
     </p>
   </header>
 
-  <div class="mt-4">
-    <PlausibleWeb.Components.Generic.button
-      data-method="post"
-      data-to={"/#{URI.encode_www_form(@site.domain)}/settings/export"}
-      data-csrf={Plug.CSRFProtection.get_csrf_token()}
-    >
-      Export to CSV
-    </PlausibleWeb.Components.Generic.button>
-  </div>
-
-  <%= on_full_build do %>
-  <% else %>
-    <%= live_render(@conn, PlausibleWeb.Live.LocalExports,
-      session: %{
-        "site_id" => @site.id,
-        "domain" => @site.domain,
-        "user_role" => @current_user_role
-      }
-    ) %>
-  <% end %>
+  <%= live_render(@conn, PlausibleWeb.Live.CSVExport,
+    session: %{
+      "site_id" => @site.id,
+      "site_domain" => @site.domain,
+      "site_timezone" => @site.timezone
+    }
+  ) %>
 </div>
