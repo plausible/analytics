@@ -86,7 +86,7 @@ export default function VisitorGraph(props) {
       })
     
     let metric = getStoredMetric()
-    const availableMetrics = getGraphableMetrics(query)
+    const availableMetrics = getGraphableMetrics(query, site)
     
     if (!availableMetrics.includes(metric)) {
       metric = availableMetrics[0]

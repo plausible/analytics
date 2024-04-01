@@ -80,6 +80,14 @@ defmodule Plausible.Goals do
 
   def find_or_create(_, %{"goal_type" => "page"}), do: {:missing, "page_path"}
 
+  def list_revenue_goals(site) do
+    from(g in Plausible.Goal,
+      where: g.site_id == ^site.id and not is_nil(g.currency),
+      select: %{event_name: g.event_name, currency: g.currency}
+    )
+    |> Plausible.Repo.all()
+  end
+
   def for_site(site, opts \\ []) do
     site
     |> for_site_query(opts)
