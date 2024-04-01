@@ -98,7 +98,7 @@ defmodule PlausibleWeb.StatsController do
       Plausible.Goals.list_revenue_goals(site)
     end
   else
-    defp list_revenue_goals(_site), do: []
+    defp list_funnels(_site), do: []
     defp list_revenue_goals(_site), do: []
   end
 
