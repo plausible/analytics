@@ -6,15 +6,15 @@ export function getGraphableMetrics(query, site) {
   const goalFilter = query.filters.goal
   const pageFilter = query.filters.page
   
-  if (isRealtime && !!goalFilter) {
+  if (isRealtime && goalFilter) {
     return ["visitors"]
   } else if (isRealtime) {
     return ["visitors", "pageviews"]
-  } else if (!!goalFilter && canGraphRevenueMetrics(goalFilter, site)) {
+  } else if (goalFilter && canGraphRevenueMetrics(goalFilter, site)) {
     return ["visitors", "events", "average_revenue", "total_revenue", "conversion_rate"]
-  } else if (!!goalFilter) {
+  } else if (goalFilter) {
     return ["visitors", "events", "conversion_rate"]
-  } else if (!!pageFilter) {
+  } else if (pageFilter) {
     return ["visitors", "visits", "pageviews", "bounce_rate", "time_on_page"]
   } else {
     return ["visitors", "visits", "pageviews", "views_per_visit", "bounce_rate", "visit_duration"]
