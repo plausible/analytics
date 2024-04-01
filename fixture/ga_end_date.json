@@ -1,0 +1,38 @@
+{
+  "reports": [
+    {
+      "columnHeader": {
+        "dimensions": [
+          "ga:date"
+        ],
+        "metricHeader": {
+          "metricHeaderEntries": [
+            {
+              "name": "ga:pageviews",
+              "type": "INTEGER"
+            }
+          ]
+        }
+      },
+      "data": {
+        "isDataGolden": true,
+        "rowCount": 849,
+        "rows": [
+          {
+            "dimensions": [
+              "20200421"
+            ],
+            "metrics": [
+              {
+                "values": [
+                  "37"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "nextPageToken": "1"
+    }
+  ]
+}

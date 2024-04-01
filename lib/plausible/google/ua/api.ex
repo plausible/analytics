@@ -64,6 +64,10 @@ defmodule Plausible.Google.UA.API do
     UA.HTTP.get_analytics_start_date(access_token, view_id)
   end
 
+  def get_analytics_end_date(access_token, view_id) do
+    UA.HTTP.get_analytics_end_date(access_token, view_id)
+  end
+
   @spec import_analytics(Date.Range.t(), String.t(), import_auth(), (String.t(), [map()] -> :ok)) ::
           :ok | {:error, term()}
   @doc """

@@ -109,13 +109,29 @@ defmodule Plausible.Google.UA.HTTP do
         {:error, :authentication_failed}
 
       {:error, %HTTPClient.Non200Error{} = error} ->
-        Sentry.capture_message("Error listing GA views for user", extra: %{error: error})
+        Sentry.capture_message("Error listing UA views for user", extra: %{error: error})
         {:error, :unknown}
     end
   end
 
   @earliest_valid_date "2005-01-01"
+
   def get_analytics_start_date(access_token, view_id) do
+    get_analytics_boundary_date(access_token, view_id, :start)
+  end
+
+  def get_analytics_end_date(access_token, view_id) do
+    get_analytics_boundary_date(access_token, view_id, :end)
+  end
+
+  defp get_analytics_boundary_date(access_token, view_id, edge) do
+    sort_order =
+      if edge == :start do
+        "ASCENDING"
+      else
+        "DESCENDING"
+      end
+
     params = %{
       reportRequests: [
         %{
@@ -127,7 +143,7 @@ defmodule Plausible.Google.UA.HTTP do
           metrics: [%{expression: "ga:pageviews"}],
           hideTotals: true,
           hideValueRanges: true,
-          orderBys: [%{fieldName: "ga:date", sortOrder: "ASCENDING"}],
+          orderBys: [%{fieldName: "ga:date", sortOrder: sort_order}],
           pageSize: 1
         }
       ]
@@ -151,13 +167,15 @@ defmodule Plausible.Google.UA.HTTP do
 
         {:ok, date}
 
-      {:error, %{reason: %Finch.Response{body: body}}} ->
-        Sentry.capture_message("Error fetching UA start date", extra: %{body: inspect(body)})
-        {:error, body}
+      {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
+        {:error, :authentication_failed}
 
-      {:error, %{reason: reason} = e} ->
-        Sentry.capture_message("Error fetching UA start date", extra: %{error: inspect(e)})
-        {:error, reason}
+      {:error, %HTTPClient.Non200Error{} = error} ->
+        Sentry.capture_message("Error retrieving UA #{edge} date",
+          extra: %{error: error}
+        )
+
+        {:error, :unknown}
     end
   end
 
