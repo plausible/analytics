@@ -7,7 +7,8 @@ export const FILTER_GROUPS = {
   'os': ['os', 'os_version'],
   'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
   'goal': ['goal'],
-  'props': ['prop_key', 'prop_value']
+  'props': ['prop_key', 'prop_value'],
+  'hostname': ['hostname'],
 }
 
 export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_GROUPS['location']))
@@ -37,7 +38,7 @@ export function isFreeChoiceFilter(filterName) {
 let NON_ESCAPED_PIPE_REGEX;
 try {
   NON_ESCAPED_PIPE_REGEX = new RegExp("(?<!\\\\)\\|", "g")
-} catch(_e) {
+} catch (_e) {
   NON_ESCAPED_PIPE_REGEX = '|'
 }
 
@@ -64,19 +65,19 @@ export function parsePrefix(rawValue) {
     .filter((clause) => !!clause)
     .map((val) => val.replaceAll(ESCAPED_PIPE, '|'))
 
-  return {type, values}
+  return { type, values }
 }
 
 export function parseQueryPropsFilter(query) {
   return Object.entries(query.filters['props']).map(([key, propVal]) => {
-    const {type, values} = parsePrefix(propVal)
-    const clauses = values.map(val => { return {value: val, label: val}})
+    const { type, values } = parsePrefix(propVal)
+    const clauses = values.map(val => { return { value: val, label: val } })
     return { propKey: { label: key, value: key }, type, clauses }
   })
 }
 
 export function parseQueryFilter(query, filter) {
-  const {type, values} = parsePrefix(query.filters[filter] || '')
+  const { type, values } = parsePrefix(query.filters[filter] || '')
 
   let labels = values
 
@@ -95,9 +96,9 @@ export function parseQueryFilter(query, filter) {
     labels = rawLabel.split('|').filter(label => !!label)
   }
 
-  const clauses = values.map((value, index) => { return {value, label: labels[index]}})
+  const clauses = values.map((value, index) => { return { value, label: labels[index] } })
 
-  return {type, clauses}
+  return { type, clauses }
 }
 
 export function isFilteringOnFixedValue(query, filter) {
@@ -152,6 +153,7 @@ export const formattedFilters = {
   'region': 'Region',
   'city': 'City',
   'page': 'Page',
+  'hostname': 'Hostname',
   'entry_page': 'Entry Page',
   'exit_page': 'Exit Page'
 }
