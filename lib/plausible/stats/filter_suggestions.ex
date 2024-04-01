@@ -213,7 +213,7 @@ defmodule Plausible.Stats.FilterSuggestions do
       end
 
     q =
-      if(filter_name == :pathname,
+      if(filter_name == :pathname or filter_name == :hostname,
         do: base_event_query(site, query),
         else: query_sessions(site, query)
       )
