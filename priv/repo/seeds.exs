@@ -161,7 +161,7 @@ native_stats_range
 
     [
       site_id: site.id,
-      hostname: site.domain,
+      hostname: Enum.random(["en.dummy.site", "es.dummy.site", "dummy.site"]),
       timestamp: put_random_time.(date, index),
       referrer_source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
       browser: Enum.random(["Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
@@ -196,7 +196,7 @@ native_stats_range
     [
       name: goal4.event_name,
       site_id: site.id,
-      hostname: site.domain,
+      hostname: Enum.random(["en.dummy.site", "es.dummy.site", "dummy.site"]),
       timestamp: put_random_time.(date, index),
       referrer_source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
       browser: Enum.random(["Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
