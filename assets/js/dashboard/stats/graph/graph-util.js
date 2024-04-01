@@ -1,21 +1,41 @@
 import numberFormatter, {durationFormatter} from '../../util/number-formatter'
+import { parsePrefix } from '../../util/filters'
 
-export function getGraphableMetrics(query) {
+export function getGraphableMetrics(query, site) {
   const isRealtime = query.period === 'realtime'
-  const isGoalFilter = !!query.filters.goal
-  const isPageFilter = !!query.filters.page
+  const goalFilter = query.filters.goal
+  const pageFilter = query.filters.page
   
-  if (isRealtime && isGoalFilter) {
+  if (isRealtime && !!goalFilter) {
     return ["visitors"]
   } else if (isRealtime) {
     return ["visitors", "pageviews"]
-  } else if (isGoalFilter) {
+  } else if (!!goalFilter && canGraphRevenueMetrics(goalFilter, site)) {
+    return ["visitors", "events", "average_revenue", "total_revenue", "conversion_rate"]
+  } else if (!!goalFilter) {
     return ["visitors", "events", "conversion_rate"]
-  } else if (isPageFilter) {
+  } else if (!!pageFilter) {
     return ["visitors", "visits", "pageviews", "bounce_rate", "time_on_page"]
   } else {
     return ["visitors", "visits", "pageviews", "views_per_visit", "bounce_rate", "visit_duration"]
   }
+}
+
+// Revenue metrics can only be graphed if:
+//   * The query is filtered by at least one revenue goal
+//   * All revenue goals in filter have the same currency
+function canGraphRevenueMetrics(goalFilter, site) {
+  const goalsInFilter = parsePrefix(goalFilter).values
+
+  const revenueGoalsInFilter = site.revenueGoals.filter((rg) => {
+    return goalsInFilter.includes(rg.event_name)
+  })
+  
+  const singleCurrency = revenueGoalsInFilter.every((rg) => {
+    return rg.currency === revenueGoalsInFilter[0].currency
+  })
+
+  return revenueGoalsInFilter.length > 0 && singleCurrency
 }
 
 export const METRIC_LABELS = {

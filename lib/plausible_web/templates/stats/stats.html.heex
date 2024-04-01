@@ -27,6 +27,7 @@
     data-props-available={
       to_string(Plausible.Billing.Feature.Props.check_availability(@site.owner) == :ok)
     }
+    data-revenue-goals={Jason.encode!(@revenue_goals)}
     data-funnels={Jason.encode!(@funnels)}
     data-has-props={to_string(@has_props)}
     data-logged-in={to_string(!!@conn.assigns[:current_user])}

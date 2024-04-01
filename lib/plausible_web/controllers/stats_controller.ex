@@ -64,6 +64,7 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: site,
           has_goals: Plausible.Sites.has_goals?(site),
+          revenue_goals: list_revenue_goals(site),
           funnels: list_funnels(site),
           has_props: Plausible.Props.configured?(site),
           stats_start_date: stats_start_date,
@@ -92,10 +93,13 @@ defmodule PlausibleWeb.StatsController do
     defp list_funnels(site) do
       Plausible.Funnels.list(site)
     end
-  else
-    defp list_funnels(_site) do
-      []
+
+    defp list_revenue_goals(site) do
+      Plausible.Goals.list_revenue_goals(site)
     end
+  else
+    defp list_revenue_goals(_site), do: []
+    defp list_revenue_goals(_site), do: []
   end
 
   @doc """
@@ -319,6 +323,7 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: shared_link.site,
           has_goals: Sites.has_goals?(shared_link.site),
+          revenue_goals: list_revenue_goals(shared_link.site),
           funnels: list_funnels(shared_link.site),
           has_props: Plausible.Props.configured?(shared_link.site),
           stats_start_date: stats_start_date,
