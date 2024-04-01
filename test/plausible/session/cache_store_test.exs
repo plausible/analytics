@@ -89,6 +89,124 @@ defmodule Plausible.Session.CacheStoreTest do
     assert session.events == 2
   end
 
+  describe "hostname-related attributes" do
+    test "initial for non-pageview" do
+      site_id = new_site_id()
+
+      event =
+        build(:event,
+          name: "custom_event",
+          site_id: site_id,
+          pathname: "/path/1",
+          hostname: "example.com"
+        )
+
+      flush([event])
+      session = get_session(site_id)
+      assert session.hostname == ""
+      assert session.exit_page_hostname == ""
+    end
+
+    test "initial for pageview" do
+      site_id = new_site_id()
+
+      event =
+        build(:event,
+          name: "pageview",
+          site_id: site_id,
+          pathname: "/path/1",
+          hostname: "example.com"
+        )
+
+      flush([event])
+      session = get_session(site_id)
+      assert session.hostname == "example.com"
+      assert session.exit_page_hostname == "example.com"
+    end
+
+    test "subsequent pageview after custom_event" do
+      site_id = new_site_id()
+
+      events = [
+        build(:event,
+          name: "custom_event",
+          site_id: site_id,
+          pathname: "/path/1",
+          hostname: "example.com",
+          timestamp: Timex.shift(Timex.now(), seconds: -5)
+        ),
+        build(:event,
+          name: "pageview",
+          site_id: site_id,
+          pathname: "/path/2",
+          hostname: "example.com"
+        )
+      ]
+
+      flush(events)
+      session = get_session(site_id)
+      assert session.hostname == "example.com"
+      assert session.exit_page_hostname == "example.com"
+    end
+
+    test "hostname change" do
+      site_id = new_site_id()
+
+      events = [
+        build(:event,
+          name: "pageview",
+          site_id: site_id,
+          pathname: "/landing",
+          hostname: "example.com",
+          timestamp: Timex.shift(Timex.now(), seconds: -5)
+        ),
+        build(:event,
+          name: "pageview",
+          site_id: site_id,
+          pathname: "/post/1",
+          hostname: "blog.example.com"
+        )
+      ]
+
+      flush(events)
+      session = get_session(site_id)
+      assert session.hostname == "blog.example.com"
+      assert session.exit_page_hostname == "blog.example.com"
+    end
+
+    test "hostname change with custom event in the middle" do
+      site_id = new_site_id()
+
+      events = [
+        build(:event,
+          name: "pageview",
+          site_id: site_id,
+          pathname: "/landing",
+          hostname: "example.com",
+          timestamp: Timex.shift(Timex.now(), seconds: -5)
+        ),
+        build(:event,
+          name: "custom_event",
+          site_id: site_id,
+          pathname: "/path/1",
+          hostname: "analytics.example.com",
+          timestamp: Timex.shift(Timex.now(), seconds: -3)
+        ),
+        build(:event,
+          name: "pageview",
+          site_id: site_id,
+          pathname: "/post/1",
+          hostname: "blog.example.com"
+        )
+      ]
+
+      flush(events)
+      session = get_session(site_id)
+      assert session.hostname == "blog.example.com"
+      assert session.exit_page_hostname == "blog.example.com"
+    end
+  end
+
   test "initial pageview-specific attributes" do
     site_id = new_site_id()
 
@@ -231,7 +349,12 @@ defmodule Plausible.Session.CacheStoreTest do
   end
 
   defp get_session(site_id) do
-    session_q = from s in Plausible.ClickhouseSessionV2, where: s.site_id == ^site_id
+    session_q =
+      from s in Plausible.ClickhouseSessionV2,
+        where: s.site_id == ^site_id,
+        order_by: [desc: :timestamp],
+        limit: 1
+
     Plausible.ClickhouseRepo.one!(session_q)
   end
 end
