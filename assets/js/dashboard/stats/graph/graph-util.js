@@ -1,5 +1,23 @@
 import numberFormatter, {durationFormatter} from '../../util/number-formatter'
 
+export function getGraphableMetrics(query) {
+  const isRealtime = query.period === 'realtime'
+  const isGoalFilter = !!query.filters.goal
+  const isPageFilter = !!query.filters.page
+  
+  if (isRealtime && isGoalFilter) {
+    return ["visitors"]
+  } else if (isRealtime) {
+    return ["visitors", "pageviews"]
+  } else if (isGoalFilter) {
+    return ["visitors", "events", "conversion_rate"]
+  } else if (isPageFilter) {
+    return ["visitors", "visits", "pageviews", "bounce_rate", "time_on_page"]
+  } else {
+    return ["visitors", "visits", "pageviews", "views_per_visit", "bounce_rate", "visit_duration"]
+  }
+}
+
 export const METRIC_LABELS = {
   'visitors': 'Visitors',
   'pageviews': 'Pageviews',
@@ -26,12 +44,6 @@ export const METRIC_FORMATTER = {
   'conversion_rate': (number) => (`${number}%`),
   'total_revenue': numberFormatter,
   'average_revenue': numberFormatter,
-}
-
-export const LoadingState = {
-  loading: 0,
-  updatingGraph: 1,
-  loaded: 2
 }
 
 const buildComparisonDataset = function(comparisonPlot) {

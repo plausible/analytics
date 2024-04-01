@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import * as api from '../../api'
 import * as storage from '../../util/storage'
-import { LoadingState } from './graph-util'
+import { getGraphableMetrics } from './graph-util'
 import TopStats from './top-stats';
 import { IntervalPicker, getCurrentInterval } from './interval-picker'
 import StatsExport from './stats-export'
@@ -34,26 +34,35 @@ export default function VisitorGraph(props) {
 
   const topStatsBoundary = useRef(null)
 
-  const [loading, setLoading] = useState(LoadingState.loading)
   const [topStatData, setTopStatData] = useState(null)
+  const [topStatsLoading, setTopStatsLoading] = useState(true)
   const [graphData, setGraphData] = useState(null)
+  const [graphLoading, setGraphLoading] = useState(true)
+
+  // This state is explicitly meant for the situation where either graph interval
+  // or graph metric is changed. That results in behaviour where Top Stats stay
+  // intact, but the graph container alone will display a loading spinner for as
+  // long as new graph data is fetched.
+  const [graphRefreshing, setGraphRefreshing] = useState(false)
+
 
   const onIntervalUpdate = useCallback((newInterval) => {
     setGraphData(null)
-    setLoading(LoadingState.updatingGraph)
+    setGraphRefreshing(true)
     fetchGraphData(getStoredMetric(), newInterval)
   }, [query])
 
   const onMetricUpdate = useCallback((newMetric) => {
     setGraphData(null)
-    setLoading(LoadingState.updatingGraph)
+    setGraphRefreshing(true)
     fetchGraphData(newMetric, getCurrentInterval(site, query))
   }, [query])
 
   useEffect(() => {
     setTopStatData(null)
+    setTopStatsLoading(true)
     setGraphData(null)
-    setLoading(LoadingState.loading)
+    setGraphLoading(true)
     fetchTopStatsAndGraphData()
 
     if (isRealtime) {
@@ -73,26 +82,28 @@ export default function VisitorGraph(props) {
     fetchTopStats(site, query)
       .then((res) => {
         setTopStatData(res)
-        
-        let metric = getStoredMetric()
-        const availableMetrics = res.top_stats.filter(stat => !!stat.graph_metric).map(stat => stat.graph_metric)
-        
-        if (!availableMetrics.includes(metric)) {
-          metric = availableMetrics[0]
-          storage.setItem(`metric__${site.domain}`, metric)
-        }
-
-        const interval = getCurrentInterval(site, query)
-
-        fetchGraphData(metric, interval)
+        setTopStatsLoading(false)
       })
+    
+    let metric = getStoredMetric()
+    const availableMetrics = getGraphableMetrics(query)
+    
+    if (!availableMetrics.includes(metric)) {
+      metric = availableMetrics[0]
+      storage.setItem(`metric__${site.domain}`, metric)
+    }
+
+    const interval = getCurrentInterval(site, query)
+
+    fetchGraphData(metric, interval)
   }
 
   function fetchGraphData(metric, interval) {
     fetchMainGraph(site, query, metric, interval)
       .then((res) => {
         setGraphData(res)
-        setLoading(LoadingState.loaded)
+        setGraphLoading(false)
+        setGraphRefreshing(false)
       })
   }
 
@@ -119,13 +130,13 @@ export default function VisitorGraph(props) {
 
   return (
     <div className={"relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825"}>
-      {loading === LoadingState.loading && renderLoader()}
-      <FadeIn show={loading !== LoadingState.loading}>
+      {(topStatsLoading || graphLoading) && renderLoader()}
+      <FadeIn show={!(topStatsLoading || graphLoading)}>
         <div id="top-stats-container" className="flex flex-wrap" ref={topStatsBoundary} style={{ height: getTopStatsHeight() }}>
           <TopStats site={site} query={query} data={topStatData} onMetricUpdate={onMetricUpdate} tooltipBoundary={topStatsBoundary.current} lastLoadTimestamp={lastLoadTimestamp} />
         </div>
         <div className="relative px-2">
-          {loading === LoadingState.updatingGraph && renderLoader()}
+          {graphRefreshing && renderLoader()}
           <div className="absolute right-4 -top-8 py-1 flex items-center">
             {!isRealtime && <StatsExport site={site} query={query} />}
             <SamplingNotice samplePercent={topStatData}/>
