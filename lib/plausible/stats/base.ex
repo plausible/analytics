@@ -48,7 +48,10 @@ defmodule Plausible.Stats.Base do
       q = Plausible.Stats.Sampling.add_query_hint(q, query)
     end
 
-    q = from(e in q, where: ^dynamic_filter_condition(query, "event:page", :pathname))
+    q =
+      q
+      |> where([e], ^dynamic_filter_condition(query, "event:page", :pathname))
+      |> where([e], ^dynamic_filter_condition(query, "event:hostname", :hostname))
 
     q =
       case query.filters["event:name"] do
