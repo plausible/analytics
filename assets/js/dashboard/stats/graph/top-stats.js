@@ -5,6 +5,7 @@ import classNames from "classnames";
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import * as storage from '../../util/storage'
 import { formatDateRange } from '../../util/date.js'
+import { getGraphableMetrics } from "./graph-util.js";
 
 function Maybe({condition, children}) {
   if (condition) {
@@ -88,7 +89,8 @@ export default function TopStats(props) {
   }
 
   function canMetricBeGraphed(stat) {
-    return !!stat.graph_metric
+    const graphableMetrics = getGraphableMetrics(query, site)
+    return stat.graph_metric && graphableMetrics.includes(stat.graph_metric)
   }
 
   function maybeUpdateMetric(stat) {
