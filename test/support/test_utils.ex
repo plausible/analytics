@@ -198,7 +198,7 @@ defmodule Plausible.TestUtils do
       session = Plausible.Session.CacheStore.on_event(event_params, event_params, nil)
 
       event_params
-      |> Map.merge(session)
+      |> Plausible.ClickhouseEventV2.merge_session(session)
       |> Plausible.Event.WriteBuffer.insert()
     end
 

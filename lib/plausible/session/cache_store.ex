@@ -61,7 +61,6 @@ defmodule Plausible.Session.CacheStore do
           if(event.name == "pageview", do: session.pageviews + 1, else: session.pageviews),
         events: session.events + 1
     }
-    |> debug(:update)
   end
 
   defp new_session_from_event(event, session_attributes) do
@@ -99,19 +98,5 @@ defmodule Plausible.Session.CacheStore do
       "entry_meta.key": Map.get(event, :"meta.key"),
       "entry_meta.value": Map.get(event, :"meta.value")
     }
-    |> debug(:new)
-  end
-
-  defp debug(session, label) do
-    IO.inspect(%{
-      user_id: session.user_id,
-      entry_page_hostname: session.hostname,
-      entry_page: session.entry_page,
-      exit_page: session.exit_page,
-      exit_page_hostname: session.exit_page_hostname,
-      label: label
-    })
-
-    session
   end
 end
