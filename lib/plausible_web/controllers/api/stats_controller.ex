@@ -96,6 +96,66 @@ defmodule PlausibleWeb.Api.StatsController do
   ```
 
   """
+
+  def top_report(conn, params) do
+    site = conn.assigns[:site]
+
+    with {:ok, dates} <- parse_date_params(params),
+         :ok <- validate_interval(params),
+         :ok <- validate_interval_granularity(site, params, dates),
+         query = Query.from(site, params),
+         {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
+      timeseries_query =
+        if query.period == "realtime" do
+          %Query{query | period: "30m"}
+        else
+          query
+        end
+
+      timeseries_result = Stats.timeseries(site, timeseries_query, [metric])
+
+      comparison_opts = parse_comparison_opts(params)
+
+      {comparison_query, comparison_result} =
+        case Comparisons.compare(site, query, params["comparison"], comparison_opts) do
+          {:ok, comparison_query} ->
+            {comparison_query, Stats.timeseries(site, comparison_query, [metric])}
+
+          {:error, :not_supported} ->
+            {nil, nil}
+        end
+
+      {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_query)
+
+      labels = label_timeseries(timeseries_result, comparison_result)
+      present_index = present_index_for(site, query, labels)
+      full_intervals = build_full_intervals(query, labels)
+
+      site_import = Plausible.Imported.get_earliest_import(site)
+
+      json(conn, %{
+        metric: metric,
+        plot: plot_timeseries(timeseries_result, metric),
+        labels: labels,
+        comparison_plot: comparison_result && plot_timeseries(comparison_result, metric),
+        comparison_labels: comparison_result && label_timeseries(comparison_result, nil),
+        comparing_from: comparison_result && comparison_query.date_range.first,
+        comparing_to: comparison_result && comparison_query.date_range.last,
+        present_index: present_index,
+        interval: query.interval,
+        with_imported: with_imported?(query, comparison_query),
+        imported_source: site_import && SiteImport.label(site_import),
+        full_intervals: full_intervals,
+        from: query.date_range.first,
+        to: query.date_range.last,
+        top_stats: top_stats,
+        sample_percent: sample_percent
+      })
+    else
+      {:error, message} when is_binary(message) -> bad_request(conn, message)
+    end
+  end
+
   def main_graph(conn, params) do
     site = conn.assigns[:site]
 

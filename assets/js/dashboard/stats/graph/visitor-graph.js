@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import * as api from '../../api'
 import * as storage from '../../util/storage'
-import { getGraphableMetrics } from './graph-util'
 import TopStats from './top-stats';
 import { IntervalPicker, getCurrentInterval } from './interval-picker'
 import StatsExport from './stats-export'
@@ -9,22 +8,16 @@ import WithImportedSwitch from './with-imported-switch';
 import SamplingNotice from './sampling-notice';
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
-import { isComparisonEnabled } from '../../comparison-input'
 import LineGraphWithRouter from './line-graph'
-
-function fetchTopStats(site, query) {
-  const q = { ...query }
-  
-  if (!isComparisonEnabled(q.comparison)) {
-    q.comparison = 'previous_period'
-  }
-
-  return api.get(url.apiPath(site, '/top-stats'), q)
-}
 
 function fetchMainGraph(site, query, metric, interval) {
   const params = {metric, interval}
   return api.get(url.apiPath(site, '/main-graph'), query, params)
+}
+
+function fetchTopReport(site, query, metric, interval) {
+  const params = {metric, interval}
+  return api.get(url.apiPath(site, '/top-report'), query, params)
 }
 
 export default function VisitorGraph(props) {
@@ -79,23 +72,16 @@ export default function VisitorGraph(props) {
   }, [topStatData])
 
   function fetchTopStatsAndGraphData() {
-    fetchTopStats(site, query)
+    const metric = getStoredMetric()
+    const interval = getCurrentInterval(site, query)
+
+    fetchTopReport(site, query, metric, interval)
       .then((res) => {
         setTopStatData(res)
         setTopStatsLoading(false)
+        setGraphData(res)
+        setGraphLoading(false)
       })
-    
-    let metric = getStoredMetric()
-    const availableMetrics = getGraphableMetrics(query, site)
-    
-    if (!availableMetrics.includes(metric)) {
-      metric = availableMetrics[0]
-      storage.setItem(`metric__${site.domain}`, metric)
-    }
-
-    const interval = getCurrentInterval(site, query)
-
-    fetchGraphData(metric, interval)
   }
 
   function fetchGraphData(metric, interval) {
