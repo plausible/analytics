@@ -2,9 +2,10 @@ import React from "react"
 import { parseNaiveDate, isBefore } from '../../util/date'
 import { Link } from 'react-router-dom'
 import * as url from '../../util/url'
+import { BarsArrowUpIcon } from '@heroicons/react/20/solid'
 
 export default function WithImportedSwitch({site, topStatData}) {
-  if (!topStatData?.imported_source) {
+  if (!topStatData?.imports_exist) {
     return null
   }
 
@@ -21,18 +22,15 @@ export default function WithImportedSwitch({site, topStatData}) {
   const isComparingImportedPeriod = isBeforeNativeStats(topStatData.comparing_from)
 
   if (isQueryingImportedPeriod || isComparingImportedPeriod) {
-    const source = topStatData.imported_source
     const withImported = topStatData.with_imported;
-    const strike = withImported ? "" : " line-through"
+    const toggleColor = withImported ? " dark:text-gray-300 text-gray-700" : " dark:text-gray-500 text-gray-400"
     const target = url.setQuery('with_imported', !withImported)
     const tip = withImported ? "" : "do not ";
 
     return (
       <Link to={target} className="w-4 h-4 mx-2">
-        <div tooltip={`Stats ${tip}include data imported from ${source}.`} className="cursor-pointer w-4 h-4">
-          <svg className="absolute dark:text-gray-300 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <text x="4" y="18" fontSize="24" fill="currentColor" className={"text-gray-700 dark:text-gray-300" + strike}>{source[0].toUpperCase()}</text>
-          </svg>
+        <div tooltip={`Stats ${tip}include imported data.`} className="cursor-pointer w-4 h-4">
+          <BarsArrowUpIcon className={"absolute " + toggleColor} />
         </div>
       </Link>
     )

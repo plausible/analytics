@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Api.StatsController do
   use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
 
-  alias Plausible.Imported.SiteImport
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Comparisons}
   alias PlausibleWeb.Api.Helpers, as: H
@@ -68,8 +67,8 @@ defmodule PlausibleWeb.Api.StatsController do
     * `with_imported` - boolean indicating whether the Google Analytics data
       was queried or not.
 
-    * `imported_source` - the source of the imported data, when applicable.
-      Currently only Google Analytics is supported.
+    * `imports_exist` - boolean indicating whether there are any completed
+      imports for a given site or not.
 
     * `full_intervals` - map of dates indicating whether the interval has been
       cut off by the requested date range or not. For example, if looking at a
@@ -87,7 +86,7 @@ defmodule PlausibleWeb.Api.StatsController do
       "2021-11-01" => true,
       "2021-12-01" => false
     },
-    "imported_source" => nil,
+    "imports_exist" => false,
     "interval" => "month",
     "labels" => ["2021-09-01", "2021-10-01", "2021-11-01", "2021-12-01"],
     "plot" => [0, 0, 0, 0],
@@ -129,8 +128,6 @@ defmodule PlausibleWeb.Api.StatsController do
       present_index = present_index_for(site, query, labels)
       full_intervals = build_full_intervals(query, labels)
 
-      site_import = Plausible.Imported.get_earliest_import(site)
-
       json(conn, %{
         metric: metric,
         plot: plot_timeseries(timeseries_result, metric),
@@ -140,7 +137,7 @@ defmodule PlausibleWeb.Api.StatsController do
         present_index: present_index,
         interval: query.interval,
         with_imported: with_imported?(query, comparison_query),
-        imported_source: site_import && SiteImport.label(site_import),
+        imports_exist: site.complete_import_ids != [],
         full_intervals: full_intervals
       })
     else
@@ -215,14 +212,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
     {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_query)
 
-    site_import = Plausible.Imported.get_earliest_import(site)
-
     json(conn, %{
       top_stats: top_stats,
       interval: query.interval,
       sample_percent: sample_percent,
       with_imported: with_imported?(query, comparison_query),
-      imported_source: site_import && SiteImport.label(site_import),
+      imports_exist: site.complete_import_ids != [],
       comparing_from: comparison_query && comparison_query.date_range.first,
       comparing_to: comparison_query && comparison_query.date_range.last,
       from: query.date_range.first,
