@@ -650,7 +650,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, screen_size: "Desktop", hostname: "blog.example.com"),
         build(:pageview, screen_size: "Desktop", hostname: "example.com", user_id: @user_id),
         build(:pageview, screen_size: "Desktop", hostname: "blog.example.com", user_id: @user_id),
-        build(:pageview, screen_size: "Mobile")
+        build(:pageview,
+          screen_size: "Desktop",
+          hostname: "blog.example.com",
+          user_id: @user_id + 1
+        ),
+        build(:pageview, screen_size: "Desktop", hostname: "example.com", user_id: @user_id + 1),
+        build(:pageview, screen_size: "Mobile", hostname: "blog.example.com")
       ])
 
       filters = Jason.encode!(%{screen: "Desktop", hostname: "blog.example.com"})
@@ -664,8 +670,8 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res =
         json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 2} in res["top_stats"]
-      assert %{"name" => "Total visits", "value" => 2} in res["top_stats"]
+      assert %{"name" => "Unique visitors", "value" => 3} in res["top_stats"]
+      assert %{"name" => "Total visits", "value" => 3} in res["top_stats"]
     end
 
     test "returns only visitors with specific browser", %{conn: conn, site: site} do
