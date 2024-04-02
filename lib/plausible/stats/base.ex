@@ -133,7 +133,8 @@ defmodule Plausible.Stats.Base do
     "os_version" => "operating_system_version",
     "country" => "country_code",
     "region" => "subdivision1_code",
-    "city" => "city_geoname_id"
+    "city" => "city_geoname_id",
+    "entry_page_hostname" => "hostname"
   }
 
   def query_sessions(site, query) do
