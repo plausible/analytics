@@ -436,20 +436,6 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   describe "GET /api/stats/main-graph - conversion_rate plot" do
     setup [:create_user, :log_in, :create_new_site]
 
-    test "returns 400 when conversion rate is queried without a goal filter", %{
-      conn: conn,
-      site: site
-    } do
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=conversion_rate"
-        )
-
-      assert %{"error" => error} = json_response(conn, 400)
-      assert error =~ "can only be queried with a goal filter"
-    end
-
     test "displays conversion_rate for a month", %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Signup")
 
@@ -480,20 +466,6 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
   describe "GET /api/stats/main-graph - events (total conversions) plot" do
     setup [:create_user, :log_in, :create_new_site]
-
-    test "returns 400 when the `events` metric is queried without a goal filter", %{
-      conn: conn,
-      site: site
-    } do
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=events"
-        )
-
-      assert %{"error" => error} = json_response(conn, 400)
-      assert error =~ "`events` can only be queried with a goal filter"
-    end
 
     test "displays total conversions for a goal", %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Signup")

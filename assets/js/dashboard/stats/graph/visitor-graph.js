@@ -46,6 +46,7 @@ export default function VisitorGraph(props) {
   }, [query])
 
   const onMetricUpdate = useCallback((newMetric) => {
+    storage.setItem(`metric__${site.domain}`, newMetric)
     setGraphData(null)
     setGraphRefreshing(true)
     fetchGraphData(newMetric, getCurrentInterval(site, query))
@@ -77,6 +78,7 @@ export default function VisitorGraph(props) {
 
     fetchTopReport(site, query, metric, interval)
       .then((res) => {
+        storage.setItem(`metric__${site.domain}`, res.metric)
         setTopStatData(res)
         setTopStatsLoading(false)
         setGraphData(res)

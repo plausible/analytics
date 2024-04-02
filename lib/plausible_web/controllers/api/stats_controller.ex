@@ -103,8 +103,7 @@ defmodule PlausibleWeb.Api.StatsController do
     with {:ok, dates} <- parse_date_params(params),
          :ok <- validate_interval(params),
          :ok <- validate_interval_granularity(site, params, dates),
-         query = Query.from(site, params),
-         {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
+         query = Query.from(site, params) do
       timeseries_query =
         if query.period == "realtime" do
           %Query{query | period: "30m"}
@@ -112,20 +111,21 @@ defmodule PlausibleWeb.Api.StatsController do
           query
         end
 
-      timeseries_result = Stats.timeseries(site, timeseries_query, [metric])
-
       comparison_opts = parse_comparison_opts(params)
 
-      {comparison_query, comparison_result} =
+      comparison_query =
         case Comparisons.compare(site, query, params["comparison"], comparison_opts) do
-          {:ok, comparison_query} ->
-            {comparison_query, Stats.timeseries(site, comparison_query, [metric])}
-
-          {:error, :not_supported} ->
-            {nil, nil}
+          {:ok, comparison_query} -> comparison_query
+          {:error, :not_supported} -> nil
         end
 
       {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_query)
+      metric = resolve_metric(top_stats, params)
+
+      timeseries_result = Stats.timeseries(site, timeseries_query, [metric])
+
+      comparison_result =
+        if comparison_query, do: Stats.timeseries(site, comparison_query, [metric])
 
       labels = label_timeseries(timeseries_result, comparison_result)
       present_index = present_index_for(site, query, labels)
@@ -163,7 +163,7 @@ defmodule PlausibleWeb.Api.StatsController do
          :ok <- validate_interval(params),
          :ok <- validate_interval_granularity(site, params, dates),
          query = Query.from(site, params),
-         {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
+         metric <- Plausible.Stats.Metrics.from_string(params["metric"], :visitors) do
       timeseries_query =
         if query.period == "realtime" do
           %Query{query | period: "30m"}
@@ -1416,23 +1416,6 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp parse_and_validate_graph_metric(params, query) do
-    metric =
-      case params["metric"] do
-        nil -> :visitors
-        "conversions" -> :visitors
-        m -> Plausible.Stats.Metrics.from_string!(m)
-      end
-
-    requires_goal_filter? = metric in [:conversion_rate, :events]
-
-    if requires_goal_filter? and !query.filters["event:goal"] do
-      {:error, "Metric `#{metric}` can only be queried with a goal filter"}
-    else
-      {:ok, metric}
-    end
-  end
-
   defp bad_request(conn, message, extra \\ %{}) do
     payload = Map.merge(extra, %{error: message})
 
@@ -1440,6 +1423,21 @@ defmodule PlausibleWeb.Api.StatsController do
     |> put_status(400)
     |> json(payload)
     |> halt()
+  end
+
+  defp resolve_metric(top_stats, params) do
+    available_metrics =
+      top_stats
+      |> Enum.map(& &1[:graph_metric])
+      |> Enum.reject(&is_nil/1)
+
+    requested_metric = Plausible.Stats.Metrics.from_string(params["metric"], :visitors)
+
+    if requested_metric in available_metrics do
+      requested_metric
+    else
+      List.first(available_metrics)
+    end
   end
 
   defp parse_comparison_opts(params) do

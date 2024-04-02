@@ -5,7 +5,6 @@ import classNames from "classnames";
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import * as storage from '../../util/storage'
 import { formatDateRange } from '../../util/date.js'
-import { getGraphableMetrics } from "./graph-util.js";
 
 function Maybe({condition, children}) {
   if (condition) {
@@ -88,18 +87,6 @@ export default function TopStats(props) {
     )
   }
 
-  function canMetricBeGraphed(stat) {
-    const graphableMetrics = getGraphableMetrics(query, site)
-    return stat.graph_metric && graphableMetrics.includes(stat.graph_metric)
-  }
-
-  function maybeUpdateMetric(stat) {
-    if (canMetricBeGraphed(stat)) {
-      storage.setItem(`metric__${site.domain}`, stat.graph_metric)
-      onMetricUpdate(stat.graph_metric)
-    }
-  }
-
   function blinkingDot() {
     return (
       <div key="dot" className="block pulsating-circle" style={{ left: '125px', top: '52px' }}></div>
@@ -130,13 +117,13 @@ export default function TopStats(props) {
 
   function renderStat(stat, index) {
     const className = classNames('px-4 md:px-6 w-1/2 my-4 lg:w-auto group select-none', {
-      'cursor-pointer': canMetricBeGraphed(stat),
+      'cursor-pointer': stat.graph_metric,
       'lg:border-l border-gray-300': index > 0,
       'border-r lg:border-r-0': index % 2 === 0
     })
 
     return (
-      <Tooltip key={stat.name} info={tooltip(stat, query)} className={className} onClick={() => { maybeUpdateMetric(stat) }} boundary={tooltipBoundary}>
+      <Tooltip key={stat.name} info={tooltip(stat, query)} className={className} onClick={() => { onMetricUpdate(stat.graph_metric) }} boundary={tooltipBoundary}>
         {renderStatName(stat)}
         <div className="my-1 space-y-2">
           <div>
