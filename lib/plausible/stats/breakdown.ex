@@ -6,7 +6,7 @@ defmodule Plausible.Stats.Breakdown do
   import Plausible.Stats.{Base, Imported}
   import Ecto.Query
   require OpenTelemetry.Tracer, as: Tracer
-  alias Plausible.Stats.{Query, Util}
+  alias Plausible.Stats.{Query, Util, TableDecider}
 
   @no_ref "Direct / None"
   @not_set "(not set)"
@@ -199,9 +199,30 @@ defmodule Plausible.Stats.Breakdown do
 
     metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @computed_metrics
 
-    breakdown_sessions(site, query, property, metrics_to_select)
-    |> maybe_add_group_conversion_rate(&breakdown_sessions/4, site, query, property, metrics)
-    |> paginate_and_execute(metrics, pagination)
+    case breakdown_table(query, metrics, property) do
+      :session ->
+        breakdown_sessions(site, query, property, metrics_to_select)
+        |> maybe_add_group_conversion_rate(&breakdown_sessions/4, site, query, property, metrics)
+        |> paginate_and_execute(metrics, pagination)
+
+      :event ->
+        breakdown_events(site, query, property, metrics_to_select)
+        |> maybe_add_group_conversion_rate(&breakdown_events/4, site, query, property, metrics)
+        |> paginate_and_execute(metrics, pagination)
+    end
+  end
+
+  defp breakdown_table(_query, _metrics, "visit:entry_page"), do: :session
+  defp breakdown_table(_query, _metrics, "visit:exit_page"), do: :session
+
+  defp breakdown_table(query, metrics, property) do
+    {_, session_metrics, _} = TableDecider.partition_metrics(metrics, query, property)
+
+    if not Enum.empty?(session_metrics) do
+      :session
+    else
+      :event
+    end
   end
 
   defp zip_results(event_result, session_result, property, metrics) do

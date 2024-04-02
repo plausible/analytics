@@ -7,7 +7,7 @@ defmodule Plausible.Stats.TableDecider do
     Enum.any?(query.filters, &(filters_partitioner(query, &1) == :session))
   end
 
-  def partition_metrics(metrics, query) do
+  def partition_metrics(metrics, query, breakdown_property \\ nil) do
     %{
       event: event_metrics,
       session: session_metrics,
@@ -17,8 +17,16 @@ defmodule Plausible.Stats.TableDecider do
     } =
       partition(metrics, query, &metric_partitioner/2)
 
+    # Treat breakdown property as yet another filter
+    filters =
+      if breakdown_property do
+        Map.put(query.filters, breakdown_property, nil)
+      else
+        query.filters
+      end
+
     %{event: event_filters, session: session_filters} =
-      partition(query.filters, query, &filters_partitioner/2)
+      partition(filters, query, &filters_partitioner/2)
 
     cond do
       # Only one table needs to be queried
