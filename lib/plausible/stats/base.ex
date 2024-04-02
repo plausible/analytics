@@ -30,7 +30,11 @@ defmodule Plausible.Stats.Base do
         on: e.session_id == sq.session_id
       )
     else
-      events_q
+      if query.experimental_reduced_joins? do
+        events_q |> filter_by_visit_props(Filters.event_table_visit_props(), query)
+      else
+        events_q
+      end
     end
   end
 
@@ -118,14 +122,6 @@ defmodule Plausible.Stats.Base do
         q,
         &filter_by_custom_prop/2
       )
-
-    # :TODO: Maybe check if joined and no filter needed
-    q =
-      if query.experimental_reduced_joins? do
-        filter_by_visit_props(q, Filters.event_table_visit_props(), query)
-      else
-        q
-      end
 
     q
   end
