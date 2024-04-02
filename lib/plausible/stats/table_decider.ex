@@ -3,12 +3,8 @@ defmodule Plausible.Stats.TableDecider do
 
   alias Plausible.Stats.{Query, Filters}
 
-  def events_join_sessions?(%Query{experimental_reduced_joins?: false} = query) do
-    Enum.any?(Filters.visit_props(), &query.filters["visit:" <> &1])
-  end
-
-  def events_join_sessions?(%Query{experimental_reduced_joins?: true} = query) do
-    Enum.any?(Filters.sessions_only_visit_props(), &query.filters["visit:" <> &1])
+  def events_join_sessions?(query) do
+    Enum.any?(query.filters, &(filters_partitioner(query, &1) == :session))
   end
 
   def partition_metrics(metrics, query) do
