@@ -8,10 +8,10 @@ export const FILTER_GROUPS = {
   'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
   'goal': ['goal'],
   'props': ['prop_key', 'prop_value'],
-  'hostname': ['hostname'],
+  'hostname': ['hostname', 'experimental_hostname_filter']
 }
 
-export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_GROUPS['location']))
+export const NO_CONTAINS_OPERATOR = new Set(['experimental_hostname_filter', 'goal', 'screen'].concat(FILTER_GROUPS['location']))
 
 export const FILTER_OPERATIONS = {
   isNot: 'is not',
@@ -26,7 +26,7 @@ export const OPERATION_PREFIX = {
 };
 
 export function supportsIsNot(filterName) {
-  return !['goal', 'prop_key'].includes(filterName)
+  return !['goal', 'prop_key', 'experimental_hostname_filter'].includes(filterName)
 }
 
 export function isFreeChoiceFilter(filterName) {
@@ -154,6 +154,7 @@ export const formattedFilters = {
   'city': 'City',
   'page': 'Page',
   'hostname': 'Hostname',
+  'experimental_hostname_filter': 'Treat hostname as entry/exit hostname',
   'entry_page': 'Entry Page',
-  'exit_page': 'Exit Page'
+  'exit_page': 'Exit Page',
 }
