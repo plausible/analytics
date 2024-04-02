@@ -70,13 +70,27 @@ defmodule Plausible.DataMigration.SiteImports do
             [site_import.id]
           end
 
-        end_date =
-          imported_stats_end_date(site.id, import_ids) || Date.add(site_import.start_date, 2)
+        end_date = imported_stats_end_date(site.id, import_ids)
 
         end_date =
-          if Date.compare(end_date, site_import.end_date) == :lt do
+          if !end_date do
+            IO.puts(
+              "Site import #{site_import.id} (site ID #{site.id}) does not have any recorded stats. Setting end date to minimum."
+            )
+
+            Date.add(site_import.start_date, 2)
+          else
+            end_date
+          end
+
+        end_date =
+          if Date.compare(end_date, site_import.end_date) in [:lt, :eq] do
             end_date
           else
+            IO.puts(
+              "Site import #{site_import.id} (site ID #{site.id}) computed end date is later than the current one. Skipping."
+            )
+
             site_import.end_date
           end
 
