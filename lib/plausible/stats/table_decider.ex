@@ -45,12 +45,18 @@ defmodule Plausible.Stats.TableDecider do
   defp metric_partitioner(_, :bounce_rate), do: :session
   defp metric_partitioner(_, :visit_duration), do: :session
   defp metric_partitioner(_, :views_per_visit), do: :session
-  # :TODO: These can be calculated on the other table as well!
+
+  # Metrics which used to only be queried from one table but can be calculated from either
+  defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :visits), do: :both
+  defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :pageviews), do: :both
+  defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :events), do: :both
+  defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :visitors), do: :both
+
   defp metric_partitioner(_, :visits), do: :session
   defp metric_partitioner(_, :pageviews), do: :event
   defp metric_partitioner(_, :events), do: :event
   defp metric_partitioner(_, :visitors), do: :event
-  # :TODO: Calculated/weird metrics
+  # Calculated metrics - handled on callsite separately from other metrics.
   defp metric_partitioner(_, :time_on_page), do: :other
   defp metric_partitioner(_, :total_visitors), do: :other
   # Sample percentage is included in both tables if queried.

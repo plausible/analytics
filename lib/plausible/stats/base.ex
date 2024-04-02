@@ -243,6 +243,13 @@ defmodule Plausible.Stats.Base do
     }
   end
 
+  defp select_event_metric(:visits) do
+    %{
+      visits:
+        dynamic([e], fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.session_id))
+    }
+  end
+
   on_full_build do
     defp select_event_metric(:total_revenue) do
       %{total_revenue: Plausible.Stats.Goal.Revenue.total_revenue_query()}
