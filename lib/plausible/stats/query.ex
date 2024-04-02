@@ -9,7 +9,8 @@ defmodule Plausible.Stats.Query do
             imported_data_requested: false,
             include_imported: false,
             now: nil,
-            experimental_session_count?: false
+            experimental_session_count?: false,
+            experimental_hostname_filter?: false
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{Filters, Interval}
@@ -22,7 +23,7 @@ defmodule Plausible.Stats.Query do
     query =
       __MODULE__
       |> struct!(now: now)
-      |> put_experimental_session_count(params)
+      |> put_experimental_flags(params)
       |> put_period(site, params)
       |> put_interval(params)
       |> put_parsed_filters(params)
@@ -36,12 +37,14 @@ defmodule Plausible.Stats.Query do
     query
   end
 
-  defp put_experimental_session_count(query, params) do
-    if Map.get(params, "experimental_session_count") == "true" do
-      struct!(query, experimental_session_count?: true)
-    else
-      query
-    end
+  defp put_experimental_flags(query, params) do
+    %{
+      "experimental_session_count" => :experimental_session_count?,
+      "experimental_hostname_filter" => :experimental_hostname_filter?
+    }
+    |> Enum.reduce(query, fn {param, flag}, query ->
+      if Map.get(params, param) == "true", do: Map.put(query, flag, true), else: query
+    end)
   end
 
   defp put_period(query, site, %{"period" => "realtime"}) do
