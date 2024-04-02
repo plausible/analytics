@@ -119,19 +119,12 @@ defmodule Plausible.Stats.Base do
         &filter_by_custom_prop/2
       )
 
+    if query.experimental_reduced_joins? do
+      q = filter_by_visit_props(q, query)
+    end
+
     q
   end
-
-  @api_prop_name_to_db %{
-    "source" => "referrer_source",
-    "device" => "screen_size",
-    "screen" => "screen_size",
-    "os" => "operating_system",
-    "os_version" => "operating_system_version",
-    "country" => "country_code",
-    "region" => "subdivision1_code",
-    "city" => "city_geoname_id"
-  }
 
   def query_sessions(site, query) do
     {first_datetime, last_datetime} =
@@ -150,9 +143,23 @@ defmodule Plausible.Stats.Base do
       sessions_q = Plausible.Stats.Sampling.add_query_hint(sessions_q, query)
     end
 
-    sessions_q = filter_by_entry_props(sessions_q, query)
+    filter_by_entry_props(sessions_q, query)
+    |> filter_by_visit_props(query)
+  end
 
-    Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->
+  @api_prop_name_to_db %{
+    "source" => "referrer_source",
+    "device" => "screen_size",
+    "screen" => "screen_size",
+    "os" => "operating_system",
+    "os_version" => "operating_system_version",
+    "country" => "country_code",
+    "region" => "subdivision1_code",
+    "city" => "city_geoname_id"
+  }
+
+  defp filter_by_visit_props(q, query) do
+    Enum.reduce(Filters.visit_props(), q, fn prop_name, sessions_q ->
       filter_key = "visit:" <> prop_name
 
       db_field =
