@@ -31,7 +31,13 @@ defmodule PlausibleWeb.Api.StatsController.TopReportTest do
 
     test "always adds comparison for top stats"
     test "compares both top stats and graph when requested"
-    test "overrides metric with default when invalid metric provided"
+
+    test "overrides metric with default when invalid metric provided", %{site: site, conn: conn} do
+      # requires goal filter
+      conn = get(conn, "/api/stats/#{site.domain}/top-report?period=day&metric=events")
+      assert %{"metric" => "visitors"} = json_response(conn, 200)
+    end
+
     test "overrides interval with default when invalid interval provided"
   end
 end
