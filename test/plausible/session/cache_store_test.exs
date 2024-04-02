@@ -132,14 +132,16 @@ defmodule Plausible.Session.CacheStoreTest do
           name: "custom_event",
           site_id: site_id,
           pathname: "/path/1",
-          hostname: "example.com",
-          timestamp: Timex.shift(Timex.now(), seconds: -5)
+          hostname: "whatever.example.com",
+          timestamp: Timex.shift(Timex.now(), seconds: -5),
+          user_id: 1
         ),
         build(:event,
           name: "pageview",
           site_id: site_id,
           pathname: "/path/2",
-          hostname: "example.com"
+          hostname: "example.com",
+          user_id: 1
         )
       ]
 
@@ -158,19 +160,21 @@ defmodule Plausible.Session.CacheStoreTest do
           site_id: site_id,
           pathname: "/landing",
           hostname: "example.com",
-          timestamp: Timex.shift(Timex.now(), seconds: -5)
+          timestamp: Timex.shift(Timex.now(), seconds: -5),
+          user_id: 1
         ),
         build(:event,
           name: "pageview",
           site_id: site_id,
           pathname: "/post/1",
-          hostname: "blog.example.com"
+          hostname: "blog.example.com",
+          user_id: 1
         )
       ]
 
       flush(events)
       session = get_session(site_id)
-      assert session.hostname == "blog.example.com"
+      assert session.hostname == "example.com"
       assert session.exit_page_hostname == "blog.example.com"
     end
 
@@ -183,26 +187,29 @@ defmodule Plausible.Session.CacheStoreTest do
           site_id: site_id,
           pathname: "/landing",
           hostname: "example.com",
-          timestamp: Timex.shift(Timex.now(), seconds: -5)
+          timestamp: Timex.shift(Timex.now(), seconds: -5),
+          user_id: 1
         ),
         build(:event,
           name: "custom_event",
           site_id: site_id,
           pathname: "/path/1",
           hostname: "analytics.example.com",
-          timestamp: Timex.shift(Timex.now(), seconds: -3)
+          timestamp: Timex.shift(Timex.now(), seconds: -3),
+          user_id: 1
         ),
         build(:event,
           name: "pageview",
           site_id: site_id,
           pathname: "/post/1",
-          hostname: "blog.example.com"
+          hostname: "blog.example.com",
+          user_id: 1
         )
       ]
 
       flush(events)
       session = get_session(site_id)
-      assert session.hostname == "blog.example.com"
+      assert session.hostname == "example.com"
       assert session.exit_page_hostname == "blog.example.com"
     end
   end
