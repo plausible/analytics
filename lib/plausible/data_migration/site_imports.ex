@@ -141,7 +141,9 @@ defmodule Plausible.DataMigration.SiteImports do
 
   defp insert!(changeset, true = _dry_run?) do
     if changeset.valid? do
-      Ecto.Changeset.apply_changes(changeset)
+      changeset
+      |> Ecto.Changeset.change(id: 0)
+      |> Ecto.Changeset.apply_changes()
     else
       raise "Invalid insert: #{inspect(changeset)}"
     end

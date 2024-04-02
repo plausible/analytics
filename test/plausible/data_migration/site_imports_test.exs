@@ -50,6 +50,24 @@ defmodule Plausible.DataMigration.SiteImportsTest do
       assert site_import.source == :universal_analytics
     end
 
+    test "runs in dry mode without making any persistent changes" do
+      site =
+        insert(:site)
+        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "ok")
+        |> Repo.update!()
+
+      populate_stats(site, 0, [
+        build(:imported_visitors, date: ~D[2021-01-07])
+      ])
+
+      assert capture_io(fn ->
+               assert :ok = SiteImports.run()
+             end) =~ "Processing 1 sites"
+
+      assert [%{id: id, legacy: true}] = Imported.list_all_imports(site)
+      assert id == 0
+    end
+
     test "does not set end date to latter than the current one" do
       site =
         insert(:site)
