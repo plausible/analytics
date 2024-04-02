@@ -51,13 +51,13 @@ defmodule Plausible.Imported do
 
   def load_import_data(site) do
     complete_import_ids = list_complete_import_ids(site)
-    earliest_import = get_earliest_import(site) || %{}
+    dates = get_imports_date_range(site)
 
     %{
       site
       | import_data_loaded: true,
-        earliest_import_start_date: Map.get(earliest_import, :start_date),
-        earliest_import_end_date: Map.get(earliest_import, :end_date),
+        earliest_import_start_date: dates.start_date,
+        latest_import_end_date: dates.end_date,
         complete_import_ids: complete_import_ids
     }
   end
@@ -110,24 +110,35 @@ defmodule Plausible.Imported do
     end
   end
 
-  @spec get_earliest_import(Site.t()) :: SiteImport.t() | nil
-  def get_earliest_import(site) do
-    first_import =
+  @spec get_imports_date_range(Site.t()) :: %{
+          start_date: Date.t() | nil,
+          end_date: Date.t() | nil
+        }
+  def get_imports_date_range(site) do
+    dates =
       from(i in SiteImport,
         where: i.site_id == ^site.id and i.status == ^SiteImport.completed(),
-        order_by: i.start_date,
-        limit: 1
+        select: %{start_date: min(i.start_date), end_date: max(i.end_date)}
       )
       |> Repo.one()
 
-    legacy_import =
-      if site.imported_data && site.imported_data.status == "ok" do
-        site.imported_data
-      end
+    dates = dates || %{start_date: nil, end_date: nil}
 
-    [legacy_import, first_import]
-    |> Enum.reject(&is_nil/1)
-    |> Enum.min_by(& &1.start_date, Date, fn -> nil end)
+    if site.imported_data && site.imported_data.status == "ok" do
+      start_date =
+        [dates.start_date, site.imported_data.start_date]
+        |> Enum.reject(&is_nil/1)
+        |> Enum.min(Date, fn -> nil end)
+
+      end_date =
+        [dates.end_date, site.imported_data.end_date]
+        |> Enum.reject(&is_nil/1)
+        |> Enum.max(Date, fn -> nil end)
+
+      %{start_date: start_date, end_date: end_date}
+    else
+      dates
+    end
   end
 
   @spec delete_imports_for_site(Site.t()) :: :ok
