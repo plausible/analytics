@@ -1,7 +1,15 @@
 defmodule Plausible.Stats.TableDecider do
   import Enum, only: [empty?: 1]
 
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, Filters}
+
+  def events_join_sessions?(%Query{experimental_reduced_joins?: false} = query) do
+    Enum.any?(Filters.visit_props(), &query.filters["visit:" <> &1])
+  end
+
+  def events_join_sessions?(%Query{experimental_reduced_joins?: true} = query) do
+    Enum.any?(Filters.sessions_only_visit_props(), &query.filters["visit:" <> &1])
+  end
 
   def partition_metrics(metrics, query) do
     %{

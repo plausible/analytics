@@ -27,6 +27,12 @@ defmodule Plausible.Stats.Filters do
   ]
   def visit_props(), do: @visit_props |> Enum.map(&to_string/1)
 
+  @sessions_only_visit_props [
+    :entry_page,
+    :exit_page
+  ]
+  def sessions_only_visit_props(), do: @sessions_only_visit_props |> Enum.map(&to_string/1)
+
   @event_props [:name, :page, :goal]
 
   def event_props(), do: @event_props |> Enum.map(&to_string/1)

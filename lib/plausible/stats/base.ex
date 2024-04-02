@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Base do
   use Plausible
   use Plausible.Stats.Fragments
 
-  alias Plausible.Stats.{Query, Filters}
+  alias Plausible.Stats.{Query, Filters, TableDecider}
   alias Plausible.Timezones
   import Ecto.Query
 
@@ -15,7 +15,7 @@ defmodule Plausible.Stats.Base do
   def base_event_query(site, query) do
     events_q = query_events(site, query)
 
-    if Enum.any?(Filters.visit_props(), &query.filters["visit:" <> &1]) do
+    if TableDecider.events_join_sessions?(query) do
       sessions_q =
         from(
           s in query_sessions(site, query),
