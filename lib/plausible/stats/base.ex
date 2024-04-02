@@ -122,7 +122,7 @@ defmodule Plausible.Stats.Base do
     # :TODO: Maybe check if joined
     q =
       if query.experimental_reduced_joins? do
-        filter_by_visit_props(q, query)
+        filter_by_visit_props(q, Filters.event_table_visit_props(), query)
       else
         q
       end
@@ -148,7 +148,7 @@ defmodule Plausible.Stats.Base do
     end
 
     filter_by_entry_props(sessions_q, query)
-    |> filter_by_visit_props(query)
+    |> filter_by_visit_props(Filters.visit_props(), query)
   end
 
   @api_prop_name_to_db %{
@@ -162,9 +162,8 @@ defmodule Plausible.Stats.Base do
     "city" => "city_geoname_id"
   }
 
-  # :TODO: handle entry/exit page conditionally
-  defp filter_by_visit_props(q, query) do
-    Enum.reduce(Filters.visit_props(), q, fn prop_name, sessions_q ->
+  defp filter_by_visit_props(q, visit_props, query) do
+    Enum.reduce(visit_props, q, fn prop_name, sessions_q ->
       filter_key = "visit:" <> prop_name
 
       db_field =
