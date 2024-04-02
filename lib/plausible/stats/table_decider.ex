@@ -47,10 +47,10 @@ defmodule Plausible.Stats.TableDecider do
   defp metric_partitioner(_, :views_per_visit), do: :session
 
   # Metrics which used to only be queried from one table but can be calculated from either
-  defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :visits), do: :both
-  defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :pageviews), do: :both
-  defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :events), do: :both
-  defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :visitors), do: :both
+  defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :visits), do: :either
+  defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :pageviews), do: :either
+  defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :events), do: :either
+  defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :visitors), do: :either
 
   defp metric_partitioner(_, :visits), do: :session
   defp metric_partitioner(_, :pageviews), do: :event
