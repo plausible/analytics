@@ -103,7 +103,6 @@ defmodule Plausible.Stats.Breakdown do
         {event_q, page_q} ->
           from(
             e in subquery(union_all(event_q, ^page_q)),
-            # :TODO: Handle other orderings
             order_by: [desc: e.visitors]
           )
           |> apply_pagination(pagination)
