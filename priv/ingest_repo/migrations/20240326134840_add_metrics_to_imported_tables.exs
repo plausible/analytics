@@ -22,6 +22,7 @@ defmodule Plausible.IngestRepo.Migrations.AddMetricsToImportedTables do
     add_column("imported_operating_systems", "operating_system_version", "String")
     add_column("imported_pages", "visits", "UInt64")
     add_column("imported_sources", "referrer", "String")
+    add_column("imported_sources", "utm_source", "String")
   end
 
   defp add_column(table, column, type) do
