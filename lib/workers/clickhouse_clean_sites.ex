@@ -30,6 +30,8 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
     "imported_visitors"
   ]
 
+  @settings if Mix.env() in [:test, :small_test], do: [mutations_sync: 2], else: []
+
   def perform(_job) do
     deleted_sites = get_deleted_sites_with_clickhouse_data()
 
@@ -41,10 +43,10 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
       site_ids_expr = deleted_sites |> Enum.map_join(", ", &to_string/1)
 
       for table <- @tables_to_clear do
-        IngestRepo.query(
-          "ALTER TABLE #{table} DELETE WHERE site_id IN (#{site_ids_expr})",
+        IngestRepo.query!(
+          "ALTER TABLE #{table} DELETE WHERE site_id IN #{site_ids_expr}",
           [],
-          if(Mix.env() == :test, do: [mutations_sync: 2], else: [])
+          settings: @settings
         )
       end
     end
@@ -54,15 +56,13 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
 
   def get_deleted_sites_with_clickhouse_data() do
     pg_sites =
-      from(s in Plausible.Site, select: %{id: s.id})
+      from(s in Plausible.Site, select: s.id)
       |> Plausible.Repo.all()
-      |> Enum.map(&(&1 |> Map.fetch!(:id)))
       |> MapSet.new()
 
     ch_sites =
-      from(e in "events_v2", group_by: e.site_id, select: %{site_id: e.site_id})
+      from(e in "events_v2", group_by: e.site_id, select: e.site_id)
       |> Plausible.ClickhouseRepo.all(timeout: :infinity)
-      |> Enum.map(& &1.site_id)
       |> MapSet.new()
 
     MapSet.difference(ch_sites, pg_sites) |> MapSet.to_list()
