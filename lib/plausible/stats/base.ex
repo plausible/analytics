@@ -34,7 +34,7 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  def query_events(site, query) do
+  defp query_events(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     q =
@@ -119,7 +119,7 @@ defmodule Plausible.Stats.Base do
         &filter_by_custom_prop/2
       )
 
-    # :TODO: Maybe check if joined
+    # :TODO: Maybe check if joined and no filter needed
     q =
       if query.experimental_reduced_joins? do
         filter_by_visit_props(q, Filters.event_table_visit_props(), query)
