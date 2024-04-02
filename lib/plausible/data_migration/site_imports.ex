@@ -19,7 +19,7 @@ defmodule Plausible.DataMigration.SiteImports do
 
     sites_with_imports =
       from(s in Site, as: :site, where: not is_nil(s.imported_data) or exists(site_import_query))
-      |> Repo.all()
+      |> Repo.all(log: false)
 
     sites_count = length(sites_with_imports)
 
@@ -28,7 +28,7 @@ defmodule Plausible.DataMigration.SiteImports do
     for {site, idx} <- Enum.with_index(sites_with_imports) do
       site_imports =
         from(i in Imported.SiteImport, where: i.site_id == ^site.id)
-        |> Repo.all()
+        |> Repo.all(log: false)
 
       IO.puts(
         "Processing site ID #{site.id} (#{idx + 1} / #{sites_count}) (imported_data: #{is_struct(site.imported_data)}, site_imports: #{length(site_imports)})"
@@ -119,7 +119,7 @@ defmodule Plausible.DataMigration.SiteImports do
         from(s in subquery(union_all(query, ^max_date_query(schema, site_id, import_ids))))
       end)
 
-    dates = ClickhouseRepo.all(from(q in query, select: q.max_date))
+    dates = ClickhouseRepo.all(from(q in query, select: q.max_date), log: false)
 
     if dates != [] do
       case Enum.max(dates, Date) do
