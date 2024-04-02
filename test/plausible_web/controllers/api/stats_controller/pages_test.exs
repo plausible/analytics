@@ -919,52 +919,24 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    test "calculates bounce rate and time on page for pages when filtered by hostname", %{
-      conn: conn,
-      site: site
-    } do
+    test "filtering by hostname, excludes a page on different hostname", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
+          timestamp: ~N[2021-01-01 05:01:00],
           pathname: "/about",
           hostname: "blog.example.com",
-          user_id: @user_id + 1,
-          timestamp: ~N[2021-01-01 00:01:00]
-        ),
-        build(:pageview,
-          pathname: "/about",
-          hostname: "example.com",
-          user_id: @user_id,
-          timestamp: ~N[2021-01-01 00:01:00]
-        ),
-        build(:pageview,
-          pathname: "/about",
-          hostname: "blog.example.com",
-          user_id: @user_id,
-          timestamp: ~N[2021-01-01 00:10:00]
-        ),
-        build(:pageview,
-          pathname: "/about",
-          hostname: "blog.example.com",
-          user_id: @user_id,
-          timestamp: ~N[2021-01-01 00:15:00]
-        ),
-        build(:pageview,
-          pathname: "/exit-blog",
-          hostname: "blog.example.com",
-          timestamp: ~N[2021-01-01 00:20:00],
           user_id: @user_id
         ),
         build(:pageview,
-          pathname: "/about",
+          timestamp: ~N[2021-01-01 05:01:02],
+          pathname: "/hello",
           hostname: "example.com",
-          timestamp: ~N[2021-01-01 00:20:00],
           user_id: @user_id
         ),
         build(:pageview,
-          pathname: "/exit",
-          hostname: "example.com",
-          timestamp: ~N[2021-01-01 00:25:00],
-          user_id: @user_id
+          timestamp: ~N[2021-01-01 05:01:02],
+          pathname: "/about",
+          hostname: "blog.example.com"
         )
       ])
 
@@ -980,8 +952,87 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                %{
                  "bounce_rate" => 50,
                  "name" => "/about",
+                 "pageviews" => 2,
+                 "time_on_page" => nil,
+                 "visitors" => 2
+               }
+             ]
+    end
+
+    test "calculates bounce rate and time on page for pages when filtered by hostname", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        # session 1
+        build(:pageview,
+          pathname: "/about-blog",
+          hostname: "blog.example.com",
+          user_id: @user_id + 1,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+
+        # session 2
+        build(:pageview,
+          pathname: "/about-blog",
+          hostname: "blog.example.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          pathname: "/about",
+          hostname: "example.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:pageview,
+          pathname: "/about-blog",
+          hostname: "blog.example.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          pathname: "/exit-blog",
+          hostname: "blog.example.com",
+          timestamp: ~N[2021-01-01 00:20:00],
+          user_id: @user_id
+        ),
+        build(:pageview,
+          pathname: "/about",
+          hostname: "example.com",
+          timestamp: ~N[2021-01-01 00:22:00],
+          user_id: @user_id
+        ),
+        build(:pageview,
+          pathname: "/exit",
+          hostname: "example.com",
+          timestamp: ~N[2021-01-01 00:25:00],
+          user_id: @user_id
+        ),
+
+        # session 3
+        build(:pageview,
+          pathname: "/about",
+          hostname: "example.com",
+          user_id: @user_id + 2,
+          timestamp: ~N[2021-01-01 00:01:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{"hostname" => "blog.example.com"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&detailed=true&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "bounce_rate" => 50,
+                 "name" => "/about-blog",
                  "pageviews" => 3,
-                 "time_on_page" => 600.0,
+                 "time_on_page" => 1140.0,
                  "visitors" => 2
                },
                %{
@@ -1366,7 +1417,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:pageview,
           pathname: "/page2",
           hostname: "es.example.com",
-          user_id: @user_id,
           timestamp: ~N[2021-01-01 23:15:00]
         )
       ])
@@ -1380,18 +1430,61 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
 
       assert json_response(conn, 200) == [
-               %{
-                 "visitors" => 1,
-                 "visits" => 1,
-                 "name" => "/page1",
-                 "visit_duration" => 0
-               },
-               %{
-                 "visitors" => 1,
-                 "visits" => 2,
-                 "name" => "/page2",
-                 "visit_duration" => 480
-               }
+               %{"name" => "/page2", "visit_duration" => 480, "visitors" => 2, "visits" => 2},
+               %{"name" => "/page1", "visit_duration" => 0, "visitors" => 1, "visits" => 1}
+             ]
+    end
+
+    test "returns top entry pages by visitors filtered by hostname with experimental_hostname_filter",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/page1",
+          hostname: "en.example.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page1",
+          hostname: "es.example.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page2",
+          hostname: "en.example.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page2",
+          hostname: "es.example.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          pathname: "/exit",
+          hostname: "es.example.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:16:00]
+        ),
+        build(:pageview,
+          pathname: "/page2",
+          hostname: "es.example.com",
+          timestamp: ~N[2021-01-01 23:15:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{"hostname" => "es.example.com"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/entry-pages?period=day&date=2021-01-01&filters=#{filters}&experimental_hostname_filter=true"
+        )
+
+      # We're going to only join sessions where the exit hostname matches the filter
+      assert json_response(conn, 200) == [
+               %{"name" => "/page1", "visit_duration" => 0, "visitors" => 1, "visits" => 1},
+               %{"name" => "/page2", "visit_duration" => 0, "visitors" => 1, "visits" => 1}
              ]
     end
 
@@ -1571,7 +1664,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         ),
         build(:pageview,
           pathname: "/exit",
-          hostname: "es.example.com",
+          hostname: "en.example.com",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:16:00]
         )
@@ -1590,6 +1683,52 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  %{"name" => "/exit", "visitors" => 1, "visits" => 1},
                  %{"name" => "/page1", "visitors" => 1, "visits" => 1}
                ]
+    end
+
+    test "returns top exit pages by visitors filtered by hostname with experimental_hostname_filter",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/page1",
+          hostname: "en.example.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page1",
+          hostname: "es.example.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page1",
+          hostname: "en.example.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page2",
+          hostname: "es.example.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          pathname: "/exit",
+          hostname: "en.example.com",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:16:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{hostname: "es.example.com"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01&filters=#{filters}&experimental_hostname_filter=true"
+        )
+
+      # We're going to only join sessions where the entry hostname matches the filter
+      assert json_response(conn, 200) ==
+               [%{"name" => "/page1", "visitors" => 1, "visits" => 1}]
     end
 
     test "returns top exit pages filtered by custom pageview props", %{conn: conn, site: site} do
