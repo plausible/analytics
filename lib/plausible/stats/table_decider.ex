@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.TableDecider do
   import Enum, only: [empty?: 1]
 
-  alias Plausible.Stats.{Query, Filters}
+  alias Plausible.Stats.Query
 
   def events_join_sessions?(query) do
     Enum.any?(query.filters, &(filters_partitioner(query, &1) == :session))

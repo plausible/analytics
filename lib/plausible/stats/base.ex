@@ -120,9 +120,12 @@ defmodule Plausible.Stats.Base do
       )
 
     # :TODO: Maybe check if joined
-    if query.experimental_reduced_joins? do
-      q = filter_by_visit_props(q, query)
-    end
+    q =
+      if query.experimental_reduced_joins? do
+        filter_by_visit_props(q, query)
+      else
+        q
+      end
 
     q
   end
