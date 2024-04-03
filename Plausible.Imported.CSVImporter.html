@@ -229,7 +229,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">date_range(uploads)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/csv_importer.ex#L112" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/csv_importer.ex#L120" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -246,13 +246,13 @@ Pages
 
       </div>
 
-<p>Extracts min/max date range from a list of uploads.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">date_range</span><span class="p" data-group-id="8774550379-1">(</span><span class="p" data-group-id="8774550379-2">[</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="p" data-group-id="8774550379-3">%{</span><span class="s">&quot;filename&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;imported_devices_20190101_20210101.csv&quot;</span><span class="p" data-group-id="8774550379-3">}</span><span class="p">,</span><span class="w">
+<p>Extracts min/max date range from a list of uploads.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">date_range</span><span class="p" data-group-id="7132584846-1">(</span><span class="p" data-group-id="7132584846-2">[</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="p" data-group-id="7132584846-3">%{</span><span class="s">&quot;filename&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;imported_devices_20190101_20210101.csv&quot;</span><span class="p" data-group-id="7132584846-3">}</span><span class="p">,</span><span class="w">
 </span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="s">&quot;imported_pages_20200101_20220101.csv&quot;</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="p" data-group-id="8774550379-2">]</span><span class="p" data-group-id="8774550379-1">)</span><span class="w">
-</span><span class="nc">Date</span><span class="o">.</span><span class="n">range</span><span class="p" data-group-id="8774550379-4">(</span><span class="ld">~D[2019-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2022-01-01]</span><span class="p" data-group-id="8774550379-4">)</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="p" data-group-id="7132584846-2">]</span><span class="p" data-group-id="7132584846-1">)</span><span class="w">
+</span><span class="nc">Date</span><span class="o">.</span><span class="n">range</span><span class="p" data-group-id="7132584846-4">(</span><span class="ld">~D[2019-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2022-01-01]</span><span class="p" data-group-id="7132584846-4">)</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">date_range</span><span class="p" data-group-id="8774550379-5">(</span><span class="p" data-group-id="8774550379-6">[</span><span class="p" data-group-id="8774550379-6">]</span><span class="p" data-group-id="8774550379-5">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">date_range</span><span class="p" data-group-id="7132584846-5">(</span><span class="p" data-group-id="7132584846-6">[</span><span class="p" data-group-id="7132584846-6">]</span><span class="p" data-group-id="7132584846-5">)</span><span class="w">
 </span><span class="no">nil</span></code></pre>
   </section>
 </section>
@@ -265,7 +265,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">extract_table(filename)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/csv_importer.ex#L216" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/csv_importer.ex#L224" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -281,10 +281,10 @@ Pages
 
       </div>
 
-<p>Extracts the table name from the provided filename.</p><p>Raises if the filename doesn't conform to the expected format.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">extract_table</span><span class="p" data-group-id="0069245680-1">(</span><span class="s">&quot;my_data.csv&quot;</span><span class="p" data-group-id="0069245680-1">)</span><span class="w">
+<p>Extracts the table name from the provided filename.</p><p>Raises if the filename doesn't conform to the expected format.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">extract_table</span><span class="p" data-group-id="9359723859-1">(</span><span class="s">&quot;my_data.csv&quot;</span><span class="p" data-group-id="9359723859-1">)</span><span class="w">
 </span><span class="gt">** (ArgumentError) invalid filename</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">extract_table</span><span class="p" data-group-id="0069245680-2">(</span><span class="s">&quot;imported_devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="0069245680-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">extract_table</span><span class="p" data-group-id="9359723859-2">(</span><span class="s">&quot;imported_devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="9359723859-2">)</span><span class="w">
 </span><span class="s">&quot;imported_devices&quot;</span></code></pre>
   </section>
 </section>
@@ -326,7 +326,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">parse_filename!(filename)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/csv_importer.ex#L162" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/csv_importer.ex#L170" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -343,11 +343,11 @@ Pages
 
       </div>
 
-<p>Extracts table name and min/max dates from the filename.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="2307445643-1">(</span><span class="s">&quot;my_data.csv&quot;</span><span class="p" data-group-id="2307445643-1">)</span><span class="w">
+<p>Extracts table name and min/max dates from the filename.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="1705112399-1">(</span><span class="s">&quot;my_data.csv&quot;</span><span class="p" data-group-id="1705112399-1">)</span><span class="w">
 </span><span class="gt">** (ArgumentError) invalid filename</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="2307445643-2">(</span><span class="s">&quot;imported_devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="2307445643-2">)</span><span class="w">
-</span><span class="p" data-group-id="2307445643-3">{</span><span class="s">&quot;imported_devices&quot;</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[0001-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2025-01-01]</span><span class="p" data-group-id="2307445643-3">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="1705112399-2">(</span><span class="s">&quot;imported_devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="1705112399-2">)</span><span class="w">
+</span><span class="p" data-group-id="1705112399-3">{</span><span class="s">&quot;imported_devices&quot;</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[0001-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2025-01-01]</span><span class="p" data-group-id="1705112399-3">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="valid_filename?/1">
@@ -359,7 +359,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">valid_filename?(filename)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/csv_importer.ex#L191" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/csv_importer.ex#L199" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -375,10 +375,10 @@ Pages
 
       </div>
 
-<p>Checks if the provided filename conforms to the expected format.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">valid_filename?</span><span class="p" data-group-id="3922669807-1">(</span><span class="s">&quot;my_data.csv&quot;</span><span class="p" data-group-id="3922669807-1">)</span><span class="w">
+<p>Checks if the provided filename conforms to the expected format.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">valid_filename?</span><span class="p" data-group-id="2599116336-1">(</span><span class="s">&quot;my_data.csv&quot;</span><span class="p" data-group-id="2599116336-1">)</span><span class="w">
 </span><span class="no">false</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">valid_filename?</span><span class="p" data-group-id="3922669807-2">(</span><span class="s">&quot;imported_devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="3922669807-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">valid_filename?</span><span class="p" data-group-id="2599116336-2">(</span><span class="s">&quot;imported_devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="2599116336-2">)</span><span class="w">
 </span><span class="no">true</span></code></pre>
   </section>
 </section>
