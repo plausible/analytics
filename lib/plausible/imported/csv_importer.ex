@@ -43,17 +43,9 @@ defmodule Plausible.Imported.CSVImporter do
       {table, _, _} = parse_filename!(filename)
       s3_structure = input_structure!(table)
 
-      s3_structure_cols_expr =
-        String.split(s3_structure, ",", trim: true)
-        |> Enum.map(fn kv ->
-          [col, _type] = String.split(kv)
-          col
-        end)
-        |> Enum.join(", ")
-
       statement =
         """
-        INSERT INTO {table:Identifier}(site_id, #{s3_structure_cols_expr}, import_id) \
+        INSERT INTO {table:Identifier} \
         SELECT {site_id:UInt64} AS site_id, *, {import_id:UInt64} AS import_id \
         FROM s3({s3_url:String},{s3_access_key_id:String},{s3_secret_access_key:String},{s3_format:String},{s3_structure:String}) \
         WHERE date >= {start_date:Date} AND date <= {end_date:Date}\
