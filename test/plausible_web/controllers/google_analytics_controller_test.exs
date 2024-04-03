@@ -753,6 +753,46 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
       )
     end
 
+    test "does not start another import when there's any other in progress for the same site", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      {:ok, job} =
+        Plausible.Imported.NoopImporter.new_import(site, user,
+          start_date: ~D[2020-01-02],
+          end_date: ~D[2021-10-11]
+        )
+
+      post(conn, "/#{site.domain}/settings/google-import", %{
+        "property_or_view" => "properties/123456",
+        "start_date" => "2018-03-01",
+        "end_date" => "2022-03-01",
+        "access_token" => "token",
+        "refresh_token" => "foo",
+        "expires_at" => "2022-09-22T20:01:37.112777",
+        "legacy" => "false"
+      })
+
+      conn =
+        post(conn, "/#{site.domain}/settings/google-import", %{
+          "property_or_view" => "123456",
+          "start_date" => "2018-03-01",
+          "end_date" => "2022-03-01",
+          "access_token" => "token",
+          "refresh_token" => "foo",
+          "expires_at" => "2022-09-22T20:01:37.112777",
+          "legacy" => "true"
+        })
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "There's another import still in progress."
+
+      assert [%{id: import_id, legacy: false}] = Plausible.Imported.list_all_imports(site)
+
+      assert job.args.import_id == import_id
+    end
+
     for {legacy, view} <- [{"true", :settings_integrations}, {"false", :settings_imports_exports}] do
       test "redirects to #{view} with no time window error flash error (legacy: #{legacy})", %{
         conn: conn,

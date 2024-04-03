@@ -83,6 +83,16 @@ defmodule Plausible.Imported do
     end
   end
 
+  @spec other_imports_in_progress?(SiteImport.t()) :: boolean()
+  def other_imports_in_progress?(site_import) do
+    Repo.exists?(
+      from(i in SiteImport,
+        where: i.site_id == ^site_import.site_id and i.id != ^site_import.id,
+        where: i.status in ^[SiteImport.pending(), SiteImport.importing()]
+      )
+    )
+  end
+
   defp maybe_filter_by_status(query, nil), do: query
 
   defp maybe_filter_by_status(query, status) do

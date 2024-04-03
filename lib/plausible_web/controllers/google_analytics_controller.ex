@@ -265,41 +265,23 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         Routes.site_path(conn, :settings_imports_exports, site.domain)
       end
 
-    case Imported.check_dates(site, start_date, end_date) do
-      {:ok, start_date, end_date} ->
-        if Google.API.property?(property_or_view) do
-          {:ok, _} =
-            Imported.GoogleAnalytics4.new_import(
-              site,
-              current_user,
-              property: property_or_view,
-              label: property_or_view,
-              start_date: start_date,
-              end_date: end_date,
-              access_token: access_token,
-              refresh_token: refresh_token,
-              token_expires_at: expires_at
-            )
-        else
-          {:ok, _} =
-            Imported.UniversalAnalytics.new_import(
-              site,
-              current_user,
-              view_id: property_or_view,
-              label: property_or_view,
-              start_date: start_date,
-              end_date: end_date,
-              access_token: access_token,
-              refresh_token: refresh_token,
-              token_expires_at: expires_at,
-              legacy: legacy == "true"
-            )
-        end
+    import_opts = [
+      label: property_or_view,
+      start_date: start_date,
+      end_date: end_date,
+      access_token: access_token,
+      refresh_token: refresh_token,
+      token_expires_at: expires_at,
+      legacy: legacy == "true"
+    ]
 
-        conn
-        |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
-        |> redirect(external: redirect_route)
-
+    with {:ok, start_date, end_date} <- Imported.check_dates(site, start_date, end_date),
+         import_opts = [{:start_date, start_date}, {:end_date, end_date} | import_opts],
+         {:ok, _} <- schedule_job(site, current_user, property_or_view, import_opts) do
+      conn
+      |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
+      |> redirect(external: redirect_route)
+    else
       {:error, :no_time_window} ->
         conn
         |> put_flash(
@@ -307,6 +289,34 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           "Import failed. No data could be imported because date range overlaps with existing data."
         )
         |> redirect(external: redirect_route)
+
+      {:error, :import_in_progress} ->
+        conn
+        |> put_flash(
+          :error,
+          "There's another import still in progress. Please wait until it's completed or cancel it before starting a new one."
+        )
+        |> redirect(external: redirect_route)
     end
+  end
+
+  defp schedule_job(site, current_user, property_or_view, opts) do
+    property? = Google.API.property?(property_or_view)
+
+    importer_fun =
+      if property? do
+        &Imported.GoogleAnalytics4.new_import/3
+      else
+        &Imported.UniversalAnalytics.new_import/3
+      end
+
+    opts =
+      if property? do
+        Keyword.put(opts, :property, property_or_view)
+      else
+        Keyword.put(opts, :view_id, property_or_view)
+      end
+
+    importer_fun.(site, current_user, opts)
   end
 end
