@@ -14,8 +14,8 @@ defmodule Plausible.Stats.TableDecider do
 
   def partition_metrics(metrics, query, breakdown_property \\ nil) do
     %{
-      event: event_metrics,
-      session: session_metrics,
+      event: event_only_metrics,
+      session: session_only_metrics,
       either: either_metrics,
       other: other_metrics,
       sample_percent: sample_percent
@@ -30,28 +30,28 @@ defmodule Plausible.Stats.TableDecider do
         query.filters
       end
 
-    %{event: event_filters, session: session_filters} =
+    %{event: event_only_filters, session: session_only_filters} =
       partition(filters, query, &filters_partitioner/2)
 
     cond do
       # Only one table needs to be queried
-      empty?(event_metrics) && empty?(event_filters) ->
-        {[], session_metrics ++ either_metrics ++ sample_percent, other_metrics}
+      empty?(event_only_metrics) && empty?(event_only_filters) ->
+        {[], session_only_metrics ++ either_metrics ++ sample_percent, other_metrics}
 
-      empty?(session_metrics) && empty?(session_filters) ->
-        {event_metrics ++ either_metrics ++ sample_percent, [], other_metrics}
+      empty?(session_only_metrics) && empty?(session_only_filters) ->
+        {event_only_metrics ++ either_metrics ++ sample_percent, [], other_metrics}
 
       # Filters on both events and sessions, but only one kind of metric
-      empty?(event_metrics) ->
-        {[], session_metrics ++ either_metrics ++ sample_percent, other_metrics}
+      empty?(event_only_metrics) ->
+        {[], session_only_metrics ++ either_metrics ++ sample_percent, other_metrics}
 
-      empty?(session_metrics) ->
-        {event_metrics ++ either_metrics ++ sample_percent, [], other_metrics}
+      empty?(session_only_metrics) ->
+        {event_only_metrics ++ either_metrics ++ sample_percent, [], other_metrics}
 
       # Default: prefer sessions
       true ->
-        {event_metrics ++ sample_percent, session_metrics ++ either_metrics ++ sample_percent,
-         other_metrics}
+        {event_only_metrics ++ sample_percent,
+         session_only_metrics ++ either_metrics ++ sample_percent, other_metrics}
     end
   end
 
