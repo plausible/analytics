@@ -118,51 +118,27 @@ defmodule Plausible.Exports do
     end
   end
 
+  defmacrop pageviews(t) do
+    quote do
+      selected_as(
+        fragment("greatest(sum(?*?),0)", unquote(t).sign, unquote(t).pageviews),
+        :pageviews
+      )
+    end
+  end
+
   @spec export_visitors_q(pos_integer) :: Ecto.Query.t()
   def export_visitors_q(site_id) do
-    visitors_sessions_q =
-      from s in sampled("sessions_v2"),
-        where: s.site_id == ^site_id,
-        group_by: selected_as(:date),
-        select: %{
-          date: date(s.start),
-          bounces: bounces(s),
-          visits: visits(s),
-          visit_duration: visit_duration(s)
-          # NOTE: can we use just sessions_v2 table in this query? sum(pageviews) and visitors(s)?
-          # visitors: visitors(s)
-        }
-
-    visitors_events_q =
-      from e in sampled("events_v2"),
-        where: e.site_id == ^site_id,
-        group_by: selected_as(:date),
-        select: %{
-          date: date(e.timestamp),
-          visitors: visitors(e),
-          pageviews:
-            selected_as(
-              fragment("toUInt64(round(countIf(?='pageview')*any(_sample_factor)))", e.name),
-              :pageviews
-            )
-        }
-
-    visitors_q =
-      "e"
-      |> with_cte("e", as: ^visitors_events_q)
-      |> with_cte("s", as: ^visitors_sessions_q)
-
-    from e in visitors_q,
-      full_join: s in "s",
-      on: e.date == s.date,
-      order_by: selected_as(:date),
+    from s in sampled("sessions_v2"),
+      where: s.site_id == ^site_id,
+      group_by: selected_as(:date),
       select: [
-        selected_as(fragment("greatest(?,?)", s.date, e.date), :date),
-        e.visitors,
-        e.pageviews,
-        s.bounces,
-        s.visits,
-        s.visit_duration
+        date(s.start),
+        visitors(s),
+        pageviews(s),
+        bounces(s),
+        visits(s),
+        visit_duration(s)
       ]
   end
 
@@ -173,6 +149,8 @@ defmodule Plausible.Exports do
       group_by: [
         selected_as(:date),
         selected_as(:source),
+        s.referrer,
+        s.utm_source,
         s.utm_medium,
         s.utm_campaign,
         s.utm_content,
@@ -182,10 +160,13 @@ defmodule Plausible.Exports do
       select: [
         date(s.start),
         selected_as(s.referrer_source, :source),
+        s.referrer,
+        s.utm_source,
         s.utm_medium,
         s.utm_campaign,
         s.utm_content,
         s.utm_term,
+        pageviews(s),
         visitors(s),
         visits(s),
         visit_duration(s),
@@ -210,6 +191,7 @@ defmodule Plausible.Exports do
           hostname: e.hostname,
           name: e.name,
           user_id: e.user_id,
+          session_id: e.session_id,
           _sample_factor: fragment("_sample_factor")
         }
 
@@ -220,6 +202,7 @@ defmodule Plausible.Exports do
         date(e.timestamp),
         selected_as(fragment("any(?)", e.hostname), :hostname),
         selected_as(e.pathname, :page),
+        selected_as(fragment("uniq(?) * any(_sample_factor)", e.session_id), :visits),
         visitors(e),
         selected_as(
           fragment("toUInt64(round(countIf(?='pageview')*any(_sample_factor)))", e.name),
@@ -252,7 +235,8 @@ defmodule Plausible.Exports do
           :entrances
         ),
         visit_duration(s),
-        bounces(s)
+        bounces(s),
+        pageviews(s)
       ]
   end
 
@@ -266,10 +250,13 @@ defmodule Plausible.Exports do
         date(s.start),
         s.exit_page,
         visitors(s),
+        visit_duration(s),
         selected_as(
           fragment("toUInt64(round(sum(?)*any(_sample_factor)))", s.sign),
           :exits
-        )
+        ),
+        bounces(s),
+        pageviews(s)
       ]
   end
 
@@ -288,7 +275,8 @@ defmodule Plausible.Exports do
         visitors(s),
         visits(s),
         visit_duration(s),
-        bounces(s)
+        bounces(s),
+        pageviews(s)
       ]
   end
 
@@ -304,7 +292,8 @@ defmodule Plausible.Exports do
         visitors(s),
         visits(s),
         visit_duration(s),
-        bounces(s)
+        bounces(s),
+        pageviews(s)
       ]
   end
 
@@ -312,15 +301,17 @@ defmodule Plausible.Exports do
   def export_browsers_q(site_id) do
     from s in sampled("sessions_v2"),
       where: s.site_id == ^site_id,
-      group_by: [selected_as(:date), s.browser],
+      group_by: [selected_as(:date), s.browser, s.browser_version],
       order_by: selected_as(:date),
       select: [
         date(s.start),
         s.browser,
+        s.browser_version,
         visitors(s),
         visits(s),
         visit_duration(s),
-        bounces(s)
+        bounces(s),
+        pageviews(s)
       ]
   end
 
@@ -328,15 +319,17 @@ defmodule Plausible.Exports do
   def export_operating_systems_q(site_id) do
     from s in sampled("sessions_v2"),
       where: s.site_id == ^site_id,
-      group_by: [selected_as(:date), s.operating_system],
+      group_by: [selected_as(:date), s.operating_system, s.operating_system_version],
       order_by: selected_as(:date),
       select: [
         date(s.start),
         s.operating_system,
+        s.operating_system_version,
         visitors(s),
         visits(s),
         visit_duration(s),
-        bounces(s)
+        bounces(s),
+        pageviews(s)
       ]
   end
 
