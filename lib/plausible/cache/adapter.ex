@@ -36,9 +36,7 @@ defmodule Plausible.Cache.Adapter do
 
   @spec get(atom(), any()) :: any()
   def get(cache_name, key) do
-    result = ConCache.get(cache_name, key)
-    if is_nil(result), do: miss(cache_name), else: hit(cache_name)
-    result
+    ConCache.get(cache_name, key)
   catch
     :exit, _ ->
       Logger.error("Error retrieving key from '#{inspect(cache_name)}'")
@@ -47,16 +45,7 @@ defmodule Plausible.Cache.Adapter do
 
   @spec get(atom(), any(), (-> any())) :: any()
   def get(cache_name, key, fallback_fn) do
-    cache = ConCache.Owner.cache(cache_name)
-
-    case ConCache.Operations.get(cache, key) do
-      nil ->
-        get_or_store_isolated(cache, cache_name, key, fallback_fn)
-
-      value ->
-        hit(cache_name)
-        value
-    end
+    ConCache.get_or_store(cache_name, key, fallback_fn)
   catch
     :exit, _ ->
       Logger.error("Error retrieving key from '#{inspect(cache_name)}'")
@@ -108,29 +97,5 @@ defmodule Plausible.Cache.Adapter do
     :exit, _ ->
       Logger.error("Error retrieving key from '#{inspect(cache_name)}'")
       []
-  end
-
-  defp hit(cache_name) do
-    Plausible.Cache.Stats.record_hit(cache_name)
-  end
-
-  defp miss(cache_name) do
-    Plausible.Cache.Stats.record_miss(cache_name)
-  end
-
-  defp get_or_store_isolated(cache, cache_name, key, fun) do
-    ConCache.isolated(cache_name, key, fn ->
-      case ConCache.Operations.get(cache, key) do
-        nil ->
-          new_value = fun.()
-          ConCache.Operations.dirty_put(cache, key, new_value)
-          miss(cache_name)
-          new_value
-
-        existing ->
-          hit(cache_name)
-          existing
-      end
-    end)
   end
 end
