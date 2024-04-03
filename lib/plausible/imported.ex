@@ -62,9 +62,9 @@ defmodule Plausible.Imported do
     }
   end
 
-  @spec get_import(non_neg_integer()) :: SiteImport.t() | nil
-  def get_import(import_id) do
-    Repo.get(SiteImport, import_id)
+  @spec get_import(Site.t(), non_neg_integer()) :: SiteImport.t() | nil
+  def get_import(site, import_id) do
+    Repo.get_by(SiteImport, id: import_id, site_id: site.id)
   end
 
   defdelegate listen(), to: Imported.Importer

@@ -43,7 +43,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
           token_expires_at: DateTime.to_iso8601(past)
         )
 
-      site_import = Plausible.Imported.get_import(job.args.import_id)
+      site_import = Plausible.Imported.get_import(site, job.args.import_id)
 
       assert site_import.label == "properties/123456"
 
