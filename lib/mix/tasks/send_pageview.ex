@@ -100,7 +100,6 @@ defmodule Mix.Tasks.SendPageview do
     %{
       name: event,
       url: "http://#{hostname}#{page}",
-      
       domain: domain,
       referrer: referrer,
       props: props,
