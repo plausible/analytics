@@ -22,7 +22,6 @@ defmodule Plausible.Stats.Aggregate do
 
     event_task = fn -> aggregate_events(site, query, event_metrics) end
 
-    # session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
     session_task = fn -> aggregate_sessions(site, query, session_metrics) end
 
     time_on_page_task =

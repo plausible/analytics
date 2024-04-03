@@ -21,13 +21,8 @@ defmodule Plausible.Stats.Timeseries do
   def timeseries(site, query, metrics) do
     steps = buckets(query)
 
-    # event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
-    # session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
-
     {event_metrics, session_metrics, _} =
       Plausible.Stats.TableDecider.partition_metrics(metrics, query)
-
-    # IO.inspect(t: "timeseries", event_metrics: event_metrics, session_metrics: session_metrics)
 
     {currency, event_metrics} =
       on_full_build do
