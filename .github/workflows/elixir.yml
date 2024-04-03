@@ -21,14 +21,15 @@ jobs:
       matrix:
         mix_env: ['test', 'small_test']
         postgres_image: ['postgres:16']
-        test_experimental_reduced_joins: '0'
-      include:
-        - mix_env: 'test'
-          postgres_image: 'postgres:15'
-          test_experimental_reduced_joins: '0'
-        - mix_env: 'test'
-          postgres_image: 'postgres:16'
-          test_experimental_reduced_joins: '1'
+        test_experimental_reduced_joins: ['0']
+
+        include:
+          - mix_env: 'test'
+            postgres_image: 'postgres:15'
+            test_experimental_reduced_joins: '0'
+          - mix_env: 'test'
+            postgres_image: 'postgres:16'
+            test_experimental_reduced_joins: '1'
 
     env:
       MIX_ENV: ${{ matrix.mix_env }}
