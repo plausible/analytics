@@ -83,10 +83,7 @@ defmodule Plausible.Stats.TableDecider do
 
   defp metric_partitioner(_, _), do: :either
 
-  defp filters_partitioner(_, {"event:name", _}), do: :event
-  defp filters_partitioner(_, {"event:page", _}), do: :event
-  defp filters_partitioner(_, {"event:goal", _}), do: :event
-  defp filters_partitioner(_, {"event:props:" <> _prop, _}), do: :event
+  defp filters_partitioner(_, {"event:" <> _, _}), do: :event
   defp filters_partitioner(_, {"visit:entry_page", _}), do: :session
   defp filters_partitioner(_, {"visit:exit_page", _}), do: :session
 
