@@ -44,12 +44,12 @@ defmodule Plausible.Imported.CSVImporter do
       s3_structure = input_structure!(table)
 
       s3_structure_cols_expr =
-        s3_structure
-        |> String.split(",", trim: true)
-        |> Enum.map_join(", ", fn kv ->
+        String.split(s3_structure, ",", trim: true)
+        |> Enum.map(fn kv ->
           [col, _type] = String.split(kv)
           col
         end)
+        |> Enum.join(", ")
 
       statement =
         """
