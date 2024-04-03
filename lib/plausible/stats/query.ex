@@ -264,8 +264,8 @@ defmodule Plausible.Stats.Query do
   @spec include_imported?(t(), Plausible.Site.t(), boolean()) :: boolean()
   def include_imported?(query, site, requested?) do
     cond do
-      is_nil(site.earliest_import_end_date) -> false
-      Date.after?(query.date_range.first, site.earliest_import_end_date) -> false
+      is_nil(site.latest_import_end_date) -> false
+      Date.after?(query.date_range.first, site.latest_import_end_date) -> false
       Enum.any?(query.filters) -> false
       query.period == "realtime" -> false
       true -> requested?
