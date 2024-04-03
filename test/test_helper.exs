@@ -13,3 +13,10 @@ else
   IO.puts("Test mode: FULL")
   ExUnit.configure(exclude: [:slow, :minio, :small_build_only])
 end
+
+# Temporary flag to test `experimental_reduced_joins` flag on all tests.
+if System.get_env("TEST_EXPERIMENTAL_REDUCED_JOINS") == "1" do
+  FunWithFlags.enable(:experimental_reduced_joins)
+else
+  FunWithFlags.disable(:experimental_reduced_joins)
+end
