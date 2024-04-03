@@ -34,8 +34,56 @@
           "type": "TYPE_SECONDS"
         }
       ],
-      "rowCount": 3,
+      "rowCount": 5,
       "rows": [
+        {
+          "dimensionValues": [
+            {
+              "value": "20240403"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240402"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
         {
           "dimensionValues": [
             {

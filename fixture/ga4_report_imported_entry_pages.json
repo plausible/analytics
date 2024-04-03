@@ -17,6 +17,10 @@
       },
       "metricHeaders": [
         {
+          "name": "screenPageViews",
+          "type": "TYPE_INTEGER"
+        },
+        {
           "name": "totalUsers",
           "type": "TYPE_INTEGER"
         },
@@ -33,8 +37,62 @@
           "type": "TYPE_INTEGER"
         }
       ],
-      "rowCount": 4,
+      "rowCount": 6,
       "rows": [
+        {
+          "dimensionValues": [
+            {
+              "value": "20240403"
+            },
+            {
+              "value": "/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240402"
+            },
+            {
+              "value": "/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
         {
           "dimensionValues": [
             {
@@ -45,6 +103,9 @@
             }
           ],
           "metricValues": [
+            {
+              "value": "1"
+            },
             {
               "value": "1"
             },
@@ -76,6 +137,9 @@
               "value": "2"
             },
             {
+              "value": "2"
+            },
+            {
               "value": "0"
             },
             {
@@ -93,6 +157,9 @@
             }
           ],
           "metricValues": [
+            {
+              "value": "9"
+            },
             {
               "value": "2"
             },
@@ -117,6 +184,9 @@
             }
           ],
           "metricValues": [
+            {
+              "value": "4"
+            },
             {
               "value": "1"
             },

@@ -20,6 +20,9 @@
         },
         {
           "name": "sessionGoogleAdsKeyword"
+        },
+        {
+          "name": "pageReferrer"
         }
       ],
       "kind": "analyticsData#runReport",
@@ -28,6 +31,10 @@
         "timeZone": "Europe/Warsaw"
       },
       "metricHeaders": [
+        {
+          "name": "screenPageViews",
+          "type": "TYPE_INTEGER"
+        },
         {
           "name": "totalUsers",
           "type": "TYPE_INTEGER"
@@ -45,8 +52,92 @@
           "type": "TYPE_SECONDS"
         }
       ],
-      "rowCount": 3,
+      "rowCount": 8,
       "rows": [
+        {
+          "dimensionValues": [
+            {
+              "value": "20240403"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240402"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
         {
           "dimensionValues": [
             {
@@ -66,9 +157,15 @@
             },
             {
               "value": "(not set)"
+            },
+            {
+              "value": ""
             }
           ],
           "metricValues": [
+            {
+              "value": "1"
+            },
             {
               "value": "1"
             },
@@ -102,9 +199,15 @@
             },
             {
               "value": "(not set)"
+            },
+            {
+              "value": ""
             }
           ],
           "metricValues": [
+            {
+              "value": "2"
+            },
             {
               "value": "2"
             },
@@ -138,9 +241,15 @@
             },
             {
               "value": "(not set)"
+            },
+            {
+              "value": ""
             }
           ],
           "metricValues": [
+            {
+              "value": "7"
+            },
             {
               "value": "3"
             },
@@ -151,7 +260,133 @@
               "value": "0"
             },
             {
-              "value": "29"
+              "value": "11"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "https://drawer.todo.computer/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "17"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "https://drawer.todo.computer/blog/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "https://drawer.todo.computer/blog/unicode-in-elixir/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "1"
             }
           ]
         }

@@ -28,12 +28,70 @@
           "type": "TYPE_INTEGER"
         },
         {
+          "name": "sessions",
+          "type": "TYPE_INTEGER"
+        },
+        {
           "name": "userEngagementDuration",
           "type": "TYPE_SECONDS"
         }
       ],
-      "rowCount": 8,
+      "rowCount": 10,
       "rows": [
+        {
+          "dimensionValues": [
+            {
+              "value": "20240403"
+            },
+            {
+              "value": "drawer.todo.computer"
+            },
+            {
+              "value": "/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240402"
+            },
+            {
+              "value": "drawer-4l3.pages.dev"
+            },
+            {
+              "value": "/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
         {
           "dimensionValues": [
             {
@@ -47,6 +105,9 @@
             }
           ],
           "metricValues": [
+            {
+              "value": "1"
+            },
             {
               "value": "1"
             },
@@ -78,6 +139,9 @@
               "value": "1"
             },
             {
+              "value": "1"
+            },
+            {
               "value": "0"
             }
           ]
@@ -95,6 +159,9 @@
             }
           ],
           "metricValues": [
+            {
+              "value": "1"
+            },
             {
               "value": "1"
             },
@@ -126,6 +193,9 @@
               "value": "3"
             },
             {
+              "value": "3"
+            },
+            {
               "value": "7"
             }
           ]
@@ -150,6 +220,9 @@
               "value": "7"
             },
             {
+              "value": "3"
+            },
+            {
               "value": "21"
             }
           ]
@@ -167,6 +240,9 @@
             }
           ],
           "metricValues": [
+            {
+              "value": "1"
+            },
             {
               "value": "1"
             },
@@ -199,6 +275,9 @@
             },
             {
               "value": "1"
+            },
+            {
+              "value": "1"
             }
           ]
         },
@@ -215,6 +294,9 @@
             }
           ],
           "metricValues": [
+            {
+              "value": "1"
+            },
             {
               "value": "1"
             },
