@@ -1,4 +1,9 @@
 defmodule Plausible.Stats.TableDecider do
+  @moduledoc """
+  This module contains logic for deciding which tables need to be queried given a query
+  and metrics, with the purpose of reducing the number of queries and JOINs needed to perform.
+  """
+
   import Enum, only: [empty?: 1]
 
   alias Plausible.Stats.Query
