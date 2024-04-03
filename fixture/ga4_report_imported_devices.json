@@ -13,7 +13,7 @@
       "kind": "analyticsData#runReport",
       "metadata": {
         "currencyCode": "USD",
-        "timeZone": "Europe/Warsaw"
+        "timeZone": "Europe/Amsterdam"
       },
       "metricHeaders": [
         {
@@ -37,66 +37,12 @@
           "type": "TYPE_SECONDS"
         }
       ],
-      "rowCount": 6,
+      "rowCount": 93,
       "rows": [
         {
           "dimensionValues": [
             {
-              "value": "20240403"
-            },
-            {
-              "value": "desktop"
-            }
-          ],
-          "metricValues": [
-            {
-              "value": "1"
-            },
-            {
-              "value": "1"
-            },
-            {
-              "value": "1"
-            },
-            {
-              "value": "1"
-            },
-            {
-              "value": "0"
-            }
-          ]
-        },
-        {
-          "dimensionValues": [
-            {
-              "value": "20240402"
-            },
-            {
-              "value": "desktop"
-            }
-          ],
-          "metricValues": [
-            {
-              "value": "1"
-            },
-            {
-              "value": "1"
-            },
-            {
-              "value": "1"
-            },
-            {
-              "value": "1"
-            },
-            {
-              "value": "0"
-            }
-          ]
-        },
-        {
-          "dimensionValues": [
-            {
-              "value": "20240226"
+              "value": "20240131"
             },
             {
               "value": "mobile"
@@ -104,26 +50,26 @@
           ],
           "metricValues": [
             {
-              "value": "1"
+              "value": "175"
             },
             {
-              "value": "1"
+              "value": "123"
             },
             {
-              "value": "1"
+              "value": "128"
             },
             {
-              "value": "1"
+              "value": "51"
             },
             {
-              "value": "0"
+              "value": "4286"
             }
           ]
         },
         {
           "dimensionValues": [
             {
-              "value": "20240224"
+              "value": "20240131"
             },
             {
               "value": "desktop"
@@ -131,37 +77,2224 @@
           ],
           "metricValues": [
             {
-              "value": "2"
+              "value": "17"
             },
             {
-              "value": "2"
+              "value": "15"
             },
             {
-              "value": "2"
+              "value": "15"
             },
             {
-              "value": "2"
+              "value": "3"
             },
             {
-              "value": "0"
+              "value": "516"
             }
           ]
         },
         {
           "dimensionValues": [
             {
-              "value": "20240222"
+              "value": "20240131"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "13"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "149"
+            },
+            {
+              "value": "97"
+            },
+            {
+              "value": "97"
+            },
+            {
+              "value": "37"
+            },
+            {
+              "value": "2916"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
             },
             {
               "value": "desktop"
             }
           ],
           "metricValues": [
+            {
+              "value": "19"
+            },
+            {
+              "value": "15"
+            },
+            {
+              "value": "15"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "464"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "101"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "113"
+            },
+            {
+              "value": "82"
+            },
+            {
+              "value": "86"
+            },
+            {
+              "value": "40"
+            },
+            {
+              "value": "2325"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "34"
+            },
+            {
+              "value": "19"
+            },
+            {
+              "value": "23"
+            },
+            {
+              "value": "13"
+            },
+            {
+              "value": "554"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "16"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "232"
+            },
+            {
+              "value": "167"
+            },
+            {
+              "value": "173"
+            },
+            {
+              "value": "67"
+            },
+            {
+              "value": "5963"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "24"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "642"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "256"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "186"
+            },
+            {
+              "value": "140"
+            },
+            {
+              "value": "142"
+            },
+            {
+              "value": "61"
+            },
+            {
+              "value": "3738"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "12"
+            },
             {
               "value": "11"
             },
             {
+              "value": "12"
+            },
+            {
               "value": "2"
+            },
+            {
+              "value": "1515"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "6"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "159"
+            },
+            {
+              "value": "110"
+            },
+            {
+              "value": "119"
+            },
+            {
+              "value": "47"
+            },
+            {
+              "value": "3948"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "25"
+            },
+            {
+              "value": "18"
+            },
+            {
+              "value": "19"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "1368"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "229"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "180"
+            },
+            {
+              "value": "127"
+            },
+            {
+              "value": "131"
+            },
+            {
+              "value": "62"
+            },
+            {
+              "value": "3652"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "37"
+            },
+            {
+              "value": "21"
+            },
+            {
+              "value": "21"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "1500"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "12"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "213"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "183"
+            },
+            {
+              "value": "119"
+            },
+            {
+              "value": "128"
+            },
+            {
+              "value": "55"
+            },
+            {
+              "value": "3609"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "35"
+            },
+            {
+              "value": "15"
+            },
+            {
+              "value": "17"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "781"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "64"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "226"
+            },
+            {
+              "value": "142"
+            },
+            {
+              "value": "146"
+            },
+            {
+              "value": "52"
+            },
+            {
+              "value": "4415"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "38"
+            },
+            {
+              "value": "22"
+            },
+            {
+              "value": "23"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "422"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "13"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "190"
+            },
+            {
+              "value": "140"
+            },
+            {
+              "value": "142"
+            },
+            {
+              "value": "63"
+            },
+            {
+              "value": "3871"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "27"
+            },
+            {
+              "value": "16"
+            },
+            {
+              "value": "17"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "828"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "16"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "172"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "370"
+            },
+            {
+              "value": "235"
+            },
+            {
+              "value": "242"
+            },
+            {
+              "value": "100"
+            },
+            {
+              "value": "8146"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "24"
+            },
+            {
+              "value": "18"
+            },
+            {
+              "value": "24"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "685"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "14"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "353"
+            },
+            {
+              "value": "197"
+            },
+            {
+              "value": "205"
+            },
+            {
+              "value": "95"
+            },
+            {
+              "value": "6141"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "29"
+            },
+            {
+              "value": "16"
+            },
+            {
+              "value": "17"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "773"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5293"
+            },
+            {
+              "value": "202"
+            },
+            {
+              "value": "40"
+            },
+            {
+              "value": "15"
+            },
+            {
+              "value": "93328"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "277"
+            },
+            {
+              "value": "178"
+            },
+            {
+              "value": "187"
+            },
+            {
+              "value": "85"
+            },
+            {
+              "value": "5160"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "61"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "241"
+            },
+            {
+              "value": "156"
+            },
+            {
+              "value": "164"
+            },
+            {
+              "value": "75"
+            },
+            {
+              "value": "4570"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "36"
+            },
+            {
+              "value": "20"
+            },
+            {
+              "value": "21"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "983"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "242"
+            },
+            {
+              "value": "180"
+            },
+            {
+              "value": "191"
+            },
+            {
+              "value": "82"
+            },
+            {
+              "value": "6238"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "25"
+            },
+            {
+              "value": "21"
+            },
+            {
+              "value": "21"
+            },
+            {
+              "value": "12"
+            },
+            {
+              "value": "504"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "35"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "244"
+            },
+            {
+              "value": "182"
+            },
+            {
+              "value": "184"
+            },
+            {
+              "value": "61"
+            },
+            {
+              "value": "8239"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "33"
+            },
+            {
+              "value": "16"
+            },
+            {
+              "value": "17"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "945"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "197"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "275"
+            },
+            {
+              "value": "225"
+            },
+            {
+              "value": "238"
+            },
+            {
+              "value": "79"
+            },
+            {
+              "value": "9717"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "30"
+            },
+            {
+              "value": "25"
+            },
+            {
+              "value": "26"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "1668"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "980"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "280"
+            },
+            {
+              "value": "225"
+            },
+            {
+              "value": "237"
+            },
+            {
+              "value": "77"
+            },
+            {
+              "value": "10320"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "17"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "16"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "590"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "163"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "255"
+            },
+            {
+              "value": "220"
+            },
+            {
+              "value": "230"
+            },
+            {
+              "value": "89"
+            },
+            {
+              "value": "9574"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "19"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "12"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "445"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "65"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "231"
+            },
+            {
+              "value": "187"
+            },
+            {
+              "value": "197"
+            },
+            {
+              "value": "74"
+            },
+            {
+              "value": "8567"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "32"
+            },
+            {
+              "value": "26"
+            },
+            {
+              "value": "26"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1561"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "67"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "212"
+            },
+            {
+              "value": "163"
+            },
+            {
+              "value": "171"
+            },
+            {
+              "value": "58"
+            },
+            {
+              "value": "7415"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "22"
+            },
+            {
+              "value": "19"
+            },
+            {
+              "value": "19"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "741"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "44"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "202"
+            },
+            {
+              "value": "164"
+            },
+            {
+              "value": "175"
+            },
+            {
+              "value": "58"
+            },
+            {
+              "value": "6400"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "37"
+            },
+            {
+              "value": "23"
+            },
+            {
+              "value": "24"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2458"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "198"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "208"
+            },
+            {
+              "value": "169"
+            },
+            {
+              "value": "178"
+            },
+            {
+              "value": "58"
+            },
+            {
+              "value": "8482"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "79"
+            },
+            {
+              "value": "30"
+            },
+            {
+              "value": "33"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "2900"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "269"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "204"
+            },
+            {
+              "value": "170"
+            },
+            {
+              "value": "182"
+            },
+            {
+              "value": "65"
+            },
+            {
+              "value": "6056"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "25"
+            },
+            {
+              "value": "21"
+            },
+            {
+              "value": "23"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "1402"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "488"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "246"
+            },
+            {
+              "value": "191"
+            },
+            {
+              "value": "203"
+            },
+            {
+              "value": "75"
+            },
+            {
+              "value": "8711"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "24"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "12"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "1214"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "123"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "274"
+            },
+            {
+              "value": "235"
+            },
+            {
+              "value": "260"
+            },
+            {
+              "value": "111"
+            },
+            {
+              "value": "7478"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "22"
+            },
+            {
+              "value": "16"
+            },
+            {
+              "value": "16"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "835"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "7"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "127"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "238"
+            },
+            {
+              "value": "199"
+            },
+            {
+              "value": "209"
+            },
+            {
+              "value": "75"
+            },
+            {
+              "value": "7581"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "28"
+            },
+            {
+              "value": "23"
+            },
+            {
+              "value": "25"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "1518"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "212"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "230"
+            },
+            {
+              "value": "199"
+            },
+            {
+              "value": "210"
+            },
+            {
+              "value": "75"
+            },
+            {
+              "value": "9852"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "34"
+            },
+            {
+              "value": "21"
+            },
+            {
+              "value": "23"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "1272"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "10"
+            },
+            {
+              "value": "3"
             },
             {
               "value": "3"
@@ -170,14 +2303,14 @@
               "value": "0"
             },
             {
-              "value": "25"
+              "value": "927"
             }
           ]
         },
         {
           "dimensionValues": [
             {
-              "value": "20240222"
+              "value": "20240103"
             },
             {
               "value": "mobile"
@@ -185,7 +2318,142 @@
           ],
           "metricValues": [
             {
+              "value": "237"
+            },
+            {
+              "value": "203"
+            },
+            {
+              "value": "213"
+            },
+            {
+              "value": "69"
+            },
+            {
+              "value": "8451"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "37"
+            },
+            {
+              "value": "23"
+            },
+            {
+              "value": "25"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "1592"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "9"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
               "value": "2"
+            },
+            {
+              "value": "585"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "224"
+            },
+            {
+              "value": "178"
+            },
+            {
+              "value": "184"
+            },
+            {
+              "value": "51"
+            },
+            {
+              "value": "9727"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "44"
+            },
+            {
+              "value": "24"
+            },
+            {
+              "value": "25"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "1287"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
             },
             {
               "value": "1"
@@ -197,7 +2465,88 @@
               "value": "0"
             },
             {
-              "value": "4"
+              "value": "154"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "205"
+            },
+            {
+              "value": "174"
+            },
+            {
+              "value": "180"
+            },
+            {
+              "value": "65"
+            },
+            {
+              "value": "7199"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "12"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "697"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "tablet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "184"
             }
           ]
         }

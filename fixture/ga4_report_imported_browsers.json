@@ -13,7 +13,7 @@
       "kind": "analyticsData#runReport",
       "metadata": {
         "currencyCode": "USD",
-        "timeZone": "Europe/Warsaw"
+        "timeZone": "Europe/Amsterdam"
       },
       "metricHeaders": [
         {
@@ -37,12 +37,12 @@
           "type": "TYPE_SECONDS"
         }
       ],
-      "rowCount": 7,
+      "rowCount": 233,
       "rows": [
         {
           "dimensionValues": [
             {
-              "value": "20240403"
+              "value": "20240131"
             },
             {
               "value": "Chrome"
@@ -50,53 +50,26 @@
           ],
           "metricValues": [
             {
-              "value": "1"
+              "value": "124"
             },
             {
-              "value": "1"
+              "value": "92"
             },
             {
-              "value": "1"
+              "value": "94"
             },
             {
-              "value": "1"
+              "value": "27"
             },
             {
-              "value": "0"
+              "value": "3601"
             }
           ]
         },
         {
           "dimensionValues": [
             {
-              "value": "20240402"
-            },
-            {
-              "value": "Chrome"
-            }
-          ],
-          "metricValues": [
-            {
-              "value": "1"
-            },
-            {
-              "value": "1"
-            },
-            {
-              "value": "1"
-            },
-            {
-              "value": "1"
-            },
-            {
-              "value": "0"
-            }
-          ]
-        },
-        {
-          "dimensionValues": [
-            {
-              "value": "20240226"
+              "value": "20240131"
             },
             {
               "value": "Safari"
@@ -104,37 +77,61 @@
           ],
           "metricValues": [
             {
-              "value": "1"
+              "value": "34"
             },
             {
-              "value": "1"
+              "value": "27"
             },
             {
-              "value": "1"
+              "value": "30"
             },
             {
-              "value": "1"
+              "value": "20"
             },
             {
-              "value": "0"
+              "value": "323"
             }
           ]
         },
         {
           "dimensionValues": [
             {
-              "value": "20240224"
+              "value": "20240131"
             },
             {
-              "value": "Chrome"
+              "value": "Samsung Internet"
             }
           ],
           "metricValues": [
             {
-              "value": "2"
+              "value": "22"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "10"
             },
             {
               "value": "2"
+            },
+            {
+              "value": "707"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240131"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
             },
             {
               "value": "2"
@@ -144,13 +141,97 @@
             },
             {
               "value": "0"
+            },
+            {
+              "value": "100"
             }
           ]
         },
         {
           "dimensionValues": [
             {
-              "value": "20240222"
+              "value": "20240131"
+            },
+            {
+              "value": "Android Browser"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240131"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240131"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240131"
             },
             {
               "value": "Firefox"
@@ -158,13 +239,4711 @@
           ],
           "metricValues": [
             {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "46"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240131"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "38"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "127"
+            },
+            {
+              "value": "89"
+            },
+            {
+              "value": "89"
+            },
+            {
+              "value": "31"
+            },
+            {
+              "value": "2859"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "13"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "279"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "11"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "48"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "10"
+            },
+            {
               "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "138"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "70"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "83"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "114"
+            },
+            {
+              "value": "79"
+            },
+            {
+              "value": "86"
+            },
+            {
+              "value": "38"
+            },
+            {
+              "value": "2443"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "16"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "294"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "12"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "127"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "Amazon Silk"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "11"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "12"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "8"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "192"
+            },
+            {
+              "value": "136"
+            },
+            {
+              "value": "139"
+            },
+            {
+              "value": "47"
+            },
+            {
+              "value": "5974"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "42"
+            },
+            {
+              "value": "25"
+            },
+            {
+              "value": "28"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "457"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "10"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "261"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "137"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "32"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "151"
+            },
+            {
+              "value": "123"
+            },
+            {
+              "value": "126"
+            },
+            {
+              "value": "48"
+            },
+            {
+              "value": "4812"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "25"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "300"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "18"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "147"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "143"
+            },
+            {
+              "value": "98"
+            },
+            {
+              "value": "107"
+            },
+            {
+              "value": "36"
+            },
+            {
+              "value": "4840"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "19"
+            },
+            {
+              "value": "18"
+            },
+            {
+              "value": "18"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "292"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "13"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "139"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
             },
             {
               "value": "1"
             },
             {
               "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "6"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "67"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "200"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "165"
+            },
+            {
+              "value": "111"
+            },
+            {
+              "value": "112"
+            },
+            {
+              "value": "46"
+            },
+            {
+              "value": "4339"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "38"
+            },
+            {
+              "value": "19"
+            },
+            {
+              "value": "21"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "615"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "11"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "288"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "22"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "93"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "7"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "175"
+            },
+            {
+              "value": "102"
+            },
+            {
+              "value": "110"
+            },
+            {
+              "value": "41"
+            },
+            {
+              "value": "3692"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "22"
+            },
+            {
+              "value": "16"
+            },
+            {
+              "value": "18"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "425"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "13"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "205"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "15"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "103"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "11"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "198"
+            },
+            {
+              "value": "123"
+            },
+            {
+              "value": "125"
+            },
+            {
+              "value": "39"
+            },
+            {
+              "value": "3959"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "46"
+            },
+            {
+              "value": "29"
+            },
+            {
+              "value": "31"
+            },
+            {
+              "value": "16"
+            },
+            {
+              "value": "582"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "13"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "210"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "95"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "182"
+            },
+            {
+              "value": "119"
+            },
+            {
+              "value": "123"
+            },
+            {
+              "value": "50"
+            },
+            {
+              "value": "4170"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "25"
+            },
+            {
+              "value": "20"
+            },
+            {
+              "value": "20"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "249"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "18"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "383"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "46"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "23"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "309"
+            },
+            {
+              "value": "183"
+            },
+            {
+              "value": "193"
+            },
+            {
+              "value": "70"
+            },
+            {
+              "value": "7949"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "43"
+            },
+            {
+              "value": "37"
+            },
+            {
+              "value": "39"
+            },
+            {
+              "value": "24"
+            },
+            {
+              "value": "360"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "22"
+            },
+            {
+              "value": "17"
+            },
+            {
+              "value": "17"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "493"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "16"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "21"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "17"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "273"
+            },
+            {
+              "value": "165"
+            },
+            {
+              "value": "170"
+            },
+            {
+              "value": "73"
+            },
+            {
+              "value": "5450"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "49"
+            },
+            {
+              "value": "35"
+            },
+            {
+              "value": "39"
+            },
+            {
+              "value": "21"
+            },
+            {
+              "value": "815"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "48"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "584"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "10"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "17"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "31"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "15"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2396"
+            },
+            {
+              "value": "332"
+            },
+            {
+              "value": "173"
+            },
+            {
+              "value": "71"
+            },
+            {
+              "value": "42409"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1100"
+            },
+            {
+              "value": "187"
+            },
+            {
+              "value": "26"
+            },
+            {
+              "value": "16"
+            },
+            {
+              "value": "19312"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1021"
+            },
+            {
+              "value": "168"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "18188"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1019"
+            },
+            {
+              "value": "172"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "18157"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "17"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "192"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "10"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "281"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "7"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "8"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "199"
+            },
+            {
+              "value": "131"
+            },
+            {
+              "value": "136"
+            },
+            {
+              "value": "52"
+            },
+            {
+              "value": "4747"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "37"
+            },
+            {
+              "value": "24"
+            },
+            {
+              "value": "26"
+            },
+            {
+              "value": "20"
+            },
+            {
+              "value": "292"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "16"
+            },
+            {
+              "value": "12"
+            },
+            {
+              "value": "13"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "148"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "9"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "180"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "YaBrowser"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "9"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "69"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "117"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "181"
+            },
+            {
+              "value": "140"
+            },
+            {
+              "value": "145"
+            },
+            {
+              "value": "55"
+            },
+            {
+              "value": "5051"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "37"
+            },
+            {
+              "value": "18"
+            },
+            {
+              "value": "24"
+            },
+            {
+              "value": "16"
+            },
+            {
+              "value": "301"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "33"
+            },
+            {
+              "value": "30"
+            },
+            {
+              "value": "31"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "1106"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "8"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "254"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "65"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "223"
+            },
+            {
+              "value": "157"
+            },
+            {
+              "value": "160"
+            },
+            {
+              "value": "49"
+            },
+            {
+              "value": "7787"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "43"
+            },
+            {
+              "value": "32"
+            },
+            {
+              "value": "32"
+            },
+            {
+              "value": "13"
+            },
+            {
+              "value": "1493"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "89"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "12"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "240"
+            },
+            {
+              "value": "194"
+            },
+            {
+              "value": "205"
+            },
+            {
+              "value": "61"
+            },
+            {
+              "value": "8777"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "54"
+            },
+            {
+              "value": "47"
+            },
+            {
+              "value": "51"
+            },
+            {
+              "value": "21"
+            },
+            {
+              "value": "2962"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "8"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "340"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "142"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "59"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "Mozilla Compatible Agent"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "85"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "215"
+            },
+            {
+              "value": "178"
+            },
+            {
+              "value": "187"
+            },
+            {
+              "value": "53"
+            },
+            {
+              "value": "8889"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "56"
+            },
+            {
+              "value": "40"
+            },
+            {
+              "value": "44"
+            },
+            {
+              "value": "19"
+            },
+            {
+              "value": "1013"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "19"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "15"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "1013"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "132"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "24"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "YaBrowser"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "0"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "224"
+            },
+            {
+              "value": "187"
+            },
+            {
+              "value": "196"
+            },
+            {
+              "value": "66"
+            },
+            {
+              "value": "9212"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "32"
+            },
+            {
+              "value": "27"
+            },
+            {
+              "value": "29"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "739"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "11"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "68"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "YaBrowser"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "31"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "Aloha Browser"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "30"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "204"
+            },
+            {
+              "value": "163"
+            },
+            {
+              "value": "172"
+            },
+            {
+              "value": "51"
+            },
+            {
+              "value": "8515"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "27"
+            },
+            {
+              "value": "24"
+            },
+            {
+              "value": "25"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "431"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "15"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "644"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "182"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "354"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "69"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "178"
+            },
+            {
+              "value": "143"
+            },
+            {
+              "value": "147"
+            },
+            {
+              "value": "42"
+            },
+            {
+              "value": "6109"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "27"
+            },
+            {
+              "value": "24"
+            },
+            {
+              "value": "26"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "784"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "23"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "1098"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "83"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "33"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "93"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "160"
+            },
+            {
+              "value": "133"
+            },
+            {
+              "value": "140"
+            },
+            {
+              "value": "35"
+            },
+            {
+              "value": "5807"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "38"
+            },
+            {
+              "value": "30"
+            },
+            {
+              "value": "34"
+            },
+            {
+              "value": "13"
+            },
+            {
+              "value": "1335"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "15"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "12"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "181"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "13"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "805"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "8"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "727"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "59"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "142"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "237"
+            },
+            {
+              "value": "162"
+            },
+            {
+              "value": "171"
+            },
+            {
+              "value": "43"
+            },
+            {
+              "value": "9733"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "27"
+            },
+            {
+              "value": "19"
+            },
+            {
+              "value": "20"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "1135"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "12"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "12"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "204"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "94"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "401"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "24"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "41"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "19"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "YaBrowser"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "177"
+            },
+            {
+              "value": "145"
+            },
+            {
+              "value": "156"
+            },
+            {
+              "value": "47"
+            },
+            {
+              "value": "6072"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "33"
+            },
+            {
+              "value": "26"
+            },
+            {
+              "value": "28"
+            },
+            {
+              "value": "15"
+            },
+            {
+              "value": "640"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "14"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "717"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "352"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "144"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
             },
             {
               "value": "0"
@@ -177,7 +4956,7 @@
         {
           "dimensionValues": [
             {
-              "value": "20240222"
+              "value": "20240107"
             },
             {
               "value": "Chrome"
@@ -185,7 +4964,88 @@
           ],
           "metricValues": [
             {
-              "value": "4"
+              "value": "180"
+            },
+            {
+              "value": "149"
+            },
+            {
+              "value": "156"
+            },
+            {
+              "value": "49"
+            },
+            {
+              "value": "7245"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "60"
+            },
+            {
+              "value": "29"
+            },
+            {
+              "value": "34"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "1652"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "21"
+            },
+            {
+              "value": "18"
+            },
+            {
+              "value": "20"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "526"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
             },
             {
               "value": "1"
@@ -197,17 +5057,206 @@
               "value": "0"
             },
             {
-              "value": "4"
+              "value": "625"
             }
           ]
         },
         {
           "dimensionValues": [
             {
-              "value": "20240222"
+              "value": "20240107"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "226"
+            },
+            {
+              "value": "192"
+            },
+            {
+              "value": "211"
+            },
+            {
+              "value": "86"
+            },
+            {
+              "value": "6564"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
             },
             {
               "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "47"
+            },
+            {
+              "value": "40"
+            },
+            {
+              "value": "46"
+            },
+            {
+              "value": "23"
+            },
+            {
+              "value": "1127"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "20"
+            },
+            {
+              "value": "17"
+            },
+            {
+              "value": "17"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "604"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "77"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "Opera"
             }
           ],
           "metricValues": [
@@ -224,7 +5273,1060 @@
               "value": "0"
             },
             {
+              "value": "68"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "199"
+            },
+            {
+              "value": "168"
+            },
+            {
+              "value": "174"
+            },
+            {
+              "value": "48"
+            },
+            {
+              "value": "7911"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "40"
+            },
+            {
+              "value": "33"
+            },
+            {
+              "value": "37"
+            },
+            {
+              "value": "23"
+            },
+            {
+              "value": "596"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "18"
+            },
+            {
+              "value": "12"
+            },
+            {
+              "value": "13"
+            },
+            {
               "value": "4"
+            },
+            {
+              "value": "662"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "88"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "54"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "197"
+            },
+            {
+              "value": "164"
+            },
+            {
+              "value": "170"
+            },
+            {
+              "value": "46"
+            },
+            {
+              "value": "10278"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "41"
+            },
+            {
+              "value": "33"
+            },
+            {
+              "value": "38"
+            },
+            {
+              "value": "19"
+            },
+            {
+              "value": "655"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "17"
+            },
+            {
+              "value": "13"
+            },
+            {
+              "value": "15"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "686"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "8"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "335"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "42"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "55"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "189"
+            },
+            {
+              "value": "168"
+            },
+            {
+              "value": "176"
+            },
+            {
+              "value": "46"
+            },
+            {
+              "value": "8259"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "40"
+            },
+            {
+              "value": "33"
+            },
+            {
+              "value": "34"
+            },
+            {
+              "value": "12"
+            },
+            {
+              "value": "1143"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "19"
+            },
+            {
+              "value": "17"
+            },
+            {
+              "value": "19"
+            },
+            {
+              "value": "15"
+            },
+            {
+              "value": "251"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "18"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "885"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "Opera Mini"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "41"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "17"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "32"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "195"
+            },
+            {
+              "value": "155"
+            },
+            {
+              "value": "158"
+            },
+            {
+              "value": "39"
+            },
+            {
+              "value": "9019"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "36"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "16"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "1256"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "22"
+            },
+            {
+              "value": "21"
+            },
+            {
+              "value": "23"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "704"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "Edge"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "78"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "105"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "5"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "170"
+            },
+            {
+              "value": "144"
+            },
+            {
+              "value": "148"
+            },
+            {
+              "value": "44"
+            },
+            {
+              "value": "7037"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "29"
+            },
+            {
+              "value": "25"
+            },
+            {
+              "value": "26"
+            },
+            {
+              "value": "13"
+            },
+            {
+              "value": "644"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "Samsung Internet"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "13"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "327"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "Safari (in-app)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "Android Webview"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "Opera"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "41"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "31"
             }
           ]
         }

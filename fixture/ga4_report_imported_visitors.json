@@ -10,7 +10,7 @@
       "kind": "analyticsData#runReport",
       "metadata": {
         "currencyCode": "USD",
-        "timeZone": "Europe/Warsaw"
+        "timeZone": "Europe/Amsterdam"
       },
       "metricHeaders": [
         {
@@ -34,125 +34,749 @@
           "type": "TYPE_SECONDS"
         }
       ],
-      "rowCount": 5,
+      "rowCount": 31,
       "rows": [
         {
           "dimensionValues": [
             {
-              "value": "20240403"
+              "value": "20240131"
             }
           ],
           "metricValues": [
             {
-              "value": "1"
+              "value": "141"
             },
             {
-              "value": "1"
+              "value": "195"
             },
             {
-              "value": "1"
+              "value": "56"
             },
             {
-              "value": "1"
+              "value": "146"
             },
             {
-              "value": "0"
+              "value": "4815"
             }
           ]
         },
         {
           "dimensionValues": [
             {
-              "value": "20240402"
+              "value": "20240130"
             }
           ],
           "metricValues": [
             {
-              "value": "1"
+              "value": "115"
             },
             {
-              "value": "1"
+              "value": "171"
             },
             {
-              "value": "1"
+              "value": "42"
             },
             {
-              "value": "1"
+              "value": "115"
             },
             {
-              "value": "0"
+              "value": "3481"
             }
           ]
         },
         {
           "dimensionValues": [
             {
-              "value": "20240226"
+              "value": "20240129"
             }
           ],
           "metricValues": [
             {
-              "value": "1"
+              "value": "105"
             },
             {
-              "value": "1"
+              "value": "153"
             },
             {
-              "value": "1"
+              "value": "54"
             },
             {
-              "value": "1"
+              "value": "113"
             },
             {
-              "value": "0"
+              "value": "2895"
             }
           ]
         },
         {
           "dimensionValues": [
             {
-              "value": "20240224"
+              "value": "20240128"
             }
           ],
           "metricValues": [
             {
-              "value": "2"
+              "value": "184"
             },
             {
-              "value": "2"
+              "value": "259"
             },
             {
-              "value": "2"
+              "value": "74"
             },
             {
-              "value": "2"
+              "value": "190"
             },
             {
-              "value": "0"
+              "value": "6861"
             }
           ]
         },
         {
           "dimensionValues": [
             {
-              "value": "20240222"
+              "value": "20240127"
             }
           ],
           "metricValues": [
             {
-              "value": "3"
+              "value": "155"
             },
             {
-              "value": "13"
+              "value": "202"
             },
             {
-              "value": "0"
+              "value": "67"
             },
             {
-              "value": "4"
+              "value": "158"
             },
             {
-              "value": "29"
+              "value": "5259"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "132"
+            },
+            {
+              "value": "189"
+            },
+            {
+              "value": "57"
+            },
+            {
+              "value": "142"
+            },
+            {
+              "value": "5545"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "151"
+            },
+            {
+              "value": "229"
+            },
+            {
+              "value": "71"
+            },
+            {
+              "value": "155"
+            },
+            {
+              "value": "5365"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "137"
+            },
+            {
+              "value": "221"
+            },
+            {
+              "value": "64"
+            },
+            {
+              "value": "148"
+            },
+            {
+              "value": "4454"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "166"
+            },
+            {
+              "value": "267"
+            },
+            {
+              "value": "61"
+            },
+            {
+              "value": "171"
+            },
+            {
+              "value": "4850"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "161"
+            },
+            {
+              "value": "233"
+            },
+            {
+              "value": "73"
+            },
+            {
+              "value": "165"
+            },
+            {
+              "value": "4871"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "254"
+            },
+            {
+              "value": "397"
+            },
+            {
+              "value": "114"
+            },
+            {
+              "value": "267"
+            },
+            {
+              "value": "8845"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "214"
+            },
+            {
+              "value": "383"
+            },
+            {
+              "value": "100"
+            },
+            {
+              "value": "223"
+            },
+            {
+              "value": "6914"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "381"
+            },
+            {
+              "value": "5571"
+            },
+            {
+              "value": "100"
+            },
+            {
+              "value": "228"
+            },
+            {
+              "value": "98549"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "177"
+            },
+            {
+              "value": "278"
+            },
+            {
+              "value": "86"
+            },
+            {
+              "value": "186"
+            },
+            {
+              "value": "5553"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "204"
+            },
+            {
+              "value": "271"
+            },
+            {
+              "value": "97"
+            },
+            {
+              "value": "216"
+            },
+            {
+              "value": "6777"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "200"
+            },
+            {
+              "value": "280"
+            },
+            {
+              "value": "65"
+            },
+            {
+              "value": "203"
+            },
+            {
+              "value": "9381"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "255"
+            },
+            {
+              "value": "311"
+            },
+            {
+              "value": "86"
+            },
+            {
+              "value": "269"
+            },
+            {
+              "value": "12365"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "243"
+            },
+            {
+              "value": "302"
+            },
+            {
+              "value": "86"
+            },
+            {
+              "value": "257"
+            },
+            {
+              "value": "11073"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "231"
+            },
+            {
+              "value": "276"
+            },
+            {
+              "value": "92"
+            },
+            {
+              "value": "244"
+            },
+            {
+              "value": "10084"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "215"
+            },
+            {
+              "value": "265"
+            },
+            {
+              "value": "75"
+            },
+            {
+              "value": "225"
+            },
+            {
+              "value": "10195"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "183"
+            },
+            {
+              "value": "235"
+            },
+            {
+              "value": "64"
+            },
+            {
+              "value": "191"
+            },
+            {
+              "value": "8200"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "190"
+            },
+            {
+              "value": "244"
+            },
+            {
+              "value": "61"
+            },
+            {
+              "value": "203"
+            },
+            {
+              "value": "9056"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "201"
+            },
+            {
+              "value": "290"
+            },
+            {
+              "value": "63"
+            },
+            {
+              "value": "213"
+            },
+            {
+              "value": "11651"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "195"
+            },
+            {
+              "value": "235"
+            },
+            {
+              "value": "71"
+            },
+            {
+              "value": "209"
+            },
+            {
+              "value": "7946"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "205"
+            },
+            {
+              "value": "274"
+            },
+            {
+              "value": "80"
+            },
+            {
+              "value": "218"
+            },
+            {
+              "value": "10048"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "256"
+            },
+            {
+              "value": "303"
+            },
+            {
+              "value": "119"
+            },
+            {
+              "value": "281"
+            },
+            {
+              "value": "8440"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "226"
+            },
+            {
+              "value": "270"
+            },
+            {
+              "value": "83"
+            },
+            {
+              "value": "237"
+            },
+            {
+              "value": "9311"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "223"
+            },
+            {
+              "value": "274"
+            },
+            {
+              "value": "81"
+            },
+            {
+              "value": "236"
+            },
+            {
+              "value": "12051"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "233"
+            },
+            {
+              "value": "283"
+            },
+            {
+              "value": "79"
+            },
+            {
+              "value": "245"
+            },
+            {
+              "value": "10628"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "203"
+            },
+            {
+              "value": "269"
+            },
+            {
+              "value": "60"
+            },
+            {
+              "value": "210"
+            },
+            {
+              "value": "11168"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "191"
+            },
+            {
+              "value": "224"
+            },
+            {
+              "value": "71"
+            },
+            {
+              "value": "197"
+            },
+            {
+              "value": "8080"
             }
           ]
         }

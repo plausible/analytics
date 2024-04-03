@@ -82,15 +82,15 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
       Enum.each(Plausible.Imported.tables(), fn table ->
         count =
           case table do
-            "imported_sources" -> 8
-            "imported_visitors" -> 5
-            "imported_pages" -> 10
-            "imported_entry_pages" -> 6
+            "imported_sources" -> 1090
+            "imported_visitors" -> 31
+            "imported_pages" -> 3340
+            "imported_entry_pages" -> 2934
             "imported_exit_pages" -> 0
-            "imported_locations" -> 6
-            "imported_devices" -> 6
-            "imported_browsers" -> 7
-            "imported_operating_systems" -> 7
+            "imported_locations" -> 2291
+            "imported_devices" -> 93
+            "imported_browsers" -> 233
+            "imported_operating_systems" -> 1068
           end
 
         query = from(imported in table, where: imported.site_id == ^site.id)
