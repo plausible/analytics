@@ -9,6 +9,7 @@ defmodule Plausible.Imported.Page do
     field :date, :date
     field :hostname, :string
     field :page, :string
+    field :visits, Ch, type: "UInt64"
     field :visitors, Ch, type: "UInt64"
     field :pageviews, Ch, type: "UInt64"
     field :exits, Ch, type: "UInt64"

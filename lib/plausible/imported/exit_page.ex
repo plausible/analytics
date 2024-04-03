@@ -8,7 +8,10 @@ defmodule Plausible.Imported.ExitPage do
     field :import_id, Ch, type: "UInt64"
     field :date, :date
     field :exit_page, :string
-    field :visitors, Ch, type: "UInt64"
     field :exits, Ch, type: "UInt64"
+    field :visitors, Ch, type: "UInt64"
+    field :visit_duration, Ch, type: "UInt64"
+    field :pageviews, Ch, type: "UInt64"
+    field :bounces, Ch, type: "UInt32"
   end
 end
