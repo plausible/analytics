@@ -18,7 +18,7 @@ defmodule Plausible.Stats.TableDecider do
       session: session_metrics,
       either: either_metrics,
       other: other_metrics,
-      both: both_metrics
+      sample_percent: sample_percent
     } =
       partition(metrics, query, &metric_partitioner/2)
 
@@ -36,21 +36,21 @@ defmodule Plausible.Stats.TableDecider do
     cond do
       # Only one table needs to be queried
       empty?(event_metrics) && empty?(event_filters) ->
-        {[], session_metrics ++ either_metrics ++ both_metrics, other_metrics}
+        {[], session_metrics ++ either_metrics ++ sample_percent, other_metrics}
 
       empty?(session_metrics) && empty?(session_filters) ->
-        {event_metrics ++ either_metrics ++ both_metrics, [], other_metrics}
+        {event_metrics ++ either_metrics ++ sample_percent, [], other_metrics}
 
       # Filters on both events and sessions, but only one kind of metric
       empty?(event_metrics) ->
-        {[], session_metrics ++ either_metrics ++ both_metrics, other_metrics}
+        {[], session_metrics ++ either_metrics ++ sample_percent, other_metrics}
 
       empty?(session_metrics) ->
-        {event_metrics ++ either_metrics ++ both_metrics, [], other_metrics}
+        {event_metrics ++ either_metrics ++ sample_percent, [], other_metrics}
 
       # Default: prefer sessions
       true ->
-        {event_metrics ++ both_metrics, session_metrics ++ either_metrics ++ both_metrics,
+        {event_metrics ++ sample_percent, session_metrics ++ either_metrics ++ sample_percent,
          other_metrics}
     end
   end
@@ -75,7 +75,7 @@ defmodule Plausible.Stats.TableDecider do
   defp metric_partitioner(_, :total_visitors), do: :other
   defp metric_partitioner(_, :percentage), do: :other
   # Sample percentage is included in both tables if queried.
-  defp metric_partitioner(_, :sample_percent), do: :both
+  defp metric_partitioner(_, :sample_percent), do: :sample_percent
 
   defp metric_partitioner(%Query{experimental_reduced_joins?: false}, unknown) do
     raise ArgumentError, "Metric #{unknown} not supported without experimental_reduced_joins?"
@@ -91,7 +91,7 @@ defmodule Plausible.Stats.TableDecider do
   defp filters_partitioner(_, {"visit:exit_page", _}), do: :session
 
   defp filters_partitioner(%Query{experimental_reduced_joins?: true}, {"visit:" <> _, _}),
-    do: :both
+    do: :either
 
   defp filters_partitioner(_, {"visit:" <> _, _}),
     do: :session
@@ -102,7 +102,7 @@ defmodule Plausible.Stats.TableDecider do
 
   defp filters_partitioner(_, _), do: :either
 
-  @default %{event: [], session: [], either: [], other: [], both: []}
+  @default %{event: [], session: [], either: [], other: [], sample_percent: []}
   defp partition(values, query, partitioner) do
     Enum.reduce(values, @default, fn value, acc ->
       key = partitioner.(query, value)
