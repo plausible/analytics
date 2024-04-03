@@ -5,8 +5,6 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
 
   use Plausible.Imported.Importer
 
-  alias PlausibleWeb.RefInspector
-
   @missing_values ["(none)", "(not set)", "(not provided)", "(other)"]
 
   @impl true
@@ -101,8 +99,8 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
     referrer_uri = row.dimensions |> Map.fetch!("pageReferrer") |> URI.parse()
 
     referrer =
-      if RefInspector.right_uri?(referrer_uri) do
-        RefInspector.format_referrer(referrer_uri)
+      if PlausibleWeb.RefInspector.right_uri?(referrer_uri) do
+        PlausibleWeb.RefInspector.format_referrer(referrer_uri)
       end
 
     %{
