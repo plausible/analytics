@@ -70,6 +70,7 @@ defmodule Plausible.Stats.TableDecider do
   # Calculated metrics - handled on callsite separately from other metrics.
   defp metric_partitioner(_, :time_on_page), do: :other
   defp metric_partitioner(_, :total_visitors), do: :other
+  defp metric_partitioner(_, :percentage), do: :other
   # Sample percentage is included in both tables if queried.
   defp metric_partitioner(_, :sample_percent), do: :both
 
