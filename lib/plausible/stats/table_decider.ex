@@ -35,13 +35,16 @@ defmodule Plausible.Stats.TableDecider do
 
     cond do
       # Only one table needs to be queried
-      empty?(session_metrics) && empty?(session_filters) ->
-        {event_metrics ++ either_metrics ++ both_metrics, [], other_metrics}
-
       empty?(event_metrics) && empty?(event_filters) ->
         {[], session_metrics ++ either_metrics ++ both_metrics, other_metrics}
 
-      # Filters from either, but only one kind of metric
+      empty?(session_metrics) && empty?(session_filters) ->
+        {event_metrics ++ either_metrics ++ both_metrics, [], other_metrics}
+
+      # Filters on both events and sessions, but only one kind of metric
+      empty?(event_metrics) ->
+        {[], session_metrics ++ either_metrics ++ both_metrics, other_metrics}
+
       empty?(session_metrics) ->
         {event_metrics ++ either_metrics ++ both_metrics, [], other_metrics}
 
