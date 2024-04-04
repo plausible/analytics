@@ -27,14 +27,14 @@ defmodule Plausible.Stats.TableDeciderTest do
       assert partition_metrics([], query) == {[], [], []}
     end
 
-    test "events-only metrics accordingly" do
+    test "session-only metrics accordingly" do
       query = make_query(false, %{})
 
       assert partition_metrics([:bounce_rate, :views_per_visit], query) ==
                {[], [:bounce_rate, :views_per_visit], []}
     end
 
-    test "session-only metrics accordingly" do
+    test "event-only metrics accordingly" do
       query = make_query(false, %{})
 
       assert partition_metrics([:total_revenue, :visitors], query) ==
