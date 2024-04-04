@@ -1,7 +1,6 @@
 {:ok, _} = Application.ensure_all_started(:ex_machina)
 Mox.defmock(Plausible.HTTPClient.Mock, for: Plausible.HTTPClient.Interface)
 Application.ensure_all_started(:double)
-FunWithFlags.enable(:window_time_on_page)
 FunWithFlags.enable(:imports_exports)
 FunWithFlags.enable(:shield_pages)
 

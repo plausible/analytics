@@ -23,7 +23,9 @@ defmodule Plausible.Stats.Filters do
     :region,
     :city,
     :entry_page,
-    :exit_page
+    :exit_page,
+    :entry_page_hostname,
+    :exit_page_hostname
   ]
   def visit_props(), do: @visit_props |> Enum.map(&to_string/1)
 
@@ -34,7 +36,7 @@ defmodule Plausible.Stats.Filters do
                              ]
   def event_table_visit_props(), do: @event_table_visit_props |> Enum.map(&to_string/1)
 
-  @event_props [:name, :page, :goal]
+  @event_props [:name, :page, :goal, :hostname]
 
   def event_props(), do: @event_props |> Enum.map(&to_string/1)
 

@@ -10,7 +10,8 @@ defmodule Plausible.Stats.Query do
             include_imported: false,
             now: nil,
             experimental_session_count?: false,
-            experimental_reduced_joins?: false
+            experimental_reduced_joins?: false,
+            experimental_hostname_filter?: false
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{Filters, Interval}
@@ -25,6 +26,7 @@ defmodule Plausible.Stats.Query do
       |> struct!(now: now)
       |> put_experimental_session_count(site, params)
       |> put_experimental_reduced_joins(site, params)
+      |> put_experimental_hostname_filter(params)
       |> put_period(site, params)
       |> put_interval(params)
       |> put_parsed_filters(params)
@@ -59,6 +61,16 @@ defmodule Plausible.Stats.Query do
       struct!(query,
         experimental_reduced_joins?: FunWithFlags.enabled?(:experimental_reduced_joins, for: site)
       )
+    end
+  end
+
+  defp put_experimental_hostname_filter(query, params) do
+    if Map.has_key?(params, "experimental_hostname_filter") do
+      struct!(query,
+        experimental_hostname_filter?: Map.get(params, "experimental_hostname_filter") == "true"
+      )
+    else
+      query
     end
   end
 

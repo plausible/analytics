@@ -423,6 +423,13 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site, params)
     pagination = parse_pagination(params)
 
+    query =
+      if query.experimental_hostname_filter? and query.filters["event:hostname"] do
+        Query.put_filter(query, "visit:entry_page_hostname", query.filters["event:hostname"])
+      else
+        query
+      end
+
     extra_metrics =
       if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
 
@@ -728,6 +735,13 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
     metrics = breakdown_metrics(query, [:visits, :visit_duration])
 
+    query =
+      if query.experimental_hostname_filter? and query.filters["event:hostname"] do
+        Query.put_filter(query, "visit:entry_page_hostname", query.filters["event:hostname"])
+      else
+        query
+      end
+
     entry_pages =
       Stats.breakdown(site, query, "visit:entry_page", metrics, pagination)
       |> transform_keys(%{entry_page: :name})
@@ -757,6 +771,13 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site, params)
     {limit, page} = parse_pagination(params)
     metrics = breakdown_metrics(query, [:visits])
+
+    query =
+      if query.experimental_hostname_filter? and query.filters["event:hostname"] do
+        Query.put_filter(query, "visit:exit_page_hostname", query.filters["event:hostname"])
+      else
+        query
+      end
 
     exit_pages =
       Stats.breakdown(site, query, "visit:exit_page", metrics, {limit, page})

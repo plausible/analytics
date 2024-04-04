@@ -96,17 +96,28 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
   end
 
   defp new_from_report(site_id, import_id, "imported_sources", row) do
+    referrer_uri = row.dimensions |> Map.fetch!("pageReferrer") |> URI.parse()
+
+    referrer =
+      if PlausibleWeb.RefInspector.right_uri?(referrer_uri) do
+        PlausibleWeb.RefInspector.format_referrer(referrer_uri)
+      end
+
     %{
       site_id: site_id,
       import_id: import_id,
       date: get_date(row),
       source: row.dimensions |> Map.fetch!("sessionSource") |> parse_referrer(),
+      referrer: referrer,
+      # Only `source` exists in GA4 API
+      utm_source: nil,
       utm_medium: row.dimensions |> Map.fetch!("sessionMedium") |> default_if_missing(),
       utm_campaign: row.dimensions |> Map.fetch!("sessionCampaignName") |> default_if_missing(),
       utm_content: row.dimensions |> Map.fetch!("sessionManualAdContent") |> default_if_missing(),
       utm_term: row.dimensions |> Map.fetch!("sessionGoogleAdsKeyword") |> default_if_missing(),
       visitors: row.metrics |> Map.fetch!("totalUsers") |> parse_number(),
       visits: row.metrics |> Map.fetch!("sessions") |> parse_number(),
+      pageviews: row.metrics |> Map.fetch!("screenPageViews") |> parse_number(),
       bounces: row.metrics |> Map.fetch!("bounces") |> parse_number(),
       visit_duration: row.metrics |> Map.fetch!("userEngagementDuration") |> parse_number()
     }
@@ -120,6 +131,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
       hostname: row.dimensions |> Map.fetch!("hostName") |> String.replace_prefix("www.", ""),
       page: row.dimensions |> Map.fetch!("pagePath") |> URI.parse() |> Map.get(:path),
       visitors: row.metrics |> Map.fetch!("totalUsers") |> parse_number(),
+      visits: row.metrics |> Map.fetch!("sessions") |> parse_number(),
       pageviews: row.metrics |> Map.fetch!("screenPageViews") |> parse_number(),
       # NOTE: no exits metric in GA4 API currently
       exits: 0,
@@ -136,6 +148,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
       visitors: row.metrics |> Map.fetch!("totalUsers") |> parse_number(),
       entrances: row.metrics |> Map.fetch!("sessions") |> parse_number(),
       visit_duration: row.metrics |> Map.fetch!("userEngagementDuration") |> parse_number(),
+      pageviews: row.metrics |> Map.fetch!("screenPageViews") |> parse_number(),
       bounces: row.metrics |> Map.fetch!("bounces") |> parse_number()
     }
   end
@@ -148,7 +161,10 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
   #     date: get_date(row),
   #     exit_page: Map.fetch!(row.dimensions, "exitPage"),
   #     visitors: row.metrics |> Map.fetch!("totalUsers") |> parse_number(),
-  #     exits: row.metrics |> Map.fetch!("sessions") |> parse_number()
+  #     exits: row.metrics |> Map.fetch!("sessions") |> parse_number(),
+  #     visit_duration: row.metrics |> Map.fetch!("userEngagementDuration") |> parse_number(),
+  #     pageviews: row.metrics |> Map.fetch!("screenPageViews") |> parse_number(),
+  #     bounces: row.metrics |> Map.fetch!("bounces") |> parse_number()
   #   }
   # end
 
@@ -166,6 +182,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
       city: city_data && city_data.id,
       visitors: row.metrics |> Map.fetch!("totalUsers") |> parse_number(),
       visits: row.metrics |> Map.fetch!("sessions") |> parse_number(),
+      pageviews: row.metrics |> Map.fetch!("screenPageViews") |> parse_number(),
       bounces: row.metrics |> Map.fetch!("bounces") |> parse_number(),
       visit_duration: row.metrics |> Map.fetch!("userEngagementDuration") |> parse_number()
     }
@@ -179,6 +196,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
       device: row.dimensions |> Map.fetch!("deviceCategory") |> String.capitalize(),
       visitors: row.metrics |> Map.fetch!("totalUsers") |> parse_number(),
       visits: row.metrics |> Map.fetch!("sessions") |> parse_number(),
+      pageviews: row.metrics |> Map.fetch!("screenPageViews") |> parse_number(),
       bounces: row.metrics |> Map.fetch!("bounces") |> parse_number(),
       visit_duration: row.metrics |> Map.fetch!("userEngagementDuration") |> parse_number()
     }
@@ -202,8 +220,11 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
       import_id: import_id,
       date: get_date(row),
       browser: Map.get(@browser_google_to_plausible, browser, browser),
+      # Does not exist in GA4 API
+      browser_version: nil,
       visitors: row.metrics |> Map.fetch!("totalUsers") |> parse_number(),
       visits: row.metrics |> Map.fetch!("sessions") |> parse_number(),
+      pageviews: row.metrics |> Map.fetch!("screenPageViews") |> parse_number(),
       bounces: row.metrics |> Map.fetch!("bounces") |> parse_number(),
       visit_duration: row.metrics |> Map.fetch!("userEngagementDuration") |> parse_number()
     }
@@ -223,8 +244,10 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
       import_id: import_id,
       date: get_date(row),
       operating_system: Map.get(@os_google_to_plausible, os, os),
+      operating_system_version: row.dimensions |> Map.fetch!("operatingSystemVersion"),
       visitors: row.metrics |> Map.fetch!("totalUsers") |> parse_number(),
       visits: row.metrics |> Map.fetch!("sessions") |> parse_number(),
+      pageviews: row.metrics |> Map.fetch!("screenPageViews") |> parse_number(),
       bounces: row.metrics |> Map.fetch!("bounces") |> parse_number(),
       visit_duration: row.metrics |> Map.fetch!("userEngagementDuration") |> parse_number()
     }

@@ -65,4 +65,28 @@ defmodule Plausible.ClickhouseEventV2 do
     )
     |> validate_required([:name, :site_id, :hostname, :pathname, :user_id, :timestamp])
   end
+
+  @session_properties [
+    :session_id,
+    :referrer,
+    :referrer_source,
+    :utm_medium,
+    :utm_source,
+    :utm_campaign,
+    :utm_content,
+    :utm_term,
+    :country_code,
+    :subdivision1_code,
+    :subdivision2_code,
+    :city_geoname_id,
+    :screen_size,
+    :operating_system,
+    :operating_system_version,
+    :browser,
+    :browser_version
+  ]
+
+  def merge_session(%__MODULE__{} = event, session) do
+    Map.merge(event, Map.take(session, @session_properties))
+  end
 end

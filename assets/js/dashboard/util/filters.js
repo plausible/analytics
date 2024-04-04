@@ -1,3 +1,5 @@
+const flags = JSON.parse(document.getElementById('stats-react-container').dataset.flags)
+
 export const FILTER_GROUPS = {
   'page': ['page', 'entry_page', 'exit_page'],
   'source': ['source', 'referrer'],
@@ -7,10 +9,12 @@ export const FILTER_GROUPS = {
   'os': ['os', 'os_version'],
   'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
   'goal': ['goal'],
-  'props': ['prop_key', 'prop_value']
+  'props': ['prop_key', 'prop_value'],
+  ...(flags.hostname_filter ? { 'hostname': ['hostname', 'experimental_hostname_filter'] } : {})
+
 }
 
-export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_GROUPS['location']))
+export const NO_CONTAINS_OPERATOR = new Set(['experimental_hostname_filter', 'goal', 'screen'].concat(FILTER_GROUPS['location']))
 
 export const FILTER_OPERATIONS = {
   isNot: 'is not',
@@ -25,7 +29,7 @@ export const OPERATION_PREFIX = {
 };
 
 export function supportsIsNot(filterName) {
-  return !['goal', 'prop_key'].includes(filterName)
+  return !['goal', 'prop_key', 'experimental_hostname_filter'].includes(filterName)
 }
 
 export function isFreeChoiceFilter(filterName) {
@@ -37,7 +41,7 @@ export function isFreeChoiceFilter(filterName) {
 let NON_ESCAPED_PIPE_REGEX;
 try {
   NON_ESCAPED_PIPE_REGEX = new RegExp("(?<!\\\\)\\|", "g")
-} catch(_e) {
+} catch (_e) {
   NON_ESCAPED_PIPE_REGEX = '|'
 }
 
@@ -64,19 +68,19 @@ export function parsePrefix(rawValue) {
     .filter((clause) => !!clause)
     .map((val) => val.replaceAll(ESCAPED_PIPE, '|'))
 
-  return {type, values}
+  return { type, values }
 }
 
 export function parseQueryPropsFilter(query) {
   return Object.entries(query.filters['props']).map(([key, propVal]) => {
-    const {type, values} = parsePrefix(propVal)
-    const clauses = values.map(val => { return {value: val, label: val}})
+    const { type, values } = parsePrefix(propVal)
+    const clauses = values.map(val => { return { value: val, label: val } })
     return { propKey: { label: key, value: key }, type, clauses }
   })
 }
 
 export function parseQueryFilter(query, filter) {
-  const {type, values} = parsePrefix(query.filters[filter] || '')
+  const { type, values } = parsePrefix(query.filters[filter] || '')
 
   let labels = values
 
@@ -95,9 +99,9 @@ export function parseQueryFilter(query, filter) {
     labels = rawLabel.split('|').filter(label => !!label)
   }
 
-  const clauses = values.map((value, index) => { return {value, label: labels[index]}})
+  const clauses = values.map((value, index) => { return { value, label: labels[index] } })
 
-  return {type, clauses}
+  return { type, clauses }
 }
 
 export function isFilteringOnFixedValue(query, filter) {
@@ -152,6 +156,8 @@ export const formattedFilters = {
   'region': 'Region',
   'city': 'City',
   'page': 'Page',
+  'hostname': 'Hostname',
+  'experimental_hostname_filter': 'Treat hostname as entry/exit hostname',
   'entry_page': 'Entry Page',
-  'exit_page': 'Exit Page'
+  'exit_page': 'Exit Page',
 }
