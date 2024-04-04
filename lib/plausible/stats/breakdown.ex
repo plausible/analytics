@@ -212,6 +212,9 @@ defmodule Plausible.Stats.Breakdown do
     end
   end
 
+  # Backwards compatibility
+  # defp breakdown_table(%Query{experimental_reduced_joins?: false}, _, _), do: :session
+
   defp breakdown_table(_query, _metrics, "visit:entry_page"), do: :session
   defp breakdown_table(_query, _metrics, "visit:exit_page"), do: :session
 
