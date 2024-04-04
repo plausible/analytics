@@ -1,19 +1,41 @@
 import numberFormatter, {durationFormatter} from '../../util/number-formatter'
+import { parsePrefix } from '../../util/filters'
 
-export const METRIC_MAPPING = {
-  'Unique visitors (last 30 min)': 'visitors',
-  'Pageviews (last 30 min)': 'pageviews',
-  'Unique visitors': 'visitors',
-  'Visit duration': 'visit_duration',
-  'Total pageviews': 'pageviews',
-  'Views per visit': 'views_per_visit',
-  'Total visits': 'visits',
-  'Bounce rate': 'bounce_rate',
-  'Unique conversions': 'conversions',
-  'Total conversions': 'events',
-  'Conversion rate': 'conversion_rate',
-  'Average revenue': 'average_revenue',
-  'Total revenue': 'total_revenue',
+export function getGraphableMetrics(query, site) {
+  const isRealtime = query.period === 'realtime'
+  const goalFilter = query.filters.goal
+  const pageFilter = query.filters.page
+  
+  if (isRealtime && goalFilter) {
+    return ["visitors"]
+  } else if (isRealtime) {
+    return ["visitors", "pageviews"]
+  } else if (goalFilter && canGraphRevenueMetrics(goalFilter, site)) {
+    return ["visitors", "events", "average_revenue", "total_revenue", "conversion_rate"]
+  } else if (goalFilter) {
+    return ["visitors", "events", "conversion_rate"]
+  } else if (pageFilter) {
+    return ["visitors", "visits", "pageviews", "bounce_rate", "time_on_page"]
+  } else {
+    return ["visitors", "visits", "pageviews", "views_per_visit", "bounce_rate", "visit_duration"]
+  }
+}
+
+// Revenue metrics can only be graphed if:
+//   * The query is filtered by at least one revenue goal
+//   * All revenue goals in filter have the same currency
+function canGraphRevenueMetrics(goalFilter, site) {
+  const goalsInFilter = parsePrefix(goalFilter).values
+
+  const revenueGoalsInFilter = site.revenueGoals.filter((rg) => {
+    return goalsInFilter.includes(rg.event_name)
+  })
+  
+  const singleCurrency = revenueGoalsInFilter.every((rg) => {
+    return rg.currency === revenueGoalsInFilter[0].currency
+  })
+
+  return revenueGoalsInFilter.length > 0 && singleCurrency
 }
 
 export const METRIC_LABELS = {
@@ -42,14 +64,6 @@ export const METRIC_FORMATTER = {
   'conversion_rate': (number) => (`${number}%`),
   'total_revenue': numberFormatter,
   'average_revenue': numberFormatter,
-}
-
-export const LoadingState = {
-  loading: 'loading',
-  refreshing: 'refreshing',
-  loaded: 'loaded',
-  isLoadingOrRefreshing: function (state) { return [this.loading, this.refreshing].includes(state) },
-  isLoadedOrRefreshing: function (state) { return [this.loaded, this.refreshing].includes(state) }
 }
 
 const buildComparisonDataset = function(comparisonPlot) {

@@ -92,6 +92,24 @@ defmodule Plausible.GoalsTest do
     assert [currency: {"is invalid", _}] = changeset.errors
   end
 
+  @tag :full_build_only
+  test "list_revenue_goals/1 lists event_names and currencies for each revenue goal" do
+    site = insert(:site)
+
+    Goals.create(site, %{"event_name" => "One", "currency" => "EUR"})
+    Goals.create(site, %{"event_name" => "Two", "currency" => "EUR"})
+    Goals.create(site, %{"event_name" => "Three", "currency" => "USD"})
+    Goals.create(site, %{"event_name" => "Four"})
+    Goals.create(site, %{"page_path" => "/some-page"})
+
+    revenue_goals = Goals.list_revenue_goals(site)
+
+    assert length(revenue_goals) == 3
+    assert %{event_name: "One", currency: :EUR} in revenue_goals
+    assert %{event_name: "Two", currency: :EUR} in revenue_goals
+    assert %{event_name: "Three", currency: :USD} in revenue_goals
+  end
+
   test "create/2 clears currency for pageview goals" do
     site = insert(:site)
     {:ok, goal} = Goals.create(site, %{"page_path" => "/purchase", "currency" => "EUR"})
