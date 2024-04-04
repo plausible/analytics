@@ -202,7 +202,10 @@ defmodule Plausible.Exports do
         date(e.timestamp),
         selected_as(fragment("any(?)", e.hostname), :hostname),
         selected_as(e.pathname, :page),
-        selected_as(fragment("uniq(?) * any(_sample_factor)", e.session_id), :visits),
+        selected_as(
+          fragment("toUInt64(round(uniq(?)*any(_sample_factor)))", e.session_id),
+          :visits
+        ),
         visitors(e),
         selected_as(
           fragment("toUInt64(round(countIf(?='pageview')*any(_sample_factor)))", e.name),
