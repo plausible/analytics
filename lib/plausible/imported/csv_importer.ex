@@ -72,7 +72,7 @@ defmodule Plausible.Imported.CSVImporter do
       {table, _, _} = parse_filename!(filename)
       s3_structure = input_structure!(table)
 
-      # TODO refactor
+      # NOTE: refactor
       s3_structure_cols_expr =
         s3_structure
         |> String.split(",", trim: true)
@@ -115,7 +115,7 @@ defmodule Plausible.Imported.CSVImporter do
       end_date: end_date
     } = site_import
 
-    # TODO s3_structure_cols_expr?
+    # NOTE: s3_structure_cols_expr
     statement =
       """
       INSERT INTO {table:Identifier} \

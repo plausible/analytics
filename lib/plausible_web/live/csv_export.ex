@@ -74,6 +74,7 @@ defmodule PlausibleWeb.Live.CSVExport do
           assign(socket, status: "failed")
 
         "cancelled" ->
+          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
           if export = get_export.(site_id) do
             assign(socket, status: "ready", export: export)
           else

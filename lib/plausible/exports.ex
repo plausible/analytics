@@ -208,7 +208,7 @@ defmodule Plausible.Exports do
           ]
       )
 
-    # TODO is it still 0 if timezone conversion is applied?
+    # NOTE: is it still 0 if timezone conversion is applied?
     unless end_date == ~D[1970-01-01] do
       Date.range(start_date, end_date)
     end

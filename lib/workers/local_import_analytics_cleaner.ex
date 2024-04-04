@@ -13,6 +13,7 @@ defmodule Plausible.Workers.LocalImportAnalyticsCleaner do
       {:snooze, _one_hour = 3600}
     else
       Enum.each(paths, fn path ->
+        # credo:disable-for-next-line Credo.Check.Refactor.Nesting
         if File.exists?(path), do: File.rm!(path)
       end)
     end
