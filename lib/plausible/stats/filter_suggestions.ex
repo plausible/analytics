@@ -118,6 +118,10 @@ defmodule Plausible.Stats.FilterSuggestions do
     end)
   end
 
+  def filter_suggestions(_site, _query, "experimental_hostname_filter", _filter_search) do
+    wrap_suggestions(["true", "false"])
+  end
+
   def filter_suggestions(site, _query, "goal", filter_search) do
     site
     |> Plausible.Goals.for_site()
@@ -208,11 +212,12 @@ defmodule Plausible.Stats.FilterSuggestions do
         "operating_system" -> :operating_system
         "operating_system_version" -> :operating_system_version
         "screen_size" -> :screen_size
+        "hostname" -> :hostname
         _ -> :unknown
       end
 
     q =
-      if(filter_name == :pathname,
+      if(filter_name == :pathname or filter_name == :hostname,
         do: base_event_query(site, query),
         else: query_sessions(site, query)
       )
@@ -228,6 +233,12 @@ defmodule Plausible.Stats.FilterSuggestions do
           from(e in q,
             select: e.pathname,
             where: fragment("? ilike ?", e.pathname, ^filter_query)
+          )
+
+        :hostname ->
+          from(e in q,
+            select: e.hostname,
+            where: fragment("? ilike ?", e.hostname, ^filter_query)
           )
 
         :entry_page ->

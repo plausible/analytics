@@ -40,6 +40,7 @@ export function parseQuery(querystring, site) {
     match_day_of_week: matchDayOfWeek == 'true',
     with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
     experimental_session_count: q.get('experimental_session_count'),
+    experimental_hostname_filter: q.get('experimental_hostname_filter'),
     filters: {
       'goal': q.get('goal'),
       'props': JSON.parse(q.get('props')),
@@ -59,6 +60,7 @@ export function parseQuery(querystring, site) {
       'region': q.get('region'),
       'city': q.get('city'),
       'page': q.get('page'),
+      'hostname': q.get('hostname'),
       'entry_page': q.get('entry_page'),
       'exit_page': q.get('exit_page')
     }

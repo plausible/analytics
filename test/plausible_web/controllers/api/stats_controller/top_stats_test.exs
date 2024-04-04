@@ -642,6 +642,38 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert %{"name" => "Unique visitors", "value" => 2} in res["top_stats"]
     end
 
+    test "returns only visitors with specific screen size for a given hostname", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, screen_size: "Desktop", hostname: "blog.example.com"),
+        build(:pageview, screen_size: "Desktop", hostname: "example.com", user_id: @user_id),
+        build(:pageview, screen_size: "Desktop", hostname: "blog.example.com", user_id: @user_id),
+        build(:pageview,
+          screen_size: "Desktop",
+          hostname: "blog.example.com",
+          user_id: @user_id + 1
+        ),
+        build(:pageview, screen_size: "Desktop", hostname: "example.com", user_id: @user_id + 1),
+        build(:pageview, screen_size: "Mobile", hostname: "blog.example.com")
+      ])
+
+      filters = Jason.encode!(%{screen: "Desktop", hostname: "blog.example.com"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}"
+        )
+
+      res =
+        json_response(conn, 200)
+
+      assert %{"name" => "Unique visitors", "value" => 3} in res["top_stats"]
+      assert %{"name" => "Total visits", "value" => 3} in res["top_stats"]
+    end
+
     test "returns only visitors with specific browser", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, browser: "Chrome"),
@@ -737,6 +769,82 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                %{"name" => "Views per visit"} -> true
                _ -> false
              end)
+    end
+
+    test "hostname exact filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/index", hostname: "example.com"),
+        build(:pageview, pathname: "/index", hostname: "example.com", user_id: @user_id),
+        build(:pageview, pathname: "/blog/post1", hostname: "blog.example.com", user_id: @user_id),
+        build(:pageview, pathname: "/blog/post2", hostname: "blog.example.com")
+      ])
+
+      filters = Jason.encode!(%{hostname: "example.com"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+
+      assert %{"name" => "Unique visitors", "value" => 2} in res["top_stats"]
+      assert %{"name" => "Total pageviews", "value" => 2} in res["top_stats"]
+    end
+
+    test "hostname glob filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/index", hostname: "example.com"),
+        build(:pageview, pathname: "/index", hostname: "example.com", user_id: @user_id),
+        build(:pageview, pathname: "/blog/post1", hostname: "blog.example.com", user_id: @user_id),
+        build(:pageview, pathname: "/blog/post2", hostname: "blog.example.com", user_id: @user_id),
+        build(:pageview, pathname: "/blog/post2", hostname: "blog.example.com"),
+        build(:pageview, pathname: "/blog/post2", hostname: "about.example.com")
+      ])
+
+      filters = Jason.encode!(%{hostname: "*example.com"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}"
+        )
+
+      res =
+        json_response(conn, 200)
+
+      assert %{"name" => "Unique visitors", "value" => 4} in res["top_stats"]
+      assert %{"name" => "Total pageviews", "value" => 6} in res["top_stats"]
+    end
+
+    test "hostname glob subdomain filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/index", hostname: "example.com"),
+        build(:pageview, pathname: "/index", hostname: "example.com", user_id: @user_id),
+        build(:pageview, pathname: "/blog/post1", hostname: "blog.example.com", user_id: @user_id),
+        build(:pageview, pathname: "/blog/post2", hostname: "blog.example.com", user_id: @user_id),
+        build(:pageview, pathname: "/blog/post3", hostname: "blog.example.com"),
+        build(:pageview,
+          pathname: "/blog/post2",
+          hostname: "blog.example.com",
+          user_id: 100_002_378_237
+        )
+      ])
+
+      filters = Jason.encode!(%{hostname: "*.example.com"})
+      # filters = Jason.encode!(%{page: "/blog/*"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=month&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+
+      assert %{"name" => "Unique visitors", "value" => 3} in res["top_stats"]
+      assert %{"name" => "Total pageviews", "value" => 4} in res["top_stats"]
     end
   end
 

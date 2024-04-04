@@ -918,7 +918,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           timestamp: ~N[2021-01-01 05:00:00]
         ),
         build(:pageview,
-          pathname: "/goobye",
+          pathname: "/goodbye",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -941,6 +941,50 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                "pageviews" => 2,
                "bounce_rate" => 100,
                "visit_duration" => 150
+             }
+    end
+
+    test "can filter by hostname", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: @user_id,
+          hostname: "landing.example.com",
+          timestamp: ~N[2021-01-01 00:00:01]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          hostname: "example.com",
+          timestamp: ~N[2021-01-01 00:00:02]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          hostname: "example.com",
+          timestamp: ~N[2021-01-01 00:00:06]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "filters" => "event:hostname==example.com",
+          "metrics" => "visitors,visits,pageviews,bounce_rate,visit_duration"
+        })
+
+      res =
+        json_response(conn, 200)["results"]
+
+      assert List.first(res) == %{
+               "bounce_rate" => 0,
+               "date" => "2021-01-01 00:00:00",
+               "pageviews" => 2,
+               "visit_duration" => 5,
+               "visitors" => 1,
+               "visits" => 1
              }
     end
 

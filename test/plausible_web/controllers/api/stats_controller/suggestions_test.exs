@@ -236,6 +236,46 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) == []
     end
 
+    test "returns suggestions for hostnames", %{conn: conn1, user: user} do
+      {:ok, [site: site]} = create_new_site(%{user: user})
+
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/",
+          hostname: "host-alice.example.com"
+        ),
+        build(:pageview,
+          pathname: "/some-other-page",
+          hostname: "host-bob.example.com",
+          user_id: 123
+        ),
+        build(:pageview, pathname: "/exit", hostname: "host-carol.example.com", user_id: 123)
+      ])
+
+      conn =
+        get(
+          conn1,
+          "/api/stats/#{site.domain}/suggestions/hostname?q=alice"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"value" => "host-alice.example.com", "label" => "host-alice.example.com"}
+             ]
+
+      conn =
+        get(
+          conn1,
+          "/api/stats/#{site.domain}/suggestions/hostname?q=host"
+        )
+
+      assert json_response(conn, 200) ==
+               [
+                 %{"label" => "host-alice.example.com", "value" => "host-alice.example.com"},
+                 %{"label" => "host-carol.example.com", "value" => "host-carol.example.com"},
+                 %{"label" => "host-bob.example.com", "value" => "host-bob.example.com"}
+               ]
+    end
+
     test "returns suggestions for referrers", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
