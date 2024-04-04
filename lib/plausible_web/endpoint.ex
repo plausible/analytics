@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Endpoint do
   use Sentry.PlugCapture
   use Phoenix.Endpoint, otp_app: :plausible
-  use Appsignal.Phoenix
 
   # Serve at "/" the static files from "priv/static" directory.
   #
