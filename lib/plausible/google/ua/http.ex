@@ -108,7 +108,10 @@ defmodule Plausible.Google.UA.HTTP do
       {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
         {:error, :authentication_failed}
 
-      {:error, %HTTPClient.Non200Error{} = error} ->
+      {:error, %{reason: :timeout}} ->
+        {:error, :timeout}
+
+      {:error, error} ->
         Sentry.capture_message("Error listing UA views for user", extra: %{error: error})
         {:error, :unknown}
     end
@@ -170,7 +173,10 @@ defmodule Plausible.Google.UA.HTTP do
       {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
         {:error, :authentication_failed}
 
-      {:error, %HTTPClient.Non200Error{} = error} ->
+      {:error, %{reason: :timeout}} ->
+        {:error, :timeout}
+
+      {:error, error} ->
         Sentry.capture_message("Error retrieving UA #{edge} date",
           extra: %{error: error}
         )
