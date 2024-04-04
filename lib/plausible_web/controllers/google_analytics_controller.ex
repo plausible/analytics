@@ -301,22 +301,12 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
   end
 
   defp schedule_job(site, current_user, property_or_view, opts) do
-    property? = Google.API.property?(property_or_view)
-
-    importer_fun =
-      if property? do
-        &Imported.GoogleAnalytics4.new_import/3
-      else
-        &Imported.UniversalAnalytics.new_import/3
-      end
-
-    opts =
-      if property? do
-        Keyword.put(opts, :property, property_or_view)
-      else
-        Keyword.put(opts, :view_id, property_or_view)
-      end
-
-    importer_fun.(site, current_user, opts)
+    if Google.API.property?(property_or_view) do
+      opts = Keyword.put(opts, :property, property_or_view)
+      Imported.GoogleAnalytics4.new_import(site, current_user, opts)
+    else
+      opts = Keyword.put(opts, :view_id, property_or_view)
+      Imported.UniversalAnalytics.new_import(site, current_user, opts)
+    end
   end
 end
