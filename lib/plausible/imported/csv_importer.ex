@@ -71,20 +71,12 @@ defmodule Plausible.Imported.CSVImporter do
 
       {table, _, _} = parse_filename!(filename)
       s3_structure = input_structure!(table)
-
-      # NOTE: refactor
-      s3_structure_cols_expr =
-        s3_structure
-        |> String.split(",", trim: true)
-        |> Enum.map_join(", ", fn kv ->
-          [col, _type] = String.split(kv)
-          col
-        end)
+      s3_columns = input_columns!(table)
 
       statement =
         """
-        INSERT INTO {table:Identifier}(site_id, #{s3_structure_cols_expr}, import_id) \
-        SELECT {site_id:UInt64} AS site_id, *, {import_id:UInt64} AS import_id \
+        INSERT INTO {table:Identifier}(site_id,import_id,#{s3_columns}) \
+        SELECT {site_id:UInt64}, {import_id:UInt64}, * \
         FROM s3({s3_url:String},{s3_access_key_id:String},{s3_secret_access_key:String},{s3_format:String},{s3_structure:String}) \
         WHERE date >= {start_date:Date} AND date <= {end_date:Date}\
         """
@@ -115,16 +107,6 @@ defmodule Plausible.Imported.CSVImporter do
       end_date: end_date
     } = site_import
 
-    # NOTE: s3_structure_cols_expr
-    statement =
-      """
-      INSERT INTO {table:Identifier} \
-      SELECT {site_id:UInt64} AS site_id, *, {import_id:UInt64} AS import_id \
-      FROM input({input_structure:String}) \
-      WHERE date >= {start_date:Date} AND date <= {end_date:Date} \
-      FORMAT CSVWithNames\
-      """
-
     DBConnection.run(
       ch,
       fn conn ->
@@ -133,6 +115,16 @@ defmodule Plausible.Imported.CSVImporter do
 
           {table, _, _} = parse_filename!(filename)
           input_structure = input_structure!(table)
+          input_columns = input_columns!(table)
+
+          statement =
+            """
+            INSERT INTO {table:Identifier}(site_id,import_id,#{input_columns}) \
+            SELECT {site_id:UInt64}, {import_id:UInt64}, * \
+            FROM input({input_structure:String}) \
+            WHERE date >= {start_date:Date} AND date <= {end_date:Date} \
+            FORMAT CSVWithNames\
+            """
 
           params = %{
             "table" => table,
@@ -248,6 +240,16 @@ defmodule Plausible.Imported.CSVImporter do
 
   for {table, input_structure} <- input_structures do
     defp input_structure!(unquote(table)), do: unquote(input_structure)
+
+    input_columns =
+      input_structure
+      |> String.split(",", trim: true)
+      |> Enum.map_join(",", fn kv ->
+        [col, _type] = String.split(kv)
+        String.trim(col)
+      end)
+
+    defp input_columns!(unquote(table)), do: unquote(input_columns)
 
     def parse_filename!(
           <<unquote(table)::bytes, ?_, start_date::8-bytes, ?_, end_date::8-bytes, ".csv">>
