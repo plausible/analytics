@@ -85,7 +85,9 @@ defmodule Plausible.Stats.TableDecider do
 
   defp filters_partitioner(_, {"event:" <> _, _}), do: :event
   defp filters_partitioner(_, {"visit:entry_page", _}), do: :session
+  defp filters_partitioner(_, {"visit:entry_page_hostname", _}), do: :session
   defp filters_partitioner(_, {"visit:exit_page", _}), do: :session
+  defp filters_partitioner(_, {"visit:exit_page_hostname", _}), do: :session
 
   defp filters_partitioner(%Query{experimental_reduced_joins?: true}, {"visit:" <> _, _}),
     do: :either

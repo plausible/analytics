@@ -32,7 +32,9 @@ defmodule Plausible.Stats.Filters do
   @event_table_visit_props @visit_props --
                              [
                                :entry_page,
-                               :exit_page
+                               :exit_page,
+                               :entry_page_hostname,
+                               :exit_page_hostname
                              ]
   def event_table_visit_props(), do: @event_table_visit_props |> Enum.map(&to_string/1)
 
