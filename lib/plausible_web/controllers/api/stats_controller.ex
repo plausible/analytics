@@ -204,8 +204,6 @@ defmodule PlausibleWeb.Api.StatsController do
         comparison_labels: comparison_result && label_timeseries(comparison_result, nil),
         present_index: present_index,
         interval: query.interval,
-        with_imported: with_imported?(query, comparison_query),
-        imports_exist: site.complete_import_ids != [],
         full_intervals: full_intervals
       })
     else
