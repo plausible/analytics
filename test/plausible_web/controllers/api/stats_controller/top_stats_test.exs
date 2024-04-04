@@ -803,8 +803,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res =
         json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 3} in res["top_stats"]
-      assert %{"name" => "Total visits", "value" => 3} in res["top_stats"]
+      assert %{"name" => "Unique visitors", "value" => 3, "graph_metric" => "visitors"} in res[
+               "top_stats"
+             ]
+
+      assert %{"name" => "Total visits", "value" => 3, "graph_metric" => "visits"} in res[
+               "top_stats"
+             ]
     end
 
     test "returns only visitors with specific browser", %{conn: conn, site: site} do
@@ -928,8 +933,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 2} in res["top_stats"]
-      assert %{"name" => "Total pageviews", "value" => 2} in res["top_stats"]
+      assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
+               "top_stats"
+             ]
+
+      assert %{"name" => "Total pageviews", "value" => 2, "graph_metric" => "pageviews"} in res[
+               "top_stats"
+             ]
     end
 
     test "hostname glob filter", %{conn: conn, site: site} do
@@ -953,8 +963,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res =
         json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 4} in res["top_stats"]
-      assert %{"name" => "Total pageviews", "value" => 6} in res["top_stats"]
+      assert %{"name" => "Unique visitors", "value" => 4, "graph_metric" => "visitors"} in res[
+               "top_stats"
+             ]
+
+      assert %{"name" => "Total pageviews", "value" => 6, "graph_metric" => "pageviews"} in res[
+               "top_stats"
+             ]
     end
 
     test "hostname glob subdomain filter", %{conn: conn, site: site} do
@@ -972,7 +987,6 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       ])
 
       filters = Jason.encode!(%{hostname: "*.example.com"})
-      # filters = Jason.encode!(%{page: "/blog/*"})
 
       conn =
         get(
@@ -982,8 +996,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Unique visitors", "value" => 3} in res["top_stats"]
-      assert %{"name" => "Total pageviews", "value" => 4} in res["top_stats"]
+      assert %{"name" => "Unique visitors", "value" => 3, "graph_metric" => "visitors"} in res[
+               "top_stats"
+             ]
+
+      assert %{"name" => "Total pageviews", "value" => 4, "graph_metric" => "pageviews"} in res[
+               "top_stats"
+             ]
     end
   end
 

@@ -44,7 +44,6 @@ export function serializeQuery(query, extraQuery = []) {
   if (query.to) { queryObj.to = formatISO(query.to) }
   if (query.filters) { queryObj.filters = serializeFilters(query.filters) }
   if (query.experimental_session_count) { queryObj.experimental_session_count = query.experimental_session_count }
-  if (query.experimental_hostname_filter) { queryObj.experimental_hostname_filter = query.experimental_hostname_filter }
   if (query.with_imported) { queryObj.with_imported = query.with_imported }
   if (SHARED_LINK_AUTH) { queryObj.auth = SHARED_LINK_AUTH }
 

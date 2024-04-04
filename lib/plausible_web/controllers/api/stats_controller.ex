@@ -459,7 +459,7 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
 
     query =
-      if query.experimental_hostname_filter? and query.filters["event:hostname"] do
+      if query.filters["event:hostname"] do
         Query.put_filter(query, "visit:entry_page_hostname", query.filters["event:hostname"])
       else
         query
@@ -771,7 +771,7 @@ defmodule PlausibleWeb.Api.StatsController do
     metrics = breakdown_metrics(query, [:visits, :visit_duration])
 
     query =
-      if query.experimental_hostname_filter? and query.filters["event:hostname"] do
+      if query.filters["event:hostname"] do
         Query.put_filter(query, "visit:entry_page_hostname", query.filters["event:hostname"])
       else
         query
@@ -808,7 +808,7 @@ defmodule PlausibleWeb.Api.StatsController do
     metrics = breakdown_metrics(query, [:visits])
 
     query =
-      if query.experimental_hostname_filter? and query.filters["event:hostname"] do
+      if query.filters["event:hostname"] do
         Query.put_filter(query, "visit:exit_page_hostname", query.filters["event:hostname"])
       else
         query
