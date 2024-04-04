@@ -1,8 +1,7 @@
 import React, { useState } from "react"
 import * as api from '../../api'
-import { getCurrentInterval } from "./interval-picker"
 
-export default function StatsExport({site, query}) {  
+export default function StatsExport({site, query}) {
   const [exporting, setExporting] = useState(false)
 
   function startExport() {
@@ -29,7 +28,8 @@ export default function StatsExport({site, query}) {
   }
 
   function renderExportLink() {
-    const interval = getCurrentInterval(site, query)
+    // FIXME const interval = getCurrentInterval(site, query)
+    const interval = 'day'
     const queryParams = api.serializeQuery(query, [{ interval }])
     const endpoint = `/${encodeURIComponent(site.domain)}/export${queryParams}`
 

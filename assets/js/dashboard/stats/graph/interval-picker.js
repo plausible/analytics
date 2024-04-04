@@ -2,9 +2,7 @@ import { Menu, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import React, { Fragment, useCallback, useEffect } from 'react';
 import classNames from 'classnames'
-import * as storage from '../../util/storage'
 import { isKeyPressed } from '../../keybinding.js'
-import { monthsBetweenDates } from '../../util/date.js'
 
 const INTERVAL_LABELS = {
   'minute': 'Minutes',
@@ -12,22 +10,6 @@ const INTERVAL_LABELS = {
   'date': 'Days',
   'week': 'Weeks',
   'month': 'Months'
-}
-
-function validIntervals(site, query) {
-  if (query.period === "custom" && monthsBetweenDates(query.from, query.to) > 12) {
-    return ["week", "month"]
-  } else {
-    return site.validIntervalsByPeriod[query.period]
-  }
-}
-
-function getStoredInterval(period, domain) {
-  return storage.getItem(`interval__${period}__${domain}`)
-}
-
-function storeInterval(period, domain, interval) {
-  storage.setItem(`interval__${period}__${domain}`, interval)
 }
 
 function subscribeKeybinding(element) {
@@ -41,41 +23,21 @@ function subscribeKeybinding(element) {
   }, [handleKeyPress])
 }
 
-export const getCurrentInterval = function(site, query) {
-  const options = validIntervals(site, query)
-
-  const storedInterval = getStoredInterval(query.period, site.domain)
-  const defaultInterval = [...options].pop()
-
-  if (storedInterval && options.includes(storedInterval)) {
-    return storedInterval
-  } else {
-    return defaultInterval
-  }
-}
-
-export function IntervalPicker({ query, site, onIntervalUpdate }) {
+export function IntervalPicker({ query, currentInterval, options, onIntervalUpdate }) {
   if (query.period == 'realtime') return null
-  
+
   const menuElement = React.useRef(null)
-  const options = validIntervals(site, query)
-  const currentInterval = getCurrentInterval(site, query)
 
   subscribeKeybinding(menuElement)
 
-  function updateInterval(interval) {
-    storeInterval(query.period, site.domain, interval)
-    onIntervalUpdate(interval)
-  }
-
   function renderDropdownItem(option) {
     return (
-      <Menu.Item onClick={() => updateInterval(option)} key={option} disabled={option == currentInterval}>
+      <Menu.Item onClick={() => onIntervalUpdate(option)} key={option} disabled={option == currentInterval}>
         {({ active }) => (
           <span className={classNames({
             'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer': active,
             'text-gray-700 dark:text-gray-200': !active,
-            'font-bold cursor-none select-none': option == currentInterval,
+            'font-bold select-none': option == currentInterval,
           }, 'block px-4 py-2 text-sm')}>
             {INTERVAL_LABELS[option]}
           </span>

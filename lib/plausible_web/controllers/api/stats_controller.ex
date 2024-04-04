@@ -100,10 +100,18 @@ defmodule PlausibleWeb.Api.StatsController do
   def top_report(conn, params) do
     site = conn.assigns[:site]
 
-    with {:ok, dates} <- parse_date_params(params),
-         :ok <- validate_interval(params),
-         :ok <- validate_interval_granularity(site, params, dates),
-         query = Query.from(site, params) do
+    with {:ok, dates} <- parse_date_params(params) do
+      valid_intervals = Plausible.Stats.Interval.valid_by_period(site: site)[params["period"]]
+
+      params =
+        if params["interval"] in valid_intervals do
+          params
+        else
+          Map.delete(params, "interval")
+        end
+
+      query = Query.from(site, params)
+
       timeseries_query =
         if query.period == "realtime" do
           %Query{query | period: "30m"}
@@ -130,6 +138,7 @@ defmodule PlausibleWeb.Api.StatsController do
       labels = label_timeseries(timeseries_result, comparison_result)
       present_index = present_index_for(site, query, labels)
       full_intervals = build_full_intervals(query, labels)
+      valid_intervals = Plausible.Stats.Interval.valid_by_period(site: site)[query.period]
 
       json(conn, %{
         metric: metric,
@@ -146,6 +155,7 @@ defmodule PlausibleWeb.Api.StatsController do
         full_intervals: full_intervals,
         from: query.date_range.first,
         to: query.date_range.last,
+        valid_intervals: valid_intervals,
         top_stats: top_stats,
         sample_percent: sample_percent
       })

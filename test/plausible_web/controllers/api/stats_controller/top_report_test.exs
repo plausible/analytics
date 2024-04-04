@@ -39,5 +39,7 @@ defmodule PlausibleWeb.Api.StatsController.TopReportTest do
     end
 
     test "overrides interval with default when invalid interval provided"
+    test "custom date range interval handling"
+    test "all time date range interval handling"
   end
 end
