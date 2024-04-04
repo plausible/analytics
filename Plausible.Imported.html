@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-156D207A.js"></script>
+    <script src="dist/sidebar_items-C3560AD8.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -178,7 +178,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_import/1" translate="no">get_import(import_id)</a>
+        <a href="#get_import/2" translate="no">get_import(site, import_id)</a>
 
       </div>
 
@@ -236,6 +236,14 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#other_imports_in_progress?/1" translate="no">other_imports_in_progress?(site_import)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#schemas/0" translate="no">schemas()</a>
 
       </div>
@@ -272,7 +280,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">check_dates(site, start_date, end_date)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L153" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L163" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -301,7 +309,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">delete_imports_for_site(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L145" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L155" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -320,14 +328,14 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
 
   </section>
 </section>
-<section class="detail" id="get_import/1">
+<section class="detail" id="get_import/2">
 
   <div class="detail-header">
-    <a href="#get_import/1" class="detail-link" title="Link to this function">
+    <a href="#get_import/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">get_import(import_id)</h1>
+    <h1 class="signature" translate="no">get_import(site, import_id)</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L66" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -341,7 +349,8 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get_import(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: <a href="Plausible.Imported.SiteImport.html#t:t/0">Plausible.Imported.SiteImport.t</a>() | nil</pre>
+          <pre translate="no"><span class="attribute">@spec</span> get_import(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
+  <a href="Plausible.Imported.SiteImport.html#t:t/0">Plausible.Imported.SiteImport.t</a>() | nil</pre>
 
       </div>
 
@@ -357,7 +366,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">get_imports_date_range(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L117" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L127" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -420,7 +429,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">list_complete_import_ids(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L93" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L103" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -511,6 +520,34 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> max_complete_imports() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="other_imports_in_progress?/1">
+
+  <div class="detail-header">
+    <a href="#other_imports_in_progress?/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">other_imports_in_progress?(site_import)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L87" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> other_imports_in_progress?(<a href="Plausible.Imported.SiteImport.html#t:t/0">Plausible.Imported.SiteImport.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
 
       </div>
 
