@@ -10,14 +10,6 @@ import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
 import LineGraphWithRouter from './line-graph'
 
-function getStoredInterval(period, domain) {
-  return storage.getItem(`interval__${period}__${domain}`)
-}
-
-function storeInterval(period, domain, interval) {
-  storage.setItem(`interval__${period}__${domain}`, interval)
-}
-
 function fetchMainGraph(site, query, metric, interval) {
   const params = {metric, interval}
   return api.get(url.apiPath(site, '/main-graph'), query, params)
@@ -48,17 +40,17 @@ export default function VisitorGraph(props) {
 
 
   const onIntervalUpdate = useCallback((newInterval) => {
-    storeInterval(query.period, site.domain, newInterval)
+    storage.setInterval(site, query, newInterval)
     setGraphData(null)
     setGraphRefreshing(true)
-    fetchGraphData(getStoredMetric(), newInterval)
+    fetchGraphData(storage.getMetric(site), newInterval)
   }, [query])
 
   const onMetricUpdate = useCallback((newMetric) => {
-    storage.setItem(`metric__${site.domain}`, newMetric)
+    storage.setMetric(site, newMetric)
     setGraphData(null)
     setGraphRefreshing(true)
-    fetchGraphData(newMetric, getStoredInterval(query.period, site.domain))
+    fetchGraphData(newMetric, storage.getInterval(site, query))
   }, [query])
 
   useEffect(() => {
@@ -82,13 +74,13 @@ export default function VisitorGraph(props) {
   }, [topStatData])
 
   function fetchTopStatsAndGraphData() {
-    const metric = getStoredMetric()
-    const interval = getStoredInterval(query.period, site.domain)
+    const metric = storage.getMetric(site)
+    const interval = storage.getInterval(site, query)
 
     fetchTopReport(site, query, metric, interval)
       .then((res) => {
-        storeInterval(query.period, site.domain, res.interval)
-        storage.setItem(`metric__${site.domain}`, res.metric)
+        storage.setInterval(site, query, res.interval)
+        storage.setMetric(site, res.metric)
         setTopStatData(res)
         setTopStatsLoading(false)
         setGraphData(res)
@@ -103,10 +95,6 @@ export default function VisitorGraph(props) {
         setGraphLoading(false)
         setGraphRefreshing(false)
       })
-  }
-
-  function getStoredMetric() {
-    return storage.getItem(`metric__${site.domain}`)
   }
 
   function storeTopStatsContainerHeight() {
@@ -139,7 +127,7 @@ export default function VisitorGraph(props) {
             {!isRealtime && <StatsExport site={site} query={query} />}
             <SamplingNotice samplePercent={topStatData}/>
             <WithImportedSwitch site={site} topStatData={topStatData} />
-            <IntervalPicker query={query} currentInterval={getStoredInterval(query.period, site.domain)} options={topStatData?.valid_intervals || []} onIntervalUpdate={onIntervalUpdate} />
+            <IntervalPicker query={query} currentInterval={storage.getInterval(site, query)} options={topStatData?.valid_intervals || []} onIntervalUpdate={onIntervalUpdate} />
           </div>
           <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} query={query} />
         </div>

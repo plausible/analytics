@@ -33,3 +33,19 @@ export function getItem(key) {
     return memStore[key]
   }
 }
+
+export function setInterval(site, query, interval) {
+  setItem(`interval__${query.period}__${site.domain}`, interval)
+}
+
+export function getInterval(site, query) {
+  return getItem(`interval__${query.period}__${site.domain}`)
+}
+
+export function setMetric(site, metric) {
+  setItem(`metric__${site.domain}`, metric)
+}
+
+export function getMetric(site) {
+  return getItem(`metric__${site.domain}`)
+}
