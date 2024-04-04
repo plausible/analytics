@@ -131,8 +131,6 @@ defmodule PlausibleWeb.Api.StatsController do
       present_index = present_index_for(site, query, labels)
       full_intervals = build_full_intervals(query, labels)
 
-      site_import = Plausible.Imported.get_earliest_import(site)
-
       json(conn, %{
         metric: metric,
         plot: plot_timeseries(timeseries_result, metric),
@@ -144,7 +142,7 @@ defmodule PlausibleWeb.Api.StatsController do
         present_index: present_index,
         interval: query.interval,
         with_imported: with_imported?(query, comparison_query),
-        imported_source: site_import && SiteImport.label(site_import),
+        imports_exist: site.complete_import_ids != [],
         full_intervals: full_intervals,
         from: query.date_range.first,
         to: query.date_range.last,
