@@ -62,9 +62,9 @@ defmodule Plausible.Imported do
     }
   end
 
-  @spec get_import(non_neg_integer()) :: SiteImport.t() | nil
-  def get_import(import_id) do
-    Repo.get(SiteImport, import_id)
+  @spec get_import(Site.t(), non_neg_integer()) :: SiteImport.t() | nil
+  def get_import(site, import_id) do
+    Repo.get_by(SiteImport, id: import_id, site_id: site.id)
   end
 
   defdelegate listen(), to: Imported.Importer
@@ -81,6 +81,16 @@ defmodule Plausible.Imported do
     else
       imports
     end
+  end
+
+  @spec other_imports_in_progress?(SiteImport.t()) :: boolean()
+  def other_imports_in_progress?(site_import) do
+    Repo.exists?(
+      from(i in SiteImport,
+        where: i.site_id == ^site_import.site_id and i.id != ^site_import.id,
+        where: i.status in ^[SiteImport.pending(), SiteImport.importing()]
+      )
+    )
   end
 
   defp maybe_filter_by_status(query, nil), do: query
