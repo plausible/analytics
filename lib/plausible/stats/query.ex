@@ -10,6 +10,7 @@ defmodule Plausible.Stats.Query do
             include_imported: false,
             now: nil,
             experimental_session_count?: false,
+            experimental_reduced_joins?: false,
             experimental_hostname_filter?: false
 
   require OpenTelemetry.Tracer, as: Tracer
@@ -23,7 +24,9 @@ defmodule Plausible.Stats.Query do
     query =
       __MODULE__
       |> struct!(now: now)
-      |> put_experimental_flags(params)
+      |> put_experimental_session_count(site, params)
+      |> put_experimental_reduced_joins(site, params)
+      |> put_experimental_hostname_filter(params)
       |> put_period(site, params)
       |> put_interval(params)
       |> put_parsed_filters(params)
@@ -37,14 +40,38 @@ defmodule Plausible.Stats.Query do
     query
   end
 
-  defp put_experimental_flags(query, params) do
-    %{
-      "experimental_session_count" => :experimental_session_count?,
-      "experimental_hostname_filter" => :experimental_hostname_filter?
-    }
-    |> Enum.reduce(query, fn {param, flag}, query ->
-      if Map.get(params, param) == "true", do: Map.put(query, flag, true), else: query
-    end)
+  defp put_experimental_session_count(query, site, params) do
+    if Map.has_key?(params, "experimental_session_count") do
+      struct!(query,
+        experimental_session_count?: Map.get(params, "experimental_session_count") == "true"
+      )
+    else
+      struct!(query,
+        experimental_session_count?: FunWithFlags.enabled?(:experimental_session_count, for: site)
+      )
+    end
+  end
+
+  defp put_experimental_reduced_joins(query, site, params) do
+    if Map.has_key?(params, "experimental_reduced_joins") do
+      struct!(query,
+        experimental_reduced_joins?: Map.get(params, "experimental_reduced_joins") == "true"
+      )
+    else
+      struct!(query,
+        experimental_reduced_joins?: FunWithFlags.enabled?(:experimental_reduced_joins, for: site)
+      )
+    end
+  end
+
+  defp put_experimental_hostname_filter(query, params) do
+    if Map.has_key?(params, "experimental_hostname_filter") do
+      struct!(query,
+        experimental_hostname_filter?: Map.get(params, "experimental_hostname_filter") == "true"
+      )
+    else
+      query
+    end
   end
 
   defp put_period(query, site, %{"period" => "realtime"}) do

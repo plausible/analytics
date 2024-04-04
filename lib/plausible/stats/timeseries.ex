@@ -18,15 +18,11 @@ defmodule Plausible.Stats.Timeseries do
   @typep value :: nil | integer() | float()
   @type results :: nonempty_list(%{required(:date) => Date.t(), required(metric()) => value()})
 
-  @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
-
-  @event_metrics [:visitors, :pageviews, :events, :conversion_rate] ++ @revenue_metrics
-  @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit]
   def timeseries(site, query, metrics) do
     steps = buckets(query)
 
-    event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
-    session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
+    {event_metrics, session_metrics, _} =
+      Plausible.Stats.TableDecider.partition_metrics(metrics, query)
 
     {currency, event_metrics} =
       on_full_build do

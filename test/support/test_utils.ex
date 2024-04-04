@@ -90,31 +90,6 @@ defmodule Plausible.TestUtils do
     Plausible.IngestRepo.insert_all(Plausible.ClickhouseEventV2, pageviews)
   end
 
-  def create_events(events) do
-    events =
-      Enum.map(events, fn event ->
-        Factory.build(:event, event)
-        |> Map.from_struct()
-        |> Map.delete(:__meta__)
-        |> update_in([:timestamp], &to_naive_truncate/1)
-      end)
-
-    Plausible.IngestRepo.insert_all(Plausible.ClickhouseEventV2, events)
-  end
-
-  def create_sessions(sessions) do
-    sessions =
-      Enum.map(sessions, fn session ->
-        Factory.build(:ch_session, session)
-        |> Map.from_struct()
-        |> Map.delete(:__meta__)
-        |> update_in([:timestamp], &to_naive_truncate/1)
-        |> update_in([:start], &to_naive_truncate/1)
-      end)
-
-    Plausible.IngestRepo.insert_all(Plausible.ClickhouseSessionV2, sessions)
-  end
-
   def log_in(%{user: user, conn: conn}) do
     conn =
       init_session(conn)
