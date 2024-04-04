@@ -16,12 +16,12 @@ const LoadingState = {
   READY: 'ready'
 }
 
-function fetchMainGraph(site, query, metric, interval) {
-  return api.get(url.apiPath(site, '/main-graph'), query, {metric, interval})
-}
-
 function fetchTopReport(site, query, metric, interval) {
   return api.get(url.apiPath(site, '/top-report'), query, {metric, interval})
+}
+
+function fetchMainGraph(site, query, metric, interval) {
+  return api.get(url.apiPath(site, '/main-graph'), query, {metric, interval})
 }
 
 export default function VisitorGraph(props) {
