@@ -294,10 +294,10 @@ tables  into the format of <code class="inline">imported_*</code> tables for a w
 
   <section class="docstring">
 
-<p>Renders filename for the Zip archive containing the exported CSV files.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">archive_filename</span><span class="p" data-group-id="6249986924-1">(</span><span class="s">&quot;plausible.io&quot;</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2021-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2024-12-31]</span><span class="p" data-group-id="6249986924-1">)</span><span class="w">
+<p>Renders filename for the Zip archive containing the exported CSV files.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">archive_filename</span><span class="p" data-group-id="0166046094-1">(</span><span class="s">&quot;plausible.io&quot;</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2021-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2024-12-31]</span><span class="p" data-group-id="0166046094-1">)</span><span class="w">
 </span><span class="s">&quot;plausible_io_20210101_20241231.zip&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">archive_filename</span><span class="p" data-group-id="6249986924-2">(</span><span class="s">&quot;Bücher.example&quot;</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2021-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2024-12-31]</span><span class="p" data-group-id="6249986924-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">archive_filename</span><span class="p" data-group-id="0166046094-2">(</span><span class="s">&quot;Bücher.example&quot;</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2021-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2024-12-31]</span><span class="p" data-group-id="0166046094-2">)</span><span class="w">
 </span><span class="s">&quot;Bücher_example_20210101_20241231.zip&quot;</span></code></pre>
   </section>
 </section>
@@ -310,7 +310,7 @@ tables  into the format of <code class="inline">imported_*</code> tables for a w
     </a>
     <h1 class="signature" translate="no">export_browsers_q(site_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L312" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L304" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -338,7 +338,7 @@ tables  into the format of <code class="inline">imported_*</code> tables for a w
     </a>
     <h1 class="signature" translate="no">export_devices_q(site_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L296" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L287" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -366,7 +366,7 @@ tables  into the format of <code class="inline">imported_*</code> tables for a w
     </a>
     <h1 class="signature" translate="no">export_entry_pages_q(site_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L241" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L227" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -394,7 +394,7 @@ tables  into the format of <code class="inline">imported_*</code> tables for a w
     </a>
     <h1 class="signature" translate="no">export_exit_pages_q(site_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L260" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L247" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -422,7 +422,7 @@ tables  into the format of <code class="inline">imported_*</code> tables for a w
     </a>
     <h1 class="signature" translate="no">export_locations_q(site_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L277" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L267" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -450,7 +450,7 @@ tables  into the format of <code class="inline">imported_*</code> tables for a w
     </a>
     <h1 class="signature" translate="no">export_operating_systems_q(site_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L328" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L322" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -478,7 +478,7 @@ tables  into the format of <code class="inline">imported_*</code> tables for a w
     </a>
     <h1 class="signature" translate="no">export_pages_q(site_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L197" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L178" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -540,7 +540,7 @@ tables  into the format of <code class="inline">imported_*</code> tables for a w
     </a>
     <h1 class="signature" translate="no">export_sources_q(site_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L170" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L146" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -568,7 +568,7 @@ tables  into the format of <code class="inline">imported_*</code> tables for a w
     </a>
     <h1 class="signature" translate="no">export_visitors_q(site_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L122" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L131" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -598,7 +598,7 @@ tables  into the format of <code class="inline">imported_*</code> tables for a w
     </a>
     <h1 class="signature" translate="no">stream_archive(conn, named_queries, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L360" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/exports.ex#L356" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -617,14 +617,14 @@ tables  into the format of <code class="inline">imported_*</code> tables for a w
 
       </div>
 
-<p>Creates a streamable Zip archive from the provided (named) Ecto queries.</p><p>Example usage:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="5567318191-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pool</span><span class="p" data-group-id="5567318191-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Ch</span><span class="o">.</span><span class="n">start_link</span><span class="p" data-group-id="5567318191-2">(</span><span class="ss">pool_size</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="5567318191-2">)</span><span class="w">
+<p>Creates a streamable Zip archive from the provided (named) Ecto queries.</p><p>Example usage:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="5795156609-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pool</span><span class="p" data-group-id="5795156609-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Ch</span><span class="o">.</span><span class="n">start_link</span><span class="p" data-group-id="5795156609-2">(</span><span class="ss">pool_size</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="5795156609-2">)</span><span class="w">
 
-</span><span class="nc">DBConnection</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="5567318191-3">(</span><span class="n">pool</span><span class="p">,</span><span class="w"> </span><span class="k" data-group-id="5567318191-4">fn</span><span class="w"> </span><span class="n">conn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+</span><span class="nc">DBConnection</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="5795156609-3">(</span><span class="n">pool</span><span class="p">,</span><span class="w"> </span><span class="k" data-group-id="5795156609-4">fn</span><span class="w"> </span><span class="n">conn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
   </span><span class="n">conn</span><span class="w">
-  </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">stream_archive</span><span class="p" data-group-id="5567318191-5">(</span><span class="n">export_queries</span><span class="p" data-group-id="5567318191-6">(</span><span class="c">_site_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="5567318191-6">)</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;CSVWithNames&quot;</span><span class="p" data-group-id="5567318191-5">)</span><span class="w">
-  </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">into</span><span class="p" data-group-id="5567318191-7">(</span><span class="nc">File</span><span class="o">.</span><span class="n">stream!</span><span class="p" data-group-id="5567318191-8">(</span><span class="s">&quot;export.zip&quot;</span><span class="p" data-group-id="5567318191-8">)</span><span class="p" data-group-id="5567318191-7">)</span><span class="w">
-  </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="5567318191-9">(</span><span class="p" data-group-id="5567318191-9">)</span><span class="w">
-</span><span class="k" data-group-id="5567318191-4">end</span><span class="p" data-group-id="5567318191-3">)</span></code></pre>
+  </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">stream_archive</span><span class="p" data-group-id="5795156609-5">(</span><span class="n">export_queries</span><span class="p" data-group-id="5795156609-6">(</span><span class="c">_site_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="5795156609-6">)</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;CSVWithNames&quot;</span><span class="p" data-group-id="5795156609-5">)</span><span class="w">
+  </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">into</span><span class="p" data-group-id="5795156609-7">(</span><span class="nc">File</span><span class="o">.</span><span class="n">stream!</span><span class="p" data-group-id="5795156609-8">(</span><span class="s">&quot;export.zip&quot;</span><span class="p" data-group-id="5795156609-8">)</span><span class="p" data-group-id="5795156609-7">)</span><span class="w">
+  </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="5795156609-9">(</span><span class="p" data-group-id="5795156609-9">)</span><span class="w">
+</span><span class="k" data-group-id="5795156609-4">end</span><span class="p" data-group-id="5795156609-3">)</span></code></pre>
   </section>
 </section>
 
