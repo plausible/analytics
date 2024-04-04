@@ -16,14 +16,6 @@ const LoadingState = {
   READY: 'ready'
 }
 
-function fetchTopReport(site, query, metric, interval) {
-  return api.get(url.apiPath(site, '/top-report'), query, {metric, interval})
-}
-
-function fetchMainGraph(site, query, metric, interval) {
-  return api.get(url.apiPath(site, '/main-graph'), query, {metric, interval})
-}
-
 export default function VisitorGraph(props) {
   const {site, query, lastLoadTimestamp} = props
   const isRealtime = query.period === 'realtime'
@@ -72,7 +64,7 @@ export default function VisitorGraph(props) {
     const metric = storage.getMetric(site)
     const interval = storage.getInterval(site, query)
 
-    fetchTopReport(site, query, metric, interval)
+    api.get(url.apiPath(site, '/top-report'), query, {metric, interval})
       .then((res) => {
         storage.setInterval(site, query, res.interval)
         storage.setMetric(site, res.metric)
@@ -83,7 +75,7 @@ export default function VisitorGraph(props) {
   }
 
   function fetchGraphData(metric, interval) {
-    fetchMainGraph(site, query, metric, interval)
+    api.get(url.apiPath(site, '/main-graph'), query, {metric, interval})
       .then((res) => {
         setGraphData(res)
         setLoadingState(LoadingState.READY)
