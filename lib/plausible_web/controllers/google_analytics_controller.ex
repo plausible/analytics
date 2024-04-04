@@ -96,6 +96,14 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         )
         |> redirect(external: redirect_route)
 
+      {:error, :timeout} ->
+        conn
+        |> put_flash(
+          :error,
+          "Google Analytics API has timed out. Please try again."
+        )
+        |> redirect(external: redirect_route)
+
       {:error, _any} ->
         conn
         |> put_flash(
@@ -168,6 +176,14 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         )
         |> redirect(external: redirect_route)
 
+      {:error, :timeout} ->
+        conn
+        |> put_flash(
+          :error,
+          "Google Analytics API has timed out. Please try again."
+        )
+        |> redirect(external: redirect_route)
+
       {:error, _any} ->
         conn
         |> put_flash(
@@ -222,6 +238,14 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         |> put_flash(
           :error,
           "Google Analytics authentication seems to have expired. Please try again."
+        )
+        |> redirect(external: redirect_route)
+
+      {:error, :timeout} ->
+        conn
+        |> put_flash(
+          :error,
+          "Google Analytics API has timed out. Please try again."
         )
         |> redirect(external: redirect_route)
 
