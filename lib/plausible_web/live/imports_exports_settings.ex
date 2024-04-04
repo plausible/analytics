@@ -62,9 +62,11 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       <li :for={entry <- @site_imports} class="py-4 flex items-center justify-between space-x-4">
         <div class="flex flex-col">
           <p class="text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">
-            Import from <%= Plausible.Imported.SiteImport.label(entry.site_import) %>
+            <%= Plausible.Imported.SiteImport.label(entry.site_import) %>
             <span :if={entry.live_status == SiteImport.completed()} class="text-xs font-normal">
-              (<%= Map.get(@pageview_counts, entry.site_import.id, 0) %> page views)
+              (<%= PlausibleWeb.StatsView.large_number_format(
+                Map.get(@pageview_counts, entry.site_import.id, 0)
+              ) %> page views)
             </span>
             <Heroicons.clock
               :if={entry.live_status == SiteImport.pending()}

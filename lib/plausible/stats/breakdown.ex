@@ -6,7 +6,7 @@ defmodule Plausible.Stats.Breakdown do
   import Plausible.Stats.{Base, Imported}
   import Ecto.Query
   require OpenTelemetry.Tracer, as: Tracer
-  alias Plausible.Stats.{Query, Util}
+  alias Plausible.Stats.{Query, Util, TableDecider}
 
   @no_ref "Direct / None"
   @not_set "(not set)"
@@ -103,7 +103,6 @@ defmodule Plausible.Stats.Breakdown do
         {event_q, page_q} ->
           from(
             e in subquery(union_all(event_q, ^page_q)),
-            # :TODO: Handle other orderings
             order_by: [desc: e.visitors]
           )
           |> apply_pagination(pagination)
@@ -200,9 +199,35 @@ defmodule Plausible.Stats.Breakdown do
 
     metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @computed_metrics
 
-    breakdown_sessions(site, query, property, metrics_to_select)
-    |> maybe_add_group_conversion_rate(&breakdown_sessions/4, site, query, property, metrics)
-    |> paginate_and_execute(metrics, pagination)
+    case breakdown_table(query, metrics, property) do
+      :session ->
+        breakdown_sessions(site, query, property, metrics_to_select)
+        |> maybe_add_group_conversion_rate(&breakdown_sessions/4, site, query, property, metrics)
+        |> paginate_and_execute(metrics, pagination)
+
+      :event ->
+        breakdown_events(site, query, property, metrics_to_select)
+        |> maybe_add_group_conversion_rate(&breakdown_events/4, site, query, property, metrics)
+        |> paginate_and_execute(metrics, pagination)
+    end
+  end
+
+  # Backwards compatibility
+  # defp breakdown_table(%Query{experimental_reduced_joins?: false}, _, _), do: :session
+
+  defp breakdown_table(_query, _metrics, "visit:entry_page"), do: :session
+  defp breakdown_table(_query, _metrics, "visit:entry_page_hostname"), do: :session
+  defp breakdown_table(_query, _metrics, "visit:exit_page"), do: :session
+  defp breakdown_table(_query, _metrics, "visit:exit_page_hostname"), do: :session
+
+  defp breakdown_table(query, metrics, property) do
+    {_, session_metrics, _} = TableDecider.partition_metrics(metrics, query, property)
+
+    if not Enum.empty?(session_metrics) do
+      :session
+    else
+      :event
+    end
   end
 
   defp zip_results(event_result, session_result, property, metrics) do
@@ -273,94 +298,6 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp breakdown_time_on_page(site, query, pages) do
-    if FunWithFlags.enabled?(:window_time_on_page) do
-      window_breakdown_time_on_page(site, query, pages)
-    else
-      neighbor_breakdown_time_on_page(site, query, pages)
-    end
-  end
-
-  defp neighbor_breakdown_time_on_page(site, query, pages) do
-    q =
-      from(
-        e in base_event_query(site, Query.remove_event_filters(query, [:page, :props])),
-        select: {
-          fragment("? as p", e.pathname),
-          fragment("? as t", e.timestamp),
-          fragment("? as s", e.session_id)
-        },
-        order_by: [e.session_id, e.timestamp]
-      )
-
-    {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
-
-    select =
-      if query.include_imported do
-        "sum(td), count(case when p2 != p then 1 end)"
-      else
-        "round(sum(td)/count(case when p2 != p then 1 end))"
-      end
-
-    pages_idx = length(base_query_raw_params)
-    params = base_query_raw_params ++ [pages]
-
-    time_query = "
-      SELECT
-        p,
-        #{select}
-      FROM
-        (SELECT
-          p,
-          p2,
-          sum(t2-t) as td
-        FROM
-          (SELECT
-            *,
-            neighbor(t, 1) as t2,
-            neighbor(p, 1) as p2,
-            neighbor(s, 1) as s2
-          FROM (#{base_query_raw}))
-        WHERE s=s2 AND p IN {$#{pages_idx}:Array(String)}
-        GROUP BY p,p2,s)
-      GROUP BY p"
-
-    {:ok, res} = ClickhouseRepo.query(time_query, params)
-
-    if query.include_imported do
-      # Imported page views have pre-calculated values
-      res =
-        res.rows
-        |> Enum.map(fn [page, time, visits] -> {page, {time, visits}} end)
-        |> Enum.into(%{})
-
-      from(
-        i in "imported_pages",
-        group_by: i.page,
-        where: i.site_id == ^site.id,
-        where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
-        where: i.page in ^pages,
-        select: %{
-          page: i.page,
-          pageviews: fragment("sum(?) - sum(?)", i.pageviews, i.exits),
-          time_on_page: sum(i.time_on_page)
-        }
-      )
-      |> ClickhouseRepo.all()
-      |> Enum.reduce(res, fn %{page: page, pageviews: pageviews, time_on_page: time}, res ->
-        {restime, resviews} = Map.get(res, page, {0, 0})
-        Map.put(res, page, {restime + time, resviews + pageviews})
-      end)
-      |> Enum.map(fn
-        {page, {_, 0}} -> {page, nil}
-        {page, {time, pageviews}} -> {page, time / pageviews}
-      end)
-      |> Enum.into(%{})
-    else
-      res.rows |> Enum.map(fn [page, time] -> {page, time} end) |> Enum.into(%{})
-    end
-  end
-
-  defp window_breakdown_time_on_page(site, query, pages) do
     import Ecto.Query
 
     windowed_pages_q =

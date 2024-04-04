@@ -64,13 +64,14 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: site,
           has_goals: Plausible.Sites.has_goals?(site),
+          revenue_goals: list_revenue_goals(site),
           funnels: list_funnels(site),
           has_props: Plausible.Props.configured?(site),
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
           title: title(conn, site),
           demo: demo,
-          flags: get_flags(conn.assigns[:current_user]),
+          flags: get_flags(conn.assigns[:current_user], site),
           is_dbip: is_dbip(),
           dogfood_page_path: dogfood_page_path,
           load_dashboard_js: true
@@ -92,10 +93,13 @@ defmodule PlausibleWeb.StatsController do
     defp list_funnels(site) do
       Plausible.Funnels.list(site)
     end
-  else
-    defp list_funnels(_site) do
-      []
+
+    defp list_revenue_goals(site) do
+      Plausible.Goals.list_revenue_goals(site)
     end
+  else
+    defp list_funnels(_site), do: []
+    defp list_revenue_goals(_site), do: []
   end
 
   @doc """
@@ -319,6 +323,7 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: shared_link.site,
           has_goals: Sites.has_goals?(shared_link.site),
+          revenue_goals: list_revenue_goals(shared_link.site),
           funnels: list_funnels(shared_link.site),
           has_props: Plausible.Props.configured?(shared_link.site),
           stats_start_date: stats_start_date,
@@ -330,7 +335,7 @@ defmodule PlausibleWeb.StatsController do
           embedded: conn.params["embed"] == "true",
           background: conn.params["background"],
           theme: conn.params["theme"],
-          flags: get_flags(conn.assigns[:current_user]),
+          flags: get_flags(conn.assigns[:current_user], shared_link.site),
           is_dbip: is_dbip(),
           load_dashboard_js: true
         )
@@ -348,8 +353,12 @@ defmodule PlausibleWeb.StatsController do
 
   defp shared_link_cookie_name(slug), do: "shared-link-" <> slug
 
-  defp get_flags(_user) do
-    %{}
+  defp get_flags(user, site) do
+    %{
+      hostname_filter:
+        FunWithFlags.enabled?(:hostname_filter, for: user) ||
+          FunWithFlags.enabled?(:hostname_filter, for: site)
+    }
   end
 
   defp is_dbip() do

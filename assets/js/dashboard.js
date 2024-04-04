@@ -22,6 +22,7 @@ if (container) {
     conversionsOptedOut: container.dataset.conversionsOptedOut === 'true',
     funnelsOptedOut: container.dataset.funnelsOptedOut === 'true',
     propsOptedOut: container.dataset.propsOptedOut === 'true',
+    revenueGoals: JSON.parse(container.dataset.revenueGoals),
     funnels: JSON.parse(container.dataset.funnels),
     statsBegin: container.dataset.statsBegin,
     nativeStatsBegin: container.dataset.nativeStatsBegin,

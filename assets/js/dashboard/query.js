@@ -59,6 +59,7 @@ export function parseQuery(querystring, site) {
       'region': q.get('region'),
       'city': q.get('city'),
       'page': q.get('page'),
+      'hostname': q.get('hostname'),
       'entry_page': q.get('entry_page'),
       'exit_page': q.get('exit_page')
     }

@@ -55,6 +55,14 @@ defmodule Plausible.Google.API do
     end
   end
 
+  def get_analytics_end_date(access_token, property_or_view) do
+    if property?(property_or_view) do
+      Plausible.Google.GA4.API.get_analytics_end_date(access_token, property_or_view)
+    else
+      Plausible.Google.UA.API.get_analytics_end_date(access_token, property_or_view)
+    end
+  end
+
   def fetch_verified_properties(auth) do
     with {:ok, access_token} <- maybe_refresh_token(auth),
          {:ok, sites} <- Plausible.Google.HTTP.list_sites(access_token) do

@@ -43,6 +43,7 @@ defmodule Plausible.ClickhouseSessionV2 do
     field :is_bounce, BoolUInt8
     field :entry_page, :string
     field :exit_page, :string
+    field :exit_page_hostname, :string
     field :pageviews, Ch, type: "Int32"
     field :events, Ch, type: "Int32"
     field :sign, Ch, type: "Int8"

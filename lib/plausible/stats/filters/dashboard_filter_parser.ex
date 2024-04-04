@@ -31,7 +31,7 @@ defmodule Plausible.Stats.Filters.DashboardFilterParser do
     {is_negated, val} = parse_negated_prefix(val)
     {is_contains, val} = parse_contains_prefix(val)
     is_list = list_expression?(val)
-    is_wildcard = String.contains?(key, ["page", "goal"]) && wildcard_expression?(val)
+    is_wildcard = String.contains?(key, ["page", "goal", "hostname"]) && wildcard_expression?(val)
     val = if is_list, do: parse_member_list(val), else: remove_escape_chars(val)
     val = if key == "goal", do: wrap_goal_value(val), else: val
 

@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Base do
   use Plausible
   use Plausible.Stats.Fragments
 
-  alias Plausible.Stats.{Query, Filters}
+  alias Plausible.Stats.{Query, Filters, TableDecider}
   alias Plausible.Timezones
   import Ecto.Query
 
@@ -15,7 +15,7 @@ defmodule Plausible.Stats.Base do
   def base_event_query(site, query) do
     events_q = query_events(site, query)
 
-    if Enum.any?(Filters.visit_props(), &query.filters["visit:" <> &1]) do
+    if TableDecider.events_join_sessions?(query) do
       sessions_q =
         from(
           s in query_sessions(site, query),
@@ -30,11 +30,15 @@ defmodule Plausible.Stats.Base do
         on: e.session_id == sq.session_id
       )
     else
-      events_q
+      if query.experimental_reduced_joins? do
+        events_q |> filter_by_visit_props(Filters.event_table_visit_props(), query)
+      else
+        events_q
+      end
     end
   end
 
-  def query_events(site, query) do
+  defp query_events(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     q =
@@ -48,7 +52,10 @@ defmodule Plausible.Stats.Base do
       q = Plausible.Stats.Sampling.add_query_hint(q, query)
     end
 
-    q = from(e in q, where: ^dynamic_filter_condition(query, "event:page", :pathname))
+    q =
+      q
+      |> where([e], ^dynamic_filter_condition(query, "event:page", :pathname))
+      |> where([e], ^dynamic_filter_condition(query, "event:hostname", :hostname))
 
     q =
       case query.filters["event:name"] do
@@ -122,17 +129,6 @@ defmodule Plausible.Stats.Base do
     q
   end
 
-  @api_prop_name_to_db %{
-    "source" => "referrer_source",
-    "device" => "screen_size",
-    "screen" => "screen_size",
-    "os" => "operating_system",
-    "os_version" => "operating_system_version",
-    "country" => "country_code",
-    "region" => "subdivision1_code",
-    "city" => "city_geoname_id"
-  }
-
   def query_sessions(site, query) do
     {first_datetime, last_datetime} =
       utc_boundaries(query, site)
@@ -140,8 +136,7 @@ defmodule Plausible.Stats.Base do
     q = from(s in "sessions_v2", where: s.site_id == ^site.id)
 
     sessions_q =
-      if FunWithFlags.enabled?(:experimental_session_count, for: site) or
-           query.experimental_session_count? do
+      if query.experimental_session_count? do
         from s in q, where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
       else
         from s in q, where: s.start >= ^first_datetime and s.start < ^last_datetime
@@ -151,9 +146,24 @@ defmodule Plausible.Stats.Base do
       sessions_q = Plausible.Stats.Sampling.add_query_hint(sessions_q, query)
     end
 
-    sessions_q = filter_by_entry_props(sessions_q, query)
+    filter_by_entry_props(sessions_q, query)
+    |> filter_by_visit_props(Filters.visit_props(), query)
+  end
 
-    Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->
+  @api_prop_name_to_db %{
+    "source" => "referrer_source",
+    "device" => "screen_size",
+    "screen" => "screen_size",
+    "os" => "operating_system",
+    "os_version" => "operating_system_version",
+    "country" => "country_code",
+    "region" => "subdivision1_code",
+    "city" => "city_geoname_id",
+    "entry_page_hostname" => "hostname"
+  }
+
+  defp filter_by_visit_props(q, visit_props, query) do
+    Enum.reduce(visit_props, q, fn prop_name, sessions_q ->
       filter_key = "visit:" <> prop_name
 
       db_field =
@@ -234,6 +244,13 @@ defmodule Plausible.Stats.Base do
   defp select_event_metric(:visitors) do
     %{
       visitors: dynamic([e], selected_as(fragment(@uniq_users_expression, e.user_id), :visitors))
+    }
+  end
+
+  defp select_event_metric(:visits) do
+    %{
+      visits:
+        dynamic([e], fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.session_id))
     }
   end
 

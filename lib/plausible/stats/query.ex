@@ -9,7 +9,8 @@ defmodule Plausible.Stats.Query do
             imported_data_requested: false,
             include_imported: false,
             now: nil,
-            experimental_session_count?: false
+            experimental_session_count?: false,
+            experimental_reduced_joins?: false
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{Filters, Interval}
@@ -22,7 +23,8 @@ defmodule Plausible.Stats.Query do
     query =
       __MODULE__
       |> struct!(now: now)
-      |> put_experimental_session_count(params)
+      |> put_experimental_session_count(site, params)
+      |> put_experimental_reduced_joins(site, params)
       |> put_period(site, params)
       |> put_interval(params)
       |> put_parsed_filters(params)
@@ -36,11 +38,27 @@ defmodule Plausible.Stats.Query do
     query
   end
 
-  defp put_experimental_session_count(query, params) do
-    if Map.get(params, "experimental_session_count") == "true" do
-      struct!(query, experimental_session_count?: true)
+  defp put_experimental_session_count(query, site, params) do
+    if Map.has_key?(params, "experimental_session_count") do
+      struct!(query,
+        experimental_session_count?: Map.get(params, "experimental_session_count") == "true"
+      )
     else
-      query
+      struct!(query,
+        experimental_session_count?: FunWithFlags.enabled?(:experimental_session_count, for: site)
+      )
+    end
+  end
+
+  defp put_experimental_reduced_joins(query, site, params) do
+    if Map.has_key?(params, "experimental_reduced_joins") do
+      struct!(query,
+        experimental_reduced_joins?: Map.get(params, "experimental_reduced_joins") == "true"
+      )
+    else
+      struct!(query,
+        experimental_reduced_joins?: FunWithFlags.enabled?(:experimental_reduced_joins, for: site)
+      )
     end
   end
 
@@ -261,8 +279,8 @@ defmodule Plausible.Stats.Query do
   @spec include_imported?(t(), Plausible.Site.t(), boolean()) :: boolean()
   def include_imported?(query, site, requested?) do
     cond do
-      is_nil(site.earliest_import_end_date) -> false
-      Date.after?(query.date_range.first, site.earliest_import_end_date) -> false
+      is_nil(site.latest_import_end_date) -> false
+      Date.after?(query.date_range.first, site.latest_import_end_date) -> false
       Enum.any?(query.filters) -> false
       query.period == "realtime" -> false
       true -> requested?
