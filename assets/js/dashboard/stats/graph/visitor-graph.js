@@ -10,14 +10,18 @@ import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
 import LineGraphWithRouter from './line-graph'
 
+const LoadingState = {
+  LOADING: 'loading',
+  UPDATING_GRAPH: 'updatingGraph',
+  READY: 'ready'
+}
+
 function fetchMainGraph(site, query, metric, interval) {
-  const params = {metric, interval}
-  return api.get(url.apiPath(site, '/main-graph'), query, params)
+  return api.get(url.apiPath(site, '/main-graph'), query, {metric, interval})
 }
 
 function fetchTopReport(site, query, metric, interval) {
-  const params = {metric, interval}
-  return api.get(url.apiPath(site, '/top-report'), query, params)
+  return api.get(url.apiPath(site, '/top-report'), query, {metric, interval})
 }
 
 export default function VisitorGraph(props) {
@@ -28,36 +32,27 @@ export default function VisitorGraph(props) {
   const topStatsBoundary = useRef(null)
 
   const [topStatData, setTopStatData] = useState(null)
-  const [topStatsLoading, setTopStatsLoading] = useState(true)
   const [graphData, setGraphData] = useState(null)
-  const [graphLoading, setGraphLoading] = useState(true)
-
-  // This state is explicitly meant for the situation where either graph interval
-  // or graph metric is changed. That results in behaviour where Top Stats stay
-  // intact, but the graph container alone will display a loading spinner for as
-  // long as new graph data is fetched.
-  const [graphRefreshing, setGraphRefreshing] = useState(false)
-
+  const [loadingState, setLoadingState] = useState(LoadingState.LOADING)
 
   const onIntervalUpdate = useCallback((newInterval) => {
     storage.setInterval(site, query, newInterval)
     setGraphData(null)
-    setGraphRefreshing(true)
+    setLoadingState(LoadingState.UPDATING_GRAPH)
     fetchGraphData(storage.getMetric(site), newInterval)
   }, [query])
 
   const onMetricUpdate = useCallback((newMetric) => {
     storage.setMetric(site, newMetric)
     setGraphData(null)
-    setGraphRefreshing(true)
+    setLoadingState(LoadingState.UPDATING_GRAPH)
     fetchGraphData(newMetric, storage.getInterval(site, query))
   }, [query])
 
   useEffect(() => {
     setTopStatData(null)
-    setTopStatsLoading(true)
     setGraphData(null)
-    setGraphLoading(true)
+    setLoadingState(LoadingState.LOADING)
     fetchTopStatsAndGraphData()
 
     if (isRealtime) {
@@ -82,9 +77,8 @@ export default function VisitorGraph(props) {
         storage.setInterval(site, query, res.interval)
         storage.setMetric(site, res.metric)
         setTopStatData(res)
-        setTopStatsLoading(false)
         setGraphData(res)
-        setGraphLoading(false)
+        setLoadingState(LoadingState.READY)
       })
   }
 
@@ -92,8 +86,7 @@ export default function VisitorGraph(props) {
     fetchMainGraph(site, query, metric, interval)
       .then((res) => {
         setGraphData(res)
-        setGraphLoading(false)
-        setGraphRefreshing(false)
+        setLoadingState(LoadingState.READY)
       })
   }
 
@@ -116,13 +109,13 @@ export default function VisitorGraph(props) {
 
   return (
     <div className={"relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825"}>
-      {(topStatsLoading || graphLoading) && renderLoader()}
-      <FadeIn show={!(topStatsLoading || graphLoading)}>
+      {loadingState == LoadingState.LOADING && renderLoader()}
+      <FadeIn show={loadingState !== LoadingState.LOADING}>
         <div id="top-stats-container" className="flex flex-wrap" ref={topStatsBoundary} style={{ height: getTopStatsHeight() }}>
           <TopStats site={site} query={query} data={topStatData} onMetricUpdate={onMetricUpdate} tooltipBoundary={topStatsBoundary.current} lastLoadTimestamp={lastLoadTimestamp} />
         </div>
         <div className="relative px-2">
-          {graphRefreshing && renderLoader()}
+          {loadingState === LoadingState.UPDATING_GRAPH && renderLoader()}
           <div className="absolute right-4 -top-8 py-1 flex items-center">
             {!isRealtime && <StatsExport site={site} query={query} />}
             <SamplingNotice samplePercent={topStatData}/>
