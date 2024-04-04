@@ -423,7 +423,6 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site, params)
     pagination = parse_pagination(params)
 
-    # untested yet
     query =
       if query.experimental_hostname_filter? and query.filters["event:hostname"] do
         Query.put_filter(query, "visit:entry_page_hostname", query.filters["event:hostname"])
