@@ -91,6 +91,22 @@ defmodule Plausible.DataMigration.SiteImportsTest do
       assert site_import.source == :universal_analytics
     end
 
+    test "removes site import when there are no stats" do
+      site =
+        insert(:site)
+        |> Site.start_import(~D[2021-01-02], ~D[2020-02-02], "Google Analytics", "ok")
+        |> Repo.update!()
+
+      _another_site_import = insert(:site_import, site: site)
+
+      assert capture_io(fn ->
+               assert :ok = SiteImports.run(dry_run?: false)
+             end) =~ "Processing 1 site"
+
+      site = Repo.reload!(site)
+      assert [] = Imported.list_all_imports(site)
+    end
+
     test "leaves site and imports unchanged if everything fits" do
       site =
         insert(:site)

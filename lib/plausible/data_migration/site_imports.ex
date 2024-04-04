@@ -72,35 +72,36 @@ defmodule Plausible.DataMigration.SiteImports do
 
         end_date = imported_stats_end_date(site.id, import_ids)
 
-        end_date =
-          if !end_date do
-            IO.puts(
-              "Site import #{site_import.id} (site ID #{site.id}) does not have any recorded stats. Setting end date to minimum."
-            )
+        if !end_date do
+          IO.puts(
+            "Site import #{site_import.id} (site ID #{site.id}) does not have any recorded stats. Removing it."
+          )
 
-            Date.add(site_import.start_date, 2)
-          else
-            end_date
+          if site_import.legacy do
+            clear_imported_data(site, dry_run?)
           end
 
-        end_date =
-          if Date.compare(end_date, site_import.end_date) in [:lt, :eq] do
-            end_date
-          else
-            IO.puts(
-              "Site import #{site_import.id} (site ID #{site.id}) computed end date is later than the current one. Skipping."
-            )
+          delete!(site_import, dry_run?)
+        else
+          end_date =
+            if Date.compare(end_date, site_import.end_date) in [:lt, :eq] do
+              end_date
+            else
+              IO.puts(
+                "Site import #{site_import.id} (site ID #{site.id}) computed end date is later than the current one. Skipping."
+              )
 
-            site_import.end_date
-          end
+              site_import.end_date
+            end
 
-        site_import
-        |> Ecto.Changeset.change(end_date: end_date)
-        |> update!(dry_run?)
+          site_import
+          |> Ecto.Changeset.change(end_date: end_date)
+          |> update!(dry_run?)
 
-        IO.puts(
-          "End date of site import #{site_import.id} (site ID #{site.id}) adjusted to #{end_date}"
-        )
+          IO.puts(
+            "End date of site import #{site_import.id} (site ID #{site.id}) adjusted to #{end_date}"
+          )
+        end
       end
 
       IO.puts("Done processing site ID #{site.id}")
@@ -149,6 +150,14 @@ defmodule Plausible.DataMigration.SiteImports do
     end
   end
 
+  defp clear_imported_data(site, false = _dry_run?) do
+    Repo.update_all(from(s in Site, where: s.id == ^site.id), set: [imported_data: nil])
+  end
+
+  defp clear_imported_data(site, true = _dry_run?) do
+    %{site | imported_data: nil}
+  end
+
   defp update!(changeset, false = _dry_run?) do
     Repo.update!(changeset)
   end
@@ -159,6 +168,14 @@ defmodule Plausible.DataMigration.SiteImports do
     else
       raise "Invalid update: #{inspect(changeset)}"
     end
+  end
+
+  defp delete!(entity, false = _dry_run?) do
+    Repo.delete!(entity)
+  end
+
+  defp delete!(entity, true = _dry_run?) do
+    entity
   end
 
   defp max_date_query(schema, site_id, import_ids) do
