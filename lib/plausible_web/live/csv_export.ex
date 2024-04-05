@@ -110,7 +110,7 @@ defmodule PlausibleWeb.Live.CSVExport do
     ~H"""
     <Generic.button phx-click="export">Prepare download</Generic.button>
     <p class="text-sm mt-4 text-gray-500">
-      Prepare your data for download by clicking the button above. When that's done, a Zip file that you can download would appear.
+      Prepare your data for download by clicking the button above. When that's done, a Zip file that you can download will appear.
     </p>
     """
   end
