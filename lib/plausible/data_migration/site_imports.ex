@@ -77,10 +77,6 @@ defmodule Plausible.DataMigration.SiteImports do
             "Site import #{site_import.id} (site ID #{site.id}) does not have any recorded stats. Removing it."
           )
 
-          if site_import.legacy do
-            clear_imported_data(site, dry_run?)
-          end
-
           delete!(site_import, dry_run?)
         else
           end_date =
@@ -104,7 +100,11 @@ defmodule Plausible.DataMigration.SiteImports do
         end
       end
 
-      IO.puts("Done processing site ID #{site.id}")
+      clear_imported_data(site, dry_run?)
+
+      IO.puts(
+        "Done processing site ID #{site.id} (site.imported_data: #{inspect(site.imported_data)})"
+      )
     end
 
     IO.puts("Finished")

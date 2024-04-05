@@ -43,9 +43,11 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
       site = Repo.reload!(site)
 
+      assert site.imported_data == nil
+
       assert [%{id: id, legacy: true} = site_import] = Imported.list_all_imports(site)
       assert id > 0
-      assert site_import.start_date == site.imported_data.start_date
+      assert site_import.start_date == ~D[2021-01-02]
       assert site_import.end_date == ~D[2021-01-07]
       assert site_import.source == :universal_analytics
     end
@@ -84,9 +86,10 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
       site = Repo.reload!(site)
 
+      assert site.imported_data == nil
       assert [%{id: id, legacy: true} = site_import] = Imported.list_all_imports(site)
       assert id > 0
-      assert site_import.start_date == site.imported_data.start_date
+      assert site_import.start_date == ~D[2021-01-02]
       assert site_import.end_date == ~D[2021-01-08]
       assert site_import.source == :universal_analytics
     end
@@ -132,9 +135,10 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
       site = Repo.reload!(site)
 
+      assert site.imported_data == nil
       assert [%{id: id, legacy: true} = site_import] = Imported.list_all_imports(site)
       assert id == existing_import.id
-      assert site_import.start_date == site.imported_data.start_date
+      assert site_import.start_date == ~D[2021-01-02]
       assert site_import.end_date == ~D[2021-01-08]
       assert site_import.source == :universal_analytics
     end
