@@ -43,12 +43,9 @@ defmodule Plausible.S3 do
 
   Example:
 
-      # in tests we "swindle" the host in s3_url with something that would
-      # make MinIO visible to ClickHouse, both assumed to be running in containers
-      iex> %{
-      ...>   s3_url:  "http://host.docker.internal:10000/test-imports/123/imported_browsers.csv",
-      ...>   presigned_url: "http://localhost:10000/test-imports/123/imported_browsers.csv?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin" <> _
-      ...> } = import_presign_upload(_site_id = 123, _filename = "imported_browsers.csv")
+      iex> upload = import_presign_upload(_site_id = 123, _filename = "imported_browsers.csv")
+      iex> true = String.ends_with?(upload.s3_url, "/test-imports/123/imported_browsers.csv")
+      iex> true = String.contains?(upload.presigned_url, "/test-imports/123/imported_browsers.csv?X-Amz-Algorithm=AWS4-HMAC-SHA256&")
 
   """
   def import_presign_upload(site_id, filename) do
@@ -64,7 +61,8 @@ defmodule Plausible.S3 do
   if Mix.env() in [:dev, :test, :small_dev, :small_test] do
     defp extract_s3_url(presigned_url) do
       [s3_url, _] = String.split(presigned_url, "?")
-      ch_host = System.get_env("MINIO_HOST_FOR_CLICKHOUSE", "host.docker.internal")
+      default_ch_host = unless System.get_env("CI"), do: "host.docker.internal"
+      ch_host = System.get_env("MINIO_HOST_FOR_CLICKHOUSE", default_ch_host)
       URI.to_string(%URI{URI.parse(s3_url) | host: ch_host})
     end
   else
