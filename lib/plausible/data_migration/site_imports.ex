@@ -11,6 +11,8 @@ defmodule Plausible.DataMigration.SiteImports do
   alias Plausible.Repo
   alias Plausible.Site
 
+  require Plausible.Imported.SiteImport
+
   def run(opts \\ []) do
     dry_run? = Keyword.get(opts, :dry_run?, true)
 
@@ -77,7 +79,8 @@ defmodule Plausible.DataMigration.SiteImports do
             "Site import #{site_import.id} (site ID #{site.id}) does not have any recorded stats. Removing it."
           )
 
-          if site_import.legacy do
+          if site.imported_data && site_import.legacy &&
+               site_import.status == Imported.SiteImport.completed() do
             clear_imported_data(site, dry_run?)
           end
 
@@ -97,6 +100,13 @@ defmodule Plausible.DataMigration.SiteImports do
           site_import
           |> Ecto.Changeset.change(end_date: end_date)
           |> update!(dry_run?)
+
+          if site.imported_data && site_import.legacy &&
+               site_import.status == Imported.SiteImport.completed() do
+            site
+            |> Ecto.Changeset.change(imported_data: %{end_date: end_date})
+            |> update!(dry_run?)
+          end
 
           IO.puts(
             "End date of site import #{site_import.id} (site ID #{site.id}) adjusted to #{end_date}"
