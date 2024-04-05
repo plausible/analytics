@@ -952,9 +952,11 @@ Silva Schneider:
 
 # Skyworth
 Skyworth:
-  regex: 'Sky_worth'
+  regex: 'Sky_worth|SWTV[;,]'
   device: 'tv'
   models:
+    - regex: 'SKWE20E21'
+      model: 'SKWE20E21'
     - regex: 'Sky_worth;([^);/]+)'
       model: '$1'
 
@@ -985,14 +987,6 @@ Sony:
       model: '$1'
     - regex: '(K[DM]L?-?[0-9]{2}[A-Z]{1,2}[0-9]{1,5})'
       model: '$1'
-
-# SWTV
-SWTV:
-  regex: 'SWTV[;,]'
-  device: 'tv'
-  models:
-    - regex: 'SKWE20E21'
-      model: 'SKWE20E21'
 
 # TD Systems
 'TD Systems':

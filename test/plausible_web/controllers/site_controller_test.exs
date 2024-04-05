@@ -680,6 +680,25 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "Google Analytics (123456)"
       assert resp =~ "(98 page views)"
     end
+
+    test "disables import buttons when there's import in progress", %{conn: conn, site: site} do
+      _site_import1 = insert(:site_import, site: site, status: SiteImport.completed())
+      _site_import2 = insert(:site_import, site: site, status: SiteImport.importing())
+
+      conn = get(conn, "/#{site.domain}/settings/imports-exports")
+      assert html_response(conn, 200) =~ "No new imports can be started"
+    end
+
+    test "enables import buttons when all imports are in completed or failed state", %{
+      conn: conn,
+      site: site
+    } do
+      _site_import1 = insert(:site_import, site: site, status: SiteImport.completed())
+      _site_import2 = insert(:site_import, site: site, status: SiteImport.failed())
+
+      conn = get(conn, "/#{site.domain}/settings/imports-exports")
+      refute html_response(conn, 200) =~ "No new imports can be started"
+    end
   end
 
   describe "GET /:website/settings/integrations for self-hosting" do

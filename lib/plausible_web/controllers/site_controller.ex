@@ -654,7 +654,7 @@ defmodule PlausibleWeb.SiteController do
         |> Plausible.Site.remove_imported_data()
         |> Repo.update!()
 
-      site_import = Plausible.Imported.get_import(import_id) ->
+      site_import = Plausible.Imported.get_import(site, import_id) ->
         Oban.cancel_all_jobs(
           from(j in Oban.Job,
             where:

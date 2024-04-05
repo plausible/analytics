@@ -1221,10 +1221,11 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
-    test "returns top referrers for a custom goal and filtered by hostname", %{
-      conn: conn,
-      site: site
-    } do
+    test "returns no top referrers for a custom goal and filtered by hostname",
+         %{
+           conn: conn,
+           site: site
+         } do
       populate_stats(site, [
         build(:pageview,
           hostname: "blog.example.com",
@@ -1252,53 +1253,10 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           "/api/stats/#{site.domain}/sources?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) ==
-               [
-                 %{
-                   "conversion_rate" => 100.0,
-                   "name" => "Facebook",
-                   "total_visitors" => 1,
-                   "visitors" => 1
-                 }
-               ]
-    end
-
-    test "returns no top referrers for a custom goal and filtered by hostname and experimental_hostname_filter",
-         %{
-           conn: conn,
-           site: site
-         } do
-      populate_stats(site, [
-        build(:pageview,
-          hostname: "blog.example.com",
-          referrer_source: "Facebook",
-          user_id: @user_id
-        ),
-        build(:pageview,
-          hostname: "app.example.com",
-          pathname: "/register",
-          user_id: @user_id
-        ),
-        build(:event,
-          name: "Signup",
-          hostname: "app.example.com",
-          pathname: "/register",
-          user_id: @user_id
-        )
-      ])
-
-      filters = Jason.encode!(%{goal: "Signup", hostname: "app.example.com"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/sources?period=day&filters=#{filters}&experimental_hostname_filter=true"
-        )
-
       assert json_response(conn, 200) == []
     end
 
-    test "returns top referrers for a custom goal and filtered by hostname and experimental_hostname_filter",
+    test "returns top referrers for a custom goal and filtered by hostname (2)",
          %{
            conn: conn,
            site: site
@@ -1323,7 +1281,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/sources?period=day&filters=#{filters}&experimental_hostname_filter=true"
+          "/api/stats/#{site.domain}/sources?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [

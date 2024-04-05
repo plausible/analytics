@@ -5,6 +5,15 @@
 # @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
 ###############
 
+# BrightSignOS (https://www.brightsign.biz/ecosystem/brightsign-os/)
+##########
+- regex: 'BrightSign/(?:[A-Z0-9]+)/(\d+[\.\d]+)'
+  name: 'BrightSignOS'
+  version: '$1'
+- regex: 'BrightSign/(\d+[\.\d]+)'
+  name: 'BrightSignOS'
+  version: '$1'
+
 ##########
 # LuneOS (https://www.webos-ports.org/)
 ##########
@@ -426,7 +435,7 @@
   name: 'Android'
   version: '$1'
 
-- regex: '(?:(?:Orca-)?(?<!like |/|RadioPublic |Anghami )Android|Adr|AOSP)[ /]?(?:[a-z]+ )?(\d+[\.\d]*)'
+- regex: '(?:(?:Orca-)?(?<!like |/|RadioPublic |Anghami |Callpod Keeper for )Android|Adr|AOSP)[ /]?(?:[a-z]+ )?(\d+[\.\d]*)'
   name: 'Android'
   version: '$1'
 
@@ -450,7 +459,7 @@
   name: 'Android'
   version: '$1'
 
-- regex: 'BeyondPod|AntennaPod|Podkicker|DoggCatcher|Player FM|okhttp|Podcatcher Deluxe|Sonos/.+\(ACR_|Linux x86_64; Quest'
+- regex: 'BeyondPod|AntennaPod|Podkicker|DoggCatcher|Player FM|okhttp|Podcatcher Deluxe|Sonos/.+\(ACR_|Linux x86_64; Quest|.*WhatsApp/.*A$'
   name: 'Android'
   version: ''
 
@@ -714,7 +723,7 @@
   name: 'Windows'
   version: '$1'
 
-- regex: 'mingw32|winhttp'
+- regex: 'mingw32|winhttp|WhatsApp/.*W$'
   name: 'Windows'
   version: ''
 
@@ -833,7 +842,7 @@
   name: 'iPadOS'
   version: '$1.$2'
 
-- regex: 'iPad(?:; (?:iOS|iPadOS|iPhone OS)|.+CPU OS) ((1[3-7])+(?:[_\.]\d+)*)'
+- regex: 'iPad(?:; (?:iOS|iPadOS|iPhone OS)|.+CPU (?:iPad |iPhone )?OS) ((1[3-7])+(?:[_\.]\d+)*)'
   name: 'iPadOS'
   version: '$1'
 
@@ -868,9 +877,11 @@
   name: 'iOS'
   version: '$1'
 
-- regex: '^(?!com.apple.Safari.SearchHelper|Safari).*CFNetwork/.+ Darwin/(\d+[\.\d]+)(?!.*(?:x86_64|i386|PowerMac|Power%20Macintosh))'
+- regex: '^(?!com.apple.Safari.SearchHelper|Safari).*(?:CFNetwork|Mana)/.+ Darwin/(\d+[\.\d]+)(?!.*(?:x86_64|i386|PowerMac|Power%20Macintosh))'
   name: 'iOS'
   versions:
+    - regex: 'Darwin/23.4.0'
+      version: '17.4'
     - regex: 'Darwin/23.3.0'
       version: '17.3'
     - regex: 'Darwin/23.2.0'
@@ -1074,7 +1085,7 @@
   name: 'iOS'
   version: '$1'
 
-- regex: '(?:Podcasts/(?:[\d\.]+)|Instacast(?:HD)?/(?:\d\.[\d\.abc]+)|Pocket Casts, iOS|\(iOS\)|iOS; Opera|Overcast|Castro|Podcat|iCatcher|RSSRadio/|MobileSafari/)(?!.*x86_64)'
+- regex: '(?:Podcasts/(?:[\d\.]+)|Instacast(?:HD)?/(?:\d\.[\d\.abc]+)|Pocket Casts, iOS|\(iOS\)|iOS; Opera|Overcast|Castro|Podcat|iCatcher|RSSRadio/|MobileSafari/|WhatsApp/.*i$)(?!.*x86_64)'
   name: 'iOS'
   version: ''
 
@@ -1097,9 +1108,11 @@
 ##########
 # Mac
 ##########
-- regex: '(?:CFNetwork|StudioDisplay)/.+Darwin(?:/|; )(?:[\d\.]+).+(?:x86_64|i386|Power%20Macintosh)|(?:x86_64-apple-)?darwin(?:[\d\.]+)|PowerMac|com.apple.Safari.SearchHelper|^Safari'
+- regex: '(?:CFNetwork|Mana|StudioDisplay)/.+Darwin(?:/|; )(?:[\d\.]+).+(?:x86_64|i386|Power%20Macintosh)|(?:x86_64-apple-)?darwin(?:[\d\.]+)|PowerMac|com.apple.Safari.SearchHelper|^Safari'
   name: 'Mac'
   versions:
+    - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?23.4.0'
+      version: '14.4'
     - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?23.3.0'
       version: '14.3'
     - regex: '(?:x86_64-apple-)?Darwin(?:/|; )?23.2.0'
@@ -1293,7 +1306,7 @@
   name: 'Mac'
   version: '$1'
 
-- regex: 'Darwin|Macintosh|Mac_PowerPC|PPC|Mac PowerPC|iMac|MacBook|macOS|AppleExchangeWebServices|com.apple.trustd|Sonos/.+\(MDCR_'
+- regex: 'Darwin|Macintosh|Mac[ _]PowerPC|PPC|iMac|MacBook|macOS|AppleExchangeWebServices|com.apple.trustd|Sonos/.+\(MDCR_|WhatsApp/.*N$'
   name: 'Mac'
   version: ''
 

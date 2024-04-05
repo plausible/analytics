@@ -118,10 +118,6 @@ defmodule Plausible.Stats.FilterSuggestions do
     end)
   end
 
-  def filter_suggestions(_site, _query, "experimental_hostname_filter", _filter_search) do
-    wrap_suggestions(["true", "false"])
-  end
-
   def filter_suggestions(site, _query, "goal", filter_search) do
     site
     |> Plausible.Goals.for_site()

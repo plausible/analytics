@@ -42,7 +42,39 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
   end
 
   def render(assigns) do
+    import_in_progress? =
+      Enum.any?(
+        assigns.site_imports,
+        &(&1.live_status in [SiteImport.pending(), SiteImport.importing()])
+      )
+
+    assigns = assign(assigns, :import_in_progress?, import_in_progress?)
+
     ~H"""
+    <div class="mt-5 flex gap-x-4">
+      <.button_link
+        class="w-36 h-20"
+        theme="bright"
+        disabled={@import_in_progress?}
+        href={Plausible.Google.API.import_authorize_url(@site.id, "import", legacy: false)}
+      >
+        <img src="/images/icon/google_analytics_logo.svg" alt="Google Analytics import" />
+      </.button_link>
+
+      <.button_link
+        class="w-36 h-20"
+        theme="bright"
+        disabled={@import_in_progress?}
+        href={"/#{URI.encode_www_form(@site.domain)}/settings/import"}
+      >
+        <img class="h-16" src="/images/icon/csv_logo.svg" alt="New CSV import" />
+      </.button_link>
+    </div>
+
+    <p :if={@import_in_progress?} class="mt-4 text-red-400 text-sm">
+      No new imports can be started until the import in progress is completed or cancelled.
+    </p>
+
     <header class="relative border-b border-gray-200 pb-4">
       <h3 class="mt-8 text-md leading-6 font-medium text-gray-900 dark:text-gray-100">
         Existing Imports

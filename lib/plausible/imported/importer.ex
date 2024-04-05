@@ -91,6 +91,7 @@ defmodule Plausible.Imported.Importer do
   like LiveView, where notifications can be listened for via `handle_info/2`.
   """
 
+  alias Plausible.Imported
   alias Plausible.Imported.SiteImport
   alias Plausible.Repo
 
@@ -98,7 +99,7 @@ defmodule Plausible.Imported.Importer do
   @callback label() :: String.t()
   @callback email_template() :: String.t()
   @callback parse_args(map()) :: Keyword.t()
-  @callback import_data(Plausible.Imported.SiteImport.t(), Keyword.t()) :: :ok | {:error, any()}
+  @callback import_data(SiteImport.t(), Keyword.t()) :: :ok | {:error, any()}
   @callback before_start(SiteImport.t()) :: :ok | {:ok, map()} | {:error, any()}
   @callback on_success(SiteImport.t(), map()) :: :ok
   @callback on_failure(SiteImport.t()) :: :ok
@@ -108,7 +109,7 @@ defmodule Plausible.Imported.Importer do
       @behaviour Plausible.Imported.Importer
 
       @spec new_import(Plausible.Site.t(), Plausible.Auth.User.t(), Keyword.t()) ::
-              {:ok, Oban.Job.t()} | {:error, Ecto.Changeset.t()}
+              {:ok, Oban.Job.t()} | {:error, Ecto.Changeset.t() | :import_in_progress}
       def new_import(site, user, opts) do
         Plausible.Imported.Importer.new_import(name(), site, user, opts, &before_start/1)
       end
@@ -222,11 +223,15 @@ defmodule Plausible.Imported.Importer do
       :ok = listen()
     end
 
-    opts
-    |> Keyword.put(:import_id, site_import.id)
-    |> Map.new()
-    |> Plausible.Workers.ImportAnalytics.new()
-    |> Oban.insert()
+    if not Imported.other_imports_in_progress?(site_import) do
+      opts
+      |> Keyword.put(:import_id, site_import.id)
+      |> Map.new()
+      |> Plausible.Workers.ImportAnalytics.new()
+      |> Oban.insert()
+    else
+      {:error, :import_in_progress}
+    end
   end
 
   defp mark_complete(site_import, extra_data, on_success_fun) do
