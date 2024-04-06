@@ -376,8 +376,9 @@ defmodule Plausible.Exports do
     window_q =
       from e in sampled("events_v2", nil),
         where: e.site_id == ^site_id,
+        where: [name: "pageview"],
         select: %{
-          timestamp: fragment("toTimeZone(?,?)", e.timestamp, ^timezone),
+          timestamp: selected_as(fragment("toTimeZone(?,?)", e.timestamp, ^timezone), :timestamp),
           next_timestamp:
             over(fragment("leadInFrame(toTimeZone(?,?))", e.timestamp, ^timezone),
               partition_by: e.session_id,
@@ -386,7 +387,6 @@ defmodule Plausible.Exports do
             ),
           pathname: e.pathname,
           hostname: e.hostname,
-          name: e.name,
           user_id: e.user_id,
           session_id: e.session_id,
           _sample_factor: fragment("_sample_factor")
@@ -394,7 +394,9 @@ defmodule Plausible.Exports do
 
     window_q =
       if date_range do
-        where(window_q, [e], e.timestamp >= ^date_range.first and e.timestamp <= ^date_range.last)
+        from e in window_q,
+          where: selected_as(:timestamp) >= ^date_range.first,
+          where: fragment("toDate(?)", selected_as(:timestamp)) <= ^date_range.last
       else
         window_q
       end
@@ -411,11 +413,7 @@ defmodule Plausible.Exports do
           :visits
         ),
         visitors(e),
-        selected_as(
-          fragment("toUInt64(round(countIf(?='pageview')*any(_sample_factor)))", e.name),
-          :pageviews
-        ),
-        # NOTE: are exits pageviews or any events?
+        selected_as(fragment("toUInt64(round(count()*any(_sample_factor)))"), :pageviews),
         selected_as(
           fragment("toUInt64(round(countIf(?=0)*any(_sample_factor)))", e.next_timestamp),
           :exits
