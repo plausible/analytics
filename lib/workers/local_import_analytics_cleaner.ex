@@ -21,10 +21,12 @@ defmodule Plausible.Workers.LocalImportAnalyticsCleaner do
 
   defp import_in_progress?(import_id) do
     import Ecto.Query
+    require Plausible.Imported.SiteImport
+    alias Plausible.Imported.SiteImport
 
-    Plausible.Imported.SiteImport
+    SiteImport
     |> where(id: ^import_id)
-    |> where([i], i.status in [:pending, :importing])
+    |> where([i], i.status in [SiteImport.pending(), SiteImport.importing()])
     |> Plausible.Repo.exists?()
   end
 end
