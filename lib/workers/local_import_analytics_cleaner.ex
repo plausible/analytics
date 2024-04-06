@@ -26,7 +26,7 @@ defmodule Plausible.Workers.LocalImportAnalyticsCleaner do
 
     SiteImport
     |> where(id: ^import_id)
-    |> where([i], i.status in [SiteImport.pending(), SiteImport.importing()])
+    |> where([i], i.status in ^[SiteImport.pending(), SiteImport.importing()])
     |> Plausible.Repo.exists?()
   end
 end
