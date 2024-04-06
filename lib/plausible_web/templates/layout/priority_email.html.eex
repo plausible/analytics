@@ -4,9 +4,9 @@
 <%= @inner_content %>
 <br /><br />
 
-Regards,<br />
+<%= if full_build?() do %>Regards,<br />
 The Plausible Team 💌
-<br /><br />
+<br /><br /><% end %>
 
 --
 <br /><br />
