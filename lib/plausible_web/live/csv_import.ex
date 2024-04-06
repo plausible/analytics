@@ -204,9 +204,18 @@ defmodule PlausibleWeb.Live.CSVImport do
 
   defp presign_upload(entry, socket) do
     %{s3_url: s3_url, presigned_url: upload_url} =
-      Plausible.S3.import_presign_upload(socket.assigns.site_id, entry.client_name)
+      Plausible.S3.import_presign_upload(socket.assigns.site_id, random_suffix(entry.client_name))
 
     {:ok, %{uploader: "S3", s3_url: s3_url, url: upload_url}, socket}
+  end
+
+  defp random_suffix(filename) do
+    # based on Plug.Upload.path/2
+    # https://github.com/elixir-plug/plug/blob/eabf0b9d43060c10663a9105cb1baf984d272a6c/lib/plug/upload.ex#L154-L159
+    sec = Integer.to_string(:os.system_time(:second))
+    rand = Integer.to_string(:rand.uniform(999_999_999_999))
+    scheduler_id = Integer.to_string(:erlang.system_info(:scheduler_id))
+    filename <> "-" <> sec <> "-" <> rand <> "-" <> scheduler_id
   end
 
   defp handle_progress(:import, entry, socket) do
