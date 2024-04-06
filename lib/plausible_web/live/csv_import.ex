@@ -2,7 +2,9 @@ defmodule PlausibleWeb.Live.CSVImport do
   @moduledoc """
   LiveView allowing uploading CSVs for imported tables to S3 or local storage
   """
+
   use PlausibleWeb, :live_view
+  require Plausible.Imported.SiteImport
   alias Plausible.Imported.CSVImporter
 
   # :not_mounted_at_router ensures we have already done auth checks in the controller
@@ -45,13 +47,26 @@ defmodule PlausibleWeb.Live.CSVImport do
           end
       end
 
+    %{assigns: %{site: site}} =
+      socket = assign_new(socket, :site, fn -> Plausible.Repo.get!(Plausible.Site, site_id) end)
+
+    occupied_ranges =
+      site
+      |> Plausible.Imported.list_all_imports(Plausible.Imported.SiteImport.completed())
+      |> Enum.reject(&(Date.diff(&1.end_date, &1.start_date) < 2))
+      |> Enum.map(&Date.range(&1.start_date, &1.end_date))
+
+    cutoff_date = Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
+
     socket =
       socket
       |> assign(
         site_id: site_id,
         user_id: user_id,
         storage: storage,
-        upload_consumer: upload_consumer
+        upload_consumer: upload_consumer,
+        occupied_ranges: occupied_ranges,
+        cutoff_date: cutoff_date
       )
       |> allow_upload(:import, upload_opts)
       |> process_imported_tables()
@@ -65,8 +80,12 @@ defmodule PlausibleWeb.Live.CSVImport do
     <div>
       <form action="#" method="post" phx-change="validate-upload-form" phx-submit="submit-upload-form">
         <.csv_picker upload={@uploads.import} imported_tables={@imported_tables} />
-        <.confirm_button date_range={@date_range} can_confirm?={@can_confirm?} />
-
+        <.confirm_button date_range={@clamped_date_range} can_confirm?={@can_confirm?} />
+        <.date_range_warning
+          :if={@clamped_date_range != @original_date_range}
+          clamped_date_range={@clamped_date_range}
+          original_date_range={@original_date_range}
+        />
         <p :for={error <- upload_errors(@uploads.import)} class="text-red-400">
           <%= error_to_string(error) %>
         </p>
@@ -119,6 +138,12 @@ defmodule PlausibleWeb.Live.CSVImport do
         Confirm import
       <% end %>
     </button>
+    """
+  end
+
+  defp date_range_warning(assigns) do
+    ~H"""
+    TODO
     """
   end
 
@@ -254,16 +279,20 @@ defmodule PlausibleWeb.Live.CSVImport do
         replaced_uploads
       end)
 
-    date_range = CSVImporter.date_range(Enum.map(valid_uploads, & &1.client_name))
+    original_date_range = CSVImporter.date_range(Enum.map(valid_uploads, & &1.client_name))
+    clamped_date_range = clamp_date_range(socket, original_date_range)
+
     all_uploaded? = completed != [] and in_progress == []
+    can_confirm? = all_uploaded? && clamped_date_range
 
     socket
     |> cancel_uploads(invalid_uploads)
     |> cancel_uploads(replaced_uploads)
     |> assign(
       imported_tables: imported_tables,
-      can_confirm?: all_uploaded?,
-      date_range: date_range
+      can_confirm?: can_confirm?,
+      original_date_range: original_date_range,
+      clamped_date_range: clamped_date_range
     )
   end
 
@@ -271,5 +300,56 @@ defmodule PlausibleWeb.Live.CSVImport do
     Enum.reduce(uploads, socket, fn upload, socket ->
       cancel_upload(socket, :import, upload.ref)
     end)
+  end
+
+  defp clamp_date_range(socket, %Date.Range{first: start_date, last: end_date}) do
+    %{occupied_ranges: occupied_ranges, cutoff_date: cutoff_date} = socket.assigns
+    end_date = Enum.min([end_date, cutoff_date], Date)
+
+    if Date.diff(end_date, start_date) >= 2 do
+      free_ranges = find_free_ranges(start_date, end_date, occupied_ranges)
+
+      unless Enum.empty?(free_ranges) do
+        Enum.max_by(free_ranges, &Date.diff(&1.last, &1.first))
+      end
+    end
+  end
+
+  defp find_free_ranges(start_date, end_date, occupied_ranges) do
+    free_ranges(Date.range(start_date, end_date), start_date, occupied_ranges, [])
+  end
+
+  # This function recursively finds open ranges that are not yet occupied
+  # by existing imported data. The idea is that we keep moving a dynamic
+  # date index `d` from start until the end of `imported_range`, hopping
+  # over each occupied range, and capturing the open ranges step-by-step
+  # in the `result` array.
+  defp free_ranges(import_range, d, [occupied_range | rest_of_occupied_ranges], result) do
+    cond do
+      Date.diff(occupied_range.last, d) <= 0 ->
+        free_ranges(import_range, d, rest_of_occupied_ranges, result)
+
+      in_range?(d, occupied_range) || Date.diff(occupied_range.first, d) < 2 ->
+        d = occupied_range.last
+        free_ranges(import_range, d, rest_of_occupied_ranges, result)
+
+      true ->
+        free_range = Date.range(d, occupied_range.first)
+        result = result ++ [free_range]
+        d = occupied_range.last
+        free_ranges(import_range, d, rest_of_occupied_ranges, result)
+    end
+  end
+
+  defp free_ranges(import_range, d, [], result) do
+    if Date.diff(import_range.last, d) < 2 do
+      result
+    else
+      result ++ [Date.range(d, import_range.last)]
+    end
+  end
+
+  defp in_range?(date, range) do
+    Date.before?(range.first, date) && Date.after?(range.last, date)
   end
 end
