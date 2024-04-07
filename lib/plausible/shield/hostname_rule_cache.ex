@@ -43,9 +43,14 @@ defmodule Plausible.Shield.HostnameRuleCache do
       base_db_query()
       |> where([..., site], site.domain == ^domain)
 
-    case Plausible.Repo.one(query) do
-      {_, _, rule} -> %HostnameRule{rule | from_cache?: false}
-      _any -> nil
+    case Plausible.Repo.all(query) do
+      [_ | _] = results ->
+        Enum.map(results, fn {_, _, rule} ->
+          %HostnameRule{rule | from_cache?: false}
+        end)
+
+      _ ->
+        nil
     end
   end
 

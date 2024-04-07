@@ -276,6 +276,64 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
                ]
     end
 
+    test "returns suggestions for hostnames limited by shields", %{conn: conn1, user: user} do
+      {:ok, [site: site]} = create_new_site(%{user: user})
+      Plausible.Shields.add_hostname_rule(site, %{"hostname" => "*.example.com"})
+      Plausible.Shields.add_hostname_rule(site, %{"hostname" => "erin.rogue.com"})
+
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/",
+          hostname: "host-alice.example.com"
+        ),
+        build(:pageview,
+          pathname: "/some-other-page",
+          hostname: "host-bob.example.com",
+          user_id: 123
+        ),
+        build(:pageview, pathname: "/exit", hostname: "host-carol.example.com", user_id: 123),
+        build(:pageview,
+          pathname: "/",
+          hostname: "host-dave.rogue.com"
+        ),
+        build(:pageview,
+          pathname: "/",
+          hostname: "erin.rogue.com"
+        )
+      ])
+
+      conn =
+        get(
+          conn1,
+          "/api/stats/#{site.domain}/suggestions/hostname?q=host"
+        )
+
+      assert json_response(conn, 200) ==
+               [
+                 %{"label" => "host-alice.example.com", "value" => "host-alice.example.com"},
+                 %{"label" => "host-carol.example.com", "value" => "host-carol.example.com"},
+                 %{"label" => "host-bob.example.com", "value" => "host-bob.example.com"}
+               ]
+
+      conn =
+        get(
+          conn1,
+          "/api/stats/#{site.domain}/suggestions/hostname?q=dave"
+        )
+
+      assert json_response(conn, 200) == []
+
+      conn =
+        get(
+          conn1,
+          "/api/stats/#{site.domain}/suggestions/hostname?q=rogue"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"label" => "erin.rogue.com", "value" => "erin.rogue.com"}
+             ]
+    end
+
     test "returns suggestions for referrers", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,

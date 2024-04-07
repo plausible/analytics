@@ -146,6 +146,21 @@ defmodule Plausible.Shields.HostnameTest do
     end
   end
 
+  describe "allowed_hostname_patterns/1" do
+    test "returns a list of regular expressions when rules are defined", %{site: site} do
+      {:ok, _} = add_hostname_rule(site, %{"hostname" => "example.com"})
+      {:ok, _} = add_hostname_rule(site, %{"hostname" => "another.example.com"})
+      {:ok, _} = add_hostname_rule(site, %{"hostname" => "app.*"})
+
+      allowed = allowed_hostname_patterns(site.domain)
+
+      assert length(allowed) == 3
+      assert "^example\\.com$" in allowed
+      assert "^another\\.example\\.com$" in allowed
+      assert "^app\\..*$" in allowed
+    end
+  end
+
   describe "Hostname Rules" do
     test "end to end", %{site: site} do
       site2 = insert(:site)

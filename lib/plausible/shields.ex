@@ -44,6 +44,23 @@ defmodule Plausible.Shields do
     end
   end
 
+  @spec allowed_hostname_patterns(Site.t() | String.t()) :: list(String.t()) | :all
+  def allowed_hostname_patterns(%Site{domain: domain}) do
+    allowed_hostname_patterns(domain)
+  end
+
+  def allowed_hostname_patterns(domain) when is_binary(domain) do
+    hostname_rules = Shield.HostnameRuleCache.get(domain)
+
+    if hostname_rules do
+      hostname_rules
+      |> List.wrap()
+      |> Enum.map(& Regex.source(&1.hostname_pattern))
+    else
+      :all
+    end
+  end
+
   @spec ip_blocked?(Site.t() | String.t(), String.t()) :: boolean()
   def ip_blocked?(%Site{domain: domain}, address) do
     ip_blocked?(domain, address)
