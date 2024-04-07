@@ -71,6 +71,10 @@ defmodule PlausibleWeb.LayoutView do
             %{key: "Countries", value: "shields/countries"},
             if FunWithFlags.enabled?(:shield_pages, for: conn.assigns[:site]) do
               %{key: "Pages", value: "shields/pages"}
+            end,
+            if FunWithFlags.enabled?(:hostname_filter, for: conn.assigns[:site]) or
+              FunWithFlags.enabled?(:hostname_filter, for: conn.assigns[:current_user]) do
+              %{key: "Hostnames", value: "shields/hostnames"}
             end
           ]
           |> Enum.reject(&is_nil/1)
