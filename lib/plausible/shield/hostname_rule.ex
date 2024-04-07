@@ -1,6 +1,6 @@
-defmodule Plausible.Shield.PageRule do
+defmodule Plausible.Shield.HostnameRule do
   @moduledoc """
-  Schema for Pages block list
+  Schema for Hostnames allow list
   """
   use Ecto.Schema
   import Ecto.Changeset
@@ -8,11 +8,11 @@ defmodule Plausible.Shield.PageRule do
   @type t() :: %__MODULE__{}
 
   @primary_key {:id, :binary_id, autogenerate: true}
-  schema "shield_rules_page" do
+  schema "shield_rules_hostname" do
     belongs_to :site, Plausible.Site
-    field :page_path, :string
-    field :page_path_pattern, Plausible.Ecto.Types.CompiledRegex
-    field :action, Ecto.Enum, values: [:deny, :allow], default: :deny
+    field :hostname, :string
+    field :hostname_pattern, Plausible.Ecto.Types.CompiledRegex
+    field :action, Ecto.Enum, values: [:deny, :allow], default: :allow
     field :added_by, :string
 
     # If `from_cache?` is set, the struct might be incomplete - see `Plausible.Site.Shield.Rules.IP.Cache`
@@ -22,29 +22,22 @@ defmodule Plausible.Shield.PageRule do
 
   def changeset(rule \\ %__MODULE__{}, attrs) do
     rule
-    |> cast(attrs, [:site_id, :page_path])
-    |> validate_required([:site_id, :page_path])
-    |> validate_length(:page_path, max: 250)
-    |> validate_change(:page_path, fn :page_path, p ->
-      if not String.starts_with?(p, "/") do
-        [page_path: "must start with /"]
-      else
-        []
-      end
-    end)
+    |> cast(attrs, [:site_id, :hostname])
+    |> validate_required([:site_id, :hostname])
+    |> validate_length(:hostname, max: 250)
     |> store_regex()
-    |> unique_constraint(:page_path_pattern,
-      name: :shield_rules_page_site_id_page_path_pattern_index,
-      error_key: :page_path,
+    |> unique_constraint(:hostname_pattern,
+      name: :shield_rules_hostname_site_id_hostname_pattern_index,
+      error_key: :hostname,
       message: "rule already exists"
     )
   end
 
   defp store_regex(changeset) do
-    case get_field(changeset, :page_path) do
-      "/" <> _ = page_path ->
+    case get_field(changeset, :hostname) do
+      hostname when is_binary(hostname) ->
         regex =
-          page_path
+          hostname
           |> Regex.escape()
           |> String.replace("\\*\\*", ".*")
           |> String.replace("\\*", ".*")
@@ -61,10 +54,10 @@ defmodule Plausible.Shield.PageRule do
   defp verify_valid_regex(changeset, regex) do
     case Regex.compile(regex) do
       {:ok, _} ->
-        put_change(changeset, :page_path_pattern, regex)
+        put_change(changeset, :hostname_pattern, regex)
 
       {:error, _} ->
-        add_error(changeset, :page_path, "could not compile regular expression")
+        add_error(changeset, :hostname, "could not compile regular expression")
     end
   end
 end
