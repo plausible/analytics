@@ -143,7 +143,16 @@ defmodule PlausibleWeb.Live.CSVImport do
 
   defp date_range_warning(assigns) do
     ~H"""
-    TODO
+    <p>
+      The date range <%= @original_date_range.first %> — <%= @original_date_range.last %>, computed from the filenames, cannot be fully utilized due to overlaps with existing imports.
+    </p>
+    <%= if @clamped_date_range do %>
+      <p>
+        As a result, the import will proceed for the longest available range within <%= @clamped_date_range.first %> — <%= @clamped_date_range.last %>.
+      </p>
+    <% else %>
+      <p>No parts of this range are available for new imports.</p>
+    <% end %>
     """
   end
 
