@@ -303,21 +303,24 @@ defmodule PlausibleWeb.Live.CSVImport do
         replaced_uploads
       end)
 
-    %Date.Range{first: start_date, last: end_date} =
-      original_date_range = CSVImporter.date_range(Enum.map(valid_uploads, & &1.client_name))
-
-    %{
-      site: site,
-      occupied_ranges: occupied_ranges,
-      native_stats_start_date: native_stats_start_date
-    } = socket.assigns
-
-    cutoff_date = native_stats_start_date || Timex.today(site.timezone)
+    original_date_range = CSVImporter.date_range(Enum.map(valid_uploads, & &1.client_name))
 
     clamped_date_range =
-      case Imported.clamp_dates(occupied_ranges, cutoff_date, start_date, end_date) do
-        {:ok, start_date, end_date} -> Date.range(start_date, end_date)
-        {:error, :no_time_window} -> nil
+      if original_date_range do
+        %Date.Range{first: start_date, last: end_date} = original_date_range
+
+        %{
+          site: site,
+          occupied_ranges: occupied_ranges,
+          native_stats_start_date: native_stats_start_date
+        } = socket.assigns
+
+        cutoff_date = native_stats_start_date || Timex.today(site.timezone)
+
+        case Imported.clamp_dates(occupied_ranges, cutoff_date, start_date, end_date) do
+          {:ok, start_date, end_date} -> Date.range(start_date, end_date)
+          {:error, :no_time_window} -> nil
+        end
       end
 
     all_uploaded? = completed != [] and in_progress == []
