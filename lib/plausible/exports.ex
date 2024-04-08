@@ -203,8 +203,8 @@ defmodule Plausible.Exports do
         from e in "events_v2",
           where: [site_id: ^site_id],
           select: [
-            fragment("toDate(toTimeZone(min(?),?))", e.timestamp, ^timezone),
-            fragment("toDate(toTimeZone(max(?),?))", e.timestamp, ^timezone)
+            fragment("toDate(min(?),?)", e.timestamp, ^timezone),
+            fragment("toDate(max(?),?)", e.timestamp, ^timezone)
           ]
       )
 
@@ -278,7 +278,7 @@ defmodule Plausible.Exports do
   defmacrop date(timestamp, timezone) do
     quote do
       selected_as(
-        fragment("toDate(toTimeZone(?,?))", unquote(timestamp), unquote(timezone)),
+        fragment("toDate(?,?)", unquote(timestamp), unquote(timezone)),
         :date
       )
     end
