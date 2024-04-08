@@ -122,7 +122,13 @@ defmodule PlausibleWeb.Live.CSVExport do
         <Generic.spinner />
         <span class="ml-2">We are preparing your download ...</span>
       </div>
-      <button phx-click="cancel" class="text-red-500 font-semibold">Cancel</button>
+      <button
+        phx-click="cancel"
+        class="text-red-500 font-semibold"
+        data-confirm="Are you sure you want to cancel this export?"
+      >
+        Cancel
+      </button>
     </div>
     <p class="text-sm mt-4 text-gray-500">
       The preparation of your stats might take a while. Depending on the volume of your data, it might take up to 20 minutes. Feel free to leave the page and return later.
@@ -149,31 +155,35 @@ defmodule PlausibleWeb.Live.CSVExport do
         <Heroicons.document_text class="w-4 h-4" />
         <span class="ml-1 text-indigo-500"><%= @export.name %></span>
       </a>
-      <button phx-click="delete" class="text-red-500 font-semibold">
+      <button
+        phx-click="delete"
+        class="text-red-500 font-semibold"
+        data-confirm="Are you sure you want to delete this export?"
+      >
         <Heroicons.trash class="w-4 h-4" />
       </button>
     </div>
 
     <p :if={@export.expires_at} class="text-sm mt-4 text-gray-500">
       Note that this file will expire
-      <span
-        title={@export.expires_at}
-        class="underline cursor-help underline-offset-2 decoration-dashed"
-      >
-        <%= Timex.Format.DateTime.Formatters.Relative.format!(
-          @export.expires_at,
-          "{relative}"
-        ) %>.
-      </span>
+      <.hint message={@export.expires_at}>
+        <%= Timex.Format.DateTime.Formatters.Relative.format!(@export.expires_at, "{relative}") %>.
+      </.hint>
     </p>
 
     <p :if={@storage == "local"} class="text-sm mt-4 text-gray-500">
       Located at
-      <span title={@export.path} class="underline cursor-help underline-offset-2 decoration-dashed">
-        <%= format_path(@export.path) %>
-      </span>
+      <.hint message={@export.path}><%= format_path(@export.path) %></.hint>
       (<%= format_bytes(@export.size) %>)
     </p>
+    """
+  end
+
+  defp hint(assigns) do
+    ~H"""
+    <span title={@message} class="underline cursor-help underline-offset-2 decoration-dashed">
+      <%= render_slot(@inner_block) %>
+    </span>
     """
   end
 
