@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Live.CSVImport do
       |> Enum.reject(&(Date.diff(&1.end_date, &1.start_date) < 2))
       |> Enum.map(&Date.range(&1.start_date, &1.end_date))
 
-    cutoff_date = Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
+    native_stats_start_date = Plausible.Sites.native_stats_start_date(site)
 
     socket =
       socket
@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Live.CSVImport do
         storage: storage,
         upload_consumer: upload_consumer,
         occupied_ranges: occupied_ranges,
-        cutoff_date: cutoff_date
+        native_stats_start_date: native_stats_start_date
       )
       |> allow_upload(:import, upload_opts)
       |> process_imported_tables()
@@ -302,7 +302,13 @@ defmodule PlausibleWeb.Live.CSVImport do
   end
 
   defp clamp_date_range(socket, %Date.Range{first: start_date, last: end_date}) do
-    %{occupied_ranges: occupied_ranges, cutoff_date: cutoff_date} = socket.assigns
+    %{
+      site: site,
+      occupied_ranges: occupied_ranges,
+      native_stats_start_date: native_stats_start_date
+    } = socket.assigns
+
+    cutoff_date = native_stats_start_date || Timex.today(site.timezone)
     end_date = Enum.min([end_date, cutoff_date], Date)
 
     if Date.diff(end_date, start_date) >= 2 do
