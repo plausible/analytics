@@ -35,17 +35,15 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
   def perform(_job) do
     deleted_sites = get_deleted_sites_with_clickhouse_data()
 
-    if length(deleted_sites) > 0 do
+    if not Enum.empty?(deleted_sites) do
       Logger.info(
         "Clearing ClickHouse data for the following #{length(deleted_sites)} sites which have been deleted: #{inspect(deleted_sites)}"
       )
 
-      site_ids_expr = deleted_sites |> Enum.map_join(", ", &to_string/1)
-
       for table <- @tables_to_clear do
         IngestRepo.query!(
-          "ALTER TABLE #{table} DELETE WHERE site_id IN #{site_ids_expr}",
-          [],
+          "ALTER TABLE {$0:Identifier} DELETE WHERE site_id IN {$1:Array(UInt64)}",
+          [table, deleted_sites],
           settings: @settings
         )
       end
