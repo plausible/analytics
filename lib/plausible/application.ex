@@ -179,7 +179,7 @@ defmodule Plausible.Application do
   def setup_request_logging() do
     :telemetry.attach(
       "plausible-request-logging",
-      [:phoenix, :router_dispatch, :stop],
+      [:phoenix, :endpoint, :stop],
       &Plausible.RequestLogger.log_request/4,
       %{}
     )
