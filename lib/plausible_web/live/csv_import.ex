@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Live.CSVImport do
   """
 
   use PlausibleWeb, :live_view
+  alias PlausibleWeb.Components.Generic
+
   require Plausible.Imported.SiteImport
   alias Plausible.Imported.CSVImporter
   alias Plausible.Imported
@@ -81,10 +83,10 @@ defmodule PlausibleWeb.Live.CSVImport do
       <form action="#" method="post" phx-change="validate-upload-form" phx-submit="submit-upload-form">
         <.csv_picker upload={@uploads.import} imported_tables={@imported_tables} />
         <.confirm_button date_range={@clamped_date_range} can_confirm?={@can_confirm?} />
-        <.date_range_warning
-          :if={@clamped_date_range != @original_date_range}
-          clamped_date_range={@clamped_date_range}
-          original_date_range={@original_date_range}
+        <.maybe_date_range_warning
+          :if={@original_date_range}
+          clamped={@clamped_date_range}
+          original={@original_date_range}
         />
         <p :for={error <- upload_errors(@uploads.import)} class="text-red-400">
           <%= error_to_string(error) %>
@@ -98,13 +100,11 @@ defmodule PlausibleWeb.Live.CSVImport do
     ~H"""
     <label
       phx-drop-target={@upload.ref}
-      class="block border-2 dark:border-gray-600 rounded p-4 group hover:border-indigo-500 dark:hover:border-indigo-600 transition cursor-pointer"
+      class="block border-2 dark:border-gray-600 rounded-md p-4 hover:bg-gray-50 dark:hover:bg-gray-900 hover:border-indigo-500 dark:hover:border-indigo-600 transition cursor-pointer"
     >
-      <div class="flex items-center">
-        <div class="bg-gray-200 dark:bg-gray-600 rounded p-1 group-hover:bg-indigo-500 dark:group-hover:bg-indigo-600 transition">
-          <Heroicons.document_plus class="w-5 h-5 group-hover:text-white transition" />
-        </div>
-        <span class="ml-2 text-sm text-gray-600 dark:text-gray-500">
+      <div class="flex items-center text-gray-500 dark:text-gray-500">
+        <Heroicons.document_plus class="w-5 h-5 transition" />
+        <span class="ml-1.5 text-sm">
           (or drag-and-drop your unzipped CSVs here)
         </span>
         <.live_file_input upload={@upload} class="hidden" />
@@ -133,7 +133,7 @@ defmodule PlausibleWeb.Live.CSVImport do
       ]}
     >
       <%= if @date_range do %>
-        Confirm import from <%= @date_range.first %> to <%= @date_range.last %>
+        Confirm import <.dates range={@date_range} />
       <% else %>
         Confirm import
       <% end %>
@@ -141,18 +141,53 @@ defmodule PlausibleWeb.Live.CSVImport do
     """
   end
 
+  defp maybe_date_range_warning(assigns) do
+    ~H"""
+    <%= if @clamped do %>
+      <.date_range_warning :if={@clamped != @original} clamped={@clamped} original={@original} />
+    <% else %>
+      <.date_range_error original={@original} />
+    <% end %>
+    """
+  end
+
   defp date_range_warning(assigns) do
     ~H"""
-    <p>
-      The date range <%= @original_date_range.first %> — <%= @original_date_range.last %>, computed from the filenames, cannot be fully utilized due to overlaps with existing imports.
-    </p>
-    <%= if @clamped_date_range do %>
-      <p>
-        As a result, the import will proceed for the longest available range within <%= @clamped_date_range.first %> — <%= @clamped_date_range.last %>.
-      </p>
-    <% else %>
-      <p>No parts of this range are available for new imports.</p>
-    <% end %>
+    <div class="mt-4 px-4 py-3 rounded-md bg-yellow-50 dark:bg-yellow-900 border-2 border-yellow-400 dark:border-yellow-500 text-yellow-700 dark:text-yellow-400">
+      <div class="text-sm">
+        <h4 class="font-bold">Dates Adjusted</h4>
+
+        <p class="mt-2">
+          The dates <.dates range={@original} />
+          overlap with previous imports, so we'll use the next best period,
+          <.dates range={@clamped} />
+        </p>
+      </div>
+    </div>
+    """
+  end
+
+  defp date_range_error(assigns) do
+    ~H"""
+    <div class="mt-4 px-4 py-3 rounded-md bg-red-50 dark:bg-red-900 border-2 border-red-400 dark:border-red-500 text-red-700 dark:text-red-300">
+      <div class="text-sm">
+        <h4 class="font-bold">Dates Conflict</h4>
+
+        <p class="mt-2">
+          The dates <.dates range={@original} />
+          overlap with dates we've already imported and cannot be used for new imports.
+        </p>
+      </div>
+    </div>
+    """
+  end
+
+  defp dates(assigns) do
+    ~H"""
+    <span class="whitespace-nowrap">
+      <span class="font-medium"><%= @range.first %></span>
+      to <span class="font-medium"><%= @range.last %></span>
+    </span>
     """
   end
 
@@ -168,19 +203,16 @@ defmodule PlausibleWeb.Live.CSVImport do
     assigns = assign(assigns, status: status)
 
     ~H"""
-    <li id={@table} class="ml-1.5">
-      <div class="flex items-center space-x-2">
-        <Heroicons.document_check :if={@status == :success} class="w-4 h-4 text-indigo-600" />
-        <PlausibleWeb.Components.Generic.spinner
-          :if={@status == :in_progress}
-          class="w-4 h-4 text-indigo-600"
-        />
-        <Heroicons.document :if={@status == :empty} class="w-4 h-4 text-gray-400 dark:text-gray-500" />
+    <li id={@table} class="ml-0.5">
+      <div class="flex items-center space-x-2 text-gray-600 dark:text-gray-500">
+        <Heroicons.document_check :if={@status == :success} class="w-4 h-4" />
+        <Generic.spinner :if={@status == :in_progress} class="w-4 h-4" />
+        <Heroicons.document :if={@status == :empty} class="w-4 h-4 opacity-80" />
         <Heroicons.document :if={@status == :error} class="w-4 h-4 text-red-600 dark:text-red-700" />
 
         <span class={[
           "text-sm",
-          if(@upload, do: "dark:text-gray-400", else: "text-gray-400 dark:text-gray-500"),
+          if(@status == :empty, do: "opacity-80"),
           if(@status == :error, do: "text-red-600 dark:text-red-700")
         ]}>
           <%= if @upload do %>
@@ -324,7 +356,7 @@ defmodule PlausibleWeb.Live.CSVImport do
       end
 
     all_uploaded? = completed != [] and in_progress == []
-    can_confirm? = all_uploaded? && clamped_date_range
+    can_confirm? = all_uploaded? and not is_nil(clamped_date_range)
 
     socket
     |> cancel_uploads(invalid_uploads)
