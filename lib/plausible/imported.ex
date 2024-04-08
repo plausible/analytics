@@ -158,16 +158,22 @@ defmodule Plausible.Imported do
     :ok
   end
 
-  @spec check_dates(Site.t(), Date.t() | nil, Date.t() | nil) ::
-          {:ok, Date.t(), Date.t()} | {:error, :no_data | :no_time_window}
-  def check_dates(_site, nil, _end_date), do: {:error, :no_data}
+  @spec clamp_dates(Site.t(), Date.t(), Date.t()) ::
+          {:ok, Date.t(), Date.t()} | {:error, :no_time_window}
+  def clamp_dates(site, start_date, end_date) do
+    cutoff_date = get_cutoff_date(site)
+    occupied_ranges = get_occupied_date_ranges(site)
 
-  def check_dates(site, start_date, end_date) do
-    cutoff_date = Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
+    clamp_dates(occupied_ranges, cutoff_date, start_date, end_date)
+  end
+
+  @spec clamp_dates([Date.Range.t()], Date.t(), Date.t(), Date.t()) ::
+          {:ok, Date.t(), Date.t()} | {:error, :no_time_window}
+  def clamp_dates(occupied_ranges, cutoff_date, start_date, end_date) do
     end_date = Enum.min([end_date, cutoff_date], Date)
 
     with true <- Date.diff(end_date, start_date) >= 2,
-         [_ | _] = free_ranges <- find_free_ranges(start_date, end_date, site) do
+         [_ | _] = free_ranges <- find_free_ranges(start_date, end_date, occupied_ranges) do
       longest = Enum.max_by(free_ranges, &Date.diff(&1.last, &1.first))
       {:ok, longest.first, longest.last}
     else
@@ -175,13 +181,20 @@ defmodule Plausible.Imported do
     end
   end
 
-  defp find_free_ranges(start_date, end_date, site) do
-    occupied_ranges =
-      site
-      |> Imported.list_all_imports(Imported.SiteImport.completed())
-      |> Enum.reject(&(Date.diff(&1.end_date, &1.start_date) < 2))
-      |> Enum.map(&Date.range(&1.start_date, &1.end_date))
+  @spec get_occupied_date_ranges(Site.t()) :: [Date.Range.t()]
+  def get_occupied_date_ranges(site) do
+    site
+    |> Imported.list_all_imports(Imported.SiteImport.completed())
+    |> Enum.reject(&(Date.diff(&1.end_date, &1.start_date) < 2))
+    |> Enum.map(&Date.range(&1.start_date, &1.end_date))
+  end
 
+  @spec get_cutoff_date(Site.t()) :: Date.t()
+  def get_cutoff_date(site) do
+    Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
+  end
+
+  defp find_free_ranges(start_date, end_date, occupied_ranges) do
     Date.range(start_date, end_date)
     |> free_ranges(start_date, occupied_ranges, [])
   end

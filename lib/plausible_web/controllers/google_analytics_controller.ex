@@ -139,7 +139,8 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
     with {:ok, api_start_date} <-
            Google.API.get_analytics_start_date(access_token, property_or_view),
          {:ok, api_end_date} <- Google.API.get_analytics_end_date(access_token, property_or_view),
-         {:ok, start_date, end_date} <- Imported.check_dates(site, api_start_date, api_end_date) do
+         :ok <- ensure_dates(api_start_date, api_end_date),
+         {:ok, start_date, end_date} <- Imported.clamp_dates(site, api_start_date, api_end_date) do
       action =
         if Timex.before?(api_start_date, @universal_analytics_new_user_metric_date) do
           :user_metric_notice
@@ -299,7 +300,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
       legacy: legacy == "true"
     ]
 
-    with {:ok, start_date, end_date} <- Imported.check_dates(site, start_date, end_date),
+    with {:ok, start_date, end_date} <- Imported.clamp_dates(site, start_date, end_date),
          import_opts = [{:start_date, start_date}, {:end_date, end_date} | import_opts],
          {:ok, _} <- schedule_job(site, current_user, property_or_view, import_opts) do
       conn
@@ -323,6 +324,9 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         |> redirect(external: redirect_route)
     end
   end
+
+  defp ensure_dates(%Date{}, %Date{}), do: :ok
+  defp ensure_dates(_, _), do: {:error, :no_data}
 
   defp schedule_job(site, current_user, property_or_view, opts) do
     if Google.API.property?(property_or_view) do
