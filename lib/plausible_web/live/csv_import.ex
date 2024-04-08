@@ -197,14 +197,13 @@ defmodule PlausibleWeb.Live.CSVImport do
   def handle_event("submit-upload-form", _params, socket) do
     %{
       storage: storage,
-      site_id: site_id,
+      site: site,
       user_id: user_id,
       date_range: date_range,
       upload_consumer: upload_consumer
     } =
       socket.assigns
 
-    site = Plausible.Repo.get!(Plausible.Site, site_id)
     user = Plausible.Repo.get!(Plausible.Auth.User, user_id)
     uploads = consume_uploaded_entries(socket, :import, upload_consumer)
 
