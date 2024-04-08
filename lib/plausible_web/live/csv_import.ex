@@ -231,10 +231,18 @@ defmodule PlausibleWeb.Live.CSVImport do
   end
 
   @impl true
-  def handle_info({:notification, :analytics_imports_jobs, _details}, socket) do
-    # TODO limit to current site
-    occupied_ranges = Imported.get_occupied_date_ranges(socket.assigns.site)
-    socket = socket |> assign(occupied_ranges: occupied_ranges) |> process_imported_tables()
+  def handle_info({:notification, :analytics_imports_jobs, details}, socket) do
+    %{"site_id" => notification_site_id} = details
+    site = socket.assigns.site
+
+    socket =
+      if notification_site_id == site.id and match?(%{"complete" => _import_id}, details) do
+        occupied_ranges = Imported.get_occupied_date_ranges(site)
+        socket |> assign(occupied_ranges: occupied_ranges) |> process_imported_tables()
+      else
+        socket
+      end
+
     {:noreply, socket}
   end
 
