@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Live.CSVImport do
     if connected?(socket), do: Imported.listen()
 
     occupied_ranges = Imported.get_occupied_date_ranges(site)
-    cutoff_date = Imported.get_cutoff_date(site)
+    native_stats_start_date = Plausible.Sites.native_stats_start_date(site)
 
     socket =
       socket
@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Live.CSVImport do
         storage: storage,
         upload_consumer: upload_consumer,
         occupied_ranges: occupied_ranges,
-        cutoff_date: cutoff_date
+        native_stats_start_date: native_stats_start_date
       )
       |> allow_upload(:import, upload_opts)
       |> process_imported_tables()
@@ -289,7 +289,13 @@ defmodule PlausibleWeb.Live.CSVImport do
     %Date.Range{first: start_date, last: end_date} =
       original_date_range = CSVImporter.date_range(Enum.map(valid_uploads, & &1.client_name))
 
-    %{occupied_ranges: occupied_ranges, cutoff_date: cutoff_date} = socket.assigns
+    %{
+      site: site,
+      occupied_ranges: occupied_ranges,
+      native_stats_start_date: native_stats_start_date
+    } = socket.assigns
+
+    cutoff_date = native_stats_start_date || Timex.today(site.timezone)
 
     clamped_date_range =
       case Imported.clamp_dates(occupied_ranges, cutoff_date, start_date, end_date) do
