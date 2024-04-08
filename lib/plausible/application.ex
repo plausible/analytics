@@ -100,6 +100,7 @@ defmodule Plausible.Application do
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
 
+    setup_request_logging()
     setup_sentry()
     setup_opentelemetry()
 
@@ -173,6 +174,15 @@ defmodule Plausible.Application do
       true ->
         pool_config
     end
+  end
+
+  def setup_request_logging() do
+    :telemetry.attach(
+      "plausible-request-logging",
+      [:phoenix, :endpoint, :stop],
+      &Plausible.RequestLogger.log_request/4,
+      %{}
+    )
   end
 
   def setup_sentry() do
