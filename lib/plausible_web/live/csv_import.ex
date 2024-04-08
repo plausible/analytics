@@ -199,7 +199,7 @@ defmodule PlausibleWeb.Live.CSVImport do
       storage: storage,
       site: site,
       user_id: user_id,
-      date_range: date_range,
+      clamped_date_range: clamped_date_range,
       upload_consumer: upload_consumer
     } =
       socket.assigns
@@ -209,8 +209,8 @@ defmodule PlausibleWeb.Live.CSVImport do
 
     {:ok, _job} =
       CSVImporter.new_import(site, user,
-        start_date: date_range.first,
-        end_date: date_range.last,
+        start_date: clamped_date_range.first,
+        end_date: clamped_date_range.last,
         uploads: uploads,
         storage: storage
       )
