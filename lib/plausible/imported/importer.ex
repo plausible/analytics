@@ -203,7 +203,10 @@ defmodule Plausible.Imported.Importer do
 
   @doc false
   def notify(site_import, event) do
-    Oban.Notifier.notify(Oban, @oban_channel, %{event => site_import.id})
+    Oban.Notifier.notify(Oban, @oban_channel, %{
+      event => site_import.id,
+      "site_id" => site_import.site_id
+    })
   end
 
   @doc """
