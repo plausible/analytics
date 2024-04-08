@@ -144,41 +144,16 @@ defmodule PlausibleWeb.Live.CSVImport do
   defp maybe_date_range_warning(assigns) do
     ~H"""
     <%= if @clamped do %>
-      <.date_range_warning :if={@clamped != @original} clamped={@clamped} original={@original} />
+      <Generic.notice :if={@clamped != @original} title="Dates Adjusted" theme={:yellow} class="mt-4">
+        The dates <.dates range={@original} />
+        overlap with previous imports, so we'll use the next best period, <.dates range={@clamped} />
+      </Generic.notice>
     <% else %>
-      <.date_range_error original={@original} />
+      <Generic.notice title="Dates Conflict" theme={:red} class="mt-4">
+        The dates <.dates range={@original} />
+        overlap with dates we've already imported and cannot be used for new imports.
+      </Generic.notice>
     <% end %>
-    """
-  end
-
-  defp date_range_warning(assigns) do
-    ~H"""
-    <div class="mt-4 px-4 py-3 rounded-md bg-yellow-50 dark:bg-yellow-900 border-2 border-yellow-400 dark:border-yellow-500 text-yellow-700 dark:text-yellow-400">
-      <div class="text-sm">
-        <h4 class="font-bold">Dates Adjusted</h4>
-
-        <p class="mt-2">
-          The dates <.dates range={@original} />
-          overlap with previous imports, so we'll use the next best period,
-          <.dates range={@clamped} />
-        </p>
-      </div>
-    </div>
-    """
-  end
-
-  defp date_range_error(assigns) do
-    ~H"""
-    <div class="mt-4 px-4 py-3 rounded-md bg-red-50 dark:bg-red-900 border-2 border-red-400 dark:border-red-500 text-red-700 dark:text-red-300">
-      <div class="text-sm">
-        <h4 class="font-bold">Dates Conflict</h4>
-
-        <p class="mt-2">
-          The dates <.dates range={@original} />
-          overlap with dates we've already imported and cannot be used for new imports.
-        </p>
-      </div>
-    </div>
     """
   end
 
