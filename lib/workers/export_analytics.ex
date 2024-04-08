@@ -56,14 +56,13 @@ defmodule Plausible.Workers.ExportAnalytics do
       Exports.oban_notify(site_id)
     end
 
+    email_success(job.args)
+
     :ok
   catch
     class, reason ->
       if job.attempt >= job.max_attempts, do: email_failure(job.args)
       :erlang.raise(class, reason, __STACKTRACE__)
-  else
-    _result ->
-      email_success(job.args)
   end
 
   defp perform_s3_export(ch, site, queries, args) do
