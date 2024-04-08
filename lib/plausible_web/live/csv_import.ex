@@ -225,7 +225,8 @@ defmodule PlausibleWeb.Live.CSVImport do
   def handle_info({:notification, :analytics_imports_jobs, _details}, socket) do
     # TODO limit to current site
     occupied_ranges = Imported.get_occupied_date_ranges(socket.assigns.site)
-    {:noreply, assign(socket, occupied_ranges: occupied_ranges)}
+    socket = socket |> assign(occupied_ranges: occupied_ranges) |> process_imported_tables()
+    {:noreply, socket}
   end
 
   defp error_to_string(:too_large), do: "is too large (max size is 1 gigabyte)"
