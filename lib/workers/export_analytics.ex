@@ -52,19 +52,18 @@ defmodule Plausible.Workers.ExportAnalytics do
         "s3" -> perform_s3_export(ch, site, queries, args)
         "local" -> perform_local_export(ch, queries, args)
       end
-    catch
-      class, reason ->
-        last_attempt_failed? = job.attempt == job.max_attempts
-        if last_attempt_failed?, do: email_failure(args)
-        :erlang.raise(class, reason, __STACKTRACE__)
-    else
-      _result ->
-        email_success(args)
     after
       Exports.oban_notify(site_id)
     end
 
     :ok
+  catch
+    class, reason ->
+      if job.attempt >= job.max_attempts, do: email_failure(job.args)
+      :erlang.raise(class, reason, __STACKTRACE__)
+  else
+    _result ->
+      email_success(job.args)
   end
 
   defp perform_s3_export(ch, site, queries, args) do
