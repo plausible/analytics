@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Live.CSVImport do
   use PlausibleWeb, :live_view
   require Plausible.Imported.SiteImport
   alias Plausible.Imported.CSVImporter
+  alias Plausible.Imported
 
   # :not_mounted_at_router ensures we have already done auth checks in the controller
   # if this liveview becomes available from the router, please make sure
@@ -17,7 +18,7 @@ defmodule PlausibleWeb.Live.CSVImport do
     upload_opts = [
       accept: [".csv", "text/csv"],
       auto_upload: true,
-      max_entries: length(Plausible.Imported.tables()),
+      max_entries: length(Imported.tables()),
       # 1GB
       max_file_size: 1_000_000_000,
       progress: &handle_progress/3
@@ -50,13 +51,12 @@ defmodule PlausibleWeb.Live.CSVImport do
     %{assigns: %{site: site}} =
       socket = assign_new(socket, :site, fn -> Plausible.Repo.get!(Plausible.Site, site_id) end)
 
-    occupied_ranges =
-      site
-      |> Plausible.Imported.list_all_imports(Plausible.Imported.SiteImport.completed())
-      |> Enum.reject(&(Date.diff(&1.end_date, &1.start_date) < 2))
-      |> Enum.map(&Date.range(&1.start_date, &1.end_date))
+    # we'll listen for new completed imports to know
+    # when to reload the occupied ranges
+    if connected?(socket), do: Imported.listen()
 
-    native_stats_start_date = Plausible.Sites.native_stats_start_date(site)
+    occupied_ranges = Imported.get_occupied_date_ranges(site)
+    cutoff_date = Imported.get_cutoff_date(site)
 
     socket =
       socket
@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Live.CSVImport do
         storage: storage,
         upload_consumer: upload_consumer,
         occupied_ranges: occupied_ranges,
-        native_stats_start_date: native_stats_start_date
+        cutoff_date: cutoff_date
       )
       |> allow_upload(:import, upload_opts)
       |> process_imported_tables()
@@ -221,6 +221,13 @@ defmodule PlausibleWeb.Live.CSVImport do
     {:noreply, redirect(socket, external: redirect_to)}
   end
 
+  @impl true
+  def handle_info({:notification, :analytics_imports_jobs, _details}, socket) do
+    # TODO limit to current site
+    occupied_ranges = Imported.get_occupied_date_ranges(socket.assigns.site)
+    {:noreply, assign(socket, occupied_ranges: occupied_ranges)}
+  end
+
   defp error_to_string(:too_large), do: "is too large (max size is 1 gigabyte)"
   defp error_to_string(:too_many_files), do: "too many files"
   defp error_to_string(:not_accepted), do: "unacceptable file types"
@@ -251,7 +258,7 @@ defmodule PlausibleWeb.Live.CSVImport do
   end
 
   defp process_imported_tables(socket) do
-    tables = Plausible.Imported.tables()
+    tables = Imported.tables()
     {completed, in_progress} = uploaded_entries(socket, :import)
 
     {valid_uploads, invalid_uploads} =
@@ -278,8 +285,16 @@ defmodule PlausibleWeb.Live.CSVImport do
         replaced_uploads
       end)
 
-    original_date_range = CSVImporter.date_range(Enum.map(valid_uploads, & &1.client_name))
-    clamped_date_range = clamp_date_range(socket, original_date_range)
+    %Date.Range{first: start_date, last: end_date} =
+      original_date_range = CSVImporter.date_range(Enum.map(valid_uploads, & &1.client_name))
+
+    %{occupied_ranges: occupied_ranges, cutoff_date: cutoff_date} = socket.assigns
+
+    clamped_date_range =
+      case Imported.clamp_dates(occupied_ranges, cutoff_date, start_date, end_date) do
+        {:ok, start_date, end_date} -> Date.range(start_date, end_date)
+        {:error, :no_time_window} -> nil
+      end
 
     all_uploaded? = completed != [] and in_progress == []
     can_confirm? = all_uploaded? && clamped_date_range
@@ -299,62 +314,5 @@ defmodule PlausibleWeb.Live.CSVImport do
     Enum.reduce(uploads, socket, fn upload, socket ->
       cancel_upload(socket, :import, upload.ref)
     end)
-  end
-
-  defp clamp_date_range(socket, %Date.Range{first: start_date, last: end_date}) do
-    %{
-      site: site,
-      occupied_ranges: occupied_ranges,
-      native_stats_start_date: native_stats_start_date
-    } = socket.assigns
-
-    cutoff_date = native_stats_start_date || Timex.today(site.timezone)
-    end_date = Enum.min([end_date, cutoff_date], Date)
-
-    if Date.diff(end_date, start_date) >= 2 do
-      free_ranges = find_free_ranges(start_date, end_date, occupied_ranges)
-
-      unless Enum.empty?(free_ranges) do
-        Enum.max_by(free_ranges, &Date.diff(&1.last, &1.first))
-      end
-    end
-  end
-
-  defp find_free_ranges(start_date, end_date, occupied_ranges) do
-    free_ranges(Date.range(start_date, end_date), start_date, occupied_ranges, [])
-  end
-
-  # This function recursively finds open ranges that are not yet occupied
-  # by existing imported data. The idea is that we keep moving a dynamic
-  # date index `d` from start until the end of `imported_range`, hopping
-  # over each occupied range, and capturing the open ranges step-by-step
-  # in the `result` array.
-  defp free_ranges(import_range, d, [occupied_range | rest_of_occupied_ranges], result) do
-    cond do
-      Date.diff(occupied_range.last, d) <= 0 ->
-        free_ranges(import_range, d, rest_of_occupied_ranges, result)
-
-      in_range?(d, occupied_range) || Date.diff(occupied_range.first, d) < 2 ->
-        d = occupied_range.last
-        free_ranges(import_range, d, rest_of_occupied_ranges, result)
-
-      true ->
-        free_range = Date.range(d, occupied_range.first)
-        result = result ++ [free_range]
-        d = occupied_range.last
-        free_ranges(import_range, d, rest_of_occupied_ranges, result)
-    end
-  end
-
-  defp free_ranges(import_range, d, [], result) do
-    if Date.diff(import_range.last, d) < 2 do
-      result
-    else
-      result ++ [Date.range(d, import_range.last)]
-    end
-  end
-
-  defp in_range?(date, range) do
-    Date.before?(range.first, date) && Date.after?(range.last, date)
   end
 end
