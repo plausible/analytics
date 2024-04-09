@@ -468,8 +468,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
   describe "filters" do
     test "event:goal filter returns 400 when goal not configured", %{conn: conn, site: site} do
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,events",
           "filters" => "event:goal==Visit /register**"
         })
 
@@ -477,6 +480,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
 
       assert msg =~
                "The pageview goal for the pathname `/register**` is not configured for this site"
+    end
+
+    test "validates that filters are valid", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,events",
+          "filters" => "badproperty==bar"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Invalid filter property 'badproperty'. Please provide a valid filter property: https://plausible.io/docs/stats-api#properties"
+             }
     end
 
     test "can filter by a custom event goal", %{conn: conn, site: site} do

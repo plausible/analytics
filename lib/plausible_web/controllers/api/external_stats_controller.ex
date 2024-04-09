@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          query <- Query.from(site, params),
-         :ok <- validate_goal_filter(site, query.filters),
+         :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, nil, query),
          :ok <- ensure_custom_props_access(site, query) do
       results =
@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_date(params),
          {:ok, property} <- validate_property(params),
          query <- Query.from(site, params),
-         :ok <- validate_goal_filter(site, query.filters),
+         :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, property, query),
          {:ok, limit} <- validate_or_default_limit(params),
          :ok <- ensure_custom_props_access(site, query, property) do
@@ -256,7 +256,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_date(params),
          :ok <- validate_interval(params),
          query <- Query.from(site, params),
-         :ok <- validate_goal_filter(site, query.filters),
+         :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, nil, query),
          :ok <- ensure_custom_props_access(site, query) do
       graph = Plausible.Stats.timeseries(site, query, metrics)
@@ -322,7 +322,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp validate_interval(_), do: :ok
 
-  defp validate_goal_filter(site, %{"event:goal" => {_type, goal_filter}}) do
+  defp validate_filters(site, filters) do
+    Enum.reduce_while(filters, :ok, fn filter, _ ->
+      case validate_filter(site, filter) do
+        :ok -> {:cont, :ok}
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
+    end)
+  end
+
+  defp validate_filter(site, {"event:goal", {_type, goal_filter}}) do
     configured_goals =
       Plausible.Goals.for_site(site)
       |> Enum.map(fn
@@ -345,7 +354,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end
   end
 
-  defp validate_goal_filter(_site, _filters), do: :ok
+  defp validate_filter(_site, {property, _}) do
+    if Plausible.Stats.Props.valid_prop?(property) do
+      :ok
+    else
+      {:error,
+       "Invalid filter property '#{property}'. Please provide a valid filter property: https://plausible.io/docs/stats-api#properties"}
+    end
+  end
 
   defp goal_not_configured_message("Visit " <> page_path) do
     "The pageview goal for the pathname `#{page_path}` is not configured for this site. "
