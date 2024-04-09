@@ -13,6 +13,11 @@ end
 
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
 
+# warn about minio if it's included in tests but not running
+if :minio in Keyword.fetch!(ExUnit.configuration(), :include) do
+  Plausible.TestUtils.ensure_minio()
+end
+
 if Mix.env() == :small_test do
   IO.puts("Test mode: SMALL")
   ExUnit.configure(exclude: [:slow, :minio, :full_build_only])

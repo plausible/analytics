@@ -145,9 +145,9 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
     """
   end
 
-  def handle_info({:notification, :analytics_imports_jobs, status}, socket) do
-    [{status_str, import_id}] = Enum.to_list(status)
-    {site_imports, updated?} = update_imports(socket.assigns.site_imports, import_id, status_str)
+  def handle_info({:notification, :analytics_imports_jobs, details}, socket) do
+    {site_imports, updated?} =
+      update_imports(socket.assigns.site_imports, details["import_id"], details["event"])
 
     pageview_counts =
       if updated? do
