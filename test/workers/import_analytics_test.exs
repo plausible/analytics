@@ -145,6 +145,7 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
         Ecto.Adapters.SQL.Sandbox.unboxed_run(Plausible.Repo, fn ->
           Repo.delete_all(Plausible.Site)
           Repo.delete_all(Plausible.Auth.User)
+          Repo.delete_all(Oban.Job)
         end)
 
         :ok
