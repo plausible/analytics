@@ -72,8 +72,7 @@ defmodule PlausibleWeb.LayoutView do
             if FunWithFlags.enabled?(:shield_pages, for: conn.assigns[:site]) do
               %{key: "Pages", value: "shields/pages"}
             end,
-            if FunWithFlags.enabled?(:hostname_filter, for: conn.assigns[:site]) or
-              FunWithFlags.enabled?(:hostname_filter, for: conn.assigns[:current_user]) do
+            if FunWithFlags.enabled?(:shield_hostnames, for: conn.assigns[:site]) do
               %{key: "Hostnames", value: "shields/hostnames"}
             end
           ]

@@ -13,6 +13,7 @@
 FunWithFlags.enable(:imports_exports)
 FunWithFlags.enable(:shield_pages)
 FunWithFlags.enable(:hostname_filter)
+FunWithFlags.enable(:shield_hostnames)
 
 user = Plausible.Factory.insert(:user, email: "user@plausible.test", password: "plausible")
 
