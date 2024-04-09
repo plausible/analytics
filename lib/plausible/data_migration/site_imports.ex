@@ -20,10 +20,18 @@ defmodule Plausible.DataMigration.SiteImports do
     dry_run? = Keyword.get(opts, :dry_run?, true)
 
     site_import_query =
-      from(i in Imported.SiteImport, where: i.site_id == parent_as(:site).id, select: 1)
+      from(i in Imported.SiteImport,
+        where: i.site_id == parent_as(:site).id and i.status == ^SiteImport.completed(),
+        select: 1
+      )
 
     sites_with_imports =
-      from(s in Site, as: :site, where: not is_nil(s.imported_data) or exists(site_import_query))
+      from(s in Site,
+        as: :site,
+        where:
+          (not is_nil(s.imported_data) and fragment("?->>'status'", s.imported_data) == "ok") or
+            exists(site_import_query)
+      )
       |> Repo.all(log: false)
 
     sites_count = length(sites_with_imports)
@@ -42,26 +50,42 @@ defmodule Plausible.DataMigration.SiteImports do
       )
 
       site_imports =
-        if site.imported_data && not Enum.any?(site_imports, & &1.legacy) do
-          IO.puts("Creating legacy site import entry for site ID #{site.id}")
+        cond do
+          !site.imported_data ->
+            IO.puts(
+              "No legacy import present. Skipping creating legacy site import for site ID #{site.id}"
+            )
 
-          # create legacy entry if there's not one yet
-          params =
-            site.imported_data
-            |> Imported.SiteImport.from_legacy()
-            |> Map.put(:site_id, site.id)
-            |> Map.take([:legacy, :start_date, :end_date, :source, :status, :site_id])
+            site_imports
 
-          legacy_site_import =
-            %Imported.SiteImport{}
-            |> Ecto.Changeset.change(params)
-            |> insert!(dry_run?)
+          site.imported_data && site.imported_data.status != "ok" ->
+            IO.puts(
+              "Legacy import is in non-complete state. Skipping creating legacy site import for site ID #{site.id}."
+            )
 
-          [legacy_site_import | site_imports]
-        else
-          IO.puts("Legacy site import entry for site ID #{site.id} already exists")
+            site_imports
 
-          site_imports
+          site.imported_data && not Enum.any?(site_imports, & &1.legacy) ->
+            IO.puts("Creating legacy site import entry for site ID #{site.id}")
+
+            # create legacy entry if there's not one yet
+            params =
+              site.imported_data
+              |> Imported.SiteImport.from_legacy()
+              |> Map.put(:site_id, site.id)
+              |> Map.take([:legacy, :start_date, :end_date, :source, :status, :site_id])
+
+            legacy_site_import =
+              %Imported.SiteImport{}
+              |> Ecto.Changeset.change(params)
+              |> insert!(dry_run?)
+
+            [legacy_site_import | site_imports]
+
+          true ->
+            IO.puts("Legacy site import entry for site ID #{site.id} already exists")
+
+            site_imports
         end
 
       # adjust end date for each site import

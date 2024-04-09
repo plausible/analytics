@@ -144,6 +144,68 @@ defmodule Plausible.DataMigration.SiteImportsTest do
       assert site_import.end_date == ~D[2021-01-08]
       assert site_import.source == :universal_analytics
     end
+
+    test "only considers sites with completed site imports or 'ok' imported data" do
+      site1 =
+        insert(:site)
+        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "error")
+        |> Repo.update!()
+
+      existing_import1 =
+        insert(:site_import,
+          site: site1,
+          start_date: ~D[2021-01-02],
+          end_date: ~D[2021-01-08],
+          status: :completed,
+          legacy: false
+        )
+
+      site2 =
+        insert(:site)
+        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "ok")
+        |> Repo.update!()
+
+      existing_import2 =
+        insert(:site_import,
+          site: site2,
+          start_date: ~D[2021-01-02],
+          end_date: ~D[2021-01-08],
+          status: :failed,
+          legacy: false
+        )
+
+      site3 =
+        insert(:site)
+        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "error")
+        |> Repo.update!()
+
+      site4 =
+        insert(:site)
+        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "error")
+        |> Repo.update!()
+
+      _existing_import3 =
+        insert(:site_import,
+          site: site4,
+          start_date: ~D[2021-01-02],
+          end_date: ~D[2021-01-08],
+          status: :failed,
+          legacy: true
+        )
+
+      output =
+        capture_io(fn ->
+          assert :ok = SiteImports.run(dry_run?: false)
+        end)
+
+      assert output =~ "Processing 2 sites"
+      assert output =~ "site ID #{site1.id} "
+      assert output =~ "site import #{existing_import1.id} "
+      assert output =~ "site ID #{site2.id} "
+      refute output =~ "site import #{existing_import2.id} "
+      refute output =~ "site ID #{site3.id} "
+      refute output =~ "site ID #{site4.id} "
+    end
   end
 
   describe "imported_stats_end_date/1" do
