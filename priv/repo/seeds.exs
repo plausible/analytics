@@ -11,7 +11,6 @@
 # and so on) as they will fail if something goes wrong.
 
 FunWithFlags.enable(:imports_exports)
-FunWithFlags.enable(:shield_pages)
 FunWithFlags.enable(:hostname_filter)
 FunWithFlags.enable(:shield_hostnames)
 
