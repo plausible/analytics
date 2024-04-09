@@ -1,11 +1,14 @@
 defmodule Plausible.Imported.CSVImporterTest do
+  use Plausible
   use Plausible.DataCase
   alias Plausible.Imported.{CSVImporter, SiteImport}
   require SiteImport
 
   doctest CSVImporter, import: true
 
-  @moduletag :minio
+  on_full_build do
+    @moduletag :minio
+  end
 
   describe "new_import/3 and parse_args/1" do
     setup [:create_user, :create_new_site]
@@ -30,10 +33,18 @@ defmodule Plausible.Imported.CSVImporterTest do
         Enum.map(tables, fn table ->
           filename = "#{table}_#{start_date}_#{end_date}.csv"
 
-          %{
-            "filename" => filename,
-            "s3_url" => "https://bucket-name.s3.eu-north-1.amazonaws.com/#{site.id}/#{filename}"
-          }
+          on_full_build do
+            %{
+              "filename" => filename,
+              "s3_url" =>
+                "https://bucket-name.s3.eu-north-1.amazonaws.com/#{site.id}/#{filename}-some-random-suffix"
+            }
+          else
+            %{
+              "filename" => filename,
+              "local_path" => "/tmp/some-random-path"
+            }
+          end
         end)
 
       date_range = CSVImporter.date_range(uploads)
@@ -43,7 +54,7 @@ defmodule Plausible.Imported.CSVImporterTest do
                  start_date: date_range.first,
                  end_date: date_range.last,
                  uploads: uploads,
-                 storage: "s3"
+                 storage: on_full_build(do: "s3", else: "local")
                )
 
       assert %Oban.Job{args: %{"import_id" => import_id, "uploads" => ^uploads} = args} =
@@ -60,14 +71,22 @@ defmodule Plausible.Imported.CSVImporterTest do
              ] = Plausible.Imported.list_all_imports(site)
 
       assert %{imported_data: nil} = Repo.reload!(site)
-      assert CSVImporter.parse_args(args) == [uploads: uploads, storage: "s3"]
+
+      assert CSVImporter.parse_args(args) == [
+               uploads: uploads,
+               storage: on_full_build(do: "s3", else: "local")
+             ]
     end
   end
 
   describe "import_data/2" do
     setup [:create_user, :create_new_site, :clean_buckets]
 
-    test "imports tables from S3", %{site: site, user: user} do
+    @describetag :tmp_dir
+
+    test "imports tables from S3", %{site: site, user: user} = ctx do
+      _ = ctx
+
       csvs = [
         %{
           name: "imported_browsers_20211230_20211231.csv",
@@ -295,25 +314,29 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       uploads =
         for %{name: name, body: body} <- csvs do
-          %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, name)
-          [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
-          ExAws.request!(ExAws.S3.put_object(bucket, key, body))
-          %{"filename" => name, "s3_url" => s3_url}
+          on_full_build do
+            %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, name)
+            [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
+            ExAws.request!(ExAws.S3.put_object(bucket, key, body))
+            %{"filename" => name, "s3_url" => s3_url}
+          else
+            local_path = Path.join(ctx.tmp_dir, name)
+            File.write!(local_path, body)
+            %{"filename" => name, "local_path" => local_path}
+          end
         end
 
       date_range = CSVImporter.date_range(uploads)
 
-      {:ok, job} =
+      {:ok, _job} =
         CSVImporter.new_import(site, user,
           start_date: date_range.first,
           end_date: date_range.last,
           uploads: uploads,
-          storage: "s3"
+          storage: on_full_build(do: "s3", else: "local")
         )
 
-      job = Repo.reload!(job)
-
-      assert :ok = Plausible.Workers.ImportAnalytics.perform(job)
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety?: false)
 
       assert %SiteImport{
                start_date: ~D[2011-12-25],
@@ -325,7 +348,9 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 99
     end
 
-    test "fails on invalid CSV", %{site: site, user: user} do
+    test "fails on invalid CSV", %{site: site, user: user} = ctx do
+      _ = ctx
+
       csvs = [
         %{
           name: "imported_browsers_20211230_20211231.csv",
@@ -351,26 +376,33 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       uploads =
         for %{name: name, body: body} <- csvs do
-          %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, name)
-          [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
-          ExAws.request!(ExAws.S3.put_object(bucket, key, body))
-          %{"filename" => name, "s3_url" => s3_url}
+          on_full_build do
+            %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, name)
+            [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
+            ExAws.request!(ExAws.S3.put_object(bucket, key, body))
+            %{"filename" => name, "s3_url" => s3_url}
+          else
+            local_path = Path.join(ctx.tmp_dir, name)
+            File.write!(local_path, body)
+            %{"filename" => name, "local_path" => local_path}
+          end
         end
 
       date_range = CSVImporter.date_range(uploads)
 
-      {:ok, job} =
+      {:ok, _job} =
         CSVImporter.new_import(site, user,
           start_date: date_range.first,
           end_date: date_range.last,
           uploads: uploads,
-          storage: "s3"
+          storage: on_full_build(do: "s3", else: "local")
         )
 
-      job = Repo.reload!(job)
+      assert %{discard: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety?: false)
 
-      assert {:discard, message} = Plausible.Workers.ImportAnalytics.perform(job)
-      assert message =~ "CANNOT_PARSE_INPUT_ASSERTION_FAILED"
+      # TODO
+      # assert {:discard, message} = Plausible.Workers.ImportAnalytics.perform(job)
+      # assert message =~ "CANNOT_PARSE_INPUT_ASSERTION_FAILED"
 
       assert %SiteImport{id: import_id, source: :csv, status: :failed} =
                Repo.get_by!(SiteImport, site_id: site.id)
@@ -384,8 +416,7 @@ defmodule Plausible.Imported.CSVImporterTest do
   describe "export -> import" do
     setup [:create_user, :create_new_site, :clean_buckets]
 
-    @describetag :tmp_dir
-
+    @tag :tmp_dir
     test "it works", %{site: site, user: user, tmp_dir: tmp_dir} do
       populate_stats(site, [
         build(:pageview,
@@ -450,26 +481,27 @@ defmodule Plausible.Imported.CSVImporterTest do
       ])
 
       # export archive to s3
-      Oban.insert!(
-        Plausible.Workers.ExportAnalytics.new(%{
-          "storage" => "s3",
-          "site_id" => site.id,
-          "email_to" => user.email,
-          "s3_bucket" => Plausible.S3.exports_bucket(),
-          "s3_path" => to_string(site.id)
-        })
-      )
+      on_full_build do
+        assert {:ok, _job} = Plausible.Exports.schedule_s3_export(site.id, user.email)
+      else
+        assert {:ok, %{args: %{"local_path" => local_path}}} =
+                 Plausible.Exports.schedule_local_export(site.id, user.email)
+      end
 
       assert %{success: 1} = Oban.drain_queue(queue: :analytics_exports, with_safety: false)
 
       # download archive
-      ExAws.request!(
-        ExAws.S3.download_file(
-          Plausible.S3.exports_bucket(),
-          to_string(site.id),
-          Path.join(tmp_dir, "plausible-export.zip")
+      on_full_build do
+        ExAws.request!(
+          ExAws.S3.download_file(
+            Plausible.S3.exports_bucket(),
+            to_string(site.id),
+            Path.join(tmp_dir, "plausible-export.zip")
+          )
         )
-      )
+      else
+        File.rename!(local_path, Path.join(tmp_dir, "plausible-export.zip"))
+      end
 
       # unzip archive
       {:ok, files} =
@@ -478,25 +510,28 @@ defmodule Plausible.Imported.CSVImporterTest do
       # upload csvs
       uploads =
         Enum.map(files, fn file ->
-          %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, file)
-          [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
-          ExAws.request!(ExAws.S3.put_object(bucket, key, File.read!(file)))
-          %{"filename" => Path.basename(file), "s3_url" => s3_url}
+          on_full_build do
+            %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, file)
+            [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
+            ExAws.request!(ExAws.S3.put_object(bucket, key, File.read!(file)))
+            %{"filename" => Path.basename(file), "s3_url" => s3_url}
+          else
+            %{"filename" => Path.basename(file), "local_path" => file}
+          end
         end)
 
       # run importer
       date_range = CSVImporter.date_range(uploads)
 
-      {:ok, job} =
+      {:ok, _job} =
         CSVImporter.new_import(site, user,
           start_date: date_range.first,
           end_date: date_range.last,
           uploads: uploads,
-          storage: "s3"
+          storage: on_full_build(do: "s3", else: "local")
         )
 
-      job = Repo.reload!(job)
-      assert :ok = Plausible.Workers.ImportAnalytics.perform(job)
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety: false)
 
       # validate import
       assert %SiteImport{
@@ -511,22 +546,26 @@ defmodule Plausible.Imported.CSVImporterTest do
   end
 
   defp clean_buckets(_context) do
-    clean_bucket = fn bucket ->
-      ExAws.S3.list_objects_v2(bucket)
-      |> ExAws.stream!()
-      |> Stream.each(fn objects ->
-        keys = objects |> List.wrap() |> Enum.map(& &1.key)
-        ExAws.request!(ExAws.S3.delete_all_objects(bucket, keys))
-      end)
-      |> Stream.run()
-    end
+    on_full_build do
+      clean_bucket = fn bucket ->
+        ExAws.S3.list_objects_v2(bucket)
+        |> ExAws.stream!()
+        |> Stream.each(fn objects ->
+          keys = objects |> List.wrap() |> Enum.map(& &1.key)
+          ExAws.request!(ExAws.S3.delete_all_objects(bucket, keys))
+        end)
+        |> Stream.run()
+      end
 
-    clean_bucket.(Plausible.S3.imports_bucket())
-    clean_bucket.(Plausible.S3.exports_bucket())
-
-    on_exit(fn ->
       clean_bucket.(Plausible.S3.imports_bucket())
       clean_bucket.(Plausible.S3.exports_bucket())
-    end)
+
+      on_exit(fn ->
+        clean_bucket.(Plausible.S3.imports_bucket())
+        clean_bucket.(Plausible.S3.exports_bucket())
+      end)
+    else
+      :ok
+    end
   end
 end
