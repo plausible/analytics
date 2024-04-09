@@ -47,6 +47,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
       assert id > 0
       assert site_import.start_date == site.imported_data.start_date
       assert site_import.end_date == ~D[2021-01-07]
+      assert site.imported_data.end_date == ~D[2021-01-07]
       assert site_import.source == :universal_analytics
     end
 
@@ -64,8 +65,11 @@ defmodule Plausible.DataMigration.SiteImportsTest do
                assert :ok = SiteImports.run()
              end) =~ "Processing 1 sites"
 
+      site = Repo.reload!(site)
+
       assert [%{id: id, legacy: true}] = Imported.list_all_imports(site)
       assert id == 0
+      assert site.imported_data.end_date == ~D[2021-01-08]
     end
 
     test "does not set end date to latter than the current one" do
@@ -88,6 +92,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
       assert id > 0
       assert site_import.start_date == site.imported_data.start_date
       assert site_import.end_date == ~D[2021-01-08]
+      assert site.imported_data.end_date == ~D[2021-01-08]
       assert site_import.source == :universal_analytics
     end
 
@@ -105,6 +110,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
       site = Repo.reload!(site)
       assert [] = Imported.list_all_imports(site)
+      assert site.imported_data == nil
     end
 
     test "leaves site and imports unchanged if everything fits" do

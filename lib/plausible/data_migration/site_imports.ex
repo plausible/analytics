@@ -2,14 +2,19 @@ defmodule Plausible.DataMigration.SiteImports do
   @moduledoc """
   Site imports migration backfilling SiteImport entries for old imports
   and alters import end dates to match actual end date of respective import stats.
+
+
   """
 
   import Ecto.Query
 
   alias Plausible.ClickhouseRepo
   alias Plausible.Imported
+  alias Plausible.Imported.SiteImport
   alias Plausible.Repo
   alias Plausible.Site
+
+  require Plausible.Imported.SiteImport
 
   def run(opts \\ []) do
     dry_run? = Keyword.get(opts, :dry_run?, true)
@@ -27,7 +32,9 @@ defmodule Plausible.DataMigration.SiteImports do
 
     for {site, idx} <- Enum.with_index(sites_with_imports) do
       site_imports =
-        from(i in Imported.SiteImport, where: i.site_id == ^site.id)
+        from(i in Imported.SiteImport,
+          where: i.site_id == ^site.id and i.status == ^SiteImport.completed()
+        )
         |> Repo.all(log: false)
 
       IO.puts(
@@ -78,29 +85,44 @@ defmodule Plausible.DataMigration.SiteImports do
           )
 
           if site_import.legacy do
+            # sanity check that data is correct
+            "ok" = site.imported_data.status
+
             clear_imported_data(site, dry_run?)
           end
 
           delete!(site_import, dry_run?)
         else
-          end_date =
-            if Date.compare(end_date, site_import.end_date) in [:lt, :eq] do
-              end_date
-            else
+          case Date.compare(end_date, site_import.end_date) do
+            :lt ->
+              IO.puts(
+                "End date of site import #{site_import.id} (site ID #{site.id}) is adjusted from #{site_import.end_date} to #{end_date}."
+              )
+
+              site_import
+              |> Ecto.Changeset.change(end_date: end_date)
+              |> update!(dry_run?)
+
+              # credo:disable-for-next-line Credo.Check.Refactor.Nesting
+              if site_import.legacy do
+                # sanity check that data is correct
+                "ok" = site.imported_data.status
+
+                site
+                |> Ecto.Changeset.change(imported_data: %{end_date: end_date})
+                |> update!(dry_run?)
+              end
+
+            :eq ->
+              IO.puts(
+                "End date of site import #{site_import.id} (site ID #{site.id}) is left unadjusted."
+              )
+
+            :gt ->
               IO.puts(
                 "Site import #{site_import.id} (site ID #{site.id}) computed end date is later than the current one. Skipping."
               )
-
-              site_import.end_date
-            end
-
-          site_import
-          |> Ecto.Changeset.change(end_date: end_date)
-          |> update!(dry_run?)
-
-          IO.puts(
-            "End date of site import #{site_import.id} (site ID #{site.id}) adjusted to #{end_date}"
-          )
+          end
         end
       end
 
