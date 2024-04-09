@@ -43,31 +43,27 @@ defmodule Plausible.S3 do
 
   Example:
 
-      iex> %{
-      ...>   s3_url:  "http://localhost:10000/test-imports/123/imported_browsers.csv",
-      ...>   presigned_url: "http://localhost:10000/test-imports/123/imported_browsers.csv?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin" <> _
-      ...> } = import_presign_upload(_site_id = 123, _filename = "imported_browsers.csv")
+      iex> upload = import_presign_upload(_site_id = 123, _filename = "imported_browsers.csv")
+      iex> true = String.ends_with?(upload.s3_url, "/test-imports/123/imported_browsers.csv")
+      iex> true = String.contains?(upload.presigned_url, "/test-imports/123/imported_browsers.csv?X-Amz-Algorithm=AWS4-HMAC-SHA256&")
 
   """
   def import_presign_upload(site_id, filename) do
     config = ExAws.Config.new(:s3)
-    s3_path = Path.join(to_string(site_id), filename)
+    s3_path = Path.join(Integer.to_string(site_id), filename)
     bucket = imports_bucket()
     {:ok, presigned_url} = ExAws.S3.presigned_url(config, :put, bucket, s3_path)
     %{s3_url: extract_s3_url(presigned_url), presigned_url: presigned_url}
   end
 
   # to make ClickHouse see MinIO in dev and test envs we replace
-  # the host in the S3 URL with whatever's set in S3_CLICKHOUSE_HOST env var
+  # the host in the S3 URL with host.docker.internal or whatever's set in $MINIO_HOST_FOR_CLICKHOUSE
   if Mix.env() in [:dev, :test, :small_dev, :small_test] do
     defp extract_s3_url(presigned_url) do
       [s3_url, _] = String.split(presigned_url, "?")
-
-      if ch_host = System.get_env("S3_CLICKHOUSE_HOST") do
-        URI.to_string(%URI{URI.parse(s3_url) | host: ch_host})
-      else
-        s3_url
-      end
+      default_ch_host = unless System.get_env("CI"), do: "host.docker.internal"
+      ch_host = System.get_env("MINIO_HOST_FOR_CLICKHOUSE", default_ch_host)
+      URI.to_string(%URI{URI.parse(s3_url) | host: ch_host})
     end
   else
     defp extract_s3_url(presigned_url) do
@@ -79,36 +75,37 @@ defmodule Plausible.S3 do
   @doc """
   Chunks and uploads Zip archive to the provided S3 destination.
 
+  In the current implementation the bucket always goes into the path component.
+  """
+  @spec export_upload_multipart(Enumerable.t(), String.t(), Path.t(), String.t()) :: :ok
+  def export_upload_multipart(stream, s3_bucket, s3_path, filename) do
+    # 5 MiB is the smallest chunk size AWS S3 supports
+    chunk_into_parts(stream, 5 * 1024 * 1024)
+    |> ExAws.S3.upload(s3_bucket, s3_path,
+      content_disposition: Plausible.Exports.content_disposition(filename),
+      content_type: "application/zip",
+      timeout: :infinity
+    )
+    |> ExAws.request!()
+
+    :ok
+  end
+
+  @doc """
   Returns a presigned URL to download the exported Zip archive from S3.
   The URL expires in 24 hours.
 
   In the current implementation the bucket always goes into the path component.
   """
-  @spec export_upload_multipart(Enumerable.t(), String.t(), Path.t(), String.t(), keyword) ::
-          :uri_string.uri_string()
-  def export_upload_multipart(stream, s3_bucket, s3_path, filename, config_overrides \\ []) do
+  @spec download_url(String.t(), Path.t()) :: :uri_string.uri_string()
+  def download_url(s3_bucket, s3_path) do
     config = ExAws.Config.new(:s3)
 
-    encoded_filename = URI.encode(filename)
-    disposition = ~s[attachment; filename="#{encoded_filename}"]
-
-    disposition =
-      if encoded_filename != filename do
-        disposition <> "; filename*=utf-8''#{encoded_filename}"
-      else
-        disposition
-      end
-
-    # 5 MiB is the smallest chunk size AWS S3 supports
-    chunk_into_parts(stream, 5 * 1024 * 1024)
-    |> ExAws.S3.upload(s3_bucket, s3_path,
-      content_disposition: disposition,
-      content_type: "application/zip"
-    )
-    |> ExAws.request!(config_overrides)
+    # ex_aws_s3 doesn't allow expires_in longer than one week
+    one_week = 60 * 60 * 24 * 7
 
     {:ok, download_url} =
-      ExAws.S3.presigned_url(config, :get, s3_bucket, s3_path, expires_in: _24hr = 86_400)
+      ExAws.S3.presigned_url(config, :get, s3_bucket, s3_path, expires_in: one_week)
 
     download_url
   end
