@@ -310,7 +310,6 @@ defmodule Plausible.Stats.Breakdown do
     q
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
-    |> transform_keys(%{operating_system: :os})
     |> Util.keep_requested_metrics(metrics)
   end
 
@@ -601,8 +600,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.operating_system,
       select_merge: %{
-        operating_system:
-          fragment("if(empty(?), ?, ?)", s.operating_system, @not_set, s.operating_system)
+        os: fragment("if(empty(?), ?, ?)", s.operating_system, @not_set, s.operating_system)
       },
       order_by: {:asc, s.operating_system}
     )
@@ -651,7 +649,6 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp group_by_field_names("event:props:" <> _prop), do: [:name]
-  defp group_by_field_names("visit:os"), do: [:operating_system]
   defp group_by_field_names("visit:os_version"), do: [:os, :os_version]
   defp group_by_field_names("visit:browser_version"), do: [:browser, :browser_version]
 
