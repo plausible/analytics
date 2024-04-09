@@ -1,5 +1,4 @@
 defmodule PlausibleWeb.Email do
-  use Plausible
   use Bamboo.Phoenix, view: PlausibleWeb.EmailView
   import Bamboo.PostmarkHelper
 
@@ -345,48 +344,6 @@ defmodule PlausibleWeb.Email do
       user: user,
       success: false
     })
-  end
-
-  def export_success(user, site, download_url, expires_at) do
-    subject =
-      on_full_build do
-        "Your Plausible Analytics export is now ready for download"
-      else
-        "Your export is now ready for download"
-      end
-
-    expires_in =
-      if expires_at do
-        Timex.Format.DateTime.Formatters.Relative.format!(
-          expires_at,
-          "{relative}"
-        )
-      end
-
-    priority_email()
-    |> to(user)
-    |> tag("export-success")
-    |> subject(subject)
-    |> render("export_success.html",
-      user: user,
-      site: site,
-      download_url: download_url,
-      expires_in: expires_in
-    )
-  end
-
-  def export_failure(user, site) do
-    subject =
-      on_full_build do
-        "Your Plausible Analytics export has failed"
-      else
-        "Your export has failed"
-      end
-
-    priority_email()
-    |> to(user)
-    |> subject(subject)
-    |> render("export_failure.html", user: user, site: site)
   end
 
   def error_report(reported_by, trace_id, feedback) do

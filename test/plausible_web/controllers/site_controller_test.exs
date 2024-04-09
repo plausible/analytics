@@ -639,7 +639,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   end
 
   describe "GET /:website/settings/imports-exports" do
-    setup [:create_user, :log_in, :create_site, :maybe_fake_minio]
+    setup [:create_user, :log_in, :create_site]
 
     test "renders empty imports list", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/imports-exports")

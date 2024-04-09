@@ -296,8 +296,7 @@ config :plausible,
   is_selfhost: is_selfhost,
   custom_script_name: custom_script_name,
   log_failed_login_attempts: log_failed_login_attempts,
-  license_key: license_key,
-  persistent_cache_dir: persistent_cache_dir
+  license_key: license_key
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
@@ -538,10 +537,10 @@ base_queues = [
   site_setup_emails: 1,
   clean_invitations: 1,
   analytics_imports: 1,
-  analytics_exports: 1,
-  notify_exported_analytics: 1,
   domain_change_transition: 1,
-  check_accept_traffic_until: 1
+  check_accept_traffic_until: 1,
+  # NOTE: maybe move s3_csv_export to cloud_queues?
+  s3_csv_export: 1
 ]
 
 cloud_queues = [
