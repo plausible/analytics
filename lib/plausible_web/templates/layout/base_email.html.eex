@@ -4,12 +4,12 @@
 <%= @inner_content %>
 <br /><br />
 
-Regards,<br />
+<%= if full_build?() do %>Regards,<br />
 The Plausible Team 💌
-<br /><br />
+<br /><br /><% end %>
 
 --
 <br /><br />
 <%= link(plausible_url(), to: plausible_url()) %><br />
 
-{{{ pm:unsubscribe }}}
+<%= if full_build?() do %>{{{ pm:unsubscribe }}}<% end %>
