@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
   use PlausibleWeb.ConnCase
 
-  describe "GET /api/stats/:domain/operating_systems" do
+  describe "GET /api/stats/:domain/operating-systems" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "returns operating systems by unique visitors", %{conn: conn, site: site} do
@@ -43,6 +43,22 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
 
       assert json_response(conn, 200) == [
                %{"name" => "(not set)", "visitors" => 1, "percentage" => 100}
+             ]
+    end
+
+    test "select empty imported_operating_systems as (not set), merging with the native (not set)",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 123),
+        build(:imported_operating_systems, visitors: 1),
+        build(:imported_visitors, visitors: 1)
+      ])
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&with_imported=true")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "(not set)", "visitors" => 2, "percentage" => 100.0}
              ]
     end
 

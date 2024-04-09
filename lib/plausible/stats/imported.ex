@@ -6,6 +6,7 @@ defmodule Plausible.Stats.Imported do
   import Plausible.Stats.Fragments
 
   @no_ref "Direct / None"
+  @not_set "(not set)"
 
   defp api_prop_name_to_db(:os), do: :operating_system
   defp api_prop_name_to_db(name), do: name
@@ -207,13 +208,19 @@ defmodule Plausible.Stats.Imported do
           |> select_merge([i], %{city: i.city})
 
         :device ->
-          imported_q |> select_merge([i], %{device: i.device})
+          imported_q |> select_merge([i], %{
+            device: fragment("if(empty(?), ?, ?)", i.device, @not_set, i.device)
+          })
 
         :browser ->
-          imported_q |> select_merge([i], %{browser: i.browser})
+          imported_q |> select_merge([i], %{
+            browser: fragment("if(empty(?), ?, ?)", i.browser, @not_set, i.browser)
+          })
 
         :os ->
-          imported_q |> select_merge([i], %{os: i.operating_system})
+          imported_q |> select_merge([i], %{
+            os: fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system)
+          })
       end
 
     q =

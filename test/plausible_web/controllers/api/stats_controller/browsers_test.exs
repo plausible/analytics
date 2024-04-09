@@ -166,6 +166,23 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                %{"name" => "(not set)", "visitors" => 1, "percentage" => 100.0}
              ]
     end
+
+    test "select empty imported_browsers as (not set), merging with the native (not set)", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, user_id: 123),
+        build(:imported_browsers, visitors: 1),
+        build(:imported_visitors, visitors: 1)
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&with_imported=true")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "(not set)", "visitors" => 2, "percentage" => 100.0}
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/browser-versions" do
