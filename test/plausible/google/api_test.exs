@@ -39,8 +39,10 @@ defmodule Plausible.Google.APITest do
 
     {:ok, buffer} = Plausible.Imported.Buffer.start_link()
 
+    site_import = insert(:site_import)
+
     persist_fn = fn table, rows ->
-      records = UniversalAnalytics.from_report(rows, site.id, _import_id = 123, table)
+      records = UniversalAnalytics.from_report(rows, site.id, site_import.id, table)
       Plausible.Imported.Buffer.insert_many(buffer, table, records)
     end
 
@@ -81,8 +83,10 @@ defmodule Plausible.Google.APITest do
 
     {:ok, buffer} = Plausible.Imported.Buffer.start_link()
 
+    site_import = insert(:site_import)
+
     persist_fn = fn table, rows ->
-      records = UniversalAnalytics.from_report(rows, site.id, _import_id = 123, table)
+      records = UniversalAnalytics.from_report(rows, site.id, site_import.id, table)
       Plausible.Imported.Buffer.insert_many(buffer, table, records)
     end
 
