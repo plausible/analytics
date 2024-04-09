@@ -198,7 +198,8 @@ defmodule Plausible.DataMigration.SiteImportsTest do
           assert :ok = SiteImports.run(dry_run?: false)
         end)
 
-      assert output =~ "Processing 2 sites"
+      assert output =~ "Backfilling legacy site import across 1 sites"
+      assert output =~ "Adjusting end dates of site imports across 2 sites"
       assert output =~ "site ID #{site1.id} "
       assert output =~ "site import #{existing_import1.id} "
       assert output =~ "site ID #{site2.id} "
