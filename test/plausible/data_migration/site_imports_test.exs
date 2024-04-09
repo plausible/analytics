@@ -15,7 +15,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
           assert :ok = SiteImports.run()
         end)
 
-      assert dry_run_output =~ "Processing 0 sites"
+      assert dry_run_output =~ "Backfilling legacy site import across 0 sites"
       assert dry_run_output =~ "DRY RUN: true"
 
       real_run_output =
@@ -23,7 +23,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
           assert :ok = SiteImports.run(dry_run?: false)
         end)
 
-      assert real_run_output =~ "Processing 0 sites"
+      assert real_run_output =~ "Backfilling legacy site import across 0 sites"
       assert real_run_output =~ "DRY RUN: false"
     end
 
@@ -39,7 +39,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
       assert capture_io(fn ->
                assert :ok = SiteImports.run(dry_run?: false)
-             end) =~ "Processing 1 sites"
+             end) =~ "Backfilling legacy site import across 1 sites"
 
       site = Repo.reload!(site)
 
@@ -63,7 +63,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
       assert capture_io(fn ->
                assert :ok = SiteImports.run()
-             end) =~ "Processing 1 sites"
+             end) =~ "Backfilling legacy site import across 1 sites"
 
       site = Repo.reload!(site)
 
@@ -84,7 +84,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
       assert capture_io(fn ->
                assert :ok = SiteImports.run(dry_run?: false)
-             end) =~ "Processing 1 sites"
+             end) =~ "Backfilling legacy site import across 1 sites"
 
       site = Repo.reload!(site)
 
@@ -102,11 +102,9 @@ defmodule Plausible.DataMigration.SiteImportsTest do
         |> Site.start_import(~D[2021-01-02], ~D[2020-02-02], "Google Analytics", "ok")
         |> Repo.update!()
 
-      _another_site_import = insert(:site_import, site: site)
-
       assert capture_io(fn ->
                assert :ok = SiteImports.run(dry_run?: false)
-             end) =~ "Processing 1 site"
+             end) =~ "Backfilling legacy site import across 1 sites"
 
       site = Repo.reload!(site)
       assert [] = Imported.list_all_imports(site)
@@ -134,7 +132,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
       assert capture_io(fn ->
                assert :ok = SiteImports.run(dry_run?: false)
-             end) =~ "Processing 1 sites"
+             end) =~ "Backfilling legacy site import across 0 sites"
 
       site = Repo.reload!(site)
 
