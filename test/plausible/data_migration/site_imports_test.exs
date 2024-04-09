@@ -61,9 +61,13 @@ defmodule Plausible.DataMigration.SiteImportsTest do
         build(:imported_visitors, date: ~D[2021-01-07])
       ])
 
-      assert capture_io(fn ->
-               assert :ok = SiteImports.run()
-             end) =~ "Backfilling legacy site import across 1 sites"
+      output =
+        capture_io(fn ->
+          assert :ok = SiteImports.run()
+        end)
+
+      assert output =~ "Backfilling legacy site import across 1 sites"
+      assert output =~ "Adjusting end dates of 1 site imports"
 
       site = Repo.reload!(site)
 
@@ -197,13 +201,13 @@ defmodule Plausible.DataMigration.SiteImportsTest do
         end)
 
       assert output =~ "Backfilling legacy site import across 1 sites"
-      assert output =~ "Adjusting end dates of site imports across 2 sites"
-      assert output =~ "site ID #{site1.id} "
+      assert output =~ "Adjusting end dates of 2 site imports"
+      assert output =~ "(site ID #{site1.id})"
       assert output =~ "site import #{existing_import1.id} "
-      assert output =~ "site ID #{site2.id} "
+      assert output =~ "(site ID #{site2.id})"
       refute output =~ "site import #{existing_import2.id} "
-      refute output =~ "site ID #{site3.id} "
-      refute output =~ "site ID #{site4.id} "
+      refute output =~ "(site ID #{site3.id})"
+      refute output =~ "(site ID #{site4.id})"
     end
   end
 
