@@ -20,49 +20,72 @@ defmodule Plausible.DataMigration.SiteImports do
     dry_run? = Keyword.get(opts, :dry_run?, true)
 
     site_import_query =
-      from(i in Imported.SiteImport, where: i.site_id == parent_as(:site).id, select: 1)
+      from(i in Imported.SiteImport,
+        where: i.site_id == parent_as(:site).id and i.status == ^SiteImport.completed(),
+        select: 1
+      )
 
-    sites_with_imports =
-      from(s in Site, as: :site, where: not is_nil(s.imported_data) or exists(site_import_query))
+    sites_with_only_legacy_import =
+      from(s in Site,
+        as: :site,
+        where:
+          not is_nil(s.imported_data) and fragment("?->>'status'", s.imported_data) == "ok" and
+            not exists(site_import_query)
+      )
       |> Repo.all(log: false)
 
-    sites_count = length(sites_with_imports)
+    backfill_legacy_site_imports(sites_with_only_legacy_import, dry_run?)
 
-    IO.puts("Processing #{sites_count} sites with imports (DRY RUN: #{dry_run?})...")
+    sites_with_site_imports =
+      from(s in Site,
+        as: :site,
+        where: exists(site_import_query)
+      )
+      |> Repo.all(log: false)
 
-    for {site, idx} <- Enum.with_index(sites_with_imports) do
+    adjust_site_import_end_dates(sites_with_site_imports, dry_run?)
+
+    IO.puts("Finished")
+  end
+
+  defp backfill_legacy_site_imports(sites, dry_run?) do
+    total = length(sites)
+
+    IO.puts("Backfilling legacy site import across #{total} sites (DRY RUN: #{dry_run?})...")
+
+    for {site, idx} <- Enum.with_index(sites) do
+      IO.puts("Creating legacy site import entry for site ID #{site.id} (#{idx + 1}/#{total})")
+
+      params =
+        site.imported_data
+        |> Imported.SiteImport.from_legacy()
+        |> Map.put(:site_id, site.id)
+        |> Map.take([:legacy, :start_date, :end_date, :source, :status, :site_id])
+
+      %Imported.SiteImport{}
+      |> Ecto.Changeset.change(params)
+      |> insert!(dry_run?)
+    end
+
+    IO.puts("Finished backfilling sites.")
+  end
+
+  defp adjust_site_import_end_dates(sites, dry_run?) do
+    total = length(sites)
+
+    IO.puts("Adjusting end dates of site imports across #{total} sites (DRY RUN: #{dry_run?})...")
+
+    for {site, idx} <- Enum.with_index(sites) do
       site_imports =
+        [_ | _] =
         from(i in Imported.SiteImport,
           where: i.site_id == ^site.id and i.status == ^SiteImport.completed()
         )
         |> Repo.all(log: false)
 
       IO.puts(
-        "Processing site ID #{site.id} (#{idx + 1} / #{sites_count}) (imported_data: #{is_struct(site.imported_data)}, site_imports: #{length(site_imports)})"
+        "Processing site ID #{site.id} (#{idx + 1} / #{total}) (imported_data: #{is_struct(site.imported_data)}, site_imports: #{length(site_imports)})"
       )
-
-      site_imports =
-        if site.imported_data && not Enum.any?(site_imports, & &1.legacy) do
-          IO.puts("Creating legacy site import entry for site ID #{site.id}")
-
-          # create legacy entry if there's not one yet
-          params =
-            site.imported_data
-            |> Imported.SiteImport.from_legacy()
-            |> Map.put(:site_id, site.id)
-            |> Map.take([:legacy, :start_date, :end_date, :source, :status, :site_id])
-
-          legacy_site_import =
-            %Imported.SiteImport{}
-            |> Ecto.Changeset.change(params)
-            |> insert!(dry_run?)
-
-          [legacy_site_import | site_imports]
-        else
-          IO.puts("Legacy site import entry for site ID #{site.id} already exists")
-
-          site_imports
-        end
 
       # adjust end date for each site import
       for site_import <- site_imports do
@@ -129,7 +152,7 @@ defmodule Plausible.DataMigration.SiteImports do
       IO.puts("Done processing site ID #{site.id}")
     end
 
-    IO.puts("Finished")
+    IO.puts("Finished adjusting end dates of site imports.")
   end
 
   # Exposed for testing purposes

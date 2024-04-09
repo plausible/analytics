@@ -15,7 +15,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
           assert :ok = SiteImports.run()
         end)
 
-      assert dry_run_output =~ "Processing 0 sites"
+      assert dry_run_output =~ "Backfilling legacy site import across 0 sites"
       assert dry_run_output =~ "DRY RUN: true"
 
       real_run_output =
@@ -23,7 +23,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
           assert :ok = SiteImports.run(dry_run?: false)
         end)
 
-      assert real_run_output =~ "Processing 0 sites"
+      assert real_run_output =~ "Backfilling legacy site import across 0 sites"
       assert real_run_output =~ "DRY RUN: false"
     end
 
@@ -39,7 +39,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
       assert capture_io(fn ->
                assert :ok = SiteImports.run(dry_run?: false)
-             end) =~ "Processing 1 sites"
+             end) =~ "Backfilling legacy site import across 1 sites"
 
       site = Repo.reload!(site)
 
@@ -63,7 +63,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
       assert capture_io(fn ->
                assert :ok = SiteImports.run()
-             end) =~ "Processing 1 sites"
+             end) =~ "Backfilling legacy site import across 1 sites"
 
       site = Repo.reload!(site)
 
@@ -84,7 +84,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
       assert capture_io(fn ->
                assert :ok = SiteImports.run(dry_run?: false)
-             end) =~ "Processing 1 sites"
+             end) =~ "Backfilling legacy site import across 1 sites"
 
       site = Repo.reload!(site)
 
@@ -102,11 +102,9 @@ defmodule Plausible.DataMigration.SiteImportsTest do
         |> Site.start_import(~D[2021-01-02], ~D[2020-02-02], "Google Analytics", "ok")
         |> Repo.update!()
 
-      _another_site_import = insert(:site_import, site: site)
-
       assert capture_io(fn ->
                assert :ok = SiteImports.run(dry_run?: false)
-             end) =~ "Processing 1 site"
+             end) =~ "Backfilling legacy site import across 1 sites"
 
       site = Repo.reload!(site)
       assert [] = Imported.list_all_imports(site)
@@ -134,7 +132,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
       assert capture_io(fn ->
                assert :ok = SiteImports.run(dry_run?: false)
-             end) =~ "Processing 1 sites"
+             end) =~ "Backfilling legacy site import across 0 sites"
 
       site = Repo.reload!(site)
 
@@ -143,6 +141,69 @@ defmodule Plausible.DataMigration.SiteImportsTest do
       assert site_import.start_date == site.imported_data.start_date
       assert site_import.end_date == ~D[2021-01-08]
       assert site_import.source == :universal_analytics
+    end
+
+    test "only considers sites with completed site imports or 'ok' imported data" do
+      site1 =
+        insert(:site)
+        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "error")
+        |> Repo.update!()
+
+      existing_import1 =
+        insert(:site_import,
+          site: site1,
+          start_date: ~D[2021-01-02],
+          end_date: ~D[2021-01-08],
+          status: :completed,
+          legacy: false
+        )
+
+      site2 =
+        insert(:site)
+        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "ok")
+        |> Repo.update!()
+
+      existing_import2 =
+        insert(:site_import,
+          site: site2,
+          start_date: ~D[2021-01-02],
+          end_date: ~D[2021-01-08],
+          status: :failed,
+          legacy: false
+        )
+
+      site3 =
+        insert(:site)
+        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "error")
+        |> Repo.update!()
+
+      site4 =
+        insert(:site)
+        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "error")
+        |> Repo.update!()
+
+      _existing_import3 =
+        insert(:site_import,
+          site: site4,
+          start_date: ~D[2021-01-02],
+          end_date: ~D[2021-01-08],
+          status: :failed,
+          legacy: true
+        )
+
+      output =
+        capture_io(fn ->
+          assert :ok = SiteImports.run(dry_run?: false)
+        end)
+
+      assert output =~ "Backfilling legacy site import across 1 sites"
+      assert output =~ "Adjusting end dates of site imports across 2 sites"
+      assert output =~ "site ID #{site1.id} "
+      assert output =~ "site import #{existing_import1.id} "
+      assert output =~ "site ID #{site2.id} "
+      refute output =~ "site import #{existing_import2.id} "
+      refute output =~ "site ID #{site3.id} "
+      refute output =~ "site ID #{site4.id} "
     end
   end
 
