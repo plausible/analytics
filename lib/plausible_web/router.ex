@@ -62,7 +62,7 @@ defmodule PlausibleWeb.Router do
     end
   end
 
-  if Mix.env() in [:dev, :small_dev] do
+  if Mix.env() == :dev do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
   end
 
@@ -390,13 +390,7 @@ defmodule PlausibleWeb.Router do
 
     delete "/:website/settings/forget-imported", SiteController, :forget_imported
     delete "/:website/settings/forget-import/:import_id", SiteController, :forget_import
-
-    on_full_build do
-      # exported archives are downloaded from object storage
-    else
-      get "/:website/exported-archive", SiteController, :download_local_export
-    end
-
+    post "/:website/settings/export", SiteController, :csv_export
     get "/:website/settings/import", SiteController, :csv_import
 
     get "/:domain/export", StatsController, :csv_export

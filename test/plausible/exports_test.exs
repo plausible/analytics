@@ -1,5 +1,5 @@
 defmodule Plausible.ExportsTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
 
   doctest Plausible.Exports, import: true
 
@@ -72,16 +72,17 @@ defmodule Plausible.ExportsTest do
 
     test "creates zip archive", %{ch: ch, tmp_dir: tmp_dir} do
       queries = %{
-        "1.csv" => from(n in fragment("numbers(3)"), select: n.number),
+        "1.csv" => from(n in "numbers", select: n.number, limit: 3),
         "2.csv" =>
-          from(n in fragment("numbers(3)"),
-            select: [n.number, selected_as(n.number + n.number, :double)]
+          from(n in "numbers",
+            select: [n.number, selected_as(n.number + n.number, :double)],
+            limit: 3
           )
       }
 
       DBConnection.run(ch, fn conn ->
         conn
-        |> Plausible.Exports.stream_archive(queries, format: "CSVWithNames")
+        |> Plausible.Exports.stream_archive(queries, database: "system", format: "CSVWithNames")
         |> Stream.into(File.stream!(Path.join(tmp_dir, "numbers.zip")))
         |> Stream.run()
       end)
@@ -122,14 +123,14 @@ defmodule Plausible.ExportsTest do
 
     test "stops on error", %{ch: ch, tmp_dir: tmp_dir} do
       queries = %{
-        "1.csv" => from(n in fragment("numbers(1000)"), select: n.number),
+        "1.csv" => from(n in "numbers", select: n.number, limit: 1000),
         "2.csv" => from(n in "no_such_table", select: n.number)
       }
 
       assert_raise Ch.Error, ~r/UNKNOWN_TABLE/, fn ->
         DBConnection.run(ch, fn conn ->
           conn
-          |> Plausible.Exports.stream_archive(queries, format: "CSVWithNames")
+          |> Plausible.Exports.stream_archive(queries, database: "system", format: "CSVWithNames")
           |> Stream.into(File.stream!(Path.join(tmp_dir, "failed.zip")))
           |> Stream.run()
         end)

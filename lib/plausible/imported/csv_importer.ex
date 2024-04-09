@@ -1,7 +1,6 @@
 defmodule Plausible.Imported.CSVImporter do
   @moduledoc """
-  CSV importer from either S3 for which it uses ClickHouse [s3 table function](https://clickhouse.com/docs/en/sql-reference/table-functions/s3)
-  or from local storage for which it uses [input function.](https://clickhouse.com/docs/en/sql-reference/table-functions/input)
+  CSV importer from S3 that uses ClickHouse [s3 table function.](https://clickhouse.com/docs/en/sql-reference/table-functions/s3)
   """
 
   use Plausible.Imported.Importer
@@ -17,45 +16,10 @@ defmodule Plausible.Imported.CSVImporter do
   def email_template(), do: "google_analytics_import.html"
 
   @impl true
-  def parse_args(%{"uploads" => uploads, "storage" => storage}) do
-    [uploads: uploads, storage: storage]
-  end
+  def parse_args(%{"uploads" => uploads}), do: [uploads: uploads]
 
   @impl true
   def import_data(site_import, opts) do
-    storage = Keyword.fetch!(opts, :storage)
-    uploads = Keyword.fetch!(opts, :uploads)
-
-    if storage == "local" do
-      # we need to remove the imported files from local storage
-      # after the importer has completed or ran out of attempts
-      paths = Enum.map(uploads, &Map.fetch!(&1, "local_path"))
-
-      Oban.insert!(
-        Plausible.Workers.LocalImportAnalyticsCleaner.new(
-          %{"import_id" => site_import.id, "paths" => paths},
-          schedule_in: _one_hour = 3600
-        )
-      )
-    end
-
-    {:ok, ch} =
-      Plausible.IngestRepo.config()
-      |> Keyword.replace!(:pool_size, 1)
-      |> Ch.start_link()
-
-    case storage do
-      "s3" -> import_s3(ch, site_import, uploads)
-      "local" -> import_local(ch, site_import, uploads)
-    end
-  rescue
-    # we are cancelling on any argument or ClickHouse errors, assuming they are permanent
-    e in [ArgumentError, Ch.Error] ->
-      # see Plausible.Imported.Importer for more details on transient vs permanent errors
-      {:error, Exception.message(e)}
-  end
-
-  defp import_s3(ch, site_import, uploads) do
     %{
       id: import_id,
       site_id: site_id,
@@ -63,20 +27,34 @@ defmodule Plausible.Imported.CSVImporter do
       end_date: end_date
     } = site_import
 
+    uploads = Keyword.fetch!(opts, :uploads)
+
     %{access_key_id: s3_access_key_id, secret_access_key: s3_secret_access_key} =
       Plausible.S3.import_clickhouse_credentials()
+
+    {:ok, ch} =
+      Plausible.IngestRepo.config()
+      |> Keyword.replace!(:pool_size, 1)
+      |> Ch.start_link()
 
     Enum.each(uploads, fn upload ->
       %{"filename" => filename, "s3_url" => s3_url} = upload
 
       {table, _, _} = parse_filename!(filename)
       s3_structure = input_structure!(table)
-      s3_columns = input_columns!(table)
+
+      s3_structure_cols_expr =
+        s3_structure
+        |> String.split(",", trim: true)
+        |> Enum.map_join(", ", fn kv ->
+          [col, _type] = String.split(kv)
+          col
+        end)
 
       statement =
         """
-        INSERT INTO {table:Identifier}(site_id,import_id,#{s3_columns}) \
-        SELECT {site_id:UInt64}, {import_id:UInt64}, * \
+        INSERT INTO {table:Identifier}(site_id, #{s3_structure_cols_expr}, import_id) \
+        SELECT {site_id:UInt64} AS site_id, *, {import_id:UInt64} AS import_id \
         FROM s3({s3_url:String},{s3_access_key_id:String},{s3_secret_access_key:String},{s3_format:String},{s3_structure:String}) \
         WHERE date >= {start_date:Date} AND date <= {end_date:Date}\
         """
@@ -97,53 +75,10 @@ defmodule Plausible.Imported.CSVImporter do
 
       Ch.query!(ch, statement, params, timeout: :infinity)
     end)
-  end
-
-  defp import_local(ch, site_import, uploads) do
-    %{
-      id: import_id,
-      site_id: site_id,
-      start_date: start_date,
-      end_date: end_date
-    } = site_import
-
-    DBConnection.run(
-      ch,
-      fn conn ->
-        Enum.each(uploads, fn upload ->
-          %{"filename" => filename, "local_path" => local_path} = upload
-
-          {table, _, _} = parse_filename!(filename)
-          input_structure = input_structure!(table)
-          input_columns = input_columns!(table)
-
-          statement =
-            """
-            INSERT INTO {table:Identifier}(site_id,import_id,#{input_columns}) \
-            SELECT {site_id:UInt64}, {import_id:UInt64}, * \
-            FROM input({input_structure:String}) \
-            WHERE date >= {start_date:Date} AND date <= {end_date:Date} \
-            FORMAT CSVWithNames\
-            """
-
-          params = %{
-            "table" => table,
-            "site_id" => site_id,
-            "import_id" => import_id,
-            "input_structure" => input_structure,
-            "start_date" => start_date,
-            "end_date" => end_date
-          }
-
-          # we are reading in 512KB chunks for better performance
-          # the default would've been line by line (not great for a CSV)
-          File.stream!(local_path, 512_000)
-          |> Stream.into(Ch.stream(conn, statement, params))
-          |> Stream.run()
-        end)
-      end,
-      timeout: :infinity
-    )
+  rescue
+    # we are cancelling on any argument or ClickHouse errors
+    e in [ArgumentError, Ch.Error] ->
+      {:error, Exception.message(e)}
   end
 
   input_structures = %{
@@ -174,7 +109,7 @@ defmodule Plausible.Imported.CSVImporter do
 
       iex> date_range([
       ...>   %{"filename" => "imported_devices_20190101_20210101.csv"},
-      ...>   "pages_20200101_20220101.csv"
+      ...>   "imported_pages_20200101_20220101.csv"
       ...> ])
       Date.range(~D[2019-01-01], ~D[2022-01-01])
 
@@ -230,9 +165,6 @@ defmodule Plausible.Imported.CSVImporter do
       iex> parse_filename!("imported_devices_00010101_20250101.csv")
       {"imported_devices", ~D[0001-01-01], ~D[2025-01-01]}
 
-      iex> parse_filename!("devices_00010101_20250101.csv")
-      {"imported_devices", ~D[0001-01-01], ~D[2025-01-01]}
-
   """
   @spec parse_filename!(String.t()) ::
           {table :: String.t(), start_date :: Date.t(), end_date :: Date.t()}
@@ -241,26 +173,8 @@ defmodule Plausible.Imported.CSVImporter do
   for {table, input_structure} <- input_structures do
     defp input_structure!(unquote(table)), do: unquote(input_structure)
 
-    input_columns =
-      input_structure
-      |> String.split(",", trim: true)
-      |> Enum.map_join(",", fn kv ->
-        [col, _type] = String.split(kv)
-        String.trim(col)
-      end)
-
-    defp input_columns!(unquote(table)), do: unquote(input_columns)
-
     def parse_filename!(
           <<unquote(table)::bytes, ?_, start_date::8-bytes, ?_, end_date::8-bytes, ".csv">>
-        ) do
-      {unquote(table), parse_date!(start_date), parse_date!(end_date)}
-    end
-
-    "imported_" <> name = table
-
-    def parse_filename!(
-          <<unquote(name)::bytes, ?_, start_date::8-bytes, ?_, end_date::8-bytes, ".csv">>
         ) do
       {unquote(table), parse_date!(start_date), parse_date!(end_date)}
     end
@@ -279,9 +193,6 @@ defmodule Plausible.Imported.CSVImporter do
       false
 
       iex> valid_filename?("imported_devices_00010101_20250101.csv")
-      true
-
-      iex> valid_filename?("devices_00010101_20250101.csv")
       true
 
   """
@@ -309,35 +220,10 @@ defmodule Plausible.Imported.CSVImporter do
       iex> extract_table("imported_devices_00010101_20250101.csv")
       "imported_devices"
 
-      iex> extract_table("devices_00010101_20250101.csv")
-      "imported_devices"
-
   """
   @spec extract_table(String.t()) :: String.t()
   def extract_table(filename) do
     {table, _start_date, _end_date} = parse_filename!(filename)
     table
-  end
-
-  @doc """
-  Returns local directory for CSV imports storage.
-
-  Builds upon `$PERSISTENT_CACHE_DIR` (if set) and falls back to /tmp
-
-  Examples:
-
-      iex> local_dir = local_dir(_site_id = 37)
-      iex> String.ends_with?(local_dir, "/plausible-imports/37")
-      true
-
-  """
-  def local_dir(site_id) do
-    persistent_cache_dir = Application.get_env(:plausible, :persistent_cache_dir)
-
-    Path.join([
-      persistent_cache_dir || System.tmp_dir!(),
-      "plausible-imports",
-      Integer.to_string(site_id)
-    ])
   end
 end

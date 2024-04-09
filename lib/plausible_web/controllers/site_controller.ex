@@ -1,8 +1,6 @@
 defmodule PlausibleWeb.SiteController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  use Plausible
-
   alias Plausible.Sites
   alias Plausible.Billing.Quota
 
@@ -712,27 +710,21 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
-  on_full_build do
-    # exported archives are downloaded from object storage
-  else
-    alias Plausible.Exports
+  def csv_export(conn, _params) do
+    %{site: site, current_user: user} = conn.assigns
 
-    def download_local_export(conn, _params) do
-      %{id: site_id, domain: domain, timezone: timezone} = conn.assigns.site
+    Oban.insert!(
+      Plausible.Workers.ExportCSV.new(%{
+        "site_id" => site.id,
+        "email_to" => user.email,
+        "s3_bucket" => Plausible.S3.exports_bucket(),
+        "s3_path" => "Plausible-#{site.id}.zip"
+      })
+    )
 
-      if local_export = Exports.get_local_export(site_id, domain, timezone) do
-        %{path: export_path, name: name} = local_export
-
-        conn
-        |> put_resp_content_type("application/zip")
-        |> put_resp_header("content-disposition", Exports.content_disposition(name))
-        |> send_file(200, export_path)
-      else
-        conn
-        |> put_flash(:error, "Export not found")
-        |> redirect(external: Routes.site_path(conn, :settings_imports_exports, domain))
-      end
-    end
+    conn
+    |> put_flash(:success, "SCHEDULED. WAIT FOR MAIL")
+    |> redirect(to: Routes.site_path(conn, :settings_imports_exports, site.domain))
   end
 
   def csv_import(conn, _params) do
