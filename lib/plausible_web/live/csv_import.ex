@@ -239,11 +239,10 @@ defmodule PlausibleWeb.Live.CSVImport do
 
   @impl true
   def handle_info({:notification, :analytics_imports_jobs, details}, socket) do
-    %{"site_id" => notification_site_id} = details
     site = socket.assigns.site
 
     socket =
-      if notification_site_id == site.id and match?(%{"complete" => _import_id}, details) do
+      if details["site_id"] == site.id and details["event"] == "complete" do
         occupied_ranges = Imported.get_occupied_date_ranges(site)
         socket |> assign(occupied_ranges: occupied_ranges) |> process_imported_tables()
       else

@@ -73,13 +73,13 @@ defmodule Plausible.Imported.Importer do
   import_id = job.args[:import_id]
 
   receive do
-    {:notification, :analytics_imports_jobs, %{"complete" => ^import_id}} ->
+    {:notification, :analytics_imports_jobs, %{"event" => "complete", "import_id" => ^import_id}} ->
       IO.puts("Job completed")
 
-    {:notification, :analytics_imports_jobs, %{"transient_fail" => ^import_id}} ->
+    {:notification, :analytics_imports_jobs, %{"event" => "transient_fail", "import_id" => ^import_id}} ->
       IO.puts("Job failed transiently")
 
-    {:notification, :analytics_imports_jobs, %{"fail" => ^import_id}} ->
+    {:notification, :analytics_imports_jobs, %{"event" => "fail", "import_id" => ^import_id}} ->
       IO.puts("Job failed permanently")
   after
     15_000 ->
@@ -204,7 +204,8 @@ defmodule Plausible.Imported.Importer do
   @doc false
   def notify(site_import, event) do
     Oban.Notifier.notify(Oban, @oban_channel, %{
-      event => site_import.id,
+      "event" => event,
+      "import_id" => site_import.id,
       "site_id" => site_import.site_id
     })
   end
