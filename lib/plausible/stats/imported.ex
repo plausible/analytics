@@ -7,6 +7,9 @@ defmodule Plausible.Stats.Imported do
 
   @no_ref "Direct / None"
 
+  defp api_prop_name_to_db(:os), do: :operating_system
+  defp api_prop_name_to_db(name), do: name
+
   def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{include_imported: false}, _),
     do: native_q
 
@@ -100,7 +103,7 @@ defmodule Plausible.Stats.Imported do
           {"imported_sources", :utm_content}
 
         "visit:os" ->
-          {"imported_operating_systems", :operating_system}
+          {"imported_operating_systems", :os}
 
         "event:page" ->
           {"imported_pages", :page}
@@ -112,10 +115,12 @@ defmodule Plausible.Stats.Imported do
 
     import_ids = site.complete_import_ids
 
+    db_field = api_prop_name_to_db(dim)
+
     imported_q =
       from(
         i in table,
-        group_by: field(i, ^dim),
+        group_by: field(i, ^db_field),
         where: i.site_id == ^site.id,
         where: i.import_id in ^import_ids,
         where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
@@ -207,8 +212,8 @@ defmodule Plausible.Stats.Imported do
         :browser ->
           imported_q |> select_merge([i], %{browser: i.browser})
 
-        :operating_system ->
-          imported_q |> select_merge([i], %{operating_system: i.operating_system})
+        :os ->
+          imported_q |> select_merge([i], %{os: i.operating_system})
       end
 
     q =
@@ -306,15 +311,15 @@ defmodule Plausible.Stats.Imported do
           browser: fragment("if(empty(?), ?, ?)", s.browser, i.browser, s.browser)
         })
 
-      :operating_system ->
+      :os ->
         q
         |> select_merge([i, s], %{
-          operating_system:
+          os:
             fragment(
               "if(empty(?), ?, ?)",
-              s.operating_system,
-              i.operating_system,
-              s.operating_system
+              s.os,
+              i.os,
+              s.os
             )
         })
     end
