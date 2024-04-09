@@ -1,5 +1,5 @@
 defmodule Plausible.Stats.Props do
-  @event_props ["event:page", "event:name", "event:goal"]
+  @event_props ["event:page", "event:name", "event:goal", "event:hostname"]
   @session_props [
     "visit:source",
     "visit:country",
@@ -19,8 +19,6 @@ defmodule Plausible.Stats.Props do
     "visit:browser",
     "visit:browser_version"
   ]
-
-  def event_props(), do: @event_props
 
   def valid_prop?(prop) when prop in @event_props, do: true
   def valid_prop?(prop) when prop in @session_props, do: true
