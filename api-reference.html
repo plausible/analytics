@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-AF7EC45B.js"></script>
+    <script src="dist/sidebar_items-9A4530EB.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -958,8 +958,7 @@ maximum size, defined by <code class="inline">max_buffer_size/0</code>.</p></div
 
   </div>
 
-    <div class="summary-synopsis"><p>CSV importer from either S3 for which it uses ClickHouse <a href="https://clickhouse.com/docs/en/sql-reference/table-functions/s3">s3 table function</a>
-or from local storage for which it uses <a href="https://clickhouse.com/docs/en/sql-reference/table-functions/input">input function.</a></p></div>
+    <div class="summary-synopsis"><p>CSV importer from S3 that uses ClickHouse <a href="https://clickhouse.com/docs/en/sql-reference/table-functions/s3">s3 table function.</a></p></div>
 
 </div>
 <div class="summary-row">
@@ -1863,12 +1862,11 @@ before redeploying their scripts and integrations.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Plausible.Workers.ExportAnalytics.html" translate="no">Plausible.Workers.ExportAnalytics</a>
+    <a href="Plausible.Workers.ExportCSV.html" translate="no">Plausible.Workers.ExportCSV</a>
 
   </div>
 
-    <div class="summary-synopsis"><p>Worker for running CSV export jobs. Supports S3 and local storage.
-To avoid blocking the queue, a timeout of 15 minutes is enforced.</p></div>
+    <div class="summary-synopsis"><p>Worker for running CSV export jobs.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1878,15 +1876,6 @@ To avoid blocking the queue, a timeout of 15 minutes is enforced.</p></div>
   </div>
 
     <div class="summary-synopsis"><p>Worker for running analytics import jobs.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Workers.LocalImportAnalyticsCleaner.html" translate="no">Plausible.Workers.LocalImportAnalyticsCleaner</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>Worker for cleaning local files left after analytics import jobs.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1901,15 +1890,6 @@ To avoid blocking the queue, a timeout of 15 minutes is enforced.</p></div>
     <a href="Plausible.Workers.NotifyAnnualRenewal.html" translate="no">Plausible.Workers.NotifyAnnualRenewal</a>
 
   </div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Workers.NotifyExportedAnalytics.html" translate="no">Plausible.Workers.NotifyExportedAnalytics</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>This worker delivers emails for successful and failed exports</p></div>
 
 </div>
 <div class="summary-row">
@@ -2324,20 +2304,11 @@ to the Plausible frontend.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="PlausibleWeb.Live.CSVExport.html" translate="no">PlausibleWeb.Live.CSVExport</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>LiveView allowing scheduling, watching, downloading, and deleting S3 and local exports.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="PlausibleWeb.Live.CSVImport.html" translate="no">PlausibleWeb.Live.CSVImport</a>
 
   </div>
 
-    <div class="summary-synopsis"><p>LiveView allowing uploading CSVs for imported tables to S3 or local storage</p></div>
+    <div class="summary-synopsis"><p>LiveView allowing uploading CSVs for imported tables to S3</p></div>
 
 </div>
 <div class="summary-row">
