@@ -141,19 +141,6 @@ defmodule Plausible.Stats.Imported do
       |> select_imported_metrics(metrics)
 
     imported_q =
-      case query.filters[property] do
-        {:is_not, value} ->
-          value = if value == @no_ref, do: "", else: value
-          where(imported_q, [i], field(i, ^dim) != ^value)
-
-        {:member, list} ->
-          where(imported_q, [i], field(i, ^dim) in ^list)
-
-        _ ->
-          imported_q
-      end
-
-    imported_q =
       case dim do
         :source ->
           imported_q
