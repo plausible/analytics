@@ -211,7 +211,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
   end
 
   describe "GET /api/stats/:domain/operating-system-versions" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "returns top OS versions by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -244,6 +244,53 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       assert json_response(conn, 200) == [
                %{"name" => "10.16", "visitors" => 2, "percentage" => 66.7, "os" => "Mac"},
                %{"name" => "10.15", "visitors" => 1, "percentage" => 33.3, "os" => "Mac"}
+             ]
+    end
+
+    test "with imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          operating_system: "Mac",
+          operating_system_version: "11",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          operating_system: "Mac",
+          operating_system_version: "12",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:imported_operating_systems,
+          date: ~D[2021-01-01],
+          operating_system: "Mac",
+          operating_system_version: "11",
+          visitors: 5
+        ),
+        build(:imported_operating_systems,
+          date: ~D[2021-01-01],
+          operating_system: "Windows",
+          operating_system_version: "11",
+          visitors: 3
+        ),
+        build(:imported_operating_systems, date: ~D[2021-01-01], visitors: 10),
+        build(:imported_visitors, date: ~D[2021-01-01], visitors: 18)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/operating-system-versions?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "os" => "(not set)",
+                 "name" => "(not set)",
+                 "visitors" => 10,
+                 "percentage" => 50.0
+               },
+               %{"os" => "Mac", "name" => "11", "visitors" => 6, "percentage" => 30.0},
+               %{"os" => "Windows", "name" => "11", "visitors" => 3, "percentage" => 15.0},
+               %{"os" => "Mac", "name" => "12", "visitors" => 1, "percentage" => 5.0}
              ]
     end
   end

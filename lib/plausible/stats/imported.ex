@@ -8,9 +8,6 @@ defmodule Plausible.Stats.Imported do
   @no_ref "Direct / None"
   @not_set "(not set)"
 
-  defp api_prop_name_to_db(:os), do: :operating_system
-  defp api_prop_name_to_db(name), do: name
-
   def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{include_imported: false}, _),
     do: native_q
 
@@ -78,6 +75,7 @@ defmodule Plausible.Stats.Imported do
              "visit:device",
              "visit:browser",
              "visit:os",
+             "visit:os_version",
              "event:page"
            ] do
     {table, dim} =
@@ -106,6 +104,9 @@ defmodule Plausible.Stats.Imported do
         "visit:os" ->
           {"imported_operating_systems", :os}
 
+        "visit:os_version" ->
+          {"imported_operating_systems", :os_version}
+
         "event:page" ->
           {"imported_pages", :page}
 
@@ -114,14 +115,23 @@ defmodule Plausible.Stats.Imported do
           {"imported_#{dim}s", String.to_existing_atom(dim)}
       end
 
-    import_ids = site.complete_import_ids
-
     db_field = api_prop_name_to_db(dim)
+
+    group_by =
+      case dim do
+        :os_version ->
+          [dynamic([i], i.operating_system), dynamic([i], field(i, ^db_field))]
+
+        _ ->
+          dynamic([i], field(i, ^db_field))
+      end
+
+    import_ids = site.complete_import_ids
 
     imported_q =
       from(
         i in table,
-        group_by: field(i, ^db_field),
+        group_by: ^group_by,
         where: i.site_id == ^site.id,
         where: i.import_id in ^import_ids,
         where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
@@ -208,25 +218,47 @@ defmodule Plausible.Stats.Imported do
           |> select_merge([i], %{city: i.city})
 
         :device ->
-          imported_q |> select_merge([i], %{
+          imported_q
+          |> select_merge([i], %{
             device: fragment("if(empty(?), ?, ?)", i.device, @not_set, i.device)
           })
 
         :browser ->
-          imported_q |> select_merge([i], %{
+          imported_q
+          |> select_merge([i], %{
             browser: fragment("if(empty(?), ?, ?)", i.browser, @not_set, i.browser)
           })
 
         :os ->
-          imported_q |> select_merge([i], %{
+          imported_q
+          |> select_merge([i], %{
             os: fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system)
           })
+
+        :os_version ->
+          imported_q
+          |> select_merge([i], %{
+            os: fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system),
+            os_version:
+              fragment(
+                "if(empty(?), ?, ?)",
+                i.operating_system_version,
+                @not_set,
+                i.operating_system_version
+              )
+          })
+      end
+
+    join_on =
+      case dim do
+        :os_version -> dynamic([s, i], s.os == i.os and s.os_version == i.os_version)
+        dim -> dynamic([s, i], field(s, ^dim) == field(i, ^dim))
       end
 
     q =
       from(s in Ecto.Query.subquery(q),
         full_join: i in subquery(imported_q),
-        on: field(s, ^dim) == field(i, ^dim),
+        on: ^join_on,
         select: %{}
       )
       |> select_joined_metrics(metrics)
@@ -321,13 +353,14 @@ defmodule Plausible.Stats.Imported do
       :os ->
         q
         |> select_merge([i, s], %{
-          os:
-            fragment(
-              "if(empty(?), ?, ?)",
-              s.os,
-              i.os,
-              s.os
-            )
+          os: fragment("if(empty(?), ?, ?)", s.os, i.os, s.os)
+        })
+
+      :os_version ->
+        q
+        |> select_merge([i, s], %{
+          os: fragment("if(empty(?), ?, ?)", s.os, i.os, s.os),
+          os_version: fragment("if(empty(?), ?, ?)", s.os_version, i.os_version, s.os_version)
         })
     end
   end
@@ -584,4 +617,8 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp apply_order_by(q, _), do: q
+
+  defp api_prop_name_to_db(:os), do: :operating_system
+  defp api_prop_name_to_db(:os_version), do: :operating_system_version
+  defp api_prop_name_to_db(name), do: name
 end
