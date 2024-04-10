@@ -21,6 +21,7 @@ defmodule Plausible.Stats.Imported do
     "visit:city" => "imported_locations",
     "visit:device" => "imported_devices",
     "visit:browser" => "imported_browsers",
+    "visit:browser_version" => "imported_browsers",
     "visit:os" => "imported_operating_systems",
     "visit:os_version" => "imported_operating_systems",
     "event:page" => "imported_pages"
@@ -100,8 +101,14 @@ defmodule Plausible.Stats.Imported do
 
     join_on =
       case dim do
-        :os_version -> dynamic([s, i], s.os == i.os and s.os_version == i.os_version)
-        dim -> dynamic([s, i], field(s, ^dim) == field(i, ^dim))
+        :os_version ->
+          dynamic([s, i], s.os == i.os and s.os_version == i.os_version)
+
+        :browser_version ->
+          dynamic([s, i], s.browser == i.browser and s.browser_version == i.browser_version)
+
+        dim ->
+          dynamic([s, i], field(s, ^dim) == field(i, ^dim))
       end
 
     from(s in Ecto.Query.subquery(q),
@@ -295,6 +302,21 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
+  defp group_imported_by(q, :browser_version) do
+    q
+    |> group_by([i], [i.browser, i.browser_version])
+    |> select_merge([i], %{
+      browser: fragment("if(empty(?), ?, ?)", i.browser, @not_set, i.browser),
+      browser_version:
+        fragment(
+          "if(empty(?), ?, ?)",
+          i.browser_version,
+          @not_set,
+          i.browser_version
+        )
+    })
+  end
+
   defp group_imported_by(q, :os) do
     q
     |> group_by([i], i.operating_system)
@@ -334,6 +356,14 @@ defmodule Plausible.Stats.Imported do
     select_merge(q, [s, i], %{
       os: fragment("if(empty(?), ?, ?)", s.os, i.os, s.os),
       os_version: fragment("if(empty(?), ?, ?)", s.os_version, i.os_version, s.os_version)
+    })
+  end
+
+  defp select_joined_dimension(q, :browser_version) do
+    select_merge(q, [s, i], %{
+      browser: fragment("if(empty(?), ?, ?)", s.browser, i.browser, s.browser),
+      browser_version:
+        fragment("if(empty(?), ?, ?)", s.browser_version, i.browser_version, s.browser_version)
     })
   end
 
