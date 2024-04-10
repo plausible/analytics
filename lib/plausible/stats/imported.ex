@@ -11,6 +11,7 @@ defmodule Plausible.Stats.Imported do
   @property_to_table_mappings %{
     "visit:source" => "imported_sources",
     "visit:referrer" => "imported_sources",
+    "visit:utm_source" => "imported_sources",
     "visit:utm_medium" => "imported_sources",
     "visit:utm_campaign" => "imported_sources",
     "visit:utm_term" => "imported_sources",
@@ -79,8 +80,6 @@ defmodule Plausible.Stats.Imported do
 
   def merge_imported(q, _, %Query{include_imported: false}, _, _), do: q
   def merge_imported(q, _, _, _, [:events | _]), do: q
-  # GA only has 'source'
-  def merge_imported(q, _, _, "utm_source", _), do: q
 
   def merge_imported(q, site, query, property, metrics)
       when property in @imported_properties do
@@ -259,7 +258,7 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp group_imported_by(q, dim)
-       when dim in [:utm_medium, :utm_campaign, :utm_term, :utm_content] do
+       when dim in [:utm_source, :utm_medium, :utm_campaign, :utm_term, :utm_content] do
     q
     |> group_by([i], field(i, ^dim))
     |> where([i], fragment("not empty(?)", field(i, ^dim)))
