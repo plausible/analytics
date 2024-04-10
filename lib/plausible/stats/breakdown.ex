@@ -213,11 +213,18 @@ defmodule Plausible.Stats.Breakdown do
     end
   end
 
-  defp maybe_update_breakdown_filters("visit:source", query) do
-    update_hostname(query, "visit:entry_page_hostname")
-  end
-
-  defp maybe_update_breakdown_filters("visit:entry_page", query) do
+  defp maybe_update_breakdown_filters(visit_entry_prop, query)
+       when visit_entry_prop in [
+              "visit:source",
+              "visit:entry_page",
+              "visit:utm_medium",
+              "visit:utm_source",
+              "visit:utm_campaign",
+              "visit:utm_content",
+              "visit:utm_term",
+              "visit:entry_page",
+              "visit:referrer"
+            ] do
     update_hostname(query, "visit:entry_page_hostname")
   end
 

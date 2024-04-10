@@ -497,6 +497,52 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     end
   end
 
+  describe "UTM parameters with hostname filter" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    for {resource, attr} <- [
+          utm_campaigns: :utm_campaign,
+          utm_sources: :utm_source,
+          utm_terms: :utm_term,
+          utm_contents: :utm_content
+        ] do
+      test "returns #{resource} when filtered by hostname", %{conn: conn, site: site} do
+        populate_stats(site, [
+          # session starts at two.example.com with utm_param=ad
+          build(
+            :pageview,
+            [
+              {unquote(attr), "ad"},
+              {:user_id, @user_id},
+              {:hostname, "two.example.com"},
+              {:timestamp, ~N[2021-01-01 00:00:00]}
+            ]
+          ),
+          # session continues on one.example.com without any utm_params
+          build(
+            :pageview,
+            [
+              {:user_id, @user_id},
+              {:hostname, "one.example.com"},
+              {:timestamp, ~N[2021-01-01 00:15:00]}
+            ]
+          )
+        ])
+
+        filters = Jason.encode!(%{hostname: "one.example.com"})
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/#{unquote(resource)}?period=day&date=2021-01-01&filters=#{filters}"
+          )
+
+        # nobody landed on one.example.com from utm_param=ad
+        assert json_response(conn, 200) == []
+      end
+    end
+  end
+
   describe "GET /api/stats/:domain/utm_mediums" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
@@ -1470,6 +1516,51 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       assert json_response(conn, 200) == [
                %{"name" => "10words.com", "visitors" => 2},
                %{"name" => "10words.com/page1", "visitors" => 1}
+             ]
+    end
+
+    test "returns top referrers for a particular source filtered by hostname", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "example",
+          referrer: "example.com",
+          hostname: "two.example.com"
+        ),
+        build(:pageview,
+          referrer_source: "example",
+          referrer: "example.com",
+          hostname: "two.example.com",
+          user_id: @user_id
+        ),
+        build(:pageview,
+          hostname: "one.example.com",
+          user_id: @user_id
+        ),
+        build(:pageview,
+          referrer_source: "example",
+          referrer: "example.com/page1",
+          hostname: "one.example.com"
+        ),
+        build(:pageview,
+          referrer_source: "ignored",
+          referrer: "ignored",
+          hostname: "two.example.com"
+        )
+      ])
+
+      filters = Jason.encode!(%{hostname: "one.example.com"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/referrers/example?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"name" => "example.com/page1", "visitors"=> 1}
              ]
     end
 
