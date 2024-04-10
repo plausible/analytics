@@ -10,6 +10,7 @@ defmodule Plausible.Stats.Imported do
 
   @property_to_table_mappings %{
     "visit:source" => "imported_sources",
+    "visit:referrer" => "imported_sources",
     "visit:utm_medium" => "imported_sources",
     "visit:utm_campaign" => "imported_sources",
     "visit:utm_term" => "imported_sources",
@@ -249,11 +250,11 @@ defmodule Plausible.Stats.Imported do
     |> select_imported_metrics(rest)
   end
 
-  defp group_imported_by(q, :source) do
+  defp group_imported_by(q, dim) when dim in [:source, :referrer] do
     q
-    |> group_by([i], i.source)
+    |> group_by([i], field(i, ^dim))
     |> select_merge([i], %{
-      source: fragment("if(empty(?), ?, ?)", i.source, @no_ref, i.source)
+      ^dim => fragment("if(empty(?), ?, ?)", field(i, ^dim), @no_ref, field(i, ^dim))
     })
   end
 
