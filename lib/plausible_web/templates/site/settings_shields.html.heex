@@ -21,11 +21,11 @@
         "domain" => @site.domain
       }
     ) %>
-    <% "hostnames" -> %>
+  <% "hostnames" -> %>
     <%= live_render(@conn, PlausibleWeb.Live.Shields.Hostnames,
-        session: %{
+      session: %{
         "site_id" => @site.id,
         "domain" => @site.domain
-        }
-        ) %>
+      }
+    ) %>
 <% end %>

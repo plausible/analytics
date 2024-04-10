@@ -55,7 +55,7 @@ defmodule Plausible.Shields do
     if hostname_rules do
       hostname_rules
       |> List.wrap()
-      |> Enum.map(& Regex.source(&1.hostname_pattern))
+      |> Enum.map(&Regex.source(&1.hostname_pattern))
     else
       :all
     end
