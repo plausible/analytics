@@ -14,6 +14,6 @@
   },
   "devDependencies": {
     "eslint": "^8.56.0",
-    "eslint-plugin-playwright": "^0.20.0"
+    "eslint-plugin-playwright": "^1.6.0"
   }
 }
