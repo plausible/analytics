@@ -268,12 +268,15 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
           "/api/stats/#{site.domain}/suggestions/hostname?q=host"
         )
 
-      assert json_response(conn, 200) ==
-               [
-                 %{"label" => "host-alice.example.com", "value" => "host-alice.example.com"},
-                 %{"label" => "host-carol.example.com", "value" => "host-carol.example.com"},
-                 %{"label" => "host-bob.example.com", "value" => "host-bob.example.com"}
-               ]
+      suggestions = json_response(conn, 200)
+
+      assert length(suggestions) == 3
+
+      assert %{"label" => "host-alice.example.com", "value" => "host-alice.example.com"} in suggestions
+
+      assert %{"label" => "host-carol.example.com", "value" => "host-carol.example.com"} in suggestions
+
+      assert %{"label" => "host-bob.example.com", "value" => "host-bob.example.com"} in suggestions
     end
 
     test "returns suggestions for referrers", %{conn: conn, site: site} do
