@@ -8,6 +8,26 @@ defmodule Plausible.Stats.Imported do
   @no_ref "Direct / None"
   @not_set "(not set)"
 
+  @property_to_table_mappings %{
+    "visit:source" => "imported_sources",
+    "visit:utm_medium" => "imported_sources",
+    "visit:utm_campaign" => "imported_sources",
+    "visit:utm_term" => "imported_sources",
+    "visit:utm_content" => "imported_sources",
+    "visit:entry_page" => "imported_entry_pages",
+    "visit:exit_page" => "imported_exit_pages",
+    "visit:country" => "imported_locations",
+    "visit:region" => "imported_locations",
+    "visit:city" => "imported_locations",
+    "visit:device" => "imported_devices",
+    "visit:browser" => "imported_browsers",
+    "visit:os" => "imported_operating_systems",
+    "visit:os_version" => "imported_operating_systems",
+    "event:page" => "imported_pages"
+  }
+
+  @imported_properties Map.keys(@property_to_table_mappings)
+
   def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{include_imported: false}, _),
     do: native_q
 
@@ -61,180 +81,22 @@ defmodule Plausible.Stats.Imported do
   def merge_imported(q, _, _, "utm_source", _), do: q
 
   def merge_imported(q, site, query, property, metrics)
-      when property in [
-             "visit:source",
-             "visit:utm_medium",
-             "visit:utm_campaign",
-             "visit:utm_term",
-             "visit:utm_content",
-             "visit:entry_page",
-             "visit:exit_page",
-             "visit:country",
-             "visit:region",
-             "visit:city",
-             "visit:device",
-             "visit:browser",
-             "visit:os",
-             "visit:os_version",
-             "event:page"
-           ] do
-    {table, dim} =
-      case property do
-        "visit:country" ->
-          {"imported_locations", :country}
-
-        "visit:region" ->
-          {"imported_locations", :region}
-
-        "visit:city" ->
-          {"imported_locations", :city}
-
-        "visit:utm_medium" ->
-          {"imported_sources", :utm_medium}
-
-        "visit:utm_campaign" ->
-          {"imported_sources", :utm_campaign}
-
-        "visit:utm_term" ->
-          {"imported_sources", :utm_term}
-
-        "visit:utm_content" ->
-          {"imported_sources", :utm_content}
-
-        "visit:os" ->
-          {"imported_operating_systems", :os}
-
-        "visit:os_version" ->
-          {"imported_operating_systems", :os_version}
-
-        "event:page" ->
-          {"imported_pages", :page}
-
-        _ ->
-          dim = String.trim_leading(property, "visit:")
-          {"imported_#{dim}s", String.to_existing_atom(dim)}
-      end
-
-    db_field = api_prop_name_to_db(dim)
-
-    group_by =
-      case dim do
-        :os_version ->
-          [dynamic([i], i.operating_system), dynamic([i], field(i, ^db_field))]
-
-        _ ->
-          dynamic([i], field(i, ^db_field))
-      end
-
+      when property in @imported_properties do
+    table = Map.fetch!(@property_to_table_mappings, property)
+    dim = Plausible.Stats.Filters.without_prefix(property)
     import_ids = site.complete_import_ids
 
     imported_q =
       from(
         i in table,
-        group_by: ^group_by,
         where: i.site_id == ^site.id,
         where: i.import_id in ^import_ids,
         where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
         where: i.visitors > 0,
         select: %{}
       )
+      |> group_imported_by(dim)
       |> select_imported_metrics(metrics)
-
-    imported_q =
-      case dim do
-        :source ->
-          imported_q
-          |> select_merge([i], %{
-            source: fragment("if(empty(?), ?, ?)", i.source, @no_ref, i.source)
-          })
-
-        :utm_medium ->
-          imported_q
-          |> where([i], fragment("not empty(?)", i.utm_medium))
-          |> select_merge([i], %{
-            utm_medium: i.utm_medium
-          })
-
-        :utm_campaign ->
-          imported_q
-          |> where([i], fragment("not empty(?)", i.utm_campaign))
-          |> select_merge([i], %{
-            utm_campaign: i.utm_campaign
-          })
-
-        :utm_term ->
-          imported_q
-          |> where([i], fragment("not empty(?)", i.utm_term))
-          |> select_merge([i], %{
-            utm_term: i.utm_term
-          })
-
-        :utm_content ->
-          imported_q
-          |> where([i], fragment("not empty(?)", i.utm_content))
-          |> select_merge([i], %{
-            utm_content: i.utm_content
-          })
-
-        :page ->
-          imported_q
-          |> select_merge([i], %{
-            page: i.page,
-            time_on_page: sum(i.time_on_page)
-          })
-
-        :entry_page ->
-          imported_q
-          |> select_merge([i], %{
-            entry_page: i.entry_page
-          })
-
-        :exit_page ->
-          imported_q
-          |> select_merge([i], %{exit_page: i.exit_page})
-
-        :country ->
-          imported_q |> where([i], i.country != "ZZ") |> select_merge([i], %{country: i.country})
-
-        :region ->
-          imported_q |> where([i], i.region != "") |> select_merge([i], %{region: i.region})
-
-        :city ->
-          imported_q
-          |> where([i], i.city != 0 and not is_nil(i.city))
-          |> select_merge([i], %{city: i.city})
-
-        :device ->
-          imported_q
-          |> select_merge([i], %{
-            device: fragment("if(empty(?), ?, ?)", i.device, @not_set, i.device)
-          })
-
-        :browser ->
-          imported_q
-          |> select_merge([i], %{
-            browser: fragment("if(empty(?), ?, ?)", i.browser, @not_set, i.browser)
-          })
-
-        :os ->
-          imported_q
-          |> select_merge([i], %{
-            os: fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system)
-          })
-
-        :os_version ->
-          imported_q
-          |> select_merge([i], %{
-            os: fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system),
-            os_version:
-              fragment(
-                "if(empty(?), ?, ?)",
-                i.operating_system_version,
-                @not_set,
-                i.operating_system_version
-              )
-          })
-      end
 
     join_on =
       case dim do
@@ -480,6 +342,88 @@ defmodule Plausible.Stats.Imported do
     |> select_imported_metrics(rest)
   end
 
+  defp group_imported_by(q, :source) do
+    q
+    |> group_by([i], i.source)
+    |> select_merge([i], %{
+      source: fragment("if(empty(?), ?, ?)", i.source, @no_ref, i.source)
+    })
+  end
+
+  defp group_imported_by(q, dim)
+       when dim in [:utm_medium, :utm_campaign, :utm_term, :utm_content] do
+    q
+    |> group_by([i], field(i, ^dim))
+    |> where([i], fragment("not empty(?)", field(i, ^dim)))
+    |> select_merge([i], %{
+      ^dim => fragment("if(empty(?), ?, ?)", field(i, ^dim), @no_ref, field(i, ^dim))
+    })
+  end
+
+  defp group_imported_by(q, :page) do
+    q
+    |> group_by([i], i.page)
+    |> select_merge([i], %{page: i.page, time_on_page: sum(i.time_on_page)})
+  end
+
+  defp group_imported_by(q, :country) do
+    q
+    |> group_by([i], i.country)
+    |> where([i], i.country != "ZZ")
+    |> select_merge([i], %{country: i.country})
+  end
+
+  defp group_imported_by(q, :region) do
+    q
+    |> group_by([i], i.region)
+    |> where([i], i.region != "")
+    |> select_merge([i], %{region: i.region})
+  end
+
+  defp group_imported_by(q, :city) do
+    q
+    |> group_by([i], i.city)
+    |> where([i], i.city != 0 and not is_nil(i.city))
+    |> select_merge([i], %{city: i.city})
+  end
+
+  defp group_imported_by(q, dim) when dim in [:device, :browser] do
+    q
+    |> group_by([i], field(i, ^dim))
+    |> select_merge([i], %{
+      ^dim => fragment("if(empty(?), ?, ?)", field(i, ^dim), @not_set, field(i, ^dim))
+    })
+  end
+
+  defp group_imported_by(q, :os) do
+    q
+    |> group_by([i], i.operating_system)
+    |> select_merge([i], %{
+      os: fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system)
+    })
+  end
+
+  defp group_imported_by(q, :os_version) do
+    q
+    |> group_by([i], [i.operating_system, i.operating_system_version])
+    |> select_merge([i], %{
+      os: fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system),
+      os_version:
+        fragment(
+          "if(empty(?), ?, ?)",
+          i.operating_system_version,
+          @not_set,
+          i.operating_system_version
+        )
+    })
+  end
+
+  defp group_imported_by(q, dim) when dim in [:entry_page, :exit_page] do
+    q
+    |> group_by([i], field(i, ^dim))
+    |> select_merge([i], %{^dim => field(i, ^dim)})
+  end
+
   defp select_joined_metrics(q, []), do: q
   # TODO: Reverse-engineering the native data bounces and total visit
   # durations to combine with imported data is inefficient. Instead both
@@ -604,8 +548,4 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp apply_order_by(q, _), do: q
-
-  defp api_prop_name_to_db(:os), do: :operating_system
-  defp api_prop_name_to_db(:os_version), do: :operating_system_version
-  defp api_prop_name_to_db(name), do: name
 end
