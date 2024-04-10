@@ -104,114 +104,14 @@ defmodule Plausible.Stats.Imported do
         dim -> dynamic([s, i], field(s, ^dim) == field(i, ^dim))
       end
 
-    q =
-      from(s in Ecto.Query.subquery(q),
-        full_join: i in subquery(imported_q),
-        on: ^join_on,
-        select: %{}
-      )
-      |> select_joined_metrics(metrics)
-      |> apply_order_by(metrics)
-
-    case dim do
-      :source ->
-        q
-        |> select_merge([s, i], %{
-          source: fragment("if(empty(?), ?, ?)", s.source, i.source, s.source)
-        })
-
-      :utm_medium ->
-        q
-        |> select_merge([s, i], %{
-          utm_medium: fragment("if(empty(?), ?, ?)", s.utm_medium, i.utm_medium, s.utm_medium)
-        })
-
-      :utm_source ->
-        q
-        |> select_merge([s, i], %{
-          utm_source: fragment("if(empty(?), ?, ?)", s.utm_source, i.utm_source, s.utm_source)
-        })
-
-      :utm_campaign ->
-        q
-        |> select_merge([s, i], %{
-          utm_campaign:
-            fragment("if(empty(?), ?, ?)", s.utm_campaign, i.utm_campaign, s.utm_campaign)
-        })
-
-      :utm_term ->
-        q
-        |> select_merge([s, i], %{
-          utm_term: fragment("if(empty(?), ?, ?)", s.utm_term, i.utm_term, s.utm_term)
-        })
-
-      :utm_content ->
-        q
-        |> select_merge([s, i], %{
-          utm_content: fragment("if(empty(?), ?, ?)", s.utm_content, i.utm_content, s.utm_content)
-        })
-
-      :page ->
-        q
-        |> select_merge([s, i], %{
-          page: fragment("if(empty(?), ?, ?)", i.page, s.page, i.page)
-        })
-
-      :entry_page ->
-        q
-        |> select_merge([s, i], %{
-          entry_page: fragment("if(empty(?), ?, ?)", i.entry_page, s.entry_page, i.entry_page)
-        })
-
-      :exit_page ->
-        q
-        |> select_merge([s, i], %{
-          exit_page: fragment("if(empty(?), ?, ?)", i.exit_page, s.exit_page, i.exit_page)
-        })
-
-      :country ->
-        q
-        |> select_merge([i, s], %{
-          country: fragment("if(empty(?), ?, ?)", s.country, i.country, s.country)
-        })
-
-      :region ->
-        q
-        |> select_merge([i, s], %{
-          region: fragment("if(empty(?), ?, ?)", s.region, i.region, s.region)
-        })
-
-      :city ->
-        q
-        |> select_merge([s, i], %{
-          city: fragment("coalesce(nullif(?, 0), ?)", i.city, s.city)
-        })
-
-      :device ->
-        q
-        |> select_merge([i, s], %{
-          device: fragment("if(empty(?), ?, ?)", s.device, i.device, s.device)
-        })
-
-      :browser ->
-        q
-        |> select_merge([i, s], %{
-          browser: fragment("if(empty(?), ?, ?)", s.browser, i.browser, s.browser)
-        })
-
-      :os ->
-        q
-        |> select_merge([i, s], %{
-          os: fragment("if(empty(?), ?, ?)", s.os, i.os, s.os)
-        })
-
-      :os_version ->
-        q
-        |> select_merge([i, s], %{
-          os: fragment("if(empty(?), ?, ?)", s.os, i.os, s.os),
-          os_version: fragment("if(empty(?), ?, ?)", s.os_version, i.os_version, s.os_version)
-        })
-    end
+    from(s in Ecto.Query.subquery(q),
+      full_join: i in subquery(imported_q),
+      on: ^join_on,
+      select: %{}
+    )
+    |> select_joined_dimension(dim)
+    |> select_joined_metrics(metrics)
+    |> apply_order_by(metrics)
   end
 
   def merge_imported(q, site, query, :aggregate, metrics) do
@@ -422,6 +322,25 @@ defmodule Plausible.Stats.Imported do
     q
     |> group_by([i], field(i, ^dim))
     |> select_merge([i], %{^dim => field(i, ^dim)})
+  end
+
+  defp select_joined_dimension(q, :city) do
+    select_merge(q, [s, i], %{
+      city: fragment("coalesce(nullif(?, 0), ?)", i.city, s.city)
+    })
+  end
+
+  defp select_joined_dimension(q, :os_version) do
+    select_merge(q, [s, i], %{
+      os: fragment("if(empty(?), ?, ?)", s.os, i.os, s.os),
+      os_version: fragment("if(empty(?), ?, ?)", s.os_version, i.os_version, s.os_version)
+    })
+  end
+
+  defp select_joined_dimension(q, dim) do
+    select_merge(q, [s, i], %{
+      ^dim => fragment("if(empty(?), ?, ?)", field(s, ^dim), field(i, ^dim), field(s, ^dim))
+    })
   end
 
   defp select_joined_metrics(q, []), do: q
