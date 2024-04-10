@@ -1560,7 +1560,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "example.com/page1", "visitors"=> 1}
+               %{"name" => "example.com/page1", "visitors" => 1}
              ]
     end
 
