@@ -195,6 +195,7 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   def breakdown(site, query, property, metrics, pagination, opts) do
+    query = maybe_update_breakdown_filters(property, query)
     if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
 
     metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @computed_metrics
@@ -209,6 +210,32 @@ defmodule Plausible.Stats.Breakdown do
         breakdown_events(site, query, property, metrics_to_select)
         |> maybe_add_group_conversion_rate(&breakdown_events/4, site, query, property, metrics)
         |> paginate_and_execute(metrics, pagination)
+    end
+  end
+
+  defp maybe_update_breakdown_filters("visit:source", query) do
+    update_hostname(query, "visit:entry_page_hostname")
+  end
+
+  defp maybe_update_breakdown_filters("visit:entry_page", query) do
+    update_hostname(query, "visit:entry_page_hostname")
+  end
+
+  defp maybe_update_breakdown_filters("visit:exit_page", query) do
+    update_hostname(query, "visit:exit_page_hostname")
+  end
+
+  defp maybe_update_breakdown_filters(_, query) do
+    query
+  end
+
+  defp update_hostname(query, visit_prop) do
+    case query.filters["event:hostname"] do
+      nil ->
+        query
+
+      some ->
+        Plausible.Stats.Query.put_filter(query, visit_prop, some)
     end
   end
 
