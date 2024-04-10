@@ -269,6 +269,8 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         )
 
       suggestions = json_response(conn, 200)
+      
+      assert length(suggestions) == 3
 
       assert %{"label" => "host-alice.example.com", "value" => "host-alice.example.com"} in suggestions
       assert %{"label" => "host-carol.example.com", "value" => "host-carol.example.com"} in suggestions
