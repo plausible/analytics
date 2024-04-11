@@ -44,6 +44,16 @@ defmodule Plausible.Exports do
     if has_data?, do: :ok, else: {:error, :no_data}
   end
 
+  @doc "Gets last CSV export job for a site"
+  @spec get_last_export_job(pos_integer) :: Oban.Job.t() | nil
+  def get_last_export_job(site_id) do
+    Plausible.Repo.one(
+      from e in Plausible.Workers.ExportAnalytics.base_query(site_id),
+        order_by: [desc: :id],
+        limit: 1
+    )
+  end
+
   @doc "Subscribes to CSV export job notifications"
   def oban_listen, do: Oban.Notifier.listen(__MODULE__)
   @doc false
