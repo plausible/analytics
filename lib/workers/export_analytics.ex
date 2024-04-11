@@ -10,15 +10,6 @@ defmodule Plausible.Workers.ExportAnalytics do
 
   alias Plausible.Exports
 
-  @doc "This base query filters export jobs for a site"
-  def base_query(site_id) do
-    import Ecto.Query, only: [from: 2]
-
-    from j in Oban.Job,
-      where: j.worker == ^Oban.Worker.to_string(__MODULE__),
-      where: j.args["site_id"] == ^site_id
-  end
-
   @impl true
   def timeout(_job), do: :timer.minutes(15)
 
