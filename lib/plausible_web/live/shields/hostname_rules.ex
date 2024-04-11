@@ -16,10 +16,9 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
     socket =
       socket
       |> assign(
-        hostname_rules_count:
-          assigns[:hostname_rules_count] || socket.assigns.hostname_rules_count,
-        site: assigns[:site] || socket.assigns.site,
-        current_user: assigns[:current_user] || socket.assigns.current_user,
+        hostname_rules_count: assigns.hostname_rules_count,
+        site: assigns.site,
+        current_user: assigns.current_user,
         form: new_form()
       )
       |> assign_new(:hostname_rules, fn %{site: site} ->
