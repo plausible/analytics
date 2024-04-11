@@ -34,24 +34,28 @@ defmodule Plausible.Shield.HostnameRule do
   end
 
   defp store_regex(changeset) do
-    case get_field(changeset, :hostname) do
-      hostname when is_binary(hostname) ->
-        regex =
-          hostname
-          |> Regex.escape()
-          |> String.replace("\\*\\*", ".*")
-          |> String.replace("\\*", ".*")
+    case fetch_change(changeset, :hostname) do
+      {:ok, hostname} ->
+        hostname
+        |> build_regex()
+        |> verify_and_put_regex(changeset)
 
-        regex = "^#{regex}$"
-
-        verify_valid_regex(changeset, regex)
-
-      _ ->
+      :error ->
         changeset
     end
   end
 
-  defp verify_valid_regex(changeset, regex) do
+  defp build_regex(hostname) do
+    regex =
+      hostname
+      |> Regex.escape()
+      |> String.replace("\\*\\*", ".*")
+      |> String.replace("\\*", ".*")
+
+    "^#{regex}$"
+  end
+
+  defp verify_and_put_regex(regex, changeset) do
     case Regex.compile(regex) do
       {:ok, _} ->
         put_change(changeset, :hostname_pattern, regex)
