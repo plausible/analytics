@@ -1,3 +1,7 @@
+if not Enum.empty?(Path.wildcard("lib/**/*_test.exs")) do
+  raise "Oops, test(s) found in `lib/` directory. Move them to `test/`."
+end
+
 {:ok, _} = Application.ensure_all_started(:ex_machina)
 Mox.defmock(Plausible.HTTPClient.Mock, for: Plausible.HTTPClient.Interface)
 Application.ensure_all_started(:double)
