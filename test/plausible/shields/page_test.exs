@@ -130,10 +130,10 @@ defmodule Plausible.Shields.PageTest do
 
     @tag :slow
     test "many", %{site: site} do
-      {:ok, r1} = add_page_rule(site, %{"page_path" => "/test"})
+      {:ok, %{id: id1}} = add_page_rule(site, %{"page_path" => "/test1"})
       :timer.sleep(1000)
-      {:ok, r2} = add_page_rule(site, %{"page_path" => "/test"})
-      assert [^r2, ^r1] = list_page_rules(site)
+      {:ok, %{id: id2}} = add_page_rule(site, %{"page_path" => "/test2"})
+      assert [%{id: ^id2}, %{id: ^id1}] = list_page_rules(site)
     end
   end
 
