@@ -94,7 +94,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
             <p class="text-sm mt-2 text-gray-500 dark:text-gray-200">
               You can use a wildcard (<code>*</code>) to match multiple hostnames. For example,
               <code>*.<%= @site.domain %></code>
-              will match all its subdomains.<br /><br />
+              will match all subdomains.<br /><br />
               Once added, we will start rejecting traffic from non-matching hostnames within a few minutes.
             </p>
             <div class="py-4 mt-8">
@@ -111,7 +111,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
         >
           No Hostname Rules configured for this Site.<br /><br />
           <strong>
-            All hostnames are accepted.
+            Traffic from all hostnames is currently accepted.
           </strong>
         </p>
         <div
@@ -222,7 +222,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
 
         send_flash(
           :success,
-          "Hostname rule added successfully. Traffic will be rejected within a few minutes."
+          "Hostname rule added successfully. Traffic will be limited within a few minutes."
         )
 
         {:noreply, socket}
@@ -237,7 +237,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
 
     send_flash(
       :success,
-      "Hostname rule removed successfully. Traffic will be resumed within a few minutes."
+      "Hostname rule removed successfully. Traffic will be re-adjusted within a few minutes."
     )
 
     hostname_rules = Enum.reject(socket.assigns.hostname_rules, &(&1.id == rule_id))

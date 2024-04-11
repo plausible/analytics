@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Live.Shields.HostnamesTest do
 
       assert resp =~ "No Hostname Rules configured for this Site"
       assert resp =~ "Hostnames Allow List"
-      assert resp =~ "All hostnames are accepted."
+      assert resp =~ "Traffic from all hostnames is currently accepted."
     end
 
     test "lists hostname rules with remove actions", %{conn: conn, site: site} do
