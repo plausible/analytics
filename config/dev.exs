@@ -23,3 +23,5 @@ config :plausible, PlausibleWeb.Endpoint,
 
 config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime
+
+config :plausible, http_impl: Plausible.HTTPClient.Mock
