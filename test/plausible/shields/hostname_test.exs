@@ -129,10 +129,10 @@ defmodule Plausible.Shields.HostnameTest do
 
     @tag :slow
     test "many", %{site: site} do
-      {:ok, r1} = add_hostname_rule(site, %{"hostname" => "test"})
+      {:ok, %{id: id1}} = add_hostname_rule(site, %{"hostname" => "test1.example.com"})
       :timer.sleep(1000)
-      {:ok, r2} = add_hostname_rule(site, %{"hostname" => "test"})
-      assert [^r2, ^r1] = list_hostname_rules(site)
+      {:ok, %{id: id2}} = add_hostname_rule(site, %{"hostname" => "test2.example.com"})
+      assert [%{id: ^id2}, %{id: ^id1}] = list_hostname_rules(site)
     end
   end
 
