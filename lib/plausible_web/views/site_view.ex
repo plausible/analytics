@@ -2,6 +2,10 @@ defmodule PlausibleWeb.SiteView do
   use PlausibleWeb, :view
   use Plausible
 
+  alias Plausible.Imported.SiteImport
+
+  require Plausible.Imported.SiteImport
+
   def plausible_url do
     PlausibleWeb.Endpoint.url()
   end

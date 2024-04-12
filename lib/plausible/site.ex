@@ -153,31 +153,6 @@ defmodule Plausible.Site do
     change(site, native_stats_start_at: val)
   end
 
-  def start_import(site, start_date, end_date, imported_source, status \\ "importing") do
-    change(site,
-      imported_data: %{
-        start_date: start_date,
-        end_date: end_date,
-        source: imported_source,
-        status: status
-      }
-    )
-  end
-
-  def import_success(site) do
-    change(site,
-      imported_data: %{status: "ok"}
-    )
-  end
-
-  def import_failure(site) do
-    change(site, imported_data: %{status: "error"})
-  end
-
-  def remove_imported_data(site) do
-    change(site, imported_data: nil)
-  end
-
   defp clean_domain(changeset) do
     clean_domain =
       (get_field(changeset, :domain) || "")

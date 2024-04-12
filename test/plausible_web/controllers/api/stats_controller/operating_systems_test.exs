@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
   use PlausibleWeb.ConnCase
 
   describe "GET /api/stats/:domain/operating-systems" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns operating systems by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [

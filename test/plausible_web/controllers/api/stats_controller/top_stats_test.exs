@@ -463,7 +463,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   end
 
   describe "GET /api/stats/top-stats - with imported data" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns divisible metrics as 0 when no stats exist", %{
       site: site,
@@ -1267,7 +1267,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   end
 
   describe "GET /api/stats/top-stats - with comparisons" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "does not return comparisons by default", %{site: site, conn: conn} do
       populate_stats(site, [
@@ -1352,17 +1352,6 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
 
-      site
-      |> Ecto.Changeset.change(
-        imported_data: %{
-          start_date: ~D[2005-01-01],
-          end_date: ~D[2020-01-31],
-          source: "Google Analytics",
-          status: "ok"
-        }
-      )
-      |> Plausible.Repo.update!()
-
       conn =
         get(
           conn,
@@ -1392,17 +1381,6 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
-
-      site
-      |> Ecto.Changeset.change(
-        imported_data: %{
-          start_date: ~D[2005-01-01],
-          end_date: ~D[2020-01-31],
-          source: "Google Analytics",
-          status: "ok"
-        }
-      )
-      |> Plausible.Repo.update!()
 
       conn =
         get(

@@ -631,12 +631,14 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       conn: conn,
       site: site
     } do
-      site =
-        site
-        |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
-        |> Plausible.Repo.update!()
+      site_import =
+        insert(:site_import,
+          start_date: ~D[2005-01-01],
+          end_date: Timex.today(),
+          source: :universal_analytics
+        )
 
-      populate_stats(site, [
+      populate_stats(site, site_import.id, [
         build(:pageview, pathname: "/"),
         build(:pageview, pathname: "/another"),
         build(:pageview, pathname: "/blog/post-1"),

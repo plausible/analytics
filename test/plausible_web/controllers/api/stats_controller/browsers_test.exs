@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
   use PlausibleWeb.ConnCase
 
   describe "GET /api/stats/:domain/browsers" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_site_import]
 
     test "returns top browsers by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -109,8 +109,12 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
              ]
     end
 
-    test "returns top browsers including imported data", %{conn: conn, site: site} do
-      populate_stats(site, [
+    test "returns top browsers including imported data", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
         build(:pageview, browser: "Chrome"),
         build(:imported_browsers, browser: "Chrome"),
         build(:imported_browsers, browser: "Firefox"),
@@ -133,9 +137,10 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
     test "skips breakdown when visitors=0 (possibly due to 'Enable Users Metric' in GA)", %{
       conn: conn,
-      site: site
+      site: site,
+      site_import: site_import
     } do
-      populate_stats(site, [
+      populate_stats(site, site_import.id, [
         build(:imported_browsers, browser: "Chrome", visitors: 0, visits: 14),
         build(:imported_browsers, browser: "Firefox", visitors: 0, visits: 14),
         build(:imported_browsers,

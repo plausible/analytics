@@ -237,8 +237,10 @@ defmodule PlausibleWeb.SiteController do
         Plausible.Google.API.fetch_verified_properties(site.google_auth)
       end
 
+    legacy_import = Plausible.Imported.get_legacy_import(site)
+
     imported_pageviews =
-      if site.imported_data do
+      if legacy_import do
         Plausible.Stats.Clickhouse.imported_pageview_count(site)
       else
         0
@@ -249,6 +251,7 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> render("settings_integrations.html",
       site: site,
+      legacy_import: legacy_import,
       imported_pageviews: imported_pageviews,
       has_plugins_tokens?: has_plugins_tokens?,
       search_console_domains: search_console_domains,
@@ -646,34 +649,22 @@ defmodule PlausibleWeb.SiteController do
   def forget_import(conn, %{"import_id" => import_id}) do
     site = conn.assigns.site
 
-    cond do
-      import_id == "0" ->
-        Plausible.Purge.delete_imported_stats!(site, 0)
-
-        site
-        |> Plausible.Site.remove_imported_data()
-        |> Repo.update!()
-
-      site_import = Plausible.Imported.get_import(site, import_id) ->
-        Oban.cancel_all_jobs(
-          from(j in Oban.Job,
-            where:
-              j.queue == "analytics_imports" and
-                fragment("(? ->> 'import_id')::int", j.args) == ^site_import.id
-          )
+    if site_import = Plausible.Imported.get_import(site, import_id) do
+      Oban.cancel_all_jobs(
+        from(j in Oban.Job,
+          where:
+            j.queue == "analytics_imports" and
+              fragment("(? ->> 'import_id')::int", j.args) == ^site_import.id
         )
+      )
 
-        Plausible.Purge.delete_imported_stats!(site_import)
+      Plausible.Purge.delete_imported_stats!(site_import)
 
-        Plausible.Repo.delete!(site_import)
+      if site_import.legacy do
+        Plausible.Purge.delete_imported_stats!(site, 0)
+      end
 
-        if site_import.legacy do
-          Plausible.Purge.delete_imported_stats!(site, 0)
-
-          site
-          |> Plausible.Site.remove_imported_data()
-          |> Repo.update!()
-        end
+      Plausible.Repo.delete!(site_import)
     end
 
     conn
@@ -701,10 +692,6 @@ defmodule PlausibleWeb.SiteController do
       Plausible.Purge.delete_imported_stats!(site)
 
       Plausible.Imported.delete_imports_for_site(site)
-
-      site
-      |> Plausible.Site.remove_imported_data()
-      |> Repo.update!()
     end
 
     conn

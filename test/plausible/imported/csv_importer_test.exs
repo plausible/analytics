@@ -70,8 +70,6 @@ defmodule Plausible.Imported.CSVImporterTest do
                }
              ] = Plausible.Imported.list_all_imports(site)
 
-      assert %{imported_data: nil} = Repo.reload!(site)
-
       assert CSVImporter.parse_args(args) == [
                uploads: uploads,
                storage: on_full_build(do: "s3", else: "local")
