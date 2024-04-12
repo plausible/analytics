@@ -690,6 +690,20 @@ defmodule PlausibleWeb.SiteControllerTest do
                "Maximum of #{Plausible.Imported.max_complete_imports()} imports is reached."
     end
 
+    test "considers older legacy imports when showing pageview count", %{conn: conn, site: site} do
+      _site_import =
+        insert(:site_import, site: site, legacy: true, status: SiteImport.completed())
+
+      populate_stats(site, [
+        build(:imported_visitors, pageviews: 77),
+        build(:imported_visitors, pageviews: 21)
+      ])
+
+      conn = get(conn, "/#{site.domain}/settings/imports-exports")
+
+      assert html_response(conn, 200) =~ "(98 page views)"
+    end
+
     test "disables import buttons when there's import in progress", %{conn: conn, site: site} do
       _site_import1 = insert(:site_import, site: site, status: SiteImport.completed())
       _site_import2 = insert(:site_import, site: site, status: SiteImport.importing())
