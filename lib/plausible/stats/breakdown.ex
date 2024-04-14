@@ -11,11 +11,11 @@ defmodule Plausible.Stats.Breakdown do
   @no_ref "Direct / None"
   @not_set "(not set)"
 
-  @session_metrics [:visits, :bounce_rate, :visit_duration]
+  @session_metrics [:bounce_rate, :visit_duration]
 
   @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
-  @event_metrics [:visitors, :pageviews, :events, :percentage] ++ @revenue_metrics
+  @event_metrics [:visits, :visitors, :pageviews, :events, :percentage] ++ @revenue_metrics
 
   # These metrics can be asked from the `breakdown/5` function,
   # but they are different from regular metrics such as `visitors`,

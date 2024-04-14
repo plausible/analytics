@@ -414,10 +414,10 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
   end
 
   defp assert_pages(conn, params) do
-    metrics = "visitors,pageviews,time_on_page"
+    metrics = "visitors,visits,pageviews,time_on_page"
 
     # FIX ME: The following metrics should be supported too:
-    # metrics = metrics <> ",visits,visit_duration,bounce_rate"
+    # metrics = metrics <> ",visit_duration,bounce_rate"
 
     params =
       params
@@ -434,14 +434,16 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
              "page" => "/brza-kukuruza/",
              "pageviews" => 814,
              "time_on_page" => 36.492628992628994,
-             "visitors" => 703
+             "visitors" => 703,
+             "visits" => 764
            }
 
     assert List.last(results) == %{
              "page" => "/5-dobrih-razloga-zasto-zapoceti-dan-zobenom-kasom/",
              "pageviews" => 2,
              "time_on_page" => 10.0,
-             "visitors" => 1
+             "visitors" => 1,
+             "visits" => 1
            }
   end
 end
