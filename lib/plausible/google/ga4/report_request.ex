@@ -31,7 +31,7 @@ defmodule Plausible.Google.GA4.ReportRequest do
         dataset: "imported_visitors",
         dimensions: ["date"],
         metrics: [
-          "totalUsers",
+          "activeUsers",
           "screenPageViews",
           "bounces = sessions - engagedSessions",
           "sessions",
@@ -51,7 +51,7 @@ defmodule Plausible.Google.GA4.ReportRequest do
         ],
         metrics: [
           "screenPageViews",
-          "totalUsers",
+          "activeUsers",
           "sessions",
           "bounces = sessions - engagedSessions",
           "userEngagementDuration"
@@ -61,14 +61,14 @@ defmodule Plausible.Google.GA4.ReportRequest do
         dataset: "imported_pages",
         dimensions: ["date", "hostName", "pagePath"],
         # NOTE: no exits as GA4 DATA API does not provide that metric
-        metrics: ["totalUsers", "screenPageViews", "sessions", "userEngagementDuration"]
+        metrics: ["activeUsers", "screenPageViews", "sessions", "userEngagementDuration"]
       },
       %__MODULE__{
         dataset: "imported_entry_pages",
         dimensions: ["date", "landingPage"],
         metrics: [
           "screenPageViews",
-          "totalUsers",
+          "activeUsers",
           "sessions",
           "userEngagementDuration",
           "bounces = sessions - engagedSessions"
@@ -79,7 +79,7 @@ defmodule Plausible.Google.GA4.ReportRequest do
       #   dataset: "imported_exit_pages",
       #   dimensions: ["date", "ga:exitPagePath"],
       #   metrics: [
-      #     "totalUsers",
+      #     "activeUsers",
       #     "sessions",
       #     "screenPageViews",
       #     "userEngagementDuration",
@@ -91,7 +91,7 @@ defmodule Plausible.Google.GA4.ReportRequest do
         dimensions: ["date", "countryId", "region", "city"],
         metrics: [
           "screenPageViews",
-          "totalUsers",
+          "activeUsers",
           "sessions",
           "bounces = sessions - engagedSessions",
           "userEngagementDuration"
@@ -102,7 +102,7 @@ defmodule Plausible.Google.GA4.ReportRequest do
         dimensions: ["date", "deviceCategory"],
         metrics: [
           "screenPageViews",
-          "totalUsers",
+          "activeUsers",
           "sessions",
           "bounces = sessions - engagedSessions",
           "userEngagementDuration"
@@ -113,7 +113,7 @@ defmodule Plausible.Google.GA4.ReportRequest do
         dimensions: ["date", "browser"],
         metrics: [
           "screenPageViews",
-          "totalUsers",
+          "activeUsers",
           "sessions",
           "bounces = sessions - engagedSessions",
           "userEngagementDuration"
@@ -124,7 +124,7 @@ defmodule Plausible.Google.GA4.ReportRequest do
         dimensions: ["date", "operatingSystem", "operatingSystemVersion"],
         metrics: [
           "screenPageViews",
-          "totalUsers",
+          "activeUsers",
           "sessions",
           "bounces = sessions - engagedSessions",
           "userEngagementDuration"
