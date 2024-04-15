@@ -262,9 +262,7 @@ defmodule Plausible.Stats.Imported do
     q
     |> group_by([i], field(i, ^dim))
     |> where([i], fragment("not empty(?)", field(i, ^dim)))
-    |> select_merge([i], %{
-      ^dim => fragment("if(empty(?), ?, ?)", field(i, ^dim), @no_ref, field(i, ^dim))
-    })
+    |> select_merge([i], %{^dim => field(i, ^dim)})
   end
 
   defp group_imported_by(q, :page) do
