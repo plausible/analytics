@@ -96,19 +96,12 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
   end
 
   defp new_from_report(site_id, import_id, "imported_sources", row) do
-    referrer_uri = row.dimensions |> Map.fetch!("pageReferrer") |> URI.parse()
-
-    referrer =
-      if PlausibleWeb.RefInspector.right_uri?(referrer_uri) do
-        PlausibleWeb.RefInspector.format_referrer(referrer_uri)
-      end
-
     %{
       site_id: site_id,
       import_id: import_id,
       date: get_date(row),
       source: row.dimensions |> Map.fetch!("sessionSource") |> parse_referrer(),
-      referrer: referrer,
+      referrer: nil,
       # Only `source` exists in GA4 API
       utm_source: nil,
       utm_medium: row.dimensions |> Map.fetch!("sessionMedium") |> default_if_missing(),

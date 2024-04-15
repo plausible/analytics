@@ -46,8 +46,7 @@ defmodule Plausible.Google.GA4.ReportRequest do
           "sessionMedium",
           "sessionCampaignName",
           "sessionManualAdContent",
-          "sessionGoogleAdsKeyword",
-          "pageReferrer"
+          "sessionGoogleAdsKeyword"
         ],
         metrics: [
           "screenPageViews",
