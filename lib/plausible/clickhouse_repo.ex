@@ -12,17 +12,45 @@ defmodule Plausible.ClickhouseRepo do
     end
   end
 
+  def prepare_query(operation, query, opts) do
+    if Plausible.DebugReplayInfo.super_admin?() do
+      Plausible.DebugReplayInfo.track_query(
+        to_inline_sql(operation, query),
+        opts[:debug_label] || "unlabelled"
+      )
+    end
+
+    {query, opts}
+  end
+
   @task_timeout 60_000
   def parallel_tasks(queries) do
-    ctx = OpenTelemetry.Ctx.get_current()
+    otel_ctx = OpenTelemetry.Ctx.get_current()
+    sentry_ctx = Sentry.Context.get_all()
 
     execute_with_tracing = fn fun ->
-      OpenTelemetry.Ctx.attach(ctx)
-      fun.()
+      Plausible.DebugReplayInfo.carry_over_user_context(sentry_ctx)
+      OpenTelemetry.Ctx.attach(otel_ctx)
+      result = fun.()
+      {Sentry.Context.get_all(), result}
     end
 
     Task.async_stream(queries, execute_with_tracing, max_concurrency: 3, timeout: @task_timeout)
     |> Enum.to_list()
     |> Keyword.values()
+    |> Enum.map(fn {sentry_ctx, result} ->
+      set_sentry_context(sentry_ctx)
+      result
+    end)
+  end
+
+  defp set_sentry_context(previous_sentry_ctx) do
+    Plausible.DebugReplayInfo.carry_over_user_context(previous_sentry_ctx)
+    previous_queries = Plausible.DebugReplayInfo.get_queries_from_context(previous_sentry_ctx)
+    current_queries = Plausible.DebugReplayInfo.get_queries_from_context()
+
+    Sentry.Context.set_extra_context(%{
+      queries: previous_queries ++ current_queries
+    })
   end
 end

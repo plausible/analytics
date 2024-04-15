@@ -64,6 +64,7 @@ export function get(url, query = {}, ...extraQuery) {
   url = url + serializeQuery(query, extraQuery)
   return fetch(url, { signal: abortController.signal, headers: headers })
     .then(response => {
+      logDebugHeaders(url, response.headers)
       if (!response.ok) {
         return response.json().then((msg) => {
           throw new ApiError(msg.error, msg)
@@ -71,6 +72,13 @@ export function get(url, query = {}, ...extraQuery) {
       }
       return response.json()
     })
+}
+
+function logDebugHeaders(url, headers) {
+  const debugHeaders = Array.from(headers).filter(([h]) => h.startsWith("x-plausible"))
+  if (debugHeaders.length > 0) {
+    console.info(url, Object.fromEntries(debugHeaders))
+  }
 }
 
 export function put(url, body) {

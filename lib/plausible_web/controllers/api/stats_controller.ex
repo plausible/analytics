@@ -13,6 +13,26 @@ defmodule PlausibleWeb.Api.StatsController do
   @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
   plug(:date_validation_plug)
+  plug(:test)
+
+  def test(conn, _) do
+    Plug.Conn.register_before_send(conn, fn conn ->
+      queries = Sentry.Context.get_all()[:extra][:queries] || []
+
+      queries
+      |> Enum.reverse()
+      |> Enum.with_index()
+      |> Enum.reduce(conn, fn {q, index}, conn ->
+        {[label], [value]} = Enum.unzip(q)
+
+        conn
+        |> put_resp_header(
+          "x-plausible-query-#{String.pad_leading("#{index}", 3, "0")}-#{label}",
+          value
+        )
+      end)
+    end)
+  end
 
   @doc """
   Returns a time-series based on given parameters.
