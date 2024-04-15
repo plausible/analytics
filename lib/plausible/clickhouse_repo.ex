@@ -12,6 +12,7 @@ defmodule Plausible.ClickhouseRepo do
     end
   end
 
+  @impl Ecto.Repo
   def prepare_query(operation, query, opts) do
     if Plausible.DebugReplayInfo.super_admin?() do
       Plausible.DebugReplayInfo.track_query(
