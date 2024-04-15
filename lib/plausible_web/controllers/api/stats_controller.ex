@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Api.StatsController do
         conn
         |> put_resp_header(
           "x-plausible-query-#{String.pad_leading("#{index}", 3, "0")}-#{label}",
-          value
+          String.replace(value, ["\n", "\r"], "")
         )
       end)
     end)

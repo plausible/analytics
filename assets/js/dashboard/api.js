@@ -61,8 +61,8 @@ export function serializeQuery(query, extraQuery = []) {
 
 export function get(url, query = {}, ...extraQuery) {
   const headers = SHARED_LINK_AUTH ? { 'X-Shared-Link-Auth': SHARED_LINK_AUTH } : {}
-  url = url + serializeQuery(query, extraQuery)
-  return fetch(url, { signal: abortController.signal, headers: headers })
+  const serializedUrl = url + serializeQuery(query, extraQuery)
+  return fetch(serializedUrl, { signal: abortController.signal, headers: headers })
     .then(response => {
       logDebugHeaders(url, response.headers)
       if (!response.ok) {
