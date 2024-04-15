@@ -1041,6 +1041,36 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    test "can filter by hostname", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          hostname: "one.example.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          hostname: "example.com",
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "metrics" => "pageviews,visitors,bounce_rate,visit_duration",
+          "filters" => "event:hostname==*.example.com|example.com"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "pageviews" => %{"value" => 2},
+               "visitors" => %{"value" => 2},
+               "bounce_rate" => %{"value" => 100},
+               "visit_duration" => %{"value" => 0}
+             }
+    end
+
     test "filtering by event:name", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event,
