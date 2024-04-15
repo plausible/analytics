@@ -21,6 +21,19 @@ defmodule Plausible.ClickhouseRepo do
       )
     end
 
+    sentry_context = Sentry.Context.get_all()
+
+    setting =
+      {:log_comment,
+       Jason.encode!(%{
+         user_id: sentry_context[:user][:id],
+         debug_label: opts[:debug_label] || "unlabelled",
+         url: sentry_context[:request][:url],
+         domain: sentry_context[:extra][:domain]
+       })}
+
+    opts = Keyword.update(opts, :settings, [setting], fn settings -> [setting | settings] end)
+
     {query, opts}
   end
 
@@ -30,7 +43,7 @@ defmodule Plausible.ClickhouseRepo do
     sentry_ctx = Sentry.Context.get_all()
 
     execute_with_tracing = fn fun ->
-      Plausible.DebugReplayInfo.carry_over_user_context(sentry_ctx)
+      Plausible.DebugReplayInfo.carry_over_context(sentry_ctx)
       OpenTelemetry.Ctx.attach(otel_ctx)
       result = fun.()
       {Sentry.Context.get_all(), result}
@@ -46,7 +59,7 @@ defmodule Plausible.ClickhouseRepo do
   end
 
   defp set_sentry_context(previous_sentry_ctx) do
-    Plausible.DebugReplayInfo.carry_over_user_context(previous_sentry_ctx)
+    Plausible.DebugReplayInfo.carry_over_context(previous_sentry_ctx)
     previous_queries = Plausible.DebugReplayInfo.get_queries_from_context(previous_sentry_ctx)
     current_queries = Plausible.DebugReplayInfo.get_queries_from_context()
 

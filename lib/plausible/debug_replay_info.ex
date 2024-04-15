@@ -62,8 +62,14 @@ defmodule Plausible.DebugReplayInfo do
     })
   end
 
-  def carry_over_user_context(sentry_ctx) do
+  def carry_over_context(sentry_ctx) do
     Sentry.Context.set_user_context(sentry_ctx[:user])
+    Sentry.Context.set_request_context(sentry_ctx[:request])
+
+    Sentry.Context.set_extra_context(%{
+      domain: sentry_ctx[:extra][:domain],
+      site_id: sentry_ctx[:extra][:site_id]
+    })
   end
 
   def get_queries_from_context(context \\ Sentry.Context.get_all()) do
