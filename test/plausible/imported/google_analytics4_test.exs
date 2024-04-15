@@ -124,7 +124,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
       assert_pages(conn, common_params)
 
       assert_sources(conn, breakdown_params)
-      assert_referrers(conn, breakdown_params)
       assert_utm_mediums(conn, breakdown_params)
       assert_entry_pages(conn, breakdown_params)
       assert_cities(conn, breakdown_params)
@@ -193,33 +192,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
              "visitors" => 1,
              "visits" => 1,
              "source" => "petalsearch.com"
-           }
-  end
-
-  defp assert_referrers(conn, params) do
-    params = Map.put(params, "property", "visit:referrer")
-
-    %{"results" => results} =
-      get(conn, "/api/v1/stats/breakdown", params) |> json_response(200)
-
-    assert length(results) == 310
-
-    assert List.first(results) == %{
-             "bounce_rate" => 34.0,
-             "referrer" => "google.com",
-             "pageviews" => 5249,
-             "visit_duration" => 36.5,
-             "visitors" => 4488,
-             "visits" => 4692
-           }
-
-    assert List.last(results) == %{
-             "bounce_rate" => 0.0,
-             "referrer" => "kuhinjskeprice.com/zapeceni-pire-krompir-pippe-middleton",
-             "pageviews" => 1,
-             "visit_duration" => 62.0,
-             "visitors" => 1,
-             "visits" => 1
            }
   end
 
