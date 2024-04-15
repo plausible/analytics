@@ -346,7 +346,7 @@ defmodule Plausible.Stats.Imported do
 
   defp select_joined_dimension(q, :city) do
     select_merge(q, [s, i], %{
-      city: fragment("coalesce(nullif(?, 0), ?)", i.city, s.city)
+      city: fragment("greatest(?,?)", i.city, s.city)
     })
   end
 
