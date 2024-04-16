@@ -386,10 +386,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
   end
 
   defp assert_pages(conn, params) do
-    metrics = "visitors,visits,pageviews,time_on_page"
-
-    # FIX ME: The following metrics should be supported too:
-    # metrics = metrics <> ",visit_duration,bounce_rate"
+    metrics = "visitors,visits,pageviews,time_on_page,visit_duration,bounce_rate"
 
     params =
       params
@@ -402,20 +399,32 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
     assert length(results) == 729
 
-    assert List.first(results) == %{
-             "page" => "/brza-kukuruza/",
-             "pageviews" => 814,
-             "time_on_page" => 36.492628992628994,
-             "visitors" => 703,
-             "visits" => 764
+    # The `event:page` breakdown is currently using the `entry_page`
+    # property to allow querying session metrics.
+    #
+    # We assert on the 3rd element of the results, because that page
+    # was also an entry page somewhere along the queried period. So
+    # it will allow us to assert on the session metrics as well.
+    assert Enum.at(results, 2) == %{
+             "page" => "/",
+             "pageviews" => 5537,
+             "time_on_page" => 17.677262055264585,
+             "visitors" => 371,
+             "visits" => 212,
+             "bounce_rate" => 54.0,
+             "visit_duration" => 45.0
            }
 
+    # This page was never an entry_page in the imported data, and
+    # therefore the session metrics are returned as `nil`.
     assert List.last(results) == %{
              "page" => "/5-dobrih-razloga-zasto-zapoceti-dan-zobenom-kasom/",
              "pageviews" => 2,
              "time_on_page" => 10.0,
              "visitors" => 1,
-             "visits" => 1
+             "visits" => 1,
+             "bounce_rate" => nil,
+             "visit_duration" => nil,
            }
   end
 end
