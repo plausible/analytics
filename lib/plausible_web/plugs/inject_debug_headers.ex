@@ -1,4 +1,9 @@
 defmodule PlausibleWeb.Plugs.InjectDebugHeaders do
+  @moduledoc """
+  This plug updates the response with debug query headers,
+  granted they were tracked via `Plausible.DebugReplayInfo`.
+  """
+
   def init(opts), do: opts
 
   def call(conn, _opts \\ []) do
