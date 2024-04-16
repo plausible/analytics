@@ -41,22 +41,25 @@ defmodule Plausible.ClickhouseRepoTest do
       debug_label: "log_one"
     )
 
-    logged =
-      Plausible.ClickhouseRepo.query!("""
-      SELECT
-      query,
-      log_comment
-      FROM system.query_log
-      WHERE (type = 1) AND (query LIKE '%sessions_v2%')
-      AND JSONExtractString(log_comment, 'debug_label') IN ('log_all', 'log_one')
-      ORDER BY event_time DESC
-      LIMIT 2
-      """).rows
-
     assert [
              [q1, c1],
              [q2, c2]
-           ] = logged
+           ] =
+             eventually(fn ->
+               result =
+                 Plausible.ClickhouseRepo.query!("""
+                 SELECT
+                 query,
+                 log_comment
+                 FROM system.query_log
+                 WHERE (type = 1) AND (query LIKE '%sessions_v2%')
+                 AND JSONExtractString(log_comment, 'debug_label') IN ('log_all', 'log_one')
+                 ORDER BY event_time DESC
+                 LIMIT 2
+                 """)
+
+               {length(result.rows) == 2, result.rows}
+             end)
 
     assert q1 == "SELECT true FROM \"sessions_v2\" AS s0 LIMIT 0"
     assert q1 == q2
