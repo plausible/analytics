@@ -17,7 +17,7 @@ defmodule PlausibleWeb.Plugs.InjectDebugHeaders do
         conn
         |> Plug.Conn.put_resp_header(
           "x-plausible-query-#{String.pad_leading("#{index}", 3, "0")}-#{label}",
-          String.replace(value, ["\n", "\r"], "")
+          String.replace(value, ["\n", "\r", "\x00"], "")
         )
       end)
     end)
