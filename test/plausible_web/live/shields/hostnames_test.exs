@@ -79,6 +79,30 @@ defmodule PlausibleWeb.Live.Shields.HostnamesTest do
       assert submit_button(html, ~s/form[phx-submit="save-hostname-rule"]/)
     end
 
+    test "if no rules are added yet, form displays hint", %{site: site, conn: conn} do
+      lv = get_liveview(conn, site)
+      html = render(lv)
+
+      assert text(html) =~
+               "NB: Once added, we will start rejecting traffic from non-matching hostnames within a few minutes.
+"
+
+      refute text(html) =~ "we will start accepting"
+    end
+
+    test "if rules are added, form changes the hint", %{site: site, conn: conn} do
+      {:ok, _} =
+        Shields.add_hostname_rule(site, %{"hostname" => "*.example.com"})
+
+      lv = get_liveview(conn, site)
+      html = render(lv)
+
+      refute text(html) =~ "we will start rejecting traffic"
+
+      assert text(html) =~
+               "Once added, we will start accepting traffic from this hostname within a few minutes."
+    end
+
     test "submitting a valid Hostname saves it", %{conn: conn, site: site} do
       lv = get_liveview(conn, site)
 

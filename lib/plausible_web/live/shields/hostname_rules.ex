@@ -95,7 +95,12 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
               You can use a wildcard (<code>*</code>) to match multiple hostnames. For example,
               <code>*.<%= @site.domain %></code>
               will match all subdomains.<br /><br />
-              Once added, we will start rejecting traffic from non-matching hostnames within a few minutes.
+
+              <%= if @hostname_rules_count >= 1 do %>
+                Once added, we will start accepting traffic from this hostname within a few minutes.
+              <% else %>
+                NB: Once added, we will start rejecting traffic from non-matching hostnames within a few minutes.
+              <% end %>
             </p>
             <div class="py-4 mt-8">
               <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
