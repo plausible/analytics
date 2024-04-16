@@ -177,11 +177,11 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     assert length(results) == 26
 
     assert List.first(results) == %{
-             "bounce_rate" => 31.0,
+             "bounce_rate" => 35.0,
              "pageviews" => 6229,
-             "visit_duration" => 36.1,
-             "visitors" => 5187,
-             "visits" => 5438,
+             "visit_duration" => 40.0,
+             "visitors" => 4671,
+             "visits" => 4917,
              "source" => "Google"
            }
 
@@ -203,20 +203,20 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
     assert [
              %{
-               "bounce_rate" => 31.0,
+               "bounce_rate" => 35.0,
                "pageviews" => 6399,
                "utm_medium" => "organic",
-               "visit_duration" => 36.1,
-               "visitors" => 5326,
-               "visits" => 5586
+               "visit_duration" => 40.0,
+               "visitors" => 4787,
+               "visits" => 5042
              },
              %{
-               "bounce_rate" => 45.0,
+               "bounce_rate" => 58.0,
                "pageviews" => 491,
                "utm_medium" => "referral",
-               "visit_duration" => 21.2,
-               "visitors" => 383,
-               "visits" => 387
+               "visit_duration" => 27.5,
+               "visitors" => 294,
+               "visits" => 298
              }
            ] = results
   end
