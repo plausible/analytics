@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Plugs.InjectDebugHeaders do
   def init(opts), do: opts
 
-  def call(conn, _opts) do
+  def call(conn, _opts \\ []) do
     Plug.Conn.register_before_send(conn, fn conn ->
       Plausible.DebugReplayInfo.get_queries_from_context()
       |> Enum.reverse()
