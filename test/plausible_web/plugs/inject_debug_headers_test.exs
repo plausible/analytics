@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Plugs.InjectDebugHeadersTest do
              [
                {"x-plausible-query-000-trap1", "foo"},
                {"x-plausible-query-001-trap2", "bar"},
-               {"x-plausible-query-001-trap2", "baz"}
+               {"x-plausible-query-002-trap2", "baz"}
              ]
   end
 end
