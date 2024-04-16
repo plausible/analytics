@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-C6CE1978.js"></script>
+    <script src="dist/sidebar_items-D15B3CF1.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -169,6 +169,14 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#add_hostname_rule/3" translate="no">add_hostname_rule(site_or_id, params, opts \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#add_ip_rule/3" translate="no">add_ip_rule(site_or_id, params, opts \\ [])</a>
 
       </div>
@@ -185,7 +193,23 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#allowed_hostname_patterns/1" translate="no">allowed_hostname_patterns(domain)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#count_country_rules/1" translate="no">count_country_rules(site_or_id)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#count_hostname_rules/1" translate="no">count_hostname_rules(site_or_id)</a>
 
       </div>
 
@@ -217,6 +241,14 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#hostname_allowed?/2" translate="no">hostname_allowed?(domain, hostname)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#ip_blocked?/2" translate="no">ip_blocked?(domain, address)</a>
 
       </div>
@@ -226,6 +258,14 @@ Pages
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#list_country_rules/1" translate="no">list_country_rules(site_or_id)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_hostname_rules/1" translate="no">list_hostname_rules(site_or_id)</a>
 
       </div>
 
@@ -250,6 +290,14 @@ Pages
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#maximum_country_rules/0" translate="no">maximum_country_rules()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#maximum_hostname_rules/0" translate="no">maximum_hostname_rules()</a>
 
       </div>
 
@@ -282,6 +330,14 @@ Pages
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#remove_country_rule/2" translate="no">remove_country_rule(site_or_id, rule_id)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#remove_hostname_rule/2" translate="no">remove_hostname_rule(site_or_id, rule_id)</a>
 
       </div>
 
@@ -327,7 +383,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">add_country_rule(site_or_id, params, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L99" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L139" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -347,6 +403,37 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="add_hostname_rule/3">
+
+    <span id="add_hostname_rule/2"></span>
+
+  <div class="detail-header">
+    <a href="#add_hostname_rule/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">add_hostname_rule(site_or_id, params, opts \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L183" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> add_hostname_rule(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
+  {:ok, <a href="Plausible.Shield.HostnameRule.html#t:t/0">Plausible.Shield.HostnameRule.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="add_ip_rule/3">
 
     <span id="add_ip_rule/2"></span>
@@ -358,7 +445,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">add_ip_rule(site_or_id, params, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L75" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L115" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -389,7 +476,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">add_page_rule(site_or_id, params, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L121" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L161" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -409,6 +496,35 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="allowed_hostname_patterns/1">
+
+  <div class="detail-header">
+    <a href="#allowed_hostname_patterns/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">allowed_hostname_patterns(domain)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L48" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> allowed_hostname_patterns(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>() | <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
+  [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()] | :all</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="count_country_rules/1">
 
   <div class="detail-header">
@@ -418,7 +534,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">count_country_rules(site_or_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L110" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L150" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -437,6 +553,35 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="count_hostname_rules/1">
+
+  <div class="detail-header">
+    <a href="#count_hostname_rules/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">count_hostname_rules(site_or_id)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L194" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> count_hostname_rules(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="count_ip_rules/1">
 
   <div class="detail-header">
@@ -446,7 +591,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">count_ip_rules(site_or_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L88" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L128" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -474,7 +619,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">count_page_rules(site_or_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L132" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L172" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -502,7 +647,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">country_blocked?(domain, country_code)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L59" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L99" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -521,6 +666,34 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="hostname_allowed?/2">
+
+  <div class="detail-header">
+    <a href="#hostname_allowed?/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">hostname_allowed?(domain, hostname)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L28" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> hostname_allowed?(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>() | <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="ip_blocked?/2">
 
   <div class="detail-header">
@@ -530,7 +703,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">ip_blocked?(domain, address)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L25" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L65" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -558,7 +731,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">list_country_rules(site_or_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L93" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L133" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -579,6 +752,36 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="list_hostname_rules/1">
+
+  <div class="detail-header">
+    <a href="#list_hostname_rules/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">list_hostname_rules(site_or_id)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L177" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> list_hostname_rules(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: [
+  <a href="Plausible.Shield.HostnameRule.html#t:t/0">Plausible.Shield.HostnameRule.t</a>()
+]</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="list_ip_rules/1">
 
   <div class="detail-header">
@@ -588,7 +791,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">list_ip_rules(site_or_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L20" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L23" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -618,7 +821,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">list_page_rules(site_or_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L115" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L155" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -649,6 +852,28 @@ Pages
     <h1 class="signature" translate="no">maximum_country_rules()</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L14" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="maximum_hostname_rules/0">
+
+  <div class="detail-header">
+    <a href="#maximum_hostname_rules/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">maximum_hostname_rules()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L20" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -714,7 +939,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">page_blocked?(domain, address)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L40" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L80" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -742,7 +967,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">remove_country_rule(site_or_id, rule_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L105" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L145" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -761,6 +986,34 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="remove_hostname_rule/2">
+
+  <div class="detail-header">
+    <a href="#remove_hostname_rule/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">remove_hostname_rule(site_or_id, rule_id)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L189" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> remove_hostname_rule(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="remove_ip_rule/2">
 
   <div class="detail-header">
@@ -770,7 +1023,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">remove_ip_rule(site_or_id, rule_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L83" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L123" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -798,7 +1051,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">remove_page_rule(site_or_id, rule_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L127" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/shields.ex#L167" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

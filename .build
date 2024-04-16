@@ -1,5 +1,4 @@
 404.html
-CompiledRegex.html
 Mix.Tasks.CancelSubscription.html
 Mix.Tasks.CleanClickhouse.html
 Mix.Tasks.CreateFreeSubscription.html
@@ -71,6 +70,7 @@ Plausible.DataMigration.VersionedSessions.html
 Plausible.DataMigration.html
 Plausible.DebugReplayInfo.html
 Plausible.Ecto.EventName.html
+Plausible.Ecto.Types.CompiledRegex.html
 Plausible.Exports.html
 Plausible.Factory.html
 Plausible.Funnel.Const.html
@@ -140,6 +140,8 @@ Plausible.Session.CacheStore.html
 Plausible.Session.Salts.html
 Plausible.Shield.CountryRule.html
 Plausible.Shield.CountryRuleCache.html
+Plausible.Shield.HostnameRule.html
+Plausible.Shield.HostnameRuleCache.html
 Plausible.Shield.IPRule.html
 Plausible.Shield.IPRuleCache.html
 Plausible.Shield.PageRule.html
@@ -288,6 +290,8 @@ PlausibleWeb.Live.ResetPasswordForm.html
 PlausibleWeb.Live.SentryContext.html
 PlausibleWeb.Live.Shields.Countries.html
 PlausibleWeb.Live.Shields.CountryRules.html
+PlausibleWeb.Live.Shields.HostnameRules.html
+PlausibleWeb.Live.Shields.Hostnames.html
 PlausibleWeb.Live.Shields.IPAddresses.html
 PlausibleWeb.Live.Shields.IPRules.html
 PlausibleWeb.Live.Shields.PageRules.html
@@ -386,8 +390,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-5D1D2C82.js
-dist/sidebar_items-C6CE1978.js
+dist/search_data-0E7B847B.js
+dist/sidebar_items-D15B3CF1.js
 index.html
 readme.html
 search.html
