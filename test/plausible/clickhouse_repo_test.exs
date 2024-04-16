@@ -30,7 +30,7 @@ defmodule Plausible.ClickhouseRepoTest do
 
   test "queries are logged with sentry metadata" do
     Plausible.ClickhouseRepo.query!("""
-    select * from system.settings where name like '%log_quer%'
+    select * from system.query_log where type = 1 order by event_time desc limit 50
     """)
     |> IO.inspect(label: :wtaf)
 
