@@ -36,8 +36,8 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
           user,
           label: "properties/123456",
           property: "properties/123456",
-          start_date: ~D[2024-02-20],
-          end_date: Date.utc_today(),
+          start_date: ~D[2024-01-01],
+          end_date: ~D[2024-01-31],
           access_token: "redacted_access_token",
           refresh_token: "redacted_refresh_token",
           token_expires_at: DateTime.to_iso8601(past)
