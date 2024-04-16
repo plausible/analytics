@@ -96,6 +96,7 @@ defmodule Plausible.Stats.Imported do
         where: i.visitors > 0,
         select: %{}
       )
+      |> maybe_filter_by_breakdown_property(query.filters[property], dim)
       |> group_imported_by(dim)
       |> select_imported_metrics(metrics)
 
@@ -152,6 +153,12 @@ defmodule Plausible.Stats.Imported do
       select: %{}
     )
   end
+
+  defp maybe_filter_by_breakdown_property(q, {:member, list}, dim) do
+    where(q, [i], field(i, ^dim) in ^list)
+  end
+
+  defp maybe_filter_by_breakdown_property(q, _, _), do: q
 
   defp select_imported_metrics(q, []), do: q
 
