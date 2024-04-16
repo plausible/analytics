@@ -6,9 +6,6 @@ defmodule Plausible.ClickhouseRepoTest do
 
     Plausible.ClickhouseRepo.all(from(u in "events_v2", select: true, limit: 0))
 
-     
-
-    
     Plausible.ClickhouseRepo.one(from(u in "events_v2", select: true, limit: 0),
       debug_label: "one"
     )
@@ -21,10 +18,6 @@ defmodule Plausible.ClickhouseRepoTest do
            ] = queries
   end
 
-     
-
-    
-
   test "queries are not kept in context for debugging purposes for non-superadmins" do
     Plausible.ClickhouseRepo.all(from(u in "events_v2", select: true, limit: 0))
 
@@ -33,13 +26,8 @@ defmodule Plausible.ClickhouseRepoTest do
     )
 
     assert Plausible.DebugReplayInfo.get_queries_from_context() == []
-  end     
+  end
 
-    
-
-     
-
-    
   test "queries are logged with sentry metadata" do
     Sentry.Context.set_user_context(%{id: 1})
     Sentry.Context.set_request_context(%{url: "http://example.com"})
