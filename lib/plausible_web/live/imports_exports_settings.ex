@@ -48,14 +48,16 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
         &(&1.live_status in [SiteImport.pending(), SiteImport.importing()])
       )
 
-    assigns = assign(assigns, :import_in_progress?, import_in_progress?)
+    at_maximum? = length(assigns.site_imports) >= assigns.max_imports
+
+    assigns = assign(assigns, import_in_progress?: import_in_progress?, at_maximum?: at_maximum?)
 
     ~H"""
     <div class="mt-5 flex gap-x-4">
       <.button_link
         class="w-36 h-20"
         theme="bright"
-        disabled={@import_in_progress?}
+        disabled={@import_in_progress? or @at_maximum?}
         href={Plausible.Google.API.import_authorize_url(@site.id, "import", legacy: false)}
       >
         <img src="/images/icon/google_analytics_logo.svg" alt="Google Analytics import" />
@@ -64,19 +66,25 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       <.button_link
         class="w-36 h-20"
         theme="bright"
-        disabled={@import_in_progress?}
+        disabled={
+          @import_in_progress? or @at_maximum? or not Plausible.csv_imports_exports_enabled?()
+        }
         href={"/#{URI.encode_www_form(@site.domain)}/settings/import"}
       >
         <img class="h-16" src="/images/icon/csv_logo.svg" alt="New CSV import" />
       </.button_link>
     </div>
 
-    <p :if={@import_in_progress?} class="mt-4 text-red-400 text-sm">
+    <p :if={@import_in_progress?} class="mt-4 text-gray-400 text-sm italic">
       No new imports can be started until the import in progress is completed or cancelled.
     </p>
 
+    <p :if={@at_maximum?} class="mt-4 text-gray-400 text-sm italic">
+      Maximum of <%= @max_imports %> imports is reached. Delete or cancel an existing import to start a new one.
+    </p>
+
     <header class="relative border-b border-gray-200 pb-4">
-      <h3 class="mt-8 text-md leading-6 font-medium text-gray-900 dark:text-gray-100">
+      <h3 class="mt-6 text-md leading-6 font-medium text-gray-900 dark:text-gray-100">
         Existing Imports
       </h3>
       <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
