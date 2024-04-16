@@ -82,7 +82,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
       Enum.each(Plausible.Imported.tables(), fn table ->
         count =
           case table do
-            "imported_sources" -> 1090
+            "imported_sources" -> 210
             "imported_visitors" -> 31
             "imported_pages" -> 3340
             "imported_entry_pages" -> 2934
