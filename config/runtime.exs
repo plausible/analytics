@@ -287,6 +287,11 @@ secure_cookie =
   |> get_var_from_path_or_env("SECURE_COOKIE", if(is_selfhost, do: "false", else: "true"))
   |> String.to_existing_atom()
 
+csv_imports_exports_enabled =
+  config_dir
+  |> get_var_from_path_or_env("CSV_IMPORTS_EXPORTS_ENABLED", "true")
+  |> String.to_existing_atom()
+
 license_key = get_var_from_path_or_env(config_dir, "LICENSE_KEY", "")
 
 config :plausible,
@@ -297,7 +302,8 @@ config :plausible,
   custom_script_name: custom_script_name,
   log_failed_login_attempts: log_failed_login_attempts,
   license_key: license_key,
-  persistent_cache_dir: persistent_cache_dir
+  persistent_cache_dir: persistent_cache_dir,
+  csv_imports_exports_enabled: csv_imports_exports_enabled
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
