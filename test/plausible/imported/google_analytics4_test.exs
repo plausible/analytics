@@ -36,8 +36,8 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
           user,
           label: "properties/123456",
           property: "properties/123456",
-          start_date: ~D[2024-02-20],
-          end_date: Date.utc_today(),
+          start_date: ~D[2024-01-01],
+          end_date: ~D[2024-01-31],
           access_token: "redacted_access_token",
           refresh_token: "redacted_refresh_token",
           token_expires_at: DateTime.to_iso8601(past)
@@ -82,7 +82,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
       Enum.each(Plausible.Imported.tables(), fn table ->
         count =
           case table do
-            "imported_sources" -> 1090
+            "imported_sources" -> 210
             "imported_visitors" -> 31
             "imported_pages" -> 3340
             "imported_entry_pages" -> 2934

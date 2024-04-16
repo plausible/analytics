@@ -30,6 +30,7 @@ defmodule Plausible.Ingestion.Event do
           | :site_ip_blocklist
           | :site_country_blocklist
           | :site_page_blocklist
+          | :site_hostname_allowlist
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -104,6 +105,7 @@ defmodule Plausible.Ingestion.Event do
   defp pipeline() do
     [
       drop_datacenter_ip: &drop_datacenter_ip/1,
+      drop_shield_rule_hostname: &drop_shield_rule_hostname/1,
       drop_shield_rule_page: &drop_shield_rule_page/1,
       drop_shield_rule_ip: &drop_shield_rule_ip/1,
       put_geolocation: &put_geolocation/1,
@@ -180,6 +182,14 @@ defmodule Plausible.Ingestion.Event do
       drop(event, :site_ip_blocklist)
     else
       event
+    end
+  end
+
+  defp drop_shield_rule_hostname(%__MODULE__{} = event) do
+    if Plausible.Shields.hostname_allowed?(event.domain, event.request.hostname) do
+      event
+    else
+      drop(event, :site_hostname_allowlist)
     end
   end
 

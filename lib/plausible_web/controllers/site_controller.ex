@@ -259,7 +259,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_shields(conn, %{"shield" => shield})
-      when shield in ["ip_addresses", "countries", "pages"] do
+      when shield in ["ip_addresses", "countries", "pages", "hostnames"] do
     site = conn.assigns.site
 
     conn

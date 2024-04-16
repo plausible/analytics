@@ -12,9 +12,8 @@ defmodule Plausible.Imported.CSVImporter do
   @impl true
   def label(), do: "CSV"
 
-  # NOTE: change it once CSV import is implemented
   @impl true
-  def email_template(), do: "google_analytics_import.html"
+  def email_template(), do: "csv_import.html"
 
   @impl true
   def parse_args(%{"uploads" => uploads, "storage" => storage}) do
