@@ -23,15 +23,17 @@ defmodule PlausibleWeb.Plugs.InjectDebugHeadersTest do
              ]
   end
 
-  test "skips \\n\\r" do
+  test "skips invalid header chars" do
     :ok = Plausible.DebugReplayInfo.track_query("\nfoo", "trap1")
     :ok = Plausible.DebugReplayInfo.track_query("\rbar", "trap2")
+    :ok = Plausible.DebugReplayInfo.track_query("\x00baz", "trap3")
     conn = :get |> conn("/") |> InjectDebugHeaders.call() |> send_resp(200, "")
 
     assert Enum.filter(conn.resp_headers, fn {k, _} -> String.starts_with?(k, @prefix) end) ==
              [
                {"x-plausible-query-000-trap1", "foo"},
-               {"x-plausible-query-001-trap2", "bar"}
+               {"x-plausible-query-001-trap2", "bar"},
+               {"x-plausible-query-001-trap2", "baz"}
              ]
   end
 end
