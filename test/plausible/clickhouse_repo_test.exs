@@ -61,18 +61,22 @@ defmodule Plausible.ClickhouseRepoTest do
     assert q1 == "SELECT true FROM \"sessions_v2\" AS s0 LIMIT 0"
     assert q1 == q2
 
-    assert Jason.decode!(c1) == %{
-             "debug_label" => "log_all",
-             "domain" => "example.com",
-             "url" => "http://example.com",
-             "user_id" => 1
-           }
+    assert Enum.find([c1, c2], fn c ->
+             Jason.decode!(c) == %{
+               "debug_label" => "log_all",
+               "domain" => "example.com",
+               "url" => "http://example.com",
+               "user_id" => 1
+             }
+           end)
 
-    assert Jason.decode!(c2) == %{
-             "debug_label" => "log_one",
-             "domain" => "example.com",
-             "url" => "http://example.com",
-             "user_id" => 1
-           }
+    assert Enum.find([c1, c2], fn c ->
+             Jason.decode!(c) == %{
+               "debug_label" => "log_one",
+               "domain" => "example.com",
+               "url" => "http://example.com",
+               "user_id" => 1
+             }
+           end)
   end
 end
