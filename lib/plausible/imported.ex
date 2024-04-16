@@ -187,6 +187,7 @@ defmodule Plausible.Imported do
     |> Imported.list_all_imports(Imported.SiteImport.completed())
     |> Enum.reject(&(Date.diff(&1.end_date, &1.start_date) < 2))
     |> Enum.map(&Date.range(&1.start_date, &1.end_date))
+    |> Enum.sort_by(& &1.first, Date)
   end
 
   @spec get_cutoff_date(Site.t()) :: Date.t()
