@@ -380,29 +380,19 @@ defmodule Plausible.Stats.Imported do
 
   defp select_joined_metrics(q, [:visits | rest]) do
     q
-    |> select_merge([s, i], %{
-      :visits => fragment("? + ?", s.visits, i.visits)
-    })
+    |> select_merge([s, i], %{visits: s.visits + i.visits})
     |> select_joined_metrics(rest)
   end
 
   defp select_joined_metrics(q, [:visitors | rest]) do
     q
-    |> select_merge([s, i], %{
-      :visitors =>
-        selected_as(
-          fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors),
-          :visitors
-        )
-    })
+    |> select_merge([s, i], %{visitors: selected_as(s.visitors + i.visitors, :visitors)})
     |> select_joined_metrics(rest)
   end
 
   defp select_joined_metrics(q, [:pageviews | rest]) do
     q
-    |> select_merge([s, i], %{
-      pageviews: fragment("coalesce(?, 0) + coalesce(?, 0)", s.pageviews, i.pageviews)
-    })
+    |> select_merge([s, i], %{pageviews: s.pageviews + i.pageviews})
     |> select_joined_metrics(rest)
   end
 
@@ -411,13 +401,7 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([s, i], %{
       views_per_visit:
         fragment(
-          """
-          if(
-            coalesce(?, 0) + coalesce(?, 0) > 0,
-            round((? + ? * coalesce(?, 0)) / (coalesce(?, 0) + coalesce(?, 0)), 2),
-            0
-          )
-          """,
+          "if(? + ? > 0, round((? + ? * ?) / (? + ?), 2), 0)",
           s.__internal_visits,
           i.__internal_visits,
           i.pageviews,
@@ -435,13 +419,7 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([s, i], %{
       bounce_rate:
         fragment(
-          """
-          if(
-            coalesce(?, 0) + coalesce(?, 0) > 0,
-            round(100 * (coalesce(?, 0) + coalesce((? * ? / 100), 0)) / (coalesce(?, 0) + coalesce(?, 0))),
-            0
-          )
-          """,
+          "if(? + ? > 0, round(100 * (? + (? * ? / 100)) / (? + ?)), 0)",
           s.__internal_visits,
           i.__internal_visits,
           i.bounces,
@@ -490,7 +468,7 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp apply_order_by(q, [:visitors | rest]) do
-    order_by(q, [s, i], desc: fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors))
+    order_by(q, [s, i], desc: s.visitors + i.visitors)
     |> apply_order_by(rest)
   end
 
