@@ -17,7 +17,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox.StaticSearchTest do
       assert [{_, "cruel hello world"}] = StaticSearch.suggest("cruel hello", options)
     end
 
-    test "favours similiarity" do
+    test "favours similarity" do
       options = fake_options(["melon", "hello", "yellow"])
       assert [{_, "hello"}, {_, "yellow"}, {_, "melon"}] = StaticSearch.suggest("hell", options)
     end
