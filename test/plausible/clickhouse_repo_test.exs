@@ -29,9 +29,10 @@ defmodule Plausible.ClickhouseRepoTest do
   end
 
   test "queries are logged with sentry metadata" do
-    Sentry.Context.set_user_context(%{id: 1})
-    Sentry.Context.set_request_context(%{url: "http://example.com"})
-    Sentry.Context.set_extra_context(%{domain: "example.com", site_id: 1})
+    Plausible.ClickhouseRepo.query!("""
+    select * from system.settings where name like '%log_quer%'
+    """)
+    |> IO.inspect(label: :wtaf)
 
     Plausible.ClickhouseRepo.all(from(u in "sessions_v2", select: true, limit: 0),
       debug_label: "log_all"
