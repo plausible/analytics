@@ -3,6 +3,7 @@ defmodule Plausible.Stats.FilterSuggestions do
   use Plausible.ClickhouseRepo
   use Plausible.Stats.Fragments
   import Plausible.Stats.Base
+  import Ecto.Query
   alias Plausible.Stats.Query
 
   def filter_suggestions(site, query, "country", filter_search) do
@@ -232,10 +233,21 @@ defmodule Plausible.Stats.FilterSuggestions do
           )
 
         :hostname ->
-          from(e in q,
-            select: e.hostname,
-            where: fragment("? ilike ?", e.hostname, ^filter_query)
-          )
+          q =
+            from(e in q,
+              select: e.hostname,
+              where: fragment("? ilike ?", e.hostname, ^filter_query)
+            )
+
+          case Plausible.Shields.allowed_hostname_patterns(site.domain) do
+            :all ->
+              q
+
+            limited_to when is_list(limited_to) ->
+              from(e in q,
+                where: fragment("multiMatchAny(?, ?)", e.hostname, ^limited_to)
+              )
+          end
 
         :entry_page ->
           from(e in q,
