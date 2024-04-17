@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
             Accept incoming traffic only from familiar hostnames.
           </p>
 
-          <PlausibleWeb.Components.Generic.docs_info slug="top-hostnames#block-traffic-from-specific-hostnames-or-sections" />
+          <PlausibleWeb.Components.Generic.docs_info slug="excluding#exclude-visits-by-hostname" />
         </header>
         <div class="border-t border-gray-200 pt-4 grid">
           <div
