@@ -49,8 +49,4 @@ defmodule Plausible do
       unquote(small_build?)
     end
   end
-
-  def csv_imports_exports_enabled?() do
-    Application.fetch_env!(:plausible, :csv_imports_exports_enabled)
-  end
 end
