@@ -424,7 +424,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
              "visitors" => 1,
              "visits" => 1,
              "bounce_rate" => nil,
-             "visit_duration" => nil,
+             "visit_duration" => nil
            }
   end
 end
