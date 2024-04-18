@@ -4,7 +4,6 @@ import React, { Fragment, useCallback, useEffect } from 'react';
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
 import { isKeyPressed } from '../../keybinding.js'
-import { monthsBetweenDates } from '../../util/date.js'
 
 const INTERVAL_LABELS = {
   'minute': 'Minutes',
