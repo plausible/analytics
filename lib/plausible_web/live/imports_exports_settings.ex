@@ -35,10 +35,13 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       |> assign_new(:current_user, fn ->
         Plausible.Repo.get(Plausible.Auth.User, user_id)
       end)
+      |> assign_new(:max_imports, fn %{site: site} ->
+        Imported.max_complete_imports(site)
+      end)
 
     :ok = Imported.listen()
 
-    {:ok, assign(socket, max_imports: Imported.max_complete_imports())}
+    {:ok, socket}
   end
 
   def render(assigns) do
@@ -79,7 +82,7 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
         class="w-36 h-20"
         theme="bright"
         disabled={@import_in_progress? or @at_maximum?}
-        href={Plausible.Google.API.import_authorize_url(@site.id, "import", legacy: false)}
+        href={Plausible.Google.API.import_authorize_url(@site.id)}
       >
         <img src="/images/icon/google_analytics_logo.svg" alt="Google Analytics import" />
       </.button_link>

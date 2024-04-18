@@ -59,9 +59,7 @@ defmodule PlausibleWeb.LayoutView do
       end,
       %{key: "Custom Properties", value: "properties", icon: :document_text},
       %{key: "Integrations", value: "integrations", icon: :arrow_path_rounded_square},
-      if FunWithFlags.enabled?(:imports_exports, for: conn.assigns.site) do
-        %{key: "Imports & Exports", value: "imports-exports", icon: :arrows_up_down}
-      end,
+      %{key: "Imports & Exports", value: "imports-exports", icon: :arrows_up_down},
       %{
         key: "Shields",
         icon: :shield_exclamation,

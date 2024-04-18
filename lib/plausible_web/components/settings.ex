@@ -12,5 +12,4 @@ defmodule PlausibleWeb.Components.Settings do
   require Plausible.Imported.SiteImport
 
   embed_templates("../templates/site/settings_search_console.html")
-  embed_templates("../templates/site/settings_google_import.html")
 end
