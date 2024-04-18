@@ -80,6 +80,34 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
       )
     end
 
+    test "send email after successful import only to the user who ran the import", %{
+      import_opts: import_opts
+    } do
+      owner = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
+      site = insert(:site, members: [owner])
+
+      importing_user = insert(:user)
+
+      insert(:site_membership, site: site, user: importing_user, role: :admin)
+
+      {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, importing_user, import_opts)
+
+      assert :ok =
+               job
+               |> Repo.reload!()
+               |> ImportAnalytics.perform()
+
+      assert_email_delivered_with(
+        to: [importing_user],
+        subject: "Noop data imported for #{site.domain}"
+      )
+
+      refute_email_delivered_with(
+        to: [owner],
+        subject: "Noop data imported for #{site.domain}"
+      )
+    end
+
     test "updates site import record after failed import", %{import_opts: import_opts} do
       user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
       site = insert(:site, members: [user])
@@ -134,6 +162,35 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
 
       assert_email_delivered_with(
         to: [user],
+        subject: "Noop import failed for #{site.domain}"
+      )
+    end
+
+    test "sends email after failed import only to the user who ran the import", %{
+      import_opts: import_opts
+    } do
+      owner = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
+      site = insert(:site, members: [owner])
+      import_opts = Keyword.put(import_opts, :error, true)
+
+      importing_user = insert(:user)
+
+      insert(:site_membership, site: site, user: importing_user, role: :admin)
+
+      {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, importing_user, import_opts)
+
+      assert {:discard, _} =
+               job
+               |> Repo.reload!()
+               |> ImportAnalytics.perform()
+
+      assert_email_delivered_with(
+        to: [importing_user],
+        subject: "Noop import failed for #{site.domain}"
+      )
+
+      refute_email_delivered_with(
+        to: [owner],
         subject: "Noop import failed for #{site.domain}"
       )
     end
