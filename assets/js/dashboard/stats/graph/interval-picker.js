@@ -30,6 +30,18 @@ function validIntervals(site, query) {
   }
 }
 
+function getDefaultInterval(period, validIntervals) {
+  const defaultByPeriod = {
+    'day': 'hour',
+    '7d': 'date',
+    '6mo': 'month',
+    '12mo': 'month',
+    'year': 'month'
+  }
+
+  return defaultByPeriod[period] || validIntervals[0]
+}
+
 function getStoredInterval(period, domain) {
   return storage.getItem(`interval__${period}__${domain}`)
 }
@@ -53,7 +65,7 @@ export const getCurrentInterval = function(site, query) {
   const options = validIntervals(site, query)
 
   const storedInterval = getStoredInterval(query.period, site.domain)
-  const defaultInterval = [...options].pop()
+  const defaultInterval = getDefaultInterval(query.period, options)
 
   if (storedInterval && options.includes(storedInterval)) {
     return storedInterval
