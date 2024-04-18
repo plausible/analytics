@@ -4,7 +4,6 @@ import React, { Fragment, useCallback, useEffect } from 'react';
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
 import { isKeyPressed } from '../../keybinding.js'
-import { monthsBetweenDates } from '../../util/date.js'
 
 const INTERVAL_LABELS = {
   'minute': 'Minutes',
@@ -15,10 +14,44 @@ const INTERVAL_LABELS = {
 }
 
 function validIntervals(site, query) {
-  if (query.period === "custom" && monthsBetweenDates(query.from, query.to) > 12) {
-    return ["week", "month"]
+  if (query.period === 'custom') {
+    if (query.to.diff(query.from, 'days') < 7) {
+      return ['date']
+    } else if (query.to.diff(query.from, 'months') < 1) {
+      return ['date', 'week']
+    } else if (query.to.diff(query.from, 'months') < 12) {
+      return ['date', 'week', 'month']
+    } else {
+      return ['week', 'month']
+    }
   } else {
     return site.validIntervalsByPeriod[query.period]
+  }
+}
+
+function getDefaultInterval(query, validIntervals) {
+  const defaultByPeriod = {
+    'day': 'hour',
+    '7d': 'date',
+    '6mo': 'month',
+    '12mo': 'month',
+    'year': 'month'
+  }
+
+  if (query.period === 'custom') {
+    return defaultForCustomPeriod(query.from, query.to)
+  } else {
+    return defaultByPeriod[query.period] || validIntervals[0]
+  }
+}
+
+function defaultForCustomPeriod(from, to) {
+  if (to.diff(from, 'days') < 30) {
+    return 'date'
+  } else if (to.diff(from, 'months') < 6) {
+    return 'week'
+  } else {
+    return 'month'
   }
 }
 
@@ -45,7 +78,7 @@ export const getCurrentInterval = function(site, query) {
   const options = validIntervals(site, query)
 
   const storedInterval = getStoredInterval(query.period, site.domain)
-  const defaultInterval = [...options].pop()
+  const defaultInterval = getDefaultInterval(query, options)
 
   if (storedInterval && options.includes(storedInterval)) {
     return storedInterval
