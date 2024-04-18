@@ -50,7 +50,14 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
 
     at_maximum? = length(assigns.site_imports) >= assigns.max_imports
 
-    assigns = assign(assigns, import_in_progress?: import_in_progress?, at_maximum?: at_maximum?)
+    csv_imports_exports_enabled? = FunWithFlags.enabled?(:csv_imports_exports, for: assigns.site)
+
+    assigns =
+      assign(assigns,
+        import_in_progress?: import_in_progress?,
+        at_maximum?: at_maximum?,
+        csv_imports_exports_enabled?: csv_imports_exports_enabled?
+      )
 
     ~H"""
     <div class="mt-5 flex gap-x-4">
@@ -64,11 +71,10 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       </.button_link>
 
       <.button_link
+        :if={@csv_imports_exports_enabled?}
         class="w-36 h-20"
         theme="bright"
-        disabled={
-          @import_in_progress? or @at_maximum? or not Plausible.csv_imports_exports_enabled?()
-        }
+        disabled={@import_in_progress? or @at_maximum?}
         href={"/#{URI.encode_www_form(@site.domain)}/settings/import"}
       >
         <img class="h-16" src="/images/icon/csv_logo.svg" alt="New CSV import" />
