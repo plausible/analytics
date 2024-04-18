@@ -353,13 +353,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp shared_link_cookie_name(slug), do: "shared-link-" <> slug
 
-  defp get_flags(user, site) do
-    %{
-      hostname_filter:
-        FunWithFlags.enabled?(:hostname_filter, for: user) ||
-          FunWithFlags.enabled?(:hostname_filter, for: site)
-    }
-  end
+  defp get_flags(_user, _site), do: %{}
 
   defp is_dbip() do
     on_full_build do
