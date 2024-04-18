@@ -118,12 +118,6 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       <li :for={entry <- @site_imports} class="py-4 flex items-center justify-between space-x-4">
         <div class="flex flex-col">
           <p class="text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">
-            <%= Plausible.Imported.SiteImport.label(entry.site_import) %>
-            <span :if={entry.live_status == SiteImport.completed()} class="text-xs font-normal">
-              (<%= PlausibleWeb.StatsView.large_number_format(
-                Map.get(@pageview_counts, entry.site_import.id, 0)
-              ) %> page views)
-            </span>
             <Heroicons.clock
               :if={entry.live_status == SiteImport.pending()}
               class="inline-block h-6 w-5 text-indigo-600 dark:text-green-600"
@@ -140,6 +134,12 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
               :if={entry.live_status == SiteImport.failed()}
               class="inline-block h-6 w-5 text-indigo-600 dark:text-green-600"
             />
+            <%= Plausible.Imported.SiteImport.label(entry.site_import) %>
+            <span :if={entry.live_status == SiteImport.completed()} class="text-xs font-normal">
+              (<%= PlausibleWeb.StatsView.large_number_format(
+                Map.get(@pageview_counts, entry.site_import.id, 0)
+              ) %> page views)
+            </span>
           </p>
           <p class="text-sm leading-5 text-gray-500 dark:text-gray-200">
             From <%= format_date(entry.site_import.start_date) %> to <%= format_date(
