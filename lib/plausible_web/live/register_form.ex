@@ -301,17 +301,24 @@ defmodule PlausibleWeb.Live.RegisterForm do
   defp add_user(socket, user) do
     case Repo.insert(user) do
       {:ok, _user} ->
-        metrics_params =
-          if socket.assigns.invitation do
-            %{
-              event_name: "Signup via invitation",
-              params: %{u: "/register/invitation/:invitation_id"}
-            }
-          else
-            %{event_name: "Signup", params: %{}}
-          end
+        on_full_build do
+          metrics_params =
+            if socket.assigns.invitation do
+              %{
+                event_name: "Signup via invitation",
+                params: %{
+                  url:
+                    Path.join(PlausibleWeb.Endpoint.url(), "/register/invitation/:invitation_id")
+                }
+              }
+            else
+              %{event_name: "Signup", params: %{}}
+            end
 
-        {:noreply, push_event(socket, "send-metrics", metrics_params)}
+          {:noreply, push_event(socket, "send-metrics", metrics_params)}
+        else
+          {:noreply, socket}
+        end
 
       {:error, changeset} ->
         {:noreply,
