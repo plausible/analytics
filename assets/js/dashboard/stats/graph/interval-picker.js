@@ -29,7 +29,7 @@ function validIntervals(site, query) {
   }
 }
 
-function getDefaultInterval(period, validIntervals) {
+function getDefaultInterval(query, validIntervals) {
   const defaultByPeriod = {
     'day': 'hour',
     '7d': 'date',
@@ -38,7 +38,21 @@ function getDefaultInterval(period, validIntervals) {
     'year': 'month'
   }
 
-  return defaultByPeriod[period] || validIntervals[0]
+  if (query.period === 'custom') {
+    return defaultForCustomPeriod(query.from, query.to)
+  } else {
+    return defaultByPeriod[query.period] || validIntervals[0]
+  }
+}
+
+function defaultForCustomPeriod(from, to) {
+  if (to.diff(from, 'days') < 30) {
+    return 'date'
+  } else if (to.diff(from, 'months') < 6) {
+    return 'week'
+  } else {
+    return 'month'
+  }
 }
 
 function getStoredInterval(period, domain) {
@@ -64,7 +78,7 @@ export const getCurrentInterval = function(site, query) {
   const options = validIntervals(site, query)
 
   const storedInterval = getStoredInterval(query.period, site.domain)
-  const defaultInterval = getDefaultInterval(query.period, options)
+  const defaultInterval = getDefaultInterval(query, options)
 
   if (storedInterval && options.includes(storedInterval)) {
     return storedInterval
