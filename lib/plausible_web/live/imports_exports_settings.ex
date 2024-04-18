@@ -52,10 +52,24 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
 
     csv_imports_exports_enabled? = FunWithFlags.enabled?(:csv_imports_exports, for: assigns.site)
 
+    import_warning =
+      cond do
+        import_in_progress? ->
+          "No new imports can be started until the import in progress is completed or cancelled."
+
+        at_maximum? ->
+          "Maximum of #{assigns.max_imports} imports is reached. " <>
+            "Delete or cancel an existing import to start a new one."
+
+        true ->
+          nil
+      end
+
     assigns =
       assign(assigns,
         import_in_progress?: import_in_progress?,
         at_maximum?: at_maximum?,
+        import_warning: import_warning,
         csv_imports_exports_enabled?: csv_imports_exports_enabled?
       )
 
@@ -81,12 +95,8 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       </.button_link>
     </div>
 
-    <p :if={@import_in_progress?} class="mt-4 text-gray-400 text-sm italic">
-      No new imports can be started until the import in progress is completed or cancelled.
-    </p>
-
-    <p :if={@at_maximum?} class="mt-4 text-gray-400 text-sm italic">
-      Maximum of <%= @max_imports %> imports is reached. Delete or cancel an existing import to start a new one.
+    <p :if={@import_warning} class="mt-4 text-gray-400 text-sm italic">
+      <%= @import_warning %>
     </p>
 
     <header class="relative border-b border-gray-200 pb-4">
