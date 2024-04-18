@@ -681,6 +681,18 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "(98 page views)"
     end
 
+    test "disables import buttons when imports are at maximum", %{conn: conn, site: site} do
+      insert_list(Plausible.Imported.max_complete_imports(), :site_import,
+        site: site,
+        status: SiteImport.completed()
+      )
+
+      conn = get(conn, "/#{site.domain}/settings/imports-exports")
+
+      assert html_response(conn, 200) =~
+               "Maximum of #{Plausible.Imported.max_complete_imports()} imports is reached."
+    end
+
     test "disables import buttons when there's import in progress", %{conn: conn, site: site} do
       _site_import1 = insert(:site_import, site: site, status: SiteImport.completed())
       _site_import2 = insert(:site_import, site: site, status: SiteImport.importing())

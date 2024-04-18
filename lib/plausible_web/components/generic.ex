@@ -71,13 +71,21 @@ defmodule PlausibleWeb.Components.Generic do
   def button_link(assigns) do
     theme_class =
       if assigns.disabled do
-        "bg-gray-400 text-white dark:text-white dark:text-gray-400 dark:bg-gray-700 pointer-events-none cursor-default"
+        "bg-gray-400 text-white dark:text-white dark:text-gray-400 dark:bg-gray-700 cursor-not-allowed"
       else
         @button_themes[assigns.theme]
       end
 
+    onclick =
+      if assigns.disabled do
+        "return false;"
+      else
+        assigns[:onclick]
+      end
+
     assigns =
       assign(assigns,
+        onclick: onclick,
         button_base_class: @button_base_class,
         theme_class: theme_class
       )
@@ -85,6 +93,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <.link
       href={@href}
+      onclick={@onclick}
       class={[
         @button_base_class,
         @theme_class,
