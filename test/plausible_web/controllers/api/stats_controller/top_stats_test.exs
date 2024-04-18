@@ -460,6 +460,62 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                |> Map.fetch!("top_stats")
                |> Enum.find(&(&1["name"] == "Time on page"))
     end
+
+    test "calculated time on page in a manner similar to GA4", %{conn: conn, site: site} do
+      s1 = @user_id
+
+      now = ~N[2021-01-01 00:00:00]
+      later = fn seconds -> NaiveDateTime.add(now, seconds) end
+
+      # user lands on page /A and spends 1 minute there
+      # then navigates to another page and spends 5 minutes there
+      # then navigates back to page /A and spends another 3 minutes there
+      # then navigates to another page and leaves the page from there
+      populate_stats(site, [
+        build(:pageview, user_id: s1, timestamp: now, pathname: "/a"),
+        build(:pageview, user_id: s1, timestamp: later.(60), pathname: "/b"),
+        build(:pageview, user_id: s1, timestamp: later.(60 + 300), pathname: "/a"),
+        build(:pageview, user_id: s1, timestamp: later.(60 + 300 + 180), pathname: "/d")
+      ])
+
+      filters = Jason.encode!(%{page: "/a"})
+      path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
+
+      assert %{"name" => "Time on page", "value" => 120} ==
+               conn
+               |> get(path)
+               |> json_response(200)
+               |> Map.fetch!("top_stats")
+               |> Enum.find(&(&1["name"] == "Time on page"))
+    end
+
+    test "calculated time on page in a manner different from GA4", %{conn: conn, site: site} do
+      s1 = @user_id
+
+      now = ~N[2021-01-01 00:00:00]
+      later = fn seconds -> NaiveDateTime.add(now, seconds) end
+
+      # user lands on page /A and spends 1 minute there
+      # then navigates to another page and spends 5 minutes there
+      # then navigates back to page /A and spends another 3 minutes there
+      # then navigates to another page and leaves the page from there
+      populate_stats(site, [
+        build(:pageview, user_id: s1, timestamp: now, pathname: "/a"),
+        build(:pageview, user_id: s1, timestamp: later.(60), pathname: "/b"),
+        build(:pageview, user_id: s1, timestamp: later.(60 + 300), pathname: "/a"),
+        build(:pageview, user_id: s1, timestamp: later.(60 + 300 + 180), pathname: "/d")
+      ])
+
+      filters = Jason.encode!(%{page: "/a"})
+      path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
+
+      assert %{"name" => "Time on page", "value" => 120} ==
+               conn
+               |> get(path)
+               |> json_response(200)
+               |> Map.fetch!("top_stats")
+               |> Enum.find(&(&1["name"] == "Time on page"))
+    end
   end
 
   describe "GET /api/stats/top-stats - with imported data" do
