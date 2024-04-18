@@ -15,8 +15,16 @@ const INTERVAL_LABELS = {
 }
 
 function validIntervals(site, query) {
-  if (query.period === "custom" && monthsBetweenDates(query.from, query.to) > 12) {
-    return ["week", "month"]
+  if (query.period === 'custom') {
+    if (query.to.diff(query.from, 'days') < 7) {
+      return ['date']
+    } else if (query.to.diff(query.from, 'months') < 1) {
+      return ['date', 'week']
+    } else if (query.to.diff(query.from, 'months') < 12) {
+      return ['date', 'week', 'month']
+    } else {
+      return ['week', 'month']
+    }
   } else {
     return site.validIntervalsByPeriod[query.period]
   }
