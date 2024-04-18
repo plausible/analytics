@@ -164,6 +164,29 @@ defmodule Plausible.ImportedTest do
                Imported.clamp_dates(site, ~D[2019-03-21], ~D[2024-01-12])
     end
 
+    test "does not depend on the order of insertion of site imports (regression fix)" do
+      site = insert(:site)
+
+      _existing_import1 =
+        insert(:site_import,
+          site: site,
+          start_date: ~D[2020-10-14],
+          end_date: ~D[2024-04-01],
+          status: :completed
+        )
+
+      _existing_import2 =
+        insert(:site_import,
+          site: site,
+          start_date: ~D[2012-01-18],
+          end_date: ~D[2018-03-09],
+          status: :completed
+        )
+
+      assert {:ok, ~D[2018-03-09], ~D[2020-10-14]} =
+               Imported.clamp_dates(site, ~D[2012-01-18], ~D[2018-03-09])
+    end
+
     test "does not alter the dates when there are no imports and no native stats" do
       site = insert(:site)
 
