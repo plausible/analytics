@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D15B3CF1.js"></script>
+    <script src="dist/sidebar_items-2257A2DE.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -210,6 +210,14 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#get_legacy_import/1" translate="no">get_legacy_import(site)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#get_occupied_date_ranges/1" translate="no">get_occupied_date_ranges(site)</a>
 
       </div>
@@ -304,7 +312,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">clamp_dates(site, start_date, end_date)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L163" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L150" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -333,7 +341,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">clamp_dates(occupied_ranges, cutoff_date, start_date, end_date)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L172" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L159" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -362,7 +370,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">delete_imports_for_site(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L155" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L142" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -390,7 +398,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">get_cutoff_date(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L194" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L181" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -447,7 +455,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">get_imports_date_range(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L127" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L130" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -469,6 +477,34 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
 
   </section>
 </section>
+<section class="detail" id="get_legacy_import/1">
+
+  <div class="detail-header">
+    <a href="#get_legacy_import/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_legacy_import(site)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L71" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_legacy_import(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: <a href="Plausible.Imported.SiteImport.html#t:t/0">Plausible.Imported.SiteImport.t</a>() | nil</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="get_occupied_date_ranges/1">
 
   <div class="detail-header">
@@ -478,7 +514,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">get_occupied_date_ranges(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L185" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L172" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -508,7 +544,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">list_all_imports(site, status \\ nil)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L73" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L83" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -538,7 +574,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">list_complete_import_ids(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L103" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L106" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -566,7 +602,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">listen()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L70" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L80" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -644,7 +680,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">other_imports_in_progress?(site_import)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L87" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L90" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
