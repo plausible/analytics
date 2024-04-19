@@ -7,9 +7,5 @@ defmodule PlausibleWeb.Components.Settings do
 
   import PlausibleWeb.Components.Generic
 
-  alias Plausible.Imported.SiteImport
-
-  require Plausible.Imported.SiteImport
-
   embed_templates("../templates/site/settings_search_console.html")
 end
