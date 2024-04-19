@@ -461,7 +461,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                |> Enum.find(&(&1["name"] == "Time on page"))
     end
 
-    test "calculated time on page in a manner similar to GA4", %{conn: conn, site: site} do
+    test "calculates time on page in a manner similar to GA4", %{conn: conn, site: site} do
       s1 = @user_id
 
       now = ~N[2021-01-01 00:00:00]
@@ -489,7 +489,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                |> Enum.find(&(&1["name"] == "Time on page"))
     end
 
-    test "calculated time on page in a manner different from GA4", %{conn: conn, site: site} do
+    test "calculates time on page in a manner different from GA4", %{conn: conn, site: site} do
       s1 = @user_id
 
       now = ~N[2021-01-01 00:00:00]
