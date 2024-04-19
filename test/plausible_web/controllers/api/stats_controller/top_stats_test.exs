@@ -475,13 +475,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:pageview, user_id: s1, timestamp: now, pathname: "/a"),
         build(:pageview, user_id: s1, timestamp: later.(60), pathname: "/b"),
         build(:pageview, user_id: s1, timestamp: later.(60 + 300), pathname: "/a"),
-        build(:pageview, user_id: s1, timestamp: later.(60 + 300 + 180), pathname: "/d")
+        build(:pageview, user_id: s1, timestamp: later.(60 + 300 + 180), pathname: "/b")
       ])
 
       filters = Jason.encode!(%{page: "/a"})
       path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
 
-      assert %{"name" => "Time on page", "value" => 120} ==
+      assert %{"name" => "Time on page", "value" => 240} ==
                conn
                |> get(path)
                |> json_response(200)
