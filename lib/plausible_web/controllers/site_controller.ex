@@ -237,22 +237,11 @@ defmodule PlausibleWeb.SiteController do
         Plausible.Google.API.fetch_verified_properties(site.google_auth)
       end
 
-    legacy_import = Plausible.Imported.get_legacy_import(site)
-
-    imported_pageviews =
-      if legacy_import do
-        Plausible.Stats.Clickhouse.imported_pageview_count(site)
-      else
-        0
-      end
-
     has_plugins_tokens? = Plausible.Plugins.API.Tokens.any?(site)
 
     conn
     |> render("settings_integrations.html",
       site: site,
-      legacy_import: legacy_import,
-      imported_pageviews: imported_pageviews,
       has_plugins_tokens?: has_plugins_tokens?,
       search_console_domains: search_console_domains,
       dogfood_page_path: "/:dashboard/settings/integrations",
@@ -278,18 +267,13 @@ defmodule PlausibleWeb.SiteController do
   def settings_imports_exports(conn, _params) do
     site = conn.assigns.site
 
-    if FunWithFlags.enabled?(:imports_exports, for: site) do
-      conn
-      |> render("settings_imports_exports.html",
-        site: site,
-        dogfood_page_path: "/:dashboard/settings/imports-exports",
-        connect_live_socket: true,
-        layout: {PlausibleWeb.LayoutView, "site_settings.html"}
-      )
-    else
-      conn
-      |> redirect(external: Routes.site_path(conn, :settings, site.domain))
-    end
+    conn
+    |> render("settings_imports_exports.html",
+      site: site,
+      dogfood_page_path: "/:dashboard/settings/imports-exports",
+      connect_live_socket: true,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
   end
 
   def update_google_auth(conn, %{"google_auth" => attrs}) do

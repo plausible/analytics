@@ -4,7 +4,6 @@
   <%= hidden_input(f, :access_token, value: @access_token) %>
   <%= hidden_input(f, :refresh_token, value: @refresh_token) %>
   <%= hidden_input(f, :expires_at, value: @expires_at) %>
-  <%= hidden_input(f, :legacy, value: @legacy) %>
 
   <div class="mt-6 text-sm text-gray-500 dark:text-gray-200">
     Choose the property or view in your Google Analytics account that will be imported to the <%= @site.domain %> dashboard.

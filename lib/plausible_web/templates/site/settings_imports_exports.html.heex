@@ -4,7 +4,12 @@
       Import Data
     </h2>
     <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-      Import existing data from external sources. Pick one of the options below to start a new import.
+      Import existing data from external sources.
+      <%= if FunWithFlags.enabled?(:csv_imports_exports, for: @site) do %>
+        Pick one of the options below to start a new import.
+      <% else %>
+        Click below to start a new import.
+      <% end %>
     </p>
 
     <PlausibleWeb.Components.Generic.docs_info slug="google-analytics-import" />

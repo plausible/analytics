@@ -4,7 +4,6 @@
   <%= hidden_input(f, :access_token, value: @access_token) %>
   <%= hidden_input(f, :refresh_token, value: @refresh_token) %>
   <%= hidden_input(f, :expires_at, value: @expires_at) %>
-  <%= hidden_input(f, :legacy, value: @legacy) %>
 
   <div class="mt-6 text-sm text-gray-500 dark:text-gray-200">
     Stats from this
@@ -56,8 +55,7 @@
             property_or_view: @selected_property_or_view,
             access_token: @access_token,
             refresh_token: @refresh_token,
-            expires_at: @expires_at,
-            legacy: @legacy
+            expires_at: @expires_at
           )
         }
         class="underline text-indigo-600"

@@ -3,14 +3,6 @@
   search_console_domains={@search_console_domains}
 />
 
-<%= if not FunWithFlags.enabled?(:imports_exports, for: @site) do %>
-  <PlausibleWeb.Components.Settings.settings_google_import
-    site={@site}
-    imported_pageviews={@imported_pageviews}
-    legacy_import={@legacy_import}
-  />
-<% end %>
-
 <section
   :if={@has_plugins_tokens? || @conn.query_params["new_token"]}
   class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden"

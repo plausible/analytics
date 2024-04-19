@@ -679,7 +679,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "disables import buttons when imports are at maximum", %{conn: conn, site: site} do
-      insert_list(Plausible.Imported.max_complete_imports(), :site_import,
+      insert_list(Plausible.Imported.max_complete_imports(site), :site_import,
         site: site,
         status: SiteImport.completed()
       )
@@ -687,7 +687,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
 
       assert html_response(conn, 200) =~
-               "Maximum of #{Plausible.Imported.max_complete_imports()} imports is reached."
+               "Maximum of #{Plausible.Imported.max_complete_imports(site)} imports is reached."
     end
 
     test "considers older legacy imports when showing pageview count", %{conn: conn, site: site} do

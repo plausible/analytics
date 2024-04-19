@@ -43,8 +43,14 @@ defmodule Plausible.Imported do
   @spec tables() :: [String.t()]
   def tables, do: @table_names
 
-  @spec max_complete_imports() :: non_neg_integer()
-  def max_complete_imports(), do: @max_complete_imports
+  @spec max_complete_imports(Site.t()) :: non_neg_integer()
+  def max_complete_imports(site) do
+    if FunWithFlags.enabled?(:imports_exports, for: site) do
+      @max_complete_imports
+    else
+      1
+    end
+  end
 
   @spec load_import_data(Site.t()) :: Site.t()
   def load_import_data(%{import_data_loaded: true} = site), do: site

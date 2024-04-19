@@ -16,16 +16,14 @@ defmodule Plausible.Google.API do
 
   @verified_permission_levels ["siteOwner", "siteFullUser", "siteRestrictedUser"]
 
-  def search_console_authorize_url(site_id, redirect_to) do
+  def search_console_authorize_url(site_id) do
     "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@search_console_scope}&state=" <>
-      Jason.encode!([site_id, redirect_to])
+      Jason.encode!([site_id, "search-console"])
   end
 
-  def import_authorize_url(site_id, redirect_to, opts \\ []) do
-    legacy = Keyword.get(opts, :legacy, true)
-
+  def import_authorize_url(site_id) do
     "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@import_scope}&state=" <>
-      Jason.encode!([site_id, redirect_to, legacy])
+      Jason.encode!([site_id, "import"])
   end
 
   def fetch_access_token!(code) do
