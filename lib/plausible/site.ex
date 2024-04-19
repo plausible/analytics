@@ -29,6 +29,7 @@ defmodule Plausible.Site do
     field :domain_changed_from, :string
     field :domain_changed_at, :naive_datetime
 
+    # NOTE: needed by `SiteImports` data migration script
     embeds_one :imported_data, Plausible.Site.ImportedData, on_replace: :update
 
     many_to_many :members, User, join_through: Plausible.Site.Membership

@@ -33,32 +33,9 @@ defmodule Plausible.Imported.SiteImport do
     defmacro unquote(status)(), do: unquote(status)
   end
 
-  @spec label(t() | Site.ImportedData.t()) :: String.t()
-  def label(%__MODULE__{source: source, label: label}) do
+  @spec label(t()) :: String.t()
+  def label(%{source: source, label: label}) do
     build_label(ImportSources.by_name(source).label(), label)
-  end
-
-  # NOTE: this is necessary for backwards compatibility
-  # with legacy imports
-  def label(%Site.ImportedData{source: source}), do: build_label(source, nil)
-
-  @spec from_legacy(Site.ImportedData.t()) :: t()
-  def from_legacy(%Site.ImportedData{} = data) do
-    status =
-      case data.status do
-        "ok" -> completed()
-        "error" -> failed()
-        _ -> importing()
-      end
-
-    %__MODULE__{
-      id: 0,
-      legacy: true,
-      start_date: data.start_date,
-      end_date: data.end_date,
-      source: :universal_analytics,
-      status: status
-    }
   end
 
   @spec create_changeset(Site.t(), User.t(), map()) :: Ecto.Changeset.t()
