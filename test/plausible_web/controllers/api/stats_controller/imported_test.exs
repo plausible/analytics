@@ -10,43 +10,30 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
     |> then(&Plausible.Imported.Buffer.insert_all(table_name, &1))
   end
 
-  for import_type <- [:legacy, :new_and_legacy, :new] do
+  for import_type <- [:new_and_legacy, :new] do
     describe "Parse and import third party data fetched from Google Analytics as #{import_type} import" do
-      if import_type == :new do
-        setup [:create_user, :log_in, :create_new_site]
-      else
-        setup [:create_user, :log_in, :create_new_site, :add_imported_data]
-      end
+      setup [:create_user, :log_in, :create_new_site]
 
       setup %{user: user, site: site} do
-        if unquote(import_type) in [:new, :new_and_legacy] do
-          import_params =
-            if unquote(import_type) == :new_and_legacy do
-              site.imported_data
-              |> Map.from_struct()
-              |> Map.put(:source, :universal_analytics)
-            else
-              %{
-                source: :universal_analytics,
-                start_date: ~D[2005-01-01],
-                end_date: Timex.today()
-              }
-            end
+        import_params =
+          %{
+            source: :universal_analytics,
+            start_date: ~D[2005-01-01],
+            end_date: Timex.today(),
+            legacy: unquote(import_type) == :new_and_legacy
+          }
 
-          site_import =
-            site
-            |> Plausible.Imported.SiteImport.create_changeset(
-              user,
-              import_params
-            )
-            |> Plausible.Repo.insert!()
-            |> Plausible.Imported.SiteImport.complete_changeset()
-            |> Plausible.Repo.update!()
+        site_import =
+          site
+          |> Plausible.Imported.SiteImport.create_changeset(
+            user,
+            import_params
+          )
+          |> Plausible.Repo.insert!()
+          |> Plausible.Imported.SiteImport.complete_changeset()
+          |> Plausible.Repo.update!()
 
-          {:ok, %{import_id: site_import.id}}
-        else
-          {:ok, %{import_id: 0}}
-        end
+        {:ok, %{import_id: site_import.id}}
       end
 
       test "Visitors data imported from Google Analytics", %{

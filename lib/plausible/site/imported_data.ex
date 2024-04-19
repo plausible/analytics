@@ -1,6 +1,8 @@
 defmodule Plausible.Site.ImportedData do
   @moduledoc """
   Embedded schema for analytics imports
+
+  NOTE: needed by `SiteImports` data migration script
   """
   use Ecto.Schema
 

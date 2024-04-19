@@ -29,6 +29,7 @@ defmodule Plausible.Site do
     field :domain_changed_from, :string
     field :domain_changed_at, :naive_datetime
 
+    # NOTE: needed by `SiteImports` data migration script
     embeds_one :imported_data, Plausible.Site.ImportedData, on_replace: :update
 
     many_to_many :members, User, join_through: Plausible.Site.Membership
@@ -151,31 +152,6 @@ defmodule Plausible.Site do
 
   def set_native_stats_start_at(site, val) do
     change(site, native_stats_start_at: val)
-  end
-
-  def start_import(site, start_date, end_date, imported_source, status \\ "importing") do
-    change(site,
-      imported_data: %{
-        start_date: start_date,
-        end_date: end_date,
-        source: imported_source,
-        status: status
-      }
-    )
-  end
-
-  def import_success(site) do
-    change(site,
-      imported_data: %{status: "ok"}
-    )
-  end
-
-  def import_failure(site) do
-    change(site, imported_data: %{status: "error"})
-  end
-
-  def remove_imported_data(site) do
-    change(site, imported_data: nil)
   end
 
   defp clean_domain(changeset) do

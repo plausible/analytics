@@ -90,8 +90,6 @@ defmodule Plausible.SitesTest do
     test "ignores imported stats" do
       site = insert(:site)
       insert(:site_import, site: site)
-      {:ok, opts} = add_imported_data(%{site: site})
-      site = Map.new(opts).site
 
       assert Sites.native_stats_start_date(site) == nil
     end

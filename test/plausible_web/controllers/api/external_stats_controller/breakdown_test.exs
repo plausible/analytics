@@ -330,12 +330,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   test "breaks down all metrics by visit:referrer with imported data", %{conn: conn, site: site} do
-    site =
-      site
-      |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
-      |> Plausible.Repo.update!()
+    site_import =
+      insert(:site_import,
+        site: site,
+        start_date: ~D[2005-01-01],
+        end_date: Timex.today(),
+        source: :universal_analytics
+      )
 
-    populate_stats(site, [
+    populate_stats(site, site_import.id, [
       build(:pageview, referrer: "site.com", timestamp: ~N[2021-01-01 00:00:00]),
       build(:pageview, referrer: "site.com/1", timestamp: ~N[2021-01-01 00:00:00]),
       build(:imported_sources,
@@ -520,12 +523,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   test "breaks down all metrics by visit:utm_source with imported data", %{conn: conn, site: site} do
-    site =
-      site
-      |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
-      |> Plausible.Repo.update!()
+    site_import =
+      insert(:site_import,
+        site: site,
+        start_date: ~D[2005-01-01],
+        end_date: Timex.today(),
+        source: :universal_analytics
+      )
 
-    populate_stats(site, [
+    populate_stats(site, site_import.id, [
       build(:pageview, utm_source: "SomeUTMSource", timestamp: ~N[2021-01-01 00:00:00]),
       build(:pageview, utm_source: "SomeUTMSource-1", timestamp: ~N[2021-01-01 00:00:00]),
       build(:imported_sources,
@@ -842,12 +848,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
   test "pageviews breakdown by event:page - imported data having pageviews=0 and visitors=n should be bypassed",
        %{conn: conn, site: site} do
-    site =
-      site
-      |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
-      |> Plausible.Repo.update!()
+    site_import =
+      insert(:site_import,
+        site: site,
+        start_date: ~D[2005-01-01],
+        end_date: Timex.today(),
+        source: :universal_analytics
+      )
 
-    populate_stats(site, [
+    populate_stats(site, site_import.id, [
       build(:pageview, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
       build(:pageview, pathname: "/", timestamp: ~N[2021-01-01 00:25:00]),
       build(:pageview,
@@ -2378,12 +2387,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
   describe "metrics" do
     test "returns time_on_page with imported data", %{conn: conn, site: site} do
-      site =
-        site
-        |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
-        |> Plausible.Repo.update!()
+      site_import =
+        insert(:site_import,
+          site: site,
+          start_date: ~D[2005-01-01],
+          end_date: Timex.today(),
+          source: :universal_analytics
+        )
 
-      populate_stats(site, [
+      populate_stats(site, site_import.id, [
         build(:imported_pages, page: "/A", time_on_page: 40, date: ~D[2021-01-01]),
         build(:imported_pages, page: "/A", time_on_page: 110, date: ~D[2021-01-01]),
         build(:imported_pages, page: "/B", time_on_page: 499, date: ~D[2021-01-01]),

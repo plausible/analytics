@@ -203,7 +203,7 @@ defmodule Plausible.Stats.ComparisonsTest do
   end
 
   describe "include_imported" do
-    setup [:create_user, :create_new_site, :add_imported_data]
+    setup [:create_user, :create_new_site, :create_site_import]
 
     test "defaults to source_query.include_imported", %{site: site} do
       query = Query.from(site, %{"period" => "day", "date" => "2023-01-01"})

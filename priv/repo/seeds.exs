@@ -256,51 +256,6 @@ native_stats_range
 end)
 |> Plausible.TestUtils.populate_stats()
 
-site =
-  site
-  |> Plausible.Site.start_import(
-    legacy_imported_stats_range.first,
-    legacy_imported_stats_range.last,
-    "Google Analytics"
-  )
-  |> Plausible.Repo.update!()
-
-legacy_imported_stats_range
-|> Enum.flat_map(fn date ->
-  Enum.flat_map(0..Enum.random(1..500), fn _ ->
-    [
-      Plausible.Factory.build(:imported_visitors,
-        date: date,
-        pageviews: Enum.random(1..20),
-        visitors: Enum.random(1..20),
-        bounces: Enum.random(1..20),
-        visits: Enum.random(1..200),
-        visit_duration: Enum.random(1000..10000)
-      ),
-      Plausible.Factory.build(:imported_sources,
-        date: date,
-        source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
-        visitors: Enum.random(1..20),
-        visits: Enum.random(1..200),
-        bounces: Enum.random(1..20),
-        visit_duration: Enum.random(1000..10000)
-      ),
-      Plausible.Factory.build(:imported_pages,
-        date: date,
-        visitors: Enum.random(1..20),
-        pageviews: Enum.random(1..20),
-        exits: Enum.random(1..20),
-        time_on_page: Enum.random(1000..10000)
-      )
-    ]
-  end)
-end)
-|> then(&Plausible.TestUtils.populate_stats(site, &1))
-
-site
-|> Plausible.Site.import_success()
-|> Plausible.Repo.update!()
-
 site_import =
   site
   |> Plausible.Imported.SiteImport.create_changeset(user, %{

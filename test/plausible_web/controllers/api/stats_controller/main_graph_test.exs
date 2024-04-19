@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   @user_id 123
 
   describe "GET /api/stats/main-graph - plot" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "displays pageviews for the last 30 minutes in realtime graph", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -368,7 +368,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - pageviews plot" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "displays pageviews for a month", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -556,7 +556,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - bounce_rate plot" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "displays bounce_rate for a month", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -620,7 +620,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - visit_duration plot" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "displays visit_duration for a month", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -915,7 +915,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - comparisons" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns past month stats when period=30d and comparison=previous_period", %{
       conn: conn,
@@ -1007,17 +1007,6 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
 
-      site
-      |> Ecto.Changeset.change(
-        imported_data: %{
-          start_date: ~D[2005-01-01],
-          end_date: ~D[2020-01-31],
-          source: "Google Analytics",
-          status: "ok"
-        }
-      )
-      |> Plausible.Repo.update!()
-
       conn =
         get(
           conn,
@@ -1063,17 +1052,6 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
-
-      site
-      |> Ecto.Changeset.change(
-        imported_data: %{
-          start_date: ~D[2005-01-01],
-          end_date: ~D[2020-01-31],
-          source: "Google Analytics",
-          status: "ok"
-        }
-      )
-      |> Plausible.Repo.update!()
 
       conn =
         get(
@@ -1125,7 +1103,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
   @tag :full_build_only
   describe "GET /api/stats/main-graph - total_revenue plot" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "plots total_revenue for a month", %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Payment", currency: "USD")
@@ -1205,7 +1183,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
   @tag :full_build_only
   describe "GET /api/stats/main-graph - average_revenue plot" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "plots total_revenue for a month", %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Payment", currency: "USD")

@@ -11,11 +11,11 @@
 
   <%= if Keyword.get(Application.get_env(:plausible, :google), :client_id) do %>
     <%= cond do %>
-      <% @site.imported_data && @site.imported_data.status == "importing" -> %>
+      <% @legacy_import && @legacy_import.status in [SiteImport.pending(), SiteImport.importing()] -> %>
         <li class="py-4 flex items-center justify-between space-x-4">
           <div class="flex flex-col">
             <p class="text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">
-              Import from <%= @site.imported_data.source %>
+              Import from Google Analytics
               <svg
                 class="animate-spin -mr-1 ml-1 h-4 w-4 inline text-indigo-600"
                 xmlns="http://www.w3.org/2000/svg"
@@ -40,8 +40,8 @@
               </svg>
             </p>
             <p class="text-sm leading-5 text-gray-500 dark:text-gray-200">
-              From <%= PlausibleWeb.EmailView.date_format(@site.imported_data.start_date) %> to <%= PlausibleWeb.EmailView.date_format(
-                @site.imported_data.end_date
+              From <%= PlausibleWeb.EmailView.date_format(@legacy_import.start_date) %> to <%= PlausibleWeb.EmailView.date_format(
+                @legacy_import.end_date
               ) %>
             </p>
           </div>
@@ -52,11 +52,11 @@
               "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150"
           ) %>
         </li>
-      <% @site.imported_data && @site.imported_data.status == "ok" -> %>
+      <% @legacy_import && @legacy_import.status == SiteImport.completed() -> %>
         <li class="py-4 flex items-center justify-between space-x-4">
           <div class="flex flex-col">
             <p class="text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">
-              Import from <%= @site.imported_data.source %>
+              Import from Google Analytics
               <svg
                 class="h-4 w-4 inline ml-1 -mt-1 text-green-600"
                 xmlns="http://www.w3.org/2000/svg"
@@ -69,8 +69,8 @@
               </svg>
             </p>
             <p class="text-sm leading-5 text-gray-500 dark:text-gray-200">
-              From <%= PlausibleWeb.EmailView.date_format(@site.imported_data.start_date) %> to <%= PlausibleWeb.EmailView.date_format(
-                @site.imported_data.end_date
+              From <%= PlausibleWeb.EmailView.date_format(@legacy_import.start_date) %> to <%= PlausibleWeb.EmailView.date_format(
+                @legacy_import.end_date
               ) %>
             </p>
           </div>
@@ -85,7 +85,7 @@
           ) %>
         </li>
       <% true -> %>
-        <%= if @site.imported_data && @site.imported_data.status == "error" do %>
+        <%= if @legacy_import && @legacy_import.status == SiteImport.failed() do %>
           <div class="text-sm mt-2 text-gray-900 dark:text-gray-100">
             Your latest import has failed. You can try importing again by clicking the button below. If you try multiple times and the import keeps failing, please contact support.
           </div>
