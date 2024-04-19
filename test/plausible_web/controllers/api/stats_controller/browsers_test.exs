@@ -174,9 +174,10 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
     test "select empty imported_browsers as (not set), merging with the native (not set)", %{
       conn: conn,
-      site: site
+      site: site,
+      site_import: site_import
     } do
-      populate_stats(site, [
+      populate_stats(site, site_import.id, [
         build(:pageview, user_id: 123),
         build(:imported_browsers, visitors: 1),
         build(:imported_visitors, visitors: 1)
@@ -191,7 +192,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
   end
 
   describe "GET /api/stats/:domain/browser-versions" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns correct conversion_rate when browser_version clashes across browsers", %{
       conn: conn,

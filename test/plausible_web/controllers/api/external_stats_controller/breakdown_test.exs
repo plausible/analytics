@@ -330,12 +330,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   test "breaks down all metrics by visit:referrer with imported data", %{conn: conn, site: site} do
-    site =
-      site
-      |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
-      |> Plausible.Repo.update!()
+    site_import =
+      insert(:site_import,
+        site: site,
+        start_date: ~D[2005-01-01],
+        end_date: Timex.today(),
+        source: :universal_analytics
+      )
 
-    populate_stats(site, [
+    populate_stats(site, site_import.id, [
       build(:pageview, referrer: "site.com", timestamp: ~N[2021-01-01 00:00:00]),
       build(:pageview, referrer: "site.com/1", timestamp: ~N[2021-01-01 00:00:00]),
       build(:imported_sources,
@@ -520,12 +523,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   test "breaks down all metrics by visit:utm_source with imported data", %{conn: conn, site: site} do
-    site =
-      site
-      |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
-      |> Plausible.Repo.update!()
+    site_import =
+      insert(:site_import,
+        site: site,
+        start_date: ~D[2005-01-01],
+        end_date: Timex.today(),
+        source: :universal_analytics
+      )
 
-    populate_stats(site, [
+    populate_stats(site, site_import.id, [
       build(:pageview, utm_source: "SomeUTMSource", timestamp: ~N[2021-01-01 00:00:00]),
       build(:pageview, utm_source: "SomeUTMSource-1", timestamp: ~N[2021-01-01 00:00:00]),
       build(:imported_sources,
