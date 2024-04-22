@@ -109,7 +109,7 @@ defmodule Plausible.Site do
     |> cast(attrs, [
       :timezone,
       :public,
-      :stats_start_date,
+      :native_stats_start_at,
       :ingest_rate_limit_threshold,
       :ingest_rate_limit_scale_seconds
     ])
