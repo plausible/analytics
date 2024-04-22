@@ -135,8 +135,11 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
             />
             <Heroicons.exclamation_triangle
               :if={entry.live_status == SiteImport.failed()}
-              class="inline-block h-6 w-5 text-indigo-600 dark:text-green-600"
+              class="inline-block h-6 w-5 text-red-700 dark:text-red-700"
             />
+            <span :if={entry.live_status == SiteImport.failed()}>
+              Import failed -
+            </span>
             <%= Plausible.Imported.SiteImport.label(entry.site_import) %>
             <span :if={entry.live_status == SiteImport.completed()} class="text-xs font-normal">
               (<%= PlausibleWeb.StatsView.large_number_format(
@@ -147,9 +150,13 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
           <p class="text-sm leading-5 text-gray-500 dark:text-gray-200">
             From <%= format_date(entry.site_import.start_date) %> to <%= format_date(
               entry.site_import.end_date
-            ) %> (created on <%= format_date(
-              entry.site_import.inserted_at || entry.site_import.start_date
-            ) %>)
+            ) %>
+            <%= if entry.live_status == SiteImport.completed() do %>
+              (imported
+            <% else %>
+              (started
+            <% end %>
+            on <%= format_date(entry.site_import.inserted_at) %>)
           </p>
         </div>
         <.button
@@ -160,8 +167,11 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
           class="sm:ml-3 sm:w-auto w-full"
           data-confirm="Are you sure you want to delete this import?"
         >
-          <span :if={entry.live_status in [SiteImport.completed(), SiteImport.failed()]}>
+          <span :if={entry.live_status == SiteImport.completed()}>
             Delete Import
+          </span>
+          <span :if={entry.live_status == SiteImport.failed()}>
+            Discard
           </span>
           <span :if={entry.live_status not in [SiteImport.completed(), SiteImport.failed()]}>
             Cancel Import
