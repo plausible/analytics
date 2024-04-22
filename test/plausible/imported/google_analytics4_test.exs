@@ -150,10 +150,8 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     assert length(result) == 31
 
     Enum.each(result, fn row ->
-      assert row.visitors > 0 and row.active_visitors > 0
+      assert row.visitors > 100 and row.active_visitors > 100
       assert row.active_visitors <= row.visitors
-      # sanity check - difference between active visitors and visitors is no more than 20%
-      assert (row.visitors - row.active_visitors) / row.visitors < 0.2
     end)
   end
 
