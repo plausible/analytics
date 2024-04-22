@@ -60,7 +60,13 @@ defmodule Plausible.Google.GA4.ReportRequest do
         dataset: "imported_pages",
         dimensions: ["date", "hostName", "pagePath"],
         # NOTE: no exits as GA4 DATA API does not provide that metric
-        metrics: ["totalUsers", "screenPageViews", "sessions", "userEngagementDuration"]
+        metrics: [
+          "totalUsers",
+          "activeUsers",
+          "screenPageViews",
+          "sessions",
+          "userEngagementDuration"
+        ]
       },
       %__MODULE__{
         dataset: "imported_entry_pages",

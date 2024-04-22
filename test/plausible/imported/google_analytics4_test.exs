@@ -4,6 +4,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
   import Mox
   import Ecto.Query, only: [from: 2]
 
+  alias Plausible.ClickhouseRepo
   alias Plausible.Repo
   alias Plausible.Imported.GoogleAnalytics4
 
@@ -131,7 +132,36 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
       assert_browsers(conn, breakdown_params)
       assert_os(conn, breakdown_params)
       assert_os_versions(conn, breakdown_params)
+      assert_active_visitors(site_import)
     end
+  end
+
+  defp assert_active_visitors(site_import) do
+    result =
+      ClickhouseRepo.query!(
+        "SELECT date, sum(visitors) AS all_visitors, sum(active_visitors) AS all_active_visitors " <>
+          "FROM imported_pages WHERE site_id = #{site_import.site_id} AND import_id = #{site_import.id} GROUP BY date"
+      )
+      |> Map.fetch!(:rows)
+      |> Enum.map(fn [date, all_visitors, all_active_visitors] ->
+        %{date: date, visitors: all_visitors, active_visitors: all_active_visitors}
+      end)
+
+    assert length(result) == 31
+
+    Enum.each(result, fn row ->
+      assert row.visitors > 100 and row.active_visitors > 100
+      assert row.active_visitors <= row.visitors
+    end)
+
+    ClickhouseRepo.query!(
+      "SELECT time_on_page FROM imported_pages WHERE active_visitors = 0 AND " <>
+        "site_id = #{site_import.site_id} AND import_id = #{site_import.id}"
+    )
+    |> Map.fetch!(:rows)
+    |> Enum.each(fn [time_on_page] ->
+      assert time_on_page == 0
+    end)
   end
 
   defp assert_timeseries(conn, params) do
