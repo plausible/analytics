@@ -153,6 +153,15 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
       assert row.visitors > 100 and row.active_visitors > 100
       assert row.active_visitors <= row.visitors
     end)
+
+    ClickhouseRepo.query!(
+      "SELECT time_on_page FROM imported_pages WHERE active_visitors = 0 AND " <>
+        "site_id = #{site_import.site_id} AND import_id = #{site_import.id}"
+    )
+    |> Map.fetch!(:rows)
+    |> Enum.each(fn [time_on_page] ->
+      assert time_on_page == 0
+    end)
   end
 
   defp assert_timeseries(conn, params) do
