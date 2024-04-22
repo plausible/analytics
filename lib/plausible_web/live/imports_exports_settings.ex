@@ -137,8 +137,8 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
               :if={entry.live_status == SiteImport.failed()}
               class="inline-block h-6 w-5 text-red-700 dark:text-red-700"
             />
-            <span :if={entry.live_status == SiteImport.failed()} class="text-xs font-normal">
-              (Import failed)
+            <span :if={entry.live_status == SiteImport.failed()}>
+              Import failed -
             </span>
             <%= Plausible.Imported.SiteImport.label(entry.site_import) %>
             <span :if={entry.live_status == SiteImport.completed()} class="text-xs font-normal">
