@@ -89,21 +89,10 @@ defmodule Plausible.Purge do
     :ok
   end
 
-  @spec reset!(Plausible.Site.t()) :: {:ok, Plausible.Site.t()}
   def reset!(site) do
     site
     |> Ecto.Changeset.change(
       native_stats_start_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
-      stats_start_date: nil
-    )
-    |> Plausible.Repo.update!()
-  end
-
-  @spec reset!(Plausible.Site.t(), NaiveDateTime.t()) :: {:ok, Plausible.Site.t()}
-  def reset!(site, timestap) do
-    site
-    |> Ecto.Changeset.change(
-      native_stats_start_at: timestamp |> NaiveDateTime.truncate(:second),
       stats_start_date: nil
     )
     |> Plausible.Repo.update!()
