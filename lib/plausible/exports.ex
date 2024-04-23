@@ -372,7 +372,7 @@ defmodule Plausible.Exports do
   end
 
   defp export_pages_q(site_id, timezone, date_range) do
-    window_q =
+    windowed_pages_q =
       from e in sampled("events_v2", nil),
         where: e.site_id == ^site_id,
         where: [name: "pageview"],
@@ -385,43 +385,61 @@ defmodule Plausible.Exports do
               frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
             ),
           pathname: e.pathname,
-          hostname: e.hostname,
-          user_id: e.user_id,
-          session_id: e.session_id,
-          _sample_factor: fragment("_sample_factor")
+          user_id: e.user_id
         }
 
-    window_q =
+    windowed_pages_q =
       if date_range do
-        from e in window_q,
+        from e in windowed_pages_q,
           where: selected_as(:timestamp) >= ^date_range.first,
           where: fragment("toDate(?)", selected_as(:timestamp)) <= ^date_range.last
       else
-        window_q
+        windowed_pages_q
       end
 
-    from e in subquery(window_q),
-      group_by: [selected_as(:date), e.pathname],
-      order_by: selected_as(:date),
-      select: [
-        selected_as(fragment("toDate(?)", e.timestamp), :date),
-        selected_as(fragment("any(?)", e.hostname), :hostname),
-        selected_as(e.pathname, :page),
-        selected_as(
-          fragment("toUInt64(round(uniq(?)*any(_sample_factor)))", e.session_id),
-          :visits
-        ),
-        visitors(e),
-        selected_as(fragment("toUInt64(round(count()*any(_sample_factor)))"), :pageviews),
-        selected_as(
-          fragment("toUInt64(round(countIf(?=0)*any(_sample_factor)))", e.next_timestamp),
-          :exits
-        ),
-        selected_as(
-          fragment("sum(greatest(?,0))", e.next_timestamp - e.timestamp),
-          :time_on_page
-        )
-      ]
+    time_on_page_q =
+      from e in subquery(windowed_pages_q),
+        group_by: [selected_as(:date), e.pathname, e.user_id],
+        order_by: selected_as(:date),
+        where: e.next_timestamp != 0,
+        having: selected_as(:time_on_page) > 0,
+        select: [
+          selected_as(fragment("toDate(?)", e.timestamp), :date),
+          selected_as(e.pathname, :page),
+          selected_as(sum(e.next_timestamp - e.timestamp), :time_on_page),
+          selected_as(
+            fragment("toUInt64(round(count(?)*any(_sample_factor)))", e.user_id),
+            :active_visitors
+          )
+        ]
+
+    other_metrics_q =
+      from e in sampled("events_v2", date_range),
+        where: e.site_id == ^site_id,
+        where: [name: "pageview"],
+        group_by: [selected_as(:date), selected_as(:page)],
+        select: [
+          date(e.timestamp, ^timezone),
+          selected_as(e.pathname, :page),
+          selected_as(fragment("any(?)", e.hostname), :hostname),
+          visitors(e),
+          selected_as(fragment("toUInt64(round(count()*any(_sample_factor)))"), :pageviews)
+        ]
+
+    "time_on_page"
+    |> with_cte("time_on_page", as: ^time_on_page_q)
+    |> with_cte("other_metrics", as: ^other_metrics_q)
+    |> join(:full, [t], o in "other_metrics", on: t.date == o.date and t.page == o.page)
+    |> order_by([_], selected_as(:date))
+    |> select([t, o], [
+      selected_as(fragment("greatest(?,?)", t.date, o.date), :date),
+      o.hostname,
+      selected_as(fragment("if(empty(?),?,?)", t.page, o.page, t.page), :page),
+      o.visitors,
+      o.pageviews,
+      t.time_on_page,
+      t.active_visitors
+    ])
   end
 
   defp export_entry_pages_q(site_id, timezone, date_range) do
