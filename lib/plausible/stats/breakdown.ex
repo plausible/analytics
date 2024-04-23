@@ -336,33 +336,26 @@ defmodule Plausible.Stats.Breakdown do
     windowed_pages_q =
       from e in base_event_query(site, Query.remove_event_filters(query, [:page, :props])),
         select: %{
-          next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
-          next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
+          next_timestamp:
+            over(fragment("leadInFrame(?)", e.timestamp),
+              partition_by: e.session_id,
+              order_by: e.timestamp,
+              frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+            ),
           timestamp: e.timestamp,
           pathname: e.pathname,
           session_id: e.session_id
-        },
-        windows: [
-          event_horizon: [
-            partition_by: e.session_id,
-            order_by: e.timestamp,
-            frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-          ]
-        ]
-
-    timed_page_transitions_q =
-      from e in subquery(windowed_pages_q),
-        group_by: [e.pathname, e.next_pathname, e.session_id],
-        where: e.pathname in ^pages,
-        where: e.next_timestamp != 0,
-        select: %{
-          pathname: e.pathname,
-          transition: e.next_pathname != e.pathname,
-          duration: sum(e.next_timestamp - e.timestamp)
         }
 
+    timed_pages_per_session_q =
+      from e in subquery(windowed_pages_q),
+        group_by: [e.pathname, e.session_id],
+        where: e.pathname in ^pages,
+        where: e.next_timestamp != 0,
+        select: %{pathname: e.pathname, duration: sum(e.next_timestamp - e.timestamp)}
+
     no_select_timed_pages_q =
-      from e in subquery(timed_page_transitions_q),
+      from e in subquery(timed_pages_per_session_q),
         group_by: e.pathname
 
     timed_pages_q =
@@ -377,7 +370,7 @@ defmodule Plausible.Stats.Breakdown do
             select: %{
               page: i.page,
               time_on_page: sum(i.time_on_page),
-              visits: sum(i.pageviews) - sum(i.exits)
+              visitors: sum(i.visitors)
             }
 
         timed_pages_q =
@@ -385,7 +378,7 @@ defmodule Plausible.Stats.Breakdown do
             select: %{
               page: e.pathname,
               time_on_page: sum(e.duration),
-              visits: fragment("countIf(?)", e.transition)
+              sessions: count(e.duration)
             }
 
         "timed_pages"
@@ -396,12 +389,11 @@ defmodule Plausible.Stats.Breakdown do
           [t, i],
           {
             fragment("if(empty(?),?,?)", t.page, i.page, t.page),
-            (t.time_on_page + i.time_on_page) / (t.visits + i.visits)
+            (t.time_on_page + i.time_on_page) / (t.sessions + i.visitors)
           }
         )
       else
-        from e in no_select_timed_pages_q,
-          select: {e.pathname, fragment("sum(?)/countIf(?)", e.duration, e.transition)}
+        from e in no_select_timed_pages_q, select: {e.pathname, avg(e.duration)}
       end
 
     timed_pages_q

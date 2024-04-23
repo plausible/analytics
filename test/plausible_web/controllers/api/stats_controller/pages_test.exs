@@ -1045,13 +1045,13 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    test "doesn't calculate time on page with only single page visits", %{conn: conn, site: site} do
+    test "calculates time on page with only single page visits", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/", user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, pathname: "/", user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00])
       ])
 
-      assert [%{"name" => "/", "time_on_page" => nil}] =
+      assert [%{"name" => "/", "time_on_page" => 600.0}] =
                conn
                |> get("/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&detailed=true")
                |> json_response(200)
@@ -1074,13 +1074,13 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                |> json_response(200)
     end
 
-    test "calculates time on page per unique transition within session", %{conn: conn, site: site} do
+    test "averages time on page across sessions", %{conn: conn, site: site} do
       # ┌─p──┬─p2─┬─minus(t2, t)─┬──s─┐
       # │ /a │ /b │          100 │ s1 │
-      # │ /a │ /d │          100 │ s2 │ <- these two get treated
-      # │ /a │ /d │            0 │ s2 │ <- as single page transition
+      # │ /a │ /d │          100 │ s2 │
+      # │ /a │ /d │            0 │ s2 │
       # └────┴────┴──────────────┴────┘
-      # so that time_on_page(a)=(100+100)/uniq(transition)=200/2=100
+      # so that time_on_page(a)=(100+100+0)/count(sessions)=200/2=100
 
       s1 = @user_id
       s2 = @user_id + 1

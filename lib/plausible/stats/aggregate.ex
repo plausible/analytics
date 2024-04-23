@@ -153,39 +153,27 @@ defmodule Plausible.Stats.Aggregate do
              | filters: Map.delete(query.filters, "event:page")
            }),
            select: %{
-             next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
-             next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
+             next_timestamp:
+               over(fragment("leadInFrame(?)", e.timestamp),
+                 partition_by: e.session_id,
+                 order_by: e.timestamp,
+                 frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+               ),
              timestamp: e.timestamp,
              pathname: e.pathname,
              session_id: e.session_id
-           },
-           windows: [
-             event_horizon: [
-               partition_by: e.session_id,
-               order_by: e.timestamp,
-               frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-             ]
-           ]
+           }
 
-    timed_page_transitions_q =
+    timed_pages_q =
       from e in Ecto.Query.subquery(windowed_pages_q),
-        group_by: [e.pathname, e.next_pathname, e.session_id],
+        group_by: [e.pathname, e.session_id],
         where: ^Plausible.Stats.Base.dynamic_filter_condition(query, "event:page", :pathname),
         where: e.next_timestamp != 0,
-        select: %{
-          pathname: e.pathname,
-          transition: e.next_pathname != e.pathname,
-          duration: sum(e.next_timestamp - e.timestamp)
-        }
-
-    avg_time_per_page_transition_q =
-      from e in Ecto.Query.subquery(timed_page_transitions_q),
-        select: %{avg: fragment("sum(?)/countIf(?)", e.duration, e.transition)},
-        group_by: e.pathname
+        select: %{duration: sum(e.next_timestamp - e.timestamp)}
 
     time_on_page_q =
-      from e in Ecto.Query.subquery(avg_time_per_page_transition_q),
-        select: fragment("avg(ifNotFinite(?,NULL))", e.avg)
+      from e in Ecto.Query.subquery(timed_pages_q),
+        select: avg(e.duration)
 
     %{time_on_page: ClickhouseRepo.one(time_on_page_q)}
   end
