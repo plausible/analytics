@@ -161,15 +161,16 @@ defmodule Plausible.Stats.Aggregate do
                ),
              timestamp: e.timestamp,
              pathname: e.pathname,
-             session_id: e.session_id
+             user_id: e.user_id
            }
 
     timed_pages_q =
       from e in Ecto.Query.subquery(windowed_pages_q),
-        group_by: [e.pathname, e.session_id],
+        group_by: [e.pathname, e.user_id],
         where: ^Plausible.Stats.Base.dynamic_filter_condition(query, "event:page", :pathname),
         where: e.next_timestamp != 0,
-        select: %{duration: sum(e.next_timestamp - e.timestamp)}
+        having: selected_as(:duration) > 0,
+        select: %{duration: selected_as(sum(e.next_timestamp - e.timestamp), :duration)}
 
     time_on_page_q =
       from e in Ecto.Query.subquery(timed_pages_q),

@@ -344,18 +344,22 @@ defmodule Plausible.Stats.Breakdown do
             ),
           timestamp: e.timestamp,
           pathname: e.pathname,
-          session_id: e.session_id
+          user_id: e.user_id
         }
 
-    timed_pages_per_session_q =
+    timed_pages_per_active_visitor_q =
       from e in subquery(windowed_pages_q),
-        group_by: [e.pathname, e.session_id],
+        group_by: [e.pathname, e.user_id],
         where: e.pathname in ^pages,
         where: e.next_timestamp != 0,
-        select: %{pathname: e.pathname, duration: sum(e.next_timestamp - e.timestamp)}
+        having: selected_as(:duration) > 0,
+        select: %{
+          pathname: e.pathname,
+          duration: selected_as(sum(e.next_timestamp - e.timestamp), :duration)
+        }
 
     no_select_timed_pages_q =
-      from e in subquery(timed_pages_per_session_q),
+      from e in subquery(timed_pages_per_active_visitor_q),
         group_by: e.pathname
 
     timed_pages_q =
@@ -370,6 +374,7 @@ defmodule Plausible.Stats.Breakdown do
             select: %{
               page: i.page,
               time_on_page: sum(i.time_on_page),
+              # TODO active visitors
               visitors: sum(i.visitors)
             }
 
@@ -378,7 +383,7 @@ defmodule Plausible.Stats.Breakdown do
             select: %{
               page: e.pathname,
               time_on_page: sum(e.duration),
-              sessions: count(e.duration)
+              active_visitors: count(e.duration)
             }
 
         "timed_pages"
@@ -389,7 +394,7 @@ defmodule Plausible.Stats.Breakdown do
           [t, i],
           {
             fragment("if(empty(?),?,?)", t.page, i.page, t.page),
-            (t.time_on_page + i.time_on_page) / (t.sessions + i.visitors)
+            (t.time_on_page + i.time_on_page) / (t.active_visitors + i.visitors)
           }
         )
       else
