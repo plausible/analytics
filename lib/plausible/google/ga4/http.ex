@@ -31,6 +31,7 @@ defmodule Plausible.Google.GA4.HTTP do
               desc: true
             }
           ],
+          dimensionFilter: report_request.dimension_filter,
           limit: report_request.limit,
           offset: report_request.offset
         }

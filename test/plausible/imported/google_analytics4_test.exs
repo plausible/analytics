@@ -16,6 +16,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
                       "fixture/ga4_report_imported_sources.json",
                       "fixture/ga4_report_imported_pages.json",
                       "fixture/ga4_report_imported_entry_pages.json",
+                      "fixture/ga4_report_imported_custom_events.json",
                       "fixture/ga4_report_imported_locations.json",
                       "fixture/ga4_report_imported_devices.json",
                       "fixture/ga4_report_imported_browsers.json",
@@ -89,6 +90,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
             "imported_pages" -> 3340
             "imported_entry_pages" -> 2934
             "imported_exit_pages" -> 0
+            "imported_custom_events" -> 56
             "imported_locations" -> 2291
             "imported_devices" -> 93
             "imported_browsers" -> 233
@@ -134,6 +136,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
       assert_os(conn, breakdown_params)
       assert_os_versions(conn, breakdown_params)
       assert_active_visitors(site_import)
+      assert_custom_events(site_import)
     end
 
     test "handles rate limiting gracefully", %{user: user, site: site} do
@@ -263,6 +266,50 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     |> Enum.each(fn [time_on_page] ->
       assert time_on_page == 0
     end)
+  end
+
+  defp assert_custom_events(site_import) do
+    totals =
+      ClickhouseRepo.query!(
+        "SELECT name, sum(visitors) AS visitors, sum(events) AS events " <>
+          "FROM imported_custom_events WHERE site_id = #{site_import.site_id} AND import_id = #{site_import.id} GROUP BY name"
+      )
+      |> Map.fetch!(:rows)
+      |> Enum.map(fn [name, visitors, events] ->
+        %{name: name, visitors: visitors, events: events}
+      end)
+      |> Enum.sort_by(& &1.events)
+
+    breakdown_by_url =
+      ClickhouseRepo.query!(
+        "SELECT name, link_url, sum(visitors) AS visitors, sum(events) AS events " <>
+          "FROM imported_custom_events WHERE site_id = #{site_import.site_id} AND import_id = #{site_import.id} GROUP BY name, link_url"
+      )
+      |> Map.fetch!(:rows)
+      |> Enum.map(fn [name, link_url, visitors, events] ->
+        %{name: name, link_url: link_url, visitors: visitors, events: events}
+      end)
+
+    assert totals == [
+             %{name: "click", events: 17, visitors: 17},
+             %{name: "view_search_results", events: 30, visitors: 11},
+             %{name: "scroll", events: 2130, visitors: 1513}
+           ]
+
+    assert Enum.all?(breakdown_by_url, fn entry ->
+             if entry.name == "click" do
+               entry.link_url != ""
+             else
+               entry.link_url == ""
+             end
+           end)
+
+    assert %{
+             name: "click",
+             events: 6,
+             visitors: 6,
+             link_url: "https://www.facebook.com/kuhinjskeprice"
+           } in breakdown_by_url
   end
 
   defp assert_timeseries(conn, params) do

@@ -27,6 +27,7 @@ defmodule Plausible.Imported do
     Imported.Page,
     Imported.EntryPage,
     Imported.ExitPage,
+    Imported.CustomEvent,
     Imported.Location,
     Imported.Device,
     Imported.Browser,

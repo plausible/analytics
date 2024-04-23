@@ -229,6 +229,18 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
   #   }
   # end
 
+  defp new_from_report(site_id, import_id, "imported_custom_events", row) do
+    %{
+      site_id: site_id,
+      import_id: import_id,
+      date: get_date(row),
+      name: row.dimensions |> Map.fetch!("eventName"),
+      link_url: row.dimensions |> Map.fetch!("linkUrl"),
+      visitors: row.metrics |> Map.fetch!("totalUsers") |> parse_number(),
+      events: row.metrics |> Map.fetch!("eventCount") |> parse_number()
+    }
+  end
+
   defp new_from_report(site_id, import_id, "imported_locations", row) do
     country_code = row.dimensions |> Map.fetch!("countryId") |> default_if_missing("")
     city_name = row.dimensions |> Map.fetch!("city") |> default_if_missing("")
