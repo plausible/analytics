@@ -35,8 +35,12 @@ defmodule Plausible.SiteAdmin do
       domain: %{update: :readonly},
       timezone: %{choices: Plausible.Timezones.options()},
       public: nil,
-      stats_start_date: %{update: :readonly},
-      native_stats_start_at: nil,
+      native_stats_start_at: %{
+        type: :string,
+        label: "Native stats start time",
+        help_text:
+          "Cutoff time for native stats in UTC timezone. Expected format: YYYY-MM-DDTHH:mm:ss"
+      },
       ingest_rate_limit_scale_seconds: %{
         help_text: "Time scale for which events rate-limiting is calculated. Default: 60"
       },
