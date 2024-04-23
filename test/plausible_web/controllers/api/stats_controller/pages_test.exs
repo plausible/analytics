@@ -1107,6 +1107,63 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                |> json_response(200)
     end
 
+    test "time on page using example from basecamp", %{conn: conn, site: site} do
+      a = @user_id
+      b = @user_id + 1
+      c = @user_id + 2
+      d = @user_id + 3
+
+      now = ~N[2021-01-01 00:00:00]
+      later = fn minutes -> NaiveDateTime.add(now, minutes, :minute) end
+
+      populate_stats(site, [
+        # session 1 - user A
+        # user A lands on page /A and spends 1 minute there
+        # then navigates to another page and spends 5 minutes there
+        # then navigates back to page /A and spends another 3 minutes there
+        # then navigates to another page and leaves the page from there
+        build(:pageview, session_id: a, user_id: a, timestamp: now, pathname: "/a"),
+        build(:pageview, session_id: a, user_id: a, timestamp: later.(1), pathname: "/b"),
+        build(:pageview, session_id: a, user_id: a, timestamp: later.(6), pathname: "/a"),
+        build(:pageview, session_id: a, user_id: a, timestamp: later.(9), pathname: "/d"),
+        # session 2 - user A
+        # user A lands on page /A and spends 1 minute there
+        # then navigates to another page
+        build(:pageview, session_id: a + 100, user_id: a, timestamp: later.(60), pathname: "/a"),
+        build(:pageview, session_id: a + 100, user_id: a, timestamp: later.(61), pathname: "/b"),
+        # session 3 - user B
+        # user B lands on page /A and stays there for 5 minutes
+        build(:pageview, session_id: b, user_id: b, timestamp: now, pathname: "/a"),
+        # session 4 - user C
+        # user B lands on page /A and stays there for 25 minutes
+        build(:pageview, session_id: c, user_id: c, timestamp: now, pathname: "/a"),
+        # session 5 - user D
+        # user D lands on page /A and spends 10 minutes there
+        # then navigates to another page
+        build(:pageview, session_id: d, user_id: d, timestamp: now, pathname: "/a"),
+        build(:pageview, session_id: d, user_id: d, timestamp: later.(10), pathname: "/d")
+      ])
+
+      result =
+        conn
+        |> get("/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&detailed=true")
+        |> json_response(200)
+
+      result = fn page ->
+        Enum.find(result, &(&1["name"] == page))
+      end
+
+      # Users B, and C are not counted towards active_visitors because the duration is 0
+      # total_duration = 1 + 3 + 1 + 0 + 0 + 10 = 15 minutes
+      # active_visitors = 2
+      # time_on_page = 15 / 2 = 7min 30s
+
+      assert result.("/a")["time_on_page"] == 450.0
+      assert result.("/b")["time_on_page"] == 300.0
+      refute result.("/c")["time_on_page"]
+      refute result.("/d")["time_on_page"]
+    end
+
     test "calculates bounce rate and time on page for pages with imported data", %{
       conn: conn,
       site: site
