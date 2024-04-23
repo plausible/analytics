@@ -94,6 +94,7 @@ defmodule Plausible.Stats.Breakdown do
           }
         )
         |> select_merge(^select_columns)
+        |> merge_imported_pageview_goals(site, query, page_exprs, metrics_to_select)
         |> apply_pagination(pagination)
       else
         nil

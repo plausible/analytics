@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.Imported do
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, Base}
 
   import Ecto.Query
   import Plausible.Stats.Fragments
@@ -26,7 +26,8 @@ defmodule Plausible.Stats.Imported do
     "visit:browser_version" => "imported_browsers",
     "visit:os" => "imported_operating_systems",
     "visit:os_version" => "imported_operating_systems",
-    "event:page" => "imported_pages"
+    "event:page" => "imported_pages",
+    "event:name" => "imported_custom_events"
   }
 
   @imported_properties Map.keys(@property_to_table_mappings)
@@ -136,6 +137,41 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, _, _, _), do: q
+
+  def merge_imported_pageview_goals(q, _, %Query{include_imported: false}, _, _), do: q
+
+  def merge_imported_pageview_goals(q, site, query, page_exprs, metrics) do
+    page_regexes = Enum.map(page_exprs, &Base.page_regex/1)
+
+    imported_q =
+      from(
+        i in "imported_pages",
+        where: i.site_id == ^site.id,
+        where: i.import_id in ^site.complete_import_ids,
+        where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
+        where: i.visitors > 0,
+        where:
+          fragment(
+            "notEmpty(multiMatchAllIndices(?, ?) as indices)",
+            i.page,
+            ^page_regexes
+          ),
+        array_join: index in fragment("indices"),
+        group_by: index,
+        select: %{
+          name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
+        }
+      )
+      |> select_imported_metrics(metrics)
+
+    from(s in Ecto.Query.subquery(q),
+      full_join: i in subquery(imported_q),
+      on: s.name == i.name,
+      select: %{}
+    )
+    |> select_joined_dimension(:name)
+    |> select_joined_metrics(metrics)
+  end
 
   def total_imported_visitors(site, query) do
     imported_visitors(site, query)
@@ -349,6 +385,12 @@ defmodule Plausible.Stats.Imported do
     q
     |> group_by([i], field(i, ^dim))
     |> select_merge([i], %{^dim => field(i, ^dim)})
+  end
+
+  defp group_imported_by(q, :name) do
+    q
+    |> group_by([i], i.name)
+    |> select_merge([i], %{name: i.name})
   end
 
   defp select_joined_dimension(q, :city) do
