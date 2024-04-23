@@ -1074,33 +1074,33 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                |> json_response(200)
     end
 
-    test "averages time on page across sessions", %{conn: conn, site: site} do
-      # ┌─p──┬─p2─┬─minus(t2, t)─┬──s─┐
-      # │ /a │ /b │          100 │ s1 │
-      # │ /a │ /d │          100 │ s2 │
-      # │ /a │ /d │            0 │ s2 │
+    test "averages time on page across active visitors", %{conn: conn, site: site} do
+      # ┌─p──┬─p2─┬─minus(t2, t)─┬──u─┐
+      # │ /a │ /b │          100 │ u1 │
+      # │ /a │ /d │          100 │ u2 │
+      # │ /a │ /d │            0 │ u2 │
       # └────┴────┴──────────────┴────┘
-      # so that time_on_page(a)=(100+100+0)/count(sessions)=200/2=100
+      # so that time_on_page(a)=(100+100+0)/count(active_visitors)=200/2=100
 
-      s1 = @user_id
-      s2 = @user_id + 1
+      u1 = @user_id
+      u2 = @user_id + 1
 
       now = ~N[2021-01-01 00:00:00]
       later = fn seconds -> NaiveDateTime.add(now, seconds) end
 
       populate_stats(site, [
-        build(:pageview, user_id: s1, timestamp: now, pathname: "/a"),
-        build(:pageview, user_id: s1, timestamp: later.(100), pathname: "/b"),
-        build(:pageview, user_id: s2, timestamp: now, pathname: "/a"),
-        build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/d"),
-        build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/a"),
-        build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/d")
+        build(:pageview, session_id: u1, user_id: u1, timestamp: now, pathname: "/a"),
+        build(:pageview, session_id: u1, user_id: u1, timestamp: later.(100), pathname: "/b"),
+        build(:pageview, session_id: u2, user_id: u2, timestamp: now, pathname: "/a"),
+        build(:pageview, session_id: u2, user_id: u2, timestamp: later.(100), pathname: "/d"),
+        build(:pageview, session_id: u2, user_id: u2, timestamp: later.(100), pathname: "/a"),
+        build(:pageview, session_id: u2, user_id: u2, timestamp: later.(100), pathname: "/d")
       ])
 
       assert [
                %{"name" => "/a", "time_on_page" => 100.0},
                %{"name" => "/b", "time_on_page" => nil},
-               %{"name" => "/d", "time_on_page" => +0.0}
+               %{"name" => "/d", "time_on_page" => nil}
              ] =
                conn
                |> get("/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&detailed=true")

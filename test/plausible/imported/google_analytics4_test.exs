@@ -438,7 +438,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     assert Enum.at(results, 2) == %{
              "page" => "/",
              "pageviews" => 5537,
-             "time_on_page" => 17.677262055264585,
+             "time_on_page" => 263.82479784366575,
              "visitors" => 371,
              "visits" => 212,
              "bounce_rate" => 54.0,
@@ -450,7 +450,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     assert List.last(results) == %{
              "page" => "/5-dobrih-razloga-zasto-zapoceti-dan-zobenom-kasom/",
              "pageviews" => 2,
-             "time_on_page" => 10.0,
+             "time_on_page" => 20.0,
              "visitors" => 1,
              "visits" => 1,
              "bounce_rate" => nil,
