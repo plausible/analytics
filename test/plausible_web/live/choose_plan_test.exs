@@ -19,8 +19,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @slider_value "#slider-value"
 
   @growth_plan_box "#growth-plan-box"
-  @growth_plan_tooltip "#growth-plan-box .tooltip-wrapper span"
-  @growth_plan_tooltip_link ~s/#growth-plan-box .tooltip-wrapper a[phx-click="show-tooltip"]/
   @growth_price_tag_amount "#growth-price-tag-amount"
   @growth_price_tag_interval "#growth-price-tag-interval"
   @growth_highlight_pill "#{@growth_plan_box} #highlight-pill"
@@ -245,7 +243,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
       refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
-      refute element_exists?(doc, @growth_plan_tooltip)
 
       generate_usage_for(site, 1)
 
@@ -254,9 +251,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
       assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
-
-      assert text_of_element(doc, @growth_plan_tooltip) ==
-               "Your usage exceeds the following limit(s): Monthly pageview limit"
     end
 
     test "allows upgrade to a 10k plan with a pageview allowance margin of 0.3 when trial ended 10 days ago",
@@ -503,9 +497,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
-
-      assert text_of_element(doc, @growth_plan_tooltip) ==
-               "Your usage exceeds the following limit(s): Team member limit"
     end
 
     test "checkout is disabled when sites usage exceeds rendered plan limit", %{
@@ -518,55 +509,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
-
-      assert text_of_element(doc, @growth_plan_tooltip) ==
-               "Your usage exceeds the following limit(s): Site limit"
-    end
-
-    test "clicking the tooltip changes makes it sticky", %{
-      conn: conn,
-      user: user
-    } do
-      insert(:site,
-        memberships: [
-          build(:site_membership, user: user, role: :owner),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user))
-        ]
-      )
-
-      {:ok, lv, doc} = get_liveview(conn)
-
-      assert class_of_element(doc, @growth_plan_tooltip) =~ "opacity-0 group-hover:opacity-90"
-
-      doc = element(lv, @growth_plan_tooltip_link) |> render_click()
-
-      assert class_of_element(doc, @growth_plan_tooltip) =~ "opacity-90"
-      refute class_of_element(doc, @growth_plan_tooltip) =~ "opacity-0"
-    end
-
-    test "when more than one limit is exceeded, the tooltip enumerates them", %{
-      conn: conn,
-      user: user
-    } do
-      for _ <- 1..11, do: insert(:site, members: [user])
-
-      insert(:site,
-        memberships: [
-          build(:site_membership, user: user, role: :owner),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user))
-        ]
-      )
-
-      {:ok, _lv, doc} = get_liveview(conn)
-
-      assert text_of_element(doc, @growth_plan_tooltip) =~ "Team member limit"
-      assert text_of_element(doc, @growth_plan_tooltip) =~ "Site limit"
     end
 
     test "checkout is not disabled when pageview usage exceeded but next upgrade allowed by override",
