@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-74E75ECC.js"></script>
+    <script src="dist/sidebar_items-721727C0.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -155,9 +155,9 @@ is additionally encrypted while stored in the database using <a href="https://he
 vault for safe storage is configured in <a href="Plausible.Auth.TOTP.Vault.html"><code class="inline">Plausible.Auth.TOTP.Vault</code></a> via
 a dedicated <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.html"><code class="inline">Ecto</code></a> type defined in <a href="Plausible.Auth.TOTP.EncryptedBinary.html"><code class="inline">Plausible.Auth.TOTP.EncryptedBinary</code></a>.
 The function returns updated user along with TOTP URI and a readable form
-of secret. Both - the URI and readable secret - are meant for exposure 
+of secret. Both - the URI and readable secret - are meant for exposure
 in the user's setup screen. The URI should be encoded as a QR code.</p><p>After initiation, user is expected to confirm valid setup with <a href="#enable/2"><code class="inline">enable/2</code></a>,
-providing TOTP code from their authenticator app. After code validation 
+providing TOTP code from their authenticator app. After code validation
 passes successfully, the <code class="inline">User.totp_enabled</code> flag is set to <code class="inline">true</code>.
 Finally, the user must be immediately presented with a list of recovery codes
 returned by the same call of <a href="#enable/2"><code class="inline">enable/2</code></a>. The codes should be presented
@@ -172,7 +172,10 @@ times, allowing user to abort and restart setup up to these stages.</p><h2 id="m
 <a href="#enabled?/1"><code class="inline">enabled?/1</code></a> or <a href="#initiated?/1"><code class="inline">initiated?/1</code></a>.</p><p>TOTP can be disabled with <a href="#disable/2"><code class="inline">disable/2</code></a>. User is expected to provide their
 current password for safety. Once disabled, all TOTP user settings are
 cleared and any remaining generated recovery codes are removed. The function
-can be safely run more than once.</p><p>If the user needs to regenerate the recovery codes outside of setup procedure,
+can be safely run more than once. There's also alternative call for forced
+disabling of TOTP for a given user without sending any notification,
+<a href="#force_disable/1"><code class="inline">force_disable/1</code></a>. It's meant for use in situation where user lost both,
+2FA device and recovery codes and their identity is verified independently.</p><p>If the user needs to regenerate the recovery codes outside of setup procedure,
 they must do it via <a href="#generate_recovery_codes/2"><code class="inline">generate_recovery_codes/2</code></a>, providing their current
 password for safety. They must be warned that any existing recovery codes
 will be invalidated.</p><h2 id="module-validation" class="section-heading">
@@ -191,7 +194,7 @@ codes. Those codes must be checked with <a href="#use_recovery_code/2"><code cla
 </h2>
 <p>In case of TOTP codes, a grace period of 30 seconds is applied, which
 allows user to use their current and previous TOTP code, assuming 30
-second validity window of each. This allows user to use code that was 
+second validity window of each. This allows user to use code that was
 about to expire before the submission. Regardless of that, each TOTP
 code can be used only once. Validation procedure rejects repeat use
 of the same code for safety. It's done by tracking last time a TOTP
@@ -204,7 +207,7 @@ They are strictly one-time use only.</p><h2 id="module-totp-token" class="sectio
 </h2>
 <p>TOTP token is an alternate method of authenticating  user session.
 It's main use case is &quot;trust this device&quot; functionality, where user
-can decide to skip 2FA verification for a particular browser session 
+can decide to skip 2FA verification for a particular browser session
 for next N days. The token should then be stored in an encrypted,
 signed cookie with a proper expiration timestamp.</p><p>The token should be reset each time it either fails to match
 or when other credentials (like password) are reset. This should
@@ -243,6 +246,14 @@ effectively invalidate all trusted devices for a given user.</p>
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#enabled?/1" translate="no">enabled?(user)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#force_disable/1" translate="no">force_disable(user)</a>
 
       </div>
 
@@ -326,7 +337,7 @@ effectively invalidate all trusted devices for a given user.</p>
     </a>
     <h1 class="signature" translate="no">disable(user, password)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L170" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L173" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -357,7 +368,7 @@ effectively invalidate all trusted devices for a given user.</p>
     </a>
     <h1 class="signature" translate="no">enable(user, code, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L130" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L133" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -387,7 +398,7 @@ effectively invalidate all trusted devices for a given user.</p>
     </a>
     <h1 class="signature" translate="no">enabled?(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L92" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L95" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -406,6 +417,34 @@ effectively invalidate all trusted devices for a given user.</p>
 
   </section>
 </section>
+<section class="detail" id="force_disable/1">
+
+  <div class="detail-header">
+    <a href="#force_disable/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">force_disable(user)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L188" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> force_disable(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: {:ok, <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="generate_recovery_codes/1">
 
   <div class="detail-header">
@@ -415,7 +454,7 @@ effectively invalidate all trusted devices for a given user.</p>
     </a>
     <h1 class="signature" translate="no">generate_recovery_codes(map)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L213" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L206" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -437,7 +476,7 @@ effectively invalidate all trusted devices for a given user.</p>
     </a>
     <h1 class="signature" translate="no">generate_recovery_codes(user, password)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L217" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L210" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -466,7 +505,7 @@ effectively invalidate all trusted devices for a given user.</p>
     </a>
     <h1 class="signature" translate="no">initiate(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L104" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L107" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -496,7 +535,7 @@ effectively invalidate all trusted devices for a given user.</p>
     </a>
     <h1 class="signature" translate="no">initiated?(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L97" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L100" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -524,7 +563,7 @@ effectively invalidate all trusted devices for a given user.</p>
     </a>
     <h1 class="signature" translate="no">reset_token(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L200" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L193" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -552,7 +591,7 @@ effectively invalidate all trusted devices for a given user.</p>
     </a>
     <h1 class="signature" translate="no">use_recovery_code(user, code)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L270" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L263" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -583,7 +622,7 @@ effectively invalidate all trusted devices for a given user.</p>
     </a>
     <h1 class="signature" translate="no">validate_code(user, code, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L258" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L251" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
