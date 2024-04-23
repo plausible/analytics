@@ -33,76 +33,83 @@ defmodule PlausibleWeb.Live.CSVExport do
   end
 
   defp fetch_export(socket) do
-    %{storage: storage, site_id: site_id} = socket.assigns
+    %{storage: storage, site: site, site_id: site_id} = socket.assigns
 
-    get_export =
-      case storage do
-        "s3" ->
-          &Exports.get_s3_export/1
+    assign_async(socket, [:status, :export], fn ->
+      get_export =
+        case storage do
+          "s3" ->
+            &Exports.get_s3_export/1
 
-        "local" ->
-          %{domain: domain, timezone: timezone} = socket.assigns.site
-          &Exports.get_local_export(&1, domain, timezone)
-      end
+          "local" ->
+            %{domain: domain, timezone: timezone} = site
+            &Exports.get_local_export(&1, domain, timezone)
+        end
 
-    socket = assign(socket, export: nil)
+      assigns =
+        if job = Exports.get_last_export_job(site_id) do
+          %Oban.Job{state: state} = job
 
-    if job = Exports.get_last_export_job(site_id) do
-      %Oban.Job{state: state} = job
+          case state do
+            _ when state in ["scheduled", "available", "retryable"] ->
+              %{status: "in_progress", export: nil}
 
-      case state do
-        _ when state in ["scheduled", "available", "retryable"] ->
-          assign(socket, status: "in_progress")
+            "executing" ->
+              # Exports.oban_notify/1 is called in `perform/1` and
+              # the notification arrives while the job.state is still "executing"
+              if export = get_export.(site_id) do
+                %{status: "ready", export: export}
+              else
+                %{status: "in_progress", export: nil}
+              end
 
-        "executing" ->
-          # Exports.oban_notify/1 is called in `perform/1` and
-          # the notification arrives while the job.state is still "executing"
-          if export = get_export.(site_id) do
-            assign(socket, status: "ready", export: export)
-          else
-            assign(socket, status: "in_progress")
+            "completed" ->
+              if export = get_export.(site_id) do
+                %{status: "ready", export: export}
+              else
+                %{status: "can_schedule", export: nil}
+              end
+
+            "discarded" ->
+              %{status: "failed", export: nil}
+
+            "cancelled" ->
+              # credo:disable-for-next-line Credo.Check.Refactor.Nesting
+              if export = get_export.(site_id) do
+                %{status: "ready", export: export}
+              else
+                %{status: "can_schedule", export: nil}
+              end
           end
-
-        "completed" ->
+        else
           if export = get_export.(site_id) do
-            assign(socket, status: "ready", export: export)
+            %{status: "ready", export: export}
           else
-            assign(socket, status: "can_schedule")
+            %{status: "can_schedule", export: nil}
           end
+        end
 
-        "discarded" ->
-          assign(socket, status: "failed")
-
-        "cancelled" ->
-          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-          if export = get_export.(site_id) do
-            assign(socket, status: "ready", export: export)
-          else
-            assign(socket, status: "can_schedule")
-          end
-      end
-    else
-      if export = get_export.(site_id) do
-        assign(socket, status: "ready", export: export)
-      else
-        assign(socket, status: "can_schedule")
-      end
-    end
+      {:ok, assigns}
+    end)
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <%= case @status do %>
-      <% "can_schedule" -> %>
-        <.prepare_download />
-      <% "in_progress" -> %>
-        <.in_progress />
-      <% "failed" -> %>
-        <.failed />
-      <% "ready" -> %>
-        <.download storage={@storage} export={@export} />
-    <% end %>
+    <.async_result :let={status} assign={@status}>
+      <:loading><Generic.spinner /></:loading>
+      <:failed :let={_failure}><.fetch_export_failed /></:failed>
+      <%= case status do %>
+        <% "can_schedule" -> %>
+          <.prepare_download />
+        <% "in_progress" -> %>
+          <.in_progress />
+        <% "failed" -> %>
+          <.export_failed />
+        <% "ready" -> %>
+          <.download storage={@storage} export={@export.result} />
+      <% end %>
+    </.async_result>
     """
   end
 
@@ -136,7 +143,18 @@ defmodule PlausibleWeb.Live.CSVExport do
     """
   end
 
-  defp failed(assigns) do
+  defp fetch_export_failed(assigns) do
+    ~H"""
+    <div class="flex items-center">
+      <Heroicons.exclamation_circle class="w-4 h-4 text-red-500" />
+      <p class="ml-2 text-sm text-gray-500">
+        Something went wrong when fetching exports. Please try again later.
+      </p>
+    </div>
+    """
+  end
+
+  defp export_failed(assigns) do
     ~H"""
     <div class="flex items-center">
       <Heroicons.exclamation_circle class="w-4 h-4 text-red-500" />
