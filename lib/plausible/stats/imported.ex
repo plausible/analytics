@@ -80,7 +80,6 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, _, %Query{include_imported: false}, _), do: q
-  def merge_imported(q, _, _, [:events | _]), do: q
 
   def merge_imported(q, site, %Query{property: property} = query, metrics)
       when property in @imported_properties do
@@ -201,6 +200,21 @@ defmodule Plausible.Stats.Imported do
   defp select_imported_metrics(q, [:visitors | rest]) do
     q
     |> select_merge([i], %{visitors: sum(i.visitors)})
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_custom_events", _}}} = q,
+         [:events | rest]
+       ) do
+    q
+    |> select_merge([i], %{events: sum(i.events)})
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(q, [:events | rest]) do
+    q
+    |> select_merge([i], %{events: sum(i.pageviews)})
     |> select_imported_metrics(rest)
   end
 
@@ -436,6 +450,12 @@ defmodule Plausible.Stats.Imported do
   defp select_joined_metrics(q, [:visitors | rest]) do
     q
     |> select_merge([s, i], %{visitors: selected_as(s.visitors + i.visitors, :visitors)})
+    |> select_joined_metrics(rest)
+  end
+
+  defp select_joined_metrics(q, [:events | rest]) do
+    q
+    |> select_merge([s, i], %{events: s.events + i.events})
     |> select_joined_metrics(rest)
   end
 

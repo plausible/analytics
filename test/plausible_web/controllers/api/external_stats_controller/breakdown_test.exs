@@ -3094,14 +3094,61 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "period" => "day",
           "date" => "2021-01-01",
           "property" => "event:goal",
-          "metrics" => "visitors",
+          "metrics" => "visitors,events",
           "with_imported" => "true"
         })
 
       assert [
-               %{"goal" => "Purchase", "visitors" => 5},
-               %{"goal" => "Visit /test", "visitors" => 3}
+               %{"goal" => "Purchase", "visitors" => 5, "events" => 7},
+               %{"goal" => "Visit /test", "visitors" => 3, "events" => 3}
              ] = json_response(conn, 200)["results"]
+    end
+
+    test "pageviews are returned as events for breakdown reports other than custom events", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:imported_browsers, browser: "Chrome", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_devices, device: "Desktop", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_entry_pages, entry_page: "/test", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_exit_pages, exit_page: "/test", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_locations, country: "EE", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_operating_systems,
+          operating_system: "Mac",
+          pageviews: 1,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages, page: "/test", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_sources, source: "Google", pageviews: 1, date: ~D[2021-01-01])
+      ])
+
+      params = %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "metrics" => "events",
+        "with_imported" => "true"
+      }
+
+      breakdown_and_first = fn property ->
+        conn
+        |> get("/api/v1/stats/breakdown", Map.put(params, "property", property))
+        |> json_response(200)
+        |> Map.get("results")
+        |> List.first()
+      end
+
+      assert %{"browser" => "Chrome", "events" => 1} = breakdown_and_first.("visit:browser")
+      assert %{"device" => "Desktop", "events" => 1} = breakdown_and_first.("visit:device")
+      assert %{"entry_page" => "/test", "events" => 1} = breakdown_and_first.("visit:entry_page")
+      assert %{"exit_page" => "/test", "events" => 1} = breakdown_and_first.("visit:exit_page")
+      assert %{"country" => "EE", "events" => 1} = breakdown_and_first.("visit:country")
+      assert %{"os" => "Mac", "events" => 1} = breakdown_and_first.("visit:os")
+      assert %{"page" => "/test", "events" => 1} = breakdown_and_first.("event:page")
+      assert %{"source" => "Google", "events" => 1} = breakdown_and_first.("visit:source")
     end
   end
 end
