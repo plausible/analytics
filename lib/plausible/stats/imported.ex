@@ -242,6 +242,15 @@ defmodule Plausible.Stats.Imported do
     |> select_imported_metrics(rest)
   end
 
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_custom_events", _}}} = q,
+         [:pageviews | rest]
+       ) do
+    q
+    |> select_merge([i], %{pageviews: 0})
+    |> select_imported_metrics(rest)
+  end
+
   defp select_imported_metrics(q, [:pageviews | rest]) do
     q
     |> where([i], i.pageviews > 0)

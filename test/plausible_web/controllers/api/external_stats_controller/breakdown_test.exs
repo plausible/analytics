@@ -3094,13 +3094,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "period" => "day",
           "date" => "2021-01-01",
           "property" => "event:goal",
-          "metrics" => "visitors,events",
+          "metrics" => "visitors,events,pageviews",
           "with_imported" => "true"
         })
 
       assert [
-               %{"goal" => "Purchase", "visitors" => 5, "events" => 7},
-               %{"goal" => "Visit /test", "visitors" => 3, "events" => 3}
+               %{"goal" => "Purchase", "visitors" => 5, "events" => 7, "pageviews" => 0},
+               %{"goal" => "Visit /test", "visitors" => 3, "events" => 3, "pageviews" => 3}
              ] = json_response(conn, 200)["results"]
     end
 
