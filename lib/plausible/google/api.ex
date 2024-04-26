@@ -26,8 +26,8 @@ defmodule Plausible.Google.API do
       Jason.encode!([site_id, "import"])
   end
 
-  def fetch_access_token!(code) do
-    HTTP.fetch_access_token!(code)
+  def fetch_access_token(code) do
+    HTTP.fetch_access_token(code)
   end
 
   def list_properties_and_views(access_token) do

@@ -22,7 +22,7 @@ defmodule Plausible.Google.HTTP do
     end
   end
 
-  def fetch_access_token!(code) do
+  def fetch_access_token(code) do
     url = "#{api_url()}/oauth2/v4/token"
     headers = [{"Content-Type", "application/x-www-form-urlencoded"}]
 
@@ -34,9 +34,20 @@ defmodule Plausible.Google.HTTP do
       redirect_uri: redirect_uri()
     }
 
-    {:ok, response} = HTTPClient.post(url, headers, params)
+    case HTTPClient.impl().get(url, headers, params) do
+      {:ok, %{body: body}} ->
+        {:ok, body}
 
-    response.body
+      {:error, %{reason: %{status: s}}} when s in [401, 403] ->
+        {:error, "google_auth_error"}
+
+      {:error, %{reason: %{body: %{"error" => error}}}} ->
+        {:error, error}
+
+      {:error, reason} ->
+        Logger.error("Google Auth: failed to obtain access token: #{inspect(reason)}")
+        {:error, "failed_to_obtain_access_token"}
+    end
   end
 
   def list_stats(access_token, property, date_range, limit, page \\ nil) do

@@ -699,7 +699,7 @@ defmodule PlausibleWeb.AuthController do
   def google_auth_callback(conn, %{"error" => error, "state" => state} = params) do
     [site_id, redirected_to | _] = Jason.decode!(state)
 
-    site = Repo.get(Plausible.Site, site_id)
+    site = Repo.get!(Plausible.Site, site_id)
 
     redirect_route =
       if redirected_to == "import" do
@@ -738,42 +738,54 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def google_auth_callback(conn, %{"code" => code, "state" => state}) do
-    res = Plausible.Google.API.fetch_access_token!(code)
-
     [site_id, redirect_to | _] = Jason.decode!(state)
+    site = Repo.get!(Plausible.Site, site_id)
 
-    site = Repo.get(Plausible.Site, site_id)
-    expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(), res["expires_in"])
-
-    case redirect_to do
-      "import" ->
-        redirect(conn,
-          external:
-            Routes.google_analytics_path(conn, :property_or_view_form, site.domain,
-              access_token: res["access_token"],
-              refresh_token: res["refresh_token"],
-              expires_at: NaiveDateTime.to_iso8601(expires_at)
-            )
-        )
+    case Plausible.Google.API.fetch_access_token(code) do
+      {:ok, token_data} ->
+        %{"expires_in" => expires_in} = token_data
+        expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(), expires_in)
+        google_auth_redirect(conn, site, redirect_to, token_data, expires_at)
 
       _ ->
-        id_token = res["id_token"]
-        [_, body, _] = String.split(id_token, ".")
-        id = body |> Base.decode64!(padding: false) |> Jason.decode!()
-
-        Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
-          email: id["email"],
-          refresh_token: res["refresh_token"],
-          access_token: res["access_token"],
-          expires: expires_at,
-          user_id: conn.assigns[:current_user].id,
-          site_id: site_id
-        })
-        |> Repo.insert!()
-
-        site = Repo.get(Plausible.Site, site_id)
-
-        redirect(conn, external: "/#{URI.encode_www_form(site.domain)}/settings/integrations")
+        conn
+        |> put_flash(
+          :error,
+          "We were unable to authenticate your Google Analytics account. Please try again in a few moments. If the problem persists, please contact support for assistance."
+        )
+        |> redirect(external: Routes.site_path(conn, :settings_general, site.domain))
     end
+  end
+
+  defp google_auth_redirect(conn, site, "import", token_data, expires_at) do
+    %{"access_token" => access_token, "refresh_token" => refresh_token} = token_data
+
+    redirect(conn,
+      external:
+        Routes.google_analytics_path(conn, :property_or_view_form, site.domain,
+          access_token: access_token,
+          refresh_token: refresh_token,
+          expires_at: NaiveDateTime.to_iso8601(expires_at)
+        )
+    )
+  end
+
+  defp google_auth_redirect(conn, site, _, token_data, expires_at) do
+    %{"access_token" => access_token, "refresh_token" => refresh_token} = token_data
+    %{"id_token" => id_token} = token_data
+    [_, body, _] = String.split(id_token, ".")
+    %{"email" => email} = body |> Base.decode64!(padding: false) |> Jason.decode!()
+
+    Plausible.Site.GoogleAuth.changeset(%Plausible.Site.GoogleAuth{}, %{
+      email: email,
+      refresh_token: refresh_token,
+      access_token: access_token,
+      expires: expires_at,
+      user_id: conn.assigns.current_user.id,
+      site_id: site.id
+    })
+    |> Repo.insert!()
+
+    redirect(conn, external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 end
