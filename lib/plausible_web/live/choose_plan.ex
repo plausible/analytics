@@ -189,14 +189,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
      )}
   end
 
-  def handle_event("show-tooltip", %{"paddle-product-id" => product_id}, socket) do
-    {:noreply, assign(socket, display_tooltip_product_id: product_id)}
-  end
-
-  def handle_event("hide-tooltip", _, socket) do
-    {:noreply, assign(socket, display_tooltip_product_id: nil)}
-  end
-
   defp default_selected_volume(%Plan{monthly_pageview_limit: limit}, _, _), do: limit
 
   defp default_selected_volume(_, last_30_days_usage, available_volumes) do

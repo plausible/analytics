@@ -168,7 +168,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     subscription_deleted = Subscription.Status.deleted?(subscription)
     usage_within_limits = usage_within_plan_limits?(assigns)
 
-    {checkout_disabled, disabled_message, limits} =
+    {checkout_disabled, disabled_message, disabled_tooltip_fn} =
       cond do
         not assigns.eligible_for_upgrade? ->
           {true, nil, nil}
@@ -176,8 +176,8 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
         change_plan_link_text == "Currently on this plan" && not subscription_deleted ->
           {true, nil, nil}
 
-        usage_within_limits != :ok ->
-          {true, "Your usage exceeds this plan", limits(usage_within_limits)}
+        assigns.available && usage_within_limits != :ok ->
+          {true, "Your usage exceeds this plan", get_tooltip_fn(usage_within_limits)}
 
         billing_details_expired ->
           {true, "Please update your billing details first", nil}
@@ -195,7 +195,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       |> assign(:change_plan_link_text, change_plan_link_text)
       |> assign(:checkout_disabled, checkout_disabled)
       |> assign(:disabled_message, disabled_message)
-      |> assign(:disabled_message_limits, limits)
+      |> assign(:disabled_tooltip_fn, disabled_tooltip_fn)
       |> assign(:confirm_message, losing_features_message(features_to_lose))
 
     ~H"""
@@ -210,13 +210,25 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       :if={@disabled_message}
       class="h-0 text-center text-sm text-red-700 dark:text-red-500 disabled-message"
     >
-      <%= if @disabled_message_limits do %>
-        <.disabled_with_tooltip
-          show_tooltip?={@paddle_product_id == @display_tooltip_product_id}
-          paddle_product_id={@paddle_product_id}
-          disabled_message={@disabled_message}
-          limits={@disabled_message_limits}
-        />
+      <%= if is_function(@disabled_tooltip_fn, 1) do %>
+        <div x-data="{sticky: false, hovered: false}" class="tooltip-wrapper relative">
+          <p
+            x-on:click="sticky = true; hovered = true"
+            x-on:click.outside="sticky = false; hovered = false"
+            x-on:mouseover="hovered = true"
+            x-on:mouseout="hovered = false"
+            class="cursor-pointer text-sm text-red-700 dark:text-red-500 mt-1 flex justify-center align-items-center"
+          >
+            <%= @disabled_message %>
+            <Heroicons.information_circle class="w-5 h-5 ml-2" />
+          </p>
+          <span
+            x-show="hovered || sticky"
+            class="bg-gray-900 pointer-events-none absolute bottom-10 margin-x-auto left-10 right-10 transition-opacity p-4 rounded text-white"
+          >
+            <%= apply(@disabled_tooltip_fn, [assigns]) %>
+          </span>
+        </div>
       <% else %>
         <%= @disabled_message %>
       <% end %>
@@ -224,46 +236,20 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     """
   end
 
-  attr :show_tooltip?, :boolean, default: false
-  attr :paddle_product_id, :string, required: true
-  attr :limits, :list, default: nil
-  attr :disabled_message, :string, required: true
+  def get_tooltip_fn({:error, {:over_plan_limits, limits}}) do
+    fn assigns ->
+      assigns = assign(assigns, :limits, limits)
 
-  def disabled_with_tooltip(assigns) do
-    opacity =
-      if assigns.show_tooltip? do
-        "opacity-90"
-      else
-        "opacity-0 group-hover:opacity-90"
-      end
-
-    assigns = assign(assigns, opacity: opacity)
-
-    ~H"""
-    <div class="text-sm text-red-700 dark:text-red-500 cursor-pointer mt-1 group tooltip-wrapper">
-      <span class={[
-        "bg-black pointer-events-none absolute bottom-10 margin-x-auto left-10 right-10 transition-opacity p-4 rounded text-white",
-        @opacity
-      ]}>
-        Your usage exceeds the following limit(s):<br /><br />
-        <%= for limit <- @limits do %>
-          <%= Phoenix.Naming.humanize(limit) %>
-        <% end %>
-      </span>
-
-      <a
-        href="#"
-        phx-click="show-tooltip"
-        phx-click-away="hide-tooltip"
-        phx-value-paddle-product-id={@paddle_product_id}
-        class="flex justify-center align-items-center"
-      >
-        <%= @disabled_message %>
-        <Heroicons.information_circle class="w-5 h-5 ml-2" />
-      </a>
-    </div>
-    """
+      ~H"""
+      Your usage exceeds the following limit(s):<br /><br />
+      <p :for={limit <- @limits}>
+        <%= Phoenix.Naming.humanize(limit) %><br />
+      </p>
+      """
+    end
   end
+
+  def get_tooltip_fn(_), do: nil
 
   defp usage_within_plan_limits?(%{available: false}) do
     {:error, :plan_unavailable}
@@ -301,12 +287,6 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
     Quota.ensure_within_plan_limits(usage, plan, limit_checking_opts)
   end
-
-  defp limits({:error, {:over_plan_limits, limits}}) do
-    limits
-  end
-
-  defp limits(_), do: nil
 
   defp get_paddle_product_id(%Plan{monthly_product_id: plan_id}, :monthly), do: plan_id
   defp get_paddle_product_id(%Plan{yearly_product_id: plan_id}, :yearly), do: plan_id

@@ -523,30 +523,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                "Your usage exceeds the following limit(s): Site limit"
     end
 
-    test "clicking the tooltip changes makes it sticky", %{
-      conn: conn,
-      user: user
-    } do
-      insert(:site,
-        memberships: [
-          build(:site_membership, user: user, role: :owner),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user))
-        ]
-      )
-
-      {:ok, lv, doc} = get_liveview(conn)
-
-      assert class_of_element(doc, @growth_plan_tooltip) =~ "opacity-0 group-hover:opacity-90"
-
-      doc = element(lv, @growth_plan_tooltip_link) |> render_click()
-
-      assert class_of_element(doc, @growth_plan_tooltip) =~ "opacity-90"
-      refute class_of_element(doc, @growth_plan_tooltip) =~ "opacity-0"
-    end
-
     test "when more than one limit is exceeded, the tooltip enumerates them", %{
       conn: conn,
       user: user
