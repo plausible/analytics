@@ -15,6 +15,7 @@ defmodule Plausible.Google.GA4.API do
         }
 
   @per_page 250_000
+  @batch_size 5
   @backoff_factor :timer.seconds(10)
   @max_attempts 5
 
@@ -103,7 +104,7 @@ defmodule Plausible.Google.GA4.API do
     attempt = Keyword.get(opts, :attempt, 1)
     sleep_time = Keyword.get(opts, :sleep_time, @backoff_factor)
 
-    case GA4.HTTP.get_report(report_request) do
+    case GA4.HTTP.get_report(report_request, @batch_size) do
       {:ok, {rows, row_count}} ->
         Logger.debug(
           "[#{inspect(__MODULE__)}:#{report_request.property}] Fetched #{length(rows)} rows of total #{row_count} with offset #{report_request.offset} for #{report_request.dataset}"
@@ -115,9 +116,12 @@ defmodule Plausible.Google.GA4.API do
           "[#{inspect(__MODULE__)}:#{report_request.property}] Persisted #{length(rows)} for #{report_request.dataset}"
         )
 
-        if report_request.offset + @per_page < row_count do
+        if report_request.offset + @per_page * @batch_size < row_count do
           fetch_and_persist(
-            %GA4.ReportRequest{report_request | offset: report_request.offset + @per_page},
+            %GA4.ReportRequest{
+              report_request
+              | offset: report_request.offset + @per_page * @batch_size
+            },
             opts
           )
         else

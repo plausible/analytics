@@ -7,34 +7,35 @@ defmodule Plausible.Google.GA4.HTTP do
 
   require Logger
 
-  @spec get_report(Plausible.Google.GA4.ReportRequest.t()) ::
+  @spec get_report(Plausible.Google.GA4.ReportRequest.t(), non_neg_integer()) ::
           {:ok, {[map()], non_neg_integer()}} | {:error, any()}
-  def get_report(%Plausible.Google.GA4.ReportRequest{} = report_request) do
+  def get_report(%Plausible.Google.GA4.ReportRequest{} = report_request, batch_size) do
     params = %{
-      requests: [
-        %{
-          property: report_request.property,
-          dateRanges: [
-            %{
-              startDate: report_request.date_range.first,
-              endDate: report_request.date_range.last
-            }
-          ],
-          dimensions: Enum.map(report_request.dimensions, &%{name: &1}),
-          metrics: Enum.map(report_request.metrics, &build_metric/1),
-          orderBys: [
-            %{
-              dimension: %{
-                dimensionName: "date",
-                orderType: "ALPHANUMERIC"
-              },
-              desc: true
-            }
-          ],
-          limit: report_request.limit,
-          offset: report_request.offset
-        }
-      ]
+      requests:
+        Enum.map(1..batch_size, fn idx ->
+          %{
+            property: report_request.property,
+            dateRanges: [
+              %{
+                startDate: report_request.date_range.first,
+                endDate: report_request.date_range.last
+              }
+            ],
+            dimensions: Enum.map(report_request.dimensions, &%{name: &1}),
+            metrics: Enum.map(report_request.metrics, &build_metric/1),
+            orderBys: [
+              %{
+                dimension: %{
+                  dimensionName: "date",
+                  orderType: "ALPHANUMERIC"
+                },
+                desc: true
+              }
+            ],
+            limit: report_request.limit,
+            offset: report_request.offset + (idx - 1) * report_request.limit
+          }
+        end)
     }
 
     url =
@@ -49,9 +50,9 @@ defmodule Plausible.Google.GA4.HTTP do
       )
 
     with {:ok, %{body: body}} <- response,
-         {:ok, report} <- parse_report_from_response(body),
-         row_count <- Map.fetch!(report, "rowCount"),
-         {:ok, report} <- convert_to_maps(report) do
+         {:ok, [first_report | _] = reports} <- parse_reports_from_response(body),
+         row_count <- Map.fetch!(first_report, "rowCount"),
+         {:ok, report} <- convert_reports(reports) do
       {:ok, {report, row_count}}
     else
       {:error, %{reason: %{status: status, body: body}}} ->
@@ -84,18 +85,34 @@ defmodule Plausible.Google.GA4.HTTP do
     end
   end
 
-  defp parse_report_from_response(%{"reports" => [report | _]}) do
-    {:ok, report}
+  defp parse_reports_from_response(%{"reports" => [_ | _] = reports}) do
+    {:ok, reports}
   end
 
-  defp parse_report_from_response(body) do
+  defp parse_reports_from_response(body) do
     Sentry.Context.set_extra_context(%{google_analytics4_response: body})
 
     Logger.error(
-      "Google Analytics 4: Failed to find report in response. Reason: #{inspect(body)}"
+      "Google Analytics 4: Failed to find reports in response. Reason: #{inspect(body)}"
     )
 
     {:error, {:invalid_response, body}}
+  end
+
+  defp convert_reports(reports) do
+    Enum.reduce_while(reports, {:ok, []}, fn
+      %{"rows" => [_ | _]} = report, {:ok, output} ->
+        case convert_to_maps(report) do
+          {:ok, rows} ->
+            {:cont, {:ok, output ++ rows}}
+
+          {:error, reason} ->
+            {:halt, {:error, reason}}
+        end
+
+      %{}, {:ok, output} ->
+        {:halt, {:ok, output}}
+    end)
   end
 
   defp convert_to_maps(%{
