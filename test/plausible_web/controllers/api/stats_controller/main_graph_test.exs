@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.any?(plot, fn pageviews -> pageviews > 0 end)
     end
 
-    test "displays visitors for a day", %{conn: conn, site: site} do
+    test "displays pageviews for a day", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-01 23:00:00])
