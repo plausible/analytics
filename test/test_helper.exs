@@ -11,8 +11,10 @@ FunWithFlags.enable(:csv_imports_exports)
 # Temporary flag to test `experimental_reduced_joins` flag on all tests.
 if System.get_env("TEST_EXPERIMENTAL_REDUCED_JOINS") == "1" do
   FunWithFlags.enable(:experimental_reduced_joins)
+  FunWithFlags.enable(:experimental_session_count)
 else
   FunWithFlags.disable(:experimental_reduced_joins)
+  FunWithFlags.disable(:experimental_session_count)
 end
 
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
