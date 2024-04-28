@@ -1,5 +1,6 @@
 defmodule Plausible.Imported.GoogleAnalytics4Test do
   use PlausibleWeb.ConnCase, async: true
+  use Oban.Testing, repo: Plausible.Repo
 
   import Mox
   import Ecto.Query, only: [from: 2]
@@ -133,6 +134,106 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
       assert_os(conn, breakdown_params)
       assert_os_versions(conn, breakdown_params)
       assert_active_visitors(site_import)
+    end
+
+    test "handles rate limiting gracefully", %{user: user, site: site} do
+      future = DateTime.add(DateTime.utc_now(), 3600, :second)
+
+      {:ok, job} =
+        Plausible.Imported.GoogleAnalytics4.new_import(
+          site,
+          user,
+          label: "properties/123456",
+          property: "properties/123456",
+          start_date: ~D[2024-01-01],
+          end_date: ~D[2024-01-31],
+          access_token: "redacted_access_token",
+          refresh_token: "redacted_refresh_token",
+          token_expires_at: DateTime.to_iso8601(future)
+        )
+
+      site_import = Plausible.Imported.get_import(site, job.args.import_id)
+
+      opts = job |> Repo.reload!() |> Map.get(:args) |> GoogleAnalytics4.parse_args()
+
+      opts = Keyword.put(opts, :flush_interval_ms, 10)
+
+      expect(Plausible.HTTPClient.Mock, :post, fn _url, headers, _body, _opts ->
+        assert [{"Authorization", "Bearer redacted_access_token"}] == headers
+        {:ok, %Finch.Response{status: 200, body: List.first(@full_report_mock)}}
+      end)
+
+      expect(Plausible.HTTPClient.Mock, :post, fn _url, headers, _body, _opts ->
+        assert [{"Authorization", "Bearer redacted_access_token"}] == headers
+
+        {:error,
+         Plausible.HTTPClient.Non200Error.new(%Finch.Response{
+           status: 429,
+           body: "Rate limit exceeded"
+         })}
+      end)
+
+      assert {:error, :rate_limit_exceeded, skip_purge?: true, skip_mark_failed?: true} =
+               GoogleAnalytics4.import_data(site_import, opts)
+
+      in_an_hour = DateTime.add(DateTime.utc_now(), 3600, :second)
+
+      assert_enqueued(
+        worker: Plausible.Workers.ImportAnalytics,
+        args: %{resume_from_import_id: site_import.id},
+        scheduled_at: {in_an_hour, delta: 10}
+      )
+
+      [%{args: resume_args}, _] = all_enqueued()
+
+      resume_opts = GoogleAnalytics4.parse_args(resume_args)
+      resume_opts = Keyword.put(resume_opts, :flush_interval_ms, 10)
+      site_import = Repo.reload!(site_import)
+
+      Enum.each(Plausible.Imported.tables(), fn table ->
+        count =
+          case table do
+            "imported_visitors" -> 31
+            "imported_sources" -> 0
+            "imported_pages" -> 0
+            "imported_entry_pages" -> 0
+            "imported_exit_pages" -> 0
+            "imported_locations" -> 0
+            "imported_devices" -> 0
+            "imported_browsers" -> 0
+            "imported_operating_systems" -> 0
+          end
+
+        query = from(imported in table, where: imported.site_id == ^site.id)
+        assert await_clickhouse_count(query, count)
+      end)
+
+      for report <- tl(@full_report_mock) do
+        expect(Plausible.HTTPClient.Mock, :post, fn _url, headers, _body, _opts ->
+          assert [{"Authorization", "Bearer redacted_access_token"}] == headers
+          {:ok, %Finch.Response{status: 200, body: report}}
+        end)
+      end
+
+      assert :ok = GoogleAnalytics4.import_data(site_import, resume_opts)
+
+      Enum.each(Plausible.Imported.tables(), fn table ->
+        count =
+          case table do
+            "imported_sources" -> 210
+            "imported_visitors" -> 31
+            "imported_pages" -> 3340
+            "imported_entry_pages" -> 2934
+            "imported_exit_pages" -> 0
+            "imported_locations" -> 2291
+            "imported_devices" -> 93
+            "imported_browsers" -> 233
+            "imported_operating_systems" -> 1068
+          end
+
+        query = from(imported in table, where: imported.site_id == ^site.id)
+        assert await_clickhouse_count(query, count)
+      end)
     end
   end
 

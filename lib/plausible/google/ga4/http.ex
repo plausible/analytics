@@ -54,6 +54,16 @@ defmodule Plausible.Google.GA4.HTTP do
          {:ok, report} <- convert_to_maps(report) do
       {:ok, {report, row_count}}
     else
+      {:error, %{reason: %{status: 429, body: body}}} ->
+        Logger.debug(
+          "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset} due to exceeding rate limit."
+        )
+
+        Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: 429}})
+
+        {:error,
+         {:rate_limit_exceeded, dataset: report_request.dataset, offset: report_request.offset}}
+
       {:error, %{reason: %{status: status, body: body}}} ->
         Logger.debug(
           "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset} with code #{status}: #{inspect(body)}"

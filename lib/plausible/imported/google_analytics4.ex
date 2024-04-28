@@ -5,6 +5,9 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
 
   use Plausible.Imported.Importer
 
+  alias Plausible.Imported
+  alias Plausible.Repo
+
   @missing_values ["(none)", "(not set)", "(not provided)", "(other)"]
 
   @impl true
@@ -17,6 +20,31 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
   def email_template(), do: "google_analytics_import.html"
 
   @impl true
+  def before_start(site_import, opts) do
+    site_import = Repo.preload(site_import, :site)
+
+    if import_id = Keyword.get(opts, :resume_from_import_id) do
+      if existing_site_import = Imported.get_import(site_import.site, import_id) do
+        Repo.delete!(site_import)
+        {:ok, existing_site_import}
+      else
+        # NOTE: shouldn't happen under normal circumsatnces
+        {:error, {:no_import_to_resume, import_id}}
+      end
+    else
+      {:ok, site_import}
+    end
+  end
+
+  @impl true
+  def parse_args(%{"resume_from_dataset" => dataset, "resume_from_offset" => offset} = args) do
+    args
+    |> Map.drop(["resume_from_dataset", "resume_from_offset"])
+    |> parse_args()
+    |> Keyword.put(:dataset, dataset)
+    |> Keyword.put(:offset, offset)
+  end
+
   def parse_args(
         %{"property" => property, "start_date" => start_date, "end_date" => end_date} = args
       ) do
@@ -57,8 +85,47 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
       Plausible.Imported.Buffer.insert_many(buffer, table, records)
     end
 
+    resume_opts = Keyword.take(opts, [:dataset, :offset])
+
     try do
-      Plausible.Google.GA4.API.import_analytics(date_range, property, auth, persist_fn)
+      result =
+        Plausible.Google.GA4.API.import_analytics(date_range, property, auth,
+          persist_fn: persist_fn,
+          resume_opts: resume_opts
+        )
+
+      case result do
+        {:error, {:rate_limit_exceeded, details}} ->
+          site_import = Repo.preload(site_import, [:site, :imported_by])
+          dataset = Keyword.fetch!(details, :dataset)
+          offset = Keyword.fetch!(details, :offset)
+          {access_token, refresh_token, token_expires_at} = auth
+
+          resume_import_opts = [
+            property: property,
+            label: property,
+            start_date: date_range.first,
+            end_date: date_range.last,
+            access_token: access_token,
+            refresh_token: refresh_token,
+            token_expires_at: token_expires_at,
+            resume_from_import_id: site_import.id,
+            resume_from_dataset: dataset,
+            resume_from_offset: offset,
+            job_opts: [schedule_in: {60, :minutes}, unique: nil]
+          ]
+
+          new_import(
+            site_import.site,
+            site_import.imported_by,
+            resume_import_opts
+          )
+
+          {:error, :rate_limit_exceeded, skip_purge?: true, skip_mark_failed?: true}
+
+        other ->
+          other
+      end
     after
       Plausible.Imported.Buffer.flush(buffer)
       Plausible.Imported.Buffer.stop(buffer)

@@ -32,7 +32,7 @@ defmodule Plausible.Workers.ImportAnalytics do
 
         :ok
 
-      {:error, error} ->
+      {:error, error, error_opts} ->
         Sentry.capture_message("Failed to import from #{site_import.source}",
           extra: %{
             import_id: site_import.id,
@@ -41,7 +41,7 @@ defmodule Plausible.Workers.ImportAnalytics do
           }
         )
 
-        import_fail(site_import)
+        import_fail(site_import, error_opts)
 
         {:discard, error}
     end
@@ -72,19 +72,26 @@ defmodule Plausible.Workers.ImportAnalytics do
     Importer.notify(site_import, :transient_fail)
   end
 
-  def import_fail(site_import) do
-    Plausible.Purge.delete_imported_stats!(site_import)
+  def import_fail(site_import, opts) do
+    skip_purge? = Keyword.get(opts, :skip_purge?, false)
+    skip_mark_failed? = Keyword.get(opts, :skip_mark_failed?, false)
 
-    import_api = ImportSources.by_name(site_import.source)
+    if not skip_purge? do
+      Plausible.Purge.delete_imported_stats!(site_import)
+    end
 
-    site_import =
-      site_import
-      |> import_api.mark_failed()
-      |> Repo.preload([:site, :imported_by])
+    if not skip_mark_failed? do
+      import_api = ImportSources.by_name(site_import.source)
 
-    Importer.notify(site_import, :fail)
+      site_import =
+        site_import
+        |> import_api.mark_failed()
+        |> Repo.preload([:site, :imported_by])
 
-    PlausibleWeb.Email.import_failure(site_import, site_import.imported_by)
-    |> Plausible.Mailer.send()
+      Importer.notify(site_import, :fail)
+
+      PlausibleWeb.Email.import_failure(site_import, site_import.imported_by)
+      |> Plausible.Mailer.send()
+    end
   end
 end
