@@ -20,7 +20,7 @@ function Historical(props) {
   return (
     <div className="mb-12">
       <div id="stats-container-top"></div>
-      <div className={`relative top-0 sm:py-3 py-2 z-10 ${props.stuck && !props.site.embedded ? 'sticky fullwidth-shadow bg-gray-50 dark:bg-gray-850' : ''}`}>
+      <div className={`relative top-0 sm:py-3 py-2 z-10 ${props.stuck && !props.site.embedded ? 'sticky fullwidth-shadow bg-opacity-70 bg-gray-50 dark:bg-gray-850' : ''}`}>
         <div className="items-center w-full flex">
           <div className="flex items-center w-full" ref={tooltipBoundary}>
             <SiteSwitcher site={props.site} loggedIn={props.loggedIn} currentUserRole={props.currentUserRole} />

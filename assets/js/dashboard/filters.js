@@ -1,6 +1,6 @@
 import React, { Fragment, useState } from 'react';
 import { Link, withRouter } from 'react-router-dom'
-import { AdjustmentsVerticalIcon, MagnifyingGlassIcon, XMarkIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
+import { AdjustmentsHorizontalIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import { Menu, Transition } from '@headlessui/react'
 
@@ -73,15 +73,7 @@ function renderDropdownFilter(site, history, { key, value, filterType }, query) 
           style={{ width: 'calc(100% - 1.5rem)' }}
         >
           <span className="inline-block w-full truncate">{filterText(filterType, key, query)}</span>
-          <PencilSquareIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
         </Link>
-        <b
-          title={`Remove filter: ${formattedFilters[filterType]}`}
-          className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"
-          onClick={() => removeFilter(filterType, key, history, query)}
-        >
-          <XMarkIcon className="w-4 h-4" />
-        </b>
       </div>
     </Menu.Item>
   )
@@ -105,24 +97,45 @@ function filterDropdownOption(site, option) {
   )
 }
 
-function DropdownContent({ history, site, query, wrapped }) {
+function DropdownContent({ history, site, query }) {
   const [addingFilter, setAddingFilter] = useState(false);
+  const filterCount = appliedFilters(query).length
 
-  if (wrapped === 0 || addingFilter) {
+  if (addingFilter) {
     let filterGroups = {...FILTER_GROUPS}
     if (!site.propsAvailable) delete filterGroups.props
 
     return Object.keys(filterGroups).map((option) => filterDropdownOption(site, option))
   }
 
+
+  if (filterCount === 0)  {
+    return (
+      <>
+        <div className="px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer">
+          Segment A
+        </div>
+        <div className="border-b border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer">
+          Segment B
+        </div>
+        <div className="border-b border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => setAddingFilter(true)}>
+          Add Filter
+        </div>
+      </>
+    )
+  }
+
   return (
     <>
-      <div className="border-b border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => setAddingFilter(true)}>
-        + Add filter
+      <div className="border-b border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => clearAllFilters(history, query)}>
+        Save Segment
       </div>
       {appliedFilters(query).map((filter) => renderDropdownFilter(site, history, filter, query))}
+      <div className="border-b border-gray-200 dark:border-gray-500 flex items-center px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => setAddingFilter(true)}>
+        Add Filter
+      </div>
       <Menu.Item key="clear">
-        <div className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => clearAllFilters(history, query)}>
+        <div className="px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => clearAllFilters(history, query)}>
           Clear All Filters
         </div>
       </Menu.Item>
@@ -239,11 +252,12 @@ class Filters extends React.Component {
   }
 
   renderDropdownButton() {
-    if (this.state.wrapped === 2) {
-      const filterCount = appliedFilters(this.props.query).length
+    const filterCount = appliedFilters(this.props.query).length
+
+    if (this.state.wrapped === 2 || filterCount > 0) {
       return (
         <>
-          <AdjustmentsVerticalIcon className="-ml-1 mr-1 h-4 w-4" aria-hidden="true" />
+          <AdjustmentsHorizontalIcon className="-ml-1 mr-1 h-4 w-4" aria-hidden="true" />
           {filterCount} Filter{filterCount === 1 ? '' : 's'}
         </>
       )
@@ -251,9 +265,8 @@ class Filters extends React.Component {
 
     return (
       <>
-        <MagnifyingGlassIcon className="-ml-1 mr-1 h-4 w-4 md:h-4 md:w-4" aria-hidden="true" />
-        {/* This would have been a good use-case for JSX! But in the interest of keeping the breakpoint width logic with TailwindCSS, this is a better long-term way to deal with it. */}
-        <span className="sm:hidden">Filter</span><span className="hidden sm:inline-block">Filter</span>
+        <AdjustmentsHorizontalIcon className="-ml-1 mr-1 h-4 w-4 md:h-4 md:w-4" aria-hidden="true" />
+        <span className="sm:hidden">Filter</span><span className="hidden sm:inline-block">Segment</span>
       </>
     )
   }
