@@ -3085,7 +3085,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           visitors: 2,
           pageviews: 2,
           date: ~D[2021-01-01]
-        )
+        ),
+        build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
       ])
 
       conn =
@@ -3094,13 +3095,25 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "period" => "day",
           "date" => "2021-01-01",
           "property" => "event:goal",
-          "metrics" => "visitors,events,pageviews",
+          "metrics" => "visitors,events,pageviews,conversion_rate",
           "with_imported" => "true"
         })
 
       assert [
-               %{"goal" => "Purchase", "visitors" => 5, "events" => 7, "pageviews" => 0},
-               %{"goal" => "Visit /test", "visitors" => 3, "events" => 3, "pageviews" => 3}
+               %{
+                 "goal" => "Purchase",
+                 "visitors" => 5,
+                 "events" => 7,
+                 "pageviews" => 0,
+                 "conversion_rate" => 62.5
+               },
+               %{
+                 "goal" => "Visit /test",
+                 "visitors" => 3,
+                 "events" => 3,
+                 "pageviews" => 3,
+                 "conversion_rate" => 37.5
+               }
              ] = json_response(conn, 200)["results"]
     end
 

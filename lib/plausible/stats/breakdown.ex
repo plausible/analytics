@@ -121,7 +121,7 @@ defmodule Plausible.Stats.Breakdown do
 
     if full_q do
       full_q
-      |> maybe_add_conversion_rate(site, query, metrics, include_imported: false)
+      |> maybe_add_conversion_rate(site, query, metrics)
       |> ClickhouseRepo.all()
       |> transform_keys(%{name: :goal})
       |> cast_revenue_metrics_to_money(revenue_goals)
@@ -150,7 +150,7 @@ defmodule Plausible.Stats.Breakdown do
     if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
 
     breakdown_events(site, query, metrics_to_select)
-    |> maybe_add_conversion_rate(site, query, metrics, include_imported: false)
+    |> maybe_add_conversion_rate(site, query, metrics)
     |> paginate_and_execute(metrics, pagination)
     |> transform_keys(%{breakdown_prop_value: custom_prop})
     |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
