@@ -37,7 +37,7 @@ defmodule Plausible.Application do
             {Plausible.Site.Cache.All,
              interval: :timer.minutes(15) + Enum.random(1..:timer.seconds(10))},
           refresh_updated_recently:
-            {Plausible.Site.Cache.ReventlyUpdated, interval: :timer.seconds(30)}
+            {Plausible.Site.Cache.RecentlyUpdated, interval: :timer.seconds(30)}
         ]
       ),
       cache(Plausible.Shield.IPRuleCache,
