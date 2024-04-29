@@ -56,8 +56,6 @@ defmodule Plausible.Cache do
   # credo:disable-for-this-file Credo.Check.Refactor.LongQuoteBlocks
   defmacro __using__(_opts) do
     quote do
-      require Logger
-
       @behaviour Plausible.Cache
       @modes [:all, :updated_recently]
 

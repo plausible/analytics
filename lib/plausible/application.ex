@@ -24,13 +24,15 @@ defmodule Plausible.Application do
       Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
       Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
       ReferrerBlocklist,
-      cache(:user_agents,
-        adapter_opts: [ttl_check_interval: :timer.seconds(5), global_ttl: :timer.minutes(60)]
+      Plausible.Cache.Adapter.child_spec(:user_agents, :cache_user_agents,
+        ttl_check_interval: :timer.seconds(5),
+        global_ttl: :timer.minutes(60)
       ),
-      cache(:sessions,
-        adapter_opts: [ttl_check_interval: :timer.seconds(1), global_ttl: :timer.minutes(30)]
+      Plausible.Cache.Adapter.child_spec(:sessions, :cache_sessions,
+        ttl_check_interval: :timer.seconds(1),
+        global_ttl: :timer.minutes(30)
       ),
-      cache(Plausible.Site.Cache,
+      warmed_cache(Plausible.Site.Cache,
         adapter_opts: [ttl_check_interval: false],
         warmers: [
           refresh_all:
@@ -40,7 +42,7 @@ defmodule Plausible.Application do
             {Plausible.Site.Cache.RecentlyUpdated, interval: :timer.seconds(30)}
         ]
       ),
-      cache(Plausible.Shield.IPRuleCache,
+      warmed_cache(Plausible.Shield.IPRuleCache,
         adapter_opts: [ttl_check_interval: false],
         warmers: [
           refresh_all:
@@ -50,7 +52,7 @@ defmodule Plausible.Application do
             {Plausible.Shield.IPRuleCache.RecentlyUpdated, interval: :timer.seconds(35)}
         ]
       ),
-      cache(Plausible.Shield.CountryRuleCache,
+      warmed_cache(Plausible.Shield.CountryRuleCache,
         adapter_opts: [ttl_check_interval: false],
         warmers: [
           refresh_all:
@@ -60,7 +62,7 @@ defmodule Plausible.Application do
             {Plausible.Shield.CountryRuleCache.RecentlyUpdated, interval: :timer.seconds(35)}
         ]
       ),
-      cache(Plausible.Shield.PageRuleCache,
+      warmed_cache(Plausible.Shield.PageRuleCache,
         adapter_opts: [ttl_check_interval: false, ets_options: [:bag]],
         warmers: [
           refresh_all:
@@ -70,7 +72,7 @@ defmodule Plausible.Application do
             {Plausible.Shield.PageRuleCache.RecentlyUpdated, interval: :timer.seconds(35)}
         ]
       ),
-      cache(Plausible.Shield.HostnameRuleCache,
+      warmed_cache(Plausible.Shield.HostnameRuleCache,
         adapter_opts: [ttl_check_interval: false, ets_options: [:bag]],
         warmers: [
           refresh_all:
@@ -196,30 +198,22 @@ defmodule Plausible.Application do
     :ok = Plausible.Geo.load_db(opts)
   end
 
-  defp cache(id_or_module, opts) do
-    warmers = Keyword.get(opts, :warmers)
+  defp warmed_cache(impl_mod, opts) when is_atom(impl_mod) and is_list(opts) do
+    warmers = Keyword.fetch!(opts, :warmers)
 
-    if is_nil(warmers) do
-      Plausible.Cache.Adapter.child_spec(
-        id_or_module,
-        String.to_atom("cache_#{id_or_module}"),
-        Keyword.fetch!(opts, :adapter_opts)
-      )
-    else
-      warmer_specs =
-        Enum.map(warmers, fn {warmer_fn, {warmer_id, warmer_opts}} ->
-          {Plausible.Cache.Warmer,
-           Keyword.merge(
-             [
-               child_name: warmer_id,
-               cache_impl: id_or_module,
-               warmer_fn: warmer_fn
-             ],
-             warmer_opts
-           )}
-        end)
+    warmer_specs =
+      Enum.map(warmers, fn {warmer_fn, {warmer_id, warmer_opts}} ->
+        {Plausible.Cache.Warmer,
+         Keyword.merge(
+           [
+             child_name: warmer_id,
+             cache_impl: impl_mod,
+             warmer_fn: warmer_fn
+           ],
+           warmer_opts
+         )}
+      end)
 
-      [{id_or_module, Keyword.fetch!(opts, :adapter_opts)} | warmer_specs]
-    end
+    [{impl_mod, Keyword.fetch!(opts, :adapter_opts)} | warmer_specs]
   end
 end
