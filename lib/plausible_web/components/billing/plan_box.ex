@@ -174,7 +174,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
         change_plan_link_text == "Currently on this plan" && not subscription_deleted ->
           {true, nil}
 
-        assigns.available && usage_check != :ok ->
+        usage_check != :ok ->
           {true, "Your usage exceeds this plan"}
 
         billing_details_expired ->
