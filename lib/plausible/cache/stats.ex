@@ -7,20 +7,12 @@ defmodule Plausible.Cache.Stats do
 
   @hit :hit
   @miss :miss
-  @telemetry_hit [:plausible, :cache, :adapter, @hit]
-  @telemetry_miss [:plausible, :cache, :adapter, @miss]
+  @telemetry_hit ConCache.Operations.telemetry_hit()
+  @telemetry_miss ConCache.Operations.telemetry_miss()
   @telemetry_events [@telemetry_hit, @telemetry_miss]
 
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, nil)
-  end
-
-  def record_hit(cache_name) do
-    :telemetry.execute(@telemetry_hit, %{}, %{cache_name: cache_name})
-  end
-
-  def record_miss(cache_name) do
-    :telemetry.execute(@telemetry_miss, %{}, %{cache_name: cache_name})
   end
 
   def init(nil) do
@@ -43,11 +35,11 @@ defmodule Plausible.Cache.Stats do
     {:ok, nil}
   end
 
-  def handle_telemetry_event(@telemetry_hit, _measurments, %{cache_name: cache_name}, _) do
+  def handle_telemetry_event(@telemetry_hit, _measurments, %{cache: %{name: cache_name}}, _) do
     bump(cache_name, @hit)
   end
 
-  def handle_telemetry_event(@telemetry_miss, _measurments, %{cache_name: cache_name}, _) do
+  def handle_telemetry_event(@telemetry_miss, _measurments, %{cache: %{name: cache_name}}, _) do
     bump(cache_name, @miss)
   end
 
