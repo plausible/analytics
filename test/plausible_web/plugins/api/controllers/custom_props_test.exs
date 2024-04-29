@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
   end
 
   describe "business tier" do
-    @describetag :full_build_only
+    @describetag :ee_only
     test "fails on custom prop enable attempt with insufficient plan", %{
       site: site,
       token: token,

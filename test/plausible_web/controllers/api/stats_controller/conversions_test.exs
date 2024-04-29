@@ -265,7 +265,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "returns formatted average and total values for a conversion with revenue value", %{
       conn: conn,
       site: site
@@ -306,7 +306,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "returns revenue goals as custom events if the plan doesn't cover the feature", %{
       conn: conn,
       site: site,
@@ -350,7 +350,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "returns revenue metrics as nil for non-revenue goals", %{
       conn: conn,
       site: site

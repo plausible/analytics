@@ -30,7 +30,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
     "imported_visitors"
   ]
 
-  @settings if Mix.env() in [:test, :small_test], do: [mutations_sync: 2], else: []
+  @settings if Mix.env() in [:test, :ce_test], do: [mutations_sync: 2], else: []
 
   def perform(_job) do
     deleted_sites = get_deleted_sites_with_clickhouse_data()

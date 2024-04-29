@@ -1101,7 +1101,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   describe "GET /api/stats/main-graph - total_revenue plot" do
     setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
@@ -1181,7 +1181,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   describe "GET /api/stats/main-graph - average_revenue plot" do
     setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 

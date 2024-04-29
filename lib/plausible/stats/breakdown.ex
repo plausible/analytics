@@ -13,7 +13,7 @@ defmodule Plausible.Stats.Breakdown do
 
   @session_metrics [:bounce_rate, :visit_duration]
 
-  @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
+  @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
   @event_metrics [:visits, :visitors, :pageviews, :events, :percentage] ++ @revenue_metrics
 
@@ -38,7 +38,7 @@ defmodule Plausible.Stats.Breakdown do
     no_revenue = {nil, metrics -- @revenue_metrics}
 
     {revenue_goals, metrics} =
-      on_full_build do
+      on_ee do
         if Plausible.Billing.Feature.RevenueGoals.enabled?(site) do
           revenue_goals = Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
           metrics = if Enum.empty?(revenue_goals), do: metrics -- @revenue_metrics, else: metrics
@@ -122,7 +122,7 @@ defmodule Plausible.Stats.Breakdown do
 
   def breakdown(site, query, "event:props:" <> custom_prop = property, metrics, pagination, opts) do
     {currency, metrics} =
-      on_full_build do
+      on_ee do
         Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
       else
         {nil, metrics}
@@ -758,7 +758,7 @@ defmodule Plausible.Stats.Breakdown do
     ])
   end
 
-  on_full_build do
+  on_ee do
     defp cast_revenue_metrics_to_money(results, revenue_goals) do
       Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
     end

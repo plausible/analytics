@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.FirstLaunchPlugTest do
   use PlausibleWeb.ConnCase
-  @moduletag :small_build_only
+  @moduletag :ce_build_only
   import Plug.Test
 
   alias PlausibleWeb.FirstLaunchPlug

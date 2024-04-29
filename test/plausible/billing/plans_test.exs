@@ -307,7 +307,7 @@ defmodule Plausible.Billing.PlansTest do
       assert Plans.suggest_tier(user) == :growth
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "suggests Business tier for a user who used the Revenue Goals, even when they signed up before Business tier release" do
       user = insert(:user, inserted_at: ~N[2023-10-25 10:00:00])
       site = insert(:site, members: [user])

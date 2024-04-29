@@ -22,7 +22,7 @@ defmodule Plausible.Goals do
     Repo.transaction(fn ->
       case insert_goal(site, params, upsert?) do
         {:ok, :insert, goal} ->
-          on_full_build do
+          on_ee do
             now = Keyword.get(opts, :now, DateTime.utc_now())
             # credo:disable-for-next-line Credo.Check.Refactor.Nesting
             if Plausible.Goal.Revenue.revenue?(goal) do
@@ -103,7 +103,7 @@ defmodule Plausible.Goals do
         order_by: [desc: g.id],
         preload: [:site]
 
-    if opts[:preload_funnels?] == true and full_build?() do
+    if opts[:preload_funnels?] == true and ee?() do
       from(g in query,
         left_join: assoc(g, :funnels),
         group_by: g.id,
@@ -136,7 +136,7 @@ defmodule Plausible.Goals do
         where: g.site_id == ^site_id
       )
 
-    goal_query = on_full_build(do: preload(goal_query, funnels: :steps), else: goal_query)
+    goal_query = on_ee(do: preload(goal_query, funnels: :steps), else: goal_query)
 
     result =
       Multi.new()

@@ -32,7 +32,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert_no_emails_delivered()
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "unlocks the site if it was previously locked" do
       site = insert(:site, locked: true, memberships: [])
       existing_owner = insert(:user)
@@ -86,7 +86,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert Repo.reload!(owner).trial_expiry_date == nil
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "does not allow transferring to an account without an active subscription" do
       current_owner = insert(:user)
       site = insert(:site, members: [current_owner])
@@ -131,7 +131,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
                AcceptInvitation.transfer_ownership(site, current_owner)
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "does not allow transferring to and account without suitable plan" do
       current_owner = insert(:user)
       site = insert(:site, members: [current_owner])
@@ -146,7 +146,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
                AcceptInvitation.transfer_ownership(site, new_owner)
     end
 
-    @tag :small_build_only
+    @tag :ce_build_only
     test "allows transferring to an account without a subscription on self hosted" do
       current_owner = insert(:user)
       site = insert(:site, members: [current_owner])
@@ -315,7 +315,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       )
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "unlocks a previously locked site after transfer" do
       site = insert(:site, locked: true, memberships: [])
       existing_owner = insert(:user)
@@ -405,7 +405,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       refute Repo.reload(invitation)
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "does not allow transferring ownership to a non-member user when at team members limit" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))
@@ -432,7 +432,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
                )
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "allows transferring ownership to existing site member when at team members limit" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))
@@ -462,7 +462,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
                )
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "does not allow transferring ownership when sites limit exceeded" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))
@@ -486,7 +486,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
                )
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "does not allow transferring ownership when pageview limit exceeded" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))
@@ -515,7 +515,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
                AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "allow_next_upgrade_override field has no effect when checking the pageview limit on ownership transfer" do
       old_owner = insert(:user, subscription: build(:business_subscription))
 
@@ -549,7 +549,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
                AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "does not allow transferring ownership when many limits exceeded at once" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))

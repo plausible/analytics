@@ -12,7 +12,7 @@ defmodule Plausible.Users do
   alias Plausible.Repo
 
   @spec on_trial?(Auth.User.t()) :: boolean()
-  on_full_build do
+  on_ee do
     def on_trial?(%Auth.User{trial_expiry_date: nil}), do: false
 
     def on_trial?(user) do
@@ -36,7 +36,7 @@ defmodule Plausible.Users do
   end
 
   @spec accept_traffic_until(Auth.User.t()) :: Date.t()
-  on_full_build do
+  on_ee do
     def accept_traffic_until(user) do
       user = with_subscription(user)
 

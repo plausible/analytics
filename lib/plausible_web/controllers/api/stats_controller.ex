@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   require Logger
 
-  @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
+  @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
   plug(:date_validation_plug)
 
@@ -347,13 +347,13 @@ defmodule PlausibleWeb.Api.StatsController do
       top_stats_entry(results, comparison, "Unique visitors", :total_visitors),
       top_stats_entry(results, comparison, "Unique conversions", :visitors, graphable?: true),
       top_stats_entry(results, comparison, "Total conversions", :events, graphable?: true),
-      on_full_build do
+      on_ee do
         top_stats_entry(results, comparison, "Average revenue", :average_revenue,
           formatter: &format_money/1,
           graphable?: true
         )
       end,
-      on_full_build do
+      on_ee do
         top_stats_entry(results, comparison, "Total revenue", :total_revenue,
           formatter: &format_money/1,
           graphable?: true
@@ -480,7 +480,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  on_full_build do
+  on_ee do
     def funnel(conn, %{"id" => funnel_id} = params) do
       site = Plausible.Repo.preload(conn.assigns.site, :owner)
 
@@ -1377,7 +1377,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  on_full_build do
+  on_ee do
     defdelegate format_revenue_metric(metric_value), to: PlausibleWeb.Controllers.API.Revenue
     defdelegate format_money(money), to: PlausibleWeb.Controllers.API.Revenue
   else
