@@ -39,9 +39,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       <div>
         <.render_price_info available={@available} {assigns} />
         <%= if @available do %>
-          <div class="relative">
-            <.checkout id={"#{@kind}-checkout"} {assigns} />
-          </div>
+          <.checkout id={"#{@kind}-checkout"} {assigns} />
         <% else %>
           <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
         <% end %>
@@ -166,36 +164,44 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       ])
 
     subscription_deleted = Subscription.Status.deleted?(subscription)
-    usage_within_limits = usage_within_plan_limits?(assigns)
+    usage_check = check_usage_within_plan_limits(assigns)
 
-    {checkout_disabled, disabled_message, disabled_tooltip_fn} =
+    {checkout_disabled, disabled_message} =
       cond do
         not assigns.eligible_for_upgrade? ->
-          {true, nil, nil}
+          {true, nil}
 
         change_plan_link_text == "Currently on this plan" && not subscription_deleted ->
-          {true, nil, nil}
+          {true, nil}
 
-        assigns.available && usage_within_limits != :ok ->
-          {true, "Your usage exceeds this plan", get_tooltip_fn(usage_within_limits)}
+        assigns.available && usage_check != :ok ->
+          {true, "Your usage exceeds this plan"}
 
         billing_details_expired ->
-          {true, "Please update your billing details first", nil}
+          {true, "Please update your billing details first"}
 
         true ->
-          {false, nil, nil}
+          {false, nil}
+      end
+
+    exceeded_plan_limits =
+      case usage_check do
+        {:error, {:over_plan_limits, limits}} ->
+          limits
+
+        _ ->
+          []
       end
 
     features_to_lose = assigns.usage.features -- assigns.plan_to_render.features
 
     assigns =
       assigns
-      |> assign(:display_tooltip_product_id, assigns[:display_tooltip_product_id])
       |> assign(:paddle_product_id, paddle_product_id)
       |> assign(:change_plan_link_text, change_plan_link_text)
       |> assign(:checkout_disabled, checkout_disabled)
       |> assign(:disabled_message, disabled_message)
-      |> assign(:disabled_tooltip_fn, disabled_tooltip_fn)
+      |> assign(:exceeded_plan_limits, exceeded_plan_limits)
       |> assign(:confirm_message, losing_features_message(features_to_lose))
 
     ~H"""
@@ -210,25 +216,16 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       :if={@disabled_message}
       class="h-0 text-center text-sm text-red-700 dark:text-red-500 disabled-message"
     >
-      <%= if is_function(@disabled_tooltip_fn, 1) do %>
-        <div x-data="{sticky: false, hovered: false}" class="tooltip-wrapper relative">
-          <p
-            x-on:click="sticky = true; hovered = true"
-            x-on:click.outside="sticky = false; hovered = false"
-            x-on:mouseover="hovered = true"
-            x-on:mouseout="hovered = false"
-            class="cursor-pointer text-sm text-red-700 dark:text-red-500 mt-1 flex justify-center align-items-center"
-          >
-            <%= @disabled_message %>
-            <Heroicons.information_circle class="w-5 h-5 ml-2" />
-          </p>
-          <span
-            x-show="hovered || sticky"
-            class="bg-gray-900 pointer-events-none absolute bottom-10 margin-x-auto left-10 right-10 transition-opacity p-4 rounded text-white"
-          >
-            <%= apply(@disabled_tooltip_fn, [assigns]) %>
-          </span>
-        </div>
+      <%= if @exceeded_plan_limits != [] do %>
+        <PlausibleWeb.Components.Generic.tooltip>
+          <%= @disabled_message %>
+          <:tooltip_content>
+            Your usage exceeds the following limit(s):<br /><br />
+            <p :for={limit <- @exceeded_plan_limits}>
+              <%= Phoenix.Naming.humanize(limit) %><br />
+            </p>
+          </:tooltip_content>
+        </PlausibleWeb.Components.Generic.tooltip>
       <% else %>
         <%= @disabled_message %>
       <% end %>
@@ -236,26 +233,11 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     """
   end
 
-  def get_tooltip_fn({:error, {:over_plan_limits, limits}}) do
-    fn assigns ->
-      assigns = assign(assigns, :limits, limits)
-
-      ~H"""
-      Your usage exceeds the following limit(s):<br /><br />
-      <p :for={limit <- @limits}>
-        <%= Phoenix.Naming.humanize(limit) %><br />
-      </p>
-      """
-    end
-  end
-
-  def get_tooltip_fn(_), do: nil
-
-  defp usage_within_plan_limits?(%{available: false}) do
+  defp check_usage_within_plan_limits(%{available: false}) do
     {:error, :plan_unavailable}
   end
 
-  defp usage_within_plan_limits?(%{
+  defp check_usage_within_plan_limits(%{
          available: true,
          usage: usage,
          user: user,
