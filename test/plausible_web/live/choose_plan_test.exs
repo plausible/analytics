@@ -20,7 +20,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
   @growth_plan_box "#growth-plan-box"
   @growth_plan_tooltip "#growth-plan-box .tooltip-wrapper span"
-  @growth_plan_tooltip_link ~s/#growth-plan-box .tooltip-wrapper a[phx-click="show-tooltip"]/
   @growth_price_tag_amount "#growth-price-tag-amount"
   @growth_price_tag_interval "#growth-price-tag-interval"
   @growth_highlight_pill "#{@growth_plan_box} #highlight-pill"
