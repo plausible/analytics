@@ -42,14 +42,14 @@
         </.styled_link>
 
         <br />
-        <span :if={full_build?()}>
+        <span :if={ee?()}>
           Check the
           <.styled_link href={Routes.site_path(@conn, :settings_general, @site.domain)}>
             site settings
           </.styled_link>
           to invite team members, <br /> import historical stats and more.
         </span>
-        <span :if={small_build?()}>
+        <span :if={ce_build?()}>
           Still not working? Ask on our
           <.styled_link new_tab href="https://github.com/plausible/analytics/discussions">
             community-supported forum

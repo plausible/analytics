@@ -349,7 +349,7 @@ defmodule PlausibleWeb.Email do
 
   def export_success(user, site, download_url, expires_at) do
     subject =
-      on_full_build do
+      on_ee do
         "Your Plausible Analytics export is now ready for download"
       else
         "Your export is now ready for download"
@@ -377,7 +377,7 @@ defmodule PlausibleWeb.Email do
 
   def export_failure(user, site) do
     subject =
-      on_full_build do
+      on_ee do
         "Your Plausible Analytics export has failed"
       else
         "Your export has failed"

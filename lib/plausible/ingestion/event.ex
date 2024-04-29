@@ -292,7 +292,7 @@ defmodule Plausible.Ingestion.Event do
   defp put_props(%__MODULE__{} = event), do: event
 
   defp put_revenue(event) do
-    on_full_build do
+    on_ee do
       attrs = Plausible.Ingestion.Event.Revenue.get_revenue_attrs(event)
       update_event_attrs(event, attrs)
     else

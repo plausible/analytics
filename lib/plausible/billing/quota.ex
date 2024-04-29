@@ -45,7 +45,7 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  on_full_build do
+  on_ee do
     @limit_sites_since ~D[2021-05-05]
     @site_limit_for_trials 10
     @team_member_limit_for_trials 3
@@ -349,7 +349,7 @@ defmodule Plausible.Billing.Quota do
     stats_api_usage = from a in Plausible.Auth.ApiKey, where: a.user_id == ^user.id
 
     queries =
-      on_full_build do
+      on_ee do
         funnels_usage_query =
           from f in "funnels",
             inner_join: os in subquery(owned_sites_query(user)),
@@ -378,7 +378,7 @@ defmodule Plausible.Billing.Quota do
     props_exist = is_list(site.allowed_event_props) && site.allowed_event_props != []
 
     funnels_exist =
-      on_full_build do
+      on_ee do
         Plausible.Repo.exists?(from f in Plausible.Funnel, where: f.site_id == ^site.id)
       else
         false

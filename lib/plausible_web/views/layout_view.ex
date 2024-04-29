@@ -41,7 +41,7 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def logo_path(filename) do
-    if full_build?() do
+    if ee?() do
       Path.join("/images/ee/", filename)
     else
       Path.join("/images/ce/", filename)
@@ -61,7 +61,7 @@ defmodule PlausibleWeb.LayoutView do
       %{key: "People", value: "people", icon: :users},
       %{key: "Visibility", value: "visibility", icon: :eye},
       %{key: "Goals", value: "goals", icon: :check_circle},
-      on_full_build do
+      on_ee do
         %{key: "Funnels", value: "funnels", icon: :funnel}
       end,
       %{key: "Custom Properties", value: "properties", icon: :document_text},

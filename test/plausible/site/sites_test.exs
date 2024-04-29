@@ -114,7 +114,7 @@ defmodule Plausible.SitesTest do
   end
 
   describe "get_for_user/2" do
-    @tag :full_build_only
+    @tag :ee_only
     test "get site for super_admin" do
       user1 = insert(:user)
       user2 = insert(:user)

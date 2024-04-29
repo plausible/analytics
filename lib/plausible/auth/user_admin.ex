@@ -134,7 +134,7 @@ defmodule Plausible.Auth.UserAdmin do
     end
   end
 
-  on_full_build do
+  on_ee do
     defp usage_link(user) do
       path = PlausibleWeb.Router.Helpers.admin_path(PlausibleWeb.Endpoint, :usage, user.id)
       {:safe, ~s(<a href="#{path}">Usage</a>)}

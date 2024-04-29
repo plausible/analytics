@@ -254,7 +254,7 @@ defmodule Plausible.Exports do
     }
   end
 
-  on_full_build do
+  on_ee do
     defp sampled(table, date_range) do
       from(table)
       |> Plausible.Stats.Sampling.add_query_hint()

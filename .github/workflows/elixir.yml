@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        mix_env: ["test", "small_test"]
+        mix_env: ["test", "ce_test"]
         postgres_image: ["postgres:16"]
         test_experimental_reduced_joins: ["0"]
 
@@ -113,7 +113,7 @@ jobs:
           MINIO_HOST_FOR_CLICKHOUSE: "172.17.0.1"
 
       - run: mix test --include slow --max-failures 1 --warnings-as-errors
-        if: env.MIX_ENV == 'small_test'
+        if: env.MIX_ENV == 'ce_test'
 
   static:
     name: Static checks (format, credo, dialyzer)

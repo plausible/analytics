@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
 
-  on_full_build do
+  on_ee do
     setup :create_user
 
     setup %{conn: conn, user: user} do

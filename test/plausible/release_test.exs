@@ -4,25 +4,25 @@ defmodule Plausible.ReleaseTest do
   import ExUnit.CaptureIO
 
   describe "should_be_first_launch?/0" do
-    @tag :small_build_only
+    @tag :ce_build_only
     test "returns true when self-hosted and no users" do
       refute Repo.exists?(Auth.User)
       assert Release.should_be_first_launch?()
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "returns false when not self-hosted and has no users" do
       refute Repo.exists?(Auth.User)
       refute Release.should_be_first_launch?()
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "returns false when not self-hosted and has users" do
       insert(:user)
       refute Release.should_be_first_launch?()
     end
 
-    @tag :small_build_only
+    @tag :ce_build_only
     test "returns false when self-hosted and has users" do
       insert(:user)
       refute Release.should_be_first_launch?()

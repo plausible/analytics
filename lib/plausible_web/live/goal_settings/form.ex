@@ -149,7 +149,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         </div>
 
         <div
-          :if={full_build?()}
+          :if={ee?()}
           class="mt-6 space-y-3"
           x-data={
             Jason.encode!(%{
@@ -211,7 +211,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
               submit_name={@f[:currency].name}
               module={ComboBox}
               suggest_fun={
-                on_full_build do
+                on_ee do
                   fn
                     "", [] ->
                       Plausible.Goal.Revenue.currency_options()

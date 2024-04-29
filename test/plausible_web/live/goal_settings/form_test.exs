@@ -26,7 +26,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
   describe "Goal submission" do
     setup [:create_user, :log_in, :create_site]
 
-    @tag :full_build_only
+    @tag :ee_only
     test "renders form fields (with currency)", %{conn: conn, site: site} do
       lv = get_liveview(conn, site)
       html = render(lv)
@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert name_of(page_path) == "goal[page_path]"
     end
 
-    @tag :small_build_only
+    @tag :ce_build_only
     test "renders form fields (no currency)", %{conn: conn, site: site} do
       lv = get_liveview(conn, site)
       html = render(lv)
@@ -87,7 +87,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert html =~ "Custom Event"
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "creates a revenue goal", %{conn: conn, site: site} do
       lv = get_liveview(conn, site)
       refute render(lv) =~ "SampleRevenueGoal"
@@ -115,7 +115,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
   describe "Combos integration" do
     setup [:create_user, :log_in, :create_site]
 
-    @tag :full_build_only
+    @tag :ee_only
     test "currency combo works", %{conn: conn, site: site} do
       lv = get_liveview(conn, site)
 

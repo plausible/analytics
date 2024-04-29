@@ -171,7 +171,7 @@ defmodule Plausible.Ingestion.RequestTest do
     assert request.props["custom2"] == "property2"
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   test "parses revenue source field from a json string" do
     payload = %{
       name: "pageview",
@@ -187,7 +187,7 @@ defmodule Plausible.Ingestion.RequestTest do
     assert Decimal.new("20.2") == amount
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   test "sets revenue source with integer amount" do
     payload = %{
       name: "pageview",
@@ -206,7 +206,7 @@ defmodule Plausible.Ingestion.RequestTest do
     assert Decimal.equal?(amount, Decimal.new("20.0"))
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   test "sets revenue source with float amount" do
     payload = %{
       name: "pageview",
@@ -225,7 +225,7 @@ defmodule Plausible.Ingestion.RequestTest do
     assert Decimal.equal?(amount, Decimal.new("20.1"))
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   test "parses string amounts into money structs" do
     payload = %{
       name: "pageview",
@@ -244,7 +244,7 @@ defmodule Plausible.Ingestion.RequestTest do
     assert Decimal.equal?(amount, Decimal.new("12.3"))
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   test "ignores revenue data when currency is invalid" do
     payload = %{
       name: "pageview",
@@ -429,7 +429,7 @@ defmodule Plausible.Ingestion.RequestTest do
     assert changeset.errors[:request]
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   test "encodable" do
     params = %{
       name: "pageview",

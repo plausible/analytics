@@ -25,7 +25,7 @@ defmodule Plausible.Stats.Timeseries do
       Plausible.Stats.TableDecider.partition_metrics(metrics, query)
 
     {currency, event_metrics} =
-      on_full_build do
+      on_ee do
         Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, event_metrics)
       else
         {nil, event_metrics}
@@ -245,7 +245,7 @@ defmodule Plausible.Stats.Timeseries do
     end)
   end
 
-  on_full_build do
+  on_ee do
     defp cast_revenue_metrics_to_money(results, revenue_goals) do
       Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
     end

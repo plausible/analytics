@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.ErrorReportControllerTest do
   use PlausibleWeb.ConnCase, async: true
-  @moduletag :full_build_only
+  @moduletag :ee_only
 
   use Bamboo.Test
 
