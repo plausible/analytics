@@ -318,6 +318,32 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
+  slot :inner_block, required: true
+  slot :tooltip_content, required: true
+
+  def tooltip(assigns) do
+    ~H"""
+    <div x-data="{sticky: false, hovered: false}" class="tooltip-wrapper relative">
+      <p
+        x-on:click="sticky = true; hovered = true"
+        x-on:click.outside="sticky = false; hovered = false"
+        x-on:mouseover="hovered = true"
+        x-on:mouseout="hovered = false"
+        class="cursor-pointer text-sm text-red-700 dark:text-red-500 mt-1 flex justify-center align-items-center"
+      >
+        <%= render_slot(@inner_block) %>
+        <Heroicons.information_circle class="w-5 h-5 ml-2" />
+      </p>
+      <span
+        x-show="hovered || sticky"
+        class="bg-gray-900 pointer-events-none absolute bottom-10 margin-x-auto left-10 right-10 transition-opacity p-4 rounded text-white"
+      >
+        <%= render_slot(List.first(@tooltip_content)) %>
+      </span>
+    </div>
+    """
+  end
+
   attr :rest, :global, include: ~w(fill stroke stroke-width)
   attr :name, :atom, required: true
   attr :outline, :boolean, default: true
