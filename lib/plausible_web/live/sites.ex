@@ -682,7 +682,7 @@ defmodule PlausibleWeb.Live.Sites do
   defp check_limits(invitation, _), do: %{invitation: invitation}
 
   defp check_features(%{role: :owner, site: site} = invitation, user) do
-    case Invitations.check_feature_access(site, user, ce_build?()) do
+    case Invitations.check_feature_access(site, user, ce?()) do
       :ok ->
         %{invitation: invitation}
 

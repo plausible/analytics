@@ -16,20 +16,8 @@ defmodule Plausible do
     do_on_ee(clauses)
   end
 
-  def do_on_ee(do: block) do
-    do_on_ee(do: block, else: nil)
-  end
-
-  def do_on_ee(do: do_block, else: else_block) do
-    if Mix.env() not in @ce_builds do
-      quote do
-        unquote(do_block)
-      end
-    else
-      quote do
-        unquote(else_block)
-      end
-    end
+  defmacro on_ce(clauses) do
+    do_on_ce(clauses)
   end
 
   defmacro ee?() do
@@ -42,11 +30,31 @@ defmodule Plausible do
     end
   end
 
-  defmacro ce_build?() do
+  defmacro ce?() do
     ce_build? = Mix.env() in @ce_builds
 
     quote do
       unquote(ce_build?)
+    end
+  end
+
+  defp do_on_ce(do: block) do
+    do_on_ee(do: nil, else: block)
+  end
+
+  defp do_on_ee(do: block) do
+    do_on_ee(do: block, else: nil)
+  end
+
+  defp do_on_ee(do: do_block, else: else_block) do
+    if Mix.env() not in @ce_builds do
+      quote do
+        unquote(do_block)
+      end
+    else
+      quote do
+        unquote(else_block)
+      end
     end
   end
 end
