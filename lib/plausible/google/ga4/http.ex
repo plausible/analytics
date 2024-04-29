@@ -147,6 +147,9 @@ defmodule Plausible.Google.GA4.HTTP do
       {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, body}
 
+      {:error, %HTTPClient.Non200Error{reason: %{status: 429}}} ->
+        {:error, :rate_limit_exceeded}
+
       {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
         {:error, :authentication_failed}
 
@@ -167,6 +170,9 @@ defmodule Plausible.Google.GA4.HTTP do
     case HTTPClient.impl().get(url, headers) do
       {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, body}
+
+      {:error, %HTTPClient.Non200Error{reason: %{status: 429}}} ->
+        {:error, :rate_limit_exceeded}
 
       {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
         {:error, :authentication_failed}
@@ -233,6 +239,9 @@ defmodule Plausible.Google.GA4.HTTP do
           end
 
         {:ok, date}
+
+      {:error, %HTTPClient.Non200Error{reason: %{status: 429}}} ->
+        {:error, :rate_limit_exceeded}
 
       {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
         {:error, :authentication_failed}
