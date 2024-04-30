@@ -626,44 +626,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                }
              ]
     end
-
-    test "conversion_rate for goals should not be calculated with imported data", %{
-      conn: conn,
-      site: site
-    } do
-      site_import =
-        insert(:site_import,
-          start_date: ~D[2005-01-01],
-          end_date: Timex.today(),
-          source: :universal_analytics
-        )
-
-      populate_stats(site, site_import.id, [
-        build(:pageview, pathname: "/"),
-        build(:pageview, pathname: "/another"),
-        build(:pageview, pathname: "/blog/post-1"),
-        build(:pageview, pathname: "/blog/post-2"),
-        build(:imported_pages, page: "/blog/post-1"),
-        build(:imported_visitors)
-      ])
-
-      insert(:goal, %{site: site, page_path: "/blog**"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/conversions?period=day"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "name" => "Visit /blog**",
-                 "visitors" => 2,
-                 "events" => 2,
-                 "conversion_rate" => 50
-               }
-             ]
-    end
   end
 
   describe "GET /api/stats/:domain/conversions - with goal and prop=(none) filter" do
@@ -781,6 +743,101 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "visitors" => 1,
                  "name" => "Visit /register",
                  "events" => 1
+               }
+             ]
+    end
+  end
+
+  describe "GET /api/stats/:domain/conversions - with imported data" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "returns custom event goals and pageview goals", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Purchase")
+      insert(:goal, site: site, page_path: "/test")
+
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          timestamp: ~N[2021-01-01 00:00:01],
+          pathname: "/test"
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:imported_custom_events,
+          name: "Purchase",
+          visitors: 3,
+          events: 5,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages,
+          page: "/test",
+          visitors: 2,
+          pageviews: 2,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
+      ])
+
+      url_query_params = "?period=day&date=2021-01-01&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/conversions#{url_query_params}")
+
+      assert [
+               %{
+                 "name" => "Purchase",
+                 "visitors" => 5,
+                 "events" => 7,
+                 "conversion_rate" => 62.5
+               },
+               %{
+                 "name" => "Visit /test",
+                 "visitors" => 3,
+                 "events" => 3,
+                 "conversion_rate" => 37.5
+               }
+             ] = json_response(conn, 200)
+    end
+
+    test "calculates conversion_rate for goals with imported data", %{
+      conn: conn,
+      site: site
+    } do
+      site_import =
+        insert(:site_import,
+          start_date: ~D[2005-01-01],
+          end_date: Timex.today(),
+          source: :universal_analytics
+        )
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/another"),
+        build(:pageview, pathname: "/blog/post-1"),
+        build(:pageview, pathname: "/blog/post-2"),
+        build(:imported_pages, page: "/blog/post-1"),
+        build(:imported_visitors)
+      ])
+
+      insert(:goal, %{site: site, page_path: "/blog**"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Visit /blog**",
+                 "visitors" => 2,
+                 "events" => 2,
+                 "conversion_rate" => 50
                }
              ]
     end
