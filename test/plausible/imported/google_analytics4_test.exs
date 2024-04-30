@@ -205,6 +205,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
             "imported_devices" -> 0
             "imported_browsers" -> 0
             "imported_operating_systems" -> 0
+            "imported_custom_events" -> 0
           end
 
         query = from(imported in table, where: imported.site_id == ^site.id)
@@ -232,6 +233,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
             "imported_devices" -> 93
             "imported_browsers" -> 233
             "imported_operating_systems" -> 1068
+            "imported_custom_events" -> 56
           end
 
         query = from(imported in table, where: imported.site_id == ^site.id)
