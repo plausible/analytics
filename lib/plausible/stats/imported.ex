@@ -78,10 +78,10 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([i], %{date: i.date})
   end
 
-  def merge_imported(q, _, %Query{include_imported: false}, _, _), do: q
-  def merge_imported(q, _, _, _, [:events | _]), do: q
+  def merge_imported(q, _, %Query{include_imported: false}, _), do: q
+  def merge_imported(q, _, _, [:events | _]), do: q
 
-  def merge_imported(q, site, query, property, metrics)
+  def merge_imported(q, site, %Query{property: property} = query, metrics)
       when property in @imported_properties do
     table = Map.fetch!(@property_to_table_mappings, property)
     dim = Plausible.Stats.Filters.without_prefix(property)
@@ -122,7 +122,7 @@ defmodule Plausible.Stats.Imported do
     |> apply_order_by(metrics)
   end
 
-  def merge_imported(q, site, query, :aggregate, metrics) do
+  def merge_imported(q, site, %Query{property: nil} = query, metrics) do
     imported_q =
       imported_visitors(site, query)
       |> select_imported_metrics(metrics)
@@ -135,7 +135,7 @@ defmodule Plausible.Stats.Imported do
     |> select_joined_metrics(metrics)
   end
 
-  def merge_imported(q, _, _, _, _), do: q
+  def merge_imported(q, _, _, _), do: q
 
   def total_imported_visitors(site, query) do
     imported_visitors(site, query)

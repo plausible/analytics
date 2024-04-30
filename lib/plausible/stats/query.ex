@@ -4,6 +4,7 @@ defmodule Plausible.Stats.Query do
   defstruct date_range: nil,
             interval: nil,
             period: nil,
+            property: nil,
             filters: %{},
             sample_threshold: 20_000_000,
             imported_data_requested: false,
@@ -26,6 +27,7 @@ defmodule Plausible.Stats.Query do
       |> put_experimental_session_count(site, params)
       |> put_experimental_reduced_joins(site, params)
       |> put_period(site, params)
+      |> put_breakdown_property(params)
       |> put_interval(params)
       |> put_parsed_filters(params)
       |> put_imported_opts(site, params)
@@ -181,6 +183,10 @@ defmodule Plausible.Stats.Query do
     put_period(query, site, Map.merge(params, %{"period" => "30d"}))
   end
 
+  defp put_breakdown_property(query, params) do
+    struct!(query, property: params["property"])
+  end
+
   defp put_interval(%{:period => "all"} = query, params) do
     interval = Map.get(params, "interval", Interval.default_for_date_range(query.date_range))
     struct!(query, interval: interval)
@@ -295,6 +301,7 @@ defmodule Plausible.Stats.Query do
     Tracer.set_attributes([
       {"plausible.query.interval", query.interval},
       {"plausible.query.period", query.period},
+      {"plausible.query.breakdown_property", query.property},
       {"plausible.query.include_imported", query.include_imported},
       {"plausible.query.filter_keys", filter_keys},
       {"plausible.query.metrics", metrics}

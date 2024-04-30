@@ -44,7 +44,7 @@ defmodule Plausible.Stats.Aggregate do
 
   defp aggregate_events(site, query, metrics) do
     from(e in base_event_query(site, query), select: ^select_event_metrics(metrics))
-    |> merge_imported(site, query, :aggregate, metrics)
+    |> merge_imported(site, query, metrics)
     |> maybe_add_conversion_rate(site, query, metrics, include_imported: query.include_imported)
     |> ClickhouseRepo.one(label: :aggregate_events)
   end
@@ -54,7 +54,7 @@ defmodule Plausible.Stats.Aggregate do
   defp aggregate_sessions(site, query, metrics) do
     from(e in query_sessions(site, query), select: ^select_session_metrics(metrics, query))
     |> filter_converted_sessions(site, query)
-    |> merge_imported(site, query, :aggregate, metrics)
+    |> merge_imported(site, query, metrics)
     |> ClickhouseRepo.one(label: :aggregate_sessions)
     |> Util.keep_requested_metrics(metrics)
   end

@@ -60,6 +60,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
              }
     end
 
+    test "ignores a given property parameter", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "property" => "event:props:author",
+          "metrics" => "visit_duration"
+        })
+
+      assert json_response(conn, 200)
+    end
+
     test "validates that period can be parsed", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/timeseries", %{
