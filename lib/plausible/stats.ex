@@ -11,9 +11,9 @@ defmodule Plausible.Stats do
 
   use Plausible.DebugReplayInfo
 
-  def breakdown(site, query, prop, metrics, pagination) do
+  def breakdown(site, query, metrics, pagination) do
     include_sentry_replay_info()
-    Breakdown.breakdown(site, query, prop, metrics, pagination)
+    Breakdown.breakdown(site, query, metrics, pagination)
   end
 
   def aggregate(site, query, metrics) do

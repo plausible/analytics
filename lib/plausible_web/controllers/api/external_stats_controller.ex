@@ -17,7 +17,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_date(params),
          query <- Query.from(site, params),
          :ok <- validate_filters(site, query.filters),
-         {:ok, metrics} <- parse_and_validate_metrics(params, nil, query),
+         {:ok, metrics} <- parse_and_validate_metrics(params, query),
          :ok <- ensure_custom_props_access(site, query) do
       results =
         if params["compare"] == "previous_period" do
@@ -51,14 +51,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
-         {:ok, property} <- validate_property(params),
+         :ok <- validate_property(params),
          query <- Query.from(site, params),
          :ok <- validate_filters(site, query.filters),
-         {:ok, metrics} <- parse_and_validate_metrics(params, property, query),
+         {:ok, metrics} <- parse_and_validate_metrics(params, query),
          {:ok, limit} <- validate_or_default_limit(params),
-         :ok <- ensure_custom_props_access(site, query, property) do
+         :ok <- ensure_custom_props_access(site, query) do
       page = String.to_integer(Map.get(params, "page", "1"))
-      results = Plausible.Stats.breakdown(site, query, property, metrics, {limit, page})
+      results = Plausible.Stats.breakdown(site, query, metrics, {limit, page})
 
       json(conn, %{results: results})
     else
@@ -68,7 +68,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp validate_property(%{"property" => property}) do
     if Plausible.Stats.Props.valid_prop?(property) do
-      {:ok, property}
+      :ok
     else
       {:error,
        "Invalid property '#{property}'. Please provide a valid property for the breakdown endpoint: https://plausible.io/docs/stats-api#properties"}
@@ -93,12 +93,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   @default_breakdown_limit 100
   defp validate_or_default_limit(_), do: {:ok, @default_breakdown_limit}
 
-  defp parse_and_validate_metrics(params, property, query) do
+  defp parse_and_validate_metrics(params, query) do
     metrics =
       Map.get(params, "metrics", "visitors")
       |> String.split(",")
 
-    case validate_metrics(metrics, property, query) do
+    case validate_metrics(metrics, query) do
       {:error, reason} ->
         {:error, reason}
 
@@ -107,14 +107,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end
   end
 
-  @spec ensure_custom_props_access(Plausible.Site.t(), Query.t(), String.t() | nil) ::
+  @spec ensure_custom_props_access(Plausible.Site.t(), Query.t()) ::
           :ok | {:error, {402, String.t()}}
-  defp ensure_custom_props_access(site, query, property \\ nil) do
+  defp ensure_custom_props_access(site, query) do
     allowed_props = Plausible.Props.allowed_for(site, bypass_setup?: true)
     prop_filter = Query.get_filter_by_prefix(query, "event:props:")
 
     query_allowed? =
-      case {prop_filter, property, allowed_props} do
+      case {prop_filter, query.property, allowed_props} do
         {_, _, :all} ->
           true
 
@@ -136,24 +136,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end
   end
 
-  defp validate_metrics(metrics, property, query) do
+  defp validate_metrics(metrics, query) do
     if length(metrics) == length(Enum.uniq(metrics)) do
-      validate_each_metric(metrics, property, query)
+      validate_each_metric(metrics, query)
     else
       {:error, "Metrics cannot be queried multiple times."}
     end
   end
 
-  defp validate_each_metric(metrics, property, query) do
+  defp validate_each_metric(metrics, query) do
     Enum.reduce_while(metrics, [], fn metric, acc ->
-      case validate_metric(metric, property, query) do
+      case validate_metric(metric, query) do
         {:ok, metric} -> {:cont, acc ++ [metric]}
         {:error, reason} -> {:halt, {:error, reason}}
       end
     end)
   end
 
-  defp validate_metric("time_on_page" = metric, property, query) do
+  defp validate_metric("time_on_page" = metric, query) do
     cond do
       query.filters["event:goal"] ->
         {:error, "Metric `#{metric}` cannot be queried when filtering by `event:goal`"}
@@ -161,10 +161,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       query.filters["event:name"] ->
         {:error, "Metric `#{metric}` cannot be queried when filtering by `event:name`"}
 
-      property == "event:page" ->
+      query.property == "event:page" ->
         {:ok, metric}
 
-      not is_nil(property) ->
+      not is_nil(query.property) ->
         {:error,
          "Metric `#{metric}` is not supported in breakdown queries (except `event:page` breakdown)"}
 
@@ -177,9 +177,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end
   end
 
-  defp validate_metric("conversion_rate" = metric, property, query) do
+  defp validate_metric("conversion_rate" = metric, query) do
     cond do
-      property == "event:goal" ->
+      query.property == "event:goal" ->
         {:ok, metric}
 
       query.filters["event:goal"] ->
@@ -191,7 +191,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end
   end
 
-  defp validate_metric("events" = metric, _, query) do
+  defp validate_metric("events" = metric, query) do
     if query.include_imported do
       {:error, "Metric `#{metric}` cannot be queried with imported data"}
     else
@@ -199,37 +199,37 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end
   end
 
-  defp validate_metric(metric, _, _) when metric in ["visitors", "pageviews"] do
+  defp validate_metric(metric, _) when metric in ["visitors", "pageviews"] do
     {:ok, metric}
   end
 
-  defp validate_metric("views_per_visit" = metric, property, query) do
+  defp validate_metric("views_per_visit" = metric, query) do
     cond do
       query.filters["event:page"] ->
         {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`."}
 
-      property != nil ->
+      query.property != nil ->
         {:error, "Metric `#{metric}` is not supported in breakdown queries."}
 
       true ->
-        validate_session_metric(metric, property, query)
+        validate_session_metric(metric, query)
     end
   end
 
-  defp validate_metric(metric, property, query)
+  defp validate_metric(metric, query)
        when metric in ["visits", "bounce_rate", "visit_duration"] do
-    validate_session_metric(metric, property, query)
+    validate_session_metric(metric, query)
   end
 
-  defp validate_metric(metric, _, _) do
+  defp validate_metric(metric, _) do
     {:error,
      "The metric `#{metric}` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#metrics"}
   end
 
-  defp validate_session_metric(metric, property, query) do
+  defp validate_session_metric(metric, query) do
     cond do
-      event_only_property?(property) ->
-        {:error, "Session metric `#{metric}` cannot be queried for breakdown by `#{property}`."}
+      event_only_property?(query.property) ->
+        {:error, "Session metric `#{metric}` cannot be queried for breakdown by `#{query.property}`."}
 
       event_only_filter = find_event_only_filter(query) ->
         {:error,
@@ -257,7 +257,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_interval(params),
          query <- Query.from(site, params),
          :ok <- validate_filters(site, query.filters),
-         {:ok, metrics} <- parse_and_validate_metrics(params, nil, query),
+         {:ok, metrics} <- parse_and_validate_metrics(params, query),
          :ok <- ensure_custom_props_access(site, query) do
       graph = Plausible.Stats.timeseries(site, query, metrics)
 
