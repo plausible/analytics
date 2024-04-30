@@ -112,7 +112,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
             resume_from_import_id: site_import.id,
             resume_from_dataset: dataset,
             resume_from_offset: offset,
-            job_opts: [schedule_in: {60, :minutes}, unique: nil]
+            job_opts: [schedule_in: {65, :minutes}, unique: nil]
           ]
 
           new_import(

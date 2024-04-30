@@ -176,12 +176,12 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
       assert {:error, :rate_limit_exceeded, skip_purge?: true, skip_mark_failed?: true} =
                GoogleAnalytics4.import_data(site_import, opts)
 
-      in_an_hour = DateTime.add(DateTime.utc_now(), 3600, :second)
+      in_65_minutes = DateTime.add(DateTime.utc_now(), 3900, :second)
 
       assert_enqueued(
         worker: Plausible.Workers.ImportAnalytics,
         args: %{resume_from_import_id: site_import.id},
-        scheduled_at: {in_an_hour, delta: 10}
+        scheduled_at: {in_65_minutes, delta: 10}
       )
 
       [%{args: resume_args}, _] = all_enqueued()
