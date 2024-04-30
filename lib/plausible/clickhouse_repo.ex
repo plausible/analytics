@@ -4,6 +4,8 @@ defmodule Plausible.ClickhouseRepo do
     adapter: Ecto.Adapters.ClickHouse,
     read_only: true
 
+  require Logger
+
   defmacro __using__(_) do
     quote do
       alias Plausible.ClickhouseRepo
@@ -67,7 +69,14 @@ defmodule Plausible.ClickhouseRepo do
       metadata: opts[:metadata] || %{}
     }
 
-    setting = {:log_comment, Jason.encode!(log_comment)}
-    Keyword.update(opts, :settings, [setting], fn settings -> [setting | settings] end)
+    case Jason.encode(log_comment) do
+      {:ok, encoded} ->
+        setting = {:log_comment, encoded}
+        Keyword.update(opts, :settings, [setting], fn settings -> [setting | settings] end)
+
+      {:error, _} ->
+        Logger.error("Failed to include log comment: #{inspect(log_comment)}")
+        opts
+    end
   end
 end

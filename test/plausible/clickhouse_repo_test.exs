@@ -4,6 +4,8 @@ defmodule Plausible.ClickhouseRepoTest do
   alias Plausible.ClickhouseRepo
   alias Plausible.DebugReplayInfo
 
+  import ExUnit.CaptureLog
+
   test "queries are kept in context for debugging purposes for superadmins" do
     Sentry.Context.set_user_context(%{id: 1, super_admin?: true})
 
@@ -88,6 +90,20 @@ defmodule Plausible.ClickhouseRepoTest do
                "site_id" => 1
              }
            end)
+  end
+
+  test "non-serializable log comment won't cause the query to crash and will log an error" do
+    log =
+      capture_log(fn ->
+        assert [] =
+                 ClickhouseRepo.all(from(u in "sessions_v2", select: true, limit: 0),
+                   label: "log_all",
+                   metadata: {:error, :skip_me}
+                 )
+      end)
+
+    assert log =~
+             ~s/Failed to include log comment: %{label: "log_all", domain: nil, metadata: {:error, :skip_me}, url: nil, site_id: nil, user_id: nil}/
   end
 
   defp flush_clickhouse_logs(), do: Plausible.IngestRepo.query!("SYSTEM FLUSH LOGS")
