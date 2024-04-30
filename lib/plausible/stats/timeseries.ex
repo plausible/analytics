@@ -272,7 +272,7 @@ defmodule Plausible.Stats.Timeseries do
       group_by: bucket,
       order_by: bucket,
       select_merge: %{
-        date: bucket
+        date: fragment("?", bucket)
       }
     )
   end
