@@ -11,11 +11,11 @@ defmodule Plausible.Stats.Breakdown do
   @no_ref "Direct / None"
   @not_set "(not set)"
 
-  @session_metrics [:visits, :bounce_rate, :visit_duration]
+  @session_metrics [:bounce_rate, :visit_duration]
 
-  @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
+  @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
-  @event_metrics [:visitors, :pageviews, :events, :percentage] ++ @revenue_metrics
+  @event_metrics [:visits, :visitors, :pageviews, :events, :percentage] ++ @revenue_metrics
 
   # These metrics can be asked from the `breakdown/5` function,
   # but they are different from regular metrics such as `visitors`,
@@ -38,7 +38,7 @@ defmodule Plausible.Stats.Breakdown do
     no_revenue = {nil, metrics -- @revenue_metrics}
 
     {revenue_goals, metrics} =
-      on_full_build do
+      on_ee do
         if Plausible.Billing.Feature.RevenueGoals.enabled?(site) do
           revenue_goals = Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
           metrics = if Enum.empty?(revenue_goals), do: metrics -- @revenue_metrics, else: metrics
@@ -122,7 +122,7 @@ defmodule Plausible.Stats.Breakdown do
 
   def breakdown(site, query, "event:props:" <> custom_prop = property, metrics, pagination, opts) do
     {currency, metrics} =
-      on_full_build do
+      on_ee do
         Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
       else
         {nil, metrics}
@@ -310,7 +310,6 @@ defmodule Plausible.Stats.Breakdown do
     q
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all(debug_label: :paginate_and_execute)
-    |> transform_keys(%{operating_system: :os})
     |> Util.keep_requested_metrics(metrics)
   end
 
@@ -601,8 +600,7 @@ defmodule Plausible.Stats.Breakdown do
       s in q,
       group_by: s.operating_system,
       select_merge: %{
-        operating_system:
-          fragment("if(empty(?), ?, ?)", s.operating_system, @not_set, s.operating_system)
+        os: fragment("if(empty(?), ?, ?)", s.operating_system, @not_set, s.operating_system)
       },
       order_by: {:asc, s.operating_system}
     )
@@ -651,7 +649,6 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp group_by_field_names("event:props:" <> _prop), do: [:name]
-  defp group_by_field_names("visit:os"), do: [:operating_system]
   defp group_by_field_names("visit:os_version"), do: [:os, :os_version]
   defp group_by_field_names("visit:browser_version"), do: [:browser, :browser_version]
 
@@ -761,7 +758,7 @@ defmodule Plausible.Stats.Breakdown do
     ])
   end
 
-  on_full_build do
+  on_ee do
     defp cast_revenue_metrics_to_money(results, revenue_goals) do
       Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
     end

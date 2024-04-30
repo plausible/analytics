@@ -43,8 +43,14 @@ defmodule Plausible.Imported do
   @spec tables() :: [String.t()]
   def tables, do: @table_names
 
-  @spec max_complete_imports() :: non_neg_integer()
-  def max_complete_imports(), do: @max_complete_imports
+  @spec max_complete_imports(Site.t()) :: non_neg_integer()
+  def max_complete_imports(site) do
+    if FunWithFlags.enabled?(:imports_exports, for: site) do
+      @max_complete_imports
+    else
+      1
+    end
+  end
 
   @spec load_import_data(Site.t()) :: Site.t()
   def load_import_data(%{import_data_loaded: true} = site), do: site
@@ -67,20 +73,23 @@ defmodule Plausible.Imported do
     Repo.get_by(SiteImport, id: import_id, site_id: site.id)
   end
 
+  @spec get_legacy_import(Site.t()) :: SiteImport.t() | nil
+  def get_legacy_import(site) do
+    from(i in SiteImport,
+      where: i.site_id == ^site.id and i.legacy == true,
+      order_by: [desc: i.updated_at],
+      limit: 1
+    )
+    |> Repo.one()
+  end
+
   defdelegate listen(), to: Imported.Importer
 
   @spec list_all_imports(Site.t(), atom()) :: [SiteImport.t()]
   def list_all_imports(site, status \\ nil) do
-    imports =
-      from(i in SiteImport, where: i.site_id == ^site.id, order_by: [desc: i.inserted_at])
-      |> maybe_filter_by_status(status)
-      |> Repo.all()
-
-    if site.imported_data && not Enum.any?(imports, & &1.legacy) do
-      imports ++ [SiteImport.from_legacy(site.imported_data)]
-    else
-      imports
-    end
+    from(i in SiteImport, where: i.site_id == ^site.id, order_by: [desc: i.inserted_at])
+    |> maybe_filter_by_status(status)
+    |> Repo.all()
   end
 
   @spec other_imports_in_progress?(SiteImport.t()) :: boolean()
@@ -113,7 +122,7 @@ defmodule Plausible.Imported do
     ids = Enum.map(ids, &elem(&1, 1))
 
     # account for legacy imports as well
-    if has_legacy? || (site.imported_data && site.imported_data.status == "ok") do
+    if has_legacy? do
       [0 | ids]
     else
       ids
@@ -132,23 +141,7 @@ defmodule Plausible.Imported do
       )
       |> Repo.one()
 
-    dates = dates || %{start_date: nil, end_date: nil}
-
-    if site.imported_data && site.imported_data.status == "ok" do
-      start_date =
-        [dates.start_date, site.imported_data.start_date]
-        |> Enum.reject(&is_nil/1)
-        |> Enum.min(Date, fn -> nil end)
-
-      end_date =
-        [dates.end_date, site.imported_data.end_date]
-        |> Enum.reject(&is_nil/1)
-        |> Enum.max(Date, fn -> nil end)
-
-      %{start_date: start_date, end_date: end_date}
-    else
-      dates
-    end
+    dates || %{start_date: nil, end_date: nil}
   end
 
   @spec delete_imports_for_site(Site.t()) :: :ok
@@ -187,6 +180,7 @@ defmodule Plausible.Imported do
     |> Imported.list_all_imports(Imported.SiteImport.completed())
     |> Enum.reject(&(Date.diff(&1.end_date, &1.start_date) < 2))
     |> Enum.map(&Date.range(&1.start_date, &1.end_date))
+    |> Enum.sort_by(& &1.first, Date)
   end
 
   @spec get_cutoff_date(Site.t()) :: Date.t()

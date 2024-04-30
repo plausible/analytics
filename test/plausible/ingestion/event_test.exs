@@ -177,6 +177,43 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :site_page_blocklist
   end
 
+  test "event pipeline drops a request when hostname allowlist is defined and hostname is not on the list" do
+    site = insert(:site)
+
+    payload = %{
+      name: "pageview",
+      url: "http://dummy.site",
+      domain: site.domain
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    {:ok, _} = Plausible.Shields.add_hostname_rule(site, %{"hostname" => "subdomain.dummy.site"})
+
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+    assert dropped.drop_reason == :site_hostname_allowlist
+  end
+
+  test "event pipeline passes a request when hostname allowlist is defined and hostname is on the list" do
+    site = insert(:site)
+
+    payload = %{
+      name: "pageview",
+      url: "http://subdomain.dummy.site",
+      domain: site.domain
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    {:ok, _} = Plausible.Shields.add_hostname_rule(site, %{"hostname" => "subdomain.dummy.site"})
+
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
+  end
+
   test "event pipeline drops events for site with accept_trafic_until in the past" do
     yesterday = Date.add(Date.utc_today(), -1)
 
@@ -199,7 +236,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :payment_required
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   test "saves revenue amount" do
     site = insert(:site)
     _goal = insert(:goal, event_name: "checkout", currency: "USD", site: site)

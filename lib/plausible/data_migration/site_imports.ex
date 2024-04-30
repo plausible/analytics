@@ -58,7 +58,7 @@ defmodule Plausible.DataMigration.SiteImports do
 
         params =
           site.imported_data
-          |> Imported.SiteImport.from_legacy()
+          |> from_legacy()
           |> Map.put(:site_id, site.id)
           |> Map.take([:legacy, :start_date, :end_date, :source, :status, :site_id])
 
@@ -215,5 +215,23 @@ defmodule Plausible.DataMigration.SiteImports do
       where: q.import_id in ^import_ids,
       select: %{max_date: fragment("max(?)", q.date)}
     )
+  end
+
+  defp from_legacy(%Site.ImportedData{} = data) do
+    status =
+      case data.status do
+        "ok" -> SiteImport.completed()
+        "error" -> SiteImport.failed()
+        _ -> SiteImport.importing()
+      end
+
+    %SiteImport{
+      id: 0,
+      legacy: true,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      source: :universal_analytics,
+      status: status
+    }
   end
 end

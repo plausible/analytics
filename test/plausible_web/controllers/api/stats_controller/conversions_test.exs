@@ -265,7 +265,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "returns formatted average and total values for a conversion with revenue value", %{
       conn: conn,
       site: site
@@ -306,7 +306,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "returns revenue goals as custom events if the plan doesn't cover the feature", %{
       conn: conn,
       site: site,
@@ -350,7 +350,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "returns revenue metrics as nil for non-revenue goals", %{
       conn: conn,
       site: site
@@ -631,12 +631,14 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       conn: conn,
       site: site
     } do
-      site =
-        site
-        |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
-        |> Plausible.Repo.update!()
+      site_import =
+        insert(:site_import,
+          start_date: ~D[2005-01-01],
+          end_date: Timex.today(),
+          source: :universal_analytics
+        )
 
-      populate_stats(site, [
+      populate_stats(site, site_import.id, [
         build(:pageview, pathname: "/"),
         build(:pageview, pathname: "/another"),
         build(:pageview, pathname: "/blog/post-1"),

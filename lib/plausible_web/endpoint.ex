@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Endpoint do
   static_paths = ~w(css js images favicon.ico)
 
   static_paths =
-    on_full_build do
+    on_ee do
       # NOTE: The Cloud uses custom robots.txt from https://github.com/plausible/website: https://plausible.io/robots.txt
       static_paths
     else
@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Endpoint do
     only: static_paths
   )
 
-  on_full_build do
+  on_ee do
     plug(Plug.Static,
       at: "/kaffy",
       from: :kaffy,

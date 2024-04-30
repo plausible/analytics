@@ -54,6 +54,10 @@ defmodule Plausible.Auth.UserAdmin do
       lock: %{
         name: "Lock",
         action: fn _, user -> lock(user) end
+      },
+      reset_2fa: %{
+        name: "Reset 2FA",
+        action: fn _, user -> disable_2fa(user) end
       }
     ]
   end
@@ -75,6 +79,10 @@ defmodule Plausible.Auth.UserAdmin do
     else
       {:error, user, "No active grace period on this user"}
     end
+  end
+
+  def disable_2fa(user) do
+    Plausible.Auth.TOTP.force_disable(user)
   end
 
   defp grace_period_status(%{grace_period: grace_period}) do
@@ -126,7 +134,7 @@ defmodule Plausible.Auth.UserAdmin do
     end
   end
 
-  on_full_build do
+  on_ee do
     defp usage_link(user) do
       path = PlausibleWeb.Router.Helpers.admin_path(PlausibleWeb.Endpoint, :usage, user.id)
       {:safe, ~s(<a href="#{path}">Usage</a>)}

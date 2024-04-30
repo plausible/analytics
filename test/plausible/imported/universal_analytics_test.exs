@@ -50,15 +50,6 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
                }
              ] = Plausible.Imported.list_all_imports(site)
 
-      assert %{
-               imported_data: %{
-                 source: "Google Analytics",
-                 start_date: ~D[2023-10-01],
-                 end_date: ~D[2024-01-02],
-                 status: "importing"
-               }
-             } = Repo.reload!(site)
-
       assert opts = [_ | _] = UniversalAnalytics.parse_args(args)
 
       assert opts[:view_id] == "123"
@@ -91,8 +82,6 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
                  legacy: false
                }
              ] = Plausible.Imported.list_all_imports(site)
-
-      assert %{imported_data: nil} = Repo.reload!(site)
     end
   end
 

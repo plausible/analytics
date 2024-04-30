@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   @user_id 123
 
   describe "GET /api/stats/:domain/sources" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns top sources by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -544,7 +544,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/utm_mediums" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns top utm_mediums by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -696,7 +696,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/utm_campaigns" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns top utm_campaigns by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -856,7 +856,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/utm_sources" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns top utm_sources by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -904,7 +904,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/utm_terms" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns top utm_terms by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -1064,7 +1064,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/utm_contents" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns top utm_contents by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [

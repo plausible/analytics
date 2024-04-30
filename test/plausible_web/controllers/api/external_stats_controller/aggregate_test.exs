@@ -473,10 +473,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   end
 
   describe "with imported data" do
-    setup :add_imported_data
+    setup :create_site_import
 
-    test "does not count imported stats unless specified", %{conn: conn, site: site} do
-      populate_stats(site, [
+    test "does not count imported stats unless specified", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
         build(:imported_visitors, date: ~D[2023-01-01]),
         build(:pageview, timestamp: ~N[2023-01-01 00:00:00])
       ])
@@ -501,8 +505,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
-    test "counts imported stats when comparing with previous period", %{conn: conn, site: site} do
-      populate_stats(site, [
+    test "counts imported stats when comparing with previous period", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
         build(:imported_visitors,
           visits: 2,
           bounces: 1,
@@ -540,8 +548,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
-    test "ignores imported data when filters are applied", %{conn: conn, site: site} do
-      populate_stats(site, [
+    test "ignores imported data when filters are applied", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
         build(:imported_visitors, date: ~D[2023-01-01]),
         build(:imported_sources, date: ~D[2023-01-01]),
         build(:pageview,
@@ -566,8 +578,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
-    test "events metric with imported data is disallowed", %{conn: conn, site: site} do
-      populate_stats(site, [
+    test "events metric with imported data is disallowed", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
         build(:imported_visitors, date: ~D[2023-01-01])
       ])
 
@@ -1038,6 +1054,36 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                "visitors" => %{"value" => 2},
                "bounce_rate" => %{"value" => 100},
                "visit_duration" => %{"value" => 750}
+             }
+    end
+
+    test "can filter by hostname", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          hostname: "one.example.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          hostname: "example.com",
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "metrics" => "pageviews,visitors,bounce_rate,visit_duration",
+          "filters" => "event:hostname==*.example.com|example.com"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "pageviews" => %{"value" => 2},
+               "visitors" => %{"value" => 2},
+               "bounce_rate" => %{"value" => 100},
+               "visit_duration" => %{"value" => 0}
              }
     end
 

@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Aggregate do
 
   def aggregate(site, query, metrics) do
     {currency, metrics} =
-      on_full_build do
+      on_ee do
         Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
       else
         {nil, metrics}
@@ -200,7 +200,7 @@ defmodule Plausible.Stats.Aggregate do
 
   defp maybe_round_value(entry), do: entry
 
-  on_full_build do
+  on_ee do
     defp cast_revenue_metrics_to_money(results, revenue_goals) do
       Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
     end

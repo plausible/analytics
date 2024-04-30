@@ -1,18 +1,3 @@
-defmodule CompiledRegex do
-  @moduledoc """
-  Ensures that the regex is compiled on load
-  """
-  use Ecto.Type
-
-  def type, do: :string
-
-  def cast(val) when is_binary(val), do: {:ok, val}
-  def cast(_), do: :error
-
-  def load(val), do: {:ok, Regex.compile!(val)}
-  def dump(val), do: {:ok, val}
-end
-
 defmodule Plausible.Shield.PageRule do
   @moduledoc """
   Schema for Pages block list
@@ -26,7 +11,7 @@ defmodule Plausible.Shield.PageRule do
   schema "shield_rules_page" do
     belongs_to :site, Plausible.Site
     field :page_path, :string
-    field :page_path_pattern, CompiledRegex
+    field :page_path_pattern, Plausible.Ecto.Types.CompiledRegex
     field :action, Ecto.Enum, values: [:deny, :allow], default: :deny
     field :added_by, :string
 

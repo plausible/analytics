@@ -47,13 +47,21 @@ defmodule Plausible.TestUtils do
     {:ok, site: site}
   end
 
-  def add_imported_data(%{site: site}) do
-    site =
-      site
-      |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
-      |> Repo.update!()
+  def create_legacy_site_import(%{site: site}) do
+    create_site_import(%{site: site, create_legacy_import?: true})
+  end
 
-    {:ok, site: site}
+  def create_site_import(%{site: site} = opts) do
+    site_import =
+      Factory.insert(:site_import,
+        site: site,
+        start_date: ~D[2005-01-01],
+        end_date: Timex.today(),
+        source: :universal_analytics,
+        legacy: opts[:create_legacy_import?] == true
+      )
+
+    {:ok, site_import: site_import}
   end
 
   def create_new_site(%{user: user}) do

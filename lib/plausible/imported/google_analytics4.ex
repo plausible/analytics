@@ -96,19 +96,12 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
   end
 
   defp new_from_report(site_id, import_id, "imported_sources", row) do
-    referrer_uri = row.dimensions |> Map.fetch!("pageReferrer") |> URI.parse()
-
-    referrer =
-      if PlausibleWeb.RefInspector.right_uri?(referrer_uri) do
-        PlausibleWeb.RefInspector.format_referrer(referrer_uri)
-      end
-
     %{
       site_id: site_id,
       import_id: import_id,
       date: get_date(row),
       source: row.dimensions |> Map.fetch!("sessionSource") |> parse_referrer(),
-      referrer: referrer,
+      referrer: nil,
       # Only `source` exists in GA4 API
       utm_source: nil,
       utm_medium: row.dimensions |> Map.fetch!("sessionMedium") |> default_if_missing(),
@@ -131,6 +124,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
       hostname: row.dimensions |> Map.fetch!("hostName") |> String.replace_prefix("www.", ""),
       page: row.dimensions |> Map.fetch!("pagePath") |> URI.parse() |> Map.get(:path),
       visitors: row.metrics |> Map.fetch!("totalUsers") |> parse_number(),
+      active_visitors: row.metrics |> Map.fetch!("activeUsers") |> parse_number(),
       visits: row.metrics |> Map.fetch!("sessions") |> parse_number(),
       pageviews: row.metrics |> Map.fetch!("screenPageViews") |> parse_number(),
       # NOTE: no exits metric in GA4 API currently

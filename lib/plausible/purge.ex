@@ -60,6 +60,10 @@ defmodule Plausible.Purge do
     site_import = Repo.preload(site_import, :site)
     delete_imported_stats!(site_import.site, site_import.id)
 
+    if site_import.legacy do
+      delete_imported_stats!(site_import.site, 0)
+    end
+
     :ok
   end
 

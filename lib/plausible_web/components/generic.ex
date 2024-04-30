@@ -71,13 +71,21 @@ defmodule PlausibleWeb.Components.Generic do
   def button_link(assigns) do
     theme_class =
       if assigns.disabled do
-        "bg-gray-400 text-white dark:text-white dark:text-gray-400 dark:bg-gray-700 pointer-events-none cursor-default"
+        "bg-gray-400 text-white dark:text-white dark:text-gray-400 dark:bg-gray-700 cursor-not-allowed"
       else
         @button_themes[assigns.theme]
       end
 
+    onclick =
+      if assigns.disabled do
+        "return false;"
+      else
+        assigns[:onclick]
+      end
+
     assigns =
       assign(assigns,
+        onclick: onclick,
         button_base_class: @button_base_class,
         theme_class: theme_class
       )
@@ -85,6 +93,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <.link
       href={@href}
+      onclick={@onclick}
       class={[
         @button_base_class,
         @theme_class,
@@ -306,6 +315,32 @@ defmodule PlausibleWeb.Components.Generic do
       >
       </path>
     </svg>
+    """
+  end
+
+  slot :inner_block, required: true
+  slot :tooltip_content, required: true
+
+  def tooltip(assigns) do
+    ~H"""
+    <div x-data="{sticky: false, hovered: false}" class="tooltip-wrapper relative">
+      <p
+        x-on:click="sticky = true; hovered = true"
+        x-on:click.outside="sticky = false; hovered = false"
+        x-on:mouseover="hovered = true"
+        x-on:mouseout="hovered = false"
+        class="cursor-pointer text-sm text-red-700 dark:text-red-500 mt-1 flex justify-center align-items-center"
+      >
+        <%= render_slot(@inner_block) %>
+        <Heroicons.information_circle class="w-5 h-5 ml-2" />
+      </p>
+      <span
+        x-show="hovered || sticky"
+        class="bg-gray-900 pointer-events-none absolute bottom-10 margin-x-auto left-10 right-10 transition-opacity p-4 rounded text-white"
+      >
+        <%= render_slot(List.first(@tooltip_content)) %>
+      </span>
+    </div>
     """
   end
 

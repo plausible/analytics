@@ -14,7 +14,7 @@ defmodule Plausible.Google.GA4.API do
           expires_at :: String.t()
         }
 
-  @per_page 50_000
+  @per_page 250_000
   @backoff_factor :timer.seconds(10)
   @max_attempts 5
 
@@ -36,6 +36,9 @@ defmodule Plausible.Google.GA4.API do
           end)
 
         {:ok, accounts}
+
+      {:ok, _} ->
+        {:ok, []}
 
       {:error, cause} ->
         {:error, cause}

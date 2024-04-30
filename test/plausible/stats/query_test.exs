@@ -177,13 +177,13 @@ defmodule Plausible.Stats.QueryTest do
     assert q.interval == "date"
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   test "adds sample_threshold :infinite to query struct", %{site: site} do
     q = Query.from(site, %{"period" => "30d", "sample_threshold" => "infinite"})
     assert q.sample_threshold == :infinite
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   test "casts sample_threshold to integer in query struct", %{site: site} do
     q = Query.from(site, %{"period" => "30d", "sample_threshold" => "30000000"})
     assert q.sample_threshold == 30_000_000

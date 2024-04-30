@@ -6,7 +6,6 @@ defmodule Plausible.DataMigration.SiteImportsTest do
   alias Plausible.DataMigration.SiteImports
   alias Plausible.Imported
   alias Plausible.Repo
-  alias Plausible.Site
 
   describe "run/1" do
     test "runs for empty dataset" do
@@ -30,7 +29,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
     test "adds site import entry when it's missing and adjusts end date" do
       site =
         insert(:site)
-        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "ok")
+        |> start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "ok")
         |> Repo.update!()
 
       populate_stats(site, 0, [
@@ -54,7 +53,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
     test "runs in dry mode without making any persistent changes" do
       site =
         insert(:site)
-        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "ok")
+        |> start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "ok")
         |> Repo.update!()
 
       populate_stats(site, 0, [
@@ -71,15 +70,14 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
       site = Repo.reload!(site)
 
-      assert [%{id: id, legacy: true}] = Imported.list_all_imports(site)
-      assert id == 0
+      assert [] = Imported.list_all_imports(site)
       assert site.imported_data.end_date == ~D[2021-01-08]
     end
 
     test "does not set end date to latter than the current one" do
       site =
         insert(:site)
-        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "ok")
+        |> start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "ok")
         |> Repo.update!()
 
       populate_stats(site, 0, [
@@ -103,7 +101,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
     test "removes site import when there are no stats" do
       site =
         insert(:site)
-        |> Site.start_import(~D[2021-01-02], ~D[2020-02-02], "Google Analytics", "ok")
+        |> start_import(~D[2021-01-02], ~D[2020-02-02], "Google Analytics", "ok")
         |> Repo.update!()
 
       assert capture_io(fn ->
@@ -118,7 +116,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
     test "leaves site and imports unchanged if everything fits" do
       site =
         insert(:site)
-        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "ok")
+        |> start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "ok")
         |> Repo.update!()
 
       existing_import =
@@ -150,7 +148,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
     test "only considers sites with completed site imports or 'ok' imported data" do
       site1 =
         insert(:site)
-        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "error")
+        |> start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "error")
         |> Repo.update!()
 
       existing_import1 =
@@ -164,7 +162,7 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
       site2 =
         insert(:site)
-        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "ok")
+        |> start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "ok")
         |> Repo.update!()
 
       existing_import2 =
@@ -178,12 +176,12 @@ defmodule Plausible.DataMigration.SiteImportsTest do
 
       site3 =
         insert(:site)
-        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "error")
+        |> start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "error")
         |> Repo.update!()
 
       site4 =
         insert(:site)
-        |> Site.start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "error")
+        |> start_import(~D[2021-01-02], ~D[2021-01-08], "Google Analytics", "error")
         |> Repo.update!()
 
       _existing_import3 =
@@ -271,5 +269,16 @@ defmodule Plausible.DataMigration.SiteImportsTest do
                  end_date
       end
     end
+  end
+
+  defp start_import(site, start_date, end_date, imported_source, status) do
+    change(site,
+      imported_data: %{
+        start_date: start_date,
+        end_date: end_date,
+        source: imported_source,
+        status: status
+      }
+    )
   end
 end

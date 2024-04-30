@@ -41,7 +41,7 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def logo_path(filename) do
-    if full_build?() do
+    if ee?() do
       Path.join("/images/ee/", filename)
     else
       Path.join("/images/ce/", filename)
@@ -49,19 +49,24 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def settings_tabs(conn) do
+    imports_exports_key =
+      if FunWithFlags.enabled?(:csv_imports_exports, for: conn.assigns.site) do
+        "Imports & Exports"
+      else
+        "Imports"
+      end
+
     [
       %{key: "General", value: "general", icon: :rocket_launch},
       %{key: "People", value: "people", icon: :users},
       %{key: "Visibility", value: "visibility", icon: :eye},
       %{key: "Goals", value: "goals", icon: :check_circle},
-      on_full_build do
+      on_ee do
         %{key: "Funnels", value: "funnels", icon: :funnel}
       end,
       %{key: "Custom Properties", value: "properties", icon: :document_text},
       %{key: "Integrations", value: "integrations", icon: :arrow_path_rounded_square},
-      if FunWithFlags.enabled?(:imports_exports, for: conn.assigns.site) do
-        %{key: "Imports & Exports", value: "imports-exports", icon: :arrows_up_down}
-      end,
+      %{key: imports_exports_key, value: "imports-exports", icon: :arrows_up_down},
       %{
         key: "Shields",
         icon: :shield_exclamation,
@@ -69,9 +74,8 @@ defmodule PlausibleWeb.LayoutView do
           [
             %{key: "IP Addresses", value: "shields/ip_addresses"},
             %{key: "Countries", value: "shields/countries"},
-            if FunWithFlags.enabled?(:shield_pages, for: conn.assigns[:site]) do
-              %{key: "Pages", value: "shields/pages"}
-            end
+            %{key: "Pages", value: "shields/pages"},
+            %{key: "Hostnames", value: "shields/hostnames"}
           ]
           |> Enum.reject(&is_nil/1)
       },

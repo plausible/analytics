@@ -90,8 +90,6 @@ defmodule Plausible.SitesTest do
     test "ignores imported stats" do
       site = insert(:site)
       insert(:site_import, site: site)
-      {:ok, opts} = add_imported_data(%{site: site})
-      site = Map.new(opts).site
 
       assert Sites.native_stats_start_date(site) == nil
     end
@@ -116,7 +114,7 @@ defmodule Plausible.SitesTest do
   end
 
   describe "get_for_user/2" do
-    @tag :full_build_only
+    @tag :ee_only
     test "get site for super_admin" do
       user1 = insert(:user)
       user2 = insert(:user)

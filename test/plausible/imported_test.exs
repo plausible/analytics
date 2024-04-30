@@ -30,34 +30,6 @@ defmodule Plausible.ImportedTest do
       assert import3.id in ids
       assert import4.id in ids
     end
-
-    test "returns one legacy import when present with respective site import entry" do
-      site = insert(:site)
-      {:ok, opts} = add_imported_data(%{site: site})
-      site = Map.new(opts).site
-      site_import = insert(:site_import, site: site, legacy: true)
-      site_import_id = site_import.id
-
-      assert [%{id: ^site_import_id}] = Imported.list_all_imports(site)
-    end
-
-    test "returns legacy import without respective site import entry" do
-      site = insert(:site)
-      {:ok, opts} = add_imported_data(%{site: site})
-      site = Map.new(opts).site
-      imported_start_date = site.imported_data.start_date
-      imported_end_date = site.imported_data.end_date
-
-      assert [
-               %{
-                 id: 0,
-                 source: :universal_analytics,
-                 start_date: ^imported_start_date,
-                 end_date: ^imported_end_date,
-                 status: :completed
-               }
-             ] = Imported.list_all_imports(site)
-    end
   end
 
   describe "get_imports_date_range/1" do
@@ -68,15 +40,7 @@ defmodule Plausible.ImportedTest do
     end
 
     test "returns empty when only incomplete or failed imports are present" do
-      site =
-        insert(:site)
-        |> Plausible.Site.start_import(
-          ~D[2020-04-01],
-          ~D[2022-06-22],
-          "Google Analytics",
-          "error"
-        )
-        |> Repo.update!()
+      site = insert(:site)
 
       _import1 = insert(:site_import, site: site, status: :pending)
       _import2 = insert(:site_import, site: site, status: :importing)
@@ -87,15 +51,7 @@ defmodule Plausible.ImportedTest do
     end
 
     test "returns start and end dates considering all imports" do
-      site =
-        insert(:site)
-        |> Plausible.Site.start_import(
-          ~D[2020-04-01],
-          ~D[2022-06-22],
-          "Google Analytics",
-          "ok"
-        )
-        |> Repo.update!()
+      site = insert(:site)
 
       _import1 =
         insert(:site_import,
@@ -114,7 +70,7 @@ defmodule Plausible.ImportedTest do
           status: :completed
         )
 
-      assert %{start_date: ~D[2020-04-01], end_date: ~D[2024-01-08]} =
+      assert %{start_date: ~D[2020-04-02], end_date: ~D[2024-01-08]} =
                Imported.get_imports_date_range(site)
     end
   end
@@ -162,6 +118,29 @@ defmodule Plausible.ImportedTest do
 
       assert {:ok, ~D[2021-05-12], ~D[2023-10-25]} =
                Imported.clamp_dates(site, ~D[2019-03-21], ~D[2024-01-12])
+    end
+
+    test "does not depend on the order of insertion of site imports (regression fix)" do
+      site = insert(:site)
+
+      _existing_import1 =
+        insert(:site_import,
+          site: site,
+          start_date: ~D[2020-10-14],
+          end_date: ~D[2024-04-01],
+          status: :completed
+        )
+
+      _existing_import2 =
+        insert(:site_import,
+          site: site,
+          start_date: ~D[2012-01-18],
+          end_date: ~D[2018-03-09],
+          status: :completed
+        )
+
+      assert {:ok, ~D[2018-03-09], ~D[2020-10-14]} =
+               Imported.clamp_dates(site, ~D[2012-01-18], ~D[2018-03-09])
     end
 
     test "does not alter the dates when there are no imports and no native stats" do

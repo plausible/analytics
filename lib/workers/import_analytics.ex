@@ -54,14 +54,10 @@ defmodule Plausible.Workers.ImportAnalytics do
   end
 
   def import_complete(site_import) do
-    site_import = Repo.preload(site_import, site: [memberships: :user])
+    site_import = Repo.preload(site_import, [:site, :imported_by])
 
-    Enum.each(site_import.site.memberships, fn membership ->
-      if membership.role in [:owner, :admin] do
-        PlausibleWeb.Email.import_success(site_import, membership.user)
-        |> Plausible.Mailer.send()
-      end
-    end)
+    PlausibleWeb.Email.import_success(site_import, site_import.imported_by)
+    |> Plausible.Mailer.send()
 
     Plausible.Sites.clear_stats_start_date!(site_import.site)
 
@@ -84,15 +80,11 @@ defmodule Plausible.Workers.ImportAnalytics do
     site_import =
       site_import
       |> import_api.mark_failed()
-      |> Repo.preload(site: [memberships: :user])
+      |> Repo.preload([:site, :imported_by])
 
     Importer.notify(site_import, :fail)
 
-    Enum.each(site_import.site.memberships, fn membership ->
-      if membership.role in [:owner, :admin] do
-        PlausibleWeb.Email.import_failure(site_import, membership.user)
-        |> Plausible.Mailer.send()
-      end
-    end)
+    PlausibleWeb.Email.import_failure(site_import, site_import.imported_by)
+    |> Plausible.Mailer.send()
   end
 end

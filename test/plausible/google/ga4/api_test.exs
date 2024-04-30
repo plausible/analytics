@@ -27,6 +27,14 @@ defmodule Plausible.Google.GA4.APITest do
                 ]}
              ] = accounts
     end
+
+    test "handles empty response properly" do
+      expect(Plausible.HTTPClient.Mock, :get, fn _url, _opts ->
+        {:ok, %Finch.Response{status: 200, body: %{}}}
+      end)
+
+      assert {:ok, []} = GA4.API.list_properties("some_access_token")
+    end
   end
 
   describe "get_property/2" do

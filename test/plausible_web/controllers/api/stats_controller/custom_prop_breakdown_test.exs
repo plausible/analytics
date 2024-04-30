@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
   use PlausibleWeb.ConnCase
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns breakdown by a custom property", %{conn: conn, site: site} do
       prop_key = "parim_s6ber"
@@ -745,7 +745,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
              ]
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "returns revenue metrics when filtering by a revenue goal", %{conn: conn, site: site} do
       prop_key = "logged_in"
 
@@ -803,7 +803,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
              ]
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "returns revenue metrics when filtering by many revenue goals with same currency", %{
       conn: conn,
       site: site

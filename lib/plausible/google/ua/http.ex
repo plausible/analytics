@@ -45,10 +45,18 @@ defmodule Plausible.Google.UA.HTTP do
       {:ok, {report, token}}
     else
       {:error, %{reason: %{status: status, body: body}}} ->
+        Logger.debug(
+          "[#{inspect(__MODULE__)}:#{report_request.view_id}] Request failed for #{report_request.dataset} with code #{status}: #{inspect(body)}"
+        )
+
         Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: status}})
         {:error, :request_failed}
 
-      {:error, _reason} ->
+      {:error, reason} ->
+        Logger.debug(
+          "[#{inspect(__MODULE__)}:#{report_request.view_id}] Request failed for #{report_request.dataset}: #{inspect(reason)}"
+        )
+
         {:error, :request_failed}
     end
   end

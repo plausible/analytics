@@ -6,7 +6,7 @@ defmodule Plausible.Imported.CSVImporterTest do
 
   doctest CSVImporter, import: true
 
-  on_full_build do
+  on_ee do
     @moduletag :minio
   end
 
@@ -33,7 +33,7 @@ defmodule Plausible.Imported.CSVImporterTest do
         Enum.map(tables, fn table ->
           filename = "#{table}_#{start_date}_#{end_date}.csv"
 
-          on_full_build do
+          on_ee do
             %{
               "filename" => filename,
               "s3_url" =>
@@ -54,7 +54,7 @@ defmodule Plausible.Imported.CSVImporterTest do
                  start_date: date_range.first,
                  end_date: date_range.last,
                  uploads: uploads,
-                 storage: on_full_build(do: "s3", else: "local")
+                 storage: on_ee(do: "s3", else: "local")
                )
 
       assert %Oban.Job{args: %{"import_id" => import_id, "uploads" => ^uploads} = args} =
@@ -70,11 +70,9 @@ defmodule Plausible.Imported.CSVImporterTest do
                }
              ] = Plausible.Imported.list_all_imports(site)
 
-      assert %{imported_data: nil} = Repo.reload!(site)
-
       assert CSVImporter.parse_args(args) == [
                uploads: uploads,
-               storage: on_full_build(do: "s3", else: "local")
+               storage: on_ee(do: "s3", else: "local")
              ]
     end
   end
@@ -314,7 +312,7 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       uploads =
         for %{name: name, body: body} <- csvs do
-          on_full_build do
+          on_ee do
             %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, name)
             [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
             ExAws.request!(ExAws.S3.put_object(bucket, key, body))
@@ -333,7 +331,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           start_date: date_range.first,
           end_date: date_range.last,
           uploads: uploads,
-          storage: on_full_build(do: "s3", else: "local")
+          storage: on_ee(do: "s3", else: "local")
         )
 
       assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety?: false)
@@ -376,7 +374,7 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       uploads =
         for %{name: name, body: body} <- csvs do
-          on_full_build do
+          on_ee do
             %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, name)
             [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
             ExAws.request!(ExAws.S3.put_object(bucket, key, body))
@@ -395,7 +393,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           start_date: date_range.first,
           end_date: date_range.last,
           uploads: uploads,
-          storage: on_full_build(do: "s3", else: "local")
+          storage: on_ee(do: "s3", else: "local")
         )
 
       assert %{discard: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety?: false)
@@ -481,7 +479,7 @@ defmodule Plausible.Imported.CSVImporterTest do
       ])
 
       # export archive to s3
-      on_full_build do
+      on_ee do
         assert {:ok, _job} = Plausible.Exports.schedule_s3_export(site.id, user.email)
       else
         assert {:ok, %{args: %{"local_path" => local_path}}} =
@@ -491,7 +489,7 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert %{success: 1} = Oban.drain_queue(queue: :analytics_exports, with_safety: false)
 
       # download archive
-      on_full_build do
+      on_ee do
         ExAws.request!(
           ExAws.S3.download_file(
             Plausible.S3.exports_bucket(),
@@ -510,7 +508,7 @@ defmodule Plausible.Imported.CSVImporterTest do
       # upload csvs
       uploads =
         Enum.map(files, fn file ->
-          on_full_build do
+          on_ee do
             %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, file)
             [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
             ExAws.request!(ExAws.S3.put_object(bucket, key, File.read!(file)))
@@ -528,7 +526,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           start_date: date_range.first,
           end_date: date_range.last,
           uploads: uploads,
-          storage: on_full_build(do: "s3", else: "local")
+          storage: on_ee(do: "s3", else: "local")
         )
 
       assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety: false)
@@ -546,7 +544,7 @@ defmodule Plausible.Imported.CSVImporterTest do
   end
 
   defp clean_buckets(_context) do
-    on_full_build do
+    on_ee do
       clean_bucket = fn bucket ->
         ExAws.S3.list_objects_v2(bucket)
         |> ExAws.stream!()

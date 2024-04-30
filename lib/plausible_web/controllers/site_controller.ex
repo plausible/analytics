@@ -237,19 +237,11 @@ defmodule PlausibleWeb.SiteController do
         Plausible.Google.API.fetch_verified_properties(site.google_auth)
       end
 
-    imported_pageviews =
-      if site.imported_data do
-        Plausible.Stats.Clickhouse.imported_pageview_count(site)
-      else
-        0
-      end
-
     has_plugins_tokens? = Plausible.Plugins.API.Tokens.any?(site)
 
     conn
     |> render("settings_integrations.html",
       site: site,
-      imported_pageviews: imported_pageviews,
       has_plugins_tokens?: has_plugins_tokens?,
       search_console_domains: search_console_domains,
       dogfood_page_path: "/:dashboard/settings/integrations",
@@ -259,7 +251,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_shields(conn, %{"shield" => shield})
-      when shield in ["ip_addresses", "countries", "pages"] do
+      when shield in ["ip_addresses", "countries", "pages", "hostnames"] do
     site = conn.assigns.site
 
     conn
@@ -275,18 +267,13 @@ defmodule PlausibleWeb.SiteController do
   def settings_imports_exports(conn, _params) do
     site = conn.assigns.site
 
-    if FunWithFlags.enabled?(:imports_exports, for: site) do
-      conn
-      |> render("settings_imports_exports.html",
-        site: site,
-        dogfood_page_path: "/:dashboard/settings/imports-exports",
-        connect_live_socket: true,
-        layout: {PlausibleWeb.LayoutView, "site_settings.html"}
-      )
-    else
-      conn
-      |> redirect(external: Routes.site_path(conn, :settings, site.domain))
-    end
+    conn
+    |> render("settings_imports_exports.html",
+      site: site,
+      dogfood_page_path: "/:dashboard/settings/imports-exports",
+      connect_live_socket: true,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
   end
 
   def update_google_auth(conn, %{"google_auth" => attrs}) do
@@ -646,34 +633,18 @@ defmodule PlausibleWeb.SiteController do
   def forget_import(conn, %{"import_id" => import_id}) do
     site = conn.assigns.site
 
-    cond do
-      import_id == "0" ->
-        Plausible.Purge.delete_imported_stats!(site, 0)
-
-        site
-        |> Plausible.Site.remove_imported_data()
-        |> Repo.update!()
-
-      site_import = Plausible.Imported.get_import(site, import_id) ->
-        Oban.cancel_all_jobs(
-          from(j in Oban.Job,
-            where:
-              j.queue == "analytics_imports" and
-                fragment("(? ->> 'import_id')::int", j.args) == ^site_import.id
-          )
+    if site_import = Plausible.Imported.get_import(site, import_id) do
+      Oban.cancel_all_jobs(
+        from(j in Oban.Job,
+          where:
+            j.queue == "analytics_imports" and
+              fragment("(? ->> 'import_id')::int", j.args) == ^site_import.id
         )
+      )
 
-        Plausible.Purge.delete_imported_stats!(site_import)
+      Plausible.Purge.delete_imported_stats!(site_import)
 
-        Plausible.Repo.delete!(site_import)
-
-        if site_import.legacy do
-          Plausible.Purge.delete_imported_stats!(site, 0)
-
-          site
-          |> Plausible.Site.remove_imported_data()
-          |> Repo.update!()
-        end
+      Plausible.Repo.delete!(site_import)
     end
 
     conn
@@ -701,10 +672,6 @@ defmodule PlausibleWeb.SiteController do
       Plausible.Purge.delete_imported_stats!(site)
 
       Plausible.Imported.delete_imports_for_site(site)
-
-      site
-      |> Plausible.Site.remove_imported_data()
-      |> Repo.update!()
     end
 
     conn
@@ -712,7 +679,7 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
-  on_full_build do
+  on_ee do
     # exported archives are downloaded from object storage
   else
     alias Plausible.Exports

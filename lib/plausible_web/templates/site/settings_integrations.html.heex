@@ -2,10 +2,6 @@
   site={@site}
   search_console_domains={@search_console_domains}
 />
-<PlausibleWeb.Components.Settings.settings_google_import
-  site={@site}
-  imported_pageviews={@imported_pageviews}
-/>
 
 <section
   :if={@has_plugins_tokens? || @conn.query_params["new_token"]}

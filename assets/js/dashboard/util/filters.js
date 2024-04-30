@@ -1,5 +1,3 @@
-const flags = JSON.parse(document.getElementById('stats-react-container').dataset.flags)
-
 export const FILTER_GROUPS = {
   'page': ['page', 'entry_page', 'exit_page'],
   'source': ['source', 'referrer'],
@@ -10,8 +8,7 @@ export const FILTER_GROUPS = {
   'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
   'goal': ['goal'],
   'props': ['prop_key', 'prop_value'],
-  ...(flags.hostname_filter ? { 'hostname': ['hostname'] } : {})
-
+  'hostname': ['hostname']
 }
 
 export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_GROUPS['location']))

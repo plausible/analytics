@@ -12,7 +12,7 @@ defmodule Plausible.Release do
   ]
 
   def should_be_first_launch? do
-    on_full_build do
+    on_ee do
       false
     else
       not (_has_users? = Repo.exists?(Plausible.Auth.User))
