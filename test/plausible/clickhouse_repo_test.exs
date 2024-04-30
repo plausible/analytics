@@ -7,7 +7,7 @@ defmodule Plausible.ClickhouseRepoTest do
     Plausible.ClickhouseRepo.all(from(u in "events_v2", select: true, limit: 0))
 
     Plausible.ClickhouseRepo.one(from(u in "events_v2", select: true, limit: 0),
-      debug_label: "one"
+      label: "one"
     )
 
     queries = Plausible.DebugReplayInfo.get_queries_from_context()
@@ -22,7 +22,7 @@ defmodule Plausible.ClickhouseRepoTest do
     Plausible.ClickhouseRepo.all(from(u in "events_v2", select: true, limit: 0))
 
     Plausible.ClickhouseRepo.one(from(u in "events_v2", select: true, limit: 0),
-      debug_label: "one"
+      label: "one"
     )
 
     assert Plausible.DebugReplayInfo.get_queries_from_context() == []
@@ -34,11 +34,11 @@ defmodule Plausible.ClickhouseRepoTest do
     Sentry.Context.set_extra_context(%{domain: "example.com", site_id: 1})
 
     Plausible.ClickhouseRepo.all(from(u in "sessions_v2", select: true, limit: 0),
-      debug_label: "log_all"
+      label: "log_all"
     )
 
     Plausible.ClickhouseRepo.one(from(u in "sessions_v2", select: true, limit: 0),
-      debug_label: "log_one"
+      label: "log_one"
     )
 
     assert [
@@ -54,7 +54,7 @@ defmodule Plausible.ClickhouseRepoTest do
                    log_comment
                    FROM system.query_log
                    WHERE (type = 1) AND (query LIKE '%sessions_v2%')
-                   AND JSONExtractString(log_comment, 'debug_label') IN ('log_all', 'log_one')
+                   AND JSONExtractString(log_comment, 'label') IN ('log_all', 'log_one')
                    ORDER BY event_time DESC
                    LIMIT 2
                    """)
@@ -70,7 +70,7 @@ defmodule Plausible.ClickhouseRepoTest do
 
     assert Enum.find([c1, c2], fn c ->
              Jason.decode!(c) == %{
-               "debug_label" => "log_all",
+               "label" => "log_all",
                "domain" => "example.com",
                "url" => "http://example.com",
                "user_id" => 1
@@ -79,7 +79,7 @@ defmodule Plausible.ClickhouseRepoTest do
 
     assert Enum.find([c1, c2], fn c ->
              Jason.decode!(c) == %{
-               "debug_label" => "log_one",
+               "label" => "log_one",
                "domain" => "example.com",
                "url" => "http://example.com",
                "user_id" => 1

@@ -17,7 +17,7 @@ defmodule Plausible.ClickhouseRepo do
     if Plausible.DebugReplayInfo.super_admin?() do
       Plausible.DebugReplayInfo.track_query(
         to_inline_sql(operation, query),
-        opts[:debug_label] || "unlabelled"
+        opts[:label] || "unlabelled"
       )
     end
 
@@ -27,7 +27,7 @@ defmodule Plausible.ClickhouseRepo do
       {:log_comment,
        Jason.encode!(%{
          user_id: sentry_context[:user][:id],
-         debug_label: opts[:debug_label] || "unlabelled",
+         label: opts[:label] || "unlabelled",
          url: sentry_context[:request][:url],
          domain: sentry_context[:extra][:domain]
        })}
