@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-FD6BE246.js"></script>
+    <script src="dist/sidebar_items-46EBB9FE.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -257,13 +257,13 @@ or from local storage for which it uses <a href="https://clickhouse.com/docs/en/
 
       </div>
 
-<p>Extracts min/max date range from a list of uploads.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">date_range</span><span class="p" data-group-id="4145666264-1">(</span><span class="p" data-group-id="4145666264-2">[</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="p" data-group-id="4145666264-3">%{</span><span class="s">&quot;filename&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;imported_devices_20190101_20210101.csv&quot;</span><span class="p" data-group-id="4145666264-3">}</span><span class="p">,</span><span class="w">
+<p>Extracts min/max date range from a list of uploads.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">date_range</span><span class="p" data-group-id="1633725036-1">(</span><span class="p" data-group-id="1633725036-2">[</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="p" data-group-id="1633725036-3">%{</span><span class="s">&quot;filename&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;imported_devices_20190101_20210101.csv&quot;</span><span class="p" data-group-id="1633725036-3">}</span><span class="p">,</span><span class="w">
 </span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="s">&quot;pages_20200101_20220101.csv&quot;</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="p" data-group-id="4145666264-2">]</span><span class="p" data-group-id="4145666264-1">)</span><span class="w">
-</span><span class="nc">Date</span><span class="o">.</span><span class="n">range</span><span class="p" data-group-id="4145666264-4">(</span><span class="ld">~D[2019-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2022-01-01]</span><span class="p" data-group-id="4145666264-4">)</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="p" data-group-id="1633725036-2">]</span><span class="p" data-group-id="1633725036-1">)</span><span class="w">
+</span><span class="nc">Date</span><span class="o">.</span><span class="n">range</span><span class="p" data-group-id="1633725036-4">(</span><span class="ld">~D[2019-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2022-01-01]</span><span class="p" data-group-id="1633725036-4">)</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">date_range</span><span class="p" data-group-id="4145666264-5">(</span><span class="p" data-group-id="4145666264-6">[</span><span class="p" data-group-id="4145666264-6">]</span><span class="p" data-group-id="4145666264-5">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">date_range</span><span class="p" data-group-id="1633725036-5">(</span><span class="p" data-group-id="1633725036-6">[</span><span class="p" data-group-id="1633725036-6">]</span><span class="p" data-group-id="1633725036-5">)</span><span class="w">
 </span><span class="no">nil</span></code></pre>
   </section>
 </section>
@@ -292,13 +292,13 @@ or from local storage for which it uses <a href="https://clickhouse.com/docs/en/
 
       </div>
 
-<p>Extracts the table name from the provided filename.</p><p>Raises if the filename doesn't conform to the expected format.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">extract_table</span><span class="p" data-group-id="6980382734-1">(</span><span class="s">&quot;my_data.csv&quot;</span><span class="p" data-group-id="6980382734-1">)</span><span class="w">
+<p>Extracts the table name from the provided filename.</p><p>Raises if the filename doesn't conform to the expected format.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">extract_table</span><span class="p" data-group-id="2103309823-1">(</span><span class="s">&quot;my_data.csv&quot;</span><span class="p" data-group-id="2103309823-1">)</span><span class="w">
 </span><span class="gt">** (ArgumentError) invalid filename</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">extract_table</span><span class="p" data-group-id="6980382734-2">(</span><span class="s">&quot;imported_devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="6980382734-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">extract_table</span><span class="p" data-group-id="2103309823-2">(</span><span class="s">&quot;imported_devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="2103309823-2">)</span><span class="w">
 </span><span class="s">&quot;imported_devices&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">extract_table</span><span class="p" data-group-id="6980382734-3">(</span><span class="s">&quot;devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="6980382734-3">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">extract_table</span><span class="p" data-group-id="2103309823-3">(</span><span class="s">&quot;devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="2103309823-3">)</span><span class="w">
 </span><span class="s">&quot;imported_devices&quot;</span></code></pre>
   </section>
 </section>
@@ -321,8 +321,8 @@ or from local storage for which it uses <a href="https://clickhouse.com/docs/en/
 
   <section class="docstring">
 
-<p>Returns local directory for CSV imports storage.</p><p>Builds upon <code class="inline">$PERSISTENT_CACHE_DIR</code> (if set) and falls back to /tmp</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">local_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">local_dir</span><span class="p" data-group-id="0295407566-1">(</span><span class="c">_site_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">37</span><span class="p" data-group-id="0295407566-1">)</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">String</span><span class="o">.</span><span class="n">ends_with?</span><span class="p" data-group-id="0295407566-2">(</span><span class="n">local_dir</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/plausible-imports/37&quot;</span><span class="p" data-group-id="0295407566-2">)</span><span class="w">
+<p>Returns local directory for CSV imports storage.</p><p>Builds upon <code class="inline">$PERSISTENT_CACHE_DIR</code> (if set) and falls back to /tmp</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">local_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">local_dir</span><span class="p" data-group-id="4890996512-1">(</span><span class="c">_site_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">37</span><span class="p" data-group-id="4890996512-1">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">String</span><span class="o">.</span><span class="n">ends_with?</span><span class="p" data-group-id="4890996512-2">(</span><span class="n">local_dir</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/plausible-imports/37&quot;</span><span class="p" data-group-id="4890996512-2">)</span><span class="w">
 </span><span class="no">true</span></code></pre>
   </section>
 </section>
@@ -348,7 +348,7 @@ or from local storage for which it uses <a href="https://clickhouse.com/docs/en/
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> new_import(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
-  {:ok, <a href="https://hexdocs.pm/oban/2.17.2/Oban.Job.html#t:t/0">Oban.Job.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>() | :import_in_progress}</pre>
+  {:ok, <a href="https://hexdocs.pm/oban/2.17.2/Oban.Job.html#t:t/0">Oban.Job.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.11.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>() | :import_in_progress}</pre>
 
       </div>
 
@@ -381,14 +381,14 @@ or from local storage for which it uses <a href="https://clickhouse.com/docs/en/
 
       </div>
 
-<p>Extracts table name and min/max dates from the filename.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="1814623632-1">(</span><span class="s">&quot;my_data.csv&quot;</span><span class="p" data-group-id="1814623632-1">)</span><span class="w">
+<p>Extracts table name and min/max dates from the filename.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="2828317807-1">(</span><span class="s">&quot;my_data.csv&quot;</span><span class="p" data-group-id="2828317807-1">)</span><span class="w">
 </span><span class="gt">** (ArgumentError) invalid filename</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="1814623632-2">(</span><span class="s">&quot;imported_devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="1814623632-2">)</span><span class="w">
-</span><span class="p" data-group-id="1814623632-3">{</span><span class="s">&quot;imported_devices&quot;</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[0001-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2025-01-01]</span><span class="p" data-group-id="1814623632-3">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="2828317807-2">(</span><span class="s">&quot;imported_devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="2828317807-2">)</span><span class="w">
+</span><span class="p" data-group-id="2828317807-3">{</span><span class="s">&quot;imported_devices&quot;</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[0001-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2025-01-01]</span><span class="p" data-group-id="2828317807-3">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="1814623632-4">(</span><span class="s">&quot;devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="1814623632-4">)</span><span class="w">
-</span><span class="p" data-group-id="1814623632-5">{</span><span class="s">&quot;imported_devices&quot;</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[0001-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2025-01-01]</span><span class="p" data-group-id="1814623632-5">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="2828317807-4">(</span><span class="s">&quot;devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="2828317807-4">)</span><span class="w">
+</span><span class="p" data-group-id="2828317807-5">{</span><span class="s">&quot;imported_devices&quot;</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[0001-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2025-01-01]</span><span class="p" data-group-id="2828317807-5">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="valid_filename?/1">
@@ -416,13 +416,13 @@ or from local storage for which it uses <a href="https://clickhouse.com/docs/en/
 
       </div>
 
-<p>Checks if the provided filename conforms to the expected format.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">valid_filename?</span><span class="p" data-group-id="8568565076-1">(</span><span class="s">&quot;my_data.csv&quot;</span><span class="p" data-group-id="8568565076-1">)</span><span class="w">
+<p>Checks if the provided filename conforms to the expected format.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">valid_filename?</span><span class="p" data-group-id="1947484882-1">(</span><span class="s">&quot;my_data.csv&quot;</span><span class="p" data-group-id="1947484882-1">)</span><span class="w">
 </span><span class="no">false</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">valid_filename?</span><span class="p" data-group-id="8568565076-2">(</span><span class="s">&quot;imported_devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="8568565076-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">valid_filename?</span><span class="p" data-group-id="1947484882-2">(</span><span class="s">&quot;imported_devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="1947484882-2">)</span><span class="w">
 </span><span class="no">true</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">valid_filename?</span><span class="p" data-group-id="8568565076-3">(</span><span class="s">&quot;devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="8568565076-3">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">valid_filename?</span><span class="p" data-group-id="1947484882-3">(</span><span class="s">&quot;devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="1947484882-3">)</span><span class="w">
 </span><span class="no">true</span></code></pre>
   </section>
 </section>

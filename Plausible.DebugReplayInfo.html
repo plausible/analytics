@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-FD6BE246.js"></script>
+    <script src="dist/sidebar_items-46EBB9FE.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -161,6 +161,14 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#carry_over_context/1" translate="no">carry_over_context(sentry_ctx)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#deserialize/1" translate="no">deserialize(replay_info)</a>
 
       </div>
@@ -169,7 +177,31 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#get_queries_from_context/1" translate="no">get_queries_from_context(context \\ Sentry.Context.get_all())</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#include_sentry_replay_info/0" translate="no">include_sentry_replay_info()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#super_admin?/0" translate="no">super_admin?()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#track_query/2" translate="no">track_query(query, label)</a>
 
       </div>
 
@@ -188,6 +220,28 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="carry_over_context/1">
+
+  <div class="detail-header">
+    <a href="#carry_over_context/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">carry_over_context(sentry_ctx)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/debug_replay_info.ex#L65" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="deserialize/1">
 
   <div class="detail-header">
@@ -197,7 +251,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">deserialize(replay_info)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/debug_replay_info.ex#L46" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/debug_replay_info.ex#L80" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -212,6 +266,30 @@ Pages
           <pre translate="no"><span class="attribute">@spec</span> deserialize(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
 
       </div>
+
+
+  </section>
+</section>
+<section class="detail" id="get_queries_from_context/1">
+
+    <span id="get_queries_from_context/0"></span>
+
+  <div class="detail-header">
+    <a href="#get_queries_from_context/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_queries_from_context(context \\ Sentry.Context.get_all())</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/debug_replay_info.ex#L75" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
 
 
   </section>
@@ -232,6 +310,50 @@ Pages
 
 
       <span class="note">(macro)</span>
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="super_admin?/0">
+
+  <div class="detail-header">
+    <a href="#super_admin?/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">super_admin?()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/debug_replay_info.ex#L45" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="track_query/2">
+
+  <div class="detail-header">
+    <a href="#track_query/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">track_query(query, label)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/debug_replay_info.ex#L57" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
 
   </div>
 

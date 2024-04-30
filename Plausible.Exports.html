@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-FD6BE246.js"></script>
+    <script src="dist/sidebar_items-46EBB9FE.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -382,7 +382,7 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 
   <section class="docstring">
 
-<p>Renders export archive filename.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">archive_filename</span><span class="p" data-group-id="4042261145-1">(</span><span class="s">&quot;plausible.io&quot;</span><span class="p">,</span><span class="w"> </span><span class="c">_created_on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ld">~D[2024-12-31]</span><span class="p" data-group-id="4042261145-1">)</span><span class="w">
+<p>Renders export archive filename.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">archive_filename</span><span class="p" data-group-id="1875944317-1">(</span><span class="s">&quot;plausible.io&quot;</span><span class="p">,</span><span class="w"> </span><span class="c">_created_on</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ld">~D[2024-12-31]</span><span class="p" data-group-id="1875944317-1">)</span><span class="w">
 </span><span class="s">&quot;plausible_io_20241231.zip&quot;</span></code></pre>
   </section>
 </section>
@@ -405,10 +405,10 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 
   <section class="docstring">
 
-<p>Safely renders content disposition for an arbitrary export filename.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">content_disposition</span><span class="p" data-group-id="4862586431-1">(</span><span class="s">&quot;plausible_io_20241231.zip&quot;</span><span class="p" data-group-id="4862586431-1">)</span><span class="w">
+<p>Safely renders content disposition for an arbitrary export filename.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">content_disposition</span><span class="p" data-group-id="0739228975-1">(</span><span class="s">&quot;plausible_io_20241231.zip&quot;</span><span class="p" data-group-id="0739228975-1">)</span><span class="w">
 </span><span class="s">&quot;attachment; filename=</span><span class="se">\&quot;</span><span class="s">plausible_io_20241231.zip</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">content_disposition</span><span class="p" data-group-id="4862586431-2">(</span><span class="s">&quot;📊.zip&quot;</span><span class="p" data-group-id="4862586431-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">content_disposition</span><span class="p" data-group-id="0739228975-2">(</span><span class="s">&quot;📊.zip&quot;</span><span class="p" data-group-id="0739228975-2">)</span><span class="w">
 </span><span class="s">&quot;attachment; filename=</span><span class="se">\&quot;</span><span class="s">plausible-export.zip</span><span class="se">\&quot;</span><span class="s">; filename*=utf-8&#39;&#39;%F0%9F%93%8A.zip&quot;</span></code></pre>
   </section>
 </section>
@@ -523,7 +523,7 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
   extname: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
   date_range: <a href="https://hexdocs.pm/elixir/Date.Range.html#t:t/0">Date.Range.t</a>(),
   timezone: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()
-) :: %{required(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) =&gt; <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Query.html#t:t/0">Ecto.Query.t</a>()}</pre>
+) :: %{required(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) =&gt; <a href="https://hexdocs.pm/ecto/3.11.2/Ecto.Query.html#t:t/0">Ecto.Query.t</a>()}</pre>
 
       </div>
 
@@ -718,21 +718,21 @@ tables into the format of <code class="inline">imported_*</code> tables for a we
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> stream_archive(<a href="https://hexdocs.pm/db_connection/2.6.0/DBConnection.html#t:t/0">DBConnection.t</a>(), %{required(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) =&gt; <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Query.html#t:t/0">Ecto.Query.t</a>()}, [
+          <pre translate="no"><span class="attribute">@spec</span> stream_archive(<a href="https://hexdocs.pm/db_connection/2.6.0/DBConnection.html#t:t/0">DBConnection.t</a>(), %{required(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) =&gt; <a href="https://hexdocs.pm/ecto/3.11.2/Ecto.Query.html#t:t/0">Ecto.Query.t</a>()}, [
   <a href="https://hexdocs.pm/ch/0.2.5/Ch.html#t:query_option/0">Ch.query_option</a>()
 ]) ::
   <a href="https://hexdocs.pm/elixir/Enumerable.html#t:t/0">Enumerable.t</a>()</pre>
 
       </div>
 
-<p>Creates a streamable Zip archive from the provided (named) Ecto queries.</p><p>Example usage:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="5622287616-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pool</span><span class="p" data-group-id="5622287616-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Ch</span><span class="o">.</span><span class="n">start_link</span><span class="p" data-group-id="5622287616-2">(</span><span class="ss">pool_size</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="5622287616-2">)</span><span class="w">
+<p>Creates a streamable Zip archive from the provided (named) Ecto queries.</p><p>Example usage:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="3075946165-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pool</span><span class="p" data-group-id="3075946165-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Ch</span><span class="o">.</span><span class="n">start_link</span><span class="p" data-group-id="3075946165-2">(</span><span class="ss">pool_size</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="3075946165-2">)</span><span class="w">
 
-</span><span class="nc">DBConnection</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="5622287616-3">(</span><span class="n">pool</span><span class="p">,</span><span class="w"> </span><span class="k" data-group-id="5622287616-4">fn</span><span class="w"> </span><span class="n">conn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+</span><span class="nc">DBConnection</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="3075946165-3">(</span><span class="n">pool</span><span class="p">,</span><span class="w"> </span><span class="k" data-group-id="3075946165-4">fn</span><span class="w"> </span><span class="n">conn</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
   </span><span class="n">conn</span><span class="w">
-  </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">stream_archive</span><span class="p" data-group-id="5622287616-5">(</span><span class="n">export_queries</span><span class="p" data-group-id="5622287616-6">(</span><span class="c">_site_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="5622287616-6">)</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;CSVWithNames&quot;</span><span class="p" data-group-id="5622287616-5">)</span><span class="w">
-  </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">into</span><span class="p" data-group-id="5622287616-7">(</span><span class="nc">File</span><span class="o">.</span><span class="n">stream!</span><span class="p" data-group-id="5622287616-8">(</span><span class="s">&quot;export.zip&quot;</span><span class="p" data-group-id="5622287616-8">)</span><span class="p" data-group-id="5622287616-7">)</span><span class="w">
-  </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="5622287616-9">(</span><span class="p" data-group-id="5622287616-9">)</span><span class="w">
-</span><span class="k" data-group-id="5622287616-4">end</span><span class="p" data-group-id="5622287616-3">)</span></code></pre>
+  </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">stream_archive</span><span class="p" data-group-id="3075946165-5">(</span><span class="n">export_queries</span><span class="p" data-group-id="3075946165-6">(</span><span class="c">_site_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="3075946165-6">)</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;CSVWithNames&quot;</span><span class="p" data-group-id="3075946165-5">)</span><span class="w">
+  </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">into</span><span class="p" data-group-id="3075946165-7">(</span><span class="nc">File</span><span class="o">.</span><span class="n">stream!</span><span class="p" data-group-id="3075946165-8">(</span><span class="s">&quot;export.zip&quot;</span><span class="p" data-group-id="3075946165-8">)</span><span class="p" data-group-id="3075946165-7">)</span><span class="w">
+  </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">run</span><span class="p" data-group-id="3075946165-9">(</span><span class="p" data-group-id="3075946165-9">)</span><span class="w">
+</span><span class="k" data-group-id="3075946165-4">end</span><span class="p" data-group-id="3075946165-3">)</span></code></pre>
   </section>
 </section>
 

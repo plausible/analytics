@@ -341,6 +341,7 @@ PlausibleWeb.Plugins.API.Views.SharedLink.html
 PlausibleWeb.PluginsAPICase.html
 PlausibleWeb.Plugs.AuthorizePluginsAPI.html
 PlausibleWeb.Plugs.ErrorHandler.html
+PlausibleWeb.Plugs.InjectDebugHeaders.html
 PlausibleWeb.Plugs.MaybeDisableRegistration.html
 PlausibleWeb.Plugs.NoRobots.html
 PlausibleWeb.RefInspector.html
@@ -390,8 +391,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-15676462.js
-dist/sidebar_items-FD6BE246.js
+dist/search_data-AD854026.js
+dist/sidebar_items-46EBB9FE.js
 index.html
 readme.html
 search.html
