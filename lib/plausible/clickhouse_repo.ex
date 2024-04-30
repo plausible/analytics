@@ -21,20 +21,7 @@ defmodule Plausible.ClickhouseRepo do
       )
     end
 
-    sentry_context = Sentry.Context.get_all()
-
-    setting =
-      {:log_comment,
-       Jason.encode!(%{
-         user_id: sentry_context[:user][:id],
-         label: opts[:label] || "unlabelled",
-         url: sentry_context[:request][:url],
-         domain: sentry_context[:extra][:domain]
-       })}
-
-    opts = Keyword.update(opts, :settings, [setting], fn settings -> [setting | settings] end)
-
-    {query, opts}
+    {query, include_log_comment(opts)}
   end
 
   @task_timeout 60_000
@@ -66,5 +53,21 @@ defmodule Plausible.ClickhouseRepo do
     Sentry.Context.set_extra_context(%{
       queries: previous_queries ++ current_queries
     })
+  end
+
+  defp include_log_comment(opts) do
+    sentry_context = Sentry.Context.get_all()
+
+    log_comment = %{
+      user_id: sentry_context[:user][:id],
+      label: opts[:label] || "unlabelled",
+      url: sentry_context[:request][:url],
+      domain: sentry_context[:extra][:domain],
+      site_id: sentry_context[:extra][:site_id],
+      metadata: opts[:metadata] || %{}
+    }
+
+    setting = {:log_comment, Jason.encode!(log_comment)}
+    Keyword.update(opts, :settings, [setting], fn settings -> [setting | settings] end)
   end
 end
