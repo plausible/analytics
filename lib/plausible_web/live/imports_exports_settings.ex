@@ -27,7 +27,9 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       |> assign_new(:site_imports, fn %{site: site} ->
         site
         |> Imported.list_all_imports()
-        |> Enum.map(&%{site_import: &1, live_status: &1.status})
+        |> Enum.map(
+          &%{site_import: &1, live_status: &1.status, tooltip: notice_label(&1, &1.status)}
+        )
       end)
       |> assign_new(:pageview_counts, fn %{site: site} ->
         Plausible.Stats.Clickhouse.imported_pageview_counts(site)
@@ -140,7 +142,15 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
             <span :if={entry.live_status == SiteImport.failed()}>
               Import failed -
             </span>
-            <%= Plausible.Imported.SiteImport.label(entry.site_import) %>
+            <.tooltip :if={entry.tooltip}>
+              <%= Plausible.Imported.SiteImport.label(entry.site_import) %>
+              <:tooltip_content>
+                <.notice_message message_label={entry.tooltip} />
+              </:tooltip_content>
+            </.tooltip>
+            <span :if={!entry.tooltip}>
+              <%= Plausible.Imported.SiteImport.label(entry.site_import) %>
+            </span>
             <span :if={entry.live_status == SiteImport.completed()} class="text-xs font-normal">
               (<%= PlausibleWeb.StatsView.large_number_format(
                 pageview_count(entry.site_import, @pageview_counts)
@@ -216,10 +226,30 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
             "transient_fail" -> SiteImport.importing()
           end
 
-        {%{entry | live_status: new_status}, true}
+        {%{entry | live_status: new_status, tooltip: notice_label(entry.site_import, new_status)},
+         true}
 
       entry, changed? ->
         {entry, changed?}
     end)
   end
+
+  defp notice_label(site_import, status) do
+    now = NaiveDateTime.utc_now()
+    seconds_since_update = NaiveDateTime.diff(now, site_import.updated_at, :second)
+    in_progress? = status in [SiteImport.pending(), SiteImport.importing()]
+
+    if in_progress? and seconds_since_update >= 300 do
+      :slow_import
+    end
+  end
+
+  defp notice_message(%{message_label: :slow_import} = assigns) do
+    ~H"""
+    The import process might be taking longer due to the amount of data<br />
+    and rate limiting enforced by Google Analytics.
+    """
+  end
+
+  defp notice_message(_), do: nil
 end
