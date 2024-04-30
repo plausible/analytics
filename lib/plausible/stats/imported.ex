@@ -27,10 +27,32 @@ defmodule Plausible.Stats.Imported do
     "visit:os" => "imported_operating_systems",
     "visit:os_version" => "imported_operating_systems",
     "event:page" => "imported_pages",
-    "event:name" => "imported_custom_events"
+    "event:name" => "imported_custom_events",
+    "event:props:url" => "imported_custom_events"
   }
 
   @imported_properties Map.keys(@property_to_table_mappings)
+
+  def schema_supports_query?(query) do
+    filter_count = length(Map.keys(query.filters))
+
+    case {filter_count, query.property} do
+      {0, "event:props:" <> _} -> false
+      {0, _} -> true
+      {1, _} -> supports_single_filter?(query)
+      {_, _} -> false
+    end
+  end
+
+  defp supports_single_filter?(%Query{
+         filters: %{"event:goal" => {:is, {:event, event}}},
+         property: "event:props:url"
+       })
+       when event in ["Outbound Link: Click", "File Download"] do
+    true
+  end
+
+  defp supports_single_filter?(_query), do: false
 
   def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{include_imported: false}, _),
     do: native_q
@@ -102,6 +124,9 @@ defmodule Plausible.Stats.Imported do
 
     join_on =
       case dim do
+        :url ->
+          dynamic([s, i], s.breakdown_prop_value == i.breakdown_prop_value)
+
         :os_version ->
           dynamic([s, i], s.os == i.os and s.os_version == i.os_version)
 
@@ -416,6 +441,12 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([i], %{name: i.name})
   end
 
+  defp group_imported_by(q, :url) do
+    q
+    |> group_by([i], i.link_url)
+    |> select_merge([i], %{breakdown_prop_value: i.link_url})
+  end
+
   defp select_joined_dimension(q, :city) do
     select_merge(q, [s, i], %{
       city: fragment("greatest(?,?)", i.city, s.city)
@@ -434,6 +465,18 @@ defmodule Plausible.Stats.Imported do
       browser: fragment("if(empty(?), ?, ?)", s.browser, i.browser, s.browser),
       browser_version:
         fragment("if(empty(?), ?, ?)", s.browser_version, i.browser_version, s.browser_version)
+    })
+  end
+
+  defp select_joined_dimension(q, :url) do
+    select_merge(q, [s, i], %{
+      breakdown_prop_value:
+        fragment(
+          "if(empty(?), ?, ?)",
+          s.breakdown_prop_value,
+          i.breakdown_prop_value,
+          s.breakdown_prop_value
+        )
     })
   end
 
