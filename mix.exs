@@ -69,7 +69,7 @@ defmodule Plausible.MixProject do
       {:bamboo_mua, "~> 0.1.4"},
       {:bcrypt_elixir, "~> 3.0"},
       {:bypass, "~> 2.1", only: [:dev, :test, :ce_test]},
-      {:ecto_ch, "~> 0.3"},
+      {:ecto_ch, github: "plausible/ecto_ch", branch: "pretty-sql"},
       {:cloak, "~> 1.1"},
       {:cloak_ecto, "~> 1.2"},
       {:combination, "~> 0.0.3"},

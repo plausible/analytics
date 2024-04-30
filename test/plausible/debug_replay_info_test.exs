@@ -46,4 +46,31 @@ defmodule Plausible.DebugReplayInfoTest do
     assert context.extra.debug_replay_info == :too_large
     assert context.extra.debug_replay_info_size > 10_000
   end
+
+  describe "query tracking" do
+    test "track and retrieve queries" do
+      :ok = Plausible.DebugReplayInfo.track_query("SELECT * FROM users", "users")
+      :ok = Plausible.DebugReplayInfo.track_query("SELECT * FROM accounts", "accounts")
+
+      assert [%{"accounts" => "SELECT * FROM accounts"}, %{"users" => "SELECT * FROM users"}] =
+               Plausible.DebugReplayInfo.get_queries_from_context()
+    end
+
+    test "carry over context" do
+      Sentry.Context.set_user_context(%{id: 1})
+      Sentry.Context.set_request_context(%{url: "http://example.com"})
+      Sentry.Context.set_extra_context(%{domain: "example.com", site_id: 1})
+
+      test = self()
+
+      sentry_ctx = Sentry.Context.get_all()
+
+      Task.start(fn ->
+        Plausible.DebugReplayInfo.carry_over_context(sentry_ctx)
+        send(test, {:task_context, Sentry.Context.get_all()})
+      end)
+
+      assert_receive {:task_context, ^sentry_ctx}
+    end
+  end
 end

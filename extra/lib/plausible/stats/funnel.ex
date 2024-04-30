@@ -74,7 +74,7 @@ defmodule Plausible.Stats.Funnel do
         group_by: f.step
       )
 
-    ClickhouseRepo.all(query)
+    ClickhouseRepo.all(query, label: :query_funnel)
   end
 
   defp select_funnel(db_query, funnel_definition) do

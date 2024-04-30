@@ -12,7 +12,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
   @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
-  plug(:date_validation_plug)
+  plug :date_validation_plug
+  plug PlausibleWeb.Plugs.InjectDebugHeaders
 
   @doc """
   Returns a time-series based on given parameters.
