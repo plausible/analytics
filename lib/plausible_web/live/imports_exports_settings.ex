@@ -27,7 +27,9 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       |> assign_new(:site_imports, fn %{site: site} ->
         site
         |> Imported.list_all_imports()
-        |> Enum.map(&%{site_import: &1, live_status: &1.status})
+        |> Enum.map(
+          &%{site_import: &1, live_status: &1.status, tooltip: notice_label(&1, &1.status)}
+        )
       end)
       |> assign_new(:pageview_counts, fn %{site: site} ->
         Plausible.Stats.Clickhouse.imported_pageview_counts(site)
@@ -120,34 +122,42 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
     <ul :if={not Enum.empty?(@site_imports)}>
       <li :for={entry <- @site_imports} class="py-4 flex items-center justify-between space-x-4">
         <div class="flex flex-col">
-          <p class="text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">
+          <div class="flex items-center text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">
             <Heroicons.clock
               :if={entry.live_status == SiteImport.pending()}
-              class="inline-block h-6 w-5 text-indigo-600 dark:text-green-600"
+              class="block h-6 w-5 text-indigo-600 dark:text-green-600"
             />
             <.spinner
               :if={entry.live_status == SiteImport.importing()}
-              class="inline-block h-6 w-5 text-indigo-600 dark:text-green-600"
+              class="block h-6 w-5 text-indigo-600 dark:text-green-600"
             />
             <Heroicons.check
               :if={entry.live_status == SiteImport.completed()}
-              class="inline-block h-6 w-5 text-indigo-600 dark:text-green-600"
+              class="block h-6 w-5 text-indigo-600 dark:text-green-600"
             />
             <Heroicons.exclamation_triangle
               :if={entry.live_status == SiteImport.failed()}
-              class="inline-block h-6 w-5 text-red-700 dark:text-red-700"
+              class="block h-6 w-5 text-red-700 dark:text-red-700"
             />
-            <span :if={entry.live_status == SiteImport.failed()}>
+            <div :if={entry.live_status == SiteImport.failed()}>
               Import failed -
-            </span>
-            <%= Plausible.Imported.SiteImport.label(entry.site_import) %>
-            <span :if={entry.live_status == SiteImport.completed()} class="text-xs font-normal">
+            </div>
+            <.tooltip :if={entry.tooltip} wrapper_class="ml-2 grow" class="justify-left">
+              <%= Plausible.Imported.SiteImport.label(entry.site_import) %>
+              <:tooltip_content>
+                <.notice_message message_label={entry.tooltip} />
+              </:tooltip_content>
+            </.tooltip>
+            <div :if={!entry.tooltip} class="ml-2">
+              <%= Plausible.Imported.SiteImport.label(entry.site_import) %>
+            </div>
+            <div :if={entry.live_status == SiteImport.completed()} class="text-xs font-normal ml-1">
               (<%= PlausibleWeb.StatsView.large_number_format(
                 pageview_count(entry.site_import, @pageview_counts)
               ) %> page views)
-            </span>
-          </p>
-          <p class="text-sm leading-5 text-gray-500 dark:text-gray-200">
+            </div>
+          </div>
+          <div class="text-sm leading-5 text-gray-500 dark:text-gray-200">
             From <%= format_date(entry.site_import.start_date) %> to <%= format_date(
               entry.site_import.end_date
             ) %>
@@ -157,7 +167,7 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
               (started
             <% end %>
             on <%= format_date(entry.site_import.inserted_at) %>)
-          </p>
+          </div>
         </div>
         <.button
           data-to={"/#{URI.encode_www_form(@site.domain)}/settings/forget-import/#{entry.site_import.id}"}
@@ -216,10 +226,30 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
             "transient_fail" -> SiteImport.importing()
           end
 
-        {%{entry | live_status: new_status}, true}
+        {%{entry | live_status: new_status, tooltip: notice_label(entry.site_import, new_status)},
+         true}
 
       entry, changed? ->
         {entry, changed?}
     end)
   end
+
+  defp notice_label(site_import, status) do
+    now = NaiveDateTime.utc_now()
+    seconds_since_update = NaiveDateTime.diff(now, site_import.updated_at, :second)
+    in_progress? = status in [SiteImport.pending(), SiteImport.importing()]
+
+    if in_progress? and seconds_since_update >= 300 do
+      :slow_import
+    end
+  end
+
+  defp notice_message(%{message_label: :slow_import} = assigns) do
+    ~H"""
+    The import process might be taking longer due to the amount of data
+    and rate limiting enforced by Google Analytics.
+    """
+  end
+
+  defp notice_message(_), do: nil
 end

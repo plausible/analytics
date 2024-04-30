@@ -217,7 +217,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       class="h-0 text-center text-sm text-red-700 dark:text-red-500 disabled-message"
     >
       <%= if @exceeded_plan_limits != [] do %>
-        <PlausibleWeb.Components.Generic.tooltip>
+        <PlausibleWeb.Components.Generic.tooltip class="text-sm text-red-700 dark:text-red-500 mt-1 justify-center">
           <%= @disabled_message %>
           <:tooltip_content>
             Your usage exceeds the following limit(s):<br /><br />

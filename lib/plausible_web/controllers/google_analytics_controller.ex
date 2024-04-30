@@ -79,6 +79,14 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
+      {:error, :rate_limit_exceeded} ->
+        conn
+        |> put_flash(
+          :error,
+          "Google Analytics rate limit has been exceeded. Please try again later."
+        )
+        |> redirect(external: redirect_route)
+
       {:error, :authentication_failed} ->
         conn
         |> put_flash(
@@ -153,6 +161,14 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
 
         property_or_view_form(conn, params)
 
+      {:error, :rate_limit_exceeded} ->
+        conn
+        |> put_flash(
+          :error,
+          "Google Analytics rate limit has been exceeded. Please try again later."
+        )
+        |> redirect(external: redirect_route)
+
       {:error, :authentication_failed} ->
         conn
         |> put_flash(
@@ -210,6 +226,14 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           property?: Google.API.property?(property_or_view),
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
+
+      {:error, :rate_limit_exceeded} ->
+        conn
+        |> put_flash(
+          :error,
+          "Google Analytics rate limit has been exceeded. Please try again later."
+        )
+        |> redirect(external: redirect_route)
 
       {:error, :authentication_failed} ->
         conn

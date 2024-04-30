@@ -27,10 +27,15 @@ defmodule Plausible.Imported.Importer do
     used for updating site import struct and is passed to `on_success/2` callback.
     Please note that error tuple should be only returned on errors that can't be
     recovered from. For transient errors, the import should throw an exception or
-    simply crash.
-  * `before_start/1` - Optional callback run right before scheduling import job. It's
-    expected to either return `:ok` for the import to proceed or `{:error, ...}` tuple,
-    which will be returned from `new_import/3` call.
+    simply crash. The error tuple has an alternative `{error, reason, opts}` form,
+    where `opts` allow to skip purging imported data so far via `skip_purge?` flag
+    and skip marking the import as failed and notifying the user via `skip_mark_failed?`
+    flag. Both flags are booleans.
+  * `before_start/2` - Optional callback run right before scheduling import job. It's
+    expected to either return `{:ok, site_import}` for the import to proceed
+    or `{:error, ...}` tuple, which will be returned from `new_import/3` call.
+    The `site_import` can be altered or replaced at this stage. The second argument
+    are opts passed to `new_import/3`.
   * `on_success/2` - Optional callback run once site import is completed. Receives map
     returned from `import_data/2`. Expected to always return `:ok`.
   * `on_failure/1` - Optional callback run when import job fails permanently.
@@ -99,8 +104,9 @@ defmodule Plausible.Imported.Importer do
   @callback label() :: String.t()
   @callback email_template() :: String.t()
   @callback parse_args(map()) :: Keyword.t()
-  @callback import_data(SiteImport.t(), Keyword.t()) :: :ok | {:error, any()}
-  @callback before_start(SiteImport.t()) :: :ok | {:ok, map()} | {:error, any()}
+  @callback import_data(SiteImport.t(), Keyword.t()) ::
+              :ok | {:error, any()} | {:error, any(), Keyword.t()}
+  @callback before_start(SiteImport.t(), Keyword.t()) :: {:ok, SiteImport.t()} | {:error, any()}
   @callback on_success(SiteImport.t(), map()) :: :ok
   @callback on_failure(SiteImport.t()) :: :ok
 
@@ -109,13 +115,13 @@ defmodule Plausible.Imported.Importer do
       @behaviour Plausible.Imported.Importer
 
       @spec new_import(Plausible.Site.t(), Plausible.Auth.User.t(), Keyword.t()) ::
-              {:ok, Oban.Job.t()} | {:error, Ecto.Changeset.t() | :import_in_progress}
+              {:ok, Oban.Job.t()} | {:error, Ecto.Changeset.t() | :import_in_progress | any()}
       def new_import(site, user, opts) do
-        Plausible.Imported.Importer.new_import(name(), site, user, opts, &before_start/1)
+        Plausible.Imported.Importer.new_import(name(), site, user, opts, &before_start/2)
       end
 
       @doc false
-      @spec run_import(SiteImport.t(), map()) :: :ok | {:error, :any}
+      @spec run_import(SiteImport.t(), map()) :: {:ok, SiteImport.t()} | {:error, :any}
       def run_import(site_import, args) do
         Plausible.Imported.Importer.run_import(
           site_import,
@@ -140,7 +146,7 @@ defmodule Plausible.Imported.Importer do
       end
 
       @impl true
-      def before_start(_site_import), do: :ok
+      def before_start(site_import, _opts), do: {:ok, site_import}
 
       @impl true
       def on_success(_site_import, _extra_data), do: :ok
@@ -148,7 +154,7 @@ defmodule Plausible.Imported.Importer do
       @impl true
       def on_failure(_site_import), do: :ok
 
-      defoverridable before_start: 1, on_success: 2, on_failure: 1
+      defoverridable before_start: 2, on_success: 2, on_failure: 1
     end
   end
 
@@ -167,7 +173,7 @@ defmodule Plausible.Imported.Importer do
         |> Repo.insert()
 
       with {:ok, site_import} <- result,
-           :ok <- before_start_fun.(site_import),
+           {:ok, site_import} <- before_start_fun.(site_import, opts),
            {:ok, job} <- schedule_job(site_import, opts) do
         job
       else
@@ -195,7 +201,10 @@ defmodule Plausible.Imported.Importer do
         {:ok, mark_complete(site_import, extra_data, on_success_fun)}
 
       {:error, error} ->
-        {:error, error}
+        {:error, error, []}
+
+      {:error, error, opts} ->
+        {:error, error, opts}
     end
   end
 
@@ -222,6 +231,7 @@ defmodule Plausible.Imported.Importer do
 
   defp schedule_job(site_import, opts) do
     {listen?, opts} = Keyword.pop(opts, :listen?, false)
+    {job_opts, opts} = Keyword.pop(opts, :job_opts, [])
 
     if listen? do
       :ok = listen()
@@ -231,7 +241,7 @@ defmodule Plausible.Imported.Importer do
       opts
       |> Keyword.put(:import_id, site_import.id)
       |> Map.new()
-      |> Plausible.Workers.ImportAnalytics.new()
+      |> Plausible.Workers.ImportAnalytics.new(job_opts)
       |> Oban.insert()
     else
       {:error, :import_in_progress}
