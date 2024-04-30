@@ -13,6 +13,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   def aggregate(conn, params) do
     site = Repo.preload(conn.assigns.site, :owner)
 
+    params = Map.put(params, "property", nil)
+
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          query <- Query.from(site, params),
@@ -229,7 +231,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   defp validate_session_metric(metric, query) do
     cond do
       event_only_property?(query.property) ->
-        {:error, "Session metric `#{metric}` cannot be queried for breakdown by `#{query.property}`."}
+        {:error,
+         "Session metric `#{metric}` cannot be queried for breakdown by `#{query.property}`."}
 
       event_only_filter = find_event_only_filter(query) ->
         {:error,
@@ -251,6 +254,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   def timeseries(conn, params) do
     site = Repo.preload(conn.assigns.site, :owner)
+
+    params = Map.put(params, "property", nil)
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
