@@ -679,7 +679,7 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
-  on_full_build do
+  on_ee do
     def download_export(conn, _params) do
       %{id: site_id, domain: domain} = conn.assigns.site
 

@@ -494,7 +494,7 @@ defmodule Plausible.Imported.CSVImporterTest do
                Oban.drain_queue(queue: :notify_exported_analytics, with_safety: false)
 
       # check mailbox
-      assert_receive {:delivered_email, email}, _within = :timer.seconds(55)
+      assert_receive {:delivered_email, email}, _within = :timer.seconds(5)
       assert email.to == [{user.name, user.email}]
 
       assert email.html_body =~

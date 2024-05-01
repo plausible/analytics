@@ -15,7 +15,7 @@ defmodule Plausible.Workers.NotifyExportedAnalyticsTest do
       job =
         Plausible.Workers.NotifyExportedAnalytics.new(%{
           "status" => "failure",
-          "storage" => on_full_build(do: "s3", else: "local"),
+          "storage" => on_ee(do: "s3", else: "local"),
           "email_to" => user.email,
           "site_id" => site.id
         })
