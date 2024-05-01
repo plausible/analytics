@@ -1,6 +1,8 @@
 defmodule Plausible.Imported.CSVImporterTest do
   use Plausible
   use Plausible.DataCase
+  use Bamboo.Test
+
   alias Plausible.Imported.{CSVImporter, SiteImport}
   require SiteImport
 
@@ -487,6 +489,16 @@ defmodule Plausible.Imported.CSVImporterTest do
       end
 
       assert %{success: 1} = Oban.drain_queue(queue: :analytics_exports, with_safety: false)
+
+      assert %{success: 1} =
+               Oban.drain_queue(queue: :notify_exported_analytics, with_safety: false)
+
+      # check mailbox
+      assert_receive {:delivered_email, email}, _within = :timer.seconds(55)
+      assert email.to == [{user.name, user.email}]
+
+      assert email.html_body =~
+               ~s[Please click <a href="http://localhost:8000/#{URI.encode_www_form(site.domain)}/download/export">here</a> to start the download process.]
 
       # download archive
       on_ee do

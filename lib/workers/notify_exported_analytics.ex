@@ -22,20 +22,11 @@ defmodule Plausible.Workers.NotifyExportedAnalytics do
         "success" ->
           case storage do
             "s3" ->
-              %{"s3_bucket" => s3_bucket, "s3_path" => s3_path} = args
-              download_url = Plausible.S3.download_url(s3_bucket, s3_path)
               %{expires_at: expires_at} = Plausible.Exports.get_s3_export(site_id)
-              PlausibleWeb.Email.export_success(user, site, download_url, expires_at)
+              PlausibleWeb.Email.export_success(user, site, expires_at)
 
             "local" ->
-              download_url =
-                PlausibleWeb.Router.Helpers.site_path(
-                  PlausibleWeb.Endpoint,
-                  :download_local_export,
-                  site.domain
-                )
-
-              PlausibleWeb.Email.export_success(user, site, download_url, _expires_at = nil)
+              PlausibleWeb.Email.export_success(user, site, _expires_at = nil)
           end
 
         "failure" ->
