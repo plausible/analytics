@@ -555,16 +555,19 @@ defmodule Plausible.Imported.CSVImporterTest do
         Enum.each(zipped, fn {left, right} -> f.(left, right) end)
       end
 
-      assert_field_in_delta = fn left, right, field, delta ->
+      assert_field_in_delta_percent = fn left, right, field, delta_percent ->
         left = Map.fetch!(left, field)
         right = Map.fetch!(right, field)
 
         if is_number(left) and is_number(right) do
           diff = abs(left - right)
+          delta = left * delta_percent
 
           message =
-            "Expected the difference between #{field} #{inspect(left)} and " <>
-              "#{inspect(right)} (#{inspect(diff)}) to be less than or equal to #{inspect(delta)}"
+            """
+            Expected the difference between #{field} #{left} and #{right} (#{diff}, #{diff / left * 100}% of #{left})\
+            to be less than or equal to #{delta} (#{delta_percent * 100}% of #{left})\
+            """
 
           assert diff <= delta, message
         else
@@ -590,11 +593,11 @@ defmodule Plausible.Imported.CSVImporterTest do
       pairwise.(exported_timeseries, imported_timeseries, fn exported, imported ->
         assert exported["date"] == imported["date"]
         assert exported["pageviews"] == imported["pageviews"]
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
-        assert_field_in_delta.(exported, imported, "views_per_visit", 5)
-        assert_field_in_delta.(exported, imported, "visit_duration", 27)
-        assert_field_in_delta.(exported, imported, "visitors", 3)
-        assert_field_in_delta.(exported, imported, "visits", 4)
+        assert_field_in_delta_percent.(exported, imported, "bounce_rate", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "views_per_visit", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visit_duration", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visitors", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visits", 0.0000001)
       end)
 
       # pages
@@ -611,11 +614,11 @@ defmodule Plausible.Imported.CSVImporterTest do
       pairwise.(exported_pages, imported_pages, fn exported, imported ->
         assert exported["page"] == imported["page"]
         assert exported["pageviews"] == imported["pageviews"]
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
+        assert_field_in_delta_percent.(exported, imported, "bounce_rate", 0.0000001)
         assert imported["time_on_page"] == 0.0
-        assert_field_in_delta.(exported, imported, "visit_duration", 1)
-        assert_field_in_delta.(exported, imported, "visitors", 230)
-        assert_field_in_delta.(exported, imported, "visits", 9)
+        assert_field_in_delta_percent.(exported, imported, "visit_duration", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visitors", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visits", 0.0000001)
       end)
 
       # sources
@@ -624,11 +627,11 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       pairwise.(exported_sources, imported_sources, fn exported, imported ->
         assert exported["source"] == imported["source"]
-        assert_field_in_delta.(exported, imported, "pageviews", 5925)
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
-        assert_field_in_delta.(exported, imported, "visit_duration", 1)
-        assert_field_in_delta.(exported, imported, "visitors", 261)
-        assert_field_in_delta.(exported, imported, "visits", 1)
+        assert_field_in_delta_percent.(exported, imported, "pageviews", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "bounce_rate", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visit_duration", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visitors", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visits", 0.0000001)
       end)
 
       # utm mediums
@@ -640,11 +643,11 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       pairwise.(exported_entry_pages, imported_entry_pages, fn exported, imported ->
         assert exported["entry_page"] == imported["entry_page"]
-        assert_field_in_delta.(exported, imported, "pageviews", 6571)
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
-        assert_field_in_delta.(exported, imported, "visit_duration", 1)
-        assert_field_in_delta.(exported, imported, "visitors", 166)
-        assert_field_in_delta.(exported, imported, "visits", 1)
+        assert_field_in_delta_percent.(exported, imported, "pageviews", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "bounce_rate", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visit_duration", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visitors", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visits", 0.0000001)
       end)
 
       # cities
@@ -653,11 +656,11 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       pairwise.(exported_cities, imported_cities, fn exported, imported ->
         assert exported["city"] == imported["city"]
-        assert_field_in_delta.(exported, imported, "pageviews", 349)
-        assert_field_in_delta.(exported, imported, "bounce_rate", 5)
-        assert_field_in_delta.(exported, imported, "visit_duration", 115)
-        assert_field_in_delta.(exported, imported, "visitors", 7)
-        assert_field_in_delta.(exported, imported, "visits", 1)
+        assert_field_in_delta_percent.(exported, imported, "pageviews", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "bounce_rate", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visit_duration", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visitors", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visits", 0.0000001)
       end)
 
       # devices
@@ -666,11 +669,11 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       pairwise.(exported_devices, imported_devices, fn exported, imported ->
         assert exported["device"] == imported["device"]
-        assert_field_in_delta.(exported, imported, "pageviews", 5918)
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
-        assert_field_in_delta.(exported, imported, "visit_duration", 1)
-        assert_field_in_delta.(exported, imported, "visitors", 174)
-        assert_field_in_delta.(exported, imported, "visits", 1)
+        assert_field_in_delta_percent.(exported, imported, "pageviews", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "bounce_rate", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visit_duration", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visitors", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visits", 0.0000001)
       end)
 
       # browsers
@@ -679,11 +682,11 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       pairwise.(exported_browsers, imported_browsers, fn exported, imported ->
         assert exported["browser"] == imported["browser"]
-        assert_field_in_delta.(exported, imported, "pageviews", 5652)
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
-        assert_field_in_delta.(exported, imported, "visit_duration", 1)
-        assert_field_in_delta.(exported, imported, "visitors", 148)
-        assert_field_in_delta.(exported, imported, "visits", 1)
+        assert_field_in_delta_percent.(exported, imported, "pageviews", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "bounce_rate", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visit_duration", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visitors", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visits", 0.0000001)
       end)
 
       # os
@@ -692,11 +695,11 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       pairwise.(exported_os, imported_os, fn exported, imported ->
         assert exported["os"] == imported["os"]
-        assert_field_in_delta.(exported, imported, "pageviews", 5267)
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
-        assert_field_in_delta.(exported, imported, "visit_duration", 1)
-        assert_field_in_delta.(exported, imported, "visitors", 93)
-        assert_field_in_delta.(exported, imported, "visits", 1)
+        assert_field_in_delta_percent.(exported, imported, "pageviews", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "bounce_rate", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visit_duration", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visitors", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visits", 0.0000001)
       end)
 
       # os versions
@@ -705,11 +708,11 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       pairwise.(exported_os_versions, imported_os_versions, fn exported, imported ->
         assert exported["os_version"] == imported["os_version"]
-        assert_field_in_delta.(exported, imported, "pageviews", 5267)
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
-        assert_field_in_delta.(exported, imported, "visit_duration", 1)
-        assert_field_in_delta.(exported, imported, "visitors", 93)
-        assert_field_in_delta.(exported, imported, "visits", 1)
+        assert_field_in_delta_percent.(exported, imported, "pageviews", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "bounce_rate", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visit_duration", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visitors", 0.0000001)
+        assert_field_in_delta_percent.(exported, imported, "visits", 0.0000001)
       end)
     end
   end
