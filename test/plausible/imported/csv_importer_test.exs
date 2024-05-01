@@ -1,6 +1,7 @@
 defmodule Plausible.Imported.CSVImporterTest do
   use Plausible
-  use Plausible.DataCase
+  use Plausible.Repo
+  use PlausibleWeb.ConnCase
   alias Plausible.Imported.{CSVImporter, SiteImport}
   require SiteImport
 
@@ -412,10 +413,13 @@ defmodule Plausible.Imported.CSVImporterTest do
   end
 
   describe "export -> import" do
-    setup [:create_user, :create_new_site, :clean_buckets]
+    setup [:create_user, :log_in, :create_api_key, :use_api_key, :clean_buckets]
 
     @tag :tmp_dir
-    test "it works", %{site: site, user: user, tmp_dir: tmp_dir} do
+    test "it works", %{conn: conn, user: user, tmp_dir: tmp_dir} do
+      exported_site = insert(:site, members: [user])
+      imported_site = insert(:site, members: [user])
+
       read_csv = fn path ->
         [header | rows] = NimbleCSV.RFC4180.parse_string(File.read!(path), skip_headers: false)
 
@@ -423,7 +427,11 @@ defmodule Plausible.Imported.CSVImporterTest do
           Enum.find_index(header, &(&1 == "site_id")) ||
             raise "couldn't find site_id column in CSV header #{inspect(header)}"
 
-        rows = Enum.map(rows, fn row -> List.replace_at(row, site_id_column_index, site.id) end)
+        rows =
+          Enum.map(rows, fn row ->
+            List.replace_at(row, site_id_column_index, exported_site.id)
+          end)
+
         NimbleCSV.RFC4180.dump_to_iodata([header | rows])
       end
 
@@ -439,10 +447,10 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # export archive to s3
       on_ee do
-        assert {:ok, _job} = Plausible.Exports.schedule_s3_export(site.id, user.email)
+        assert {:ok, _job} = Plausible.Exports.schedule_s3_export(exported_site.id, user.email)
       else
         assert {:ok, %{args: %{"local_path" => local_path}}} =
-                 Plausible.Exports.schedule_local_export(site.id, user.email)
+                 Plausible.Exports.schedule_local_export(exported_site.id, user.email)
       end
 
       assert %{success: 1} = Oban.drain_queue(queue: :analytics_exports, with_safety: false)
@@ -452,7 +460,7 @@ defmodule Plausible.Imported.CSVImporterTest do
         ExAws.request!(
           ExAws.S3.download_file(
             Plausible.S3.exports_bucket(),
-            to_string(site.id),
+            to_string(exported_site.id),
             Path.join(tmp_dir, "plausible-export.zip")
           )
         )
@@ -468,7 +476,7 @@ defmodule Plausible.Imported.CSVImporterTest do
       uploads =
         Enum.map(files, fn file ->
           on_ee do
-            %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, file)
+            %{s3_url: s3_url} = Plausible.S3.import_presign_upload(imported_site.id, file)
             [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
             ExAws.request!(ExAws.S3.put_object(bucket, key, File.read!(file)))
             %{"filename" => Path.basename(file), "s3_url" => s3_url}
@@ -481,7 +489,7 @@ defmodule Plausible.Imported.CSVImporterTest do
       date_range = CSVImporter.date_range(uploads)
 
       {:ok, _job} =
-        CSVImporter.new_import(site, user,
+        CSVImporter.new_import(imported_site, user,
           start_date: date_range.first,
           end_date: date_range.last,
           uploads: uploads,
@@ -496,9 +504,127 @@ defmodule Plausible.Imported.CSVImporterTest do
                end_date: ~D[2024-03-31],
                source: :csv,
                status: :completed
-             } = Repo.get_by!(SiteImport, site_id: site.id)
+             } = Repo.get_by!(SiteImport, site_id: imported_site.id)
 
-      assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 6325
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(exported_site) == 0
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 6325
+
+      # compare original and imported data via stats api requests
+      stats_api_get = fn conn, path, params ->
+        json_response(get(conn, path, params), 200)
+      end
+
+      common_params = fn site ->
+        %{
+          "site_id" => site.domain,
+          "period" => "custom",
+          "date" => "2024-03-28,2024-03-31",
+          "with_imported" => true
+        }
+      end
+
+      breakdown_params = fn site ->
+        common_params.(site)
+        |> Map.put("metrics", "visitors,visits,pageviews,visit_duration,bounce_rate")
+        |> Map.put("limit", 1000)
+      end
+
+      # timeseries
+      timeseries_params = fn site ->
+        Map.put(
+          common_params.(site),
+          "metrics",
+          "visitors,visits,pageviews,views_per_visit,visit_duration,bounce_rate"
+        )
+      end
+
+      assert stats_api_get.(conn, "/api/v1/stats/timeseries", timeseries_params.(exported_site)) ==
+               stats_api_get.(conn, "/api/v1/stats/timeseries", timeseries_params.(imported_site))
+
+      # pages
+      pages_params = fn site ->
+        metrics = "visitors,visits,pageviews,time_on_page,visit_duration,bounce_rate"
+
+        common_params.(site)
+        |> Map.put("metrics", metrics)
+        |> Map.put("limit", 1000)
+        |> Map.put("property", "event:page")
+      end
+
+      assert stats_api_get.(conn, "/api/v1/stats/breakdown", pages_params.(exported_site)) ==
+               stats_api_get.(conn, "/api/v1/stats/breakdown", pages_params.(imported_site))
+
+      # sources
+      sources_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:source")
+      end
+
+      assert stats_api_get.(conn, "/api/v1/stats/breakdown", sources_params.(exported_site)) ==
+               stats_api_get.(conn, "/api/v1/stats/breakdown", sources_params.(imported_site))
+
+      # utm mediums
+      utm_mediums_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:utm_medium")
+      end
+
+      assert stats_api_get.(conn, "/api/v1/stats/breakdown", utm_mediums_params.(exported_site)) ==
+               stats_api_get.(conn, "/api/v1/stats/breakdown", utm_mediums_params.(imported_site))
+
+      # entry pages
+      entry_pages_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:entry_page")
+      end
+
+      assert stats_api_get.(conn, "/api/v1/stats/breakdown", entry_pages_params.(exported_site)) ==
+               stats_api_get.(conn, "/api/v1/stats/breakdown", entry_pages_params.(imported_site))
+
+      # cities
+      cities_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:city")
+      end
+
+      assert stats_api_get.(conn, "/api/v1/stats/breakdown", cities_params.(exported_site)) ==
+               stats_api_get.(conn, "/api/v1/stats/breakdown", cities_params.(imported_site))
+
+      # devices
+      devices_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:device")
+      end
+
+      assert stats_api_get.(conn, "/api/v1/stats/breakdown", devices_params.(exported_site)) ==
+               stats_api_get.(conn, "/api/v1/stats/breakdown", devices_params.(imported_site))
+
+      # browsers
+      browsers_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:browser")
+      end
+
+      assert stats_api_get.(conn, "/api/v1/stats/breakdown", browsers_params.(exported_site)) ==
+               stats_api_get.(conn, "/api/v1/stats/breakdown", browsers_params.(imported_site))
+
+      # os
+      os_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:os")
+      end
+
+      assert stats_api_get.(conn, "/api/v1/stats/breakdown", os_params.(exported_site)) ==
+               stats_api_get.(conn, "/api/v1/stats/breakdown", os_params.(imported_site))
+
+      # os versions
+      os_version_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:os_version")
+      end
+
+      assert stats_api_get.(conn, "/api/v1/stats/breakdown", os_version_params.(exported_site)) ==
+               stats_api_get.(conn, "/api/v1/stats/breakdown", os_version_params.(imported_site))
     end
   end
 
