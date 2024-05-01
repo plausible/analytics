@@ -535,10 +535,6 @@ defmodule Plausible.Imported.CSVImporterTest do
         Enum.sort_by(results, &Map.fetch!(&1, sort_by))
       end
 
-      breakdown = fn params, sort_by ->
-        sorted.(results.("/api/v1/stats/breakdown", params), sort_by)
-      end
-
       common_params = fn site ->
         %{
           "site_id" => site.domain,
@@ -548,13 +544,22 @@ defmodule Plausible.Imported.CSVImporterTest do
         }
       end
 
-      breakdown_params = fn site ->
-        common_params.(site)
-        |> Map.put("metrics", "visitors,visits,pageviews,visit_duration,bounce_rate")
-        |> Map.put("limit", 1000)
+      breakdown = fn params_or_site, by ->
+        params =
+          case params_or_site do
+            %Plausible.Site{} = site ->
+              common_params.(site)
+              |> Map.put("metrics", "visitors,visits,pageviews,visit_duration,bounce_rate")
+              |> Map.put("limit", 1000)
+              |> Map.put("property", "visit:#{by}")
+
+            params ->
+              params
+          end
+
+        sorted.(results.("/api/v1/stats/breakdown", params), by)
       end
 
-      # timeseries
       timeseries_params = fn site ->
         Map.put(
           common_params.(site),
@@ -566,7 +571,6 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert timeseries.(timeseries_params.(exported_site)) ==
                timeseries.(timeseries_params.(imported_site))
 
-      # pages
       pages_params = fn site ->
         common_params.(site)
         |> Map.put("metrics", "visitors,visits,pageviews,time_on_page,visit_duration,bounce_rate")
@@ -577,77 +581,14 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert breakdown.(pages_params.(exported_site), "page") ==
                breakdown.(pages_params.(imported_site), "page")
 
-      # sources
-      sources_params = fn site ->
-        params = breakdown_params.(site)
-        Map.put(params, "property", "visit:source")
-      end
-
-      assert breakdown.(sources_params.(exported_site), "source") ==
-               breakdown.(sources_params.(imported_site), "source")
-
-      # utm mediums
-      utm_mediums_params = fn site ->
-        params = breakdown_params.(site)
-        Map.put(params, "property", "visit:utm_medium")
-      end
-
-      assert breakdown.(utm_mediums_params.(exported_site), "utm_medium") ==
-               breakdown.(utm_mediums_params.(imported_site), "utm_medium")
-
-      # entry pages
-      entry_pages_params = fn site ->
-        params = breakdown_params.(site)
-        Map.put(params, "property", "visit:entry_page")
-      end
-
-      assert breakdown.(entry_pages_params.(exported_site), "entry_page") ==
-               breakdown.(entry_pages_params.(imported_site), "entry_page")
-
-      # cities
-      cities_params = fn site ->
-        params = breakdown_params.(site)
-        Map.put(params, "property", "visit:city")
-      end
-
-      assert breakdown.(cities_params.(exported_site), "city") ==
-               breakdown.(cities_params.(imported_site), "city")
-
-      # devices
-      devices_params = fn site ->
-        params = breakdown_params.(site)
-        Map.put(params, "property", "visit:device")
-      end
-
-      assert breakdown.(devices_params.(exported_site), "device") ==
-               breakdown.(devices_params.(imported_site), "device")
-
-      # browsers
-      browsers_params = fn site ->
-        params = breakdown_params.(site)
-        Map.put(params, "property", "visit:browser")
-      end
-
-      assert breakdown.(browsers_params.(exported_site), "browser") ==
-               breakdown.(browsers_params.(imported_site), "browser")
-
-      # os
-      os_params = fn site ->
-        params = breakdown_params.(site)
-        Map.put(params, "property", "visit:os")
-      end
-
-      assert breakdown.(os_params.(exported_site), "os") ==
-               breakdown.(os_params.(imported_site), "os")
-
-      # os versions
-      os_version_params = fn site ->
-        params = breakdown_params.(site)
-        Map.put(params, "property", "visit:os_version")
-      end
-
-      assert breakdown.(os_version_params.(exported_site), "os_version") ==
-               breakdown.(os_version_params.(imported_site), "os_version")
+      assert breakdown.(exported_site, "source") == breakdown.(imported_site, "source")
+      assert breakdown.(exported_site, "utm_medium") == breakdown.(imported_site, "utm_medium")
+      assert breakdown.(exported_site, "entry_page") == breakdown.(imported_site, "entry_page")
+      assert breakdown.(exported_site, "city") == breakdown.(imported_site, "city")
+      assert breakdown.(exported_site, "device") == breakdown.(imported_site, "device")
+      assert breakdown.(exported_site, "browser") == breakdown.(imported_site, "browser")
+      assert breakdown.(exported_site, "os") == breakdown.(imported_site, "os")
+      assert breakdown.(exported_site, "os_version") == breakdown.(imported_site, "os_version")
     end
   end
 

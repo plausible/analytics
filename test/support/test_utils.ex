@@ -1,5 +1,4 @@
 defmodule Plausible.TestUtils do
-  require Plausible
   use Plausible.Repo
   alias Plausible.Factory
 
