@@ -418,24 +418,26 @@ defmodule Plausible.Imported.CSVImporterTest do
 
     @tag :tmp_dir
     test "it works", %{site: site, user: user, tmp_dir: tmp_dir} do
-      events_csv =
-        File.read!("fixture/plausible_io_events_v2_2024_03_01_2024_03_31_500users_dump.csv")
+      read_csv = fn path ->
+        [header | rows] = NimbleCSV.RFC4180.parse_string(File.read!(path), skip_headers: false)
 
-      [header | events_csv] = NimbleCSV.RFC4180.parse_string(events_csv, skip_headers: false)
-      idx = Enum.find_index(header, &(&1 == "site_id"))
-      events_csv = Enum.map(events_csv, fn row -> List.replace_at(row, idx, site.id) end)
-      events_csv = NimbleCSV.RFC4180.dump_to_iodata([header | events_csv])
+        site_id_column_index =
+          Enum.find_index(header, &(&1 == "site_id")) ||
+            raise "couldn't find site_id column in CSV header #{inspect(header)}"
 
-      sessions_csv =
-        File.read!("fixture/plausible_io_sessions_v2_2024_03_01_2024_03_31_500users_dump.csv")
+        rows = Enum.map(rows, fn row -> List.replace_at(row, site_id_column_index, site.id) end)
+        NimbleCSV.RFC4180.dump_to_iodata([header | rows])
+      end
 
-      [header | sessions_csv] = NimbleCSV.RFC4180.parse_string(sessions_csv, skip_headers: false)
-      idx = Enum.find_index(header, &(&1 == "site_id"))
-      sessions_csv = Enum.map(sessions_csv, fn row -> List.replace_at(row, idx, site.id) end)
-      sessions_csv = NimbleCSV.RFC4180.dump_to_iodata([header | sessions_csv])
+      Plausible.IngestRepo.query!([
+        "insert into events_v2 format CSVWithNames\n",
+        read_csv.("fixture/plausible_io_events_v2_2024_03_01_2024_03_31_500users_dump.csv")
+      ])
 
-      Plausible.IngestRepo.query!(["insert into events_v2 format CSVWithNames\n", events_csv])
-      Plausible.IngestRepo.query!(["insert into sessions_v2 format CSVWithNames\n", sessions_csv])
+      Plausible.IngestRepo.query!([
+        "insert into sessions_v2 format CSVWithNames\n",
+        read_csv.("fixture/plausible_io_sessions_v2_2024_03_01_2024_03_31_500users_dump.csv")
+      ])
 
       # export archive to s3
       on_ee do
