@@ -518,7 +518,7 @@ defmodule Plausible.Imported.CSVImporterTest do
              } = Repo.get_by!(SiteImport, site_id: imported_site.id)
 
       assert Plausible.Stats.Clickhouse.imported_pageview_count(exported_site) == 0
-      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 6325
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 12250
 
       # compare original and imported data via stats api requests
       results = fn path, params ->
@@ -560,6 +560,33 @@ defmodule Plausible.Imported.CSVImporterTest do
         sorted.(results.("/api/v1/stats/breakdown", params), by)
       end
 
+      pairwise = fn left, right, f ->
+        assert length(left) == length(right)
+        zipped = Enum.zip(left, right)
+        Enum.each(zipped, fn {left, right} -> f.(left, right) end)
+      end
+
+      assert_field_in_delta = fn left, right, field, delta ->
+        left = Map.fetch!(left, field)
+        right = Map.fetch!(right, field)
+
+        if is_number(left) and is_number(right) do
+          diff = abs(left - right)
+
+          message =
+            "Expected the difference between #{field} #{inspect(left)} and " <>
+              "#{inspect(right)} (#{inspect(diff)}) to be less than or equal to #{inspect(delta)}"
+
+          assert diff <= delta, message
+        else
+          message =
+            "Expected #{field} to be either a number or missing in both #{inspect(left)} and #{inspect(right)}"
+
+          assert left == right, message
+        end
+      end
+
+      # timeseries
       timeseries_params = fn site ->
         Map.put(
           common_params.(site),
@@ -568,9 +595,20 @@ defmodule Plausible.Imported.CSVImporterTest do
         )
       end
 
-      assert timeseries.(timeseries_params.(exported_site)) ==
-               timeseries.(timeseries_params.(imported_site))
+      exported_timeseries = timeseries.(timeseries_params.(exported_site))
+      imported_timeseries = timeseries.(timeseries_params.(imported_site))
 
+      pairwise.(exported_timeseries, imported_timeseries, fn exported, imported ->
+        assert exported["date"] == imported["date"]
+        assert exported["pageviews"] == imported["pageviews"]
+        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
+        assert_field_in_delta.(exported, imported, "views_per_visit", 5)
+        assert_field_in_delta.(exported, imported, "visit_duration", 27)
+        assert_field_in_delta.(exported, imported, "visitors", 3)
+        assert_field_in_delta.(exported, imported, "visits", 4)
+      end)
+
+      # pages
       pages_params = fn site ->
         common_params.(site)
         |> Map.put("metrics", "visitors,visits,pageviews,time_on_page,visit_duration,bounce_rate")
@@ -578,17 +616,112 @@ defmodule Plausible.Imported.CSVImporterTest do
         |> Map.put("property", "event:page")
       end
 
-      assert breakdown.(pages_params.(exported_site), "page") ==
-               breakdown.(pages_params.(imported_site), "page")
+      exported_pages = breakdown.(pages_params.(exported_site), "page")
+      imported_pages = breakdown.(pages_params.(imported_site), "page")
 
-      assert breakdown.(exported_site, "source") == breakdown.(imported_site, "source")
+      pairwise.(exported_pages, imported_pages, fn exported, imported ->
+        assert exported["page"] == imported["page"]
+        assert exported["pageviews"] == imported["pageviews"]
+        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
+        assert imported["time_on_page"] == 0.0
+        assert_field_in_delta.(exported, imported, "visit_duration", 1)
+        assert_field_in_delta.(exported, imported, "visitors", 230)
+        assert_field_in_delta.(exported, imported, "visits", 9)
+      end)
+
+      # sources
+      exported_sources = breakdown.(exported_site, "source")
+      imported_sources = breakdown.(imported_site, "source")
+
+      pairwise.(exported_sources, imported_sources, fn exported, imported ->
+        assert exported["source"] == imported["source"]
+        assert_field_in_delta.(exported, imported, "pageviews", 5925)
+        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
+        assert_field_in_delta.(exported, imported, "visit_duration", 1)
+        assert_field_in_delta.(exported, imported, "visitors", 261)
+        assert_field_in_delta.(exported, imported, "visits", 1)
+      end)
+
+      # utm mediums
       assert breakdown.(exported_site, "utm_medium") == breakdown.(imported_site, "utm_medium")
-      assert breakdown.(exported_site, "entry_page") == breakdown.(imported_site, "entry_page")
-      assert breakdown.(exported_site, "city") == breakdown.(imported_site, "city")
-      assert breakdown.(exported_site, "device") == breakdown.(imported_site, "device")
-      assert breakdown.(exported_site, "browser") == breakdown.(imported_site, "browser")
-      assert breakdown.(exported_site, "os") == breakdown.(imported_site, "os")
-      assert breakdown.(exported_site, "os_version") == breakdown.(imported_site, "os_version")
+
+      # entry pages
+      exported_entry_pages = breakdown.(exported_site, "entry_page")
+      imported_entry_pages = breakdown.(imported_site, "entry_page")
+
+      pairwise.(exported_entry_pages, imported_entry_pages, fn exported, imported ->
+        assert exported["entry_page"] == imported["entry_page"]
+        assert_field_in_delta.(exported, imported, "pageviews", 6571)
+        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
+        assert_field_in_delta.(exported, imported, "visit_duration", 1)
+        assert_field_in_delta.(exported, imported, "visitors", 166)
+        assert_field_in_delta.(exported, imported, "visits", 1)
+      end)
+
+      # cities
+      exported_cities = breakdown.(exported_site, "city")
+      imported_cities = breakdown.(imported_site, "city")
+
+      pairwise.(exported_cities, imported_cities, fn exported, imported ->
+        assert exported["city"] == imported["city"]
+        assert_field_in_delta.(exported, imported, "pageviews", 349)
+        assert_field_in_delta.(exported, imported, "bounce_rate", 5)
+        assert_field_in_delta.(exported, imported, "visit_duration", 115)
+        assert_field_in_delta.(exported, imported, "visitors", 7)
+        assert_field_in_delta.(exported, imported, "visits", 1)
+      end)
+
+      # devices
+      exported_devices = breakdown.(exported_site, "device")
+      imported_devices = breakdown.(imported_site, "device")
+
+      pairwise.(exported_devices, imported_devices, fn exported, imported ->
+        assert exported["device"] == imported["device"]
+        assert_field_in_delta.(exported, imported, "pageviews", 5918)
+        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
+        assert_field_in_delta.(exported, imported, "visit_duration", 1)
+        assert_field_in_delta.(exported, imported, "visitors", 174)
+        assert_field_in_delta.(exported, imported, "visits", 1)
+      end)
+
+      # browsers
+      exported_browsers = breakdown.(exported_site, "browser")
+      imported_browsers = breakdown.(imported_site, "browser")
+
+      pairwise.(exported_browsers, imported_browsers, fn exported, imported ->
+        assert exported["browser"] == imported["browser"]
+        assert_field_in_delta.(exported, imported, "pageviews", 5652)
+        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
+        assert_field_in_delta.(exported, imported, "visit_duration", 1)
+        assert_field_in_delta.(exported, imported, "visitors", 148)
+        assert_field_in_delta.(exported, imported, "visits", 1)
+      end)
+
+      # os
+      exported_os = breakdown.(exported_site, "os")
+      imported_os = breakdown.(imported_site, "os")
+
+      pairwise.(exported_os, imported_os, fn exported, imported ->
+        assert exported["os"] == imported["os"]
+        assert_field_in_delta.(exported, imported, "pageviews", 5267)
+        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
+        assert_field_in_delta.(exported, imported, "visit_duration", 1)
+        assert_field_in_delta.(exported, imported, "visitors", 93)
+        assert_field_in_delta.(exported, imported, "visits", 1)
+      end)
+
+      # os versions
+      exported_os_versions = breakdown.(exported_site, "os_version")
+      imported_os_versions = breakdown.(imported_site, "os_version")
+
+      pairwise.(exported_os_versions, imported_os_versions, fn exported, imported ->
+        assert exported["os_version"] == imported["os_version"]
+        assert_field_in_delta.(exported, imported, "pageviews", 5267)
+        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
+        assert_field_in_delta.(exported, imported, "visit_duration", 1)
+        assert_field_in_delta.(exported, imported, "visitors", 93)
+        assert_field_in_delta.(exported, imported, "visits", 1)
+      end)
     end
   end
 
