@@ -316,89 +316,129 @@ defmodule Plausible.Exports do
     end
   end
 
-  defmacrop pageviews(t) do
-    quote do
-      selected_as(
-        fragment("greatest(sum(?*?),0)", unquote(t).sign, unquote(t).pageviews),
-        :pageviews
-      )
-    end
+  defp pageviews_q(site_id, timezone, date_range) do
+    from e in sampled("events_v2", date_range),
+      where: [site_id: ^site_id, name: "pageview"],
+      select: %{
+        date: date(e.timestamp, ^timezone),
+        pageviews: fragment("toUInt64(round(count()*any(_sample_factor)))")
+      }
   end
 
   defp export_visitors_q(site_id, timezone, date_range) do
-    visitors_sessions_q =
+    visitors_q =
       from s in sampled("sessions_v2", date_range),
-        where: s.site_id == ^site_id,
+        where: [site_id: ^site_id],
         group_by: selected_as(:date),
         select: %{
           date: date(s.start, ^timezone),
+          visitors: visitors(s),
           bounces: bounces(s),
           visits: visits(s),
-          visit_duration: visit_duration(s),
-          visitors: visitors(s)
+          visit_duration: visit_duration(s)
         }
 
-    visitors_events_q =
-      from e in sampled("events_v2", date_range),
-        where: e.site_id == ^site_id,
-        group_by: selected_as(:date),
-        select: %{
-          date: date(e.timestamp, ^timezone),
-          pageviews:
-            selected_as(
-              fragment("toUInt64(round(countIf(?='pageview')*any(_sample_factor)))", e.name),
-              :pageviews
-            )
-        }
+    pageviews_q =
+      from p in pageviews_q(site_id, timezone, date_range),
+        group_by: selected_as(:date)
 
-    visitors_q =
-      "e"
-      |> with_cte("e", as: ^visitors_events_q)
-      |> with_cte("s", as: ^visitors_sessions_q)
-
-    from e in visitors_q,
-      full_join: s in "s",
-      on: e.date == s.date,
-      order_by: selected_as(:date),
-      select: [
-        selected_as(fragment("greatest(?,?)", s.date, e.date), :date),
-        s.visitors,
-        e.pageviews,
-        s.bounces,
-        s.visits,
-        s.visit_duration
-      ]
+    "visitors"
+    |> with_cte("visitors", as: ^visitors_q)
+    |> with_cte("pageviews", as: ^pageviews_q)
+    |> join(:full, [v], p in "pageviews", on: v.date == p.date)
+    |> order_by([], selected_as(:date))
+    |> select([v, p], [
+      selected_as(fragment("greatest(?,?)", v.date, p.date), :date),
+      v.visitors,
+      p.pageviews,
+      v.bounces,
+      v.visits,
+      v.visit_duration
+    ])
   end
 
   defp export_sources_q(site_id, timezone, date_range) do
-    from s in sampled("sessions_v2", date_range),
-      where: s.site_id == ^site_id,
-      group_by: [
-        selected_as(:date),
-        selected_as(:source),
-        s.referrer,
-        s.utm_source,
-        s.utm_medium,
-        s.utm_campaign,
-        s.utm_content,
-        s.utm_term
-      ],
-      order_by: selected_as(:date),
-      select: [
-        date(s.start, ^timezone),
-        selected_as(s.referrer_source, :source),
-        s.referrer,
-        s.utm_source,
-        s.utm_medium,
-        s.utm_campaign,
-        s.utm_content,
-        s.utm_term,
-        pageviews(s),
-        visitors(s),
-        visits(s),
-        visit_duration(s),
-        bounces(s)
-      ]
+    sources_q =
+      from s in sampled("sessions_v2", date_range),
+        where: s.site_id == ^site_id,
+        group_by: [
+          selected_as(:date),
+          selected_as(:source),
+          s.referrer,
+          s.utm_source,
+          s.utm_medium,
+          s.utm_campaign,
+          s.utm_content,
+          s.utm_term
+        ],
+        order_by: selected_as(:date),
+        select: %{
+          date: date(s.start, ^timezone),
+          source: selected_as(s.referrer_source, :source),
+          referrer: s.referrer,
+          utm_source: s.utm_source,
+          utm_medium: s.utm_medium,
+          utm_campaign: s.utm_campaign,
+          utm_content: s.utm_content,
+          utm_term: s.utm_term,
+          visitors: visitors(s),
+          visits: visits(s),
+          visit_duration: visit_duration(s),
+          bounces: bounces(s)
+        }
+
+    pageviews_q =
+      from p in pageviews_q(site_id, timezone, date_range),
+        select_merge: %{
+          source: selected_as(p.referrer_source, :source),
+          referrer: p.referrer,
+          utm_source: p.utm_source,
+          utm_medium: p.utm_medium,
+          utm_campaign: p.utm_campaign,
+          utm_content: p.utm_content,
+          utm_term: p.utm_term
+        },
+        group_by: [
+          selected_as(:date),
+          selected_as(:source),
+          p.referrer,
+          p.utm_source,
+          p.utm_medium,
+          p.utm_campaign,
+          p.utm_content,
+          p.utm_term
+        ]
+
+    "sources"
+    |> with_cte("sources", as: ^sources_q)
+    |> with_cte("pageviews", as: ^pageviews_q)
+    |> join(:left, [s], p in "pageviews",
+      on:
+        s.date == p.date and
+          s.source == p.source and
+          s.referrer == p.referrer and
+          s.utm_source == p.utm_source and
+          s.utm_medium == p.utm_medium and
+          s.utm_campaign == p.utm_campaign and
+          s.utm_content == p.utm_content and
+          s.utm_term == p.utm_term
+    )
+    |> order_by([s], s.date)
+    |> select([s, p], [
+      s.date,
+      s.source,
+      s.referrer,
+      s.utm_source,
+      s.utm_medium,
+      s.utm_campaign,
+      s.utm_content,
+      s.utm_term,
+      p.pageviews,
+      s.visitors,
+      s.visits,
+      s.visit_duration,
+      s.bounces
+    ])
   end
 
   defp export_pages_q(site_id, timezone, date_range) do
@@ -420,110 +460,270 @@ defmodule Plausible.Exports do
   end
 
   defp export_entry_pages_q(site_id, timezone, date_range) do
-    from s in sampled("sessions_v2", date_range),
-      where: s.site_id == ^site_id,
-      group_by: [selected_as(:date), s.entry_page],
-      order_by: selected_as(:date),
-      select: [
-        date(s.start, ^timezone),
-        s.entry_page,
-        visitors(s),
-        selected_as(
-          fragment("toUInt64(round(sum(?)*any(_sample_factor)))", s.sign),
-          :entrances
-        ),
-        visit_duration(s),
-        bounces(s),
-        pageviews(s)
-      ]
+    entry_pages_q =
+      from s in sampled("sessions_v2", date_range),
+        where: s.site_id == ^site_id,
+        group_by: [selected_as(:date), s.entry_page],
+        order_by: selected_as(:date),
+        select: %{
+          date: date(s.start, ^timezone),
+          entry_page: s.entry_page,
+          visitors: visitors(s),
+          entrances:
+            selected_as(
+              fragment("toUInt64(round(sum(?)*any(_sample_factor)))", s.sign),
+              :entrances
+            ),
+          visit_duration: visit_duration(s),
+          bounces: bounces(s)
+        }
+
+    pageviews_q =
+      from p in pageviews_q(site_id, timezone, date_range),
+        select_merge: %{pathname: p.pathname},
+        group_by: [selected_as(:date), p.pathname]
+
+    "entry_pages"
+    |> with_cte("entry_pages", as: ^entry_pages_q)
+    |> with_cte("pageviews", as: ^pageviews_q)
+    |> join(:left, [ep], p in "pageviews", on: ep.date == p.date and ep.entry_page == p.pathname)
+    |> order_by([ep], ep.date)
+    |> select([ep, p], [
+      ep.date,
+      ep.entry_page,
+      ep.visitors,
+      ep.entrances,
+      ep.visit_duration,
+      ep.bounces,
+      p.pageviews
+    ])
   end
 
   defp export_exit_pages_q(site_id, timezone, date_range) do
-    from s in sampled("sessions_v2", date_range),
-      where: s.site_id == ^site_id,
-      group_by: [selected_as(:date), s.exit_page],
-      order_by: selected_as(:date),
-      select: [
-        date(s.start, ^timezone),
-        s.exit_page,
-        visitors(s),
-        visit_duration(s),
-        selected_as(
-          fragment("toUInt64(round(sum(?)*any(_sample_factor)))", s.sign),
-          :exits
-        ),
-        bounces(s),
-        pageviews(s)
-      ]
+    exit_pages_q =
+      from s in sampled("sessions_v2", date_range),
+        where: s.site_id == ^site_id,
+        group_by: [selected_as(:date), s.exit_page],
+        order_by: selected_as(:date),
+        select: %{
+          date: date(s.start, ^timezone),
+          exit_page: s.exit_page,
+          visitors: visitors(s),
+          visit_duration: visit_duration(s),
+          exits:
+            selected_as(
+              fragment("toUInt64(round(sum(?)*any(_sample_factor)))", s.sign),
+              :exits
+            ),
+          bounces: bounces(s)
+        }
+
+    pageviews_q =
+      from p in pageviews_q(site_id, timezone, date_range),
+        select_merge: %{pathname: p.pathname},
+        group_by: [selected_as(:date), p.pathname]
+
+    "exit_pages"
+    |> with_cte("exit_pages", as: ^exit_pages_q)
+    |> with_cte("pageviews", as: ^pageviews_q)
+    |> join(:left, [ep], p in "pageviews", on: ep.date == p.date and ep.exit_page == p.pathname)
+    |> order_by([ep], ep.date)
+    |> select([ep, p], [
+      ep.date,
+      ep.exit_page,
+      ep.visitors,
+      ep.visit_duration,
+      ep.exits,
+      ep.bounces,
+      p.pageviews
+    ])
   end
 
   defp export_locations_q(site_id, timezone, date_range) do
-    from s in sampled("sessions_v2", date_range),
-      where: s.site_id == ^site_id,
-      where: s.city_geoname_id != 0 and s.country_code != "\0\0" and s.country_code != "ZZ",
-      group_by: [selected_as(:date), s.country_code, selected_as(:region), s.city_geoname_id],
-      order_by: selected_as(:date),
-      select: [
-        date(s.start, ^timezone),
-        selected_as(s.country_code, :country),
-        selected_as(s.subdivision1_code, :region),
-        selected_as(s.city_geoname_id, :city),
-        visitors(s),
-        visits(s),
-        visit_duration(s),
-        bounces(s),
-        pageviews(s)
-      ]
+    locations_q =
+      from s in sampled("sessions_v2", date_range),
+        where: s.site_id == ^site_id,
+        where: s.city_geoname_id != 0 and s.country_code != "\0\0" and s.country_code != "ZZ",
+        group_by: [
+          selected_as(:date),
+          selected_as(:country),
+          selected_as(:region),
+          selected_as(:city)
+        ],
+        order_by: selected_as(:date),
+        select: %{
+          date: date(s.start, ^timezone),
+          country: selected_as(s.country_code, :country),
+          region: selected_as(s.subdivision1_code, :region),
+          city: selected_as(s.city_geoname_id, :city),
+          visitors: visitors(s),
+          visits: visits(s),
+          visit_duration: visit_duration(s),
+          bounces: bounces(s)
+        }
+
+    pageviews_q =
+      from p in pageviews_q(site_id, timezone, date_range),
+        select_merge: %{
+          country: selected_as(p.country_code, :country),
+          region: selected_as(p.subdivision1_code, :region),
+          city_geoname_id: selected_as(p.city_geoname_id, :city)
+        },
+        group_by: [
+          selected_as(:date),
+          selected_as(:country),
+          selected_as(:region),
+          selected_as(:city)
+        ]
+
+    "locations"
+    |> with_cte("locations", as: ^locations_q)
+    |> with_cte("pageviews", as: ^pageviews_q)
+    |> join(:left, [l], p in "pageviews",
+      on:
+        l.date == p.date and
+          l.country == p.country and
+          l.region == p.region and
+          l.city == p.city
+    )
+    |> order_by([l], l.date)
+    |> select([l, p], [
+      l.date,
+      l.country,
+      l.region,
+      l.city,
+      l.visitors,
+      l.visits,
+      l.visit_duration,
+      l.bounces,
+      p.pageviews
+    ])
   end
 
   defp export_devices_q(site_id, timezone, date_range) do
-    from s in sampled("sessions_v2", date_range),
-      where: s.site_id == ^site_id,
-      group_by: [selected_as(:date), s.screen_size],
-      order_by: selected_as(:date),
-      select: [
-        date(s.start, ^timezone),
-        selected_as(s.screen_size, :device),
-        visitors(s),
-        visits(s),
-        visit_duration(s),
-        bounces(s),
-        pageviews(s)
-      ]
+    devices_q =
+      from s in sampled("sessions_v2", date_range),
+        where: s.site_id == ^site_id,
+        group_by: [selected_as(:date), selected_as(:device)],
+        order_by: selected_as(:date),
+        select: %{
+          date: date(s.start, ^timezone),
+          device: selected_as(s.screen_size, :device),
+          visitors: visitors(s),
+          visits: visits(s),
+          visit_duration: visit_duration(s),
+          bounces: bounces(s)
+        }
+
+    pageviews_q =
+      from p in pageviews_q(site_id, timezone, date_range),
+        select_merge: %{device: selected_as(p.screen_size, :device)},
+        group_by: [selected_as(:date), selected_as(:device)]
+
+    "devices"
+    |> with_cte("devices", as: ^devices_q)
+    |> with_cte("pageviews", as: ^pageviews_q)
+    |> join(:left, [d], p in "pageviews", on: d.date == p.date and d.device == p.device)
+    |> order_by([d], d.date)
+    |> select([d, p], [
+      d.date,
+      d.device,
+      d.visitors,
+      d.visits,
+      d.visit_duration,
+      d.bounces,
+      p.pageviews
+    ])
   end
 
   defp export_browsers_q(site_id, timezone, date_range) do
-    from s in sampled("sessions_v2", date_range),
-      where: s.site_id == ^site_id,
-      group_by: [selected_as(:date), s.browser, s.browser_version],
-      order_by: selected_as(:date),
-      select: [
-        date(s.start, ^timezone),
-        s.browser,
-        s.browser_version,
-        visitors(s),
-        visits(s),
-        visit_duration(s),
-        bounces(s),
-        pageviews(s)
-      ]
+    browsers_q =
+      from s in sampled("sessions_v2", date_range),
+        where: s.site_id == ^site_id,
+        group_by: [selected_as(:date), s.browser, s.browser_version],
+        order_by: selected_as(:date),
+        select: %{
+          date: date(s.start, ^timezone),
+          browser: s.browser,
+          browser_version: s.browser_version,
+          visitors: visitors(s),
+          visits: visits(s),
+          visit_duration: visit_duration(s),
+          bounces: bounces(s)
+        }
+
+    pageviews_q =
+      from p in pageviews_q(site_id, timezone, date_range),
+        select_merge: %{browser: p.browser, browser_version: p.browser_version},
+        group_by: [selected_as(:date), p.browser, p.browser_version]
+
+    "browsers"
+    |> with_cte("browsers", as: ^browsers_q)
+    |> with_cte("pageviews", as: ^pageviews_q)
+    |> join(:left, [b], p in "pageviews",
+      on: b.date == p.date and b.browser == p.browser and b.browser_version == p.browser_version
+    )
+    |> order_by([b], b.date)
+    |> select([b, p], [
+      b.date,
+      b.browser,
+      b.browser_version,
+      b.visitors,
+      b.visits,
+      b.visit_duration,
+      b.bounces,
+      p.pageviews
+    ])
   end
 
   defp export_operating_systems_q(site_id, timezone, date_range) do
-    from s in sampled("sessions_v2", date_range),
-      where: s.site_id == ^site_id,
-      group_by: [selected_as(:date), s.operating_system, s.operating_system_version],
-      order_by: selected_as(:date),
-      select: [
-        date(s.start, ^timezone),
-        s.operating_system,
-        s.operating_system_version,
-        visitors(s),
-        visits(s),
-        visit_duration(s),
-        bounces(s),
-        pageviews(s)
-      ]
+    operation_systems_q =
+      from s in sampled("sessions_v2", date_range),
+        where: s.site_id == ^site_id,
+        group_by: [selected_as(:date), s.operating_system, s.operating_system_version],
+        order_by: selected_as(:date),
+        select: %{
+          date: date(s.start, ^timezone),
+          operating_system: s.operating_system,
+          operating_system_version: s.operating_system_version,
+          visitors: visitors(s),
+          visits: visits(s),
+          visit_duration: visit_duration(s),
+          bounces: bounces(s)
+        }
+
+    pageviews_q =
+      from p in pageviews_q(site_id, timezone, date_range),
+        select_merge: %{
+          operating_system: p.operating_system,
+          operating_system_version: p.operating_system_version
+        },
+        group_by: [
+          selected_as(:date),
+          p.operating_system,
+          p.operating_system_version
+        ]
+
+    "operation_systems"
+    |> with_cte("operation_systems", as: ^operation_systems_q)
+    |> with_cte("pageviews", as: ^pageviews_q)
+    |> join(:left, [os], p in "pageviews",
+      on:
+        os.date == p.date and
+          os.operating_system == p.operating_system and
+          os.operating_system_version == p.operating_system_version
+    )
+    |> order_by([os], os.date)
+    |> select([os, p], [
+      os.date,
+      os.operating_system,
+      os.operating_system_version,
+      os.visitors,
+      os.visits,
+      os.visit_duration,
+      os.bounces,
+      p.pageviews
+    ])
   end
 
   @doc """
