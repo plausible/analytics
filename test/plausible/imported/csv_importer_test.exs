@@ -421,7 +421,7 @@ defmodule Plausible.Imported.CSVImporterTest do
       exported_site = insert(:site, members: [user])
       imported_site = insert(:site, members: [user])
 
-      read_csv = fn path ->
+      process_csv = fn path ->
         [header | rows] = NimbleCSV.RFC4180.parse_string(File.read!(path), skip_headers: false)
 
         site_id_column_index =
@@ -438,12 +438,12 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       Plausible.IngestRepo.query!([
         "insert into events_v2 format CSVWithNames\n",
-        read_csv.("fixture/plausible_io_events_v2_2024_03_01_2024_03_31_500users_dump.csv")
+        process_csv.("fixture/plausible_io_events_v2_2024_03_01_2024_03_31_500users_dump.csv")
       ])
 
       Plausible.IngestRepo.query!([
         "insert into sessions_v2 format CSVWithNames\n",
-        read_csv.("fixture/plausible_io_sessions_v2_2024_03_01_2024_03_31_500users_dump.csv")
+        process_csv.("fixture/plausible_io_sessions_v2_2024_03_01_2024_03_31_500users_dump.csv")
       ])
 
       # export archive to s3
@@ -527,8 +527,16 @@ defmodule Plausible.Imported.CSVImporterTest do
         |> Map.fetch!("results")
       end
 
+      timeseries = fn params ->
+        results.("/api/v1/stats/timeseries", params)
+      end
+
       sorted = fn results, sort_by ->
         Enum.sort_by(results, &Map.fetch!(&1, sort_by))
+      end
+
+      breakdown = fn params, sort_by ->
+        sorted.(results.("/api/v1/stats/breakdown", params), sort_by)
       end
 
       common_params = fn site ->
@@ -555,8 +563,8 @@ defmodule Plausible.Imported.CSVImporterTest do
         )
       end
 
-      assert results.("/api/v1/stats/timeseries", timeseries_params.(exported_site)) ==
-               results.("/api/v1/stats/timeseries", timeseries_params.(imported_site))
+      assert timeseries.(timeseries_params.(exported_site)) ==
+               timeseries.(timeseries_params.(imported_site))
 
       # pages
       pages_params = fn site ->
@@ -566,80 +574,80 @@ defmodule Plausible.Imported.CSVImporterTest do
         |> Map.put("property", "event:page")
       end
 
-      assert sorted.(results.("/api/v1/stats/breakdown", pages_params.(exported_site)), "page") ==
-               sorted.(results.("/api/v1/stats/breakdown", pages_params.(imported_site)), "page")
+      assert breakdown.(pages_params.(exported_site), "page") ==
+               breakdown.(pages_params.(imported_site), "page")
 
-      # # sources
-      # sources_params = fn site ->
-      #   params = breakdown_params.(site)
-      #   Map.put(params, "property", "visit:source")
-      # end
+      # sources
+      sources_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:source")
+      end
 
-      # assert stats_api_get.(conn, "/api/v1/stats/breakdown", sources_params.(exported_site)) ==
-      #          stats_api_get.(conn, "/api/v1/stats/breakdown", sources_params.(imported_site))
+      assert breakdown.(sources_params.(exported_site), "source") ==
+               breakdown.(sources_params.(imported_site), "source")
 
-      # # utm mediums
-      # utm_mediums_params = fn site ->
-      #   params = breakdown_params.(site)
-      #   Map.put(params, "property", "visit:utm_medium")
-      # end
+      # utm mediums
+      utm_mediums_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:utm_medium")
+      end
 
-      # assert stats_api_get.(conn, "/api/v1/stats/breakdown", utm_mediums_params.(exported_site)) ==
-      #          stats_api_get.(conn, "/api/v1/stats/breakdown", utm_mediums_params.(imported_site))
+      assert breakdown.(utm_mediums_params.(exported_site), "utm_medium") ==
+               breakdown.(utm_mediums_params.(imported_site), "utm_medium")
 
-      # # entry pages
-      # entry_pages_params = fn site ->
-      #   params = breakdown_params.(site)
-      #   Map.put(params, "property", "visit:entry_page")
-      # end
+      # entry pages
+      entry_pages_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:entry_page")
+      end
 
-      # assert stats_api_get.(conn, "/api/v1/stats/breakdown", entry_pages_params.(exported_site)) ==
-      #          stats_api_get.(conn, "/api/v1/stats/breakdown", entry_pages_params.(imported_site))
+      assert breakdown.(entry_pages_params.(exported_site), "entry_page") ==
+               breakdown.(entry_pages_params.(imported_site), "entry_page")
 
-      # # cities
-      # cities_params = fn site ->
-      #   params = breakdown_params.(site)
-      #   Map.put(params, "property", "visit:city")
-      # end
+      # cities
+      cities_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:city")
+      end
 
-      # assert stats_api_get.(conn, "/api/v1/stats/breakdown", cities_params.(exported_site)) ==
-      #          stats_api_get.(conn, "/api/v1/stats/breakdown", cities_params.(imported_site))
+      assert breakdown.(cities_params.(exported_site), "city") ==
+               breakdown.(cities_params.(imported_site), "city")
 
-      # # devices
-      # devices_params = fn site ->
-      #   params = breakdown_params.(site)
-      #   Map.put(params, "property", "visit:device")
-      # end
+      # devices
+      devices_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:device")
+      end
 
-      # assert stats_api_get.(conn, "/api/v1/stats/breakdown", devices_params.(exported_site)) ==
-      #          stats_api_get.(conn, "/api/v1/stats/breakdown", devices_params.(imported_site))
+      assert breakdown.(devices_params.(exported_site), "device") ==
+               breakdown.(devices_params.(imported_site), "device")
 
-      # # browsers
-      # browsers_params = fn site ->
-      #   params = breakdown_params.(site)
-      #   Map.put(params, "property", "visit:browser")
-      # end
+      # browsers
+      browsers_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:browser")
+      end
 
-      # assert stats_api_get.(conn, "/api/v1/stats/breakdown", browsers_params.(exported_site)) ==
-      #          stats_api_get.(conn, "/api/v1/stats/breakdown", browsers_params.(imported_site))
+      assert breakdown.(browsers_params.(exported_site), "browser") ==
+               breakdown.(browsers_params.(imported_site), "browser")
 
-      # # os
-      # os_params = fn site ->
-      #   params = breakdown_params.(site)
-      #   Map.put(params, "property", "visit:os")
-      # end
+      # os
+      os_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:os")
+      end
 
-      # assert stats_api_get.(conn, "/api/v1/stats/breakdown", os_params.(exported_site)) ==
-      #          stats_api_get.(conn, "/api/v1/stats/breakdown", os_params.(imported_site))
+      assert breakdown.(os_params.(exported_site), "os") ==
+               breakdown.(os_params.(imported_site), "os")
 
-      # # os versions
-      # os_version_params = fn site ->
-      #   params = breakdown_params.(site)
-      #   Map.put(params, "property", "visit:os_version")
-      # end
+      # os versions
+      os_version_params = fn site ->
+        params = breakdown_params.(site)
+        Map.put(params, "property", "visit:os_version")
+      end
 
-      # assert stats_api_get.(conn, "/api/v1/stats/breakdown", os_version_params.(exported_site)) ==
-      #          stats_api_get.(conn, "/api/v1/stats/breakdown", os_version_params.(imported_site))
+      assert breakdown.(os_version_params.(exported_site), "os_version") ==
+               breakdown.(os_version_params.(imported_site), "os_version")
     end
   end
 
