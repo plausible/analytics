@@ -556,25 +556,23 @@ cron_enabled = !disable_cron
 
 thirty_days_in_seconds = 60 * 60 * 24 * 30
 
-cond do
-  config_env() == :prod ->
-    config :plausible, Oban,
-      repo: Plausible.Repo,
-      plugins: [
-        # Keep 30 days history
-        {Oban.Plugins.Pruner, max_age: thirty_days_in_seconds},
-        {Oban.Plugins.Cron, crontab: if(cron_enabled, do: crontab, else: [])},
-        # Rescue orphaned jobs after 2 hours
-        {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)}
-      ],
-      queues: if(cron_enabled, do: queues, else: []),
-      peer: if(cron_enabled, do: Oban.Peers.Postgres, else: false)
-
-  true ->
-    config :plausible, Oban,
-      repo: Plausible.Repo,
-      queues: queues,
-      plugins: false
+if config_env() in [:prod, :ce] do
+  config :plausible, Oban,
+    repo: Plausible.Repo,
+    plugins: [
+      # Keep 30 days history
+      {Oban.Plugins.Pruner, max_age: thirty_days_in_seconds},
+      {Oban.Plugins.Cron, crontab: if(cron_enabled, do: crontab, else: [])},
+      # Rescue orphaned jobs after 2 hours
+      {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)}
+    ],
+    queues: if(cron_enabled, do: queues, else: []),
+    peer: if(cron_enabled, do: Oban.Peers.Postgres, else: false)
+else
+  config :plausible, Oban,
+    repo: Plausible.Repo,
+    queues: queues,
+    plugins: false
 end
 
 config :plausible, :hcaptcha,
