@@ -242,7 +242,6 @@ defmodule Plausible.Exports do
     %{
       filename.("imported_visitors") => export_visitors_q(site_id, timezone, date_range),
       filename.("imported_sources") => export_sources_q(site_id, timezone, date_range),
-      # NOTE: this query can result in `MEMORY_LIMIT_EXCEEDED` error
       filename.("imported_pages") => export_pages_q(site_id, timezone, date_range),
       filename.("imported_entry_pages") => export_entry_pages_q(site_id, timezone, date_range),
       filename.("imported_exit_pages") => export_exit_pages_q(site_id, timezone, date_range),
@@ -372,39 +371,12 @@ defmodule Plausible.Exports do
   end
 
   defp export_pages_q(site_id, timezone, date_range) do
-    window_q =
-      from e in sampled("events_v2", nil),
-        where: e.site_id == ^site_id,
-        where: [name: "pageview"],
-        select: %{
-          timestamp: selected_as(fragment("toTimeZone(?,?)", e.timestamp, ^timezone), :timestamp),
-          next_timestamp:
-            over(fragment("leadInFrame(toTimeZone(?,?))", e.timestamp, ^timezone),
-              partition_by: e.session_id,
-              order_by: e.timestamp,
-              frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-            ),
-          pathname: e.pathname,
-          hostname: e.hostname,
-          user_id: e.user_id,
-          session_id: e.session_id,
-          _sample_factor: fragment("_sample_factor")
-        }
-
-    window_q =
-      if date_range do
-        from e in window_q,
-          where: selected_as(:timestamp) >= ^date_range.first,
-          where: fragment("toDate(?)", selected_as(:timestamp)) <= ^date_range.last
-      else
-        window_q
-      end
-
-    from e in subquery(window_q),
+    from e in sampled("events_v2", date_range),
+      where: [site_id: ^site_id, name: "pageview"],
       group_by: [selected_as(:date), e.pathname],
       order_by: selected_as(:date),
       select: [
-        selected_as(fragment("toDate(?)", e.timestamp), :date),
+        date(e.timestamp, ^timezone),
         selected_as(fragment("any(?)", e.hostname), :hostname),
         selected_as(e.pathname, :page),
         selected_as(
@@ -412,15 +384,7 @@ defmodule Plausible.Exports do
           :visits
         ),
         visitors(e),
-        selected_as(fragment("toUInt64(round(count()*any(_sample_factor)))"), :pageviews),
-        selected_as(
-          fragment("toUInt64(round(countIf(?=0)*any(_sample_factor)))", e.next_timestamp),
-          :exits
-        ),
-        selected_as(
-          fragment("sum(greatest(?,0))", e.next_timestamp - e.timestamp),
-          :time_on_page
-        )
+        selected_as(fragment("toUInt64(round(count()*any(_sample_factor)))"), :pageviews)
       ]
   end
 
