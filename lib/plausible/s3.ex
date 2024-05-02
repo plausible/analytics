@@ -93,7 +93,7 @@ defmodule Plausible.S3 do
 
   @doc """
   Returns a presigned URL to download the exported Zip archive from S3.
-  The URL expires in 24 hours.
+  The URL expires in 300 seconds, which should be enough for a redirect.
 
   In the current implementation the bucket always goes into the path component.
   """
@@ -101,11 +101,8 @@ defmodule Plausible.S3 do
   def download_url(s3_bucket, s3_path) do
     config = ExAws.Config.new(:s3)
 
-    # ex_aws_s3 doesn't allow expires_in longer than one week
-    one_week = 60 * 60 * 24 * 7
-
     {:ok, download_url} =
-      ExAws.S3.presigned_url(config, :get, s3_bucket, s3_path, expires_in: one_week)
+      ExAws.S3.presigned_url(config, :get, s3_bucket, s3_path, expires_in: 300)
 
     download_url
   end

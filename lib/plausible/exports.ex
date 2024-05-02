@@ -98,7 +98,6 @@ defmodule Plausible.Exports do
           path: Path.t(),
           name: String.t(),
           expires_at: DateTime.t() | nil,
-          download_link: String.t(),
           size: pos_integer
         }
 
@@ -113,14 +112,7 @@ defmodule Plausible.Exports do
       created_on_in_site_tz = Plausible.Timezones.to_date_in_timezone(created_at, timezone)
       name = archive_filename(domain, created_on_in_site_tz)
 
-      download_link =
-        PlausibleWeb.Router.Helpers.site_path(
-          PlausibleWeb.Endpoint,
-          :download_local_export,
-          domain
-        )
-
-      %{path: path, name: name, expires_at: nil, download_link: download_link, size: size}
+      %{path: path, name: name, expires_at: nil, size: size}
     end
   end
 
@@ -175,7 +167,6 @@ defmodule Plausible.Exports do
           path: path,
           name: name,
           expires_at: expires_at,
-          download_link: Plausible.S3.download_url(bucket, path),
           size: String.to_integer(size)
         }
     end

@@ -391,12 +391,7 @@ defmodule PlausibleWeb.Router do
     delete "/:website/settings/forget-imported", SiteController, :forget_imported
     delete "/:website/settings/forget-import/:import_id", SiteController, :forget_import
 
-    on_ee do
-      # exported archives are downloaded from object storage
-    else
-      get "/:website/exported-archive", SiteController, :download_local_export
-    end
-
+    get "/:website/download/export", SiteController, :download_export
     get "/:website/settings/import", SiteController, :csv_import
 
     get "/:domain/export", StatsController, :csv_export
