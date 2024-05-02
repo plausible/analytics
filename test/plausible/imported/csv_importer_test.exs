@@ -518,7 +518,7 @@ defmodule Plausible.Imported.CSVImporterTest do
              } = Repo.get_by!(SiteImport, site_id: imported_site.id)
 
       assert Plausible.Stats.Clickhouse.imported_pageview_count(exported_site) == 0
-      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 12250
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 6325
 
       # compare original and imported data via stats api requests
       results = fn path, params ->
@@ -529,10 +529,6 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       timeseries = fn params ->
         results.("/api/v1/stats/timeseries", params)
-      end
-
-      sorted = fn results, sort_by ->
-        Enum.sort_by(results, &Map.fetch!(&1, sort_by))
       end
 
       common_params = fn site ->
@@ -557,33 +553,7 @@ defmodule Plausible.Imported.CSVImporterTest do
               params
           end
 
-        sorted.(results.("/api/v1/stats/breakdown", params), by)
-      end
-
-      pairwise = fn left, right, f ->
-        assert length(left) == length(right)
-        zipped = Enum.zip(left, right)
-        Enum.each(zipped, fn {left, right} -> f.(left, right) end)
-      end
-
-      assert_field_in_delta = fn left, right, field, delta ->
-        left = Map.fetch!(left, field)
-        right = Map.fetch!(right, field)
-
-        if is_number(left) and is_number(right) do
-          diff = abs(left - right)
-
-          message =
-            "Expected the difference between #{field} #{inspect(left)} and " <>
-              "#{inspect(right)} (#{inspect(diff)}) to be less than or equal to #{inspect(delta)}"
-
-          assert diff <= delta, message
-        else
-          message =
-            "Expected #{field} to be either a number or missing in both #{inspect(left)} and #{inspect(right)}"
-
-          assert left == right, message
-        end
+        Enum.sort_by(results.("/api/v1/stats/breakdown", params), &Map.fetch!(&1, by))
       end
 
       # timeseries
@@ -598,15 +568,112 @@ defmodule Plausible.Imported.CSVImporterTest do
       exported_timeseries = timeseries.(timeseries_params.(exported_site))
       imported_timeseries = timeseries.(timeseries_params.(imported_site))
 
-      pairwise.(exported_timeseries, imported_timeseries, fn exported, imported ->
+      pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
         assert exported["date"] == imported["date"]
-        assert exported["pageviews"] == imported["pageviews"]
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
-        assert_field_in_delta.(exported, imported, "views_per_visit", 5)
-        assert_field_in_delta.(exported, imported, "visit_duration", 27)
-        assert_field_in_delta.(exported, imported, "visitors", 3)
-        assert_field_in_delta.(exported, imported, "visits", 4)
+
+        # NOTE: it will be equal after https://github.com/plausible/analytics/pull/4035 so I'm not adding extra tests for it now
+        assert exported["pageviews"] != imported["pageviews"]
       end)
+
+      # timeseries' views per visit difference is within 5%
+      assert summary(field(exported_timeseries, "views_per_visit")) == [
+               2.98,
+               2.995,
+               3.065,
+               3.135,
+               3.15
+             ]
+
+      assert summary(field(imported_timeseries, "views_per_visit")) == [
+               2.98,
+               3.0175,
+               3.08,
+               3.1375,
+               3.16
+             ]
+
+      assert summary(
+               pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
+                 abs(1 - imported["views_per_visit"] / exported["views_per_visit"])
+               end)
+             ) == [
+               0.0,
+               0.0023809523809523725,
+               0.017561742481870313,
+               0.0347949946751864,
+               0.043333333333333224
+             ]
+
+      # timeseries' bounce rate difference is within 3%
+      assert summary(field(exported_timeseries, "bounce_rate")) == [36, 37.5, 39, 41.25, 45]
+      assert summary(field(imported_timeseries, "bounce_rate")) == [37, 37.75, 38.5, 40.5, 45]
+
+      assert summary(
+               pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
+                 abs(1 - exported["bounce_rate"] / imported["bounce_rate"])
+               end)
+             ) == [0, 0, 0.012820512820512775, 0.025987525987525906, 0.027027027027026973]
+
+      # timeseries' visit duration difference is within 4%
+      assert summary(field(exported_timeseries, "visit_duration")) == [
+               457,
+               549.25,
+               588,
+               610.5,
+               654
+             ]
+
+      assert summary(field(imported_timeseries, "visit_duration")) == [
+               449.9,
+               549.875,
+               589.9000000000001,
+               617.55,
+               680.4
+             ]
+
+      assert summary(
+               pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
+                 abs(1 - exported["visit_duration"] / imported["visit_duration"])
+               end)
+             ) == [
+               0.015781284729940115,
+               0.020406226532279248,
+               0.024886105857288232,
+               0.030568429802981162,
+               0.03880070546737213
+             ]
+
+      # timeseries' visitors difference is within 3%
+      assert summary(field(exported_timeseries, "visitors")) == [80, 88.25, 93.5, 197, 500]
+      assert summary(field(imported_timeseries, "visitors")) == [78, 87, 92, 194.75, 497]
+
+      assert summary(
+               pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
+                 abs(1 - exported["visitors"] / imported["visitors"])
+               end)
+             ) == [
+               0.006036217303822866,
+               0.00984238765928902,
+               0.01619385342789592,
+               0.022367703218766966,
+               0.02564102564102555
+             ]
+
+      # timeseries' visits difference is within 2%
+      assert summary(field(exported_timeseries, "visits")) == [250, 289.75, 314.5, 546.5, 1208]
+      assert summary(field(imported_timeseries, "visits")) == [253, 293.5, 315, 543.25, 1204]
+
+      assert summary(
+               pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
+                 abs(1 - exported["visits"] / imported["visits"])
+               end)
+             ) == [
+               0.0033222591362125353,
+               0.007796509056499035,
+               0.010572816603238,
+               0.012150609622639114,
+               0.013029315960912058
+             ]
 
       # pages
       pages_params = fn site ->
@@ -619,28 +686,101 @@ defmodule Plausible.Imported.CSVImporterTest do
       exported_pages = breakdown.(pages_params.(exported_site), "page")
       imported_pages = breakdown.(pages_params.(imported_site), "page")
 
-      pairwise.(exported_pages, imported_pages, fn exported, imported ->
+      pairwise(exported_pages, imported_pages, fn exported, imported ->
         assert exported["page"] == imported["page"]
         assert exported["pageviews"] == imported["pageviews"]
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
-        assert imported["time_on_page"] == 0.0
-        assert_field_in_delta.(exported, imported, "visit_duration", 1)
-        assert_field_in_delta.(exported, imported, "visitors", 230)
-        assert_field_in_delta.(exported, imported, "visits", 9)
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+
+        # time on page is not being exported/imported right now
+        assert imported["time_on_page"] == 0
       end)
+
+      # page breakdown's visit_duration difference is within 1%
+      assert summary(field(exported_pages, "visit_duration")) == [0, 0, 25, 217.5, 743]
+      assert summary(field(imported_pages, "visit_duration")) == [0, 0, 25, 217.55, 742.8]
+
+      assert summary(
+               pairwise(exported_pages, imported_pages, fn exported, imported ->
+                 e = exported["visit_duration"]
+                 i = imported["visit_duration"]
+
+                 if is_number(e) and is_number(i) and i > 0 do
+                   abs(1 - e / i)
+                 else
+                   # both nil or both zero
+                   assert e == i
+                   _no_diff = 0
+                 end
+               end)
+             ) == [0, 0, 0, 0, 0.002375296912114022]
+
+      # NOTE: page breakdown's visitors difference is up to almost 37%
+      assert summary(field(exported_pages, "visitors")) == [1, 1, 2, 2.5, 396]
+      assert summary(field(imported_pages, "visitors")) == [1, 1, 2, 2.5, 626]
+
+      assert summary(
+               pairwise(exported_pages, imported_pages, fn exported, imported ->
+                 e = exported["visitors"]
+                 i = imported["visitors"]
+
+                 # only consider non tiny readings
+                 if abs(e - i) > 5, do: abs(1 - e / i), else: 0
+               end)
+             ) == [0, 0, 0, 0, 0.36741214057507987]
+
+      # page breakdown's visits difference is within 1%
+      assert summary(field(exported_pages, "visits")) == [1, 1, 2, 3, 1785]
+      assert summary(field(imported_pages, "visits")) == [1, 1, 2, 2.5, 1794]
+
+      assert summary(
+               pairwise(exported_pages, imported_pages, fn exported, imported ->
+                 e = exported["visits"]
+                 i = imported["visits"]
+
+                 # only consider non tiny readings
+                 if abs(e - i) > 5, do: abs(1 - e / i), else: 0
+               end)
+             ) == [0, 0, 0, 0, 0.0050167224080267525]
 
       # sources
       exported_sources = breakdown.(exported_site, "source")
       imported_sources = breakdown.(imported_site, "source")
 
-      pairwise.(exported_sources, imported_sources, fn exported, imported ->
+      pairwise(exported_sources, imported_sources, fn exported, imported ->
         assert exported["source"] == imported["source"]
-        assert_field_in_delta.(exported, imported, "pageviews", 5925)
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
-        assert_field_in_delta.(exported, imported, "visit_duration", 1)
-        assert_field_in_delta.(exported, imported, "visitors", 261)
-        assert_field_in_delta.(exported, imported, "visits", 1)
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+        assert exported["visits"] == imported["visits"]
+        assert exported["pageviews"] == imported["pageviews"]
       end)
+
+      # source breakdown's visit_duration difference is within 1%
+      assert summary(field(exported_sources, "visit_duration")) == [0, 0, 0, 27, 534]
+      assert summary(field(imported_sources, "visit_duration")) == [0, 0, 0, 27, 534.5]
+
+      assert summary(
+               pairwise(exported_sources, imported_sources, fn exported, imported ->
+                 e = exported["visit_duration"]
+                 i = imported["visit_duration"]
+
+                 if is_number(e) and is_number(i) and i > 0 do
+                   abs(1 - e / i)
+                 else
+                   # both nil or both 0
+                   assert e == i
+                   _no_diff = 0
+                 end
+               end)
+             ) == [0, 0, 0, 0, 0.001335113484646211]
+
+      # NOTE: source breakdown's visitors difference is up to almost 40%
+      assert summary(field(exported_sources, "visitors")) == [1, 1, 1, 2, 451]
+      assert summary(field(imported_sources, "visitors")) == [1, 1, 1, 2, 712]
+
+      assert Enum.max(
+               pairwise(exported_sources, imported_sources, fn exported, imported ->
+                 abs(1 - exported["visitors"] / imported["visitors"])
+               end)
+             ) == 0.3665730337078652
 
       # utm mediums
       assert breakdown.(exported_site, "utm_medium") == breakdown.(imported_site, "utm_medium")
@@ -649,79 +789,278 @@ defmodule Plausible.Imported.CSVImporterTest do
       exported_entry_pages = breakdown.(exported_site, "entry_page")
       imported_entry_pages = breakdown.(imported_site, "entry_page")
 
-      pairwise.(exported_entry_pages, imported_entry_pages, fn exported, imported ->
+      pairwise(exported_entry_pages, imported_entry_pages, fn exported, imported ->
         assert exported["entry_page"] == imported["entry_page"]
-        assert_field_in_delta.(exported, imported, "pageviews", 6571)
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
-        assert_field_in_delta.(exported, imported, "visit_duration", 1)
-        assert_field_in_delta.(exported, imported, "visitors", 166)
-        assert_field_in_delta.(exported, imported, "visits", 1)
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+        assert exported["visits"] == imported["visits"]
+        assert exported["pageviews"] == imported["pageviews"]
       end)
+
+      # entry page breakdown's visit_duration difference is within 1%
+      assert summary(field(exported_entry_pages, "visit_duration")) == [0, 0, 25, 217.5, 743]
+      assert summary(field(imported_entry_pages, "visit_duration")) == [0, 0, 25, 217.55, 742.8]
+
+      assert Enum.max(
+               pairwise(exported_entry_pages, imported_entry_pages, fn exported, imported ->
+                 e = exported["visit_duration"]
+                 i = imported["visit_duration"]
+
+                 if is_number(e) and is_number(i) and i > 0 do
+                   abs(1 - e / i)
+                 else
+                   # both nil or both 0
+                   assert e == i
+                   _no_diff = 0
+                 end
+               end)
+             ) == 0.002375296912114022
+
+      # NOTE: entry page breakdown's visitors difference is up to almost 50%
+      assert summary(field(exported_entry_pages, "visitors")) == [1, 1, 1, 2, 310]
+      assert summary(field(imported_entry_pages, "visitors")) == [1, 1, 1, 2, 476]
+
+      assert Enum.max(
+               pairwise(exported_entry_pages, imported_entry_pages, fn exported, imported ->
+                 abs(1 - exported["visitors"] / imported["visitors"])
+               end)
+             ) == 0.5
 
       # cities
       exported_cities = breakdown.(exported_site, "city")
       imported_cities = breakdown.(imported_site, "city")
 
-      pairwise.(exported_cities, imported_cities, fn exported, imported ->
+      pairwise(exported_cities, imported_cities, fn exported, imported ->
         assert exported["city"] == imported["city"]
-        assert_field_in_delta.(exported, imported, "pageviews", 349)
-        assert_field_in_delta.(exported, imported, "bounce_rate", 5)
-        assert_field_in_delta.(exported, imported, "visit_duration", 115)
-        assert_field_in_delta.(exported, imported, "visitors", 7)
-        assert_field_in_delta.(exported, imported, "visits", 1)
+        assert exported["pageviews"] == imported["pageviews"]
       end)
+
+      # city breakdown's bounce_rate difference is within 5
+      assert summary(field(exported_cities, "bounce_rate")) == [0, 17, 50, 100, 100]
+      assert summary(field(imported_cities, "bounce_rate")) == [0, 17, 50, 100, 100]
+
+      pairwise(exported_cities, imported_cities, fn exported, imported ->
+        e = exported["bounce_rate"]
+        i = imported["bounce_rate"]
+
+        if is_number(e) and is_number(i) do
+          assert_in_delta e, i, 5
+        else
+          assert e == i
+        end
+      end)
+
+      # city breakdown's visits difference is within 1
+      assert summary(field(exported_cities, "visits")) == [1, 1, 3, 7, 63]
+      assert summary(field(imported_cities, "visits")) == [1, 1, 3, 7, 63]
+
+      pairwise(exported_cities, imported_cities, fn exported, imported ->
+        e = exported["visits"]
+        i = imported["visits"]
+
+        if is_number(e) and is_number(i) do
+          assert_in_delta e, i, 1
+        else
+          assert e == i
+        end
+      end)
+
+      # NOTE: city breakdown's visit_duration difference is up to almost 240%
+      assert summary(field(exported_cities, "visit_duration")) == [0, 0, 49, 359, 7324]
+
+      assert summary(field(imported_cities, "visit_duration")) == [
+               0,
+               0,
+               49.05,
+               358.70000000000005,
+               7324
+             ]
+
+      assert pairwise(exported_cities, imported_cities, fn exported, imported ->
+               e = exported["visit_duration"]
+               i = imported["visit_duration"]
+
+               if is_number(e) and is_number(i) do
+                 assert_in_delta e, i, 5
+               else
+                 assert e == i
+               end
+             end)
+
+      # NOTE: city breakdown's visitors difference is up to almost 70%
+      assert summary(field(exported_cities, "visitors")) == [1, 1, 1, 1, 7]
+      assert summary(field(imported_cities, "visitors")) == [1, 1, 1, 3, 13]
+
+      assert Enum.max(
+               pairwise(exported_cities, imported_cities, fn exported, imported ->
+                 e = exported["visitors"]
+                 i = imported["visitors"]
+
+                 # only consider non tiny readings
+                 if abs(e - i) > 3, do: abs(1 - e / i), else: 0
+               end)
+             ) == 0.6666666666666667
 
       # devices
       exported_devices = breakdown.(exported_site, "device")
       imported_devices = breakdown.(imported_site, "device")
 
-      pairwise.(exported_devices, imported_devices, fn exported, imported ->
+      pairwise(exported_devices, imported_devices, fn exported, imported ->
         assert exported["device"] == imported["device"]
-        assert_field_in_delta.(exported, imported, "pageviews", 5918)
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
-        assert_field_in_delta.(exported, imported, "visit_duration", 1)
-        assert_field_in_delta.(exported, imported, "visitors", 174)
-        assert_field_in_delta.(exported, imported, "visits", 1)
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+        assert exported["visits"] == imported["visits"]
+        assert exported["pageviews"] == imported["pageviews"]
       end)
+
+      # device breakdown's visit_duration difference is within 1%
+      assert summary(field(exported_devices, "visit_duration")) == [
+               470,
+               492.75,
+               515.5,
+               538.25,
+               561
+             ]
+
+      assert summary(field(imported_devices, "visit_duration")) == [
+               469.9,
+               492.575,
+               515.25,
+               537.925,
+               560.6
+             ]
+
+      assert Enum.max(
+               pairwise(exported_devices, imported_devices, fn exported, imported ->
+                 abs(1 - exported["visit_duration"] / imported["visit_duration"])
+               end)
+             ) == 0.0007135212272564306
+
+      # NOTE: device breakdown's visitors difference is up to almost 40%
+      assert summary(field(exported_devices, "visitors")) == [216, 232.25, 248.5, 264.75, 281]
+      assert summary(field(imported_devices, "visitors")) == [304, 341.75, 379.5, 417.25, 455]
+
+      assert Enum.max(
+               pairwise(exported_devices, imported_devices, fn exported, imported ->
+                 abs(1 - exported["visitors"] / imported["visitors"])
+               end)
+             ) == 0.3824175824175824
 
       # browsers
       exported_browsers = breakdown.(exported_site, "browser")
       imported_browsers = breakdown.(imported_site, "browser")
 
-      pairwise.(exported_browsers, imported_browsers, fn exported, imported ->
+      pairwise(exported_browsers, imported_browsers, fn exported, imported ->
         assert exported["browser"] == imported["browser"]
-        assert_field_in_delta.(exported, imported, "pageviews", 5652)
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
-        assert_field_in_delta.(exported, imported, "visit_duration", 1)
-        assert_field_in_delta.(exported, imported, "visitors", 148)
-        assert_field_in_delta.(exported, imported, "visits", 1)
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+        assert exported["visits"] == imported["visits"]
+        assert exported["pageviews"] == imported["pageviews"]
       end)
+
+      # browser breakdown's visit_duration difference is within 1%
+      assert summary(field(exported_browsers, "visit_duration")) == [2, 144.5, 250, 530.5, 565]
+      assert summary(field(imported_browsers, "visit_duration")) == [2, 144.55, 249.6, 530.3, 565]
+
+      assert Enum.max(
+               pairwise(exported_browsers, imported_browsers, fn exported, imported ->
+                 abs(1 - exported["visit_duration"] / imported["visit_duration"])
+               end)
+             ) == 0.0016025641025640969
+
+      # NOTE: browser breakdown's visitors difference is up to almost 70%
+      assert summary(field(exported_browsers, "visitors")) == [1, 1, 10, 105, 274]
+      assert summary(field(imported_browsers, "visitors")) == [1, 2, 18, 157, 422]
+
+      assert Enum.max(
+               pairwise(exported_browsers, imported_browsers, fn exported, imported ->
+                 abs(1 - exported["visitors"] / imported["visitors"])
+               end)
+             ) == 0.6666666666666667
 
       # os
       exported_os = breakdown.(exported_site, "os")
       imported_os = breakdown.(imported_site, "os")
 
-      pairwise.(exported_os, imported_os, fn exported, imported ->
+      pairwise(exported_os, imported_os, fn exported, imported ->
         assert exported["os"] == imported["os"]
-        assert_field_in_delta.(exported, imported, "pageviews", 5267)
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
-        assert_field_in_delta.(exported, imported, "visit_duration", 1)
-        assert_field_in_delta.(exported, imported, "visitors", 93)
-        assert_field_in_delta.(exported, imported, "visits", 1)
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+        assert exported["visits"] == imported["visits"]
+        assert exported["pageviews"] == imported["pageviews"]
       end)
+
+      # os breakdown's visit_duration difference is within 1%
+      assert summary(field(exported_os, "visit_duration")) == [453, 477, 594, 922.5, 1093]
+
+      assert summary(field(imported_os, "visit_duration")) == [
+               452.9,
+               476.95,
+               593.5,
+               922.65,
+               1093.3
+             ]
+
+      assert Enum.max(
+               pairwise(exported_os, imported_os, fn exported, imported ->
+                 abs(1 - exported["visit_duration"] / imported["visit_duration"])
+               end)
+             ) == 0.0008424599831506896
+
+      # NOTE: os breakdown's visitors difference is between 20% and 60%
+      assert summary(field(exported_os, "visitors")) == [2, 9.5, 51, 130, 165]
+      assert summary(field(imported_os, "visitors")) == [5, 13, 70, 200, 258]
+
+      assert summary(
+               pairwise(exported_os, imported_os, fn exported, imported ->
+                 abs(1 - exported["visitors"] / imported["visitors"])
+               end)
+             ) == [
+               0.19999999999999996,
+               0.28315018315018314,
+               0.36046511627906974,
+               0.463855421686747,
+               0.6
+             ]
 
       # os versions
       exported_os_versions = breakdown.(exported_site, "os_version")
       imported_os_versions = breakdown.(imported_site, "os_version")
 
-      pairwise.(exported_os_versions, imported_os_versions, fn exported, imported ->
+      pairwise(exported_os_versions, imported_os_versions, fn exported, imported ->
         assert exported["os_version"] == imported["os_version"]
-        assert_field_in_delta.(exported, imported, "pageviews", 5267)
-        assert_field_in_delta.(exported, imported, "bounce_rate", 1)
-        assert_field_in_delta.(exported, imported, "visit_duration", 1)
-        assert_field_in_delta.(exported, imported, "visitors", 93)
-        assert_field_in_delta.(exported, imported, "visits", 1)
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+        assert exported["visits"] == imported["visits"]
+        assert exported["pageviews"] == imported["pageviews"]
       end)
+
+      # os version breakdown's visit_duration difference is within 2
+      assert summary(field(exported_os_versions, "visit_duration")) == [0, 2, 274.5, 619, 1907]
+
+      assert summary(field(imported_os_versions, "visit_duration")) == [
+               0,
+               1.925,
+               274.45,
+               618.625,
+               1907.3
+             ]
+
+      assert pairwise(exported_os_versions, imported_os_versions, fn exported, imported ->
+               e = exported["visit_duration"]
+               i = imported["visit_duration"]
+
+               if is_number(e) and is_number(i) do
+                 assert_in_delta e, i, 2
+               else
+                 assert e == i
+               end
+             end)
+
+      # NOTE: os version breakdown's visitors difference is up to almost 80%
+      assert summary(field(exported_os_versions, "visitors")) == [1, 1, 3, 10.75, 165]
+      assert summary(field(imported_os_versions, "visitors")) == [1, 1.75, 4.5, 14.75, 258]
+
+      assert summary(
+               pairwise(exported_os_versions, imported_os_versions, fn exported, imported ->
+                 abs(1 - exported["visitors"] / imported["visitors"])
+               end)
+             ) == [0, 0, 0.19090909090909086, 0.3401162790697675, 0.75]
     end
   end
 
@@ -747,5 +1086,37 @@ defmodule Plausible.Imported.CSVImporterTest do
     else
       :ok
     end
+  end
+
+  defp pairwise(left, right, f) do
+    assert length(left) == length(right)
+    zipped = Enum.zip(left, right)
+    Enum.map(zipped, fn {left, right} -> f.(left, right) end)
+  end
+
+  defp field(results, field) do
+    results
+    |> Enum.map(&Map.fetch!(&1, field))
+    |> Enum.filter(&is_number/1)
+  end
+
+  defp summary(values) do
+    values = Enum.sort(values)
+
+    percentile = fn n ->
+      r = n / 100.0 * (length(values) - 1)
+      f = :erlang.trunc(r)
+      lower = Enum.at(values, f)
+      upper = Enum.at(values, f + 1)
+      lower + (upper - lower) * (r - f)
+    end
+
+    [
+      List.first(values),
+      percentile.(25),
+      percentile.(50),
+      percentile.(75),
+      List.last(values)
+    ]
   end
 end
