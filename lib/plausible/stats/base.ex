@@ -150,25 +150,10 @@ defmodule Plausible.Stats.Base do
     |> filter_by_visit_props(Filters.visit_props(), query)
   end
 
-  @api_prop_name_to_db %{
-    "source" => "referrer_source",
-    "device" => "screen_size",
-    "screen" => "screen_size",
-    "os" => "operating_system",
-    "os_version" => "operating_system_version",
-    "country" => "country_code",
-    "region" => "subdivision1_code",
-    "city" => "city_geoname_id",
-    "entry_page_hostname" => "hostname"
-  }
-
   defp filter_by_visit_props(q, visit_props, query) do
     Enum.reduce(visit_props, q, fn prop_name, sessions_q ->
       filter_key = "visit:" <> prop_name
-
-      db_field =
-        Map.get(@api_prop_name_to_db, prop_name, prop_name)
-        |> String.to_existing_atom()
+      db_field = String.to_existing_atom(prop_name)
 
       from(s in sessions_q,
         where: ^dynamic_filter_condition(query, filter_key, db_field)
@@ -431,7 +416,7 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  defp db_field_val(:referrer_source, @no_ref), do: ""
+  defp db_field_val(:source, @no_ref), do: ""
   defp db_field_val(:referrer, @no_ref), do: ""
   defp db_field_val(:utm_medium, @no_ref), do: ""
   defp db_field_val(:utm_source, @no_ref), do: ""
