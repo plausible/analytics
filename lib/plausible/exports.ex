@@ -326,16 +326,47 @@ defmodule Plausible.Exports do
   end
 
   defp export_visitors_q(site_id, timezone, date_range) do
-    from s in sampled("sessions_v2", date_range),
-      where: s.site_id == ^site_id,
-      group_by: selected_as(:date),
+    visitors_sessions_q =
+      from s in sampled("sessions_v2", date_range),
+        where: s.site_id == ^site_id,
+        group_by: selected_as(:date),
+        select: %{
+          date: date(s.start, ^timezone),
+          bounces: bounces(s),
+          visits: visits(s),
+          visit_duration: visit_duration(s),
+          visitors: visitors(s)
+        }
+
+    visitors_events_q =
+      from e in sampled("events_v2", date_range),
+        where: e.site_id == ^site_id,
+        group_by: selected_as(:date),
+        select: %{
+          date: date(e.timestamp, ^timezone),
+          pageviews:
+            selected_as(
+              fragment("toUInt64(round(countIf(?='pageview')*any(_sample_factor)))", e.name),
+              :pageviews
+            )
+        }
+
+    visitors_q =
+      "e"
+      |> with_cte("e", as: ^visitors_events_q)
+      |> with_cte("s", as: ^visitors_sessions_q)
+
+    from e in visitors_q,
+      full_join: s in "s",
+      on: e.date == s.date,
+      order_by: selected_as(:date),
       select: [
-        date(s.start, ^timezone),
-        visitors(s),
-        pageviews(s),
-        bounces(s),
-        visits(s),
-        visit_duration(s)
+        selected_as(fragment("greatest(?,?)", s.date, e.date), :date),
+        s.visitors,
+        e.pageviews,
+        s.bounces,
+        s.visits,
+        s.visit_duration
       ]
   end
 
