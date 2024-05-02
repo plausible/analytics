@@ -67,7 +67,7 @@ defmodule Plausible.Stats.Filters do
   def parse(filters) when is_binary(filters) do
     case Jason.decode(filters) do
       {:ok, filters} when is_map(filters) -> DashboardFilterParser.parse_and_prefix(filters)
-      {:ok, _} -> %{}
+      {:ok, _} -> []
       {:error, err} -> StatsAPIFilterParser.parse_filter_expression(err.data)
     end
   end
