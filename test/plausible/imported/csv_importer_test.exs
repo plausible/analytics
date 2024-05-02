@@ -519,7 +519,7 @@ defmodule Plausible.Imported.CSVImporterTest do
              } = Repo.get_by!(SiteImport, site_id: imported_site.id)
 
       assert Plausible.Stats.Clickhouse.imported_pageview_count(exported_site) == 0
-      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 6325
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 12250
 
       # compare original and imported data via stats api requests
       results = fn path, params ->
@@ -571,12 +571,10 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
         assert exported["date"] == imported["date"]
-
-        # NOTE: it will be equal after https://github.com/plausible/analytics/pull/4035 so I'm not adding extra tests for it now
-        assert exported["pageviews"] != imported["pageviews"]
+        assert exported["pageviews"] == imported["pageviews"]
       end)
 
-      # timeseries' views per visit difference is within 5%
+      # NOTE: timeseries' views per visit difference is up to 160%
       assert summary(field(exported_timeseries, "views_per_visit")) == [
                2.98,
                2.995,
@@ -586,11 +584,11 @@ defmodule Plausible.Imported.CSVImporterTest do
              ]
 
       assert summary(field(imported_timeseries, "views_per_visit")) == [
-               2.98,
-               3.0175,
-               3.08,
-               3.1375,
-               3.16
+               4.53,
+               6.3225,
+               7.390000000000001,
+               7.9325,
+               8.15
              ]
 
       assert summary(
@@ -598,11 +596,11 @@ defmodule Plausible.Imported.CSVImporterTest do
                  abs(1 - imported["views_per_visit"] / exported["views_per_visit"])
                end)
              ) == [
-               0.0,
-               0.0023809523809523725,
-               0.017561742481870313,
-               0.0347949946751864,
-               0.043333333333333224
+               0.5201342281879195,
+               1.11003355704698,
+               1.4089243876464324,
+               1.5302119782950454,
+               1.5873015873015874
              ]
 
       # timeseries' bounce rate difference is within 3%
