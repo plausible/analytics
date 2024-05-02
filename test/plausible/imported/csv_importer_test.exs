@@ -520,7 +520,7 @@ defmodule Plausible.Imported.CSVImporterTest do
              } = Repo.get_by!(SiteImport, site_id: imported_site.id)
 
       assert Plausible.Stats.Clickhouse.imported_pageview_count(exported_site) == 0
-      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 12250
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 12_250
 
       # compare original and imported data via stats api requests
       results = fn path, params ->
