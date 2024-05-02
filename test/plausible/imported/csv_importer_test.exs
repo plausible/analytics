@@ -805,24 +805,10 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       pairwise(exported_cities, imported_cities, fn exported, imported ->
         assert exported["city"] == imported["city"]
+        assert exported["bounce_rate"] == imported["bounce_rate"]
         assert exported["pageviews"] == imported["pageviews"]
         assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
         assert_in_delta exported["visits"], imported["visits"], 1
-      end)
-
-      # city breakdown's bounce_rate difference is within 5
-      assert summary(field(exported_cities, "bounce_rate")) == [0, 17, 50, 100, 100]
-      assert summary(field(imported_cities, "bounce_rate")) == [0, 17, 50, 100, 100]
-
-      pairwise(exported_cities, imported_cities, fn exported, imported ->
-        e = exported["bounce_rate"]
-        i = imported["bounce_rate"]
-
-        if is_number(e) and is_number(i) do
-          assert_in_delta e, i, 1
-        else
-          assert e == i
-        end
       end)
 
       # NOTE: city breakdown's visitors relative difference is up to almost 70%,
