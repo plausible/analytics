@@ -103,7 +103,7 @@ defmodule Plausible.ClickhouseRepoTest do
       end)
 
     assert log =~
-             ~s/Failed to include log comment: %{domain: nil, label: "log_all", metadata: {:error, :skip_me}, site_id: nil, url: nil, user_id: nil}/
+             ~s/Failed to include log comment: %{label: "log_all", domain: nil, metadata: {:error, :skip_me}, url: nil, site_id: nil, user_id: nil}/
   end
 
   defp flush_clickhouse_logs(), do: Plausible.IngestRepo.query!("SYSTEM FLUSH LOGS")
