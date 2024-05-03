@@ -292,14 +292,15 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
         %{name: name, link_url: link_url, visitors: visitors, events: events}
       end)
 
+    # The 'click' event is overridden with 'Outbound Link: Click'
     assert totals == [
-             %{name: "click", events: 17, visitors: 17},
+             %{name: "Outbound Link: Click", events: 17, visitors: 17},
              %{name: "view_search_results", events: 30, visitors: 11},
              %{name: "scroll", events: 2130, visitors: 1513}
            ]
 
     assert Enum.all?(breakdown_by_url, fn entry ->
-             if entry.name == "click" do
+             if entry.name == "Outbound Link: Click" do
                entry.link_url != ""
              else
                entry.link_url == ""
@@ -307,7 +308,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
            end)
 
     assert %{
-             name: "click",
+             name: "Outbound Link: Click",
              events: 6,
              visitors: 6,
              link_url: "https://www.facebook.com/kuhinjskeprice"
