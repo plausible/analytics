@@ -421,8 +421,6 @@ defmodule Plausible.Imported.CSVImporterTest do
       exported_site = insert(:site, members: [user])
       imported_site = insert(:site, members: [user])
 
-      experimental_reduced_joins? = FunWithFlags.enabled?(:experimental_reduced_joins)
-
       process_csv = fn path ->
         [header | rows] = NimbleCSV.RFC4180.parse_string(File.read!(path), skip_headers: false)
 
@@ -443,10 +441,37 @@ defmodule Plausible.Imported.CSVImporterTest do
         process_csv.("fixture/plausible_io_events_v2_2024_03_01_2024_03_31_500users_dump.csv")
       ])
 
+      Plausible.IngestRepo.query!(
+        "DELETE FROM events_v2 WHERE session_id IN {session_ids:Array(UInt64)}",
+        %{
+          "session_ids" => [
+            # these sessions were extended beyond the timeframe of the datasert
+            5_041_567_837_619_101_952,
+            9_941_822_201_751_237_677,
+            11_179_857_592_511_640_054,
+            7_914_293_758_317_123_167,
+            2_843_014_593_483_252_784,
+            16_120_773_483_696_094_616,
+            1_082_359_377_393_852_532,
+            9_083_812_924_395_524_907,
+            564_929_186_898_220_874,
+            15_890_328_459_878_810_482,
+            # this session was collapsed incorectly
+            1_966_893_030_056_597_902
+          ]
+        }
+      )
+
       Plausible.IngestRepo.query!([
         "insert into sessions_v2 format CSVWithNames\n",
         process_csv.("fixture/plausible_io_sessions_v2_2024_03_01_2024_03_31_500users_dump.csv")
       ])
+
+      Plausible.IngestRepo.query!(
+        "DELETE FROM sessions_v2 WHERE session_id IN {session_ids:Array(UInt64)}",
+        # this session was collapsed incorectly
+        %{"session_ids" => [1_966_893_030_056_597_902]}
+      )
 
       # export archive to s3
       on_ee do
@@ -520,7 +545,7 @@ defmodule Plausible.Imported.CSVImporterTest do
              } = Repo.get_by!(SiteImport, site_id: imported_site.id)
 
       assert Plausible.Stats.Clickhouse.imported_pageview_count(exported_site) == 0
-      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 12_250
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 6298
 
       # compare original and imported data via stats api requests
       results = fn path, params ->
@@ -575,21 +600,21 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert exported["pageviews"] == imported["pageviews"]
       end)
 
-      # NOTE: timeseries' views per visit difference is up to 160%
+      # timeseries' views per visit difference is within 2%
       assert summary(field(exported_timeseries, "views_per_visit")) == [
-               2.98,
-               2.995,
+               2.96,
+               2.99,
                3.065,
                3.135,
                3.15
              ]
 
       assert summary(field(imported_timeseries, "views_per_visit")) == [
-               4.53,
-               6.3225,
-               7.390000000000001,
-               7.9325,
-               8.15
+               2.96,
+               3.02,
+               3.075,
+               3.1149999999999998,
+               3.13
              ]
 
       assert summary(
@@ -597,11 +622,11 @@ defmodule Plausible.Imported.CSVImporterTest do
                  abs(1 - imported["views_per_visit"] / exported["views_per_visit"])
                end)
              ) == [
-               0.5201342281879195,
-               1.11003355704698,
-               1.4089243876464324,
-               1.5302119782950454,
-               1.5873015873015874
+               0.0,
+               0.004761904761904745,
+               0.006369491353516887,
+               0.00812566560170394,
+               0.01333333333333342
              ]
 
       # timeseries' bounce rate difference is within 3%
@@ -616,16 +641,16 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # timeseries' visit duration difference is within 4%
       assert summary(field(exported_timeseries, "visit_duration")) == [
-               457,
-               549.25,
-               588,
+               451,
+               547.75,
+               588.0,
                610.5,
                654
              ]
 
       assert summary(field(imported_timeseries, "visit_duration")) == [
-               449.9,
-               549.875,
+               443.3,
+               548.225,
                589.9000000000001,
                617.55,
                680.4
@@ -636,21 +661,15 @@ defmodule Plausible.Imported.CSVImporterTest do
                  abs(1 - exported["visit_duration"] / imported["visit_duration"])
                end)
              ) == [
-               0.015781284729940115,
-               0.020406226532279248,
+               0.017369727047146455,
+               0.020803337111580833,
                0.024886105857288232,
                0.030568429802981162,
                0.03880070546737213
              ]
 
-      # timeseries' visitors difference is within 3%
-      # with experimental_reduced_joins, it's within 2%
-      assert summary(field(exported_timeseries, "visitors")) ==
-               if(experimental_reduced_joins?,
-                 do: [78, 86.25, 91.5, 194.75, 497],
-                 else: [80, 88.25, 93.5, 197, 500]
-               )
-
+      # timeseries' visitors difference is within 2%
+      assert summary(field(exported_timeseries, "visitors")) == [78, 86.25, 91.5, 194.75, 497]
       assert summary(field(imported_timeseries, "visitors")) == [78, 87, 92, 194.75, 497]
 
       assert summary(
@@ -658,16 +677,7 @@ defmodule Plausible.Imported.CSVImporterTest do
                  abs(1 - exported["visitors"] / imported["visitors"])
                end)
              ) ==
-               if(experimental_reduced_joins?,
-                 do: [0, 0, 0, 0.002777777777777768, 0.011111111111111072],
-                 else: [
-                   0.006036217303822866,
-                   0.00984238765928902,
-                   0.01619385342789592,
-                   0.022367703218766966,
-                   0.02564102564102555
-                 ]
-               )
+               [0, 0, 0, 0.002777777777777768, 0.011111111111111072]
 
       # timeseries' visits difference is within 2%
       assert summary(field(exported_timeseries, "visits")) == [250, 289.75, 314.5, 546.5, 1208]
@@ -725,8 +735,8 @@ defmodule Plausible.Imported.CSVImporterTest do
              ) == [0, 0, 0, 0, 0.002375296912114022]
 
       # NOTE: page breakdown's visitors difference is up to almost 37%
-      assert summary(field(exported_pages, "visitors")) == [1, 1, 2, 2.5, 396]
-      assert summary(field(imported_pages, "visitors")) == [1, 1, 2, 2.5, 626]
+      assert summary(field(exported_pages, "visitors")) == [1, 1, 2, 2.5, 393]
+      assert summary(field(imported_pages, "visitors")) == [1, 1, 2, 2.5, 617]
 
       assert summary(
                pairwise(exported_pages, imported_pages, fn exported, imported ->
@@ -734,13 +744,13 @@ defmodule Plausible.Imported.CSVImporterTest do
                  i = imported["visitors"]
 
                  # only consider non tiny readings
-                 if abs(e - i) > 5, do: abs(1 - e / i), else: 0
+                 if e > 5, do: abs(1 - e / i), else: 0
                end)
-             ) == [0, 0, 0, 0, 0.36741214057507987]
+             ) == [0, 0, 0, 0, 0.36304700162074555]
 
       # page breakdown's visits difference is within 1% for non-tiny values
-      assert summary(field(exported_pages, "visits")) == [1, 1, 2, 3, 1785]
-      assert summary(field(imported_pages, "visits")) == [1, 1, 2, 2.5, 1794]
+      assert summary(field(exported_pages, "visits")) == [1, 1, 2, 3, 1774]
+      assert summary(field(imported_pages, "visits")) == [1, 1, 2, 2.5, 1777]
 
       assert summary(
                pairwise(exported_pages, imported_pages, fn exported, imported ->
@@ -748,9 +758,9 @@ defmodule Plausible.Imported.CSVImporterTest do
                  i = imported["visits"]
 
                  # only consider non tiny readings
-                 if abs(e - i) > 5, do: abs(1 - e / i), else: 0
+                 if e > 4, do: abs(1 - e / i), else: 0
                end)
-             ) == [0, 0, 0, 0, 0.0050167224080267525]
+             ) == [0, 0, 0, 0, 0.01666666666666672]
 
       # sources
       exported_sources = breakdown.(exported_site, "source")
@@ -811,7 +821,7 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert_in_delta exported["visits"], imported["visits"], 1
       end)
 
-      # NOTE: city breakdown's visitors relative difference is up to almost 70%,
+      # NOTE: city breakdown's visitors relative difference is up to 60%,
       #       but the absolute difference is small
       assert summary(field(exported_cities, "visitors")) == [1, 1, 1, 1, 7]
       assert summary(field(imported_cities, "visitors")) == [1, 1, 1, 3, 13]
@@ -822,9 +832,9 @@ defmodule Plausible.Imported.CSVImporterTest do
                  i = imported["visitors"]
 
                  # only consider non tiny readings
-                 if abs(e - i) > 3, do: abs(1 - e / i), else: 0
+                 if e > 3, do: abs(1 - e / i), else: 0
                end)
-             ) == [0, 0, 0, 0, 0.6666666666666667]
+             ) == [0, 0, 0, 0, 0.6]
 
       # devices
       exported_devices = breakdown.(exported_site, "device")
