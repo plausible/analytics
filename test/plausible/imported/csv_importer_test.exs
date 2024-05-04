@@ -456,7 +456,7 @@ defmodule Plausible.Imported.CSVImporterTest do
             9_083_812_924_395_524_907,
             564_929_186_898_220_874,
             15_890_328_459_878_810_482,
-            # this session was collapsed incorectly
+            # this session was collapsed incorrectly
             1_966_893_030_056_597_902
           ]
         }
@@ -469,7 +469,7 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       Plausible.IngestRepo.query!(
         "DELETE FROM sessions_v2 WHERE session_id IN {session_ids:Array(UInt64)}",
-        # this session was collapsed incorectly
+        # this session was collapsed incorrectly
         %{"session_ids" => [1_966_893_030_056_597_902]}
       )
 
