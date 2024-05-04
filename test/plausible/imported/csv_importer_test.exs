@@ -571,9 +571,13 @@ defmodule Plausible.Imported.CSVImporterTest do
       pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
         assert exported["date"] == imported["date"]
         assert exported["pageviews"] == imported["pageviews"]
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+        assert exported["visitors"] == imported["visitors"]
+        assert exported["visits"] == imported["visits"]
+        assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
       end)
 
-      # timeseries' views per visit difference is within 2%
+      # timeseries' views per visit difference is within 3%
       assert summary(field(exported_timeseries, "views_per_visit")) == [
                2.96,
                2.99,
@@ -583,11 +587,11 @@ defmodule Plausible.Imported.CSVImporterTest do
              ]
 
       assert summary(field(imported_timeseries, "views_per_visit")) == [
-               2.96,
-               3.02,
+               2.95,
+               3.04,
                3.075,
-               3.1149999999999998,
-               3.13
+               3.1025,
+               3.17
              ]
 
       assert summary(
@@ -595,77 +599,11 @@ defmodule Plausible.Imported.CSVImporterTest do
                  abs(1 - imported["views_per_visit"] / exported["views_per_visit"])
                end)
              ) == [
-               0.0,
-               0.004761904761904745,
-               0.006369491353516887,
-               0.00812566560170394,
-               0.01333333333333342
-             ]
-
-      # timeseries' bounce rate difference is within 3%
-      assert summary(field(exported_timeseries, "bounce_rate")) == [36, 37.5, 39, 41.25, 45]
-      assert summary(field(imported_timeseries, "bounce_rate")) == [37, 37.75, 38.5, 40.5, 45]
-
-      assert summary(
-               pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
-                 abs(1 - exported["bounce_rate"] / imported["bounce_rate"])
-               end)
-             ) == [0, 0, 0.012820512820512775, 0.025987525987525906, 0.027027027027026973]
-
-      # timeseries' visit duration difference is within 4%
-      assert summary(field(exported_timeseries, "visit_duration")) == [
-               451,
-               547.75,
-               588.0,
-               610.5,
-               654
-             ]
-
-      assert summary(field(imported_timeseries, "visit_duration")) == [
-               443.3,
-               548.225,
-               589.9000000000001,
-               617.55,
-               680.4
-             ]
-
-      assert summary(
-               pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
-                 abs(1 - exported["visit_duration"] / imported["visit_duration"])
-               end)
-             ) == [
-               0.017369727047146455,
-               0.020803337111580833,
-               0.024886105857288232,
-               0.030568429802981162,
-               0.03880070546737213
-             ]
-
-      # timeseries' visitors difference is within 2%
-      assert summary(field(exported_timeseries, "visitors")) == [78, 86.25, 91.5, 194.75, 497]
-      assert summary(field(imported_timeseries, "visitors")) == [78, 87, 92, 194.75, 497]
-
-      assert summary(
-               pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
-                 abs(1 - exported["visitors"] / imported["visitors"])
-               end)
-             ) ==
-               [0, 0, 0, 0.002777777777777768, 0.011111111111111072]
-
-      # timeseries' visits difference is within 2%
-      assert summary(field(exported_timeseries, "visits")) == [250, 289.75, 314.5, 546.5, 1208]
-      assert summary(field(imported_timeseries, "visits")) == [253, 293.5, 315, 543.25, 1204]
-
-      assert summary(
-               pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
-                 abs(1 - exported["visits"] / imported["visits"])
-               end)
-             ) == [
-               0.0033222591362125353,
-               0.007796509056499035,
-               0.010572816603238,
-               0.012150609622639114,
-               0.013029315960912058
+               0.0033783783783782884,
+               0.005606499356499317,
+               0.011161823621887501,
+               0.017814164004259808,
+               0.023333333333333206
              ]
 
       # pages
@@ -749,13 +687,13 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # NOTE: source breakdown's visitors difference is up to almost 40%
       assert summary(field(exported_sources, "visitors")) == [1, 1, 1, 2, 451]
-      assert summary(field(imported_sources, "visitors")) == [1, 1, 1, 2, 712]
+      assert summary(field(imported_sources, "visitors")) == [1, 1, 1, 2, 711]
 
       assert summary(
                pairwise(exported_sources, imported_sources, fn exported, imported ->
                  abs(1 - exported["visitors"] / imported["visitors"])
                end)
-             ) == [0, 0, 0, 0, 0.3665730337078652]
+             ) == [0, 0, 0, 0, 0.3656821378340366]
 
       # utm mediums
       assert breakdown.(exported_site, "utm_medium") == breakdown.(imported_site, "utm_medium")
@@ -774,7 +712,7 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # NOTE: entry page breakdown's visitors difference is up to almost 50%
       assert summary(field(exported_entry_pages, "visitors")) == [1, 1, 1, 2, 310]
-      assert summary(field(imported_entry_pages, "visitors")) == [1, 1, 1, 2, 476]
+      assert summary(field(imported_entry_pages, "visitors")) == [1, 1, 1, 2, 475]
 
       assert summary(
                pairwise(exported_entry_pages, imported_entry_pages, fn exported, imported ->
@@ -823,7 +761,7 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # NOTE: device breakdown's visitors difference is between 30% and 40%
       assert summary(field(exported_devices, "visitors")) == [216, 232.25, 248.5, 264.75, 281]
-      assert summary(field(imported_devices, "visitors")) == [304, 341.75, 379.5, 417.25, 455]
+      assert summary(field(imported_devices, "visitors")) == [304, 341.5, 379, 416.5, 454]
 
       assert summary(
                pairwise(exported_devices, imported_devices, fn exported, imported ->
@@ -831,10 +769,10 @@ defmodule Plausible.Imported.CSVImporterTest do
                end)
              ) == [
                0.2894736842105263,
-               0.31270965876229034,
-               0.33594563331405436,
-               0.3591816078658184,
-               0.3824175824175824
+               0.3123695803385115,
+               0.3352654764664966,
+               0.3581613725944818,
+               0.3810572687224669
              ]
 
       # browsers
@@ -851,7 +789,7 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # NOTE: browser breakdown's visitors difference is up to almost 70%
       assert summary(field(exported_browsers, "visitors")) == [1, 1, 10, 105, 274]
-      assert summary(field(imported_browsers, "visitors")) == [1, 2, 18, 157, 422]
+      assert summary(field(imported_browsers, "visitors")) == [1, 2, 18, 156.5, 422]
 
       assert summary(
                pairwise(exported_browsers, imported_browsers, fn exported, imported ->
@@ -861,7 +799,7 @@ defmodule Plausible.Imported.CSVImporterTest do
                0,
                0.1422018348623853,
                0.3507109004739336,
-               0.4409722222222222,
+               0.43801169590643274,
                0.6666666666666667
              ]
 
@@ -879,14 +817,14 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # NOTE: os breakdown's visitors difference is between 20% and 60%
       assert summary(field(exported_os, "visitors")) == [2, 9.5, 51, 130, 165]
-      assert summary(field(imported_os, "visitors")) == [5, 13, 70, 200, 258]
+      assert summary(field(imported_os, "visitors")) == [5, 12.5, 70, 200, 258]
 
       assert summary(
                pairwise(exported_os, imported_os, fn exported, imported ->
                  abs(1 - exported["visitors"] / imported["visitors"])
                end)
              ) == [
-               0.19999999999999996,
+               0.1578947368421053,
                0.28315018315018314,
                0.36046511627906974,
                0.463855421686747,
@@ -907,13 +845,13 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # NOTE: os version breakdown's visitors difference is up to almost 80%
       assert summary(field(exported_os_versions, "visitors")) == [1, 1, 3, 10.75, 165]
-      assert summary(field(imported_os_versions, "visitors")) == [1, 1.75, 4.5, 14.75, 258]
+      assert summary(field(imported_os_versions, "visitors")) == [1, 1.75, 4.5, 14.5, 258]
 
       assert summary(
                pairwise(exported_os_versions, imported_os_versions, fn exported, imported ->
                  abs(1 - exported["visitors"] / imported["visitors"])
                end)
-             ) == [0, 0, 0.19090909090909086, 0.3401162790697675, 0.75]
+             ) == [0, 0, 0.16985645933014354, 0.3401162790697675, 0.75]
     end
   end
 
