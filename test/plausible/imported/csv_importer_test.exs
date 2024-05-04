@@ -748,7 +748,7 @@ defmodule Plausible.Imported.CSVImporterTest do
                end)
              ) == [0, 0, 0, 0, 0.36304700162074555]
 
-      # page breakdown's visits difference is within 1% for non-tiny values
+      # page breakdown's visits difference is within 2% for non-tiny values
       assert summary(field(exported_pages, "visits")) == [1, 1, 2, 3, 1774]
       assert summary(field(imported_pages, "visits")) == [1, 1, 2, 2.5, 1777]
 
