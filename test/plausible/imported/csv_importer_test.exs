@@ -441,37 +441,10 @@ defmodule Plausible.Imported.CSVImporterTest do
         process_csv.("fixture/plausible_io_events_v2_2024_03_01_2024_03_31_500users_dump.csv")
       ])
 
-      Plausible.IngestRepo.query!(
-        "DELETE FROM events_v2 WHERE session_id IN {session_ids:Array(UInt64)}",
-        %{
-          "session_ids" => [
-            # these sessions were extended beyond the timeframe of the datasert
-            5_041_567_837_619_101_952,
-            9_941_822_201_751_237_677,
-            11_179_857_592_511_640_054,
-            7_914_293_758_317_123_167,
-            2_843_014_593_483_252_784,
-            16_120_773_483_696_094_616,
-            1_082_359_377_393_852_532,
-            9_083_812_924_395_524_907,
-            564_929_186_898_220_874,
-            15_890_328_459_878_810_482,
-            # this session was collapsed incorrectly
-            1_966_893_030_056_597_902
-          ]
-        }
-      )
-
       Plausible.IngestRepo.query!([
         "insert into sessions_v2 format CSVWithNames\n",
         process_csv.("fixture/plausible_io_sessions_v2_2024_03_01_2024_03_31_500users_dump.csv")
       ])
-
-      Plausible.IngestRepo.query!(
-        "DELETE FROM sessions_v2 WHERE session_id IN {session_ids:Array(UInt64)}",
-        # this session was collapsed incorrectly
-        %{"session_ids" => [1_966_893_030_056_597_902]}
-      )
 
       # export archive to s3
       on_ee do
