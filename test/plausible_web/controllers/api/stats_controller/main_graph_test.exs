@@ -56,7 +56,6 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{"plot" => ^zeroes, "with_imported" => false} = json_response(conn, 200)
     end
 
-    # Blows up with time slots!
     test "displays visitors for a day with imported data", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
