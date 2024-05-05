@@ -58,11 +58,11 @@ defmodule Plausible.Stats.Base do
       |> where([e], ^dynamic_filter_condition(query, "event:hostname", :hostname))
 
     q =
-      case query.filters["event:name"] do
-        {:is, name} ->
+      case Query.get_filter(query, "event:name") do
+        {:is, _, name} ->
           from(e in q, where: e.name == ^name)
 
-        {:member, list} ->
+        {:member, _, list} ->
           from(e in q, where: e.name in ^list)
 
         nil ->
@@ -70,28 +70,28 @@ defmodule Plausible.Stats.Base do
       end
 
     q =
-      case query.filters["event:goal"] do
-        {:is, {:page, path}} ->
+      case Query.get_filter(query, "event:goal") do
+        {:is, _, {:page, path}} ->
           from(e in q, where: e.pathname == ^path and e.name == "pageview")
 
-        {:matches, {:page, expr}} ->
+        {:matches, _, {:page, expr}} ->
           regex = page_regex(expr)
 
           from(e in q,
             where: fragment("match(?, ?)", e.pathname, ^regex) and e.name == "pageview"
           )
 
-        {:is, {:event, event}} ->
+        {:is, _, {:event, event}} ->
           from(e in q, where: e.name == ^event)
 
-        {:member, clauses} ->
+        {:member, _, clauses} ->
           {events, pages} = split_goals(clauses)
 
           from(e in q,
             where: (e.pathname in ^pages and e.name == "pageview") or e.name in ^events
           )
 
-        {:matches_member, clauses} ->
+        {:matches_member, _, clauses} ->
           {events, pages} = split_goals(clauses, &page_regex/1)
 
           event_clause =
@@ -359,36 +359,36 @@ defmodule Plausible.Stats.Base do
   defp select_session_metric(:percentage, _query), do: %{}
 
   def dynamic_filter_condition(query, filter_key, db_field) do
-    case query && query.filters && query.filters[filter_key] do
-      {:is, value} ->
+    case Query.get_filter(query, filter_key) do
+      {:is, _, value} ->
         value = db_field_val(db_field, value)
         dynamic([x], field(x, ^db_field) == ^value)
 
-      {:is_not, value} ->
+      {:is_not, _, value} ->
         value = db_field_val(db_field, value)
         dynamic([x], field(x, ^db_field) != ^value)
 
-      {:matches_member, glob_exprs} ->
+      {:matches_member, _, glob_exprs} ->
         page_regexes = Enum.map(glob_exprs, &page_regex/1)
         dynamic([x], fragment("multiMatchAny(?, ?)", field(x, ^db_field), ^page_regexes))
 
-      {:not_matches_member, glob_exprs} ->
+      {:not_matches_member, _, glob_exprs} ->
         page_regexes = Enum.map(glob_exprs, &page_regex/1)
         dynamic([x], fragment("not(multiMatchAny(?, ?))", field(x, ^db_field), ^page_regexes))
 
-      {:matches, glob_expr} ->
+      {:matches, _, glob_expr} ->
         regex = page_regex(glob_expr)
         dynamic([x], fragment("match(?, ?)", field(x, ^db_field), ^regex))
 
-      {:does_not_match, glob_expr} ->
+      {:does_not_match, _, glob_expr} ->
         regex = page_regex(glob_expr)
         dynamic([x], fragment("not(match(?, ?))", field(x, ^db_field), ^regex))
 
-      {:member, list} ->
+      {:member, _, list} ->
         list = Enum.map(list, &db_field_val(db_field, &1))
         dynamic([x], field(x, ^db_field) in ^list)
 
-      {:not_member, list} ->
+      {:not_member, _, list} ->
         list = Enum.map(list, &db_field_val(db_field, &1))
         dynamic([x], field(x, ^db_field) not in ^list)
 

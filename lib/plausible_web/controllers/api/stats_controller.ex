@@ -684,7 +684,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     query =
       Query.from(site, params)
-      |> Query.put_filter("visit:source", "Google")
+      |> Query.put_filter({:is, "visit:source", "Google"})
 
     search_terms =
       if site.google_auth && site.google_auth.property && !query.filters["goal"] do
@@ -720,7 +720,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     query =
       Query.from(site, params)
-      |> Query.put_filter("visit:source", referrer)
+      |> Query.put_filter({:is, "visit:source", referrer})
 
     pagination = parse_pagination(params)
 
@@ -836,8 +836,9 @@ defmodule PlausibleWeb.Api.StatsController do
       pages = Enum.map(breakdown_results, & &1[:exit_page])
 
       total_visits_query =
-        Query.put_filter(query, "event:page", {:member, pages})
-        |> Query.put_filter("event:name", {:is, "pageview"})
+        query
+        |> Query.put_filter({:member, "event:page", pages})
+        |> Query.put_filter({:is, "event:name", "pageview"})
         |> struct!(property: "event:page")
 
       total_pageviews =

@@ -180,7 +180,7 @@ defmodule Plausible.Stats.Breakdown do
 
         pages ->
           query
-          |> Query.put_filter("visit:entry_page", {:member, Enum.map(pages, & &1[:page])})
+          |> Query.put_filter({:member, "visit:entry_page", Enum.map(pages, & &1[:page])})
           |> struct!(property: "visit:entry_page")
       end
 
@@ -256,12 +256,12 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp update_hostname(query, visit_prop) do
-    case query.filters["event:hostname"] do
+    case Query.get_filter(query, "event:hostname") do
       nil ->
         query
 
-      some ->
-        Plausible.Stats.Query.put_filter(query, visit_prop, some)
+      {op, "event:hostname", value} ->
+        Plausible.Stats.Query.put_filter(query, {op, visit_prop, value})
     end
   end
 

@@ -200,22 +200,15 @@ defmodule Plausible.Stats.Query do
     struct!(query, filters: Filters.parse(params["filters"]))
   end
 
-  def put_filter(query, key, val) do
-    parsed_val =
-      if is_binary(val) do
-        Filters.DashboardFilterParser.filter_value(key, val)
-      else
-        val
-      end
-
+  def put_filter(query, filter) do
     struct!(query,
-      filters: Map.put(query.filters, key, parsed_val)
+      filters: query.filters ++ [filter]
     )
   end
 
   def remove_event_filters(query, opts) do
     new_filters =
-      Enum.filter(query.filters, fn {filter_key, _} ->
+      Enum.filter(query.filters, fn {_, filter_key, _} ->
         cond do
           :page in opts && filter_key == "event:page" -> false
           :goal in opts && filter_key == "event:goal" -> false
@@ -223,27 +216,33 @@ defmodule Plausible.Stats.Query do
           true -> true
         end
       end)
-      |> Enum.into(%{})
 
     struct!(query, filters: new_filters)
   end
 
   def has_event_filters?(query) do
     Enum.any?(query.filters, fn
-      {"event:" <> _, _} -> true
+      {_, "event:" <> _, _} -> true
       _ -> false
     end)
   end
 
   def get_filter_by_prefix(query, prefix) do
-    Enum.find(query.filters, fn {prop, _value} ->
+    Enum.find(query.filters, fn {_op, prop, _value} ->
       String.starts_with?(prop, prefix)
     end)
   end
 
   def get_all_filters_by_prefix(query, prefix) do
-    Enum.filter(query.filters, fn {prop, _value} ->
+    Enum.filter(query.filters, fn {_op, prop, _value} ->
       String.starts_with?(prop, prefix)
+    end)
+  end
+
+  # :TODO: Replace these callsites with proper mapping over query.filters
+  def get_filter(query, name) do
+    Enum.find(query.filters, fn {_, prop, _} ->
+      prop == name
     end)
   end
 
