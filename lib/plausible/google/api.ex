@@ -73,7 +73,7 @@ defmodule Plausible.Google.API do
     end
   end
 
-  def fetch_stats(site, %{filters: [] = filters, date_range: date_range}, limit) do
+  def fetch_stats(site, %{date_range: date_range}, limit) do
     with site <- Plausible.Repo.preload(site, :google_auth),
          {:ok, access_token} <- maybe_refresh_token(site.google_auth),
          {:ok, stats} <-
@@ -81,8 +81,7 @@ defmodule Plausible.Google.API do
              access_token,
              site.google_auth.property,
              date_range,
-             limit,
-             filters["page"]
+             limit
            ) do
       stats
       |> Map.get("rows", [])
