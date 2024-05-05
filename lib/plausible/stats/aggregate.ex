@@ -150,7 +150,8 @@ defmodule Plausible.Stats.Aggregate do
     windowed_pages_q =
       from e in base_event_query(site, %Query{
              query
-             | filters: Map.delete(query.filters, "event:page")
+             | filters:
+                 Enum.filter(query.filters, fn [_, filter, _] -> filter != "event:page" end)
            }),
            select: %{
              next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
