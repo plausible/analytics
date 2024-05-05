@@ -209,7 +209,7 @@ defmodule Plausible.Stats.QueryTest do
       filters = Jason.encode!(%{"props" => %{"author" => "!John Doe"}})
       query = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      assert Map.has_key?(query.filters, "event:props:author")
+      assert query.filters == %{"event:props:author" => {:is_not, "John Doe"}}
     end
 
     test "drops prop filter when site owner is on a growth plan", %{site: site, user: user} do
@@ -217,7 +217,7 @@ defmodule Plausible.Stats.QueryTest do
       filters = Jason.encode!(%{"props" => %{"author" => "!John Doe"}})
       query = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      refute Map.has_key?(query.filters, "props")
+      assert query.filters == %{}
     end
   end
 end

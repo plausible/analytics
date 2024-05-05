@@ -270,16 +270,21 @@ defmodule Plausible.Stats.Query do
   end
 
   defp maybe_drop_prop_filter(query, site) do
-    prop_filter? = Map.has_key?(query.filters, "props")
-
-    props_available? = fn ->
+    props_unavailable? = fn ->
       site = Plausible.Repo.preload(site, :owner)
-      Plausible.Billing.Feature.Props.check_availability(site.owner) == :ok
+      Plausible.Billing.Feature.Props.check_availability(site.owner) != :ok
     end
 
-    if prop_filter? && !props_available?.(),
-      do: struct!(query, filters: Map.drop(query.filters, ["props"])),
-      else: query
+    if props_unavailable?.() do
+      props_keys =
+        query.filters
+        |> Map.keys()
+        |> Enum.filter(&String.starts_with?(&1, "event:props"))
+
+      struct!(query, filters: Map.drop(query.filters, props_keys))
+    else
+      query
+    end
   end
 
   @spec include_imported?(t(), Plausible.Site.t(), boolean()) :: boolean()
