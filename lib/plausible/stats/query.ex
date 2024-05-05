@@ -31,7 +31,6 @@ defmodule Plausible.Stats.Query do
       |> put_interval(params)
       |> put_parsed_filters(params)
       |> put_imported_opts(site, params)
-      |> maybe_drop_prop_filter(site)
 
     on_ee do
       query = Plausible.Stats.Sampling.put_threshold(query, params)
@@ -267,24 +266,6 @@ defmodule Plausible.Stats.Query do
       imported_data_requested: requested?,
       include_imported: include_imported?(query, site, requested?)
     )
-  end
-
-  defp maybe_drop_prop_filter(query, site) do
-    props_keys =
-      query.filters
-      |> Map.keys()
-      |> Enum.filter(&String.starts_with?(&1, "event:props"))
-
-    props_unavailable? = fn ->
-      site = Plausible.Repo.preload(site, :owner)
-      Plausible.Billing.Feature.Props.check_availability(site.owner) != :ok
-    end
-
-    if length(props_keys) > 0 and props_unavailable?.() do
-      struct!(query, filters: Map.drop(query.filters, props_keys))
-    else
-      query
-    end
   end
 
   @spec include_imported?(t(), Plausible.Site.t(), boolean()) :: boolean()

@@ -203,21 +203,5 @@ defmodule Plausible.Stats.QueryTest do
 
       assert q.filters["visit:source"] == {:is, "Twitter"}
     end
-
-    test "allows prop filters when site owner is on a business plan", %{site: site, user: user} do
-      insert(:business_subscription, user: user)
-      filters = Jason.encode!(%{"props" => %{"author" => "!John Doe"}})
-      query = Query.from(site, %{"period" => "6mo", "filters" => filters})
-
-      assert query.filters == %{"event:props:author" => {:is_not, "John Doe"}}
-    end
-
-    test "drops prop filter when site owner is on a growth plan", %{site: site, user: user} do
-      insert(:growth_subscription, user: user)
-      filters = Jason.encode!(%{"props" => %{"author" => "!John Doe"}})
-      query = Query.from(site, %{"period" => "6mo", "filters" => filters})
-
-      assert query.filters == %{}
-    end
   end
 end
