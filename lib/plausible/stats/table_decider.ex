@@ -25,7 +25,7 @@ defmodule Plausible.Stats.TableDecider do
     # Treat breakdown property as yet another filter
     filters =
       if breakdown_property do
-        Map.put(query.filters, breakdown_property, nil)
+        query.filters ++ [:is, breakdown_property, []]
       else
         query.filters
       end
@@ -83,16 +83,16 @@ defmodule Plausible.Stats.TableDecider do
 
   defp metric_partitioner(_, _), do: :either
 
-  defp filters_partitioner(_, {"event:" <> _, _}), do: :event
-  defp filters_partitioner(_, {"visit:entry_page", _}), do: :session
-  defp filters_partitioner(_, {"visit:entry_page_hostname", _}), do: :session
-  defp filters_partitioner(_, {"visit:exit_page", _}), do: :session
-  defp filters_partitioner(_, {"visit:exit_page_hostname", _}), do: :session
+  defp filters_partitioner(_, [_, "event:" <> _, _]), do: :event
+  defp filters_partitioner(_, [_, "visit:entry_page", _]), do: :session
+  defp filters_partitioner(_, [_, "visit:entry_page_hostname", _]), do: :session
+  defp filters_partitioner(_, [_, "visit:exit_page", _]), do: :session
+  defp filters_partitioner(_, [_, "visit:exit_page_hostname", _]), do: :session
 
-  defp filters_partitioner(%Query{experimental_reduced_joins?: true}, {"visit:" <> _, _}),
+  defp filters_partitioner(%Query{experimental_reduced_joins?: true}, [_, "visit:" <> _, _]),
     do: :either
 
-  defp filters_partitioner(_, {"visit:" <> _, _}),
+  defp filters_partitioner(_, [_, "visit:" <> _, _]),
     do: :session
 
   defp filters_partitioner(%Query{experimental_reduced_joins?: false}, {unknown, _}) do

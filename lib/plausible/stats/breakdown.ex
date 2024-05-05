@@ -39,7 +39,7 @@ defmodule Plausible.Stats.Breakdown do
 
     event_query = %Query{
       query
-      | filters: Map.put(query.filters, "event:name", {:member, events}),
+      | filters: query.filters ++ [:member, "event:name", {:member, events}],
         property: "event:name"
     }
 
