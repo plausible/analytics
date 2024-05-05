@@ -166,8 +166,8 @@ defmodule Plausible.Stats.Base do
       nil ->
         sessions_q
 
-      {"visit:entry_props:" <> prop_name, filter_value} ->
-        apply_entry_prop_filter(sessions_q, prop_name, filter_value)
+      [op, "visit:entry_props:" <> prop_name, filter_value] ->
+        apply_entry_prop_filter(sessions_q, prop_name, {op, filter_value})
     end
   end
 

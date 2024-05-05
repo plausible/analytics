@@ -118,7 +118,11 @@ defmodule Plausible.Stats.Imported do
         where: i.visitors > 0,
         select: %{}
       )
-      |> maybe_apply_filter(query.filters, property, dim)
+<<<<<<< HEAD
+      |> maybe_apply_filter(query, property, dim)
+=======
+      |> maybe_filter_by_breakdown_property(Query.get_filter(query, property), dim)
+>>>>>>> 273eba496 (Breakdown tests pass)
       |> group_imported_by(dim)
       |> select_imported_metrics(metrics)
 
@@ -214,22 +218,26 @@ defmodule Plausible.Stats.Imported do
     )
   end
 
-  defp maybe_apply_filter(
-         q,
-         %{"event:goal" => {:is, {:event, event_name}}},
-         "event:props:url",
-         _dim
-       )
-       when event_name in ["Outbound Link: Click", "File Download"] do
-    where(q, [i], i.name == ^event_name)
-  end
+  defp maybe_apply_filter(q, query, property, dim) do
+    goal_filter_event_name = goal_filter_event_name(Query.get_filter(query, "event:goal", property))
+    q =
+      if goal_filter_event_name do
+        where(q, [i], i.name == ^goal_filter_event_name)
+      else
+        q
+      end
 
-  defp maybe_apply_filter(q, filters, property, dim) do
-    case filters[property] do
-      {:member, list} -> where(q, [i], field(i, ^dim) in ^list)
+    case Query.get_filter(query, property) do
+      [:member, _ list] -> where(q, [i], field(i, ^dim) in ^list)
       _ -> q
     end
   end
+
+  defp goal_filter_event_name([:is, "event:goal", {:event, event_name}], "event:props:url") when event_name in ["Outbound Link: Click", "File Download"] do
+    event_name
+  end
+
+  defp goal_filter_event_name(_, _), do: nil
 
   defp select_imported_metrics(q, []), do: q
 
