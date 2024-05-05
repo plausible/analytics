@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Query do
             interval: nil,
             period: nil,
             property: nil,
-            filters: %{},
+            filters: [],
             sample_threshold: 20_000_000,
             imported_data_requested: false,
             include_imported: false,

@@ -73,7 +73,7 @@ defmodule Plausible.Stats.Filters do
   end
 
   def parse(filters) when is_map(filters), do: DashboardFilterParser.parse_and_prefix(filters)
-  def parse(_), do: %{}
+  def parse(_), do: []
 
   def without_prefix(property) do
     property
