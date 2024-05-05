@@ -25,7 +25,7 @@ defmodule Plausible.Stats.TableDecider do
     # Treat breakdown property as yet another filter
     filters =
       if breakdown_property do
-        query.filters ++ [:is, breakdown_property, []]
+        query.filters ++ [[:is, breakdown_property, []]]
       else
         query.filters
       end
