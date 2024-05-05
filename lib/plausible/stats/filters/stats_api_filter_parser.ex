@@ -27,11 +27,11 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
         final_value = remove_escape_chars(raw_value)
 
         cond do
-          is_wildcard? && is_negated? -> {:does_not_match, key, raw_value}
-          is_wildcard? -> {:matches, key, raw_value}
-          is_list? -> {:member, key, parse_member_list(raw_value)}
-          is_negated? -> {:is_not, key, final_value}
-          true -> {:is, key, final_value}
+          is_wildcard? && is_negated? -> [:does_not_match, key, raw_value]
+          is_wildcard? -> [:matches, key, raw_value]
+          is_list? -> [:member, key, parse_member_list(raw_value)]
+          is_negated? -> [:is_not, key, final_value]
+          true -> [:is, key, final_value]
         end
         |> reject_invalid_country_codes()
 
@@ -71,10 +71,10 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
       |> wrap_goal_value()
 
     cond do
-      is_list? && is_wildcard? -> {:matches_member, key, value}
-      is_list? -> {:member, key, value}
-      is_wildcard? -> {:matches, key, value}
-      true -> {:is, key, value}
+      is_list? && is_wildcard? -> [:matches_member, key, value]
+      is_list? -> [:member, key, value]
+      is_wildcard? -> [:matches, key, value]
+      true -> [:is, key, value]
     end
   end
 end

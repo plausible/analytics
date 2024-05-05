@@ -208,7 +208,7 @@ defmodule Plausible.Stats.Query do
 
   def remove_event_filters(query, opts) do
     new_filters =
-      Enum.filter(query.filters, fn {_, filter_key, _} ->
+      Enum.filter(query.filters, fn [_, filter_key, _] ->
         cond do
           :page in opts && filter_key == "event:page" -> false
           :goal in opts && filter_key == "event:goal" -> false
@@ -222,26 +222,26 @@ defmodule Plausible.Stats.Query do
 
   def has_event_filters?(query) do
     Enum.any?(query.filters, fn
-      {_, "event:" <> _, _} -> true
+      [_, "event:" <> _, _] -> true
       _ -> false
     end)
   end
 
   def get_filter_by_prefix(query, prefix) do
-    Enum.find(query.filters, fn {_op, prop, _value} ->
+    Enum.find(query.filters, fn [_op, prop, _value] ->
       String.starts_with?(prop, prefix)
     end)
   end
 
   def get_all_filters_by_prefix(query, prefix) do
-    Enum.filter(query.filters, fn {_op, prop, _value} ->
+    Enum.filter(query.filters, fn [_op, prop, _value] ->
       String.starts_with?(prop, prefix)
     end)
   end
 
   # :TODO: Replace these callsites with proper mapping over query.filters
   def get_filter(query, name) do
-    Enum.find(query.filters, fn {_, prop, _} ->
+    Enum.find(query.filters, fn [_, prop, _] ->
       prop == name
     end)
   end
@@ -282,7 +282,7 @@ defmodule Plausible.Stats.Query do
   def trace(%__MODULE__{} = query, metrics) do
     filter_keys =
       query.filters
-      |> Enum.map(fn {_op, prop, _value} -> prop end)
+      |> Enum.map(fn [_op, prop, _value] -> prop end)
       |> Enum.sort()
       |> Enum.join(";")
 

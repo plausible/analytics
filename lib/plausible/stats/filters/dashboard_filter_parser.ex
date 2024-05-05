@@ -37,43 +37,43 @@ defmodule Plausible.Stats.Filters.DashboardFilterParser do
 
     cond do
       is_negated && is_wildcard && is_list ->
-        {:not_matches_member, key, val}
+        [:not_matches_member, key, val]
 
       is_negated && is_contains && is_list ->
-        {:not_matches_member, key, Enum.map(val, &"**#{&1}**")}
+        [:not_matches_member, key, Enum.map(val, &"**#{&1}**")]
 
       is_wildcard && is_list ->
-        {:matches_member, key, val}
+        [:matches_member, key, val]
 
       is_negated && is_wildcard ->
-        {:does_not_match, key, val}
+        [:does_not_match, key, val]
 
       is_negated && is_list ->
-        {:not_member, key, val}
+        [:not_member, key, val]
 
       is_negated && is_contains ->
-        {:does_not_match, key, "**" <> val <> "**"}
+        [:does_not_match, key, "**" <> val <> "**"]
 
       is_contains && is_list ->
-        {:matches_member, key, Enum.map(val, &"**#{&1}**")}
+        [:matches_member, key, Enum.map(val, &"**#{&1}**")]
 
       is_wildcard && is_list ->
-        {:matches_member, key, val}
+        [:matches_member, key, val]
 
       is_negated ->
-        {:is_not, key, val}
+        [:is_not, key, val]
 
       is_list ->
-        {:member, key, val}
+        [:member, key, val]
 
       is_contains ->
-        {:matches, key, "**" <> val <> "**"}
+        [:matches, key, "**" <> val <> "**"]
 
       is_wildcard ->
-        {:matches, key, val}
+        [:matches, key, val]
 
       true ->
-        {:is, key, val}
+        [:is, key, val]
     end
   end
 
