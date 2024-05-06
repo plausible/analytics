@@ -615,7 +615,7 @@ defmodule Plausible.Stats.Base do
   # filters.
   def maybe_add_conversion_rate(q, site, query, metrics) do
     if :conversion_rate in metrics do
-      total_query = query |> Query.remove_event_filters([:goal, :props])
+      total_query = query |> Query.remove_filters(["event:goal", "event:props"])
 
       # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
       subquery(q)

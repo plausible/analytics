@@ -70,10 +70,7 @@ defmodule Plausible.Stats.Aggregate do
   defp neighbor_aggregate_time_on_page(site, query) do
     q =
       from(
-        e in base_event_query(site, %Query{
-          query
-          | filters: Enum.filter(query.filters, fn [_, filter, _] -> filter != "event:page" end)
-        }),
+        e in base_event_query(site, Query.remove_filters(query, ["event:page"])),
         select: {
           fragment("? as p", e.pathname),
           fragment("? as t", e.timestamp),
@@ -148,25 +145,21 @@ defmodule Plausible.Stats.Aggregate do
 
   defp window_aggregate_time_on_page(site, query) do
     windowed_pages_q =
-      from e in base_event_query(site, %Query{
-             query
-             | filters:
-                 Enum.filter(query.filters, fn [_, filter, _] -> filter != "event:page" end)
-           }),
-           select: %{
-             next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
-             next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
-             timestamp: e.timestamp,
-             pathname: e.pathname,
-             session_id: e.session_id
-           },
-           windows: [
-             event_horizon: [
-               partition_by: e.session_id,
-               order_by: e.timestamp,
-               frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-             ]
-           ]
+      from e in base_event_query(site, Query.remove_filters(query, ["event:page"])),
+        select: %{
+          next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
+          next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
+          timestamp: e.timestamp,
+          pathname: e.pathname,
+          session_id: e.session_id
+        },
+        windows: [
+          event_horizon: [
+            partition_by: e.session_id,
+            order_by: e.timestamp,
+            frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+          ]
+        ]
 
     timed_page_transitions_q =
       from e in Ecto.Query.subquery(windowed_pages_q),

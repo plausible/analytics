@@ -206,15 +206,10 @@ defmodule Plausible.Stats.Query do
     )
   end
 
-  def remove_event_filters(query, opts) do
+  def remove_filters(query, prefixes) do
     new_filters =
-      Enum.filter(query.filters, fn [_, filter_key, _] ->
-        cond do
-          :page in opts && filter_key == "event:page" -> false
-          :goal in opts && filter_key == "event:goal" -> false
-          :props in opts && filter_key && String.starts_with?(filter_key, "event:props:") -> false
-          true -> true
-        end
+      Enum.reject(query.filters, fn [_, filter_key, _] ->
+        Enum.any?(prefixes, &String.starts_with?(filter_key, &1))
       end)
 
     struct!(query, filters: new_filters)

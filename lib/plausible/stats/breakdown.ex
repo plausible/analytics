@@ -353,7 +353,7 @@ defmodule Plausible.Stats.Breakdown do
     import Ecto.Query
 
     windowed_pages_q =
-      from e in base_event_query(site, Query.remove_event_filters(query, [:page, :props])),
+      from e in base_event_query(site, Query.remove_filters(query, ["event:page", "event:props"])),
         select: %{
           next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
           next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
@@ -719,7 +719,8 @@ defmodule Plausible.Stats.Breakdown do
          metrics
        ) do
     if :conversion_rate in metrics do
-      breakdown_total_visitors_query = query |> Query.remove_event_filters([:goal, :props])
+      breakdown_total_visitors_query =
+        query |> Query.remove_filters(["event:goal", "event:props"])
 
       breakdown_total_visitors_q =
         breakdown_fn.(site, breakdown_total_visitors_query, [:visitors])
