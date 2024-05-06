@@ -36,4 +36,13 @@ defmodule PlausibleWeb.Plugs.InjectDebugHeadersTest do
                {"x-plausible-query-002-trap3", "baz"}
              ]
   end
+
+  test "crops lengthy header values" do
+    :ok = Plausible.DebugReplayInfo.track_query(:binary.copy("a", 10_000), "trap1")
+    conn = :get |> conn("/") |> InjectDebugHeaders.call() |> send_resp(200, "")
+
+    assert Plug.Conn.get_resp_header(conn, "x-plausible-query-000-trap1-cropped") == [
+             :binary.copy("a", 8000)
+           ]
+  end
 end
