@@ -322,7 +322,7 @@ defmodule Plausible.Exports do
         where: s.site_id == ^site_id,
         group_by: selected_as(:date),
         select: %{
-          date: date(s.start, ^timezone),
+          date: date(s.timestamp, ^timezone),
           bounces: bounces(s),
           visits: visits(s),
           visit_duration: visit_duration(s),
@@ -376,7 +376,7 @@ defmodule Plausible.Exports do
       ],
       order_by: selected_as(:date),
       select: [
-        date(s.start, ^timezone),
+        date(s.timestamp, ^timezone),
         selected_as(s.referrer_source, :source),
         s.referrer,
         s.utm_source,
@@ -416,7 +416,7 @@ defmodule Plausible.Exports do
       group_by: [selected_as(:date), s.entry_page],
       order_by: selected_as(:date),
       select: [
-        date(s.start, ^timezone),
+        date(s.timestamp, ^timezone),
         s.entry_page,
         visitors(s),
         selected_as(
@@ -435,7 +435,7 @@ defmodule Plausible.Exports do
       group_by: [selected_as(:date), s.exit_page],
       order_by: selected_as(:date),
       select: [
-        date(s.start, ^timezone),
+        date(s.timestamp, ^timezone),
         s.exit_page,
         visitors(s),
         visit_duration(s),
@@ -455,7 +455,7 @@ defmodule Plausible.Exports do
       group_by: [selected_as(:date), s.country_code, selected_as(:region), s.city_geoname_id],
       order_by: selected_as(:date),
       select: [
-        date(s.start, ^timezone),
+        date(s.timestamp, ^timezone),
         selected_as(s.country_code, :country),
         selected_as(s.subdivision1_code, :region),
         selected_as(s.city_geoname_id, :city),
@@ -473,7 +473,7 @@ defmodule Plausible.Exports do
       group_by: [selected_as(:date), s.screen_size],
       order_by: selected_as(:date),
       select: [
-        date(s.start, ^timezone),
+        date(s.timestamp, ^timezone),
         selected_as(s.screen_size, :device),
         visitors(s),
         visits(s),
@@ -489,7 +489,7 @@ defmodule Plausible.Exports do
       group_by: [selected_as(:date), s.browser, s.browser_version],
       order_by: selected_as(:date),
       select: [
-        date(s.start, ^timezone),
+        date(s.timestamp, ^timezone),
         s.browser,
         s.browser_version,
         visitors(s),
@@ -506,7 +506,7 @@ defmodule Plausible.Exports do
       group_by: [selected_as(:date), s.operating_system, s.operating_system_version],
       order_by: selected_as(:date),
       select: [
-        date(s.start, ^timezone),
+        date(s.timestamp, ^timezone),
         s.operating_system,
         s.operating_system_version,
         visitors(s),
