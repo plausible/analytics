@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Comparisons}
+  alias Plausible.Stats.Filters.DashboardFilterParser
   alias PlausibleWeb.Api.Helpers, as: H
 
   require Logger
@@ -367,7 +368,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp fetch_top_stats(site, query, comparison_query) do
     metrics =
-      if query.filters["event:page"] do
+      if Query.get_filter(query, "event:page") do
         [
           :visitors,
           :visits,
@@ -684,10 +685,11 @@ defmodule PlausibleWeb.Api.StatsController do
 
     query =
       Query.from(site, params)
-      |> Query.put_filter({:is, "visit:source", "Google"})
+      |> Query.put_filter([:is, "visit:source", "Google"])
 
+    # :TODO: Goal exclusion doesn't work here!
     search_terms =
-      if site.google_auth && site.google_auth.property && !query.filters["goal"] do
+      if site.google_auth && site.google_auth.property && !Query.get_filter(query, "goal") do
         google_api().fetch_stats(site, query, params["limit"] || 9)
       end
 
@@ -718,9 +720,11 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:referrer")
 
+    referrer_filter = DashboardFilterParser.filter_value("visit:source", referrer)
+
     query =
       Query.from(site, params)
-      |> Query.put_filter({:is, "visit:source", referrer})
+      |> Query.put_filter(referrer_filter)
 
     pagination = parse_pagination(params)
 
@@ -837,8 +841,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
       total_visits_query =
         query
-        |> Query.put_filter({:member, "event:page", pages})
-        |> Query.put_filter({:is, "event:name", "pageview"})
+        |> Query.put_filter([:member, "event:page", pages])
+        |> Query.put_filter([:is, "event:name", "pageview"])
         |> struct!(property: "event:page")
 
       total_pageviews =
@@ -1191,7 +1195,7 @@ defmodule PlausibleWeb.Api.StatsController do
         |> Enum.concat()
 
       percent_or_cr =
-        if query.filters["event:goal"],
+        if Query.get_filter(query, "event:goal"),
           do: :conversion_rate,
           else: :percentage
 
@@ -1208,7 +1212,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site, params)
 
     metrics =
-      if query.filters["event:goal"] do
+      if Query.get_filter(query, "event:goal") do
         [:visitors, :events, :conversion_rate] ++ @revenue_metrics
       else
         [:visitors, :events, :percentage] ++ @revenue_metrics
@@ -1367,7 +1371,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     requires_goal_filter? = metric in [:conversion_rate, :events]
 
-    if requires_goal_filter? and !query.filters["event:goal"] do
+    if requires_goal_filter? and !Query.get_filter(query, "event:goal") do
       {:error, "Metric `#{metric}` can only be queried with a goal filter"}
     else
       {:ok, metric}
@@ -1409,7 +1413,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp breakdown_metrics(query, extra_metrics \\ []) do
-    if query.filters["event:goal"] do
+    if Query.get_filter(query, "event:goal") do
       [:visitors, :conversion_rate, :total_visitors]
     else
       [:visitors] ++ extra_metrics
