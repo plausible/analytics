@@ -416,11 +416,12 @@ defmodule Plausible.Imported.CSVImporterTest do
   describe "export -> import" do
     setup [:create_user, :log_in, :create_api_key, :use_api_key, :clean_buckets]
 
-    @tag :export_e2e
     @tag :tmp_dir
     test "it works", %{conn: conn, user: user, tmp_dir: tmp_dir} do
       exported_site = insert(:site, members: [user])
       imported_site = insert(:site, members: [user])
+
+      experimental_reduced_joins? = FunWithFlags.enabled?(:experimental_reduced_joins)
 
       process_csv = fn path ->
         [header | rows] = NimbleCSV.RFC4180.parse_string(File.read!(path), skip_headers: false)
@@ -643,20 +644,30 @@ defmodule Plausible.Imported.CSVImporterTest do
              ]
 
       # timeseries' visitors difference is within 3%
-      assert summary(field(exported_timeseries, "visitors")) == [80, 88.25, 93.5, 197, 500]
+      # with experimental_reduced_joins, it's within 2%
+      assert summary(field(exported_timeseries, "visitors")) ==
+               if(experimental_reduced_joins?,
+                 do: [78, 86.25, 91.5, 194.75, 497],
+                 else: [80, 88.25, 93.5, 197, 500]
+               )
+
       assert summary(field(imported_timeseries, "visitors")) == [78, 87, 92, 194.75, 497]
 
       assert summary(
                pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
                  abs(1 - exported["visitors"] / imported["visitors"])
                end)
-             ) == [
-               0.006036217303822866,
-               0.00984238765928902,
-               0.01619385342789592,
-               0.022367703218766966,
-               0.02564102564102555
-             ]
+             ) ==
+               if(experimental_reduced_joins?,
+                 do: [0, 0, 0, 0.002777777777777768, 0.011111111111111072],
+                 else: [
+                   0.006036217303822866,
+                   0.00984238765928902,
+                   0.01619385342789592,
+                   0.022367703218766966,
+                   0.02564102564102555
+                 ]
+               )
 
       # timeseries' visits difference is within 2%
       assert summary(field(exported_timeseries, "visits")) == [250, 289.75, 314.5, 546.5, 1208]
