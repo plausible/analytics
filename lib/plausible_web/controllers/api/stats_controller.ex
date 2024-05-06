@@ -277,11 +277,25 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp fetch_top_stats(
-         site,
-         %Query{period: "realtime", filters: %{"event:goal" => _goal}} = query,
-         _comparison_query
-       ) do
+  defp fetch_top_stats(site, query, comparison_query) do
+    goal_filter = Query.get_filter(query, "event:goal")
+
+    cond do
+      query.period == "realtime" && goal_filter ->
+        fetch_goal_realtime_top_stats(site, query, comparison_query)
+
+      query.period == "realtime" ->
+        fetch_realtime_top_stats(site, query, comparison_query)
+
+      goal_filter ->
+        fetch_goal_top_stats(site, query, comparison_query)
+
+      true ->
+        fetch_other_top_stats(site, query, comparison_query)
+    end
+  end
+
+  defp fetch_goal_realtime_top_stats(site, query, _comparison_query) do
     query_30m = %Query{query | period: "30m"}
 
     %{
@@ -309,7 +323,7 @@ defmodule PlausibleWeb.Api.StatsController do
     {stats, 100}
   end
 
-  defp fetch_top_stats(site, %Query{period: "realtime"} = query, _comparison_query) do
+  defp fetch_realtime_top_stats(site, query, _comparison_query) do
     query_30m = %Query{query | period: "30m"}
 
     %{
@@ -337,7 +351,7 @@ defmodule PlausibleWeb.Api.StatsController do
     {stats, 100}
   end
 
-  defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _}} = query, comparison_query) do
+  defp fetch_goal_top_stats(site, query, comparison_query) do
     metrics =
       [:total_visitors, :visitors, :events, :conversion_rate] ++ @revenue_metrics
 
@@ -366,7 +380,7 @@ defmodule PlausibleWeb.Api.StatsController do
     |> then(&{&1, 100})
   end
 
-  defp fetch_top_stats(site, query, comparison_query) do
+  defp fetch_other_top_stats(site, query, comparison_query) do
     metrics =
       if Query.get_filter(query, "event:page") do
         [
