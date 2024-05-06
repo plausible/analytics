@@ -416,6 +416,7 @@ defmodule Plausible.Imported.CSVImporterTest do
   describe "export -> import" do
     setup [:create_user, :log_in, :create_api_key, :use_api_key, :clean_buckets]
 
+    @tag :export_e2e
     @tag :tmp_dir
     test "it works", %{conn: conn, user: user, tmp_dir: tmp_dir} do
       exported_site = insert(:site, members: [user])
