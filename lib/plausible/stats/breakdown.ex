@@ -121,7 +121,7 @@ defmodule Plausible.Stats.Breakdown do
     if full_q do
       full_q
       |> maybe_add_conversion_rate(site, query, metrics, include_imported: false)
-      |> ClickhouseRepo.all(label: :breakdown_by_goal)
+      |> ClickhouseRepo.all()
       |> transform_keys(%{name: :goal})
       |> cast_revenue_metrics_to_money(revenue_goals)
       |> Util.keep_requested_metrics(metrics)
@@ -327,7 +327,7 @@ defmodule Plausible.Stats.Breakdown do
   defp paginate_and_execute(q, metrics, pagination) do
     q
     |> apply_pagination(pagination)
-    |> ClickhouseRepo.all(label: :paginate_and_execute)
+    |> ClickhouseRepo.all()
     |> Util.keep_requested_metrics(metrics)
   end
 
@@ -423,7 +423,7 @@ defmodule Plausible.Stats.Breakdown do
       end
 
     timed_pages_q
-    |> Plausible.ClickhouseRepo.all(label: :breakdown_time_on_page)
+    |> Plausible.ClickhouseRepo.all()
     |> Map.new()
   end
 
