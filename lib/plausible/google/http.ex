@@ -39,26 +39,18 @@ defmodule Plausible.Google.HTTP do
     response.body
   end
 
-  def list_stats(access_token, property, date_range, limit, page \\ nil) do
-    property = URI.encode_www_form(property)
-
-    filter_groups =
-      if page do
-        url = property_base_url(property)
-        [%{filters: [%{dimension: "page", expression: "https://#{url}#{page}"}]}]
-      else
-        %{}
-      end
-
+  def list_stats(access_token, property, date_range, limit, filters) do
     params = %{
       startDate: Date.to_iso8601(date_range.first),
       endDate: Date.to_iso8601(date_range.last),
       dimensions: ["query"],
       rowLimit: limit,
-      dimensionFilterGroups: filter_groups
+      dimensionFilterGroups: filters
     }
 
-    url = "#{api_url()}/webmasters/v3/sites/#{property}/searchAnalytics/query"
+    url =
+      "#{api_url()}/webmasters/v3/sites/#{URI.encode_www_form(property)}/searchAnalytics/query"
+
     headers = [{"Authorization", "Bearer #{access_token}"}]
 
     case HTTPClient.impl().post(url, headers, params) do
@@ -77,9 +69,6 @@ defmodule Plausible.Google.HTTP do
         {:error, "failed_to_list_stats"}
     end
   end
-
-  defp property_base_url("sc-domain:" <> domain), do: "https://" <> domain
-  defp property_base_url(url), do: url
 
   def refresh_auth_token(refresh_token) do
     url = "#{api_url()}/oauth2/v4/token"
