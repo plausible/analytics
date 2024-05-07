@@ -23,9 +23,6 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     |> Enum.reduce(true, fn condition, acc -> dynamic([], ^acc and ^condition) end)
   end
 
-  # :TODO: Remove this
-  def add_filter(_query, _table, nil), do: true
-
   def add_filter(_query, :events, [:is, "event:name", name]) do
     dynamic([e], e.name == ^name)
   end

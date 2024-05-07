@@ -30,11 +30,7 @@ defmodule Plausible.Stats.Base do
         on: e.session_id == sq.session_id
       )
     else
-      if query.experimental_reduced_joins? do
-        events_q |> filter_by_visit_props(:events, Filters.event_table_visit_props(), query)
-      else
-        events_q
-      end
+      events_q
     end
   end
 
@@ -73,64 +69,8 @@ defmodule Plausible.Stats.Base do
       sessions_q = Plausible.Stats.Sampling.add_query_hint(sessions_q, query)
     end
 
-    filter_by_entry_props(sessions_q, query)
-    |> filter_by_visit_props(:sessions, Filters.visit_props(), query)
+    where(sessions_q, [], ^Filters.WhereBuilder.build(:sessions, query))
   end
-
-  defp filter_by_visit_props(q, table, visit_props, query) do
-    Enum.reduce(visit_props, q, fn prop_name, q ->
-      filter_key = "visit:" <> prop_name
-
-      q
-      |> where(
-        [e],
-        ^Filters.WhereBuilder.add_filter(query, table, Query.get_filter(query, filter_key))
-      )
-    end)
-  end
-
-  def filter_by_entry_props(sessions_q, query) do
-    case Query.get_filter_by_prefix(query, "visit:entry_props:") do
-      nil ->
-        sessions_q
-
-      [op, "visit:entry_props:" <> prop_name, filter_value] ->
-        apply_entry_prop_filter(sessions_q, prop_name, {op, filter_value})
-    end
-  end
-
-  def apply_entry_prop_filter(sessions_q, prop_name, {:is, "(none)"}) do
-    from(
-      s in sessions_q,
-      where: not has_key(s, :entry_meta, ^prop_name)
-    )
-  end
-
-  def apply_entry_prop_filter(sessions_q, prop_name, {:is, value}) do
-    from(
-      s in sessions_q,
-      where:
-        has_key(s, :entry_meta, ^prop_name) and get_by_key(s, :entry_meta, ^prop_name) == ^value
-    )
-  end
-
-  def apply_entry_prop_filter(sessions_q, prop_name, {:is_not, "(none)"}) do
-    from(
-      s in sessions_q,
-      where: has_key(s, :entry_meta, ^prop_name)
-    )
-  end
-
-  def apply_entry_prop_filter(sessions_q, prop_name, {:is_not, value}) do
-    from(
-      s in sessions_q,
-      where:
-        not has_key(s, :entry_meta, ^prop_name) or
-          get_by_key(s, :entry_meta, ^prop_name) != ^value
-    )
-  end
-
-  def apply_entry_prop_filter(sessions_q, _, _), do: sessions_q
 
   def select_event_metrics(metrics) do
     metrics

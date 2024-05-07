@@ -228,12 +228,6 @@ defmodule Plausible.Stats.Query do
     end)
   end
 
-  def get_all_filters_by_prefix(query, prefix) do
-    Enum.filter(query.filters, fn [_op, prop, _value] ->
-      String.starts_with?(prop, prefix)
-    end)
-  end
-
   # :TODO: Replace these callsites with proper mapping over query.filters
   def get_filter(query, name) do
     Enum.find(query.filters, fn [_, prop, _] ->
