@@ -198,25 +198,23 @@ defmodule Plausible.Sites do
 
   @doc """
   Returns the date of the first recorded stat in the timezone configured by the user.
-  This function does 2 transformations:
-    UTC %NaiveDateTime{} -> Local %DateTime{} -> Local %Date
+  This function does 3 transformations:
+    Date -> UTC DateTime at 00:00 -> Local %DateTime{} -> Local %Date
 
   ## Examples
 
-    iex> Plausible.Site.local_start_date(%Plausible.Site{stats_start_date: nil})
+    iex> %Plausible.Site{stats_start_date: nil} = site = Plausible.Factory.insert(:site)
+    iex> Plausible.Sites.local_start_date(site)
     nil
 
-    iex> utc_start = ~N[2022-09-28 00:00:00]
-    iex> tz = "Europe/Helsinki"
-    iex> site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
-    iex> Plausible.Site.local_start_date(site)
+    iex> site = %Plausible.Site{stats_start_date: ~D[2022-09-28], timezone: "Europe/Helsinki"}
+    iex> Plausible.Sites.local_start_date(site)
     ~D[2022-09-28]
 
-    iex> utc_start = ~N[2022-09-28 00:00:00]
-    iex> tz = "America/Los_Angeles"
-    iex> site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
-    iex> Plausible.Site.local_start_date(site)
+    iex> site = %Plausible.Site{stats_start_date: ~D[2022-09-28], timezone: "America/Los_Angeles"}
+    iex> Plausible.Sites.local_start_date(site)
     ~D[2022-09-27]
+
   """
   @spec local_start_date(Site.t()) :: Date.t() | nil
   def local_start_date(site) do
