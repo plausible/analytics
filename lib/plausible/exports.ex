@@ -277,7 +277,11 @@ defmodule Plausible.Exports do
   defmacrop visit_duration(t) do
     quote do
       selected_as(
-        fragment("greatest(sum(?*?),0)", unquote(t).sign, unquote(t).duration),
+        fragment(
+          "toUInt64(round(greatest(sum(?*?),0)*any(_sample_factor)))",
+          unquote(t).sign,
+          unquote(t).duration
+        ),
         :visit_duration
       )
     end
@@ -294,14 +298,21 @@ defmodule Plausible.Exports do
 
   defmacrop visits(t) do
     quote do
-      selected_as(sum(unquote(t).sign), :visits)
+      selected_as(
+        fragment("toUInt64(round(greatest(sum(?),0)*any(_sample_factor)))", unquote(t).sign),
+        :visits
+      )
     end
   end
 
   defmacrop bounces(t) do
     quote do
       selected_as(
-        fragment("greatest(sum(?*?),0)", unquote(t).sign, unquote(t).is_bounce),
+        fragment(
+          "toUInt32(round(greatest(sum(?*?),0)*any(_sample_factor)))",
+          unquote(t).sign,
+          unquote(t).is_bounce
+        ),
         :bounces
       )
     end
@@ -310,7 +321,11 @@ defmodule Plausible.Exports do
   defmacrop pageviews(t) do
     quote do
       selected_as(
-        fragment("greatest(sum(?*?),0)", unquote(t).sign, unquote(t).pageviews),
+        fragment(
+          "toUInt64(round(greatest(sum(?*?),0)*any(_sample_factor)))",
+          unquote(t).sign,
+          unquote(t).pageviews
+        ),
         :pageviews
       )
     end
@@ -420,7 +435,7 @@ defmodule Plausible.Exports do
         s.entry_page,
         visitors(s),
         selected_as(
-          fragment("toUInt64(round(sum(?)*any(_sample_factor)))", s.sign),
+          fragment("toUInt64(round(greatest(sum(?),0)*any(_sample_factor)))", s.sign),
           :entrances
         ),
         visit_duration(s),
@@ -440,7 +455,7 @@ defmodule Plausible.Exports do
         visitors(s),
         visit_duration(s),
         selected_as(
-          fragment("toUInt64(round(sum(?)*any(_sample_factor)))", s.sign),
+          fragment("toUInt64(round(greatest(sum(?),0)*any(_sample_factor)))", s.sign),
           :exits
         ),
         bounces(s),

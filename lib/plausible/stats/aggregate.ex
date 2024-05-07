@@ -46,7 +46,7 @@ defmodule Plausible.Stats.Aggregate do
     from(e in base_event_query(site, query), select: ^select_event_metrics(metrics))
     |> merge_imported(site, query, metrics)
     |> maybe_add_conversion_rate(site, query, metrics, include_imported: query.include_imported)
-    |> ClickhouseRepo.one(label: :aggregate_events)
+    |> ClickhouseRepo.one()
   end
 
   defp aggregate_sessions(_, _, []), do: %{}
@@ -55,7 +55,7 @@ defmodule Plausible.Stats.Aggregate do
     from(e in query_sessions(site, query), select: ^select_session_metrics(metrics, query))
     |> filter_converted_sessions(site, query)
     |> merge_imported(site, query, metrics)
-    |> ClickhouseRepo.one(label: :aggregate_sessions)
+    |> ClickhouseRepo.one()
     |> Util.keep_requested_metrics(metrics)
   end
 
@@ -187,7 +187,7 @@ defmodule Plausible.Stats.Aggregate do
       from e in Ecto.Query.subquery(avg_time_per_page_transition_q),
         select: fragment("avg(ifNotFinite(?,NULL))", e.avg)
 
-    %{time_on_page: ClickhouseRepo.one(time_on_page_q, label: :time_on_page)}
+    %{time_on_page: ClickhouseRepo.one(time_on_page_q)}
   end
 
   @metrics_to_round [:bounce_rate, :time_on_page, :visit_duration, :sample_percent]
