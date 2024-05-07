@@ -6,6 +6,14 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
   import Ecto.Query
   import Plausible.Stats.Base, only: [page_regex: 1]
 
+  def add_filter(q, :events, [:is, "event:name", name]) do
+    from(e in q, where: e.name == ^name)
+  end
+
+  def add_filter(q, :events, [:member, "event:name", list]) do
+    from(e in q, where: e.name in ^list)
+  end
+
   def add_filter(q, :events, [:is, "event:goal", {:page, path}]) do
     from(e in q, where: e.pathname == ^path and e.name == "pageview")
   end

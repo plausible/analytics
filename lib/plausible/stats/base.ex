@@ -57,16 +57,13 @@ defmodule Plausible.Stats.Base do
       |> where([e], ^dynamic_filter_condition(query, "event:page", :pathname))
       |> where([e], ^dynamic_filter_condition(query, "event:hostname", :hostname))
 
+    event_name_filter = Query.get_filter(query, "event:name")
+
     q =
-      case Query.get_filter(query, "event:name") do
-        [:is, _, name] ->
-          from(e in q, where: e.name == ^name)
-
-        [:member, _, list] ->
-          from(e in q, where: e.name in ^list)
-
-        nil ->
-          q
+      if event_name_filter do
+        Plausible.Stats.Filters.WhereBuilder.add_filter(q, :events, event_name_filter)
+      else
+        q
       end
 
     goal_filter = Query.get_filter(query, "event:goal")
