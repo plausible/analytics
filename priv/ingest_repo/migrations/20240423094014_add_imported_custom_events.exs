@@ -10,13 +10,13 @@ defmodule Plausible.IngestRepo.Migrations.AddImportedCustomEvents do
         """
         ENGINE = ReplicatedMergeTree('/clickhouse/{cluster}/tables/{shard}/{database}/imported_custom_events', '{replica}')
         ORDER BY (site_id, import_id, date, name)
-        SETTINGS index_granularity = 8192, replicated_deduplication_window = 0, storage_policy = 'tiered'
+        SETTINGS replicated_deduplication_window = 0, storage_policy = 'tiered'
         """
       else
         """
         ENGINE = MergeTree()
         ORDER BY (site_id, import_id, date, name)
-        SETTINGS index_granularity = 8192, replicated_deduplication_window = 0
+        SETTINGS replicated_deduplication_window = 0
         """
       end
 
