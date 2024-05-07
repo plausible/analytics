@@ -110,7 +110,7 @@ defmodule Plausible.Stats.Fragments do
     quote do
       fragment(
         "has(?, ?)",
-        field(unquote(table), unquote(meta_key_column(meta_column))),
+        field(unquote(table), ^meta_key_column(unquote(meta_column))),
         unquote(key)
       )
     end
@@ -130,18 +130,18 @@ defmodule Plausible.Stats.Fragments do
     quote do
       fragment(
         "?[indexOf(?, ?)]",
-        field(unquote(table), unquote(meta_value_column(meta_column))),
-        field(unquote(table), unquote(meta_key_column(meta_column))),
+        field(unquote(table), ^meta_value_column(unquote(meta_column))),
+        field(unquote(table), ^meta_key_column(unquote(meta_column))),
         unquote(key)
       )
     end
   end
 
-  defp meta_key_column(:meta), do: :"meta.key"
-  defp meta_key_column(:entry_meta), do: :"entry_meta.key"
+  def meta_key_column(:meta), do: :"meta.key"
+  def meta_key_column(:entry_meta), do: :"entry_meta.key"
 
-  defp meta_value_column(:meta), do: :"meta.value"
-  defp meta_value_column(:entry_meta), do: :"entry_meta.value"
+  def meta_value_column(:meta), do: :"meta.value"
+  def meta_value_column(:entry_meta), do: :"entry_meta.value"
 
   defmacro __using__(_) do
     quote do
