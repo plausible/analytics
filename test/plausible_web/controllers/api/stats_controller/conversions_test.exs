@@ -804,7 +804,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ] = json_response(conn, 200)
     end
 
-    test "calculates conversion_rate for goals with imported data", %{
+    test "calculates conversion_rate for goals with glob pattern with imported data", %{
       conn: conn,
       site: site
     } do

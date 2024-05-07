@@ -3187,6 +3187,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
             events: 10,
             link_url: "https://two.com"
           ),
+          build(:imported_custom_events,
+            name: "some goal",
+            visitors: 5,
+            events: 10
+          ),
           build(:imported_visitors, visitors: 9)
         ])
 
