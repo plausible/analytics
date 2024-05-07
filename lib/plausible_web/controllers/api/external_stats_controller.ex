@@ -6,8 +6,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   def realtime_visitors(conn, _params) do
     site = conn.assigns.site
-    query = Query.from(site, %{"period" => "realtime"})
-    json(conn, Plausible.Stats.Clickhouse.current_visitors(site, query))
+    json(conn, Plausible.Stats.current_visitors(site))
   end
 
   def aggregate(conn, params) do
