@@ -6,39 +6,49 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
   import Ecto.Query
   import Plausible.Stats.Base, only: [page_regex: 1]
 
-  def add_filter(q, :events, [:is, "event:name", name]) do
-    from(e in q, where: e.name == ^name)
+  alias Plausible.Stats.Query
+
+  use Plausible.Stats.Fragments
+
+  @sessions_only_visit_fields [
+    :entry_page,
+    :exit_page,
+    :entry_page_hostname,
+    :exit_page_hostname
+  ]
+
+  # :TODO: Remove this
+  def add_filter(_query, _table, nil), do: true
+
+  def add_filter(_query, :events, [:is, "event:name", name]) do
+    dynamic([e], e.name == ^name)
   end
 
-  def add_filter(q, :events, [:member, "event:name", list]) do
-    from(e in q, where: e.name in ^list)
+  def add_filter(_query, :events, [:member, "event:name", list]) do
+    dynamic([e], e.name in ^list)
   end
 
-  def add_filter(q, :events, [:is, "event:goal", {:page, path}]) do
-    from(e in q, where: e.pathname == ^path and e.name == "pageview")
+  def add_filter(_query, :events, [:is, "event:goal", {:page, path}]) do
+    dynamic([e], e.pathname == ^path and e.name == "pageview")
   end
 
-  def add_filter(q, :events, [:matches, "event:goal", {:page, expr}]) do
+  def add_filter(_query, :events, [:matches, "event:goal", {:page, expr}]) do
     regex = page_regex(expr)
 
-    from(e in q,
-      where: fragment("match(?, ?)", e.pathname, ^regex) and e.name == "pageview"
-    )
+    dynamic([e], fragment("match(?, ?)", e.pathname, ^regex) and e.name == "pageview")
   end
 
-  def add_filter(q, :events, [:is, "event:goal", {:event, event}]) do
-    from(e in q, where: e.name == ^event)
+  def add_filter(_query, :events, [:is, "event:goal", {:event, event}]) do
+    dynamic([e], e.name == ^event)
   end
 
-  def add_filter(q, :events, [:member, "event:goal", clauses]) do
+  def add_filter(_query, :events, [:member, "event:goal", clauses]) do
     {events, pages} = split_goals(clauses)
 
-    from(e in q,
-      where: (e.pathname in ^pages and e.name == "pageview") or e.name in ^events
-    )
+    dynamic([e], (e.pathname in ^pages and e.name == "pageview") or e.name in ^events)
   end
 
-  def add_filter(q, :events, [:matches_member, "event:goal", clauses]) do
+  def add_filter(_query, :events, [:matches_member, "event:goal", clauses]) do
     {events, pages} = split_goals(clauses, &page_regex/1)
 
     event_clause =
@@ -60,8 +70,100 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
 
     where_clause = dynamic([], ^event_clause or ^page_clause)
 
-    from(e in q, where: ^where_clause)
+    dynamic([e], ^where_clause)
   end
+
+  def add_filter(_query, :events, [_, "event:page" | _rest] = filter) do
+    filter_field(:pathname, filter)
+  end
+
+  def add_filter(_query, :events, [_, "event:hostname" | _rest] = filter) do
+    filter_field(:hostname, filter)
+  end
+
+  # :TODO: event:props
+  # :TODO: visit:entry_props:
+
+  def add_filter(_query, :sessions, [_, "event:" <> _ | _rest]) do
+    # Cannot apply sessions filters directly on session query where clause.
+    true
+  end
+
+  def add_filter(_query, :sessions, [_, "visit:" <> key | _rest] = filter) do
+    filter_field(String.to_existing_atom(key), filter)
+  end
+
+  def add_filter(
+        %Query{experimental_reduced_joins?: true},
+        :events,
+        [_, "visit:" <> key | _rest] = filter
+      ) do
+    # Filter events query if experimental_reduced_joins? is true
+    field_name = String.to_existing_atom(key)
+
+    if Enum.member?(@sessions_only_visit_fields, field_name) do
+      true
+    else
+      filter_field(field_name, filter)
+    end
+  end
+
+  def add_filter(_query, :events, [_, "visit:" <> _key | _rest]) do
+    true
+  end
+
+  defp filter_field(db_field, [:is, _key, value]) do
+    value = db_field_val(db_field, value)
+    dynamic([x], field(x, ^db_field) == ^value)
+  end
+
+  defp filter_field(db_field, [:is_not, _key, value]) do
+    value = db_field_val(db_field, value)
+    dynamic([x], field(x, ^db_field) != ^value)
+  end
+
+  defp filter_field(db_field, [:matches_member, _key, glob_exprs]) do
+    page_regexes = Enum.map(glob_exprs, &page_regex/1)
+    dynamic([x], fragment("multiMatchAny(?, ?)", field(x, ^db_field), ^page_regexes))
+  end
+
+  defp filter_field(db_field, [:not_matches_member, _key, glob_exprs]) do
+    page_regexes = Enum.map(glob_exprs, &page_regex/1)
+    dynamic([x], fragment("not(multiMatchAny(?, ?))", field(x, ^db_field), ^page_regexes))
+  end
+
+  defp filter_field(db_field, [:matches, _key, glob_expr]) do
+    regex = page_regex(glob_expr)
+    dynamic([x], fragment("match(?, ?)", field(x, ^db_field), ^regex))
+  end
+
+  defp filter_field(db_field, [:does_not_match, _key, glob_expr]) do
+    regex = page_regex(glob_expr)
+    dynamic([x], fragment("not(match(?, ?))", field(x, ^db_field), ^regex))
+  end
+
+  defp filter_field(db_field, [:member, _key, list]) do
+    list = Enum.map(list, &db_field_val(db_field, &1))
+    dynamic([x], field(x, ^db_field) in ^list)
+  end
+
+  defp filter_field(db_field, [:not_member, _key, list]) do
+    list = Enum.map(list, &db_field_val(db_field, &1))
+    dynamic([x], field(x, ^db_field) not in ^list)
+  end
+
+  @no_ref "Direct / None"
+  @not_set "(not set)"
+
+  defp db_field_val(:source, @no_ref), do: ""
+  defp db_field_val(:referrer, @no_ref), do: ""
+  defp db_field_val(:utm_medium, @no_ref), do: ""
+  defp db_field_val(:utm_source, @no_ref), do: ""
+  defp db_field_val(:utm_campaign, @no_ref), do: ""
+  defp db_field_val(:utm_content, @no_ref), do: ""
+  defp db_field_val(:utm_term, @no_ref), do: ""
+  defp db_field_val(_, @not_set), do: ""
+  defp db_field_val(_, val), do: val
 
   defp split_goals(clauses, map_fn \\ &Function.identity/1) do
     groups =

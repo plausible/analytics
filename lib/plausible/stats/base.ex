@@ -31,7 +31,7 @@ defmodule Plausible.Stats.Base do
       )
     else
       if query.experimental_reduced_joins? do
-        events_q |> filter_by_visit_props(Filters.event_table_visit_props(), query)
+        events_q |> filter_by_visit_props(:events, Filters.event_table_visit_props(), query)
       else
         events_q
       end
@@ -54,26 +54,26 @@ defmodule Plausible.Stats.Base do
 
     q =
       q
-      |> where([e], ^dynamic_filter_condition(query, "event:page", :pathname))
-      |> where([e], ^dynamic_filter_condition(query, "event:hostname", :hostname))
-
-    event_name_filter = Query.get_filter(query, "event:name")
-
-    q =
-      if event_name_filter do
-        Plausible.Stats.Filters.WhereBuilder.add_filter(q, :events, event_name_filter)
-      else
-        q
-      end
-
-    goal_filter = Query.get_filter(query, "event:goal")
-
-    q =
-      if goal_filter do
-        Plausible.Stats.Filters.WhereBuilder.add_filter(q, :events, goal_filter)
-      else
-        q
-      end
+      |> where(
+        [e],
+        ^Filters.WhereBuilder.add_filter(query, :events, Query.get_filter(query, "event:page"))
+      )
+      |> where(
+        [e],
+        ^Filters.WhereBuilder.add_filter(
+          query,
+          :events,
+          Query.get_filter(query, "event:hostname")
+        )
+      )
+      |> where(
+        [e],
+        ^Filters.WhereBuilder.add_filter(query, :events, Query.get_filter(query, "event:name"))
+      )
+      |> where(
+        [e],
+        ^Filters.WhereBuilder.add_filter(query, :events, Query.get_filter(query, "event:goal"))
+      )
 
     q =
       Enum.reduce(
@@ -103,16 +103,17 @@ defmodule Plausible.Stats.Base do
     end
 
     filter_by_entry_props(sessions_q, query)
-    |> filter_by_visit_props(Filters.visit_props(), query)
+    |> filter_by_visit_props(:sessions, Filters.visit_props(), query)
   end
 
-  defp filter_by_visit_props(q, visit_props, query) do
-    Enum.reduce(visit_props, q, fn prop_name, sessions_q ->
+  defp filter_by_visit_props(q, table, visit_props, query) do
+    Enum.reduce(visit_props, q, fn prop_name, q ->
       filter_key = "visit:" <> prop_name
-      db_field = String.to_existing_atom(prop_name)
 
-      from(s in sessions_q,
-        where: ^dynamic_filter_condition(query, filter_key, db_field)
+      q
+      |> where(
+        [e],
+        ^Filters.WhereBuilder.add_filter(query, table, Query.get_filter(query, filter_key))
       )
     end)
   end
