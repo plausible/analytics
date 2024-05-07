@@ -318,6 +318,7 @@ config :plausible, PlausibleWeb.Endpoint,
 maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
 db_cacertfile = get_var_from_path_or_env(config_dir, "DATABASE_CACERTFILE", CAStore.file_path())
+db_search_path = get_var_from_path_or_env(config_dir, "DATABASE_SEARCH_PATH")
 
 if is_nil(db_socket_dir) do
   config :plausible, Plausible.Repo,
@@ -334,6 +335,11 @@ else
   config :plausible, Plausible.Repo,
     socket_dir: db_socket_dir,
     database: get_var_from_path_or_env(config_dir, "DATABASE_NAME", "plausible")
+end
+
+if db_search_path do
+  config :plausible, Plausible.Repo,
+    after_connect: {Postgrex, :query!, ["SET search_path TO #{db_search_path}", []]}
 end
 
 sentry_app_version = runtime_metadata[:version] || app_version
