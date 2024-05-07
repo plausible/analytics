@@ -118,7 +118,7 @@ defmodule Plausible.Stats.Imported do
         where: i.visitors > 0,
         select: %{}
       )
-      |> maybe_filter_by_breakdown_property(query.filters[property], dim)
+      |> maybe_apply_filter(query.filters, property, dim)
       |> group_imported_by(dim)
       |> select_imported_metrics(metrics)
 
@@ -214,11 +214,22 @@ defmodule Plausible.Stats.Imported do
     )
   end
 
-  defp maybe_filter_by_breakdown_property(q, {:member, list}, dim) do
-    where(q, [i], field(i, ^dim) in ^list)
+  defp maybe_apply_filter(
+         q,
+         %{"event:goal" => {:is, {:event, event_name}}},
+         "event:props:url",
+         _dim
+       )
+       when event_name in ["Outbound Link: Click", "File Download"] do
+    where(q, [i], i.name == ^event_name)
   end
 
-  defp maybe_filter_by_breakdown_property(q, _, _), do: q
+  defp maybe_apply_filter(q, filters, property, dim) do
+    case filters[property] do
+      {:member, list} -> where(q, [i], field(i, ^dim) in ^list)
+      _ -> q
+    end
+  end
 
   defp select_imported_metrics(q, []), do: q
 

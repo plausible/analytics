@@ -1159,6 +1159,11 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
             events: 10,
             link_url: "https://two.com"
           ),
+          build(:imported_custom_events,
+            name: "view_search_results",
+            visitors: 100,
+            events: 200
+          ),
           build(:imported_visitors, visitors: 9)
         ])
 
