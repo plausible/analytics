@@ -28,6 +28,7 @@ defmodule Plausible.IngestRepo.Migrations.AddImportedCustomEvents do
                 `date` Date,
                 `name` String CODEC(ZSTD(3)),
                 `link_url` String CODEC(ZSTD(3)),
+                `path` String CODEC(ZSTD(3)),
                 `visitors` UInt64,
                 `events` UInt64
             )
