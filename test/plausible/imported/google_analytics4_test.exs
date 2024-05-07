@@ -124,9 +124,19 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
       conn = put_req_header(conn, "authorization", "Bearer #{api_key}")
 
-      assert_timeseries(conn, common_params)
-      assert_pages(conn, common_params)
+      insert(:goal, event_name: "Outbound Link: Click", site: site)
+      insert(:goal, event_name: "view_search_results", site: site)
+      insert(:goal, event_name: "scroll", site: site)
 
+      # Timeseries
+      assert_timeseries(conn, common_params)
+
+      # Breakdown (event:*)
+      assert_pages(conn, common_params)
+      assert_custom_events(conn, common_params)
+      assert_outbound_link_urls(conn, common_params)
+
+      # Breakdown (visit:*)
       assert_sources(conn, breakdown_params)
       assert_utm_mediums(conn, breakdown_params)
       assert_entry_pages(conn, breakdown_params)
@@ -135,8 +145,9 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
       assert_browsers(conn, breakdown_params)
       assert_os(conn, breakdown_params)
       assert_os_versions(conn, breakdown_params)
+
+      # Misc
       assert_active_visitors(site_import)
-      assert_custom_events(site_import)
     end
 
     test "handles rate limiting gracefully", %{user: user, site: site} do
@@ -270,49 +281,65 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     end)
   end
 
-  defp assert_custom_events(site_import) do
-    totals =
-      ClickhouseRepo.query!(
-        "SELECT name, sum(visitors) AS visitors, sum(events) AS events " <>
-          "FROM imported_custom_events WHERE site_id = #{site_import.site_id} AND import_id = #{site_import.id} GROUP BY name"
-      )
-      |> Map.fetch!(:rows)
-      |> Enum.map(fn [name, visitors, events] ->
-        %{name: name, visitors: visitors, events: events}
-      end)
-      |> Enum.sort_by(& &1.events)
+  defp assert_custom_events(conn, params) do
+    params =
+      params
+      |> Map.put("metrics", "visitors,events,conversion_rate")
+      |> Map.put("property", "event:goal")
 
-    breakdown_by_url =
-      ClickhouseRepo.query!(
-        "SELECT name, link_url, sum(visitors) AS visitors, sum(events) AS events " <>
-          "FROM imported_custom_events WHERE site_id = #{site_import.site_id} AND import_id = #{site_import.id} GROUP BY name, link_url"
-      )
-      |> Map.fetch!(:rows)
-      |> Enum.map(fn [name, link_url, visitors, events] ->
-        %{name: name, link_url: link_url, visitors: visitors, events: events}
-      end)
+    %{"results" => results} =
+      get(conn, "/api/v1/stats/breakdown", params) |> json_response(200)
 
-    # The 'click' event is overridden with 'Outbound Link: Click'
-    assert totals == [
-             %{name: "Outbound Link: Click", events: 17, visitors: 17},
-             %{name: "view_search_results", events: 30, visitors: 11},
-             %{name: "scroll", events: 2130, visitors: 1513}
+    assert results == [
+             %{
+               "goal" => "scroll",
+               "visitors" => 1513,
+               "events" => 2130,
+               "conversion_rate" => 24.7
+             },
+             %{
+               "goal" => "Outbound Link: Click",
+               "visitors" => 17,
+               "events" => 17,
+               "conversion_rate" => 0.3
+             },
+             %{
+               "goal" => "view_search_results",
+               "visitors" => 11,
+               "events" => 30,
+               "conversion_rate" => 0.2
+             }
            ]
+  end
 
-    assert Enum.all?(breakdown_by_url, fn entry ->
-             if entry.name == "Outbound Link: Click" do
-               entry.link_url != ""
-             else
-               entry.link_url == ""
-             end
-           end)
+  defp assert_outbound_link_urls(conn, params) do
+    params =
+      Map.merge(params, %{
+        "metrics" => "visitors,events,conversion_rate",
+        "property" => "event:props:url",
+        "filters" => "event:goal==Outbound Link: Click"
+      })
+
+    %{"results" => results} =
+      get(conn, "/api/v1/stats/breakdown", params) |> json_response(200)
+
+    assert length(results) == 10
+
+    assert List.first(results) ==
+             %{
+               "url" => "https://www.facebook.com/kuhinjskeprice",
+               "visitors" => 6,
+               "conversion_rate" => 0.1,
+               "events" => 6
+             }
 
     assert %{
-             name: "Outbound Link: Click",
-             events: 6,
-             visitors: 6,
-             link_url: "https://www.facebook.com/kuhinjskeprice"
-           } in breakdown_by_url
+             "url" =>
+               "http://www.jamieoliver.com/recipes/pasta-recipes/spinach-ricotta-cannelloni/",
+             "visitors" => 1,
+             "conversion_rate" => 0.0,
+             "events" => 1
+           } in results
   end
 
   defp assert_timeseries(conn, params) do
