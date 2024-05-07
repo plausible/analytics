@@ -17,25 +17,14 @@ class GoogleKeywordsModal extends React.Component {
   }
 
   componentDidMount() {
-    if (this.state.query.filters.goal) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers/Google`, this.state.query, {limit: 100})
-        .then((res) => this.setState({
-          loading: false,
-          searchTerms: res.search_terms,
-          totalVisitors: res.total_visitors,
-          notConfigured: res.not_configured,
-          isOwner: res.is_owner
-        }))
-    } else {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.state.query, {limit: 100})
-        .then((res) => this.setState({
-          loading: false,
-          searchTerms: res.search_terms,
-          totalVisitors: res.total_visitors,
-          notConfigured: res.not_configured,
-          isOwner: res.is_owner
-        }))
-    }
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.state.query, {limit: 100})
+      .then((res) => this.setState({
+        loading: false,
+        searchTerms: res.search_terms,
+        totalVisitors: res.total_visitors,
+        notConfigured: res.not_configured,
+        isOwner: res.is_owner
+      }))
   }
 
   renderTerm(term) {
