@@ -45,42 +45,13 @@ defmodule Plausible.Stats.Base do
       from(
         e in "events_v2",
         where: e.site_id == ^site.id,
-        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
+        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
+        where: ^Filters.WhereBuilder.build(:events, query)
       )
 
     on_ee do
       q = Plausible.Stats.Sampling.add_query_hint(q, query)
     end
-
-    q =
-      q
-      |> where(
-        [e],
-        ^Filters.WhereBuilder.add_filter(query, :events, Query.get_filter(query, "event:page"))
-      )
-      |> where(
-        [e],
-        ^Filters.WhereBuilder.add_filter(
-          query,
-          :events,
-          Query.get_filter(query, "event:hostname")
-        )
-      )
-      |> where(
-        [e],
-        ^Filters.WhereBuilder.add_filter(query, :events, Query.get_filter(query, "event:name"))
-      )
-      |> where(
-        [e],
-        ^Filters.WhereBuilder.add_filter(query, :events, Query.get_filter(query, "event:goal"))
-      )
-
-    q =
-      Enum.reduce(
-        Query.get_all_filters_by_prefix(query, "event:props"),
-        q,
-        &filter_by_custom_prop/2
-      )
 
     q
   end
@@ -441,82 +412,6 @@ defmodule Plausible.Stats.Base do
       |> String.replace("\\*", ".*")
 
     "^#{escaped}$"
-  end
-
-  defp filter_by_custom_prop([:is, "event:props:" <> prop_name, "(none)"], q) do
-    from(
-      e in q,
-      where: not has_key(e, :meta, ^prop_name)
-    )
-  end
-
-  defp filter_by_custom_prop([:is, "event:props:" <> prop_name, value], q) do
-    from(
-      e in q,
-      where: has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) == ^value
-    )
-  end
-
-  defp filter_by_custom_prop([:is_not, "event:props:" <> prop_name, "(none)"], q) do
-    from(
-      e in q,
-      where: has_key(e, :meta, ^prop_name)
-    )
-  end
-
-  defp filter_by_custom_prop([:is_not, "event:props:" <> prop_name, value], q) do
-    from(
-      e in q,
-      where: not has_key(e, :meta, ^prop_name) or get_by_key(e, :meta, ^prop_name) != ^value
-    )
-  end
-
-  defp filter_by_custom_prop([:matches, "event:props:" <> prop_name, value], q) do
-    regex = page_regex(value)
-
-    from(
-      e in q,
-      where:
-        has_key(e, :meta, ^prop_name) and
-          fragment("match(?, ?)", get_by_key(e, :meta, ^prop_name), ^regex)
-    )
-  end
-
-  defp filter_by_custom_prop([:member, "event:props:" <> prop_name, values], q) do
-    none_value_included = Enum.member?(values, "(none)")
-
-    from(
-      e in q,
-      where:
-        (has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) in ^values) or
-          (^none_value_included and not has_key(e, :meta, ^prop_name))
-    )
-  end
-
-  defp filter_by_custom_prop([:not_member, "event:props:" <> prop_name, values], q) do
-    none_value_included = Enum.member?(values, "(none)")
-
-    from(
-      e in q,
-      where:
-        (has_key(e, :meta, ^prop_name) and
-           get_by_key(e, :meta, ^prop_name) not in ^values) or
-          (^none_value_included and
-             has_key(e, :meta, ^prop_name) and
-             get_by_key(e, :meta, ^prop_name) not in ^values) or
-          (not (^none_value_included) and not has_key(e, :meta, ^prop_name))
-    )
-  end
-
-  defp filter_by_custom_prop([:matches_member, "event:props:" <> prop_name, clauses], q) do
-    regexes = Enum.map(clauses, &page_regex/1)
-
-    from(
-      e in q,
-      where:
-        has_key(e, :meta, ^prop_name) and
-          fragment("arrayExists(k -> match(?, k), ?)", get_by_key(e, :meta, ^prop_name), ^regexes)
-    )
   end
 
   defp total_visitors(site, query) do

@@ -17,6 +17,12 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     :exit_page_hostname
   ]
 
+  def build(table, query) do
+    query.filters
+    |> Enum.map(&add_filter(query, table, &1))
+    |> Enum.reduce(true, fn condition, acc -> dynamic([], ^acc and ^condition) end)
+  end
+
   # :TODO: Remove this
   def add_filter(_query, _table, nil), do: true
 
@@ -81,16 +87,12 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     filter_field(:hostname, filter)
   end
 
-  # :TODO: event:props
-  # :TODO: visit:entry_props:
-
-  def add_filter(_query, :sessions, [_, "event:" <> _ | _rest]) do
-    # Cannot apply sessions filters directly on session query where clause.
-    true
+  def add_filter(_query, :events, [_, "event:props:" <> prop_name | _rest] = filter) do
+    filter_custom_prop(prop_name, :meta, filter)
   end
 
-  def add_filter(_query, :sessions, [_, "visit:" <> key | _rest] = filter) do
-    filter_field(String.to_existing_atom(key), filter)
+  def add_filter(_query, :events, [_, "visit:entry_props:" <> _prop_name | _rest]) do
+    true
   end
 
   def add_filter(
@@ -110,6 +112,89 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
 
   def add_filter(_query, :events, [_, "visit:" <> _key | _rest]) do
     true
+  end
+
+  def add_filter(_query, :sessions, [_, "visit:entry_props:" <> prop_name | _rest] = filter) do
+    filter_custom_prop(prop_name, :entry_meta, filter)
+  end
+
+  def add_filter(_query, :sessions, [_, "visit:" <> key | _rest] = filter) do
+    filter_field(String.to_existing_atom(key), filter)
+  end
+
+  def add_filter(_query, :sessions, [_, "event:" <> _ | _rest]) do
+    # Cannot apply sessions filters directly on session query where clause.
+    true
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:is, _, "(none)"]) do
+    dynamic([t], not has_key(t, column_name, ^prop_name))
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:is, _, value]) do
+    dynamic(
+      [t],
+      has_key(t, column_name, ^prop_name) and get_by_key(t, column_name, ^prop_name) == ^value
+    )
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:is_not, _, "(none)"]) do
+    dynamic([t], has_key(t, column_name, ^prop_name))
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:is_not, _, value]) do
+    dynamic(
+      [t],
+      not has_key(t, column_name, ^prop_name) or get_by_key(t, column_name, ^prop_name) != ^value
+    )
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:matches, _, value]) do
+    regex = page_regex(value)
+
+    dynamic(
+      [t],
+      has_key(t, column_name, ^prop_name) and
+        fragment("match(?, ?)", get_by_key(t, column_name, ^prop_name), ^regex)
+    )
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:member, _, values]) do
+    none_value_included = Enum.member?(values, "(none)")
+
+    dynamic(
+      [t],
+      (has_key(t, column_name, ^prop_name) and get_by_key(t, column_name, ^prop_name) in ^values) or
+        (^none_value_included and not has_key(t, column_name, ^prop_name))
+    )
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:not_member, _, values]) do
+    none_value_included = Enum.member?(values, "(none)")
+
+    dynamic(
+      [t],
+      (has_key(t, column_name, ^prop_name) and
+         get_by_key(t, column_name, ^prop_name) not in ^values) or
+        (^none_value_included and
+           has_key(t, column_name, ^prop_name) and
+           get_by_key(t, column_name, ^prop_name) not in ^values) or
+        (not (^none_value_included) and not has_key(t, column_name, ^prop_name))
+    )
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:matches_member, _, clauses]) do
+    regexes = Enum.map(clauses, &page_regex/1)
+
+    dynamic(
+      [t],
+      has_key(t, column_name, ^prop_name) and
+        fragment(
+          "arrayExists(k -> match(?, k), ?)",
+          get_by_key(t, column_name, ^prop_name),
+          ^regexes
+        )
+    )
   end
 
   defp filter_field(db_field, [:is, _key, value]) do
