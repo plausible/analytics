@@ -299,7 +299,7 @@ defmodule Plausible.Exports do
   defmacrop visits(t) do
     quote do
       selected_as(
-        fragment("toUInt64(round(greatest(sum(?), 0)*any(_sample_factor)))", unquote(t).sign),
+        fragment("toUInt64(round(greatest(sum(?),0)*any(_sample_factor)))", unquote(t).sign),
         :visits
       )
     end
@@ -309,7 +309,7 @@ defmodule Plausible.Exports do
     quote do
       selected_as(
         fragment(
-          "toUInt64(round(greatest(sum(?*?),0)*any(_sample_factor)))",
+          "toUInt32(round(greatest(sum(?*?),0)*any(_sample_factor)))",
           unquote(t).sign,
           unquote(t).is_bounce
         ),
