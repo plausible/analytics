@@ -69,54 +69,13 @@ defmodule Plausible.Stats.Base do
           q
       end
 
+    goal_filter = Query.get_filter(query, "event:goal")
+
     q =
-      case Query.get_filter(query, "event:goal") do
-        [:is, _, {:page, path}] ->
-          from(e in q, where: e.pathname == ^path and e.name == "pageview")
-
-        [:matches, _, {:page, expr}] ->
-          regex = page_regex(expr)
-
-          from(e in q,
-            where: fragment("match(?, ?)", e.pathname, ^regex) and e.name == "pageview"
-          )
-
-        [:is, _, {:event, event}] ->
-          from(e in q, where: e.name == ^event)
-
-        [:member, _, clauses] ->
-          {events, pages} = split_goals(clauses)
-
-          from(e in q,
-            where: (e.pathname in ^pages and e.name == "pageview") or e.name in ^events
-          )
-
-        [:matches_member, _, clauses] ->
-          {events, pages} = split_goals(clauses, &page_regex/1)
-
-          event_clause =
-            if Enum.any?(events) do
-              dynamic([x], fragment("multiMatchAny(?, ?)", x.name, ^events))
-            else
-              dynamic([x], false)
-            end
-
-          page_clause =
-            if Enum.any?(pages) do
-              dynamic(
-                [x],
-                fragment("multiMatchAny(?, ?)", x.pathname, ^pages) and x.name == "pageview"
-              )
-            else
-              dynamic([x], false)
-            end
-
-          where_clause = dynamic([], ^event_clause or ^page_clause)
-
-          from(e in q, where: ^where_clause)
-
-        nil ->
-          q
+      if goal_filter do
+        Plausible.Stats.Filters.WhereBuilder.add_filter(q, :events, goal_filter)
+      else
+        q
       end
 
     q =
@@ -484,16 +443,6 @@ defmodule Plausible.Stats.Base do
       |> String.replace("\\*", ".*")
 
     "^#{escaped}$"
-  end
-
-  defp split_goals(clauses, map_fn \\ &Function.identity/1) do
-    groups =
-      Enum.group_by(clauses, fn {goal_type, _v} -> goal_type end, fn {_k, val} -> map_fn.(val) end)
-
-    {
-      Map.get(groups, :event, []),
-      Map.get(groups, :page, [])
-    }
   end
 
   defp filter_by_custom_prop([:is, "event:props:" <> prop_name, "(none)"], q) do
