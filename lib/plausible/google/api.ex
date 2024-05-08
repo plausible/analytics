@@ -75,7 +75,7 @@ defmodule Plausible.Google.API do
   end
 
   def fetch_stats(site, %{filters: %{} = filters, date_range: date_range}, limit) do
-    with site <- Plausible.Repo.preload(site, :google_auth),
+    with {:ok, site} <- ensure_search_console_property(site),
          {:ok, access_token} <- maybe_refresh_token(site.google_auth),
          {:ok, search_console_filters} <-
            get_search_console_filters(site.google_auth.property, filters),
@@ -93,8 +93,10 @@ defmodule Plausible.Google.API do
       |> Enum.map(fn row -> %{name: row["keys"], visitors: round(row["clicks"])} end)
       |> then(&{:ok, &1})
     else
+      :google_property_not_configured -> {:err, :google_property_not_configured}
       # Show empty report to user with message about not being able to get keyword data for this set of filters
-      :bad_filters -> raise "FILTERS ARE BAD"
+      :invalid_filters -> {:err, :invalid_filters}
+      {:error, error} -> {:error, error}
     end
   end
 
@@ -149,16 +151,19 @@ defmodule Plausible.Google.API do
   end
 
   defp get_search_console_filters(property, plausible_filters) do
+    plausible_filters = Map.drop(plausible_filters, ["visit:source"])
+
     search_console_filters =
       Enum.reduce_while(plausible_filters, [], fn plausible_filter, search_console_filters ->
         case transform_filter(property, plausible_filter) do
-          :err -> {:halt, :bad_filters}
+          :err -> {:halt, :invalid_filters}
           search_console_filter -> {:cont, [search_console_filter | search_console_filters]}
         end
       end)
 
     case search_console_filters do
-      :bad_filters -> :bad_filters
+      :invalid_filters -> :invalid_filters
+      [] -> {:ok, []}
       filters when is_list(filters) -> {:ok, [%{filters: filters}]}
     end
   end
@@ -185,7 +190,9 @@ defmodule Plausible.Google.API do
 
   defp transform_filter(property, {"visit:entry_page", {:matches_member, pages}})
        when is_list(pages) do
-    expression = Enum.map(pages, fn page -> page_regex(page) end) |> Enum.join("|")
+    expression =
+      Enum.map(pages, fn page -> page_regex(property_url(property, page)) end) |> Enum.join("|")
+
     %{dimension: "page", operator: "includingRegex", expression: expression}
   end
 
@@ -212,10 +219,7 @@ defmodule Plausible.Google.API do
     %{dimension: "country", operator: "includingRegex", expression: expression}
   end
 
-  defp transform_filter(_, filter) do
-    IO.inspect(filter)
-    :err
-  end
+  defp transform_filter(_, _filter), do: :err
 
   defp property_url("sc-domain:" <> domain, page), do: "https://" <> domain <> page
   defp property_url(url, page), do: url <> page
@@ -227,6 +231,16 @@ defmodule Plausible.Google.API do
   defp search_console_country(alpha_2) do
     country = Location.Country.get_country(alpha_2)
     country.alpha_3
+  end
+
+  defp ensure_search_console_property(site) do
+    site = Plausible.Repo.preload(site, :google_auth)
+
+    if site.google_auth && site.google_auth.property do
+      {:ok, site}
+    else
+      :google_property_not_configured
+    end
   end
 
   defp client_id() do
