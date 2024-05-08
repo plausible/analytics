@@ -228,7 +228,6 @@ defmodule Plausible.Stats.Query do
     end)
   end
 
-  # :TODO: Replace these callsites with proper mapping over query.filters
   def get_filter(query, name) do
     Enum.find(query.filters, fn [_, prop, _] ->
       prop == name
