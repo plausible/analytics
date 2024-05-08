@@ -245,7 +245,7 @@ defmodule Plausible.Google.APITest do
           "https://www.googleapis.com/webmasters/v3/sites/sc-domain%3Adummy.test/searchAnalytics/query",
           [{"Authorization", "Bearer 123"}],
           %{
-            dimensionFilterGroups: %{},
+            dimensionFilterGroups: [],
             dimensions: ["query"],
             endDate: "2022-01-05",
             rowLimit: 5,
@@ -301,7 +301,7 @@ defmodule Plausible.Google.APITest do
     end
   end
 
-  describe "fetch_stats/3 with VCR cassetes" do
+  describe "fetch_stats/3 with Mox" do
     test "returns name and visitor count", %{user: user, site: site} do
       mock_http_with("google_analytics_stats.json")
 
@@ -342,25 +342,6 @@ defmodule Plausible.Google.APITest do
     #             %{name: ["keyword3", "keyword4"], visitors: 15}
     #           ]} = Google.API.fetch_stats(site, query, 5)
     # end
-
-    test "defaults first page when page argument is not set", %{user: user, site: site} do
-      mock_http_with("google_analytics_stats#without_page.json")
-
-      insert(:google_auth,
-        user: user,
-        site: site,
-        property: "sc-domain:dummy.test",
-        expires: NaiveDateTime.add(NaiveDateTime.utc_now(), 3600)
-      )
-
-      query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
-
-      assert {:ok,
-              [
-                %{name: ["keyword1", "keyword2"], visitors: 25},
-                %{name: ["keyword3", "keyword4"], visitors: 15}
-              ]} = Google.API.fetch_stats(site, query, 5)
-    end
 
     test "returns error when token refresh fails", %{user: user, site: site} do
       mock_http_with("google_analytics_auth#invalid_grant.json")

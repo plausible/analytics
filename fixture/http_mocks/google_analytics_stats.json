@@ -4,7 +4,7 @@
     "url": "https://www.googleapis.com/webmasters/v3/sites/sc-domain%3Adummy.test/searchAnalytics/query",
     "method": "post",
     "request_body": {
-      "dimensionFilterGroups": {},
+      "dimensionFilterGroups": [],
       "dimensions": [
         "query"
       ],
