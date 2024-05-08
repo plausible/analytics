@@ -45,7 +45,8 @@ defmodule Plausible.Google.HTTP do
     filter_groups =
       if page do
         url = property_base_url(property)
-        [%{filters: [%{dimension: "page", expression: "https://#{url}#{page}"}]}]
+        [_, _, page_no] = page
+        [%{filters: [%{dimension: "page", expression: "https://#{url}#{page_no}"}]}]
       else
         %{}
       end

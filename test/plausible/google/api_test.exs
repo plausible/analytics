@@ -332,7 +332,7 @@ defmodule Plausible.Google.APITest do
       )
 
       query = %Plausible.Stats.Query{
-        filters: %{"page" => 5},
+        filters: [[:is, "page", 5]],
         date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])
       }
 

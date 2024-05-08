@@ -73,15 +73,17 @@ defmodule Plausible.Google.API do
     end
   end
 
-  def fetch_stats(site, %{date_range: date_range}, limit) do
+  def fetch_stats(site, query, limit) do
     with site <- Plausible.Repo.preload(site, :google_auth),
          {:ok, access_token} <- maybe_refresh_token(site.google_auth),
          {:ok, stats} <-
            HTTP.list_stats(
              access_token,
              site.google_auth.property,
-             date_range,
-             limit
+             query.date_range,
+             limit,
+             # :BUG: This type of filter does not exist.
+             Plausible.Stats.Query.get_filter(query, "page")
            ) do
       stats
       |> Map.get("rows", [])
