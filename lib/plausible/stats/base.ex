@@ -35,15 +35,7 @@ defmodule Plausible.Stats.Base do
   end
 
   defp query_events(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site)
-
-    q =
-      from(
-        e in "events_v2",
-        where: e.site_id == ^site.id,
-        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime,
-        where: ^Filters.WhereBuilder.build(:events, query)
-      )
+    q = from(e in "events_v2", where: ^Filters.WhereBuilder.build(:events, site, query))
 
     on_ee do
       q = Plausible.Stats.Sampling.add_query_hint(q, query)
@@ -53,23 +45,13 @@ defmodule Plausible.Stats.Base do
   end
 
   def query_sessions(site, query) do
-    {first_datetime, last_datetime} =
-      utc_boundaries(query, site)
-
-    q = from(s in "sessions_v2", where: s.site_id == ^site.id)
-
-    sessions_q =
-      if query.experimental_session_count? do
-        from s in q, where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
-      else
-        from s in q, where: s.start >= ^first_datetime and s.start < ^last_datetime
-      end
+    q = from(s in "sessions_v2", where: ^Filters.WhereBuilder.build(:sessions, site, query))
 
     on_ee do
-      sessions_q = Plausible.Stats.Sampling.add_query_hint(sessions_q, query)
+      q = Plausible.Stats.Sampling.add_query_hint(q, query)
     end
 
-    where(sessions_q, [], ^Filters.WhereBuilder.build(:sessions, query))
+    q
   end
 
   def select_event_metrics(metrics) do

@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
   """
 
   import Ecto.Query
-  import Plausible.Stats.Base, only: [page_regex: 1]
+  import Plausible.Stats.Base, only: [page_regex: 1, utc_boundaries: 2]
 
   alias Plausible.Stats.Query
 
@@ -17,12 +17,44 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     :exit_page_hostname
   ]
 
-  def build(table, query) do
+  # Builds WHERE clause for a given Query against sessions or events table
+  def build(table, site, query) do
+    base_condition = filter_site_time_range(table, site, query)
+
     query.filters
     |> Enum.map(&add_filter(query, table, &1))
-    |> Enum.reduce(true, fn condition, acc -> dynamic([], ^acc and ^condition) end)
+    |> Enum.reduce(base_condition, fn condition, acc -> dynamic([], ^acc and ^condition) end)
   end
 
+  defp filter_site_time_range(:events, site, query) do
+    {first_datetime, last_datetime} = utc_boundaries(query, site)
+
+    dynamic(
+      [e],
+      e.site_id == ^site.id and e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
+    )
+  end
+
+  defp filter_site_time_range(:sessions, site, %Query{experimental_session_count?: true} = query) do
+    {first_datetime, last_datetime} = utc_boundaries(query, site)
+
+    # Counts each _active_ session in time range even if they started before
+    dynamic(
+      [s],
+      s.site_id == ^site.id and s.timestamp >= ^first_datetime and s.start < ^last_datetime
+    )
+  end
+
+  defp filter_site_time_range(:sessions, site, query) do
+    {first_datetime, last_datetime} = utc_boundaries(query, site)
+
+    dynamic(
+      [s],
+      s.site_id == ^site.id and s.start >= ^first_datetime and s.start < ^last_datetime
+    )
+  end
+
+  # :TODO: defp
   def add_filter(_query, :events, [:is, "event:name", name]) do
     dynamic([e], e.name == ^name)
   end
