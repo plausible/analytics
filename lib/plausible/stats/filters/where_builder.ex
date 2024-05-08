@@ -22,8 +22,19 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     base_condition = filter_site_time_range(table, site, query)
 
     query.filters
-    |> Enum.map(&add_filter(query, table, &1))
+    |> Enum.map(&add_filter(table, query, &1))
     |> Enum.reduce(base_condition, fn condition, acc -> dynamic([], ^acc and ^condition) end)
+  end
+
+  # Builds WHERE clause condition based off of a filter and a custom column name
+  # Used for special business logic cases
+  def build_condition(db_field, filter) do
+    if filter do
+      filter_field(db_field, filter)
+    else
+      # Shortcut: No filter was actually passed.
+      true
+    end
   end
 
   defp filter_site_time_range(:events, site, query) do
@@ -54,36 +65,35 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     )
   end
 
-  # :TODO: defp
-  def add_filter(_query, :events, [:is, "event:name", name]) do
+  defp add_filter(:events, _query, [:is, "event:name", name]) do
     dynamic([e], e.name == ^name)
   end
 
-  def add_filter(_query, :events, [:member, "event:name", list]) do
+  defp add_filter(:events, _query, [:member, "event:name", list]) do
     dynamic([e], e.name in ^list)
   end
 
-  def add_filter(_query, :events, [:is, "event:goal", {:page, path}]) do
+  defp add_filter(:events, _query, [:is, "event:goal", {:page, path}]) do
     dynamic([e], e.pathname == ^path and e.name == "pageview")
   end
 
-  def add_filter(_query, :events, [:matches, "event:goal", {:page, expr}]) do
+  defp add_filter(:events, _query, [:matches, "event:goal", {:page, expr}]) do
     regex = page_regex(expr)
 
     dynamic([e], fragment("match(?, ?)", e.pathname, ^regex) and e.name == "pageview")
   end
 
-  def add_filter(_query, :events, [:is, "event:goal", {:event, event}]) do
+  defp add_filter(:events, _query, [:is, "event:goal", {:event, event}]) do
     dynamic([e], e.name == ^event)
   end
 
-  def add_filter(_query, :events, [:member, "event:goal", clauses]) do
+  defp add_filter(:events, _query, [:member, "event:goal", clauses]) do
     {events, pages} = split_goals(clauses)
 
     dynamic([e], (e.pathname in ^pages and e.name == "pageview") or e.name in ^events)
   end
 
-  def add_filter(_query, :events, [:matches_member, "event:goal", clauses]) do
+  defp add_filter(:events, _query, [:matches_member, "event:goal", clauses]) do
     {events, pages} = split_goals(clauses, &page_regex/1)
 
     event_clause =
@@ -108,27 +118,27 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     dynamic([e], ^where_clause)
   end
 
-  def add_filter(_query, :events, [_, "event:page" | _rest] = filter) do
+  defp add_filter(:events, _query, [_, "event:page" | _rest] = filter) do
     filter_field(:pathname, filter)
   end
 
-  def add_filter(_query, :events, [_, "event:hostname" | _rest] = filter) do
+  defp add_filter(:events, _query, [_, "event:hostname" | _rest] = filter) do
     filter_field(:hostname, filter)
   end
 
-  def add_filter(_query, :events, [_, "event:props:" <> prop_name | _rest] = filter) do
+  defp add_filter(:events, _query, [_, "event:props:" <> prop_name | _rest] = filter) do
     filter_custom_prop(prop_name, :meta, filter)
   end
 
-  def add_filter(_query, :events, [_, "visit:entry_props:" <> _prop_name | _rest]) do
+  defp add_filter(:events, _query, [_, "visit:entry_props:" <> _prop_name | _rest]) do
     true
   end
 
-  def add_filter(
-        %Query{experimental_reduced_joins?: true},
-        :events,
-        [_, "visit:" <> key | _rest] = filter
-      ) do
+  defp add_filter(
+         :events,
+         %Query{experimental_reduced_joins?: true},
+         [_, "visit:" <> key | _rest] = filter
+       ) do
     # Filter events query if experimental_reduced_joins? is true
     field_name = String.to_existing_atom(key)
 
@@ -139,19 +149,19 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     end
   end
 
-  def add_filter(_query, :events, [_, "visit:" <> _key | _rest]) do
+  defp add_filter(:events, _query, [_, "visit:" <> _key | _rest]) do
     true
   end
 
-  def add_filter(_query, :sessions, [_, "visit:entry_props:" <> prop_name | _rest] = filter) do
+  defp add_filter(:sessions, _query, [_, "visit:entry_props:" <> prop_name | _rest] = filter) do
     filter_custom_prop(prop_name, :entry_meta, filter)
   end
 
-  def add_filter(_query, :sessions, [_, "visit:" <> key | _rest] = filter) do
+  defp add_filter(:sessions, _query, [_, "visit:" <> key | _rest] = filter) do
     filter_field(String.to_existing_atom(key), filter)
   end
 
-  def add_filter(_query, :sessions, [_, "event:" <> _ | _rest]) do
+  defp add_filter(:sessions, _query, [_, "event:" <> _ | _rest]) do
     # Cannot apply sessions filters directly on session query where clause.
     true
   end

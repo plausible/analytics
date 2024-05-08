@@ -7,9 +7,6 @@ defmodule Plausible.Stats.Base do
   alias Plausible.Timezones
   import Ecto.Query
 
-  @no_ref "Direct / None"
-  @not_set "(not set)"
-
   @uniq_users_expression "toUInt64(round(uniq(?) * any(_sample_factor)))"
 
   def base_event_query(site, query) do
@@ -122,7 +119,9 @@ defmodule Plausible.Stats.Base do
   end
 
   defp select_session_metric(:bounce_rate, query) do
-    condition = dynamic_filter_condition(query, "event:page", :entry_page)
+    # :TRICKY: If page is passed to query, we only count bounce rate where users _entered_ at page.
+    event_page_filter = Query.get_filter(query, "event:page")
+    condition = Filters.WhereBuilder.build_condition(:entry_page, event_page_filter)
 
     %{
       bounce_rate:
@@ -208,45 +207,6 @@ defmodule Plausible.Stats.Base do
 
   defp select_session_metric(:percentage, _query), do: %{}
 
-  def dynamic_filter_condition(query, filter_key, db_field) do
-    case Query.get_filter(query, filter_key) do
-      [:is, _, value] ->
-        value = db_field_val(db_field, value)
-        dynamic([x], field(x, ^db_field) == ^value)
-
-      [:is_not, _, value] ->
-        value = db_field_val(db_field, value)
-        dynamic([x], field(x, ^db_field) != ^value)
-
-      [:matches_member, _, glob_exprs] ->
-        page_regexes = Enum.map(glob_exprs, &page_regex/1)
-        dynamic([x], fragment("multiMatchAny(?, ?)", field(x, ^db_field), ^page_regexes))
-
-      [:not_matches_member, _, glob_exprs] ->
-        page_regexes = Enum.map(glob_exprs, &page_regex/1)
-        dynamic([x], fragment("not(multiMatchAny(?, ?))", field(x, ^db_field), ^page_regexes))
-
-      [:matches, _, glob_expr] ->
-        regex = page_regex(glob_expr)
-        dynamic([x], fragment("match(?, ?)", field(x, ^db_field), ^regex))
-
-      [:does_not_match, _, glob_expr] ->
-        regex = page_regex(glob_expr)
-        dynamic([x], fragment("not(match(?, ?))", field(x, ^db_field), ^regex))
-
-      [:member, _, list] ->
-        list = Enum.map(list, &db_field_val(db_field, &1))
-        dynamic([x], field(x, ^db_field) in ^list)
-
-      [:not_member, _, list] ->
-        list = Enum.map(list, &db_field_val(db_field, &1))
-        dynamic([x], field(x, ^db_field) not in ^list)
-
-      nil ->
-        true
-    end
-  end
-
   def filter_converted_sessions(db_query, site, query) do
     if Query.has_event_filters?(query) do
       converted_sessions =
@@ -265,16 +225,6 @@ defmodule Plausible.Stats.Base do
       db_query
     end
   end
-
-  defp db_field_val(:source, @no_ref), do: ""
-  defp db_field_val(:referrer, @no_ref), do: ""
-  defp db_field_val(:utm_medium, @no_ref), do: ""
-  defp db_field_val(:utm_source, @no_ref), do: ""
-  defp db_field_val(:utm_campaign, @no_ref), do: ""
-  defp db_field_val(:utm_content, @no_ref), do: ""
-  defp db_field_val(:utm_term, @no_ref), do: ""
-  defp db_field_val(_, @not_set), do: ""
-  defp db_field_val(_, val), do: val
 
   defp beginning_of_time(candidate, native_stats_start_at) do
     if Timex.after?(native_stats_start_at, candidate) do
