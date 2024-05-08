@@ -83,16 +83,16 @@ defmodule Plausible.Stats.TableDecider do
 
   defp metric_partitioner(_, _), do: :either
 
-  defp filters_partitioner(_, [_, "event:" <> _, _]), do: :event
-  defp filters_partitioner(_, [_, "visit:entry_page", _]), do: :session
-  defp filters_partitioner(_, [_, "visit:entry_page_hostname", _]), do: :session
-  defp filters_partitioner(_, [_, "visit:exit_page", _]), do: :session
-  defp filters_partitioner(_, [_, "visit:exit_page_hostname", _]), do: :session
+  defp filters_partitioner(_, [_, "event:" <> _ | _rest]), do: :event
+  defp filters_partitioner(_, [_, "visit:entry_page" | _rest]), do: :session
+  defp filters_partitioner(_, [_, "visit:entry_page_hostname" | _rest]), do: :session
+  defp filters_partitioner(_, [_, "visit:exit_page" | _rest]), do: :session
+  defp filters_partitioner(_, [_, "visit:exit_page_hostname" | _rest]), do: :session
 
-  defp filters_partitioner(%Query{experimental_reduced_joins?: true}, [_, "visit:" <> _, _]),
+  defp filters_partitioner(%Query{experimental_reduced_joins?: true}, [_, "visit:" <> _ | _rest]),
     do: :either
 
-  defp filters_partitioner(_, [_, "visit:" <> _, _]),
+  defp filters_partitioner(_, [_, "visit:" <> _ | _rest]),
     do: :session
 
   defp filters_partitioner(%Query{experimental_reduced_joins?: false}, {unknown, _}) do

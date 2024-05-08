@@ -208,7 +208,7 @@ defmodule Plausible.Stats.Query do
 
   def remove_filters(query, prefixes) do
     new_filters =
-      Enum.reject(query.filters, fn [_, filter_key, _] ->
+      Enum.reject(query.filters, fn [_, filter_key | _rest] ->
         Enum.any?(prefixes, &String.starts_with?(filter_key, &1))
       end)
 
@@ -216,20 +216,19 @@ defmodule Plausible.Stats.Query do
   end
 
   def has_event_filters?(query) do
-    Enum.any?(query.filters, fn
-      [_, "event:" <> _, _] -> true
-      _ -> false
+    Enum.any?(query.filters, fn [_op, prop | _rest] ->
+      String.starts_with?(prop, "event:")
     end)
   end
 
   def get_filter_by_prefix(query, prefix) do
-    Enum.find(query.filters, fn [_op, prop, _value] ->
+    Enum.find(query.filters, fn [_op, prop | _rest] ->
       String.starts_with?(prop, prefix)
     end)
   end
 
   def get_filter(query, name) do
-    Enum.find(query.filters, fn [_, prop, _] ->
+    Enum.find(query.filters, fn [_op, prop | _rest] ->
       prop == name
     end)
   end
@@ -270,7 +269,7 @@ defmodule Plausible.Stats.Query do
   def trace(%__MODULE__{} = query, metrics) do
     filter_keys =
       query.filters
-      |> Enum.map(fn [_op, prop, _value] -> prop end)
+      |> Enum.map(fn [_op, prop | _rest] -> prop end)
       |> Enum.sort()
       |> Enum.join(";")
 

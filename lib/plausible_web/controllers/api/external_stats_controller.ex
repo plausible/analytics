@@ -119,7 +119,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
         {_, _, :all} ->
           true
 
-        {[_, "event:props:" <> prop, _], _property, allowed_props} ->
+        {[_, "event:props:" <> prop | _], _property, allowed_props} ->
           prop in allowed_props
 
         {_filter, "event:props:" <> prop, allowed_props} ->
@@ -236,7 +236,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp find_event_only_filter(query) do
     query.filters
-    |> Enum.map(fn [_op, prop, _value] -> prop end)
+    |> Enum.map(fn [_op, prop | _] -> prop end)
     |> Enum.find(&event_only_property?/1)
   end
 
@@ -352,7 +352,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end
   end
 
-  defp validate_filter(_site, [_, property, _]) do
+  defp validate_filter(_site, [_, property | _]) do
     if Plausible.Stats.Props.valid_prop?(property) do
       :ok
     else
