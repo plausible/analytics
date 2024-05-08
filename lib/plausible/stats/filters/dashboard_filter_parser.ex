@@ -26,7 +26,6 @@ defmodule Plausible.Stats.Filters.DashboardFilterParser do
     end)
   end
 
-  @spec filter_value(String.t(), String.t()) :: {atom(), String.t(), String.t() | [String.t()]}
   def filter_value(key, val) do
     {is_negated, val} = parse_negated_prefix(val)
     {is_contains, val} = parse_contains_prefix(val)
