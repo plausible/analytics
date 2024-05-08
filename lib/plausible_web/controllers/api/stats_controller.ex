@@ -682,34 +682,29 @@ defmodule PlausibleWeb.Api.StatsController do
   def referrer_drilldown(conn, %{"referrer" => "Google"} = params) do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
 
-    query =
-      Query.from(site, params)
-      |> Query.put_filter("visit:source", "Google")
+    query = Query.from(site, params)
 
     search_terms =
-      if site.google_auth && site.google_auth.property && !query.filters["goal"] do
+      if site.google_auth && site.google_auth.property do
         google_api().fetch_stats(site, query, params["limit"] || 9)
       end
-
-    %{:visitors => %{value: total_visitors}} = Stats.aggregate(site, query, [:visitors])
 
     user_id = get_session(conn, :current_user_id)
     is_admin = user_id && Plausible.Sites.has_admin_access?(user_id, site)
 
     case search_terms do
       nil ->
-        json(conn, %{not_configured: true, is_admin: is_admin, total_visitors: total_visitors})
+        json(conn, %{not_configured: true, is_admin: is_admin})
 
       {:ok, terms} ->
-        json(conn, %{search_terms: terms, total_visitors: total_visitors})
+        json(conn, %{search_terms: terms})
 
       {:error, _} ->
         conn
         |> put_status(502)
         |> json(%{
           not_configured: true,
-          is_admin: is_admin,
-          total_visitors: total_visitors
+          is_admin: is_admin
         })
     end
   end

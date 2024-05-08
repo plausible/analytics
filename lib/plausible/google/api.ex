@@ -149,8 +149,6 @@ defmodule Plausible.Google.API do
   end
 
   defp get_search_console_filters(property, plausible_filters) do
-    plausible_filters = Map.drop(plausible_filters, ["visit:source"])
-
     search_console_filters =
       Enum.reduce_while(plausible_filters, [], fn plausible_filter, search_console_filters ->
         case transform_filter(property, plausible_filter) do

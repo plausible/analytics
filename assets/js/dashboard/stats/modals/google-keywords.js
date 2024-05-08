@@ -21,7 +21,6 @@ class GoogleKeywordsModal extends React.Component {
       .then((res) => this.setState({
         loading: false,
         searchTerms: res.search_terms,
-        totalVisitors: res.total_visitors,
         notConfigured: res.not_configured,
         isOwner: res.is_owner
       }))
@@ -40,15 +39,7 @@ class GoogleKeywordsModal extends React.Component {
   }
 
   renderKeywords() {
-    if (this.state.query.filters.goal) {
-      return (
-        <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
-          <RocketIcon />
-          <div className="text-lg">Sorry, we cannot show which keywords converted best for goal <b>{this.state.query.filters.goal}</b></div>
-          <div className="text-lg">Google does not share this information</div>
-        </div>
-      )
-    } else if (this.state.notConfigured) {
+    if (this.state.notConfigured) {
       if (this.state.isOwner) {
         return (
           <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
@@ -91,14 +82,6 @@ class GoogleKeywordsModal extends React.Component {
     }
   }
 
-  renderGoalText() {
-    if (this.state.query.filters.goal) {
-      return (
-        <h1 className="text-xl font-semibold text-gray-500 dark:text-gray-200 leading-none">completed {this.state.query.filters.goal}</h1>
-      )
-    }
-  }
-
   renderBody() {
     if (this.state.loading) {
       return (
@@ -111,10 +94,6 @@ class GoogleKeywordsModal extends React.Component {
 
           <div className="my-4 border-b border-gray-300 dark:border-gray-500"></div>
           <main className="modal__content">
-            <h1 className="text-xl font-semibold mb-0 leading-none dark:text-gray-200">
-              {this.state.totalVisitors} visitors from Google<br />
-            </h1>
-            {this.renderGoalText()}
             { this.renderKeywords() }
           </main>
         </React.Fragment>
