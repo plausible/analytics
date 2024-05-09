@@ -267,7 +267,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         !@selected? && "dark:text-gray-100 text-gray-800"
       ]}
       id="event-tab"
-      x-on:click="tabSelectionInProgress = true"
+      x-on:click={!@selected? && "tabSelectionInProgress = true"}
       phx-click="switch-tab"
       phx-value-tab="custom_events"
       phx-target={@myself}
@@ -286,7 +286,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         !@selected? && "dark:text-gray-100 text-gray-800"
       ]}
       id="pageview-tab"
-      x-on:click="tabSelectionInProgress = true"
+      x-on:click={!@selected? && "tabSelectionInProgress = true"}
       phx-click="switch-tab"
       phx-value-tab="pageviews"
       phx-target={@myself}
