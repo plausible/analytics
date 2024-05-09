@@ -390,7 +390,7 @@ defmodule Plausible.Google.APITest do
           "filters" => "event:goal==Signup"
         })
 
-      assert {:err, :unsupported_filters} = Google.API.fetch_stats(site, query, 5)
+      assert {:error, :unsupported_filters} = Google.API.fetch_stats(site, query, 5)
     end
   end
 
