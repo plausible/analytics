@@ -192,7 +192,24 @@ defmodule Plausible.Stats.FilterSuggestions do
     filter_name =
       case filter_name do
         "page" -> :pathname
-        filter_name -> String.to_existing_atom(filter_name)
+        "entry_page" -> :entry_page
+        "source" -> :referrer_source
+        "os" -> :operating_system
+        "os_version" -> :operating_system_version
+        "screen" -> :screen_size
+        "exit_page" -> :exit_page
+        "utm_source" -> :utm_source
+        "utm_medium" -> :utm_medium
+        "utm_campaign" -> :utm_campaign
+        "utm_content" -> :utm_content
+        "utm_term" -> :utm_term
+        "referrer" -> :referrer
+        "browser" -> :browser
+        "browser_version" -> :browser_version
+        "operating_system" -> :operating_system
+        "operating_system_version" -> :operating_system_version
+        "screen_size" -> :screen_size
+        "hostname" -> :hostname
       end
 
     base_q =
