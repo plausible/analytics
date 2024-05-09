@@ -67,6 +67,6 @@ defmodule Plausible.Stats.GoalSuggestions do
       limit: 25
     )
     |> ClickhouseRepo.all()
-    |> Enum.map(&{&1, &1})
+    |> Enum.reject(&(String.length(&1) > Plausible.Goal.max_event_name_length()))
   end
 end

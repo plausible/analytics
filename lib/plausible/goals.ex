@@ -114,6 +114,15 @@ defmodule Plausible.Goals do
     end
   end
 
+  def batch_create_event_goals(names, site) do
+    Enum.reduce(names, [], fn name, acc ->
+      case insert_goal(site, %{event_name: name}, true) do
+        {:ok, _, goal} -> acc ++ [goal]
+        _ -> acc
+      end
+    end)
+  end
+
   @doc """
   If a goal belongs to funnel(s), we need to inspect their number of steps.
 

@@ -28,12 +28,14 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       |> assign(
         id: assigns.id,
         form: form,
+        event_name_options_count: length(assigns.event_name_options),
         current_user: assigns.current_user,
         domain: assigns.domain,
         selected_tab: "custom_events",
         site: site,
         has_access_to_revenue_goals?: has_access_to_revenue_goals?,
-        on_save_goal: assigns.on_save_goal
+        on_save_goal: assigns.on_save_goal,
+        on_autoconfigure: assigns.on_autoconfigure
       )
 
     {:ok, socket}
@@ -80,6 +82,21 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
             Add Goal →
           </PlausibleWeb.Components.Generic.button>
         </div>
+
+        <button
+          :if={@selected_tab == "custom_events" && @event_name_options_count > 0}
+          title="Use this to add any existing properties from your past events into your settings. This allows you to set up properties without having to manually enter each item."
+          class="mt-2 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
+          phx-click="autoconfigure"
+          phx-target={@myself}
+        >
+          <span :if={@event_name_options_count > 1}>
+            Already sending custom events? We've found <%= @event_name_options_count %> custom events from the last 6 months that are not yet configured as goals. Click here to add them.
+          </span>
+          <span :if={@event_name_options_count == 1}>
+            Already sending custom events? We've found 1 custom event from the last 6 months that is not yet configured as a goal. Click here to add it.
+          </span>
+        </button>
       </.form>
     </div>
     """
@@ -296,6 +313,10 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
+  end
+
+  def handle_event("autoconfigure", _params, socket) do
+    {:noreply, socket.assigns.on_autoconfigure.(socket)}
   end
 
   def suggest_page_paths(input, _options, site) do

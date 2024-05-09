@@ -25,10 +25,10 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
       )
 
       assert GoalSuggestions.suggest_event_names(site, "") == [
-               {"Outbound Link: Click", "Outbound Link: Click"},
-               {"Signup Newsletter", "Signup Newsletter"},
-               {"Signup", "Signup"},
-               {"Purchase", "Purchase"}
+               "Outbound Link: Click",
+               "Signup Newsletter",
+               "Signup",
+               "Purchase"
              ]
     end
 
@@ -49,10 +49,10 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
       ])
 
       assert GoalSuggestions.suggest_event_names(site, "Sign") == [
-               {"GA Signup", "GA Signup"},
-               {"Some Signup", "Some Signup"},
-               {"A Sign", "A Sign"},
-               {"sign", "sign"}
+               "GA Signup",
+               "Some Signup",
+               "A Sign",
+               "sign"
              ]
     end
 
@@ -62,15 +62,19 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
         build(:pageview)
       ])
 
-      assert GoalSuggestions.suggest_event_names(site, "") == [
-               {"Signup", "Signup"}
-             ]
+      assert GoalSuggestions.suggest_event_names(site, "") == ["Signup"]
     end
 
     test "can exclude goals from being suggested", %{site: site} do
       populate_stats(site, [build(:event, name: "Signup")])
 
       assert GoalSuggestions.suggest_event_names(site, "", exclude: ["Signup"]) == []
+    end
+
+    test "does not suggest event names longer than schema allows", %{site: site} do
+      populate_stats(site, [build(:event, name: String.duplicate("A", 121))])
+
+      assert GoalSuggestions.suggest_event_names(site, "") == []
     end
   end
 end

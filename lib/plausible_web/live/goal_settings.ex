@@ -21,6 +21,14 @@ defmodule PlausibleWeb.Live.GoalSettings do
       |> assign_new(:all_goals, fn %{site: site} ->
         Goals.for_site(site, preload_funnels?: true)
       end)
+      |> assign_new(:event_name_options, fn %{site: site, all_goals: all_goals} ->
+        exclude =
+          all_goals
+          |> Enum.reject(&is_nil(&1.event_name))
+          |> Enum.map(& &1.event_name)
+
+        Plausible.Stats.GoalSuggestions.suggest_event_names(site, "", exclude: exclude)
+      end)
       |> assign_new(:current_user, fn ->
         Plausible.Repo.get(Plausible.Auth.User, user_id)
       end)
@@ -44,12 +52,19 @@ defmodule PlausibleWeb.Live.GoalSettings do
         <.live_component
           module={PlausibleWeb.Live.GoalSettings.Form}
           id="goals-form"
+          event_name_options={@event_name_options}
           domain={@domain}
           site={@site}
           current_user={@current_user}
           on_save_goal={
             fn goal, socket ->
               send(self(), {:goal_added, goal})
+              Modal.close(socket, "goals-form-modal")
+            end
+          }
+          on_autoconfigure={
+            fn socket ->
+              send(self(), :autoconfigure)
               Modal.close(socket, "goals-form-modal")
             end
           }
@@ -81,16 +96,24 @@ defmodule PlausibleWeb.Live.GoalSettings do
     {:noreply, assign(socket, displayed_goals: new_list, filter_text: filter_text)}
   end
 
-  def handle_event("delete-goal", %{"goal-id" => goal_id}, socket) do
+  def handle_event("delete-goal", %{"goal-id" => goal_id} = params, socket) do
     goal_id = String.to_integer(goal_id)
 
     case Plausible.Goals.delete(goal_id, socket.assigns.site_id) do
       :ok ->
+        event_name_options =
+          if goal_name = params["goal-name"] do
+            [goal_name | socket.assigns.event_name_options]
+          else
+            socket.assigns.event_name_options
+          end
+
         socket =
           socket
           |> put_live_flash(:success, "Goal deleted successfully")
           |> assign(
             all_goals: Enum.reject(socket.assigns.all_goals, &(&1.id == goal_id)),
+            event_name_options: event_name_options,
             displayed_goals: Enum.reject(socket.assigns.displayed_goals, &(&1.id == goal_id))
           )
 
@@ -107,9 +130,32 @@ defmodule PlausibleWeb.Live.GoalSettings do
       |> assign(
         filter_text: "",
         all_goals: [goal | socket.assigns.all_goals],
+        event_name_options:
+          Enum.reject(socket.assigns.event_name_options, &(&1 == goal.event_name)),
         displayed_goals: [goal | socket.assigns.all_goals]
       )
       |> put_live_flash(:success, "Goal saved successfully")
+
+    {:noreply, socket}
+  end
+
+  def handle_info(:autoconfigure, socket) do
+    %{event_name_options: names, site: site} = socket.assigns
+
+    added_goals =
+      names
+      |> Plausible.Goals.batch_create_event_goals(site)
+      |> Enum.map(&Map.put(&1, :funnels, []))
+
+    socket =
+      socket
+      |> assign(
+        filter_text: "",
+        all_goals: added_goals ++ socket.assigns.all_goals,
+        event_name_options: [],
+        displayed_goals: added_goals ++ socket.assigns.all_goals
+      )
+      |> put_live_flash(:success, "All goals added successfully")
 
     {:noreply, socket}
   end
