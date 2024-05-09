@@ -31,8 +31,10 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       lv = get_liveview(conn, site)
       html = render(lv)
 
-      [event_name, currency_display, currency_submit] = find(html, "#goals-form input")
+      [event_name_display, event_name, currency_display, currency_submit] =
+        find(html, "#goals-form input")
 
+      assert name_of(event_name_display) == "display-event_name_input"
       assert name_of(event_name) == "goal[event_name]"
       assert name_of(currency_display) == "display-currency_input"
       assert name_of(currency_submit) == "goal[currency]"
@@ -51,8 +53,8 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       lv = get_liveview(conn, site)
       html = render(lv)
 
-      [event_name] = find(html, "#goals-form input")
-
+      [event_name_display, event_name | _] = find(html, "#goals-form input")
+      assert name_of(event_name_display) == "display-event_name_input"
       assert name_of(event_name) == "goal[event_name]"
 
       lv |> element(~s/a#pageview-tab/) |> render_click()
