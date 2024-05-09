@@ -237,6 +237,17 @@ defmodule Plausible.Factory do
     }
   end
 
+  def imported_custom_events_factory do
+    %{
+      table: "imported_custom_events",
+      date: Timex.today(),
+      name: "",
+      link_url: "",
+      visitors: 1,
+      events: 1
+    }
+  end
+
   def imported_locations_factory do
     %{
       table: "imported_locations",

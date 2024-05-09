@@ -1204,9 +1204,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     params = Map.put(params, "property", prefixed_prop)
 
-    query =
-      Query.from(site, params)
-      |> Map.put(:include_imported, false)
+    query = Query.from(site, params)
 
     metrics =
       if query.filters["event:goal"] do

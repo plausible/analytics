@@ -26,6 +26,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
     "imported_locations",
     "imported_operating_systems",
     "imported_pages",
+    "imported_custom_events",
     "imported_sources",
     "imported_visitors"
   ]

@@ -204,4 +204,79 @@ defmodule Plausible.Stats.QueryTest do
       assert q.filters["visit:source"] == {:is, "Twitter"}
     end
   end
+
+  describe "include_imported" do
+    setup [:create_site]
+
+    test "is true when requested via params and imported data exists", %{site: site} do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: true} =
+               Query.from(site, %{"period" => "day", "with_imported" => "true"})
+    end
+
+    test "is false when imported data does not exist", %{site: site} do
+      assert %{include_imported: false} =
+               Query.from(site, %{"period" => "day", "with_imported" => "true"})
+    end
+
+    test "is false when imported data exists but is out of the date range", %{site: site} do
+      insert(:site_import, site: site, start_date: ~D[2021-01-01], end_date: ~D[2022-01-01])
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: false} =
+               Query.from(site, %{"period" => "day", "with_imported" => "true"})
+    end
+
+    test "is false in realtime even when imported data from today exists", %{site: site} do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: false} =
+               Query.from(site, %{"period" => "realtime", "with_imported" => "true"})
+    end
+
+    test "is false when an arbitrary custom property filter is used", %{site: site} do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: false} =
+               Query.from(site, %{
+                 "period" => "day",
+                 "with_imported" => "true",
+                 "property" => "event:props:url",
+                 "filters" => Jason.encode!(%{"props" => %{"author" => "!John Doe"}})
+               })
+    end
+
+    test "is true when breaking down by url and filtering by outbound link or file download goal",
+         %{site: site} do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      Enum.each(["Outbound Link: Click", "File Download"], fn goal_name ->
+        assert %{include_imported: true} =
+                 Query.from(site, %{
+                   "period" => "day",
+                   "with_imported" => "true",
+                   "property" => "event:props:url",
+                   "filters" => Jason.encode!(%{"goal" => goal_name})
+                 })
+      end)
+    end
+
+    test "is false when breaking down by url but without a special goal filter",
+         %{site: site} do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: false} =
+               Query.from(site, %{
+                 "period" => "day",
+                 "with_imported" => "true",
+                 "property" => "event:props:url"
+               })
+    end
+  end
 end

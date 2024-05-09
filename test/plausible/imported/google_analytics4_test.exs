@@ -16,6 +16,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
                       "fixture/ga4_report_imported_sources.json",
                       "fixture/ga4_report_imported_pages.json",
                       "fixture/ga4_report_imported_entry_pages.json",
+                      "fixture/ga4_report_imported_custom_events.json",
                       "fixture/ga4_report_imported_locations.json",
                       "fixture/ga4_report_imported_devices.json",
                       "fixture/ga4_report_imported_browsers.json",
@@ -89,6 +90,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
             "imported_pages" -> 3340
             "imported_entry_pages" -> 2934
             "imported_exit_pages" -> 0
+            "imported_custom_events" -> 56
             "imported_locations" -> 2291
             "imported_devices" -> 93
             "imported_browsers" -> 233
@@ -122,9 +124,19 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
       conn = put_req_header(conn, "authorization", "Bearer #{api_key}")
 
-      assert_timeseries(conn, common_params)
-      assert_pages(conn, common_params)
+      insert(:goal, event_name: "Outbound Link: Click", site: site)
+      insert(:goal, event_name: "view_search_results", site: site)
+      insert(:goal, event_name: "scroll", site: site)
 
+      # Timeseries
+      assert_timeseries(conn, common_params)
+
+      # Breakdown (event:*)
+      assert_pages(conn, common_params)
+      assert_custom_events(conn, common_params)
+      assert_outbound_link_urls(conn, common_params)
+
+      # Breakdown (visit:*)
       assert_sources(conn, breakdown_params)
       assert_utm_mediums(conn, breakdown_params)
       assert_entry_pages(conn, breakdown_params)
@@ -133,6 +145,8 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
       assert_browsers(conn, breakdown_params)
       assert_os(conn, breakdown_params)
       assert_os_versions(conn, breakdown_params)
+
+      # Misc
       assert_active_visitors(site_import)
     end
 
@@ -202,6 +216,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
             "imported_devices" -> 0
             "imported_browsers" -> 0
             "imported_operating_systems" -> 0
+            "imported_custom_events" -> 0
           end
 
         query = from(imported in table, where: imported.site_id == ^site.id)
@@ -229,6 +244,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
             "imported_devices" -> 93
             "imported_browsers" -> 233
             "imported_operating_systems" -> 1068
+            "imported_custom_events" -> 56
           end
 
         query = from(imported in table, where: imported.site_id == ^site.id)
@@ -263,6 +279,67 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     |> Enum.each(fn [time_on_page] ->
       assert time_on_page == 0
     end)
+  end
+
+  defp assert_custom_events(conn, params) do
+    params =
+      params
+      |> Map.put("metrics", "visitors,events,conversion_rate")
+      |> Map.put("property", "event:goal")
+
+    %{"results" => results} =
+      get(conn, "/api/v1/stats/breakdown", params) |> json_response(200)
+
+    assert results == [
+             %{
+               "goal" => "scroll",
+               "visitors" => 1513,
+               "events" => 2130,
+               "conversion_rate" => 24.7
+             },
+             %{
+               "goal" => "Outbound Link: Click",
+               "visitors" => 17,
+               "events" => 17,
+               "conversion_rate" => 0.3
+             },
+             %{
+               "goal" => "view_search_results",
+               "visitors" => 11,
+               "events" => 30,
+               "conversion_rate" => 0.2
+             }
+           ]
+  end
+
+  defp assert_outbound_link_urls(conn, params) do
+    params =
+      Map.merge(params, %{
+        "metrics" => "visitors,events,conversion_rate",
+        "property" => "event:props:url",
+        "filters" => "event:goal==Outbound Link: Click"
+      })
+
+    %{"results" => results} =
+      get(conn, "/api/v1/stats/breakdown", params) |> json_response(200)
+
+    assert length(results) == 10
+
+    assert List.first(results) ==
+             %{
+               "url" => "https://www.facebook.com/kuhinjskeprice",
+               "visitors" => 6,
+               "conversion_rate" => 0.1,
+               "events" => 6
+             }
+
+    assert %{
+             "url" =>
+               "http://www.jamieoliver.com/recipes/pasta-recipes/spinach-ricotta-cannelloni/",
+             "visitors" => 1,
+             "conversion_rate" => 0.0,
+             "events" => 1
+           } in results
   end
 
   defp assert_timeseries(conn, params) do
