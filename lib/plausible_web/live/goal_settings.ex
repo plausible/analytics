@@ -58,6 +58,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
           domain={@domain}
           site={@site}
           current_user={@current_user}
+          existing_goals={@all_goals}
           on_save_goal={
             fn goal, socket ->
               send(self(), {:goal_added, goal})

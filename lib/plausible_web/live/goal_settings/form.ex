@@ -34,6 +34,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         selected_tab: "custom_events",
         site: site,
         has_access_to_revenue_goals?: has_access_to_revenue_goals?,
+        existing_goals: assigns.existing_goals,
         on_save_goal: assigns.on_save_goal,
         on_autoconfigure: assigns.on_autoconfigure
       )
@@ -66,6 +67,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           f={f}
           current_user={@current_user}
           site={@site}
+          existing_goals={@existing_goals}
           has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
           x-init="tabSelectionInProgress = false"
         />
@@ -120,7 +122,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           "py-2"
         ]}
         module={ComboBox}
-        suggest_fun={fn input, options -> suggest_page_paths(input, options, @site) end}
+        suggest_fun={fn input, _options -> suggest_page_paths(input, @site) end}
         creatable
       />
 
@@ -136,6 +138,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   attr(:f, Phoenix.HTML.Form)
   attr(:site, Plausible.Site)
   attr(:current_user, Plausible.Auth.User)
+  attr(:existing_goals, :list)
   attr(:has_access_to_revenue_goals?, :boolean)
 
   attr(:rest, :global)
@@ -154,13 +157,20 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         </div>
 
         <div>
-          <.input
-            autofocus
-            field={@f[:event_name]}
-            label="Event Name"
-            class="focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-7/12 rounded-md sm:text-sm border-gray-300 dark:border-gray-500 w-full p-2 mt-2"
+          <.label for="event_name_input">
+            Event Name
+          </.label>
+
+          <.live_component
+            id="event_name_input"
+            submit_name="goal[event_name]"
             placeholder="e.g. Signup"
-            autocomplete="off"
+            class={[
+              "py-2"
+            ]}
+            module={ComboBox}
+            suggest_fun={fn input, _options -> suggest_event_names(input, @site, @existing_goals) end}
+            creatable
           />
         </div>
 
@@ -241,6 +251,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
             />
           </div>
         </div>
+
+        <.error :for={{msg, opts} <- @f[:event_name].errors}>
+          <%= Enum.reduce(opts, msg, fn {key, value}, acc ->
+            String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
+          end) %>
+        </.error>
       </div>
     </div>
     """
@@ -318,11 +334,22 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     {:noreply, socket.assigns.on_autoconfigure.(socket)}
   end
 
-  def suggest_page_paths(input, _options, site) do
+  def suggest_page_paths(input, site) do
     query = Plausible.Stats.Query.from(site, %{"with_imported" => "true", "period" => "all"})
 
     site
     |> Plausible.Stats.filter_suggestions(query, "page", input)
     |> Enum.map(fn %{label: label, value: value} -> {label, value} end)
+  end
+
+  def suggest_event_names(input, site, existing_goals) do
+    existing_names =
+      existing_goals
+      |> Enum.reject(&is_nil(&1.event_name))
+      |> Enum.map(& &1.event_name)
+
+    site
+    |> Plausible.Stats.GoalSuggestions.suggest_event_names(input, exclude: existing_names)
+    |> Enum.map(fn name -> {name, name} end)
   end
 end
