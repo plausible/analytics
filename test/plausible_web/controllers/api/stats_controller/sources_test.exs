@@ -1607,8 +1607,6 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     end
 
     test "gets keywords from Google", %{conn: conn, user: user, site: site} do
-      insert(:google_auth, user: user, user: user, site: site, property: "sc-domain:example.com")
-
       populate_stats(site, [
         build(:pageview,
           referrer_source: "DuckDuckGo",
@@ -1627,10 +1625,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day")
       {:ok, terms} = Plausible.Google.API.Mock.fetch_stats(nil, nil, nil)
 
-      assert json_response(conn, 200) == %{
-               "total_visitors" => 2,
-               "search_terms" => terms
-             }
+      assert json_response(conn, 200) == %{"search_terms" => terms}
     end
 
     test "works when filter expression is provided for source", %{

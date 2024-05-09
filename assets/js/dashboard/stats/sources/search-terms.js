@@ -40,7 +40,7 @@ export default class SearchTerms extends React.Component {
         searchTerms: res.search_terms || [],
         notConfigured: res.not_configured,
         isAdmin: res.is_admin,
-        invalidFilters: res.invalid_filters
+        unsupportedFilters: res.unsupported_filters
       })).catch((error) =>
         {
             this.setState({ loading: false, searchTerms: [], notConfigured: true, error: true, isAdmin: error.payload.is_admin })
@@ -69,7 +69,7 @@ export default class SearchTerms extends React.Component {
   }
 
   renderList() {
-   if (this.state.invalidFilters)  {
+   if (this.state.unsupportedFilters)  {
       return (
         <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
           <RocketIcon />
@@ -81,7 +81,7 @@ export default class SearchTerms extends React.Component {
         <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
           <RocketIcon />
           <div>
-          This site is not connected to Search Console so we cannot show the search phrases.
+          This site is not connected to Search Console so we cannot show the search terms
           {this.state.isAdmin && this.state.error && <><br/><br/><p>Please click below to connect your Search Console account.</p></>}
           </div>
           {this.state.isAdmin && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/integrations`} className="button mt-4">Connect with Google</a> }

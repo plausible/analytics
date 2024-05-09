@@ -115,7 +115,7 @@
 
     request.onreadystatechange = function() {
       if (request.readyState === 4) {
-        options && options.callback && options.callback()
+        options && options.callback && options.callback({status: request.status})
       }
     }
   }

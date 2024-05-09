@@ -691,8 +691,8 @@ defmodule PlausibleWeb.Api.StatsController do
       {:err, :google_propery_not_configured} ->
         json(conn, %{not_configured: true, is_admin: is_admin})
 
-      {:err, :invalid_filters} ->
-        json(conn, %{invalid_filters: true})
+      {:err, :unsupported_filters} ->
+        json(conn, %{unsupported_filters: true})
 
       {:ok, terms} ->
         json(conn, %{search_terms: terms})

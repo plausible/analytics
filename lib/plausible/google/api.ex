@@ -6,9 +6,9 @@ defmodule Plausible.Google.API do
   use Timex
 
   alias Plausible.Google.HTTP
+  alias Plausible.Google.SearchConsole
 
   require Logger
-  import Plausible.Stats.Base, only: [page_regex: 1]
 
   @search_console_scope URI.encode_www_form(
                           "email https://www.googleapis.com/auth/webmasters.readonly"
@@ -78,7 +78,7 @@ defmodule Plausible.Google.API do
     with {:ok, site} <- ensure_search_console_property(site),
          {:ok, access_token} <- maybe_refresh_token(site.google_auth),
          {:ok, search_console_filters} <-
-           get_search_console_filters(site.google_auth.property, filters),
+           SearchConsole.Filters.transform(site.google_auth.property, filters),
          {:ok, stats} <-
            HTTP.list_stats(
              access_token,
@@ -94,8 +94,7 @@ defmodule Plausible.Google.API do
       |> then(&{:ok, &1})
     else
       :google_property_not_configured -> {:err, :google_property_not_configured}
-      # Show empty report to user with message about not being able to get keyword data for this set of filters
-      :invalid_filters -> {:err, :invalid_filters}
+      :unsupported_filters -> {:err, :unsupported_filters}
       {:error, error} -> {:error, error}
     end
   end
@@ -148,89 +147,6 @@ defmodule Plausible.Google.API do
   defp needs_to_refresh_token?(%NaiveDateTime{} = expires_at) do
     thirty_seconds_ago = Timex.shift(Timex.now(), seconds: 30)
     Timex.before?(expires_at, thirty_seconds_ago)
-  end
-
-  defp get_search_console_filters(property, plausible_filters) do
-    plausible_filters = Map.drop(plausible_filters, ["visit:source"])
-
-    search_console_filters =
-      Enum.reduce_while(plausible_filters, [], fn plausible_filter, search_console_filters ->
-        case transform_filter(property, plausible_filter) do
-          :err -> {:halt, :invalid_filters}
-          search_console_filter -> {:cont, [search_console_filter | search_console_filters]}
-        end
-      end)
-
-    case search_console_filters do
-      :invalid_filters -> :invalid_filters
-      [] -> {:ok, []}
-      filters when is_list(filters) -> {:ok, [%{filters: filters}]}
-    end
-  end
-
-  defp transform_filter(property, {"event:page", filter}) do
-    transform_filter(property, {"visit:entry_page", filter})
-  end
-
-  defp transform_filter(property, {"visit:entry_page", {:is, page}}) when is_binary(page) do
-    %{dimension: "page", expression: property_url(property, page)}
-  end
-
-  defp transform_filter(property, {"visit:entry_page", {:member, pages}}) when is_list(pages) do
-    expression =
-      Enum.map(pages, fn page -> property_url(property, Regex.escape(page)) end) |> Enum.join("|")
-
-    %{dimension: "page", operator: "includingRegex", expression: expression}
-  end
-
-  defp transform_filter(property, {"visit:entry_page", {:matches, page}}) when is_binary(page) do
-    page = page_regex(property_url(property, page))
-    %{dimension: "page", operator: "includingRegex", expression: page}
-  end
-
-  defp transform_filter(property, {"visit:entry_page", {:matches_member, pages}})
-       when is_list(pages) do
-    expression =
-      Enum.map(pages, fn page -> page_regex(property_url(property, page)) end) |> Enum.join("|")
-
-    %{dimension: "page", operator: "includingRegex", expression: expression}
-  end
-
-  defp transform_filter(_property, {"visit:screen", {:is, device}}) when is_binary(device) do
-    %{dimension: "device", expression: search_console_device(device)}
-  end
-
-  defp transform_filter(_property, {"visit:screen", {:is, device}}) when is_binary(device) do
-    %{dimension: "device", expression: search_console_device(device)}
-  end
-
-  defp transform_filter(_property, {"visit:screen", {:member, devices}}) when is_list(devices) do
-    expression = devices |> Enum.join("|")
-    %{dimension: "device", operator: "includingRegex", expression: expression}
-  end
-
-  defp transform_filter(_property, {"visit:country", {:is, country}}) when is_binary(country) do
-    %{dimension: "country", expression: search_console_country(country)}
-  end
-
-  defp transform_filter(_property, {"visit:country", {:member, countries}})
-       when is_list(countries) do
-    expression = Enum.map(countries, &search_console_country/1) |> Enum.join("|")
-    %{dimension: "country", operator: "includingRegex", expression: expression}
-  end
-
-  defp transform_filter(_, _filter), do: :err
-
-  defp property_url("sc-domain:" <> domain, page), do: "https://" <> domain <> page
-  defp property_url(url, page), do: url <> page
-
-  defp search_console_device("Desktop"), do: "DESKTOP"
-  defp search_console_device("Mobile"), do: "MOBILE"
-  defp search_console_device("Tablet"), do: "TABLET"
-
-  defp search_console_country(alpha_2) do
-    country = Location.Country.get_country(alpha_2)
-    country.alpha_3
   end
 
   defp ensure_search_console_property(site) do
