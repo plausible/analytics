@@ -482,6 +482,41 @@ case mailer_adapter do
         port: port
     end
 
+    if get_var_from_path_or_env(config_dir, "SMTP_HOST_SSL_ENABLED") do
+      config :plausible, Plausible.Mailer, protocol: :ssl
+    end
+
+    if smtp_tls_versions = get_var_from_path_or_env(config_dir, "SMTP_TLS_VERSIONS") do
+      versions =
+        smtp_tls_versions
+        |> String.split(",")
+        |> Enum.map(fn version ->
+          case version |> String.trim() |> String.downcase() do
+            "tlsv1" ->
+              :tlsv1
+
+            "tlsv1.1" ->
+              :"tlsv1.1"
+
+            "tlsv1.2" ->
+              :"tlsv1.2"
+
+            "tlsv1.3" ->
+              :"tlsv1.3"
+
+            unmatched ->
+              raise ArgumentError,
+                    "unrecognized TLS version is passed in SMTP_TLS_VERSIONS: #{inspect(unmatched)}"
+          end
+        end)
+
+      if Enum.empty?(versions) do
+        raise ArgumentError, "no TLS versions are passed in SMTP_TLS_VERSIONS"
+      end
+
+      config :plausible, Plausible.Mailer, transport_opts: [versions: versions]
+    end
+
   "Bamboo.LocalAdapter" ->
     config :plausible, Plausible.Mailer, adapter: Bamboo.LocalAdapter
 

@@ -165,6 +165,50 @@ defmodule Plausible.ConfigTest do
              ]
     end
 
+    test "Bamboo.Mua (TLS versions)" do
+      env = [
+        {"MAILER_ADAPTER", "Bamboo.Mua"},
+        {"SMTP_TLS_VERSIONS", "TLSv1,TLSv1.1,TLSv1.2,TLSv1.3"}
+      ]
+
+      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+               {:adapter, Bamboo.Mua},
+               {:transport_opts, [versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2", :"tlsv1.3"]]}
+             ]
+    end
+
+    test "Bamboo.Mua (invalid TLS version)" do
+      env = [
+        {"MAILER_ADAPTER", "Bamboo.Mua"},
+        {"SMTP_TLS_VERSIONS", "i am, invalid"}
+      ]
+
+      assert_raise ArgumentError,
+                   "unrecognized TLS version is passed in SMTP_TLS_VERSIONS: \"i am\"",
+                   fn -> runtime_config(env) end
+
+      env = [
+        {"MAILER_ADAPTER", "Bamboo.Mua"},
+        {"SMTP_TLS_VERSIONS", ""}
+      ]
+
+      assert_raise ArgumentError,
+                   "unrecognized TLS version is passed in SMTP_TLS_VERSIONS: \"\"",
+                   fn -> runtime_config(env) end
+    end
+
+    test "Bamboo.Mua (SMTPS)" do
+      env = [
+        {"MAILER_ADAPTER", "Bamboo.Mua"},
+        {"SMTP_HOST_SSL_ENABLED", "1"}
+      ]
+
+      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+               {:adapter, Bamboo.Mua},
+               {:protocol, :ssl}
+             ]
+    end
+
     test "unknown adapter raises" do
       env = {"MAILER_ADAPTER", "Bamboo.FakeAdapter"}
 
