@@ -49,13 +49,6 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def settings_tabs(conn) do
-    imports_exports_key =
-      if FunWithFlags.enabled?(:csv_imports_exports, for: conn.assigns.site) do
-        "Imports & Exports"
-      else
-        "Imports"
-      end
-
     [
       %{key: "General", value: "general", icon: :rocket_launch},
       %{key: "People", value: "people", icon: :users},
@@ -66,7 +59,7 @@ defmodule PlausibleWeb.LayoutView do
       end,
       %{key: "Custom Properties", value: "properties", icon: :document_text},
       %{key: "Integrations", value: "integrations", icon: :arrow_path_rounded_square},
-      %{key: imports_exports_key, value: "imports-exports", icon: :arrows_up_down},
+      %{key: "Imports & Exports", value: "imports-exports", icon: :arrows_up_down},
       %{
         key: "Shields",
         icon: :shield_exclamation,

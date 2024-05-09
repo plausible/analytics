@@ -37,13 +37,10 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       |> assign_new(:current_user, fn ->
         Plausible.Repo.get(Plausible.Auth.User, user_id)
       end)
-      |> assign_new(:max_imports, fn %{site: site} ->
-        Imported.max_complete_imports(site)
-      end)
 
     :ok = Imported.listen()
 
-    {:ok, socket}
+    {:ok, assign(socket, max_imports: Imported.max_complete_imports())}
   end
 
   def render(assigns) do
@@ -54,8 +51,6 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       )
 
     at_maximum? = length(assigns.site_imports) >= assigns.max_imports
-
-    csv_imports_exports_enabled? = FunWithFlags.enabled?(:csv_imports_exports, for: assigns.site)
 
     import_warning =
       cond do
@@ -74,8 +69,7 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       assign(assigns,
         import_in_progress?: import_in_progress?,
         at_maximum?: at_maximum?,
-        import_warning: import_warning,
-        csv_imports_exports_enabled?: csv_imports_exports_enabled?
+        import_warning: import_warning
       )
 
     ~H"""
@@ -90,7 +84,6 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       </.button_link>
 
       <.button_link
-        :if={@csv_imports_exports_enabled?}
         class="w-36 h-20"
         theme="bright"
         disabled={@import_in_progress? or @at_maximum?}

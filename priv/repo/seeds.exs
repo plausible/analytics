@@ -10,9 +10,6 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
-FunWithFlags.enable(:imports_exports)
-FunWithFlags.enable(:csv_imports_exports)
-
 user = Plausible.Factory.insert(:user, email: "user@plausible.test", password: "plausible")
 
 native_stats_range =
