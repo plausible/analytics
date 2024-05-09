@@ -343,8 +343,8 @@ defmodule Plausible.Google.APITest do
 
       assert {:ok,
               [
-                %{name: ["keyword1", "keyword2"], visitors: 25},
-                %{name: ["keyword3", "keyword4"], visitors: 15}
+                %{name: "keyword1", visitors: 25, ctr: 36.8, impressions: 50, position: 2.2},
+                %{name: "keyword3", visitors: 15}
               ]} = Google.API.fetch_stats(site, query, 5)
     end
 

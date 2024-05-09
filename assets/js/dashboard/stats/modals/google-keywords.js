@@ -3,7 +3,7 @@ import { Link, withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
-import numberFormatter from '../../util/number-formatter'
+import numberFormatter, { percentageFormatter } from '../../util/number-formatter'
 import {parseQuery} from '../../query'
 import RocketIcon from './rocket-icon'
 
@@ -29,10 +29,12 @@ class GoogleKeywordsModal extends React.Component {
   renderTerm(term) {
     return (
       <React.Fragment key={term.name}>
-
         <tr className="text-sm dark:text-gray-200" key={term.name}>
-          <td className="p-2 truncate">{term.name}</td>
+          <td className="p-2">{term.name}</td>
           <td className="p-2 w-32 font-medium" align="right">{numberFormatter(term.visitors)}</td>
+          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(term.impressions)}</td>
+          <td className="p-2 w-32 font-medium" align="right">{percentageFormatter(term.ctr)}</td>
+          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(term.position)}</td>
         </tr>
       </React.Fragment>
     )
@@ -64,7 +66,10 @@ class GoogleKeywordsModal extends React.Component {
           <thead>
             <tr>
               <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Search Term</th>
-              <th className="p-2 w-32 lg:w-1/2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visitors</th>
+              <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visitors</th>
+              <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Impressions</th>
+              <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">CTR</th>
+              <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Position</th>
             </tr>
           </thead>
           <tbody>

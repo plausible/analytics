@@ -688,10 +688,10 @@ defmodule PlausibleWeb.Api.StatsController do
     is_admin = user_id && Plausible.Sites.has_admin_access?(user_id, site)
 
     case google_api().fetch_stats(site, query, params["limit"] || 9) do
-      {:err, :google_propery_not_configured} ->
+      {:error, :google_propery_not_configured} ->
         json(conn, %{not_configured: true, is_admin: is_admin})
 
-      {:err, :unsupported_filters} ->
+      {:error, :unsupported_filters} ->
         json(conn, %{unsupported_filters: true})
 
       {:ok, terms} ->

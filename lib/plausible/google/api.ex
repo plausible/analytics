@@ -89,12 +89,11 @@ defmodule Plausible.Google.API do
            ) do
       stats
       |> Map.get("rows", [])
-      |> Enum.filter(fn row -> row["clicks"] > 0 end)
-      |> Enum.map(fn row -> %{name: row["keys"], visitors: round(row["clicks"])} end)
+      |> Enum.map(&search_console_row/1)
       |> then(&{:ok, &1})
     else
-      :google_property_not_configured -> {:err, :google_property_not_configured}
-      :unsupported_filters -> {:err, :unsupported_filters}
+      :google_property_not_configured -> {:error, :google_property_not_configured}
+      :unsupported_filters -> {:error, :unsupported_filters}
       {:error, error} -> {:error, error}
     end
   end
@@ -157,6 +156,34 @@ defmodule Plausible.Google.API do
     else
       :google_property_not_configured
     end
+  end
+
+  defp search_console_row(row) do
+    %{
+      # We always request just one dimension at a time (`query`)
+      name: row["keys"] |> List.first(),
+      visitors: row["clicks"],
+      impressions: row["impressions"],
+      ctr: rounded_ctr(row["ctr"]),
+      position: rounded_position(row["position"])
+    }
+  end
+
+  defp rounded_ctr(ctr) do
+    {:ok, decimal} = Decimal.cast(ctr)
+
+    decimal
+    |> Decimal.mult(100)
+    |> Decimal.round(1)
+    |> Decimal.to_float()
+  end
+
+  defp rounded_position(position) do
+    {:ok, decimal} = Decimal.cast(position)
+
+    decimal
+    |> Decimal.round(1)
+    |> Decimal.to_float()
   end
 
   defp client_id() do

@@ -8,7 +8,7 @@ defmodule Plausible.Google.SearchConsole.Filters do
     search_console_filters =
       Enum.reduce_while(plausible_filters, [], fn plausible_filter, search_console_filters ->
         case transform_filter(property, plausible_filter) do
-          :err -> {:halt, :unsupported_filters}
+          :unsupported -> {:halt, :unsupported_filters}
           search_console_filter -> {:cont, [search_console_filter | search_console_filters]}
         end
       end)
@@ -67,7 +67,7 @@ defmodule Plausible.Google.SearchConsole.Filters do
     %{dimension: "country", operator: "includingRegex", expression: expression}
   end
 
-  defp transform_filter(_, _filter), do: :err
+  defp transform_filter(_, _filter), do: :unsupported
 
   defp property_url("sc-domain:" <> domain, page), do: "https://" <> domain <> page
   defp property_url(url, page), do: url <> page
