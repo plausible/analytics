@@ -1,4 +1,5 @@
 defmodule Plausible.Google.SearchConsole.Filters do
+  @moduledoc false
   import Plausible.Stats.Base, only: [page_regex: 1]
 
   def transform(property, plausible_filters) do
@@ -29,7 +30,7 @@ defmodule Plausible.Google.SearchConsole.Filters do
 
   defp transform_filter(property, {"visit:entry_page", {:member, pages}}) when is_list(pages) do
     expression =
-      Enum.map(pages, fn page -> property_url(property, Regex.escape(page)) end) |> Enum.join("|")
+      Enum.map_join(pages, "|", fn page -> property_url(property, Regex.escape(page)) end)
 
     %{dimension: "page", operator: "includingRegex", expression: expression}
   end
@@ -42,7 +43,7 @@ defmodule Plausible.Google.SearchConsole.Filters do
   defp transform_filter(property, {"visit:entry_page", {:matches_member, pages}})
        when is_list(pages) do
     expression =
-      Enum.map(pages, fn page -> page_regex(property_url(property, page)) end) |> Enum.join("|")
+      Enum.map_join(pages, "|", fn page -> page_regex(property_url(property, page)) end)
 
     %{dimension: "page", operator: "includingRegex", expression: expression}
   end
@@ -62,7 +63,7 @@ defmodule Plausible.Google.SearchConsole.Filters do
 
   defp transform_filter(_property, {"visit:country", {:member, countries}})
        when is_list(countries) do
-    expression = Enum.map(countries, &search_console_country/1) |> Enum.join("|")
+    expression = Enum.map_join(countries, "|", &search_console_country/1)
     %{dimension: "country", operator: "includingRegex", expression: expression}
   end
 
