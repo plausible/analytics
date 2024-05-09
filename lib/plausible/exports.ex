@@ -187,7 +187,7 @@ defmodule Plausible.Exports do
   defp s3_export_key(site_id), do: Integer.to_string(site_id)
 
   @doc "Returns the date range for the site's events data in site's timezone or `nil` if there is no data"
-  @spec date_range(non_neg_integer, String.t()) :: Date.Range.t() | nil
+  @spec date_range(pos_integer, String.t()) :: Date.Range.t() | nil
   def date_range(site_id, timezone) do
     [%Date{} = start_date, %Date{} = end_date] =
       Plausible.ClickhouseRepo.one(
