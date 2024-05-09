@@ -1606,7 +1606,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
-    test "gets keywords from Google", %{conn: conn, user: user, site: site} do
+    test "gets keywords from Google", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           referrer_source: "DuckDuckGo",
