@@ -105,7 +105,7 @@ defmodule Plausible.Stats.QueryTest do
     site = Map.put(site, :timezone, "America/Cancun")
     q = Query.from(site, %{"period" => "all"})
 
-    assert q.date_range.first == ~D[2019-12-31]
+    assert q.date_range.first == ~D[2020-01-01]
     assert q.date_range.last == Timex.today("America/Cancun")
   end
 
