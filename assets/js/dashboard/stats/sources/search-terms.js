@@ -73,7 +73,7 @@ export default class SearchTerms extends React.Component {
       return (
         <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
           <RocketIcon />
-          <div>Unable to fetch keyword data from Search Console because it doesn not support the current set of filters</div>
+          <div>Unable to fetch keyword data from Search Console because it does not support the current set of filters</div>
         </div>
       )
     } else if (this.state.notConfigured) {
