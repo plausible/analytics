@@ -150,7 +150,7 @@ defmodule Plausible.Stats.Query do
 
   defp put_period(query, site, %{"period" => "all"}) do
     now = today(site.timezone)
-    start_date = Plausible.Sites.local_start_date(site) || now
+    start_date = Plausible.Sites.stats_start_date(site) || now
 
     struct!(query,
       period: "all",
