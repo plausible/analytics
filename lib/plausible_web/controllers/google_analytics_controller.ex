@@ -46,12 +46,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
 
     redirect_route = Routes.site_path(conn, :settings_imports_exports, site.domain)
 
-    result =
-      if FunWithFlags.enabled?(:imports_exports, for: site) do
-        Google.API.list_properties_and_views(access_token)
-      else
-        Google.UA.API.list_views(access_token)
-      end
+    result = Google.API.list_properties_and_views(access_token)
 
     error =
       case params["error"] do
