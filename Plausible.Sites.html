@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-C2C6A220.js"></script>
+    <script src="dist/sidebar_items-6D5BFF0C.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -279,18 +279,6 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#local_start_date/1" translate="no">local_start_date(site)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Returns the date of the first recorded stat in the timezone configured by the user.
-This function does 2 transformations:
-  UTC %NaiveDateTime{} -&gt; Local %DateTime{} -&gt; Local %Date</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#locked?/1" translate="no">locked?(site)</a>
 
       </div>
@@ -486,7 +474,7 @@ does not have stats yet.</p></div>
     </a>
     <h1 class="signature" translate="no">create_shared_link(site, name, password \\ nil)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L273" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L244" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -554,7 +542,7 @@ does not have stats yet.</p></div>
     </a>
     <h1 class="signature" translate="no">get_for_user(user_id, domain, roles \\ [:owner, :admin, :viewer])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L302" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L273" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -578,7 +566,7 @@ does not have stats yet.</p></div>
     </a>
     <h1 class="signature" translate="no">get_for_user!(user_id, domain, roles \\ [:owner, :admin, :viewer])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L292" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L263" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -600,7 +588,7 @@ does not have stats yet.</p></div>
     </a>
     <h1 class="signature" translate="no">has_admin_access?(user_id, site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L335" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L306" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -622,7 +610,7 @@ does not have stats yet.</p></div>
     </a>
     <h1 class="signature" translate="no">has_goals?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L323" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L294" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -644,7 +632,7 @@ does not have stats yet.</p></div>
     </a>
     <h1 class="signature" translate="no">has_stats?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L269" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L240" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -666,7 +654,7 @@ does not have stats yet.</p></div>
     </a>
     <h1 class="signature" translate="no">is_member?(user_id, site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L331" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L302" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -740,51 +728,6 @@ does not have stats yet.</p></div>
 
   </section>
 </section>
-<section class="detail" id="local_start_date/1">
-
-  <div class="detail-header">
-    <a href="#local_start_date/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">local_start_date(site)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L222" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> local_start_date(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: <a href="https://hexdocs.pm/elixir/Date.html#t:t/0">Date.t</a>() | nil</pre>
-
-      </div>
-
-<p>Returns the date of the first recorded stat in the timezone configured by the user.
-This function does 2 transformations:
-  UTC %NaiveDateTime{} -&gt; Local %DateTime{} -&gt; Local %Date</p><h2 id="local_start_date/1-examples" class="section-heading">
-  <a href="#local_start_date/1-examples" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Examples</span>
-</h2>
-<p>  iex&gt; Plausible.Site.local_start_date(%Plausible.Site{stats_start_date: nil})
-  nil</p><p>  iex&gt; utc_start = ~N[2022-09-28 00:00:00]
-  iex&gt; tz = &quot;Europe/Helsinki&quot;
-  iex&gt; site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
-  iex&gt; Plausible.Site.local_start_date(site)
-  ~D[2022-09-28]</p><p>  iex&gt; utc_start = ~N[2022-09-28 00:00:00]
-  iex&gt; tz = &quot;America/Los_Angeles&quot;
-  iex&gt; site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
-  iex&gt; Plausible.Site.local_start_date(site)
-  ~D[2022-09-27]</p>
-  </section>
-</section>
 <section class="detail" id="locked?/1">
 
   <div class="detail-header">
@@ -794,7 +737,7 @@ This function does 2 transformations:
     </a>
     <h1 class="signature" translate="no">locked?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L339" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L310" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -816,7 +759,7 @@ This function does 2 transformations:
     </a>
     <h1 class="signature" translate="no">native_stats_start_date(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L265" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L236" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -844,7 +787,7 @@ This function does 2 transformations:
     </a>
     <h1 class="signature" translate="no">owned_site_ids(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L365" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L336" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -866,7 +809,7 @@ This function does 2 transformations:
     </a>
     <h1 class="signature" translate="no">owned_sites_count(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L352" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L323" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -888,7 +831,7 @@ This function does 2 transformations:
     </a>
     <h1 class="signature" translate="no">owned_sites_domains(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L358" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L329" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -910,7 +853,7 @@ This function does 2 transformations:
     </a>
     <h1 class="signature" translate="no">role(user_id, site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L343" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L314" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -961,7 +904,7 @@ This function does 2 transformations:
     </a>
     <h1 class="signature" translate="no">shared_link_url(site, link)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L286" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L257" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -983,7 +926,7 @@ This function does 2 transformations:
     </a>
     <h1 class="signature" translate="no">stats_start_date(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L237" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L208" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
