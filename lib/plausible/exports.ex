@@ -470,8 +470,8 @@ defmodule Plausible.Exports do
   defp export_locations_q(site_id, timezone, date_range) do
     from s in sampled("sessions_v2"),
       where: ^export_filter(site_id, date_range),
-      where: s.city_geoname_id != 0 and s.country_code != "\0\0" and s.country_code != "ZZ",
-      group_by: [selected_as(:date), s.country_code, selected_as(:region), s.city_geoname_id],
+      where: s.country_code != "\0\0" and s.country_code != "ZZ",
+      group_by: [selected_as(:date), s.country_code, s.subdivision1_code, s.city_geoname_id],
       order_by: selected_as(:date),
       select: [
         date(s.timestamp, ^timezone),
