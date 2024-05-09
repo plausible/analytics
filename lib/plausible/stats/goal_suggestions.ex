@@ -37,6 +37,7 @@ defmodule Plausible.Stats.GoalSuggestions do
           name: e.name,
           visitors: visitors(e)
         },
+        order_by: selected_as(:visitors),
         group_by: e.name,
         limit: 25
       )
@@ -53,6 +54,7 @@ defmodule Plausible.Stats.GoalSuggestions do
           name: i.name,
           visitors: selected_as(sum(i.visitors), :visitors)
         },
+        order_by: selected_as(:visitors),
         group_by: i.name,
         limit: 25
       )
