@@ -1,4 +1,6 @@
 defmodule Plausible.Stats.GoalSuggestions do
+  @moduledoc false
+
   alias Plausible.{Repo, ClickhouseRepo}
   alias Plausible.Stats.Query
   import Plausible.Stats.Base
