@@ -85,7 +85,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
         <button
           :if={@selected_tab == "custom_events" && @event_name_options_count > 0}
-          title="Use this to add any existing properties from your past events into your settings. This allows you to set up properties without having to manually enter each item."
           class="mt-2 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
           phx-click="autoconfigure"
           phx-target={@myself}
