@@ -34,7 +34,7 @@ defmodule Plausible.Stats.Imported do
   @imported_properties Map.keys(@property_to_table_mappings)
 
   def schema_supports_query?(query) do
-    filter_count = length(Map.keys(query.filters))
+    filter_count = length(query.filters)
 
     case {filter_count, query.property} do
       {0, "event:props:" <> _} -> false
@@ -44,15 +44,9 @@ defmodule Plausible.Stats.Imported do
     end
   end
 
-  defp supports_single_filter?(%Query{
-         filters: %{"event:goal" => {:is, {:event, event}}},
-         property: "event:props:url"
-       })
-       when event in ["Outbound Link: Click", "File Download"] do
-    true
+  defp supports_single_filter?(query) do
+    goal_filter_event_name(Query.get_filter(query, "event:goal"), query.property) != nil
   end
-
-  defp supports_single_filter?(_query), do: false
 
   def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{include_imported: false}, _),
     do: native_q
@@ -118,11 +112,7 @@ defmodule Plausible.Stats.Imported do
         where: i.visitors > 0,
         select: %{}
       )
-<<<<<<< HEAD
       |> maybe_apply_filter(query, property, dim)
-=======
-      |> maybe_filter_by_breakdown_property(Query.get_filter(query, property), dim)
->>>>>>> 273eba496 (Breakdown tests pass)
       |> group_imported_by(dim)
       |> select_imported_metrics(metrics)
 
@@ -219,7 +209,9 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp maybe_apply_filter(q, query, property, dim) do
-    goal_filter_event_name = goal_filter_event_name(Query.get_filter(query, "event:goal", property))
+    goal_filter_event_name =
+      goal_filter_event_name(Query.get_filter(query, "event:goal"), property)
+
     q =
       if goal_filter_event_name do
         where(q, [i], i.name == ^goal_filter_event_name)
@@ -228,12 +220,13 @@ defmodule Plausible.Stats.Imported do
       end
 
     case Query.get_filter(query, property) do
-      [:member, _ list] -> where(q, [i], field(i, ^dim) in ^list)
+      [:member, _, list] -> where(q, [i], field(i, ^dim) in ^list)
       _ -> q
     end
   end
 
-  defp goal_filter_event_name([:is, "event:goal", {:event, event_name}], "event:props:url") when event_name in ["Outbound Link: Click", "File Download"] do
+  defp goal_filter_event_name([:is, "event:goal", {:event, event_name}], "event:props:url")
+       when event_name in ["Outbound Link: Click", "File Download"] do
     event_name
   end
 
