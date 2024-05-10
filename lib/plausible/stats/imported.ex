@@ -28,12 +28,14 @@ defmodule Plausible.Stats.Imported do
     "visit:os_version" => "imported_operating_systems",
     "event:page" => "imported_pages",
     "event:name" => "imported_custom_events",
-    "event:props:url" => "imported_custom_events"
+    "event:props:url" => "imported_custom_events",
+    "event:props:path" => "imported_custom_events"
   }
 
   @imported_properties Map.keys(@property_to_table_mappings)
 
   @goals_with_url ["Outbound Link: Click", "Cloaked Link: Click", "File Download"]
+  @goals_with_path ["404"]
 
   @doc """
   Returns a boolean indicating whether the combination of filters and
@@ -52,6 +54,7 @@ defmodule Plausible.Stats.Imported do
       {0, "event:props:" <> _} -> false
       {0, _} -> true
       {1, "event:props:url"} -> has_special_goal_filter?(query, @goals_with_url)
+      {1, "event:props:path"} -> has_special_goal_filter?(query, @goals_with_path)
       {_, _} -> false
     end
   end
@@ -126,7 +129,7 @@ defmodule Plausible.Stats.Imported do
 
     join_on =
       case dim do
-        :url ->
+        _ when dim in [:url, :path] ->
           dynamic([s, i], s.breakdown_prop_value == i.breakdown_prop_value)
 
         :os_version ->
@@ -219,6 +222,14 @@ defmodule Plausible.Stats.Imported do
   defp maybe_apply_filter(q, query, "event:props:url", _) do
     if name = find_special_goal_filter(query, @goals_with_url) do
       where(q, [i], i.name == ^name)
+    else
+      q
+    end
+  end
+
+  defp maybe_apply_filter(q, query, "event:props:path", _) do
+    if name = find_special_goal_filter(query, @goals_with_path) do
+      where(q, [i], i.path == ^path)
     else
       q
     end
@@ -472,6 +483,12 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([i], %{breakdown_prop_value: i.link_url})
   end
 
+  defp group_imported_by(q, :path) do
+    q
+    |> group_by([i], i.path)
+    |> select_merge([i], %{breakdown_prop_value: i.path})
+  end
+
   defp select_joined_dimension(q, :city) do
     select_merge(q, [s, i], %{
       city: fragment("greatest(?,?)", i.city, s.city)
@@ -493,7 +510,7 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
-  defp select_joined_dimension(q, :url) do
+  defp select_joined_dimension(q, dim) when dim in [:url, :path] do
     select_merge(q, [s, i], %{
       breakdown_prop_value:
         fragment(
