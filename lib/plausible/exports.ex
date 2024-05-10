@@ -4,6 +4,7 @@ defmodule Plausible.Exports do
   """
 
   use Plausible
+  use Plausible.Stats.Fragments
   import Ecto.Query
 
   @doc "Schedules CSV export job to S3 storage"
@@ -234,6 +235,8 @@ defmodule Plausible.Exports do
       filename.("imported_pages") => export_pages_q(site_id, timezone, date_range),
       filename.("imported_entry_pages") => export_entry_pages_q(site_id, timezone, date_range),
       filename.("imported_exit_pages") => export_exit_pages_q(site_id, timezone, date_range),
+      filename.("imported_custom_events") =>
+        export_custom_events_q(site_id, timezone, date_range),
       filename.("imported_locations") => export_locations_q(site_id, timezone, date_range),
       filename.("imported_devices") => export_devices_q(site_id, timezone, date_range),
       filename.("imported_browsers") => export_browsers_q(site_id, timezone, date_range),
@@ -462,6 +465,36 @@ defmodule Plausible.Exports do
         ),
         bounces(s),
         pageviews(s)
+      ]
+  end
+
+  @events_with_url ["Outbound Link: Click", "Cloaked Link: Click", "File Download"]
+  @events_with_path ["404"]
+
+  defp export_custom_events_q(site_id, timezone, date_range) do
+    from e in sampled("events_v2"),
+      where: ^export_filter(site_id, date_range),
+      where: e.name != "pageview",
+      group_by: [
+        selected_as(:date),
+        e.name,
+        selected_as(:link_url),
+        selected_as(:path)
+      ],
+      order_by: selected_as(:date),
+      select: [
+        date(e.timestamp, ^timezone),
+        e.name,
+        selected_as(
+          fragment("if(? in ?, ?, '')", e.name, @events_with_url, get_by_key(e, :meta, "url")),
+          :link_url
+        ),
+        selected_as(
+          fragment("if(? in ?, ?, '')", e.name, @events_with_path, get_by_key(e, :meta, "path")),
+          :path
+        ),
+        visitors(e),
+        selected_as(fragment("toUInt64(round(count()*any(_sample_factor)))"), :events)
       ]
   end
 

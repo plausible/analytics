@@ -154,6 +154,8 @@ defmodule Plausible.Imported.CSVImporter do
       "date Date, entry_page String, visitors UInt64, entrances UInt64, visit_duration UInt64, bounces UInt32, pageviews UInt64",
     "imported_exit_pages" =>
       "date Date, exit_page String, visitors UInt64, visit_duration UInt64, exits UInt64, bounces UInt32, pageviews UInt64",
+    "imported_custom_events" =>
+      "date Date, name String, link_url String, path String, visitors UInt64, events UInt64",
     "imported_locations" =>
       "date Date, country String, region String, city UInt64, visitors UInt64, visits UInt64, visit_duration UInt64, bounces UInt32, pageviews UInt64",
     "imported_operating_systems" =>

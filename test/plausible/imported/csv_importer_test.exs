@@ -18,6 +18,7 @@ defmodule Plausible.Imported.CSVImporterTest do
     test "parses job args properly", %{user: user, site: site} do
       tables = [
         "imported_browsers",
+        "imported_custom_events",
         "imported_devices",
         "imported_entry_pages",
         "imported_exit_pages",
@@ -187,6 +188,19 @@ defmodule Plausible.Imported.CSVImporterTest do
           "2021-12-31",1,1,"/11263893625781431659"
           "2021-12-31",1,1,"/16478773157730928089"
           "2021-12-31",1,1,"/1710995203264225236"
+          """
+        },
+        %{
+          name: "imported_custom_events_20211230_20211231.csv",
+          body: """
+          "date","name","link_url","path","visitors","events"
+          "2021-12-30","Filter Menu: Open","","",300,1652
+          "2021-12-30","Signup","","",40,82
+          "2021-12-30","Signup via invitation","","",5,10
+          "2021-12-31","Signup via invitation","","",5,10
+          "2021-12-31","Signup","","",39,78
+          "2021-12-31","Filter Menu: Open","","",295,1394
+          "2021-12-31","Newsletter signup","","",1,2
           """
         },
         %{
@@ -421,6 +435,13 @@ defmodule Plausible.Imported.CSVImporterTest do
       exported_site = insert(:site, members: [user])
       imported_site = insert(:site, members: [user])
 
+      insert(:goal, site: exported_site, event_name: "Filter Menu: Open")
+      insert(:goal, site: exported_site, event_name: "Signup")
+      insert(:goal, site: exported_site, event_name: "Signup via invitation")
+      insert(:goal, site: imported_site, event_name: "Filter Menu: Open")
+      insert(:goal, site: imported_site, event_name: "Signup")
+      insert(:goal, site: imported_site, event_name: "Signup via invitation")
+
       process_csv = fn path ->
         [header | rows] = NimbleCSV.RFC4180.parse_string(File.read!(path), skip_headers: false)
 
@@ -540,14 +561,23 @@ defmodule Plausible.Imported.CSVImporterTest do
         }
       end
 
-      breakdown = fn params_or_site, by ->
+      breakdown = fn params_or_site, by, metrics ->
+        metrics = metrics || "visitors,visits,pageviews,visit_duration,bounce_rate"
+
+        by_prefix =
+          if by == "goal" do
+            "event"
+          else
+            "visit"
+          end
+
         params =
           case params_or_site do
             %Plausible.Site{} = site ->
               common_params.(site)
-              |> Map.put("metrics", "visitors,visits,pageviews,visit_duration,bounce_rate")
+              |> Map.put("metrics", metrics)
               |> Map.put("limit", 1000)
-              |> Map.put("property", "visit:#{by}")
+              |> Map.put("property", "#{by_prefix}:#{by}")
 
             params ->
               params
@@ -614,8 +644,8 @@ defmodule Plausible.Imported.CSVImporterTest do
         |> Map.put("property", "event:page")
       end
 
-      exported_pages = breakdown.(pages_params.(exported_site), "page")
-      imported_pages = breakdown.(pages_params.(imported_site), "page")
+      exported_pages = breakdown.(pages_params.(exported_site), "page", nil)
+      imported_pages = breakdown.(pages_params.(imported_site), "page", nil)
 
       pairwise(exported_pages, imported_pages, fn exported, imported ->
         assert exported["page"] == imported["page"]
@@ -674,8 +704,8 @@ defmodule Plausible.Imported.CSVImporterTest do
              ) == [0, 0, 0, 0, 0.01666666666666672]
 
       # sources
-      exported_sources = breakdown.(exported_site, "source")
-      imported_sources = breakdown.(imported_site, "source")
+      exported_sources = breakdown.(exported_site, "source", nil)
+      imported_sources = breakdown.(imported_site, "source", nil)
 
       pairwise(exported_sources, imported_sources, fn exported, imported ->
         assert exported["source"] == imported["source"]
@@ -696,11 +726,12 @@ defmodule Plausible.Imported.CSVImporterTest do
              ) == [0, 0, 0, 0, 0.3656821378340366]
 
       # utm mediums
-      assert breakdown.(exported_site, "utm_medium") == breakdown.(imported_site, "utm_medium")
+      assert breakdown.(exported_site, "utm_medium", nil) ==
+               breakdown.(imported_site, "utm_medium", nil)
 
       # entry pages
-      exported_entry_pages = breakdown.(exported_site, "entry_page")
-      imported_entry_pages = breakdown.(imported_site, "entry_page")
+      exported_entry_pages = breakdown.(exported_site, "entry_page", nil)
+      imported_entry_pages = breakdown.(imported_site, "entry_page", nil)
 
       pairwise(exported_entry_pages, imported_entry_pages, fn exported, imported ->
         assert exported["entry_page"] == imported["entry_page"]
@@ -721,8 +752,8 @@ defmodule Plausible.Imported.CSVImporterTest do
              ) == [0, 0, 0, 0, 0.5]
 
       # cities
-      exported_cities = breakdown.(exported_site, "city")
-      imported_cities = breakdown.(imported_site, "city")
+      exported_cities = breakdown.(exported_site, "city", nil)
+      imported_cities = breakdown.(imported_site, "city", nil)
 
       pairwise(exported_cities, imported_cities, fn exported, imported ->
         assert exported["city"] == imported["city"]
@@ -748,8 +779,8 @@ defmodule Plausible.Imported.CSVImporterTest do
              ) == [0, 0, 0, 0, 0.6]
 
       # devices
-      exported_devices = breakdown.(exported_site, "device")
-      imported_devices = breakdown.(imported_site, "device")
+      exported_devices = breakdown.(exported_site, "device", nil)
+      imported_devices = breakdown.(imported_site, "device", nil)
 
       pairwise(exported_devices, imported_devices, fn exported, imported ->
         assert exported["device"] == imported["device"]
@@ -776,8 +807,8 @@ defmodule Plausible.Imported.CSVImporterTest do
              ]
 
       # browsers
-      exported_browsers = breakdown.(exported_site, "browser")
-      imported_browsers = breakdown.(imported_site, "browser")
+      exported_browsers = breakdown.(exported_site, "browser", nil)
+      imported_browsers = breakdown.(imported_site, "browser", nil)
 
       pairwise(exported_browsers, imported_browsers, fn exported, imported ->
         assert exported["browser"] == imported["browser"]
@@ -804,8 +835,8 @@ defmodule Plausible.Imported.CSVImporterTest do
              ]
 
       # os
-      exported_os = breakdown.(exported_site, "os")
-      imported_os = breakdown.(imported_site, "os")
+      exported_os = breakdown.(exported_site, "os", nil)
+      imported_os = breakdown.(imported_site, "os", nil)
 
       pairwise(exported_os, imported_os, fn exported, imported ->
         assert exported["os"] == imported["os"]
@@ -832,8 +863,8 @@ defmodule Plausible.Imported.CSVImporterTest do
              ]
 
       # os versions
-      exported_os_versions = breakdown.(exported_site, "os_version")
-      imported_os_versions = breakdown.(imported_site, "os_version")
+      exported_os_versions = breakdown.(exported_site, "os_version", nil)
+      imported_os_versions = breakdown.(imported_site, "os_version", nil)
 
       pairwise(exported_os_versions, imported_os_versions, fn exported, imported ->
         assert exported["os_version"] == imported["os_version"]
@@ -852,6 +883,33 @@ defmodule Plausible.Imported.CSVImporterTest do
                  abs(1 - exported["visitors"] / imported["visitors"])
                end)
              ) == [0, 0, 0.16985645933014354, 0.3401162790697675, 0.75]
+
+      # goals
+      exported_goals = breakdown.(exported_site, "goal", "visitors,events,conversion_rate")
+      imported_goals = breakdown.(imported_site, "goal", "visitors,events,conversion_rate")
+
+      assert summary(field(exported_goals, "visitors")) == [2, 2.5, 3.0, 17.0, 31]
+      assert summary(field(imported_goals, "visitors")) == [2, 2.5, 3.0, 20.5, 38]
+
+      pairwise(exported_goals, imported_goals, fn exported, imported ->
+        assert exported["events"] == imported["events"]
+      end)
+
+      assert summary(field(exported_goals, "conversion_rate")) == [
+               0.4,
+               0.5,
+               0.6,
+               3.4000000000000004,
+               6.2
+             ]
+
+      assert summary(field(imported_goals, "conversion_rate")) == [
+               0.3,
+               0.35,
+               0.4,
+               2.6999999999999997,
+               5.0
+             ]
     end
   end
 
