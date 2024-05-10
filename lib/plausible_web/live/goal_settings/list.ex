@@ -86,6 +86,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                 id={"delete-goal-#{goal.id}"}
                 phx-click="delete-goal"
                 phx-value-goal-id={goal.id}
+                phx-value-goal-name={goal.event_name}
                 class="text-sm text-red-600"
                 data-confirm={delete_confirmation_text(goal)}
               >
