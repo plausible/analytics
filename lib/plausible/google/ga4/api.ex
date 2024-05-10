@@ -137,6 +137,13 @@ defmodule Plausible.Google.GA4.API do
     sleep_time = Keyword.get(opts, :sleep_time, @backoff_factor)
 
     case GA4.HTTP.get_report(report_request) do
+      {:ok, {_, 0}} ->
+        Logger.debug(
+          "[#{inspect(__MODULE__)}:#{report_request.property}] Fetched empty response for #{report_request.dataset}"
+        )
+
+        :ok
+
       {:ok, {rows, row_count}} ->
         Logger.debug(
           "[#{inspect(__MODULE__)}:#{report_request.property}] Fetched #{length(rows)} rows of total #{row_count} with offset #{report_request.offset} for #{report_request.dataset}"
