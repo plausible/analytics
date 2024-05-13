@@ -232,6 +232,9 @@ maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLi
 data_dir = get_var_from_path_or_env(config_dir, "DATA_DIR")
 persistent_cache_dir = get_var_from_path_or_env(config_dir, "PERSISTENT_CACHE_DIR")
 
+data_dir = data_dir || persistent_cache_dir
+persistent_cache_dir = persistent_cache_dir || data_dir
+
 enable_email_verification =
   config_dir
   |> get_var_from_path_or_env("ENABLE_EMAIL_VERIFICATION", "false")
@@ -298,7 +301,7 @@ config :plausible,
   custom_script_name: custom_script_name,
   log_failed_login_attempts: log_failed_login_attempts,
   license_key: license_key,
-  data_dir: data_dir || persistent_cache_dir
+  data_dir: data_dir
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
@@ -632,7 +635,7 @@ geo_opts =
       [
         license_key: maxmind_license_key,
         edition: maxmind_edition,
-        cache_dir: persistent_cache_dir || data_dir,
+        cache_dir: persistent_cache_dir,
         async: true
       ]
 
@@ -684,9 +687,7 @@ else
     traces_exporter: :none
 end
 
-config :tzdata,
-       :data_dir,
-       Path.join(persistent_cache_dir || data_dir || System.tmp_dir!(), "tzdata_data")
+config :tzdata, :data_dir, Path.join(persistent_cache_dir || System.tmp_dir!(), "tzdata_data")
 
 promex_disabled? =
   config_dir
