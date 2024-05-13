@@ -765,7 +765,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       on_exit(fn -> Application.put_env(:ex_aws, :s3, prev_env) end)
     end
 
-    @tag :capture_log
+    @tag capture_log: true, ee_only: true
     test "displays error message", %{conn: conn, site: site} do
       assert conn |> get("/#{site.domain}/settings/imports-exports") |> html_response(200) =~
                "Something went wrong when fetching exports. Please try again later."
