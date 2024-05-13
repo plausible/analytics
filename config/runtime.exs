@@ -229,7 +229,11 @@ ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", ge
 geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
 maxmind_license_key = get_var_from_path_or_env(config_dir, "MAXMIND_LICENSE_KEY")
 maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLite2-City")
+data_dir = get_var_from_path_or_env(config_dir, "DATA_DIR")
 persistent_cache_dir = get_var_from_path_or_env(config_dir, "PERSISTENT_CACHE_DIR")
+
+data_dir = data_dir || persistent_cache_dir
+persistent_cache_dir = persistent_cache_dir || data_dir
 
 enable_email_verification =
   config_dir
@@ -297,7 +301,7 @@ config :plausible,
   custom_script_name: custom_script_name,
   log_failed_login_attempts: log_failed_login_attempts,
   license_key: license_key,
-  persistent_cache_dir: persistent_cache_dir
+  data_dir: data_dir
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
