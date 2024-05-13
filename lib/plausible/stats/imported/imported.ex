@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.Imported do
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Query, Base}
+  alias Plausible.Stats.{Query, Base, Imported}
 
   import Ecto.Query
   import Plausible.Stats.Fragments
@@ -69,15 +69,9 @@ defmodule Plausible.Stats.Imported do
         query,
         metrics
       ) do
-    import_ids = site.complete_import_ids
-
     imported_q =
-      from(v in "imported_visitors",
-        where: v.site_id == ^site.id,
-        where: v.import_id in ^import_ids,
-        where: v.date >= ^query.date_range.first and v.date <= ^query.date_range.last,
-        select: %{}
-      )
+      "imported_visitors"
+      |> Imported.Base.query_imported(site, query)
       |> select_imported_metrics(metrics)
       |> apply_interval(query, site)
 
@@ -113,17 +107,11 @@ defmodule Plausible.Stats.Imported do
       when property in @imported_properties do
     table = Map.fetch!(@property_to_table_mappings, property)
     dim = Plausible.Stats.Filters.without_prefix(property)
-    import_ids = site.complete_import_ids
 
     imported_q =
-      from(
-        i in table,
-        where: i.site_id == ^site.id,
-        where: i.import_id in ^import_ids,
-        where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
-        where: i.visitors > 0,
-        select: %{}
-      )
+      table
+      |> Imported.Base.query_imported(site, query)
+      |> where([i], i.visitors > 0)
       |> maybe_apply_filter(query, property, dim)
       |> group_imported_by(dim)
       |> select_imported_metrics(metrics)
@@ -155,7 +143,8 @@ defmodule Plausible.Stats.Imported do
 
   def merge_imported(q, site, %Query{property: nil} = query, metrics) do
     imported_q =
-      imported_visitors(site, query)
+      "imported_visitors"
+      |> Imported.Base.query_imported(site, query)
       |> select_imported_metrics(metrics)
 
     from(
@@ -174,24 +163,18 @@ defmodule Plausible.Stats.Imported do
     page_regexes = Enum.map(page_exprs, &Base.page_regex/1)
 
     imported_q =
-      from(
-        i in "imported_pages",
-        where: i.site_id == ^site.id,
-        where: i.import_id in ^site.complete_import_ids,
-        where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
-        where: i.visitors > 0,
-        where:
-          fragment(
-            "notEmpty(multiMatchAllIndices(?, ?) as indices)",
-            i.page,
-            ^page_regexes
-          ),
-        array_join: index in fragment("indices"),
-        group_by: index,
-        select: %{
-          name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
-        }
+      "imported_pages"
+      |> Imported.Base.query_imported(site, query)
+      |> where([i], i.visitors > 0)
+      |> where(
+        [i],
+        fragment("notEmpty(multiMatchAllIndices(?, ?) as indices)", i.page, ^page_regexes)
       )
+      |> join(:array, index in fragment("indices"))
+      |> group_by([_i, index], index)
+      |> select_merge([_i, index], %{
+        name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
+      })
       |> select_imported_metrics(metrics)
 
     from(s in Ecto.Query.subquery(q),
@@ -204,20 +187,9 @@ defmodule Plausible.Stats.Imported do
   end
 
   def total_imported_visitors(site, query) do
-    imported_visitors(site, query)
+    "imported_visitors"
+    |> Imported.Base.query_imported(site, query)
     |> select_merge([i], %{total_visitors: fragment("sum(?)", i.visitors)})
-  end
-
-  defp imported_visitors(site, query) do
-    import_ids = site.complete_import_ids
-
-    from(
-      i in "imported_visitors",
-      where: i.site_id == ^site.id,
-      where: i.import_id in ^import_ids,
-      where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
-      select: %{}
-    )
   end
 
   defp maybe_apply_filter(q, query, "event:props:url", _) do
