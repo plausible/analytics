@@ -282,6 +282,7 @@ defmodule Plausible.ConfigTest do
     test "with only DATA_DIR set" do
       env = [
         {"MAXMIND_LICENSE_KEY", "abc"},
+        {"PERSISTENT_CACHE_DIR", nil},
         {"DATA_DIR", "/data"}
       ]
 
@@ -298,7 +299,8 @@ defmodule Plausible.ConfigTest do
     test "with only PERSISTENT_CACHE_DIR set" do
       env = [
         {"MAXMIND_LICENSE_KEY", "abc"},
-        {"PERSISTENT_CACHE_DIR", "/cache"}
+        {"PERSISTENT_CACHE_DIR", "/cache"},
+        {"DATA_DIR", nil}
       ]
 
       config = runtime_config(env)
@@ -314,8 +316,8 @@ defmodule Plausible.ConfigTest do
     test "with both DATA_DIR and PERSISTENT_CACHE_DIR set" do
       env = [
         {"MAXMIND_LICENSE_KEY", "abc"},
-        {"DATA_DIR", "/data"},
-        {"PERSISTENT_CACHE_DIR", "/cache"}
+        {"PERSISTENT_CACHE_DIR", "/cache"},
+        {"DATA_DIR", "/data"}
       ]
 
       config = runtime_config(env)
