@@ -278,8 +278,55 @@ defmodule Plausible.ConfigTest do
     end
   end
 
-  describe "data_dir" do
-    test "todo"
+  describe "storage" do
+    test "with only DATA_DIR set" do
+      env = [
+        {"MAXMIND_LICENSE_KEY", "abc"},
+        {"DATA_DIR", "/data"}
+      ]
+
+      config = runtime_config(env)
+
+      # exports/imports
+      assert get_in(config, [:plausible, :data_dir]) == "/data"
+      # locus (mmdb cache)
+      assert get_in(config, [:plausible, Plausible.Geo, :cache_dir]) == "/data"
+      # tzdata (timezones cache)
+      assert get_in(config, [:tzdata, :data_dir]) == "/data/tzdata_data"
+    end
+
+    test "with only PERSISTENT_CACHE_DIR set" do
+      env = [
+        {"MAXMIND_LICENSE_KEY", "abc"},
+        {"PERSISTENT_CACHE_DIR", "/cache"}
+      ]
+
+      config = runtime_config(env)
+
+      # exports/imports
+      assert get_in(config, [:plausible, :data_dir]) == "/cache"
+      # locus (mmdb cache)
+      assert get_in(config, [:plausible, Plausible.Geo, :cache_dir]) == "/cache"
+      # tzdata (timezones cache)
+      assert get_in(config, [:tzdata, :data_dir]) == "/cache/tzdata_data"
+    end
+
+    test "with both DATA_DIR and PERSISTENT_CACHE_DIR set" do
+      env = [
+        {"MAXMIND_LICENSE_KEY", "abc"},
+        {"DATA_DIR", "/data"},
+        {"PERSISTENT_CACHE_DIR", "/cache"}
+      ]
+
+      config = runtime_config(env)
+
+      # exports/imports
+      assert get_in(config, [:plausible, :data_dir]) == "/data"
+      # locus (mmdb cache)
+      assert get_in(config, [:plausible, Plausible.Geo, :cache_dir]) == "/cache"
+      # tzdata (timezones cache)
+      assert get_in(config, [:tzdata, :data_dir]) == "/cache/tzdata_data"
+    end
   end
 
   describe "extra config" do
