@@ -229,6 +229,7 @@ ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", ge
 geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
 maxmind_license_key = get_var_from_path_or_env(config_dir, "MAXMIND_LICENSE_KEY")
 maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLite2-City")
+data_dir = get_var_from_path_or_env(config_dir, "DATA_DIR")
 persistent_cache_dir = get_var_from_path_or_env(config_dir, "PERSISTENT_CACHE_DIR")
 
 enable_email_verification =
@@ -297,7 +298,7 @@ config :plausible,
   custom_script_name: custom_script_name,
   log_failed_login_attempts: log_failed_login_attempts,
   license_key: license_key,
-  persistent_cache_dir: persistent_cache_dir
+  data_dir: data_dir || persistent_cache_dir
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
@@ -631,7 +632,7 @@ geo_opts =
       [
         license_key: maxmind_license_key,
         edition: maxmind_edition,
-        cache_dir: persistent_cache_dir,
+        cache_dir: persistent_cache_dir || data_dir,
         async: true
       ]
 
@@ -683,7 +684,9 @@ else
     traces_exporter: :none
 end
 
-config :tzdata, :data_dir, Path.join(persistent_cache_dir || System.tmp_dir!(), "tzdata_data")
+config :tzdata,
+       :data_dir,
+       Path.join(persistent_cache_dir || data_dir || System.tmp_dir!(), "tzdata_data")
 
 promex_disabled? =
   config_dir

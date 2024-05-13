@@ -278,6 +278,10 @@ defmodule Plausible.ConfigTest do
     end
   end
 
+  describe "data_dir" do
+    test "todo"
+  end
+
   describe "extra config" do
     test "no-op when no extra path is set" do
       put_system_env_undo({"EXTRA_CONFIG_PATH", nil})
