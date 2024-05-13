@@ -20,7 +20,9 @@ import {
   parseNaiveDate,
   isBefore,
   isAfter,
-  formatDateRange
+  formatDateRange,
+  yesterday,
+  isSameDate
 } from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
 import { shouldIgnoreKeypress } from "./keybinding.js"
@@ -282,7 +284,7 @@ function DatePicker({ query, site, history }) {
   function renderLink(period, text, opts = {}) {
     let boldClass;
     if (query.period === "day" && period === "day") {
-      boldClass = isToday(site, query.date) ? "font-bold" : "";
+      boldClass = isSameDate(opts.date, query.date) ? "font-bold" : "";
     } else if (query.period === "month" && period === "month") {
       const linkDate = opts.date || nowForSite(site);
       boldClass = isSameMonth(linkDate, query.date) ? "font-bold" : "";
@@ -319,7 +321,8 @@ function DatePicker({ query, site, history }) {
             font-medium text-gray-800 dark:text-gray-200 date-options"
           >
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {renderLink("day", "Today", { keybindHint: 'D' })}
+              {renderLink("day", "Today", { keybindHint: 'D', date: nowForSite(site) })}
+              {renderLink("day", "Yesterday", { keybindHint: 'E', date: yesterday(site) })}
               {renderLink("realtime", "Realtime", { keybindHint: 'R' })}
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">

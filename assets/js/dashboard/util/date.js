@@ -71,8 +71,16 @@ export function nowForSite(site) {
   return dayjs.utc().utcOffset(site.offset / 60)
 }
 
+export function yesterday(site) {
+  return nowForSite(site).subtract(1, 'day')
+}
+
 export function lastMonth(site) {
   return shiftMonths(nowForSite(site), -1)
+}
+
+export function isSameDate(date1, date2) {
+  return formatISO(date1) === formatISO(date2)
 }
 
 export function isSameMonth(date1, date2) {
@@ -80,7 +88,7 @@ export function isSameMonth(date1, date2) {
 }
 
 export function isToday(site, date) {
-  return formatISO(date) === formatISO(nowForSite(site))
+  return isSameDate(date, nowForSite(site))
 }
 
 export function isThisMonth(site, date) {

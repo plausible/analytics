@@ -9,7 +9,7 @@ defmodule Plausible.Goal do
     field :event_name, :string
     field :page_path, :string
 
-    on_full_build do
+    on_ee do
       field :currency, Ecto.Enum, values: Money.Currency.known_current_currencies()
       many_to_many :funnels, Plausible.Funnel, join_through: Plausible.Funnel.Step
     else
@@ -22,7 +22,11 @@ defmodule Plausible.Goal do
     timestamps()
   end
 
-  @fields [:id, :site_id, :event_name, :page_path] ++ on_full_build(do: [:currency], else: [])
+  @fields [:id, :site_id, :event_name, :page_path] ++ on_ee(do: [:currency], else: [])
+
+  @max_event_name_length 120
+
+  def max_event_name_length(), do: @max_event_name_length
 
   def changeset(goal, attrs \\ %{}) do
     goal
@@ -35,7 +39,7 @@ defmodule Plausible.Goal do
     |> update_change(:page_path, &String.trim/1)
     |> unique_constraint(:event_name, name: :goals_event_name_unique)
     |> unique_constraint(:page_path, name: :goals_page_path_unique)
-    |> validate_length(:event_name, max: 120)
+    |> validate_length(:event_name, max: @max_event_name_length)
     |> check_constraint(:event_name,
       name: :check_event_name_or_page_path,
       message: "cannot co-exist with page_path"
@@ -77,7 +81,7 @@ defmodule Plausible.Goal do
   end
 
   defp maybe_drop_currency(changeset) do
-    if full_build?() and get_field(changeset, :page_path) do
+    if ee?() and get_field(changeset, :page_path) do
       delete_change(changeset, :currency)
     else
       changeset

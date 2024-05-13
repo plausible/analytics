@@ -79,6 +79,37 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
       assert response =~ "GA4 - Google Merch Shop (properties/213025502)"
     end
 
+    test "redirects to imports and exports on rate limit error with flash error", %{
+      conn: conn,
+      site: site
+    } do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn _url, _opts ->
+          {:error, %HTTPClient.Non200Error{reason: %{status: 429, body: "rate limit exceeded"}}}
+        end
+      )
+
+      conn =
+        conn
+        |> get("/#{site.domain}/import/google-analytics/property-or-view", %{
+          "access_token" => "token",
+          "refresh_token" => "foo",
+          "expires_at" => "2022-09-22T20:01:37.112777"
+        })
+
+      assert redirected_to(conn, 302) ==
+               PlausibleWeb.Router.Helpers.site_path(
+                 conn,
+                 :settings_imports_exports,
+                 site.domain
+               )
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "Google Analytics rate limit has been exceeded. Please try again later."
+    end
+
     test "redirects to imports and exports on auth error with flash error", %{
       conn: conn,
       site: site
@@ -416,6 +447,39 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
                "We were unable to retrieve information from Google Analytics"
     end
 
+    test "redirects to imports and exports on rate limiting with flash error",
+         %{
+           conn: conn,
+           site: site
+         } do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :post,
+        fn _url, _opts, _params ->
+          {:error, %HTTPClient.Non200Error{reason: %{status: 429, body: "rate limit exceeded"}}}
+        end
+      )
+
+      conn =
+        conn
+        |> post("/#{site.domain}/import/google-analytics/property-or-view", %{
+          "property_or_view" => "properties/428685906",
+          "access_token" => "token",
+          "refresh_token" => "foo",
+          "expires_at" => "2022-09-22T20:01:37.112777"
+        })
+
+      assert redirected_to(conn, 302) ==
+               PlausibleWeb.Router.Helpers.site_path(
+                 conn,
+                 :settings_imports_exports,
+                 site.domain
+               )
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "Google Analytics rate limit has been exceeded. Please try again later."
+    end
+
     test "redirects to imports and exports on expired authentication with flash error",
          %{
            conn: conn,
@@ -598,6 +662,41 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "We were unable to retrieve information from Google Analytics"
+    end
+
+    test "redirects to imports and exports on rate limiting with flash error",
+         %{
+           conn: conn,
+           site: site
+         } do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn _url, _params ->
+          {:error, %HTTPClient.Non200Error{reason: %{status: 429, body: "rate limit exceeded"}}}
+        end
+      )
+
+      conn =
+        conn
+        |> get("/#{site.domain}/import/google-analytics/confirm", %{
+          "property_or_view" => "properties/428685906",
+          "access_token" => "token",
+          "refresh_token" => "foo",
+          "expires_at" => "2022-09-22T20:01:37.112777",
+          "start_date" => "2024-02-22",
+          "end_date" => "2024-02-26"
+        })
+
+      assert redirected_to(conn, 302) ==
+               PlausibleWeb.Router.Helpers.site_path(
+                 conn,
+                 :settings_imports_exports,
+                 site.domain
+               )
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "Google Analytics rate limit has been exceeded. Please try again later."
     end
 
     test "redirects to imports and exports on expired authentication with flash error",

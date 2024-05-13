@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Hostname Allow List in Site Settings
 - Pages Block List in Site Settings
-- Add `conversion_rate` to Stats API Timeseries and on the main graph 
+- Add `conversion_rate` to Stats API Timeseries and on the main graph
 - Add `total_conversions` and `conversion_rate` to `visitors.csv` in a goal-filtered CSV export
 - Ability to display total conversions (with a goal filter) on the main graph
 - Add `conversion_rate` to Stats API Timeseries and on the main graph
@@ -39,6 +39,9 @@ All notable changes to this project will be documented in this file.
 - Add alternative SMTP adapter plausible/analytics#3654
 - Add `EXTRA_CONFIG_PATH` env var to specify extra Elixir config plausible/analytics#3906
 - Add restrictive `robots.txt` for self-hosted plausible/analytics#3905
+- Add Yesterday as an time range option in the dashboard
+- Add support for importing Google Analytics 4 data
+- Import custom events from Google Analytics 4
 
 ### Removed
 - Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions

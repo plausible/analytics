@@ -347,9 +347,9 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  def export_success(user, site, download_url, expires_at) do
+  def export_success(user, site, expires_at) do
     subject =
-      on_full_build do
+      on_ee do
         "Your Plausible Analytics export is now ready for download"
       else
         "Your export is now ready for download"
@@ -362,6 +362,13 @@ defmodule PlausibleWeb.Email do
           "{relative}"
         )
       end
+
+    download_url =
+      PlausibleWeb.Router.Helpers.site_url(
+        PlausibleWeb.Endpoint,
+        :download_export,
+        site.domain
+      )
 
     priority_email()
     |> to(user)
@@ -377,7 +384,7 @@ defmodule PlausibleWeb.Email do
 
   def export_failure(user, site) do
     subject =
-      on_full_build do
+      on_ee do
         "Your Plausible Analytics export has failed"
       else
         "Your export has failed"

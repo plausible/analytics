@@ -60,6 +60,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
              }
     end
 
+    test "ignores a given property parameter", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "property" => "event:props:author",
+          "metrics" => "visit_duration"
+        })
+
+      assert json_response(conn, 200)
+    end
+
     test "validates that period can be parsed", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/timeseries", %{
@@ -1512,6 +1523,34 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                  %{"date" => "2021-01-07", "views_per_visit" => 1.0}
                ]
              }
+    end
+  end
+
+  describe "imported data" do
+    test "returns pageviews as the value of events metric", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:imported_visitors, pageviews: 1, date: ~D[2021-01-01])
+      ])
+
+      first_result =
+        conn
+        |> get("/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "7d",
+          "metrics" => "events",
+          "date" => "2021-01-07",
+          "with_imported" => "true"
+        })
+        |> json_response(200)
+        |> Map.get("results")
+        |> List.first()
+
+      assert first_result == %{"date" => "2021-01-01", "events" => 1}
     end
   end
 end

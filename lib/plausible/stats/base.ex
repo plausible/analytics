@@ -48,7 +48,7 @@ defmodule Plausible.Stats.Base do
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )
 
-    on_full_build do
+    on_ee do
       q = Plausible.Stats.Sampling.add_query_hint(q, query)
     end
 
@@ -142,7 +142,7 @@ defmodule Plausible.Stats.Base do
         from s in q, where: s.start >= ^first_datetime and s.start < ^last_datetime
       end
 
-    on_full_build do
+    on_ee do
       sessions_q = Plausible.Stats.Sampling.add_query_hint(sessions_q, query)
     end
 
@@ -150,25 +150,10 @@ defmodule Plausible.Stats.Base do
     |> filter_by_visit_props(Filters.visit_props(), query)
   end
 
-  @api_prop_name_to_db %{
-    "source" => "referrer_source",
-    "device" => "screen_size",
-    "screen" => "screen_size",
-    "os" => "operating_system",
-    "os_version" => "operating_system_version",
-    "country" => "country_code",
-    "region" => "subdivision1_code",
-    "city" => "city_geoname_id",
-    "entry_page_hostname" => "hostname"
-  }
-
   defp filter_by_visit_props(q, visit_props, query) do
     Enum.reduce(visit_props, q, fn prop_name, sessions_q ->
       filter_key = "visit:" <> prop_name
-
-      db_field =
-        Map.get(@api_prop_name_to_db, prop_name, prop_name)
-        |> String.to_existing_atom()
+      db_field = String.to_existing_atom(prop_name)
 
       from(s in sessions_q,
         where: ^dynamic_filter_condition(query, filter_key, db_field)
@@ -254,7 +239,7 @@ defmodule Plausible.Stats.Base do
     }
   end
 
-  on_full_build do
+  on_ee do
     defp select_event_metric(:total_revenue) do
       %{total_revenue: Plausible.Stats.Goal.Revenue.total_revenue_query()}
     end
@@ -431,7 +416,7 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  defp db_field_val(:referrer_source, @no_ref), do: ""
+  defp db_field_val(:source, @no_ref), do: ""
   defp db_field_val(:referrer, @no_ref), do: ""
   defp db_field_val(:utm_medium, @no_ref), do: ""
   defp db_field_val(:utm_source, @no_ref), do: ""
@@ -592,7 +577,7 @@ defmodule Plausible.Stats.Base do
     |> select([e], total_visitors: fragment(@uniq_users_expression, e.user_id))
   end
 
-  defp total_visitors_subquery(site, query, true) do
+  defp total_visitors_subquery(site, %Query{include_imported: true} = query) do
     dynamic(
       [e],
       selected_as(
@@ -603,16 +588,14 @@ defmodule Plausible.Stats.Base do
     )
   end
 
-  defp total_visitors_subquery(site, query, false) do
+  defp total_visitors_subquery(site, query) do
     dynamic([e], selected_as(subquery(total_visitors(site, query)), :__total_visitors))
   end
 
   def add_percentage_metric(q, site, query, metrics) do
     if :percentage in metrics do
       q
-      |> select_merge(
-        ^%{__total_visitors: total_visitors_subquery(site, query, query.include_imported)}
-      )
+      |> select_merge(^%{__total_visitors: total_visitors_subquery(site, query)})
       |> select_merge(%{
         percentage:
           fragment(
@@ -630,17 +613,13 @@ defmodule Plausible.Stats.Base do
   # Adds conversion_rate metric to query, calculated as
   # X / Y where Y is the same breakdown value without goal or props
   # filters.
-  def maybe_add_conversion_rate(q, site, query, metrics, opts) do
+  def maybe_add_conversion_rate(q, site, query, metrics) do
     if :conversion_rate in metrics do
-      include_imported = Keyword.fetch!(opts, :include_imported)
-
       total_query = query |> Query.remove_event_filters([:goal, :props])
 
       # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
       subquery(q)
-      |> select_merge(
-        ^%{total_visitors: total_visitors_subquery(site, total_query, include_imported)}
-      )
+      |> select_merge(^%{total_visitors: total_visitors_subquery(site, total_query)})
       |> select_merge([e], %{
         conversion_rate:
           fragment(

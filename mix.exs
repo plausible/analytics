@@ -10,7 +10,7 @@ defmodule Plausible.MixProject do
       version: System.get_env("APP_VERSION", "0.0.1"),
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
-      start_permanent: Mix.env() in [:prod, :small],
+      start_permanent: Mix.env() in [:prod, :ce],
       aliases: aliases(),
       deps: deps(),
       test_coverage: [
@@ -51,10 +51,10 @@ defmodule Plausible.MixProject do
   defp elixirc_paths(env) when env in [:test, :dev],
     do: ["lib", "test/support", "extra/lib"]
 
-  defp elixirc_paths(env) when env in [:small_test, :small_dev],
+  defp elixirc_paths(env) when env in [:ce_test, :ce_dev],
     do: ["lib", "test/support"]
 
-  defp elixirc_paths(:small), do: ["lib"]
+  defp elixirc_paths(:ce), do: ["lib"]
   defp elixirc_paths(_), do: ["lib", "extra/lib"]
 
   # Specifies your project dependencies.
@@ -68,8 +68,8 @@ defmodule Plausible.MixProject do
       {:bamboo_smtp, "~> 4.1"},
       {:bamboo_mua, "~> 0.1.4"},
       {:bcrypt_elixir, "~> 3.0"},
-      {:bypass, "~> 2.1", only: [:dev, :test, :small_test]},
-      {:ecto_ch, "~> 0.3"},
+      {:bypass, "~> 2.1", only: [:dev, :test, :ce_test]},
+      {:ecto_ch, "~> 0.3.5"},
       {:cloak, "~> 1.1"},
       {:cloak_ecto, "~> 1.2"},
       {:combination, "~> 0.0.3"},
@@ -77,15 +77,15 @@ defmodule Plausible.MixProject do
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:csv, "~> 2.3"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:double, "~> 0.8.0", only: [:test, :small_test]},
+      {:double, "~> 0.8.0", only: [:test, :ce_test]},
       {:ecto, "~> 3.11.0"},
       {:ecto_sql, "~> 3.11.0"},
       {:envy, "~> 1.1.1"},
       {:eqrcode, "~> 0.1.10"},
-      {:ex_machina, "~> 2.3", only: [:dev, :test, :small_dev, :small_test]},
+      {:ex_machina, "~> 2.3", only: [:dev, :test, :ce_dev, :ce_test]},
       {:excoveralls, "~> 0.10", only: :test},
       {:finch, "~> 0.16.0"},
-      {:floki, "~> 0.35.0", only: [:dev, :test, :small_dev, :small_test]},
+      {:floki, "~> 0.35.0", only: [:dev, :test, :ce_dev, :ce_test]},
       {:fun_with_flags, "~> 1.11.0"},
       {:fun_with_flags_ui, "~> 1.0"},
       {:locus, "~> 2.3"},
@@ -94,7 +94,7 @@ defmodule Plausible.MixProject do
       {:jason, "~> 1.3"},
       {:kaffy, "~> 0.10.2", only: [:dev, :test, :staging, :prod]},
       {:location, git: "https://github.com/plausible/location.git"},
-      {:mox, "~> 1.0", only: [:test, :small_test]},
+      {:mox, "~> 1.0", only: [:test, :ce_test]},
       {:nanoid, "~> 2.1.0"},
       {:nimble_totp, "~> 1.0"},
       {:oban, "~> 2.17.0"},
@@ -109,7 +109,7 @@ defmodule Plausible.MixProject do
       {:phoenix_view, "~> 2.0"},
       {:phoenix_ecto, "~> 4.0"},
       {:phoenix_html, "~> 3.3", override: true},
-      {:phoenix_live_reload, "~> 1.2", only: [:dev, :small_dev]},
+      {:phoenix_live_reload, "~> 1.2", only: [:dev, :ce_dev]},
       {:phoenix_pubsub, "~> 2.0"},
       {:phoenix_live_view, "~> 0.18"},
       {:php_serializer, "~> 2.0"},
@@ -134,15 +134,15 @@ defmodule Plausible.MixProject do
       {:joken, "~> 2.5"},
       {:paginator, git: "https://github.com/duffelhq/paginator.git"},
       {:scrivener_ecto, "~> 2.0"},
-      {:esbuild, "~> 0.7", runtime: Mix.env() in [:dev, :small_dev]},
-      {:tailwind, "~> 0.2.0", runtime: Mix.env() in [:dev, :small_dev]},
+      {:esbuild, "~> 0.7", runtime: Mix.env() in [:dev, :ce_dev]},
+      {:tailwind, "~> 0.2.0", runtime: Mix.env() in [:dev, :ce_dev]},
       {:ex_json_logger, "~> 1.4.0"},
       {:ecto_network, "~> 1.5.0"},
       {:ex_aws, "~> 2.5"},
       {:ex_aws_s3, "~> 2.5"},
       {:sweet_xml, "~> 0.7.4"},
       {:zstream, "~> 0.6.4"},
-      {:con_cache, "~> 1.0"}
+      {:con_cache, "~> 1.1.0"}
     ]
   end
 

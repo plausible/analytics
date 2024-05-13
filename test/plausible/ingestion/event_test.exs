@@ -236,7 +236,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :payment_required
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   test "saves revenue amount" do
     site = insert(:site)
     _goal = insert(:goal, event_name: "checkout", currency: "USD", site: site)

@@ -4,6 +4,7 @@ defmodule Plausible.Stats.Query do
   defstruct date_range: nil,
             interval: nil,
             period: nil,
+            property: nil,
             filters: %{},
             sample_threshold: 20_000_000,
             imported_data_requested: false,
@@ -13,7 +14,7 @@ defmodule Plausible.Stats.Query do
             experimental_reduced_joins?: false
 
   require OpenTelemetry.Tracer, as: Tracer
-  alias Plausible.Stats.{Filters, Interval}
+  alias Plausible.Stats.{Filters, Interval, Imported}
 
   @type t :: %__MODULE__{}
 
@@ -26,12 +27,12 @@ defmodule Plausible.Stats.Query do
       |> put_experimental_session_count(site, params)
       |> put_experimental_reduced_joins(site, params)
       |> put_period(site, params)
+      |> put_breakdown_property(params)
       |> put_interval(params)
       |> put_parsed_filters(params)
       |> put_imported_opts(site, params)
-      |> maybe_drop_prop_filter(site)
 
-    on_full_build do
+    on_ee do
       query = Plausible.Stats.Sampling.put_threshold(query, params)
     end
 
@@ -149,7 +150,7 @@ defmodule Plausible.Stats.Query do
 
   defp put_period(query, site, %{"period" => "all"}) do
     now = today(site.timezone)
-    start_date = Plausible.Sites.local_start_date(site) || now
+    start_date = Plausible.Sites.stats_start_date(site) || now
 
     struct!(query,
       period: "all",
@@ -179,6 +180,10 @@ defmodule Plausible.Stats.Query do
 
   defp put_period(query, site, params) do
     put_period(query, site, Map.merge(params, %{"period" => "30d"}))
+  end
+
+  defp put_breakdown_property(query, params) do
+    struct!(query, property: params["property"])
   end
 
   defp put_interval(%{:period => "all"} = query, params) do
@@ -263,25 +268,12 @@ defmodule Plausible.Stats.Query do
     )
   end
 
-  defp maybe_drop_prop_filter(query, site) do
-    prop_filter? = Map.has_key?(query.filters, "props")
-
-    props_available? = fn ->
-      site = Plausible.Repo.preload(site, :owner)
-      Plausible.Billing.Feature.Props.check_availability(site.owner) == :ok
-    end
-
-    if prop_filter? && !props_available?.(),
-      do: struct!(query, filters: Map.drop(query.filters, ["props"])),
-      else: query
-  end
-
   @spec include_imported?(t(), Plausible.Site.t(), boolean()) :: boolean()
   def include_imported?(query, site, requested?) do
     cond do
       is_nil(site.latest_import_end_date) -> false
       Date.after?(query.date_range.first, site.latest_import_end_date) -> false
-      Enum.any?(query.filters) -> false
+      not Imported.schema_supports_query?(query) -> false
       query.period == "realtime" -> false
       true -> requested?
     end
@@ -295,6 +287,7 @@ defmodule Plausible.Stats.Query do
     Tracer.set_attributes([
       {"plausible.query.interval", query.interval},
       {"plausible.query.period", query.period},
+      {"plausible.query.breakdown_property", query.property},
       {"plausible.query.include_imported", query.include_imported},
       {"plausible.query.filter_keys", filter_keys},
       {"plausible.query.metrics", metrics}

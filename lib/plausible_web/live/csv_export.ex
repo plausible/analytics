@@ -107,7 +107,11 @@ defmodule PlausibleWeb.Live.CSVExport do
         <% "failed" -> %>
           <.export_failed />
         <% "ready" -> %>
-          <.download storage={@storage} export={@export.result} />
+          <.download
+            storage={@storage}
+            export={@export}
+            href={Routes.site_path(@socket, :download_export, @site.domain)}
+          />
       <% end %>
     </.async_result>
     """
@@ -169,7 +173,7 @@ defmodule PlausibleWeb.Live.CSVExport do
   defp download(assigns) do
     ~H"""
     <div class="flex items-center justify-between space-x-2">
-      <a href={@export.download_link} class="inline-flex items-center">
+      <a href={@href} class="inline-flex items-center">
         <Heroicons.document_text class="w-4 h-4" />
         <span class="ml-1 text-indigo-500"><%= @export.name %></span>
       </a>

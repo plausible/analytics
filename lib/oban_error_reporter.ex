@@ -48,7 +48,7 @@ defmodule ObanErrorReporter do
     site_import = Plausible.Repo.get(Plausible.Imported.SiteImport, import_id)
 
     if site_import do
-      Plausible.Workers.ImportAnalytics.import_fail(site_import)
+      Plausible.Workers.ImportAnalytics.import_fail(site_import, [])
     end
   end
 

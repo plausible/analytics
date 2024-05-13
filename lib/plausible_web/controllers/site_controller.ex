@@ -679,20 +679,30 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
-  on_full_build do
-    # exported archives are downloaded from object storage
-  else
-    alias Plausible.Exports
+  on_ee do
+    def download_export(conn, _params) do
+      %{id: site_id, domain: domain} = conn.assigns.site
 
-    def download_local_export(conn, _params) do
+      if s3_export = Plausible.Exports.get_s3_export(site_id) do
+        s3_bucket = Plausible.S3.exports_bucket()
+        download_url = Plausible.S3.download_url(s3_bucket, s3_export.path)
+        redirect(conn, external: download_url)
+      else
+        conn
+        |> put_flash(:error, "Export not found")
+        |> redirect(external: Routes.site_path(conn, :settings_imports_exports, domain))
+      end
+    end
+  else
+    def download_export(conn, _params) do
       %{id: site_id, domain: domain, timezone: timezone} = conn.assigns.site
 
-      if local_export = Exports.get_local_export(site_id, domain, timezone) do
+      if local_export = Plausible.Exports.get_local_export(site_id, domain, timezone) do
         %{path: export_path, name: name} = local_export
 
         conn
         |> put_resp_content_type("application/zip")
-        |> put_resp_header("content-disposition", Exports.content_disposition(name))
+        |> put_resp_header("content-disposition", Plausible.Exports.content_disposition(name))
         |> send_file(200, export_path)
       else
         conn

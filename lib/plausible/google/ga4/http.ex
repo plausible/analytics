@@ -31,6 +31,7 @@ defmodule Plausible.Google.GA4.HTTP do
               desc: true
             }
           ],
+          dimensionFilter: report_request.dimension_filter,
           limit: report_request.limit,
           offset: report_request.offset
         }
@@ -50,10 +51,20 @@ defmodule Plausible.Google.GA4.HTTP do
 
     with {:ok, %{body: body}} <- response,
          {:ok, report} <- parse_report_from_response(body),
-         row_count <- Map.fetch!(report, "rowCount"),
+         row_count <- Map.get(report, "rowCount", 0),
          {:ok, report} <- convert_to_maps(report) do
       {:ok, {report, row_count}}
     else
+      {:error, %{reason: %{status: 429, body: body}}} ->
+        Logger.debug(
+          "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset} due to exceeding rate limit."
+        )
+
+        Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: 429}})
+
+        {:error,
+         {:rate_limit_exceeded, dataset: report_request.dataset, offset: report_request.offset}}
+
       {:error, %{reason: %{status: status, body: body}}} ->
         Logger.debug(
           "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset} with code #{status}: #{inspect(body)}"
@@ -119,6 +130,10 @@ defmodule Plausible.Google.GA4.HTTP do
     {:ok, report}
   end
 
+  defp convert_to_maps(%{"dimensionHeaders" => _, "metricHeaders" => _}) do
+    {:ok, []}
+  end
+
   defp convert_to_maps(response) do
     Logger.error(
       "Google Analytics 4: Failed to read report in response. Reason: #{inspect(response)}"
@@ -136,6 +151,9 @@ defmodule Plausible.Google.GA4.HTTP do
     case HTTPClient.impl().get(url, headers) do
       {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, body}
+
+      {:error, %HTTPClient.Non200Error{reason: %{status: 429}}} ->
+        {:error, :rate_limit_exceeded}
 
       {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
         {:error, :authentication_failed}
@@ -157,6 +175,9 @@ defmodule Plausible.Google.GA4.HTTP do
     case HTTPClient.impl().get(url, headers) do
       {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, body}
+
+      {:error, %HTTPClient.Non200Error{reason: %{status: 429}}} ->
+        {:error, :rate_limit_exceeded}
 
       {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
         {:error, :authentication_failed}
@@ -223,6 +244,9 @@ defmodule Plausible.Google.GA4.HTTP do
           end
 
         {:ok, date}
+
+      {:error, %HTTPClient.Non200Error{reason: %{status: 429}}} ->
+        {:error, :rate_limit_exceeded}
 
       {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
         {:error, :authentication_failed}

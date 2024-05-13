@@ -1,5 +1,6 @@
 defmodule Plausible.Imported.GoogleAnalytics4Test do
   use PlausibleWeb.ConnCase, async: true
+  use Oban.Testing, repo: Plausible.Repo
 
   import Mox
   import Ecto.Query, only: [from: 2]
@@ -15,6 +16,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
                       "fixture/ga4_report_imported_sources.json",
                       "fixture/ga4_report_imported_pages.json",
                       "fixture/ga4_report_imported_entry_pages.json",
+                      "fixture/ga4_report_imported_custom_events.json",
                       "fixture/ga4_report_imported_locations.json",
                       "fixture/ga4_report_imported_devices.json",
                       "fixture/ga4_report_imported_browsers.json",
@@ -88,6 +90,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
             "imported_pages" -> 3340
             "imported_entry_pages" -> 2934
             "imported_exit_pages" -> 0
+            "imported_custom_events" -> 56
             "imported_locations" -> 2291
             "imported_devices" -> 93
             "imported_browsers" -> 233
@@ -121,9 +124,19 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
       conn = put_req_header(conn, "authorization", "Bearer #{api_key}")
 
-      assert_timeseries(conn, common_params)
-      assert_pages(conn, common_params)
+      insert(:goal, event_name: "Outbound Link: Click", site: site)
+      insert(:goal, event_name: "view_search_results", site: site)
+      insert(:goal, event_name: "scroll", site: site)
 
+      # Timeseries
+      assert_timeseries(conn, common_params)
+
+      # Breakdown (event:*)
+      assert_pages(conn, common_params)
+      assert_custom_events(conn, common_params)
+      assert_outbound_link_urls(conn, common_params)
+
+      # Breakdown (visit:*)
       assert_sources(conn, breakdown_params)
       assert_utm_mediums(conn, breakdown_params)
       assert_entry_pages(conn, breakdown_params)
@@ -132,7 +145,192 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
       assert_browsers(conn, breakdown_params)
       assert_os(conn, breakdown_params)
       assert_os_versions(conn, breakdown_params)
+
+      # Misc
       assert_active_visitors(site_import)
+    end
+
+    test "handles empty response payload gracefully", %{user: user, site: site} do
+      future = DateTime.add(DateTime.utc_now(), 3600, :second)
+
+      empty_custom_events = %{
+        "reports" => [
+          %{
+            "dimensionHeaders" => [
+              %{"name" => "date"},
+              %{"name" => "eventName"},
+              %{"name" => "linkUrl"}
+            ],
+            "kind" => "analyticsData#runReport",
+            "metadata" => %{"currencyCode" => "USD", "timeZone" => "Etc/GMT"},
+            "metricHeaders" => [
+              %{"name" => "totalUsers", "type" => "TYPE_INTEGER"},
+              %{"name" => "eventCount", "type" => "TYPE_INTEGER"}
+            ]
+          }
+        ]
+      }
+
+      {:ok, job} =
+        Plausible.Imported.GoogleAnalytics4.new_import(
+          site,
+          user,
+          label: "properties/123456",
+          property: "properties/123456",
+          start_date: ~D[2024-01-01],
+          end_date: ~D[2024-01-31],
+          access_token: "redacted_access_token",
+          refresh_token: "redacted_refresh_token",
+          token_expires_at: DateTime.to_iso8601(future)
+        )
+
+      site_import = Plausible.Imported.get_import(site, job.args.import_id)
+
+      opts = job |> Repo.reload!() |> Map.get(:args) |> GoogleAnalytics4.parse_args()
+
+      opts = Keyword.put(opts, :flush_interval_ms, 10)
+
+      for report <- Enum.take(@full_report_mock, 4) do
+        expect(Plausible.HTTPClient.Mock, :post, fn _url, headers, _body, _opts ->
+          assert [{"Authorization", "Bearer redacted_access_token"}] == headers
+          {:ok, %Finch.Response{status: 200, body: report}}
+        end)
+      end
+
+      expect(Plausible.HTTPClient.Mock, :post, fn _url, headers, _body, _opts ->
+        assert [{"Authorization", "Bearer redacted_access_token"}] == headers
+        {:ok, %Finch.Response{status: 200, body: empty_custom_events}}
+      end)
+
+      for report <- Enum.drop(@full_report_mock, 5) do
+        expect(Plausible.HTTPClient.Mock, :post, fn _url, headers, _body, _opts ->
+          assert [{"Authorization", "Bearer redacted_access_token"}] == headers
+          {:ok, %Finch.Response{status: 200, body: report}}
+        end)
+      end
+
+      assert :ok = GoogleAnalytics4.import_data(site_import, opts)
+
+      Enum.each(Plausible.Imported.tables(), fn table ->
+        count =
+          case table do
+            "imported_sources" -> 210
+            "imported_visitors" -> 31
+            "imported_pages" -> 3340
+            "imported_entry_pages" -> 2934
+            "imported_exit_pages" -> 0
+            "imported_locations" -> 2291
+            "imported_devices" -> 93
+            "imported_browsers" -> 233
+            "imported_operating_systems" -> 1068
+            "imported_custom_events" -> 0
+          end
+
+        query = from(imported in table, where: imported.site_id == ^site.id)
+        assert await_clickhouse_count(query, count)
+      end)
+    end
+
+    test "handles rate limiting gracefully", %{user: user, site: site} do
+      future = DateTime.add(DateTime.utc_now(), 3600, :second)
+
+      {:ok, job} =
+        Plausible.Imported.GoogleAnalytics4.new_import(
+          site,
+          user,
+          label: "properties/123456",
+          property: "properties/123456",
+          start_date: ~D[2024-01-01],
+          end_date: ~D[2024-01-31],
+          access_token: "redacted_access_token",
+          refresh_token: "redacted_refresh_token",
+          token_expires_at: DateTime.to_iso8601(future)
+        )
+
+      site_import = Plausible.Imported.get_import(site, job.args.import_id)
+
+      opts = job |> Repo.reload!() |> Map.get(:args) |> GoogleAnalytics4.parse_args()
+
+      opts = Keyword.put(opts, :flush_interval_ms, 10)
+
+      expect(Plausible.HTTPClient.Mock, :post, fn _url, headers, _body, _opts ->
+        assert [{"Authorization", "Bearer redacted_access_token"}] == headers
+        {:ok, %Finch.Response{status: 200, body: List.first(@full_report_mock)}}
+      end)
+
+      expect(Plausible.HTTPClient.Mock, :post, fn _url, headers, _body, _opts ->
+        assert [{"Authorization", "Bearer redacted_access_token"}] == headers
+
+        {:error,
+         Plausible.HTTPClient.Non200Error.new(%Finch.Response{
+           status: 429,
+           body: "Rate limit exceeded"
+         })}
+      end)
+
+      assert {:error, :rate_limit_exceeded, skip_purge?: true, skip_mark_failed?: true} =
+               GoogleAnalytics4.import_data(site_import, opts)
+
+      in_65_minutes = DateTime.add(DateTime.utc_now(), 3900, :second)
+
+      assert_enqueued(
+        worker: Plausible.Workers.ImportAnalytics,
+        args: %{resume_from_import_id: site_import.id},
+        scheduled_at: {in_65_minutes, delta: 10}
+      )
+
+      [%{args: resume_args}, _] = all_enqueued()
+
+      resume_opts = GoogleAnalytics4.parse_args(resume_args)
+      resume_opts = Keyword.put(resume_opts, :flush_interval_ms, 10)
+      site_import = Repo.reload!(site_import)
+
+      Enum.each(Plausible.Imported.tables(), fn table ->
+        count =
+          case table do
+            "imported_visitors" -> 31
+            "imported_sources" -> 0
+            "imported_pages" -> 0
+            "imported_entry_pages" -> 0
+            "imported_exit_pages" -> 0
+            "imported_locations" -> 0
+            "imported_devices" -> 0
+            "imported_browsers" -> 0
+            "imported_operating_systems" -> 0
+            "imported_custom_events" -> 0
+          end
+
+        query = from(imported in table, where: imported.site_id == ^site.id)
+        assert await_clickhouse_count(query, count)
+      end)
+
+      for report <- tl(@full_report_mock) do
+        expect(Plausible.HTTPClient.Mock, :post, fn _url, headers, _body, _opts ->
+          assert [{"Authorization", "Bearer redacted_access_token"}] == headers
+          {:ok, %Finch.Response{status: 200, body: report}}
+        end)
+      end
+
+      assert :ok = GoogleAnalytics4.import_data(site_import, resume_opts)
+
+      Enum.each(Plausible.Imported.tables(), fn table ->
+        count =
+          case table do
+            "imported_sources" -> 210
+            "imported_visitors" -> 31
+            "imported_pages" -> 3340
+            "imported_entry_pages" -> 2934
+            "imported_exit_pages" -> 0
+            "imported_locations" -> 2291
+            "imported_devices" -> 93
+            "imported_browsers" -> 233
+            "imported_operating_systems" -> 1068
+            "imported_custom_events" -> 56
+          end
+
+        query = from(imported in table, where: imported.site_id == ^site.id)
+        assert await_clickhouse_count(query, count)
+      end)
     end
   end
 
@@ -162,6 +360,67 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     |> Enum.each(fn [time_on_page] ->
       assert time_on_page == 0
     end)
+  end
+
+  defp assert_custom_events(conn, params) do
+    params =
+      params
+      |> Map.put("metrics", "visitors,events,conversion_rate")
+      |> Map.put("property", "event:goal")
+
+    %{"results" => results} =
+      get(conn, "/api/v1/stats/breakdown", params) |> json_response(200)
+
+    assert results == [
+             %{
+               "goal" => "scroll",
+               "visitors" => 1513,
+               "events" => 2130,
+               "conversion_rate" => 24.7
+             },
+             %{
+               "goal" => "Outbound Link: Click",
+               "visitors" => 17,
+               "events" => 17,
+               "conversion_rate" => 0.3
+             },
+             %{
+               "goal" => "view_search_results",
+               "visitors" => 11,
+               "events" => 30,
+               "conversion_rate" => 0.2
+             }
+           ]
+  end
+
+  defp assert_outbound_link_urls(conn, params) do
+    params =
+      Map.merge(params, %{
+        "metrics" => "visitors,events,conversion_rate",
+        "property" => "event:props:url",
+        "filters" => "event:goal==Outbound Link: Click"
+      })
+
+    %{"results" => results} =
+      get(conn, "/api/v1/stats/breakdown", params) |> json_response(200)
+
+    assert length(results) == 10
+
+    assert List.first(results) ==
+             %{
+               "url" => "https://www.facebook.com/kuhinjskeprice",
+               "visitors" => 6,
+               "conversion_rate" => 0.1,
+               "events" => 6
+             }
+
+    assert %{
+             "url" =>
+               "http://www.jamieoliver.com/recipes/pasta-recipes/spinach-ricotta-cannelloni/",
+             "visitors" => 1,
+             "conversion_rate" => 0.0,
+             "events" => 1
+           } in results
   end
 
   defp assert_timeseries(conn, params) do

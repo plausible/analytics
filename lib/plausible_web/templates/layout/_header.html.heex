@@ -28,7 +28,7 @@
           <% @conn.assigns[:current_user] -> %>
             <ul class="flex items-center w-full sm:w-auto">
               <li
-                :if={full_build?() and Plausible.Users.on_trial?(@conn.assigns[:current_user])}
+                :if={ee?() and Plausible.Users.on_trial?(@conn.assigns[:current_user])}
                 class="hidden mr-6 sm:block"
               >
                 <%= link(trial_notificaton(@conn.assigns[:current_user]),
@@ -61,7 +61,7 @@
                       <.dropdown_link new_tab href="https://plausible.io/docs">
                         Help Center
                       </.dropdown_link>
-                      <%= if full_build?() do %>
+                      <%= if ee?() do %>
                         <.dropdown_link new_tab href="https://plausible.io/contact">
                           Contact Support
                         </.dropdown_link>
@@ -80,7 +80,7 @@
                   </:panel>
                 </.dropdown>
               </li>
-              <%= if @conn.assigns[:current_user] && full_build?() do %>
+              <%= if @conn.assigns[:current_user] && ee?() do %>
                 <li id="changelog-notification" class="relative py-2"></li>
               <% end %>
             </ul>

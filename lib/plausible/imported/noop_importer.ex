@@ -24,10 +24,10 @@ defmodule Plausible.Imported.NoopImporter do
   def import_data(_site_import, _opts), do: :ok
 
   @impl true
-  def before_start(site_import) do
+  def before_start(site_import, _opts) do
     send(self(), {:before_start, site_import.id})
 
-    :ok
+    {:ok, site_import}
   end
 
   @impl true

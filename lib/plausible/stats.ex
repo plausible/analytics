@@ -11,9 +11,9 @@ defmodule Plausible.Stats do
 
   use Plausible.DebugReplayInfo
 
-  def breakdown(site, query, prop, metrics, pagination) do
+  def breakdown(site, query, metrics, pagination) do
     include_sentry_replay_info()
-    Breakdown.breakdown(site, query, prop, metrics, pagination)
+    Breakdown.breakdown(site, query, metrics, pagination)
   end
 
   def aggregate(site, query, metrics) do
@@ -31,7 +31,7 @@ defmodule Plausible.Stats do
     CurrentVisitors.current_visitors(site)
   end
 
-  on_full_build do
+  on_ee do
     def funnel(site, query, funnel) do
       include_sentry_replay_info()
       Plausible.Stats.Funnel.funnel(site, query, funnel)

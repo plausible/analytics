@@ -5,7 +5,6 @@ defmodule Plausible.Stats.Breakdown do
 
   import Plausible.Stats.{Base, Imported}
   import Ecto.Query
-  require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{Query, Util, TableDecider}
 
   @no_ref "Direct / None"
@@ -13,7 +12,7 @@ defmodule Plausible.Stats.Breakdown do
 
   @session_metrics [:bounce_rate, :visit_duration]
 
-  @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
+  @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
   @event_metrics [:visits, :visitors, :pageviews, :events, :percentage] ++ @revenue_metrics
 
@@ -24,21 +23,32 @@ defmodule Plausible.Stats.Breakdown do
   # the breakdown results later on.
   @computed_metrics [:conversion_rate, :total_visitors]
 
-  def breakdown(site, query, property, metrics, pagination, opts \\ [])
+  def breakdown(site, query, metrics, pagination, opts \\ [])
 
-  def breakdown(site, query, "event:goal" = property, metrics, pagination, opts) do
+  def breakdown(
+        site,
+        %Query{property: "event:goal"} = query,
+        metrics,
+        pagination,
+        opts
+      ) do
     site = Plausible.Repo.preload(site, :goals)
 
     {event_goals, pageview_goals} = Enum.split_with(site.goals, & &1.event_name)
     events = Enum.map(event_goals, & &1.event_name)
-    event_query = %Query{query | filters: Map.put(query.filters, "event:name", {:member, events})}
 
-    if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
+    event_query = %Query{
+      query
+      | filters: Map.put(query.filters, "event:name", {:member, events}),
+        property: "event:name"
+    }
+
+    if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
 
     no_revenue = {nil, metrics -- @revenue_metrics}
 
     {revenue_goals, metrics} =
-      on_full_build do
+      on_ee do
         if Plausible.Billing.Feature.RevenueGoals.enabled?(site) do
           revenue_goals = Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
           metrics = if Enum.empty?(revenue_goals), do: metrics -- @revenue_metrics, else: metrics
@@ -56,7 +66,7 @@ defmodule Plausible.Stats.Breakdown do
     event_q =
       if Enum.any?(event_goals) do
         site
-        |> breakdown_events(event_query, "event:name", metrics_to_select)
+        |> breakdown_events(event_query, metrics_to_select)
         |> apply_pagination(pagination)
       else
         nil
@@ -84,6 +94,7 @@ defmodule Plausible.Stats.Breakdown do
           }
         )
         |> select_merge(^select_columns)
+        |> merge_imported_pageview_goals(site, query, page_exprs, metrics_to_select)
         |> apply_pagination(pagination)
       else
         nil
@@ -110,7 +121,7 @@ defmodule Plausible.Stats.Breakdown do
 
     if full_q do
       full_q
-      |> maybe_add_conversion_rate(site, query, metrics, include_imported: false)
+      |> maybe_add_conversion_rate(site, query, metrics)
       |> ClickhouseRepo.all()
       |> transform_keys(%{name: :goal})
       |> cast_revenue_metrics_to_money(revenue_goals)
@@ -120,9 +131,15 @@ defmodule Plausible.Stats.Breakdown do
     end
   end
 
-  def breakdown(site, query, "event:props:" <> custom_prop = property, metrics, pagination, opts) do
+  def breakdown(
+        site,
+        %Query{property: "event:props:" <> custom_prop} = query,
+        metrics,
+        pagination,
+        opts
+      ) do
     {currency, metrics} =
-      on_full_build do
+      on_ee do
         Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
       else
         {nil, metrics}
@@ -130,40 +147,42 @@ defmodule Plausible.Stats.Breakdown do
 
     metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @computed_metrics
 
-    if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
+    if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
 
-    breakdown_events(site, query, "event:props:" <> custom_prop, metrics_to_select)
-    |> maybe_add_conversion_rate(site, query, metrics, include_imported: false)
+    breakdown_events(site, query, metrics_to_select)
+    |> maybe_add_conversion_rate(site, query, metrics)
     |> paginate_and_execute(metrics, pagination)
     |> transform_keys(%{breakdown_prop_value: custom_prop})
     |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
   end
 
-  def breakdown(site, query, "event:page" = property, metrics, pagination, opts) do
+  def breakdown(site, %Query{property: "event:page"} = query, metrics, pagination, opts) do
     event_metrics =
       metrics
       |> Util.maybe_add_visitors_metric()
       |> Enum.filter(&(&1 in @event_metrics))
 
+    if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
+
     event_result =
       site
-      |> breakdown_events(query, property, event_metrics)
-      |> maybe_add_group_conversion_rate(&breakdown_events/4, site, query, property, metrics)
+      |> breakdown_events(query, event_metrics)
+      |> maybe_add_group_conversion_rate(&breakdown_events/3, site, query, metrics)
       |> paginate_and_execute(metrics, pagination)
       |> maybe_add_time_on_page(site, query, metrics)
 
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
-    new_query =
+    entry_page_query =
       case event_result do
         [] ->
           query
 
         pages ->
-          Query.put_filter(query, "visit:entry_page", {:member, Enum.map(pages, & &1[:page])})
+          query
+          |> Query.put_filter("visit:entry_page", {:member, Enum.map(pages, & &1[:page])})
+          |> struct!(property: "visit:entry_page")
       end
-
-    if !Keyword.get(opts, :skip_tracing), do: trace(new_query, property, metrics)
 
     if Enum.any?(event_metrics) && Enum.empty?(event_result) do
       []
@@ -171,7 +190,7 @@ defmodule Plausible.Stats.Breakdown do
       {limit, _page} = pagination
 
       session_result =
-        breakdown_sessions(site, new_query, "visit:entry_page", session_metrics)
+        breakdown_sessions(site, entry_page_query, session_metrics)
         |> paginate_and_execute(session_metrics, {limit, 1})
         |> transform_keys(%{entry_page: :page})
 
@@ -187,33 +206,33 @@ defmodule Plausible.Stats.Breakdown do
     end
   end
 
-  def breakdown(site, query, "event:name" = property, metrics, pagination, opts) do
-    if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
+  def breakdown(site, %Query{property: "event:name"} = query, metrics, pagination, opts) do
+    if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
 
-    breakdown_events(site, query, property, metrics)
+    breakdown_events(site, query, metrics)
     |> paginate_and_execute(metrics, pagination)
   end
 
-  def breakdown(site, query, property, metrics, pagination, opts) do
-    query = maybe_update_breakdown_filters(property, query)
-    if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
+  def breakdown(site, query, metrics, pagination, opts) do
+    query = maybe_update_breakdown_filters(query)
+    if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
 
     metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @computed_metrics
 
-    case breakdown_table(query, metrics, property) do
+    case breakdown_table(query, metrics) do
       :session ->
-        breakdown_sessions(site, query, property, metrics_to_select)
-        |> maybe_add_group_conversion_rate(&breakdown_sessions/4, site, query, property, metrics)
+        breakdown_sessions(site, query, metrics_to_select)
+        |> maybe_add_group_conversion_rate(&breakdown_sessions/3, site, query, metrics)
         |> paginate_and_execute(metrics, pagination)
 
       :event ->
-        breakdown_events(site, query, property, metrics_to_select)
-        |> maybe_add_group_conversion_rate(&breakdown_events/4, site, query, property, metrics)
+        breakdown_events(site, query, metrics_to_select)
+        |> maybe_add_group_conversion_rate(&breakdown_events/3, site, query, metrics)
         |> paginate_and_execute(metrics, pagination)
     end
   end
 
-  defp maybe_update_breakdown_filters(visit_entry_prop, query)
+  defp maybe_update_breakdown_filters(%Query{property: visit_entry_prop} = query)
        when visit_entry_prop in [
               "visit:source",
               "visit:entry_page",
@@ -228,11 +247,11 @@ defmodule Plausible.Stats.Breakdown do
     update_hostname(query, "visit:entry_page_hostname")
   end
 
-  defp maybe_update_breakdown_filters("visit:exit_page", query) do
+  defp maybe_update_breakdown_filters(%Query{property: "visit:exit_page"} = query) do
     update_hostname(query, "visit:exit_page_hostname")
   end
 
-  defp maybe_update_breakdown_filters(_, query) do
+  defp maybe_update_breakdown_filters(query) do
     query
   end
 
@@ -247,14 +266,14 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   # Backwards compatibility
-  defp breakdown_table(%Query{experimental_reduced_joins?: false}, _, _), do: :session
+  defp breakdown_table(%Query{experimental_reduced_joins?: false}, _), do: :session
 
-  defp breakdown_table(_query, _metrics, "visit:entry_page"), do: :session
-  defp breakdown_table(_query, _metrics, "visit:entry_page_hostname"), do: :session
-  defp breakdown_table(_query, _metrics, "visit:exit_page"), do: :session
-  defp breakdown_table(_query, _metrics, "visit:exit_page_hostname"), do: :session
+  defp breakdown_table(%Query{property: "visit:entry_page"}, _metrics), do: :session
+  defp breakdown_table(%Query{property: "visit:entry_page_hostname"}, _metrics), do: :session
+  defp breakdown_table(%Query{property: "visit:exit_page"}, _metrics), do: :session
+  defp breakdown_table(%Query{property: "visit:exit_page_hostname"}, _metrics), do: :session
 
-  defp breakdown_table(query, metrics, property) do
+  defp breakdown_table(%Query{property: property} = query, metrics) do
     {_, session_metrics, _} = TableDecider.partition_metrics(metrics, query, property)
 
     if not Enum.empty?(session_metrics) do
@@ -282,25 +301,25 @@ defmodule Plausible.Stats.Breakdown do
     |> sort_results(metrics)
   end
 
-  defp breakdown_sessions(site, query, property, metrics) do
+  defp breakdown_sessions(site, %Query{property: property} = query, metrics) do
     from(s in query_sessions(site, query),
       order_by: [desc: fragment("uniq(?)", s.user_id)],
       select: ^select_session_metrics(metrics, query)
     )
     |> filter_converted_sessions(site, query)
     |> do_group_by(property)
-    |> merge_imported(site, query, property, metrics)
+    |> merge_imported(site, query, metrics)
     |> add_percentage_metric(site, query, metrics)
   end
 
-  defp breakdown_events(site, query, property, metrics) do
+  defp breakdown_events(site, %Query{property: property} = query, metrics) do
     from(e in base_event_query(site, query),
       order_by: [desc: fragment("uniq(?)", e.user_id)],
       select: %{}
     )
     |> do_group_by(property)
     |> select_merge(^select_event_metrics(metrics))
-    |> merge_imported(site, query, property, metrics)
+    |> merge_imported(site, query, metrics)
     |> add_percentage_metric(site, query, metrics)
   end
 
@@ -458,41 +477,41 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:source") do
     from(
       s in q,
-      group_by: s.referrer_source,
+      group_by: s.source,
       select_merge: %{
-        source: fragment("if(empty(?), ?, ?)", s.referrer_source, @no_ref, s.referrer_source)
+        source: fragment("if(empty(?), ?, ?)", s.source, @no_ref, s.source)
       },
-      order_by: {:asc, s.referrer_source}
+      order_by: {:asc, s.source}
     )
   end
 
   defp do_group_by(q, "visit:country") do
     from(
       s in q,
-      where: s.country_code != "\0\0" and s.country_code != "ZZ",
-      group_by: s.country_code,
-      select_merge: %{country: s.country_code},
-      order_by: {:asc, s.country_code}
+      where: s.country != "\0\0" and s.country != "ZZ",
+      group_by: s.country,
+      select_merge: %{country: s.country},
+      order_by: {:asc, s.country}
     )
   end
 
   defp do_group_by(q, "visit:region") do
     from(
       s in q,
-      where: s.subdivision1_code != "",
-      group_by: s.subdivision1_code,
-      select_merge: %{region: s.subdivision1_code},
-      order_by: {:asc, s.subdivision1_code}
+      where: s.region != "",
+      group_by: s.region,
+      select_merge: %{region: s.region},
+      order_by: {:asc, s.region}
     )
   end
 
   defp do_group_by(q, "visit:city") do
     from(
       s in q,
-      where: s.city_geoname_id != 0,
-      group_by: s.city_geoname_id,
-      select_merge: %{city: s.city_geoname_id},
-      order_by: {:asc, s.city_geoname_id}
+      where: s.city != 0,
+      group_by: s.city,
+      select_merge: %{city: s.city},
+      order_by: {:asc, s.city}
     )
   end
 
@@ -587,40 +606,40 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:device") do
     from(
       s in q,
-      group_by: s.screen_size,
+      group_by: s.device,
       select_merge: %{
-        device: fragment("if(empty(?), ?, ?)", s.screen_size, @not_set, s.screen_size)
+        device: fragment("if(empty(?), ?, ?)", s.device, @not_set, s.device)
       },
-      order_by: {:asc, s.screen_size}
+      order_by: {:asc, s.device}
     )
   end
 
   defp do_group_by(q, "visit:os") do
     from(
       s in q,
-      group_by: s.operating_system,
+      group_by: s.os,
       select_merge: %{
-        os: fragment("if(empty(?), ?, ?)", s.operating_system, @not_set, s.operating_system)
+        os: fragment("if(empty(?), ?, ?)", s.os, @not_set, s.os)
       },
-      order_by: {:asc, s.operating_system}
+      order_by: {:asc, s.os}
     )
   end
 
   defp do_group_by(q, "visit:os_version") do
     from(
       s in q,
-      group_by: [s.operating_system, s.operating_system_version],
+      group_by: [s.os, s.os_version],
       select_merge: %{
-        os: fragment("if(empty(?), ?, ?)", s.operating_system, @not_set, s.operating_system),
+        os: fragment("if(empty(?), ?, ?)", s.os, @not_set, s.os),
         os_version:
           fragment(
             "if(empty(?), ?, ?)",
-            s.operating_system_version,
+            s.os_version,
             @not_set,
-            s.operating_system_version
+            s.os_version
           )
       },
-      order_by: {:asc, s.operating_system_version}
+      order_by: {:asc, s.os_version}
     )
   end
 
@@ -692,12 +711,18 @@ defmodule Plausible.Stats.Breakdown do
   #  * Y is the number of all visitors for this breakdown
   #    result without the `event:goal` and `event:props:*`
   #    filters.
-  defp maybe_add_group_conversion_rate(q, breakdown_fn, site, query, property, metrics) do
+  defp maybe_add_group_conversion_rate(
+         q,
+         breakdown_fn,
+         site,
+         %Query{property: property} = query,
+         metrics
+       ) do
     if :conversion_rate in metrics do
       breakdown_total_visitors_query = query |> Query.remove_event_filters([:goal, :props])
 
       breakdown_total_visitors_q =
-        breakdown_fn.(site, breakdown_total_visitors_query, property, [:visitors])
+        breakdown_fn.(site, breakdown_total_visitors_query, [:visitors])
 
       from(e in subquery(q),
         left_join: c in subquery(breakdown_total_visitors_q),
@@ -750,15 +775,7 @@ defmodule Plausible.Stats.Breakdown do
     |> offset(^offset)
   end
 
-  defp trace(query, property, metrics) do
-    Query.trace(query, metrics)
-
-    Tracer.set_attributes([
-      {"plausible.query.breakdown_property", property}
-    ])
-  end
-
-  on_full_build do
+  on_ee do
     defp cast_revenue_metrics_to_money(results, revenue_goals) do
       Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
     end

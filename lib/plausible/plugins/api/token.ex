@@ -64,7 +64,7 @@ defmodule Plausible.Plugins.API.Token do
   can scan repositories for accidental secret commits.
   """
   def prefix() do
-    on_full_build do
+    on_ee do
       env = Application.get_env(:plausible, :environment)
 
       case env do

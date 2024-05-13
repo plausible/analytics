@@ -42,7 +42,7 @@ defmodule Plausible.Ingestion.Request do
     field :pathname, :string
     field :props, :map
 
-    on_full_build do
+    on_ee do
       field :revenue_source, :map
     end
 
@@ -95,7 +95,7 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
-  on_full_build do
+  on_ee do
     defp put_revenue_source(changeset, request_body) do
       Plausible.Ingestion.Request.Revenue.put_revenue_source(changeset, request_body)
     end

@@ -46,12 +46,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
 
     redirect_route = Routes.site_path(conn, :settings_imports_exports, site.domain)
 
-    result =
-      if FunWithFlags.enabled?(:imports_exports, for: site) do
-        Google.API.list_properties_and_views(access_token)
-      else
-        Google.UA.API.list_views(access_token)
-      end
+    result = Google.API.list_properties_and_views(access_token)
 
     error =
       case params["error"] do
@@ -78,6 +73,14 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           selected_property_or_view_error: error,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
+
+      {:error, :rate_limit_exceeded} ->
+        conn
+        |> put_flash(
+          :error,
+          "Google Analytics rate limit has been exceeded. Please try again later."
+        )
+        |> redirect(external: redirect_route)
 
       {:error, :authentication_failed} ->
         conn
@@ -153,6 +156,14 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
 
         property_or_view_form(conn, params)
 
+      {:error, :rate_limit_exceeded} ->
+        conn
+        |> put_flash(
+          :error,
+          "Google Analytics rate limit has been exceeded. Please try again later."
+        )
+        |> redirect(external: redirect_route)
+
       {:error, :authentication_failed} ->
         conn
         |> put_flash(
@@ -210,6 +221,14 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           property?: Google.API.property?(property_or_view),
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
+
+      {:error, :rate_limit_exceeded} ->
+        conn
+        |> put_flash(
+          :error,
+          "Google Analytics rate limit has been exceeded. Please try again later."
+        )
+        |> redirect(external: redirect_route)
 
       {:error, :authentication_failed} ->
         conn

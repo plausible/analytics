@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Router do
     plug :fetch_live_flash
     plug :put_secure_browser_headers
     plug PlausibleWeb.Plugs.NoRobots
-    on_full_build(do: nil, else: plug(PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"))
+    on_ee(do: nil, else: plug(PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"))
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
     plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.LastSeenPlug
@@ -51,7 +51,7 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["json"]
   end
 
-  on_full_build do
+  on_ee do
     pipeline :flags do
       plug :accepts, ["html"]
       plug :put_secure_browser_headers
@@ -62,24 +62,24 @@ defmodule PlausibleWeb.Router do
     end
   end
 
-  if Mix.env() in [:dev, :small_dev] do
+  if Mix.env() in [:dev, :ce_dev] do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
   end
 
-  on_full_build do
+  on_ee do
     use Kaffy.Routes,
       scope: "/crm",
       pipe_through: [PlausibleWeb.Plugs.NoRobots, PlausibleWeb.CRMAuthPlug]
   end
 
-  on_full_build do
+  on_ee do
     scope "/crm", PlausibleWeb do
       pipe_through :flags
       get "/auth/user/:user_id/usage", AdminController, :usage
     end
   end
 
-  on_full_build do
+  on_ee do
     scope path: "/flags" do
       pipe_through :flags
       forward "/", FunWithFlags.UI.Router, namespace: "flags"
@@ -129,7 +129,7 @@ defmodule PlausibleWeb.Router do
   scope "/api/stats", PlausibleWeb.Api do
     pipe_through :internal_stats_api
 
-    on_full_build do
+    on_ee do
       get "/:domain/funnels/:id", StatsController, :funnel
     end
 
@@ -168,7 +168,7 @@ defmodule PlausibleWeb.Router do
     get "/timeseries", ExternalStatsController, :timeseries
   end
 
-  on_full_build do
+  on_ee do
     scope "/api/v1/sites", PlausibleWeb.Api do
       pipe_through [:public_api, PlausibleWeb.AuthorizeSitesApiPlug]
 
@@ -352,7 +352,7 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/goals", SiteController, :settings_goals
     get "/:website/settings/properties", SiteController, :settings_props
 
-    on_full_build do
+    on_ee do
       get "/:website/settings/funnels", SiteController, :settings_funnels
     end
 
@@ -391,12 +391,7 @@ defmodule PlausibleWeb.Router do
     delete "/:website/settings/forget-imported", SiteController, :forget_imported
     delete "/:website/settings/forget-import/:import_id", SiteController, :forget_import
 
-    on_full_build do
-      # exported archives are downloaded from object storage
-    else
-      get "/:website/exported-archive", SiteController, :download_local_export
-    end
-
+    get "/:website/download/export", SiteController, :download_export
     get "/:website/settings/import", SiteController, :csv_import
 
     get "/:domain/export", StatsController, :csv_export

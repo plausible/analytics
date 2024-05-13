@@ -1102,7 +1102,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              ]
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "returns average and total when filtering by a revenue goal", %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Payment", currency: "USD")
       insert(:goal, site: site, event_name: "AddToCart", currency: "EUR")
@@ -1147,7 +1147,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              } in top_stats
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "returns average and total when filtering by many revenue goals with same currency", %{
       conn: conn,
       site: site
