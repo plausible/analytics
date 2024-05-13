@@ -146,8 +146,6 @@ defmodule Plausible.Exports do
     bucket = Plausible.S3.exports_bucket()
     head_object_op = ExAws.S3.head_object(bucket, path)
 
-    # the result of this request shows up in UI
-    # so the user can do a page refresh for another attempt
     case ExAws.request(head_object_op, retries: retries) do
       {:ok, %{status_code: 200, headers: headers}} ->
         "attachment; filename=" <> filename = :proplists.get_value("content-disposition", headers)

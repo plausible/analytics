@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Live.CSVExport do
   end
 
   defp fetch_export(socket) do
-    %{storage: storage, site: site, site_id: site_id} = socket.assigns
+    %{storage: storage, site_id: site_id} = socket.assigns
 
     get_export =
       case storage do
@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Live.CSVExport do
           &Exports.get_s3_export!/1
 
         "local" ->
-          %{domain: domain, timezone: timezone} = site
+          %{domain: domain, timezone: timezone} = socket.assigns.site
           &Exports.get_local_export(&1, domain, timezone)
       end
 
