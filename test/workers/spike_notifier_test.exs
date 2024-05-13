@@ -14,7 +14,7 @@ defmodule Plausible.Workers.SpikeNotifierTest do
     )
 
     clickhouse_stub =
-      stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 5 end)
+      stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site -> 5 end)
       |> stub(:top_sources_for_spike, fn _site, _query, _limit, _page -> [] end)
 
     SpikeNotifier.perform(nil, clickhouse_stub)
@@ -32,7 +32,7 @@ defmodule Plausible.Workers.SpikeNotifierTest do
     )
 
     clickhouse_stub =
-      stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 10 end)
+      stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site -> 10 end)
       |> stub(:top_sources_for_spike, fn _site, _query, _limit, _page -> [] end)
 
     SpikeNotifier.perform(nil, clickhouse_stub)
@@ -58,7 +58,7 @@ defmodule Plausible.Workers.SpikeNotifierTest do
     )
 
     clickhouse_stub =
-      stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 10 end)
+      stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site -> 10 end)
       |> stub(:top_sources_for_spike, fn _site, _query, _limit, _page -> [] end)
 
     SpikeNotifier.perform(nil, clickhouse_stub)
@@ -71,7 +71,7 @@ defmodule Plausible.Workers.SpikeNotifierTest do
     insert(:spike_notification, site: site, threshold: 10, recipients: ["uku@example.com"])
 
     clickhouse_stub =
-      stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 10 end)
+      stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site -> 10 end)
       |> stub(:top_sources_for_spike, fn _site, _query, _limit, _page -> [] end)
 
     SpikeNotifier.perform(nil, clickhouse_stub)
@@ -92,7 +92,7 @@ defmodule Plausible.Workers.SpikeNotifierTest do
     insert(:spike_notification, site: site, threshold: 10, recipients: ["robert@example.com"])
 
     clickhouse_stub =
-      stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 10 end)
+      stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site -> 10 end)
       |> stub(:top_sources_for_spike, fn _site, _query, _limit, _page -> [] end)
 
     SpikeNotifier.perform(nil, clickhouse_stub)

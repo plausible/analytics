@@ -40,6 +40,9 @@ All notable changes to this project will be documented in this file.
 - Add `EXTRA_CONFIG_PATH` env var to specify extra Elixir config plausible/analytics#3906
 - Add restrictive `robots.txt` for self-hosted plausible/analytics#3905
 - Add Yesterday as an time range option in the dashboard
+- Add support for importing Google Analytics 4 data
+- Import custom events from Google Analytics 4
+- Add `DATA_DIR` env var for exports/imports plausible/analytics#4100
 
 ### Removed
 - Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions

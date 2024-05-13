@@ -46,34 +46,14 @@ defmodule Plausible.Stats.Clickhouse do
       group_by: i.import_id,
       select: {i.import_id, sum(i.pageviews)}
     )
-    |> Plausible.ClickhouseRepo.all(label: :imported_pageview_counts)
+    |> Plausible.ClickhouseRepo.all()
     |> Map.new()
   end
 
-  def usage_breakdown([d | _] = domains, date_range) when is_binary(d) do
-    Enum.chunk_every(domains, 300)
-    |> Enum.reduce({0, 0}, fn domains, {pageviews_total, custom_events_total} ->
-      {chunk_pageviews, chunk_custom_events} =
-        ClickhouseRepo.one(
-          from(e in "events",
-            where: e.domain in ^domains,
-            where: fragment("toDate(?)", e.timestamp) >= ^date_range.first,
-            where: fragment("toDate(?)", e.timestamp) <= ^date_range.last,
-            select: {
-              fragment("countIf(? = 'pageview')", e.name),
-              fragment("countIf(? != 'pageview')", e.name)
-            }
-          )
-        )
-
-      {pageviews_total + chunk_pageviews, custom_events_total + chunk_custom_events}
-    end)
-  end
-
   def usage_breakdown([sid | _] = site_ids, date_range) when is_integer(sid) do
-    Enum.chunk_every(site_ids, 300)
-    |> Enum.reduce({0, 0}, fn site_ids, {pageviews_total, custom_events_total} ->
-      {chunk_pageviews, chunk_custom_events} =
+    Enum.chunk_every(site_ids, 1000)
+    |> Enum.map(fn site_ids ->
+      fn ->
         ClickhouseRepo.one(
           from(e in "events_v2",
             where: e.site_id in ^site_ids,
@@ -85,8 +65,11 @@ defmodule Plausible.Stats.Clickhouse do
             }
           )
         )
-
-      {pageviews_total + chunk_pageviews, custom_events_total + chunk_custom_events}
+      end
+    end)
+    |> ClickhouseRepo.parallel_tasks(max_concurrency: 10)
+    |> Enum.reduce(fn {pageviews, custom_events}, {pageviews_total, custom_events_total} ->
+      {pageviews_total + pageviews, custom_events_total + custom_events}
     end)
   end
 
@@ -117,15 +100,11 @@ defmodule Plausible.Stats.Clickhouse do
       referrers = Plausible.Stats.Sampling.add_query_hint(referrers, 10_000_000)
     end
 
-    ClickhouseRepo.all(referrers, label: :referrers)
+    ClickhouseRepo.all(referrers)
   end
 
-  def current_visitors(site, query) do
-    Plausible.ClickhouseRepo.one(
-      from(e in base_query(site, query),
-        select: uniq(e.user_id)
-      )
-    )
+  def current_visitors(site) do
+    Plausible.Stats.current_visitors(site)
   end
 
   def has_pageviews?(site) do
@@ -168,7 +147,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     previous_result =
       previous_query
-      |> ClickhouseRepo.all(label: :last_24h_visitors_previous)
+      |> ClickhouseRepo.all()
       |> Enum.reduce(%{}, fn
         %{total_visitors: total, site_id: site_id}, acc -> Map.put_new(acc, site_id, total)
       end)
@@ -199,7 +178,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     result =
       current_q
-      |> ClickhouseRepo.all(label: :last_24h_visitors_current)
+      |> ClickhouseRepo.all()
       |> Enum.group_by(& &1.site_id)
       |> Enum.map(fn {site_id, entries} ->
         %{total: visitors} = List.first(entries)
@@ -251,140 +230,6 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  defp base_query_bare(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site)
-
-    q =
-      from(e in "events_v2",
-        where: e.site_id == ^site.id,
-        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
-      )
-
-    on_ee do
-      q = Plausible.Stats.Sampling.add_query_hint(q, 10_000_000)
-    end
-
-    q =
-      if query.filters["screen"] do
-        size = query.filters["screen"]
-        from(e in q, where: e.screen_size == ^size)
-      else
-        q
-      end
-
-    q =
-      if query.filters["browser"] do
-        browser = query.filters["browser"]
-        from(s in q, where: s.browser == ^browser)
-      else
-        q
-      end
-
-    q =
-      if query.filters["browser_version"] do
-        version = query.filters["browser_version"]
-        from(s in q, where: s.browser_version == ^version)
-      else
-        q
-      end
-
-    q =
-      if query.filters["os"] do
-        os = query.filters["os"]
-        from(s in q, where: s.operating_system == ^os)
-      else
-        q
-      end
-
-    q =
-      if query.filters["os_version"] do
-        version = query.filters["os_version"]
-        from(s in q, where: s.operating_system_version == ^version)
-      else
-        q
-      end
-
-    q =
-      if query.filters["country"] do
-        country = query.filters["country"]
-        from(s in q, where: s.country_code == ^country)
-      else
-        q
-      end
-
-    q =
-      if query.filters["utm_medium"] do
-        utm_medium = query.filters["utm_medium"]
-        from(e in q, where: e.utm_medium == ^utm_medium)
-      else
-        q
-      end
-
-    q =
-      if query.filters["utm_source"] do
-        utm_source = query.filters["utm_source"]
-        from(e in q, where: e.utm_source == ^utm_source)
-      else
-        q
-      end
-
-    q =
-      if query.filters["utm_campaign"] do
-        utm_campaign = query.filters["utm_campaign"]
-        from(e in q, where: e.utm_campaign == ^utm_campaign)
-      else
-        q
-      end
-
-    q =
-      if query.filters["utm_content"] do
-        utm_content = query.filters["utm_content"]
-        from(e in q, where: e.utm_content == ^utm_content)
-      else
-        q
-      end
-
-    q =
-      if query.filters["utm_term"] do
-        utm_term = query.filters["utm_term"]
-        from(e in q, where: e.utm_term == ^utm_term)
-      else
-        q
-      end
-
-    q =
-      if query.filters["referrer"] do
-        ref = query.filters["referrer"]
-        from(e in q, where: e.referrer == ^ref)
-      else
-        q
-      end
-
-    q = include_path_filter(q, query.filters[:page])
-
-    if query.filters["props"] do
-      [{key, val}] = query.filters["props"] |> Enum.into([])
-
-      if val == "(none)" do
-        from(
-          e in q,
-          where: not has_key(e, :meta, ^key)
-        )
-      else
-        from(
-          e in q,
-          where: has_key(e, :meta, ^key) and get_by_key(e, :meta, ^key) == ^val
-        )
-      end
-    else
-      q
-    end
-  end
-
-  defp base_query(site, query) do
-    base_query_bare(site, query) |> include_goal_conversions(query)
-  end
-
   defp utc_boundaries(%Query{now: now, period: "30m"}, site) do
     last_datetime = now |> NaiveDateTime.truncate(:second)
 
@@ -423,83 +268,6 @@ defmodule Plausible.Stats.Clickhouse do
       Timezones.to_utc_datetime(last, site.timezone)
 
     {first_datetime, last_datetime}
-  end
-
-  defp event_name_for_goal(query) do
-    case query.filters["goal"] do
-      "Visit " <> page ->
-        {"pageview", page}
-
-      goal when is_binary(goal) ->
-        {goal, nil}
-
-      _ ->
-        {nil, nil}
-    end
-  end
-
-  defp include_goal_conversions(db_query, query) do
-    {goal_event, path} = event_name_for_goal(query)
-
-    q =
-      if goal_event do
-        from(e in db_query, where: e.name == ^goal_event)
-      else
-        from(e in db_query, where: e.name == "pageview")
-      end
-
-    if path do
-      {contains_regex, path_regex} = convert_path_regex(path)
-
-      if contains_regex do
-        from(e in q, where: fragment("match(?, ?)", e.pathname, ^path_regex))
-      else
-        from(e in q, where: e.pathname == ^path)
-      end
-    else
-      q
-    end
-  end
-
-  defp check_negated_filter(filter) do
-    negated = String.at(filter, 0) == "!"
-    updated_filter = if negated, do: String.slice(filter, 1..-1), else: filter
-
-    {negated, updated_filter}
-  end
-
-  defp convert_path_regex(path) do
-    contains_regex = String.match?(path, ~r/\*/)
-
-    regex =
-      "^#{path}\/?$"
-      |> String.replace(~r/\*\*/, ".*")
-      |> String.replace(~r/(?<!\.)\*/, "[^/]*")
-
-    {contains_regex, regex}
-  end
-
-  defp include_path_filter(db_query, path) do
-    if path do
-      {negated, path} = check_negated_filter(path)
-      {contains_regex, path_regex} = convert_path_regex(path)
-
-      if contains_regex do
-        if negated do
-          from(e in db_query, where: fragment("not(match(?, ?))", e.pathname, ^path_regex))
-        else
-          from(e in db_query, where: fragment("match(?, ?)", e.pathname, ^path_regex))
-        end
-      else
-        if negated do
-          from(e in db_query, where: e.pathname != ^path)
-        else
-          from(e in db_query, where: e.pathname == ^path)
-        end
-      end
-    else
-      db_query
-    end
   end
 
   defp beginning_of_time(candidate, site_creation_date) do

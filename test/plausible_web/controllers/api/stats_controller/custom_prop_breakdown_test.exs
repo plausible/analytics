@@ -1132,4 +1132,64 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
              }
     end
   end
+
+  describe "with imported data" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    for goal_name <- ["Outbound Link: Click", "File Download"] do
+      test "returns url breakdown for #{goal_name} goal", %{conn: conn, site: site} do
+        insert(:goal, event_name: unquote(goal_name), site: site)
+        site_import = insert(:site_import, site: site)
+
+        populate_stats(site, site_import.id, [
+          build(:event,
+            name: unquote(goal_name),
+            "meta.key": ["url"],
+            "meta.value": ["https://one.com"]
+          ),
+          build(:imported_custom_events,
+            name: unquote(goal_name),
+            visitors: 2,
+            events: 5,
+            link_url: "https://one.com"
+          ),
+          build(:imported_custom_events,
+            name: unquote(goal_name),
+            visitors: 5,
+            events: 10,
+            link_url: "https://two.com"
+          ),
+          build(:imported_custom_events,
+            name: "view_search_results",
+            visitors: 100,
+            events: 200
+          ),
+          build(:imported_visitors, visitors: 9)
+        ])
+
+        filters = Jason.encode!(%{goal: unquote(goal_name)})
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/custom-prop-values/url?period=day&with_imported=true&filters=#{filters}"
+          )
+
+        assert json_response(conn, 200) == [
+                 %{
+                   "visitors" => 5,
+                   "name" => "https://two.com",
+                   "events" => 10,
+                   "conversion_rate" => 50.0
+                 },
+                 %{
+                   "visitors" => 3,
+                   "name" => "https://one.com",
+                   "events" => 6,
+                   "conversion_rate" => 30.0
+                 }
+               ]
+      end
+    end
+  end
 end

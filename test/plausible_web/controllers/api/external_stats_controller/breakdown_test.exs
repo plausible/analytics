@@ -3053,4 +3053,173 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
   end
+
+  describe "imported data" do
+    test "returns custom event goals and pageview goals", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Purchase")
+      insert(:goal, site: site, page_path: "/test")
+
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          timestamp: ~N[2021-01-01 00:00:01],
+          pathname: "/test"
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:imported_custom_events,
+          name: "Purchase",
+          visitors: 3,
+          events: 5,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages,
+          page: "/test",
+          visitors: 2,
+          pageviews: 2,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:goal",
+          "metrics" => "visitors,events,pageviews,conversion_rate",
+          "with_imported" => "true"
+        })
+
+      assert [
+               %{
+                 "goal" => "Purchase",
+                 "visitors" => 5,
+                 "events" => 7,
+                 "pageviews" => 0,
+                 "conversion_rate" => 62.5
+               },
+               %{
+                 "goal" => "Visit /test",
+                 "visitors" => 3,
+                 "events" => 3,
+                 "pageviews" => 3,
+                 "conversion_rate" => 37.5
+               }
+             ] = json_response(conn, 200)["results"]
+    end
+
+    test "pageviews are returned as events for breakdown reports other than custom events", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:imported_browsers, browser: "Chrome", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_devices, device: "Desktop", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_entry_pages, entry_page: "/test", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_exit_pages, exit_page: "/test", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_locations, country: "EE", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_operating_systems,
+          operating_system: "Mac",
+          pageviews: 1,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages, page: "/test", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_sources, source: "Google", pageviews: 1, date: ~D[2021-01-01])
+      ])
+
+      params = %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "metrics" => "events",
+        "with_imported" => "true"
+      }
+
+      breakdown_and_first = fn property ->
+        conn
+        |> get("/api/v1/stats/breakdown", Map.put(params, "property", property))
+        |> json_response(200)
+        |> Map.get("results")
+        |> List.first()
+      end
+
+      assert %{"browser" => "Chrome", "events" => 1} = breakdown_and_first.("visit:browser")
+      assert %{"device" => "Desktop", "events" => 1} = breakdown_and_first.("visit:device")
+      assert %{"entry_page" => "/test", "events" => 1} = breakdown_and_first.("visit:entry_page")
+      assert %{"exit_page" => "/test", "events" => 1} = breakdown_and_first.("visit:exit_page")
+      assert %{"country" => "EE", "events" => 1} = breakdown_and_first.("visit:country")
+      assert %{"os" => "Mac", "events" => 1} = breakdown_and_first.("visit:os")
+      assert %{"page" => "/test", "events" => 1} = breakdown_and_first.("event:page")
+      assert %{"source" => "Google", "events" => 1} = breakdown_and_first.("visit:source")
+    end
+
+    for goal_name <- ["Outbound Link: Click", "File Download"] do
+      test "returns url breakdown for #{goal_name} goal", %{conn: conn, site: site} do
+        insert(:goal, event_name: unquote(goal_name), site: site)
+        site_import = insert(:site_import, site: site)
+
+        populate_stats(site, site_import.id, [
+          build(:event,
+            name: unquote(goal_name),
+            "meta.key": ["url"],
+            "meta.value": ["https://one.com"]
+          ),
+          build(:imported_custom_events,
+            name: unquote(goal_name),
+            visitors: 2,
+            events: 5,
+            link_url: "https://one.com"
+          ),
+          build(:imported_custom_events,
+            name: unquote(goal_name),
+            visitors: 5,
+            events: 10,
+            link_url: "https://two.com"
+          ),
+          build(:imported_custom_events,
+            name: "some goal",
+            visitors: 5,
+            events: 10
+          ),
+          build(:imported_visitors, visitors: 9)
+        ])
+
+        conn =
+          get(conn, "/api/v1/stats/breakdown", %{
+            "site_id" => site.domain,
+            "period" => "day",
+            "property" => "event:props:url",
+            "filters" => "event:goal==#{unquote(goal_name)}",
+            "metrics" => "visitors,events,conversion_rate",
+            "with_imported" => "true"
+          })
+
+        assert json_response(conn, 200)["results"] == [
+                 %{
+                   "visitors" => 5,
+                   "url" => "https://two.com",
+                   "events" => 10,
+                   "conversion_rate" => 50.0
+                 },
+                 %{
+                   "visitors" => 3,
+                   "url" => "https://one.com",
+                   "events" => 6,
+                   "conversion_rate" => 30.0
+                 }
+               ]
+      end
+    end
+  end
 end

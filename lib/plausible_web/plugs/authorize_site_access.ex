@@ -20,17 +20,14 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
       PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt
     else
       user_id = get_session(conn, :current_user_id)
-
       membership_role = user_id && Plausible.Sites.role(user_id, site)
-
-      super_admin? = user_id && Plausible.Auth.is_super_admin?(user_id)
 
       role =
         cond do
           user_id && membership_role ->
             membership_role
 
-          super_admin? ->
+          Plausible.Auth.is_super_admin?(user_id) ->
             :super_admin
 
           site.public ->
@@ -44,8 +41,7 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
         end
 
       if role in allowed_roles do
-        Sentry.Context.set_user_context(%{id: user_id, super_admin?: super_admin?})
-
+        Sentry.Context.set_user_context(%{id: user_id})
         Plausible.OpenTelemetry.add_user_attributes(user_id)
 
         Sentry.Context.set_extra_context(%{site_id: site.id, domain: site.domain})
@@ -53,7 +49,7 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
 
         site = Plausible.Imported.load_import_data(site)
 
-        merge_assigns(conn, site: site, current_user_role: role, current_user_id: user_id)
+        merge_assigns(conn, site: site, current_user_role: role)
       else
         PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt
       end

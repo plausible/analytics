@@ -19,7 +19,7 @@ defmodule Plausible.Stats.CustomProps do
           distinct: true
         )
         |> maybe_allowed_props_only(site)
-        |> ClickhouseRepo.all(label: :fetch_prop_names)
+        |> ClickhouseRepo.all()
     end
   end
 

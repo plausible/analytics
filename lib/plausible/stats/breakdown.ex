@@ -94,6 +94,7 @@ defmodule Plausible.Stats.Breakdown do
           }
         )
         |> select_merge(^select_columns)
+        |> merge_imported_pageview_goals(site, query, page_exprs, metrics_to_select)
         |> apply_pagination(pagination)
       else
         nil
@@ -120,8 +121,8 @@ defmodule Plausible.Stats.Breakdown do
 
     if full_q do
       full_q
-      |> maybe_add_conversion_rate(site, query, metrics, include_imported: false)
-      |> ClickhouseRepo.all(label: :breakdown_by_goal)
+      |> maybe_add_conversion_rate(site, query, metrics)
+      |> ClickhouseRepo.all()
       |> transform_keys(%{name: :goal})
       |> cast_revenue_metrics_to_money(revenue_goals)
       |> Util.keep_requested_metrics(metrics)
@@ -149,7 +150,7 @@ defmodule Plausible.Stats.Breakdown do
     if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
 
     breakdown_events(site, query, metrics_to_select)
-    |> maybe_add_conversion_rate(site, query, metrics, include_imported: false)
+    |> maybe_add_conversion_rate(site, query, metrics)
     |> paginate_and_execute(metrics, pagination)
     |> transform_keys(%{breakdown_prop_value: custom_prop})
     |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
@@ -327,7 +328,7 @@ defmodule Plausible.Stats.Breakdown do
   defp paginate_and_execute(q, metrics, pagination) do
     q
     |> apply_pagination(pagination)
-    |> ClickhouseRepo.all(label: :paginate_and_execute)
+    |> ClickhouseRepo.all()
     |> Util.keep_requested_metrics(metrics)
   end
 
@@ -423,7 +424,7 @@ defmodule Plausible.Stats.Breakdown do
       end
 
     timed_pages_q
-    |> Plausible.ClickhouseRepo.all(label: :breakdown_time_on_page)
+    |> Plausible.ClickhouseRepo.all()
     |> Map.new()
   end
 
@@ -476,41 +477,41 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:source") do
     from(
       s in q,
-      group_by: s.referrer_source,
+      group_by: s.source,
       select_merge: %{
-        source: fragment("if(empty(?), ?, ?)", s.referrer_source, @no_ref, s.referrer_source)
+        source: fragment("if(empty(?), ?, ?)", s.source, @no_ref, s.source)
       },
-      order_by: {:asc, s.referrer_source}
+      order_by: {:asc, s.source}
     )
   end
 
   defp do_group_by(q, "visit:country") do
     from(
       s in q,
-      where: s.country_code != "\0\0" and s.country_code != "ZZ",
-      group_by: s.country_code,
-      select_merge: %{country: s.country_code},
-      order_by: {:asc, s.country_code}
+      where: s.country != "\0\0" and s.country != "ZZ",
+      group_by: s.country,
+      select_merge: %{country: s.country},
+      order_by: {:asc, s.country}
     )
   end
 
   defp do_group_by(q, "visit:region") do
     from(
       s in q,
-      where: s.subdivision1_code != "",
-      group_by: s.subdivision1_code,
-      select_merge: %{region: s.subdivision1_code},
-      order_by: {:asc, s.subdivision1_code}
+      where: s.region != "",
+      group_by: s.region,
+      select_merge: %{region: s.region},
+      order_by: {:asc, s.region}
     )
   end
 
   defp do_group_by(q, "visit:city") do
     from(
       s in q,
-      where: s.city_geoname_id != 0,
-      group_by: s.city_geoname_id,
-      select_merge: %{city: s.city_geoname_id},
-      order_by: {:asc, s.city_geoname_id}
+      where: s.city != 0,
+      group_by: s.city,
+      select_merge: %{city: s.city},
+      order_by: {:asc, s.city}
     )
   end
 
@@ -605,40 +606,40 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:device") do
     from(
       s in q,
-      group_by: s.screen_size,
+      group_by: s.device,
       select_merge: %{
-        device: fragment("if(empty(?), ?, ?)", s.screen_size, @not_set, s.screen_size)
+        device: fragment("if(empty(?), ?, ?)", s.device, @not_set, s.device)
       },
-      order_by: {:asc, s.screen_size}
+      order_by: {:asc, s.device}
     )
   end
 
   defp do_group_by(q, "visit:os") do
     from(
       s in q,
-      group_by: s.operating_system,
+      group_by: s.os,
       select_merge: %{
-        os: fragment("if(empty(?), ?, ?)", s.operating_system, @not_set, s.operating_system)
+        os: fragment("if(empty(?), ?, ?)", s.os, @not_set, s.os)
       },
-      order_by: {:asc, s.operating_system}
+      order_by: {:asc, s.os}
     )
   end
 
   defp do_group_by(q, "visit:os_version") do
     from(
       s in q,
-      group_by: [s.operating_system, s.operating_system_version],
+      group_by: [s.os, s.os_version],
       select_merge: %{
-        os: fragment("if(empty(?), ?, ?)", s.operating_system, @not_set, s.operating_system),
+        os: fragment("if(empty(?), ?, ?)", s.os, @not_set, s.os),
         os_version:
           fragment(
             "if(empty(?), ?, ?)",
-            s.operating_system_version,
+            s.os_version,
             @not_set,
-            s.operating_system_version
+            s.os_version
           )
       },
-      order_by: {:asc, s.operating_system_version}
+      order_by: {:asc, s.os_version}
     )
   end
 
