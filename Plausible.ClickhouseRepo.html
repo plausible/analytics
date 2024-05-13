@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-0EA66901.js"></script>
+    <script src="dist/sidebar_items-3DA817E9.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -346,7 +346,7 @@ pool to disconnect within the given interval.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#parallel_tasks/1" translate="no">parallel_tasks(queries)</a>
+        <a href="#parallel_tasks/2" translate="no">parallel_tasks(queries, opts \\ [])</a>
 
       </div>
 
@@ -855,23 +855,23 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Similar to <code class="inline">insert_all/2</code> but with the following differences:</p><ul><li>accepts rows as streams or lists</li><li>sends rows as a chunked request</li><li>doesn't autogenerate ids or does any other preprocessing</li></ul><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="nc">Repo</span><span class="o">.</span><span class="n">query!</span><span class="p" data-group-id="6583090293-1">(</span><span class="s">&quot;create table ecto_ch_demo(a UInt64, b String) engine Null&quot;</span><span class="p" data-group-id="6583090293-1">)</span><span class="w">
+<p>Similar to <code class="inline">insert_all/2</code> but with the following differences:</p><ul><li>accepts rows as streams or lists</li><li>sends rows as a chunked request</li><li>doesn't autogenerate ids or does any other preprocessing</li></ul><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="nc">Repo</span><span class="o">.</span><span class="n">query!</span><span class="p" data-group-id="3870585454-1">(</span><span class="s">&quot;create table ecto_ch_demo(a UInt64, b String) engine Null&quot;</span><span class="p" data-group-id="3870585454-1">)</span><span class="w">
 
-</span><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Demo</span><span class="w"> </span><span class="k" data-group-id="6583090293-2">do</span><span class="w">
+</span><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Demo</span><span class="w"> </span><span class="k" data-group-id="3870585454-2">do</span><span class="w">
   </span><span class="kn">use</span><span class="w"> </span><span class="nc">Ecto.Schema</span><span class="w">
 
   </span><span class="na">@primary_key</span><span class="w"> </span><span class="no">false</span><span class="w">
-  </span><span class="n">schema</span><span class="w"> </span><span class="s">&quot;ecto_ch_demo&quot;</span><span class="w"> </span><span class="k" data-group-id="6583090293-3">do</span><span class="w">
+  </span><span class="n">schema</span><span class="w"> </span><span class="s">&quot;ecto_ch_demo&quot;</span><span class="w"> </span><span class="k" data-group-id="3870585454-3">do</span><span class="w">
     </span><span class="n">field</span><span class="w"> </span><span class="ss">:a</span><span class="p">,</span><span class="w"> </span><span class="nc">Ch</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;UInt64&quot;</span><span class="w">
     </span><span class="n">field</span><span class="w"> </span><span class="ss">:b</span><span class="p">,</span><span class="w"> </span><span class="ss">:string</span><span class="w">
-  </span><span class="k" data-group-id="6583090293-3">end</span><span class="w">
-</span><span class="k" data-group-id="6583090293-2">end</span><span class="w">
+  </span><span class="k" data-group-id="3870585454-3">end</span><span class="w">
+</span><span class="k" data-group-id="3870585454-2">end</span><span class="w">
 
-</span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">map</span><span class="p" data-group-id="6583090293-4">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="k" data-group-id="6583090293-5">fn</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p" data-group-id="6583090293-6">%{</span><span class="ss">a</span><span class="p">:</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="ss">b</span><span class="p">:</span><span class="w"> </span><span class="n">to_string</span><span class="p" data-group-id="6583090293-7">(</span><span class="n">i</span><span class="p" data-group-id="6583090293-7">)</span><span class="p" data-group-id="6583090293-6">}</span><span class="w"> </span><span class="k" data-group-id="6583090293-5">end</span><span class="p" data-group-id="6583090293-4">)</span><span class="w">
-</span><span class="p" data-group-id="6583090293-8">{</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="6583090293-8">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Repo</span><span class="o">.</span><span class="n">insert_stream</span><span class="p" data-group-id="6583090293-9">(</span><span class="nc">Demo</span><span class="p">,</span><span class="w"> </span><span class="n">rows</span><span class="p" data-group-id="6583090293-9">)</span><span class="w">
+</span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">map</span><span class="p" data-group-id="3870585454-4">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="k" data-group-id="3870585454-5">fn</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p" data-group-id="3870585454-6">%{</span><span class="ss">a</span><span class="p">:</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="ss">b</span><span class="p">:</span><span class="w"> </span><span class="n">to_string</span><span class="p" data-group-id="3870585454-7">(</span><span class="n">i</span><span class="p" data-group-id="3870585454-7">)</span><span class="p" data-group-id="3870585454-6">}</span><span class="w"> </span><span class="k" data-group-id="3870585454-5">end</span><span class="p" data-group-id="3870585454-4">)</span><span class="w">
+</span><span class="p" data-group-id="3870585454-8">{</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="3870585454-8">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Repo</span><span class="o">.</span><span class="n">insert_stream</span><span class="p" data-group-id="3870585454-9">(</span><span class="nc">Demo</span><span class="p">,</span><span class="w"> </span><span class="n">rows</span><span class="p" data-group-id="3870585454-9">)</span><span class="w">
 
 </span><span class="c1"># schemaless</span><span class="w">
-</span><span class="p" data-group-id="6583090293-10">{</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="6583090293-10">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Repo</span><span class="o">.</span><span class="n">insert_stream</span><span class="p" data-group-id="6583090293-11">(</span><span class="s">&quot;ecto_ch_demo&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">rows</span><span class="p">,</span><span class="w"> </span><span class="ss">types</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6583090293-12">[</span><span class="ss">a</span><span class="p">:</span><span class="w"> </span><span class="nc">Ch.Types</span><span class="o">.</span><span class="n">u64</span><span class="p" data-group-id="6583090293-13">(</span><span class="p" data-group-id="6583090293-13">)</span><span class="p">,</span><span class="w"> </span><span class="ss">b</span><span class="p">:</span><span class="w"> </span><span class="ss">:string</span><span class="p" data-group-id="6583090293-12">]</span><span class="p" data-group-id="6583090293-11">)</span></code></pre>
+</span><span class="p" data-group-id="3870585454-10">{</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="3870585454-10">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Repo</span><span class="o">.</span><span class="n">insert_stream</span><span class="p" data-group-id="3870585454-11">(</span><span class="s">&quot;ecto_ch_demo&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">rows</span><span class="p">,</span><span class="w"> </span><span class="ss">types</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3870585454-12">[</span><span class="ss">a</span><span class="p">:</span><span class="w"> </span><span class="nc">Ch.Types</span><span class="o">.</span><span class="n">u64</span><span class="p" data-group-id="3870585454-13">(</span><span class="p" data-group-id="3870585454-13">)</span><span class="p">,</span><span class="w"> </span><span class="ss">b</span><span class="p">:</span><span class="w"> </span><span class="ss">:string</span><span class="p" data-group-id="3870585454-12">]</span><span class="p" data-group-id="3870585454-11">)</span></code></pre>
   </section>
 </section>
 <section class="detail" id="load/2">
@@ -944,14 +944,16 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 <p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.2/Ecto.Repo.html#c:one!/2"><code class="inline">Ecto.Repo.one!/2</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="parallel_tasks/1">
+<section class="detail" id="parallel_tasks/2">
+
+    <span id="parallel_tasks/1"></span>
 
   <div class="detail-header">
-    <a href="#parallel_tasks/1" class="detail-link" title="Link to this function">
+    <a href="#parallel_tasks/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">parallel_tasks(queries)</h1>
+    <h1 class="signature" translate="no">parallel_tasks(queries, opts \\ [])</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L16" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
