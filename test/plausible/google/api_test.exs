@@ -321,7 +321,7 @@ defmodule Plausible.Google.APITest do
   test "returns error when google auth not configured", %{site: site} do
     query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
 
-    assert {:err, :google_property_not_configured} = Google.API.fetch_stats(site, query, 5)
+    assert {:error, :google_property_not_configured} = Google.API.fetch_stats(site, query, 5)
   end
 
   describe "fetch_stats/3 with valid auth" do
