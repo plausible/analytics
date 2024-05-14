@@ -12,6 +12,7 @@ defmodule Plausible.ExportsTest do
 
       assert Map.keys(queries) == [
                "imported_browsers.csv",
+               "imported_custom_events.csv",
                "imported_devices.csv",
                "imported_entry_pages.csv",
                "imported_exit_pages.csv",
@@ -31,6 +32,7 @@ defmodule Plausible.ExportsTest do
 
       assert Map.keys(queries) == [
                "imported_browsers_20230101_20240312.csv",
+               "imported_custom_events_20230101_20240312.csv",
                "imported_devices_20230101_20240312.csv",
                "imported_entry_pages_20230101_20240312.csv",
                "imported_exit_pages_20230101_20240312.csv",
@@ -50,6 +52,7 @@ defmodule Plausible.ExportsTest do
 
       assert Map.keys(queries) == [
                "imported_browsers.ch",
+               "imported_custom_events.ch",
                "imported_devices.ch",
                "imported_entry_pages.ch",
                "imported_exit_pages.ch",

@@ -9,6 +9,7 @@ defmodule Plausible.Imported.CustomEvent do
     field :date, :date
     field :name, :string
     field :link_url, :string
+    field :path, :string
     field :visitors, Ch, type: "UInt64"
     field :events, Ch, type: "UInt64"
   end

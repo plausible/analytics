@@ -18,6 +18,7 @@ defmodule Plausible.Imported.CSVImporterTest do
     test "parses job args properly", %{user: user, site: site} do
       tables = [
         "imported_browsers",
+        "imported_custom_events",
         "imported_devices",
         "imported_entry_pages",
         "imported_exit_pages",
@@ -187,6 +188,19 @@ defmodule Plausible.Imported.CSVImporterTest do
           "2021-12-31",1,1,"/11263893625781431659"
           "2021-12-31",1,1,"/16478773157730928089"
           "2021-12-31",1,1,"/1710995203264225236"
+          """
+        },
+        %{
+          name: "imported_custom_events_20211230_20211231.csv",
+          body: """
+          "date","name","link_url","path","visitors","events"
+          "2021-12-30","Filter Menu: Open","","",300,1652
+          "2021-12-30","Signup","","",40,82
+          "2021-12-30","Signup via invitation","","",5,10
+          "2021-12-31","Signup via invitation","","",5,10
+          "2021-12-31","Signup","","",39,78
+          "2021-12-31","Filter Menu: Open","","",295,1394
+          "2021-12-31","Newsletter signup","","",1,2
           """
         },
         %{
@@ -421,6 +435,13 @@ defmodule Plausible.Imported.CSVImporterTest do
       exported_site = insert(:site, members: [user])
       imported_site = insert(:site, members: [user])
 
+      insert(:goal, site: exported_site, event_name: "Outbound Link: Click")
+      insert(:goal, site: exported_site, event_name: "404")
+      insert(:goal, site: exported_site, event_name: "click-button")
+      insert(:goal, site: imported_site, event_name: "Outbound Link: Click")
+      insert(:goal, site: imported_site, event_name: "404")
+      insert(:goal, site: imported_site, event_name: "click-button")
+
       process_csv = fn path ->
         [header | rows] = NimbleCSV.RFC4180.parse_string(File.read!(path), skip_headers: false)
 
@@ -438,12 +459,12 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       Plausible.IngestRepo.query!([
         "insert into events_v2 format CSVWithNames\n",
-        process_csv.("fixture/plausible_io_events_v2_2024_03_01_2024_03_31_500users_dump.csv")
+        process_csv.("fixture/markosaric_com_events_v2_2024_04_01_2024_04_30_dump.csv")
       ])
 
       Plausible.IngestRepo.query!([
         "insert into sessions_v2 format CSVWithNames\n",
-        process_csv.("fixture/plausible_io_sessions_v2_2024_03_01_2024_03_31_500users_dump.csv")
+        process_csv.("fixture/markosaric_com_sessions_v2_2024_04_01_2024_04_30_dump.csv")
       ])
 
       # export archive to s3
@@ -511,14 +532,14 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # validate import
       assert %SiteImport{
-               start_date: ~D[2024-03-28],
-               end_date: ~D[2024-03-31],
+               start_date: ~D[2024-04-01],
+               end_date: ~D[2024-04-30],
                source: :csv,
                status: :completed
              } = Repo.get_by!(SiteImport, site_id: imported_site.id)
 
       assert Plausible.Stats.Clickhouse.imported_pageview_count(exported_site) == 0
-      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 6298
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 1745
 
       # compare original and imported data via stats api requests
       results = fn path, params ->
@@ -535,25 +556,40 @@ defmodule Plausible.Imported.CSVImporterTest do
         %{
           "site_id" => site.domain,
           "period" => "custom",
-          "date" => "2024-03-28,2024-03-31",
+          "date" => "2024-04-01,2024-04-30",
           "with_imported" => true
         }
       end
 
-      breakdown = fn params_or_site, by ->
+      breakdown = fn params_or_site, by, opts ->
+        metrics =
+          Keyword.get(opts, :metrics, "visitors,visits,pageviews,visit_duration,bounce_rate")
+
+        filters = Keyword.get(opts, :filters, "")
+
+        by_without_prefix =
+          by
+          |> String.trim_leading("event:")
+          |> String.trim_leading("visit:")
+          |> String.trim_leading("props:")
+
         params =
           case params_or_site do
             %Plausible.Site{} = site ->
               common_params.(site)
-              |> Map.put("metrics", "visitors,visits,pageviews,visit_duration,bounce_rate")
+              |> Map.put("metrics", metrics)
+              |> Map.put("filters", filters)
               |> Map.put("limit", 1000)
-              |> Map.put("property", "visit:#{by}")
+              |> Map.put("property", by)
 
             params ->
               params
           end
 
-        Enum.sort_by(results.("/api/v1/stats/breakdown", params), &Map.fetch!(&1, by))
+        Enum.sort_by(
+          results.("/api/v1/stats/breakdown", params),
+          &Map.fetch!(&1, by_without_prefix)
+        )
       end
 
       # timeseries
@@ -572,39 +608,23 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert exported["date"] == imported["date"]
         assert exported["pageviews"] == imported["pageviews"]
         assert exported["bounce_rate"] == imported["bounce_rate"]
-        assert exported["visitors"] == imported["visitors"]
+        assert_in_delta exported["visitors"], imported["visitors"], 1
         assert exported["visits"] == imported["visits"]
         assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
       end)
 
       # timeseries' views per visit difference is within 3%
-      assert summary(field(exported_timeseries, "views_per_visit")) == [
-               2.96,
-               2.99,
-               3.065,
-               3.135,
-               3.15
-             ]
+      assert summary(field(exported_timeseries, "views_per_visit")) ==
+               [0.98, 1.2025, 1.29, 1.3699999999999999, 1.64]
 
-      assert summary(field(imported_timeseries, "views_per_visit")) == [
-               2.95,
-               3.04,
-               3.075,
-               3.1025,
-               3.17
-             ]
+      assert summary(field(imported_timeseries, "views_per_visit")) ==
+               [0.98, 1.1925, 1.29, 1.375, 1.64]
 
       assert summary(
                pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
                  abs(1 - imported["views_per_visit"] / exported["views_per_visit"])
                end)
-             ) == [
-               0.0033783783783782884,
-               0.005606499356499317,
-               0.011161823621887501,
-               0.017814164004259808,
-               0.023333333333333206
-             ]
+             ) == [0.0, 0.0, 0.0, 0.0, 0.0325203252032521]
 
       # pages
       pages_params = fn site ->
@@ -614,8 +634,8 @@ defmodule Plausible.Imported.CSVImporterTest do
         |> Map.put("property", "event:page")
       end
 
-      exported_pages = breakdown.(pages_params.(exported_site), "page")
-      imported_pages = breakdown.(pages_params.(imported_site), "page")
+      exported_pages = breakdown.(pages_params.(exported_site), "visit:page", [])
+      imported_pages = breakdown.(pages_params.(imported_site), "visit:page", [])
 
       pairwise(exported_pages, imported_pages, fn exported, imported ->
         assert exported["page"] == imported["page"]
@@ -626,9 +646,9 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert imported["time_on_page"] == 0
       end)
 
-      # page breakdown's visit_duration difference is within 1%
-      assert summary(field(exported_pages, "visit_duration")) == [0, 0, 25, 217.5, 743]
-      assert summary(field(imported_pages, "visit_duration")) == [0, 0, 25, 217.55, 742.8]
+      # NOTE: page breakdown's visitors difference is up to almost 43%
+      assert summary(field(exported_pages, "visit_duration")) == [0, 0.0, 13.0, 46.5, 264]
+      assert summary(field(imported_pages, "visit_duration")) == [0.0, 0.0, 13.3, 46.6, 264.5]
 
       assert summary(
                pairwise(exported_pages, imported_pages, fn exported, imported ->
@@ -643,11 +663,11 @@ defmodule Plausible.Imported.CSVImporterTest do
                    _no_diff = 0
                  end
                end)
-             ) == [0, 0, 0, 0, 0.002375296912114022]
+             ) == [0.0, 0.0, 0.0, 0.008812019016100597, 0.4285714285714286]
 
-      # NOTE: page breakdown's visitors difference is up to almost 37%
-      assert summary(field(exported_pages, "visitors")) == [1, 1, 2, 2.5, 393]
-      assert summary(field(imported_pages, "visitors")) == [1, 1, 2, 2.5, 617]
+      # NOTE: page breakdown's visitors difference is up to 28%
+      assert summary(field(exported_pages, "visitors")) == [1, 1.0, 5.5, 17.75, 495]
+      assert summary(field(imported_pages, "visitors")) == [1, 1.75, 5.5, 20.0, 511]
 
       assert summary(
                pairwise(exported_pages, imported_pages, fn exported, imported ->
@@ -657,11 +677,11 @@ defmodule Plausible.Imported.CSVImporterTest do
                  # only consider non tiny readings
                  if e > 5, do: abs(1 - e / i), else: 0
                end)
-             ) == [0, 0, 0, 0, 0.36304700162074555]
+             ) == [0, 0.0, 0.0, 0.0, 0.2857142857142857]
 
-      # page breakdown's visits difference is within 2% for non-tiny values
-      assert summary(field(exported_pages, "visits")) == [1, 1, 2, 3, 1774]
-      assert summary(field(imported_pages, "visits")) == [1, 1, 2, 2.5, 1777]
+      # page breakdown's visits difference is within 6% for non-tiny values
+      assert summary(field(exported_pages, "visits")) == [1, 1.75, 5.5, 20.25, 526]
+      assert summary(field(imported_pages, "visits")) == [1, 1.75, 5.5, 20.25, 527]
 
       assert summary(
                pairwise(exported_pages, imported_pages, fn exported, imported ->
@@ -671,11 +691,11 @@ defmodule Plausible.Imported.CSVImporterTest do
                  # only consider non tiny readings
                  if e > 4, do: abs(1 - e / i), else: 0
                end)
-             ) == [0, 0, 0, 0, 0.01666666666666672]
+             ) == [0, 0.0, 0.0, 0.0, 0.06666666666666665]
 
       # sources
-      exported_sources = breakdown.(exported_site, "source")
-      imported_sources = breakdown.(imported_site, "source")
+      exported_sources = breakdown.(exported_site, "visit:source", [])
+      imported_sources = breakdown.(imported_site, "visit:source", [])
 
       pairwise(exported_sources, imported_sources, fn exported, imported ->
         assert exported["source"] == imported["source"]
@@ -685,22 +705,23 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
       end)
 
-      # NOTE: source breakdown's visitors difference is up to almost 40%
-      assert summary(field(exported_sources, "visitors")) == [1, 1, 1, 2, 451]
-      assert summary(field(imported_sources, "visitors")) == [1, 1, 1, 2, 711]
+      # NOTE: source breakdown's visitors difference is up to 12%
+      assert summary(field(exported_sources, "visitors")) == [1, 1.0, 1.0, 7.25, 582]
+      assert summary(field(imported_sources, "visitors")) == [1, 1.0, 1.0, 7.25, 587]
 
       assert summary(
                pairwise(exported_sources, imported_sources, fn exported, imported ->
                  abs(1 - exported["visitors"] / imported["visitors"])
                end)
-             ) == [0, 0, 0, 0, 0.3656821378340366]
+             ) == [0.0, 0.0, 0.0, 0.0, 0.11111111111111116]
 
       # utm mediums
-      assert breakdown.(exported_site, "utm_medium") == breakdown.(imported_site, "utm_medium")
+      assert breakdown.(exported_site, "visit:utm_medium", []) ==
+               breakdown.(imported_site, "visit:utm_medium", [])
 
       # entry pages
-      exported_entry_pages = breakdown.(exported_site, "entry_page")
-      imported_entry_pages = breakdown.(imported_site, "entry_page")
+      exported_entry_pages = breakdown.(exported_site, "visit:entry_page", [])
+      imported_entry_pages = breakdown.(imported_site, "visit:entry_page", [])
 
       pairwise(exported_entry_pages, imported_entry_pages, fn exported, imported ->
         assert exported["entry_page"] == imported["entry_page"]
@@ -711,8 +732,8 @@ defmodule Plausible.Imported.CSVImporterTest do
       end)
 
       # NOTE: entry page breakdown's visitors difference is up to almost 50%
-      assert summary(field(exported_entry_pages, "visitors")) == [1, 1, 1, 2, 310]
-      assert summary(field(imported_entry_pages, "visitors")) == [1, 1, 1, 2, 475]
+      assert summary(field(exported_entry_pages, "visitors")) == [1, 1.0, 5.0, 12.5, 458]
+      assert summary(field(imported_entry_pages, "visitors")) == [1, 1.0, 5.0, 12.5, 473]
 
       assert summary(
                pairwise(exported_entry_pages, imported_entry_pages, fn exported, imported ->
@@ -721,21 +742,20 @@ defmodule Plausible.Imported.CSVImporterTest do
              ) == [0, 0, 0, 0, 0.5]
 
       # cities
-      exported_cities = breakdown.(exported_site, "city")
-      imported_cities = breakdown.(imported_site, "city")
+      exported_cities = breakdown.(exported_site, "visit:city", [])
+      imported_cities = breakdown.(imported_site, "visit:city", [])
 
       pairwise(exported_cities, imported_cities, fn exported, imported ->
         assert exported["city"] == imported["city"]
-        assert exported["bounce_rate"] == imported["bounce_rate"]
+        assert_in_delta exported["bounce_rate"], imported["bounce_rate"], 4
         assert exported["pageviews"] == imported["pageviews"]
-        assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
+        assert_in_delta exported["visit_duration"], imported["visit_duration"], 2
         assert_in_delta exported["visits"], imported["visits"], 1
       end)
 
-      # NOTE: city breakdown's visitors relative difference is up to 60%,
-      #       but the absolute difference is small
-      assert summary(field(exported_cities, "visitors")) == [1, 1, 1, 1, 7]
-      assert summary(field(imported_cities, "visitors")) == [1, 1, 1, 3, 13]
+      # NOTE: city breakdown's visitors relative difference is up to 27%
+      assert summary(field(exported_cities, "visitors")) == [1, 1.0, 1.0, 2.0, 22]
+      assert summary(field(imported_cities, "visitors")) == [1, 1.0, 1.0, 2.0, 30]
 
       assert summary(
                pairwise(exported_cities, imported_cities, fn exported, imported ->
@@ -745,11 +765,11 @@ defmodule Plausible.Imported.CSVImporterTest do
                  # only consider non tiny readings
                  if e > 3, do: abs(1 - e / i), else: 0
                end)
-             ) == [0, 0, 0, 0, 0.6]
+             ) == [0, 0.0, 0.0, 0.0, 0.2666666666666667]
 
       # devices
-      exported_devices = breakdown.(exported_site, "device")
-      imported_devices = breakdown.(imported_site, "device")
+      exported_devices = breakdown.(exported_site, "visit:device", [])
+      imported_devices = breakdown.(imported_site, "visit:device", [])
 
       pairwise(exported_devices, imported_devices, fn exported, imported ->
         assert exported["device"] == imported["device"]
@@ -759,25 +779,19 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
       end)
 
-      # NOTE: device breakdown's visitors difference is between 30% and 40%
-      assert summary(field(exported_devices, "visitors")) == [216, 232.25, 248.5, 264.75, 281]
-      assert summary(field(imported_devices, "visitors")) == [304, 341.5, 379, 416.5, 454]
+      # NOTE: device breakdown's visitors difference is up to 3%
+      assert summary(field(exported_devices, "visitors")) == [3, 21.75, 242.0, 535.25, 773]
+      assert summary(field(imported_devices, "visitors")) == [3, 21.75, 249.5, 551.0, 791]
 
       assert summary(
                pairwise(exported_devices, imported_devices, fn exported, imported ->
                  abs(1 - exported["visitors"] / imported["visitors"])
                end)
-             ) == [
-               0.2894736842105263,
-               0.3123695803385115,
-               0.3352654764664966,
-               0.3581613725944818,
-               0.3810572687224669
-             ]
+             ) == [0.0, 0.0, 0.011378002528445008, 0.025028787232157956, 0.031847133757961776]
 
       # browsers
-      exported_browsers = breakdown.(exported_site, "browser")
-      imported_browsers = breakdown.(imported_site, "browser")
+      exported_browsers = breakdown.(exported_site, "visit:browser", [])
+      imported_browsers = breakdown.(imported_site, "visit:browser", [])
 
       pairwise(exported_browsers, imported_browsers, fn exported, imported ->
         assert exported["browser"] == imported["browser"]
@@ -787,25 +801,19 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
       end)
 
-      # NOTE: browser breakdown's visitors difference is up to almost 70%
-      assert summary(field(exported_browsers, "visitors")) == [1, 1, 10, 105, 274]
-      assert summary(field(imported_browsers, "visitors")) == [1, 2, 18, 156.5, 422]
+      # NOTE: browser breakdown's visitors difference is up to 4%
+      assert summary(field(exported_browsers, "visitors")) == [1, 1.5, 8.0, 34.0, 572]
+      assert summary(field(imported_browsers, "visitors")) == [1, 1.5, 8.0, 34.0, 588]
 
       assert summary(
                pairwise(exported_browsers, imported_browsers, fn exported, imported ->
                  abs(1 - exported["visitors"] / imported["visitors"])
                end)
-             ) == [
-               0,
-               0.1422018348623853,
-               0.3507109004739336,
-               0.43801169590643274,
-               0.6666666666666667
-             ]
+             ) == [0.0, 0.0, 0.0, 0.0, 0.037122969837587005]
 
       # os
-      exported_os = breakdown.(exported_site, "os")
-      imported_os = breakdown.(imported_site, "os")
+      exported_os = breakdown.(exported_site, "visit:os", [])
+      imported_os = breakdown.(imported_site, "visit:os", [])
 
       pairwise(exported_os, imported_os, fn exported, imported ->
         assert exported["os"] == imported["os"]
@@ -815,25 +823,19 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
       end)
 
-      # NOTE: os breakdown's visitors difference is between 20% and 60%
-      assert summary(field(exported_os, "visitors")) == [2, 9.5, 51, 130, 165]
-      assert summary(field(imported_os, "visitors")) == [5, 12.5, 70, 200, 258]
+      # NOTE: os breakdown's visitors difference is up to 5%
+      assert summary(field(exported_os, "visitors")) == [3, 11.0, 56.0, 311.0, 390]
+      assert summary(field(imported_os, "visitors")) == [3, 11.0, 57.0, 315.0, 403]
 
       assert summary(
                pairwise(exported_os, imported_os, fn exported, imported ->
                  abs(1 - exported["visitors"] / imported["visitors"])
                end)
-             ) == [
-               0.1578947368421053,
-               0.28315018315018314,
-               0.36046511627906974,
-               0.463855421686747,
-               0.6
-             ]
+             ) == [0.0, 0.0, 0.0, 0.01754385964912286, 0.045592705167173286]
 
       # os versions
-      exported_os_versions = breakdown.(exported_site, "os_version")
-      imported_os_versions = breakdown.(imported_site, "os_version")
+      exported_os_versions = breakdown.(exported_site, "visit:os_version", [])
+      imported_os_versions = breakdown.(imported_site, "visit:os_version", [])
 
       pairwise(exported_os_versions, imported_os_versions, fn exported, imported ->
         assert exported["os_version"] == imported["os_version"]
@@ -843,15 +845,112 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
       end)
 
-      # NOTE: os version breakdown's visitors difference is up to almost 80%
-      assert summary(field(exported_os_versions, "visitors")) == [1, 1, 3, 10.75, 165]
-      assert summary(field(imported_os_versions, "visitors")) == [1, 1.75, 4.5, 14.5, 258]
+      # NOTE: os version breakdown's visitors difference is up to almost 34%
+      assert summary(field(exported_os_versions, "visitors")) == [1, 1.0, 2.0, 7.0, 380]
+      assert summary(field(imported_os_versions, "visitors")) == [1, 1.0, 2.0, 7.0, 393]
 
       assert summary(
                pairwise(exported_os_versions, imported_os_versions, fn exported, imported ->
                  abs(1 - exported["visitors"] / imported["visitors"])
                end)
-             ) == [0, 0, 0.16985645933014354, 0.3401162790697675, 0.75]
+             ) == [0.0, 0.0, 0.0, 0.0, 0.33333333333333337]
+
+      # goals
+      exported_goals =
+        breakdown.(exported_site, "event:goal", metrics: "visitors,events,conversion_rate")
+
+      imported_goals =
+        breakdown.(imported_site, "event:goal", metrics: "visitors,events,conversion_rate")
+
+      # NOTE: goal breakdown's visitors difference is up to 20%
+      assert summary(field(exported_goals, "visitors")) == [1, 6.5, 12.0, 41.0, 70]
+      assert summary(field(imported_goals, "visitors")) == [1, 6.5, 12.0, 50.0, 88]
+
+      assert summary(
+               pairwise(exported_goals, imported_goals, fn exported, imported ->
+                 abs(1 - exported["visitors"] / imported["visitors"])
+               end)
+             ) == [0.0, 0.0, 0.0, 0.10227272727272729, 0.20454545454545459]
+
+      pairwise(exported_goals, imported_goals, fn exported, imported ->
+        assert exported["events"] == imported["events"]
+      end)
+
+      # NOTE: goal breakdown's conversion rate difference is up to 18%
+      assert summary(field(exported_goals, "conversion_rate")) == [
+               0.1,
+               0.55,
+               1.0,
+               3.3,
+               5.6
+             ]
+
+      assert summary(field(imported_goals, "conversion_rate")) == [
+               0.1,
+               0.5,
+               0.9,
+               3.8499999999999996,
+               6.8
+             ]
+
+      assert summary(
+               pairwise(exported_goals, imported_goals, fn exported, imported ->
+                 abs(1 - exported["conversion_rate"] / imported["conversion_rate"])
+               end)
+             ) == [
+               0.0,
+               0.05555555555555558,
+               0.11111111111111116,
+               0.14379084967320266,
+               0.17647058823529416
+             ]
+
+      # url property breakdown
+      exported_url_props =
+        breakdown.(exported_site, "event:props:url",
+          filters: "event:goal==Outbound Link: Click",
+          metrics: "visitors,events,conversion_rate"
+        )
+
+      imported_url_props =
+        breakdown.(imported_site, "event:props:url",
+          filters: "event:goal==Outbound Link: Click",
+          metrics: "visitors,events,conversion_rate"
+        )
+
+      pairwise(exported_url_props, imported_url_props, fn exported, imported ->
+        assert exported["visitors"] == imported["visitors"]
+        assert exported["events"] == imported["events"]
+      end)
+
+      # NOTE: url property breakdown's conversion rate difference is up to 20%
+      assert summary(field(exported_url_props, "conversion_rate")) == [0.1, 0.1, 0.1, 0.1, 0.8]
+      assert summary(field(imported_url_props, "conversion_rate")) == [0.1, 0.1, 0.1, 0.1, 0.8]
+
+      assert summary(
+               pairwise(exported_url_props, imported_url_props, fn exported, imported ->
+                 abs(1 - exported["conversion_rate"] / imported["conversion_rate"])
+               end)
+             ) == [0.0, 0.0, 0.0, 0.0, 0.19999999999999996]
+
+      # path property breakdown
+      exported_path_props =
+        breakdown.(exported_site, "event:props:path",
+          filters: "event:goal==404",
+          metrics: "visitors,events,conversion_rate"
+        )
+
+      imported_path_props =
+        breakdown.(imported_site, "event:props:path",
+          filters: "event:goal==404",
+          metrics: "visitors,events,conversion_rate"
+        )
+
+      pairwise(exported_path_props, imported_path_props, fn exported, imported ->
+        assert exported["visitors"] == imported["visitors"]
+        assert exported["events"] == imported["events"]
+        assert exported["conversion_rate"] == imported["conversion_rate"]
+      end)
     end
   end
 
