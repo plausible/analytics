@@ -321,7 +321,7 @@ defmodule Plausible.Imported.CSVImporter do
   @doc """
   Returns local directory for CSV imports storage.
 
-  Builds upon `$PERSISTENT_CACHE_DIR` (if set) and falls back to /tmp
+  Builds upon `$DATA_DIR` or `$PERSISTENT_CACHE_DIR` (if set) and falls back to /tmp
 
   Examples:
 
@@ -331,12 +331,7 @@ defmodule Plausible.Imported.CSVImporter do
 
   """
   def local_dir(site_id) do
-    persistent_cache_dir = Application.get_env(:plausible, :persistent_cache_dir)
-
-    Path.join([
-      persistent_cache_dir || System.tmp_dir!(),
-      "plausible-imports",
-      Integer.to_string(site_id)
-    ])
+    data_dir = Application.get_env(:plausible, :data_dir)
+    Path.join([data_dir || System.tmp_dir!(), "plausible-imports", Integer.to_string(site_id)])
   end
 end

@@ -23,7 +23,7 @@ if :minio in Keyword.fetch!(ExUnit.configuration(), :include) do
 end
 
 if Mix.env() == :ce_test do
-  IO.puts("Test mode: Communnity Edition")
+  IO.puts("Test mode: Community Edition")
   ExUnit.configure(exclude: [:slow, :minio, :ee_only])
 else
   IO.puts("Test mode: Enterprise Edition")

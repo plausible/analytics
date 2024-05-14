@@ -167,6 +167,53 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
                ~s/div#goals-form form[phx-submit="save-goal"]/
              )
     end
+
+    test "auto-configuring custom event goals", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "Signup"),
+        build(:event, name: "Newsletter Signup"),
+        build(:event, name: "Purchase")
+      ])
+
+      autoconfigure_button_selector = ~s/button[phx-click="autoconfigure"]/
+
+      assert_suggested_event_name_count = fn html, number ->
+        assert text_of_element(html, autoconfigure_button_selector) =~
+                 "found #{number} custom events from the last 6 months that are not yet configured as goals"
+      end
+
+      {lv, html} = get_liveview(conn, site, with_html?: true)
+
+      # At first, 3 event names are suggested
+      assert_suggested_event_name_count.(html, 3)
+
+      # Add one goal
+      lv
+      |> element("#goals-form form")
+      |> render_submit(%{goal: %{event_name: "Signup"}})
+
+      html = render(lv)
+
+      # Now two goals are suggested because one is already added
+      assert_suggested_event_name_count.(html, 2)
+
+      # Delete the goal
+      goal = Plausible.Repo.get_by(Plausible.Goal, site_id: site.id, event_name: "Signup")
+      html = lv |> element(~s/button#delete-goal-#{goal.id}/) |> render_click()
+
+      # Suggested event name count should be 3 again
+      assert_suggested_event_name_count.(html, 3)
+
+      # Autoconfigure all custom event goals
+      lv
+      |> element(autoconfigure_button_selector)
+      |> render_click()
+
+      html = render(lv)
+
+      # All possible goals exist - no suggestions anymore
+      refute html =~ "from the last 6 months"
+    end
   end
 
   defp setup_goals(site) do

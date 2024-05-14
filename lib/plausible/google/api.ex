@@ -6,6 +6,7 @@ defmodule Plausible.Google.API do
   use Timex
 
   alias Plausible.Google.HTTP
+  alias Plausible.Google.SearchConsole
 
   require Logger
 
@@ -74,22 +75,26 @@ defmodule Plausible.Google.API do
   end
 
   def fetch_stats(site, query, limit) do
-    with site <- Plausible.Repo.preload(site, :google_auth),
+    with {:ok, site} <- ensure_search_console_property(site),
          {:ok, access_token} <- maybe_refresh_token(site.google_auth),
+         {:ok, search_console_filters} <-
+           SearchConsole.Filters.transform(site.google_auth.property, query.filters),
          {:ok, stats} <-
            HTTP.list_stats(
              access_token,
              site.google_auth.property,
              query.date_range,
              limit,
-             # :BUG: This type of filter does not exist.
-             Plausible.Stats.Query.get_filter(query, "page")
+             search_console_filters
            ) do
       stats
       |> Map.get("rows", [])
-      |> Enum.filter(fn row -> row["clicks"] > 0 end)
-      |> Enum.map(fn row -> %{name: row["keys"], visitors: round(row["clicks"])} end)
+      |> Enum.map(&search_console_row/1)
       |> then(&{:ok, &1})
+    else
+      :google_property_not_configured -> {:error, :google_property_not_configured}
+      :unsupported_filters -> {:error, :unsupported_filters}
+      {:error, error} -> {:error, error}
     end
   end
 
@@ -141,6 +146,44 @@ defmodule Plausible.Google.API do
   defp needs_to_refresh_token?(%NaiveDateTime{} = expires_at) do
     thirty_seconds_ago = Timex.shift(Timex.now(), seconds: 30)
     Timex.before?(expires_at, thirty_seconds_ago)
+  end
+
+  defp ensure_search_console_property(site) do
+    site = Plausible.Repo.preload(site, :google_auth)
+
+    if site.google_auth && site.google_auth.property do
+      {:ok, site}
+    else
+      :google_property_not_configured
+    end
+  end
+
+  defp search_console_row(row) do
+    %{
+      # We always request just one dimension at a time (`query`)
+      name: row["keys"] |> List.first(),
+      visitors: row["clicks"],
+      impressions: row["impressions"],
+      ctr: rounded_ctr(row["ctr"]),
+      position: rounded_position(row["position"])
+    }
+  end
+
+  defp rounded_ctr(ctr) do
+    {:ok, decimal} = Decimal.cast(ctr)
+
+    decimal
+    |> Decimal.mult(100)
+    |> Decimal.round(1)
+    |> Decimal.to_float()
+  end
+
+  defp rounded_position(position) do
+    {:ok, decimal} = Decimal.cast(position)
+
+    decimal
+    |> Decimal.round(1)
+    |> Decimal.to_float()
   end
 
   defp client_id() do
