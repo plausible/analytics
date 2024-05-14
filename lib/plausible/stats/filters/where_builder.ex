@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.Filters.WhereBuilder do
   @moduledoc """
-  A module for building a where clause of a query out of a query.
+  A module for building am ecto where clause of a query out of a query.
   """
 
   import Ecto.Query
@@ -17,7 +17,7 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     :exit_page_hostname
   ]
 
-  # Builds WHERE clause for a given Query against sessions or events table
+  @doc "Builds WHERE clause for a given Query against sessions or events table"
   def build(table, site, query) do
     base_condition = filter_site_time_range(table, site, query)
 
@@ -26,13 +26,16 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     |> Enum.reduce(base_condition, fn condition, acc -> dynamic([], ^acc and ^condition) end)
   end
 
-  # Builds WHERE clause condition based off of a filter and a custom column name
-  # Used for special business logic cases
+  @doc """
+  Builds WHERE clause condition based off of a filter and a custom column name
+  Used for special business logic cases
+
+  Accepts nil as the `filter` parameter, in which case the condition is a no-op (WHERE TRUE).
+  """
   def build_condition(db_field, filter) do
     if filter do
       filter_field(db_field, filter)
     else
-      # Shortcut: No filter was actually passed.
       true
     end
   end
