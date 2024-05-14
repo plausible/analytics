@@ -23,15 +23,15 @@ defmodule Plausible.Stats.TableDecider do
       partition(metrics, query, &metric_partitioner/2)
 
     # Treat breakdown property as yet another filter
-    filters =
+    query =
       if breakdown_property do
-        query.filters ++ [[:is, breakdown_property, []]]
+        Query.put_filter(query, [:is, breakdown_property, []])
       else
-        query.filters
+        query
       end
 
     %{event: event_only_filters, session: session_only_filters} =
-      partition(filters, query, &filters_partitioner/2)
+      partition(query.filters, query, &filters_partitioner/2)
 
     cond do
       # Only one table needs to be queried
