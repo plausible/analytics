@@ -3221,5 +3221,63 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                ]
       end
     end
+
+    for goal_name <- Plausible.Imported.goals_with_path() do
+      test "returns path breakdown for #{goal_name} goal", %{conn: conn, site: site} do
+        insert(:goal, event_name: unquote(goal_name), site: site)
+        site_import = insert(:site_import, site: site)
+
+        populate_stats(site, site_import.id, [
+          build(:event,
+            name: unquote(goal_name),
+            "meta.key": ["path"],
+            "meta.value": ["/one"]
+          ),
+          build(:imported_custom_events,
+            name: unquote(goal_name),
+            visitors: 2,
+            events: 5,
+            path: "/one"
+          ),
+          build(:imported_custom_events,
+            name: unquote(goal_name),
+            visitors: 5,
+            events: 10,
+            path: "/two"
+          ),
+          build(:imported_custom_events,
+            name: "some goal",
+            visitors: 5,
+            events: 10
+          ),
+          build(:imported_visitors, visitors: 9)
+        ])
+
+        conn =
+          get(conn, "/api/v1/stats/breakdown", %{
+            "site_id" => site.domain,
+            "period" => "day",
+            "property" => "event:props:path",
+            "filters" => "event:goal==#{unquote(goal_name)}",
+            "metrics" => "visitors,events,conversion_rate",
+            "with_imported" => "true"
+          })
+
+        assert json_response(conn, 200)["results"] == [
+                 %{
+                   "visitors" => 5,
+                   "path" => "/two",
+                   "events" => 10,
+                   "conversion_rate" => 50.0
+                 },
+                 %{
+                   "visitors" => 3,
+                   "path" => "/one",
+                   "events" => 6,
+                   "conversion_rate" => 30.0
+                 }
+               ]
+      end
+    end
   end
 end
