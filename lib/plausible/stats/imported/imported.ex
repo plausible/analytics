@@ -33,10 +33,17 @@ defmodule Plausible.Stats.Imported do
     "event:props:path" => "imported_custom_events"
   }
 
+  def property_to_table_mappings(), do: @property_to_table_mappings
+
   @imported_properties Map.keys(@property_to_table_mappings)
 
   @goals_with_url Plausible.Imported.goals_with_url()
+
+  def goals_with_url(), do: @goals_with_url
+
   @goals_with_path Plausible.Imported.goals_with_path()
+
+  def goals_with_path(), do: @goals_with_path
 
   @doc """
   Returns a boolean indicating whether the combination of filters and
@@ -49,15 +56,30 @@ defmodule Plausible.Stats.Imported do
   (see `@goals_with_url` and `@goals_with_path`).
   """
   def schema_supports_query?(query) do
-    filter_count = length(query.filters)
+    query = drop_redundant_filters(query)
 
-    case {filter_count, query.property} do
-      {0, "event:props:" <> _} -> false
-      {0, _} -> true
-      {1, "event:props:url"} -> has_special_goal_filter?(query, @goals_with_url)
-      {1, "event:props:path"} -> has_special_goal_filter?(query, @goals_with_path)
-      {_, _} -> false
+    # TODO: We want to be able to filter by a goal and still
+    # show a goal breakdown
+    case query.property do
+      "event:goal" -> query.filters == []
+      _ -> not is_nil(Imported.Base.decide_table(query))
     end
+  end
+
+  @doc """
+  This function gets rid of filters that do not make sense in the context
+  of imported data, for example `event:name == "pageview"`. They will be
+  ignored when deciding whether to include imported data in the query or
+  not, as well as when actually applying those filters to the query.
+  """
+  def drop_redundant_filters(query) do
+    struct!(query,
+      filters:
+        Enum.reject(query.filters, fn
+          [:is, "event:name", "pageview"] -> true
+          _ -> false
+        end)
+    )
   end
 
   def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{include_imported: false}, _),
@@ -70,8 +92,8 @@ defmodule Plausible.Stats.Imported do
         metrics
       ) do
     imported_q =
-      "imported_visitors"
-      |> Imported.Base.query_imported(site, query)
+      site
+      |> Imported.Base.query_imported(query)
       |> select_imported_metrics(metrics)
       |> apply_interval(query, site)
 
@@ -105,12 +127,11 @@ defmodule Plausible.Stats.Imported do
 
   def merge_imported(q, site, %Query{property: property} = query, metrics)
       when property in @imported_properties do
-    table = Map.fetch!(@property_to_table_mappings, property)
     dim = Plausible.Stats.Filters.without_prefix(property)
 
     imported_q =
-      table
-      |> Imported.Base.query_imported(site, query)
+      site
+      |> Imported.Base.query_imported(query)
       |> where([i], i.visitors > 0)
       |> maybe_apply_filter(query, property, dim)
       |> group_imported_by(dim)
@@ -143,8 +164,8 @@ defmodule Plausible.Stats.Imported do
 
   def merge_imported(q, site, %Query{property: nil} = query, metrics) do
     imported_q =
-      "imported_visitors"
-      |> Imported.Base.query_imported(site, query)
+      site
+      |> Imported.Base.query_imported(query)
       |> select_imported_metrics(metrics)
 
     from(
@@ -187,45 +208,15 @@ defmodule Plausible.Stats.Imported do
   end
 
   def total_imported_visitors(site, query) do
-    "imported_visitors"
-    |> Imported.Base.query_imported(site, query)
+    site
+    |> Imported.Base.query_imported(query)
     |> select_merge([i], %{total_visitors: fragment("sum(?)", i.visitors)})
-  end
-
-  defp maybe_apply_filter(q, query, "event:props:url", _) do
-    if name = find_special_goal_filter(query, @goals_with_url) do
-      where(q, [i], i.name == ^name)
-    else
-      q
-    end
-  end
-
-  defp maybe_apply_filter(q, query, "event:props:path", _) do
-    if name = find_special_goal_filter(query, @goals_with_path) do
-      where(q, [i], i.name == ^name)
-    else
-      q
-    end
   end
 
   defp maybe_apply_filter(q, query, property, dim) do
     case Query.get_filter(query, property) do
       [:member, _, list] -> where(q, [i], field(i, ^dim) in ^list)
       _ -> q
-    end
-  end
-
-  defp has_special_goal_filter?(query, event_names) do
-    not is_nil(find_special_goal_filter(query, event_names))
-  end
-
-  defp find_special_goal_filter(query, event_names) do
-    case Query.get_filter(query, "event:goal") do
-      [:is, "event:goal", {:event, name}] ->
-        if name in event_names, do: name, else: nil
-
-      _ ->
-        nil
     end
   end
 
