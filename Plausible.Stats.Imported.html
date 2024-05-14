@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-0922C167.js"></script>
+    <script src="dist/sidebar_items-BB799624.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -185,6 +185,9 @@ Pages
 
       </div>
 
+        <div class="summary-synopsis"><p>Returns a boolean indicating whether the combination of filters and
+breakdown property is possible to query from the imported tables.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -217,7 +220,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">merge_imported(q, site, query, metrics)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported.ex#L104" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported.ex#L106" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -239,7 +242,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">merge_imported_pageview_goals(q, site, query, page_exprs, metrics)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported.ex#L165" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported.ex#L167" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -261,7 +264,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">merge_imported_timeseries(native_q, site, query, metrics)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported.ex#L57" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported.ex#L59" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -283,7 +286,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">schema_supports_query?(query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported.ex#L36" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported.ex#L48" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -293,7 +296,10 @@ Pages
 
   <section class="docstring">
 
-
+<p>Returns a boolean indicating whether the combination of filters and
+breakdown property is possible to query from the imported tables.</p><p>Usually, when no filters are used, the imported schema supports the
+query. There is one exception though - breakdown by a custom property.
+We are currently importing only two custom properties - <code class="inline">url</code> and <code class="inline">path. Both these properties can only be used with their special goal filter (see</code>@goals_with_url<code class="inline">and</code>@goals_with_path`).</p>
   </section>
 </section>
 <section class="detail" id="total_imported_visitors/2">
@@ -305,7 +311,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">total_imported_visitors(site, query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported.ex#L200" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported.ex#L202" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
