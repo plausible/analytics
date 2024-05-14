@@ -39,13 +39,13 @@ defmodule Plausible.Google.HTTP do
     response.body
   end
 
-  def list_stats(access_token, property, date_range, limit, filters) do
+  def list_stats(access_token, property, date_range, limit, search_console_filters) do
     params = %{
       startDate: Date.to_iso8601(date_range.first),
       endDate: Date.to_iso8601(date_range.last),
       dimensions: ["query"],
       rowLimit: limit,
-      dimensionFilterGroups: filters
+      dimensionFilterGroups: search_console_filters
     }
 
     url =
