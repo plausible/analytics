@@ -7,6 +7,7 @@ defmodule Plausible.Stats.Imported do
 
   @no_ref "Direct / None"
   @not_set "(not set)"
+  @none "(none)"
 
   @property_to_table_mappings %{
     "visit:source" => "imported_sources",
@@ -480,13 +481,17 @@ defmodule Plausible.Stats.Imported do
   defp group_imported_by(q, :url) do
     q
     |> group_by([i], i.link_url)
-    |> select_merge([i], %{breakdown_prop_value: i.link_url})
+    |> select_merge([i], %{
+      breakdown_prop_value: fragment("if(not empty(?), ?, ?)", i.link_url, i.link_url, @none)
+    })
   end
 
   defp group_imported_by(q, :path) do
     q
     |> group_by([i], i.path)
-    |> select_merge([i], %{breakdown_prop_value: i.path})
+    |> select_merge([i], %{
+      breakdown_prop_value: fragment("if(not empty(?), ?, ?)", i.path, i.path, @none)
+    })
   end
 
   defp select_joined_dimension(q, :city) do
