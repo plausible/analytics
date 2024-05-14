@@ -50,30 +50,10 @@ defmodule Plausible.Stats.Clickhouse do
     |> Map.new()
   end
 
-  def usage_breakdown([d | _] = domains, date_range) when is_binary(d) do
-    Enum.chunk_every(domains, 300)
-    |> Enum.reduce({0, 0}, fn domains, {pageviews_total, custom_events_total} ->
-      {chunk_pageviews, chunk_custom_events} =
-        ClickhouseRepo.one(
-          from(e in "events",
-            where: e.domain in ^domains,
-            where: fragment("toDate(?)", e.timestamp) >= ^date_range.first,
-            where: fragment("toDate(?)", e.timestamp) <= ^date_range.last,
-            select: {
-              fragment("countIf(? = 'pageview')", e.name),
-              fragment("countIf(? != 'pageview')", e.name)
-            }
-          )
-        )
-
-      {pageviews_total + chunk_pageviews, custom_events_total + chunk_custom_events}
-    end)
-  end
-
   def usage_breakdown([sid | _] = site_ids, date_range) when is_integer(sid) do
-    Enum.chunk_every(site_ids, 300)
-    |> Enum.reduce({0, 0}, fn site_ids, {pageviews_total, custom_events_total} ->
-      {chunk_pageviews, chunk_custom_events} =
+    Enum.chunk_every(site_ids, 1000)
+    |> Enum.map(fn site_ids ->
+      fn ->
         ClickhouseRepo.one(
           from(e in "events_v2",
             where: e.site_id in ^site_ids,
@@ -85,8 +65,11 @@ defmodule Plausible.Stats.Clickhouse do
             }
           )
         )
-
-      {pageviews_total + chunk_pageviews, custom_events_total + chunk_custom_events}
+      end
+    end)
+    |> ClickhouseRepo.parallel_tasks(max_concurrency: 10)
+    |> Enum.reduce(fn {pageviews, custom_events}, {pageviews_total, custom_events_total} ->
+      {pageviews_total + pageviews, custom_events_total + custom_events}
     end)
   end
 

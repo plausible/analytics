@@ -13,7 +13,7 @@ defmodule Plausible.ClickhouseRepo do
   end
 
   @task_timeout 60_000
-  def parallel_tasks(queries) do
+  def parallel_tasks(queries, opts \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
     execute_with_tracing = fn fun ->
@@ -21,7 +21,12 @@ defmodule Plausible.ClickhouseRepo do
       fun.()
     end
 
-    Task.async_stream(queries, execute_with_tracing, max_concurrency: 3, timeout: @task_timeout)
+    max_concurrency = Keyword.get(opts, :max_concurrency, 3)
+
+    Task.async_stream(queries, execute_with_tracing,
+      max_concurrency: max_concurrency,
+      timeout: @task_timeout
+    )
     |> Enum.to_list()
     |> Keyword.values()
   end

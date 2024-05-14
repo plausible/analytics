@@ -683,7 +683,7 @@ defmodule PlausibleWeb.SiteController do
     def download_export(conn, _params) do
       %{id: site_id, domain: domain} = conn.assigns.site
 
-      if s3_export = Plausible.Exports.get_s3_export(site_id) do
+      if s3_export = Plausible.Exports.get_s3_export!(site_id) do
         s3_bucket = Plausible.S3.exports_bucket()
         download_url = Plausible.S3.download_url(s3_bucket, s3_export.path)
         redirect(conn, external: download_url)

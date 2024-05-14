@@ -130,26 +130,18 @@ defmodule Plausible.Exports do
 
   @spec local_export_file(pos_integer) :: Path.t()
   defp local_export_file(site_id) do
-    persistent_cache_dir = Application.get_env(:plausible, :persistent_cache_dir)
-
-    Path.join([
-      persistent_cache_dir || System.tmp_dir!(),
-      "plausible-exports",
-      Integer.to_string(site_id)
-    ])
+    data_dir = Application.get_env(:plausible, :data_dir)
+    Path.join([data_dir || System.tmp_dir!(), "plausible-exports", Integer.to_string(site_id)])
   end
 
-  @doc "Gets S3 export for a site"
-  @spec get_s3_export(pos_integer) :: export | nil
-  def get_s3_export(site_id) do
+  @doc "Gets S3 export for a site. Raises if object storage is unavailable."
+  @spec get_s3_export!(pos_integer, non_neg_integer) :: export | nil
+  def get_s3_export!(site_id, retries \\ 0) do
     path = s3_export_key(site_id)
     bucket = Plausible.S3.exports_bucket()
     head_object_op = ExAws.S3.head_object(bucket, path)
 
-    case ExAws.request(head_object_op) do
-      {:error, {:http_error, 404, _response}} ->
-        nil
-
+    case ExAws.request(head_object_op, retries: retries) do
       {:ok, %{status_code: 200, headers: headers}} ->
         "attachment; filename=" <> filename = :proplists.get_value("content-disposition", headers)
         name = String.trim(filename, "\"")
@@ -169,13 +161,19 @@ defmodule Plausible.Exports do
           expires_at: expires_at,
           size: String.to_integer(size)
         }
+
+      {:error, {:http_error, 404, _response}} ->
+        nil
+
+      {:error, %Mint.TransportError{} = e} ->
+        raise e
     end
   end
 
-  @doc "Deletes S3 export for a site"
-  @spec delete_s3_export(pos_integer) :: :ok
-  def delete_s3_export(site_id) do
-    if export = get_s3_export(site_id) do
+  @doc "Deletes S3 export for a site. Raises if object storage is unavailable."
+  @spec delete_s3_export!(pos_integer) :: :ok
+  def delete_s3_export!(site_id) do
+    if export = get_s3_export!(site_id) do
       exports_bucket = Plausible.S3.exports_bucket()
       delete_op = ExAws.S3.delete_object(exports_bucket, export.path)
       ExAws.request!(delete_op)
