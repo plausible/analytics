@@ -40,6 +40,7 @@ All notable changes to this project will be documented in this file.
 - Add `EXTRA_CONFIG_PATH` env var to specify extra Elixir config plausible/analytics#3906
 - Add restrictive `robots.txt` for self-hosted plausible/analytics#3905
 - Add Yesterday as an time range option in the dashboard
+- Add dmg extension to the list of default tracked file downloads
 - Add support for importing Google Analytics 4 data
 - Import custom events from Google Analytics 4
 - Ability to filter Search Console keywords by page, country and device plausible/analytics#4077
