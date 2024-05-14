@@ -468,9 +468,6 @@ defmodule Plausible.Exports do
       ]
   end
 
-  @events_with_url ["Outbound Link: Click", "Cloaked Link: Click", "File Download"]
-  @events_with_path ["404"]
-
   defp export_custom_events_q(site_id, timezone, date_range) do
     from e in sampled("events_v2"),
       where: ^export_filter(site_id, date_range),
@@ -486,11 +483,21 @@ defmodule Plausible.Exports do
         date(e.timestamp, ^timezone),
         e.name,
         selected_as(
-          fragment("if(? in ?, ?, '')", e.name, @events_with_url, get_by_key(e, :meta, "url")),
+          fragment(
+            "if(? in ?, ?, '')",
+            e.name,
+            ^Plausible.Imported.goals_with_url(),
+            get_by_key(e, :meta, "url")
+          ),
           :link_url
         ),
         selected_as(
-          fragment("if(? in ?, ?, '')", e.name, @events_with_path, get_by_key(e, :meta, "path")),
+          fragment(
+            "if(? in ?, ?, '')",
+            e.name,
+            ^Plausible.Imported.goals_with_path(),
+            get_by_key(e, :meta, "path")
+          ),
           :path
         ),
         visitors(e),

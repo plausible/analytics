@@ -35,8 +35,8 @@ defmodule Plausible.Stats.Imported do
 
   @imported_properties Map.keys(@property_to_table_mappings)
 
-  @goals_with_url ["Outbound Link: Click", "Cloaked Link: Click", "File Download"]
-  @goals_with_path ["404"]
+  @goals_with_url Plausible.Imported.goals_with_url()
+  @goals_with_path Plausible.Imported.goals_with_path()
 
   @doc """
   Returns a boolean indicating whether the combination of filters and

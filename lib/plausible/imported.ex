@@ -38,6 +38,11 @@ defmodule Plausible.Imported do
   # Maximum number of complete imports to account for when querying stats
   @max_complete_imports 5
 
+  # Goals which can be filtered by url property
+  @goals_with_url ["Outbound Link: Click", "Cloaked Link: Click", "File Download"]
+  # Goals which can be filtered by path property
+  @goals_with_path ["404"]
+
   @spec schemas() :: [module()]
   def schemas, do: @tables
 
@@ -47,6 +52,16 @@ defmodule Plausible.Imported do
   @spec max_complete_imports() :: non_neg_integer()
   def max_complete_imports() do
     @max_complete_imports
+  end
+
+  @spec goals_with_url() :: [String.t()]
+  def goals_with_url() do
+    @goals_with_url
+  end
+
+  @spec goals_with_path() :: [String.t()]
+  def goals_with_path() do
+    @goals_with_path
   end
 
   @spec load_import_data(Site.t()) :: Site.t()
