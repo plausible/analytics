@@ -4,7 +4,7 @@ import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
-import numberFormatter from '../../util/number-formatter'
+import numberFormatter, {percentageFormatter} from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import { trimURL } from '../../util/url'
 class ExitPagesModal extends React.Component {
@@ -32,14 +32,6 @@ class ExitPagesModal extends React.Component {
 
   loadMore() {
     this.setState({ loading: true, page: this.state.page + 1 }, this.loadPages.bind(this))
-  }
-
-  formatPercentage(number) {
-    if (typeof (number) === 'number') {
-      return number + '%'
-    } else {
-      return '-'
-    }
   }
 
   showConversionRate() {
@@ -74,7 +66,7 @@ class ExitPagesModal extends React.Component {
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_visitors)}</td>}
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.visitors)}</td>
         {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.visits)}</td>}
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatPercentage(page.exit_rate)}</td>}
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{percentageFormatter(page.exit_rate)}</td>}
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.conversion_rate)}%</td>}
       </tr>
     )

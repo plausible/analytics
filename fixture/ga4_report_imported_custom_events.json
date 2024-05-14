@@ -1,0 +1,1212 @@
+{
+  "kind": "analyticsData#batchRunReports",
+  "reports": [
+    {
+      "dimensionHeaders": [
+        {
+          "name": "date"
+        },
+        {
+          "name": "eventName"
+        },
+        {
+          "name": "linkUrl"
+        }
+      ],
+      "kind": "analyticsData#runReport",
+      "metadata": {
+        "currencyCode": "USD",
+        "timeZone": "Europe/Amsterdam"
+      },
+      "metricHeaders": [
+        {
+          "name": "totalUsers",
+          "type": "TYPE_INTEGER"
+        },
+        {
+          "name": "eventCount",
+          "type": "TYPE_INTEGER"
+        }
+      ],
+      "rowCount": 56,
+      "rows": [
+        {
+          "dimensionValues": [
+            {
+              "value": "20240131"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "40"
+            },
+            {
+              "value": "55"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "42"
+            },
+            {
+              "value": "61"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "40"
+            },
+            {
+              "value": "57"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "67"
+            },
+            {
+              "value": "85"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "https://www.facebook.com/kuhinjskeprice"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "view_search_results"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "51"
+            },
+            {
+              "value": "65"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "http://www.coolinarika.com/recept/omiljeni-mramorni-kuglof/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "50"
+            },
+            {
+              "value": "70"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "view_search_results"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "58"
+            },
+            {
+              "value": "98"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "https://www.google.co.uk/imgres?imgurl=http://30.media.tumblr.com/oapJteChehjbp5traCrAENnXo1_500.jpg"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "view_search_results"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "61"
+            },
+            {
+              "value": "97"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "http://www.ikea.com/dk/da/catalog/products/20213835/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "https://www.facebook.com/kuhinjskeprice"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "74"
+            },
+            {
+              "value": "114"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "view_search_results"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "68"
+            },
+            {
+              "value": "95"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "https://pinterest.com/pin/68539225549526297/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "https://www.facebook.com/kuhinjskeprice"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "116"
+            },
+            {
+              "value": "181"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "view_search_results"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "111"
+            },
+            {
+              "value": "190"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "https://www.facebook.com/kuhinjskeprice"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "view_search_results"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "6"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "119"
+            },
+            {
+              "value": "186"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "https://www.facebook.com/kuhinjskeprice"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "view_search_results"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "86"
+            },
+            {
+              "value": "125"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "43"
+            },
+            {
+              "value": "55"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "66"
+            },
+            {
+              "value": "95"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "view_search_results"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "29"
+            },
+            {
+              "value": "32"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "31"
+            },
+            {
+              "value": "36"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "30"
+            },
+            {
+              "value": "34"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "http://www.coolinarika.com/recept/omiljeni-mramorni-kuglof/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "http://www.jamieoliver.com/recipes/pasta-recipes/spinach-ricotta-cannelloni/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "31"
+            },
+            {
+              "value": "33"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "http://www.ikea.com/dk/da/catalog/products/80010222/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "26"
+            },
+            {
+              "value": "29"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "http://www.apartmenttherapy.com/minh-and-ted-bought-a-distress-150686"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "24"
+            },
+            {
+              "value": "28"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "32"
+            },
+            {
+              "value": "56"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "24"
+            },
+            {
+              "value": "26"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "http://www.coolinarika.com/recept/omiljeni-mramorni-kuglof/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "27"
+            },
+            {
+              "value": "45"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            },
+            {
+              "value": "view_search_results"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "15"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "22"
+            },
+            {
+              "value": "22"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "38"
+            },
+            {
+              "value": "39"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "24"
+            },
+            {
+              "value": "27"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "34"
+            },
+            {
+              "value": "35"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "https://pinterest.com/pin/238198267760892524/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "29"
+            },
+            {
+              "value": "39"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "click"
+            },
+            {
+              "value": "http://www.lonelyplanet.com/denmark/images/legoland-copenhagen$25938-2"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "scroll"
+            },
+            {
+              "value": ""
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "20"
+            },
+            {
+              "value": "20"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

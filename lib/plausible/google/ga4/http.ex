@@ -31,6 +31,7 @@ defmodule Plausible.Google.GA4.HTTP do
               desc: true
             }
           ],
+          dimensionFilter: report_request.dimension_filter,
           limit: report_request.limit,
           offset: report_request.offset
         }
@@ -50,7 +51,7 @@ defmodule Plausible.Google.GA4.HTTP do
 
     with {:ok, %{body: body}} <- response,
          {:ok, report} <- parse_report_from_response(body),
-         row_count <- Map.fetch!(report, "rowCount"),
+         row_count <- Map.get(report, "rowCount", 0),
          {:ok, report} <- convert_to_maps(report) do
       {:ok, {report, row_count}}
     else
@@ -127,6 +128,10 @@ defmodule Plausible.Google.GA4.HTTP do
       end)
 
     {:ok, report}
+  end
+
+  defp convert_to_maps(%{"dimensionHeaders" => _, "metricHeaders" => _}) do
+    {:ok, []}
   end
 
   defp convert_to_maps(response) do

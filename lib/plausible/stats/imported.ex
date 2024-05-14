@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.Imported do
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, Base}
 
   import Ecto.Query
   import Plausible.Stats.Fragments
@@ -26,10 +26,33 @@ defmodule Plausible.Stats.Imported do
     "visit:browser_version" => "imported_browsers",
     "visit:os" => "imported_operating_systems",
     "visit:os_version" => "imported_operating_systems",
-    "event:page" => "imported_pages"
+    "event:page" => "imported_pages",
+    "event:name" => "imported_custom_events",
+    "event:props:url" => "imported_custom_events"
   }
 
   @imported_properties Map.keys(@property_to_table_mappings)
+
+  def schema_supports_query?(query) do
+    filter_count = length(Map.keys(query.filters))
+
+    case {filter_count, query.property} do
+      {0, "event:props:" <> _} -> false
+      {0, _} -> true
+      {1, _} -> supports_single_filter?(query)
+      {_, _} -> false
+    end
+  end
+
+  defp supports_single_filter?(%Query{
+         filters: %{"event:goal" => {:is, {:event, event}}},
+         property: "event:props:url"
+       })
+       when event in ["Outbound Link: Click", "File Download"] do
+    true
+  end
+
+  defp supports_single_filter?(_query), do: false
 
   def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{include_imported: false}, _),
     do: native_q
@@ -79,7 +102,6 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, _, %Query{include_imported: false}, _), do: q
-  def merge_imported(q, _, _, [:events | _]), do: q
 
   def merge_imported(q, site, %Query{property: property} = query, metrics)
       when property in @imported_properties do
@@ -96,12 +118,15 @@ defmodule Plausible.Stats.Imported do
         where: i.visitors > 0,
         select: %{}
       )
-      |> maybe_filter_by_breakdown_property(query.filters[property], dim)
+      |> maybe_apply_filter(query.filters, property, dim)
       |> group_imported_by(dim)
       |> select_imported_metrics(metrics)
 
     join_on =
       case dim do
+        :url ->
+          dynamic([s, i], s.breakdown_prop_value == i.breakdown_prop_value)
+
         :os_version ->
           dynamic([s, i], s.os == i.os and s.os_version == i.os_version)
 
@@ -137,6 +162,41 @@ defmodule Plausible.Stats.Imported do
 
   def merge_imported(q, _, _, _), do: q
 
+  def merge_imported_pageview_goals(q, _, %Query{include_imported: false}, _, _), do: q
+
+  def merge_imported_pageview_goals(q, site, query, page_exprs, metrics) do
+    page_regexes = Enum.map(page_exprs, &Base.page_regex/1)
+
+    imported_q =
+      from(
+        i in "imported_pages",
+        where: i.site_id == ^site.id,
+        where: i.import_id in ^site.complete_import_ids,
+        where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
+        where: i.visitors > 0,
+        where:
+          fragment(
+            "notEmpty(multiMatchAllIndices(?, ?) as indices)",
+            i.page,
+            ^page_regexes
+          ),
+        array_join: index in fragment("indices"),
+        group_by: index,
+        select: %{
+          name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
+        }
+      )
+      |> select_imported_metrics(metrics)
+
+    from(s in Ecto.Query.subquery(q),
+      full_join: i in subquery(imported_q),
+      on: s.name == i.name,
+      select: %{}
+    )
+    |> select_joined_dimension(:name)
+    |> select_joined_metrics(metrics)
+  end
+
   def total_imported_visitors(site, query) do
     imported_visitors(site, query)
     |> select_merge([i], %{total_visitors: fragment("sum(?)", i.visitors)})
@@ -154,17 +214,43 @@ defmodule Plausible.Stats.Imported do
     )
   end
 
-  defp maybe_filter_by_breakdown_property(q, {:member, list}, dim) do
-    where(q, [i], field(i, ^dim) in ^list)
+  defp maybe_apply_filter(
+         q,
+         %{"event:goal" => {:is, {:event, event_name}}},
+         "event:props:url",
+         _dim
+       )
+       when event_name in ["Outbound Link: Click", "File Download"] do
+    where(q, [i], i.name == ^event_name)
   end
 
-  defp maybe_filter_by_breakdown_property(q, _, _), do: q
+  defp maybe_apply_filter(q, filters, property, dim) do
+    case filters[property] do
+      {:member, list} -> where(q, [i], field(i, ^dim) in ^list)
+      _ -> q
+    end
+  end
 
   defp select_imported_metrics(q, []), do: q
 
   defp select_imported_metrics(q, [:visitors | rest]) do
     q
     |> select_merge([i], %{visitors: sum(i.visitors)})
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_custom_events", _}}} = q,
+         [:events | rest]
+       ) do
+    q
+    |> select_merge([i], %{events: sum(i.events)})
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(q, [:events | rest]) do
+    q
+    |> select_merge([i], %{events: sum(i.pageviews)})
     |> select_imported_metrics(rest)
   end
 
@@ -189,6 +275,15 @@ defmodule Plausible.Stats.Imported do
   defp select_imported_metrics(q, [:visits | rest]) do
     q
     |> select_merge([i], %{visits: sum(i.visits)})
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_custom_events", _}}} = q,
+         [:pageviews | rest]
+       ) do
+    q
+    |> select_merge([i], %{pageviews: 0})
     |> select_imported_metrics(rest)
   end
 
@@ -351,6 +446,18 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([i], %{^dim => field(i, ^dim)})
   end
 
+  defp group_imported_by(q, :name) do
+    q
+    |> group_by([i], i.name)
+    |> select_merge([i], %{name: i.name})
+  end
+
+  defp group_imported_by(q, :url) do
+    q
+    |> group_by([i], i.link_url)
+    |> select_merge([i], %{breakdown_prop_value: i.link_url})
+  end
+
   defp select_joined_dimension(q, :city) do
     select_merge(q, [s, i], %{
       city: fragment("greatest(?,?)", i.city, s.city)
@@ -369,6 +476,18 @@ defmodule Plausible.Stats.Imported do
       browser: fragment("if(empty(?), ?, ?)", s.browser, i.browser, s.browser),
       browser_version:
         fragment("if(empty(?), ?, ?)", s.browser_version, i.browser_version, s.browser_version)
+    })
+  end
+
+  defp select_joined_dimension(q, :url) do
+    select_merge(q, [s, i], %{
+      breakdown_prop_value:
+        fragment(
+          "if(empty(?), ?, ?)",
+          s.breakdown_prop_value,
+          i.breakdown_prop_value,
+          s.breakdown_prop_value
+        )
     })
   end
 
@@ -394,6 +513,12 @@ defmodule Plausible.Stats.Imported do
   defp select_joined_metrics(q, [:visitors | rest]) do
     q
     |> select_merge([s, i], %{visitors: selected_as(s.visitors + i.visitors, :visitors)})
+    |> select_joined_metrics(rest)
+  end
+
+  defp select_joined_metrics(q, [:events | rest]) do
+    q
+    |> select_merge([s, i], %{events: s.events + i.events})
     |> select_joined_metrics(rest)
   end
 

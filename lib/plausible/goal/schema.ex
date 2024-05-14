@@ -24,6 +24,10 @@ defmodule Plausible.Goal do
 
   @fields [:id, :site_id, :event_name, :page_path] ++ on_ee(do: [:currency], else: [])
 
+  @max_event_name_length 120
+
+  def max_event_name_length(), do: @max_event_name_length
+
   def changeset(goal, attrs \\ %{}) do
     goal
     |> cast(attrs, @fields)
@@ -35,7 +39,7 @@ defmodule Plausible.Goal do
     |> update_change(:page_path, &String.trim/1)
     |> unique_constraint(:event_name, name: :goals_event_name_unique)
     |> unique_constraint(:page_path, name: :goals_page_path_unique)
-    |> validate_length(:event_name, max: 120)
+    |> validate_length(:event_name, max: @max_event_name_length)
     |> check_constraint(:event_name,
       name: :check_event_name_or_page_path,
       message: "cannot co-exist with page_path"

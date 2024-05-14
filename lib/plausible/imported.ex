@@ -27,6 +27,7 @@ defmodule Plausible.Imported do
     Imported.Page,
     Imported.EntryPage,
     Imported.ExitPage,
+    Imported.CustomEvent,
     Imported.Location,
     Imported.Device,
     Imported.Browser,
@@ -43,13 +44,9 @@ defmodule Plausible.Imported do
   @spec tables() :: [String.t()]
   def tables, do: @table_names
 
-  @spec max_complete_imports(Site.t()) :: non_neg_integer()
-  def max_complete_imports(site) do
-    if FunWithFlags.enabled?(:imports_exports, for: site) do
-      @max_complete_imports
-    else
-      1
-    end
+  @spec max_complete_imports() :: non_neg_integer()
+  def max_complete_imports() do
+    @max_complete_imports
   end
 
   @spec load_import_data(Site.t()) :: Site.t()

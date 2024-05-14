@@ -679,7 +679,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "disables import buttons when imports are at maximum", %{conn: conn, site: site} do
-      insert_list(Plausible.Imported.max_complete_imports(site), :site_import,
+      insert_list(Plausible.Imported.max_complete_imports(), :site_import,
         site: site,
         status: SiteImport.completed()
       )
@@ -687,7 +687,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
 
       assert html_response(conn, 200) =~
-               "Maximum of #{Plausible.Imported.max_complete_imports(site)} imports is reached."
+               "Maximum of #{Plausible.Imported.max_complete_imports()} imports is reached."
     end
 
     test "considers older legacy imports when showing pageview count", %{conn: conn, site: site} do
@@ -743,6 +743,32 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert response =~ "No new imports can be started"
       assert response =~ "The import process might be taking longer due to the amount of data"
       assert response =~ "and rate limiting enforced by Google Analytics"
+    end
+
+    test "displays CSV export button", %{conn: conn, site: site} do
+      assert conn |> get("/#{site.domain}/settings/imports-exports") |> html_response(200) =~
+               "Prepare download"
+    end
+  end
+
+  describe "GET /:website/settings/imports-exports when object storage is unreachable" do
+    setup [:create_user, :log_in, :create_site]
+
+    setup tags do
+      if tags[:async] do
+        raise "this test modifies application envinronment and can't be run asynchronously"
+      end
+
+      prev_env = Application.get_env(:ex_aws, :s3)
+      new_env = Keyword.update!(prev_env, :port, fn prev_port -> prev_port + 1 end)
+      Application.put_env(:ex_aws, :s3, new_env)
+      on_exit(fn -> Application.put_env(:ex_aws, :s3, prev_env) end)
+    end
+
+    @tag capture_log: true, ee_only: true
+    test "displays error message", %{conn: conn, site: site} do
+      assert conn |> get("/#{site.domain}/settings/imports-exports") |> html_response(200) =~
+               "Something went wrong when fetching exports. Please try again later."
     end
   end
 

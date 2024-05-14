@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Live.CSVExport do
     get_export =
       case storage do
         "s3" ->
-          &Exports.get_s3_export/1
+          &Exports.get_s3_export!/1
 
         "local" ->
           %{domain: domain, timezone: timezone} = socket.assigns.site
@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Live.CSVExport do
           end
 
         "discarded" ->
-          assign(socket, status: "failed")
+          assign(socket, status: "export_failed")
 
         "cancelled" ->
           # credo:disable-for-next-line Credo.Check.Refactor.Nesting
@@ -88,6 +88,9 @@ defmodule PlausibleWeb.Live.CSVExport do
         assign(socket, status: "can_schedule")
       end
     end
+  rescue
+    _e ->
+      assign(socket, status: "fetch_error", export: nil)
   end
 
   @impl true
@@ -98,8 +101,10 @@ defmodule PlausibleWeb.Live.CSVExport do
         <.prepare_download />
       <% "in_progress" -> %>
         <.in_progress />
-      <% "failed" -> %>
-        <.failed />
+      <% "export_failed" -> %>
+        <.export_failed />
+      <% "fetch_error" -> %>
+        <.fetch_export_failed />
       <% "ready" -> %>
         <.download
           storage={@storage}
@@ -140,7 +145,18 @@ defmodule PlausibleWeb.Live.CSVExport do
     """
   end
 
-  defp failed(assigns) do
+  defp fetch_export_failed(assigns) do
+    ~H"""
+    <div class="flex items-center">
+      <Heroicons.exclamation_circle class="w-4 h-4 text-red-500" />
+      <p class="ml-2 text-sm text-gray-500">
+        Something went wrong when fetching exports. Please try again later.
+      </p>
+    </div>
+    """
+  end
+
+  defp export_failed(assigns) do
     ~H"""
     <div class="flex items-center">
       <Heroicons.exclamation_circle class="w-4 h-4 text-red-500" />
@@ -227,7 +243,7 @@ defmodule PlausibleWeb.Live.CSVExport do
     %{storage: storage, site_id: site_id} = socket.assigns
 
     case storage do
-      "s3" -> Exports.delete_s3_export(site_id)
+      "s3" -> Exports.delete_s3_export!(site_id)
       "local" -> Exports.delete_local_export(site_id)
     end
 

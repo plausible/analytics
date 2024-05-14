@@ -149,6 +149,10 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
     round(float)
   end
 
+  defp maybe_override_event_name("file_download"), do: "File Download"
+  defp maybe_override_event_name("click"), do: "Outbound Link: Click"
+  defp maybe_override_event_name(name), do: name
+
   defp new_from_report(site_id, import_id, "imported_visitors", row) do
     %{
       site_id: site_id,
@@ -228,6 +232,18 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
   #     bounces: row.metrics |> Map.fetch!("bounces") |> parse_number()
   #   }
   # end
+
+  defp new_from_report(site_id, import_id, "imported_custom_events", row) do
+    %{
+      site_id: site_id,
+      import_id: import_id,
+      date: get_date(row),
+      name: row.dimensions |> Map.fetch!("eventName") |> maybe_override_event_name(),
+      link_url: row.dimensions |> Map.fetch!("linkUrl"),
+      visitors: row.metrics |> Map.fetch!("totalUsers") |> parse_number(),
+      events: row.metrics |> Map.fetch!("eventCount") |> parse_number()
+    }
+  end
 
   defp new_from_report(site_id, import_id, "imported_locations", row) do
     country_code = row.dimensions |> Map.fetch!("countryId") |> default_if_missing("")

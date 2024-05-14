@@ -107,6 +107,7 @@ defmodule Plausible.Imported.Buffer do
   defp table_schema("imported_pages"), do: Plausible.Imported.Page
   defp table_schema("imported_entry_pages"), do: Plausible.Imported.EntryPage
   defp table_schema("imported_exit_pages"), do: Plausible.Imported.ExitPage
+  defp table_schema("imported_custom_events"), do: Plausible.Imported.CustomEvent
   defp table_schema("imported_locations"), do: Plausible.Imported.Location
   defp table_schema("imported_devices"), do: Plausible.Imported.Device
   defp table_schema("imported_browsers"), do: Plausible.Imported.Browser

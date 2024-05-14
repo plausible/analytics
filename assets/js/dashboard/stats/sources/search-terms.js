@@ -39,7 +39,8 @@ export default class SearchTerms extends React.Component {
         loading: false,
         searchTerms: res.search_terms || [],
         notConfigured: res.not_configured,
-        isAdmin: res.is_admin
+        isAdmin: res.is_admin,
+        unsupportedFilters: res.unsupported_filters
       })).catch((error) =>
         {
             this.setState({ loading: false, searchTerms: [], notConfigured: true, error: true, isAdmin: error.payload.is_admin })
@@ -68,21 +69,19 @@ export default class SearchTerms extends React.Component {
   }
 
   renderList() {
-    if (this.props.query.filters.goal) {
+   if (this.state.unsupportedFilters)  {
       return (
         <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
           <RocketIcon />
-          <div>Sorry, we cannot show which keywords converted best for goal <b>{this.props.query.filters.goal}</b></div>
-          <div>Google does not share this information</div>
+          <div>Unable to fetch keyword data from Search Console because it does not support the current set of filters</div>
         </div>
       )
-
     } else if (this.state.notConfigured) {
       return (
         <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
           <RocketIcon />
           <div>
-          This site is not connected to Search Console so we cannot show the search phrases.
+          This site is not connected to Search Console so we cannot show the search terms
           {this.state.isAdmin && this.state.error && <><br/><br/><p>Please click below to connect your Search Console account.</p></>}
           </div>
           {this.state.isAdmin && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/integrations`} className="button mt-4">Connect with Google</a> }
@@ -103,9 +102,8 @@ export default class SearchTerms extends React.Component {
       )
     } else {
       return (
-        <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
-          <RocketIcon />
-          <div>No search terms were found for this period. Please adjust or extend your time range. Check <a href="https://plausible.io/docs/google-search-console-integration#i-dont-see-google-search-query-data-in-my-dashboard" target="_blank" rel="noreferrer" className="hover:underline text-indigo-700 dark:text-indigo-500">our documentation</a> for more details.</div>
+        <div className="text-center text-gray-700 dark:text-gray-300 ">
+          <div className="mt-44 mx-auto font-medium text-gray-500 dark:text-gray-400">No data yet</div>
         </div>
       )
     }

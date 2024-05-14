@@ -22,7 +22,7 @@ defmodule Plausible.Workers.NotifyExportedAnalytics do
         "success" ->
           case storage do
             "s3" ->
-              %{expires_at: expires_at} = Plausible.Exports.get_s3_export(site_id)
+              %{expires_at: expires_at} = Plausible.Exports.get_s3_export!(site_id, _retries = 10)
               PlausibleWeb.Email.export_success(user, site, expires_at)
 
             "local" ->

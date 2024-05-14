@@ -14,7 +14,7 @@ defmodule Plausible.Stats.Query do
             experimental_reduced_joins?: false
 
   require OpenTelemetry.Tracer, as: Tracer
-  alias Plausible.Stats.{Filters, Interval}
+  alias Plausible.Stats.{Filters, Interval, Imported}
 
   @type t :: %__MODULE__{}
 
@@ -150,7 +150,7 @@ defmodule Plausible.Stats.Query do
 
   defp put_period(query, site, %{"period" => "all"}) do
     now = today(site.timezone)
-    start_date = Plausible.Sites.local_start_date(site) || now
+    start_date = Plausible.Sites.stats_start_date(site) || now
 
     struct!(query,
       period: "all",
@@ -273,7 +273,7 @@ defmodule Plausible.Stats.Query do
     cond do
       is_nil(site.latest_import_end_date) -> false
       Date.after?(query.date_range.first, site.latest_import_end_date) -> false
-      Enum.any?(query.filters) -> false
+      not Imported.schema_supports_query?(query) -> false
       query.period == "realtime" -> false
       true -> requested?
     end
