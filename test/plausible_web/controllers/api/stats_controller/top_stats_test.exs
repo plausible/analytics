@@ -530,6 +530,63 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                %{"name" => "Visit duration", "value" => 303, "graph_metric" => "visit_duration"}
              ]
     end
+
+    test ":member filter on country", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          country_code: "EE",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          country_code: "EE",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:imported_locations,
+          country: "EE",
+          date: ~D[2021-01-01],
+          visitors: 1,
+          visits: 3,
+          pageviews: 34,
+          bounces: 0,
+          visit_duration: 420
+        ),
+        build(:imported_locations,
+          country: "FR",
+          date: ~D[2021-01-01],
+          visitors: 3,
+          visits: 7,
+          pageviews: 65,
+          bounces: 1,
+          visit_duration: 300
+        ),
+        build(:imported_locations, country: "US", date: ~D[2021-01-01], visitors: 999)
+      ])
+
+      filters = Jason.encode!(%{country: "EE|FR"})
+      q = "?period=day&date=2021-01-01&with_imported=true&filters=#{filters}"
+
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["top_stats"] == [
+               %{"name" => "Unique visitors", "value" => 5, "graph_metric" => "visitors"},
+               %{"name" => "Total visits", "value" => 11, "graph_metric" => "visits"},
+               %{"name" => "Total pageviews", "value" => 101, "graph_metric" => "pageviews"},
+               %{
+                 "name" => "Views per visit",
+                 "value" => 9.18,
+                 "graph_metric" => "views_per_visit"
+               },
+               %{"name" => "Bounce rate", "value" => 9, "graph_metric" => "bounce_rate"},
+               %{"name" => "Visit duration", "value" => 71, "graph_metric" => "visit_duration"}
+             ]
+    end
   end
 
   describe "GET /api/stats/top-stats - realtime" do
