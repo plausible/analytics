@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Query do
             interval: nil,
             period: nil,
             property: nil,
-            filters: %{},
+            filters: [],
             sample_threshold: 20_000_000,
             imported_data_requested: false,
             include_imported: false,
@@ -200,50 +200,36 @@ defmodule Plausible.Stats.Query do
     struct!(query, filters: Filters.parse(params["filters"]))
   end
 
-  def put_filter(query, key, val) do
-    parsed_val =
-      if is_binary(val) do
-        Filters.DashboardFilterParser.filter_value(key, val)
-      else
-        val
-      end
-
+  def put_filter(query, filter) do
     struct!(query,
-      filters: Map.put(query.filters, key, parsed_val)
+      filters: query.filters ++ [filter]
     )
   end
 
-  def remove_event_filters(query, opts) do
+  def remove_filters(query, prefixes) do
     new_filters =
-      Enum.filter(query.filters, fn {filter_key, _} ->
-        cond do
-          :page in opts && filter_key == "event:page" -> false
-          :goal in opts && filter_key == "event:goal" -> false
-          :props in opts && filter_key && String.starts_with?(filter_key, "event:props:") -> false
-          true -> true
-        end
+      Enum.reject(query.filters, fn [_, filter_key | _rest] ->
+        Enum.any?(prefixes, &String.starts_with?(filter_key, &1))
       end)
-      |> Enum.into(%{})
 
     struct!(query, filters: new_filters)
   end
 
   def has_event_filters?(query) do
-    Enum.any?(query.filters, fn
-      {"event:" <> _, _} -> true
-      _ -> false
+    Enum.any?(query.filters, fn [_op, prop | _rest] ->
+      String.starts_with?(prop, "event:")
     end)
   end
 
   def get_filter_by_prefix(query, prefix) do
-    Enum.find(query.filters, fn {prop, _value} ->
+    Enum.find(query.filters, fn [_op, prop | _rest] ->
       String.starts_with?(prop, prefix)
     end)
   end
 
-  def get_all_filters_by_prefix(query, prefix) do
-    Enum.filter(query.filters, fn {prop, _value} ->
-      String.starts_with?(prop, prefix)
+  def get_filter(query, name) do
+    Enum.find(query.filters, fn [_op, prop | _rest] ->
+      prop == name
     end)
   end
 
@@ -281,7 +267,12 @@ defmodule Plausible.Stats.Query do
 
   @spec trace(%__MODULE__{}, [atom()]) :: %__MODULE__{}
   def trace(%__MODULE__{} = query, metrics) do
-    filter_keys = Map.keys(query.filters) |> Enum.sort() |> Enum.join(";")
+    filter_keys =
+      query.filters
+      |> Enum.map(fn [_op, prop | _rest] -> prop end)
+      |> Enum.sort()
+      |> Enum.join(";")
+
     metrics = metrics |> Enum.sort() |> Enum.join(";")
 
     Tracer.set_attributes([

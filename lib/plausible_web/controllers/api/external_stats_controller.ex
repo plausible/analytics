@@ -119,7 +119,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
         {_, _, :all} ->
           true
 
-        {{"event:props:" <> prop, _}, _property, allowed_props} ->
+        {[_, "event:props:" <> prop | _], _property, allowed_props} ->
           prop in allowed_props
 
         {_filter, "event:props:" <> prop, allowed_props} ->
@@ -156,10 +156,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp validate_metric("time_on_page" = metric, query) do
     cond do
-      query.filters["event:goal"] ->
+      Query.get_filter(query, "event:goal") ->
         {:error, "Metric `#{metric}` cannot be queried when filtering by `event:goal`"}
 
-      query.filters["event:name"] ->
+      Query.get_filter(query, "event:name") ->
         {:error, "Metric `#{metric}` cannot be queried when filtering by `event:name`"}
 
       query.property == "event:page" ->
@@ -169,7 +169,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
         {:error,
          "Metric `#{metric}` is not supported in breakdown queries (except `event:page` breakdown)"}
 
-      query.filters["event:page"] ->
+      Query.get_filter(query, "event:page") ->
         {:ok, metric}
 
       true ->
@@ -183,7 +183,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       query.property == "event:goal" ->
         {:ok, metric}
 
-      query.filters["event:goal"] ->
+      Query.get_filter(query, "event:goal") ->
         {:ok, metric}
 
       true ->
@@ -198,7 +198,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp validate_metric("views_per_visit" = metric, query) do
     cond do
-      query.filters["event:page"] ->
+      Query.get_filter(query, "event:page") ->
         {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`."}
 
       query.property != nil ->
@@ -235,7 +235,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp find_event_only_filter(query) do
-    Map.keys(query.filters) |> Enum.find(&event_only_property?/1)
+    query.filters
+    |> Enum.map(fn [_op, prop | _] -> prop end)
+    |> Enum.find(&event_only_property?/1)
   end
 
   defp event_only_property?("event:name"), do: true
@@ -327,7 +329,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end)
   end
 
-  defp validate_filter(site, {"event:goal", {_type, goal_filter}}) do
+  defp validate_filter(site, [_type, "event:goal", goal_filter]) do
     configured_goals =
       Plausible.Goals.for_site(site)
       |> Enum.map(fn
@@ -350,7 +352,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end
   end
 
-  defp validate_filter(_site, {property, _}) do
+  defp validate_filter(_site, [_, property | _]) do
     if Plausible.Stats.Props.valid_prop?(property) do
       :ok
     else

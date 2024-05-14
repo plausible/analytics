@@ -180,16 +180,28 @@ defmodule PlausibleWeb.StatsController do
     |> Enum.join()
   end
 
-  defp csv_graph_metrics(%Query{filters: %{"event:goal" => _}}) do
-    metrics = [:visitors, :events, :conversion_rate]
-    column_headers = [:date, :unique_conversions, :total_conversions, :conversion_rate]
+  defp csv_graph_metrics(query) do
+    {metrics, column_headers} =
+      if Query.get_filter(query, "event:goal") do
+        {
+          [:visitors, :events, :conversion_rate],
+          [:date, :unique_conversions, :total_conversions, :conversion_rate]
+        }
+      else
+        metrics = [
+          :visitors,
+          :pageviews,
+          :visits,
+          :views_per_visit,
+          :bounce_rate,
+          :visit_duration
+        ]
 
-    {metrics, column_headers}
-  end
-
-  defp csv_graph_metrics(_) do
-    metrics = [:visitors, :pageviews, :visits, :views_per_visit, :bounce_rate, :visit_duration]
-    column_headers = [:date | metrics]
+        {
+          metrics,
+          [:date | metrics]
+        }
+      end
 
     {metrics, column_headers}
   end

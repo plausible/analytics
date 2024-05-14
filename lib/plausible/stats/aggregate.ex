@@ -70,10 +70,7 @@ defmodule Plausible.Stats.Aggregate do
   defp neighbor_aggregate_time_on_page(site, query) do
     q =
       from(
-        e in base_event_query(site, %Query{
-          query
-          | filters: Map.delete(query.filters, "event:page")
-        }),
+        e in base_event_query(site, Query.remove_filters(query, ["event:page"])),
         select: {
           fragment("? as p", e.pathname),
           fragment("? as t", e.timestamp),
@@ -86,32 +83,32 @@ defmodule Plausible.Stats.Aggregate do
     where_param_idx = length(base_query_raw_params)
 
     {where_clause, where_arg} =
-      case query.filters["event:page"] do
-        {:is, page} ->
+      case Query.get_filter(query, "event:page") do
+        [:is, _, page] ->
           {"p = {$#{where_param_idx}:String}", page}
 
-        {:is_not, page} ->
+        [:is_not, _, page] ->
           {"p != {$#{where_param_idx}:String}", page}
 
-        {:member, page} ->
+        [:member, _, page] ->
           {"p IN {$#{where_param_idx}:Array(String)}", page}
 
-        {:not_member, page} ->
+        [:not_member, _, page] ->
           {"p NOT IN {$#{where_param_idx}:Array(String)}", page}
 
-        {:matches, expr} ->
+        [:matches, _, expr] ->
           regex = page_regex(expr)
           {"match(p, {$#{where_param_idx}:String})", regex}
 
-        {:matches_member, exprs} ->
+        [:matches_member, _, exprs] ->
           page_regexes = Enum.map(exprs, &page_regex/1)
           {"multiMatchAny(p, {$#{where_param_idx}:Array(String)})", page_regexes}
 
-        {:not_matches_member, exprs} ->
+        [:not_matches_member, _, exprs] ->
           page_regexes = Enum.map(exprs, &page_regex/1)
           {"not(multiMatchAny(p, {$#{where_param_idx}:Array(String)}))", page_regexes}
 
-        {:does_not_match, expr} ->
+        [:does_not_match, _, expr] ->
           regex = page_regex(expr)
           {"not(match(p, {$#{where_param_idx}:String}))", regex}
       end
@@ -148,29 +145,29 @@ defmodule Plausible.Stats.Aggregate do
 
   defp window_aggregate_time_on_page(site, query) do
     windowed_pages_q =
-      from e in base_event_query(site, %Query{
-             query
-             | filters: Map.delete(query.filters, "event:page")
-           }),
-           select: %{
-             next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
-             next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
-             timestamp: e.timestamp,
-             pathname: e.pathname,
-             session_id: e.session_id
-           },
-           windows: [
-             event_horizon: [
-               partition_by: e.session_id,
-               order_by: e.timestamp,
-               frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-             ]
-           ]
+      from e in base_event_query(site, Query.remove_filters(query, ["event:page"])),
+        select: %{
+          next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
+          next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
+          timestamp: e.timestamp,
+          pathname: e.pathname,
+          session_id: e.session_id
+        },
+        windows: [
+          event_horizon: [
+            partition_by: e.session_id,
+            order_by: e.timestamp,
+            frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+          ]
+        ]
+
+    event_page_filter = Query.get_filter(query, "event:page")
 
     timed_page_transitions_q =
       from e in Ecto.Query.subquery(windowed_pages_q),
         group_by: [e.pathname, e.next_pathname, e.session_id],
-        where: ^Plausible.Stats.Base.dynamic_filter_condition(query, "event:page", :pathname),
+        where:
+          ^Plausible.Stats.Filters.WhereBuilder.build_condition(:pathname, event_page_filter),
         where: e.next_timestamp != 0,
         select: %{
           pathname: e.pathname,

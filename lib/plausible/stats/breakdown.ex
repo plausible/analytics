@@ -39,7 +39,7 @@ defmodule Plausible.Stats.Breakdown do
 
     event_query = %Query{
       query
-      | filters: Map.put(query.filters, "event:name", {:member, events}),
+      | filters: query.filters ++ [[:member, "event:name", events]],
         property: "event:name"
     }
 
@@ -180,7 +180,7 @@ defmodule Plausible.Stats.Breakdown do
 
         pages ->
           query
-          |> Query.put_filter("visit:entry_page", {:member, Enum.map(pages, & &1[:page])})
+          |> Query.put_filter([:member, "visit:entry_page", Enum.map(pages, & &1[:page])])
           |> struct!(property: "visit:entry_page")
       end
 
@@ -256,12 +256,12 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp update_hostname(query, visit_prop) do
-    case query.filters["event:hostname"] do
+    case Query.get_filter(query, "event:hostname") do
       nil ->
         query
 
-      some ->
-        Plausible.Stats.Query.put_filter(query, visit_prop, some)
+      [op, "event:hostname", value] ->
+        Plausible.Stats.Query.put_filter(query, [op, visit_prop, value])
     end
   end
 
@@ -353,7 +353,7 @@ defmodule Plausible.Stats.Breakdown do
     import Ecto.Query
 
     windowed_pages_q =
-      from e in base_event_query(site, Query.remove_event_filters(query, [:page, :props])),
+      from e in base_event_query(site, Query.remove_filters(query, ["event:page", "event:props"])),
         select: %{
           next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
           next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
@@ -719,7 +719,8 @@ defmodule Plausible.Stats.Breakdown do
          metrics
        ) do
     if :conversion_rate in metrics do
-      breakdown_total_visitors_query = query |> Query.remove_event_filters([:goal, :props])
+      breakdown_total_visitors_query =
+        query |> Query.remove_filters(["event:goal", "event:props"])
 
       breakdown_total_visitors_q =
         breakdown_fn.(site, breakdown_total_visitors_query, [:visitors])

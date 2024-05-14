@@ -314,7 +314,7 @@ defmodule Plausible.Stats.Timeseries do
 
   defp maybe_add_timeseries_conversion_rate(q, site, query, metrics) do
     if :conversion_rate in metrics do
-      totals_query = query |> Query.remove_event_filters([:goal, :props])
+      totals_query = query |> Query.remove_filters(["event:goal", "event:props"])
 
       totals_timeseries_q =
         from(e in base_event_query(site, totals_query),

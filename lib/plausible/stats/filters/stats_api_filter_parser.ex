@@ -12,13 +12,12 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
 
     Enum.map(filters, &parse_single_filter/1)
     |> Enum.reject(fn parsed -> parsed == :error end)
-    |> Enum.into(%{})
   end
 
   defp parse_single_filter(str) do
     case to_kv(str) do
       ["event:goal" = key, raw_value] ->
-        {key, parse_goal_filter(raw_value)}
+        parse_goal_filter(key, raw_value)
 
       [key, raw_value] ->
         is_negated? = String.contains?(str, "!=")
@@ -28,11 +27,11 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
         final_value = remove_escape_chars(raw_value)
 
         cond do
-          is_wildcard? && is_negated? -> {key, {:does_not_match, raw_value}}
-          is_wildcard? -> {key, {:matches, raw_value}}
-          is_list? -> {key, {:member, parse_member_list(raw_value)}}
-          is_negated? -> {key, {:is_not, final_value}}
-          true -> {key, {:is, final_value}}
+          is_wildcard? && is_negated? -> [:does_not_match, key, raw_value]
+          is_wildcard? -> [:matches, key, raw_value]
+          is_list? -> [:member, key, parse_member_list(raw_value)]
+          is_negated? -> [:is_not, key, final_value]
+          true -> [:is, key, final_value]
         end
         |> reject_invalid_country_codes()
 
@@ -41,7 +40,7 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
     end
   end
 
-  defp reject_invalid_country_codes({"visit:country", {_, code_or_codes}} = filter) do
+  defp reject_invalid_country_codes([_op, "visit:country", code_or_codes] = filter) do
     code_or_codes
     |> List.wrap()
     |> Enum.reduce_while(filter, fn
@@ -59,7 +58,7 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
     |> Enum.map(&String.trim/1)
   end
 
-  defp parse_goal_filter(value) do
+  defp parse_goal_filter(key, value) do
     is_list? = list_expression?(value)
     is_wildcard? = wildcard_expression?(value)
 
@@ -72,10 +71,10 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
       |> wrap_goal_value()
 
     cond do
-      is_list? && is_wildcard? -> {:matches_member, value}
-      is_list? -> {:member, value}
-      is_wildcard? -> {:matches, value}
-      true -> {:is, value}
+      is_list? && is_wildcard? -> [:matches_member, key, value]
+      is_list? -> [:member, key, value]
+      is_wildcard? -> [:matches, key, value]
+      true -> [:is, key, value]
     end
   end
 end

@@ -56,24 +56,24 @@ defmodule Plausible.Stats.Filters do
   ### Examples:
 
       iex> Filters.parse("{\\"page\\":\\"/blog/**\\"}")
-      %{"event:page" => {:matches, "/blog/**"}}
+      [[:matches, "event:page", "/blog/**"]]
 
       iex> Filters.parse("visit:browser!=Chrome")
-      %{"visit:browser" => {:is_not, "Chrome"}}
+      [[:is_not, "visit:browser", "Chrome"]]
 
       iex> Filters.parse(nil)
-      %{}
+      []
   """
   def parse(filters) when is_binary(filters) do
     case Jason.decode(filters) do
       {:ok, filters} when is_map(filters) -> DashboardFilterParser.parse_and_prefix(filters)
-      {:ok, _} -> %{}
+      {:ok, _} -> []
       {:error, err} -> StatsAPIFilterParser.parse_filter_expression(err.data)
     end
   end
 
   def parse(filters) when is_map(filters), do: DashboardFilterParser.parse_and_prefix(filters)
-  def parse(_), do: %{}
+  def parse(_), do: []
 
   def without_prefix(property) do
     property

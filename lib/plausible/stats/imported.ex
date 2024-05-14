@@ -33,26 +33,28 @@ defmodule Plausible.Stats.Imported do
 
   @imported_properties Map.keys(@property_to_table_mappings)
 
+  @goals_with_url ["Outbound Link: Click", "Cloaked Link: Click", "File Download"]
+
+  @doc """
+  Returns a boolean indicating whether the combination of filters and
+  breakdown property is possible to query from the imported tables.
+
+  Usually, when no filters are used, the imported schema supports the
+  query. There is one exception though - breakdown by a custom property.
+  We are currently importing only two custom properties - `url` and `path.
+  Both these properties can only be used with their special goal filter
+  (see `@goals_with_url` and `@goals_with_path`).
+  """
   def schema_supports_query?(query) do
-    filter_count = length(Map.keys(query.filters))
+    filter_count = length(query.filters)
 
     case {filter_count, query.property} do
       {0, "event:props:" <> _} -> false
       {0, _} -> true
-      {1, _} -> supports_single_filter?(query)
+      {1, "event:props:url"} -> has_special_goal_filter?(query, @goals_with_url)
       {_, _} -> false
     end
   end
-
-  defp supports_single_filter?(%Query{
-         filters: %{"event:goal" => {:is, {:event, event}}},
-         property: "event:props:url"
-       })
-       when event in ["Outbound Link: Click", "File Download"] do
-    true
-  end
-
-  defp supports_single_filter?(_query), do: false
 
   def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{include_imported: false}, _),
     do: native_q
@@ -118,7 +120,7 @@ defmodule Plausible.Stats.Imported do
         where: i.visitors > 0,
         select: %{}
       )
-      |> maybe_apply_filter(query.filters, property, dim)
+      |> maybe_apply_filter(query, property, dim)
       |> group_imported_by(dim)
       |> select_imported_metrics(metrics)
 
@@ -214,20 +216,32 @@ defmodule Plausible.Stats.Imported do
     )
   end
 
-  defp maybe_apply_filter(
-         q,
-         %{"event:goal" => {:is, {:event, event_name}}},
-         "event:props:url",
-         _dim
-       )
-       when event_name in ["Outbound Link: Click", "File Download"] do
-    where(q, [i], i.name == ^event_name)
+  defp maybe_apply_filter(q, query, "event:props:url", _) do
+    if name = find_special_goal_filter(query, @goals_with_url) do
+      where(q, [i], i.name == ^name)
+    else
+      q
+    end
   end
 
-  defp maybe_apply_filter(q, filters, property, dim) do
-    case filters[property] do
-      {:member, list} -> where(q, [i], field(i, ^dim) in ^list)
+  defp maybe_apply_filter(q, query, property, dim) do
+    case Query.get_filter(query, property) do
+      [:member, _, list] -> where(q, [i], field(i, ^dim) in ^list)
       _ -> q
+    end
+  end
+
+  defp has_special_goal_filter?(query, event_names) do
+    not is_nil(find_special_goal_filter(query, event_names))
+  end
+
+  defp find_special_goal_filter(query, event_names) do
+    case Query.get_filter(query, "event:goal") do
+      [:is, "event:goal", {:event, name}] ->
+        if name in event_names, do: name, else: nil
+
+      _ ->
+        nil
     end
   end
 

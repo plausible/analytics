@@ -7,9 +7,6 @@ defmodule Plausible.Stats.Base do
   alias Plausible.Timezones
   import Ecto.Query
 
-  @no_ref "Direct / None"
-  @not_set "(not set)"
-
   @uniq_users_expression "toUInt64(round(uniq(?) * any(_sample_factor)))"
 
   def base_event_query(site, query) do
@@ -30,179 +27,29 @@ defmodule Plausible.Stats.Base do
         on: e.session_id == sq.session_id
       )
     else
-      if query.experimental_reduced_joins? do
-        events_q |> filter_by_visit_props(Filters.event_table_visit_props(), query)
-      else
-        events_q
-      end
+      events_q
     end
   end
 
   defp query_events(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site)
-
-    q =
-      from(
-        e in "events_v2",
-        where: e.site_id == ^site.id,
-        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
-      )
+    q = from(e in "events_v2", where: ^Filters.WhereBuilder.build(:events, site, query))
 
     on_ee do
       q = Plausible.Stats.Sampling.add_query_hint(q, query)
     end
 
-    q =
-      q
-      |> where([e], ^dynamic_filter_condition(query, "event:page", :pathname))
-      |> where([e], ^dynamic_filter_condition(query, "event:hostname", :hostname))
-
-    q =
-      case query.filters["event:name"] do
-        {:is, name} ->
-          from(e in q, where: e.name == ^name)
-
-        {:member, list} ->
-          from(e in q, where: e.name in ^list)
-
-        nil ->
-          q
-      end
-
-    q =
-      case query.filters["event:goal"] do
-        {:is, {:page, path}} ->
-          from(e in q, where: e.pathname == ^path and e.name == "pageview")
-
-        {:matches, {:page, expr}} ->
-          regex = page_regex(expr)
-
-          from(e in q,
-            where: fragment("match(?, ?)", e.pathname, ^regex) and e.name == "pageview"
-          )
-
-        {:is, {:event, event}} ->
-          from(e in q, where: e.name == ^event)
-
-        {:member, clauses} ->
-          {events, pages} = split_goals(clauses)
-
-          from(e in q,
-            where: (e.pathname in ^pages and e.name == "pageview") or e.name in ^events
-          )
-
-        {:matches_member, clauses} ->
-          {events, pages} = split_goals(clauses, &page_regex/1)
-
-          event_clause =
-            if Enum.any?(events) do
-              dynamic([x], fragment("multiMatchAny(?, ?)", x.name, ^events))
-            else
-              dynamic([x], false)
-            end
-
-          page_clause =
-            if Enum.any?(pages) do
-              dynamic(
-                [x],
-                fragment("multiMatchAny(?, ?)", x.pathname, ^pages) and x.name == "pageview"
-              )
-            else
-              dynamic([x], false)
-            end
-
-          where_clause = dynamic([], ^event_clause or ^page_clause)
-
-          from(e in q, where: ^where_clause)
-
-        nil ->
-          q
-      end
-
-    q =
-      Enum.reduce(
-        Query.get_all_filters_by_prefix(query, "event:props"),
-        q,
-        &filter_by_custom_prop/2
-      )
-
     q
   end
 
   def query_sessions(site, query) do
-    {first_datetime, last_datetime} =
-      utc_boundaries(query, site)
-
-    q = from(s in "sessions_v2", where: s.site_id == ^site.id)
-
-    sessions_q =
-      if query.experimental_session_count? do
-        from s in q, where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
-      else
-        from s in q, where: s.start >= ^first_datetime and s.start < ^last_datetime
-      end
+    q = from(s in "sessions_v2", where: ^Filters.WhereBuilder.build(:sessions, site, query))
 
     on_ee do
-      sessions_q = Plausible.Stats.Sampling.add_query_hint(sessions_q, query)
+      q = Plausible.Stats.Sampling.add_query_hint(q, query)
     end
 
-    filter_by_entry_props(sessions_q, query)
-    |> filter_by_visit_props(Filters.visit_props(), query)
+    q
   end
-
-  defp filter_by_visit_props(q, visit_props, query) do
-    Enum.reduce(visit_props, q, fn prop_name, sessions_q ->
-      filter_key = "visit:" <> prop_name
-      db_field = String.to_existing_atom(prop_name)
-
-      from(s in sessions_q,
-        where: ^dynamic_filter_condition(query, filter_key, db_field)
-      )
-    end)
-  end
-
-  def filter_by_entry_props(sessions_q, query) do
-    case Query.get_filter_by_prefix(query, "visit:entry_props:") do
-      nil ->
-        sessions_q
-
-      {"visit:entry_props:" <> prop_name, filter_value} ->
-        apply_entry_prop_filter(sessions_q, prop_name, filter_value)
-    end
-  end
-
-  def apply_entry_prop_filter(sessions_q, prop_name, {:is, "(none)"}) do
-    from(
-      s in sessions_q,
-      where: not has_key(s, :entry_meta, ^prop_name)
-    )
-  end
-
-  def apply_entry_prop_filter(sessions_q, prop_name, {:is, value}) do
-    from(
-      s in sessions_q,
-      where:
-        has_key(s, :entry_meta, ^prop_name) and get_by_key(s, :entry_meta, ^prop_name) == ^value
-    )
-  end
-
-  def apply_entry_prop_filter(sessions_q, prop_name, {:is_not, "(none)"}) do
-    from(
-      s in sessions_q,
-      where: has_key(s, :entry_meta, ^prop_name)
-    )
-  end
-
-  def apply_entry_prop_filter(sessions_q, prop_name, {:is_not, value}) do
-    from(
-      s in sessions_q,
-      where:
-        not has_key(s, :entry_meta, ^prop_name) or
-          get_by_key(s, :entry_meta, ^prop_name) != ^value
-    )
-  end
-
-  def apply_entry_prop_filter(sessions_q, _, _), do: sessions_q
 
   def select_event_metrics(metrics) do
     metrics
@@ -272,7 +119,9 @@ defmodule Plausible.Stats.Base do
   end
 
   defp select_session_metric(:bounce_rate, query) do
-    condition = dynamic_filter_condition(query, "event:page", :entry_page)
+    # :TRICKY: If page is passed to query, we only count bounce rate where users _entered_ at page.
+    event_page_filter = Query.get_filter(query, "event:page")
+    condition = Filters.WhereBuilder.build_condition(:entry_page, event_page_filter)
 
     %{
       bounce_rate:
@@ -358,45 +207,6 @@ defmodule Plausible.Stats.Base do
 
   defp select_session_metric(:percentage, _query), do: %{}
 
-  def dynamic_filter_condition(query, filter_key, db_field) do
-    case query && query.filters && query.filters[filter_key] do
-      {:is, value} ->
-        value = db_field_val(db_field, value)
-        dynamic([x], field(x, ^db_field) == ^value)
-
-      {:is_not, value} ->
-        value = db_field_val(db_field, value)
-        dynamic([x], field(x, ^db_field) != ^value)
-
-      {:matches_member, glob_exprs} ->
-        page_regexes = Enum.map(glob_exprs, &page_regex/1)
-        dynamic([x], fragment("multiMatchAny(?, ?)", field(x, ^db_field), ^page_regexes))
-
-      {:not_matches_member, glob_exprs} ->
-        page_regexes = Enum.map(glob_exprs, &page_regex/1)
-        dynamic([x], fragment("not(multiMatchAny(?, ?))", field(x, ^db_field), ^page_regexes))
-
-      {:matches, glob_expr} ->
-        regex = page_regex(glob_expr)
-        dynamic([x], fragment("match(?, ?)", field(x, ^db_field), ^regex))
-
-      {:does_not_match, glob_expr} ->
-        regex = page_regex(glob_expr)
-        dynamic([x], fragment("not(match(?, ?))", field(x, ^db_field), ^regex))
-
-      {:member, list} ->
-        list = Enum.map(list, &db_field_val(db_field, &1))
-        dynamic([x], field(x, ^db_field) in ^list)
-
-      {:not_member, list} ->
-        list = Enum.map(list, &db_field_val(db_field, &1))
-        dynamic([x], field(x, ^db_field) not in ^list)
-
-      nil ->
-        true
-    end
-  end
-
   def filter_converted_sessions(db_query, site, query) do
     if Query.has_event_filters?(query) do
       converted_sessions =
@@ -415,16 +225,6 @@ defmodule Plausible.Stats.Base do
       db_query
     end
   end
-
-  defp db_field_val(:source, @no_ref), do: ""
-  defp db_field_val(:referrer, @no_ref), do: ""
-  defp db_field_val(:utm_medium, @no_ref), do: ""
-  defp db_field_val(:utm_source, @no_ref), do: ""
-  defp db_field_val(:utm_campaign, @no_ref), do: ""
-  defp db_field_val(:utm_content, @no_ref), do: ""
-  defp db_field_val(:utm_term, @no_ref), do: ""
-  defp db_field_val(_, @not_set), do: ""
-  defp db_field_val(_, val), do: val
 
   defp beginning_of_time(candidate, native_stats_start_at) do
     if Timex.after?(native_stats_start_at, candidate) do
@@ -486,92 +286,6 @@ defmodule Plausible.Stats.Base do
     "^#{escaped}$"
   end
 
-  defp split_goals(clauses, map_fn \\ &Function.identity/1) do
-    groups =
-      Enum.group_by(clauses, fn {goal_type, _v} -> goal_type end, fn {_k, val} -> map_fn.(val) end)
-
-    {
-      Map.get(groups, :event, []),
-      Map.get(groups, :page, [])
-    }
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:is, "(none)"}}, q) do
-    from(
-      e in q,
-      where: not has_key(e, :meta, ^prop_name)
-    )
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:is, value}}, q) do
-    from(
-      e in q,
-      where: has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) == ^value
-    )
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:is_not, "(none)"}}, q) do
-    from(
-      e in q,
-      where: has_key(e, :meta, ^prop_name)
-    )
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:is_not, value}}, q) do
-    from(
-      e in q,
-      where: not has_key(e, :meta, ^prop_name) or get_by_key(e, :meta, ^prop_name) != ^value
-    )
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:matches, value}}, q) do
-    regex = page_regex(value)
-
-    from(
-      e in q,
-      where:
-        has_key(e, :meta, ^prop_name) and
-          fragment("match(?, ?)", get_by_key(e, :meta, ^prop_name), ^regex)
-    )
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:member, values}}, q) do
-    none_value_included = Enum.member?(values, "(none)")
-
-    from(
-      e in q,
-      where:
-        (has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) in ^values) or
-          (^none_value_included and not has_key(e, :meta, ^prop_name))
-    )
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:not_member, values}}, q) do
-    none_value_included = Enum.member?(values, "(none)")
-
-    from(
-      e in q,
-      where:
-        (has_key(e, :meta, ^prop_name) and
-           get_by_key(e, :meta, ^prop_name) not in ^values) or
-          (^none_value_included and
-             has_key(e, :meta, ^prop_name) and
-             get_by_key(e, :meta, ^prop_name) not in ^values) or
-          (not (^none_value_included) and not has_key(e, :meta, ^prop_name))
-    )
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:matches_member, clauses}}, q) do
-    regexes = Enum.map(clauses, &page_regex/1)
-
-    from(
-      e in q,
-      where:
-        has_key(e, :meta, ^prop_name) and
-          fragment("arrayExists(k -> match(?, k), ?)", get_by_key(e, :meta, ^prop_name), ^regexes)
-    )
-  end
-
   defp total_visitors(site, query) do
     base_event_query(site, query)
     |> select([e], total_visitors: fragment(@uniq_users_expression, e.user_id))
@@ -615,7 +329,7 @@ defmodule Plausible.Stats.Base do
   # filters.
   def maybe_add_conversion_rate(q, site, query, metrics) do
     if :conversion_rate in metrics do
-      total_query = query |> Query.remove_event_filters([:goal, :props])
+      total_query = query |> Query.remove_filters(["event:goal", "event:props"])
 
       # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
       subquery(q)
