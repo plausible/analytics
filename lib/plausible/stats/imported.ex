@@ -230,7 +230,7 @@ defmodule Plausible.Stats.Imported do
 
   defp maybe_apply_filter(q, query, "event:props:path", _) do
     if name = find_special_goal_filter(query, @goals_with_path) do
-      where(q, [i], i.path == ^path)
+      where(q, [i], i.name == ^name)
     else
       q
     end
