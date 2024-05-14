@@ -49,3 +49,11 @@ export function durationFormatter(duration) {
     return `${seconds}s`
   }
 }
+
+export function percentageFormatter(number) {
+  if (typeof (number) === 'number') {
+    return number + '%'
+  } else {
+    return '-'
+  }
+}

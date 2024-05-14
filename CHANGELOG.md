@@ -42,6 +42,7 @@ All notable changes to this project will be documented in this file.
 - Add Yesterday as an time range option in the dashboard
 - Add support for importing Google Analytics 4 data
 - Import custom events from Google Analytics 4
+- Ability to filter Search Console keywords by page, country and device plausible/analytics#4077
 - Add `DATA_DIR` env var for exports/imports plausible/analytics#4100
 
 ### Removed
