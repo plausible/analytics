@@ -845,14 +845,15 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       pages = Enum.map(breakdown_results, & &1[:exit_page])
 
-      total_visits_query =
+      total_pageviews_query =
         query
+        |> Query.remove_filters(["visit:exit_page"])
         |> Query.put_filter([:member, "event:page", pages])
         |> Query.put_filter([:is, "event:name", "pageview"])
         |> struct!(property: "event:page")
 
       total_pageviews =
-        Stats.breakdown(site, total_visits_query, [:pageviews], {limit, 1})
+        Stats.breakdown(site, total_pageviews_query, [:pageviews], {limit, 1})
 
       Enum.map(breakdown_results, fn result ->
         exit_rate =

@@ -180,6 +180,7 @@ defmodule Plausible.Stats.Breakdown do
 
         pages ->
           query
+          |> Query.remove_filters(["event:page"])
           |> Query.put_filter([:member, "visit:entry_page", Enum.map(pages, & &1[:page])])
           |> struct!(property: "visit:entry_page")
       end

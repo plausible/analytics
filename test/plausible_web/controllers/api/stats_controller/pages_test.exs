@@ -1199,6 +1199,156 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                %{"total_visitors" => 3, "visitors" => 1, "name" => "/", "conversion_rate" => 33.3}
              ]
     end
+
+    test "filter by :is page with imported data", %{conn: conn, site: site} do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, user_id: 1, pathname: "/", timestamp: ~N[2021-01-01 12:00:00]),
+        build(:pageview, user_id: 1, pathname: "/ignored", timestamp: ~N[2021-01-01 12:01:00]),
+        build(:imported_entry_pages,
+          entry_page: "/",
+          visitors: 1,
+          bounces: 1,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages,
+          page: "/",
+          visitors: 3,
+          pageviews: 3,
+          time_on_page: 300,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages, page: "/ignored", visitors: 10, date: ~D[2021-01-01])
+      ])
+
+      filters = Jason.encode!(%{"page" => "/"})
+      q = "?period=day&date=2021-01-01&filters=#{filters}&detailed=true&with_imported=true"
+
+      conn = get(conn, "/api/stats/#{site.domain}/pages#{q}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "bounce_rate" => 50,
+                 "name" => "/",
+                 "pageviews" => 4,
+                 "time_on_page" => 90.0,
+                 "visitors" => 4
+               }
+             ]
+    end
+
+    test "filter by :member page with imported data", %{conn: conn, site: site} do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, user_id: 1, pathname: "/", timestamp: ~N[2021-01-01 12:00:00]),
+        build(:pageview, user_id: 1, pathname: "/ignored", timestamp: ~N[2021-01-01 12:01:00]),
+        build(:imported_entry_pages,
+          entry_page: "/",
+          visitors: 1,
+          bounces: 1,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_entry_pages,
+          entry_page: "/a",
+          visitors: 1,
+          bounces: 1,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages,
+          page: "/",
+          visitors: 3,
+          pageviews: 3,
+          time_on_page: 300,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages,
+          page: "/a",
+          visitors: 1,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages, page: "/ignored", visitors: 10, date: ~D[2021-01-01])
+      ])
+
+      filters = Jason.encode!(%{"page" => "/|/a"})
+      q = "?period=day&date=2021-01-01&filters=#{filters}&detailed=true&with_imported=true"
+
+      conn = get(conn, "/api/stats/#{site.domain}/pages#{q}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "bounce_rate" => 50,
+                 "name" => "/",
+                 "pageviews" => 4,
+                 "time_on_page" => 90.0,
+                 "visitors" => 4
+               },
+               %{
+                 "bounce_rate" => 100,
+                 "name" => "/a",
+                 "pageviews" => 1,
+                 "time_on_page" => 10.0,
+                 "visitors" => 1
+               }
+             ]
+    end
+
+    test "filter by :matches page with imported data", %{conn: conn, site: site} do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, user_id: 1, pathname: "/aaa", timestamp: ~N[2021-01-01 12:00:00]),
+        build(:pageview, user_id: 1, pathname: "/ignored", timestamp: ~N[2021-01-01 12:01:00]),
+        build(:imported_entry_pages,
+          entry_page: "/aaa",
+          visitors: 1,
+          bounces: 1,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_entry_pages,
+          entry_page: "/a",
+          visitors: 1,
+          bounces: 1,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages,
+          page: "/aaa",
+          visitors: 3,
+          pageviews: 3,
+          time_on_page: 300,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages,
+          page: "/a",
+          visitors: 1,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages, page: "/ignored", visitors: 10, date: ~D[2021-01-01])
+      ])
+
+      filters = Jason.encode!(%{"page" => "/a**"})
+      q = "?period=day&date=2021-01-01&filters=#{filters}&detailed=true&with_imported=true"
+
+      conn = get(conn, "/api/stats/#{site.domain}/pages#{q}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "bounce_rate" => 50,
+                 "name" => "/aaa",
+                 "pageviews" => 4,
+                 "time_on_page" => 90.0,
+                 "visitors" => 4
+               },
+               %{
+                 "bounce_rate" => 100,
+                 "name" => "/a",
+                 "pageviews" => 1,
+                 "time_on_page" => 10.0,
+                 "visitors" => 1
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/entry-pages" do
@@ -1552,6 +1702,56 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
 
       assert json_response(conn, 200) == []
     end
+
+    test "filter by :matches_member entry_page with imported data", %{conn: conn, site: site} do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, pathname: "/aaa", timestamp: ~N[2021-01-01 12:00:00]),
+        build(:pageview, pathname: "/a", timestamp: ~N[2021-01-01 12:00:00]),
+        build(:pageview, pathname: "/ignored", timestamp: ~N[2021-01-01 12:01:00]),
+        build(:imported_entry_pages,
+          entry_page: "/a",
+          visitors: 5,
+          entrances: 9,
+          visit_duration: 1000,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_entry_pages,
+          entry_page: "/bbb",
+          visitors: 2,
+          entrances: 2,
+          visit_duration: 100,
+          date: ~D[2021-01-01]
+        )
+      ])
+
+      filters = Jason.encode!(%{"entry_page" => "/a**|/b**"})
+      q = "?period=day&date=2021-01-01&filters=#{filters}&detailed=true&with_imported=true"
+
+      conn = get(conn, "/api/stats/#{site.domain}/entry-pages#{q}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "visit_duration" => 100.0,
+                 "name" => "/a",
+                 "visits" => 10,
+                 "visitors" => 6
+               },
+               %{
+                 "visit_duration" => 50.0,
+                 "name" => "/bbb",
+                 "visits" => 2,
+                 "visitors" => 2
+               },
+               %{
+                 "visit_duration" => 0,
+                 "name" => "/aaa",
+                 "visits" => 1,
+                 "visitors" => 1
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/exit-pages" do
@@ -1848,6 +2048,58 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
 
       assert json_response(conn, 200) == []
+    end
+
+    test "filter by :is_not exit_page with imported data", %{conn: conn, site: site} do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, pathname: "/aaa", timestamp: ~N[2021-01-01 12:00:00]),
+        build(:pageview, pathname: "/a", timestamp: ~N[2021-01-01 12:00:00]),
+        build(:pageview, pathname: "/ignored", timestamp: ~N[2021-01-01 12:01:00]),
+        build(:imported_exit_pages,
+          exit_page: "/a",
+          visitors: 5,
+          exits: 9,
+          visit_duration: 1000,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_exit_pages,
+          exit_page: "/bbb",
+          visitors: 2,
+          exits: 2,
+          visit_duration: 100,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages, page: "/a", pageviews: 19, date: ~D[2021-01-01]),
+        build(:imported_pages, page: "/bbb", pageviews: 2, date: ~D[2021-01-01])
+      ])
+
+      filters = Jason.encode!(%{"exit_page" => "!/ignored"})
+      q = "?period=day&date=2021-01-01&filters=#{filters}&detailed=true&with_imported=true"
+
+      conn = get(conn, "/api/stats/#{site.domain}/exit-pages#{q}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "exit_rate" => 50.0,
+                 "name" => "/a",
+                 "visits" => 10,
+                 "visitors" => 6
+               },
+               %{
+                 "exit_rate" => 100.0,
+                 "name" => "/bbb",
+                 "visits" => 2,
+                 "visitors" => 2
+               },
+               %{
+                 "exit_rate" => 100.0,
+                 "name" => "/aaa",
+                 "visits" => 1,
+                 "visitors" => 1
+               }
+             ]
     end
   end
 end

@@ -308,6 +308,8 @@ defmodule Plausible.Stats.Base do
 
   def add_percentage_metric(q, site, query, metrics) do
     if :percentage in metrics do
+      query = struct!(query, property: nil)
+
       q
       |> select_merge(^%{__total_visitors: total_visitors_subquery(site, query)})
       |> select_merge(%{
@@ -329,7 +331,10 @@ defmodule Plausible.Stats.Base do
   # filters.
   def maybe_add_conversion_rate(q, site, query, metrics) do
     if :conversion_rate in metrics do
-      total_query = query |> Query.remove_filters(["event:goal", "event:props"])
+      total_query =
+        query
+        |> Query.remove_filters(["event:goal", "event:props"])
+        |> struct!(property: nil)
 
       # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
       subquery(q)
