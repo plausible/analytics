@@ -587,6 +587,45 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                %{"name" => "Visit duration", "value" => 71, "graph_metric" => "visit_duration"}
              ]
     end
+
+    test ":is filter on page returns only visitors, visits and pageviews", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:imported_pages,
+          page: "/",
+          date: ~D[2021-01-01],
+          visitors: 1,
+          visits: 3,
+          pageviews: 34
+        ),
+        build(:imported_pages, page: "/ignored", date: ~D[2021-01-01], visitors: 999)
+      ])
+
+      filters = Jason.encode!(%{page: "/"})
+      q = "?period=day&date=2021-01-01&with_imported=true&filters=#{filters}"
+
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["top_stats"] == [
+               %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"},
+               %{"name" => "Total visits", "value" => 4, "graph_metric" => "visits"},
+               %{"name" => "Total pageviews", "value" => 36, "graph_metric" => "pageviews"}
+             ]
+    end
   end
 
   describe "GET /api/stats/top-stats - realtime" do
