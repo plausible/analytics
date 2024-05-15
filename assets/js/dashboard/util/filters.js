@@ -50,34 +50,34 @@ export function escapeFilterValue(value) {
 
 export function toFilterQuery(type, clauses) {
   const prefix = OPERATION_PREFIX[type];
-  const result = clauses.map(clause => escapeFilterValue(clause.value.trim())).join('|')
+  const result = clauses.map(clause => escapeFilterValue(clause.trim())).join('|')
   return prefix + result;
 }
 
 export function parsePrefix(rawValue) {
-  const type = Object.keys(OPERATION_PREFIX)
-    .find(type => OPERATION_PREFIX[type] === rawValue[0]) || FILTER_OPERATIONS.is;
+  const operation = Object.keys(OPERATION_PREFIX)
+    .find(operation => OPERATION_PREFIX[operation] === rawValue[0]) || FILTER_OPERATIONS.is;
 
-  const value = type === FILTER_OPERATIONS.is ? rawValue : rawValue.substring(1)
+  const value = operation === FILTER_OPERATIONS.is ? rawValue : rawValue.substring(1)
 
   const values = value
     .split(NON_ESCAPED_PIPE_REGEX)
     .filter((clause) => !!clause)
     .map((val) => val.replaceAll(ESCAPED_PIPE, '|'))
 
-  return { type, values }
+  return { operation, values }
 }
 
 export function parseQueryPropsFilter(query) {
   return Object.entries(query.filters['props']).map(([key, propVal]) => {
-    const { type, values } = parsePrefix(propVal)
+    const { operation, values } = parsePrefix(propVal)
     const clauses = values.map(val => { return { value: val, label: val } })
-    return { propKey: { label: key, value: key }, type, clauses }
+    return { propKey: { label: key, value: key }, operation, clauses }
   })
 }
 
 export function parseQueryFilter(query, filter) {
-  const { type, values } = parsePrefix(query.filters[filter] || '')
+  const { operation, values } = parsePrefix(query.filters[filter] || '')
 
   let labels = values
 
@@ -98,7 +98,7 @@ export function parseQueryFilter(query, filter) {
 
   const clauses = values.map((value, index) => { return { value, label: labels[index] } })
 
-  return { type, clauses }
+  return { operation, clauses }
 }
 
 export function isFilteringOnFixedValue(query, filter) {

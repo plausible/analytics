@@ -1,3 +1,5 @@
+import JsonURL from '@jsonurl/jsonurl'
+
 export function apiPath(site, path = '') {
   return `/api/stats/${encodeURIComponent(site.domain)}${path}`
 }
@@ -11,7 +13,7 @@ export function sitePath(site, path = '') {
 }
 
 export function setQuery(key, value) {
-  const query = new URLSearchParams(window.location.search)
+  const query = new PlausibleSearchParams(window.location.search)
   query.set(key, value)
   return `${window.location.pathname}?${query.toString()}`
 }
@@ -74,5 +76,20 @@ export function trimURL(url, maxLength) {
     const rightSide = url.slice(-rightSideLength);
 
     return leftSide + ellipsis + rightSide;
+  }
+}
+
+export class PlausibleSearchParams extends URLSearchParams {
+  set(key, value) {
+    console.log('calling set', {key, value})
+    if (typeof value === 'object') {
+      value = JsonURL.stringify(value)
+    }
+    super.set(key, value)
+  }
+
+  toString() {
+    // Don't url-encode values that don't need urlencoding strictly and are used in JsonURL
+    return super.toString().replaceAll("%28", "(").replaceAll("%29", ")").replaceAll("%2C", ",").replaceAll("%3A", ":")
   }
 }

@@ -8,7 +8,7 @@ import * as storage from "../../util/storage";
 import { parsePrefix, escapeFilterValue } from "../../util/filters"
 
 
-export default function Properties(props) {
+export default function Properties(propws) {
   const { site, query } = props
   const propKeyStorageName = `prop_key__${site.domain}`
   const propKeyStorageNameForGoal = `${query.filters.goal}__prop_key__${site.domain}`

@@ -1,5 +1,7 @@
 import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
+import JsonURL from '@jsonurl/jsonurl'
+import { PlausibleSearchParams } from './util/url'
 import { nowForSite } from './util/date'
 import * as storage from './util/storage'
 import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled, getStoredMatchDayOfWeek } from './comparison-input'
@@ -12,7 +14,7 @@ dayjs.extend(utc)
 const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'year', 'all', 'custom']
 
 export function parseQuery(querystring, site) {
-  const q = new URLSearchParams(querystring)
+  const q = new PlausibleSearchParams(querystring)
   let period = q.get('period')
   const periodKey = `period__${site.domain}`
 
@@ -40,33 +42,23 @@ export function parseQuery(querystring, site) {
     match_day_of_week: matchDayOfWeek == 'true',
     with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
     experimental_session_count: q.get('experimental_session_count'),
-    filters: {
-      'goal': q.get('goal'),
-      'props': JSON.parse(q.get('props')),
-      'source': q.get('source'),
-      'utm_medium': q.get('utm_medium'),
-      'utm_source': q.get('utm_source'),
-      'utm_campaign': q.get('utm_campaign'),
-      'utm_content': q.get('utm_content'),
-      'utm_term': q.get('utm_term'),
-      'referrer': q.get('referrer'),
-      'screen': q.get('screen'),
-      'browser': q.get('browser'),
-      'browser_version': q.get('browser_version'),
-      'os': q.get('os'),
-      'os_version': q.get('os_version'),
-      'country': q.get('country'),
-      'region': q.get('region'),
-      'city': q.get('city'),
-      'page': q.get('page'),
-      'hostname': q.get('hostname'),
-      'entry_page': q.get('entry_page'),
-      'exit_page': q.get('exit_page')
-    }
+    // :TODO: Backwards compatibility
+    filters: parseQueryFilters(q.get('filters'))
   }
 }
 
+export function parseQueryFilters(string) {
+  // :TODO: Removing the default will blow up cases which need blowing up!
+  return JsonURL.parse(string) || []
+}
+
+export function stringifyQueryFilters(filters) {
+  return JsonURL.stringify(filters)
+}
+
 export function appliedFilters(query) {
+  return []
+
   const propKeys = Object.entries(query.filters.props || {})
     .map(([key, value]) => ({ key, value, filterType: 'props' }))
 
@@ -77,26 +69,29 @@ export function appliedFilters(query) {
 }
 
 function generateQueryString(data) {
-  const query = new URLSearchParams(window.location.search)
+  const query = new PlausibleSearchParams(window.location.search)
   Object.keys(data).forEach(key => {
     if (!data[key]) {
       query.delete(key)
-      return
+    } else if (key != 'filters') {
+      query.set(key, data[key])
     }
-
-    query.set(key, data[key])
   })
-  return query.toString()
+  let qs = query.toString()
+  if (data.filters) {
+    qs = `${qs}${qs.length>0?'&':''}${stringifyQueryFilters(data.filters)}`
+  }
+  return qs
 }
 
 export function navigateToQuery(history, queryFrom, newData) {
   // if we update any data that we store in localstorage, make sure going back in history will
   // revert them
-  if (newData.period && newData.period !== queryFrom.period) {
-    const replaceQuery = new URLSearchParams(window.location.search)
-    replaceQuery.set('period', queryFrom.period)
-    history.replace({ search: replaceQuery.toString() })
-  }
+  // if (newData.period && newData.period !== queryFrom.period) {
+  //   const replaceQuery = new PlausibleSearchParams(window.location.search)
+  //   replaceQuery.set('period', queryFrom.period)
+  //   history.replace({ search: replaceQuery.toString() })
+  // }
 
   // then push the new query to the history
   history.push({ search: generateQueryString(newData) })
