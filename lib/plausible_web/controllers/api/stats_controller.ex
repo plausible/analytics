@@ -381,26 +381,15 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_other_top_stats(site, query, comparison_query) do
+    page_filter? = Query.get_filter(query, "event:page")
+
+    metrics = [:visitors, :visits, :pageviews, :sample_percent]
+
     metrics =
-      if Query.get_filter(query, "event:page") do
-        [
-          :visitors,
-          :visits,
-          :pageviews,
-          :bounce_rate,
-          :time_on_page,
-          :sample_percent
-        ]
-      else
-        [
-          :visitors,
-          :visits,
-          :pageviews,
-          :views_per_visit,
-          :bounce_rate,
-          :visit_duration,
-          :sample_percent
-        ]
+      cond do
+        page_filter? && query.include_imported -> metrics
+        page_filter? -> metrics ++ [:bounce_rate, :time_on_page]
+        true -> metrics ++ [:views_per_visit, :bounce_rate, :visit_duration]
       end
 
     current_results = Stats.aggregate(site, query, metrics)
