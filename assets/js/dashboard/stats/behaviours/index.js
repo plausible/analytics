@@ -48,6 +48,10 @@ export default function Behaviours(props) {
   const [showingPropsForGoalFilter, setShowingPropsForGoalFilter] = useState(false)
 
   const onGoalFilterClick = useCallback((e) => {
+    if (query.with_imported && site.hasImportedData) {
+      return
+    }
+
     const goalName = e.target.innerHTML
     const isSpecialGoal = Object.keys(SPECIAL_GOALS).includes(goalName)
     const isPageviewGoal = goalName.startsWith('Visit ')
