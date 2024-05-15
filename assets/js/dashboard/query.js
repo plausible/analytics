@@ -61,25 +61,21 @@ function generateQueryString(data) {
   Object.keys(data).forEach(key => {
     if (!data[key]) {
       query.delete(key)
-    } else if (key != 'filters') {
+    } else {
       query.set(key, data[key])
     }
   })
-  let qs = query.toString()
-  if (data.filters) {
-    qs = `${qs}${qs.length>0?'&':''}${stringifyQueryFilters(data.filters)}`
-  }
-  return qs
+  return query.toString()
 }
 
 export function navigateToQuery(history, queryFrom, newData) {
   // if we update any data that we store in localstorage, make sure going back in history will
   // revert them
-  // if (newData.period && newData.period !== queryFrom.period) {
-  //   const replaceQuery = new PlausibleSearchParams(window.location.search)
-  //   replaceQuery.set('period', queryFrom.period)
-  //   history.replace({ search: replaceQuery.toString() })
-  // }
+  if (newData.period && newData.period !== queryFrom.period) {
+    const replaceQuery = new PlausibleSearchParams(window.location.search)
+    replaceQuery.set('period', queryFrom.period)
+    history.replace({ search: replaceQuery.toString() })
+  }
 
   // then push the new query to the history
   history.push({ search: generateQueryString(newData) })
