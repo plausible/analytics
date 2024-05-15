@@ -160,21 +160,27 @@ export default class Devices extends React.Component {
   }
 
   renderContent() {
+    const {site, query} = this.props
+
+    const filtersByBrowser = isFilteringOnFixedValue(query, 'browser')
+    const filtersByOS = isFilteringOnFixedValue(query, 'os')
+    const includesImported = query.with_imported && site.hasImportedData
+
     switch (this.state.mode) {
       case 'browser':
-        if (isFilteringOnFixedValue(this.props.query, 'browser')) {
-          return <BrowserVersions site={this.props.site} query={this.props.query} />
+        if (filtersByBrowser && !includesImported) {
+          return <BrowserVersions site={site} query={query} />
         }
-        return <Browsers site={this.props.site} query={this.props.query} />
+        return <Browsers site={site} query={query} />
       case 'os':
-        if (isFilteringOnFixedValue(this.props.query, 'os')) {
-          return <OperatingSystemVersions site={this.props.site} query={this.props.query} />
+        if (filtersByOS && !includesImported) {
+          return <OperatingSystemVersions site={site} query={query} />
         }
-        return <OperatingSystems site={this.props.site} query={this.props.query} />
+        return <OperatingSystems site={site} query={query} />
       case 'size':
       default:
         return (
-          <ScreenSizes site={this.props.site} query={this.props.query} />
+          <ScreenSizes site={site} query={query} />
         )
     }
   }
