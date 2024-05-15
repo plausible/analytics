@@ -1647,5 +1647,101 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
 
       refute json_response(conn, 200)["warning"]
     end
+
+    test "returns all metrics based on imported/native data when filtering by browser", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, browser: "Chrome", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, browser: "Chrome", user_id: 1, timestamp: ~N[2021-01-01 00:03:00]),
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:imported_browsers, browser: "Firefox", date: ~D[2021-01-02]),
+        build(:imported_browsers,
+          browser: "Chrome",
+          visitors: 1,
+          pageviews: 1,
+          bounces: 1,
+          visit_duration: 3,
+          visits: 1,
+          date: ~D[2021-01-03]
+        ),
+        build(:pageview, browser: "Chrome", user_id: 2, timestamp: ~N[2021-01-04 00:00:00]),
+        build(:event,
+          name: "Signup",
+          browser: "Chrome",
+          user_id: 2,
+          timestamp: ~N[2021-01-04 00:10:00]
+        ),
+        build(:imported_browsers,
+          browser: "Chrome",
+          visitors: 4,
+          pageviews: 6,
+          bounces: 1,
+          visit_duration: 300,
+          visits: 5,
+          date: ~D[2021-01-04]
+        )
+      ])
+
+      results =
+        conn
+        |> get("/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "custom",
+          "date" => "2021-01-01,2021-01-04",
+          "metrics" =>
+            "visitors,pageviews,events,visits,views_per_visit,bounce_rate,visit_duration",
+          "filters" => "visit:browser==Chrome",
+          "with_imported" => "true"
+        })
+        |> json_response(200)
+        |> Map.get("results")
+
+      assert results == [
+               %{
+                 "bounce_rate" => 0.0,
+                 "date" => "2021-01-01",
+                 "events" => 2,
+                 "pageviews" => 2,
+                 "views_per_visit" => 2.0,
+                 "visit_duration" => 180.0,
+                 "visitors" => 1,
+                 "visits" => 1
+               },
+               %{
+                 "bounce_rate" => nil,
+                 "date" => "2021-01-02",
+                 "events" => 0,
+                 "pageviews" => 0,
+                 "views_per_visit" => 0.0,
+                 "visit_duration" => nil,
+                 "visitors" => 0,
+                 "visits" => 0
+               },
+               %{
+                 "bounce_rate" => 100,
+                 "date" => "2021-01-03",
+                 "events" => 1,
+                 "pageviews" => 1,
+                 "views_per_visit" => 1.0,
+                 "visit_duration" => 3,
+                 "visitors" => 1,
+                 "visits" => 1
+               },
+               %{
+                 "bounce_rate" => 17.0,
+                 "date" => "2021-01-04",
+                 "events" => 8,
+                 "pageviews" => 7,
+                 "views_per_visit" => 1.17,
+                 "visit_duration" => 150,
+                 "visitors" => 5,
+                 "visits" => 6
+               }
+             ]
+    end
   end
 end
