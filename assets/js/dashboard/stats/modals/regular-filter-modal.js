@@ -10,17 +10,6 @@ import { apiPath, siteBasePath, PlausibleSearchParams } from '../../util/url'
 import { shouldIgnoreKeypress } from '../../keybinding'
 import { isFreeChoiceFilter } from "../../util/filters"
 
-/*
-Filters, we have multiple relevant groups
-
-State should have { key => filter } mapping
-Should handle multiple group value having things - handled in populateDefaults
-
-On submit:
-- Exclude all filters in group
--
-*/
-// AARGH - multiple filters causes issues!
 function populateDefaults(filterGroup, filters) {
   return FILTER_GROUPS[filterGroup].reduce((result, key) => {
     const existingFilters = filters.filter(([_, filterKey]) => filterKey == key)
@@ -35,6 +24,17 @@ function populateDefaults(filterGroup, filters) {
       return Object.assign(result, Object.fromEntries(entries))
     }
   }, {})
+}
+
+function cleanLabels(filterState, labels, mergedFilterKey, mergedLabels) {
+  let result = labels
+  if (mergedFilterKey && ['country', 'region', 'city'].includes(mergedFilterKey)) {
+    result = {
+      ...result,
+      [mergedFilterKey]: mergedLabels
+    }
+  }
+  return result
 }
 
 function withIndefiniteArticle(word) {
@@ -53,7 +53,7 @@ class RegularFilterModal extends React.Component {
     const filterState = populateDefaults(props.filterGroup, query.filters)
 
     this.handleKeydown = this.handleKeydown.bind(this)
-    this.state = { query, filterState }
+    this.state = { query, filterState, labelState: query.labels }
   }
 
   componentDidMount() {
@@ -73,24 +73,8 @@ class RegularFilterModal extends React.Component {
   }
 
   handleSubmit() {
-    console.log('handleSubmit')
-
     const filters = Object.values(this.state.filterState).filter(([ _op, _key, clauses ]) => clauses.length > 0)
-    // const filters = Object.entries(formState).reduce((res, [filterKey, { type, clauses }]) => {
-    //   if (clauses.length === 0) { return res }
-    //   // if (filterKey === 'country') { res.push({ filter: 'country_labels', value: clauses.map(clause => clause.label).join('|') }) }
-    //   // if (filterKey === 'region') { res.push({ filter: 'region_labels', value: clauses.map(clause => clause.label).join('|') }) }
-    //   // if (filterKey === 'city') { res.push({ filter: 'city_labels', value: clauses.map(clause => clause.label).join('|') }) }
-
-    //   // res.push({ filter: filterKey, value: toFilterQuery(type, clauses) })
-
-    //   // console.log({ type, clauses, filterKey, res })
-    //   // res
-    //   res.push([type, filterKey, clauses])
-    //   return res
-    // }, [])
-
-    this.selectFiltersAndCloseModal(filters)
+    this.selectFiltersAndCloseModal(filters, this.state.labelState)
   }
 
   onComboboxSelect(key) {
@@ -98,8 +82,12 @@ class RegularFilterModal extends React.Component {
       this.setState(prevState => {
         const [operation, filterKey, _clauses] = prevState.filterState[key]
         const newClauses = selection.map(({ value }) => value)
+
+        const filterState = Object.assign(prevState.filterState, { [key]: [operation, filterKey, newClauses] })
+        const newLabels = Object.fromEntries(selection.map(({ label, value }) => [value, label]))
         return {
-          filterState: Object.assign(prevState.filterState, { [key]: [operation, filterKey, newClauses] })
+          filterState,
+          labelState: cleanLabels(filterState, prevState.labels, filterKey, newLabels)
         }
       })
     }
@@ -153,7 +141,7 @@ class RegularFilterModal extends React.Component {
     return Object.values(this.state.filterState).every(([_operation, _key, clauses]) => clauses.length === 0)
   }
 
-  selectFiltersAndCloseModal(filters) {
+  selectFiltersAndCloseModal(filters, labels) {
     const queryString = new PlausibleSearchParams(window.location.search)
 
     if (filters.length > 0) {
@@ -162,15 +150,27 @@ class RegularFilterModal extends React.Component {
       queryString.delete('filters')
     }
 
-    console.log('selectFiltersAndCloseModal2s', [queryString.toString()])
+    if (labels) {
+      queryString.set('labels', labels)
+    } else {
+      queryString.delete('labels')
+    }
 
+    // :TODO: Use navigateToQuery or something similar
     this.props.history.replace({ pathname: siteBasePath(this.props.site), search: queryString.toString() })
   }
 
   selectedClauses(key) {
-    const [_operation, _filterKey, clauses] = this.state.filterState[key]
-    // :TODO: Country/city/etc labels need to be stored separately
-    return clauses.map((value) => ({ label: value, value }))
+    const [_operation, filterKey, clauses] = this.state.filterState[key]
+    return clauses.map((value) => ({ value, label: this.labelFor(filterKey, value) }))
+  }
+
+  labelFor(filterKey, value) {
+    if (['country', 'region', 'city'].includes(filterKey)) {
+      return this.state.labelState[filterKey][value]
+    } else {
+      return value
+    }
   }
 
   renderFilterInputs() {

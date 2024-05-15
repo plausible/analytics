@@ -43,17 +43,9 @@ export function parseQuery(querystring, site) {
     with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
     experimental_session_count: q.get('experimental_session_count'),
     // :TODO: Backwards compatibility
-    filters: parseQueryFilters(q.get('filters'))
+    filters: JsonURL.parse(q.get('filters')) || [],
+    labels: JsonURL.parse(q.get('labels')) || {}
   }
-}
-
-export function parseQueryFilters(string) {
-  // :TODO: Removing the default will blow up cases which need blowing up!
-  return JsonURL.parse(string) || []
-}
-
-export function stringifyQueryFilters(filters) {
-  return JsonURL.stringify(filters)
 }
 
 function generateQueryString(data) {

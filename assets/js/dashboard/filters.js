@@ -18,7 +18,7 @@ function removeFilter(filterIndex, history, query) {
   navigateToQuery(
     history,
     query,
-    { filters: newFilters.length > 0 ? newFilters : false }
+    { filters: newFilters }
   )
 }
 
@@ -26,7 +26,7 @@ function clearAllFilters(history, query) {
   navigateToQuery(
     history,
     query,
-    { filters: false }
+    { filters: false, labels: false }
   );
 }
 
