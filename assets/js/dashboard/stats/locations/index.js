@@ -7,6 +7,7 @@ import * as api from '../../api'
 import {apiPath, sitePath} from '../../util/url'
 import ListReport from '../reports/list'
 import { VISITORS_METRIC, maybeWithCR } from '../reports/metrics';
+import ImportedQueryValidationBoundary from '../imported-query-validation-boundary';
 
 function Countries({query, site, onClick}) {
   function fetchData() {
@@ -94,10 +95,11 @@ function Cities({query, site}) {
 }
 
 
-const labelFor = {
-	'countries': 'Countries',
-	'regions': 'Regions',
-	'cities': 'Cities',
+const TABS = {
+  'map': {label: 'Locations', property: 'country'},
+	'countries': {label: 'Countries', property: 'country'},
+	'regions': {label: 'Regions', property: 'region'},
+	'cities': {label: 'Cities', property: 'city'},
 }
 
 export default class Locations extends React.Component {
@@ -196,7 +198,7 @@ export default class Locations extends React.Component {
       <div>
         <div className="w-full flex justify-between">
           <h3 className="font-bold dark:text-gray-100">
-            {labelFor[this.state.mode] || 'Locations'}
+            {TABS[this.state.mode].label || 'Locations'}
           </h3>
           <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
             { this.renderPill('Map', 'map') }
@@ -205,7 +207,13 @@ export default class Locations extends React.Component {
             { this.renderPill('Cities', 'cities') }
           </div>
         </div>
-        {this.renderContent()}
+        <ImportedQueryValidationBoundary
+          property={TABS[this.state.mode].property}
+          query={this.props.query}
+          classNames={"mt-20"}
+        >
+          {this.renderContent()}
+        </ImportedQueryValidationBoundary>
       </div>
     )
   }

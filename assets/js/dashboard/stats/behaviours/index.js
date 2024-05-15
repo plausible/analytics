@@ -8,6 +8,7 @@ import GoalConversions, { specialTitleWhenGoalFilter } from './goal-conversions'
 import Properties from './props'
 import { FeatureSetupNotice } from '../../components/notice'
 import { SPECIAL_GOALS } from './goal-conversions'
+import ImportedQueryValidationBoundary from '../imported-query-validation-boundary'
 
 /*global BUILD_EXTRA*/
 /*global require*/
@@ -175,7 +176,11 @@ export default function Behaviours(props) {
 
   function renderConversions() {
     if (site.hasGoals) {
-      return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} />
+      return (
+        <ImportedQueryValidationBoundary property={'goal'} query={query} classNames={"max-w-lg mx-auto mt-6 mb-16"}>
+          <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} />
+        </ImportedQueryValidationBoundary>
+      )
     }
     else if (adminAccess) {
       return (

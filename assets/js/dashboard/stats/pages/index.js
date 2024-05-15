@@ -5,6 +5,7 @@ import * as url from '../../util/url'
 import * as api from '../../api'
 import ListReport from './../reports/list'
 import { VISITORS_METRIC, maybeWithCR } from './../reports/metrics';
+import ImportedQueryValidationBoundary from './../imported-query-validation-boundary'
 
 function EntryPages({ query, site }) {
   function fetchData() {
@@ -87,10 +88,10 @@ function TopPages({ query, site }) {
   )
 }
 
-const labelFor = {
-  'pages': 'Top Pages',
-  'entry-pages': 'Entry Pages',
-  'exit-pages': 'Exit Pages',
+const TABS = {
+  'pages': {label: 'Top Pages', property: 'page'},
+  'entry-pages': {label: 'Entry Pages', property: 'entry_page'},
+  'exit-pages': {label: 'Exit Pages', property: 'exit_page'}
 }
 
 export default class Pages extends React.Component {
@@ -152,7 +153,7 @@ export default class Pages extends React.Component {
         {/* Header Container */}
         <div className="w-full flex justify-between">
           <h3 className="font-bold dark:text-gray-100">
-            {labelFor[this.state.mode] || 'Page Visits'}
+            {TABS[this.state.mode].label || 'Page Visits'}
           </h3>
           <div className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
             {this.renderPill('Top Pages', 'pages')}
@@ -161,7 +162,13 @@ export default class Pages extends React.Component {
           </div>
         </div>
         {/* Main Contents */}
-        {this.renderContent()}
+        <ImportedQueryValidationBoundary
+          property={TABS[this.state.mode].property}
+          query={this.props.query}
+          classNames={"mt-20"}
+        >
+          {this.renderContent()}
+        </ImportedQueryValidationBoundary>
       </div>
     )
   }

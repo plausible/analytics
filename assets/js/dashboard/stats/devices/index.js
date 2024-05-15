@@ -6,6 +6,7 @@ import ListReport from '../reports/list'
 import * as api from '../../api'
 import * as url from '../../util/url'
 import { VISITORS_METRIC, PERCENTAGE_METRIC, maybeWithCR } from '../reports/metrics';
+import ImportedQueryValidationBoundary from '../imported-query-validation-boundary';
 
 function Browsers({ query, site }) {
   function fetchData() {
@@ -142,6 +143,12 @@ function iconFor(screenSize) {
   }
 }
 
+MODE_TO_PROPERTY_MAPPING = {
+  'browser': 'browser',
+  'os': 'os',
+  'size': 'screen'
+}
+
 export default class Devices extends React.Component {
   constructor(props) {
     super(props)
@@ -219,7 +226,13 @@ export default class Devices extends React.Component {
             {this.renderPill('Size', 'size')}
           </div>
         </div>
-        {this.renderContent()}
+        <ImportedQueryValidationBoundary
+          property={MODE_TO_PROPERTY_MAPPING[this.state.mode]}
+          query={this.props.query}
+          classNames={"mt-20"}
+        >
+          {this.renderContent()}
+        </ImportedQueryValidationBoundary>
       </div>
     )
   }

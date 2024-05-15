@@ -9,13 +9,14 @@ import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { escapeFilterValue } from '../../util/filters'
 import classNames from 'classnames'
+import ImportedQueryValidationBoundary from './../imported-query-validation-boundary'
 
 const UTM_TAGS = {
-  utm_medium: { label: 'UTM Medium', shortLabel: 'UTM Medium', endpoint: '/utm_mediums' },
-  utm_source: { label: 'UTM Source', shortLabel: 'UTM Source', endpoint: '/utm_sources' },
-  utm_campaign: { label: 'UTM Campaign', shortLabel: 'UTM Campai', endpoint: '/utm_campaigns' },
-  utm_content: { label: 'UTM Content', shortLabel: 'UTM Conten', endpoint: '/utm_contents' },
-  utm_term: { label: 'UTM Term', shortLabel: 'UTM Term', endpoint: '/utm_terms' },
+  utm_medium: { label: 'UTM Medium', shortLabel: 'UTM Medium', endpoint: '/utm_mediums', property: 'utm_medium' },
+  utm_source: { label: 'UTM Source', shortLabel: 'UTM Source', endpoint: '/utm_sources', property: 'utm_source' },
+  utm_campaign: { label: 'UTM Campaign', shortLabel: 'UTM Campai', endpoint: '/utm_campaigns', property: 'utm_campaign' },
+  utm_content: { label: 'UTM Content', shortLabel: 'UTM Conten', endpoint: '/utm_contents', property: 'utm_content' },
+  utm_term: { label: 'UTM Term', shortLabel: 'UTM Term', endpoint: '/utm_terms', property: 'utm_term' },
 }
 
 function AllSources(props) {
@@ -39,16 +40,18 @@ function AllSources(props) {
   }
 
   return (
-    <ListReport
-      fetchData={fetchData}
-      getFilterFor={getFilterFor}
-      keyLabel="Source"
-      metrics={maybeWithCR([VISITORS_METRIC], query)}
-      detailsLink={url.sitePath(site, '/sources')}
-      renderIcon={renderIcon}
-      query={query}
-      color="bg-blue-50"
-    />
+    <ImportedQueryValidationBoundary property={'source'} query={query} classNames={"mt-20"}>
+      <ListReport
+        fetchData={fetchData}
+        getFilterFor={getFilterFor}
+        keyLabel="Source"
+        metrics={maybeWithCR([VISITORS_METRIC], query)}
+        detailsLink={url.sitePath(site, '/sources')}
+        renderIcon={renderIcon}
+        query={query}
+        color="bg-blue-50"
+      />
+    </ImportedQueryValidationBoundary>
   )
 }
 
@@ -65,15 +68,17 @@ function UTMSources(props) {
   }
 
   return (
-    <ListReport
-      fetchData={fetchData}
-      getFilterFor={getFilterFor}
-      keyLabel={utmTag.label}
-      metrics={maybeWithCR([VISITORS_METRIC], query)}
-      detailsLink={url.sitePath(site, utmTag.endpoint)}
-      query={query}
-      color="bg-blue-50"
-    />
+    <ImportedQueryValidationBoundary property={utmTag.property} query={query} classNames={"mt-20"}>
+      <ListReport
+        fetchData={fetchData}
+        getFilterFor={getFilterFor}
+        keyLabel={utmTag.label}
+        metrics={maybeWithCR([VISITORS_METRIC], query)}
+        detailsLink={url.sitePath(site, utmTag.endpoint)}
+        query={query}
+        color="bg-blue-50"
+      />
+    </ImportedQueryValidationBoundary>
   )
 }
 
