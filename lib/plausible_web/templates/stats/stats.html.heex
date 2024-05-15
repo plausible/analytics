@@ -32,6 +32,7 @@
     data-has-props={to_string(@has_props)}
     data-logged-in={to_string(!!@conn.assigns[:current_user])}
     data-stats-begin={@stats_start_date}
+    data-has-imported-data={to_string(@has_imported_data)}
     data-native-stats-begin={@native_stats_start_date}
     data-shared-link-auth={assigns[:shared_link_auth]}
     data-embedded={to_string(@conn.assigns[:embedded])}

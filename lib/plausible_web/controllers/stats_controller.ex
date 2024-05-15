@@ -44,7 +44,7 @@ defmodule PlausibleWeb.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
 
-  alias Plausible.Sites
+  alias Plausible.{Sites, Imported}
   alias Plausible.Stats.Query
   alias PlausibleWeb.Api
 
@@ -56,6 +56,7 @@ defmodule PlausibleWeb.StatsController do
     can_see_stats? = not Sites.locked?(site) or conn.assigns[:current_user_role] == :super_admin
     demo = site.domain == PlausibleWeb.Endpoint.host()
     dogfood_page_path = if !demo, do: "/:dashboard"
+    has_imported_data = Enum.any?(Imported.list_complete_import_ids(site))
 
     cond do
       stats_start_date && can_see_stats? ->
@@ -68,6 +69,7 @@ defmodule PlausibleWeb.StatsController do
           funnels: list_funnels(site),
           has_props: Plausible.Props.configured?(site),
           stats_start_date: stats_start_date,
+          has_imported_data: has_imported_data,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
           title: title(conn, site),
           demo: demo,
@@ -328,6 +330,7 @@ defmodule PlausibleWeb.StatsController do
       !shared_link.site.locked ->
         shared_link = Plausible.Repo.preload(shared_link, site: :owner)
         stats_start_date = Plausible.Sites.stats_start_date(shared_link.site)
+        has_imported_data = Enum.any?(Imported.list_complete_import_ids(shared_link.site))
 
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
@@ -339,6 +342,7 @@ defmodule PlausibleWeb.StatsController do
           funnels: list_funnels(shared_link.site),
           has_props: Plausible.Props.configured?(shared_link.site),
           stats_start_date: stats_start_date,
+          has_imported_data: has_imported_data,
           native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
           title: title(conn, shared_link.site),
           demo: false,

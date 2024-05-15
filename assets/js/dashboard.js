@@ -25,6 +25,7 @@ if (container) {
     revenueGoals: JSON.parse(container.dataset.revenueGoals),
     funnels: JSON.parse(container.dataset.funnels),
     statsBegin: container.dataset.statsBegin,
+    hasImportedData: container.dataset.hasImportedData === 'true',
     nativeStatsBegin: container.dataset.nativeStatsBegin,
     embedded: container.dataset.embedded,
     background: container.dataset.background,
