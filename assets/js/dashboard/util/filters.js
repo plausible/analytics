@@ -143,6 +143,17 @@ export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
   return result
 }
 
+
+// :TODO: New schema for filters in the BE
+export function serializeApiFilters(filters) {
+  const cleaned = {}
+  filters.forEach(([operation, filterKey, clauses]) => {
+    cleaned[filterKey] = toFilterQuery(operation, clauses)
+  })
+  return JSON.stringify(cleaned)
+}
+
+
 export const formattedFilters = {
   'goal': 'Goal',
   'props': 'Property',
