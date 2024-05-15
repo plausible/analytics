@@ -6,6 +6,7 @@ import { Menu, Transition } from '@headlessui/react'
 
 import { navigateToQuery } from './query'
 import {
+  cleanLabels,
   FILTER_GROUPS,
   formatFilterGroup,
   filterGroupForFilter,
@@ -14,11 +15,12 @@ import {
 
 function removeFilter(filterIndex, history, query) {
   const newFilters = query.filters.filter((_filter, index) => filterIndex != index)
+  const newLabels = cleanLabels(query.labels)
 
   navigateToQuery(
     history,
     query,
-    { filters: newFilters }
+    { filters: newFilters.length > 0 ? newFilters : false, labels: newLabels ? newLabels : false }
   )
 }
 

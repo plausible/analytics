@@ -132,6 +132,17 @@ export function filterGroupForFilter(filter) {
   return map[filter] || filter
 }
 
+export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
+  let result = labels
+  if (mergedFilterKey && ['country', 'region', 'city'].includes(mergedFilterKey)) {
+    result = {
+      ...result,
+      [mergedFilterKey]: mergedLabels
+    }
+  }
+  return result
+}
+
 export const formattedFilters = {
   'goal': 'Goal',
   'props': 'Property',

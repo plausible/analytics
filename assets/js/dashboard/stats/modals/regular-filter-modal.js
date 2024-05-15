@@ -8,33 +8,31 @@ import { parseQuery } from '../../query'
 import * as api from '../../api'
 import { apiPath, siteBasePath, PlausibleSearchParams } from '../../util/url'
 import { shouldIgnoreKeypress } from '../../keybinding'
-import { isFreeChoiceFilter } from "../../util/filters"
+import { isFreeChoiceFilter, cleanLabels } from "../../util/filters"
 
-function populateDefaults(filterGroup, filters) {
-  return FILTER_GROUPS[filterGroup].reduce((result, key) => {
-    const existingFilters = filters.filter(([_, filterKey]) => filterKey == key)
+function partitionFilters(filterGroup, filters) {
+  const otherFilters = []
+  const filterState = {}
+  let hasRelevantFilters = false
 
-    if (existingFilters.length == 0) {
-      return Object.assign(result, { [key]: [FILTER_OPERATIONS.is, key, []] })
+  filters.forEach((filter, index) => {
+    const filterKey = filter[1]
+    if (!FILTER_GROUPS[filterGroup].includes(filterKey)) {
+      otherFilters.push(filter)
     } else {
-      // :TODO: handling value/label dichotomy
-      const entries = existingFilters.map((filter, index) =>
-        [index == 0 ? key : `key${index}`, filter]
-      )
-      return Object.assign(result, Object.fromEntries(entries))
+      const key = filterState[filterKey] ? `${filterKey}:${index}` : filterKey
+      filterState[key] = filter
+      hasRelevantFilters = true
     }
-  }, {})
-}
+  })
 
-function cleanLabels(filterState, labels, mergedFilterKey, mergedLabels) {
-  let result = labels
-  if (mergedFilterKey && ['country', 'region', 'city'].includes(mergedFilterKey)) {
-    result = {
-      ...result,
-      [mergedFilterKey]: mergedLabels
+  FILTER_GROUPS[filterGroup].forEach((key) => {
+    if (!filterState[key]) {
+      filterState[key] = [FILTER_OPERATIONS.is, key, []]
     }
-  }
-  return result
+  })
+
+  return { filterState, otherFilters, hasRelevantFilters }
 }
 
 function withIndefiniteArticle(word) {
@@ -50,10 +48,10 @@ class RegularFilterModal extends React.Component {
   constructor(props) {
     super(props)
     const query = parseQuery(props.location.search, props.site)
-    const filterState = populateDefaults(props.filterGroup, query.filters)
+    const { filterState, otherFilters, hasRelevantFilters }  = partitionFilters(props.filterGroup, query.filters)
 
     this.handleKeydown = this.handleKeydown.bind(this)
-    this.state = { query, filterState, labelState: query.labels }
+    this.state = { query, filterState, labelState: query.labels, otherFilters, hasRelevantFilters }
   }
 
   componentDidMount() {
@@ -73,8 +71,11 @@ class RegularFilterModal extends React.Component {
   }
 
   handleSubmit() {
-    const filters = Object.values(this.state.filterState).filter(([ _op, _key, clauses ]) => clauses.length > 0)
-    this.selectFiltersAndCloseModal(filters, this.state.labelState)
+    const filters = Object.values(this.state.filterState)
+      .filter(([ _op, _key, clauses ]) => clauses.length > 0)
+      .concat(this.state.otherFilters)
+
+    this.selectFiltersAndCloseModal(filters)
   }
 
   onComboboxSelect(key) {
@@ -87,7 +88,7 @@ class RegularFilterModal extends React.Component {
         const newLabels = Object.fromEntries(selection.map(({ label, value }) => [value, label]))
         return {
           filterState,
-          labelState: cleanLabels(filterState, prevState.labels, filterKey, newLabels)
+          labelState: cleanLabels(Object.values(this.state.filterState), prevState.labels, filterKey, newLabels)
         }
       })
     }
@@ -141,7 +142,7 @@ class RegularFilterModal extends React.Component {
     return Object.values(this.state.filterState).every(([_operation, _key, clauses]) => clauses.length === 0)
   }
 
-  selectFiltersAndCloseModal(filters, labels) {
+  selectFiltersAndCloseModal(filters) {
     const queryString = new PlausibleSearchParams(window.location.search)
 
     if (filters.length > 0) {
@@ -150,8 +151,8 @@ class RegularFilterModal extends React.Component {
       queryString.delete('filters')
     }
 
-    if (labels) {
-      queryString.set('labels', labels)
+    if (this.state.labelState) {
+      queryString.set('labels', cleanLabels(filters, this.state.labelState))
     } else {
       queryString.delete('labels')
     }
@@ -202,8 +203,6 @@ class RegularFilterModal extends React.Component {
 
   render() {
     const { filterGroup } = this.props
-    const { query } = this.state
-    const showClear = FILTER_GROUPS[filterGroup].some((filterName) => query.filters[filterName])
 
     return (
       <>
@@ -223,15 +222,12 @@ class RegularFilterModal extends React.Component {
                 Apply Filter
               </button>
 
-              {showClear && (
+              {this.state.hasRelevantFilters && (
                 <button
                   type="button"
                   className="ml-2 button px-4 flex bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-700 items-center"
                   onClick={() => {
-                    // :TODO:
-                    // const updatedFilters = FILTER_GROUPS[filterGroup].map((filterName) => ({ filter: filterName, value: null }))
-
-                    // this.selectFiltersAndCloseModal(updatedFilters)
+                    this.selectFiltersAndCloseModal(this.state.otherFilters)
                   }}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
