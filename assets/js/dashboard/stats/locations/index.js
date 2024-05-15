@@ -112,6 +112,11 @@ export default class Locations extends React.Component {
     }
   }
 
+  includesImported() {
+    const {site, query} = this.props
+    return query.with_imported && site.hasImportedData
+  }
+
   componentDidUpdate(prevProps) {
     const isRemovingFilter = (filterName) => {
       return prevProps.query.filters[filterName] && !this.props.query.filters[filterName]
@@ -134,6 +139,9 @@ export default class Locations extends React.Component {
   }
 
   onCountryFilter(mode) {
+    if (this.includesImported()) {
+      return () => {}
+    }
     return () => {
       this.countriesRestoreMode = mode
       this.setMode('regions')()
@@ -141,7 +149,9 @@ export default class Locations extends React.Component {
   }
 
   onRegionFilter() {
-    this.setMode('cities')()
+    if (!this.includesImported()) {
+      this.setMode('cities')()
+    }
   }
 
 	renderContent() {
