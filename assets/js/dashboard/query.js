@@ -56,18 +56,6 @@ export function stringifyQueryFilters(filters) {
   return JsonURL.stringify(filters)
 }
 
-export function appliedFilters(query) {
-  return []
-
-  const propKeys = Object.entries(query.filters.props || {})
-    .map(([key, value]) => ({ key, value, filterType: 'props' }))
-
-  return Object.entries(query.filters)
-    .map(([key, value]) => ({ key, value, filterType: key }))
-    .filter(({ key, value }) => key !== 'props' && !!value)
-    .concat(propKeys)
-}
-
 function generateQueryString(data) {
   const query = new PlausibleSearchParams(window.location.search)
   Object.keys(data).forEach(key => {
