@@ -57,7 +57,7 @@ export function escapeFilterValue(value) {
   return value.replaceAll(NON_ESCAPED_PIPE_REGEX, ESCAPED_PIPE)
 }
 
-export function toFilterQuery(type, clauses) {
+function toFilterQuery(type, clauses) {
   const prefix = OPERATION_PREFIX[type];
   const result = clauses.map(clause => escapeFilterValue(clause.trim())).join('|')
   return prefix + result;
