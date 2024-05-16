@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
 import JsonURL from '@jsonurl/jsonurl'
-import { PlausibleSearchParams } from './util/url'
+import { PlausibleSearchParams, updatedQuery } from './util/url'
 import { nowForSite } from './util/date'
 import * as storage from './util/storage'
 import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled, getStoredMatchDayOfWeek } from './comparison-input'
@@ -48,29 +48,15 @@ export function parseQuery(querystring, site) {
   }
 }
 
-function generateQueryString(data) {
-  const query = new PlausibleSearchParams(window.location.search)
-  Object.keys(data).forEach(key => {
-    if (!data[key]) {
-      query.delete(key)
-    } else {
-      query.set(key, data[key])
-    }
-  })
-  return query.toString()
-}
-
 export function navigateToQuery(history, queryFrom, newData) {
   // if we update any data that we store in localstorage, make sure going back in history will
   // revert them
   if (newData.period && newData.period !== queryFrom.period) {
-    const replaceQuery = new PlausibleSearchParams(window.location.search)
-    replaceQuery.set('period', queryFrom.period)
-    history.replace({ search: replaceQuery.toString() })
+    history.replace({ search: updatedQuery({ period: queryFrom.period}) })
   }
 
   // then push the new query to the history
-  history.push({ search: generateQueryString(newData) })
+  history.push({ search: updatedQuery(newData) })
 }
 
 class QueryLink extends React.Component {
@@ -90,7 +76,7 @@ class QueryLink extends React.Component {
     return (
       <Link
         {...props}
-        to={{ pathname: window.location.pathname, search: generateQueryString(to) }}
+        to={{ pathname: window.location.pathname, search: updatedQuery(to) }}
         onClick={this.onClick}
       />
     )
@@ -107,7 +93,7 @@ function QueryButton({ history, query, to, disabled, className, children, onClic
         event.preventDefault()
         navigateToQuery(history, query, to)
         if (onClick) onClick(event)
-        history.push({ pathname: window.location.pathname, search: generateQueryString(to) })
+        history.push({ pathname: window.location.pathname, search: updatedQuery(to) })
       }}
       type="button"
       disabled={disabled}

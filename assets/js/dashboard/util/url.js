@@ -13,9 +13,14 @@ export function sitePath(site, path = '') {
 }
 
 export function setQuery(key, value) {
-  const query = new PlausibleSearchParams(window.location.search)
-  query.set(key, value)
-  return `${window.location.pathname}?${query.toString()}`
+  return `${window.location.pathname}?${updatedQuery({ [key]: value })}`
+}
+
+export function updatedQuery(values) {
+  const queryString = new PlausibleSearchParams(window.location.search)
+  Object.entries(values).forEach(([key, value]) => queryString.set(key, value))
+
+  return queryString.toString()
 }
 
 export function externalLinkForPage(domain, page) {

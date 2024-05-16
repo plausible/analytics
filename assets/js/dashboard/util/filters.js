@@ -140,8 +140,6 @@ export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
     }
   }
 
-  console.log('cleanLabels', { filters, labels, filteredBy, result, mergedFilterKey, mergedLabels })
-
   if (mergedFilterKey && ['country', 'region', 'city'].includes(mergedFilterKey)) {
     result = {
       ...result,

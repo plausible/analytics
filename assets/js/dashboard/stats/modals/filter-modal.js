@@ -4,7 +4,7 @@ import { withRouter } from 'react-router-dom'
 import Modal from './modal'
 import { EVENT_PROPS_PREFIX, FILTER_GROUPS, formatFilterGroup, FILTER_OPERATIONS, filterType} from '../../util/filters'
 import { parseQuery } from '../../query'
-import { siteBasePath, PlausibleSearchParams } from '../../util/url'
+import { siteBasePath, updatedQuery } from '../../util/url'
 import { shouldIgnoreKeypress } from '../../keybinding'
 import { cleanLabels } from "../../util/filters"
 import FilterModalGroup from "./filter-modal-group"
@@ -82,12 +82,13 @@ class FilterModal extends React.Component {
   }
 
   selectFiltersAndCloseModal(filters) {
-    const queryString = new PlausibleSearchParams(window.location.search)
-    queryString.set('filters', filters)
-    queryString.set('labels', cleanLabels(filters, this.state.labelState))
-
-    // :TODO: Use navigateToQuery or something similar
-    this.props.history.replace({ pathname: siteBasePath(this.props.site), search: queryString.toString() })
+    this.props.history.replace({
+      pathname: siteBasePath(this.props.site),
+      search: updatedQuery({
+        filters: filters,
+        labels: cleanLabels(filters, this.state.labelState)
+      })
+    })
   }
 
   onUpdateRowValue(id, newFilter, newLabels) {
