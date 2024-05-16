@@ -156,7 +156,7 @@ export function serializeApiFilters(filters) {
   const cleaned = {}
   filters.forEach(([operation, filterKey, clauses]) => {
     if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
-      const propKey = filterKey.slice(EVENT_PROPS_PREFIX)
+      const propKey = filterKey.slice(EVENT_PROPS_PREFIX.length)
       cleaned.props ||= {}
       cleaned.props[propKey] = toFilterQuery(operation, clauses)
     } else {
