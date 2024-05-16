@@ -1,14 +1,12 @@
 import React from "react";
 import { withRouter } from 'react-router-dom'
 
-import FilterTypeSelector from "../../components/filter-type-selector";
-import Combobox from '../../components/combobox'
-import { FILTER_GROUPS, formatFilterGroup, formattedFilters, toFilterQuery, FILTER_OPERATIONS } from '../../util/filters'
+import { FILTER_GROUPS, formatFilterGroup, FILTER_OPERATIONS } from '../../util/filters'
 import { parseQuery } from '../../query'
-import * as api from '../../api'
-import { apiPath, siteBasePath, PlausibleSearchParams } from '../../util/url'
+import { siteBasePath, PlausibleSearchParams } from '../../util/url'
 import { shouldIgnoreKeypress } from '../../keybinding'
-import { isFreeChoiceFilter, cleanLabels } from "../../util/filters"
+import { cleanLabels } from "../../util/filters"
+import FilterModalGroup from "./filter-modal-group"
 
 function partitionFilters(filterGroup, filters) {
   const otherFilters = []
@@ -35,20 +33,11 @@ function partitionFilters(filterGroup, filters) {
   return { filterState, otherFilters, hasRelevantFilters }
 }
 
-function withIndefiniteArticle(word) {
-  if (word.startsWith('UTM')) {
-    return `a ${word}`
-  } if (['a', 'e', 'i', 'o', 'u'].some((vowel) => word.toLowerCase().startsWith(vowel))) {
-    return `an ${word}`
-  }
-  return `a ${word}`
-}
-
 class RegularFilterModal extends React.Component {
   constructor(props) {
     super(props)
     const query = parseQuery(props.location.search, props.site)
-    const { filterState, otherFilters, hasRelevantFilters }  = partitionFilters(props.filterGroup, query.filters)
+    const { filterState, otherFilters, hasRelevantFilters } = partitionFilters(props.filterGroup, query.filters)
 
     this.handleKeydown = this.handleKeydown.bind(this)
     this.state = { query, filterState, labelState: query.labels, otherFilters, hasRelevantFilters }
@@ -72,70 +61,10 @@ class RegularFilterModal extends React.Component {
 
   handleSubmit() {
     const filters = Object.values(this.state.filterState)
-      .filter(([ _op, _key, clauses ]) => clauses.length > 0)
+      .filter(([_op, _key, clauses]) => clauses.length > 0)
       .concat(this.state.otherFilters)
 
     this.selectFiltersAndCloseModal(filters)
-  }
-
-  onComboboxSelect(key) {
-    return (selection) => {
-      this.setState(prevState => {
-        const [operation, filterKey, _clauses] = prevState.filterState[key]
-        const newClauses = selection.map(({ value }) => value)
-
-        const filterState = Object.assign(prevState.filterState, { [key]: [operation, filterKey, newClauses] })
-        const newLabels = Object.fromEntries(selection.map(({ label, value }) => [value, label]))
-        return {
-          filterState,
-          labelState: cleanLabels(Object.values(this.state.filterState), prevState.labels, filterKey, newLabels)
-        }
-      })
-    }
-  }
-
-  onOperationSelect(key) {
-    return (newOperation) => {
-      this.setState(prevState => {
-        const [_operation, filterKey, clauses] = prevState.filterState[key]
-        return {
-          filterState: Object.assign(prevState.filterState, { [key]: [newOperation, filterKey, clauses] })
-        }
-      })
-    }
-  }
-
-  fetchOptions(key) {
-    return (input) => {
-      const { query, filterState } = this.state
-      const [operation, filterKey, _clauses] = this.state.filterState[key]
-      if (operation === FILTER_OPERATIONS.contains) {return Promise.resolve([])}
-
-      const formFilters = Object.fromEntries(
-        Object.values(filterState)
-          .filter(([_operation, _filterKey, clauses]) => clauses.length > 0)
-          .map(([operation, filterKey, clauses]) => [filterKey, toFilterQuery(operation, clauses)])
-      )
-      const updatedQuery = this.queryForSuggestions(query, formFilters, filterKey)
-      return api.get(apiPath(this.props.site, `/suggestions/${filterKey}`), updatedQuery, { q: input.trim() })
-    }
-  }
-
-  queryForSuggestions(query, formFilters, filter) {
-    // :TODO: Handle formFilters properly
-    return { ...query, filters: { ...query.filters, ...formFilters, [filter]: this.negate(formFilters[filter]) } }
-  }
-
-  negate(filterVal) {
-    if (!filterVal) {
-      return filterVal
-    } else if (filterVal.startsWith('!')) {
-      return filterVal
-    } else if (filterVal.startsWith('~')) {
-      return null
-    } else {
-      return '!' + filterVal
-    }
   }
 
   isDisabled() {
@@ -161,44 +90,23 @@ class RegularFilterModal extends React.Component {
     this.props.history.replace({ pathname: siteBasePath(this.props.site), search: queryString.toString() })
   }
 
-  selectedClauses(key) {
-    const [_operation, filterKey, clauses] = this.state.filterState[key]
-    return clauses.map((value) => ({ value, label: this.labelFor(filterKey, value) }))
-  }
-
-  labelFor(filterKey, value) {
-    if (['country', 'region', 'city'].includes(filterKey)) {
-      return this.state.labelState[filterKey][value]
-    } else {
-      return value
-    }
-  }
-
-  renderFilterInputs() {
-    const filtersInGroup = FILTER_GROUPS[this.props.filterGroup]
-
-    return filtersInGroup.map((key) => {
-      const [operation, filterKey, _clauses] = this.state.filterState[key]
-      return (
-        <div className="mt-4" key={key}>
-          <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{formattedFilters[filterKey]}</div>
-          <div className="grid grid-cols-11 mt-1">
-            <div className="col-span-3 mr-2">
-              <FilterTypeSelector forFilter={filterKey} onSelect={this.onOperationSelect(key)} selectedType={operation}/>
-            </div>
-            <div className="col-span-8">
-              <Combobox
-                fetchOptions={this.fetchOptions(key)}
-                freeChoice={isFreeChoiceFilter(filterKey)}
-                values={this.selectedClauses(key)}
-                onSelect={this.onComboboxSelect(key)}
-                placeholder={`Select ${withIndefiniteArticle(formattedFilters[filterKey])}`}
-              />
-            </div>
-          </div>
-        </div>
-      )
+  onUpdateRowValue(id, newFilter, newLabels) {
+    this.setState(prevState => {
+      const [_operation, filterKey, _clauses] = newFilter
+      return {
+        filterState: {
+          ...prevState.filterState,
+          [id]: newFilter
+        },
+        labelState: cleanLabels(
+          Object.values(this.state.filterState).concat(this.state.otherFilters),
+          prevState.labels,
+          filterKey,
+          newLabels
+        )
+      }
     })
+
   }
 
   render() {
@@ -211,7 +119,17 @@ class RegularFilterModal extends React.Component {
         <div className="mt-4 border-b border-gray-300"></div>
         <main className="modal__content">
           <form className="flex flex-col" onSubmit={this.handleSubmit.bind(this)}>
-            {this.renderFilterInputs()}
+            {FILTER_GROUPS[this.props.filterGroup].map((type) => (
+              <FilterModalGroup
+                key={type}
+                type={type}
+                rows={Object.entries(this.state.filterState).filter(([_, filter]) => filter[1] === type).map(([id, filter]) => ({ id, filter }))}
+                labels={this.state.labelState}
+                site={this.props.site}
+                query={this.state.query}
+                onUpdateRowValue={this.onUpdateRowValue.bind(this)}
+              />
+            ))}
 
             <div className="mt-6 flex items-center justify-start">
               <button
