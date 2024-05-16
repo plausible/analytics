@@ -5,6 +5,7 @@ import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter, {durationFormatter} from '../../util/number-formatter'
 import {parseQuery} from '../../query'
+import { updatedQuery } from "../../util/url";
 
 class ReferrerDrilldownModal extends React.Component {
   constructor(props) {
@@ -69,13 +70,14 @@ class ReferrerDrilldownModal extends React.Component {
   }
 
   renderReferrerName(referrer) {
-    const query = new URLSearchParams(window.location.search)
-    query.set('referrer', referrer.name)
-
     return (
       <span className="flex group items-center">
         <img src={`/favicon/sources/${referrer.name}`} referrerPolicy="no-referrer" className="h-4 w-4 mr-2 inline" />
-        <Link className="block truncate hover:underline dark:text-gray-200" to={{search: query.toString(), pathname: '/' + this.props.site.domain}} title={referrer.name}>
+        <Link
+          className="block truncate hover:underline dark:text-gray-200"
+          to={{search: updatedQuery({ referrer: referrer.name }), pathname: '/' + this.props.site.domain}}
+          title={referrer.name}
+        >
           {referrer.name}
         </Link>
         { this.renderExternalLink(referrer.name) }

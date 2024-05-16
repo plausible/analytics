@@ -6,7 +6,7 @@ import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { parseQuery } from '../../query'
-import { trimURL } from '../../util/url'
+import { trimURL, updatedQuery } from '../../util/url'
 
 class EntryPagesModal extends React.Component {
   constructor(props) {
@@ -74,16 +74,13 @@ class EntryPagesModal extends React.Component {
   }
 
   renderPage(page) {
-    const query = new URLSearchParams(window.location.search)
-    query.set('entry_page', page.name)
-
     return (
       <tr className="text-sm dark:text-gray-200" key={page.name}>
         <td className="p-2 truncate">
           <Link
             to={{
               pathname: `/${encodeURIComponent(this.props.site.domain)}`,
-              search: query.toString()
+              search: updatedQuery({ entry_page: page.name })
             }}
             className="hover:underline"
           >

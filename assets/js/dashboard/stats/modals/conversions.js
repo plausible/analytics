@@ -60,9 +60,7 @@ function ConversionsModal(props) {
   }
 
   function filterSearchLink(listItem) {
-    const searchParams = new URLSearchParams(window.location.search)
-    searchParams.set('goal', escapeFilterValue(listItem.name))
-    return searchParams.toString()
+    return url.updatedQuery({ goal: escapeFilterValue(listItem.name) })
   }
 
   function renderListItem(listItem, hasRevenue) {

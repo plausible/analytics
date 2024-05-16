@@ -6,7 +6,7 @@ import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter, {percentageFormatter} from '../../util/number-formatter'
 import { parseQuery } from '../../query'
-import { trimURL } from '../../util/url'
+import { trimURL, updatedQuery } from '../../util/url'
 class ExitPagesModal extends React.Component {
   constructor(props) {
     super(props)
@@ -55,13 +55,18 @@ class ExitPagesModal extends React.Component {
   }
 
   renderPage(page) {
-    const query = new URLSearchParams(window.location.search)
-    query.set('exit_page', page.name)
-
     return (
       <tr className="text-sm dark:text-gray-200" key={page.name}>
         <td className="p-2 truncate">
-          <Link to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString() }} className="hover:underline">{trimURL(page.name, 40)}</Link>
+          <Link
+            to={{
+              pathname: `/${encodeURIComponent(this.props.site.domain)}`,
+              search: updatedQuery({ exit_page: page.name })
+            }}
+            className="hover:underline"
+          >
+            {trimURL(page.name, 40)}
+          </Link>
         </td>
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_visitors)}</td>}
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.visitors)}</td>
