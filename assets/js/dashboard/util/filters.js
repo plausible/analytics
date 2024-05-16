@@ -123,13 +123,27 @@ export function formatFilterGroup(filterGroup) {
 }
 
 export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
-  let result = labels
+  const filteredBy = Object.fromEntries(
+    filters
+    .flatMap(([_operation, filterKey, clauses]) => ['country', 'region', 'city'].includes(filterKey) ? clauses : [])
+    .map((value) => [value, true])
+  )
+  let result = { ...labels }
+  for (const value in labels) {
+    if (!filteredBy[value]) {
+      delete result[value]
+    }
+  }
+
+  console.log('cleanLabels', { filters, labels, filteredBy, result, mergedFilterKey, mergedLabels })
+
   if (mergedFilterKey && ['country', 'region', 'city'].includes(mergedFilterKey)) {
     result = {
       ...result,
-      [mergedFilterKey]: mergedLabels
+      ...mergedLabels
     }
   }
+
   return result
 }
 

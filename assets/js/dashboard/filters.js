@@ -15,12 +15,12 @@ import {
 
 function removeFilter(filterIndex, history, query) {
   const newFilters = query.filters.filter((_filter, index) => filterIndex != index)
-  const newLabels = cleanLabels(query.labels)
+  const newLabels = cleanLabels(newFilters, query.labels)
 
   navigateToQuery(
     history,
     query,
-    { filters: newFilters.length > 0 ? newFilters : false, labels: newLabels ? newLabels : false }
+    { filters: newFilters, labels: newLabels }
   )
 }
 

@@ -65,7 +65,7 @@ export default function FilterModalRow({
 
 function getLabel(labels, filterKey, value) {
   if (['country', 'region', 'city'].includes(filterKey)) {
-    return labels[filterKey][value]
+    return labels[value]
   } else {
     return value
   }

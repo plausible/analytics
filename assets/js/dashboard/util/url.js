@@ -81,11 +81,16 @@ export function trimURL(url, maxLength) {
 
 export class PlausibleSearchParams extends URLSearchParams {
   set(key, value) {
-    console.log('calling set', {key, value})
     if (typeof value === 'object') {
       value = JsonURL.stringify(value)
+      if (value.length > 2) {
+        super.set(key, value)
+      } else {
+        super.delete(key)
+      }
+    } else {
+      super.set(key, value)
     }
-    super.set(key, value)
   }
 
   toString() {

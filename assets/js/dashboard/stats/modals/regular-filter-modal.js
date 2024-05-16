@@ -79,18 +79,8 @@ class RegularFilterModal extends React.Component {
 
   selectFiltersAndCloseModal(filters) {
     const queryString = new PlausibleSearchParams(window.location.search)
-
-    if (filters.length > 0) {
-      queryString.set('filters', filters)
-    } else {
-      queryString.delete('filters')
-    }
-
-    if (this.state.labelState) {
-      queryString.set('labels', cleanLabels(filters, this.state.labelState))
-    } else {
-      queryString.delete('labels')
-    }
+    queryString.set('filters', filters)
+    queryString.set('labels', cleanLabels(filters, this.state.labelState))
 
     // :TODO: Use navigateToQuery or something similar
     this.props.history.replace({ pathname: siteBasePath(this.props.site), search: queryString.toString() })
@@ -105,8 +95,8 @@ class RegularFilterModal extends React.Component {
           [id]: newFilter
         },
         labelState: cleanLabels(
-          Object.values(this.state.filterState).concat(this.state.otherFilters),
-          prevState.labels,
+          Object.values(this.state.filterState).concat(this.state.query.filters),
+          prevState.labelState,
           filterKey,
           newLabels
         )

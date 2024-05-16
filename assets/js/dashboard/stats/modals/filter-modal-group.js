@@ -7,6 +7,7 @@ export default function FilterModalGroup({
   type,
   filterState,
   site,
+  labels,
   query,
   onUpdateRowValue,
   onAddRow,
@@ -42,6 +43,7 @@ export default function FilterModalGroup({
               filter={filter}
               site={site}
               query={query}
+              labels={labels}
               onUpdate={(newFilter, labelUpdate) => onUpdateRowValue(id, newFilter, labelUpdate)}
             />
           )
