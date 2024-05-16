@@ -122,20 +122,6 @@ export function formatFilterGroup(filterGroup) {
   }
 }
 
-export function filterGroupForFilter(filter) {
-  const map = Object.entries(FILTER_GROUPS).reduce((filterToGroupMap, [group, filtersInGroup]) => {
-    const filtersToAdd = {}
-    filtersInGroup.forEach((filterInGroup) => {
-      filtersToAdd[filterInGroup] = group
-    })
-
-    return { ...filterToGroupMap, ...filtersToAdd }
-  }, {})
-
-
-  return map[filter] || filter
-}
-
 export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
   let result = labels
   if (mergedFilterKey && ['country', 'region', 'city'].includes(mergedFilterKey)) {
@@ -152,7 +138,13 @@ export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
 export function serializeApiFilters(filters) {
   const cleaned = {}
   filters.forEach(([operation, filterKey, clauses]) => {
-    cleaned[filterKey] = toFilterQuery(operation, clauses)
+    if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
+      const propKey = filterKey.slice(EVENT_PROPS_PREFIX)
+      cleaned.props ||= {}
+      cleaned.props[propKey] = toFilterQuery(operation, clauses)
+    } else {
+      cleaned[filterKey] = toFilterQuery(operation, clauses)
+    }
   })
   return JSON.stringify(cleaned)
 }

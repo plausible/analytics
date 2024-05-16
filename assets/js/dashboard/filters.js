@@ -9,8 +9,8 @@ import {
   cleanLabels,
   FILTER_GROUPS,
   formatFilterGroup,
-  filterGroupForFilter,
-  formattedFilters
+  formattedFilters,
+  EVENT_PROPS_PREFIX
 } from "./util/filters"
 
 function removeFilter(filterIndex, history, query) {
@@ -35,13 +35,11 @@ function clearAllFilters(history, query) {
 function filterText([operation, filterKey, clauses]) {
   const formattedFilter = formattedFilters[filterKey]
 
-  // if (filterType === "props") {
-  //   const { propKey, clauses, type } = parseQueryPropsFilter(query).find((filter) => filter.propKey.value === key)
-  //   return <>Property <b>{propKey.label}</b> {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
-  // } else
   if (formattedFilter) {
-    // :TODO: Labels support
     return <>{formattedFilter} {operation} {clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+  } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
+    const propKey = filterKey.slice(EVENT_PROPS_PREFIX.length)
+    return <>Property <b>{propKey}</b> {operation} {clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   }
 
   throw new Error(`Unknown filter: ${filterKey}`)
@@ -49,12 +47,14 @@ function filterText([operation, filterKey, clauses]) {
 
 function renderDropdownFilter(filterIndex, filter, site, history, query) {
   const [_operation, filterKey, _clauses] = filter
+
+  const type = filterKey.startsWith(EVENT_PROPS_PREFIX) ? 'props' : filterKey
   return (
     <Menu.Item key={filterIndex}>
       <div className="px-3 md:px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={filterIndex}>
         <Link
-          title={`Edit filter: ${formattedFilters[filterKey]}`}
-          to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${filterGroupForFilter(filterKey)}`, search: window.location.search }}
+          title={`Edit filter: ${formattedFilters[type]}`}
+          to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${type}`, search: window.location.search }}
           className="group flex w-full justify-between items-center"
           style={{ width: 'calc(100% - 1.5rem)' }}
         >
@@ -62,7 +62,7 @@ function renderDropdownFilter(filterIndex, filter, site, history, query) {
           <PencilSquareIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
         </Link>
         <b
-          title={`Remove filter: ${formattedFilters[filterKey]}`}
+          title={`Remove filter: ${formattedFilters[type]}`}
           className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"
           onClick={() => removeFilter(filterIndex, history, query)}
         >
@@ -206,20 +206,21 @@ class Filters extends React.Component {
   renderListFilter(filterIndex, filter, history, query) {
     const text = filterText(filter)
     const [_operation, filterKey, _clauses] = filter
+    const type = filterKey.startsWith(EVENT_PROPS_PREFIX) ? 'props' : filterKey
     return (
       <span key={filterIndex} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
         <Link
-          title={`Edit filter: ${formattedFilters[filterKey]}`}
+          title={`Edit filter: ${formattedFilters[type]}`}
           className="flex w-full h-full items-center py-2 pl-3"
           to={{
-            pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${filterGroupForFilter(filterKey)}`,
+            pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${type}`,
             search: window.location.search
           }}
         >
           <span className="inline-block max-w-2xs md:max-w-xs truncate">{text}</span>
         </Link>
         <span
-          title={`Remove filter: ${formattedFilters[filterKey]}`}
+          title={`Remove filter: ${formattedFilters[type]}`}
           className="flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center"
           onClick={() => removeFilter(filterIndex, history, query)}
         >
