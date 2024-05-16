@@ -98,8 +98,15 @@ export class PlausibleSearchParams extends URLSearchParams {
     }
   }
 
+  escape(value) {
+    return value.replaceAll("?", "%3F").replaceAll("=", "%3D").replaceAll("&", "%26")
+  }
+
   toString() {
-    // Don't url-encode values that don't need urlencoding strictly and are used in JsonURL
-    return super.toString().replaceAll("%28", "(").replaceAll("%29", ")").replaceAll("%2C", ",").replaceAll("%3A", ":")
+    const entries = Array.from(super.entries())
+    if (entries.length === 0) {
+      return ''
+    }
+    return "?" + entries.map(([key, value]) => `${this.escape(key)}=${this.escape(value)}`).join("&")
   }
 }
