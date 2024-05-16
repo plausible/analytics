@@ -13,6 +13,11 @@ export const FILTER_GROUPS = {
   'hostname': ['hostname']
 }
 
+export const FILTER_GROUP_TO_MODAL_TYPE = Object.fromEntries(
+  Object.entries(FILTER_GROUPS)
+    .flatMap(([modalName, filterGroups]) => filterGroups.map((filterGroup) => [filterGroup, modalName]))
+)
+
 export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_GROUPS['location']))
 
 export const EVENT_PROPS_PREFIX = "props:"

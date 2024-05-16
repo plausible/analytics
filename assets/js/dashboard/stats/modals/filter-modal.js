@@ -5,8 +5,8 @@ import RegularFilterModal from './regular-filter-modal'
 
 function FilterModal(props) {
   function renderBody() {
-    const filterGroup = props.match.params.field || 'page'
-    return <RegularFilterModal site={props.site} filterGroup={filterGroup} />
+    const modalType = props.match.params.field || 'page'
+    return <RegularFilterModal site={props.site} modalType={modalType} />
   }
 
   return (

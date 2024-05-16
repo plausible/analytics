@@ -8,14 +8,14 @@ import { shouldIgnoreKeypress } from '../../keybinding'
 import { cleanLabels } from "../../util/filters"
 import FilterModalGroup from "./filter-modal-group"
 
-function partitionFilters(filterGroup, filters) {
+function partitionFilters(modalType, filters) {
   const otherFilters = []
   const filterState = {}
   let hasRelevantFilters = false
 
   filters.forEach((filter, index) => {
     const type = filterType(filter)
-    if (FILTER_GROUPS[filterGroup].includes(type)) {
+    if (FILTER_GROUPS[modalType].includes(type)) {
       const key = filterState[type] ? `${type}:${index}` : type
       filterState[key] = filter
       hasRelevantFilters = true
@@ -24,7 +24,7 @@ function partitionFilters(filterGroup, filters) {
     }
   })
 
-  FILTER_GROUPS[filterGroup].forEach((type) => {
+  FILTER_GROUPS[modalType].forEach((type) => {
     if (!filterState[type]) {
       filterState[type] = emptyFilter(type)
     }
@@ -43,7 +43,7 @@ class RegularFilterModal extends React.Component {
   constructor(props) {
     super(props)
     const query = parseQuery(props.location.search, props.site)
-    const { filterState, otherFilters, hasRelevantFilters } = partitionFilters(props.filterGroup, query.filters)
+    const { filterState, otherFilters, hasRelevantFilters } = partitionFilters(props.modalType, query.filters)
 
     this.handleKeydown = this.handleKeydown.bind(this)
     this.state = { query, filterState, labelState: query.labels, otherFilters, hasRelevantFilters }
@@ -127,16 +127,16 @@ class RegularFilterModal extends React.Component {
   }
 
   render() {
-    const { filterGroup } = this.props
+    const { modalType } = this.props
 
     return (
       <>
-        <h1 className="text-xl font-bold dark:text-gray-100">Filter by {formatFilterGroup(filterGroup)}</h1>
+        <h1 className="text-xl font-bold dark:text-gray-100">Filter by {formatFilterGroup(modalType)}</h1>
 
         <div className="mt-4 border-b border-gray-300"></div>
         <main className="modal__content">
           <form className="flex flex-col" onSubmit={this.handleSubmit.bind(this)}>
-            {FILTER_GROUPS[this.props.filterGroup].map((type) => (
+            {FILTER_GROUPS[this.props.modalType].map((type) => (
               <FilterModalGroup
                 key={type}
                 type={type}
@@ -168,7 +168,7 @@ class RegularFilterModal extends React.Component {
                   }}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                  Remove filter{FILTER_GROUPS[filterGroup].length > 1 ? 's' : ''}
+                  Remove filter{FILTER_GROUPS[modalType].length > 1 ? 's' : ''}
                 </button>
               )}
             </div>

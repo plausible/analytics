@@ -6,6 +6,7 @@ import { Menu, Transition } from '@headlessui/react'
 
 import { navigateToQuery } from './query'
 import {
+  FILTER_GROUP_TO_MODAL_TYPE,
   cleanLabels,
   FILTER_GROUPS,
   formatFilterGroup,
@@ -54,7 +55,7 @@ function renderDropdownFilter(filterIndex, filter, site, history, query) {
       <div className="px-3 md:px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={filterIndex}>
         <Link
           title={`Edit filter: ${formattedFilters[type]}`}
-          to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${type}`, search: window.location.search }}
+          to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`, search: window.location.search }}
           className="group flex w-full justify-between items-center"
           style={{ width: 'calc(100% - 1.5rem)' }}
         >
@@ -213,7 +214,7 @@ class Filters extends React.Component {
           title={`Edit filter: ${formattedFilters[type]}`}
           className="flex w-full h-full items-center py-2 pl-3"
           to={{
-            pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${type}`,
+            pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`,
             search: window.location.search
           }}
         >
