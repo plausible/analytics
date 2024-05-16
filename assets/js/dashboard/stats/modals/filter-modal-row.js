@@ -3,10 +3,9 @@ import React, { useMemo } from "react"
 import FilterTypeSelector from "../../components/filter-type-selector"
 import Combobox from '../../components/combobox'
 
-import { isFreeChoiceFilter } from "../../util/filters"
-import * as api from '../../api'
+import { fetchSuggestions, isFreeChoiceFilter } from "../../util/filters"
 import { apiPath } from '../../util/url'
-import { formattedFilters, FILTER_OPERATIONS } from '../../util/filters'
+import { formattedFilters } from '../../util/filters'
 
 export default function FilterModalRow({
   site,
@@ -19,7 +18,7 @@ export default function FilterModalRow({
 
   const selectedClauses = useMemo(
     () => clauses.map((value) => ({ value, label: getLabel(labels, filterKey, value) })),
-    [filter, filterKey]
+    [filter, labels]
   )
 
   function onComboboxSelect(selection) {
@@ -33,19 +32,7 @@ export default function FilterModalRow({
   }
 
   function fetchOptions(input) {
-    if (operation === FILTER_OPERATIONS.contains) {return Promise.resolve([])}
-
-    const updatedQuery = queryForSuggestions(query, filter)
-    return api.get(apiPath(site, `/suggestions/${filterKey}`), updatedQuery, { q: input.trim() })
-  }
-
-  function queryForSuggestions(query, filter) {
-    let filters = query.filters
-    const [_operation, filterKey, clauses] = filter
-    if (clauses.length > 0) {
-      filters = filters.concat([[FILTER_OPERATIONS.isNot, filterKey, clauses]])
-    }
-    return { ...query, filters }
+    return fetchSuggestions(apiPath(site, `/suggestions/${filterKey}`), query, input, filter)
   }
 
   return (

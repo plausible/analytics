@@ -1,7 +1,7 @@
 import React from "react";
 import { withRouter } from 'react-router-dom'
 
-import { FILTER_GROUPS, formatFilterGroup, FILTER_OPERATIONS } from '../../util/filters'
+import { EVENT_PROPS_PREFIX, FILTER_GROUPS, formatFilterGroup, FILTER_OPERATIONS } from '../../util/filters'
 import { parseQuery } from '../../query'
 import { siteBasePath, PlausibleSearchParams } from '../../util/url'
 import { shouldIgnoreKeypress } from '../../keybinding'
@@ -24,13 +24,26 @@ function partitionFilters(filterGroup, filters) {
     }
   })
 
-  FILTER_GROUPS[filterGroup].forEach((key) => {
-    if (!filterState[key]) {
-      filterState[key] = [FILTER_OPERATIONS.is, key, []]
+  FILTER_GROUPS[filterGroup].forEach((type) => {
+    if (!filterState[type]) {
+      filterState[type] = emptyFilter(type)
     }
   })
 
   return { filterState, otherFilters, hasRelevantFilters }
+}
+
+function emptyFilter(key) {
+  const filterKey = key === 'props' ? EVENT_PROPS_PREFIX : key
+
+  return [FILTER_OPERATIONS.is, filterKey, []]
+}
+
+function isOfGroup(filterGroup, [_operation, filterKey, _clauses]) {
+  if (filterGroup === 'props') {
+    return filterKey.startsWith(EVENT_PROPS_PREFIX)
+  }
+  return filterKey === filterGroup
 }
 
 class RegularFilterModal extends React.Component {
@@ -106,7 +119,28 @@ class RegularFilterModal extends React.Component {
         )
       }
     })
+  }
 
+  onAddRow(type) {
+    this.setState(prevState => {
+      const filter = emptyFilter(type)
+      const id = `${type}${Object.keys(this.state.filterState).length}`
+
+      return {
+        filterState: {
+          ...prevState.filterState,
+          [id]: filter
+        }
+      }
+    })
+  }
+
+  onDeleteRow(id) {
+    this.setState(prevState => {
+      const filterState = {...prevState.filterState}
+      delete filterState[id]
+      return { filterState }
+    })
   }
 
   render() {
@@ -123,11 +157,13 @@ class RegularFilterModal extends React.Component {
               <FilterModalGroup
                 key={type}
                 type={type}
-                rows={Object.entries(this.state.filterState).filter(([_, filter]) => filter[1] === type).map(([id, filter]) => ({ id, filter }))}
+                rows={Object.entries(this.state.filterState).filter(([_, filter]) => isOfGroup(type, filter)).map(([id, filter]) => ({ id, filter }))}
                 labels={this.state.labelState}
                 site={this.props.site}
                 query={this.state.query}
                 onUpdateRowValue={this.onUpdateRowValue.bind(this)}
+                onAddRow={this.onAddRow.bind(this)}
+                onDeleteRow={this.onDeleteRow.bind(this)}
               />
             ))}
 

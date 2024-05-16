@@ -1,3 +1,5 @@
+import * as api from '../api'
+
 export const FILTER_GROUPS = {
   'page': ['page', 'entry_page', 'exit_page'],
   'source': ['source', 'referrer'],
@@ -7,11 +9,13 @@ export const FILTER_GROUPS = {
   'os': ['os', 'os_version'],
   'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
   'goal': ['goal'],
-  'props': ['prop_key', 'prop_value'],
+  'props': ['props'],
   'hostname': ['hostname']
 }
 
 export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_GROUPS['location']))
+
+export const EVENT_PROPS_PREFIX = "props:"
 
 export const FILTER_OPERATIONS = {
   isNot: 'is not',
@@ -151,6 +155,22 @@ export function serializeApiFilters(filters) {
     cleaned[filterKey] = toFilterQuery(operation, clauses)
   })
   return JSON.stringify(cleaned)
+}
+
+export function fetchSuggestions(apiPath, query, input, filter) {
+  if (filter[0] === FILTER_OPERATIONS.contains) {return Promise.resolve([])}
+
+  const updatedQuery = queryForSuggestions(query, filter)
+  return api.get(apiPath, updatedQuery, { q: input.trim() })
+}
+
+function queryForSuggestions(query, filter) {
+  let filters = query.filters
+  if (filter && filter[2].length > 0) {
+    const [_operation, filterKey, clauses] = filter
+    filters = filters.concat([[FILTER_OPERATIONS.isNot, filterKey, clauses]])
+  }
+  return { ...query, filters }
 }
 
 
