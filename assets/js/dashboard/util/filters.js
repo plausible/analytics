@@ -85,34 +85,13 @@ export function parseQueryPropsFilter(query) {
   })
 }
 
-export function parseQueryFilter(query, filter) {
-  const { operation, values } = parsePrefix(query.filters[filter] || '')
-
-  let labels = values
-
-  if (filter === 'country' && values.length > 0) {
-    const rawLabel = (new URLSearchParams(window.location.search)).get('country_labels') || ''
-    labels = rawLabel.split('|').filter(label => !!label)
+export function isFilteringOnFixedValue(query, filterKey) {
+  const filters = query.filters.filter(([_operation, key]) => filterKey == key)
+  if (filters.length == 1) {
+    const [operation, _filterKey, clauses] = filters[0]
+    return operation === FILTER_OPERATIONS.is && clauses.length === 1
   }
-
-  if (filter === 'region' && values.length > 0) {
-    const rawLabel = (new URLSearchParams(window.location.search)).get('region_labels') || ''
-    labels = rawLabel.split('|').filter(label => !!label)
-  }
-
-  if (filter === 'city' && values.length > 0) {
-    const rawLabel = (new URLSearchParams(window.location.search)).get('city_labels') || ''
-    labels = rawLabel.split('|').filter(label => !!label)
-  }
-
-  const clauses = values.map((value, index) => { return { value, label: labels[index] } })
-
-  return { operation, clauses }
-}
-
-export function isFilteringOnFixedValue(query, filter) {
-  const { type, clauses } = parseQueryFilter(query, filter)
-  return type == FILTER_OPERATIONS.is && clauses.length == 1
+  return false
 }
 
 export function formatFilterGroup(filterGroup) {
