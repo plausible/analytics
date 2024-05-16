@@ -157,18 +157,15 @@ export function serializeApiFilters(filters) {
   return JSON.stringify(cleaned)
 }
 
-export function fetchSuggestions(apiPath, query, input, filter) {
-  if (filter[0] === FILTER_OPERATIONS.contains) {return Promise.resolve([])}
-
-  const updatedQuery = queryForSuggestions(query, filter)
+export function fetchSuggestions(apiPath, query, input, additionalFilter) {
+  const updatedQuery = queryForSuggestions(query, additionalFilter)
   return api.get(apiPath, updatedQuery, { q: input.trim() })
 }
 
-function queryForSuggestions(query, filter) {
+function queryForSuggestions(query, additionalFilter) {
   let filters = query.filters
-  if (filter && filter[2].length > 0) {
-    const [_operation, filterKey, clauses] = filter
-    filters = filters.concat([[FILTER_OPERATIONS.isNot, filterKey, clauses]])
+  if (additionalFilter && additionalFilter[2].length > 0) {
+    filters = filters.concat([additionalFilter])
   }
   return { ...query, filters }
 }

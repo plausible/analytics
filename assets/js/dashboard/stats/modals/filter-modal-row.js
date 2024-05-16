@@ -3,7 +3,7 @@ import React, { useMemo } from "react"
 import FilterTypeSelector from "../../components/filter-type-selector"
 import Combobox from '../../components/combobox'
 
-import { fetchSuggestions, isFreeChoiceFilter } from "../../util/filters"
+import { FILTER_OPERATIONS, fetchSuggestions, isFreeChoiceFilter } from "../../util/filters"
 import { apiPath } from '../../util/url'
 import { formattedFilters } from '../../util/filters'
 
@@ -32,7 +32,13 @@ export default function FilterModalRow({
   }
 
   function fetchOptions(input) {
-    return fetchSuggestions(apiPath(site, `/suggestions/${filterKey}`), query, input, filter)
+    if (operation === FILTER_OPERATIONS.contains) {
+      return Promise.resolve([])
+    }
+
+    return fetchSuggestions(apiPath(site, `/suggestions/${filterKey}`), query, input, [
+      FILTER_OPERATIONS.isNot, filterKey, clauses
+    ])
   }
 
   return (

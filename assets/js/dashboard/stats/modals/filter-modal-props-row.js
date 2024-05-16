@@ -4,9 +4,8 @@ import { TrashIcon } from '@heroicons/react/20/solid'
 import FilterTypeSelector from "../../components/filter-type-selector"
 import Combobox from '../../components/combobox'
 
-import * as api from '../../api'
 import { apiPath } from '../../util/url'
-import { EVENT_PROPS_PREFIX, FILTER_OPERATIONS } from '../../util/filters'
+import { EVENT_PROPS_PREFIX, FILTER_OPERATIONS, fetchSuggestions } from '../../util/filters'
 
 export default function FilterModalPropsRow({
   site,
@@ -29,19 +28,14 @@ export default function FilterModalPropsRow({
   )
 
   function fetchPropKeyOptions(input) {
-    return api.get(apiPath(site, "/suggestions/prop_key"), query, { q: input.trim() })
+    return fetchSuggestions(apiPath(site, `/suggestions/prop_key`), query, input)
   }
 
-  function fetchPropValueOptions(_input) {
-    // :TODO: Handle this properly with negation
-    if (operation === FILTER_OPERATIONS.contains) {
-      return Promise.resolve([])
-    }
-    return Promise.resolve([])
-
-    // const key = propKey?.value
-    // const updatedQuery = { ...query, filters: { ...query.filters, props: { [key]: '!(none)' } } }
-    // return api.get(apiPath(site, "/suggestions/prop_value"), updatedQuery, { q: input.trim() })
+  function fetchPropValueOptions(input) {
+    if (operation === FILTER_OPERATIONS.contains) {return Promise.resolve([])}
+    return fetchSuggestions(apiPath(site, `/suggestions/prop_value`), query, input, [
+      FILTER_OPERATIONS.isNot, filterKey, ['(none)']
+    ])
   }
 
   function onPropKeySelect(selection) {
