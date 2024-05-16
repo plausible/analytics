@@ -341,6 +341,213 @@ defmodule PlausibleWeb.StatsControllerTest do
                [""]
              ]
     end
+
+    test "exports imported data when requested", %{conn: conn, site: site} do
+      site_import = insert(:site_import, site: site)
+
+      insert(:goal, site: site, event_name: "Outbound Link: Click")
+
+      populate_stats(site, site_import.id, [
+        build(:imported_visitors, visitors: 9),
+        build(:imported_browsers, browser: "Chrome", pageviews: 1),
+        build(:imported_devices, device: "Desktop", pageviews: 1),
+        build(:imported_entry_pages, entry_page: "/test", pageviews: 1),
+        build(:imported_exit_pages, exit_page: "/test", pageviews: 1),
+        build(:imported_locations,
+          country: "PL",
+          region: "PL-22",
+          city: 3_099_434,
+          pageviews: 1
+        ),
+        build(:imported_operating_systems, operating_system: "Mac", pageviews: 1),
+        build(:imported_pages, page: "/test", pageviews: 1),
+        build(:imported_sources,
+          source: "Google",
+          utm_medium: "search",
+          utm_campaign: "ads",
+          utm_source: "google",
+          utm_content: "content",
+          utm_term: "term",
+          pageviews: 1
+        ),
+        build(:imported_custom_events,
+          name: "Outbound Link: Click",
+          link_url: "https://example.com",
+          visitors: 5,
+          events: 10
+        )
+      ])
+
+      conn = get(conn, "/#{site.domain}/export?with_imported=true")
+
+      assert response = response(conn, 200)
+      {:ok, zip} = :zip.unzip(response, [:memory])
+
+      filenames = zip |> Enum.map(fn {filename, _} -> to_string(filename) end)
+
+      # NOTE: currently, custom_props.csv is not populated from imported data
+      expected_filenames = [
+        "visitors.csv",
+        "sources.csv",
+        "utm_mediums.csv",
+        "utm_sources.csv",
+        "utm_campaigns.csv",
+        "utm_contents.csv",
+        "utm_terms.csv",
+        "pages.csv",
+        "entry_pages.csv",
+        "exit_pages.csv",
+        "countries.csv",
+        "regions.csv",
+        "cities.csv",
+        "browsers.csv",
+        "browser_versions.csv",
+        "operating_systems.csv",
+        "operating_system_versions.csv",
+        "devices.csv",
+        "conversions.csv",
+        "referrers.csv"
+      ]
+
+      Enum.each(expected_filenames, fn expected ->
+        assert expected in filenames
+      end)
+
+      Enum.each(zip, fn
+        {~c"visitors.csv", data} ->
+          csv = parse_csv(data)
+
+          assert List.first(csv) == [
+                   "date",
+                   "visitors",
+                   "pageviews",
+                   "visits",
+                   "views_per_visit",
+                   "bounce_rate",
+                   "visit_duration"
+                 ]
+
+          assert Enum.at(csv, -2) ==
+                   [Date.to_iso8601(Date.utc_today()), "9", "1", "1", "1.0", "0.0", "10.0"]
+
+        {~c"sources.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "bounce_rate", "visit_duration"],
+                   ["Google", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+
+        {~c"utm_mediums.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "bounce_rate", "visit_duration"],
+                   ["search", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+
+        {~c"utm_sources.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "bounce_rate", "visit_duration"],
+                   ["google", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+
+        {~c"utm_campaigns.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "bounce_rate", "visit_duration"],
+                   ["ads", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+
+        {~c"utm_contents.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "bounce_rate", "visit_duration"],
+                   ["content", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+
+        {~c"utm_terms.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "bounce_rate", "visit_duration"],
+                   ["term", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+
+        {~c"pages.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "pageviews", "bounce_rate", "time_on_page"],
+                   ["/test", "1", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+
+        {~c"entry_pages.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "unique_entrances", "total_entrances", "visit_duration"],
+                   ["/test", "1", "1", "10.0"],
+                   [""]
+                 ]
+
+        {~c"exit_pages.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "unique_exits", "total_exits", "exit_rate"],
+                   ["/test", "1", "1", "100.0"],
+                   [""]
+                 ]
+
+        {~c"countries.csv", data} ->
+          assert parse_csv(data) == [["name", "visitors"], ["Poland", "1"], [""]]
+
+        {~c"regions.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors"],
+                   ["Pomerania", "1"],
+                   [""]
+                 ]
+
+        {~c"cities.csv", data} ->
+          assert parse_csv(data) == [["name", "visitors"], ["Gdańsk", "1"], [""]]
+
+        {~c"browsers.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors"],
+                   ["Chrome", "1"],
+                   [""]
+                 ]
+
+        {~c"browser_versions.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "version", "visitors"],
+                   ["Chrome", "(not set)", "1"],
+                   [""]
+                 ]
+
+        {~c"operating_systems.csv", data} ->
+          assert parse_csv(data) == [["name", "visitors"], ["Mac", "1"], [""]]
+
+        {~c"operating_system_versions.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "version", "visitors"],
+                   ["Mac", "(not set)", "1"],
+                   [""]
+                 ]
+
+        {~c"devices.csv", data} ->
+          assert parse_csv(data) == [["name", "visitors"], ["Desktop", "1"], [""]]
+
+        {~c"conversions.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "unique_conversions", "total_conversions"],
+                   ["Outbound Link: Click", "5", "10"],
+                   [""]
+                 ]
+
+        {~c"referrers.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "bounce_rate", "visit_duration"],
+                   ["Direct / None", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+      end)
+    end
   end
 
   defp parse_csv(file_content) when is_binary(file_content) do
