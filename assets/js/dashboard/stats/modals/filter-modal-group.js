@@ -1,17 +1,22 @@
-import React from "react"
+import React, { useMemo } from "react"
 import FilterModalRow from "./filter-modal-row"
-import { formattedFilters } from '../../util/filters'
+import { formattedFilters, filterType } from '../../util/filters'
 import FilterModalPropsRow from "./filter-modal-props-row"
 
 export default function FilterModalGroup({
   type,
-  rows,
+  filterState,
   site,
   query,
   onUpdateRowValue,
   onAddRow,
   onDeleteRow
 }) {
+  const rows = useMemo(
+    () => Object.entries(filterState).filter(([_, filter]) => filterType(filter) == type).map(([id, filter]) => ({ id, filter })),
+    [type, filterState]
+  )
+
   const showAddRow = type == 'props'
   const showTitle = type != 'props'
 

@@ -162,6 +162,10 @@ function queryForSuggestions(query, additionalFilter) {
   return { ...query, filters }
 }
 
+export function filterType([_operation, filterKey, _clauses]) {
+  return filterKey.startsWith(EVENT_PROPS_PREFIX) ? 'props' : filterKey
+}
+
 
 export const formattedFilters = {
   'goal': 'Goal',

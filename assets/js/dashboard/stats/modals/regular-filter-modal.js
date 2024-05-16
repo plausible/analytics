@@ -1,7 +1,7 @@
 import React from "react";
 import { withRouter } from 'react-router-dom'
 
-import { EVENT_PROPS_PREFIX, FILTER_GROUPS, formatFilterGroup, FILTER_OPERATIONS } from '../../util/filters'
+import { EVENT_PROPS_PREFIX, FILTER_GROUPS, formatFilterGroup, FILTER_OPERATIONS, filterType} from '../../util/filters'
 import { parseQuery } from '../../query'
 import { siteBasePath, PlausibleSearchParams } from '../../util/url'
 import { shouldIgnoreKeypress } from '../../keybinding'
@@ -14,13 +14,13 @@ function partitionFilters(filterGroup, filters) {
   let hasRelevantFilters = false
 
   filters.forEach((filter, index) => {
-    const filterKey = filter[1]
-    if (!FILTER_GROUPS[filterGroup].includes(filterKey)) {
-      otherFilters.push(filter)
-    } else {
-      const key = filterState[filterKey] ? `${filterKey}:${index}` : filterKey
+    const type = filterType(filter)
+    if (FILTER_GROUPS[filterGroup].includes(type)) {
+      const key = filterState[type] ? `${type}:${index}` : type
       filterState[key] = filter
       hasRelevantFilters = true
+    } else {
+      otherFilters.push(filter)
     }
   })
 
@@ -37,13 +37,6 @@ function emptyFilter(key) {
   const filterKey = key === 'props' ? EVENT_PROPS_PREFIX : key
 
   return [FILTER_OPERATIONS.is, filterKey, []]
-}
-
-function isOfGroup(filterGroup, [_operation, filterKey, _clauses]) {
-  if (filterGroup === 'props') {
-    return filterKey.startsWith(EVENT_PROPS_PREFIX)
-  }
-  return filterKey === filterGroup
 }
 
 class RegularFilterModal extends React.Component {
@@ -157,7 +150,7 @@ class RegularFilterModal extends React.Component {
               <FilterModalGroup
                 key={type}
                 type={type}
-                rows={Object.entries(this.state.filterState).filter(([_, filter]) => isOfGroup(type, filter)).map(([id, filter]) => ({ id, filter }))}
+                filterState={this.state.filterState}
                 labels={this.state.labelState}
                 site={this.props.site}
                 query={this.state.query}
