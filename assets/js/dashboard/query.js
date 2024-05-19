@@ -105,13 +105,3 @@ function QueryButton({ history, query, to, disabled, className, children, onClic
 
 const QueryButtonWithRouter = withRouter(QueryButton)
 export { QueryButtonWithRouter as QueryButton };
-
-export function eventName(query) {
-  if (query.filters.goal) {
-    if (query.filters.goal.startsWith('Visit ')) {
-      return 'pageviews'
-    }
-    return 'events'
-  }
-  return 'pageviews'
-}
