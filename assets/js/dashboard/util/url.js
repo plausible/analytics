@@ -111,6 +111,6 @@ export class PlausibleSearchParams extends URLSearchParams {
     if (entries.length === 0) {
       return ''
     }
-    return "?" + entries.map(([key, value]) => `${this.escape(key)}=${this.escape(value)}`).join("&")
+    return entries.map(([key, value]) => `${this.escape(key)}=${this.escape(value)}`).join("&")
   }
 }
