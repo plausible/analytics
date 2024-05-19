@@ -5,7 +5,7 @@ import * as api from '../../api'
 import * as url from '../../util/url'
 import { CR_METRIC, PERCENTAGE_METRIC } from "../reports/metrics";
 import * as storage from "../../util/storage";
-import { getFiltersByKeyPrefix, parsePrefix, escapeFilterValue, EVENT_PROPS_PREFIX, getPropertyKeyFromFilterKey } from "../../util/filters"
+import { getFiltersByKeyPrefix, escapeFilterValue, EVENT_PROPS_PREFIX, getPropertyKeyFromFilterKey, getGoalFilter, FILTER_OPERATIONS, hasGoalFilter } from "../../util/filters"
 
 
 export default function Properties(props) {
@@ -16,10 +16,10 @@ export default function Properties(props) {
   const [propKey, setPropKey] = useState(choosePropKey())
 
   function singleGoalFilterApplied() {
-    const goalFilter = query.filters.goal
+    const goalFilter = getGoalFilter(query)
     if (goalFilter) {
-      const { type, values } = parsePrefix(goalFilter)
-      return type === 'is' && values.length === 1
+      const [operation, _filterKey, clauses] = goalFilter
+      return operation === FILTER_OPERATIONS.is && clauses.length === 1
     } else {
       return false
     }
@@ -77,7 +77,7 @@ export default function Properties(props) {
         metrics={[
           { name: 'visitors', label: 'Visitors', plot: true },
           { name: 'events', label: 'Events', hiddenOnMobile: true },
-          query.filters.goal ? CR_METRIC : PERCENTAGE_METRIC,
+          hasGoalFilter(query) ? CR_METRIC : PERCENTAGE_METRIC,
           BUILD_EXTRA && { name: 'total_revenue', label: 'Revenue', hiddenOnMobile: true },
           BUILD_EXTRA && { name: 'average_revenue', label: 'Average', hiddenOnMobile: true }
         ]}

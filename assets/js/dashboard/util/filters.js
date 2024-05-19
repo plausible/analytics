@@ -102,6 +102,15 @@ export function isFilteringOnFixedValue(query, filterKey, expectedValue) {
   return false
 }
 
+export function hasGoalFilter(query) {
+  return getFiltersByKeyPrefix(query, "goal").length > 0
+}
+
+// Note: Currently only a single goal filter can be applied at a time.
+export function getGoalFilter(query) {
+  return getFiltersByKeyPrefix(query, "goal")[0] || null
+}
+
 export function formatFilterGroup(filterGroup) {
   if (filterGroup === 'utm') {
     return 'UTM tags'

@@ -1,3 +1,4 @@
+import { hasGoalFilter } from "../../util/filters"
 import numberFormatter from "../../util/number-formatter"
 import React from "react"
 
@@ -24,10 +25,10 @@ export const PERCENTAGE_METRIC = { name: 'percentage', label: '%' }
 export const CR_METRIC = { name: 'conversion_rate', label: 'CR' }
 
 export function maybeWithCR(metrics, query) {
-  if (metrics.includes(PERCENTAGE_METRIC) && query.filters.goal) {
+  if (metrics.includes(PERCENTAGE_METRIC) && hasGoalFilter(query)) {
     return metrics.filter((m) => { return m !== PERCENTAGE_METRIC }).concat([CR_METRIC])
   }
-  else if (query.filters.goal) {
+  else if (hasGoalFilter(query)) {
     return metrics.concat(CR_METRIC)
   }
   else {
@@ -49,6 +50,6 @@ export function displayMetricValue(value, metric) {
 
 export function metricLabelFor(metric, query) {
   if (metric.realtimeLabel && query.period === 'realtime') { return metric.realtimeLabel }
-  if (metric.goalFilterLabel && query.filters.goal) { return metric.goalFilterLabel }
+  if (metric.goalFilterLabel && hasGoalFilter(query)) { return metric.goalFilterLabel }
   return metric.label
 }

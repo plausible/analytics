@@ -5,6 +5,7 @@ import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter from '../../util/number-formatter'
 import {parseQuery} from '../../query'
+import { hasGoalFilter } from "../../util/filters";
 
 class ModalTable extends React.Component {
   constructor(props) {
@@ -21,7 +22,7 @@ class ModalTable extends React.Component {
   }
 
   showConversionRate() {
-    return !!this.state.query.filters.goal
+    return hasGoalFilter(this.state.query)
   }
 
   showPercentage() {

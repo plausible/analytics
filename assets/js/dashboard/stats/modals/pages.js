@@ -7,6 +7,7 @@ import * as api from '../../api'
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import { trimURL, updatedQuery } from '../../util/url'
+import { hasGoalFilter } from "../../util/filters";
 
 class PagesModal extends React.Component {
   constructor(props) {
@@ -37,15 +38,15 @@ class PagesModal extends React.Component {
   }
 
   showExtra() {
-    return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
+    return this.state.query.period !== 'realtime' && !hasGoalFilter(this.state.query)
   }
 
   showPageviews() {
-    return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
+    return this.state.query.period !== 'realtime' && !hasGoalFilter(this.state.query)
   }
 
   showConversionRate() {
-    return !!this.state.query.filters.goal
+    return hasGoalFilter(this.state.query)
   }
 
   formatBounceRate(page) {

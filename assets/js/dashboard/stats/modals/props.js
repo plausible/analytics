@@ -8,7 +8,7 @@ import * as url from "../../util/url";
 import numberFormatter from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import { specialTitleWhenGoalFilter } from "../behaviours/goal-conversions";
-import { escapeFilterValue } from "../../util/filters"
+import { escapeFilterValue, hasGoalFilter } from "../../util/filters"
 
 /*global BUILD_EXTRA*/
 /*global require*/
@@ -79,8 +79,13 @@ function PropsModal(props) {
         </td>
         <td className="p-2 w-24 font-medium" align="right">{numberFormatter(listItem.visitors)}</td>
         <td className="p-2 w-24 font-medium" align="right">{numberFormatter(listItem.events)}</td>
-        {query.filters.goal && <td className="p-2 w-24 font-medium" align="right">{listItem.conversion_rate}%</td>}
-        {!query.filters.goal && <td className="p-2 w-24 font-medium" align="right">{listItem.percentage}</td>}
+        {
+          hasGoalFilter(query) ? (
+            <td className="p-2 w-24 font-medium" align="right">{listItem.conversion_rate}%</td>
+          ) : (
+            <td className="p-2 w-24 font-medium" align="right">{listItem.percentage}</td>
+          )
+        }
         {hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.total_revenue} /></td>}
         {hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.average_revenue} /></td>}
       </tr>
@@ -106,7 +111,7 @@ function PropsModal(props) {
                 <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400 truncate" align="left">{propKey}</th>
                 <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visitors</th>
                 <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Events</th>
-                <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{query.filters.goal ? 'CR' : '%'}</th>
+                <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{hasGoalFilter(query) ? 'CR' : '%'}</th>
                 {hasRevenue && <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Revenue</th>}
                 {hasRevenue && <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Average</th>}
               </tr>

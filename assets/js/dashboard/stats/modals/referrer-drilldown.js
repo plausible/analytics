@@ -6,6 +6,7 @@ import * as api from '../../api'
 import numberFormatter, {durationFormatter} from '../../util/number-formatter'
 import {parseQuery} from '../../query'
 import { updatedQuery } from "../../util/url";
+import { hasGoalFilter } from "../../util/filters";
 
 class ReferrerDrilldownModal extends React.Component {
   constructor(props) {
@@ -24,11 +25,11 @@ class ReferrerDrilldownModal extends React.Component {
   }
 
   showExtra() {
-    return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
+    return this.state.query.period !== 'realtime' && !hasGoalFilter(this.state.query)
   }
 
   showConversionRate() {
-    return !!this.state.query.filters.goal
+    return hasGoalFilter(this.state.query)
   }
 
   label() {

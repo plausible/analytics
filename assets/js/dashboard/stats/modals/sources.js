@@ -6,6 +6,7 @@ import * as api from '../../api'
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import { updatedQuery } from "../../util/url";
+import { hasGoalFilter } from "../../util/filters";
 
 const TITLES = {
   sources: 'Top Sources',
@@ -53,11 +54,11 @@ class SourcesModal extends React.Component {
   }
 
   showExtra() {
-    return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
+    return this.state.query.period !== 'realtime' && !hasGoalFilter(this.state.querys)
   }
 
   showConversionRate() {
-    return !!this.state.query.filters.goal
+    return hasGoalFilter(this.state.query)
   }
 
   loadMore() {

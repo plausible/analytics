@@ -9,6 +9,7 @@ import Bar from '../bar'
 import LazyLoader from '../../components/lazy-loader'
 import classNames from 'classnames'
 import { trimURL } from '../../util/url'
+import { hasGoalFilter } from '../../util/filters'
 const MAX_ITEMS = 9
 const MIN_HEIGHT = 380
 const ROW_HEIGHT = 32
@@ -114,7 +115,7 @@ export default function ListReport(props) {
   const colMinWidth = props.colMinWidth || COL_MIN_WIDTH
 
   const isRealtime = props.query.period === 'realtime'
-  const goalFilterApplied = !!props.query.filters.goal
+  const goalFilterApplied = hasGoalFilter(props.query)
 
   const fetchData = useCallback(() => {
     if (!isRealtime) {

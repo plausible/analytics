@@ -7,6 +7,7 @@ import * as api from '../../api'
 import numberFormatter, {percentageFormatter} from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import { trimURL, updatedQuery } from '../../util/url'
+import { hasGoalFilter } from "../../util/filters";
 class ExitPagesModal extends React.Component {
   constructor(props) {
     super(props)
@@ -35,7 +36,7 @@ class ExitPagesModal extends React.Component {
   }
 
   showConversionRate() {
-    return !!this.state.query.filters.goal
+    return hasGoalFilter(this.state.query)
   }
 
   showExtra() {
