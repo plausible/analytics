@@ -4,6 +4,7 @@ import ListReport from "../reports/list"
 import { CR_METRIC } from "../reports/metrics"
 import * as url from "../../util/url"
 import * as api from "../../api"
+import { getGoalFilter } from "../../util/filters"
 
 export const SPECIAL_GOALS = {
   '404': {title: '404 Pages', prop: 'path'},
@@ -12,14 +13,26 @@ export const SPECIAL_GOALS = {
   'File Download': {title: 'File Downloads', prop: 'url'}
 }
 
+function getSpecialGoal(query) {
+  const goalFilter = getGoalFilter(query)
+  if (!goalFilter) {
+    return null
+  }
+  const [_operation, _filterKey, clauses] = goalFilter
+  if (clauses.length == 1) {
+    return SPECIAL_GOALS[clauses[0]]?.title || null
+  }
+  return null
+
+}
+
 export function specialTitleWhenGoalFilter(query, defaultTitle) {
-  return SPECIAL_GOALS[query.filters.goal]?.title || defaultTitle
+  return getSpecialGoal(query)?.title || defaultTitle
 }
 
 function SpecialPropBreakdown(props) {
-  const { site, query } = props
-  const prop = SPECIAL_GOALS[query.filters.goal].prop
-  
+  const { site, query, prop } = props
+
   function fetchData() {
     return api.get(url.apiPath(site, `/custom-prop-values/${prop}`), query)
   }
@@ -57,8 +70,9 @@ function SpecialPropBreakdown(props) {
 export default function GoalConversions(props) {
   const {site, query} = props
 
-  if (SPECIAL_GOALS[query.filters.goal]) {
-    return <SpecialPropBreakdown site={site} query={props.query} />
+  const specialGoal = getSpecialGoal(query)
+  if (specialGoal) {
+    return <SpecialPropBreakdown site={site} query={props.query} prop={specialGoal.prop} />
   } else {
     return <Conversions site={site} query={props.query} onGoalFilterClick={props.onGoalFilterClick}/>
   }
