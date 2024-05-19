@@ -99,7 +99,11 @@ export class PlausibleSearchParams extends URLSearchParams {
   }
 
   escape(value) {
-    return value.replaceAll("?", "%3F").replaceAll("=", "%3D").replaceAll("&", "%26")
+    // Less strict encoding - allow components which don't need to get encoded strictly
+    return encodeURIComponent(value)
+      .replaceAll("%2C", ",")
+      .replaceAll("%27", "'")
+      .replaceAll("%3A", ":")
   }
 
   toString() {
