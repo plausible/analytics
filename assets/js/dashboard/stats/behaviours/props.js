@@ -5,7 +5,7 @@ import * as api from '../../api'
 import * as url from '../../util/url'
 import { CR_METRIC, PERCENTAGE_METRIC } from "../reports/metrics";
 import * as storage from "../../util/storage";
-import { parsePrefix, escapeFilterValue } from "../../util/filters"
+import { getFiltersByKeyPrefix, parsePrefix, escapeFilterValue, EVENT_PROPS_PREFIX, getPropertyKeyFromFilterKey } from "../../util/filters"
 
 
 export default function Properties(props) {
@@ -26,8 +26,10 @@ export default function Properties(props) {
   }
 
   function choosePropKey() {
-    if (query.filters.props) {
-      return Object.keys(query.filters.props)[0]
+    const propFilters = getFiltersByKeyPrefix(query, EVENT_PROPS_PREFIX)
+    if (propFilters.length > 0) {
+      const [_operation, filterKey, _clauses] = propFilters[0]
+      return getPropertyKeyFromFilterKey(filterKey)
     } else {
       return getPropKeyFromStorage()
     }

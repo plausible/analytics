@@ -11,7 +11,8 @@ import {
   FILTER_GROUPS,
   formatFilterGroup,
   formattedFilters,
-  EVENT_PROPS_PREFIX
+  EVENT_PROPS_PREFIX,
+  getPropertyKeyFromFilterKey
 } from "./util/filters"
 
 function removeFilter(filterIndex, history, query) {
@@ -39,7 +40,7 @@ function filterText([operation, filterKey, clauses]) {
   if (formattedFilter) {
     return <>{formattedFilter} {operation} {clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
-    const propKey = filterKey.slice(EVENT_PROPS_PREFIX.length)
+    const propKey = getPropertyKeyFromFilterKey(filterKey)
     return <>Property <b>{propKey}</b> {operation} {clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   }
 

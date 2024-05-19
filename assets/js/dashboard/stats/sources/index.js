@@ -6,8 +6,7 @@ import { isFilteringOnFixedValue } from '../../util/filters'
 
 
 export default function Sources(props) {
-  // :TODO: Limit
-  if (false && props.query.filters.source === 'Google') {
+  if (isFilteringOnFixedValue(props.query, 'source', 'Google')) {
     return <SearchTerms {...props} />
   } else if (isFilteringOnFixedValue(props.query, 'source')) {
     return <ReferrerList {...props} />

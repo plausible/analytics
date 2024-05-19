@@ -5,7 +5,7 @@ import FilterTypeSelector from "../../components/filter-type-selector"
 import Combobox from '../../components/combobox'
 
 import { apiPath } from '../../util/url'
-import { EVENT_PROPS_PREFIX, FILTER_OPERATIONS, fetchSuggestions } from '../../util/filters'
+import { EVENT_PROPS_PREFIX, FILTER_OPERATIONS, fetchSuggestions, getPropertyKeyFromFilterKey } from '../../util/filters'
 
 export default function FilterModalPropsRow({
   site,
@@ -18,7 +18,7 @@ export default function FilterModalPropsRow({
   const [operation, filterKey, clauses] = filter
 
   const propKey = useMemo(
-    () => filterKey.slice(EVENT_PROPS_PREFIX.length),
+    () => getPropertyKeyFromFilterKey(filterKey),
     [filterKey]
   )
 

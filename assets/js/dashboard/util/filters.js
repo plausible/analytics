@@ -85,11 +85,19 @@ export function parseQueryPropsFilter(query) {
   })
 }
 
-export function isFilteringOnFixedValue(query, filterKey) {
+export function getPropertyKeyFromFilterKey(filterKey) {
+  return filterKey.slice(EVENT_PROPS_PREFIX.length)
+}
+
+export function getFiltersByKeyPrefix(query, prefix) {
+  return query.filters.filter(([_query, filterKey, _clauses]) => filterKey.startsWith(prefix))
+}
+
+export function isFilteringOnFixedValue(query, filterKey, expectedValue) {
   const filters = query.filters.filter(([_operation, key]) => filterKey == key)
   if (filters.length == 1) {
     const [operation, _filterKey, clauses] = filters[0]
-    return operation === FILTER_OPERATIONS.is && clauses.length === 1
+    return operation === FILTER_OPERATIONS.is && clauses.length === 1 && (!expectedValue || clauses[0] == expectedValue)
   }
   return false
 }
@@ -135,9 +143,8 @@ export function serializeApiFilters(filters) {
   const cleaned = {}
   filters.forEach(([operation, filterKey, clauses]) => {
     if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
-      const propKey = filterKey.slice(EVENT_PROPS_PREFIX.length)
       cleaned.props ||= {}
-      cleaned.props[propKey] = toFilterQuery(operation, clauses)
+      cleaned.props[getPropertyKeyFromFilterKey(filterKey)] = toFilterQuery(operation, clauses)
     } else {
       cleaned[filterKey] = toFilterQuery(operation, clauses)
     }
