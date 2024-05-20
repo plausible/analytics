@@ -608,7 +608,7 @@ defmodule Plausible.Stats.Imported do
           """
           if(
             ? + ? > 0,
-            round((? + ? * ?) / (? + ?), 1),
+            round((? + ? * ?) / (? + ?), 0),
             0
           )
           """,

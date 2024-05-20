@@ -646,30 +646,12 @@ defmodule Plausible.Imported.CSVImporterTest do
       pairwise(exported_pages, imported_pages, fn exported, imported ->
         assert exported["page"] == imported["page"]
         assert exported["pageviews"] == imported["pageviews"]
+        assert exported["visit_duration"] == imported["visit_duration"]
         assert exported["bounce_rate"] == imported["bounce_rate"]
 
         # time on page is not being exported/imported right now
         assert imported["time_on_page"] == 0
       end)
-
-      # NOTE: page breakdown's visit duration difference is up to almost 43%
-      assert summary(field(exported_pages, "visit_duration")) == [0, 0.0, 13.0, 46.5, 264]
-      assert summary(field(imported_pages, "visit_duration")) == [0.0, 0.0, 13.3, 46.6, 264.5]
-
-      assert summary(
-               pairwise(exported_pages, imported_pages, fn exported, imported ->
-                 e = exported["visit_duration"]
-                 i = imported["visit_duration"]
-
-                 if is_number(e) and is_number(i) and i > 0 do
-                   abs(1 - e / i)
-                 else
-                   # both nil or both zero
-                   assert e == i
-                   _no_diff = 0
-                 end
-               end)
-             ) == [0.0, 0.0, 0.0, 0.008812019016100597, 0.4285714285714286]
 
       # NOTE: page breakdown's visitors difference is up to 28%
       assert summary(field(exported_pages, "visitors")) == [1, 1.0, 5.5, 17.75, 495]
@@ -776,12 +758,9 @@ defmodule Plausible.Imported.CSVImporterTest do
                end)
              ) == [0.0, 0.0, 0.0, 0.0, 0.03614457831325302]
 
-      # NOTE: city breakdown's visit duration difference can reach 100% in some cases,
-      # though these extreme cases seem to come from the fact that duration in native query
-      # is half-up rounded to full integer, while imported visit duration is rounded
-      # to first decimal place.
+      # NOTE: city breakdown's visit duration difference is up to 14%
       assert summary(field(exported_cities, "visit_duration")) == [0, 0.0, 0.0, 1.0, 1718]
-      assert summary(field(imported_cities, "visit_duration")) == [0.0, 0.0, 0.0, 0.9, 1718.0]
+      assert summary(field(imported_cities, "visit_duration")) == [0.0, 0.0, 0.0, 1.0, 1718.0]
 
       assert summary(
                pairwise(exported_cities, imported_cities, fn exported, imported ->
@@ -796,21 +775,7 @@ defmodule Plausible.Imported.CSVImporterTest do
                    _no_diff = 0
                  end
                end)
-             ) == [0, 0, 0, 0, 1.0]
-
-      assert Enum.reject(
-               pairwise(exported_cities, imported_cities, fn exported, imported ->
-                 e = exported["visit_duration"]
-                 i = imported["visit_duration"]
-
-                 if i > 0 and e == 0 do
-                   {e, i}
-                 else
-                   nil
-                 end
-               end),
-               &is_nil/1
-             ) == [{0, 0.3}, {0, 0.4}, {0, 0.4}]
+             ) == [0, 0.0, 0.0, 0.0, 0.1428571428571429]
 
       # NOTE: city breakdown's visitors relative difference is up to 27%
       assert summary(field(exported_cities, "visitors")) == [1, 1.0, 1.0, 2.0, 22]
