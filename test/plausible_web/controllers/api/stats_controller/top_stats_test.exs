@@ -1454,7 +1454,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
           "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=true&comparison=year_over_year"
         )
 
-      assert %{"top_stats" => top_stats, "with_imported" => true} = json_response(conn, 200)
+      assert %{"top_stats" => top_stats, "includes_imported" => true} = json_response(conn, 200)
 
       assert %{
                "change" => 100,
@@ -1484,7 +1484,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
           "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=false&comparison=year_over_year"
         )
 
-      assert %{"top_stats" => top_stats, "with_imported" => false} = json_response(conn, 200)
+      assert %{"top_stats" => top_stats, "includes_imported" => false} = json_response(conn, 200)
 
       assert %{
                "change" => 100,

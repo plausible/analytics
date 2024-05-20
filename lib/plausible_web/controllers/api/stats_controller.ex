@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     * `interval` - the interval used for querying.
 
-    * `with_imported` - boolean indicating whether the Google Analytics data
+    * `includes_imported` - boolean indicating whether imported data
       was queried or not.
 
     * `imports_exist` - boolean indicating whether there are any completed
@@ -92,7 +92,7 @@ defmodule PlausibleWeb.Api.StatsController do
     "labels" => ["2021-09-01", "2021-10-01", "2021-11-01", "2021-12-01"],
     "plot" => [0, 0, 0, 0],
     "present_index" => nil,
-    "with_imported" => false
+    "includes_imported" => false
   }
   ```
 
@@ -137,7 +137,7 @@ defmodule PlausibleWeb.Api.StatsController do
         comparison_labels: comparison_result && label_timeseries(comparison_result, nil),
         present_index: present_index,
         interval: query.interval,
-        with_imported: with_imported?(query, comparison_query),
+        includes_imported: includes_imported?(query, comparison_query),
         imports_exist: site.complete_import_ids != [],
         full_intervals: full_intervals
       })
@@ -217,7 +217,7 @@ defmodule PlausibleWeb.Api.StatsController do
       top_stats: top_stats,
       interval: query.interval,
       sample_percent: sample_percent,
-      with_imported: with_imported?(query, comparison_query),
+      includes_imported: includes_imported?(query, comparison_query),
       imports_exist: site.complete_import_ids != [],
       comparing_from: comparison_query && comparison_query.date_range.first,
       comparing_to: comparison_query && comparison_query.date_range.last,
@@ -1391,7 +1391,7 @@ defmodule PlausibleWeb.Api.StatsController do
     ]
   end
 
-  defp with_imported?(source_query, comparison_query) do
+  defp includes_imported?(source_query, comparison_query) do
     cond do
       source_query.include_imported -> true
       comparison_query && comparison_query.include_imported -> true
