@@ -1,7 +1,7 @@
 import React from 'react';
 
 import * as storage from '../../util/storage'
-import { isFilteringOnFixedValue } from '../../util/filters'
+import { getFiltersByKeyPrefix, isFilteringOnFixedValue } from '../../util/filters'
 import ListReport from '../reports/list'
 import * as api from '../../api'
 import * as url from '../../util/url'
@@ -36,12 +36,13 @@ function BrowserVersions({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    return null
-    // :TODO:
-    if (query.filters.browser === '(not set)') {
+    if (getSingleFilter(query, "browser") == '(not set)') {
       return null
     }
-    return { browser_version: listItem['name'] }
+    return {
+      prefix: 'browser_version',
+      filter: ["is", "browser_version", [listItem['name']]]
+    }
   }
 
   return (
@@ -85,12 +86,13 @@ function OperatingSystemVersions({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    // :TODO:
-    return null
-    if (query.filters.os === '(not set)') {
-      return {}
+    if (getSingleFilter(query, "os") == '(not set)') {
+      return null
     }
-    return { os_version: listItem['name'] }
+    return {
+      prefix: 'os_version',
+      filter: ["is", "os_version", [listItem['name']]]
+    }
   }
 
   return (
@@ -230,4 +232,14 @@ export default class Devices extends React.Component {
       </div>
     )
   }
+}
+
+function getSingleFilter(query, filterKey) {
+  const matches = getFiltersByKeyPrefix(query, filterKey)
+  if (matches.length != 1) {
+    return null
+  }
+  const clauses = matches[0][2]
+
+  return clauses.length == 1 ? clauses[0] : null
 }
