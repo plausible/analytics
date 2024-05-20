@@ -8,6 +8,7 @@ defmodule Plausible.Stats.Comparisons do
   """
 
   alias Plausible.Stats
+  alias Plausible.Stats.Query
 
   @modes ~w(previous_period year_over_year custom)
   @disallowed_periods ~w(realtime all)
@@ -161,10 +162,25 @@ defmodule Plausible.Stats.Comparisons do
     Date.add(date, -days_to_subtract)
   end
 
-  defp maybe_include_imported(query, source_query, site) do
-    requested? = source_query.imported_data_requested
-    include_imported? = Stats.Query.include_imported?(query, site, requested?)
-    %Stats.Query{query | include_imported: include_imported?}
+  defp maybe_include_imported(query, %Query{imported_data_requested: false}, _site) do
+    %Stats.Query{query | include_imported: false}
+  end
+
+  defp maybe_include_imported(query, _source_query, site) do
+    case Query.ensure_include_imported(query, site) do
+      :ok ->
+        struct!(query,
+          imported_data_requested: true,
+          include_imported: true
+        )
+
+      {:error, reason} ->
+        struct!(query,
+          imported_data_requested: true,
+          include_imported: false,
+          skip_imported_reason: reason
+        )
+    end
   end
 
   defp validate_mode(%Stats.Query{period: period}, mode) do
