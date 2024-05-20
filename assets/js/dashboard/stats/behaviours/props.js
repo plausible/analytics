@@ -11,8 +11,10 @@ import { getFiltersByKeyPrefix, EVENT_PROPS_PREFIX, getPropertyKeyFromFilterKey,
 export default function Properties(props) {
   const { site, query } = props
   const propKeyStorageName = `prop_key__${site.domain}`
-  // :TODO:
-  const propKeyStorageNameForGoal = `${query.filters.goal}__prop_key__${site.domain}`
+  const propKeyStorageNameForGoal = () => {
+    const [_operation, _filterKey, [goal]] = getGoalFilter(query)
+    return `${goal}__prop_key__${site.domain}`
+  }
 
   const [propKey, setPropKey] = useState(choosePropKey())
 
@@ -38,7 +40,7 @@ export default function Properties(props) {
 
   function getPropKeyFromStorage() {
     if (singleGoalFilterApplied()) {
-      const storedForGoal = storage.getItem(propKeyStorageNameForGoal)
+      const storedForGoal = storage.getItem(propKeyStorageNameForGoal())
       if (storedForGoal) { return storedForGoal }
     }
 
@@ -60,7 +62,7 @@ export default function Properties(props) {
       const newPropKey = selectedOptions.length === 0 ? null : selectedOptions[0].value
 
       if (newPropKey) {
-        const storageName = singleGoalFilterApplied() ? propKeyStorageNameForGoal : propKeyStorageName
+        const storageName = singleGoalFilterApplied() ? propKeyStorageNameForGoal() : propKeyStorageName
         storage.setItem(storageName, newPropKey)
       }
 
