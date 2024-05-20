@@ -9,6 +9,7 @@ defmodule Plausible.Stats.Query do
             sample_threshold: 20_000_000,
             imported_data_requested: false,
             include_imported: false,
+            skip_imported_reason: nil,
             now: nil,
             experimental_session_count?: false,
             experimental_reduced_joins?: false
@@ -248,20 +249,31 @@ defmodule Plausible.Stats.Query do
   defp put_imported_opts(query, site, params) do
     requested? = params["with_imported"] == "true"
 
-    struct!(query,
-      imported_data_requested: requested?,
-      include_imported: include_imported?(query, site, requested?)
-    )
+    case ensure_include_imported(query, site) do
+      :ok ->
+        struct!(query,
+          imported_data_requested: requested?,
+          include_imported: requested?
+        )
+
+      {:error, reason} ->
+        struct!(query,
+          imported_data_requested: requested?,
+          include_imported: false,
+          skip_imported_reason: reason
+        )
+    end
   end
 
-  @spec include_imported?(t(), Plausible.Site.t(), boolean()) :: boolean()
-  def include_imported?(query, site, requested?) do
+  @spec ensure_include_imported(t(), Plausible.Site.t()) ::
+          :ok | {:error, :no_imported_data | :out_of_range | :unsupported_query}
+  def ensure_include_imported(query, site) do
     cond do
-      is_nil(site.latest_import_end_date) -> false
-      Date.after?(query.date_range.first, site.latest_import_end_date) -> false
-      not Imported.schema_supports_query?(query) -> false
-      query.period == "realtime" -> false
-      true -> requested?
+      is_nil(site.latest_import_end_date) -> {:error, :no_imported_data}
+      Date.after?(query.date_range.first, site.latest_import_end_date) -> {:error, :out_of_range}
+      not Imported.schema_supports_query?(query) -> {:error, :unsupported_query}
+      query.period == "realtime" -> {:error, :unsupported_query}
+      true -> :ok
     end
   end
 
