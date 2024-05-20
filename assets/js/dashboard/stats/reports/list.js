@@ -8,8 +8,8 @@ import MoreLink from '../more-link'
 import Bar from '../bar'
 import LazyLoader from '../../components/lazy-loader'
 import classNames from 'classnames'
-import { trimURL } from '../../util/url'
-import { hasGoalFilter } from '../../util/filters'
+import { trimURL, updatedQuery } from '../../util/url'
+import { cleanLabels, hasGoalFilter, omitFiltersByKeyPrefix } from '../../util/filters'
 const MAX_ITEMS = 9
 const MIN_HEIGHT = 380
 const ROW_HEIGHT = 32
@@ -83,9 +83,10 @@ function ExternalLink({ item, externalLinkDest }) {
 //     least the `name` and the `label` keys. If the metric should have a different label
 //     in realtime or goal-filtered views, we'll use `realtimeLabel` and `GoalFilterLabel`.
 
-//   * `getFilterFor` - a function that takes a list item and returns the query link (with
-//      the filter) to navigate to when this list item is clicked. If a list item is not
-//      supposed to be clickable, this function should return `null` for that list item.
+//   * `getFilterFor` - a function that takes a list item and returns [prefix, filter, labels]
+//      that should be applied when the list item is clicked. All existing filters matching prefix
+//      are removed. If a list item is not supposed to be clickable, this function should
+//      return `null` for that list item.
 
 // OPTIONAL PROPS:
 
@@ -222,15 +223,14 @@ export default function ListReport(props) {
   }
 
   function getFilterQuery(listItem) {
-    const filter = props.getFilterFor(listItem)
-    if (!filter) { return null }
+    const prefixAndFilter = props.getFilterFor(listItem)
+    if (!prefixAndFilter) { return null }
 
-    const query = new URLSearchParams(window.location.search)
-    Object.entries(filter).forEach((([key, value]) => {
-      query.set(key, value)
-    }))
+    const {prefix, filter, labels} = prefixAndFilter
+    const newFilters = omitFiltersByKeyPrefix(props.query, prefix).concat([filter])
+    const newLabels = cleanLabels(newFilters, props.query.labels, filter[1], labels)
 
-    return query
+    return updatedQuery({ filters: newFilters, labels: newLabels })
   }
 
   function renderBarFor(listItem) {

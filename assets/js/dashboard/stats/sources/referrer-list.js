@@ -16,7 +16,11 @@ export default function Referrers({site, query}) {
 
   function getFilterFor(referrer) {
     if (referrer.name === 'Direct / None') { return null }
-    return { referrer: referrer.name }
+
+    return {
+      prefix: 'referrer',
+      filter: ["is", "referrer", [referrer.name]]
+    }
   }
 
   function renderIcon(listItem) {

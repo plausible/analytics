@@ -21,7 +21,11 @@ function Countries({query, site, onClick}) {
   }
 
   function getFilterFor(listItem) {
-    return { country: listItem['code'], country_labels: listItem['name'] }
+    return {
+      prefix: "country",
+      filter: ["is", "country", [listItem['code']]],
+      labels: { [listItem['code']]: listItem['name'] }
+    }
   }
 
   return (
@@ -49,7 +53,11 @@ function Regions({query, site, onClick}) {
   }
 
   function getFilterFor(listItem) {
-    return {region: listItem['code'], region_labels: listItem['name']}
+    return {
+      prefix: "region",
+      filter: ["is", "region", [listItem['code']]],
+      labels: { [listItem['code']]: listItem['name'] }
+    }
   }
 
   return (
@@ -77,7 +85,11 @@ function Cities({query, site}) {
   }
 
   function getFilterFor(listItem) {
-    return {city: listItem['code'], city_labels: listItem['name']}
+    return {
+      prefix: "city",
+      filter: ["is", "city", [listItem['code']]],
+      labels: { [listItem['code']]: listItem['name'] }
+    }
   }
 
   return (

@@ -4,7 +4,7 @@ import ListReport from "../reports/list"
 import { CR_METRIC } from "../reports/metrics"
 import * as url from "../../util/url"
 import * as api from "../../api"
-import { getGoalFilter } from "../../util/filters"
+import { EVENT_PROPS_PREFIX, getGoalFilter } from "../../util/filters"
 
 export const SPECIAL_GOALS = {
   '404': {title: '404 Pages', prop: 'path'},
@@ -45,7 +45,12 @@ function SpecialPropBreakdown(props) {
     }
   }
 
-  const getFilterFor = (listItem) => { return {'props': JSON.stringify({[prop]: listItem['name']})} }
+  function getFilterFor(listItem) {
+    return {
+      prefix: EVENT_PROPS_PREFIX,
+      filter: ["is", `${EVENT_PROPS_PREFIX}${prop}`, [listItem['name']]]
+    }
+  }
 
   return (
     <ListReport

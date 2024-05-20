@@ -59,7 +59,7 @@ export function escapeFilterValue(value) {
 
 function toFilterQuery(type, clauses) {
   const prefix = OPERATION_PREFIX[type];
-  const result = clauses.map(clause => escapeFilterValue(clause.trim())).join('|')
+  const result = clauses.map(clause => escapeFilterValue(clause.toString().trim())).join('|')
   return prefix + result;
 }
 
@@ -90,7 +90,11 @@ export function getPropertyKeyFromFilterKey(filterKey) {
 }
 
 export function getFiltersByKeyPrefix(query, prefix) {
-  return query.filters.filter(([_query, filterKey, _clauses]) => filterKey.startsWith(prefix))
+  return query.filters.filter(([_operation, filterKey, _clauses]) => filterKey.startsWith(prefix))
+}
+
+export function omitFiltersByKeyPrefix(query, prefix) {
+  return query.filters.filter(([_operation, filterKey, _clauses]) => !filterKey.startsWith(prefix))
 }
 
 export function isFilteringOnFixedValue(query, filterKey, expectedValue) {

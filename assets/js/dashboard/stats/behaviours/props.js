@@ -5,12 +5,13 @@ import * as api from '../../api'
 import * as url from '../../util/url'
 import { CR_METRIC, PERCENTAGE_METRIC } from "../reports/metrics";
 import * as storage from "../../util/storage";
-import { getFiltersByKeyPrefix, escapeFilterValue, EVENT_PROPS_PREFIX, getPropertyKeyFromFilterKey, getGoalFilter, FILTER_OPERATIONS, hasGoalFilter } from "../../util/filters"
+import { getFiltersByKeyPrefix, EVENT_PROPS_PREFIX, getPropertyKeyFromFilterKey, getGoalFilter, FILTER_OPERATIONS, hasGoalFilter } from "../../util/filters"
 
 
 export default function Properties(props) {
   const { site, query } = props
   const propKeyStorageName = `prop_key__${site.domain}`
+  // :TODO:
   const propKeyStorageNameForGoal = `${query.filters.goal}__prop_key__${site.domain}`
 
   const [propKey, setPropKey] = useState(choosePropKey())
@@ -91,8 +92,10 @@ export default function Properties(props) {
   }
 
   const getFilterFor = (listItem) => ({
-    props: JSON.stringify({ ...query.filters.props, [propKey]: escapeFilterValue(listItem.name) })
+    prefix: `${EVENT_PROPS_PREFIX}${propKey}`,
+    filter: ["is", `${EVENT_PROPS_PREFIX}${propKey}`, [listItem.name]]
   })
+
   const comboboxValues = propKey ? [{ value: propKey, label: propKey }] : []
   const boxClass = 'pl-2 pr-8 py-1 bg-transparent dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-500'
 
