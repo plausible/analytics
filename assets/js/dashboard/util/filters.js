@@ -85,6 +85,14 @@ export function parseQueryPropsFilter(query) {
   })
 }
 
+export function getLabel(labels, filterKey, value) {
+  if (['country', 'region', 'city'].includes(filterKey)) {
+    return labels[value]
+  } else {
+    return value
+  }
+}
+
 export function getPropertyKeyFromFilterKey(filterKey) {
   return filterKey.slice(EVENT_PROPS_PREFIX.length)
 }

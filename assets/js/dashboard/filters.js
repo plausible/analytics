@@ -12,7 +12,8 @@ import {
   formatFilterGroup,
   formattedFilters,
   EVENT_PROPS_PREFIX,
-  getPropertyKeyFromFilterKey
+  getPropertyKeyFromFilterKey,
+  getLabel
 } from "./util/filters"
 
 function removeFilter(filterIndex, history, query) {
@@ -34,11 +35,11 @@ function clearAllFilters(history, query) {
   );
 }
 
-function filterText([operation, filterKey, clauses]) {
+function filterText(query, [operation, filterKey, clauses]) {
   const formattedFilter = formattedFilters[filterKey]
 
   if (formattedFilter) {
-    return <>{formattedFilter} {operation} {clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+    return <>{formattedFilter} {operation} {clauses.map((value) => <b key={value}>{getLabel(query.labels, filterKey, value)}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
     const propKey = getPropertyKeyFromFilterKey(filterKey)
     return <>Property <b>{propKey}</b> {operation} {clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
@@ -60,7 +61,7 @@ function renderDropdownFilter(filterIndex, filter, site, history, query) {
           className="group flex w-full justify-between items-center"
           style={{ width: 'calc(100% - 1.5rem)' }}
         >
-          <span className="inline-block w-full truncate">{filterText(filter)}</span>
+          <span className="inline-block w-full truncate">{filterText(query, filter)}</span>
           <PencilSquareIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
         </Link>
         <b
@@ -206,7 +207,7 @@ class Filters extends React.Component {
   };
 
   renderListFilter(filterIndex, filter, history, query) {
-    const text = filterText(filter)
+    const text = filterText(query, filter)
     const [_operation, filterKey, _clauses] = filter
     const type = filterKey.startsWith(EVENT_PROPS_PREFIX) ? 'props' : filterKey
     return (

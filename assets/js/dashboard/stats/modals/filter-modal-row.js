@@ -5,7 +5,7 @@ import Combobox from '../../components/combobox'
 
 import { FILTER_OPERATIONS, fetchSuggestions, isFreeChoiceFilter } from "../../util/filters"
 import { apiPath } from '../../util/url'
-import { formattedFilters } from '../../util/filters'
+import { getLabel, formattedFilters } from '../../util/filters'
 
 export default function FilterModalRow({
   site,
@@ -61,14 +61,6 @@ export default function FilterModalRow({
       </div>
     </div>
   )
-}
-
-function getLabel(labels, filterKey, value) {
-  if (['country', 'region', 'city'].includes(filterKey)) {
-    return labels[value]
-  } else {
-    return value
-  }
 }
 
 function withIndefiniteArticle(word) {
