@@ -29,7 +29,6 @@ defmodule Plausible.Stats.Imported do
     "visit:os_version" => "imported_operating_systems",
     "event:page" => "imported_pages",
     "event:name" => "imported_custom_events",
-    "event:hostname" => "imported_pages",
     "event:props:url" => "imported_custom_events",
     "event:props:path" => "imported_custom_events"
   }
@@ -322,18 +321,6 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp select_imported_metrics(
-         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_pages", _}}} = q,
-         [:bounce_rate | rest]
-       ) do
-    q
-    |> select_merge([i], %{
-      bounces: 0,
-      __internal_visits: 0
-    })
-    |> select_imported_metrics(rest)
-  end
-
-  defp select_imported_metrics(
          %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
          [:bounce_rate | rest]
        ) do
@@ -362,18 +349,6 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([i], %{
       bounces: sum(i.bounces),
       __internal_visits: sum(i.visits)
-    })
-    |> select_imported_metrics(rest)
-  end
-
-  defp select_imported_metrics(
-         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_pages", _}}} = q,
-         [:visit_duration | rest]
-       ) do
-    q
-    |> select_merge([i], %{
-      visit_duration: 0,
-      __internal_visits: 0
     })
     |> select_imported_metrics(rest)
   end
@@ -525,12 +500,6 @@ defmodule Plausible.Stats.Imported do
     q
     |> group_by([i], i.name)
     |> select_merge([i], %{name: i.name})
-  end
-
-  defp group_imported_by(q, :hostname) do
-    q
-    |> group_by([i], i.hostname)
-    |> select_merge([i], %{hostname: i.hostname})
   end
 
   defp group_imported_by(q, :url) do

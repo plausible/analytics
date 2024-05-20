@@ -949,98 +949,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     assert json_response(conn, 200) == %{"results" => []}
   end
 
-  describe "breakdown by event:hostname" do
-    setup %{site: site} do
-      site_import = insert(:site_import, site: site)
+  test "attempting to breakdown by event:hostname returns an error", %{conn: conn, site: site} do
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "property" => "event:hostname",
+        "with_imported" => "true"
+      })
 
-      populate_stats(site, site_import.id, [
-        build(:pageview,
-          hostname: "alice.example.com",
-          pathname: "/a",
-          timestamp: ~N[2021-01-01 00:00:00]
-        ),
-        build(:pageview,
-          hostname: "bob.example.com",
-          pathname: "/a",
-          timestamp: ~N[2021-01-01 00:25:00]
-        ),
-        build(:pageview,
-          hostname: "alice.example.com",
-          pathname: "/b",
-          timestamp: ~N[2021-01-01 00:35:00]
-        ),
-        build(:imported_pages,
-          hostname: "alice.example.com",
-          page: "/a",
-          date: ~D[2021-01-01],
-          visitors: 3,
-          pageviews: 20
-        ),
-        build(:imported_pages,
-          hostname: "bob.example.com",
-          page: "/a",
-          date: ~D[2021-01-01],
-          visitors: 10,
-          pageviews: 18
-        )
-      ])
-    end
+    assert %{
+             "error" => error
+           } = json_response(conn, 400)
 
-    test "can breakdown by event:hostname", %{conn: conn, site: site} do
-      conn =
-        get(conn, "/api/v1/stats/breakdown", %{
-          "site_id" => site.domain,
-          "period" => "day",
-          "date" => "2021-01-01",
-          "property" => "event:hostname",
-          "with_imported" => "true"
-        })
-
-      assert json_response(conn, 200) == %{
-               "results" => [
-                 %{"hostname" => "bob.example.com", "visitors" => 11},
-                 %{"hostname" => "alice.example.com", "visitors" => 5}
-               ]
-             }
-    end
-
-    test "handles all applicable metrics with graceful fallback for imported data when needed", %{
-      conn: conn,
-      site: site
-    } do
-      conn =
-        get(conn, "/api/v1/stats/breakdown", %{
-          "site_id" => site.domain,
-          "period" => "day",
-          "date" => "2021-01-01",
-          "property" => "event:hostname",
-          "metrics" => "visitors,visits,pageviews,bounce_rate,visit_duration,events",
-          "with_imported" => "true"
-        })
-
-      assert json_response(conn, 200) == %{
-               "results" => [
-                 %{
-                   "hostname" => "bob.example.com",
-                   "visitors" => 11,
-                   "bounce_rate" => 100.0,
-                   "events" => 19,
-                   "pageviews" => 19,
-                   "visit_duration" => 0.0,
-                   "visits" => 1
-                 },
-                 %{
-                   "hostname" => "alice.example.com",
-                   "visitors" => 5,
-                   "bounce_rate" => 100.0,
-                   "events" => 22,
-                   "pageviews" => 22,
-                   "visit_duration" => 0.0,
-                   "visits" => 2
-                 }
-               ]
-             }
-    end
+    assert error =~ "Property 'event:hostname' is currently not supported for breakdowns."
   end
 
   describe "breakdown by visit:exit_page" do

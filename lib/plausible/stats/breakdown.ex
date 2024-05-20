@@ -474,15 +474,6 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "event:hostname") do
-    from(
-      s in q,
-      group_by: s.hostname,
-      select_merge: %{hostname: s.hostname},
-      order_by: {:asc, s.hostname}
-    )
-  end
-
   defp do_group_by(q, "visit:source") do
     from(
       s in q,
