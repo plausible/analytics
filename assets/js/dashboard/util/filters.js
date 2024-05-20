@@ -63,27 +63,6 @@ function toFilterQuery(type, clauses) {
   return prefix + result;
 }
 
-export function parsePrefix(rawValue) {
-  const operation = Object.keys(OPERATION_PREFIX)
-    .find(operation => OPERATION_PREFIX[operation] === rawValue[0]) || FILTER_OPERATIONS.is;
-
-  const value = operation === FILTER_OPERATIONS.is ? rawValue : rawValue.substring(1)
-
-  const values = value
-    .split(NON_ESCAPED_PIPE_REGEX)
-    .filter((clause) => !!clause)
-    .map((val) => val.replaceAll(ESCAPED_PIPE, '|'))
-
-  return { operation, values }
-}
-
-export function parseQueryPropsFilter(query) {
-  return Object.entries(query.filters['props']).map(([key, propVal]) => {
-    const { operation, values } = parsePrefix(propVal)
-    const clauses = values.map(val => { return { value: val, label: val } })
-    return { propKey: { label: key, value: key }, operation, clauses }
-  })
-}
 
 export function getLabel(labels, filterKey, value) {
   if (['country', 'region', 'city'].includes(filterKey)) {
@@ -215,4 +194,25 @@ export const formattedFilters = {
   'hostname': 'Hostname',
   'entry_page': 'Entry Page',
   'exit_page': 'Exit Page',
+}
+
+
+export function parseLegacyFilter(filterKey, rawValue) {
+  const operation = Object.keys(OPERATION_PREFIX)
+    .find(operation => OPERATION_PREFIX[operation] === rawValue[0]) || FILTER_OPERATIONS.is;
+
+  const value = operation === FILTER_OPERATIONS.is ? rawValue : rawValue.substring(1)
+
+  const clauses = value
+    .split(NON_ESCAPED_PIPE_REGEX)
+    .filter((clause) => !!clause)
+    .map((val) => val.replaceAll(ESCAPED_PIPE, '|'))
+
+  return [operation, filterKey, clauses]
+}
+
+export function parseLegacyPropsFilter(rawValue) {
+  return Object.entries(JSON.parse(rawValue)).map(([key, propVal]) => {
+    return parseLegacyFilter(`${EVENT_PROPS_PREFIX}${key}`, propVal)
+  })
 }

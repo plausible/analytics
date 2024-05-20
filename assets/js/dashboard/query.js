@@ -8,6 +8,7 @@ import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabl
 
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import { parseLegacyFilter, parseLegacyPropsFilter } from './util/filters'
 
 dayjs.extend(utc)
 
@@ -42,7 +43,6 @@ export function parseQuery(querystring, site) {
     match_day_of_week: matchDayOfWeek == 'true',
     with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
     experimental_session_count: q.get('experimental_session_count'),
-    // :TODO: Backwards compatibility
     filters: JsonURL.parse(q.get('filters')) || [],
     labels: JsonURL.parse(q.get('labels')) || {}
   }
@@ -57,6 +57,74 @@ export function navigateToQuery(history, queryFrom, newData) {
 
   // then push the new query to the history
   history.push({ search: updatedQuery(newData) })
+}
+
+const LEGACY_URL_PARAMETERS = {
+  'goal': null,
+  'source': null,
+  'utm_medium': null,
+  'utm_source': null,
+  'utm_campaign': null,
+  'utm_content': null,
+  'utm_term': null,
+  'referrer': null,
+  'screen': null,
+  'browser': null,
+  'browser_version': null,
+  'os': null,
+  'os_version': null,
+  'country': 'country_labels',
+  'region': 'region_labels',
+  'city': 'city_labels',
+  'page': null,
+  'hostname': null,
+  'entry_page': null,
+  'exit_page': null,
+}
+
+// Called once when dashboard is loaded load. Checks whether old filter style is used and if so,
+// updates the filters and updates location
+export function filtersBackwardsCompatibilityRedirect() {
+  const q = new PlausibleSearchParams(window.location.search)
+  const entries = Array.from(q.entries())
+
+  // New filters are used - no need to do anything
+  if (q.get("filters")) {
+    return
+  }
+
+  let filters = []
+  let labels = {}
+
+  for (const [key, value] of entries) {
+    if (LEGACY_URL_PARAMETERS.hasOwnProperty(key)) {
+      const filter = parseLegacyFilter(key, value)
+      filters.push(filter)
+      q.delete(key)
+
+      const labelsKey = LEGACY_URL_PARAMETERS[key]
+      if (labelsKey && q.get(labelsKey)) {
+        const clauses = filter[2]
+        const labelsValues = q.get(labelsKey).split('|').filter(label => !!label)
+        const newLabels = Object.fromEntries(clauses.map((clause, index) => [clause, labelsValues[index]]))
+
+        labels = Object.assign(labels, newLabels)
+        q.delete(labelsKey)
+      }
+    }
+  }
+
+  if (q.get('props')) {
+    filters.push(...parseLegacyPropsFilter(q.get('props')))
+    q.delete('props')
+  }
+
+  if (filters.length > 0) {
+    q.set('filters', filters)
+    q.set('labels', labels)
+
+    history.pushState({}, null, `${window.location.pathname}?${q.toString()}`)
+  }
 }
 
 class QueryLink extends React.Component {
