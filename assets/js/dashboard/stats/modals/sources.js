@@ -54,7 +54,7 @@ class SourcesModal extends React.Component {
   }
 
   showExtra() {
-    return this.state.query.period !== 'realtime' && !hasGoalFilter(this.state.querys)
+    return this.state.query.period !== 'realtime' && !hasGoalFilter(this.state.query)
   }
 
   showConversionRate() {

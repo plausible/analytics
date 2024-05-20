@@ -55,7 +55,7 @@ class EntryPagesModal extends React.Component {
   }
 
   showConversionRate() {
-    return hasGoalFilter(this.state.querys)
+    return hasGoalFilter(this.state.query)
   }
 
   showExtra() {
