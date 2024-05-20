@@ -652,7 +652,7 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert imported["time_on_page"] == 0
       end)
 
-      # NOTE: page breakdown's visitors difference is up to almost 43%
+      # NOTE: page breakdown's visit duration difference is up to almost 43%
       assert summary(field(exported_pages, "visit_duration")) == [0, 0.0, 13.0, 46.5, 264]
       assert summary(field(imported_pages, "visit_duration")) == [0.0, 0.0, 13.3, 46.6, 264.5]
 
