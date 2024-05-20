@@ -351,8 +351,8 @@ defmodule Plausible.Stats.Imported do
        ) do
     q
     |> select_merge([i], %{
-      bounces: 0,
-      __internal_visits: 0
+      bounces: sum(i.bounces),
+      __internal_visits: sum(i.exits)
     })
     |> select_imported_metrics(rest)
   end
@@ -396,8 +396,8 @@ defmodule Plausible.Stats.Imported do
        ) do
     q
     |> select_merge([i], %{
-      visit_duration: 0,
-      __internal_visits: 0
+      visit_duration: sum(i.visit_duration),
+      __internal_visits: sum(i.exits)
     })
     |> select_imported_metrics(rest)
   end

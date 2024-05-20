@@ -1111,7 +1111,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "events" => 7,
                    "exit_page" => "/b",
                    "pageviews" => 7,
-                   "visit_duration" => 600.0,
+                   "visit_duration" => 150.0,
                    "visitors" => 3,
                    "visits" => 4
                  },
