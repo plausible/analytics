@@ -561,30 +561,36 @@ defmodule Plausible.Imported.CSVImporterTest do
         }
       end
 
-      breakdown = fn params_or_site, by, opts ->
-        metrics =
-          Keyword.get(opts, :metrics, "visitors,visits,pageviews,visit_duration,bounce_rate")
-
-        filters = Keyword.get(opts, :filters, "")
-
-        by_without_prefix =
-          by
-          |> String.trim_leading("event:")
-          |> String.trim_leading("visit:")
-          |> String.trim_leading("props:")
+      breakdown = fn params_or_site, by ->
+        by_without_prefix = by |> Plausible.Stats.Filters.without_prefix() |> to_string()
 
         params =
           case params_or_site do
             %Plausible.Site{} = site ->
               common_params.(site)
-              |> Map.put("metrics", metrics)
-              |> Map.put("filters", filters)
+              |> Map.put("metrics", "visitors,visits,pageviews,visit_duration,bounce_rate")
               |> Map.put("limit", 1000)
               |> Map.put("property", by)
 
             params ->
               params
           end
+
+        Enum.sort_by(
+          results.("/api/v1/stats/breakdown", params),
+          &Map.fetch!(&1, by_without_prefix)
+        )
+      end
+
+      goal_breakdown = fn site, by, filters ->
+        by_without_prefix = by |> Plausible.Stats.Filters.without_prefix() |> to_string()
+
+        params =
+          common_params.(site)
+          |> Map.put("metrics", "visitors,events,conversion_rate")
+          |> Map.put("filters", filters)
+          |> Map.put("limit", 1000)
+          |> Map.put("property", by)
 
         Enum.sort_by(
           results.("/api/v1/stats/breakdown", params),
@@ -634,8 +640,8 @@ defmodule Plausible.Imported.CSVImporterTest do
         |> Map.put("property", "event:page")
       end
 
-      exported_pages = breakdown.(pages_params.(exported_site), "visit:page", [])
-      imported_pages = breakdown.(pages_params.(imported_site), "visit:page", [])
+      exported_pages = breakdown.(pages_params.(exported_site), "visit:page")
+      imported_pages = breakdown.(pages_params.(imported_site), "visit:page")
 
       pairwise(exported_pages, imported_pages, fn exported, imported ->
         assert exported["page"] == imported["page"]
@@ -694,8 +700,8 @@ defmodule Plausible.Imported.CSVImporterTest do
              ) == [0, 0.0, 0.0, 0.0, 0.06666666666666665]
 
       # sources
-      exported_sources = breakdown.(exported_site, "visit:source", [])
-      imported_sources = breakdown.(imported_site, "visit:source", [])
+      exported_sources = breakdown.(exported_site, "visit:source")
+      imported_sources = breakdown.(imported_site, "visit:source")
 
       pairwise(exported_sources, imported_sources, fn exported, imported ->
         assert exported["source"] == imported["source"]
@@ -716,12 +722,12 @@ defmodule Plausible.Imported.CSVImporterTest do
              ) == [0.0, 0.0, 0.0, 0.0, 0.11111111111111116]
 
       # utm mediums
-      assert breakdown.(exported_site, "visit:utm_medium", []) ==
-               breakdown.(imported_site, "visit:utm_medium", [])
+      assert breakdown.(exported_site, "visit:utm_medium") ==
+               breakdown.(imported_site, "visit:utm_medium")
 
       # entry pages
-      exported_entry_pages = breakdown.(exported_site, "visit:entry_page", [])
-      imported_entry_pages = breakdown.(imported_site, "visit:entry_page", [])
+      exported_entry_pages = breakdown.(exported_site, "visit:entry_page")
+      imported_entry_pages = breakdown.(imported_site, "visit:entry_page")
 
       pairwise(exported_entry_pages, imported_entry_pages, fn exported, imported ->
         assert exported["entry_page"] == imported["entry_page"]
@@ -742,8 +748,8 @@ defmodule Plausible.Imported.CSVImporterTest do
              ) == [0, 0, 0, 0, 0.5]
 
       # cities
-      exported_cities = breakdown.(exported_site, "visit:city", [])
-      imported_cities = breakdown.(imported_site, "visit:city", [])
+      exported_cities = breakdown.(exported_site, "visit:city")
+      imported_cities = breakdown.(imported_site, "visit:city")
 
       pairwise(exported_cities, imported_cities, fn exported, imported ->
         assert exported["city"] == imported["city"]
@@ -768,8 +774,8 @@ defmodule Plausible.Imported.CSVImporterTest do
              ) == [0, 0.0, 0.0, 0.0, 0.2666666666666667]
 
       # devices
-      exported_devices = breakdown.(exported_site, "visit:device", [])
-      imported_devices = breakdown.(imported_site, "visit:device", [])
+      exported_devices = breakdown.(exported_site, "visit:device")
+      imported_devices = breakdown.(imported_site, "visit:device")
 
       pairwise(exported_devices, imported_devices, fn exported, imported ->
         assert exported["device"] == imported["device"]
@@ -790,8 +796,8 @@ defmodule Plausible.Imported.CSVImporterTest do
              ) == [0.0, 0.0, 0.011378002528445008, 0.025028787232157956, 0.031847133757961776]
 
       # browsers
-      exported_browsers = breakdown.(exported_site, "visit:browser", [])
-      imported_browsers = breakdown.(imported_site, "visit:browser", [])
+      exported_browsers = breakdown.(exported_site, "visit:browser")
+      imported_browsers = breakdown.(imported_site, "visit:browser")
 
       pairwise(exported_browsers, imported_browsers, fn exported, imported ->
         assert exported["browser"] == imported["browser"]
@@ -812,8 +818,8 @@ defmodule Plausible.Imported.CSVImporterTest do
              ) == [0.0, 0.0, 0.0, 0.0, 0.037122969837587005]
 
       # os
-      exported_os = breakdown.(exported_site, "visit:os", [])
-      imported_os = breakdown.(imported_site, "visit:os", [])
+      exported_os = breakdown.(exported_site, "visit:os")
+      imported_os = breakdown.(imported_site, "visit:os")
 
       pairwise(exported_os, imported_os, fn exported, imported ->
         assert exported["os"] == imported["os"]
@@ -834,8 +840,8 @@ defmodule Plausible.Imported.CSVImporterTest do
              ) == [0.0, 0.0, 0.0, 0.01754385964912286, 0.045592705167173286]
 
       # os versions
-      exported_os_versions = breakdown.(exported_site, "visit:os_version", [])
-      imported_os_versions = breakdown.(imported_site, "visit:os_version", [])
+      exported_os_versions = breakdown.(exported_site, "visit:os_version")
+      imported_os_versions = breakdown.(imported_site, "visit:os_version")
 
       pairwise(exported_os_versions, imported_os_versions, fn exported, imported ->
         assert exported["os_version"] == imported["os_version"]
@@ -856,11 +862,8 @@ defmodule Plausible.Imported.CSVImporterTest do
              ) == [0.0, 0.0, 0.0, 0.0, 0.33333333333333337]
 
       # goals
-      exported_goals =
-        breakdown.(exported_site, "event:goal", metrics: "visitors,events,conversion_rate")
-
-      imported_goals =
-        breakdown.(imported_site, "event:goal", metrics: "visitors,events,conversion_rate")
+      exported_goals = goal_breakdown.(exported_site, "event:goal", "")
+      imported_goals = goal_breakdown.(imported_site, "event:goal", "")
 
       # NOTE: goal breakdown's visitors difference is up to 20%
       assert summary(field(exported_goals, "visitors")) == [1, 6.5, 12.0, 41.0, 70]
@@ -907,16 +910,10 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # url property breakdown
       exported_url_props =
-        breakdown.(exported_site, "event:props:url",
-          filters: "event:goal==Outbound Link: Click",
-          metrics: "visitors,events,conversion_rate"
-        )
+        goal_breakdown.(exported_site, "event:props:url", "event:goal==Outbound Link: Click")
 
       imported_url_props =
-        breakdown.(imported_site, "event:props:url",
-          filters: "event:goal==Outbound Link: Click",
-          metrics: "visitors,events,conversion_rate"
-        )
+        goal_breakdown.(imported_site, "event:props:url", "event:goal==Outbound Link: Click")
 
       pairwise(exported_url_props, imported_url_props, fn exported, imported ->
         assert exported["visitors"] == imported["visitors"]
@@ -934,17 +931,8 @@ defmodule Plausible.Imported.CSVImporterTest do
              ) == [0.0, 0.0, 0.0, 0.0, 0.19999999999999996]
 
       # path property breakdown
-      exported_path_props =
-        breakdown.(exported_site, "event:props:path",
-          filters: "event:goal==404",
-          metrics: "visitors,events,conversion_rate"
-        )
-
-      imported_path_props =
-        breakdown.(imported_site, "event:props:path",
-          filters: "event:goal==404",
-          metrics: "visitors,events,conversion_rate"
-        )
+      exported_path_props = goal_breakdown.(exported_site, "event:props:path", "event:goal==404")
+      imported_path_props = goal_breakdown.(imported_site, "event:props:path", "event:goal==404")
 
       pairwise(exported_path_props, imported_path_props, fn exported, imported ->
         assert exported["visitors"] == imported["visitors"]
