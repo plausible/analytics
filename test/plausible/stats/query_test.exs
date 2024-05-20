@@ -217,7 +217,7 @@ defmodule Plausible.Stats.QueryTest do
     end
 
     test "is false when imported data does not exist", %{site: site} do
-      assert %{include_imported: false} =
+      assert %{include_imported: false, skip_imported_reason: :no_imported_data} =
                Query.from(site, %{"period" => "day", "with_imported" => "true"})
     end
 
@@ -225,7 +225,7 @@ defmodule Plausible.Stats.QueryTest do
       insert(:site_import, site: site, start_date: ~D[2021-01-01], end_date: ~D[2022-01-01])
       site = Plausible.Imported.load_import_data(site)
 
-      assert %{include_imported: false} =
+      assert %{include_imported: false, skip_imported_reason: :out_of_range} =
                Query.from(site, %{"period" => "day", "with_imported" => "true"})
     end
 
@@ -233,7 +233,7 @@ defmodule Plausible.Stats.QueryTest do
       insert(:site_import, site: site)
       site = Plausible.Imported.load_import_data(site)
 
-      assert %{include_imported: false} =
+      assert %{include_imported: false, skip_imported_reason: :unsupported_query} =
                Query.from(site, %{"period" => "realtime", "with_imported" => "true"})
     end
 
@@ -241,7 +241,7 @@ defmodule Plausible.Stats.QueryTest do
       insert(:site_import, site: site)
       site = Plausible.Imported.load_import_data(site)
 
-      assert %{include_imported: false} =
+      assert %{include_imported: false, skip_imported_reason: :unsupported_query} =
                Query.from(site, %{
                  "period" => "day",
                  "with_imported" => "true",
