@@ -1537,7 +1537,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
         build(:imported_visitors, pageviews: 1, date: ~D[2021-01-01])
       ])
 
-      first_result =
+      conn =
         conn
         |> get("/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
@@ -1546,11 +1546,106 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "date" => "2021-01-07",
           "with_imported" => "true"
         })
+
+      first_result =
+        conn
         |> json_response(200)
         |> Map.get("results")
         |> List.first()
 
       assert first_result == %{"date" => "2021-01-01", "events" => 1}
+
+      refute json_response(conn, 200)["warning"]
+    end
+
+    test "adds a warning when query params are not supported for imported data", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          "meta.key": ["package"],
+          "meta.value": ["large"],
+          timestamp: ~N[2021-01-01 12:00:00]
+        ),
+        build(:imported_visitors, pageviews: 1, date: ~D[2021-01-01])
+      ])
+
+      conn =
+        conn
+        |> get("/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "7d",
+          "metrics" => "events",
+          "date" => "2021-01-07",
+          "with_imported" => "true",
+          "filters" => "event:props:package==large"
+        })
+
+      first_result =
+        conn
+        |> json_response(200)
+        |> Map.get("results")
+        |> List.first()
+
+      assert first_result == %{"date" => "2021-01-01", "events" => 1}
+
+      assert json_response(conn, 200)["warning"] =~
+               "Imported stats are not included in the results because query parameters are not supported."
+    end
+
+    test "does not add a warning when there are no site imports", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["package"],
+          "meta.value": ["large"],
+          timestamp: ~N[2021-01-01 12:00:00]
+        )
+      ])
+
+      conn =
+        conn
+        |> get("/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "7d",
+          "metrics" => "events",
+          "date" => "2021-01-07",
+          "with_imported" => "true",
+          "filters" => "event:props:package==large"
+        })
+
+      refute json_response(conn, 200)["warning"]
+    end
+
+    test "does not add a warning when import is out of queried date range", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site, end_date: ~D[2020-12-29])
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          "meta.key": ["package"],
+          "meta.value": ["large"],
+          timestamp: ~N[2021-01-01 12:00:00]
+        ),
+        build(:imported_visitors, pageviews: 1, date: ~D[2020-12-29])
+      ])
+
+      conn =
+        conn
+        |> get("/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "7d",
+          "metrics" => "events",
+          "date" => "2021-01-07",
+          "with_imported" => "true",
+          "filters" => "event:props:package==large"
+        })
+
+      refute json_response(conn, 200)["warning"]
     end
   end
 end

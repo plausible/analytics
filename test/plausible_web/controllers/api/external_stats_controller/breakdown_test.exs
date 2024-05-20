@@ -3322,6 +3322,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "conversion_rate" => 30.0
                  }
                ]
+
+        refute json_response(conn, 200)["warning"]
       end
     end
 
@@ -3380,7 +3382,101 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "conversion_rate" => 30.0
                  }
                ]
+
+        refute json_response(conn, 200)["warning"]
       end
+    end
+
+    test "adds a warning when query params are not supported for imported data", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      insert(:goal, event_name: "Signup", site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        ),
+        build(:imported_visitors, visitors: 9)
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "event:props:package",
+          "filters" => "event:goal==Signup",
+          "metrics" => "visitors",
+          "with_imported" => "true"
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "package" => "large",
+                 "visitors" => 1
+               }
+             ]
+
+      assert json_response(conn, 200)["warning"] =~
+               "Imported stats are not included in the results because query parameters are not supported."
+    end
+
+    test "does not add a warning when there are no site imports", %{conn: conn, site: site} do
+      insert(:goal, event_name: "Signup", site: site)
+
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "event:props:package",
+          "filters" => "event:goal==Signup",
+          "metrics" => "visitors",
+          "with_imported" => "true"
+        })
+
+      refute json_response(conn, 200)["warning"]
+    end
+
+    test "does not add a warning when import is out of queried date range", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site, end_date: Date.add(Date.utc_today(), -3))
+
+      insert(:goal, event_name: "Signup", site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        ),
+        build(:imported_visitors, visitors: 9)
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "event:props:package",
+          "filters" => "event:goal==Signup",
+          "metrics" => "visitors",
+          "with_imported" => "true"
+        })
+
+      refute json_response(conn, 200)["warning"]
     end
   end
 end

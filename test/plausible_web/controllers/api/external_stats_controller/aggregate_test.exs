@@ -514,6 +514,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       assert json_response(conn2, 200)["results"] == %{
                "pageviews" => %{"value" => 2}
              }
+
+      refute json_response(conn2, 200)["warning"]
     end
 
     test "counts imported stats when comparing with previous period", %{
@@ -587,6 +589,97 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       assert json_response(conn, 200)["results"] == %{
                "visitors" => %{"value" => 1, "change" => 100}
              }
+    end
+
+    test "adds a warning when query params are not supported for imported data", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        ),
+        build(:imported_visitors, visitors: 9)
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors",
+          "filters" => "event:props:package==large",
+          "compare" => "previous_period",
+          "with_imported" => "true"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"change" => 100, "value" => 1}
+             }
+
+      assert json_response(conn, 200)["warning"] =~
+               "Imported stats are not included in the results because query parameters are not supported."
+    end
+
+    test "does not add a warning when there are no site imports", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      Plausible.Repo.delete!(site_import)
+
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors",
+          "filters" => "event:props:package==large",
+          "compare" => "previous_period",
+          "with_imported" => "true"
+        })
+
+      refute json_response(conn, 200)["warning"]
+    end
+
+    test "does not add a warning when import is out of queried date range", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      site_import
+      |> Ecto.Changeset.change(end_date: Date.add(Date.utc_today(), -3))
+      |> Plausible.Repo.update!()
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        ),
+        build(:imported_visitors, visitors: 9)
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors",
+          "filters" => "event:props:package==large",
+          "compare" => "previous_period",
+          "with_imported" => "true"
+        })
+
+      refute json_response(conn, 200)["warning"]
     end
   end
 
