@@ -99,7 +99,8 @@ export class PlausibleSearchParams extends URLSearchParams {
   }
 
   escape(value) {
-    // Less strict encoding - allow components which don't need to get encoded strictly
+    // Less strict encoding - allow components which browsers don't require encoded and make jsonurl
+    // more readable
     return encodeURIComponent(value)
       .replaceAll("%2C", ",")
       .replaceAll("%27", "'")
