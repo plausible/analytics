@@ -949,6 +949,109 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     assert json_response(conn, 200) == %{"results" => []}
   end
 
+  test "attempting to breakdown by event:hostname returns an error", %{conn: conn, site: site} do
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "property" => "event:hostname",
+        "with_imported" => "true"
+      })
+
+    assert %{
+             "error" => error
+           } = json_response(conn, 400)
+
+    assert error =~ "Property 'event:hostname' is currently not supported for breakdowns."
+  end
+
+  describe "breakdown by visit:exit_page" do
+    setup %{site: site} do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          pathname: "/a",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          pathname: "/a",
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          pathname: "/b",
+          timestamp: ~N[2021-01-01 00:35:00]
+        ),
+        build(:imported_exit_pages,
+          exit_page: "/b",
+          exits: 3,
+          visitors: 2,
+          pageviews: 5,
+          date: ~D[2021-01-01]
+        )
+      ])
+    end
+
+    test "can breakdown by visit:exit_page", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:exit_page",
+          "with_imported" => "true"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"exit_page" => "/b", "visitors" => 3},
+                 %{"exit_page" => "/a", "visitors" => 1}
+               ]
+             }
+    end
+
+    test "handles all applicable metrics with graceful fallback for imported data when needed", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:exit_page",
+          "metrics" => "visitors,visits,pageviews,bounce_rate,visit_duration,events",
+          "with_imported" => "true"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "bounce_rate" => 0.0,
+                   "events" => 7,
+                   "exit_page" => "/b",
+                   "pageviews" => 7,
+                   "visit_duration" => 150.0,
+                   "visitors" => 3,
+                   "visits" => 4
+                 },
+                 %{
+                   "bounce_rate" => 100.0,
+                   "events" => 1,
+                   "exit_page" => "/a",
+                   "pageviews" => 1,
+                   "visit_duration" => 0.0,
+                   "visitors" => 1,
+                   "visits" => 1
+                 }
+               ]
+             }
+    end
+  end
+
   describe "custom events" do
     test "can breakdown by event:name", %{conn: conn, site: site} do
       populate_stats(site, [

@@ -332,6 +332,18 @@ defmodule Plausible.Stats.Imported do
     |> select_imported_metrics(rest)
   end
 
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_exit_pages", _}}} = q,
+         [:bounce_rate | rest]
+       ) do
+    q
+    |> select_merge([i], %{
+      bounces: sum(i.bounces),
+      __internal_visits: sum(i.exits)
+    })
+    |> select_imported_metrics(rest)
+  end
+
   defp select_imported_metrics(q, [:bounce_rate | rest]) do
     q
     |> select_merge([i], %{
@@ -349,6 +361,18 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([i], %{
       visit_duration: sum(i.visit_duration),
       __internal_visits: sum(i.entrances)
+    })
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_exit_pages", _}}} = q,
+         [:visit_duration | rest]
+       ) do
+    q
+    |> select_merge([i], %{
+      visit_duration: sum(i.visit_duration),
+      __internal_visits: sum(i.exits)
     })
     |> select_imported_metrics(rest)
   end
