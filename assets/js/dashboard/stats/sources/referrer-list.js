@@ -4,9 +4,9 @@ import * as url from '../../util/url'
 import { VISITORS_METRIC, maybeWithCR } from '../reports/metrics'
 import ListReport from '../reports/list'
 
-export default function Referrers({site, query}) {
+export default function Referrers({source, site, query}) {
   function fetchReferrers() {
-    return api.get(url.apiPath(site, `/referrers/${encodeURIComponent(query.filters.source)}`), query, {limit: 9})
+    return api.get(url.apiPath(site, `/referrers/${encodeURIComponent(source)}`), query, {limit: 9})
   }
 
   function externalLinkDest(referrer) {
@@ -41,7 +41,7 @@ export default function Referrers({site, query}) {
         getFilterFor={getFilterFor}
         keyLabel="Referrer"
         metrics={maybeWithCR([VISITORS_METRIC], query)}
-        detailsLink={url.sitePath(site, `/referrers/${encodeURIComponent(query.filters.source)}`)}
+        detailsLink={url.sitePath(site, `/referrers/${encodeURIComponent(source)}`)}
         query={query}
         externalLinkDest={externalLinkDest}
         renderIcon={renderIcon}
