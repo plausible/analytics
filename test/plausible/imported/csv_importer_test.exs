@@ -753,11 +753,64 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       pairwise(exported_cities, imported_cities, fn exported, imported ->
         assert exported["city"] == imported["city"]
-        assert_in_delta exported["bounce_rate"], imported["bounce_rate"], 4
         assert exported["pageviews"] == imported["pageviews"]
-        assert_in_delta exported["visit_duration"], imported["visit_duration"], 2
         assert_in_delta exported["visits"], imported["visits"], 1
       end)
+
+      # NOTE: city breakdown's bounce rate difference is up to 4%
+      assert summary(field(exported_cities, "bounce_rate")) == [0, 87.0, 100.0, 100.0, 100]
+      assert summary(field(imported_cities, "bounce_rate")) == [0.0, 87.0, 100.0, 100.0, 100.0]
+
+      assert summary(
+               pairwise(exported_cities, imported_cities, fn exported, imported ->
+                 e = exported["bounce_rate"]
+                 i = imported["bounce_rate"]
+
+                 if is_number(e) and is_number(i) and i > 0 do
+                   abs(1 - e / i)
+                 else
+                   # both nil or both zero
+                   assert e == i
+                   _no_diff = 0
+                 end
+               end)
+             ) == [0.0, 0.0, 0.0, 0.0, 0.03614457831325302]
+
+      # NOTE: city breakdown's visit duration difference can reach 100% in some cases,
+      # though these extreme cases seem to come from the fact that duration in native query
+      # is half-up rounded to full integer, while imported visit duration is rounded
+      # to first decimal place.
+      assert summary(field(exported_cities, "visit_duration")) == [0, 0.0, 0.0, 1.0, 1718]
+      assert summary(field(imported_cities, "visit_duration")) == [0.0, 0.0, 0.0, 0.9, 1718.0]
+
+      assert summary(
+               pairwise(exported_cities, imported_cities, fn exported, imported ->
+                 e = exported["visit_duration"]
+                 i = imported["visit_duration"]
+
+                 if is_number(e) and is_number(i) and i > 0 do
+                   abs(1 - e / i)
+                 else
+                   # both nil or both zero
+                   assert e == i
+                   _no_diff = 0
+                 end
+               end)
+             ) == [0, 0, 0, 0, 1.0]
+
+      assert Enum.reject(
+               pairwise(exported_cities, imported_cities, fn exported, imported ->
+                 e = exported["visit_duration"]
+                 i = imported["visit_duration"]
+
+                 if i > 0 and e == 0 do
+                   {e, i}
+                 else
+                   nil
+                 end
+               end),
+               &is_nil/1
+             ) == [{0, 0.3}, {0, 0.4}, {0, 0.4}]
 
       # NOTE: city breakdown's visitors relative difference is up to 27%
       assert summary(field(exported_cities, "visitors")) == [1, 1.0, 1.0, 2.0, 22]
