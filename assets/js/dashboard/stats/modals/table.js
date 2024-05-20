@@ -5,7 +5,8 @@ import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter from '../../util/number-formatter'
 import {parseQuery} from '../../query'
-import { hasGoalFilter } from "../../util/filters";
+import { cleanLabels, hasGoalFilter, omitFiltersByKeyPrefix } from "../../util/filters";
+import { updatedQuery } from "../../util/url";
 
 class ModalTable extends React.Component {
   constructor(props) {
@@ -42,16 +43,22 @@ class ModalTable extends React.Component {
   }
 
   renderTableItem(tableItem) {
-    const query = new URLSearchParams(window.location.search)
+    const filters = omitFiltersByKeyPrefix(this.state.query, this.props.filterKey).concat([[
+      "is", this.props.filterKey, [tableItem.code]
+    ]])
 
-    Object.entries(this.props.filter).forEach((([key, valueKey]) => {
-      query.set(key, tableItem[valueKey])
-    }))
+    const labels = cleanLabels(filters, this.state.query.labels, this.props.filterKey, { [tableItem.code]: tableItem.name })
 
     return (
       <tr className="text-sm dark:text-gray-200" key={tableItem.name}>
         <td className="p-2">
-          <Link className="hover:underline" to={{search: query.toString(), pathname: `/${encodeURIComponent(this.props.site.domain)}`}}>
+          <Link
+            className="hover:underline"
+            to={{
+              search: updatedQuery({ filters, labels }),
+              pathname: `/${encodeURIComponent(this.props.site.domain)}`
+            }}
+          >
             {this.props.renderIcon && this.props.renderIcon(tableItem)}
             {this.props.renderIcon && ' '}
             {tableItem.name}
