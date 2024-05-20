@@ -8,7 +8,7 @@ import * as url from "../../util/url";
 import numberFormatter from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import { specialTitleWhenGoalFilter } from "../behaviours/goal-conversions";
-import { escapeFilterValue, hasGoalFilter } from "../../util/filters"
+import { EVENT_PROPS_PREFIX, hasGoalFilter, omitFiltersByKeyPrefix } from "../../util/filters"
 
 /*global BUILD_EXTRA*/
 /*global require*/
@@ -62,9 +62,8 @@ function PropsModal(props) {
   }
 
   function filterSearchLink(listItem) {
-    const searchParams = new URLSearchParams(window.location.search)
-    searchParams.set('props', JSON.stringify({ [propKey]: escapeFilterValue(listItem.name) }))
-    return searchParams.toString()
+    const filters = omitFiltersByKeyPrefix(query, EVENT_PROPS_PREFIX).concat([["is", `${EVENT_PROPS_PREFIX}${propKey}`, [listItem.name]]])
+    return url.updatedQuery({ filters })
   }
 
   function renderListItem(listItem, hasRevenue) {
