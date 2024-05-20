@@ -7,7 +7,7 @@ import * as api from '../../api'
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import { trimURL, updatedQuery } from '../../util/url'
-import { hasGoalFilter } from "../../util/filters";
+import { hasGoalFilter, omitFiltersByKeyPrefix } from "../../util/filters";
 
 class PagesModal extends React.Component {
   constructor(props) {
@@ -58,6 +58,7 @@ class PagesModal extends React.Component {
   }
 
   renderPage(page) {
+    const filters = omitFiltersByKeyPrefix(this.state.query, "page").concat([["is", "page", [page.name]]])
     const timeOnPage = page['time_on_page'] ? durationFormatter(page['time_on_page']) : '-';
     return (
       <tr className="text-sm dark:text-gray-200" key={page.name}>
@@ -65,7 +66,7 @@ class PagesModal extends React.Component {
           <Link
             to={{
               pathname: `/${encodeURIComponent(this.props.site.domain)}`,
-              search: updatedQuery({ page: page.name })
+              search: updatedQuery({ filters })
             }}
             className="hover:underline block truncate"
           >
