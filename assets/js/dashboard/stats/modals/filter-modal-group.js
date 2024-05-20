@@ -1,6 +1,6 @@
 import React, { useMemo } from "react"
 import FilterModalRow from "./filter-modal-row"
-import { formattedFilters, filterType } from '../../util/filters'
+import { formattedFilters, filterType, getPropertyKeyFromFilterKey } from '../../util/filters'
 import FilterModalPropsRow from "./filter-modal-props-row"
 
 export default function FilterModalGroup({
@@ -18,6 +18,11 @@ export default function FilterModalGroup({
     [type, filterState]
   )
 
+  const disabledOptions = useMemo(
+    () => (type == 'props') ? rows.map(({ filter }) => ({ value: getPropertyKeyFromFilterKey(filter[1]) })) : null,
+    [rows]
+  )
+
   const showAddRow = type == 'props'
   const showTitle = type != 'props'
 
@@ -33,8 +38,8 @@ export default function FilterModalGroup({
               site={site}
               query={query}
               showDelete={rows.length > 1}
+              disabledOptions={disabledOptions}
               onUpdate={(newFilter) => onUpdateRowValue(id, newFilter)}
-              onAddRow={() => onAddRow(type)}
               onDelete={() => onDeleteRow(id)}
             />
           ) : (

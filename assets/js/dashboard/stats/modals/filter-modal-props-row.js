@@ -12,6 +12,7 @@ export default function FilterModalPropsRow({
   query,
   filter,
   showDelete,
+  disabledOptions,
   onUpdate,
   onDelete,
 }) {
@@ -59,8 +60,7 @@ export default function FilterModalPropsRow({
           values={propKey ? [{ value: propKey, label: propKey }] : []}
           onSelect={onPropKeySelect}
           placeholder="Property"
-          // :TODO: Disable all other selected prop keys
-          disabledOptions={[]}
+          disabledOptions={disabledOptions}
         />
       </div>
       <div className="col-span-3 mx-2">
