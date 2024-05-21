@@ -753,10 +753,10 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, metrics, pagination)
       |> transform_keys(%{referrer: :name})
 
-      json(conn, %{
-        results: referrers,
-        skip_imported_reason: query.skip_imported_reason
-      })
+    json(conn, %{
+      results: referrers,
+      skip_imported_reason: query.skip_imported_reason
+    })
   end
 
   def pages(conn, params) do
@@ -940,10 +940,10 @@ defmodule PlausibleWeb.Api.StatsController do
           end
         end)
 
-        json(conn, %{
-          results: countries,
-          skip_imported_reason: query.skip_imported_reason
-        })
+      json(conn, %{
+        results: countries,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -1216,8 +1216,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     case Plausible.Props.ensure_prop_key_accessible(prop_key, site.owner) do
       :ok ->
-        props = breakdown_custom_prop_values(site, params)
-        json(conn, %{results: props})
+        json(conn, breakdown_custom_prop_values(site, params))
 
       {:error, :upgrade_required} ->
         H.payment_required(
@@ -1245,6 +1244,7 @@ defmodule PlausibleWeb.Api.StatsController do
         prop_names
         |> Enum.map(fn prop_key ->
           breakdown_custom_prop_values(site, Map.put(params, "prop_key", prop_key))
+          |> Map.get(:results)
           |> Enum.map(&Map.put(&1, :property, prop_key))
           |> transform_keys(%{:name => :value})
         end)
@@ -1274,12 +1274,16 @@ defmodule PlausibleWeb.Api.StatsController do
         [:visitors, :events, :percentage] ++ @revenue_metrics
       end
 
-    Stats.breakdown(site, query, metrics, pagination)
-    |> transform_keys(%{prop_key => :name})
-    |> Enum.map(fn entry ->
-      Enum.map(entry, &format_revenue_metric/1)
-      |> Map.new()
-    end)
+    props =
+      Stats.breakdown(site, query, metrics, pagination)
+      |> transform_keys(%{prop_key => :name})
+      |> Enum.map(fn entry ->
+        Enum.map(entry, &format_revenue_metric/1)
+        |> Map.new()
+      end)
+      |> IO.inspect()
+
+    %{results: props, skip_imported_reason: query.skip_imported_reason}
   end
 
   def current_visitors(conn, _) do

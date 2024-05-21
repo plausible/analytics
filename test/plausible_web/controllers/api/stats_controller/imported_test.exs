@@ -263,7 +263,9 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
 
         results =
           conn
-          |> get("/api/stats/#{site.domain}/sources?period=month&date=2021-01-01&with_imported=true")
+          |> get(
+            "/api/stats/#{site.domain}/sources?period=month&date=2021-01-01&with_imported=true"
+          )
           |> json_response(200)
           |> Map.get("results")
           |> Enum.sort()

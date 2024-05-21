@@ -6,7 +6,7 @@ import { CR_METRIC } from '../reports/metrics';
 import ListReport from '../reports/list';
 
 export default function Conversions(props) {
-  const { site, query } = props
+  const { site, query, afterFetchData } = props
 
   function fetchConversions() {
     return api.get(url.apiPath(site, '/conversions'), query, { limit: 9 })
@@ -23,6 +23,7 @@ export default function Conversions(props) {
   return (
     <ListReport
       fetchData={fetchConversions}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Goal"
       onClick={props.onGoalFilterClick}

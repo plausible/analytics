@@ -5,8 +5,9 @@ import * as url from '../../util/url'
 import * as api from '../../api'
 import ListReport from './../reports/list'
 import { VISITORS_METRIC, maybeWithCR } from './../reports/metrics';
+import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 
-function EntryPages({ query, site }) {
+function EntryPages({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/entry-pages'), query, { limit: 9 })
   }
@@ -25,6 +26,7 @@ function EntryPages({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Entry page"
       metrics={maybeWithCR([{ ...VISITORS_METRIC, label: 'Unique Entrances' }], query)}
@@ -36,7 +38,7 @@ function EntryPages({ query, site }) {
   )
 }
 
-function ExitPages({ query, site }) {
+function ExitPages({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/exit-pages'), query, { limit: 9 })
   }
@@ -55,6 +57,7 @@ function ExitPages({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Exit page"
       metrics={maybeWithCR([{ ...VISITORS_METRIC, label: "Unique Exits" }], query)}
@@ -66,7 +69,7 @@ function ExitPages({ query, site }) {
   )
 }
 
-function TopPages({ query, site }) {
+function TopPages({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/pages'), query, { limit: 9 })
   }
@@ -85,6 +88,7 @@ function TopPages({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Page"
       metrics={maybeWithCR([VISITORS_METRIC], query)}
@@ -107,21 +111,28 @@ export default function Pages(props) {
   const tabKey = `pageTab__${site.domain}`
   const storedTab = storage.getItem(tabKey)
   const [mode, setMode] = useState(storedTab || 'pages')
+  const [importedQueryUnsupported, setImportedQueryUnsupported] = useState(false)
 
   function switchTab(mode) {
     storage.setItem(tabKey, mode)
     setMode(mode)
   }
 
+  function afterFetchData(apiResponse) {
+    const unsupportedQuery = apiResponse.skip_imported_reason === 'unsupported_query'
+    const isRealtime = query.period === 'realtime'
+    setImportedQueryUnsupported(unsupportedQuery && !isRealtime)
+  }
+
   function renderContent() {
     switch (mode) {
       case "entry-pages":
-        return <EntryPages site={site} query={query} />
+        return <EntryPages site={site} query={query} afterFetchData={afterFetchData} />
       case "exit-pages":
-        return <ExitPages site={site} query={query} />
+        return <ExitPages site={site} query={query} afterFetchData={afterFetchData} />
       case "pages":
       default:
-        return <TopPages site={site} query={query} />
+        return <TopPages site={site} query={query} afterFetchData={afterFetchData} />
     }
   }
 
@@ -153,9 +164,12 @@ export default function Pages(props) {
     <div>
       {/* Header Container */}
       <div className="w-full flex justify-between">
-        <h3 className="font-bold dark:text-gray-100">
-          {labelFor[mode] || 'Page Visits'}
-        </h3>
+        <div className="flex gap-x-1">
+          <h3 className="font-bold dark:text-gray-100">
+            {labelFor[mode] || 'Page Visits'}
+          </h3>
+          <ImportedQueryUnsupportedWarning condition={importedQueryUnsupported}/>
+        </div>
         <div className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
           {renderPill('Top Pages', 'pages')}
           {renderPill('Entry Pages', 'entry-pages')}

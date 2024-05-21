@@ -3,7 +3,7 @@ import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
-
+import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
 import GoalConversions, { specialTitleWhenGoalFilter } from './goal-conversions'
 import Properties from './props'
 import { FeatureSetupNotice } from '../../components/notice'
@@ -47,6 +47,8 @@ export default function Behaviours(props) {
   const [selectedFunnel, setSelectedFunnel] = useState(defaultSelectedFunnel())
 
   const [showingPropsForGoalFilter, setShowingPropsForGoalFilter] = useState(false)
+
+  const [importedQueryUnsupported, setImportedQueryUnsupported] = useState(false)
 
   const onGoalFilterClick = useCallback((e) => {
     const goalName = e.target.innerHTML
@@ -170,9 +172,14 @@ export default function Behaviours(props) {
     )
   }
 
+  function afterFetchGoalData(apiResponse) {
+    const unsupportedQuery = apiResponse.skip_imported_reason === 'unsupported_query'
+    setImportedQueryUnsupported(unsupportedQuery && !isRealtime())
+  }
+
   function renderConversions() {
     if (site.hasGoals) {
-      return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} />
+      return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} afterFetchData={afterFetchGoalData}/>
     }
     else if (adminAccess) {
       return (
@@ -330,9 +337,12 @@ export default function Behaviours(props) {
       <div className="items-start justify-between block w-full mt-6 md:flex">
         <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
           <div className="flex justify-between w-full">
-            <h3 className="font-bold dark:text-gray-100">
-              {sectionTitle() + (isRealtime() ? ' (last 30min)' : '')}
-            </h3>
+            <div className="flex gap-x-1">
+              <h3 className="font-bold dark:text-gray-100">
+                {sectionTitle() + (isRealtime() ? ' (last 30min)' : '')}
+              </h3>
+              <ImportedQueryUnsupportedWarning condition={mode === CONVERSIONS  && importedQueryUnsupported}/>
+            </div>
             {tabs()}
           </div>
           {renderContent()}

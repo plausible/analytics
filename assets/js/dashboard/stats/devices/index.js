@@ -5,8 +5,9 @@ import ListReport from '../reports/list'
 import * as api from '../../api'
 import * as url from '../../util/url'
 import { VISITORS_METRIC, PERCENTAGE_METRIC, maybeWithCR } from '../reports/metrics';
+import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 
-function Browsers({ query, site }) {
+function Browsers({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/browsers'), query)
   }
@@ -21,6 +22,7 @@ function Browsers({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Browser"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
@@ -29,7 +31,7 @@ function Browsers({ query, site }) {
   )
 }
 
-function BrowserVersions({ query, site }) {
+function BrowserVersions({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/browser-versions'), query)
   }
@@ -47,6 +49,7 @@ function BrowserVersions({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Browser version"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
@@ -56,7 +59,7 @@ function BrowserVersions({ query, site }) {
 
 }
 
-function OperatingSystems({ query, site }) {
+function OperatingSystems({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/operating-systems'), query)
   }
@@ -71,6 +74,7 @@ function OperatingSystems({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Operating system"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
@@ -79,7 +83,7 @@ function OperatingSystems({ query, site }) {
   )
 }
 
-function OperatingSystemVersions({ query, site }) {
+function OperatingSystemVersions({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/operating-system-versions'), query)
   }
@@ -97,6 +101,7 @@ function OperatingSystemVersions({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Operating System Version"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
@@ -106,7 +111,7 @@ function OperatingSystemVersions({ query, site }) {
 
 }
 
-function ScreenSizes({ query, site }) {
+function ScreenSizes({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/screen-sizes'), query)
   }
@@ -125,6 +130,7 @@ function ScreenSizes({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Screen size"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
@@ -161,27 +167,34 @@ export default function Devices(props) {
   const tabKey = `deviceTab__${site.domain}`
   const storedTab = storage.getItem(tabKey)
   const [mode, setMode] = useState(storedTab || 'browser')
+  const [importedQueryUnsupported, setImportedQueryUnsupported] = useState(false)
 
   function switchTab(mode) {
     storage.setItem(tabKey, mode)
     setMode(mode)
   }
 
+  function afterFetchData(apiResponse) {
+    const unsupportedQuery = apiResponse.skip_imported_reason === 'unsupported_query'
+    const isRealtime = query.period === 'realtime'
+    setImportedQueryUnsupported(unsupportedQuery && !isRealtime)
+  }
+
   function renderContent() {
     switch (mode) {
       case 'browser':
         if (isFilteringOnFixedValue(query, 'browser')) {
-          return <BrowserVersions site={site} query={query} />
+          return <BrowserVersions site={site} query={query} afterFetchData={afterFetchData} />
         }
-        return <Browsers site={site} query={query} />
+        return <Browsers site={site} query={query} afterFetchData={afterFetchData} />
       case 'os':
         if (isFilteringOnFixedValue(query, 'os')) {
-          return <OperatingSystemVersions site={site} query={query} />
+          return <OperatingSystemVersions site={site} query={query} afterFetchData={afterFetchData} />
         }
-        return <OperatingSystems site={site} query={query} />
+        return <OperatingSystems site={site} query={query} afterFetchData={afterFetchData} />
       case 'size':
       default:
-        return <ScreenSizes site={site} query={query} />
+        return <ScreenSizes site={site} query={query} afterFetchData={afterFetchData} />
     }
   }
 
@@ -211,7 +224,10 @@ export default function Devices(props) {
   return (
     <div>
       <div className="flex justify-between w-full">
-        <h3 className="font-bold dark:text-gray-100">Devices</h3>
+        <div className="flex gap-x-1">
+          <h3 className="font-bold dark:text-gray-100">Devices</h3>
+          <ImportedQueryUnsupportedWarning condition={importedQueryUnsupported}/>
+        </div>
         <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
           {renderPill('Browser', 'browser')}
           {renderPill('OS', 'os')}
