@@ -357,6 +357,24 @@ defmodule Plausible.Verification.DiagnosticsTest do
              ]
     end
 
+    test "disallowed via content-security-policy with no snippet should make the latter a priority" do
+      stub_fetch_body(fn conn ->
+        conn
+        |> put_resp_header("content-security-policy", "default-src 'self' foo.local")
+        |> put_resp_content_type("text/html")
+        |> send_resp(200, @body_no_snippet)
+      end)
+
+      stub_installation(200, plausible_installed(false))
+
+      result = run_checks()
+      rating = Checks.interpret_diagnostics(result)
+
+      refute rating.ok?
+
+      assert rating.errors == ["We couldn't find the Plausible snippet on your site"]
+    end
+
     test "allowed via content-security-policy" do
       stub_fetch_body(fn conn ->
         conn
