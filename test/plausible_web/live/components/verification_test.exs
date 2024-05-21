@@ -74,6 +74,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
     assert text_of_element(html, @progress) == "Arbitrary message"
   end
 
+  @tag :ee_only
   test "renders contact link on >3 attempts" do
     html = render_component(@component, domain: "example.com", attempts: 2, finished?: true)
     refute html =~ "Need further help with your integration?"
