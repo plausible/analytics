@@ -503,7 +503,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
                "bounce_rate" => 58.0,
                "pageviews" => 491,
                "utm_medium" => "referral",
-               "visit_duration" => 27.5,
+               "visit_duration" => 27.0,
                "visitors" => 294,
                "visits" => 298
              }
@@ -521,7 +521,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     assert List.first(results) == %{
              "bounce_rate" => 35.0,
              "pageviews" => 838,
-             "visit_duration" => 43.1,
+             "visit_duration" => 43.0,
              "visitors" => 675,
              "visits" => 712,
              "entry_page" => "/brza-kukuruza"
@@ -549,7 +549,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
              "bounce_rate" => 35.0,
              "city" => 792_680,
              "pageviews" => 1650,
-             "visit_duration" => 38.9,
+             "visit_duration" => 39.0,
              "visitors" => 1233,
              "visits" => 1273
            }
@@ -575,7 +575,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     assert List.first(results) == %{
              "bounce_rate" => 38.0,
              "pageviews" => 7041,
-             "visit_duration" => 36.6,
+             "visit_duration" => 37.0,
              "visitors" => 5277,
              "visits" => 5532,
              "device" => "Mobile"
@@ -584,7 +584,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     assert List.last(results) == %{
              "bounce_rate" => 37.0,
              "pageviews" => 143,
-             "visit_duration" => 59.8,
+             "visit_duration" => 60.0,
              "visitors" => 97,
              "visits" => 100,
              "device" => "Tablet"
@@ -602,7 +602,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     assert List.first(results) == %{
              "bounce_rate" => 33.0,
              "pageviews" => 8143,
-             "visit_duration" => 50.2,
+             "visit_duration" => 50.0,
              "visitors" => 4625,
              "visits" => 4655,
              "browser" => "Chrome"
@@ -629,7 +629,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     assert List.first(results) == %{
              "bounce_rate" => 34.0,
              "pageviews" => 5827,
-             "visit_duration" => 40.6,
+             "visit_duration" => 41.0,
              "visitors" => 4319,
              "visits" => 4495,
              "os" => "Android"
@@ -658,7 +658,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
              "os" => "Android",
              "os_version" => "13.0.0",
              "pageviews" => 1673,
-             "visit_duration" => 42.4,
+             "visit_duration" => 42.0,
              "visitors" => 1247,
              "visits" => 1295
            }

@@ -514,7 +514,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                    "name" => "Sweden",
                    "visitors" => 3,
                    "bounce_rate" => 67.0,
-                   "visit_duration" => 33.3
+                   "visit_duration" => 33.0
                  },
                  %{
                    "name" => "oat milk",
@@ -1158,7 +1158,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
 
         visit_duration = Enum.find(top_stats, fn stat -> stat["name"] == "Visit duration" end)
 
-        assert visit_duration["value"] == 3_479_033
+        assert visit_duration["value"] == 3_479_032
       end
 
       test "skips empty dates from import", %{conn: conn, site: site, import_id: import_id} do
