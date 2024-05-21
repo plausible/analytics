@@ -103,8 +103,8 @@ export class PlausibleSearchParams extends URLSearchParams {
     // more readable
     return encodeURIComponent(value)
       .replaceAll("%2C", ",")
-      .replaceAll("%27", "'")
       .replaceAll("%3A", ":")
+      .replaceAll("%2F", "/")
   }
 
   toString() {

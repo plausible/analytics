@@ -23,7 +23,7 @@ export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_GRO
 export const EVENT_PROPS_PREFIX = "props:"
 
 export const FILTER_OPERATIONS = {
-  isNot: 'is not',
+  isNot: 'is_not',
   contains: 'contains',
   is: 'is'
 };
