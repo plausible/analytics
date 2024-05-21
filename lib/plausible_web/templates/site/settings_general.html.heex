@@ -109,7 +109,7 @@
       </a>
     </div>
 
-    <div>
+    <div :if={Plausible.Verification.enabled?(@current_user)}>
       <%= live_render(@conn, PlausibleWeb.Live.Verification,
         session: %{
           "site_id" => @site.id,

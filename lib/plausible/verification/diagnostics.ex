@@ -55,7 +55,14 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(%__MODULE__{plausible_installed?: false, snippets_found_in_head: 1, disallowed_via_csp?: true}, _url) do
+  def rate(
+        %__MODULE__{
+          plausible_installed?: false,
+          snippets_found_in_head: 1,
+          disallowed_via_csp?: true
+        },
+        _url
+      ) do
     %Rating{
       ok?: false,
       errors: ["We encountered an issue with your site's CSP"],

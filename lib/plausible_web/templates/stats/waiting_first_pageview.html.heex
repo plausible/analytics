@@ -21,12 +21,53 @@
       <p>This dashboard is actually locked. You are viewing it with super-admin access</p>
     </div>
   <% end %>
+  <div
+    :if={not Plausible.Verification.enabled?(assigns[:current_user])}
+    class="bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16 relative text-center"
+  >
+    <h2 class="text-xl font-bold dark:text-gray-100">Waiting for first pageview</h2>
+    <h2 class="text-xl font-bold dark:text-gray-100">on <%= @site.domain %></h2>
+    <div class="my-44">
+      <div class="block pulsating-circle top-1/2 left-1/2"></div>
+      <p class="text-gray-600 dark:text-gray-400 text-xs absolute left-0 bottom-0 mb-6 w-full text-center leading-normal">
+        Need to see the snippet again?
+        <.styled_link href={"/#{URI.encode_www_form(@site.domain)}/snippet"}>
+          Click here
+        </.styled_link>
 
-  <%= live_render(@conn, PlausibleWeb.Live.Verification,
-    session: %{
-      "site_id" => @site.id,
-      "domain" => @site.domain,
-      "slowdown" => @conn.private[:verification_slowdown]
-    }
-  ) %>
+        <br /> Not working?
+        <.styled_link
+          new_tab
+          href="https://plausible.io/docs/troubleshoot-integration#check-for-the-plausible-snippet-in-your-source-code"
+        >
+          Troubleshoot the integration
+        </.styled_link>
+
+        <br />
+        <span :if={ee?()}>
+          Check the
+          <.styled_link href={Routes.site_path(@conn, :settings_general, @site.domain)}>
+            site settings
+          </.styled_link>
+          to invite team members, <br /> import historical stats and more.
+        </span>
+        <span :if={ce?()}>
+          Still not working? Ask on our
+          <.styled_link new_tab href="https://github.com/plausible/analytics/discussions">
+            community-supported forum
+          </.styled_link>
+        </span>
+      </p>
+    </div>
+  </div>
+
+  <%= if Plausible.Verification.enabled?(assigns[:current_user]),
+    do:
+      live_render(@conn, PlausibleWeb.Live.Verification,
+        session: %{
+          "site_id" => @site.id,
+          "domain" => @site.domain,
+          "slowdown" => @conn.private[:verification_slowdown]
+        }
+      ) %>
 </div>
