@@ -41,7 +41,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
           Plausible.Stats.aggregate(site, query, metrics)
         end
 
-      json(conn, %{results: results})
+      payload = maybe_add_warning(%{results: results}, query)
+
+      json(conn, payload)
     else
       err_tuple -> send_json_error_response(conn, err_tuple)
     end
@@ -60,8 +62,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- ensure_custom_props_access(site, query) do
       page = String.to_integer(Map.get(params, "page", "1"))
       results = Plausible.Stats.breakdown(site, query, metrics, {limit, page})
+      payload = maybe_add_warning(%{results: results}, query)
 
-      json(conn, %{results: results})
+      json(conn, payload)
     else
       err_tuple -> send_json_error_response(conn, err_tuple)
     end
@@ -264,8 +267,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          {:ok, metrics} <- parse_and_validate_metrics(params, query),
          :ok <- ensure_custom_props_access(site, query) do
       graph = Plausible.Stats.timeseries(site, query, metrics)
+      payload = maybe_add_warning(%{results: graph}, query)
 
-      json(conn, %{results: graph})
+      json(conn, payload)
     else
       err_tuple -> send_json_error_response(conn, err_tuple)
     end
@@ -373,6 +377,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp goal_not_configured_message(goal) do
     "The goal `#{goal}` is not configured for this site. "
+  end
+
+  defp maybe_add_warning(payload, %{skip_imported_reason: reason})
+       when reason in [nil, :no_imported_data, :out_of_range] do
+    payload
+  end
+
+  defp maybe_add_warning(payload, %{skip_imported_reason: :unsupported_query}) do
+    Map.put(
+      payload,
+      :warning,
+      "Imported stats are not included in the results because query parameters are not supported. " <>
+        "For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats"
+    )
   end
 
   defp send_json_error_response(conn, {:error, {status, msg}}) do
