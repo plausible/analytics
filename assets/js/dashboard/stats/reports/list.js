@@ -58,10 +58,11 @@ function ExternalLink({ item, externalLinkDest }) {
 // The main function component for rendering list reports and making them react to what
 // is happening on the dashboard.
 
-// A `fetchData` function must be passed through props. This function defines the format
-// of the data, which is expected to be a list of objects. Think of these objects as rows
-// with keys being columns. The number of columns is dynamic and should be configured
-// via the `metrics` input list. For example:
+// A `fetchData` function must be passed through props. This function defines the data
+// to be rendered, and should return a list of objects under a `results` key. Think of
+// these objects as rows. The number of columns that are **actually rendered** is also
+// configurable through the `metrics` prop, which also defines the keys under which
+// column values are read. For example:
 
 // | keyLabel           |            METRIC_1.label |            METRIC_2.label | ...
 // |--------------------|---------------------------|---------------------------|-----
@@ -76,8 +77,8 @@ function ExternalLink({ item, externalLinkDest }) {
 
 //   * `query` - The query object representing the current state of the dashboard.
 
-//   * `fetchData` - a function that returns an `api.get` promise that will resolve to the
-//     list of data.
+//   * `fetchData` - a function that returns an `api.get` promise that will resolve to an
+//     object containing a `results` key.
 
 //   * `metrics` - a list of `metric` objects. Each `metric` object is required to have at
 //     least the `name` and the `label` keys. If the metric should have a different label
@@ -123,7 +124,10 @@ export default function ListReport(props) {
       setState({ loading: true, list: null })
     }
     props.fetchData()
-      .then((res) => setState({ loading: false, list: res }))
+      .then((response) => {
+        const results = !!response.results ? response.results : response
+        setState({ loading: false, list: results })
+      })
   }, [props.keyLabel, props.query])
 
   const onVisible = () => { setVisible(true) }
