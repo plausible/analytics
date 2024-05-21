@@ -56,9 +56,10 @@ defmodule PlausibleWeb.StatsController do
     can_see_stats? = not Sites.locked?(site) or conn.assigns[:current_user_role] == :super_admin
     demo = site.domain == PlausibleWeb.Endpoint.host()
     dogfood_page_path = if !demo, do: "/:dashboard"
+    skip_to_dashboard? = conn.params["skip_to_dashboard"] == "true"
 
     cond do
-      stats_start_date && can_see_stats? ->
+      (stats_start_date && can_see_stats?) || (can_see_stats? && skip_to_dashboard?) ->
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> render("stats.html",
@@ -80,7 +81,8 @@ defmodule PlausibleWeb.StatsController do
       !stats_start_date && can_see_stats? ->
         render(conn, "waiting_first_pageview.html",
           site: site,
-          dogfood_page_path: dogfood_page_path
+          dogfood_page_path: dogfood_page_path,
+          connect_live_socket: true
         )
 
       Sites.locked?(site) ->
