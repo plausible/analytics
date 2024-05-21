@@ -1,6 +1,8 @@
 defmodule Plausible.Verification.Checks.Installation do
-  @verification_script_filename "verification/verify_plausible_installed.js.eex"
+  @verification_script_filename "verification/verify_plausible_installed.js"
   @verification_script_path Path.join(:code.priv_dir(:plausible), @verification_script_filename)
+  @external_resource @verification_script_path
+  @code File.read!(@verification_script_path)
 
   @moduledoc """
   Calls the browserless.io service (local instance can be spawned with `make browserless`)
@@ -12,18 +14,7 @@ defmodule Plausible.Verification.Checks.Installation do
 
   The test event ingestion is discarded based on user-agent, see: `Plausible.Verification.user_agent/0`
   """
-  require EEx
   use Plausible.Verification.Check
-
-  EEx.function_from_file(
-    :def,
-    :verify_plausible_installed_js_code,
-    @verification_script_path,
-    [
-      :url,
-      :user_agent
-    ]
-  )
 
   @impl true
   def friendly_name, do: "We're verifying that your visitors are being counted correctly"
@@ -31,8 +22,16 @@ defmodule Plausible.Verification.Checks.Installation do
   @impl true
   def perform(%State{url: url} = state) do
     opts = [
-      headers: %{content_type: "application/javascript"},
-      body: verify_plausible_installed_js_code(url, Plausible.Verification.user_agent()),
+      headers: %{content_type: "application/json"},
+      body:
+        Jason.encode!(%{
+          code: @code,
+          context: %{
+            url: url,
+            userAgent: Plausible.Verification.user_agent(),
+            debug: Application.get_env(:plausible, :environment) == "dev"
+          }
+        }),
       retry: :transient,
       retry_log_level: :warning,
       max_retries: 2,
