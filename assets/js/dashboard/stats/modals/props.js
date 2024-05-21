@@ -8,7 +8,7 @@ import * as url from "../../util/url";
 import numberFormatter from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import { specialTitleWhenGoalFilter } from "../behaviours/goal-conversions";
-import { EVENT_PROPS_PREFIX, hasGoalFilter, omitFiltersByKeyPrefix } from "../../util/filters"
+import { EVENT_PROPS_PREFIX, hasGoalFilter, replaceFilterByPrefix } from "../../util/filters"
 
 /*global BUILD_EXTRA*/
 /*global require*/
@@ -62,7 +62,7 @@ function PropsModal(props) {
   }
 
   function filterSearchLink(listItem) {
-    const filters = omitFiltersByKeyPrefix(query, EVENT_PROPS_PREFIX).concat([["is", `${EVENT_PROPS_PREFIX}${propKey}`, [listItem.name]]])
+    const filters = replaceFilterByPrefix(query, EVENT_PROPS_PREFIX, ["is", `${EVENT_PROPS_PREFIX}${propKey}`, [listItem.name]])
     return url.updatedQuery({ filters })
   }
 

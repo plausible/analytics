@@ -6,7 +6,7 @@ import * as api from '../../api'
 import numberFormatter, {durationFormatter} from '../../util/number-formatter'
 import {parseQuery} from '../../query'
 import { updatedQuery } from "../../util/url";
-import { hasGoalFilter, omitFiltersByKeyPrefix } from "../../util/filters";
+import { hasGoalFilter, replaceFilterByPrefix } from "../../util/filters";
 
 class ReferrerDrilldownModal extends React.Component {
   constructor(props) {
@@ -71,7 +71,7 @@ class ReferrerDrilldownModal extends React.Component {
   }
 
   renderReferrerName(referrer) {
-    const filters = omitFiltersByKeyPrefix(this.state.query, "referrer").concat([["is", "referrer", [referrer.name]]])
+    const filters = replaceFilterByPrefix(this.state.query, "referrer", ["is", "referrer", [referrer.name]])
     return (
       <span className="flex group items-center">
         <img src={`/favicon/sources/${referrer.name}`} referrerPolicy="no-referrer" className="h-4 w-4 mr-2 inline" />

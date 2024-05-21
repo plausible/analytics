@@ -80,8 +80,12 @@ export function getFiltersByKeyPrefix(query, prefix) {
   return query.filters.filter(([_operation, filterKey, _clauses]) => filterKey.startsWith(prefix))
 }
 
-export function omitFiltersByKeyPrefix(query, prefix) {
+function omitFiltersByKeyPrefix(query, prefix) {
   return query.filters.filter(([_operation, filterKey, _clauses]) => !filterKey.startsWith(prefix))
+}
+
+export function replaceFilterByPrefix(query, prefix, filter) {
+  return omitFiltersByKeyPrefix(query, prefix).concat([filter])
 }
 
 export function isFilteringOnFixedValue(query, filterKey, expectedValue) {

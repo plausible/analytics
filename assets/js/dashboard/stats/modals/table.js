@@ -5,7 +5,7 @@ import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter from '../../util/number-formatter'
 import {parseQuery} from '../../query'
-import { cleanLabels, hasGoalFilter, omitFiltersByKeyPrefix } from "../../util/filters";
+import { cleanLabels, hasGoalFilter, replaceFilterByPrefix } from "../../util/filters";
 import { updatedQuery } from "../../util/url";
 
 class ModalTable extends React.Component {
@@ -43,9 +43,9 @@ class ModalTable extends React.Component {
   }
 
   renderTableItem(tableItem) {
-    const filters = omitFiltersByKeyPrefix(this.state.query, this.props.filterKey).concat([[
+    const filters = replaceFilterByPrefix(this.state.query, this.props.filterKey, [
       "is", this.props.filterKey, [tableItem.code]
-    ]])
+    ])
 
     const labels = cleanLabels(filters, this.state.query.labels, this.props.filterKey, { [tableItem.code]: tableItem.name })
 

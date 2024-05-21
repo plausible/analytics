@@ -9,7 +9,7 @@ import Bar from '../bar'
 import LazyLoader from '../../components/lazy-loader'
 import classNames from 'classnames'
 import { trimURL, updatedQuery } from '../../util/url'
-import { cleanLabels, hasGoalFilter, omitFiltersByKeyPrefix } from '../../util/filters'
+import { cleanLabels, hasGoalFilter, replaceFilterByPrefix } from '../../util/filters'
 const MAX_ITEMS = 9
 const MIN_HEIGHT = 380
 const ROW_HEIGHT = 32
@@ -227,7 +227,7 @@ export default function ListReport(props) {
     if (!prefixAndFilter) { return null }
 
     const {prefix, filter, labels} = prefixAndFilter
-    const newFilters = omitFiltersByKeyPrefix(props.query, prefix).concat([filter])
+    const newFilters = replaceFilterByPrefix(props.query, prefix, filter)
     const newLabels = cleanLabels(newFilters, props.query.labels, filter[1], labels)
 
     return updatedQuery({ filters: newFilters, labels: newLabels })

@@ -7,7 +7,7 @@ import * as api from '../../api'
 import numberFormatter, {percentageFormatter} from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import { trimURL, updatedQuery } from '../../util/url'
-import { hasGoalFilter, omitFiltersByKeyPrefix } from "../../util/filters";
+import { hasGoalFilter, replaceFilterByPrefix } from "../../util/filters";
 class ExitPagesModal extends React.Component {
   constructor(props) {
     super(props)
@@ -56,7 +56,7 @@ class ExitPagesModal extends React.Component {
   }
 
   renderPage(page) {
-    const filters = omitFiltersByKeyPrefix(this.state.query, "exit_page").concat([["is", "exit_page", [page.name]]])
+    const filters = replaceFilterByPrefix(this.state.query, "exit_page", ["is", "exit_page", [page.name]])
     return (
       <tr className="text-sm dark:text-gray-200" key={page.name}>
         <td className="p-2 truncate">
