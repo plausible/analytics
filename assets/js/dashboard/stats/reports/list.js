@@ -110,6 +110,12 @@ function ExternalLink({ item, externalLinkDest }) {
 
 //   * `color` - color of the comparison bars in light-mode
 
+//   * `afterFetchData` - a function to be called directly after `fetchData`. Receives the,
+//     raw API response as an argument. The return value is ignored by ListReport. Allows
+//     hooking into the request lifecycle and doing actions with returned metadata. For
+//     example, the parent component might want to control what happens when imported data
+//     is included or not.
+
 export default function ListReport(props) {
   const [state, setState] = useState({ loading: true, list: null })
   const [visible, setVisible] = useState(false)
@@ -125,6 +131,10 @@ export default function ListReport(props) {
     }
     props.fetchData()
       .then((response) => {
+        if (props.afterFetchData) {
+          props.afterFetchData(response)
+        }
+
         setState({ loading: false, list: response.results })
       })
   }, [props.keyLabel, props.query])
