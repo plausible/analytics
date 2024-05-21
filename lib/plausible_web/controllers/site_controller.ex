@@ -129,6 +129,7 @@ defmodule PlausibleWeb.SiteController do
     |> render("settings_general.html",
       site: site,
       changeset: Plausible.Site.changeset(site, %{}),
+      connect_live_socket: true,
       dogfood_page_path: "/:dashboard/settings/general",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
