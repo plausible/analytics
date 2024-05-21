@@ -1,5 +1,4 @@
-import React from 'react';
-
+import React, {useState} from 'react';
 import * as storage from '../../util/storage'
 import { getFiltersByKeyPrefix, isFilteringOnFixedValue } from '../../util/filters'
 import ListReport from '../reports/list'
@@ -157,45 +156,37 @@ function iconFor(screenSize) {
   }
 }
 
-export default class Devices extends React.Component {
-  constructor(props) {
-    super(props)
-    this.tabKey = `deviceTab__${props.site.domain}`
-    const storedTab = storage.getItem(this.tabKey)
-    this.state = {
-      mode: storedTab || 'browser'
-    }
+export default function Devices(props) {
+  const {site, query} = props
+  const tabKey = `deviceTab__${site.domain}`
+  const storedTab = storage.getItem(tabKey)
+  const [mode, setMode] = useState(storedTab || 'browser')
+
+  function switchTab(mode) {
+    storage.setItem(tabKey, mode)
+    setMode(mode)
   }
 
-  setMode(mode) {
-    return () => {
-      storage.setItem(this.tabKey, mode)
-      this.setState({ mode })
-    }
-  }
-
-  renderContent() {
-    switch (this.state.mode) {
+  function renderContent() {
+    switch (mode) {
       case 'browser':
-        if (isFilteringOnFixedValue(this.props.query, 'browser')) {
-          return <BrowserVersions site={this.props.site} query={this.props.query} />
+        if (isFilteringOnFixedValue(query, 'browser')) {
+          return <BrowserVersions site={site} query={query} />
         }
-        return <Browsers site={this.props.site} query={this.props.query} />
+        return <Browsers site={site} query={query} />
       case 'os':
-        if (isFilteringOnFixedValue(this.props.query, 'os')) {
-          return <OperatingSystemVersions site={this.props.site} query={this.props.query} />
+        if (isFilteringOnFixedValue(query, 'os')) {
+          return <OperatingSystemVersions site={site} query={query} />
         }
-        return <OperatingSystems site={this.props.site} query={this.props.query} />
+        return <OperatingSystems site={site} query={query} />
       case 'size':
       default:
-        return (
-          <ScreenSizes site={this.props.site} query={this.props.query} />
-        )
+        return <ScreenSizes site={site} query={query} />
     }
   }
 
-  renderPill(name, mode) {
-    const isActive = this.state.mode === mode
+  function renderPill(name, pill) {
+    const isActive = mode === pill
 
     if (isActive) {
       return (
@@ -210,28 +201,26 @@ export default class Devices extends React.Component {
     return (
       <button
         className="cursor-pointer hover:text-indigo-600"
-        onClick={this.setMode(mode)}
+        onClick={() => switchTab(pill)}
       >
         {name}
       </button>
     )
   }
 
-  render() {
-    return (
-      <div>
-        <div className="flex justify-between w-full">
-          <h3 className="font-bold dark:text-gray-100">Devices</h3>
-          <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-            {this.renderPill('Browser', 'browser')}
-            {this.renderPill('OS', 'os')}
-            {this.renderPill('Size', 'size')}
-          </div>
+  return (
+    <div>
+      <div className="flex justify-between w-full">
+        <h3 className="font-bold dark:text-gray-100">Devices</h3>
+        <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
+          {renderPill('Browser', 'browser')}
+          {renderPill('OS', 'os')}
+          {renderPill('Size', 'size')}
         </div>
-        {this.renderContent()}
       </div>
-    )
-  }
+      {renderContent()}
+    </div>
+  )
 }
 
 function getSingleFilter(query, filterKey) {
