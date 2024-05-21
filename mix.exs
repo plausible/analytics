@@ -84,8 +84,8 @@ defmodule Plausible.MixProject do
       {:eqrcode, "~> 0.1.10"},
       {:ex_machina, "~> 2.3", only: [:dev, :test, :ce_dev, :ce_test]},
       {:excoveralls, "~> 0.10", only: :test},
-      {:finch, "~> 0.16.0"},
-      {:floki, "~> 0.35.0", only: [:dev, :test, :ce_dev, :ce_test]},
+      {:finch, "~> 0.17.0"},
+      {:floki, "~> 0.35.0"},
       {:fun_with_flags, "~> 1.11.0"},
       {:fun_with_flags_ui, "~> 1.0"},
       {:locus, "~> 2.3"},
@@ -142,7 +142,8 @@ defmodule Plausible.MixProject do
       {:ex_aws_s3, "~> 2.5"},
       {:sweet_xml, "~> 0.7.4"},
       {:zstream, "~> 0.6.4"},
-      {:con_cache, "~> 1.1.0"}
+      {:con_cache, "~> 1.1.0"},
+      {:req, "~> 0.4.14"}
     ]
   end
 
