@@ -8,7 +8,8 @@
     <h2 class="text-xl font-bold dark:text-gray-100">Add JavaScript snippet</h2>
     <div class="mt-4">
       <p class="dark:text-gray-100">
-        Paste this snippet in the <code>&lt;head&gt;</code> of your website.
+        Include this snippet in the <code>&lt;head&gt;</code>
+        section of your website.<br />To verify your integration, click the button below to confirm that everything is working correctly.
       </p>
 
       <div class="relative">
@@ -60,7 +61,7 @@
         </.styled_link>
       </p>
     </div>
-    <%= link("Start collecting data →",
+    <%= link("Verify your integration to start collecting data →",
       class: "button mt-4 w-full",
       to: "/#{URI.encode_www_form(@site.domain)}"
     ) %>
