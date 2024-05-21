@@ -91,8 +91,11 @@ export class PlausibleSearchParams extends URLSearchParams {
       if (value.length > 2) {
         super.set(key, value)
       } else {
+        // Empty arrays/objects are handled by defaults
         super.delete(key)
       }
+    } else if (value === false) {
+      super.delete(key)
     } else {
       super.set(key, value)
     }
