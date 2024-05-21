@@ -38,6 +38,7 @@ defmodule Plausible.Test.Support.HTML do
     element
     |> Floki.text()
     |> String.trim()
+    |> String.replace(~r/\s+/, " ")
   end
 
   def class_of_element(html, element) do
