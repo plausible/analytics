@@ -31,3 +31,13 @@ config :ex_money, api_module: Plausible.ExchangeRateMock
 config :plausible, Plausible.Ingestion.Counters, enabled: false
 
 config :plausible, Oban, testing: :manual
+
+config :plausible, Plausible.Verification.Checks.FetchBody,
+  req_opts: [
+    plug: {Req.Test, Plausible.Verification.Checks.FetchBody}
+  ]
+
+config :plausible, Plausible.Verification.Checks.Installation,
+  req_opts: [
+    plug: {Req.Test, Plausible.Verification.Checks.Installation}
+  ]
