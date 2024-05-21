@@ -6,7 +6,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { isFreeChoiceFilter, supportsIsNot } from "../util/filters";
 import classNames from "classnames";
 
-export default function FilterTypeSelector(props) {
+export default function FilterOperatorSelector(props) {
   const filterName = props.forFilter
 
   function renderTypeItem(type, shouldDisplay) {

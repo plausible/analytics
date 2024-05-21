@@ -1,7 +1,7 @@
 import React, { useMemo } from "react"
 import { TrashIcon } from '@heroicons/react/20/solid'
 
-import FilterTypeSelector from "../../components/filter-type-selector"
+import FilterOperatorSelector from "../../components/filter-operator-selector"
 import Combobox from '../../components/combobox'
 
 import { apiPath } from '../../util/url'
@@ -64,7 +64,7 @@ export default function FilterModalPropsRow({
         />
       </div>
       <div className="col-span-3 mx-2">
-        <FilterTypeSelector
+        <FilterOperatorSelector
           isDisabled={!filterKey}
           forFilter={'prop_value'}
           onSelect={(newOperation) => onUpdate([newOperation, filterKey, clauses])}

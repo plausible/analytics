@@ -1,6 +1,6 @@
 import React, { useMemo } from "react"
 
-import FilterTypeSelector from "../../components/filter-type-selector"
+import FilterOperatorSelector from "../../components/filter-operator-selector"
 import Combobox from '../../components/combobox'
 
 import { FILTER_OPERATIONS, fetchSuggestions, isFreeChoiceFilter } from "../../util/filters"
@@ -44,7 +44,7 @@ export default function FilterModalRow({
   return (
     <div className="grid grid-cols-11 mt-1">
       <div className="col-span-3 mr-2">
-        <FilterTypeSelector
+        <FilterOperatorSelector
           forFilter={filterKey}
           onSelect={(newOperation) => onUpdate([newOperation, filterKey, clauses], labels)}
           selectedType={operation}
