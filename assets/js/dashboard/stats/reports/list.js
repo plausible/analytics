@@ -125,8 +125,7 @@ export default function ListReport(props) {
     }
     props.fetchData()
       .then((response) => {
-        const results = response.results ? response.results : response
-        setState({ loading: false, list: results })
+        setState({ loading: false, list: response.results })
       })
   }, [props.keyLabel, props.query])
 

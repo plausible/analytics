@@ -32,7 +32,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Signup",
                  "visitors" => 2,
@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       filters = Jason.encode!(%{props: %{"logged_in" => "true"}})
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Payment",
                  "visitors" => 1,
@@ -119,7 +119,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       filters = Jason.encode!(%{props: %{"logged_in" => "!true"}})
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Payment",
                  "visitors" => 2,
@@ -157,7 +157,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       filters = Jason.encode!(%{props: %{"logged_in" => "(none)"}})
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Payment",
                  "visitors" => 2,
@@ -197,7 +197,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       filters = Jason.encode!(%{props: %{"logged_in" => "!(none)"}})
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Payment",
                  "visitors" => 2,
@@ -215,6 +215,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         conn
         |> get("/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
         |> json_response(200)
+        |> Map.get("results")
 
       assert resp == []
     end
@@ -249,7 +250,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       filters = Jason.encode!(%{browser: "Firefox"})
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Payment",
                  "visitors" => 1,
@@ -294,7 +295,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Payment",
                  "visitors" => 5,
@@ -340,7 +341,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Payment",
                  "visitors" => 5,
@@ -372,7 +373,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, event_name: "Payment", currency: :EUR})
 
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
-      response = json_response(conn, 200)
+      response = json_response(conn, 200)["results"]
 
       assert [
                %{
@@ -414,7 +415,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Signup",
                  "visitors" => 1,
@@ -447,6 +448,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
         get(conn, path <> query)
         |> json_response(200)
+        |> Map.get("results")
       end
 
       expected = [
@@ -488,6 +490,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
         get(conn, path <> query)
         |> json_response(200)
+        |> Map.get("results")
       end
 
       expected = [
@@ -539,7 +542,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Signup",
                  "visitors" => 2,
@@ -573,7 +576,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Visit /blog/**",
                  "visitors" => 2,
@@ -611,7 +614,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Visit /blog**",
                  "visitors" => 2,
@@ -649,7 +652,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Signup",
                  "visitors" => 1,
@@ -713,7 +716,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           "/api/stats/#{site.domain}/conversions?period=day&date=2019-07-01"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "conversion_rate" => 100.0,
                  "visitors" => 8,
@@ -801,7 +804,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "events" => 3,
                  "conversion_rate" => 37.5
                }
-             ] = json_response(conn, 200)
+             ] = json_response(conn, 200)["results"]
     end
 
     test "calculates conversion_rate for goals with glob pattern with imported data", %{
@@ -832,7 +835,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           "/api/stats/#{site.domain}/conversions?period=day"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Visit /blog**",
                  "visitors" => 2,

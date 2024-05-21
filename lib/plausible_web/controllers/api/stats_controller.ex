@@ -481,7 +481,10 @@ defmodule PlausibleWeb.Api.StatsController do
         res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
-      json(conn, res)
+      json(conn, %{
+        results: res,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -559,7 +562,10 @@ defmodule PlausibleWeb.Api.StatsController do
         res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
-      json(conn, res)
+      json(conn, %{
+        results: res,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -583,7 +589,10 @@ defmodule PlausibleWeb.Api.StatsController do
         res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
-      json(conn, res)
+      json(conn, %{
+        results: res,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -607,7 +616,10 @@ defmodule PlausibleWeb.Api.StatsController do
         res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
-      json(conn, res)
+      json(conn, %{
+        results: res,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -631,7 +643,10 @@ defmodule PlausibleWeb.Api.StatsController do
         res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
-      json(conn, res)
+      json(conn, %{
+        results: res,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -655,7 +670,10 @@ defmodule PlausibleWeb.Api.StatsController do
         res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
-      json(conn, res)
+      json(conn, %{
+        results: res,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -679,7 +697,10 @@ defmodule PlausibleWeb.Api.StatsController do
         res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
-      json(conn, res)
+      json(conn, %{
+        results: res,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -732,7 +753,10 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, metrics, pagination)
       |> transform_keys(%{referrer: :name})
 
-    json(conn, referrers)
+      json(conn, %{
+        results: referrers,
+        skip_imported_reason: query.skip_imported_reason
+      })
   end
 
   def pages(conn, params) do
@@ -761,7 +785,10 @@ defmodule PlausibleWeb.Api.StatsController do
         pages |> to_csv([:name, :visitors, :pageviews, :bounce_rate, :time_on_page])
       end
     else
-      json(conn, pages)
+      json(conn, %{
+        results: pages,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -792,7 +819,10 @@ defmodule PlausibleWeb.Api.StatsController do
         ])
       end
     else
-      json(conn, entry_pages)
+      json(conn, %{
+        results: entry_pages,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -824,7 +854,10 @@ defmodule PlausibleWeb.Api.StatsController do
         ])
       end
     else
-      json(conn, exit_pages)
+      json(conn, %{
+        results: exit_pages,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -907,7 +940,10 @@ defmodule PlausibleWeb.Api.StatsController do
           end
         end)
 
-      json(conn, countries)
+        json(conn, %{
+          results: countries,
+          skip_imported_reason: query.skip_imported_reason
+        })
     end
   end
 
@@ -942,7 +978,10 @@ defmodule PlausibleWeb.Api.StatsController do
         regions |> to_csv([:name, :visitors])
       end
     else
-      json(conn, regions)
+      json(conn, %{
+        results: regions,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -982,7 +1021,10 @@ defmodule PlausibleWeb.Api.StatsController do
         cities |> to_csv([:name, :visitors])
       end
     else
-      json(conn, cities)
+      json(conn, %{
+        results: cities,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -1006,7 +1048,10 @@ defmodule PlausibleWeb.Api.StatsController do
         browsers |> to_csv([:name, :visitors])
       end
     else
-      json(conn, browsers)
+      json(conn, %{
+        results: browsers,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -1036,7 +1081,10 @@ defmodule PlausibleWeb.Api.StatsController do
         |> to_csv([:name, :version, :visitors])
       end
     else
-      json(conn, versions)
+      json(conn, %{
+        results: versions,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -1060,7 +1108,10 @@ defmodule PlausibleWeb.Api.StatsController do
         systems |> to_csv([:name, :visitors])
       end
     else
-      json(conn, systems)
+      json(conn, %{
+        results: systems,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -1086,7 +1137,10 @@ defmodule PlausibleWeb.Api.StatsController do
         |> to_csv([:name, :version, :visitors])
       end
     else
-      json(conn, versions)
+      json(conn, %{
+        results: versions,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -1110,7 +1164,10 @@ defmodule PlausibleWeb.Api.StatsController do
         sizes |> to_csv([:name, :visitors])
       end
     else
-      json(conn, sizes)
+      json(conn, %{
+        results: sizes,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -1146,7 +1203,10 @@ defmodule PlausibleWeb.Api.StatsController do
         :total_conversions
       ])
     else
-      json(conn, conversions)
+      json(conn, %{
+        results: conversions,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -1157,7 +1217,7 @@ defmodule PlausibleWeb.Api.StatsController do
     case Plausible.Props.ensure_prop_key_accessible(prop_key, site.owner) do
       :ok ->
         props = breakdown_custom_prop_values(site, params)
-        json(conn, props)
+        json(conn, %{results: props})
 
       {:error, :upgrade_required} ->
         H.payment_required(

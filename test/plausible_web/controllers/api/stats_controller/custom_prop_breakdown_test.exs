@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 2,
                  "name" => "K2sna Kalle",
@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&with_imported=true"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 1,
                  "name" => "K2sna Kalle",
@@ -82,7 +82,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 2,
                  "name" => "K2sna Kalle",
@@ -122,7 +122,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&limit=2&page=2"
         )
 
-      assert json_response(conn1, 200) == [
+      assert json_response(conn1, 200)["results"] == [
                %{
                  "visitors" => 3,
                  "name" => "Tiit",
@@ -137,7 +137,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                }
              ]
 
-      assert json_response(conn2, 200) == [
+      assert json_response(conn2, 200)["results"] == [
                %{
                  "visitors" => 1,
                  "name" => "(none)",
@@ -171,7 +171,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 2,
                  "name" => "B",
@@ -207,7 +207,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 2,
                  "name" => "(none)",
@@ -250,7 +250,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "0",
                  "visitors" => 1,
@@ -287,7 +287,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "(none)",
                  "visitors" => 1,
@@ -334,7 +334,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "20",
                  "visitors" => 2,
@@ -377,7 +377,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "0",
                  "visitors" => 1,
@@ -424,7 +424,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "1",
                  "visitors" => 2,
@@ -475,7 +475,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "1",
                  "visitors" => 2,
@@ -533,7 +533,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "20",
                  "visitors" => 2,
@@ -584,7 +584,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "20",
                  "visitors" => 2,
@@ -611,7 +611,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/variant?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 2,
                  "name" => "A",
@@ -645,7 +645,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 1,
                  "name" => "B",
@@ -690,7 +690,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "A",
                  "visitors" => 1,
@@ -735,7 +735,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "A",
                  "visitors" => 1,
@@ -783,7 +783,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 2,
                  "name" => "true",
@@ -844,7 +844,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 2,
                  "name" => "true",
@@ -889,6 +889,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
 
       returned_metrics =
         json_response(conn, 200)
+        |> Map.get("results")
         |> List.first()
         |> Map.keys()
 
@@ -916,7 +917,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 1,
                  "name" => "Sipsik",
@@ -946,7 +947,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 1,
                  "name" => "Sipsik",
@@ -973,7 +974,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 1,
                  "name" => "Sipsik",
@@ -1004,7 +1005,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 2,
                  "name" => "K2sna Kalle",
@@ -1040,7 +1041,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/key?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 2,
                  "name" => "bar",
@@ -1078,7 +1079,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
           "/api/stats/#{site.domain}/custom-prop-values/key?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 1,
                  "name" => "bar",
@@ -1116,11 +1117,13 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
         conn
         |> get("/api/stats/#{site.domain}/custom-prop-values/url?period=day")
         |> json_response(200)
+        |> Map.get("results")
 
       [%{"visitors" => 1, "name" => "two"}] =
         conn
         |> get("/api/stats/#{site.domain}/custom-prop-values/path?period=day")
         |> json_response(200)
+        |> Map.get("results")
     end
 
     test "returns 402 'upgrade required' for any other prop key", %{conn: conn, site: site} do
@@ -1175,7 +1178,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
             "/api/stats/#{site.domain}/custom-prop-values/url?period=day&with_imported=true&filters=#{filters}"
           )
 
-        assert json_response(conn, 200) == [
+        assert json_response(conn, 200)["results"] == [
                  %{
                    "visitors" => 5,
                    "name" => "https://two.com",

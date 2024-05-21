@@ -35,10 +35,7 @@ class SourcesModal extends React.Component {
 
     const detailed = this.showExtra()
     api.get(`/api/stats/${encodeURIComponent(site.domain)}/${this.currentView()}`, query, { limit: 100, page, detailed })
-      .then((response) => {
-        const results = response.results ? response.results : response
-        this.setState({ loading: false, sources: sources.concat(results), moreResultsAvailable: results.length === 100 })
-      })
+      .then((response) => this.setState({ loading: false, sources: sources.concat(response.results), moreResultsAvailable: response.results.length === 100 }))
   }
 
   componentDidMount() {
