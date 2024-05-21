@@ -108,5 +108,16 @@
         </svg>
       </a>
     </div>
+
+    <div>
+      <%= live_render(@conn, PlausibleWeb.Live.Verification,
+        session: %{
+          "site_id" => @site.id,
+          "domain" => @site.domain,
+          "modal?" => true,
+          "slowdown" => @conn.private[:verification_slowdown]
+        }
+      ) %>
+    </div>
   </div>
 <% end %>
