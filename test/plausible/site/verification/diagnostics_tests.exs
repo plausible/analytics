@@ -257,6 +257,55 @@ defmodule Plausible.Verification.DiagnosticsTest do
              ]
     end
 
+    @normal_body_wordpress """
+    <html>
+    <head>
+    <meta name="foo" content="/wp-content/plugins/bar"/>
+    <script defer data-domain="example.com" src="http://localhost:8000/js/script.js"></script>
+    </head>
+    <body>Hello</body>
+    </html>
+    """
+
+    test "detecting snippet after busting WordPress cache" do
+      stub_fetch_body(fn conn ->
+        conn = fetch_query_params(conn)
+
+        if conn.query_params["plausible_verification"] do
+          conn
+          |> put_resp_content_type("text/html")
+          |> send_resp(200, @normal_body_wordpress)
+        else
+          conn
+          |> put_resp_content_type("text/html")
+          |> send_resp(200, @body_no_snippet)
+        end
+      end)
+
+      stub_installation(fn conn ->
+        {:ok, body, _} = read_body(conn)
+
+        if String.contains?(body, "?plausible_verification") do
+          conn
+          |> put_resp_content_type("application/json")
+          |> send_resp(200, Jason.encode!(plausible_installed()))
+        else
+          raise "Should not get here even"
+        end
+      end)
+
+      result = run_checks()
+
+      rating = Checks.interpret_diagnostics(result)
+      refute rating.ok?
+      assert rating.errors == ["We encountered an issue with your site cache"]
+
+      assert rating.recommendations == [
+               {"Please clear your cache (or wait for your provider to clear it) to ensure that the latest version of your site is being displayed to all your visitors",
+                "https://plausible.io/docs/troubleshoot-integration"}
+             ]
+    end
+
     test "detecting no snippet" do
       stub_fetch_body(200, @body_no_snippet)
       stub_installation(200, plausible_installed(false))
@@ -500,6 +549,33 @@ defmodule Plausible.Verification.DiagnosticsTest do
              ]
     end
 
+    @proxied_script_body_wordpress """
+    <html>
+    <head>
+    <meta name="foo" content="/wp-content/plugins/bar"/>
+    <script defer data-domain="example.com" src="https://proxy.example.com/js/script.js"></script>
+    </head>
+    <body>Hello</body>
+    </html>
+    """
+
+    test "proxied WordPress setup, function undefined, callback won't fire" do
+      stub_fetch_body(200, @proxied_script_body_wordpress)
+      stub_installation(200, plausible_installed(false, 0))
+
+      result = run_checks()
+      rating = Checks.interpret_diagnostics(result)
+
+      refute rating.ok?
+      assert rating.errors == ["We encountered an error with your Plausible proxy"]
+
+      assert rating.recommendations ==
+               [
+                 {"Please re-enable the proxy in our WordPress plugin to start counting your visitors",
+                  "https://plausible.io/wordpress-analytics-plugin"}
+               ]
+    end
+
     test "proxied setup, function undefined, callback won't fire" do
       stub_fetch_body(200, @proxied_script_body)
       stub_installation(200, plausible_installed(false, 0))
@@ -522,14 +598,68 @@ defmodule Plausible.Verification.DiagnosticsTest do
       stub_installation(200, plausible_installed(true, 0))
 
       result = run_checks()
-
       rating = Checks.interpret_diagnostics(result)
+
       refute rating.ok?
-      assert ["Your Plausible integration is not working"]
+      assert rating.errors == ["Your Plausible integration is not working"]
 
       assert rating.recommendations == [
                {"Please manually check your integration to make sure that the Plausible snippet has been inserted correctly",
                 "https://plausible.io/docs/troubleshoot-integration"}
+             ]
+    end
+
+    @body_unknown_attributes """
+    <html>
+    <head>
+    <script foo="bar" defer data-domain="example.com" src="http://localhost:8000/js/script.js"></script>
+    </head>
+    <body>Hello</body>
+    </html>
+    """
+
+    test "unknown attributes" do
+      stub_fetch_body(200, @body_unknown_attributes)
+      stub_installation(200, plausible_installed(false, 0))
+
+      result = run_checks()
+      rating = Checks.interpret_diagnostics(result)
+
+      refute rating.ok?
+      assert rating.errors == ["Something seems to have altered our snippet"]
+
+      assert rating.recommendations == [
+               {"Please manually check your integration to make sure that nothing prevents our script from working",
+                "https://plausible.io/docs/troubleshoot-integration"}
+             ]
+    end
+
+    @body_unknown_attributes_wordpress """
+    <html>
+    <head>
+    <meta name="foo" content="/wp-content/plugins/bar"/>
+    <script foo="bar" defer data-domain="example.com" src="http://localhost:8000/js/script.js"></script>
+    </head>
+    <body>Hello</body>
+    </html>
+    """
+
+    test "unknown attributes for WordPress installation" do
+      stub_fetch_body(200, @body_unknown_attributes_wordpress)
+      stub_installation(200, plausible_installed(false, 0))
+
+      result = run_checks()
+      rating = Checks.interpret_diagnostics(result)
+
+      refute rating.ok?
+
+      assert rating.errors == [
+               "A performance optimization plugin seems to have altered our snippet"
+             ]
+
+      assert rating.recommendations == [
+               {"Please install and activate our WordPress plugin to avoid the most common plugin conflicts",
+                "https://plausible.io/wordpress-analytics-plugin "}
              ]
     end
   end

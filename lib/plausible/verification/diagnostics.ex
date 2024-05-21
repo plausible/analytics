@@ -210,7 +210,6 @@ defmodule Plausible.Verification.Diagnostics do
       when count_head + count_body > 1 do
     %Rating{
       ok?: false,
-      # FIXME
       errors: ["We've found multiple Plausible snippets on your site."],
       recommendations: [
         {"Please ensure that only one snippet is used",
@@ -260,7 +259,6 @@ defmodule Plausible.Verification.Diagnostics do
   def rate(%__MODULE__{snippets_found_in_head: 0, snippets_found_in_body: n}, _url) when n >= 1 do
     %Rating{
       ok?: false,
-      # FIXME
       errors: ["Plausible snippet is placed in the body of your site"],
       recommendations: [
         {"Please relocate the snippet to the header of your site",
@@ -272,7 +270,6 @@ defmodule Plausible.Verification.Diagnostics do
   def rate(%__MODULE__{data_domain_mismatch?: true}, url) do
     %Rating{
       ok?: false,
-      # FIXME
       errors: ["Your data-domain is different than #{url}"],
       recommendations: [
         {"Please ensure that the site in the data-domain attribute is an exact match to the site as you added it to your Plausible account",
