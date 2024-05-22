@@ -114,13 +114,7 @@ defmodule PlausibleWeb.Live.Verification do
     {:noreply, socket}
   end
 
-  def handle_info(
-        {:verification_end,
-         %State{
-           data_domain: _data_domain
-         } = state},
-        socket
-      ) do
+  def handle_info({:verification_end, %State{} = state}, socket) do
     rating = Checks.interpret_diagnostics(state)
 
     update_component(socket,

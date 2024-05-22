@@ -47,11 +47,29 @@ defmodule Plausible.Verification.Checks do
         init_state,
         fn check, state ->
           state
-          |> State.notify_start(check, slowdown)
+          |> notify_start(check, slowdown)
           |> check.perform_wrapped()
         end
       )
 
-    State.notify_verification_end(state, slowdown)
+    notify_verification_end(state, slowdown)
+  end
+
+  defp notify_start(state, check, slowdown) do
+    if is_pid(state.report_to) do
+      if is_integer(slowdown) and slowdown > 0, do: :timer.sleep(slowdown)
+      send(state.report_to, {:verification_check_start, {check, state}})
+    end
+
+    state
+  end
+
+  defp notify_verification_end(state, slowdown) do
+    if is_pid(state.report_to) do
+      if is_integer(slowdown) and slowdown > 0, do: :timer.sleep(slowdown)
+      send(state.report_to, {:verification_end, state})
+    end
+
+    state
   end
 end

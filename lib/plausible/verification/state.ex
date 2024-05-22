@@ -24,22 +24,4 @@ defmodule Plausible.Verification.State do
   def put_diagnostics(%__MODULE__{} = state, diagnostics) do
     put_diagnostics(state, List.wrap(diagnostics))
   end
-
-  def notify_start(state, check, slowdown \\ 0) do
-    if is_pid(state.report_to) do
-      if is_integer(slowdown) and slowdown > 0, do: :timer.sleep(slowdown)
-      send(state.report_to, {:verification_check_start, {check, state}})
-    end
-
-    state
-  end
-
-  def notify_verification_end(state, slowdown \\ 0) do
-    if is_pid(state.report_to) do
-      if is_integer(slowdown) and slowdown > 0, do: :timer.sleep(slowdown)
-      send(state.report_to, {:verification_end, state})
-    end
-
-    state
-  end
 end
