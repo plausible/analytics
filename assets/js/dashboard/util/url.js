@@ -1,3 +1,5 @@
+import JsonURL from '@jsonurl/jsonurl'
+
 export function apiPath(site, path = '') {
   return `/api/stats/${encodeURIComponent(site.domain)}${path}`
 }
@@ -11,9 +13,14 @@ export function sitePath(site, path = '') {
 }
 
 export function setQuery(key, value) {
-  const query = new URLSearchParams(window.location.search)
-  query.set(key, value)
-  return `${window.location.pathname}?${query.toString()}`
+  return `${window.location.pathname}?${updatedQuery({ [key]: value })}`
+}
+
+export function updatedQuery(values) {
+  const queryString = new PlausibleSearchParams(window.location.search)
+  Object.entries(values).forEach(([key, value]) => queryString.set(key, value))
+
+  return queryString.toString()
 }
 
 export function externalLinkForPage(domain, page) {
@@ -74,5 +81,40 @@ export function trimURL(url, maxLength) {
     const rightSide = url.slice(-rightSideLength);
 
     return leftSide + ellipsis + rightSide;
+  }
+}
+
+export class PlausibleSearchParams extends URLSearchParams {
+  set(key, value) {
+    if (typeof value === 'object') {
+      value = JsonURL.stringify(value)
+      if (value.length > 2) {
+        super.set(key, value)
+      } else {
+        // Empty arrays/objects are handled by defaults
+        super.delete(key)
+      }
+    } else if (value === false) {
+      super.delete(key)
+    } else {
+      super.set(key, value)
+    }
+  }
+
+  escape(value) {
+    // Less strict encoding - allow components which browsers don't require encoded and make jsonurl
+    // more readable
+    return encodeURIComponent(value)
+      .replaceAll("%2C", ",")
+      .replaceAll("%3A", ":")
+      .replaceAll("%2F", "/")
+  }
+
+  toString() {
+    const entries = Array.from(super.entries())
+    if (entries.length === 0) {
+      return ''
+    }
+    return entries.map(([key, value]) => `${this.escape(key)}=${this.escape(value)}`).join("&")
   }
 }

@@ -1,4 +1,6 @@
-export const FILTER_GROUPS = {
+import * as api from '../api'
+
+export const FILTER_MODAL_TO_FILTER_GROUP = {
   'page': ['page', 'entry_page', 'exit_page'],
   'source': ['source', 'referrer'],
   'location': ['country', 'region', 'city'],
@@ -7,14 +9,21 @@ export const FILTER_GROUPS = {
   'os': ['os', 'os_version'],
   'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
   'goal': ['goal'],
-  'props': ['prop_key', 'prop_value'],
+  'props': ['props'],
   'hostname': ['hostname']
 }
 
-export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_GROUPS['location']))
+export const FILTER_GROUP_TO_MODAL_TYPE = Object.fromEntries(
+  Object.entries(FILTER_MODAL_TO_FILTER_GROUP)
+    .flatMap(([modalName, filterGroups]) => filterGroups.map((filterGroup) => [filterGroup, modalName]))
+)
+
+export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_MODAL_TO_FILTER_GROUP['location']))
+
+export const EVENT_PROPS_PREFIX = "props:"
 
 export const FILTER_OPERATIONS = {
-  isNot: 'is not',
+  isNot: 'is_not',
   contains: 'contains',
   is: 'is'
 };
@@ -44,66 +53,57 @@ try {
 
 const ESCAPED_PIPE = '\\|'
 
-export function escapeFilterValue(value) {
+function escapeFilterValue(value) {
   return value.replaceAll(NON_ESCAPED_PIPE_REGEX, ESCAPED_PIPE)
 }
 
-export function toFilterQuery(type, clauses) {
+function toFilterQuery(type, clauses) {
   const prefix = OPERATION_PREFIX[type];
-  const result = clauses.map(clause => escapeFilterValue(clause.value.trim())).join('|')
+  const result = clauses.map(clause => escapeFilterValue(clause.toString().trim())).join('|')
   return prefix + result;
 }
 
-export function parsePrefix(rawValue) {
-  const type = Object.keys(OPERATION_PREFIX)
-    .find(type => OPERATION_PREFIX[type] === rawValue[0]) || FILTER_OPERATIONS.is;
 
-  const value = type === FILTER_OPERATIONS.is ? rawValue : rawValue.substring(1)
-
-  const values = value
-    .split(NON_ESCAPED_PIPE_REGEX)
-    .filter((clause) => !!clause)
-    .map((val) => val.replaceAll(ESCAPED_PIPE, '|'))
-
-  return { type, values }
+export function getLabel(labels, filterKey, value) {
+  if (['country', 'region', 'city'].includes(filterKey)) {
+    return labels[value]
+  } else {
+    return value
+  }
 }
 
-export function parseQueryPropsFilter(query) {
-  return Object.entries(query.filters['props']).map(([key, propVal]) => {
-    const { type, values } = parsePrefix(propVal)
-    const clauses = values.map(val => { return { value: val, label: val } })
-    return { propKey: { label: key, value: key }, type, clauses }
-  })
+export function getPropertyKeyFromFilterKey(filterKey) {
+  return filterKey.slice(EVENT_PROPS_PREFIX.length)
 }
 
-export function parseQueryFilter(query, filter) {
-  const { type, values } = parsePrefix(query.filters[filter] || '')
-
-  let labels = values
-
-  if (filter === 'country' && values.length > 0) {
-    const rawLabel = (new URLSearchParams(window.location.search)).get('country_labels') || ''
-    labels = rawLabel.split('|').filter(label => !!label)
-  }
-
-  if (filter === 'region' && values.length > 0) {
-    const rawLabel = (new URLSearchParams(window.location.search)).get('region_labels') || ''
-    labels = rawLabel.split('|').filter(label => !!label)
-  }
-
-  if (filter === 'city' && values.length > 0) {
-    const rawLabel = (new URLSearchParams(window.location.search)).get('city_labels') || ''
-    labels = rawLabel.split('|').filter(label => !!label)
-  }
-
-  const clauses = values.map((value, index) => { return { value, label: labels[index] } })
-
-  return { type, clauses }
+export function getFiltersByKeyPrefix(query, prefix) {
+  return query.filters.filter(([_operation, filterKey, _clauses]) => filterKey.startsWith(prefix))
 }
 
-export function isFilteringOnFixedValue(query, filter) {
-  const { type, clauses } = parseQueryFilter(query, filter)
-  return type == FILTER_OPERATIONS.is && clauses.length == 1
+function omitFiltersByKeyPrefix(query, prefix) {
+  return query.filters.filter(([_operation, filterKey, _clauses]) => !filterKey.startsWith(prefix))
+}
+
+export function replaceFilterByPrefix(query, prefix, filter) {
+  return omitFiltersByKeyPrefix(query, prefix).concat([filter])
+}
+
+export function isFilteringOnFixedValue(query, filterKey, expectedValue) {
+  const filters = query.filters.filter(([_operation, key]) => filterKey == key)
+  if (filters.length == 1) {
+    const [operation, _filterKey, clauses] = filters[0]
+    return operation === FILTER_OPERATIONS.is && clauses.length === 1 && (!expectedValue || clauses[0] == expectedValue)
+  }
+  return false
+}
+
+export function hasGoalFilter(query) {
+  return getFiltersByKeyPrefix(query, "goal").length > 0
+}
+
+// Note: Currently only a single goal filter can be applied at a time.
+export function getGoalFilter(query) {
+  return getFiltersByKeyPrefix(query, "goal")[0] || null
 }
 
 export function formatFilterGroup(filterGroup) {
@@ -118,19 +118,61 @@ export function formatFilterGroup(filterGroup) {
   }
 }
 
-export function filterGroupForFilter(filter) {
-  const map = Object.entries(FILTER_GROUPS).reduce((filterToGroupMap, [group, filtersInGroup]) => {
-    const filtersToAdd = {}
-    filtersInGroup.forEach((filterInGroup) => {
-      filtersToAdd[filterInGroup] = group
-    })
+export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
+  const filteredBy = Object.fromEntries(
+    filters
+    .flatMap(([_operation, filterKey, clauses]) => ['country', 'region', 'city'].includes(filterKey) ? clauses : [])
+    .map((value) => [value, true])
+  )
+  let result = { ...labels }
+  for (const value in labels) {
+    if (!filteredBy[value]) {
+      delete result[value]
+    }
+  }
 
-    return { ...filterToGroupMap, ...filtersToAdd }
-  }, {})
+  if (mergedFilterKey && ['country', 'region', 'city'].includes(mergedFilterKey)) {
+    result = {
+      ...result,
+      ...mergedLabels
+    }
+  }
 
-
-  return map[filter] || filter
+  return result
 }
+
+
+// :TODO: New schema for filters in the BE
+export function serializeApiFilters(filters) {
+  const cleaned = {}
+  filters.forEach(([operation, filterKey, clauses]) => {
+    if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
+      cleaned.props ||= {}
+      cleaned.props[getPropertyKeyFromFilterKey(filterKey)] = toFilterQuery(operation, clauses)
+    } else {
+      cleaned[filterKey] = toFilterQuery(operation, clauses)
+    }
+  })
+  return JSON.stringify(cleaned)
+}
+
+export function fetchSuggestions(apiPath, query, input, additionalFilter) {
+  const updatedQuery = queryForSuggestions(query, additionalFilter)
+  return api.get(apiPath, updatedQuery, { q: input.trim() })
+}
+
+function queryForSuggestions(query, additionalFilter) {
+  let filters = query.filters
+  if (additionalFilter && additionalFilter[2].length > 0) {
+    filters = filters.concat([additionalFilter])
+  }
+  return { ...query, filters }
+}
+
+export function getFilterGroup([_operation, filterKey, _clauses]) {
+  return filterKey.startsWith(EVENT_PROPS_PREFIX) ? 'props' : filterKey
+}
+
 
 export const formattedFilters = {
   'goal': 'Goal',
@@ -156,4 +198,25 @@ export const formattedFilters = {
   'hostname': 'Hostname',
   'entry_page': 'Entry Page',
   'exit_page': 'Exit Page',
+}
+
+
+export function parseLegacyFilter(filterKey, rawValue) {
+  const operation = Object.keys(OPERATION_PREFIX)
+    .find(operation => OPERATION_PREFIX[operation] === rawValue[0]) || FILTER_OPERATIONS.is;
+
+  const value = operation === FILTER_OPERATIONS.is ? rawValue : rawValue.substring(1)
+
+  const clauses = value
+    .split(NON_ESCAPED_PIPE_REGEX)
+    .filter((clause) => !!clause)
+    .map((val) => val.replaceAll(ESCAPED_PIPE, '|'))
+
+  return [operation, filterKey, clauses]
+}
+
+export function parseLegacyPropsFilter(rawValue) {
+  return Object.entries(JSON.parse(rawValue)).map(([key, propVal]) => {
+    return parseLegacyFilter(`${EVENT_PROPS_PREFIX}${key}`, propVal)
+  })
 }

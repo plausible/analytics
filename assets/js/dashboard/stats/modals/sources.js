@@ -5,6 +5,8 @@ import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { parseQuery } from '../../query'
+import { updatedQuery } from "../../util/url";
+import { hasGoalFilter } from "../../util/filters";
 
 const TITLES = {
   sources: 'Top Sources',
@@ -52,11 +54,11 @@ class SourcesModal extends React.Component {
   }
 
   showExtra() {
-    return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
+    return this.state.query.period !== 'realtime' && !hasGoalFilter(this.state.query)
   }
 
   showConversionRate() {
-    return !!this.state.query.filters.goal
+    return hasGoalFilter(this.state.query)
   }
 
   loadMore() {
@@ -91,20 +93,20 @@ class SourcesModal extends React.Component {
   }
 
   renderSource(source) {
-    const query = new URLSearchParams(window.location.search)
+    const searchParams = {}
     const filter = this.currentFilter()
-    if (filter === 'sources') query.set('source', source.name)
-    if (filter === 'utm_mediums') query.set('utm_medium', source.name)
-    if (filter === 'utm_sources') query.set('utm_source', source.name)
-    if (filter === 'utm_campaigns') query.set('utm_campaign', source.name)
-    if (filter === 'utm_contents') query.set('utm_content', source.name)
-    if (filter === 'utm_terms') query.set('utm_term', source.name)
+    if (filter === 'sources') searchParams['source'] = source.name
+    if (filter === 'utm_mediums') searchParams['utm_medium'] = source.name
+    if (filter === 'utm_sources') searchParams['utm_source'] = source.name
+    if (filter === 'utm_campaigns') searchParams['utm_campaign'] = source.name
+    if (filter === 'utm_contents') searchParams['utm_content'] = source.name
+    if (filter === 'utm_terms') searchParams['utm_term'] = source.name
 
     return (
       <tr className="text-sm dark:text-gray-200" key={source.name}>
         <td className="p-2">
           {this.icon(source)}
-          <Link className="hover:underline" to={{ search: query.toString(), pathname: '/' + encodeURIComponent(this.props.site.domain) }}>{source.name}</Link>
+          <Link className="hover:underline" to={{ search: updatedQuery(searchParams), pathname: '/' + encodeURIComponent(this.props.site.domain) }}>{source.name}</Link>
         </td>
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(source.total_visitors)}</td>}
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(source.visitors)}</td>

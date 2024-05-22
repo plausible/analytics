@@ -1,7 +1,7 @@
 import React from 'react';
 
 import * as storage from '../../util/storage'
-import { isFilteringOnFixedValue } from '../../util/filters'
+import { getFiltersByKeyPrefix, isFilteringOnFixedValue } from '../../util/filters'
 import ListReport from '../reports/list'
 import * as api from '../../api'
 import * as url from '../../util/url'
@@ -13,7 +13,10 @@ function Browsers({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    return { browser: listItem['name'] }
+    return {
+      prefix: 'browser',
+      filter: ["is", "browser", [listItem['name']]]
+    }
   }
 
   return (
@@ -33,10 +36,13 @@ function BrowserVersions({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    if (query.filters.browser === '(not set)') {
-      return {}
+    if (getSingleFilter(query, "browser") == '(not set)') {
+      return null
     }
-    return { browser_version: listItem['name'] }
+    return {
+      prefix: 'browser_version',
+      filter: ["is", "browser_version", [listItem['name']]]
+    }
   }
 
   return (
@@ -57,7 +63,10 @@ function OperatingSystems({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    return { os: listItem['name'] }
+    return {
+      prefix: 'os',
+      filter: ["is", "os", [listItem['name']]]
+    }
   }
 
   return (
@@ -77,10 +86,13 @@ function OperatingSystemVersions({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    if (query.filters.os === '(not set)') {
-      return {}
+    if (getSingleFilter(query, "os") == '(not set)') {
+      return null
     }
-    return { os_version: listItem['name'] }
+    return {
+      prefix: 'os_version',
+      filter: ["is", "os_version", [listItem['name']]]
+    }
   }
 
   return (
@@ -105,7 +117,10 @@ function ScreenSizes({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    return { screen: listItem['name'] }
+    return {
+      prefix: 'screen',
+      filter: ["is", "screen", [listItem['name']]]
+    }
   }
 
   return (
@@ -217,4 +232,14 @@ export default class Devices extends React.Component {
       </div>
     )
   }
+}
+
+function getSingleFilter(query, filterKey) {
+  const matches = getFiltersByKeyPrefix(query, filterKey)
+  if (matches.length != 1) {
+    return null
+  }
+  const clauses = matches[0][2]
+
+  return clauses.length == 1 ? clauses[0] : null
 }

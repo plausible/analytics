@@ -6,7 +6,8 @@ import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { parseQuery } from '../../query'
-import { trimURL } from '../../util/url'
+import { trimURL, updatedQuery } from '../../util/url'
+import { hasGoalFilter, replaceFilterByPrefix } from "../../util/filters";
 
 class PagesModal extends React.Component {
   constructor(props) {
@@ -37,15 +38,15 @@ class PagesModal extends React.Component {
   }
 
   showExtra() {
-    return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
+    return this.state.query.period !== 'realtime' && !hasGoalFilter(this.state.query)
   }
 
   showPageviews() {
-    return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
+    return this.state.query.period !== 'realtime' && !hasGoalFilter(this.state.query)
   }
 
   showConversionRate() {
-    return !!this.state.query.filters.goal
+    return hasGoalFilter(this.state.query)
   }
 
   formatBounceRate(page) {
@@ -57,14 +58,20 @@ class PagesModal extends React.Component {
   }
 
   renderPage(page) {
-    const query = new URLSearchParams(window.location.search)
+    const filters = replaceFilterByPrefix(this.state.query, "page", ["is", "page", [page.name]])
     const timeOnPage = page['time_on_page'] ? durationFormatter(page['time_on_page']) : '-';
-    query.set('page', page.name)
-
     return (
       <tr className="text-sm dark:text-gray-200" key={page.name}>
         <td className="p-2">
-          <Link to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString() }} className="hover:underline block truncate">{trimURL(page.name, 50)}</Link>
+          <Link
+            to={{
+              pathname: `/${encodeURIComponent(this.props.site.domain)}`,
+              search: updatedQuery({ filters })
+            }}
+            className="hover:underline block truncate"
+          >
+            {trimURL(page.name, 50)}
+          </Link>
         </td>
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{page.total_visitors}</td>}
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.visitors)}</td>

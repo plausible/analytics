@@ -7,6 +7,7 @@ import * as api from '../../api'
 import {apiPath, sitePath} from '../../util/url'
 import ListReport from '../reports/list'
 import { VISITORS_METRIC, maybeWithCR } from '../reports/metrics';
+import { getFiltersByKeyPrefix } from '../../util/filters';
 
 function Countries({query, site, onClick}) {
   function fetchData() {
@@ -20,7 +21,11 @@ function Countries({query, site, onClick}) {
   }
 
   function getFilterFor(listItem) {
-    return { country: listItem['code'], country_labels: listItem['name'] }
+    return {
+      prefix: "country",
+      filter: ["is", "country", [listItem['code']]],
+      labels: { [listItem['code']]: listItem['name'] }
+    }
   }
 
   return (
@@ -48,7 +53,11 @@ function Regions({query, site, onClick}) {
   }
 
   function getFilterFor(listItem) {
-    return {region: listItem['code'], region_labels: listItem['name']}
+    return {
+      prefix: "region",
+      filter: ["is", "region", [listItem['code']]],
+      labels: { [listItem['code']]: listItem['name'] }
+    }
   }
 
   return (
@@ -76,7 +85,11 @@ function Cities({query, site}) {
   }
 
   function getFilterFor(listItem) {
-    return {city: listItem['code'], city_labels: listItem['name']}
+    return {
+      prefix: "city",
+      filter: ["is", "city", [listItem['code']]],
+      labels: { [listItem['code']]: listItem['name'] }
+    }
   }
 
   return (
@@ -114,7 +127,8 @@ export default class Locations extends React.Component {
 
   componentDidUpdate(prevProps) {
     const isRemovingFilter = (filterName) => {
-      return prevProps.query.filters[filterName] && !this.props.query.filters[filterName]
+      return getFiltersByKeyPrefix(prevProps.query, filterName).length > 0 &&
+        getFiltersByKeyPrefix(this.props.query, filterName).length == 0
     }
 
     if (this.state.mode === 'cities' && isRemovingFilter('region')) {

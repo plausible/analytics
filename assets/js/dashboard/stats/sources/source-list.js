@@ -7,7 +7,6 @@ import ListReport from '../reports/list'
 import { VISITORS_METRIC, maybeWithCR } from '../reports/metrics';
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import { escapeFilterValue } from '../../util/filters'
 import classNames from 'classnames'
 
 const UTM_TAGS = {
@@ -26,7 +25,10 @@ function AllSources(props) {
   }
 
   function getFilterFor(listItem) {
-    return { source: escapeFilterValue(listItem['name']) }
+    return {
+      prefix: 'source',
+      filter: ["is", "source", [listItem['name']]]
+    }
   }
 
   function renderIcon(listItem) {
@@ -61,7 +63,10 @@ function UTMSources(props) {
   }
 
   function getFilterFor(listItem) {
-    return { [props.tab]: escapeFilterValue(listItem['name']) }
+    return {
+      prefix: props.tab,
+      filter: ["is", props.tab, [listItem['name']]]
+    }
   }
 
   return (
