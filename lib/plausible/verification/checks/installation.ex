@@ -27,7 +27,7 @@ defmodule Plausible.Verification.Checks.Installation do
         Jason.encode!(%{
           code: @code,
           context: %{
-            url: url,
+            url: Plausible.Verification.URL.bust_url(url),
             userAgent: Plausible.Verification.user_agent(),
             debug: Application.get_env(:plausible, :environment) == "dev"
           }

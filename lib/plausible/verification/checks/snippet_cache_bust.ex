@@ -22,11 +22,8 @@ defmodule Plausible.Verification.Checks.SnippetCacheBust do
           }
         } = state
       ) do
-    cache_invalidator = abs(:erlang.unique_integer())
-    busted_url = update_url(url, cache_invalidator)
-
     state2 =
-      %{state | url: busted_url}
+      %{state | url: Plausible.Verification.URL.bust_url(url)}
       |> Plausible.Verification.Checks.ScanBody.perform()
       |> Plausible.Verification.Checks.FetchBody.perform()
       |> Plausible.Verification.Checks.Snippet.perform()
@@ -40,19 +37,4 @@ defmodule Plausible.Verification.Checks.SnippetCacheBust do
   end
 
   def perform(state), do: state
-
-  defp update_url(url, invalidator) do
-    url
-    |> URI.parse()
-    |> then(fn uri ->
-      updated_query =
-        (uri.query || "")
-        |> URI.decode_query()
-        |> Map.put("plausible_verification", invalidator)
-        |> URI.encode_query()
-
-      struct!(uri, query: updated_query)
-    end)
-    |> to_string()
-  end
 end
