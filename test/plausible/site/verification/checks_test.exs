@@ -1,4 +1,4 @@
-defmodule Plausible.Verification.DiagnosticsTest do
+defmodule Plausible.Verification.ChecksTest do
   use Plausible.DataCase, async: true
 
   alias Plausible.Verification.Checks
@@ -339,7 +339,7 @@ defmodule Plausible.Verification.DiagnosticsTest do
         end)
 
       assert log =~
-               ~s|Error running check Plausible.Verification.DiagnosticsTest.FaultyCheckRaise on https://example.com: %RuntimeError{message: "boom"}|
+               ~s|Error running check Plausible.Verification.ChecksTest.FaultyCheckRaise on https://example.com: %RuntimeError{message: "boom"}|
 
       rating = Checks.interpret_diagnostics(result)
 
@@ -369,7 +369,7 @@ defmodule Plausible.Verification.DiagnosticsTest do
         end)
 
       assert log =~
-               ~s|Error running check Plausible.Verification.DiagnosticsTest.FaultyCheckThrow on https://example.com: :boom|
+               ~s|Error running check Plausible.Verification.ChecksTest.FaultyCheckThrow on https://example.com: :boom|
 
       rating = Checks.interpret_diagnostics(result)
       refute rating.ok?
