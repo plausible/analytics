@@ -1,6 +1,6 @@
 import * as api from '../api'
 
-export const FILTER_GROUPS = {
+export const FILTER_MODAL_TO_FILTER_GROUP = {
   'page': ['page', 'entry_page', 'exit_page'],
   'source': ['source', 'referrer'],
   'location': ['country', 'region', 'city'],
@@ -14,11 +14,11 @@ export const FILTER_GROUPS = {
 }
 
 export const FILTER_GROUP_TO_MODAL_TYPE = Object.fromEntries(
-  Object.entries(FILTER_GROUPS)
+  Object.entries(FILTER_MODAL_TO_FILTER_GROUP)
     .flatMap(([modalName, filterGroups]) => filterGroups.map((filterGroup) => [filterGroup, modalName]))
 )
 
-export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_GROUPS['location']))
+export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_MODAL_TO_FILTER_GROUP['location']))
 
 export const EVENT_PROPS_PREFIX = "props:"
 
@@ -169,7 +169,7 @@ function queryForSuggestions(query, additionalFilter) {
   return { ...query, filters }
 }
 
-export function filterType([_operation, filterKey, _clauses]) {
+export function getFilterGroup([_operation, filterKey, _clauses]) {
   return filterKey.startsWith(EVENT_PROPS_PREFIX) ? 'props' : filterKey
 }
 

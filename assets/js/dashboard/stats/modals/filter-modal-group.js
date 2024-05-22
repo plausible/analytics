@@ -1,10 +1,10 @@
 import React, { useMemo } from "react"
 import FilterModalRow from "./filter-modal-row"
-import { formattedFilters, filterType, getPropertyKeyFromFilterKey } from '../../util/filters'
+import { formattedFilters, getFilterGroup, getPropertyKeyFromFilterKey } from '../../util/filters'
 import FilterModalPropsRow from "./filter-modal-props-row"
 
 export default function FilterModalGroup({
-  type,
+  filterGroup,
   filterState,
   site,
   labels,
@@ -14,24 +14,24 @@ export default function FilterModalGroup({
   onDeleteRow
 }) {
   const rows = useMemo(
-    () => Object.entries(filterState).filter(([_, filter]) => filterType(filter) == type).map(([id, filter]) => ({ id, filter })),
-    [type, filterState]
+    () => Object.entries(filterState).filter(([_, filter]) => getFilterGroup(filter) == filterGroup).map(([id, filter]) => ({ id, filter })),
+    [filterGroup, filterState]
   )
 
   const disabledOptions = useMemo(
-    () => (type == 'props') ? rows.map(({ filter }) => ({ value: getPropertyKeyFromFilterKey(filter[1]) })) : null,
-    [rows]
+    () => (filterGroup == 'props') ? rows.map(({ filter }) => ({ value: getPropertyKeyFromFilterKey(filter[1]) })) : null,
+    [filterGroup, rows]
   )
 
-  const showAddRow = type == 'props'
-  const showTitle = type != 'props'
+  const showAddRow = filterGroup == 'props'
+  const showTitle = filterGroup != 'props'
 
   return (
     <>
       <div className="mt-4">
-        {showTitle && (<div className="text-sm font-medium text-gray-700 dark:text-gray-300">{formattedFilters[type]}</div>)}
+        {showTitle && (<div className="text-sm font-medium text-gray-700 dark:text-gray-300">{formattedFilters[filterGroup]}</div>)}
         {rows.map(({ id, filter }) =>
-          type === 'props' ? (
+          filterGroup === 'props' ? (
             <FilterModalPropsRow
               key={id}
               filter={filter}
@@ -56,7 +56,7 @@ export default function FilterModalGroup({
       </div>
       {showAddRow && (
         <div className="mt-6">
-          <a className="underline text-indigo-500 text-sm cursor-pointer" onClick={() => onAddRow(type)}>
+          <a className="underline text-indigo-500 text-sm cursor-pointer" onClick={() => onAddRow(filterGroup)}>
             + Add another
           </a>
         </div>

@@ -8,7 +8,7 @@ import { navigateToQuery } from './query'
 import {
   FILTER_GROUP_TO_MODAL_TYPE,
   cleanLabels,
-  FILTER_GROUPS,
+  FILTER_MODAL_TO_FILTER_GROUP,
   formatFilterGroup,
   formattedFilters,
   EVENT_PROPS_PREFIX,
@@ -98,10 +98,10 @@ function DropdownContent({ history, site, query, wrapped }) {
   const [addingFilter, setAddingFilter] = useState(false);
 
   if (wrapped === 0 || addingFilter) {
-    let filterGroups = {...FILTER_GROUPS}
-    if (!site.propsAvailable) delete filterGroups.props
+    let filterModals = {...FILTER_MODAL_TO_FILTER_GROUP}
+    if (!site.propsAvailable) delete filterModals.props
 
-    return Object.keys(filterGroups).map((option) => filterDropdownOption(site, option))
+    return Object.keys(filterModals).map((option) => filterDropdownOption(site, option))
   }
 
   return (

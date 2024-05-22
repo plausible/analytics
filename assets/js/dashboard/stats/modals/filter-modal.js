@@ -2,7 +2,7 @@ import React from "react";
 import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
-import { EVENT_PROPS_PREFIX, FILTER_GROUPS, formatFilterGroup, FILTER_OPERATIONS, filterType} from '../../util/filters'
+import { EVENT_PROPS_PREFIX, FILTER_GROUP_TO_MODAL_TYPE, formatFilterGroup, FILTER_OPERATIONS, getFilterGroup, FILTER_MODAL_TO_FILTER_GROUP} from '../../util/filters'
 import { parseQuery } from '../../query'
 import { siteBasePath, updatedQuery } from '../../util/url'
 import { shouldIgnoreKeypress } from '../../keybinding'
@@ -15,9 +15,9 @@ function partitionFilters(modalType, filters) {
   let hasRelevantFilters = false
 
   filters.forEach((filter, index) => {
-    const type = filterType(filter)
-    if (FILTER_GROUPS[modalType].includes(type)) {
-      const key = filterState[type] ? `${type}:${index}` : type
+    const filterGroup = getFilterGroup(filter)
+    if (FILTER_GROUP_TO_MODAL_TYPE[modalType].includes(filterGroup)) {
+      const key = filterState[filterGroup] ? `${filterGroup}:${index}` : filterGroup
       filterState[key] = filter
       hasRelevantFilters = true
     } else {
@@ -25,9 +25,9 @@ function partitionFilters(modalType, filters) {
     }
   })
 
-  FILTER_GROUPS[modalType].forEach((type) => {
-    if (!filterState[type]) {
-      filterState[type] = emptyFilter(type)
+  FILTER_MODAL_TO_FILTER_GROUP[modalType].forEach((filterGroup) => {
+    if (!filterState[filterGroup]) {
+      filterState[filterGroup] = emptyFilter(filterGroup)
     }
   })
 
@@ -109,10 +109,10 @@ class FilterModal extends React.Component {
     })
   }
 
-  onAddRow(type) {
+  onAddRow(filterGroup) {
     this.setState(prevState => {
-      const filter = emptyFilter(type)
-      const id = `${type}${Object.keys(this.state.filterState).length}`
+      const filter = emptyFilter(filterGroup)
+      const id = `${filterGroup}${Object.keys(this.state.filterState).length}`
 
       return {
         filterState: {
@@ -139,10 +139,10 @@ class FilterModal extends React.Component {
         <div className="mt-4 border-b border-gray-300"></div>
         <main className="modal__content">
           <form className="flex flex-col" onSubmit={this.handleSubmit.bind(this)}>
-            {FILTER_GROUPS[this.state.modalType].map((type) => (
+            {FILTER_MODAL_TO_FILTER_GROUP[this.state.modalType].map((filterGroup) => (
               <FilterModalGroup
-                key={type}
-                type={type}
+                key={filterGroup}
+                filterGroup={filterGroup}
                 filterState={this.state.filterState}
                 labels={this.state.labelState}
                 site={this.props.site}
@@ -171,7 +171,7 @@ class FilterModal extends React.Component {
                   }}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                  Remove filter{FILTER_GROUPS[this.state.modalType].length > 1 ? 's' : ''}
+                  Remove filter{FILTER_MODAL_TO_FILTER_GROUP[this.state.modalType].length > 1 ? 's' : ''}
                 </button>
               )}
             </div>
