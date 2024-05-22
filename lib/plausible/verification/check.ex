@@ -23,23 +23,14 @@ defmodule Plausible.Verification.Check do
       @behaviour Plausible.Verification.Check
 
       def perform_wrapped(state) do
-        try do
-          perform(state)
-        rescue
-          e ->
-            Logger.error(
-              "Error running check #{inspect(__MODULE__)} on #{state.url}: #{inspect(e)}"
-            )
+        perform(state)
+          catch
+            _, e ->
+              Logger.error(
+                "Error running check #{inspect(__MODULE__)} on #{state.url}: #{inspect(e)}"
+              )
 
-            put_diagnostics(state, service_error: true)
-        catch
-          e ->
-            Logger.error(
-              "Error running check #{inspect(__MODULE__)} on #{state.url}: #{inspect(e)}"
-            )
-
-            put_diagnostics(state, service_error: true)
-        end
+              put_diagnostics(state, service_error: true)
       end
     end
   end
