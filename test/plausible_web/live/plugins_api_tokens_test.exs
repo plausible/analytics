@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
       conn = get(conn, "/#{site.domain}/integrations")
       resp = html_response(conn, 200)
 
-      refute resp =~ "Plugins API Tokens"
+      refute resp =~ "Plugin Tokens"
     end
 
     test "does display the Plugins API section on ?new_token=....", %{
@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
       conn = get(conn, "/#{site.domain}/settings/integrations?new_token=test")
       resp = html_response(conn, 200)
 
-      assert resp =~ "Plugins API Tokens"
+      assert resp =~ "Plugin Tokens"
     end
 
     test "does display the Plugins API section when there are tokens already created", %{
@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
       conn = get(conn, "/#{site.domain}/settings/integrations")
       resp = html_response(conn, 200)
 
-      assert resp =~ "Plugins API Tokens"
+      assert resp =~ "Plugin Tokens"
     end
 
     test "lists tokens with revoke actions", %{conn: conn, site: site} do
@@ -83,7 +83,7 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
       assert element_exists?(html, "#token-form")
       assert text_of_element(html, "label[for=token_description]") == "Description"
       assert element_exists?(html, "input[value=WordPress]#token_description")
-      assert text_of_element(html, "label[for=token-clipboard]") == "API Token"
+      assert text_of_element(html, "label[for=token-clipboard]") == "Plugin Token"
       assert element_exists?(html, "input#token-clipboard")
 
       assert element_exists?(

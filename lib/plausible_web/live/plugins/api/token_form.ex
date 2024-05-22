@@ -57,7 +57,9 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
           phx-submit="save-token"
           phx-click-away="cancel-add-token"
         >
-          <h2 class="text-xl font-black dark:text-gray-100 mb-8">Add Token for <%= @domain %></h2>
+          <h2 class="text-xl font-black dark:text-gray-100 mb-8">
+            Add Plugin Token for <%= @domain %>
+          </h2>
 
           <.input
             autofocus
@@ -72,22 +74,22 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
           <.input_with_clipboard
             id="token-clipboard"
             name="token_clipboard"
-            label="API Token"
+            label="Plugin Token"
             value={@token.raw}
             onfocus="this.value = this.value;"
             class="focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50 dark:bg-gray-850 dark:text-gray-300 block w-7/12 rounded-md sm:text-sm border-gray-300 dark:border-gray-500 w-full p-2 mt-2"
           />
 
           <p class="text-sm mt-2 text-gray-500 dark:text-gray-200">
-            Once created, we will not be able to show the Token again.
-            Please copy the Token now and store it in a secure place.
+            Once created, we will not be able to show the Plugin Token again.
+            Please copy the Plugin Token now and store it in a secure place.
             <span :if={@token_description == "WordPress"}>
               You'll need to paste it in the settings area of the Plausible WordPress plugin.
             </span>
           </p>
           <div class="py-4 mt-8">
             <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-              Add Token →
+              Add Plugin Token →
             </PlausibleWeb.Components.Generic.button>
           </div>
         </.form>

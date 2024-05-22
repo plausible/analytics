@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
       <div class="border-t border-gray-200 pt-4 grid">
         <div class="mt-4 sm:ml-4 sm:mt-0 justify-self-end">
           <PlausibleWeb.Components.Generic.button phx-click="add-token">
-            + Add Token
+            + Add Plugin Token
           </PlausibleWeb.Components.Generic.button>
         </div>
       </div>
@@ -140,7 +140,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
   def handle_info({:token_added, token}, socket) do
     displayed_tokens = [token | socket.assigns.displayed_tokens]
 
-    socket = put_live_flash(socket, :success, "Plugins API Token created successfully")
+    socket = put_live_flash(socket, :success, "Plugins Token created successfully")
 
     {:noreply,
      assign(socket,

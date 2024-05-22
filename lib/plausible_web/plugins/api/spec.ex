@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Plugins.API.Spec do
             scheme: "basic",
             description: """
             HTTP basic access authentication using your Site Domain as the
-            username and the Plugins API Token contents as the password.
+            username and the Plugin Token contents as the password.
             Note that Site Domain is optional, a password alone suffices.
 
             For more information see
