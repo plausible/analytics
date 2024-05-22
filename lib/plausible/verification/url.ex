@@ -1,4 +1,8 @@
 defmodule Plausible.Verification.URL do
+  @moduledoc """
+  Busting some caches by appending ?plausible_verification=12345 to it.
+  """
+
   def bust_url(url) do
     cache_invalidator = abs(:erlang.unique_integer())
     update_url(url, cache_invalidator)
