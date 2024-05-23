@@ -60,7 +60,8 @@ defmodule Plausible.Verification.Diagnostics do
         %__MODULE__{
           plausible_installed?: false,
           snippets_found_in_head: 1,
-          disallowed_via_csp?: true
+          disallowed_via_csp?: true,
+          proxy_likely?: false
         },
         _url
       ) do
