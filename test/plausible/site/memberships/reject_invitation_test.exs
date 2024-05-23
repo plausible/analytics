@@ -1,6 +1,9 @@
 defmodule Plausible.Site.Memberships.RejectInvitationTest do
+  use Plausible
   use Plausible.DataCase, async: true
   use Bamboo.Test
+
+  @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
   alias Plausible.Site.Memberships.RejectInvitation
 
@@ -25,7 +28,7 @@ defmodule Plausible.Site.Memberships.RejectInvitationTest do
 
     assert_email_delivered_with(
       to: [nil: inviter.email],
-      subject: "[Plausible Analytics] #{invitee.email} rejected your invitation to #{site.domain}"
+      subject: @subject_prefix <> "#{invitee.email} rejected your invitation to #{site.domain}"
     )
   end
 

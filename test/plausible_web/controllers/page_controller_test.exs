@@ -4,8 +4,9 @@ defmodule PlausibleWeb.PageControllerTest do
   setup {PlausibleWeb.FirstLaunchPlug.Test, :skip}
 
   describe "GET /" do
+    @tag :ce_build_only
     test "shows landing page when user not authenticated", %{conn: conn} do
-      assert conn |> get("/") |> html_response(200) =~ "Welcome to Plausible Analytics!"
+      assert conn |> get("/") |> html_response(200) =~ "Welcome to Plausible CE!"
     end
 
     test "redirects to /sites if user is authenticated", %{conn: conn} do
