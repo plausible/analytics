@@ -16,7 +16,7 @@ function partitionFilters(modalType, filters) {
 
   filters.forEach((filter, index) => {
     const filterGroup = getFilterGroup(filter)
-    if (FILTER_GROUP_TO_MODAL_TYPE[modalType].includes(filterGroup)) {
+    if (FILTER_GROUP_TO_MODAL_TYPE[filterGroup] === modalType) {
       const key = filterState[filterGroup] ? `${filterGroup}:${index}` : filterGroup
       filterState[key] = filter
       hasRelevantFilters = true
