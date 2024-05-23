@@ -115,12 +115,12 @@ defmodule PlausibleWeb.Live.Verification do
   end
 
   def handle_info({:verification_end, %State{} = state}, socket) do
-    rating = Checks.interpret_diagnostics(state)
+    interpretation = Checks.interpret_diagnostics(state)
 
     update_component(socket,
       finished?: true,
-      success?: rating.ok?,
-      rating: rating
+      success?: interpretation.ok?,
+      interpretation: interpretation
     )
 
     {:noreply, assign(socket, checks_pid: nil)}

@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
 
   attr :finished?, :boolean, default: false
   attr :success?, :boolean, default: false
-  attr :rating, Plausible.Verification.Diagnostics.Rating, default: nil
+  attr :interpretation, Plausible.Verification.Diagnostics.Result, default: nil
   attr :attempts, :integer, default: 0
 
   def render(assigns) do
@@ -70,10 +70,10 @@ defmodule PlausibleWeb.Live.Components.Verification do
       >
         <p id="progress-message" class="leading-normal">
           <span :if={!@finished?}><%= @message %></span>
-          <span :if={@finished? && !@success? && @rating && @rating.errors}>
-            <%= List.first(@rating.errors) %>
+          <span :if={@finished? && !@success? && @interpretation && @interpretation.errors}>
+            <%= List.first(@interpretation.errors) %>
             <div class="text-xs dark:text-gray-400 font-normal mt-1" id="recommendations">
-              <.recommendations rating={@rating} />
+              <.recommendations interpretation={@interpretation} />
             </div>
           </span>
           <p
@@ -126,7 +126,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
   def recommendations(assigns) do
     ~H"""
     <p class="leading-normal">
-      <span :for={recommendation <- @rating.recommendations} class="recommendation">
+      <span :for={recommendation <- @interpretation.recommendations} class="recommendation">
         <span :if={is_binary(recommendation)}><%= recommendation %></span>
         <span :if={is_tuple(recommendation)}><%= elem(recommendation, 0) %> -</span>
         <.styled_link

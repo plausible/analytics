@@ -21,7 +21,7 @@ defmodule Plausible.Verification.Diagnostics do
 
   @type t :: %__MODULE__{}
 
-  defmodule Rating do
+  defmodule Result do
     @moduledoc """
     Diagnostics interpretation result.
     """
@@ -29,8 +29,8 @@ defmodule Plausible.Verification.Diagnostics do
     @type t :: %__MODULE__{}
   end
 
-  @spec rate(t(), String.t()) :: Rating.t()
-  def rate(
+  @spec interpret(t(), String.t()) :: Result.t()
+  def interpret(
         %__MODULE__{
           plausible_installed?: true,
           snippets_found_in_head: 1,
@@ -42,11 +42,11 @@ defmodule Plausible.Verification.Diagnostics do
         },
         _url
       ) do
-    %Rating{ok?: true}
+    %Result{ok?: true}
   end
 
-  def rate(%__MODULE__{plausible_installed?: false, gtm_likely?: true}, _url) do
-    %Rating{
+  def interpret(%__MODULE__{plausible_installed?: false, gtm_likely?: true}, _url) do
+    %Result{
       ok?: false,
       errors: ["We encountered an issue with your Plausible integration"],
       recommendations: [
@@ -56,7 +56,7 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(
+  def interpret(
         %__MODULE__{
           plausible_installed?: false,
           snippets_found_in_head: 1,
@@ -64,7 +64,7 @@ defmodule Plausible.Verification.Diagnostics do
         },
         _url
       ) do
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["We encountered an issue with your site's CSP"],
       recommendations: [
@@ -74,7 +74,7 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(
+  def interpret(
         %__MODULE__{
           plausible_installed?: false,
           snippets_found_in_head: 0,
@@ -85,7 +85,7 @@ defmodule Plausible.Verification.Diagnostics do
         },
         _url
       ) do
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["We couldn't find the Plausible snippet on your site"],
       recommendations: [
@@ -94,14 +94,14 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(
+  def interpret(
         %__MODULE__{
           plausible_installed?: false,
           body_fetched?: false
         },
         url
       ) do
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["We couldn't reach #{url}. Is your site up?"],
       recommendations: [
@@ -111,7 +111,7 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(
+  def interpret(
         %__MODULE__{
           plausible_installed?: false,
           service_error: service_error
@@ -119,7 +119,7 @@ defmodule Plausible.Verification.Diagnostics do
         _url
       )
       when not is_nil(service_error) do
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["We encountered a temporary problem verifying your website"],
       recommendations: [
@@ -129,7 +129,7 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(
+  def interpret(
         %__MODULE__{
           plausible_installed?: true,
           service_error: nil,
@@ -137,7 +137,7 @@ defmodule Plausible.Verification.Diagnostics do
         },
         url
       ) do
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["We couldn't reach #{url}. Is your site up?"],
       recommendations: [
@@ -147,7 +147,7 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(
+  def interpret(
         %__MODULE__{
           plausible_installed?: true,
           callback_status: callback_status,
@@ -156,7 +156,7 @@ defmodule Plausible.Verification.Diagnostics do
         _url
       )
       when callback_status != 202 do
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["We encountered an error with your Plausible proxy"],
       recommendations: [
@@ -166,7 +166,7 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(
+  def interpret(
         %__MODULE__{
           plausible_installed?: false,
           snippets_found_in_head: 1,
@@ -176,7 +176,7 @@ defmodule Plausible.Verification.Diagnostics do
         },
         _url
       ) do
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["We encountered an error with your Plausible proxy"],
       recommendations: [
@@ -186,7 +186,7 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(
+  def interpret(
         %__MODULE__{
           plausible_installed?: false,
           snippets_found_in_head: 1,
@@ -195,7 +195,7 @@ defmodule Plausible.Verification.Diagnostics do
         },
         _url
       ) do
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["We encountered an error with your Plausible proxy"],
       recommendations: [
@@ -205,12 +205,12 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(
+  def interpret(
         %__MODULE__{snippets_found_in_head: count_head, snippets_found_in_body: count_body},
         _url
       )
       when count_head + count_body > 1 do
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["We've found multiple Plausible snippets on your site."],
       recommendations: [
@@ -220,7 +220,7 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(
+  def interpret(
         %__MODULE__{
           plausible_installed?: true,
           callback_status: 202,
@@ -230,7 +230,7 @@ defmodule Plausible.Verification.Diagnostics do
         },
         _url
       ) do
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["We encountered an issue with your site cache"],
       recommendations: [
@@ -240,7 +240,7 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(
+  def interpret(
         %__MODULE__{
           plausible_installed?: true,
           callback_status: 202,
@@ -250,7 +250,7 @@ defmodule Plausible.Verification.Diagnostics do
         },
         _url
       ) do
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["We encountered an issue with your site cache"],
       recommendations: [
@@ -260,7 +260,7 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(
+  def interpret(
         %__MODULE__{
           plausible_installed?: true,
           callback_status: 202,
@@ -269,7 +269,7 @@ defmodule Plausible.Verification.Diagnostics do
         },
         _url
       ) do
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["We encountered an issue with your site cache"],
       recommendations: [
@@ -279,8 +279,9 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(%__MODULE__{snippets_found_in_head: 0, snippets_found_in_body: n}, _url) when n >= 1 do
-    %Rating{
+  def interpret(%__MODULE__{snippets_found_in_head: 0, snippets_found_in_body: n}, _url)
+      when n >= 1 do
+    %Result{
       ok?: false,
       errors: ["Plausible snippet is placed in the body of your site"],
       recommendations: [
@@ -290,8 +291,8 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(%__MODULE__{data_domain_mismatch?: true}, url) do
-    %Rating{
+  def interpret(%__MODULE__{data_domain_mismatch?: true}, url) do
+    %Result{
       ok?: false,
       errors: ["Your data-domain is different than #{url}"],
       recommendations: [
@@ -301,7 +302,7 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(
+  def interpret(
         %__MODULE__{
           plausible_installed?: false,
           snippet_unknown_attributes?: true,
@@ -310,7 +311,7 @@ defmodule Plausible.Verification.Diagnostics do
         },
         _url
       ) do
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["A performance optimization plugin seems to have altered our snippet"],
       recommendations: [
@@ -320,7 +321,7 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(
+  def interpret(
         %__MODULE__{
           plausible_installed?: false,
           snippet_unknown_attributes?: true,
@@ -329,7 +330,7 @@ defmodule Plausible.Verification.Diagnostics do
         },
         _url
       ) do
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["A performance optimization plugin seems to have altered our snippet"],
       recommendations: [
@@ -339,7 +340,7 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(
+  def interpret(
         %__MODULE__{
           plausible_installed?: false,
           snippet_unknown_attributes?: true,
@@ -347,7 +348,7 @@ defmodule Plausible.Verification.Diagnostics do
         },
         _url
       ) do
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["Something seems to have altered our snippet"],
       recommendations: [
@@ -357,14 +358,14 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def rate(rating, url) do
+  def interpret(rating, url) do
     Sentry.capture_message("Unhandled case for site verification: #{url}",
       extra: %{
         message: inspect(rating)
       }
     )
 
-    %Rating{
+    %Result{
       ok?: false,
       errors: ["Your Plausible integration is not working"],
       recommendations: [

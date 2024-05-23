@@ -34,8 +34,8 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
     assert element_exists?(html, @shuttle)
   end
 
-  test "renders diagnostic rating" do
-    rating =
+  test "renders diagnostic interpretation" do
+    interpretation =
       Plausible.Verification.Checks.interpret_diagnostics(%Plausible.Verification.State{
         url: "example.com"
       })
@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
         domain: "example.com",
         success?: false,
         finished?: true,
-        rating: rating
+        interpretation: interpretation
       )
 
     recommendations = html |> find(@recommendations) |> Enum.map(&text/1)

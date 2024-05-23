@@ -23,10 +23,10 @@ defmodule Plausible.Verification.ChecksTest do
 
       result = run_checks()
 
-      rating = Checks.interpret_diagnostics(result)
-      assert rating.ok?
-      assert rating.errors == []
-      assert rating.recommendations == []
+      interpretation = Checks.interpret_diagnostics(result)
+      assert interpretation.ok?
+      assert interpretation.errors == []
+      assert interpretation.recommendations == []
     end
 
     test "service error - 400" do
@@ -35,13 +35,15 @@ defmodule Plausible.Verification.ChecksTest do
 
       result = run_checks()
 
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      refute rating.ok?
+      refute interpretation.ok?
 
-      assert rating.errors == ["We encountered a temporary problem verifying your website"]
+      assert interpretation.errors == [
+               "We encountered a temporary problem verifying your website"
+             ]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"Please try again in a few minutes or manually check your integration",
                 "https://plausible.io/docs/troubleshoot-integration"}
              ]
@@ -61,11 +63,11 @@ defmodule Plausible.Verification.ChecksTest do
       assert log =~ "2 attempts left"
       assert log =~ "1 attempt left"
 
-      rating = Checks.interpret_diagnostics(result)
-      refute rating.ok?
-      assert rating.errors == ["We couldn't reach https://example.com. Is your site up?"]
+      interpretation = Checks.interpret_diagnostics(result)
+      refute interpretation.ok?
+      assert interpretation.errors == ["We couldn't reach https://example.com. Is your site up?"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"If your site is running at a different location, please manually check your integration",
                 "https://plausible.io/docs/troubleshoot-integration"}
              ]
@@ -97,10 +99,10 @@ defmodule Plausible.Verification.ChecksTest do
       assert_receive :redirect_sent
       refute_receive _
 
-      rating = Checks.interpret_diagnostics(result)
-      assert rating.ok?
-      assert rating.errors == []
-      assert rating.recommendations == []
+      interpretation = Checks.interpret_diagnostics(result)
+      assert interpretation.ok?
+      assert interpretation.errors == []
+      assert interpretation.recommendations == []
     end
 
     test "fetching will not follow more than 2 redirect" do
@@ -123,11 +125,11 @@ defmodule Plausible.Verification.ChecksTest do
       assert_receive :redirect_sent
       refute_receive _
 
-      rating = Checks.interpret_diagnostics(result)
-      refute rating.ok?
-      assert rating.errors == ["We couldn't reach https://example.com. Is your site up?"]
+      interpretation = Checks.interpret_diagnostics(result)
+      refute interpretation.ok?
+      assert interpretation.errors == ["We couldn't reach https://example.com. Is your site up?"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"If your site is running at a different location, please manually check your integration",
                 "https://plausible.io/docs/troubleshoot-integration"}
              ]
@@ -139,11 +141,11 @@ defmodule Plausible.Verification.ChecksTest do
 
       result = run_checks()
 
-      rating = Checks.interpret_diagnostics(result)
-      refute rating.ok?
-      assert rating.errors == ["We couldn't reach https://example.com. Is your site up?"]
+      interpretation = Checks.interpret_diagnostics(result)
+      refute interpretation.ok?
+      assert interpretation.errors == ["We couldn't reach https://example.com. Is your site up?"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"If your site is running at a different location, please manually check your integration",
                 "https://plausible.io/docs/troubleshoot-integration"}
              ]
@@ -165,12 +167,12 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation()
 
       result = run_checks()
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      refute rating.ok?
-      assert rating.errors == ["Plausible snippet is placed in the body of your site"]
+      refute interpretation.ok?
+      assert interpretation.errors == ["Plausible snippet is placed in the body of your site"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"Please relocate the snippet to the header of your site",
                 "https://plausible.io/docs/troubleshoot-integration"}
              ]
@@ -197,12 +199,12 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation()
 
       result = run_checks()
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      refute rating.ok?
-      assert rating.errors == ["We've found multiple Plausible snippets on your site."]
+      refute interpretation.ok?
+      assert interpretation.errors == ["We've found multiple Plausible snippets on your site."]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"Please ensure that only one snippet is used",
                 "https://plausible.io/docs/troubleshoot-integration"}
              ]
@@ -247,11 +249,11 @@ defmodule Plausible.Verification.ChecksTest do
 
       result = run_checks()
 
-      rating = Checks.interpret_diagnostics(result)
-      refute rating.ok?
-      assert rating.errors == ["We encountered an issue with your site cache"]
+      interpretation = Checks.interpret_diagnostics(result)
+      refute interpretation.ok?
+      assert interpretation.errors == ["We encountered an issue with your site cache"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"Please clear your cache (or wait for your provider to clear it) to ensure that the latest version of your site is being displayed to all your visitors",
                 "https://plausible.io/docs/troubleshoot-integration"}
              ]
@@ -296,11 +298,11 @@ defmodule Plausible.Verification.ChecksTest do
 
       result = run_checks()
 
-      rating = Checks.interpret_diagnostics(result)
-      refute rating.ok?
-      assert rating.errors == ["We encountered an issue with your site cache"]
+      interpretation = Checks.interpret_diagnostics(result)
+      refute interpretation.ok?
+      assert interpretation.errors == ["We encountered an issue with your site cache"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"Please install and activate our WordPress plugin to start counting your visitors",
                 "https://plausible.io/wordpress-analytics-plugin"}
              ]
@@ -346,11 +348,11 @@ defmodule Plausible.Verification.ChecksTest do
 
       result = run_checks()
 
-      rating = Checks.interpret_diagnostics(result)
-      refute rating.ok?
-      assert rating.errors == ["We encountered an issue with your site cache"]
+      interpretation = Checks.interpret_diagnostics(result)
+      refute interpretation.ok?
+      assert interpretation.errors == ["We encountered an issue with your site cache"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"Please clear your WordPress cache to ensure that the latest version of your site is being displayed to all your visitors",
                 "https://plausible.io/wordpress-analytics-plugin"}
              ]
@@ -361,12 +363,12 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false))
 
       result = run_checks()
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      refute rating.ok?
-      assert rating.errors == ["We couldn't find the Plausible snippet on your site"]
+      refute interpretation.ok?
+      assert interpretation.errors == ["We couldn't find the Plausible snippet on your site"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"Please insert the snippet into your site",
                 "https://plausible.io/docs/plausible-script"}
              ]
@@ -391,12 +393,12 @@ defmodule Plausible.Verification.ChecksTest do
       assert log =~
                ~s|Error running check Plausible.Verification.ChecksTest.FaultyCheckRaise on https://example.com: %RuntimeError{message: "boom"}|
 
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      refute rating.ok?
-      assert rating.errors == ["We couldn't reach https://example.com. Is your site up?"]
+      refute interpretation.ok?
+      assert interpretation.errors == ["We couldn't reach https://example.com. Is your site up?"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"If your site is running at a different location, please manually check your integration",
                 "https://plausible.io/docs/troubleshoot-integration"}
              ]
@@ -421,11 +423,11 @@ defmodule Plausible.Verification.ChecksTest do
       assert log =~
                ~s|Error running check Plausible.Verification.ChecksTest.FaultyCheckThrow on https://example.com: :boom|
 
-      rating = Checks.interpret_diagnostics(result)
-      refute rating.ok?
-      assert rating.errors == ["We couldn't reach https://example.com. Is your site up?"]
+      interpretation = Checks.interpret_diagnostics(result)
+      refute interpretation.ok?
+      assert interpretation.errors == ["We couldn't reach https://example.com. Is your site up?"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"If your site is running at a different location, please manually check your integration",
                 "https://plausible.io/docs/troubleshoot-integration"}
              ]
@@ -442,13 +444,13 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false))
 
       result = run_checks()
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      refute rating.ok?
+      refute interpretation.ok?
 
-      assert rating.errors == ["We encountered an issue with your site's CSP"]
+      assert interpretation.errors == ["We encountered an issue with your site's CSP"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {
                  "Please add plausible.io domain specifically to the allowed list of domains in your Content Security Policy (CSP)",
                  "https://plausible.io/docs/troubleshoot-integration"
@@ -467,11 +469,11 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false))
 
       result = run_checks()
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      refute rating.ok?
+      refute interpretation.ok?
 
-      assert rating.errors == ["We couldn't find the Plausible snippet on your site"]
+      assert interpretation.errors == ["We couldn't find the Plausible snippet on your site"]
     end
 
     test "allowed via content-security-policy" do
@@ -491,11 +493,11 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation()
       result = run_checks()
 
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      assert rating.ok?
-      assert rating.errors == []
-      assert rating.recommendations == []
+      assert interpretation.ok?
+      assert interpretation.errors == []
+      assert interpretation.recommendations == []
     end
 
     test "running checks sends progress messages" do
@@ -530,12 +532,12 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false))
 
       result = run_checks()
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      refute rating.ok?
-      assert rating.errors == ["We encountered an issue with your Plausible integration"]
+      refute interpretation.ok?
+      assert interpretation.errors == ["We encountered an issue with your Plausible integration"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"As you're using Google Tag Manager, you'll need to use a GTM-specific Plausible snippet",
                 "https://plausible.io/docs/google-tag-manager"}
              ]
@@ -552,11 +554,11 @@ defmodule Plausible.Verification.ChecksTest do
 
       result = run_checks()
 
-      rating = Checks.interpret_diagnostics(result)
-      refute rating.ok?
-      assert rating.errors == ["We couldn't reach https://example.com. Is your site up?"]
+      interpretation = Checks.interpret_diagnostics(result)
+      refute interpretation.ok?
+      assert interpretation.errors == ["We couldn't reach https://example.com. Is your site up?"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"If your site is running at a different location, please manually check your integration",
                 "https://plausible.io/docs/troubleshoot-integration"}
              ]
@@ -577,10 +579,10 @@ defmodule Plausible.Verification.ChecksTest do
 
       result = run_checks()
 
-      rating = Checks.interpret_diagnostics(result)
-      assert rating.ok?
-      assert rating.errors == []
-      assert rating.recommendations == []
+      interpretation = Checks.interpret_diagnostics(result)
+      assert interpretation.ok?
+      assert interpretation.errors == []
+      assert interpretation.recommendations == []
     end
 
     test "proxied setup, function defined but callback won't fire" do
@@ -588,12 +590,12 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(true, 0))
 
       result = run_checks()
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      refute rating.ok?
-      assert rating.errors == ["We encountered an error with your Plausible proxy"]
+      refute interpretation.ok?
+      assert interpretation.errors == ["We encountered an error with your Plausible proxy"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"Please check whether you've configured the /event route correctly",
                 "https://plausible.io/docs/proxy/introduction"}
              ]
@@ -614,12 +616,12 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false, 0))
 
       result = run_checks()
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      refute rating.ok?
-      assert rating.errors == ["We encountered an error with your Plausible proxy"]
+      refute interpretation.ok?
+      assert interpretation.errors == ["We encountered an error with your Plausible proxy"]
 
-      assert rating.recommendations ==
+      assert interpretation.recommendations ==
                [
                  {"Please re-enable the proxy in our WordPress plugin to start counting your visitors",
                   "https://plausible.io/wordpress-analytics-plugin"}
@@ -631,12 +633,12 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false, 0))
 
       result = run_checks()
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      refute rating.ok?
-      assert rating.errors == ["We encountered an error with your Plausible proxy"]
+      refute interpretation.ok?
+      assert interpretation.errors == ["We encountered an error with your Plausible proxy"]
 
-      assert rating.recommendations ==
+      assert interpretation.recommendations ==
                [
                  {"Please check your proxy configuration to make sure it's set up correctly",
                   "https://plausible.io/docs/proxy/introduction"}
@@ -648,12 +650,12 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(true, 0))
 
       result = run_checks()
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      refute rating.ok?
-      assert rating.errors == ["Your Plausible integration is not working"]
+      refute interpretation.ok?
+      assert interpretation.errors == ["Your Plausible integration is not working"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"Please manually check your integration to make sure that the Plausible snippet has been inserted correctly",
                 "https://plausible.io/docs/troubleshoot-integration"}
              ]
@@ -673,12 +675,12 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false, 0))
 
       result = run_checks()
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      refute rating.ok?
-      assert rating.errors == ["Something seems to have altered our snippet"]
+      refute interpretation.ok?
+      assert interpretation.errors == ["Something seems to have altered our snippet"]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"Please manually check your integration to make sure that nothing prevents our script from working",
                 "https://plausible.io/docs/troubleshoot-integration"}
              ]
@@ -699,15 +701,15 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false, 0))
 
       result = run_checks()
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      refute rating.ok?
+      refute interpretation.ok?
 
-      assert rating.errors == [
+      assert interpretation.errors == [
                "A performance optimization plugin seems to have altered our snippet"
              ]
 
-      assert rating.recommendations == [
+      assert interpretation.recommendations == [
                {"Please install and activate our WordPress plugin to avoid the most common plugin conflicts",
                 "https://plausible.io/wordpress-analytics-plugin "}
              ]
@@ -729,16 +731,18 @@ defmodule Plausible.Verification.ChecksTest do
       stub_installation(200, plausible_installed(false, 0))
 
       result = run_checks()
-      rating = Checks.interpret_diagnostics(result)
+      interpretation = Checks.interpret_diagnostics(result)
 
-      refute rating.ok?
+      refute interpretation.ok?
 
-      assert rating.errors == [
+      assert interpretation.errors == [
                "A performance optimization plugin seems to have altered our snippet"
              ]
 
-      assert rating.recommendations == [{"Please whitelist our script in your performance optimization plugin to stop it from changing our snippet", "https://plausible.io/wordpress-analytics-plugin "}]
-
+      assert interpretation.recommendations == [
+               {"Please whitelist our script in your performance optimization plugin to stop it from changing our snippet",
+                "https://plausible.io/wordpress-analytics-plugin "}
+             ]
     end
   end
 

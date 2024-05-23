@@ -35,7 +35,7 @@ defmodule Plausible.Verification.Checks do
   end
 
   def interpret_diagnostics(%State{} = state) do
-    Plausible.Verification.Diagnostics.rate(state.diagnostics, state.url)
+    Plausible.Verification.Diagnostics.interpret(state.diagnostics, state.url)
   end
 
   defp do_run(url, data_domain, checks, report_to, slowdown) do
