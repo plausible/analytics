@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Added
+
+### Removed
+
+### Changed
+
+### Fixed
+
+## v2.1.0 - 2024-05-23
+
 ### Added
 - Hostname Allow List in Site Settings
 - Pages Block List in Site Settings
