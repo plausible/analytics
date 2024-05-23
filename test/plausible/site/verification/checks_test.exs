@@ -319,7 +319,7 @@ defmodule Plausible.Verification.ChecksTest do
     </html>
     """
 
-    test "detecting snippet after busting WordPress cache -  official plugin" do
+    test "detecting snippet after busting WordPress cache - official plugin" do
       stub_fetch_body(fn conn ->
         conn = fetch_query_params(conn)
 
