@@ -84,8 +84,7 @@ defmodule PlausibleWeb.Live.Shields.HostnamesTest do
       html = render(lv)
 
       assert text(html) =~
-               "NB: Once added, we will start rejecting traffic from non-matching hostnames within a few minutes.
-"
+               "NB: Once added, we will start rejecting traffic from non-matching hostnames within a few minutes."
 
       refute text(html) =~ "we will start accepting"
     end

@@ -11,7 +11,6 @@
 
   setInterval(updateStatus, 5000)
 </script>
-
 <div class="w-full max-w-md mx-auto mt-8">
   <%= if @site.locked do %>
     <div
@@ -22,7 +21,10 @@
       <p>This dashboard is actually locked. You are viewing it with super-admin access</p>
     </div>
   <% end %>
-  <div class="bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16 relative text-center">
+  <div
+    :if={not Plausible.Verification.enabled?(assigns[:current_user])}
+    class="bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16 relative text-center"
+  >
     <h2 class="text-xl font-bold dark:text-gray-100">Waiting for first pageview</h2>
     <h2 class="text-xl font-bold dark:text-gray-100">on <%= @site.domain %></h2>
     <div class="my-44">
@@ -58,4 +60,14 @@
       </p>
     </div>
   </div>
+
+  <%= if Plausible.Verification.enabled?(assigns[:current_user]),
+    do:
+      live_render(@conn, PlausibleWeb.Live.Verification,
+        session: %{
+          "site_id" => @site.id,
+          "domain" => @site.domain,
+          "slowdown" => @conn.private[:verification_slowdown]
+        }
+      ) %>
 </div>

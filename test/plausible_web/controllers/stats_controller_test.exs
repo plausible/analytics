@@ -77,6 +77,17 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
     end
 
+    test "can view stats of a website I've created, enforcing pageviews check skip", %{
+      conn: conn,
+      site: site
+    } do
+      resp = conn |> get("/" <> site.domain) |> html_response(200)
+      refute text_of_attr(resp, @react_container, "data-logged-in") == "true"
+
+      resp = conn |> get("/" <> site.domain <> "?skip_to_dashboard=true") |> html_response(200)
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+    end
+
     test "shows locked page if page is locked", %{conn: conn, user: user} do
       locked_site = insert(:site, locked: true, members: [user])
       conn = get(conn, "/" <> locked_site.domain)

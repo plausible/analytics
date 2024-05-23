@@ -21,6 +21,8 @@ defmodule Plausible.Ingestion.Event do
             salts: nil,
             changeset: nil
 
+  @verification_user_agent Plausible.Verification.user_agent()
+
   @type drop_reason() ::
           :bot
           | :spam_referrer
@@ -31,6 +33,7 @@ defmodule Plausible.Ingestion.Event do
           | :site_country_blocklist
           | :site_page_blocklist
           | :site_hostname_allowlist
+          | :verification_agent
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -104,6 +107,7 @@ defmodule Plausible.Ingestion.Event do
 
   defp pipeline() do
     [
+      drop_verification_agent: &drop_verification_agent/1,
       drop_datacenter_ip: &drop_datacenter_ip/1,
       drop_shield_rule_hostname: &drop_shield_rule_hostname/1,
       drop_shield_rule_page: &drop_shield_rule_page/1,
@@ -165,6 +169,16 @@ defmodule Plausible.Ingestion.Event do
 
   defp update_session_attrs(%__MODULE__{} = event, %{} = attrs) do
     struct!(event, clickhouse_session_attrs: Map.merge(event.clickhouse_session_attrs, attrs))
+  end
+
+  defp drop_verification_agent(%__MODULE__{} = event) do
+    case event.request.user_agent do
+      @verification_user_agent ->
+        drop(event, :verification_agent)
+
+      _ ->
+        event
+    end
   end
 
   defp drop_datacenter_ip(%__MODULE__{} = event) do
