@@ -267,7 +267,7 @@ defmodule Plausible.Verification.ChecksTest do
     </html>
     """
 
-    test "detecting snippet after busting WordPress cache" do
+    test "detecting snippet after busting WordPress cache - no official plugin" do
       stub_fetch_body(fn conn ->
         conn = fetch_query_params(conn)
 
@@ -301,8 +301,58 @@ defmodule Plausible.Verification.ChecksTest do
       assert rating.errors == ["We encountered an issue with your site cache"]
 
       assert rating.recommendations == [
-               {"Please clear your cache (or wait for your provider to clear it) to ensure that the latest version of your site is being displayed to all your visitors",
-                "https://plausible.io/docs/troubleshoot-integration"}
+               {"Please install and activate our WordPress plugin to start counting your visitors",
+                "https://plausible.io/wordpress-analytics-plugin"}
+             ]
+    end
+
+    @normal_body_wordpress_official_plugin """
+    <html>
+    <head>
+    <meta name="foo" content="/wp-content/plugins/bar"/>
+    <meta name='plausible-analytics-version' content='2.0.9' />
+    <script defer data-domain="example.com" src="http://localhost:8000/js/script.js"></script>
+    </head>
+    <body>Hello</body>
+    </html>
+    """
+
+    test "detecting snippet after busting WordPress cache -  official plugin" do
+      stub_fetch_body(fn conn ->
+        conn = fetch_query_params(conn)
+
+        if conn.query_params["plausible_verification"] do
+          conn
+          |> put_resp_content_type("text/html")
+          |> send_resp(200, @normal_body_wordpress_official_plugin)
+        else
+          conn
+          |> put_resp_content_type("text/html")
+          |> send_resp(200, @body_no_snippet)
+        end
+      end)
+
+      stub_installation(fn conn ->
+        {:ok, body, _} = read_body(conn)
+
+        if String.contains?(body, "?plausible_verification") do
+          conn
+          |> put_resp_content_type("application/json")
+          |> send_resp(200, Jason.encode!(plausible_installed()))
+        else
+          raise "Should not get here even"
+        end
+      end)
+
+      result = run_checks()
+
+      rating = Checks.interpret_diagnostics(result)
+      refute rating.ok?
+      assert rating.errors == ["We encountered an issue with your site cache"]
+
+      assert rating.recommendations == [
+               {"Please clear your WordPress cache to ensure that the latest version of your site is being displayed to all your visitors",
+                "https://plausible.io/wordpress-analytics-plugin"}
              ]
     end
 
@@ -661,6 +711,34 @@ defmodule Plausible.Verification.ChecksTest do
                {"Please install and activate our WordPress plugin to avoid the most common plugin conflicts",
                 "https://plausible.io/wordpress-analytics-plugin "}
              ]
+    end
+
+    @body_unknown_attributes_wordpress_official_plugin """
+    <html>
+    <head>
+    <meta name="foo" content="/wp-content/plugins/bar"/>
+    <meta name='plausible-analytics-version' content='2.0.9' />
+    <script foo="bar" defer data-domain="example.com" src="http://localhost:8000/js/script.js"></script>
+    </head>
+    <body>Hello</body>
+    </html>
+    """
+
+    test "unknown attributes for WordPress installation - official plugin" do
+      stub_fetch_body(200, @body_unknown_attributes_wordpress_official_plugin)
+      stub_installation(200, plausible_installed(false, 0))
+
+      result = run_checks()
+      rating = Checks.interpret_diagnostics(result)
+
+      refute rating.ok?
+
+      assert rating.errors == [
+               "A performance optimization plugin seems to have altered our snippet"
+             ]
+
+      assert rating.recommendations == [{"Please whitelist our script in your performance optimization plugin to stop it from changing our snippet", "https://plausible.io/wordpress-analytics-plugin "}]
+
     end
   end
 

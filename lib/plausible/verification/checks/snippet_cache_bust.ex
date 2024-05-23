@@ -24,8 +24,8 @@ defmodule Plausible.Verification.Checks.SnippetCacheBust do
       ) do
     state2 =
       %{state | url: Plausible.Verification.URL.bust_url(url)}
-      |> Plausible.Verification.Checks.ScanBody.perform()
       |> Plausible.Verification.Checks.FetchBody.perform()
+      |> Plausible.Verification.Checks.ScanBody.perform()
       |> Plausible.Verification.Checks.Snippet.perform()
 
     if state2.diagnostics.snippets_found_in_head > 0 or

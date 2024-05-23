@@ -16,7 +16,8 @@ defmodule Plausible.Verification.Diagnostics do
             gtm_likely?: false,
             callback_status: -1,
             proxy_likely?: false,
-            data_domain_mismatch?: false
+            data_domain_mismatch?: false,
+            wordpress_plugin?: false
 
   @type t :: %__MODULE__{}
 
@@ -170,7 +171,8 @@ defmodule Plausible.Verification.Diagnostics do
           plausible_installed?: false,
           snippets_found_in_head: 1,
           proxy_likely?: true,
-          wordpress_likely?: true
+          wordpress_likely?: true,
+          wordpress_plugin?: false
         },
         _url
       ) do
@@ -223,7 +225,8 @@ defmodule Plausible.Verification.Diagnostics do
           plausible_installed?: true,
           callback_status: 202,
           snippet_found_after_busting_cache?: true,
-          wordpress_likely?: true
+          wordpress_likely?: true,
+          wordpress_plugin?: true
         },
         _url
       ) do
@@ -232,6 +235,26 @@ defmodule Plausible.Verification.Diagnostics do
       errors: ["We encountered an issue with your site cache"],
       recommendations: [
         {"Please clear your WordPress cache to ensure that the latest version of your site is being displayed to all your visitors",
+         "https://plausible.io/wordpress-analytics-plugin"}
+      ]
+    }
+  end
+
+  def rate(
+        %__MODULE__{
+          plausible_installed?: true,
+          callback_status: 202,
+          snippet_found_after_busting_cache?: true,
+          wordpress_likely?: true,
+          wordpress_plugin?: false
+        },
+        _url
+      ) do
+    %Rating{
+      ok?: false,
+      errors: ["We encountered an issue with your site cache"],
+      recommendations: [
+        {"Please install and activate our WordPress plugin to start counting your visitors",
          "https://plausible.io/wordpress-analytics-plugin"}
       ]
     }
@@ -282,7 +305,27 @@ defmodule Plausible.Verification.Diagnostics do
         %__MODULE__{
           plausible_installed?: false,
           snippet_unknown_attributes?: true,
-          wordpress_likely?: true
+          wordpress_likely?: true,
+          wordpress_plugin?: true
+        },
+        _url
+      ) do
+    %Rating{
+      ok?: false,
+      errors: ["A performance optimization plugin seems to have altered our snippet"],
+      recommendations: [
+        {"Please whitelist our script in your performance optimization plugin to stop it from changing our snippet",
+         "https://plausible.io/wordpress-analytics-plugin "}
+      ]
+    }
+  end
+
+  def rate(
+        %__MODULE__{
+          plausible_installed?: false,
+          snippet_unknown_attributes?: true,
+          wordpress_likely?: true,
+          wordpress_plugin?: false
         },
         _url
       ) do

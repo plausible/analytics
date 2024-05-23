@@ -41,6 +41,7 @@ defmodule Plausible.Verification.Checks.ScanBodyTest do
 
       refute state.diagnostics.gtm_likely?
       assert state.diagnostics.wordpress_likely?
+      refute state.diagnostics.wordpress_plugin?
     end
   end
 
@@ -52,5 +53,20 @@ defmodule Plausible.Verification.Checks.ScanBodyTest do
 
     assert state.diagnostics.gtm_likely?
     assert state.diagnostics.wordpress_likely?
+    refute state.diagnostics.wordpress_plugin?
+  end
+
+  @d """
+  <meta name='plausible-analytics-version' content='2.0.9' />
+  """
+
+  test "detects official plugin" do
+    state =
+      %State{}
+      |> State.assign(raw_body: @d, document: Floki.parse_document!(@d))
+      |> @check.perform()
+
+    assert state.diagnostics.wordpress_likely?
+    assert state.diagnostics.wordpress_plugin?
   end
 end
