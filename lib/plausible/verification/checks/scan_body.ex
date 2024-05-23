@@ -34,8 +34,7 @@ defmodule Plausible.Verification.Checks.ScanBody do
   end
 
   @gtm_signatures [
-    "gtm.js",
-    "googletagmanager.com"
+    "googletagmanager.com/gtm.js"
   ]
 
   defp scan_gtm(state) do

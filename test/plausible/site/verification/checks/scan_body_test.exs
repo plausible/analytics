@@ -20,16 +20,14 @@ defmodule Plausible.Verification.Checks.ScanBodyTest do
     refute state.diagnostics.wordpress_likely?
   end
 
-  for signature <- ["gtm.js", "googletagmanager.com"] do
-    test "detects GTM: #{signature}" do
-      state =
-        %State{}
-        |> State.assign(raw_body: "...#{unquote(signature)}...")
-        |> @check.perform()
+  test "detects GTM" do
+    state =
+      %State{}
+      |> State.assign(raw_body: "...googletagmanager.com/gtm.js...")
+      |> @check.perform()
 
-      assert state.diagnostics.gtm_likely?
-      refute state.diagnostics.wordpress_likely?
-    end
+    assert state.diagnostics.gtm_likely?
+    refute state.diagnostics.wordpress_likely?
   end
 
   for signature <- ["wp-content", "wp-includes", "wp-json"] do
@@ -48,7 +46,7 @@ defmodule Plausible.Verification.Checks.ScanBodyTest do
   test "detects GTM and WordPress" do
     state =
       %State{}
-      |> State.assign(raw_body: "...gtm.js....wp-content...")
+      |> State.assign(raw_body: "...googletagmanager.com/gtm.js....wp-content...")
       |> @check.perform()
 
     assert state.diagnostics.gtm_likely?
