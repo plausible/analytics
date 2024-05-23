@@ -6,6 +6,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
   alias Plausible.Site.Memberships.AcceptInvitation
 
+  @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
+
   describe "transfer_ownership/3" do
     test "transfers ownership successfully" do
       site = insert(:site, memberships: [])
@@ -210,8 +212,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
       assert_email_delivered_with(
         to: [nil: inviter.email],
-        subject:
-          "[Plausible Analytics] #{invitee.email} accepted your invitation to #{site.domain}"
+        subject: @subject_prefix <> "#{invitee.email} accepted your invitation to #{site.domain}"
       )
     end
 
@@ -311,7 +312,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert_email_delivered_with(
         to: [nil: existing_owner.email],
         subject:
-          "[Plausible Analytics] #{new_owner.email} accepted the ownership transfer of #{site.domain}"
+          @subject_prefix <>
+            "#{new_owner.email} accepted the ownership transfer of #{site.domain}"
       )
     end
 

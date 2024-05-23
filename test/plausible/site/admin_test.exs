@@ -1,6 +1,9 @@
 defmodule Plausible.Site.AdminTest do
+  use Plausible
   use Plausible.DataCase, async: true
   use Bamboo.Test
+
+  @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
   setup do
     admin_user = insert(:user)
@@ -56,12 +59,12 @@ defmodule Plausible.Site.AdminTest do
 
       assert_email_delivered_with(
         to: [nil: new_owner.email],
-        subject: "[Plausible Analytics] Request to transfer ownership of #{site1.domain}"
+        subject: @subject_prefix <> "Request to transfer ownership of #{site1.domain}"
       )
 
       assert_email_delivered_with(
         to: [nil: new_owner.email],
-        subject: "[Plausible Analytics] Request to transfer ownership of #{site2.domain}"
+        subject: @subject_prefix <> "Request to transfer ownership of #{site2.domain}"
       )
     end
   end

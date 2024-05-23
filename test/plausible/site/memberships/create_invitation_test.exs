@@ -1,7 +1,10 @@
 defmodule Plausible.Site.Memberships.CreateInvitationTest do
   alias Plausible.Site.Memberships.CreateInvitation
+  use Plausible
   use Plausible.DataCase
   use Bamboo.Test
+
+  @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
   describe "create_invitation/4" do
     test "creates an invitation" do
@@ -49,7 +52,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert_email_delivered_with(
         to: [nil: invitee.email],
-        subject: "[Plausible Analytics] You've been invited to #{site.domain}"
+        subject: @subject_prefix <> "You've been invited to #{site.domain}"
       )
     end
 
@@ -62,7 +65,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert_email_delivered_with(
         to: [nil: "vini@plausible.test"],
-        subject: "[Plausible Analytics] You've been invited to #{site.domain}"
+        subject: @subject_prefix <> "You've been invited to #{site.domain}"
       )
     end
 
@@ -143,7 +146,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert_email_delivered_with(
         to: [nil: "vini@plausible.test"],
-        subject: "[Plausible Analytics] Request to transfer ownership of #{site.domain}"
+        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
       )
     end
 
@@ -261,7 +264,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert_email_delivered_with(
         to: [nil: new_owner.email],
-        subject: "[Plausible Analytics] Request to transfer ownership of #{site1.domain}"
+        subject: @subject_prefix <> "Request to transfer ownership of #{site1.domain}"
       )
 
       assert Repo.exists?(
@@ -275,7 +278,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert_email_delivered_with(
         to: [nil: new_owner.email],
-        subject: "[Plausible Analytics] Request to transfer ownership of #{site2.domain}"
+        subject: @subject_prefix <> "Request to transfer ownership of #{site2.domain}"
       )
 
       assert_invitation_exists(site2, new_owner.email, :owner)
@@ -299,7 +302,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert_email_delivered_with(
         to: [nil: new_owner.email],
-        subject: "[Plausible Analytics] Request to transfer ownership of #{site1.domain}"
+        subject: @subject_prefix <> "Request to transfer ownership of #{site1.domain}"
       )
 
       assert Repo.exists?(
@@ -313,7 +316,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert_email_delivered_with(
         to: [nil: new_owner.email],
-        subject: "[Plausible Analytics] Request to transfer ownership of #{site2.domain}"
+        subject: @subject_prefix <> "Request to transfer ownership of #{site2.domain}"
       )
 
       assert_invitation_exists(site2, new_owner.email, :owner)
