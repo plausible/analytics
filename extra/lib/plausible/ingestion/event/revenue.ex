@@ -22,7 +22,17 @@ defmodule Plausible.Ingestion.Event.Revenue do
         }
 
       matching_goal.currency != revenue_source.currency ->
-        converted = Money.to_currency!(revenue_source, matching_goal.currency)
+        IO.inspect(matching_goal.currency, label: :goal)
+        IO.inspect(revenue_source, label: :source_currency)
+
+        IO.inspect(
+          revenue_source.currency,
+          label: :source_currency
+        )
+
+        converted =
+          Money.to_currency!(revenue_source, matching_goal.currency)
+          |> IO.inspect(label: :converted)
 
         %{
           revenue_source_amount: Money.to_decimal(revenue_source),
@@ -30,6 +40,7 @@ defmodule Plausible.Ingestion.Event.Revenue do
           revenue_reporting_amount: Money.to_decimal(converted),
           revenue_reporting_currency: to_string(converted.currency)
         }
+        |> IO.inspect(label: :converted)
     end
   end
 

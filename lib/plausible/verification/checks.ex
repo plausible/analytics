@@ -48,7 +48,7 @@ defmodule Plausible.Verification.Checks do
         fn check, state ->
           state
           |> notify_start(check, slowdown)
-          |> check.perform_wrapped()
+          |> check.perform_safe()
         end
       )
 

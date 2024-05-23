@@ -4,7 +4,7 @@ defmodule Plausible.Verification.Check do
   `friendly_name()` doesn't necessarily reflect the actual check description,
   it serves as a user-facing message grouping mechanism, to prevent frequent message flashing when checks rotate often.
   Each check operates on `state()` and is expected to return it, optionally modified, by all means.
-  `perform_wrapped/1` is used to guarantee no exceptions are thrown by faulty implementations, not to interrupt LiveView.
+  `perform_safe/1` is used to guarantee no exceptions are thrown by faulty implementations, not to interrupt LiveView.
   """
   @type state() :: Plausible.Verification.State.t()
   @callback friendly_name() :: String.t()
@@ -22,7 +22,7 @@ defmodule Plausible.Verification.Check do
 
       @behaviour Plausible.Verification.Check
 
-      def perform_wrapped(state) do
+      def perform_safe(state) do
         perform(state)
       catch
         _, e ->
