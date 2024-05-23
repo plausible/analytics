@@ -63,6 +63,7 @@ All notable changes to this project will be documented in this file.
 - GA/SC sections moved to new settings: Integrations
 - Replace `CLICKHOUSE_MAX_BUFFER_SIZE` with `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES`
 - Validate metric isn't queried multiple times
+- Filters in dashboard are represented by jsonurl
 
 ### Fixed
 - Creating many sites no longer leads to cookie overflow

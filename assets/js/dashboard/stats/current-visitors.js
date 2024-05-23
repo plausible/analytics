@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom'
 import * as api from '../api'
 import * as url from '../util/url'
-import { appliedFilters } from '../query';
 import { Tooltip } from '../util/tooltip';
 import { SecondsSinceLastLoad } from '../util/seconds-since-last-load';
 
@@ -37,7 +36,7 @@ export default class CurrentVisitors extends React.Component {
   }
 
   render() {
-    if (appliedFilters(this.props.query).length >= 1) { return null }
+    if (this.props.query.filters.length >= 1) { return null }
     const { currentVisitors } = this.state;
 
     if (currentVisitors !== null) {

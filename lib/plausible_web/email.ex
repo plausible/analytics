@@ -224,7 +224,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(invitation.email)
     |> tag("new-user-invitation")
-    |> subject("[Plausible Analytics] You've been invited to #{invitation.site.domain}")
+    |> subject("[#{Plausible.product_name()}] You've been invited to #{invitation.site.domain}")
     |> render("new_user_invitation.html",
       invitation: invitation
     )
@@ -234,7 +234,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(invitation.email)
     |> tag("existing-user-invitation")
-    |> subject("[Plausible Analytics] You've been invited to #{invitation.site.domain}")
+    |> subject("[#{Plausible.product_name()}] You've been invited to #{invitation.site.domain}")
     |> render("existing_user_invitation.html",
       invitation: invitation
     )
@@ -244,7 +244,9 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(invitation.email)
     |> tag("ownership-transfer-request")
-    |> subject("[Plausible Analytics] Request to transfer ownership of #{invitation.site.domain}")
+    |> subject(
+      "[#{Plausible.product_name()}] Request to transfer ownership of #{invitation.site.domain}"
+    )
     |> render("ownership_transfer_request.html",
       invitation: invitation,
       new_owner_account: new_owner_account
@@ -256,7 +258,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("invitation-accepted")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} accepted your invitation to #{invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{invitation.email} accepted your invitation to #{invitation.site.domain}"
     )
     |> render("invitation_accepted.html",
       user: invitation.inviter,
@@ -269,7 +271,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("invitation-rejected")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} rejected your invitation to #{invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{invitation.email} rejected your invitation to #{invitation.site.domain}"
     )
     |> render("invitation_rejected.html",
       user: invitation.inviter,
@@ -282,7 +284,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("ownership-transfer-accepted")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} accepted the ownership transfer of #{invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{invitation.email} accepted the ownership transfer of #{invitation.site.domain}"
     )
     |> render("ownership_transfer_accepted.html",
       user: invitation.inviter,
@@ -295,7 +297,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("ownership-transfer-rejected")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} rejected the ownership transfer of #{invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{invitation.email} rejected the ownership transfer of #{invitation.site.domain}"
     )
     |> render("ownership_transfer_rejected.html",
       user: invitation.inviter,
@@ -307,7 +309,9 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(membership.user.email)
     |> tag("site-member-removed")
-    |> subject("[Plausible Analytics] Your access to #{membership.site.domain} has been revoked")
+    |> subject(
+      "[#{Plausible.product_name()}] Your access to #{membership.site.domain} has been revoked"
+    )
     |> render("site_member_removed.html",
       user: membership.user,
       membership: membership
@@ -348,13 +352,6 @@ defmodule PlausibleWeb.Email do
   end
 
   def export_success(user, site, expires_at) do
-    subject =
-      on_ee do
-        "Your Plausible Analytics export is now ready for download"
-      else
-        "Your export is now ready for download"
-      end
-
     expires_in =
       if expires_at do
         Timex.Format.DateTime.Formatters.Relative.format!(
@@ -373,7 +370,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(user)
     |> tag("export-success")
-    |> subject(subject)
+    |> subject("[#{Plausible.product_name()}] Your export is now ready for download")
     |> render("export_success.html",
       user: user,
       site: site,
@@ -383,16 +380,9 @@ defmodule PlausibleWeb.Email do
   end
 
   def export_failure(user, site) do
-    subject =
-      on_ee do
-        "Your Plausible Analytics export has failed"
-      else
-        "Your export has failed"
-      end
-
     priority_email()
     |> to(user)
-    |> subject(subject)
+    |> subject("[#{Plausible.product_name()}] Your export has failed")
     |> render("export_failure.html", user: user, site: site)
   end
 

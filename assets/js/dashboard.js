@@ -6,6 +6,7 @@ import Router from './dashboard/router'
 import ErrorBoundary from './dashboard/error-boundary'
 import * as api from './dashboard/api'
 import * as timer from './dashboard/util/realtime-update-timer'
+import { filtersBackwardsCompatibilityRedirect } from './dashboard/query';
 
 timer.start()
 
@@ -39,6 +40,8 @@ if (container) {
   if (sharedLinkAuth) {
     api.setSharedLinkAuth(sharedLinkAuth)
   }
+
+  filtersBackwardsCompatibilityRedirect()
 
   const app = (
     <ErrorBoundary>

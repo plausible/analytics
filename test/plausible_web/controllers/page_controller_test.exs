@@ -5,7 +5,7 @@ defmodule PlausibleWeb.PageControllerTest do
 
   describe "GET /" do
     test "shows landing page when user not authenticated", %{conn: conn} do
-      assert conn |> get("/") |> html_response(200) =~ "Welcome to Plausible Analytics!"
+      assert conn |> get("/") |> html_response(200) =~ "Welcome to Plausible!"
     end
 
     test "redirects to /sites if user is authenticated", %{conn: conn} do

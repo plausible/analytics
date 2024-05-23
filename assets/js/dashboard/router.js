@@ -52,13 +52,13 @@ export default function Router({ site, loggedIn, currentUserRole }) {
             <ExitPagesModal site={site} />
           </Route>
           <Route path="/:domain/countries">
-            <ModalTable title="Top countries" site={site} endpoint={url.apiPath(site, '/countries')} filter={{ country: 'code', country_labels: 'name' }} keyLabel="Country" renderIcon={renderCountryIcon} showPercentage={true}/>
+            <ModalTable title="Top countries" site={site} endpoint={url.apiPath(site, '/countries')} filterKey="country" keyLabel="Country" renderIcon={renderCountryIcon} showPercentage={true}/>
           </Route>
           <Route path="/:domain/regions">
-            <ModalTable title="Top regions" site={site} endpoint={url.apiPath(site, '/regions')} filter={{ region: 'code', region_labels: 'name' }} keyLabel="Region" renderIcon={renderRegionIcon} />
+            <ModalTable title="Top regions" site={site} endpoint={url.apiPath(site, '/regions')} filterKey="region" keyLabel="Region" renderIcon={renderRegionIcon} />
           </Route>
           <Route path="/:domain/cities">
-            <ModalTable title="Top cities" site={site} endpoint={url.apiPath(site, '/cities')} filter={{ city: 'code', city_labels: 'name' }} keyLabel="City" renderIcon={renderCityIcon} />
+            <ModalTable title="Top cities" site={site} endpoint={url.apiPath(site, '/cities')} filterKey="city" keyLabel="City" renderIcon={renderCityIcon} />
           </Route>
           <Route path="/:domain/custom-prop-values/:prop_key">
             <PropsModal site={site} />

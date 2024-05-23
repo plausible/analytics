@@ -57,4 +57,14 @@ defmodule Plausible do
       end
     end
   end
+
+  if Mix.env() in @ce_builds do
+    def product_name do
+      "Plausible CE"
+    end
+  else
+    def product_name do
+      "Plausible Analytics"
+    end
+  end
 end

@@ -5,6 +5,8 @@ import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter, {durationFormatter} from '../../util/number-formatter'
 import {parseQuery} from '../../query'
+import { updatedQuery } from "../../util/url";
+import { hasGoalFilter, replaceFilterByPrefix } from "../../util/filters";
 
 class ReferrerDrilldownModal extends React.Component {
   constructor(props) {
@@ -23,11 +25,11 @@ class ReferrerDrilldownModal extends React.Component {
   }
 
   showExtra() {
-    return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
+    return this.state.query.period !== 'realtime' && !hasGoalFilter(this.state.query)
   }
 
   showConversionRate() {
-    return !!this.state.query.filters.goal
+    return hasGoalFilter(this.state.query)
   }
 
   label() {
@@ -69,13 +71,15 @@ class ReferrerDrilldownModal extends React.Component {
   }
 
   renderReferrerName(referrer) {
-    const query = new URLSearchParams(window.location.search)
-    query.set('referrer', referrer.name)
-
+    const filters = replaceFilterByPrefix(this.state.query, "referrer", ["is", "referrer", [referrer.name]])
     return (
       <span className="flex group items-center">
         <img src={`/favicon/sources/${referrer.name}`} referrerPolicy="no-referrer" className="h-4 w-4 mr-2 inline" />
-        <Link className="block truncate hover:underline dark:text-gray-200" to={{search: query.toString(), pathname: '/' + this.props.site.domain}} title={referrer.name}>
+        <Link
+          className="block truncate hover:underline dark:text-gray-200"
+          to={{search: updatedQuery({ filters }), pathname: '/' + this.props.site.domain}}
+          title={referrer.name}
+        >
           {referrer.name}
         </Link>
         { this.renderExternalLink(referrer.name) }

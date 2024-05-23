@@ -1,7 +1,6 @@
 import React from 'react';
 import * as api from '../../api'
 import * as url from '../../util/url'
-import { escapeFilterValue } from '../../util/filters'
 
 import { CR_METRIC } from '../reports/metrics';
 import ListReport from '../reports/list';
@@ -14,7 +13,10 @@ export default function Conversions(props) {
   }
 
   function getFilterFor(listItem) {
-    return { goal: escapeFilterValue(listItem.name) }
+    return {
+      prefix: "goal",
+      filter: ["is", "goal", [listItem.name]],
+    }
   }
 
   /*global BUILD_EXTRA*/

@@ -88,7 +88,6 @@ defmodule Plausible.Auth.TOTP do
   alias Plausible.Repo
   alias PlausibleWeb.Email
 
-  @issuer_name "Plausible Analytics"
   @recovery_codes_count 10
 
   @spec enabled?(Auth.User.t()) :: boolean()
@@ -298,9 +297,8 @@ defmodule Plausible.Auth.TOTP do
   end
 
   defp totp_uri(user) do
-    NimbleTOTP.otpauth_uri("#{@issuer_name}:#{user.email}", user.totp_secret,
-      issuer: @issuer_name
-    )
+    issuer_name = Plausible.product_name()
+    NimbleTOTP.otpauth_uri("#{issuer_name}:#{user.email}", user.totp_secret, issuer: issuer_name)
   end
 
   defp readable_secret(user) do

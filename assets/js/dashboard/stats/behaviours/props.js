@@ -5,29 +5,34 @@ import * as api from '../../api'
 import * as url from '../../util/url'
 import { CR_METRIC, PERCENTAGE_METRIC } from "../reports/metrics";
 import * as storage from "../../util/storage";
-import { parsePrefix, escapeFilterValue } from "../../util/filters"
+import { getFiltersByKeyPrefix, EVENT_PROPS_PREFIX, getPropertyKeyFromFilterKey, getGoalFilter, FILTER_OPERATIONS, hasGoalFilter } from "../../util/filters"
 
 
 export default function Properties(props) {
   const { site, query } = props
   const propKeyStorageName = `prop_key__${site.domain}`
-  const propKeyStorageNameForGoal = `${query.filters.goal}__prop_key__${site.domain}`
+  const propKeyStorageNameForGoal = () => {
+    const [_operation, _filterKey, [goal]] = getGoalFilter(query)
+    return `${goal}__prop_key__${site.domain}`
+  }
 
   const [propKey, setPropKey] = useState(choosePropKey())
 
   function singleGoalFilterApplied() {
-    const goalFilter = query.filters.goal
+    const goalFilter = getGoalFilter(query)
     if (goalFilter) {
-      const { type, values } = parsePrefix(goalFilter)
-      return type === 'is' && values.length === 1
+      const [operation, _filterKey, clauses] = goalFilter
+      return operation === FILTER_OPERATIONS.is && clauses.length === 1
     } else {
       return false
     }
   }
 
   function choosePropKey() {
-    if (query.filters.props) {
-      return Object.keys(query.filters.props)[0]
+    const propFilters = getFiltersByKeyPrefix(query, EVENT_PROPS_PREFIX)
+    if (propFilters.length > 0) {
+      const [_operation, filterKey, _clauses] = propFilters[0]
+      return getPropertyKeyFromFilterKey(filterKey)
     } else {
       return getPropKeyFromStorage()
     }
@@ -35,7 +40,7 @@ export default function Properties(props) {
 
   function getPropKeyFromStorage() {
     if (singleGoalFilterApplied()) {
-      const storedForGoal = storage.getItem(propKeyStorageNameForGoal)
+      const storedForGoal = storage.getItem(propKeyStorageNameForGoal())
       if (storedForGoal) { return storedForGoal }
     }
 
@@ -57,7 +62,7 @@ export default function Properties(props) {
       const newPropKey = selectedOptions.length === 0 ? null : selectedOptions[0].value
 
       if (newPropKey) {
-        const storageName = singleGoalFilterApplied() ? propKeyStorageNameForGoal : propKeyStorageName
+        const storageName = singleGoalFilterApplied() ? propKeyStorageNameForGoal() : propKeyStorageName
         storage.setItem(storageName, newPropKey)
       }
 
@@ -75,7 +80,7 @@ export default function Properties(props) {
         metrics={[
           { name: 'visitors', label: 'Visitors', plot: true },
           { name: 'events', label: 'Events', hiddenOnMobile: true },
-          query.filters.goal ? CR_METRIC : PERCENTAGE_METRIC,
+          hasGoalFilter(query) ? CR_METRIC : PERCENTAGE_METRIC,
           BUILD_EXTRA && { name: 'total_revenue', label: 'Revenue', hiddenOnMobile: true },
           BUILD_EXTRA && { name: 'average_revenue', label: 'Average', hiddenOnMobile: true }
         ]}
@@ -89,8 +94,10 @@ export default function Properties(props) {
   }
 
   const getFilterFor = (listItem) => ({
-    props: JSON.stringify({ ...query.filters.props, [propKey]: escapeFilterValue(listItem.name) })
+    prefix: `${EVENT_PROPS_PREFIX}${propKey}`,
+    filter: ["is", `${EVENT_PROPS_PREFIX}${propKey}`, [listItem.name]]
   })
+
   const comboboxValues = propKey ? [{ value: propKey, label: propKey }] : []
   const boxClass = 'pl-2 pr-8 py-1 bg-transparent dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-500'
 

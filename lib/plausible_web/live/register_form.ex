@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
   def render(%{invitation_expired: true} = assigns) do
     ~H"""
     <div class="mx-auto mt-6 text-center dark:text-gray-300">
-      <h1 class="text-3xl font-black">Plausible Analytics</h1>
+      <h1 class="text-3xl font-black"><%= Plausible.product_name() %></h1>
       <div class="text-xl font-medium">Lightweight and privacy-friendly web analytics</div>
     </div>
 
@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     <div class="mx-auto mt-6 text-center dark:text-gray-300">
       <h1 class="text-3xl font-black">
         <%= if ce?() or @live_action == :register_from_invitation_form do %>
-          Register your Plausible Analytics account
+          Register your <%= Plausible.product_name() %> account
         <% else %>
           Register your 30-day free trial
         <% end %>

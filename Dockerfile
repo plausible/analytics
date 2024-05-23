@@ -63,7 +63,7 @@ ENV LANG=C.UTF-8
 ARG MIX_ENV=ce
 ENV MIX_ENV=$MIX_ENV
 
-RUN adduser -S -H -u 999 -G nogroup plausible -g 'Plausible Analytics'
+RUN adduser -S -H -u 999 -G nogroup plausible
 
 RUN apk upgrade --no-cache
 RUN apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates

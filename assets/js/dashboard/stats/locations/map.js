@@ -9,6 +9,7 @@ import LazyLoader from '../../components/lazy-loader'
 import MoreLink from '../more-link'
 import * as api from '../../api'
 import { navigateToQuery } from '../../query'
+import { cleanLabels, replaceFilterByPrefix } from '../../util/filters';
 
 class Countries extends React.Component {
   constructor(props) {
@@ -112,6 +113,8 @@ class Countries extends React.Component {
       done: (datamap) => {
         datamap.svg.selectAll('.datamaps-subunit').on('click', (geography) => {
           const country = this.state.countries.find(c => c.alpha_3 === geography.id)
+          const filters = replaceFilterByPrefix(this.props.query, "country", ["is", "country", [country.code]])
+          const labels = cleanLabels(filters, this.props.query.labels, "country", { [country.code]: country.name })
 
           if (country) {
             this.props.onClick()
@@ -120,8 +123,8 @@ class Countries extends React.Component {
               this.props.history,
               this.props.query,
               {
-                country: country.code,
-                country_labels: country.name
+                filters,
+                labels
               }
             )
           }
