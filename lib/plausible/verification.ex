@@ -8,7 +8,7 @@ defmodule Plausible.Verification do
 
   def enabled?(user) do
     enabled_via_config? =
-      :plausible |> Application.get_env(__MODULE__) |> Keyword.fetch!(:enabled?)
+      :plausible |> Application.fetch_env!(__MODULE__) |> Keyword.fetch!(:enabled?)
 
     enabled_for_user? = not is_nil(user) and FunWithFlags.enabled?(@feature_flag, for: user)
     enabled_via_config? or enabled_for_user?
