@@ -20,7 +20,7 @@ function getSpecialGoal(query) {
   }
   const [_operation, _filterKey, clauses] = goalFilter
   if (clauses.length == 1) {
-    return SPECIAL_GOALS[clauses[0]]?.title || null
+    return SPECIAL_GOALS[clauses[0]] || null
   }
   return null
 
