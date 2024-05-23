@@ -199,6 +199,19 @@ Plausible.TestUtils.html
 Plausible.Themes.html
 Plausible.Timezones.html
 Plausible.Users.html
+Plausible.Verification.Check.html
+Plausible.Verification.Checks.CSP.html
+Plausible.Verification.Checks.FetchBody.html
+Plausible.Verification.Checks.Installation.html
+Plausible.Verification.Checks.ScanBody.html
+Plausible.Verification.Checks.Snippet.html
+Plausible.Verification.Checks.SnippetCacheBust.html
+Plausible.Verification.Checks.html
+Plausible.Verification.Diagnostics.Result.html
+Plausible.Verification.Diagnostics.html
+Plausible.Verification.State.html
+Plausible.Verification.URL.html
+Plausible.Verification.html
 Plausible.Workers.AcceptTrafficUntil.html
 Plausible.Workers.CheckUsage.html
 Plausible.Workers.CleanInvitations.html
@@ -272,6 +285,7 @@ PlausibleWeb.Live.Components.ComboBox.html
 PlausibleWeb.Live.Components.Form.html
 PlausibleWeb.Live.Components.Modal.html
 PlausibleWeb.Live.Components.Pagination.html
+PlausibleWeb.Live.Components.Verification.html
 PlausibleWeb.Live.Components.Visitors.html
 PlausibleWeb.Live.Flash.html
 PlausibleWeb.Live.FunnelSettings.Form.html
@@ -298,6 +312,7 @@ PlausibleWeb.Live.Shields.IPRules.html
 PlausibleWeb.Live.Shields.PageRules.html
 PlausibleWeb.Live.Shields.Pages.html
 PlausibleWeb.Live.Sites.html
+PlausibleWeb.Live.Verification.html
 PlausibleWeb.MJML.StatsReport.html
 PlausibleWeb.PageController.html
 PlausibleWeb.PageView.html
@@ -391,8 +406,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-15B36CD9.js
-dist/sidebar_items-B452642D.js
+dist/search_data-2E525FD2.js
+dist/sidebar_items-0A9F3806.js
 index.html
 readme.html
 search.html
