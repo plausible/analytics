@@ -12,7 +12,7 @@ defmodule Plausible.Verification.Checks.SnippetTest do
 
   @well_placed """
   <head>
-  <script defer data-domain="example.com" src="http://localhost:8000/js/script.js"></script>
+  <script defer data-domain="example.com" event-author="Me" src="http://localhost:8000/js/script.js"></script>
   </head>
   """
 

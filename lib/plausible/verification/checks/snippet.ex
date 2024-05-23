@@ -34,11 +34,12 @@ defmodule Plausible.Verification.Checks.Snippet do
   end
 
   @known_attributes ["data-domain", "src", "defer", "data-api", "data-exclude", "data-include"]
+  @known_prefix "event-"
 
   defp unknown_attributes?(nodes) do
     Enum.any?(nodes, fn {_, attrs, _} ->
       Enum.any?(attrs, fn {key, _} ->
-        key not in @known_attributes
+        key not in @known_attributes and not String.starts_with?(key, @known_prefix)
       end)
     end)
   end
