@@ -1,4 +1,6 @@
 defmodule Plausible.Verification.Checks.Installation do
+  require Logger
+
   @verification_script_filename "verification/verify_plausible_installed.js"
   @verification_script_path Path.join(:code.priv_dir(:plausible), @verification_script_filename)
   @external_resource @verification_script_path
@@ -34,8 +36,7 @@ defmodule Plausible.Verification.Checks.Installation do
         }),
       retry: :transient,
       retry_log_level: :warning,
-      max_retries: 2,
-      receive_timeout: 6_000
+      max_retries: 2
     ]
 
     extra_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
@@ -46,16 +47,22 @@ defmodule Plausible.Verification.Checks.Installation do
        %{
          status: 200,
          body: %{
-           "data" => %{"plausibleInstalled" => installed?, "callbackStatus" => callback_status}
+           "data" =>
+             %{"plausibleInstalled" => installed?, "callbackStatus" => callback_status} = data
          }
        }}
       when is_boolean(installed?) ->
+        if data["error"] do
+          Logger.warning("Browserless error: #{Map.get(data, "error")}")
+        end
+
         put_diagnostics(state, plausible_installed?: installed?, callback_status: callback_status)
 
       {:ok, %{status: status}} ->
         put_diagnostics(state, plausible_installed?: false, service_error: status)
 
       {:error, %{reason: reason}} ->
+        Logger.warning("Browserless error: #{inspect(reason)}")
         put_diagnostics(state, plausible_installed?: false, service_error: reason)
     end
   end
@@ -64,6 +71,6 @@ defmodule Plausible.Verification.Checks.Installation do
     config = Application.fetch_env!(:plausible, __MODULE__)
     token = Keyword.fetch!(config, :token)
     endpoint = Keyword.fetch!(config, :endpoint)
-    Path.join(endpoint, "function?token=#{token}")
+    Path.join(endpoint, "function?token=#{token}&stealth")
   end
 end
