@@ -53,7 +53,7 @@ defmodule Plausible.IngestRepo.Migrations.AliasApiPropNames do
   def down do
     on_cluster = Plausible.MigrationUtils.on_cluster_statement("sessions_v2")
 
-    for {alias_name, column_name} <- @sessions_prop_names do
+    for {alias_name, _column_name} <- @sessions_prop_names do
       execute """
       ALTER TABLE sessions_v2
       #{on_cluster}
@@ -61,7 +61,7 @@ defmodule Plausible.IngestRepo.Migrations.AliasApiPropNames do
       """
     end
 
-    for {alias_name, column_name} <- @events_prop_names do
+    for {alias_name, _column_name} <- @events_prop_names do
       execute """
       ALTER TABLE events_v2
       #{on_cluster}
