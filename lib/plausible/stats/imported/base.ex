@@ -10,6 +10,21 @@ defmodule Plausible.Stats.Imported.Base do
   @goals_with_path Imported.goals_with_path()
   @special_goals @goals_with_path ++ @goals_with_url
 
+  @db_field_mappings %{
+    referrer_source: :source,
+    screen_size: :device,
+    screen: :device,
+    os: :operating_system,
+    os_version: :operating_system_version,
+    country_code: :country,
+    subdivision1_code: :region,
+    city_geoname_id: :city,
+    entry_page_hostname: :hostname,
+    pathname: :page
+  }
+
+  def db_field_mappings(), do: @db_field_mappings
+
   def query_imported(site, query) do
     query = Imported.drop_redundant_filters(query)
 
@@ -86,7 +101,8 @@ defmodule Plausible.Stats.Imported.Base do
 
   defp apply_filter(q, %Query{filters: [[_, filtered_prop | _] = filter]}) do
     db_field = Plausible.Stats.Filters.without_prefix(filtered_prop)
-    condition = Filters.WhereBuilder.build_condition(db_field, filter)
+    mapped_db_field = Map.get(@db_field_mappings, db_field, db_field)
+    condition = Filters.WhereBuilder.build_condition(mapped_db_field, filter)
 
     where(q, ^condition)
   end

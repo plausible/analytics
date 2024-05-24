@@ -30,7 +30,11 @@ defmodule Plausible.Stats.Imported do
     "event:page" => "imported_pages",
     "event:name" => "imported_custom_events",
     "event:props:url" => "imported_custom_events",
-    "event:props:path" => "imported_custom_events"
+    "event:props:path" => "imported_custom_events",
+
+    # NOTE: these properties can be only filtered by
+    "visit:screen" => "imported_devices",
+    "event:hostname" => "imported_pages"
   }
 
   def property_to_table_mappings(), do: @property_to_table_mappings
@@ -80,6 +84,123 @@ defmodule Plausible.Stats.Imported do
           _ -> false
         end)
     )
+  end
+
+  def merged_imported_countries(native_q, site, query) do
+    native_q =
+      native_q
+      |> exclude(:order_by)
+      |> exclude(:select)
+      |> select([e], %{country_code: e.country_code, count: fragment("count(*)")})
+
+    imported_q =
+      from i in Imported.Base.query_imported("imported_locations", site, query),
+        group_by: i.country,
+        select_merge: %{country_code: i.country, count: fragment("count(*)")}
+
+    from(s in subquery(native_q),
+      full_join: i in subquery(imported_q),
+      on: s.country_code == i.country_code,
+      select: fragment("if(not empty(?), ?, ?)", s.country_code, s.country_code, i.country_code),
+      order_by: [desc: fragment("? + ?", s.count, i.count)]
+    )
+  end
+
+  def merge_imported_regions(native_q, site, query) do
+    native_q =
+      native_q
+      |> exclude(:order_by)
+      |> exclude(:select)
+      |> select([e], %{region_code: e.subdivision1_code, count: fragment("count(*)")})
+
+    imported_q =
+      from i in Imported.Base.query_imported("imported_locations", site, query),
+        where: i.region != "",
+        group_by: i.region,
+        select_merge: %{region_code: i.region, count: fragment("count(*)")}
+
+    from(s in subquery(native_q),
+      full_join: i in subquery(imported_q),
+      on: s.region_code == i.region_code,
+      select: fragment("if(not empty(?), ?, ?)", s.region_code, s.region_code, i.region_code),
+      order_by: [desc: fragment("? + ?", s.count, i.count)]
+    )
+  end
+
+  def merge_imported_cities(native_q, site, query) do
+    native_q =
+      native_q
+      |> exclude(:order_by)
+      |> exclude(:select)
+      |> select([e], %{city_id: e.city_geoname_id, count: fragment("count(*)")})
+
+    imported_q =
+      from i in Imported.Base.query_imported("imported_locations", site, query),
+        where: i.city != 0,
+        group_by: i.city,
+        select_merge: %{city_id: i.city, count: fragment("count(*)")}
+
+    from(s in subquery(native_q),
+      full_join: i in subquery(imported_q),
+      on: s.city_id == i.city_id,
+      select: fragment("if(? > 0, ?, ?)", s.city_id, s.city_id, i.city_id),
+      order_by: [desc: fragment("? + ?", s.count, i.count)]
+    )
+  end
+
+  def merge_imported_filter_suggestions(
+        native_q,
+        _site,
+        %Plausible.Stats.Query{include_imported: false},
+        _filter_name,
+        _filter_search
+      ) do
+    native_q
+  end
+
+  def merge_imported_filter_suggestions(
+        native_q,
+        site,
+        query,
+        filter_name,
+        filter_query
+      ) do
+    native_q =
+      native_q
+      |> exclude(:order_by)
+      |> exclude(:select)
+      |> select([e], %{name: field(e, ^filter_name), count: fragment("count(*)")})
+
+    db_field = Map.get(Imported.Base.db_field_mappings(), filter_name, filter_name)
+
+    property_field =
+      case db_field do
+        :operating_system -> :os
+        :operating_system_version -> :os_version
+        other -> other
+      end
+
+    table_by_visit = Map.get(@property_to_table_mappings, "visit:#{property_field}")
+    table_by_event = Map.get(@property_to_table_mappings, "event:#{property_field}")
+    table = table_by_visit || table_by_event
+
+    if db_field && table do
+      imported_q =
+        from i in Imported.Base.query_imported(table, site, query),
+          where: fragment("? ilike ?", field(i, ^db_field), ^filter_query),
+          group_by: field(i, ^db_field),
+          select_merge: %{name: field(i, ^db_field), count: fragment("count(*)")}
+
+      from(s in subquery(native_q),
+        full_join: i in subquery(imported_q),
+        on: s.name == i.name,
+        select: fragment("if(not empty(?), ?, ?)", s.name, s.name, i.name),
+        order_by: [desc: fragment("? + ?", s.count, i.count)],
+        limit: 25
+      )
+    else
+      native_q
+    end
   end
 
   def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{include_imported: false}, _),
@@ -284,6 +405,18 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_pages", _}}} = q,
+         [:bounce_rate | rest]
+       ) do
+    q
+    |> select_merge([i], %{
+      bounces: 0,
+      __internal_visits: 0
+    })
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
          %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
          [:bounce_rate | rest]
        ) do
@@ -312,6 +445,18 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([i], %{
       bounces: sum(i.bounces),
       __internal_visits: sum(i.visits)
+    })
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_pages", _}}} = q,
+         [:visit_duration | rest]
+       ) do
+    q
+    |> select_merge([i], %{
+      visit_duration: 0,
+      __internal_visits: 0
     })
     |> select_imported_metrics(rest)
   end

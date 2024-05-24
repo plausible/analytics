@@ -1281,7 +1281,6 @@ defmodule PlausibleWeb.Api.StatsController do
         Enum.map(entry, &format_revenue_metric/1)
         |> Map.new()
       end)
-      |> IO.inspect()
 
     %{results: props, skip_imported_reason: query.skip_imported_reason}
   end
