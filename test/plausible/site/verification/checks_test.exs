@@ -799,6 +799,18 @@ defmodule Plausible.Verification.ChecksTest do
                }
              ]
     end
+
+    test "non-standard integration where the snippet cannot be found but it works ok in headless" do
+      stub_fetch_body(200, @body_no_snippet)
+      stub_installation(200, plausible_installed(true, 202))
+
+      result = run_checks()
+
+      interpretation = Checks.interpret_diagnostics(result)
+      assert interpretation.ok?
+      assert interpretation.errors == []
+      assert interpretation.recommendations == []
+    end
   end
 
   defp run_checks(extra_opts \\ []) do

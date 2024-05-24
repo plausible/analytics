@@ -14,7 +14,7 @@ defmodule Plausible.Verification.Diagnostics do
             body_fetched?: false,
             wordpress_likely?: false,
             gtm_likely?: false,
-            callback_status: -1,
+            callback_status: 0,
             proxy_likely?: false,
             data_domain_mismatch?: false,
             wordpress_plugin?: false
@@ -155,7 +155,6 @@ defmodule Plausible.Verification.Diagnostics do
           snippets_found_in_head: 1,
           plausible_installed?: true,
           wordpress_likely?: false,
-          proxy_likely?: false,
           callback_status: -1
         },
         _url
@@ -176,7 +175,6 @@ defmodule Plausible.Verification.Diagnostics do
           snippets_found_in_head: 1,
           plausible_installed?: true,
           wordpress_likely?: true,
-          proxy_likely?: false,
           wordpress_plugin?: false,
           callback_status: -1
         },
@@ -198,7 +196,6 @@ defmodule Plausible.Verification.Diagnostics do
           snippets_found_in_head: 1,
           plausible_installed?: true,
           wordpress_likely?: true,
-          proxy_likely?: false,
           wordpress_plugin?: true,
           callback_status: -1
         },
@@ -422,6 +419,21 @@ defmodule Plausible.Verification.Diagnostics do
          "https://plausible.io/docs/troubleshoot-integration"}
       ]
     }
+  end
+
+  def interpret(
+    %__MODULE__{
+      plausible_installed?: true,
+      snippets_found_in_head: 0,
+      snippets_found_in_body: 0,
+      callback_status: callback_status,
+      snippet_found_after_busting_cache?: false,
+      service_error: nil
+    },
+    _url
+  )
+  when callback_status in [200, 202] do
+    %Result{ok?: true}
   end
 
   def interpret(rating, url) do
