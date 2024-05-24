@@ -21,7 +21,8 @@ defmodule Plausible.Verification.Checks.Snippet do
       snippets_found_in_body: Enum.count(in_body),
       proxy_likely?: proxy_likely?(all),
       snippet_unknown_attributes?: unknown_attributes?(all),
-      data_domain_mismatch?: data_domain_mismatch?(all, state.data_domain)
+      data_domain_mismatch?:
+        data_domain_mismatch?(all, state.data_domain, state.assigns[:final_domain])
     )
   end
 
@@ -33,20 +34,32 @@ defmodule Plausible.Verification.Checks.Snippet do
     |> Enum.any?(&(not String.starts_with?(&1, PlausibleWeb.Endpoint.url())))
   end
 
-  @known_attributes ["data-domain", "src", "defer", "data-api", "data-exclude", "data-include"]
-  @known_prefix "event-"
+  @known_attributes [
+    "data-domain",
+    "src",
+    "defer",
+    "data-api",
+    "data-exclude",
+    "data-include"
+  ]
 
   defp unknown_attributes?(nodes) do
     Enum.any?(nodes, fn {_, attrs, _} ->
-      Enum.any?(attrs, fn {key, _} ->
-        key not in @known_attributes and not String.starts_with?(key, @known_prefix)
+      Enum.any?(attrs, fn
+        {"type", "text/javascript"} -> false
+        {"event-" <> _, _} -> false
+        {key, _} -> key not in @known_attributes
       end)
     end)
   end
 
-  defp data_domain_mismatch?(nodes, data_domain) do
+  defp data_domain_mismatch?(nodes, data_domain, final_data_domain) do
     nodes
     |> Floki.attribute("data-domain")
-    |> Enum.any?(&(&1 != data_domain and data_domain not in String.split(&1, ",")))
+    |> Enum.any?(fn script_data_domain ->
+      multiple = String.split(script_data_domain, ",")
+
+      data_domain not in multiple and final_data_domain not in multiple
+    end)
   end
 end

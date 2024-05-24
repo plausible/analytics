@@ -827,6 +827,64 @@ defmodule Plausible.Verification.ChecksTest do
                 "https://plausible.io/docs/troubleshoot-integration"}
              ]
     end
+
+    @different_data_domain_body """
+    <html>
+    <head>
+    <script defer data-domain="www.example.com" src="http://localhost:8000/js/script.js"></script>
+    </head>
+    <body>Hello</body>
+    </html>
+    """
+
+    test "data-domain mismatch" do
+      stub_fetch_body(200, @different_data_domain_body)
+      stub_installation()
+
+      result = run_checks()
+
+      interpretation = Checks.interpret_diagnostics(result)
+      refute interpretation.ok?
+      assert interpretation.errors == ["Your data-domain is different than example.com"]
+
+      assert interpretation.recommendations == [
+               {
+                 "Please ensure that the site in the data-domain attribute is an exact match to the site as you added it to your Plausible account",
+                 "https://plausible.io/docs/troubleshoot-integration"
+               }
+             ]
+    end
+
+    test "data-domain mismatch on redirect chain" do
+      ref = :counters.new(1, [:atomics])
+      test = self()
+
+      Req.Test.stub(Plausible.Verification.Checks.FetchBody, fn conn ->
+        if :counters.get(ref, 1) == 0 do
+          :counters.add(ref, 1, 1)
+          send(test, :redirect_sent)
+
+          conn
+          |> put_resp_header("location", "https://www.example.com")
+          |> send_resp(302, "redirecting to https://www.example.com")
+        else
+          conn
+          |> put_resp_header("content-type", "text/html")
+          |> send_resp(200, @different_data_domain_body)
+        end
+      end)
+
+      stub_installation()
+
+      result = run_checks()
+
+      assert_receive :redirect_sent
+
+      interpretation = Checks.interpret_diagnostics(result)
+      assert interpretation.ok?
+      assert interpretation.errors == []
+      assert interpretation.recommendations == []
+    end
   end
 
   defp run_checks(extra_opts \\ []) do

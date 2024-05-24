@@ -24,12 +24,14 @@ defmodule Plausible.Verification.Checks.FetchBody do
         fetch_body_opts
       )
 
-    req = Req.new(opts)
+    {req, resp} = opts |> Req.new() |> Req.Request.run_request()
 
-    case Req.get(req) do
-      {:ok, %Req.Response{status: status, body: body} = response}
+    case resp do
+      %Req.Response{status: status, body: body}
       when is_binary(body) and status in 200..299 ->
-        extract_document(state, response)
+        state
+        |> assign(final_domain: req.url.host)
+        |> extract_document(resp)
 
       _ ->
         state
