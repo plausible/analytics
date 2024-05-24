@@ -422,17 +422,17 @@ defmodule Plausible.Verification.Diagnostics do
   end
 
   def interpret(
-    %__MODULE__{
-      plausible_installed?: true,
-      snippets_found_in_head: 0,
-      snippets_found_in_body: 0,
-      callback_status: callback_status,
-      snippet_found_after_busting_cache?: false,
-      service_error: nil
-    },
-    _url
-  )
-  when callback_status in [200, 202] do
+        %__MODULE__{
+          plausible_installed?: true,
+          snippets_found_in_head: 0,
+          snippets_found_in_body: 0,
+          callback_status: callback_status,
+          snippet_found_after_busting_cache?: false,
+          service_error: nil
+        },
+        _url
+      )
+      when callback_status in [200, 202] do
     %Result{ok?: true}
   end
 
