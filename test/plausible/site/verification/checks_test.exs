@@ -752,6 +752,53 @@ defmodule Plausible.Verification.ChecksTest do
                 "https://plausible.io/wordpress-analytics-plugin "}
              ]
     end
+
+    test "callback handling not found for non-wordpress site" do
+      stub_fetch_body(200, @normal_body)
+      stub_installation(200, plausible_installed(true, -1))
+
+      result = run_checks()
+      interpretation = Checks.interpret_diagnostics(result)
+
+      assert interpretation.errors == ["We encountered a problem trying to verify your website"]
+
+      assert interpretation.recommendations == [
+               {"The integration may be working but as you're running an older version of our script, we cannot verify it automatically. Please manually check your integration or update to use the latest script",
+                "https://plausible.io/docs/troubleshoot-integration"}
+             ]
+    end
+
+    test "callback handling not found for wordpress site" do
+      stub_fetch_body(200, @normal_body_wordpress)
+      stub_installation(200, plausible_installed(true, -1))
+
+      result = run_checks()
+      interpretation = Checks.interpret_diagnostics(result)
+
+      assert interpretation.errors == ["We encountered a problem trying to verify your website"]
+
+      assert interpretation.recommendations == [
+               {"The integration may be working but as you're running an older version of our script, we cannot verify it automatically. Please install our WordPress plugin to use the built-in proxy",
+                "https://plausible.io/wordpress-analytics-plugin"}
+             ]
+    end
+
+    test "callback handling not found for wordpress site using our plugin" do
+      stub_fetch_body(200, @normal_body_wordpress_official_plugin)
+      stub_installation(200, plausible_installed(true, -1))
+
+      result = run_checks()
+
+      interpretation = Checks.interpret_diagnostics(result)
+      assert interpretation.errors == ["We encountered a problem trying to verify your website"]
+
+      assert interpretation.recommendations == [
+               {
+                 "The integration may be working but as you're running an older version of our script, we cannot verify it automatically. Please disable and then enable the proxy in our WordPress plugin, then clear your WordPress cache",
+                 "https://plausible.io/wordpress-analytics-plugin"
+               }
+             ]
+    end
   end
 
   defp run_checks(extra_opts \\ []) do

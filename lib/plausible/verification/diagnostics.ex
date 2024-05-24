@@ -35,13 +35,14 @@ defmodule Plausible.Verification.Diagnostics do
           plausible_installed?: true,
           snippets_found_in_head: 1,
           snippets_found_in_body: 0,
-          callback_status: 202,
+          callback_status: callback_status,
           snippet_found_after_busting_cache?: false,
           service_error: nil,
           data_domain_mismatch?: false
         },
         _url
-      ) do
+      )
+      when callback_status in [200, 202] do
     %Result{ok?: true}
   end
 
@@ -150,13 +151,77 @@ defmodule Plausible.Verification.Diagnostics do
 
   def interpret(
         %__MODULE__{
+          snippets_found_in_body: 0,
+          snippets_found_in_head: 1,
           plausible_installed?: true,
-          callback_status: callback_status,
+          wordpress_likely?: false,
+          proxy_likely?: false,
+          callback_status: -1
+        },
+        _url
+      ) do
+    %Result{
+      ok?: false,
+      errors: ["We encountered a problem trying to verify your website"],
+      recommendations: [
+        {"The integration may be working but as you're running an older version of our script, we cannot verify it automatically. Please manually check your integration or update to use the latest script",
+         "https://plausible.io/docs/troubleshoot-integration"}
+      ]
+    }
+  end
+
+  def interpret(
+        %__MODULE__{
+          snippets_found_in_body: 0,
+          snippets_found_in_head: 1,
+          plausible_installed?: true,
+          wordpress_likely?: true,
+          proxy_likely?: false,
+          wordpress_plugin?: false,
+          callback_status: -1
+        },
+        _url
+      ) do
+    %Result{
+      ok?: false,
+      errors: ["We encountered a problem trying to verify your website"],
+      recommendations: [
+        {"The integration may be working but as you're running an older version of our script, we cannot verify it automatically. Please install our WordPress plugin to use the built-in proxy",
+         "https://plausible.io/wordpress-analytics-plugin"}
+      ]
+    }
+  end
+
+  def interpret(
+        %__MODULE__{
+          snippets_found_in_body: 0,
+          snippets_found_in_head: 1,
+          plausible_installed?: true,
+          wordpress_likely?: true,
+          proxy_likely?: false,
+          wordpress_plugin?: true,
+          callback_status: -1
+        },
+        _url
+      ) do
+    %Result{
+      ok?: false,
+      errors: ["We encountered a problem trying to verify your website"],
+      recommendations: [
+        {"The integration may be working but as you're running an older version of our script, we cannot verify it automatically. Please disable and then enable the proxy in our WordPress plugin, then clear your WordPress cache",
+         "https://plausible.io/wordpress-analytics-plugin"}
+      ]
+    }
+  end
+
+  def interpret(
+        %__MODULE__{
+          plausible_installed?: true,
+          callback_status: 0,
           proxy_likely?: true
         },
         _url
-      )
-      when callback_status != 202 do
+      ) do
     %Result{
       ok?: false,
       errors: ["We encountered an error with your Plausible proxy"],
