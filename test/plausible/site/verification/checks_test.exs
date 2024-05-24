@@ -105,7 +105,7 @@ defmodule Plausible.Verification.ChecksTest do
       assert interpretation.recommendations == []
     end
 
-    test "fetching will not follow more than 2 redirect" do
+    test "fetching will give up at 5th redirect" do
       test = self()
 
       stub_fetch_body(fn conn ->
@@ -120,6 +120,8 @@ defmodule Plausible.Verification.ChecksTest do
 
       result = run_checks()
 
+      assert_receive :redirect_sent
+      assert_receive :redirect_sent
       assert_receive :redirect_sent
       assert_receive :redirect_sent
       assert_receive :redirect_sent
