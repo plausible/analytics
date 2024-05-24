@@ -27,11 +27,11 @@ defmodule Plausible.Verification.Checks.FetchBody do
     {req, resp} = opts |> Req.new() |> Req.Request.run_request()
 
     case resp do
-      %Req.Response{status: status, body: body} = response
+      %Req.Response{status: status, body: body}
       when is_binary(body) and status in 200..299 ->
         state
         |> assign(final_domain: req.url.host)
-        |> extract_document(response)
+        |> extract_document(resp)
 
       _ ->
         state
