@@ -45,7 +45,7 @@ defmodule Plausible.Verification.Checks.FetchBodyTest do
     stub(200, @normal_body, "text/plain")
     state = @check.perform(state)
 
-    assert map_size(state.assigns) == 0
+    assert state.assigns == %{final_domain: "example.com"}
 
     refute state.diagnostics.body_fetched?
   end
