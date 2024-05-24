@@ -5,38 +5,32 @@ export default async function({ page, context }) {
 	}
 
 	await page.setUserAgent(context.userAgent);
-
 	await page.goto(context.url);
-	await page.waitForNetworkIdle({ idleTime: 1000 });
 
-	const plausibleInstalled = await page.evaluate(() => {
-		window.__plausible = true;
-		if (typeof (window.plausible) === "function") {
+	try {
+		await page.waitForFunction('window.plausible', { timeout: 4000 });
+		await page.evaluate(() => {
+			window.__plausible = true;
 			window.plausible('verification-agent-test', {
 				callback: function(options) {
-					window.plausibleCallbackResult = () => options && options.status ? options.status : 1;
+					window.plausibleCallbackResult = () => options && options.status ? options.status : -1;
 				}
 			});
-			return true;
-		} else {
-			window.plausibleCallbackResult = () => 0;
-			return false;
-		}
-	});
+		});
 
-	await page.waitForFunction('window.plausibleCallbackResult', { timeout: 2000 });
-	const callbackStatus = await page.evaluate(() => {
-		if (typeof (window.plausibleCallbackResult) === "function") {
-			return window.plausibleCallbackResult();
-		} else {
-			return 0;
+		try {
+			await page.waitForFunction('window.plausibleCallbackResult', { timeout: 3000 });
+			const status = await page.evaluate(() => { return window.plausibleCallbackResult() });
+			return { data: { plausibleInstalled: true, callbackStatus: status } };
+		} catch ({ err, message }) {
+			return { data: { plausibleInstalled: true, callbackStatus: 0, error: message } };
 		}
-	});
-
-	return {
-		data: {
-			plausibleInstalled, callbackStatus
-		},
-		type: "application/json"
-	};
+	} catch ({ err, message }) {
+		return {
+			data: {
+				plausibleInstalled: false, callbackStatus: 0, error: message
+			}
+		};
+	}
 }
+
