@@ -105,7 +105,7 @@ defmodule Plausible.Verification.ChecksTest do
       assert interpretation.recommendations == []
     end
 
-    test "fetching will not follow more than 2 redirect" do
+    test "fetching will give up at 5th redirect" do
       test = self()
 
       stub_fetch_body(fn conn ->
@@ -120,6 +120,8 @@ defmodule Plausible.Verification.ChecksTest do
 
       result = run_checks()
 
+      assert_receive :redirect_sent
+      assert_receive :redirect_sent
       assert_receive :redirect_sent
       assert_receive :redirect_sent
       assert_receive :redirect_sent
@@ -748,6 +750,81 @@ defmodule Plausible.Verification.ChecksTest do
       assert interpretation.recommendations == [
                {"Please whitelist our script in your performance optimization plugin to stop it from changing our snippet",
                 "https://plausible.io/wordpress-analytics-plugin "}
+             ]
+    end
+
+    test "callback handling not found for non-wordpress site" do
+      stub_fetch_body(200, @normal_body)
+      stub_installation(200, plausible_installed(true, -1))
+
+      result = run_checks()
+      interpretation = Checks.interpret_diagnostics(result)
+
+      assert interpretation.errors == ["We encountered a problem trying to verify your website"]
+
+      assert interpretation.recommendations == [
+               {"The integration may be working but as you're running an older version of our script, we cannot verify it automatically. Please manually check your integration or update to use the latest script",
+                "https://plausible.io/docs/troubleshoot-integration"}
+             ]
+    end
+
+    test "callback handling not found for wordpress site" do
+      stub_fetch_body(200, @normal_body_wordpress)
+      stub_installation(200, plausible_installed(true, -1))
+
+      result = run_checks()
+      interpretation = Checks.interpret_diagnostics(result)
+
+      assert interpretation.errors == ["We encountered a problem trying to verify your website"]
+
+      assert interpretation.recommendations == [
+               {"The integration may be working but as you're running an older version of our script, we cannot verify it automatically. Please install our WordPress plugin to use the built-in proxy",
+                "https://plausible.io/wordpress-analytics-plugin"}
+             ]
+    end
+
+    test "callback handling not found for wordpress site using our plugin" do
+      stub_fetch_body(200, @normal_body_wordpress_official_plugin)
+      stub_installation(200, plausible_installed(true, -1))
+
+      result = run_checks()
+
+      interpretation = Checks.interpret_diagnostics(result)
+      assert interpretation.errors == ["We encountered a problem trying to verify your website"]
+
+      assert interpretation.recommendations == [
+               {
+                 "The integration may be working but as you're running an older version of our script, we cannot verify it automatically. Please disable and then enable the proxy in our WordPress plugin, then clear your WordPress cache",
+                 "https://plausible.io/wordpress-analytics-plugin"
+               }
+             ]
+    end
+
+    test "non-standard integration where the snippet cannot be found but it works ok in headless" do
+      stub_fetch_body(200, @body_no_snippet)
+      stub_installation(200, plausible_installed(true, 202))
+
+      result = run_checks()
+
+      interpretation = Checks.interpret_diagnostics(result)
+      assert interpretation.ok?
+      assert interpretation.errors == []
+      assert interpretation.recommendations == []
+    end
+
+    test "fails due to callback status being something unlikely like 500" do
+      stub_fetch_body(200, @normal_body)
+      stub_installation(200, plausible_installed(true, 500))
+
+      result = run_checks()
+
+      interpretation = Checks.interpret_diagnostics(result)
+      refute interpretation.ok?
+      assert interpretation.errors == ["Your Plausible integration is not working"]
+
+      assert interpretation.recommendations == [
+               {"Please manually check your integration to make sure that the Plausible snippet has been inserted correctly",
+                "https://plausible.io/docs/troubleshoot-integration"}
              ]
     end
   end
