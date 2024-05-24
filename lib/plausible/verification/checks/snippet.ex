@@ -59,8 +59,7 @@ defmodule Plausible.Verification.Checks.Snippet do
     |> Enum.any?(fn script_data_domain ->
       multiple = String.split(script_data_domain, ",")
 
-      script_data_domain not in [data_domain, final_data_domain] and data_domain not in multiple and
-        final_data_domain not in multiple
+      data_domain not in multiple and final_data_domain not in multiple
     end)
   end
 end
