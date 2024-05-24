@@ -40,7 +40,7 @@ defmodule Plausible.Verification.Checks.Snippet do
     "defer",
     "data-api",
     "data-exclude",
-    "data-include",
+    "data-include"
   ]
 
   defp unknown_attributes?(nodes) do
