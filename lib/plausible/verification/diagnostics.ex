@@ -354,10 +354,10 @@ defmodule Plausible.Verification.Diagnostics do
     }
   end
 
-  def interpret(%__MODULE__{data_domain_mismatch?: true}, url) do
+  def interpret(%__MODULE__{data_domain_mismatch?: true}, "https://" <> domain) do
     %Result{
       ok?: false,
-      errors: ["Your data-domain is different than #{url}"],
+      errors: ["Your data-domain is different than #{domain}"],
       recommendations: [
         {"Please ensure that the site in the data-domain attribute is an exact match to the site as you added it to your Plausible account",
          "https://plausible.io/docs/troubleshoot-integration"}
