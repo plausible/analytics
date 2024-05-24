@@ -1,4 +1,8 @@
 defmodule Plausible.Verification.Errors do
+  @moduledoc """
+  A go-to definition of all verification errors
+  """
+
   @errors %{
     gtm: %{
       message: "We encountered an issue with your Plausible integration",
