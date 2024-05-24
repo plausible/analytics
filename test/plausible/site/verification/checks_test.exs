@@ -811,6 +811,22 @@ defmodule Plausible.Verification.ChecksTest do
       assert interpretation.errors == []
       assert interpretation.recommendations == []
     end
+
+    test "fails due to callback status being something unlikely like 500" do
+      stub_fetch_body(200, @normal_body)
+      stub_installation(200, plausible_installed(true, 500))
+
+      result = run_checks()
+
+      interpretation = Checks.interpret_diagnostics(result)
+      refute interpretation.ok?
+      assert interpretation.errors == ["Your Plausible integration is not working"]
+
+      assert interpretation.recommendations == [
+               {"Please manually check your integration to make sure that the Plausible snippet has been inserted correctly",
+                "https://plausible.io/docs/troubleshoot-integration"}
+             ]
+    end
   end
 
   defp run_checks(extra_opts \\ []) do
