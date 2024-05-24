@@ -36,7 +36,7 @@ defmodule Plausible.Verification.Checks.FetchBody do
     end
   end
 
-  defp extract_document(state, response) when byte_size(response.body) <= 500_000 do
+  defp extract_document(state, response) do
     with true <- html?(response),
          {:ok, document} <- Floki.parse_document(response.body) do
       state
@@ -46,10 +46,6 @@ defmodule Plausible.Verification.Checks.FetchBody do
       _ ->
         state
     end
-  end
-
-  defp extract_document(state, response) when byte_size(response.body) > 500_000 do
-    state
   end
 
   defp html?(%Req.Response{headers: headers}) do
