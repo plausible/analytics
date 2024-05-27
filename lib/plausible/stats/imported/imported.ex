@@ -87,10 +87,6 @@ defmodule Plausible.Stats.Imported do
     )
   end
 
-  def merge_imported_country_suggestions(native_q, _site, %Plausible.Stats.Query{filters: [_ | _]}) do
-    native_q
-  end
-
   def merge_imported_country_suggestions(native_q, _site, %Plausible.Stats.Query{
         include_imported: false
       }) do
@@ -98,27 +94,34 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported_country_suggestions(native_q, site, query) do
-    native_q =
+    supports_filter_set? =
+      Enum.all?(query.filters, fn filter ->
+        [_, filtered_prop | _] = filter
+        @property_to_table_mappings[filtered_prop] == "imported_locations"
+      end)
+
+    if supports_filter_set? do
+      native_q =
+        native_q
+        |> exclude(:order_by)
+        |> exclude(:select)
+        |> select([e], %{country_code: e.country_code, count: fragment("count(*)")})
+
+      imported_q =
+        from i in Imported.Base.query_imported("imported_locations", site, query),
+          group_by: i.country,
+          select_merge: %{country_code: i.country, count: fragment("sum(?)", i.pageviews)}
+
+      from(s in subquery(native_q),
+        full_join: i in subquery(imported_q),
+        on: s.country_code == i.country_code,
+        select:
+          fragment("if(not empty(?), ?, ?)", s.country_code, s.country_code, i.country_code),
+        order_by: [desc: fragment("? + ?", s.count, i.count)]
+      )
+    else
       native_q
-      |> exclude(:order_by)
-      |> exclude(:select)
-      |> select([e], %{country_code: e.country_code, count: fragment("count(*)")})
-
-    imported_q =
-      from i in Imported.Base.query_imported("imported_locations", site, query),
-        group_by: i.country,
-        select_merge: %{country_code: i.country, count: fragment("sum(?)", i.pageviews)}
-
-    from(s in subquery(native_q),
-      full_join: i in subquery(imported_q),
-      on: s.country_code == i.country_code,
-      select: fragment("if(not empty(?), ?, ?)", s.country_code, s.country_code, i.country_code),
-      order_by: [desc: fragment("? + ?", s.count, i.count)]
-    )
-  end
-
-  def merge_imported_region_suggestions(native_q, _site, %Plausible.Stats.Query{filters: [_ | _]}) do
-    native_q
+    end
   end
 
   def merge_imported_region_suggestions(native_q, _site, %Plausible.Stats.Query{
@@ -128,28 +131,34 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported_region_suggestions(native_q, site, query) do
-    native_q =
+    supports_filter_set? =
+      Enum.all?(query.filters, fn filter ->
+        [_, filtered_prop | _] = filter
+        @property_to_table_mappings[filtered_prop] == "imported_locations"
+      end)
+
+    if supports_filter_set? do
+      native_q =
+        native_q
+        |> exclude(:order_by)
+        |> exclude(:select)
+        |> select([e], %{region_code: e.subdivision1_code, count: fragment("count(*)")})
+
+      imported_q =
+        from i in Imported.Base.query_imported("imported_locations", site, query),
+          where: i.region != "",
+          group_by: i.region,
+          select_merge: %{region_code: i.region, count: fragment("sum(?)", i.pageviews)}
+
+      from(s in subquery(native_q),
+        full_join: i in subquery(imported_q),
+        on: s.region_code == i.region_code,
+        select: fragment("if(not empty(?), ?, ?)", s.region_code, s.region_code, i.region_code),
+        order_by: [desc: fragment("? + ?", s.count, i.count)]
+      )
+    else
       native_q
-      |> exclude(:order_by)
-      |> exclude(:select)
-      |> select([e], %{region_code: e.subdivision1_code, count: fragment("count(*)")})
-
-    imported_q =
-      from i in Imported.Base.query_imported("imported_locations", site, query),
-        where: i.region != "",
-        group_by: i.region,
-        select_merge: %{region_code: i.region, count: fragment("sum(?)", i.pageviews)}
-
-    from(s in subquery(native_q),
-      full_join: i in subquery(imported_q),
-      on: s.region_code == i.region_code,
-      select: fragment("if(not empty(?), ?, ?)", s.region_code, s.region_code, i.region_code),
-      order_by: [desc: fragment("? + ?", s.count, i.count)]
-    )
-  end
-
-  def merge_imported_city_suggestions(native_q, _site, %Plausible.Stats.Query{filters: [_ | _]}) do
-    native_q
+    end
   end
 
   def merge_imported_city_suggestions(native_q, _site, %Plausible.Stats.Query{
@@ -159,24 +168,34 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported_city_suggestions(native_q, site, query) do
-    native_q =
+    supports_filter_set? =
+      Enum.all?(query.filters, fn filter ->
+        [_, filtered_prop | _] = filter
+        @property_to_table_mappings[filtered_prop] == "imported_locations"
+      end)
+
+    if supports_filter_set? do
+      native_q =
+        native_q
+        |> exclude(:order_by)
+        |> exclude(:select)
+        |> select([e], %{city_id: e.city_geoname_id, count: fragment("count(*)")})
+
+      imported_q =
+        from i in Imported.Base.query_imported("imported_locations", site, query),
+          where: i.city != 0,
+          group_by: i.city,
+          select_merge: %{city_id: i.city, count: fragment("sum(?)", i.pageviews)}
+
+      from(s in subquery(native_q),
+        full_join: i in subquery(imported_q),
+        on: s.city_id == i.city_id,
+        select: fragment("if(? > 0, ?, ?)", s.city_id, s.city_id, i.city_id),
+        order_by: [desc: fragment("? + ?", s.count, i.count)]
+      )
+    else
       native_q
-      |> exclude(:order_by)
-      |> exclude(:select)
-      |> select([e], %{city_id: e.city_geoname_id, count: fragment("count(*)")})
-
-    imported_q =
-      from i in Imported.Base.query_imported("imported_locations", site, query),
-        where: i.city != 0,
-        group_by: i.city,
-        select_merge: %{city_id: i.city, count: fragment("sum(?)", i.pageviews)}
-
-    from(s in subquery(native_q),
-      full_join: i in subquery(imported_q),
-      on: s.city_id == i.city_id,
-      select: fragment("if(? > 0, ?, ?)", s.city_id, s.city_id, i.city_id),
-      order_by: [desc: fragment("? + ?", s.count, i.count)]
-    )
+    end
   end
 
   def merge_imported_filter_suggestions(

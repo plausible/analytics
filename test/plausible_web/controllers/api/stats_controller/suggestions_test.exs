@@ -663,11 +663,12 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
              ]
     end
 
-    test "ignores imported data in country suggestions when filters applied", %{
-      conn: conn,
-      site: site,
-      site_import: site_import
-    } do
+    test "ignores imported data in country suggestions when a different property is filtered by",
+         %{
+           conn: conn,
+           site: site,
+           site_import: site_import
+         } do
       populate_stats(site, site_import.id, [
         build(:pageview, country_code: "EE", referrer_source: "Bing"),
         build(:imported_locations, country: "GB")
@@ -679,6 +680,26 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         get(
           conn,
           "/api/stats/#{site.domain}/suggestions/country?filters=#{filters}&q=&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [%{"value" => "EE", "label" => "Estonia"}]
+    end
+
+    test "queries imported countries when filtering by country", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:imported_locations, date: ~D[2019-01-01], country: "EE")
+      ])
+
+      filters = Jason.encode!(%{country: "EE"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/country?period=month&date=2019-01-01&filters=#{filters}&q=&with_imported=true"
         )
 
       assert json_response(conn, 200) == [%{"value" => "EE", "label" => "Estonia"}]
@@ -728,11 +749,12 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       end
     end
 
-    test "ignores imported data in region suggestions when filters applied", %{
-      conn: conn,
-      site: site,
-      site_import: site_import
-    } do
+    test "ignores imported data in region suggestions when a different property is filtered by",
+         %{
+           conn: conn,
+           site: site,
+           site_import: site_import
+         } do
       populate_stats(site, site_import.id, [
         build(:pageview,
           country_code: "EE",
@@ -748,6 +770,26 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         get(
           conn,
           "/api/stats/#{site.domain}/suggestions/region?filters=#{filters}&q=&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [%{"value" => "EE-39", "label" => "Hiiumaa"}]
+    end
+
+    test "queries imported regions when filtering by region", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:imported_locations, date: ~D[2019-01-01], region: "EE-39")
+      ])
+
+      filters = Jason.encode!(%{region: "EE-39"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/region?period=month&date=2019-01-01&filters=#{filters}&q=&with_imported=true"
         )
 
       assert json_response(conn, 200) == [%{"value" => "EE-39", "label" => "Hiiumaa"}]
@@ -809,7 +851,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       end
     end
 
-    test "ignores imported data in city suggestions when filters applied", %{
+    test "ignores imported data in city suggestions when a different property is filtered by", %{
       conn: conn,
       site: site,
       site_import: site_import
@@ -830,6 +872,26 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         get(
           conn,
           "/api/stats/#{site.domain}/suggestions/city?filters=#{filters}&q=&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [%{"value" => "591632", "label" => "Kärdla"}]
+    end
+
+    test "queries imported cities when filtering by city", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:imported_locations, date: ~D[2019-01-01], city: 591_632)
+      ])
+
+      filters = Jason.encode!(%{city: "591632"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/city?period=month&date=2019-01-01&filters=#{filters}&q=&with_imported=true"
         )
 
       assert json_response(conn, 200) == [%{"value" => "591632", "label" => "Kärdla"}]
