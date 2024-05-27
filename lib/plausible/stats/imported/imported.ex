@@ -182,28 +182,12 @@ defmodule Plausible.Stats.Imported do
   def merge_imported_filter_suggestions(
         native_q,
         _site,
-        %Plausible.Stats.Query{filters: [_ | _]},
-        _filter_name,
-        _filter_search
-      ) do
-    native_q
-  end
-
-  def merge_imported_filter_suggestions(
-        native_q,
-        _site,
         %Plausible.Stats.Query{include_imported: false},
         _filter_name,
         _filter_search
       ) do
     native_q
   end
-
-  @filter_suggestions_mapping %{
-    referrer_source: :source,
-    screen_size: :device,
-    pathname: :page
-  }
 
   def merge_imported_filter_suggestions(
         native_q,
@@ -212,26 +196,21 @@ defmodule Plausible.Stats.Imported do
         filter_name,
         filter_query
       ) do
-    native_q =
-      native_q
-      |> exclude(:order_by)
-      |> exclude(:select)
-      |> select([e], %{name: field(e, ^filter_name), count: fragment("count(*)")})
+    {table, db_field} = expand_suggestions_field(filter_name)
 
-    db_field = Map.get(@filter_suggestions_mapping, filter_name, filter_name)
+    supports_filter_set? =
+      Enum.all?(query.filters, fn filter ->
+        [_, filtered_prop | _] = filter
+        @property_to_table_mappings[filtered_prop] == table
+      end)
 
-    property_field =
-      case db_field do
-        :operating_system -> :os
-        :operating_system_version -> :os_version
-        other -> other
-      end
+    if supports_filter_set? do
+      native_q =
+        native_q
+        |> exclude(:order_by)
+        |> exclude(:select)
+        |> select([e], %{name: field(e, ^filter_name), count: fragment("count(*)")})
 
-    table_by_visit = Map.get(@property_to_table_mappings, "visit:#{property_field}")
-    table_by_event = Map.get(@property_to_table_mappings, "event:#{property_field}")
-    table = table_by_visit || table_by_event
-
-    if table do
       imported_q =
         from i in Imported.Base.query_imported(table, site, query),
           where: fragment("? ilike ?", field(i, ^db_field), ^filter_query),
@@ -248,6 +227,29 @@ defmodule Plausible.Stats.Imported do
     else
       native_q
     end
+  end
+
+  @filter_suggestions_mapping %{
+    referrer_source: :source,
+    screen_size: :device,
+    pathname: :page
+  }
+
+  defp expand_suggestions_field(filter_name) do
+    db_field = Map.get(@filter_suggestions_mapping, filter_name, filter_name)
+
+    property =
+      case db_field do
+        :operating_system -> :os
+        :operating_system_version -> :os_version
+        other -> other
+      end
+
+    table_by_visit = Map.get(@property_to_table_mappings, "visit:#{property}")
+    table_by_event = Map.get(@property_to_table_mappings, "event:#{property}")
+    table = table_by_visit || table_by_event
+
+    {table, db_field}
   end
 
   def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{include_imported: false}, _),

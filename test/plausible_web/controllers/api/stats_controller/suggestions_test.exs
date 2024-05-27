@@ -1090,7 +1090,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       end
     end
 
-    test "does not query imported data when filters applied", %{
+    test "does not query imported data when a different property is filtered by", %{
       conn: conn,
       site: site,
       site_import: site_import
@@ -1113,6 +1113,32 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         )
 
       assert json_response(conn, 200) == [%{"value" => "Linux", "label" => "Linux"}]
+    end
+
+    test "queries imported data when filtering by the same property", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:01],
+          pathname: "/blog",
+          operating_system: "Linux"
+        ),
+        build(:imported_operating_systems, date: ~D[2019-01-01], operating_system: "Windows"),
+        build(:imported_operating_systems, date: ~D[2019-01-01], operating_system: "Linux")
+      ])
+
+      filters = Jason.encode!(%{os: "!Linux"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/operating_system?period=month&date=2019-01-01&filters=#{filters}&q=&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [%{"value" => "Windows", "label" => "Windows"}]
     end
   end
 end
