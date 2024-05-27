@@ -1112,7 +1112,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert team_member_usage_row_text == "Team members 0"
     end
 
-    test "redners 2FA section in disabled state", %{conn: conn} do
+    test "renders 2FA section in disabled state", %{conn: conn} do
       conn = get(conn, "/settings")
 
       assert html_response(conn, 200) =~ "Enable 2FA"

@@ -172,7 +172,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
                "Google Analytics API has timed out."
     end
 
-    test "redirects to imports and exports on list retrival failure with flash error",
+    test "redirects to imports and exports on list retrieval failure with flash error",
          %{
            conn: conn,
            site: site

@@ -756,7 +756,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     setup tags do
       if tags[:async] do
-        raise "this test modifies application envinronment and can't be run asynchronously"
+        raise "this test modifies application environment and can't be run asynchronously"
       end
 
       prev_env = Application.get_env(:ex_aws, :s3)
@@ -1556,7 +1556,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert is_nil(site.domain_changed_from)
     end
 
-    test "domain change succcessful form submission redirects to snippet change info", %{
+    test "domain change successful form submission redirects to snippet change info", %{
       conn: conn,
       site: site
     } do
