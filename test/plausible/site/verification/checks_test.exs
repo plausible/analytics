@@ -671,6 +671,27 @@ defmodule Plausible.Verification.ChecksTest do
 
       assert_receive :redirect_sent
     end
+
+    @many_snippets_with_domain_mismatch """
+    <html>
+    <head>
+    <script defer data-domain="example.org" src="https://plausible.io/js/script.js"></script>
+    <script defer data-domain="example.org" src="https://plausible.io/js/script.js"></script>
+    </head>
+    <body>
+    Hello
+    </body>
+    </html>
+    """
+
+    test "prioritizes data-domain mismatch over multiple snippets" do
+      stub_fetch_body(200, @many_snippets_with_domain_mismatch)
+      stub_installation()
+
+      run_checks()
+      |> Checks.interpret_diagnostics()
+      |> assert_error(@errors.different_data_domain, domain: "example.com")
+    end
   end
 
   defp run_checks(extra_opts \\ []) do

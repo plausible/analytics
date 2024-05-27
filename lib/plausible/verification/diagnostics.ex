@@ -187,6 +187,10 @@ defmodule Plausible.Verification.Diagnostics do
     error(@errors.proxy_general)
   end
 
+  def interpret(%__MODULE__{data_domain_mismatch?: true}, "https://" <> domain) do
+    error(@errors.different_data_domain, domain: domain)
+  end
+
   def interpret(
         %__MODULE__{snippets_found_in_head: count_head, snippets_found_in_body: count_body},
         _url
@@ -236,10 +240,6 @@ defmodule Plausible.Verification.Diagnostics do
   def interpret(%__MODULE__{snippets_found_in_head: 0, snippets_found_in_body: n}, _url)
       when n >= 1 do
     error(@errors.snippet_in_body)
-  end
-
-  def interpret(%__MODULE__{data_domain_mismatch?: true}, "https://" <> domain) do
-    error(@errors.different_data_domain, domain: domain)
   end
 
   def interpret(
