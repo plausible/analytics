@@ -33,6 +33,7 @@ defmodule Plausible.Stats.Imported do
     "event:props:path" => "imported_custom_events",
 
     # NOTE: these properties can be only filtered by
+    # TODO: add support for breaking down by translating to device breakdown
     "visit:screen" => "imported_devices",
     "event:hostname" => "imported_pages"
   }
@@ -86,7 +87,7 @@ defmodule Plausible.Stats.Imported do
     )
   end
 
-  def merged_imported_countries(native_q, site, query) do
+  def merge_imported_countries(native_q, site, query) do
     native_q =
       native_q
       |> exclude(:order_by)

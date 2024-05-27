@@ -634,4 +634,30 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
              }
     end
   end
+
+  describe "imported data - country" do
+    setup [:create_user, :log_in, :create_site, :create_site_import]
+
+    test "it works", %{conn: conn, site: site, site_import: site_import} do
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:01],
+          pathname: "/",
+          country_code: "US"
+        ),
+        build(:imported_locations,
+          date: ~D[2019-01-01],
+          country: "PL"
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/country?period=month&date=2019-01-01&q=Unit"
+        )
+
+      assert json_response(conn, 200) == [%{"value" => "US", "label" => "United States"}]
+    end
+  end
 end

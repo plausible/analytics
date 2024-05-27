@@ -16,7 +16,7 @@ defmodule Plausible.Stats.FilterSuggestions do
         order_by: [desc: fragment("count(*)")],
         select: e.country_code
       )
-      |> Plausible.Stats.Imported.merged_imported_countries(site, query)
+      |> Plausible.Stats.Imported.merge_imported_countries(site, query)
 
     ClickhouseRepo.all(q)
     |> Enum.map(fn c -> Enum.find(matches, fn x -> x.alpha_2 == c end) end)
