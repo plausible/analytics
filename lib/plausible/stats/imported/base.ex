@@ -80,6 +80,7 @@ defmodule Plausible.Stats.Imported.Base do
 
     cond do
       is_nil(property) -> table_candidate
+      property == "visit:device" and filtered_prop == "visit:screen" -> table_candidate
       property == filtered_prop -> table_candidate
       true -> nil
     end

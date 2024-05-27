@@ -3158,6 +3158,37 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   describe "imported data" do
+    test "returns screen sizes breakdown when filtering by screen size", %{conn: conn, site: site} do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          timestamp: ~N[2021-01-01 00:00:01],
+          screen_size: "Mobile"
+        ),
+        build(:imported_devices,
+          device: "Mobile",
+          visitors: 3,
+          pageviews: 5,
+          date: ~D[2021-01-01]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:device",
+          "filters" => "visit:device==Mobile",
+          "metrics" => "visitors,pageviews",
+          "with_imported" => "true"
+        })
+
+      assert [%{"pageviews" => 6, "visitors" => 4, "device" => "Mobile"}] =
+               json_response(conn, 200)["results"]
+    end
+
     test "returns custom event goals and pageview goals", %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Purchase")
       insert(:goal, site: site, page_path: "/test")

@@ -187,6 +187,27 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
              ]
     end
 
+    test "returns screen sizes when filtering by imported screen size", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, screen_size: "Desktop"),
+        build(:imported_devices, device: "Desktop"),
+        build(:imported_devices, device: "Laptop"),
+        build(:imported_visitors, visitors: 2)
+      ])
+
+      filters = Jason.encode!(%{screen: "Desktop"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/screen-sizes?filters=#{filters}&period=day&with_imported=true"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{"name" => "Desktop", "visitors" => 2, "percentage" => 100.0}
+             ]
+    end
+
     test "returns screen sizes for user making multiple sessions by no of visitors with imported data",
          %{conn: conn, site: site} do
       populate_stats(site, [
