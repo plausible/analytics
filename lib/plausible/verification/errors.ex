@@ -110,7 +110,8 @@ defmodule Plausible.Verification.Errors do
       message: "A performance optimization plugin seems to have altered our snippet",
       recommendation:
         "Please whitelist our script in your performance optimization plugin to stop it from changing our snippet",
-      url: "https://plausible.io/wordpress-analytics-plugin"
+      url:
+        "https://plausible.io/docs/troubleshoot-integration#has-some-other-plugin-altered-our-snippet"
     },
     illegal_attrs_wp_no_plugin: %{
       message: "A performance optimization plugin seems to have altered our snippet",
