@@ -23,8 +23,6 @@ defmodule Plausible.Stats.Imported.Base do
     pathname: :page
   }
 
-  def db_field_mappings(), do: @db_field_mappings
-
   def query_imported(site, query) do
     query = Imported.drop_redundant_filters(query)
 

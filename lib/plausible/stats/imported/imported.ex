@@ -87,6 +87,14 @@ defmodule Plausible.Stats.Imported do
     )
   end
 
+  def merge_imported_countries(native_q, _site, %Plausible.Stats.Query{filters: [_ | _]}) do
+    native_q
+  end
+
+  def merge_imported_countries(native_q, _site, %Plausible.Stats.Query{include_imported: false}) do
+    native_q
+  end
+
   def merge_imported_countries(native_q, site, query) do
     native_q =
       native_q
@@ -97,7 +105,7 @@ defmodule Plausible.Stats.Imported do
     imported_q =
       from i in Imported.Base.query_imported("imported_locations", site, query),
         group_by: i.country,
-        select_merge: %{country_code: i.country, count: fragment("count(*)")}
+        select_merge: %{country_code: i.country, count: fragment("sum(?)", i.pageviews)}
 
     from(s in subquery(native_q),
       full_join: i in subquery(imported_q),
@@ -105,6 +113,14 @@ defmodule Plausible.Stats.Imported do
       select: fragment("if(not empty(?), ?, ?)", s.country_code, s.country_code, i.country_code),
       order_by: [desc: fragment("? + ?", s.count, i.count)]
     )
+  end
+
+  def merge_imported_regions(native_q, _site, %Plausible.Stats.Query{filters: [_ | _]}) do
+    native_q
+  end
+
+  def merge_imported_regions(native_q, _site, %Plausible.Stats.Query{include_imported: false}) do
+    native_q
   end
 
   def merge_imported_regions(native_q, site, query) do
@@ -118,7 +134,7 @@ defmodule Plausible.Stats.Imported do
       from i in Imported.Base.query_imported("imported_locations", site, query),
         where: i.region != "",
         group_by: i.region,
-        select_merge: %{region_code: i.region, count: fragment("count(*)")}
+        select_merge: %{region_code: i.region, count: fragment("sum(?)", i.pageviews)}
 
     from(s in subquery(native_q),
       full_join: i in subquery(imported_q),
@@ -126,6 +142,15 @@ defmodule Plausible.Stats.Imported do
       select: fragment("if(not empty(?), ?, ?)", s.region_code, s.region_code, i.region_code),
       order_by: [desc: fragment("? + ?", s.count, i.count)]
     )
+  end
+
+  #NOTE: rename location merge functions adding _suggestions suffix
+  def merge_imported_cities(native_q, _site, %Plausible.Stats.Query{filters: [_ | _]}) do
+    native_q
+  end
+
+  def merge_imported_cities(native_q, _site, %Plausible.Stats.Query{include_imported: false}) do
+    native_q
   end
 
   def merge_imported_cities(native_q, site, query) do
@@ -139,7 +164,7 @@ defmodule Plausible.Stats.Imported do
       from i in Imported.Base.query_imported("imported_locations", site, query),
         where: i.city != 0,
         group_by: i.city,
-        select_merge: %{city_id: i.city, count: fragment("count(*)")}
+        select_merge: %{city_id: i.city, count: fragment("sum(?)", i.pageviews)}
 
     from(s in subquery(native_q),
       full_join: i in subquery(imported_q),
@@ -152,12 +177,28 @@ defmodule Plausible.Stats.Imported do
   def merge_imported_filter_suggestions(
         native_q,
         _site,
+        %Plausible.Stats.Query{filters: [_ | _]},
+        _filter_name,
+        _filter_search
+      ) do
+    native_q
+  end
+
+  def merge_imported_filter_suggestions(
+        native_q,
+        _site,
         %Plausible.Stats.Query{include_imported: false},
         _filter_name,
         _filter_search
       ) do
     native_q
   end
+
+  @filter_suggestions_mapping %{
+    referrer_source: :source,
+    screen_size: :device,
+    pathname: :page
+  }
 
   def merge_imported_filter_suggestions(
         native_q,
@@ -172,7 +213,7 @@ defmodule Plausible.Stats.Imported do
       |> exclude(:select)
       |> select([e], %{name: field(e, ^filter_name), count: fragment("count(*)")})
 
-    db_field = Map.get(Imported.Base.db_field_mappings(), filter_name, filter_name)
+    db_field = Map.get(@filter_suggestions_mapping, filter_name, filter_name)
 
     property_field =
       case db_field do
@@ -185,12 +226,12 @@ defmodule Plausible.Stats.Imported do
     table_by_event = Map.get(@property_to_table_mappings, "event:#{property_field}")
     table = table_by_visit || table_by_event
 
-    if db_field && table do
+    if table do
       imported_q =
         from i in Imported.Base.query_imported(table, site, query),
           where: fragment("? ilike ?", field(i, ^db_field), ^filter_query),
           group_by: field(i, ^db_field),
-          select_merge: %{name: field(i, ^db_field), count: fragment("count(*)")}
+          select_merge: %{name: field(i, ^db_field), count: fragment("sum(?)", i.pageviews)}
 
       from(s in subquery(native_q),
         full_join: i in subquery(imported_q),
