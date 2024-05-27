@@ -87,15 +87,17 @@ defmodule Plausible.Stats.Imported do
     )
   end
 
-  def merge_imported_countries(native_q, _site, %Plausible.Stats.Query{filters: [_ | _]}) do
+  def merge_imported_country_suggestions(native_q, _site, %Plausible.Stats.Query{filters: [_ | _]}) do
     native_q
   end
 
-  def merge_imported_countries(native_q, _site, %Plausible.Stats.Query{include_imported: false}) do
+  def merge_imported_country_suggestions(native_q, _site, %Plausible.Stats.Query{
+        include_imported: false
+      }) do
     native_q
   end
 
-  def merge_imported_countries(native_q, site, query) do
+  def merge_imported_country_suggestions(native_q, site, query) do
     native_q =
       native_q
       |> exclude(:order_by)
@@ -115,15 +117,17 @@ defmodule Plausible.Stats.Imported do
     )
   end
 
-  def merge_imported_regions(native_q, _site, %Plausible.Stats.Query{filters: [_ | _]}) do
+  def merge_imported_region_suggestions(native_q, _site, %Plausible.Stats.Query{filters: [_ | _]}) do
     native_q
   end
 
-  def merge_imported_regions(native_q, _site, %Plausible.Stats.Query{include_imported: false}) do
+  def merge_imported_region_suggestions(native_q, _site, %Plausible.Stats.Query{
+        include_imported: false
+      }) do
     native_q
   end
 
-  def merge_imported_regions(native_q, site, query) do
+  def merge_imported_region_suggestions(native_q, site, query) do
     native_q =
       native_q
       |> exclude(:order_by)
@@ -144,16 +148,17 @@ defmodule Plausible.Stats.Imported do
     )
   end
 
-  #NOTE: rename location merge functions adding _suggestions suffix
-  def merge_imported_cities(native_q, _site, %Plausible.Stats.Query{filters: [_ | _]}) do
+  def merge_imported_city_suggestions(native_q, _site, %Plausible.Stats.Query{filters: [_ | _]}) do
     native_q
   end
 
-  def merge_imported_cities(native_q, _site, %Plausible.Stats.Query{include_imported: false}) do
+  def merge_imported_city_suggestions(native_q, _site, %Plausible.Stats.Query{
+        include_imported: false
+      }) do
     native_q
   end
 
-  def merge_imported_cities(native_q, site, query) do
+  def merge_imported_city_suggestions(native_q, site, query) do
     native_q =
       native_q
       |> exclude(:order_by)

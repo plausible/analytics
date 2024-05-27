@@ -2,9 +2,12 @@ defmodule Plausible.Stats.FilterSuggestions do
   use Plausible.Repo
   use Plausible.ClickhouseRepo
   use Plausible.Stats.Fragments
+
   import Plausible.Stats.Base
   import Ecto.Query
+
   alias Plausible.Stats.Query
+  alias Plausible.Stats.Imported
 
   def filter_suggestions(site, query, "country", filter_search) do
     matches = Location.search_country(filter_search)
@@ -16,7 +19,7 @@ defmodule Plausible.Stats.FilterSuggestions do
         order_by: [desc: fragment("count(*)")],
         select: e.country_code
       )
-      |> Plausible.Stats.Imported.merge_imported_countries(site, query)
+      |> Imported.merge_imported_country_suggestions(site, query)
 
     ClickhouseRepo.all(q)
     |> Enum.map(fn c -> Enum.find(matches, fn x -> x.alpha_2 == c end) end)
@@ -38,7 +41,7 @@ defmodule Plausible.Stats.FilterSuggestions do
       select: e.subdivision1_code,
       where: e.subdivision1_code != ""
     )
-    |> Plausible.Stats.Imported.merge_imported_regions(site, query)
+    |> Imported.merge_imported_region_suggestions(site, query)
     |> limit(24)
     |> ClickhouseRepo.all()
     |> Enum.map(fn c ->
@@ -61,7 +64,7 @@ defmodule Plausible.Stats.FilterSuggestions do
         order_by: [desc: fragment("count(*)")],
         select: e.subdivision1_code
       )
-      |> Plausible.Stats.Imported.merge_imported_regions(site, query)
+      |> Imported.merge_imported_region_suggestions(site, query)
 
     ClickhouseRepo.all(q)
     |> Enum.map(fn c -> Enum.find(matches, fn x -> x.code == c end) end)
@@ -83,7 +86,7 @@ defmodule Plausible.Stats.FilterSuggestions do
       select: e.city_geoname_id,
       where: e.city_geoname_id != 0
     )
-    |> Plausible.Stats.Imported.merge_imported_cities(site, query)
+    |> Imported.merge_imported_city_suggestions(site, query)
     |> limit(24)
     |> ClickhouseRepo.all()
     |> Enum.map(fn c ->
@@ -107,7 +110,7 @@ defmodule Plausible.Stats.FilterSuggestions do
         select: e.city_geoname_id,
         where: e.city_geoname_id != 0
       )
-      |> Plausible.Stats.Imported.merge_imported_cities(site, query)
+      |> Imported.merge_imported_city_suggestions(site, query)
       |> limit(5000)
 
     ClickhouseRepo.all(q)
@@ -231,7 +234,7 @@ defmodule Plausible.Stats.FilterSuggestions do
       order_by: [desc: fragment("count(*)")]
     )
     |> apply_additional_filters(filter_name, site)
-    |> Plausible.Stats.Imported.merge_imported_filter_suggestions(
+    |> Imported.merge_imported_filter_suggestions(
       site,
       query,
       filter_name,
