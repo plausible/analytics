@@ -31,7 +31,7 @@ defmodule Plausible.PaginationTest do
     assert Enum.count(pagination.entries) == Enum.count(sites)
   end
 
-  test "user provided limit exceeeds maximum limit", %{query: q} do
+  test "user provided limit exceeds maximum limit", %{query: q} do
     pagination = Pagination.paginate(q, %{"limit" => 200}, cursor_fields: [id: :desc])
     assert pagination.metadata.limit == 10
   end

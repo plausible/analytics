@@ -1,6 +1,6 @@
 defmodule Plausible.Funnel.Const do
   @moduledoc """
-  Compile-time convience constants for funnel characteristics.
+  Compile-time convenience constants for funnel characteristics.
   """
   @min_steps 2
   @max_steps 8
