@@ -127,7 +127,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
-    for property <- ["event:name", "event:goal", "event:props:custom_prop"] do
+    for property <- ["event:name", "event:goal"] do
       test "validates that session metrics cannot be used with #{property} filter", %{
         conn: conn,
         site: site
@@ -1388,6 +1388,50 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                "visitors" => %{"value" => 2},
                "events" => %{"value" => 3},
                "pageviews" => %{"value" => 2}
+             }
+    end
+
+    test "filtering by a custom property", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: @user_id,
+          "meta.key": ["logged_in"],
+          "meta.value": ["true"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          "meta.key": ["logged_in"],
+          "meta.value": ["true"],
+          timestamp: ~N[2021-01-01 00:20:00]
+        ),
+        build(:pageview,
+          "meta.key": ["logged_in"],
+          "meta.value": ["false"],
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview,
+          "meta.key": ["logged_in"],
+          "meta.value": ["true"],
+          timestamp: ~N[2021-01-02 00:25:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,pageviews,visits,visit_duration,bounce_rate",
+          "filters" => "event:props:logged_in==true"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "bounce_rate" => %{"value" => 50},
+               "pageviews" => %{"value" => 3},
+               "visit_duration" => %{"value" => 600},
+               "visitors" => %{"value" => 2},
+               "visits" => %{"value" => 2}
              }
     end
 

@@ -251,7 +251,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp event_only_property?("event:name"), do: true
   defp event_only_property?("event:goal"), do: true
-  defp event_only_property?("event:props:" <> _), do: true
   defp event_only_property?(_), do: false
 
   def timeseries(conn, params) do

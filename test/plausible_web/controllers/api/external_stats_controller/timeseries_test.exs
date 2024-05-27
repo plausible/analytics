@@ -1039,7 +1039,63 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       assert List.first(res["results"]) == %{"date" => "2021-01-01", "visitors" => 1}
     end
 
-    test "filter by custom event property", %{conn: conn, site: site} do
+    test "session metrics by custom props", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: @user_id,
+          "meta.key": ["logged_in"],
+          "meta.value": ["true"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          "meta.key": ["logged_in"],
+          "meta.value": ["true"],
+          timestamp: ~N[2021-01-01 00:20:00]
+        ),
+        build(:pageview,
+          "meta.key": ["logged_in"],
+          "meta.value": ["false"],
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview,
+          "meta.key": ["logged_in"],
+          "meta.value": ["true"],
+          timestamp: ~N[2021-01-02 00:25:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,visits,visit_duration,pageviews,bounce_rate",
+          "filters" => "event:props:logged_in==true"
+        })
+
+      %{"results" => [first, second | _rest]} = json_response(conn, 200)
+
+      assert first == %{
+               "date" => "2021-01-01",
+               "visitors" => 1,
+               "visits" => 1,
+               "visit_duration" => 1200,
+               "pageviews" => 2,
+               "bounce_rate" => 0
+             }
+
+      assert second == %{
+               "date" => "2021-01-02",
+               "visitors" => 1,
+               "visits" => 1,
+               "visit_duration" => 0,
+               "pageviews" => 1,
+               "bounce_rate" => 100
+             }
+    end
+
+    test "filter by custom event and custom property", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event,
           name: "Purchase",
@@ -1076,6 +1132,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
         })
 
       %{"results" => [first, second | _rest]} = json_response(conn, 200)
+
       assert first == %{"date" => "2021-01-01", "visitors" => 2}
       assert second == %{"date" => "2021-01-02", "visitors" => 1}
     end
@@ -1523,6 +1580,51 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                  %{"date" => "2021-01-07", "views_per_visit" => 1.0}
                ]
              }
+    end
+  end
+
+  describe "metric validation" do
+    for metric_name <- ["visits", "bounce_rate", "visit_duration"] do
+      test "does not allow requesting #{metric_name} metric with goal filter", %{
+        conn: conn,
+        site: site
+      } do
+        insert(:goal, site: site, event_name: "Purchase")
+        metric = unquote(metric_name)
+
+        conn =
+          get(conn, "/api/v1/stats/timeseries", %{
+            "site_id" => site.domain,
+            "metrics" => metric,
+            "filters" => "event:goal==Purchase"
+          })
+
+        %{"error" => error} = json_response(conn, 400)
+
+        assert error ==
+                 "Session metric `#{metric}` cannot be queried when using a filter on `event:goal`."
+      end
+    end
+
+    for metric_name <- ["visits", "bounce_rate", "visit_duration"] do
+      test "does not allow requesting #{metric_name} metric with event name filter", %{
+        conn: conn,
+        site: site
+      } do
+        metric = unquote(metric_name)
+
+        conn =
+          get(conn, "/api/v1/stats/timeseries", %{
+            "site_id" => site.domain,
+            "metrics" => metric,
+            "filters" => "event:name==Purchase"
+          })
+
+        %{"error" => error} = json_response(conn, 400)
+
+        assert error ==
+                 "Session metric `#{metric}` cannot be queried when using a filter on `event:name`."
+      end
     end
   end
 
