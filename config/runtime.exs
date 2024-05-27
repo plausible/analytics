@@ -494,6 +494,15 @@ case mailer_adapter do
         port: port
     end
 
+    default_mua_ipv6 = to_string(is_selfhost)
+
+    maybe_mua_ipv6 =
+      config_dir
+      |> get_var_from_path_or_env("MUA_IPV6", default_mua_ipv6)
+      |> String.to_existing_atom()
+
+    config :plausible, Plausible.Mailer, transport_opts: [inet6: maybe_mua_ipv6]
+
   "Bamboo.LocalAdapter" ->
     config :plausible, Plausible.Mailer, adapter: Bamboo.LocalAdapter
 
