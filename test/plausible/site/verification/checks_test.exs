@@ -763,8 +763,8 @@ defmodule Plausible.Verification.ChecksTest do
   end
 
   defp assert_error(interpretation, error, assigns) do
-    message = EEx.eval_string(error.message, assigns: assigns)
-    assert_error(interpretation, %{error | message: message})
+    recommendation = EEx.eval_string(error.recommendation, assigns: assigns)
+    assert_error(interpretation, %{error | recommendation: recommendation})
   end
 
   defp assert_ok(interpretation) do

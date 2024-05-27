@@ -11,8 +11,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
   attr :domain, :string, required: true
   attr :modal?, :boolean, default: false
 
-  attr :message, :string,
-    default: "We're visiting your site to ensure that everything is working correctly"
+  attr :message, :string, default: "We're visiting your site to ensure that everything is working"
 
   attr :finished?, :boolean, default: false
   attr :success?, :boolean, default: false
@@ -21,93 +20,87 @@ defmodule PlausibleWeb.Live.Components.Verification do
 
   def render(assigns) do
     ~H"""
-    <div class={[
-      "bg-white dark:bg-gray-800 text-center h-96 flex flex-col",
-      if(!@modal?, do: "shadow-md rounded px-8 pt-6 pb-4 mb-4 mt-16")
-    ]}>
-      <h2 class="text-xl font-bold dark:text-gray-100">
-        <%= if @success? && @finished? do %>
-          Success!
-        <% else %>
-          Verifying your integration
-        <% end %>
-      </h2>
-      <h2 class="text-xl dark:text-gray-100 text-xs">
-        <%= if @finished? && @success? do %>
-          Your integration is working and visitors are being counted accurately
-        <% else %>
-          on <%= @domain %>
-        <% end %>
-      </h2>
+    <div
+      class={[
+        "dark:text-gray-100 text-center bg-white dark:bg-gray-800 flex flex-col",
+        if(not @modal?, do: "shadow-md rounded px-8 pt-6 pb-4 mb-4 mt-16 h-96", else: "h-72")
+      ]}
+      id="progress-indicator"
+    >
       <div
-        :if={!@finished? || @success?}
-        class="flex justify-center w-full my-auto"
-        id="progress-indicator"
+        :if={not @finished? or (not @modal? and @success?)}
+        class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-gray-700"
       >
-        <div class={["block pulsating-circle", if(@modal? && @finished?, do: "hidden")]}></div>
-        <Heroicons.check_circle
-          :if={@modal? && @finished? && @success?}
-          id="check-circle"
-          solid
-          class="w-24 h-24 text-green-500 pt-8"
+        <div class="block pulsating-circle" }></div>
+      </div>
+
+      <div
+        :if={@finished? and @success? and @modal?}
+        class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-500"
+        id="check-circle"
+      >
+        <Heroicons.check_badge class="h-6 w-6 text-green-600 bg-green-100 dark:bg-green-500 dark:text-green-200" />
+      </div>
+
+      <div
+        :if={@finished? and not @success?}
+        class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-200"
+        id="error-circle"
+      >
+        <Heroicons.exclamation_triangle class="h-6 w-6 text-red-600 bg-red-100 dark:bg-red-200 dark:text-red-800" />
+      </div>
+
+      <div class="mt-6">
+        <h3 class="font-semibold leading-6 text-xl">
+          <span :if={@finished? and @success?}>Success!</span>
+          <span :if={not @finished?}>Verifying your integration</span>
+
+          <span :if={@finished? and not @success? and @interpretation}>
+            <%= List.first(@interpretation.errors) %>
+          </span>
+        </h3>
+        <p id="progress" :if={@finished? and @success? and @modal?} class="mt-2">
+          Your integration is working and visitors are being counted accurately
+        </p>
+        <p id="progress" :if={@finished? and @success? and not @modal?} class="mt-2 animate-pulse">
+          Your integration is working. Awaiting your first pageview.
+        </p>
+        <p :if={not @finished?} class="mt-2 animate-pulse" id="progress"><%= @message %></p>
+
+        <.recommendations
+          :if={@finished? and not @success? and @interpretation}
+          interpretation={@interpretation}
         />
       </div>
 
-      <div
-        :if={@finished? && !@success?}
-        class="flex justify-center pt-3 h-14 mb-4 dark:text-gray-400 "
-        id="progress-indicator"
-      >
-        <.shuttle width={50} height={50} />
-      </div>
-      <div
-        id="progress"
-        class={[
-          "mt-2 dark:text-gray-400",
-          if(!@finished?, do: "animate-pulse text-xs", else: "font-bold text-sm"),
-          if(@finished? && !@success?, do: "text-red-500 dark:text-red-600")
-        ]}
-      >
-        <p id="progress-message" class="leading-normal">
-          <span :if={!@finished?}><%= @message %></span>
-          <span :if={@finished? && !@success? && @interpretation && @interpretation.errors}>
-            <%= List.first(@interpretation.errors) %>
-            <div class="text-xs dark:text-gray-400 font-normal mt-1" id="recommendations">
-              <.recommendations interpretation={@interpretation} />
-            </div>
-          </span>
-          <p
-            :if={@finished? && @success? && !@modal?}
-            class="leading-normal animate-pulse text-xs font-normal"
-          >
-            Awaiting your first pageview.
-          </p>
-        </p>
+      <div :if={@finished?} class="mt-auto">
+        <.button_link :if={not @success?} href="#" phx-click="retry" class="font-bold w-full">
+          Verify integration again
+        </.button_link>
+        <.button_link
+          :if={@success?}
+          href={"/#{URI.encode_www_form(@domain)}?skip_to_dashboard=true"}
+          class="w-full font-bold mb-4"
+        >
+          Go to the dashboard
+        </.button_link>
       </div>
 
-      <div class="mt-auto pb-2 text-gray-600 dark:text-gray-400 text-xs w-full text-center leading-normal">
-        <div :if={@finished?} class="mb-4">
-          <div class="flex justify-center gap-x-4 mt-4">
-            <.button_link :if={!@success?} href="#" phx-click="retry" class="text-xs font-bold">
-              Verify integration again
-            </.button_link>
-            <.button_link
-              :if={@success?}
-              href={"/#{URI.encode_www_form(@domain)}?skip_to_dashboard=true"}
-              class="text-xs font-bold"
-            >
-              Go to the dashboard
-            </.button_link>
-          </div>
-        </div>
-        <%= if ee?() && @finished? && !@success? && @attempts >= 3 do %>
+      <div
+        :if={
+          (not @modal? and not @success?) or
+            (@finished? and not @success?)
+        }
+        class="mt-auto text-sm"
+      >
+        <%= if ee?() and @finished? and not @success? and @attempts >= 3 do %>
           Need further help with your integration? Do
           <.styled_link href="https://plausible.io/contact">
             contact us
           </.styled_link>
           <br />
         <% end %>
-        <%= if !@modal? && !@success? do %>
+        <%= if not @success? and not @modal? do %>
           Need to see the snippet again?
           <.styled_link href={"/#{URI.encode_www_form(@domain)}/snippet"}>
             Click here
@@ -125,16 +118,11 @@ defmodule PlausibleWeb.Live.Components.Verification do
 
   def recommendations(assigns) do
     ~H"""
-    <p class="leading-normal">
+    <p class="mt-2" id="recommendations">
       <span :for={recommendation <- @interpretation.recommendations} class="recommendation">
         <span :if={is_binary(recommendation)}><%= recommendation %></span>
-        <span :if={is_tuple(recommendation)}><%= elem(recommendation, 0) %> -</span>
-        <.styled_link
-          :if={is_tuple(recommendation)}
-          href={elem(recommendation, 1)}
-          new_tab={true}
-          class="text-xs"
-        >
+        <span :if={is_tuple(recommendation)}><%= elem(recommendation, 0) %>.&nbsp;</span>
+        <.styled_link :if={is_tuple(recommendation)} href={elem(recommendation, 1)} new_tab={true}>
           Learn more
         </.styled_link>
         <br />

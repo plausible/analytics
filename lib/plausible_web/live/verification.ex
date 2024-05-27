@@ -128,7 +128,7 @@ defmodule PlausibleWeb.Live.Verification do
 
   defp reset_component(socket) do
     update_component(socket,
-      message: "We're visiting your site to ensure that everything is working correctly",
+      message: "We're visiting your site to ensure that everything is working",
       finished?: false,
       success?: false,
       diagnostics: nil

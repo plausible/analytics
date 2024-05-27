@@ -10,17 +10,17 @@ defmodule PlausibleWeb.Live.VerificationTest do
   @verification_modal ~s|div#verification-modal|
   @retry_button ~s|a[phx-click="retry"]|
   @go_to_dashboard_button ~s|a[href$="?skip_to_dashboard=true"]|
-  @progress ~s|div#progress|
+  @progress ~s|#progress-indicator p#progress|
+  @heading ~s|#progress-indicator h3|
 
   describe "GET /:domain" do
     test "static verification screen renders", %{conn: conn, site: site} do
       resp = conn |> no_slowdown() |> get("/#{site.domain}") |> html_response(200)
 
       assert text_of_element(resp, @progress) =~
-               "We're visiting your site to ensure that everything is working correctly"
+               "We're visiting your site to ensure that everything is working"
 
       assert resp =~ "Verifying your integration"
-      assert resp =~ "on #{site.domain}"
       assert resp =~ "Need to see the snippet again?"
       assert resp =~ "Run verification later and go to Site Settings?"
       refute resp =~ "modal"
@@ -46,10 +46,9 @@ defmodule PlausibleWeb.Live.VerificationTest do
       {_, html} = get_lv_standalone(conn, site)
 
       assert html =~ "Verifying your integration"
-      assert html =~ "on #{site.domain}"
 
       assert text_of_element(html, @progress) =~
-               "We're visiting your site to ensure that everything is working correctly"
+               "We're visiting your site to ensure that everything is working"
     end
 
     test "eventually verifies installation", %{conn: conn, site: site} do
@@ -70,7 +69,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
       html = render(lv)
       assert html =~ "Success!"
-      assert html =~ "Your integration is working and visitors are being counted accurately"
+      assert html =~ "Your integration is working"
     end
 
     test "eventually fails to verify installation", %{conn: conn, site: site} do
@@ -85,8 +84,8 @@ defmodule PlausibleWeb.Live.VerificationTest do
                  {html =~ "", html}
 
                  {
-                   text_of_element(html, @progress) =~
-                     "We couldn't find the Plausible snippet on your site",
+                   text_of_element(html, @heading) =~
+                     "We couldn't find the Plausible snippet",
                    html
                  }
                end)
@@ -123,7 +122,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
       assert text_of_attr(html, @verify_button, "x-on:click") =~ "open-modal"
 
       assert text_of_element(html, @progress) =~
-               "We're visiting your site to ensure that everything is working correctly"
+               "We're visiting your site to ensure that everything is working"
 
       lv |> element(@verify_button) |> render_click()
 
@@ -153,8 +152,8 @@ defmodule PlausibleWeb.Live.VerificationTest do
                eventually(fn ->
                  html = render(lv)
 
-                 {text_of_element(html, @progress) =~
-                    "We couldn't find the Plausible snippet on your site", html}
+                 {text_of_element(html, @heading) =~
+                    "We couldn't find the Plausible snippet", html}
                end)
 
       assert element_exists?(html, @retry_button)
