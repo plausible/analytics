@@ -14,7 +14,7 @@ defmodule Plausible.Verification.Errors do
       message: "We encountered an issue with your site's CSP",
       recommendation:
         "Please add plausible.io domain specifically to the allowed list of domains in your Content Security Policy (CSP)",
-      url: "https://plausible.io/docs/troubleshoot-integration"
+      url: "https://plausible.io/docs/troubleshoot-integration#does-your-site-use-a-content-security-policy-csp"
     },
     unreachable: %{
       message: "We couldn't reach <%= @url %>. Is your site up?",
@@ -30,13 +30,14 @@ defmodule Plausible.Verification.Errors do
     temporary: %{
       message: "We encountered a temporary problem verifying your website",
       recommendation: "Please try again in a few minutes or manually check your integration",
-      url: "https://plausible.io/docs/troubleshoot-integration"
+      url: "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
     },
     old_script: %{
       message: "We encountered a problem trying to verify your website",
       recommendation:
         "The integration may be working but as you're running an older version of our script, we cannot verify it automatically. Please manually check your integration or update to use the latest script",
-      url: "https://plausible.io/docs/troubleshoot-integration"
+      url:
+        "https://plausible.io/docs/troubleshoot-integration#are-you-using-an-older-version-of-our-script"
     },
     old_script_wp_no_plugin: %{
       message: "We encountered a problem trying to verify your website",
@@ -69,7 +70,7 @@ defmodule Plausible.Verification.Errors do
     multiple_snippets: %{
       message: "We've found multiple Plausible snippets on your site.",
       recommendation: "Please ensure that only one snippet is used",
-      url: "https://plausible.io/docs/troubleshoot-integration"
+      url: "https://plausible.io/docs/troubleshoot-integration#did-you-insert-multiple-plausible-snippets-into-your-site"
     },
     cache_wp_plugin: %{
       message: "We encountered an issue with your site cache",
@@ -87,7 +88,7 @@ defmodule Plausible.Verification.Errors do
       message: "We encountered an issue with your site cache",
       recommendation:
         "Please clear your cache (or wait for your provider to clear it) to ensure that the latest version of your site is being displayed to all your visitors",
-      url: "https://plausible.io/docs/troubleshoot-integration"
+      url: "https://plausible.io/docs/troubleshoot-integration#have-you-cleared-the-cache-of-your-site"
     },
     snippet_in_body: %{
       message: "Plausible snippet is placed in the body of your site",
@@ -98,31 +99,31 @@ defmodule Plausible.Verification.Errors do
       message: "Your data-domain is different than <%= @domain %>",
       recommendation:
         "Please ensure that the site in the data-domain attribute is an exact match to the site as you added it to your Plausible account",
-      url: "https://plausible.io/docs/troubleshoot-integration"
+      url: "https://plausible.io/docs/troubleshoot-integration#have-you-added-the-correct-data-domain-attribute-in-the-plausible-snippet"
     },
     illegal_attrs_wp_plugin: %{
       message: "A performance optimization plugin seems to have altered our snippet",
       recommendation:
         "Please whitelist our script in your performance optimization plugin to stop it from changing our snippet",
-      url: "https://plausible.io/wordpress-analytics-plugin "
+      url: "https://plausible.io/wordpress-analytics-plugin"
     },
     illegal_attrs_wp_no_plugin: %{
       message: "A performance optimization plugin seems to have altered our snippet",
       recommendation:
         "Please install and activate our WordPress plugin to avoid the most common plugin conflicts",
-      url: "https://plausible.io/wordpress-analytics-plugin "
+      url: "https://plausible.io/wordpress-analytics-plugin"
     },
     illegal_attrs_general: %{
       message: "Something seems to have altered our snippet",
       recommendation:
         "Please manually check your integration to make sure that nothing prevents our script from working",
-      url: "https://plausible.io/docs/troubleshoot-integration"
+      url: "https://plausible.io/docs/troubleshoot-integration#has-some-other-plugin-altered-our-snippet"
     },
     unknown: %{
       message: "Your Plausible integration is not working",
       recommendation:
         "Please manually check your integration to make sure that the Plausible snippet has been inserted correctly",
-      url: "https://plausible.io/docs/troubleshoot-integration"
+      url: "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
     }
   }
 
