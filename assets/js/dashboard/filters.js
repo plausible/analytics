@@ -6,7 +6,6 @@ import { Menu, Transition } from '@headlessui/react'
 
 import { navigateToQuery } from './query'
 import {
-  FILTER_GROUP_TO_MODAL_TYPE,
   cleanLabels,
   FILTER_MODAL_TO_FILTER_GROUP,
   formatFilterGroup,
@@ -17,7 +16,7 @@ import {
 } from "./util/filters"
 
 function removeFilter(filterIndex, history, query) {
-  const newFilters = query.filters.filter((_filter, index) => filterIndex != index)
+  const newFilters = query._filters.filter((_filter, index) => filterIndex != index)
   const newLabels = cleanLabels(newFilters, query.labels)
 
   navigateToQuery(
@@ -35,29 +34,26 @@ function clearAllFilters(history, query) {
   );
 }
 
-function filterText(query, [operation, filterKey, clauses]) {
-  const formattedFilter = formattedFilters[filterKey]
+function filterText(query, filter) {
+  const formattedFilter = formattedFilters[filter.key]
 
   if (formattedFilter) {
-    return <>{formattedFilter} {operation} {clauses.map((value) => <b key={value}>{getLabel(query.labels, filterKey, value)}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
-  } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
-    const propKey = getPropertyKeyFromFilterKey(filterKey)
-    return <>Property <b>{propKey}</b> {operation} {clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+    return <>{formattedFilter} {filter.operation} {filter.clauses.map((value) => <b key={value}>{getLabel(query.labels, filter.key, value)}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+  } else if (filter.key.startsWith(EVENT_PROPS_PREFIX)) {
+    const propKey = getPropertyKeyFromFilterKey(filter.key)
+    return <>Property <b>{propKey}</b> {filter.operation} {filter.clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   }
 
-  throw new Error(`Unknown filter: ${filterKey}`)
+  throw new Error(`Unknown filter: ${filter.key}`)
 }
 
 function renderDropdownFilter(filterIndex, filter, site, history, query) {
-  const [_operation, filterKey, _clauses] = filter
-
-  const type = filterKey.startsWith(EVENT_PROPS_PREFIX) ? 'props' : filterKey
   return (
     <Menu.Item key={filterIndex}>
       <div className="px-3 md:px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={filterIndex}>
         <Link
-          title={`Edit filter: ${formattedFilters[type]}`}
-          to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`, search: window.location.search }}
+          title={`Edit filter: ${filter.displayName()}`}
+          to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${filter.modalGroup()}`, search: window.location.search }}
           className="group flex w-full justify-between items-center"
           style={{ width: 'calc(100% - 1.5rem)' }}
         >
@@ -65,7 +61,7 @@ function renderDropdownFilter(filterIndex, filter, site, history, query) {
           <PencilSquareIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
         </Link>
         <b
-          title={`Remove filter: ${formattedFilters[type]}`}
+          title={`Remove filter: ${filter.displayName()}`}
           className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"
           onClick={() => removeFilter(filterIndex, history, query)}
         >
@@ -109,7 +105,7 @@ function DropdownContent({ history, site, query, wrapped }) {
       <div className="border-b border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => setAddingFilter(true)}>
         + Add filter
       </div>
-      {query.filters.map((filter, index) => renderDropdownFilter(index, filter, site, history, query))}
+      {query._filters.map((filter, index) => renderDropdownFilter(index, filter, site, history, query))}
       <Menu.Item key="clear">
         <div className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => clearAllFilters(history, query)}>
           Clear All Filters
@@ -182,7 +178,7 @@ class Filters extends React.Component {
     const { wrapped, viewport } = this.state;
 
     // Always wrap on mobile
-    if (this.props.query.filters.length > 0 && viewport <= 768) {
+    if (this.props.query._filters.length > 0 && viewport <= 768) {
       this.setState({ wrapped: 2 })
       return;
     }
@@ -190,7 +186,7 @@ class Filters extends React.Component {
     this.setState({ wrapped: 0 });
 
     // Don't rewrap if we're already properly wrapped, there are no DOM children, or there is only filter
-    if (wrapped !== 1 || !items || this.props.query.filters.length === 1) {
+    if (wrapped !== 1 || !items || this.props.query._filters.length === 1) {
       return;
     };
 
@@ -208,22 +204,20 @@ class Filters extends React.Component {
 
   renderListFilter(filterIndex, filter, history, query) {
     const text = filterText(query, filter)
-    const [_operation, filterKey, _clauses] = filter
-    const type = filterKey.startsWith(EVENT_PROPS_PREFIX) ? 'props' : filterKey
     return (
       <span key={filterIndex} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
         <Link
-          title={`Edit filter: ${formattedFilters[type]}`}
+          title={`Edit filter: ${filter.displayName()}`}
           className="flex w-full h-full items-center py-2 pl-3"
           to={{
-            pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`,
+            pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${filter.modalGroup()}`,
             search: window.location.search
           }}
         >
           <span className="inline-block max-w-2xs md:max-w-xs truncate">{text}</span>
         </Link>
         <span
-          title={`Remove filter: ${formattedFilters[type]}`}
+          title={`Remove filter: ${filter.displayName()}`}
           className="flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center"
           onClick={() => removeFilter(filterIndex, history, query)}
         >
@@ -235,7 +229,7 @@ class Filters extends React.Component {
 
   renderDropdownButton() {
     if (this.state.wrapped === 2) {
-      const filterCount = this.props.query.filters.length
+      const filterCount = this.props.query._filters.length
       return (
         <>
           <AdjustmentsVerticalIcon className="-ml-1 mr-1 h-4 w-4" aria-hidden="true" />
@@ -304,7 +298,7 @@ class Filters extends React.Component {
     if (this.state.wrapped !== 2) {
       return (
         <div id="filters" className="flex flex-wrap">
-          {query.filters.map((filter, index) => this.renderListFilter(index, filter, history, query))}
+          {query._filters.map((filter, index) => this.renderListFilter(index, filter, history, query))}
         </div>
       );
     }

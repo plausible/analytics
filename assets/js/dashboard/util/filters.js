@@ -220,3 +220,27 @@ export function parseLegacyPropsFilter(rawValue) {
     return parseLegacyFilter(`${EVENT_PROPS_PREFIX}${key}`, propVal)
   })
 }
+
+export class Filter {
+  constructor([operation, key, clauses]) {
+    this.operation = operation
+    this.key = key
+    this.clauses = clauses
+  }
+
+  displayName() {
+    if (this.key.startsWith(EVENT_PROPS_PREFIX)) {
+      return 'Property'
+    } else {
+      return formattedFilters[this.key]
+    }
+  }
+
+  modalGroup() {
+    if (this.key.startsWith(EVENT_PROPS_PREFIX)) {
+      return 'props'
+    } else {
+      return FILTER_GROUP_TO_MODAL_TYPE[this.key]
+    }
+  }
+}

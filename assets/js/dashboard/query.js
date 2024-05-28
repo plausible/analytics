@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
 import JsonURL from '@jsonurl/jsonurl'
+import { Filter } from './util/filters'
 import { PlausibleSearchParams, updatedQuery } from './util/url'
 import { nowForSite } from './util/date'
 import * as storage from './util/storage'
@@ -31,6 +32,8 @@ export function parseQuery(querystring, site) {
   if (COMPARISON_DISABLED_PERIODS.includes(period) || !isComparisonEnabled(comparison)) comparison = null
 
   let matchDayOfWeek = q.get('match_day_of_week') || getStoredMatchDayOfWeek(site.domain)
+  const filters = JsonURL.parse(q.get('filters')) || []
+  const labels = JsonURL.parse(q.get('labels')) || {}
 
   return {
     period,
@@ -43,8 +46,9 @@ export function parseQuery(querystring, site) {
     match_day_of_week: matchDayOfWeek == 'true',
     with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
     experimental_session_count: q.get('experimental_session_count'),
-    filters: JsonURL.parse(q.get('filters')) || [],
-    labels: JsonURL.parse(q.get('labels')) || {}
+    filters: filters,
+    _filters: filters.map((f) => new Filter(f)),
+    labels: labels
   }
 }
 
