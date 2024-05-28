@@ -4,7 +4,7 @@ defmodule Plausible.Repo.Migrations.MigrateSiteImports do
 
   def up do
     if ce?() do
-      Plausible.DataMigration.SiteImports.run()
+      Plausible.DataMigration.SiteImports.run(dry_run?: false)
     end
   end
 end
