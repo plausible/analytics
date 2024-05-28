@@ -3540,15 +3540,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
-    test "ignores imported data if filtered property belongs to a different table than the breakdown property", %{
-      conn: conn,
-      site: site
-    } do
+    test "ignores imported data if filtered property belongs to a different table than the breakdown property",
+         %{
+           conn: conn,
+           site: site
+         } do
       site_import = insert(:site_import, site: site)
 
       populate_stats(site, site_import.id, [
         build(:imported_sources, source: "Google"),
-        build(:imported_devices, device: "Desktop"),
+        build(:imported_devices, device: "Desktop")
       ])
 
       conn =

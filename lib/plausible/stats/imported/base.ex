@@ -8,7 +8,6 @@ defmodule Plausible.Stats.Imported.Base do
 
   @goals_with_url Imported.goals_with_url()
   @goals_with_path Imported.goals_with_path()
-  @special_goals @goals_with_path ++ @goals_with_url
 
   @db_field_mappings %{
     referrer_source: :source,
@@ -20,19 +19,19 @@ defmodule Plausible.Stats.Imported.Base do
     subdivision1_code: :region,
     city_geoname_id: :city,
     entry_page_hostname: :hostname,
-    pathname: :page
+    pathname: :page,
+    url: :link_url
   }
 
   def query_imported(site, query) do
-    query = Imported.drop_redundant_filters(query)
-
     query
+    |> Imported.transform_filters()
     |> decide_table()
     |> query_imported(site, query)
   end
 
   def query_imported(table, site, query) do
-    query = Imported.drop_redundant_filters(query)
+    query = Imported.transform_filters(query)
     import_ids = site.complete_import_ids
     %{first: date_from, last: date_to} = query.date_range
 
@@ -52,7 +51,7 @@ defmodule Plausible.Stats.Imported.Base do
 
   def decide_table(%Query{filters: filters, property: "event:props:url"}) do
     case filters do
-      [[:is, "event:goal", {:event, name}]] when name in @goals_with_url ->
+      [[:is, "event:name", name]] when name in @goals_with_url ->
         "imported_custom_events"
 
       _ ->
@@ -62,7 +61,7 @@ defmodule Plausible.Stats.Imported.Base do
 
   def decide_table(%Query{filters: filters, property: "event:props:path"}) do
     case filters do
-      [[:is, "event:goal", {:event, name}]] when name in @goals_with_path ->
+      [[:is, "event:name", name]] when name in @goals_with_path ->
         "imported_custom_events"
 
       _ ->
@@ -70,8 +69,36 @@ defmodule Plausible.Stats.Imported.Base do
     end
   end
 
+  def decide_table(%Query{filters: [], property: "event:goal"}) do
+    "imported_custom_events"
+  end
+
   def decide_table(%Query{filters: [], property: property}) do
     Imported.property_to_table_mappings()[property]
+  end
+
+  def decide_table(%Query{filters: filters, property: "event:goal"}) do
+    any_event_name_filters? =
+      filters
+      |> Enum.filter(fn filter -> Enum.at(filter, 1) in ["event:name"] end)
+      |> Enum.any?()
+
+    any_page_filters? =
+      filters
+      |> Enum.filter(fn filter -> Enum.at(filter, 1) in ["event:page"] end)
+      |> Enum.any?()
+
+    any_other_filters? =
+      filters
+      |> Enum.filter(fn filter -> Enum.at(filter, 1) not in ["event:page", "event:name"] end)
+      |> Enum.any?()
+
+    cond do
+      any_other_filters? -> nil
+      any_event_name_filters? && !any_page_filters? -> "imported_custom_events"
+      any_page_filters? && !any_event_name_filters? -> "imported_pages"
+      true -> nil
+    end
   end
 
   def decide_table(%Query{filters: filters, property: property}) do
@@ -89,16 +116,6 @@ defmodule Plausible.Stats.Imported.Base do
       [candidate] -> candidate
       _ -> nil
     end
-  end
-
-  defp apply_filter(q, %Query{filters: [[:is, "event:goal", {:event, name}]]})
-       when name in @special_goals do
-    where(q, [i], i.name == ^name)
-  end
-
-  defp apply_filter(_q, %Query{filters: [[_, "event:goal" | _]]}) do
-    # TODO: implement and test.
-    raise "Unimplemented"
   end
 
   defp apply_filter(q, %Query{filters: filters}) do

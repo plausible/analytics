@@ -807,6 +807,247 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ] = json_response(conn, 200)["results"]
     end
 
+    test "returns only custom event goals with a custom event goal filter", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, event_name: "Purchase")
+      insert(:goal, site: site, event_name: "Activation")
+      insert(:goal, site: site, page_path: "/test")
+
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          timestamp: ~N[2021-01-01 00:00:01],
+          pathname: "/test"
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:imported_custom_events,
+          name: "Purchase",
+          visitors: 3,
+          events: 5,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages,
+          page: "/test",
+          visitors: 2,
+          pageviews: 2,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
+      ])
+
+      filters = Jason.encode!(%{goal: "Purchase"})
+      url_query_params = "?filters=#{filters}&period=day&date=2021-01-01&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/conversions#{url_query_params}")
+
+      assert [
+               %{
+                 "name" => "Purchase",
+                 "visitors" => 5,
+                 "events" => 7,
+                 "conversion_rate" => 62.5
+               }
+             ] = json_response(conn, 200)["results"]
+    end
+
+    test "returns custom event goals with more than one option in goal filter", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, event_name: "Purchase")
+      insert(:goal, site: site, event_name: "Activation")
+      insert(:goal, site: site, page_path: "/test")
+
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          timestamp: ~N[2021-01-01 00:00:01],
+          pathname: "/test"
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:event,
+          name: "Activation",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:imported_custom_events,
+          name: "Purchase",
+          visitors: 3,
+          events: 5,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_custom_events,
+          name: "Activation",
+          visitors: 2,
+          events: 4,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages,
+          page: "/test",
+          visitors: 2,
+          pageviews: 2,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
+      ])
+
+      filters = Jason.encode!(%{goal: "Purchase|Activation"})
+      url_query_params = "?filters=#{filters}&period=day&date=2021-01-01&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/conversions#{url_query_params}")
+
+      assert [
+               %{
+                 "name" => "Purchase",
+                 "visitors" => 5,
+                 "events" => 7,
+                 "conversion_rate" => 55.6
+               },
+               %{
+                 "name" => "Activation",
+                 "visitors" => 3,
+                 "events" => 5,
+                 "conversion_rate" => 33.3
+               }
+             ] = json_response(conn, 200)["results"]
+    end
+
+    test "returns only pageview goals with a pageview goal filter", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, event_name: "Purchase")
+      insert(:goal, site: site, event_name: "Activation")
+      insert(:goal, site: site, page_path: "/test")
+
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          timestamp: ~N[2021-01-01 00:00:01],
+          pathname: "/test"
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:imported_custom_events,
+          name: "Purchase",
+          visitors: 3,
+          events: 5,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages,
+          page: "/test",
+          visitors: 2,
+          pageviews: 2,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
+      ])
+
+      filters = Jason.encode!(%{goal: "Visit /test"})
+      url_query_params = "?filters=#{filters}&period=day&date=2021-01-01&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/conversions#{url_query_params}")
+
+      assert [
+               %{
+                 "name" => "Visit /test",
+                 "visitors" => 3,
+                 "events" => 3,
+                 "conversion_rate" => 37.5
+               }
+             ] = json_response(conn, 200)["results"]
+    end
+
+    test "returns pageview goals with more than one option in pageview goal filter", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, event_name: "Purchase")
+      insert(:goal, site: site, event_name: "Activation")
+      insert(:goal, site: site, page_path: "/test")
+      insert(:goal, site: site, page_path: "/blog")
+
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          timestamp: ~N[2021-01-01 00:00:01],
+          pathname: "/test"
+        ),
+        build(:pageview,
+          timestamp: ~N[2021-01-01 00:00:01],
+          pathname: "/blog"
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:imported_custom_events,
+          name: "Purchase",
+          visitors: 3,
+          events: 5,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages,
+          page: "/test",
+          visitors: 2,
+          pageviews: 2,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages,
+          page: "/blog",
+          visitors: 1,
+          pageviews: 1,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
+      ])
+
+      filters = Jason.encode!(%{goal: "Visit /test|Visit /blog"})
+      url_query_params = "?filters=#{filters}&period=day&date=2021-01-01&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/conversions#{url_query_params}")
+
+      assert [
+               %{
+                 "name" => "Visit /test",
+                 "visitors" => 3,
+                 "events" => 3,
+                 "conversion_rate" => 33.3
+               },
+               %{
+                 "name" => "Visit /blog",
+                 "visitors" => 2,
+                 "events" => 2,
+                 "conversion_rate" => 22.2
+               }
+             ] = json_response(conn, 200)["results"]
+    end
+
     test "calculates conversion_rate for goals with glob pattern with imported data", %{
       conn: conn,
       site: site

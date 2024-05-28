@@ -33,7 +33,6 @@ defmodule Plausible.Stats.Imported do
     "event:props:path" => "imported_custom_events",
 
     # NOTE: these properties can be only filtered by
-    # TODO: add support for breaking down by translating to device breakdown
     "visit:screen" => "imported_devices",
     "event:hostname" => "imported_pages"
   }
@@ -61,14 +60,9 @@ defmodule Plausible.Stats.Imported do
   (see `@goals_with_url` and `@goals_with_path`).
   """
   def schema_supports_query?(query) do
-    query = drop_redundant_filters(query)
+    query = transform_filters(query)
 
-    # TODO: We want to be able to filter by a goal and still
-    # show a goal breakdown
-    case query.property do
-      "event:goal" -> query.filters == []
-      _ -> not is_nil(Imported.Base.decide_table(query))
-    end
+    not is_nil(Imported.Base.decide_table(query))
   end
 
   @doc """
@@ -77,14 +71,36 @@ defmodule Plausible.Stats.Imported do
   ignored when deciding whether to include imported data in the query or
   not, as well as when actually applying those filters to the query.
   """
-  def drop_redundant_filters(query) do
-    struct!(query,
-      filters:
-        Enum.reject(query.filters, fn
-          [:is, "event:name", "pageview"] -> true
-          _ -> false
-        end)
-    )
+  def transform_filters(query) do
+    new_filters =
+      query.filters
+      |> Enum.reject(fn
+        [:is, "event:name", "pageview"] -> true
+        _ -> false
+      end)
+      |> Enum.map(fn filter ->
+        case filter do
+          [:is, "event:goal", {:event, name}] ->
+            [[:is, "event:name", name]]
+
+          [:is, "event:goal", {:page, page}] ->
+            [[:is, "event:page", page]]
+
+          [:member, "event:goal", events] ->
+            events
+            |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+            |> Enum.map(fn
+              {:event, names} -> [:member, "event:name", names]
+              {:page, pages} -> [:member, "event:page", pages]
+            end)
+
+          filter ->
+            [filter]
+        end
+      end)
+      |> Enum.concat()
+
+    struct!(query, filters: new_filters)
   end
 
   def merge_imported_country_suggestions(native_q, _site, %Plausible.Stats.Query{
@@ -370,30 +386,39 @@ defmodule Plausible.Stats.Imported do
   def merge_imported_pageview_goals(q, _, %Query{include_imported: false}, _, _), do: q
 
   def merge_imported_pageview_goals(q, site, query, page_exprs, metrics) do
-    page_regexes = Enum.map(page_exprs, &Base.page_regex/1)
+    query_table =
+      query
+      |> transform_filters()
+      |> Imported.Base.decide_table()
 
-    imported_q =
-      "imported_pages"
-      |> Imported.Base.query_imported(site, query)
-      |> where([i], i.visitors > 0)
-      |> where(
-        [i],
-        fragment("notEmpty(multiMatchAllIndices(?, ?) as indices)", i.page, ^page_regexes)
+    if query_table == "imported_pages" do
+      page_regexes = Enum.map(page_exprs, &Base.page_regex/1)
+
+      imported_q =
+        "imported_pages"
+        |> Imported.Base.query_imported(site, query)
+        |> where([i], i.visitors > 0)
+        |> where(
+          [i],
+          fragment("notEmpty(multiMatchAllIndices(?, ?) as indices)", i.page, ^page_regexes)
+        )
+        |> join(:array, index in fragment("indices"))
+        |> group_by([_i, index], index)
+        |> select_merge([_i, index], %{
+          name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
+        })
+        |> select_imported_metrics(metrics)
+
+      from(s in Ecto.Query.subquery(q),
+        full_join: i in subquery(imported_q),
+        on: s.name == i.name,
+        select: %{}
       )
-      |> join(:array, index in fragment("indices"))
-      |> group_by([_i, index], index)
-      |> select_merge([_i, index], %{
-        name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
-      })
-      |> select_imported_metrics(metrics)
-
-    from(s in Ecto.Query.subquery(q),
-      full_join: i in subquery(imported_q),
-      on: s.name == i.name,
-      select: %{}
-    )
-    |> select_joined_dimension(:name)
-    |> select_joined_metrics(metrics)
+      |> select_joined_dimension(:name)
+      |> select_joined_metrics(metrics)
+    else
+      q
+    end
   end
 
   def total_imported_visitors(site, query) do

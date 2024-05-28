@@ -43,6 +43,11 @@ defmodule Plausible.Stats.Breakdown do
         property: "event:name"
     }
 
+    event_query =
+      struct!(event_query,
+        include_imported: event_query.include_imported && schema_supports_query?(event_query)
+      )
+
     if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
 
     no_revenue = {nil, metrics -- @revenue_metrics}
@@ -74,12 +79,19 @@ defmodule Plausible.Stats.Breakdown do
 
     page_q =
       if Enum.any?(pageview_goals) do
+        page_query = struct!(query, property: "event:page")
+
+        page_query =
+          struct!(page_query,
+            include_imported: page_query.include_imported && schema_supports_query?(page_query)
+          )
+
         page_exprs = Enum.map(pageview_goals, & &1.page_path)
         page_regexes = Enum.map(page_exprs, &page_regex/1)
 
         select_columns = metrics_to_select |> select_event_metrics |> mark_revenue_as_nil
 
-        from(e in base_event_query(site, query),
+        from(e in base_event_query(site, page_query),
           order_by: [desc: fragment("uniq(?)", e.user_id)],
           where:
             fragment(
@@ -94,7 +106,7 @@ defmodule Plausible.Stats.Breakdown do
           }
         )
         |> select_merge(^select_columns)
-        |> merge_imported_pageview_goals(site, query, page_exprs, metrics_to_select)
+        |> merge_imported_pageview_goals(site, page_query, page_exprs, metrics_to_select)
         |> apply_pagination(pagination)
       else
         nil
@@ -184,6 +196,12 @@ defmodule Plausible.Stats.Breakdown do
           |> Query.put_filter([:member, "visit:entry_page", Enum.map(pages, & &1[:page])])
           |> struct!(property: "visit:entry_page")
       end
+
+    entry_page_query =
+      struct!(entry_page_query,
+        include_imported:
+          entry_page_query.include_imported && schema_supports_query?(entry_page_query)
+      )
 
     if Enum.any?(event_metrics) && Enum.empty?(event_result) do
       []
