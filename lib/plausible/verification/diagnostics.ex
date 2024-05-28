@@ -81,6 +81,20 @@ defmodule Plausible.Verification.Diagnostics do
   def interpret(
         %__MODULE__{
           plausible_installed?: false,
+          snippets_found_in_head: 0,
+          snippets_found_in_body: 0,
+          body_fetched?: true,
+          service_error: nil,
+          wordpress_likely?: true
+        },
+        _url
+      ) do
+    error(@errors.no_snippet_wp)
+  end
+
+  def interpret(
+        %__MODULE__{
+          plausible_installed?: false,
           body_fetched?: false
         },
         url
