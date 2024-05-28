@@ -121,7 +121,7 @@ export function formatFilterGroup(filterGroup) {
 export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
   const filteredBy = Object.fromEntries(
     filters
-    .flatMap(([_operation, filterKey, clauses]) => ['country', 'region', 'city'].includes(filterKey) ? clauses : [])
+    .flatMap(([_operation, filterKey, clauses]) => ['country', 'region', 'city'].includes(filterKey) ? clauses : []) // TODO
     .map((value) => [value, true])
   )
   let result = { ...labels }
@@ -228,8 +228,16 @@ export class Filter {
     this.clauses = clauses
   }
 
+  isPropFilter() {
+    return this.key.startsWith(EVENT_PROPS_PREFIX)
+  }
+
+  getPropKey() {
+    return this.key.slice(EVENT_PROPS_PREFIX.length)
+  }
+
   displayName() {
-    if (this.key.startsWith(EVENT_PROPS_PREFIX)) {
+    if (this.isPropFilter()) {
       return 'Property'
     } else {
       return formattedFilters[this.key]
@@ -237,7 +245,7 @@ export class Filter {
   }
 
   modalGroup() {
-    if (this.key.startsWith(EVENT_PROPS_PREFIX)) {
+    if (this.isPropFilter()) {
       return 'props'
     } else {
       return FILTER_GROUP_TO_MODAL_TYPE[this.key]

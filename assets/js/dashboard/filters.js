@@ -9,14 +9,11 @@ import {
   cleanLabels,
   FILTER_MODAL_TO_FILTER_GROUP,
   formatFilterGroup,
-  formattedFilters,
-  EVENT_PROPS_PREFIX,
-  getPropertyKeyFromFilterKey,
   getLabel
 } from "./util/filters"
 
 function removeFilter(filterIndex, history, query) {
-  const newFilters = query._filters.filter((_filter, index) => filterIndex != index)
+  const newFilters = query.filters.filter((_filter, index) => filterIndex != index)
   const newLabels = cleanLabels(newFilters, query.labels)
 
   navigateToQuery(
@@ -35,16 +32,11 @@ function clearAllFilters(history, query) {
 }
 
 function filterText(query, filter) {
-  const formattedFilter = formattedFilters[filter.key]
-
-  if (formattedFilter) {
-    return <>{formattedFilter} {filter.operation} {filter.clauses.map((value) => <b key={value}>{getLabel(query.labels, filter.key, value)}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
-  } else if (filter.key.startsWith(EVENT_PROPS_PREFIX)) {
-    const propKey = getPropertyKeyFromFilterKey(filter.key)
-    return <>Property <b>{propKey}</b> {filter.operation} {filter.clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+  if (filter.isPropFilter()) {
+    return <>Property <b>{filter.getPropKey()}</b> {filter.operation} {filter.clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+  } else {
+    return <>{filter.displayName()} {filter.operation} {filter.clauses.map((value) => <b key={value}>{getLabel(query.labels, filter.key, value)}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   }
-
-  throw new Error(`Unknown filter: ${filter.key}`)
 }
 
 function renderDropdownFilter(filterIndex, filter, site, history, query) {
