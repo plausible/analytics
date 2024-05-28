@@ -587,6 +587,32 @@ defmodule Plausible.Stats.Imported do
     |> select_imported_metrics(rest)
   end
 
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
+         [:views_per_visit | rest]
+       ) do
+    q
+    |> where([i], i.pageviews > 0)
+    |> select_merge([i], %{
+      pageviews: sum(i.pageviews),
+      __internal_visits: sum(i.entrances)
+    })
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_exit_pages", _}}} = q,
+         [:views_per_visit | rest]
+       ) do
+    q
+    |> where([i], i.pageviews > 0)
+    |> select_merge([i], %{
+      pageviews: sum(i.pageviews),
+      __internal_visits: sum(i.exits)
+    })
+    |> select_imported_metrics(rest)
+  end
+
   defp select_imported_metrics(q, [:views_per_visit | rest]) do
     q
     |> where([i], i.pageviews > 0)
