@@ -3509,5 +3509,63 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
       refute json_response(conn, 200)["warning"]
     end
+
+    test "applies multiple filters if the properties belong to the same table", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:imported_sources, source: "Google", utm_medium: "organic", utm_term: "one"),
+        build(:imported_sources, source: "Twitter", utm_medium: "organic", utm_term: "two"),
+        build(:imported_sources,
+          source: "Facebook",
+          utm_medium: "something_else",
+          utm_term: "one"
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "visit:source",
+          "filters" => "visit:utm_medium==organic;visit:utm_term==one",
+          "with_imported" => "true"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [%{"source" => "Google", "visitors" => 1}]
+             }
+    end
+
+    test "ignores imported data if filtered property belongs to a different table than the breakdown property", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:imported_sources, source: "Google"),
+        build(:imported_devices, device: "Desktop"),
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "visit:source",
+          "filters" => "visit:device==Desktop",
+          "with_imported" => "true"
+        })
+
+      assert %{
+               "results" => [],
+               "warning" => warning
+             } = json_response(conn, 200)
+
+      assert warning =~ "Imported stats are not included in the results"
+    end
   end
 end

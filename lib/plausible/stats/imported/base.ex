@@ -74,19 +74,22 @@ defmodule Plausible.Stats.Imported.Base do
     Imported.property_to_table_mappings()[property]
   end
 
-  def decide_table(%Query{filters: [filter], property: property}) do
-    [_op, filtered_prop | _] = filter
-    table_candidate = Imported.property_to_table_mappings()[filtered_prop]
+  def decide_table(%Query{filters: filters, property: property}) do
+    table_candidates =
+      filters
+      |> Enum.map(fn [_, prop | _] -> prop end)
+      |> Enum.concat(if property, do: [property], else: [])
+      |> Enum.map(fn
+        "visit:screen" -> "visit:device"
+        prop -> prop
+      end)
+      |> Enum.map(&Imported.property_to_table_mappings()[&1])
 
-    cond do
-      is_nil(property) -> table_candidate
-      property == "visit:device" and filtered_prop == "visit:screen" -> table_candidate
-      property == filtered_prop -> table_candidate
-      true -> nil
+    case Enum.uniq(table_candidates) do
+      [candidate] -> candidate
+      _ -> nil
     end
   end
-
-  def decide_table(_query_with_more_than_one_filter), do: nil
 
   defp apply_filter(q, %Query{filters: [[:is, "event:goal", {:event, name}]]})
        when name in @special_goals do
@@ -98,13 +101,13 @@ defmodule Plausible.Stats.Imported.Base do
     raise "Unimplemented"
   end
 
-  defp apply_filter(q, %Query{filters: [[_, filtered_prop | _] = filter]}) do
-    db_field = Plausible.Stats.Filters.without_prefix(filtered_prop)
-    mapped_db_field = Map.get(@db_field_mappings, db_field, db_field)
-    condition = Filters.WhereBuilder.build_condition(mapped_db_field, filter)
+  defp apply_filter(q, %Query{filters: filters}) do
+    Enum.reduce(filters, q, fn [_, filtered_prop | _] = filter, q ->
+      db_field = Plausible.Stats.Filters.without_prefix(filtered_prop)
+      mapped_db_field = Map.get(@db_field_mappings, db_field, db_field)
+      condition = Filters.WhereBuilder.build_condition(mapped_db_field, filter)
 
-    where(q, ^condition)
+      where(q, ^condition)
+    end)
   end
-
-  defp apply_filter(q, _), do: q
 end

@@ -561,14 +561,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
-    test "ignores imported data when filters are applied", %{
+    test "includes imported data in comparison when filter applied", %{
       conn: conn,
       site: site,
       site_import: site_import
     } do
       populate_stats(site, site_import.id, [
         build(:imported_visitors, date: ~D[2023-01-01]),
-        build(:imported_sources, date: ~D[2023-01-01]),
+        build(:imported_sources, source: "Google", date: ~D[2023-01-01], visitors: 3),
         build(:pageview,
           referrer_source: "Google",
           timestamp: ~N[2023-01-02 00:10:00]
@@ -587,7 +587,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         })
 
       assert json_response(conn, 200)["results"] == %{
-               "visitors" => %{"value" => 1, "change" => 100}
+               "visitors" => %{"value" => 1, "change" => -67}
              }
     end
 
