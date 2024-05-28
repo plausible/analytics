@@ -4,19 +4,19 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
   import Plausible.Test.Support.HTML
 
   @component PlausibleWeb.Live.Components.Verification
-  @progress ~s|div#progress|
+  @progress ~s|#progress-indicator p#progress|
 
   @pulsating_circle ~s|div#progress-indicator div.pulsating-circle|
   @check_circle ~s|div#progress-indicator #check-circle|
-  @shuttle ~s|div#progress-indicator svg#shuttle|
-  @recommendations ~s|div#recommendations .recommendation|
+  @error_circle ~s|div#progress-indicator #error-circle|
+  @recommendations ~s|#recommendations .recommendation|
 
   test "renders initial state" do
     html = render_component(@component, domain: "example.com")
     assert element_exists?(html, @progress)
 
     assert text_of_element(html, @progress) ==
-             "We're visiting your site to ensure that everything is working correctly"
+             "We're visiting your site to ensure that everything is working"
 
     assert element_exists?(html, ~s|a[href="/example.com/snippet"]|)
     assert element_exists?(html, ~s|a[href="/example.com/settings/general"]|)
@@ -26,12 +26,12 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
     refute element_exists?(html, @check_circle)
   end
 
-  test "renders shuttle on error" do
+  test "renders error badge on error" do
     html = render_component(@component, domain: "example.com", success?: false, finished?: true)
     refute element_exists?(html, @pulsating_circle)
     refute element_exists?(html, @check_circle)
     refute element_exists?(html, @recommendations)
-    assert element_exists?(html, @shuttle)
+    assert element_exists?(html, @error_circle)
   end
 
   test "renders diagnostic interpretation" do
@@ -51,7 +51,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
     recommendations = html |> find(@recommendations) |> Enum.map(&text/1)
 
     assert recommendations == [
-             "If your site is running at a different location, please manually check your integration - Learn more"
+             "If your site is running at a different location, please manually check your integration.  Learn more"
            ]
   end
 
@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
         finished?: true
       )
 
-    assert class_of_element(html, @pulsating_circle) =~ "hidden"
+    refute element_exists?(html, @pulsating_circle)
     assert element_exists?(html, @check_circle)
   end
 

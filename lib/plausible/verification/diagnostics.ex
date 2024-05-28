@@ -97,9 +97,9 @@ defmodule Plausible.Verification.Diagnostics do
           plausible_installed?: false,
           body_fetched?: false
         },
-        url
+        _url
       ) do
-    error(@errors.unreachable, url: url)
+    error(@errors.unreachable)
   end
 
   def interpret(
@@ -119,9 +119,9 @@ defmodule Plausible.Verification.Diagnostics do
           service_error: nil,
           body_fetched?: false
         },
-        url
+        _url
       ) do
-    error(@errors.unreachable, url: url)
+    error(@errors.unreachable)
   end
 
   def interpret(
@@ -325,7 +325,7 @@ defmodule Plausible.Verification.Diagnostics do
   end
 
   defp error(error, assigns) do
-    message = EEx.eval_string(error.message, assigns: assigns)
-    error(%{error | message: message})
+    recommendation = EEx.eval_string(error.recommendation, assigns: assigns)
+    error(%{error | recommendation: recommendation})
   end
 end
