@@ -1395,8 +1395,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       populate_stats(site, [
         build(:pageview,
           user_id: @user_id,
-          "meta.key": ["logged_in"],
-          "meta.value": ["true"],
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
@@ -1428,7 +1426,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
 
       assert json_response(conn, 200)["results"] == %{
                "bounce_rate" => %{"value" => 50},
-               "pageviews" => %{"value" => 3},
+               "pageviews" => %{"value" => 2},
                "visit_duration" => %{"value" => 600},
                "visitors" => %{"value" => 2},
                "visits" => %{"value" => 2}
