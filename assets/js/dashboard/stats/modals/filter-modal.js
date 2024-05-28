@@ -2,7 +2,7 @@ import React from "react";
 import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
-import { EVENT_PROPS_PREFIX, FILTER_GROUP_TO_MODAL_TYPE, formatFilterGroup, FILTER_OPERATIONS, getFilterGroup, FILTER_MODAL_TO_FILTER_GROUP} from '../../util/filters'
+import { EVENT_PROPS_PREFIX, FILTER_GROUP_TO_MODAL_TYPE, formatFilterGroup, FILTER_OPERATIONS, FILTER_MODAL_TO_FILTER_GROUP, Filter} from '../../util/filters'
 import { parseQuery } from '../../query'
 import { siteBasePath, updatedQuery } from '../../util/url'
 import { shouldIgnoreKeypress } from '../../keybinding'
@@ -15,7 +15,7 @@ function partitionFilters(modalType, filters) {
   let hasRelevantFilters = false
 
   filters.forEach((filter, index) => {
-    const filterGroup = getFilterGroup(filter)
+    const filterGroup = filter.getGroup()
     if (FILTER_GROUP_TO_MODAL_TYPE[filterGroup] === modalType) {
       const key = filterState[filterGroup] ? `${filterGroup}:${index}` : filterGroup
       filterState[key] = filter
@@ -37,7 +37,7 @@ function partitionFilters(modalType, filters) {
 function emptyFilter(key) {
   const filterKey = key === 'props' ? EVENT_PROPS_PREFIX : key
 
-  return [FILTER_OPERATIONS.is, filterKey, []]
+  return new Filter([FILTER_OPERATIONS.is, filterKey, []])
 }
 
 class FilterModal extends React.Component {
@@ -47,7 +47,7 @@ class FilterModal extends React.Component {
     const modalType = props.match.params.field || 'page'
 
     const query = parseQuery(props.location.search, props.site)
-    const { filterState, otherFilters, hasRelevantFilters } = partitionFilters(modalType, query.filters)
+    const { filterState, otherFilters, hasRelevantFilters } = partitionFilters(modalType, query._filters)
 
     this.handleKeydown = this.handleKeydown.bind(this)
     this.state = { query, modalType, filterState, labelState: query.labels, otherFilters, hasRelevantFilters }
@@ -78,7 +78,7 @@ class FilterModal extends React.Component {
   }
 
   isDisabled() {
-    return Object.values(this.state.filterState).every(([_operation, _key, clauses]) => clauses.length === 0)
+    return Object.values(this.state.filterState).every((filter) => filter.clauses.length === 0)
   }
 
   selectFiltersAndCloseModal(filters) {
@@ -93,7 +93,6 @@ class FilterModal extends React.Component {
 
   onUpdateRowValue(id, newFilter, newLabels) {
     this.setState(prevState => {
-      const [_operation, filterKey, _clauses] = newFilter
       return {
         filterState: {
           ...prevState.filterState,
@@ -102,7 +101,7 @@ class FilterModal extends React.Component {
         labelState: cleanLabels(
           Object.values(this.state.filterState).concat(this.state.query.filters),
           prevState.labelState,
-          filterKey,
+          newFilter.key,
           newLabels
         )
       }

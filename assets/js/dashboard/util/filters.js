@@ -251,4 +251,20 @@ export class Filter {
       return FILTER_GROUP_TO_MODAL_TYPE[this.key]
     }
   }
+
+  getGroup() {
+    return this.isPropFilter() ? 'props' : this.key
+  }
+
+  isFreeChoice() {
+    return !NO_CONTAINS_OPERATOR.has(this.key)
+  }
+
+  updateClauses(clauses) {
+    return new this.constructor(this.operation, this.key, clauses)
+  }
+
+  updateOperation(newOperation) {
+    return new this.constructor(newOperation, this.key, this.clauses)
+  }
 }

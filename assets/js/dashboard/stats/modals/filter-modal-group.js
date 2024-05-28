@@ -1,6 +1,6 @@
 import React, { useMemo } from "react"
 import FilterModalRow from "./filter-modal-row"
-import { formattedFilters, getFilterGroup, getPropertyKeyFromFilterKey } from '../../util/filters'
+import { formattedFilters, getPropertyKeyFromFilterKey } from '../../util/filters'
 import FilterModalPropsRow from "./filter-modal-props-row"
 
 export default function FilterModalGroup({
@@ -14,7 +14,7 @@ export default function FilterModalGroup({
   onDeleteRow
 }) {
   const rows = useMemo(
-    () => Object.entries(filterState).filter(([_, filter]) => getFilterGroup(filter) == filterGroup).map(([id, filter]) => ({ id, filter })),
+    () => Object.entries(filterState).filter(([_, filter]) => filter.getGroup() == filterGroup).map(([id, filter]) => ({ id, filter })),
     [filterGroup, filterState]
   )
 

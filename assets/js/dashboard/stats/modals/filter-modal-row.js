@@ -3,9 +3,9 @@ import React, { useMemo } from "react"
 import FilterOperatorSelector from "../../components/filter-operator-selector"
 import Combobox from '../../components/combobox'
 
-import { FILTER_OPERATIONS, fetchSuggestions, isFreeChoiceFilter } from "../../util/filters"
+import { FILTER_OPERATIONS, fetchSuggestions } from "../../util/filters"
 import { apiPath } from '../../util/url'
-import { getLabel, formattedFilters } from '../../util/filters'
+import { getLabel } from '../../util/filters'
 
 export default function FilterModalRow({
   site,
@@ -14,10 +14,8 @@ export default function FilterModalRow({
   labels,
   onUpdate
 }) {
-  const [operation, filterKey, clauses] = filter
-
   const selectedClauses = useMemo(
-    () => clauses.map((value) => ({ value, label: getLabel(labels, filterKey, value) })),
+    () => filter.clauses.map((value) => ({ value, label: getLabel(labels, filter.key, value) })),
     [filter, labels]
   )
 
@@ -26,18 +24,18 @@ export default function FilterModalRow({
     const newLabels = Object.fromEntries(selection.map(({ label, value }) => [value, label]))
 
     onUpdate(
-      [operation, filterKey, newClauses],
+      filter.updateClauses(newClauses),
       newLabels
     )
   }
 
   function fetchOptions(input) {
-    if (operation === FILTER_OPERATIONS.contains) {
+    if (filter.operation === FILTER_OPERATIONS.contains) {
       return Promise.resolve([])
     }
 
-    return fetchSuggestions(apiPath(site, `/suggestions/${filterKey}`), query, input, [
-      FILTER_OPERATIONS.isNot, filterKey, clauses
+    return fetchSuggestions(apiPath(site, `/suggestions/${filter.key}`), query, input, [
+      FILTER_OPERATIONS.isNot, filter.key, filter.clauses
     ])
   }
 
@@ -45,18 +43,18 @@ export default function FilterModalRow({
     <div className="grid grid-cols-11 mt-1">
       <div className="col-span-3 mr-2">
         <FilterOperatorSelector
-          forFilter={filterKey}
-          onSelect={(newOperation) => onUpdate([newOperation, filterKey, clauses], labels)}
-          selectedType={operation}
+          forFilter={filter.key}
+          onSelect={(newOperation) => onUpdate(filter.updateOperation(newOperation), labels)}
+          selectedType={filter.operation}
         />
       </div>
       <div className="col-span-8">
         <Combobox
           fetchOptions={fetchOptions}
-          freeChoice={isFreeChoiceFilter(filterKey)}
+          freeChoice={filter.isFreeChoice()}
           values={selectedClauses}
           onSelect={onComboboxSelect}
-          placeholder={`Select ${withIndefiniteArticle(formattedFilters[filterKey])}`}
+          placeholder={`Select ${withIndefiniteArticle(filter.displayName())}`}
         />
       </div>
     </div>
