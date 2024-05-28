@@ -51,7 +51,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
     recommendations = html |> find(@recommendations) |> Enum.map(&text/1)
 
     assert recommendations == [
-             "If your site is running at a different location, please manually check your integration.  Learn more" 
+             "If your site is running at a different location, please manually check your integration.  Learn more"
            ]
   end
 

@@ -59,10 +59,10 @@ defmodule PlausibleWeb.Live.Components.Verification do
             <%= List.first(@interpretation.errors) %>
           </span>
         </h3>
-        <p id="progress" :if={@finished? and @success? and @modal?} class="mt-2">
+        <p :if={@finished? and @success? and @modal?} id="progress" class="mt-2">
           Your integration is working and visitors are being counted accurately
         </p>
-        <p id="progress" :if={@finished? and @success? and not @modal?} class="mt-2 animate-pulse">
+        <p :if={@finished? and @success? and not @modal?} id="progress" class="mt-2 animate-pulse">
           Your integration is working. Awaiting your first pageview.
         </p>
         <p :if={not @finished?} class="mt-2 animate-pulse" id="progress"><%= @message %></p>

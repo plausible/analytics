@@ -107,8 +107,7 @@ defmodule Plausible.Verification.Errors do
     },
     different_data_domain: %{
       message: "Your data-domain is different",
-      recommendation:
-        "Please ensure that the data-domain is an exact match to <%= @domain %>",
+      recommendation: "Please ensure that the data-domain is an exact match to <%= @domain %>",
       url:
         "https://plausible.io/docs/troubleshoot-integration#have-you-added-the-correct-data-domain-attribute-in-the-plausible-snippet"
     },
