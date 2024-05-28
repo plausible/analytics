@@ -28,6 +28,12 @@ defmodule Plausible.Verification.Errors do
       recommendation: "Please insert the snippet into your site",
       url: "https://plausible.io/docs/plausible-script"
     },
+    no_snippet_wp: %{
+      message: "We couldn't find the Plausible snippet on your site",
+      recommendation:
+        "Please install and activate our WordPress plugin to start counting your visitors",
+      url: "https://plausible.io/wordpress-analytics-plugin"
+    },
     temporary: %{
       message: "We encountered a temporary problem verifying your website",
       recommendation: "Please try again in a few minutes or manually check your integration",

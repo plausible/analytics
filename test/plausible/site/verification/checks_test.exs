@@ -299,6 +299,26 @@ defmodule Plausible.Verification.ChecksTest do
       |> assert_error(@errors.no_snippet)
     end
 
+    @body_no_snippet_wp """
+    <html>
+    <head>
+    <meta name="foo" content="/wp-content/plugins/bar"/>
+    </head>
+    <body>
+    Hello
+    </body>
+    </html>
+    """
+
+    test "detecting no snippet on a wordpress site" do
+      stub_fetch_body(200, @body_no_snippet_wp)
+      stub_installation(200, plausible_installed(false))
+
+      run_checks()
+      |> Checks.interpret_diagnostics()
+      |> assert_error(@errors.no_snippet_wp)
+    end
+
     test "a check that raises" do
       defmodule FaultyCheckRaise do
         use Plausible.Verification.Check
