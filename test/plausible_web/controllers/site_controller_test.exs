@@ -244,7 +244,9 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/#{URI.encode_www_form("éxample.com")}/snippet"
+      assert redirected_to(conn) ==
+               "/#{URI.encode_www_form("éxample.com")}/snippet?site_created=true"
+
       assert site = Repo.get_by(Plausible.Site, domain: "éxample.com")
       assert site.timezone == "Europe/London"
       assert site.ingest_rate_limit_scale_seconds == 60
@@ -303,7 +305,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert_no_emails_delivered()
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "does not allow site creation when the user is at their site limit", %{
       conn: conn,
       user: user
@@ -341,7 +343,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/example.com/snippet"
+      assert redirected_to(conn) == "/example.com/snippet?site_created=true"
       assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
@@ -361,7 +363,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/example.com/snippet"
+      assert redirected_to(conn) == "/example.com/snippet?site_created=true"
       assert Plausible.Billing.Quota.site_usage(user) == 3
     end
 
@@ -375,7 +377,7 @@ defmodule PlausibleWeb.SiteControllerTest do
             }
           })
 
-        assert redirected_to(conn) == "/example.com/snippet"
+        assert redirected_to(conn) == "/example.com/snippet?site_created=true"
         assert Repo.get_by(Plausible.Site, domain: "example.com")
       end
     end
@@ -637,7 +639,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   end
 
   describe "GET /:website/settings/imports-exports" do
-    setup [:create_user, :log_in, :create_site]
+    setup [:create_user, :log_in, :create_site, :maybe_fake_minio]
 
     test "renders empty imports list", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
@@ -653,12 +655,12 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "renders imports in import list", %{conn: conn, site: site} do
-      {:ok, opts} = add_imported_data(%{site: site})
-      site = Map.new(opts).site
-
       _site_import1 = insert(:site_import, site: site, status: SiteImport.pending())
       _site_import2 = insert(:site_import, site: site, status: SiteImport.importing())
-      site_import3 = insert(:site_import, site: site, status: SiteImport.completed())
+
+      site_import3 =
+        insert(:site_import, label: "123456", site: site, status: SiteImport.completed())
+
       _site_import4 = insert(:site_import, site: site, status: SiteImport.failed())
 
       populate_stats(site, site_import3.id, [
@@ -670,9 +672,103 @@ defmodule PlausibleWeb.SiteControllerTest do
       resp = html_response(conn, 200)
 
       buttons = find(resp, ~s|button[data-method="delete"]|)
-      assert length(buttons) == 5
+      assert length(buttons) == 4
 
+      assert resp =~ "Google Analytics (123456)"
       assert resp =~ "(98 page views)"
+    end
+
+    test "disables import buttons when imports are at maximum", %{conn: conn, site: site} do
+      insert_list(Plausible.Imported.max_complete_imports(), :site_import,
+        site: site,
+        status: SiteImport.completed()
+      )
+
+      conn = get(conn, "/#{site.domain}/settings/imports-exports")
+
+      assert html_response(conn, 200) =~
+               "Maximum of #{Plausible.Imported.max_complete_imports()} imports is reached."
+    end
+
+    test "considers older legacy imports when showing pageview count", %{conn: conn, site: site} do
+      _site_import =
+        insert(:site_import, site: site, legacy: true, status: SiteImport.completed())
+
+      populate_stats(site, [
+        build(:imported_visitors, pageviews: 77),
+        build(:imported_visitors, pageviews: 21)
+      ])
+
+      conn = get(conn, "/#{site.domain}/settings/imports-exports")
+
+      assert html_response(conn, 200) =~ "(98 page views)"
+    end
+
+    test "disables import buttons when there's import in progress", %{conn: conn, site: site} do
+      _site_import1 = insert(:site_import, site: site, status: SiteImport.completed())
+      _site_import2 = insert(:site_import, site: site, status: SiteImport.importing())
+
+      conn = get(conn, "/#{site.domain}/settings/imports-exports")
+      assert html_response(conn, 200) =~ "No new imports can be started"
+    end
+
+    test "enables import buttons when all imports are in completed or failed state", %{
+      conn: conn,
+      site: site
+    } do
+      _site_import1 = insert(:site_import, site: site, status: SiteImport.completed())
+      _site_import2 = insert(:site_import, site: site, status: SiteImport.failed())
+
+      conn = get(conn, "/#{site.domain}/settings/imports-exports")
+      refute html_response(conn, 200) =~ "No new imports can be started"
+    end
+
+    test "displays notice when import in progress is running for over 5 minutes", %{
+      conn: conn,
+      site: site
+    } do
+      six_minutes_ago = NaiveDateTime.add(NaiveDateTime.utc_now(), -360)
+
+      _site_import1 = insert(:site_import, site: site, status: SiteImport.completed())
+
+      _site_import2 =
+        insert(:site_import,
+          site: site,
+          status: SiteImport.importing(),
+          updated_at: six_minutes_ago
+        )
+
+      conn = get(conn, "/#{site.domain}/settings/imports-exports")
+      response = html_response(conn, 200)
+      assert response =~ "No new imports can be started"
+      assert response =~ "The import process might be taking longer due to the amount of data"
+      assert response =~ "and rate limiting enforced by Google Analytics"
+    end
+
+    test "displays CSV export button", %{conn: conn, site: site} do
+      assert conn |> get("/#{site.domain}/settings/imports-exports") |> html_response(200) =~
+               "Prepare download"
+    end
+  end
+
+  describe "GET /:website/settings/imports-exports when object storage is unreachable" do
+    setup [:create_user, :log_in, :create_site]
+
+    setup tags do
+      if tags[:async] do
+        raise "this test modifies application environment and can't be run asynchronously"
+      end
+
+      prev_env = Application.get_env(:ex_aws, :s3)
+      new_env = Keyword.update!(prev_env, :port, fn prev_port -> prev_port + 1 end)
+      Application.put_env(:ex_aws, :s3, new_env)
+      on_exit(fn -> Application.put_env(:ex_aws, :s3, prev_env) end)
+    end
+
+    @tag capture_log: true, ee_only: true
+    test "displays error message", %{conn: conn, site: site} do
+      assert conn |> get("/#{site.domain}/settings/imports-exports") |> html_response(200) =~
+               "Something went wrong when fetching exports. Please try again later."
     end
   end
 
@@ -1274,85 +1370,8 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:website/import/google-analytics/view-id" do
-    setup [:create_user, :log_in, :create_new_site]
-
-    test "lists Google Analytics views", %{conn: conn, site: site} do
-      expect(
-        Plausible.HTTPClient.Mock,
-        :get,
-        fn _url, _body ->
-          body = "fixture/ga_list_views.json" |> File.read!() |> Jason.decode!()
-          {:ok, %Finch.Response{body: body, status: 200}}
-        end
-      )
-
-      response =
-        conn
-        |> get("/#{site.domain}/import/google-analytics/view-id", %{
-          "access_token" => "token",
-          "refresh_token" => "foo",
-          "expires_at" => "2022-09-22T20:01:37.112777",
-          "legacy" => "true"
-        })
-        |> html_response(200)
-
-      assert response =~ "57238190 - one.test"
-      assert response =~ "54460083 - two.test"
-    end
-  end
-
-  describe "POST /:website/settings/google-import" do
-    setup [:create_user, :log_in, :create_new_site]
-
-    test "creates site import instance", %{conn: conn, site: site} do
-      post(conn, "/#{site.domain}/settings/google-import", %{
-        "view_id" => "123",
-        "start_date" => "2018-03-01",
-        "end_date" => "2022-03-01",
-        "access_token" => "token",
-        "refresh_token" => "foo",
-        "expires_at" => "2022-09-22T20:01:37.112777",
-        "legacy" => "true"
-      })
-
-      [site_import] = Plausible.Imported.list_all_imports(site)
-
-      assert site_import.source == :universal_analytics
-      assert site_import.end_date == ~D[2022-03-01]
-      assert site_import.status == SiteImport.pending()
-    end
-
-    test "schedules an import job in Oban", %{conn: conn, site: site} do
-      post(conn, "/#{site.domain}/settings/google-import", %{
-        "view_id" => "123",
-        "start_date" => "2018-03-01",
-        "end_date" => "2022-03-01",
-        "access_token" => "token",
-        "refresh_token" => "foo",
-        "expires_at" => "2022-09-22T20:01:37.112777",
-        "legacy" => "true"
-      })
-
-      assert [%{id: import_id, legacy: true}] = Plausible.Imported.list_all_imports(site)
-
-      assert_enqueued(
-        worker: Plausible.Workers.ImportAnalytics,
-        args: %{
-          "import_id" => import_id,
-          "view_id" => "123",
-          "start_date" => "2018-03-01",
-          "end_date" => "2022-03-01",
-          "access_token" => "token",
-          "refresh_token" => "foo",
-          "token_expires_at" => "2022-09-22T20:01:37.112777"
-        }
-      )
-    end
-  end
-
   describe "DELETE /:website/settings/:forget_import/:import_id" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "removes site import, associated data and cancels oban job for a particular import", %{
       conn: conn,
@@ -1378,7 +1397,11 @@ defmodule PlausibleWeb.SiteControllerTest do
         build(:imported_visitors, pageviews: 10)
       ])
 
-      assert [%{id: ^import_id}, %{id: 0}] = Plausible.Imported.list_all_imports(site)
+      imports = Plausible.Imported.list_all_imports(site)
+
+      assert Enum.find(imports, &(&1.id == import_id))
+
+      site = Plausible.Imported.load_import_data(site)
 
       assert eventually(fn ->
                count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
@@ -1395,9 +1418,10 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.reload(job).state == "cancelled"
     end
 
-    test "removes legacy site import along with associated data when instructed", %{
+    test "removes all legacy site import data when instructed", %{
       conn: conn,
-      site: site
+      site: site,
+      site_import: legacy_site_import
     } do
       other_site_import = insert(:site_import, site: site)
 
@@ -1415,7 +1439,7 @@ defmodule PlausibleWeb.SiteControllerTest do
                {count == 22, count}
              end)
 
-      delete(conn, "/#{site.domain}/settings/forget-import/0")
+      delete(conn, "/#{site.domain}/settings/forget-import/#{legacy_site_import.id}")
 
       assert eventually(fn ->
                count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
@@ -1425,13 +1449,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   end
 
   describe "DELETE /:website/settings/forget_imported" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
-
-    test "removes imported_data field from site", %{conn: conn, site: site} do
-      delete(conn, "/#{site.domain}/settings/forget-imported")
-
-      assert Repo.reload(site).imported_data == nil
-    end
+    setup [:create_user, :log_in, :create_new_site]
 
     test "removes actual imported data from Clickhouse", %{conn: conn, user: user, site: site} do
       Plausible.Imported.NoopImporter.new_import(
@@ -1538,7 +1556,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert is_nil(site.domain_changed_from)
     end
 
-    test "domain change succcessful form submission redirects to snippet change info", %{
+    test "domain change successful form submission redirects to snippet change info", %{
       conn: conn,
       site: site
     } do

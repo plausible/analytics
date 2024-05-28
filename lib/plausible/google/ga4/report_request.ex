@@ -3,6 +3,13 @@ defmodule Plausible.Google.GA4.ReportRequest do
   Report request struct for Google Analytics 4 API
   """
 
+  @excluded_event_names [
+    "page_view",
+    "session_start",
+    "first_visit",
+    "user_engagement"
+  ]
+
   defstruct [
     :dataset,
     :dimensions,
@@ -11,6 +18,7 @@ defmodule Plausible.Google.GA4.ReportRequest do
     :property,
     :access_token,
     :offset,
+    :dimension_filter,
     :limit
   ]
 
@@ -49,6 +57,7 @@ defmodule Plausible.Google.GA4.ReportRequest do
           "sessionGoogleAdsKeyword"
         ],
         metrics: [
+          "screenPageViews",
           "totalUsers",
           "sessions",
           "bounces = sessions - engagedSessions",
@@ -59,12 +68,19 @@ defmodule Plausible.Google.GA4.ReportRequest do
         dataset: "imported_pages",
         dimensions: ["date", "hostName", "pagePath"],
         # NOTE: no exits as GA4 DATA API does not provide that metric
-        metrics: ["totalUsers", "screenPageViews", "userEngagementDuration"]
+        metrics: [
+          "totalUsers",
+          "activeUsers",
+          "screenPageViews",
+          "sessions",
+          "userEngagementDuration"
+        ]
       },
       %__MODULE__{
         dataset: "imported_entry_pages",
         dimensions: ["date", "landingPage"],
         metrics: [
+          "screenPageViews",
           "totalUsers",
           "sessions",
           "userEngagementDuration",
@@ -75,12 +91,38 @@ defmodule Plausible.Google.GA4.ReportRequest do
       # %__MODULE__{
       #   dataset: "imported_exit_pages",
       #   dimensions: ["date", "ga:exitPagePath"],
-      #   metrics: ["totalUsers", "sessions"]
+      #   metrics: [
+      #     "totalUsers",
+      #     "sessions",
+      #     "screenPageViews",
+      #     "userEngagementDuration",
+      #     "bounces = sessions - engagedSessions"
+      #   ]
       # },
+      %__MODULE__{
+        dataset: "imported_custom_events",
+        dimensions: ["date", "eventName", "linkUrl"],
+        metrics: [
+          "totalUsers",
+          "eventCount"
+        ],
+        dimension_filter: %{
+          "notExpression" => %{
+            "filter" => %{
+              "fieldName" => "eventName",
+              "inListFilter" => %{
+                "values" => @excluded_event_names,
+                "caseSensitive" => true
+              }
+            }
+          }
+        }
+      },
       %__MODULE__{
         dataset: "imported_locations",
         dimensions: ["date", "countryId", "region", "city"],
         metrics: [
+          "screenPageViews",
           "totalUsers",
           "sessions",
           "bounces = sessions - engagedSessions",
@@ -91,6 +133,7 @@ defmodule Plausible.Google.GA4.ReportRequest do
         dataset: "imported_devices",
         dimensions: ["date", "deviceCategory"],
         metrics: [
+          "screenPageViews",
           "totalUsers",
           "sessions",
           "bounces = sessions - engagedSessions",
@@ -101,6 +144,7 @@ defmodule Plausible.Google.GA4.ReportRequest do
         dataset: "imported_browsers",
         dimensions: ["date", "browser"],
         metrics: [
+          "screenPageViews",
           "totalUsers",
           "sessions",
           "bounces = sessions - engagedSessions",
@@ -109,8 +153,9 @@ defmodule Plausible.Google.GA4.ReportRequest do
       },
       %__MODULE__{
         dataset: "imported_operating_systems",
-        dimensions: ["date", "operatingSystem"],
+        dimensions: ["date", "operatingSystem", "operatingSystemVersion"],
         metrics: [
+          "screenPageViews",
           "totalUsers",
           "sessions",
           "bounces = sessions - engagedSessions",

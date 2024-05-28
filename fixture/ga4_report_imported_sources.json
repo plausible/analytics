@@ -25,9 +25,13 @@
       "kind": "analyticsData#runReport",
       "metadata": {
         "currencyCode": "USD",
-        "timeZone": "Europe/Warsaw"
+        "timeZone": "Europe/Amsterdam"
       },
       "metricHeaders": [
+        {
+          "name": "screenPageViews",
+          "type": "TYPE_INTEGER"
+        },
         {
           "name": "totalUsers",
           "type": "TYPE_INTEGER"
@@ -45,12 +49,51 @@
           "type": "TYPE_SECONDS"
         }
       ],
-      "rowCount": 3,
+      "rowCount": 210,
       "rows": [
         {
           "dimensionValues": [
             {
-              "value": "20240226"
+              "value": "20240131"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "125"
+            },
+            {
+              "value": "102"
+            },
+            {
+              "value": "106"
+            },
+            {
+              "value": "36"
+            },
+            {
+              "value": "4066"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240131"
             },
             {
               "value": "(direct)"
@@ -70,32 +113,35 @@
           ],
           "metricValues": [
             {
-              "value": "1"
+              "value": "60"
             },
             {
-              "value": "1"
+              "value": "29"
             },
             {
-              "value": "1"
+              "value": "30"
             },
             {
-              "value": "0"
+              "value": "13"
+            },
+            {
+              "value": "676"
             }
           ]
         },
         {
           "dimensionValues": [
             {
-              "value": "20240224"
+              "value": "20240131"
             },
             {
-              "value": "(direct)"
+              "value": "pinterest.com"
             },
             {
-              "value": "(none)"
+              "value": "referral"
             },
             {
-              "value": "(direct)"
+              "value": "(referral)"
             },
             {
               "value": "(not set)"
@@ -106,32 +152,35 @@
           ],
           "metricValues": [
             {
-              "value": "2"
+              "value": "6"
             },
             {
-              "value": "2"
+              "value": "6"
             },
             {
-              "value": "2"
+              "value": "6"
             },
             {
-              "value": "0"
+              "value": "5"
+            },
+            {
+              "value": "10"
             }
           ]
         },
         {
           "dimensionValues": [
             {
-              "value": "20240222"
+              "value": "20240131"
             },
             {
-              "value": "(direct)"
+              "value": "bing"
             },
             {
-              "value": "(none)"
+              "value": "organic"
             },
             {
-              "value": "(direct)"
+              "value": "(organic)"
             },
             {
               "value": "(not set)"
@@ -145,13 +194,8050 @@
               "value": "3"
             },
             {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "63"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240131"
+            },
+            {
+              "value": "lm.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "111"
+            },
+            {
+              "value": "80"
+            },
+            {
+              "value": "80"
+            },
+            {
+              "value": "27"
+            },
+            {
+              "value": "2912"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "30"
+            },
+            {
+              "value": "19"
+            },
+            {
+              "value": "19"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "261"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "12"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "161"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "lm.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "9"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "48"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "72"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "pinterest.de"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "12"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "kuhinjica-mignone.blogspot.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "15"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240130"
+            },
+            {
+              "value": "m.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "104"
+            },
+            {
+              "value": "75"
+            },
+            {
+              "value": "82"
+            },
+            {
+              "value": "39"
+            },
+            {
+              "value": "2428"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "34"
+            },
+            {
+              "value": "19"
+            },
+            {
+              "value": "20"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "394"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "8"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "47"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "26"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240129"
+            },
+            {
+              "value": "m.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "190"
+            },
+            {
+              "value": "141"
+            },
+            {
+              "value": "147"
+            },
+            {
+              "value": "49"
+            },
+            {
+              "value": "5776"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "38"
+            },
+            {
+              "value": "25"
+            },
+            {
+              "value": "25"
+            },
+            {
+              "value": "15"
+            },
+            {
+              "value": "459"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "18"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "559"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "10"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "59"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "m.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240128"
+            },
+            {
+              "value": "pinterest.com.au"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "8"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "137"
+            },
+            {
+              "value": "115"
+            },
+            {
+              "value": "118"
+            },
+            {
+              "value": "43"
+            },
+            {
+              "value": "4721"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "54"
+            },
+            {
+              "value": "30"
+            },
+            {
+              "value": "30"
+            },
+            {
+              "value": "17"
+            },
+            {
+              "value": "447"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "10"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "vikendkuvarica.blogspot.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "40"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "m.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240127"
+            },
+            {
+              "value": "yahoo"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "41"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "133"
+            },
+            {
+              "value": "100"
+            },
+            {
+              "value": "110"
+            },
+            {
+              "value": "40"
+            },
+            {
+              "value": "4709"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "43"
+            },
+            {
+              "value": "21"
+            },
+            {
+              "value": "21"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "731"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "88"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "16"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "abaiak.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240126"
+            },
+            {
+              "value": "m.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "149"
+            },
+            {
+              "value": "105"
+            },
+            {
+              "value": "108"
+            },
+            {
+              "value": "45"
+            },
+            {
+              "value": "4206"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "62"
+            },
+            {
+              "value": "33"
+            },
+            {
+              "value": "34"
+            },
+            {
+              "value": "20"
+            },
+            {
+              "value": "654"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "9"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "108"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "380"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "pinterest.it"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "17"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240125"
+            },
+            {
+              "value": "parfe-dunja.blogspot.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "174"
+            },
+            {
+              "value": "112"
+            },
+            {
+              "value": "122"
+            },
+            {
+              "value": "53"
+            },
+            {
+              "value": "3668"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "35"
+            },
+            {
+              "value": "18"
+            },
+            {
+              "value": "18"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "654"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "vikendkuvarica.blogspot.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "114"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "15"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240124"
+            },
+            {
+              "value": "lm.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "215"
+            },
+            {
+              "value": "135"
+            },
+            {
+              "value": "139"
+            },
+            {
+              "value": "51"
+            },
+            {
+              "value": "4160"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "26"
+            },
+            {
+              "value": "15"
+            },
+            {
+              "value": "15"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "366"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "10"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "62"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "7"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "36"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "pinterest.se"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "147"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "pinterest.com.au"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "10"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "pinterest.de"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "16"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "links.google.wdsystem.cn"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "9"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240123"
+            },
+            {
+              "value": "nely-bluehortensia.blogspot.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "44"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "173"
+            },
+            {
+              "value": "122"
+            },
+            {
+              "value": "126"
+            },
+            {
+              "value": "46"
+            },
+            {
+              "value": "4127"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "40"
+            },
+            {
+              "value": "28"
+            },
+            {
+              "value": "28"
+            },
+            {
+              "value": "20"
+            },
+            {
+              "value": "423"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "16"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "310"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "pinterest.de"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "11"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "links.google.wdsystem.cn"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240122"
+            },
+            {
+              "value": "pinterest.ca"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "330"
+            },
+            {
+              "value": "203"
+            },
+            {
+              "value": "214"
+            },
+            {
+              "value": "82"
+            },
+            {
+              "value": "8230"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "35"
+            },
+            {
+              "value": "26"
+            },
+            {
+              "value": "26"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "281"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "16"
+            },
+            {
+              "value": "13"
+            },
+            {
+              "value": "13"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "108"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "10"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "204"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "m.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "21"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240121"
+            },
+            {
+              "value": "nl.pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "292"
+            },
+            {
+              "value": "176"
+            },
+            {
+              "value": "183"
+            },
+            {
+              "value": "79"
+            },
+            {
+              "value": "5692"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "lm.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "44"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "571"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "33"
+            },
+            {
+              "value": "25"
+            },
+            {
+              "value": "27"
+            },
+            {
+              "value": "17"
+            },
+            {
+              "value": "490"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "10"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "68"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "31"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "m.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "10"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "pinterest.ca"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "50"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240120"
+            },
+            {
+              "value": "pinterest.de"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5220"
+            },
+            {
+              "value": "165"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "92166"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "249"
+            },
+            {
+              "value": "174"
+            },
+            {
+              "value": "182"
+            },
+            {
+              "value": "82"
+            },
+            {
+              "value": "4929"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "60"
+            },
+            {
+              "value": "27"
+            },
+            {
+              "value": "30"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "852"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "29"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "323"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "9"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "273"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "duckduckgo"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "hitree.shop"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "m.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240119"
+            },
+            {
+              "value": "pinterest.se"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "218"
+            },
+            {
+              "value": "137"
+            },
+            {
+              "value": "145"
+            },
+            {
+              "value": "68"
+            },
+            {
+              "value": "4590"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "48"
+            },
+            {
+              "value": "30"
+            },
+            {
+              "value": "30"
+            },
+            {
+              "value": "13"
+            },
+            {
+              "value": "756"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "160"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "41"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "lm.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240118"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "0"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "6"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "208"
+            },
+            {
+              "value": "154"
+            },
+            {
+              "value": "161"
+            },
+            {
+              "value": "62"
+            },
+            {
+              "value": "5575"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "47"
+            },
+            {
+              "value": "35"
+            },
+            {
+              "value": "39"
+            },
+            {
+              "value": "25"
+            },
+            {
+              "value": "876"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "10"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "227"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "92"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "l.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240117"
+            },
+            {
+              "value": "thursdaycooking.com.hr"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "7"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "238"
+            },
+            {
+              "value": "174"
+            },
+            {
+              "value": "177"
+            },
+            {
+              "value": "61"
+            },
+            {
+              "value": "8231"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "26"
+            },
+            {
+              "value": "16"
+            },
+            {
+              "value": "16"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "831"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "7"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "54"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "4"
+            },
+            {
               "value": "4"
             },
             {
               "value": "0"
             },
             {
+              "value": "246"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "pinterest.at"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "8"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240116"
+            },
+            {
+              "value": "mojaslatkakuhinja.wordpress.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "11"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "274"
+            },
+            {
+              "value": "223"
+            },
+            {
+              "value": "235"
+            },
+            {
+              "value": "72"
+            },
+            {
+              "value": "11002"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "31"
+            },
+            {
+              "value": "26"
+            },
+            {
+              "value": "28"
+            },
+            {
+              "value": "12"
+            },
+            {
+              "value": "1126"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "237"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240115"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "236"
+            },
+            {
+              "value": "190"
+            },
+            {
+              "value": "202"
+            },
+            {
+              "value": "63"
+            },
+            {
+              "value": "7933"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "47"
+            },
+            {
+              "value": "37"
+            },
+            {
+              "value": "39"
+            },
+            {
+              "value": "15"
+            },
+            {
+              "value": "2445"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "9"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "545"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "70"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "baidu"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "duckduckgo"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "71"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240114"
+            },
+            {
+              "value": "pinterest.it"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "9"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "241"
+            },
+            {
+              "value": "196"
+            },
+            {
+              "value": "209"
+            },
+            {
+              "value": "71"
+            },
+            {
+              "value": "8947"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "26"
+            },
+            {
+              "value": "26"
+            },
+            {
+              "value": "26"
+            },
+            {
+              "value": "15"
+            },
+            {
+              "value": "1055"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "baidu"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "alohafind.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "30"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "16"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240113"
+            },
+            {
+              "value": "pinterest.de"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "36"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "212"
+            },
+            {
+              "value": "170"
+            },
+            {
+              "value": "179"
+            },
+            {
+              "value": "54"
+            },
+            {
+              "value": "8401"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "38"
+            },
+            {
+              "value": "31"
+            },
+            {
+              "value": "31"
+            },
+            {
+              "value": "12"
+            },
+            {
+              "value": "1634"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "36"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "42"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "pinterest.de"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "72"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240112"
+            },
+            {
+              "value": "duckduckgo"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "10"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "181"
+            },
+            {
+              "value": "147"
+            },
+            {
+              "value": "152"
+            },
+            {
+              "value": "48"
+            },
+            {
+              "value": "6321"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "37"
+            },
+            {
+              "value": "25"
+            },
+            {
+              "value": "28"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "1606"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "mojaslatkakuhinja.wordpress.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "8"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "71"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "baidu"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "96"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "7"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "pinterest.de"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "33"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240111"
+            },
+            {
+              "value": "thursdaycooking.com.hr"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "66"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "175"
+            },
+            {
+              "value": "143"
+            },
+            {
+              "value": "152"
+            },
+            {
+              "value": "38"
+            },
+            {
+              "value": "6286"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "41"
+            },
+            {
+              "value": "32"
+            },
+            {
+              "value": "35"
+            },
+            {
+              "value": "16"
+            },
+            {
+              "value": "1458"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "10"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "103"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "9"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "473"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "de.search.yahoo.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "663"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "m.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "49"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "gagasrce.blogspot.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "24"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240110"
+            },
+            {
+              "value": "petalsearch.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "209"
+            },
+            {
+              "value": "156"
+            },
+            {
+              "value": "163"
+            },
+            {
+              "value": "45"
+            },
+            {
+              "value": "8820"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "41"
+            },
+            {
+              "value": "33"
+            },
+            {
+              "value": "36"
+            },
+            {
+              "value": "14"
+            },
+            {
+              "value": "1354"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "kadjakuvam.blogspot.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "26"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "861"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "6"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "447"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "36"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "baidu"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "mojaslatkakuhinja.wordpress.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "42"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240109"
+            },
+            {
+              "value": "pinterest.ch"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "91"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "188"
+            },
+            {
+              "value": "154"
+            },
+            {
+              "value": "165"
+            },
+            {
+              "value": "52"
+            },
+            {
+              "value": "6359"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "32"
+            },
+            {
+              "value": "26"
+            },
+            {
+              "value": "28"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "1262"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "64"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "baidu"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "63"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "ecosia.org"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "97"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "kuhinjica-mignone.blogspot.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "21"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "pinterest.ch"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "66"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240108"
+            },
+            {
+              "value": "tr.pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "14"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "220"
+            },
+            {
+              "value": "164"
+            },
+            {
+              "value": "175"
+            },
+            {
+              "value": "58"
+            },
+            {
+              "value": "8334"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "37"
+            },
+            {
+              "value": "30"
+            },
+            {
+              "value": "33"
+            },
+            {
+              "value": "15"
+            },
+            {
+              "value": "1327"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "8"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "55"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "7"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "271"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            },
+            {
+              "value": "lm.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240107"
+            },
+            {
+              "value": "pinterest.com.au"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "61"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "259"
+            },
+            {
+              "value": "216"
+            },
+            {
+              "value": "240"
+            },
+            {
+              "value": "102"
+            },
+            {
+              "value": "6671"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "34"
+            },
+            {
+              "value": "31"
+            },
+            {
+              "value": "32"
+            },
+            {
+              "value": "12"
+            },
+            {
+              "value": "1637"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "45"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "28"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "pinterest.es"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "20"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240106"
+            },
+            {
+              "value": "l.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "39"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "209"
+            },
+            {
+              "value": "172"
+            },
+            {
+              "value": "181"
+            },
+            {
+              "value": "61"
+            },
+            {
+              "value": "7231"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "40"
+            },
+            {
+              "value": "36"
+            },
+            {
+              "value": "36"
+            },
+            {
+              "value": "13"
+            },
+            {
+              "value": "1530"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "12"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "13"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "146"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "171"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "mojaslatkakuhinja.wordpress.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "49"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "pinterest.de"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "126"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240105"
+            },
+            {
+              "value": "nely-bluehortensia.blogspot.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "58"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "221"
+            },
+            {
+              "value": "174"
+            },
+            {
+              "value": "184"
+            },
+            {
+              "value": "54"
+            },
+            {
+              "value": "9029"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "34"
+            },
+            {
+              "value": "31"
+            },
+            {
+              "value": "34"
+            },
+            {
+              "value": "15"
+            },
+            {
+              "value": "2370"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "11"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "10"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "556"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "baidu"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "96"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240104"
+            },
+            {
+              "value": "m.facebook.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "228"
+            },
+            {
+              "value": "182"
+            },
+            {
+              "value": "192"
+            },
+            {
+              "value": "54"
+            },
+            {
+              "value": "8590"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "39"
+            },
+            {
+              "value": "37"
+            },
+            {
+              "value": "39"
+            },
+            {
+              "value": "20"
+            },
+            {
+              "value": "1576"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "8"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "140"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "5"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "287"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "kadjakuvam.blogspot.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "31"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240103"
+            },
+            {
+              "value": "kuhinjica-mignone.blogspot.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "171"
+            },
+            {
+              "value": "150"
+            },
+            {
+              "value": "154"
+            },
+            {
+              "value": "32"
+            },
+            {
+              "value": "8448"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "44"
+            },
+            {
+              "value": "36"
+            },
+            {
+              "value": "40"
+            },
+            {
+              "value": "18"
+            },
+            {
+              "value": "1356"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "kuhinjica-mignone.blogspot.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "19"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "553"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "mojaslatkakuhinja.wordpress.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "19"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "727"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "9"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "8"
+            },
+            {
+              "value": "6"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "4"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "63"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "emea.search.yahoo.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "20"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "pinterest.de"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240102"
+            },
+            {
+              "value": "startraffic.online"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "google"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "159"
+            },
+            {
+              "value": "129"
+            },
+            {
+              "value": "134"
+            },
+            {
+              "value": "42"
+            },
+            {
+              "value": "6225"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(none)"
+            },
+            {
+              "value": "(direct)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "50"
+            },
+            {
+              "value": "47"
+            },
+            {
+              "value": "48"
+            },
+            {
+              "value": "18"
+            },
+            {
+              "value": "1580"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "pinterest.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "11"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "11"
+            },
+            {
+              "value": "9"
+            },
+            {
+              "value": "236"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "baidu"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "bing"
+            },
+            {
+              "value": "organic"
+            },
+            {
+              "value": "(organic)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "10"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "mojaslatkakuhinja.wordpress.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
               "value": "29"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240101"
+            },
+            {
+              "value": "vrtaljica.blogspot.com"
+            },
+            {
+              "value": "referral"
+            },
+            {
+              "value": "(referral)"
+            },
+            {
+              "value": "(not set)"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
             }
           ]
         }

@@ -3,19 +3,16 @@ defmodule Plausible.Stats.Base do
   use Plausible
   use Plausible.Stats.Fragments
 
-  alias Plausible.Stats.{Query, Filters}
+  alias Plausible.Stats.{Query, Filters, TableDecider}
   alias Plausible.Timezones
   import Ecto.Query
-
-  @no_ref "Direct / None"
-  @not_set "(not set)"
 
   @uniq_users_expression "toUInt64(round(uniq(?) * any(_sample_factor)))"
 
   def base_event_query(site, query) do
     events_q = query_events(site, query)
 
-    if Enum.any?(Filters.visit_props(), &query.filters["visit:" <> &1]) do
+    if TableDecider.events_join_sessions?(query) do
       sessions_q =
         from(
           s in query_sessions(site, query),
@@ -34,377 +31,181 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  def query_events(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site)
+  defp query_events(site, query) do
+    q = from(e in "events_v2", where: ^Filters.WhereBuilder.build(:events, site, query))
 
-    q =
-      from(
-        e in "events_v2",
-        where: e.site_id == ^site.id,
-        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
-      )
-
-    on_full_build do
+    on_ee do
       q = Plausible.Stats.Sampling.add_query_hint(q, query)
     end
-
-    q = from(e in q, where: ^dynamic_filter_condition(query, "event:page", :pathname))
-
-    q =
-      case query.filters["event:name"] do
-        {:is, name} ->
-          from(e in q, where: e.name == ^name)
-
-        {:member, list} ->
-          from(e in q, where: e.name in ^list)
-
-        nil ->
-          q
-      end
-
-    q =
-      case query.filters["event:goal"] do
-        {:is, {:page, path}} ->
-          from(e in q, where: e.pathname == ^path and e.name == "pageview")
-
-        {:matches, {:page, expr}} ->
-          regex = page_regex(expr)
-
-          from(e in q,
-            where: fragment("match(?, ?)", e.pathname, ^regex) and e.name == "pageview"
-          )
-
-        {:is, {:event, event}} ->
-          from(e in q, where: e.name == ^event)
-
-        {:member, clauses} ->
-          {events, pages} = split_goals(clauses)
-
-          from(e in q,
-            where: (e.pathname in ^pages and e.name == "pageview") or e.name in ^events
-          )
-
-        {:matches_member, clauses} ->
-          {events, pages} = split_goals(clauses, &page_regex/1)
-
-          event_clause =
-            if Enum.any?(events) do
-              dynamic([x], fragment("multiMatchAny(?, ?)", x.name, ^events))
-            else
-              dynamic([x], false)
-            end
-
-          page_clause =
-            if Enum.any?(pages) do
-              dynamic(
-                [x],
-                fragment("multiMatchAny(?, ?)", x.pathname, ^pages) and x.name == "pageview"
-              )
-            else
-              dynamic([x], false)
-            end
-
-          where_clause = dynamic([], ^event_clause or ^page_clause)
-
-          from(e in q, where: ^where_clause)
-
-        nil ->
-          q
-      end
-
-    q =
-      Enum.reduce(
-        Query.get_all_filters_by_prefix(query, "event:props"),
-        q,
-        &filter_by_custom_prop/2
-      )
 
     q
   end
 
-  @api_prop_name_to_db %{
-    "source" => "referrer_source",
-    "device" => "screen_size",
-    "screen" => "screen_size",
-    "os" => "operating_system",
-    "os_version" => "operating_system_version",
-    "country" => "country_code",
-    "region" => "subdivision1_code",
-    "city" => "city_geoname_id"
-  }
-
   def query_sessions(site, query) do
-    {first_datetime, last_datetime} =
-      utc_boundaries(query, site)
+    q = from(s in "sessions_v2", where: ^Filters.WhereBuilder.build(:sessions, site, query))
 
-    q = from(s in "sessions_v2", where: s.site_id == ^site.id)
-
-    sessions_q =
-      if FunWithFlags.enabled?(:experimental_session_count, for: site) or
-           query.experimental_session_count? do
-        from s in q, where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
-      else
-        from s in q, where: s.start >= ^first_datetime and s.start < ^last_datetime
-      end
-
-    on_full_build do
-      sessions_q = Plausible.Stats.Sampling.add_query_hint(sessions_q, query)
+    on_ee do
+      q = Plausible.Stats.Sampling.add_query_hint(q, query)
     end
 
-    sessions_q = filter_by_entry_props(sessions_q, query)
-
-    Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->
-      filter_key = "visit:" <> prop_name
-
-      db_field =
-        Map.get(@api_prop_name_to_db, prop_name, prop_name)
-        |> String.to_existing_atom()
-
-      from(s in sessions_q,
-        where: ^dynamic_filter_condition(query, filter_key, db_field)
-      )
-    end)
+    q
   end
 
-  def filter_by_entry_props(sessions_q, query) do
-    case Query.get_filter_by_prefix(query, "visit:entry_props:") do
-      nil ->
-        sessions_q
-
-      {"visit:entry_props:" <> prop_name, filter_value} ->
-        apply_entry_prop_filter(sessions_q, prop_name, filter_value)
-    end
+  def select_event_metrics(metrics) do
+    metrics
+    |> Enum.map(&select_event_metric/1)
+    |> Enum.reduce(%{}, &Map.merge/2)
   end
 
-  def apply_entry_prop_filter(sessions_q, prop_name, {:is, "(none)"}) do
-    from(
-      s in sessions_q,
-      where: not has_key(s, :entry_meta, ^prop_name)
-    )
-  end
-
-  def apply_entry_prop_filter(sessions_q, prop_name, {:is, value}) do
-    from(
-      s in sessions_q,
-      where:
-        has_key(s, :entry_meta, ^prop_name) and get_by_key(s, :entry_meta, ^prop_name) == ^value
-    )
-  end
-
-  def apply_entry_prop_filter(sessions_q, prop_name, {:is_not, "(none)"}) do
-    from(
-      s in sessions_q,
-      where: has_key(s, :entry_meta, ^prop_name)
-    )
-  end
-
-  def apply_entry_prop_filter(sessions_q, prop_name, {:is_not, value}) do
-    from(
-      s in sessions_q,
-      where:
-        not has_key(s, :entry_meta, ^prop_name) or
-          get_by_key(s, :entry_meta, ^prop_name) != ^value
-    )
-  end
-
-  def apply_entry_prop_filter(sessions_q, _, _), do: sessions_q
-
-  def select_event_metrics(q, []), do: q
-
-  def select_event_metrics(q, [:pageviews | rest]) do
-    from(e in q,
-      select_merge: %{
-        pageviews:
+  defp select_event_metric(:pageviews) do
+    %{
+      pageviews:
+        dynamic(
+          [e],
           fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name)
-      }
-    )
-    |> select_event_metrics(rest)
+        )
+    }
   end
 
-  def select_event_metrics(q, [:events | rest]) do
-    from(e in q,
-      select_merge: %{events: fragment("toUInt64(round(count(*) * any(_sample_factor)))")}
-    )
-    |> select_event_metrics(rest)
+  defp select_event_metric(:events) do
+    %{
+      events: dynamic([], fragment("toUInt64(round(count(*) * any(_sample_factor)))"))
+    }
   end
 
-  def select_event_metrics(q, [:visitors | rest]) do
-    from(e in q,
-      select_merge: %{
-        visitors: selected_as(fragment(@uniq_users_expression, e.user_id), :visitors)
-      }
-    )
-    |> select_event_metrics(rest)
+  defp select_event_metric(:visitors) do
+    %{
+      visitors: dynamic([e], selected_as(fragment(@uniq_users_expression, e.user_id), :visitors))
+    }
   end
 
-  on_full_build do
-    def select_event_metrics(q, [:total_revenue | rest]) do
-      q
-      |> Plausible.Stats.Goal.Revenue.total_revenue_query()
-      |> select_event_metrics(rest)
+  defp select_event_metric(:visits) do
+    %{
+      visits:
+        dynamic([e], fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.session_id))
+    }
+  end
+
+  on_ee do
+    defp select_event_metric(:total_revenue) do
+      %{total_revenue: Plausible.Stats.Goal.Revenue.total_revenue_query()}
     end
 
-    def select_event_metrics(q, [:average_revenue | rest]) do
-      q
-      |> Plausible.Stats.Goal.Revenue.average_revenue_query()
-      |> select_event_metrics(rest)
+    defp select_event_metric(:average_revenue) do
+      %{average_revenue: Plausible.Stats.Goal.Revenue.average_revenue_query()}
     end
   end
 
-  def select_event_metrics(q, [:sample_percent | rest]) do
-    from(e in q,
-      select_merge: %{
-        sample_percent:
+  defp select_event_metric(:sample_percent) do
+    %{
+      sample_percent:
+        dynamic(
+          [],
           fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
-      }
-    )
-    |> select_event_metrics(rest)
+        )
+    }
   end
 
-  def select_event_metrics(q, [:percentage | rest]) do
-    q |> select_event_metrics(rest)
+  defp select_event_metric(:percentage), do: %{}
+  defp select_event_metric(:conversion_rate), do: %{}
+  defp select_event_metric(:total_visitors), do: %{}
+
+  defp select_event_metric(unknown), do: raise("Unknown metric: #{unknown}")
+
+  def select_session_metrics(metrics, query) do
+    metrics
+    |> Enum.map(&select_session_metric(&1, query))
+    |> Enum.reduce(%{}, &Map.merge/2)
   end
 
-  def select_event_metrics(_, [unknown | _]), do: raise("Unknown metric: #{unknown}")
+  defp select_session_metric(:bounce_rate, query) do
+    # :TRICKY: If page is passed to query, we only count bounce rate where users _entered_ at page.
+    event_page_filter = Query.get_filter(query, "event:page")
+    condition = Filters.WhereBuilder.build_condition(:entry_page, event_page_filter)
 
-  def select_session_metrics(q, [], _query), do: q
-
-  def select_session_metrics(q, [:bounce_rate | rest], query) do
-    condition = dynamic_filter_condition(query, "event:page", :entry_page)
-
-    from(s in q,
-      select_merge:
-        ^%{
-          bounce_rate:
-            dynamic(
-              [],
-              fragment(
-                "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
-                ^condition,
-                ^condition
-              )
-            ),
-          __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
-        }
-    )
-    |> select_session_metrics(rest, query)
+    %{
+      bounce_rate:
+        dynamic(
+          [],
+          fragment(
+            "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
+            ^condition,
+            ^condition
+          )
+        ),
+      __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
+    }
   end
 
-  def select_session_metrics(q, [:visits | rest], query) do
-    from(s in q,
-      select_merge: %{
-        visits: fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign)
-      }
-    )
-    |> select_session_metrics(rest, query)
+  defp select_session_metric(:visits, _query) do
+    %{
+      visits: dynamic([s], fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign))
+    }
   end
 
-  def select_session_metrics(q, [:pageviews | rest], query) do
-    from(s in q,
-      select_merge: %{
-        pageviews:
+  defp select_session_metric(:pageviews, _query) do
+    %{
+      pageviews:
+        dynamic(
+          [s],
           fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
-      }
-    )
-    |> select_session_metrics(rest, query)
+        )
+    }
   end
 
-  def select_session_metrics(q, [:events | rest], query) do
-    from(s in q,
-      select_merge: %{
-        events: fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
-      }
-    )
-    |> select_session_metrics(rest, query)
+  defp select_session_metric(:events, _query) do
+    %{
+      events:
+        dynamic(
+          [s],
+          fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
+        )
+    }
   end
 
-  def select_session_metrics(q, [:visitors | rest], query) do
-    from(s in q,
-      select_merge: %{
-        visitors:
+  defp select_session_metric(:visitors, _query) do
+    %{
+      visitors:
+        dynamic(
+          [s],
           selected_as(
             fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id),
             :visitors
           )
-      }
-    )
-    |> select_session_metrics(rest, query)
+        )
+    }
   end
 
-  def select_session_metrics(q, [:visit_duration | rest], query) do
-    from(s in q,
-      select_merge: %{
-        :visit_duration =>
-          fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))"),
-        __internal_visits: fragment("toUInt32(sum(sign))")
-      }
-    )
-    |> select_session_metrics(rest, query)
+  defp select_session_metric(:visit_duration, _query) do
+    %{
+      visit_duration:
+        dynamic([], fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))")),
+      __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
+    }
   end
 
-  def select_session_metrics(q, [:views_per_visit | rest], query) do
-    from(s in q,
-      select_merge: %{
-        views_per_visit:
-          fragment("ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)", s.sign, s.pageviews, s.sign),
-        __internal_visits: fragment("toUInt32(sum(sign))")
-      }
-    )
-    |> select_session_metrics(rest, query)
+  defp select_session_metric(:views_per_visit, _query) do
+    %{
+      views_per_visit:
+        dynamic(
+          [s],
+          fragment("ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)", s.sign, s.pageviews, s.sign)
+        ),
+      __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
+    }
   end
 
-  def select_session_metrics(q, [:sample_percent | rest], query) do
-    from(e in q,
-      select_merge: %{
-        sample_percent:
+  defp select_session_metric(:sample_percent, _query) do
+    %{
+      sample_percent:
+        dynamic(
+          [],
           fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
-      }
-    )
-    |> select_session_metrics(rest, query)
+        )
+    }
   end
 
-  def select_session_metrics(q, [:percentage | rest], query) do
-    q |> select_session_metrics(rest, query)
-  end
-
-  def dynamic_filter_condition(query, filter_key, db_field) do
-    case query && query.filters && query.filters[filter_key] do
-      {:is, value} ->
-        value = db_field_val(db_field, value)
-        dynamic([x], field(x, ^db_field) == ^value)
-
-      {:is_not, value} ->
-        value = db_field_val(db_field, value)
-        dynamic([x], field(x, ^db_field) != ^value)
-
-      {:matches_member, glob_exprs} ->
-        page_regexes = Enum.map(glob_exprs, &page_regex/1)
-        dynamic([x], fragment("multiMatchAny(?, ?)", field(x, ^db_field), ^page_regexes))
-
-      {:not_matches_member, glob_exprs} ->
-        page_regexes = Enum.map(glob_exprs, &page_regex/1)
-        dynamic([x], fragment("not(multiMatchAny(?, ?))", field(x, ^db_field), ^page_regexes))
-
-      {:matches, glob_expr} ->
-        regex = page_regex(glob_expr)
-        dynamic([x], fragment("match(?, ?)", field(x, ^db_field), ^regex))
-
-      {:does_not_match, glob_expr} ->
-        regex = page_regex(glob_expr)
-        dynamic([x], fragment("not(match(?, ?))", field(x, ^db_field), ^regex))
-
-      {:member, list} ->
-        list = Enum.map(list, &db_field_val(db_field, &1))
-        dynamic([x], field(x, ^db_field) in ^list)
-
-      {:not_member, list} ->
-        list = Enum.map(list, &db_field_val(db_field, &1))
-        dynamic([x], field(x, ^db_field) not in ^list)
-
-      nil ->
-        true
-    end
-  end
+  defp select_session_metric(:percentage, _query), do: %{}
 
   def filter_converted_sessions(db_query, site, query) do
     if Query.has_event_filters?(query) do
@@ -424,16 +225,6 @@ defmodule Plausible.Stats.Base do
       db_query
     end
   end
-
-  defp db_field_val(:referrer_source, @no_ref), do: ""
-  defp db_field_val(:referrer, @no_ref), do: ""
-  defp db_field_val(:utm_medium, @no_ref), do: ""
-  defp db_field_val(:utm_source, @no_ref), do: ""
-  defp db_field_val(:utm_campaign, @no_ref), do: ""
-  defp db_field_val(:utm_content, @no_ref), do: ""
-  defp db_field_val(:utm_term, @no_ref), do: ""
-  defp db_field_val(_, @not_set), do: ""
-  defp db_field_val(_, val), do: val
 
   defp beginning_of_time(candidate, native_stats_start_at) do
     if Timex.after?(native_stats_start_at, candidate) do
@@ -495,92 +286,6 @@ defmodule Plausible.Stats.Base do
     "^#{escaped}$"
   end
 
-  defp split_goals(clauses, map_fn \\ &Function.identity/1) do
-    groups =
-      Enum.group_by(clauses, fn {goal_type, _v} -> goal_type end, fn {_k, val} -> map_fn.(val) end)
-
-    {
-      Map.get(groups, :event, []),
-      Map.get(groups, :page, [])
-    }
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:is, "(none)"}}, q) do
-    from(
-      e in q,
-      where: not has_key(e, :meta, ^prop_name)
-    )
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:is, value}}, q) do
-    from(
-      e in q,
-      where: has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) == ^value
-    )
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:is_not, "(none)"}}, q) do
-    from(
-      e in q,
-      where: has_key(e, :meta, ^prop_name)
-    )
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:is_not, value}}, q) do
-    from(
-      e in q,
-      where: not has_key(e, :meta, ^prop_name) or get_by_key(e, :meta, ^prop_name) != ^value
-    )
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:matches, value}}, q) do
-    regex = page_regex(value)
-
-    from(
-      e in q,
-      where:
-        has_key(e, :meta, ^prop_name) and
-          fragment("match(?, ?)", get_by_key(e, :meta, ^prop_name), ^regex)
-    )
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:member, values}}, q) do
-    none_value_included = Enum.member?(values, "(none)")
-
-    from(
-      e in q,
-      where:
-        (has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) in ^values) or
-          (^none_value_included and not has_key(e, :meta, ^prop_name))
-    )
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:not_member, values}}, q) do
-    none_value_included = Enum.member?(values, "(none)")
-
-    from(
-      e in q,
-      where:
-        (has_key(e, :meta, ^prop_name) and
-           get_by_key(e, :meta, ^prop_name) not in ^values) or
-          (^none_value_included and
-             has_key(e, :meta, ^prop_name) and
-             get_by_key(e, :meta, ^prop_name) not in ^values) or
-          (not (^none_value_included) and not has_key(e, :meta, ^prop_name))
-    )
-  end
-
-  defp filter_by_custom_prop({"event:props:" <> prop_name, {:matches_member, clauses}}, q) do
-    regexes = Enum.map(clauses, &page_regex/1)
-
-    from(
-      e in q,
-      where:
-        has_key(e, :meta, ^prop_name) and
-          fragment("arrayExists(k -> match(?, k), ?)", get_by_key(e, :meta, ^prop_name), ^regexes)
-    )
-  end
-
   defp total_visitors(site, query) do
     base_event_query(site, query)
     |> select([e], total_visitors: fragment(@uniq_users_expression, e.user_id))
@@ -611,6 +316,30 @@ defmodule Plausible.Stats.Base do
             "if(? > 0, round(? / ? * 100, 1), null)",
             selected_as(:__total_visitors),
             selected_as(:visitors),
+            selected_as(:__total_visitors)
+          )
+      })
+    else
+      q
+    end
+  end
+
+  # Adds conversion_rate metric to query, calculated as
+  # X / Y where Y is the same breakdown value without goal or props
+  # filters.
+  def maybe_add_conversion_rate(q, site, query, metrics) do
+    if :conversion_rate in metrics do
+      total_query = query |> Query.remove_filters(["event:goal", "event:props"])
+
+      # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
+      subquery(q)
+      |> select_merge(^%{total_visitors: total_visitors_subquery(site, total_query)})
+      |> select_merge([e], %{
+        conversion_rate:
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), 0)",
+            selected_as(:__total_visitors),
+            e.visitors,
             selected_as(:__total_visitors)
           )
       })

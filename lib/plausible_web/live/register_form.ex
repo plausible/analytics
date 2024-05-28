@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
   def render(%{invitation_expired: true} = assigns) do
     ~H"""
     <div class="mx-auto mt-6 text-center dark:text-gray-300">
-      <h1 class="text-3xl font-black">Plausible Analytics</h1>
+      <h1 class="text-3xl font-black"><%= Plausible.product_name() %></h1>
       <div class="text-xl font-medium">Lightweight and privacy-friendly web analytics</div>
     </div>
 
@@ -64,8 +64,8 @@ defmodule PlausibleWeb.Live.RegisterForm do
     ~H"""
     <div class="mx-auto mt-6 text-center dark:text-gray-300">
       <h1 class="text-3xl font-black">
-        <%= if small_build?() or @live_action == :register_from_invitation_form do %>
-          Register your Plausible Analytics account
+        <%= if ce?() or @live_action == :register_from_invitation_form do %>
+          Register your <%= Plausible.product_name() %> account
         <% else %>
           Register your 30-day free trial
         <% end %>
@@ -158,7 +158,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
         <% end %>
 
         <% submit_text =
-          if small_build?() or @invitation do
+          if ce?() or @invitation do
             "Create my account →"
           else
             "Start my free trial →"
@@ -301,17 +301,24 @@ defmodule PlausibleWeb.Live.RegisterForm do
   defp add_user(socket, user) do
     case Repo.insert(user) do
       {:ok, _user} ->
-        metrics_params =
-          if socket.assigns.invitation do
-            %{
-              event_name: "Signup via invitation",
-              params: %{u: "/register/invitation/:invitation_id"}
-            }
-          else
-            %{event_name: "Signup", params: %{}}
-          end
+        on_ee do
+          metrics_params =
+            if socket.assigns.invitation do
+              %{
+                event_name: "Signup via invitation",
+                params: %{
+                  url:
+                    Path.join(PlausibleWeb.Endpoint.url(), "/register/invitation/:invitation_id")
+                }
+              }
+            else
+              %{event_name: "Signup", params: %{}}
+            end
 
-        {:noreply, push_event(socket, "send-metrics", metrics_params)}
+          {:noreply, push_event(socket, "send-metrics", metrics_params)}
+        else
+          {:noreply, socket}
+        end
 
       {:error, changeset} ->
         {:noreply,

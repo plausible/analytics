@@ -14,4 +14,18 @@
         "domain" => @site.domain
       }
     ) %>
+  <% "pages" -> %>
+    <%= live_render(@conn, PlausibleWeb.Live.Shields.Pages,
+      session: %{
+        "site_id" => @site.id,
+        "domain" => @site.domain
+      }
+    ) %>
+  <% "hostnames" -> %>
+    <%= live_render(@conn, PlausibleWeb.Live.Shields.Hostnames,
+      session: %{
+        "site_id" => @site.id,
+        "domain" => @site.domain
+      }
+    ) %>
 <% end %>

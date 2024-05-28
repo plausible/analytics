@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   @user_id 123
 
   describe "GET /api/stats/:domain/sources" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns top sources by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -497,8 +497,54 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     end
   end
 
+  describe "UTM parameters with hostname filter" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    for {resource, attr} <- [
+          utm_campaigns: :utm_campaign,
+          utm_sources: :utm_source,
+          utm_terms: :utm_term,
+          utm_contents: :utm_content
+        ] do
+      test "returns #{resource} when filtered by hostname", %{conn: conn, site: site} do
+        populate_stats(site, [
+          # session starts at two.example.com with utm_param=ad
+          build(
+            :pageview,
+            [
+              {unquote(attr), "ad"},
+              {:user_id, @user_id},
+              {:hostname, "two.example.com"},
+              {:timestamp, ~N[2021-01-01 00:00:00]}
+            ]
+          ),
+          # session continues on one.example.com without any utm_params
+          build(
+            :pageview,
+            [
+              {:user_id, @user_id},
+              {:hostname, "one.example.com"},
+              {:timestamp, ~N[2021-01-01 00:15:00]}
+            ]
+          )
+        ])
+
+        filters = Jason.encode!(%{hostname: "one.example.com"})
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/#{unquote(resource)}?period=day&date=2021-01-01&filters=#{filters}"
+          )
+
+        # nobody landed on one.example.com from utm_param=ad
+        assert json_response(conn, 200) == []
+      end
+    end
+  end
+
   describe "GET /api/stats/:domain/utm_mediums" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns top utm_mediums by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -650,7 +696,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/utm_campaigns" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns top utm_campaigns by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -810,7 +856,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/utm_sources" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns top utm_sources by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -858,7 +904,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/utm_terms" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns top utm_terms by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -1018,7 +1064,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   end
 
   describe "GET /api/stats/:domain/utm_contents" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns top utm_contents by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -1221,6 +1267,79 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
+    test "returns no top referrers for a custom goal and filtered by hostname",
+         %{
+           conn: conn,
+           site: site
+         } do
+      populate_stats(site, [
+        build(:pageview,
+          hostname: "blog.example.com",
+          referrer_source: "Facebook",
+          user_id: @user_id
+        ),
+        build(:pageview,
+          hostname: "app.example.com",
+          pathname: "/register",
+          user_id: @user_id
+        ),
+        build(:event,
+          name: "Signup",
+          hostname: "app.example.com",
+          pathname: "/register",
+          user_id: @user_id
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup", hostname: "app.example.com"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == []
+    end
+
+    test "returns top referrers for a custom goal and filtered by hostname (2)",
+         %{
+           conn: conn,
+           site: site
+         } do
+      populate_stats(site, [
+        build(:pageview,
+          hostname: "app.example.com",
+          referrer_source: "Facebook",
+          pathname: "/register",
+          user_id: @user_id
+        ),
+        build(:event,
+          name: "Signup",
+          hostname: "app.example.com",
+          pathname: "/register",
+          user_id: @user_id
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup", hostname: "app.example.com"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "conversion_rate" => 100.0,
+                 "name" => "Facebook",
+                 "total_visitors" => 1,
+                 "visitors" => 1
+               }
+             ]
+    end
+
     test "returns top referrers with goal filter + :is prop filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -1400,6 +1519,51 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
+    test "returns top referrers for a particular source filtered by hostname", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "example",
+          referrer: "example.com",
+          hostname: "two.example.com"
+        ),
+        build(:pageview,
+          referrer_source: "example",
+          referrer: "example.com",
+          hostname: "two.example.com",
+          user_id: @user_id
+        ),
+        build(:pageview,
+          hostname: "one.example.com",
+          user_id: @user_id
+        ),
+        build(:pageview,
+          referrer_source: "example",
+          referrer: "example.com/page1",
+          hostname: "one.example.com"
+        ),
+        build(:pageview,
+          referrer_source: "ignored",
+          referrer: "ignored",
+          hostname: "two.example.com"
+        )
+      ])
+
+      filters = Jason.encode!(%{hostname: "one.example.com"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/referrers/example?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"name" => "example.com/page1", "visitors" => 1}
+             ]
+    end
+
     test "calculates bounce rate and visit duration for referrer urls", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -1442,9 +1606,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
-    test "gets keywords from Google", %{conn: conn, user: user, site: site} do
-      insert(:google_auth, user: user, user: user, site: site, property: "sc-domain:example.com")
-
+    test "gets keywords from Google", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           referrer_source: "DuckDuckGo",
@@ -1463,10 +1625,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day")
       {:ok, terms} = Plausible.Google.API.Mock.fetch_stats(nil, nil, nil)
 
-      assert json_response(conn, 200) == %{
-               "total_visitors" => 2,
-               "search_terms" => terms
-             }
+      assert json_response(conn, 200) == %{"search_terms" => terms}
     end
 
     test "works when filter expression is provided for source", %{

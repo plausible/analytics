@@ -12,11 +12,11 @@ defmodule Plausible.Auth.TOTP do
   vault for safe storage is configured in `Plausible.Auth.TOTP.Vault` via
   a dedicated `Ecto` type defined in `Plausible.Auth.TOTP.EncryptedBinary`.
   The function returns updated user along with TOTP URI and a readable form
-  of secret. Both - the URI and readable secret - are meant for exposure 
+  of secret. Both - the URI and readable secret - are meant for exposure
   in the user's setup screen. The URI should be encoded as a QR code.
 
   After initiation, user is expected to confirm valid setup with `enable/2`,
-  providing TOTP code from their authenticator app. After code validation 
+  providing TOTP code from their authenticator app. After code validation
   passes successfully, the `User.totp_enabled` flag is set to `true`.
   Finally, the user must be immediately presented with a list of recovery codes
   returned by the same call of `enable/2`. The codes should be presented
@@ -33,7 +33,10 @@ defmodule Plausible.Auth.TOTP do
   TOTP can be disabled with `disable/2`. User is expected to provide their
   current password for safety. Once disabled, all TOTP user settings are
   cleared and any remaining generated recovery codes are removed. The function
-  can be safely run more than once.
+  can be safely run more than once. There's also alternative call for forced
+  disabling of TOTP for a given user without sending any notification,
+  `force_disable/1`. It's meant for use in situation where user lost both,
+  2FA device and recovery codes and their identity is verified independently.
 
   If the user needs to regenerate the recovery codes outside of setup procedure,
   they must do it via `generate_recovery_codes/2`, providing their current
@@ -54,7 +57,7 @@ defmodule Plausible.Auth.TOTP do
 
   In case of TOTP codes, a grace period of 30 seconds is applied, which
   allows user to use their current and previous TOTP code, assuming 30
-  second validity window of each. This allows user to use code that was 
+  second validity window of each. This allows user to use code that was
   about to expire before the submission. Regardless of that, each TOTP
   code can be used only once. Validation procedure rejects repeat use
   of the same code for safety. It's done by tracking last time a TOTP
@@ -67,7 +70,7 @@ defmodule Plausible.Auth.TOTP do
 
   TOTP token is an alternate method of authenticating  user session.
   It's main use case is "trust this device" functionality, where user
-  can decide to skip 2FA verification for a particular browser session 
+  can decide to skip 2FA verification for a particular browser session
   for next N days. The token should then be stored in an encrypted,
   signed cookie with a proper expiration timestamp.
 
@@ -85,7 +88,6 @@ defmodule Plausible.Auth.TOTP do
   alias Plausible.Repo
   alias PlausibleWeb.Email
 
-  @issuer_name "Plausible Analytics"
   @recovery_codes_count 10
 
   @spec enabled?(Auth.User.t()) :: boolean()
@@ -169,22 +171,7 @@ defmodule Plausible.Auth.TOTP do
   @spec disable(Auth.User.t(), String.t()) :: {:ok, Auth.User.t()} | {:error, :invalid_password}
   def disable(user, password) do
     if Auth.Password.match?(password, user.password_hash) do
-      {:ok, user} =
-        Repo.transaction(fn ->
-          {_, _} =
-            user
-            |> recovery_codes_query()
-            |> Repo.delete_all()
-
-          user
-          |> change(
-            totp_enabled: false,
-            totp_token: nil,
-            totp_secret: nil,
-            totp_last_used_at: nil
-          )
-          |> Repo.update!()
-        end)
+      {:ok, user} = disable_for(user)
 
       user
       |> Email.two_factor_disabled_email()
@@ -194,6 +181,11 @@ defmodule Plausible.Auth.TOTP do
     else
       {:error, :invalid_password}
     end
+  end
+
+  @spec force_disable(Auth.User.t()) :: {:ok, Auth.User.t()}
+  def force_disable(user) do
+    disable_for(user)
   end
 
   @spec reset_token(Auth.User.t()) :: Auth.User.t()
@@ -286,10 +278,27 @@ defmodule Plausible.Auth.TOTP do
     end
   end
 
+  defp disable_for(user) do
+    Repo.transaction(fn ->
+      {_, _} =
+        user
+        |> recovery_codes_query()
+        |> Repo.delete_all()
+
+      user
+      |> change(
+        totp_enabled: false,
+        totp_token: nil,
+        totp_secret: nil,
+        totp_last_used_at: nil
+      )
+      |> Repo.update!()
+    end)
+  end
+
   defp totp_uri(user) do
-    NimbleTOTP.otpauth_uri("#{@issuer_name}:#{user.email}", user.totp_secret,
-      issuer: @issuer_name
-    )
+    issuer_name = Plausible.product_name()
+    NimbleTOTP.otpauth_uri("#{issuer_name}:#{user.email}", user.totp_secret, issuer: issuer_name)
   end
 
   defp readable_secret(user) do

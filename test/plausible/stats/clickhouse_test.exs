@@ -258,8 +258,6 @@ defmodule Plausible.Stats.ClickhouseTest do
   describe "imported_pageview_counts/1" do
     test "gets pageview counts for each of sites' imports" do
       site = insert(:site)
-      {:ok, opts} = add_imported_data(%{site: site})
-      site = Map.new(opts).site
 
       import1 = insert(:site_import, site: site)
       import2 = insert(:site_import, site: site)

@@ -60,6 +60,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
              }
     end
 
+    test "ignores a given property parameter", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "property" => "event:props:author",
+          "metrics" => "visit_duration"
+        })
+
+      assert json_response(conn, 200)
+    end
+
     test "validates that period can be parsed", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/timeseries", %{
@@ -468,8 +479,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
   describe "filters" do
     test "event:goal filter returns 400 when goal not configured", %{conn: conn, site: site} do
       conn =
-        get(conn, "/api/v1/stats/aggregate", %{
+        get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,events",
           "filters" => "event:goal==Visit /register**"
         })
 
@@ -477,6 +491,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
 
       assert msg =~
                "The pageview goal for the pathname `/register**` is not configured for this site"
+    end
+
+    test "validates that filters are valid", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,events",
+          "filters" => "badproperty==bar"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Invalid filter property 'badproperty'. Please provide a valid filter property: https://plausible.io/docs/stats-api#properties"
+             }
     end
 
     test "can filter by a custom event goal", %{conn: conn, site: site} do
@@ -918,7 +948,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           timestamp: ~N[2021-01-01 05:00:00]
         ),
         build(:pageview,
-          pathname: "/goobye",
+          pathname: "/goodbye",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -941,6 +971,50 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                "pageviews" => 2,
                "bounce_rate" => 100,
                "visit_duration" => 150
+             }
+    end
+
+    test "can filter by hostname", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: @user_id,
+          hostname: "landing.example.com",
+          timestamp: ~N[2021-01-01 00:00:01]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          hostname: "example.com",
+          timestamp: ~N[2021-01-01 00:00:02]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          hostname: "example.com",
+          timestamp: ~N[2021-01-01 00:00:06]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "filters" => "event:hostname==example.com",
+          "metrics" => "visitors,visits,pageviews,bounce_rate,visit_duration"
+        })
+
+      res =
+        json_response(conn, 200)["results"]
+
+      assert List.first(res) == %{
+               "bounce_rate" => 0,
+               "date" => "2021-01-01 00:00:00",
+               "pageviews" => 2,
+               "visit_duration" => 5,
+               "visitors" => 1,
+               "visits" => 1
              }
     end
 
@@ -1091,6 +1165,184 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
   end
 
   describe "metrics" do
+    test "returns conversion rate as 0 when no stats exist", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, event_name: "Signup")
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "metrics" => "conversion_rate",
+          "filters" => "event:goal==Signup",
+          "period" => "7d",
+          "date" => "2021-01-10"
+        })
+
+      Enum.each(json_response(conn, 200)["results"], fn bucket ->
+        bucket["conversion_rate"] == 0.0
+      end)
+    end
+
+    test "returns conversion rate when goal filter is applied", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, name: "Signup", timestamp: ~N[2021-01-04 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-04 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-04 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-05 00:00:00])
+      ])
+
+      insert(:goal, site: site, event_name: "Signup")
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "metrics" => "conversion_rate",
+          "filters" => "event:goal==Signup",
+          "period" => "7d",
+          "date" => "2021-01-10"
+        })
+
+      assert [first, second | _] = json_response(conn, 200)["results"]
+
+      assert [first, second] == [
+               %{
+                 "date" => "2021-01-04",
+                 "conversion_rate" => 66.7
+               },
+               %{
+                 "date" => "2021-01-05",
+                 "conversion_rate" => 100.0
+               }
+             ]
+    end
+
+    test "returns conversion rate with a goal + custom prop filter", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["author"],
+          "meta.value": ["Teet"],
+          timestamp: ~N[2021-01-04 00:12:00]
+        ),
+        build(:event,
+          name: "Signup",
+          "meta.key": ["author"],
+          "meta.value": ["Tiit"],
+          timestamp: ~N[2021-01-04 00:12:00]
+        ),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-04 00:12:00]),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Teet"],
+          timestamp: ~N[2021-01-04 00:12:00]
+        )
+      ])
+
+      insert(:goal, site: site, event_name: "Signup")
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "metrics" => "conversion_rate",
+          "filters" => "event:goal==Signup;event:props:author==Teet",
+          "period" => "7d",
+          "date" => "2021-01-10"
+        })
+
+      [first | _] = json_response(conn, 200)["results"]
+
+      assert first == %{
+               "date" => "2021-01-04",
+               "conversion_rate" => 25.0
+             }
+    end
+
+    test "returns conversion rate with a goal + page filter", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          pathname: "/yes",
+          timestamp: ~N[2021-01-04 00:12:00]
+        ),
+        build(:event,
+          name: "Signup",
+          pathname: "/no",
+          timestamp: ~N[2021-01-04 00:12:00]
+        ),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-04 00:12:00]),
+        build(:pageview, pathname: "/yes", timestamp: ~N[2021-01-04 00:12:00]),
+        build(:pageview, pathname: "/yes", timestamp: ~N[2021-01-04 00:12:00])
+      ])
+
+      insert(:goal, site: site, event_name: "Signup")
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "metrics" => "conversion_rate",
+          "filters" => "event:goal==Signup;event:page==/yes",
+          "period" => "7d",
+          "date" => "2021-01-10"
+        })
+
+      [first | _] = json_response(conn, 200)["results"]
+
+      assert first == %{
+               "date" => "2021-01-04",
+               "conversion_rate" => 33.3
+             }
+    end
+
+    test "returns conversion rate with a goal + session filter", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          screen_size: "Mobile",
+          timestamp: ~N[2021-01-04 00:12:00]
+        ),
+        build(:event,
+          name: "Signup",
+          screen_size: "Laptop",
+          timestamp: ~N[2021-01-04 00:12:00]
+        ),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-04 00:12:00]),
+        build(:pageview, screen_size: "Mobile", timestamp: ~N[2021-01-04 00:12:00]),
+        build(:pageview, screen_size: "Mobile", timestamp: ~N[2021-01-04 00:12:00])
+      ])
+
+      insert(:goal, site: site, event_name: "Signup")
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "metrics" => "conversion_rate",
+          "filters" => "event:goal==Signup;visit:device==Mobile",
+          "period" => "7d",
+          "date" => "2021-01-10"
+        })
+
+      [first | _] = json_response(conn, 200)["results"]
+
+      assert first == %{
+               "date" => "2021-01-04",
+               "conversion_rate" => 33.3
+             }
+    end
+
     test "validates that conversion_rate cannot be queried without a goal filter", %{
       conn: conn,
       site: site
@@ -1271,6 +1523,129 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                  %{"date" => "2021-01-07", "views_per_visit" => 1.0}
                ]
              }
+    end
+  end
+
+  describe "imported data" do
+    test "returns pageviews as the value of events metric", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:imported_visitors, pageviews: 1, date: ~D[2021-01-01])
+      ])
+
+      conn =
+        conn
+        |> get("/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "7d",
+          "metrics" => "events",
+          "date" => "2021-01-07",
+          "with_imported" => "true"
+        })
+
+      first_result =
+        conn
+        |> json_response(200)
+        |> Map.get("results")
+        |> List.first()
+
+      assert first_result == %{"date" => "2021-01-01", "events" => 1}
+
+      refute json_response(conn, 200)["warning"]
+    end
+
+    test "adds a warning when query params are not supported for imported data", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          "meta.key": ["package"],
+          "meta.value": ["large"],
+          timestamp: ~N[2021-01-01 12:00:00]
+        ),
+        build(:imported_visitors, pageviews: 1, date: ~D[2021-01-01])
+      ])
+
+      conn =
+        conn
+        |> get("/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "7d",
+          "metrics" => "events",
+          "date" => "2021-01-07",
+          "with_imported" => "true",
+          "filters" => "event:props:package==large"
+        })
+
+      first_result =
+        conn
+        |> json_response(200)
+        |> Map.get("results")
+        |> List.first()
+
+      assert first_result == %{"date" => "2021-01-01", "events" => 1}
+
+      assert json_response(conn, 200)["warning"] =~
+               "Imported stats are not included in the results because query parameters are not supported."
+    end
+
+    test "does not add a warning when there are no site imports", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["package"],
+          "meta.value": ["large"],
+          timestamp: ~N[2021-01-01 12:00:00]
+        )
+      ])
+
+      conn =
+        conn
+        |> get("/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "7d",
+          "metrics" => "events",
+          "date" => "2021-01-07",
+          "with_imported" => "true",
+          "filters" => "event:props:package==large"
+        })
+
+      refute json_response(conn, 200)["warning"]
+    end
+
+    test "does not add a warning when import is out of queried date range", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site, end_date: ~D[2020-12-29])
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          "meta.key": ["package"],
+          "meta.value": ["large"],
+          timestamp: ~N[2021-01-01 12:00:00]
+        ),
+        build(:imported_visitors, pageviews: 1, date: ~D[2020-12-29])
+      ])
+
+      conn =
+        conn
+        |> get("/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "7d",
+          "metrics" => "events",
+          "date" => "2021-01-07",
+          "with_imported" => "true",
+          "filters" => "event:props:package==large"
+        })
+
+      refute json_response(conn, 200)["warning"]
     end
   end
 end

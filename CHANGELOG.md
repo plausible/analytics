@@ -1,7 +1,27 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
 ### Added
+
+- Snippet integration verification
+
+### Removed
+
+### Changed
+
+### Fixed
+
+## v2.1.0 - 2024-05-23
+
+### Added
+- Hostname Allow List in Site Settings
+- Pages Block List in Site Settings
+- Add `conversion_rate` to Stats API Timeseries and on the main graph
+- Add `total_conversions` and `conversion_rate` to `visitors.csv` in a goal-filtered CSV export
+- Ability to display total conversions (with a goal filter) on the main graph
+- Add `conversion_rate` to Stats API Timeseries and on the main graph
 - Add `time_on_page` metric into the Stats API
 - County Block List in Site Settings
 - Query the `views_per_visit` metric based on imported data as well if possible
@@ -32,6 +52,14 @@ All notable changes to this project will be documented in this file.
 - Add `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES` env var which defaults to `100000` (100KB)
 - Add alternative SMTP adapter plausible/analytics#3654
 - Add `EXTRA_CONFIG_PATH` env var to specify extra Elixir config plausible/analytics#3906
+- Add restrictive `robots.txt` for self-hosted plausible/analytics#3905
+- Add Yesterday as an time range option in the dashboard
+- Add dmg extension to the list of default tracked file downloads
+- Add support for importing Google Analytics 4 data
+- Import custom events from Google Analytics 4
+- Ability to filter Search Console keywords by page, country and device plausible/analytics#4077
+- Add `DATA_DIR` env var for exports/imports plausible/analytics#4100
+- Add custom events support to CSV export and import
 
 ### Removed
 - Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions
@@ -49,8 +77,11 @@ All notable changes to this project will be documented in this file.
 - GA/SC sections moved to new settings: Integrations
 - Replace `CLICKHOUSE_MAX_BUFFER_SIZE` with `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES`
 - Validate metric isn't queried multiple times
+- Filters in dashboard are represented by jsonurl
 
 ### Fixed
+- Creating many sites no longer leads to cookie overflow
+- Ignore sessions without pageviews for `entry_page` and `exit_page` breakdowns
 - Using `VersionedCollapsingMergeTree` to store visit data to avoid rare race conditions that led to wrong visit data being shown
 - Fix `conversion_rate` metric in a `browser_versions` breakdown
 - Calculate `conversion_rate` percentage change in the same way like `bounce_rate` (subtraction instead of division)
@@ -72,6 +103,7 @@ All notable changes to this project will be documented in this file.
 - Fix automatic scrolling to the bottom on the dashboard if previously selected properties tab plausible/analytics#3872
 - Allow running the container with arbitrary UID plausible/analytics#2986
 - Fix `width=manual` in embedded dashboards plausible/analytics#3910
+- Fix URL escaping when pipes are used in UTM tags plausible/analytics#3930
 
 ## v2.0.0 - 2023-07-12
 

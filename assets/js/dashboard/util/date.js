@@ -71,8 +71,16 @@ export function nowForSite(site) {
   return dayjs.utc().utcOffset(site.offset / 60)
 }
 
+export function yesterday(site) {
+  return nowForSite(site).subtract(1, 'day')
+}
+
 export function lastMonth(site) {
   return shiftMonths(nowForSite(site), -1)
+}
+
+export function isSameDate(date1, date2) {
+  return formatISO(date1) === formatISO(date2)
 }
 
 export function isSameMonth(date1, date2) {
@@ -80,7 +88,7 @@ export function isSameMonth(date1, date2) {
 }
 
 export function isToday(site, date) {
-  return formatISO(date) === formatISO(nowForSite(site))
+  return isSameDate(date, nowForSite(site))
 }
 
 export function isThisMonth(site, date) {
@@ -123,9 +131,4 @@ export function isAfter(date1, date2, period) {
     return false;
   }
   return date1.date() > date2.date()
-}
-
-export function monthsBetweenDates(date1, date2) {
-  var diffMonths = (date2.year() - date1.year()) * 12 + date2.month() - date1.month();
-  return Math.abs(diffMonths);
 }

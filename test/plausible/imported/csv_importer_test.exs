@@ -1,42 +1,15 @@
 defmodule Plausible.Imported.CSVImporterTest do
-  use Plausible.DataCase, async: true
+  use Plausible
+  use Plausible.Repo
+  use PlausibleWeb.ConnCase
+  use Bamboo.Test
   alias Plausible.Imported.{CSVImporter, SiteImport}
-  alias Testcontainers.MinioContainer
   require SiteImport
 
-  @moduletag :minio
+  doctest CSVImporter, import: true
 
-  setup_all do
-    Testcontainers.start_link()
-
-    {:ok, minio} = Testcontainers.start_container(MinioContainer.new())
-    on_exit(fn -> :ok = Testcontainers.stop_container(minio.container_id) end)
-    connection_opts = MinioContainer.connection_opts(minio)
-
-    s3 = fn op -> ExAws.request!(op, connection_opts) end
-    s3.(ExAws.S3.put_bucket("imports", "us-east-1"))
-    s3.(ExAws.S3.put_bucket("exports", "us-east-1"))
-
-    {:ok, container: minio, s3: s3}
-  end
-
-  setup %{container: minio, s3: s3} do
-    connection_opts = MinioContainer.connection_opts(minio)
-
-    clean_bucket = fn bucket ->
-      ExAws.S3.list_objects_v2(bucket)
-      |> ExAws.stream!(connection_opts)
-      |> Stream.each(fn objects ->
-        keys = objects |> List.wrap() |> Enum.map(& &1.key)
-        s3.(ExAws.S3.delete_all_objects(bucket, keys))
-      end)
-      |> Stream.run()
-    end
-
-    clean_bucket.("imports")
-    clean_bucket.("exports")
-
-    :ok
+  on_ee do
+    @moduletag :minio
   end
 
   describe "new_import/3 and parse_args/1" do
@@ -45,6 +18,7 @@ defmodule Plausible.Imported.CSVImporterTest do
     test "parses job args properly", %{user: user, site: site} do
       tables = [
         "imported_browsers",
+        "imported_custom_events",
         "imported_devices",
         "imported_entry_pages",
         "imported_exit_pages",
@@ -55,22 +29,35 @@ defmodule Plausible.Imported.CSVImporterTest do
         "imported_visitors"
       ]
 
+      start_date = "20231001"
+      end_date = "20240102"
+
       uploads =
         Enum.map(tables, fn table ->
-          filename = "#{table}.csv"
+          filename = "#{table}_#{start_date}_#{end_date}.csv"
 
-          %{
-            "filename" => filename,
-            "s3_url" => "https://bucket-name.s3.eu-north-1.amazonaws.com/#{site.id}/#{filename}"
-          }
+          on_ee do
+            %{
+              "filename" => filename,
+              "s3_url" =>
+                "https://bucket-name.s3.eu-north-1.amazonaws.com/#{site.id}/#{filename}-some-random-suffix"
+            }
+          else
+            %{
+              "filename" => filename,
+              "local_path" => "/tmp/some-random-path"
+            }
+          end
         end)
+
+      date_range = CSVImporter.date_range(uploads)
 
       assert {:ok, job} =
                CSVImporter.new_import(site, user,
-                 # to satisfy the non null constraints on the table I'm providing "0" dates (according to ClickHouse)
-                 start_date: ~D[1970-01-01],
-                 end_date: ~D[1970-01-01],
-                 uploads: uploads
+                 start_date: date_range.first,
+                 end_date: date_range.last,
+                 uploads: uploads,
+                 storage: on_ee(do: "s3", else: "local")
                )
 
       assert %Oban.Job{args: %{"import_id" => import_id, "uploads" => ^uploads} = args} =
@@ -80,24 +67,30 @@ defmodule Plausible.Imported.CSVImporterTest do
                %{
                  id: ^import_id,
                  source: :csv,
-                 start_date: ~D[1970-01-01],
-                 end_date: ~D[1970-01-01],
+                 start_date: ~D[2023-10-01],
+                 end_date: ~D[2024-01-02],
                  status: SiteImport.pending()
                }
              ] = Plausible.Imported.list_all_imports(site)
 
-      assert %{imported_data: nil} = Repo.reload!(site)
-      assert CSVImporter.parse_args(args) == [uploads: uploads]
+      assert CSVImporter.parse_args(args) == [
+               uploads: uploads,
+               storage: on_ee(do: "s3", else: "local")
+             ]
     end
   end
 
   describe "import_data/2" do
-    setup [:create_user, :create_new_site]
+    setup [:create_user, :create_new_site, :clean_buckets]
 
-    test "imports tables from S3", %{site: site, user: user, s3: s3, container: minio} do
+    @describetag :tmp_dir
+
+    test "imports tables from S3", %{site: site, user: user} = ctx do
+      _ = ctx
+
       csvs = [
         %{
-          name: "imported_browsers.csv",
+          name: "imported_browsers_20211230_20211231.csv",
           body: """
           "date","browser","visitors","visits","visit_duration","bounces"
           "2021-12-30","Amazon Silk",2,2,0,2
@@ -122,7 +115,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_devices.csv",
+          name: "imported_devices_20211230_20220102.csv",
           body: """
           "date","device","visitors","visits","visit_duration","bounces"
           "2021-12-30","Desktop",25,28,75,27
@@ -140,7 +133,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_entry_pages.csv",
+          name: "imported_entry_pages_20211230_20211231.csv",
           body: """
           "date","visitors","entrances","visit_duration","bounces","entry_page"
           "2021-12-30",6,6,0,6,"/14776416252794997127"
@@ -173,7 +166,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_exit_pages.csv",
+          name: "imported_exit_pages_20211230_20211231.csv",
           body: """
           "date","visitors","exits","exit_page"
           "2021-12-30",6,6,"/14776416252794997127"
@@ -198,7 +191,20 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_locations.csv",
+          name: "imported_custom_events_20211230_20211231.csv",
+          body: """
+          "date","name","link_url","path","visitors","events"
+          "2021-12-30","Filter Menu: Open","","",300,1652
+          "2021-12-30","Signup","","",40,82
+          "2021-12-30","Signup via invitation","","",5,10
+          "2021-12-31","Signup via invitation","","",5,10
+          "2021-12-31","Signup","","",39,78
+          "2021-12-31","Filter Menu: Open","","",295,1394
+          "2021-12-31","Newsletter signup","","",1,2
+          """
+        },
+        %{
+          name: "imported_locations_20211230_20211231.csv",
           body: """
           "date","country","region","city","visitors","visits","visit_duration","bounces"
           "2021-12-30","AU","",0,1,1,43,0
@@ -235,7 +241,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_operating_systems.csv",
+          name: "imported_operating_systems_20211230_20220101.csv",
           body: """
           "date","operating_system","visitors","visits","visit_duration","bounces"
           "2021-12-30","Android",25,26,254,24
@@ -255,29 +261,29 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_pages.csv",
+          name: "imported_pages_20211230_20220101.csv",
           body: """
-          "date","visitors","pageviews","exits","time_on_page","hostname","page"
-          "2021-12-30",1,1,0,43,"lucky.numbers.com","/14776416252794997127"
-          "2021-12-30",1,1,1,0,"lucky.numbers.com","/14776416252794997127"
-          "2021-12-30",6,6,6,0,"lucky.numbers.com","/14776416252794997127"
-          "2021-12-30",1,1,1,0,"lucky.numbers.com","/9102354072466236765"
-          "2021-12-30",1,1,1,0,"lucky.numbers.com","/7478911940502018071"
-          "2021-12-30",1,1,1,0,"lucky.numbers.com","/6402607186523575652"
-          "2021-12-30",2,2,2,0,"lucky.numbers.com","/9962503789684934900"
-          "2021-12-30",8,10,10,0,"lucky.numbers.com","/13595620304963848161"
-          "2021-12-30",2,2,2,0,"lucky.numbers.com","/17019199732013993436"
-          "2021-12-30",32,33,32,211,"lucky.numbers.com","/9874837495456455794"
-          "2021-12-31",4,4,4,0,"lucky.numbers.com","/14776416252794997127"
-          "2021-12-31",1,1,1,0,"lucky.numbers.com","/8738789417178304429"
-          "2021-12-31",1,1,1,0,"lucky.numbers.com","/7445073500314667742"
-          "2021-12-31",1,1,1,0,"lucky.numbers.com","/4897404798407749335"
-          "2021-12-31",1,2,1,29,"lucky.numbers.com","/11263893625781431659"
-          "2022-01-01",2,2,2,0,"lucky.numbers.com","/5878724061840196349"
+          "date","visitors","pageviews","hostname","page"
+          "2021-12-30",1,1,"lucky.numbers.com","/14776416252794997127"
+          "2021-12-30",1,1,"lucky.numbers.com","/14776416252794997127"
+          "2021-12-30",6,6,"lucky.numbers.com","/14776416252794997127"
+          "2021-12-30",1,1,"lucky.numbers.com","/9102354072466236765"
+          "2021-12-30",1,1,"lucky.numbers.com","/7478911940502018071"
+          "2021-12-30",1,1,"lucky.numbers.com","/6402607186523575652"
+          "2021-12-30",2,2,"lucky.numbers.com","/9962503789684934900"
+          "2021-12-30",8,10,"lucky.numbers.com","/13595620304963848161"
+          "2021-12-30",2,2,"lucky.numbers.com","/17019199732013993436"
+          "2021-12-30",32,33,"lucky.numbers.com","/9874837495456455794"
+          "2021-12-31",4,4,"lucky.numbers.com","/14776416252794997127"
+          "2021-12-31",1,1,"lucky.numbers.com","/8738789417178304429"
+          "2021-12-31",1,1,"lucky.numbers.com","/7445073500314667742"
+          "2021-12-31",1,1,"lucky.numbers.com","/4897404798407749335"
+          "2021-12-31",1,2,"lucky.numbers.com","/11263893625781431659"
+          "2022-01-01",2,2,"lucky.numbers.com","/5878724061840196349"
           """
         },
         %{
-          name: "imported_sources.csv",
+          name: "imported_sources_20211230_20220106.csv",
           body: """
           "date","source","utm_medium","utm_campaign","utm_content","utm_term","visitors","visits","visit_duration","bounces"
           "2021-12-30","","","","","",25,26,254,24
@@ -307,7 +313,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_visitors.csv",
+          name: "imported_visitors_20111225_20111230.csv",
           body: """
           "date","visitors","pageviews","bounces","visits","visit_duration"
           "2011-12-25",5,50,2,7,8640
@@ -322,26 +328,30 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       uploads =
         for %{name: name, body: body} <- csvs do
-          key = "#{site.id}/#{name}"
-          s3.(ExAws.S3.put_object("imports", key, body))
-          %{"filename" => name, "s3_url" => minio_url(minio, "imports", key)}
+          on_ee do
+            %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, name)
+            [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
+            ExAws.request!(ExAws.S3.put_object(bucket, key, body))
+            %{"filename" => name, "s3_url" => s3_url}
+          else
+            local_path = Path.join(ctx.tmp_dir, name)
+            File.write!(local_path, body)
+            %{"filename" => name, "local_path" => local_path}
+          end
         end
 
-      {:ok, job} =
-        CSVImporter.new_import(
-          site,
-          user,
-          # to satisfy the non null constraints on the table I'm providing "0" dates (according to ClickHouse)
-          start_date: ~D[1970-01-01],
-          end_date: ~D[1970-01-01],
-          uploads: uploads
+      date_range = CSVImporter.date_range(uploads)
+
+      {:ok, _job} =
+        CSVImporter.new_import(site, user,
+          start_date: date_range.first,
+          end_date: date_range.last,
+          uploads: uploads,
+          storage: on_ee(do: "s3", else: "local")
         )
 
-      job = Repo.reload!(job)
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety?: false)
 
-      assert :ok = Plausible.Workers.ImportAnalytics.perform(job)
-
-      # on successfull import the start and end dates are updated
       assert %SiteImport{
                start_date: ~D[2011-12-25],
                end_date: ~D[2022-01-06],
@@ -352,10 +362,12 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 99
     end
 
-    test "fails on invalid CSV", %{site: site, user: user, s3: s3, container: minio} do
+    test "fails on invalid CSV", %{site: site, user: user} = ctx do
+      _ = ctx
+
       csvs = [
         %{
-          name: "imported_browsers.csv",
+          name: "imported_browsers_20211230_20211231.csv",
           body: """
           "date","browser","visitors","visits","visit_duration","bounces"
           "2021-12-30","Amazon Silk",2,2,0,2
@@ -368,7 +380,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_devices.csv",
+          name: "imported_devices_20211230_20211231.csv",
           body: """
           "date","device","visitors","visit_duration","bounces"
           "2021-12-30","Desktop",28,ehhhh....
@@ -378,24 +390,33 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       uploads =
         for %{name: name, body: body} <- csvs do
-          key = "#{site.id}/#{name}"
-          s3.(ExAws.S3.put_object("imports", key, body))
-          %{"filename" => name, "s3_url" => minio_url(minio, "imports", key)}
+          on_ee do
+            %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, name)
+            [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
+            ExAws.request!(ExAws.S3.put_object(bucket, key, body))
+            %{"filename" => name, "s3_url" => s3_url}
+          else
+            local_path = Path.join(ctx.tmp_dir, name)
+            File.write!(local_path, body)
+            %{"filename" => name, "local_path" => local_path}
+          end
         end
 
-      {:ok, job} =
-        CSVImporter.new_import(
-          site,
-          user,
-          start_date: ~D[1970-01-01],
-          end_date: ~D[1970-01-01],
-          uploads: uploads
+      date_range = CSVImporter.date_range(uploads)
+
+      {:ok, _job} =
+        CSVImporter.new_import(site, user,
+          start_date: date_range.first,
+          end_date: date_range.last,
+          uploads: uploads,
+          storage: on_ee(do: "s3", else: "local")
         )
 
-      job = Repo.reload!(job)
+      assert %{discard: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety?: false)
 
-      assert {:discard, message} = Plausible.Workers.ImportAnalytics.perform(job)
-      assert message =~ "CANNOT_PARSE_INPUT_ASSERTION_FAILED"
+      # TODO
+      # assert {:discard, message} = Plausible.Workers.ImportAnalytics.perform(job)
+      # assert message =~ "CANNOT_PARSE_INPUT_ASSERTION_FAILED"
 
       assert %SiteImport{id: import_id, source: :csv, status: :failed} =
                Repo.get_by!(SiteImport, site_id: site.id)
@@ -407,133 +428,591 @@ defmodule Plausible.Imported.CSVImporterTest do
   end
 
   describe "export -> import" do
-    setup [:create_user, :create_new_site]
+    setup [:create_user, :log_in, :create_api_key, :use_api_key, :clean_buckets]
 
-    @describetag :tmp_dir
+    @tag :tmp_dir
+    test "it works", %{conn: conn, user: user, tmp_dir: tmp_dir} do
+      exported_site = insert(:site, members: [user])
+      imported_site = insert(:site, members: [user])
 
-    test "it works", %{site: site, user: user, s3: s3, tmp_dir: tmp_dir, container: minio} do
-      populate_stats(site, [
-        build(:pageview,
-          user_id: 123,
-          pathname: "/",
-          timestamp:
-            Timex.shift(~N[2021-10-20 12:00:00], minutes: -1) |> NaiveDateTime.truncate(:second),
-          country_code: "EE",
-          subdivision1_code: "EE-37",
-          city_geoname_id: 588_409,
-          referrer_source: "Google"
-        ),
-        build(:pageview,
-          user_id: 123,
-          pathname: "/some-other-page",
-          timestamp:
-            Timex.shift(~N[2021-10-20 12:00:00], minutes: -2) |> NaiveDateTime.truncate(:second),
-          country_code: "EE",
-          subdivision1_code: "EE-37",
-          city_geoname_id: 588_409,
-          referrer_source: "Google"
-        ),
-        build(:pageview,
-          pathname: "/",
-          timestamp:
-            Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
-          utm_medium: "search",
-          utm_campaign: "ads",
-          utm_source: "google",
-          utm_content: "content",
-          utm_term: "term",
-          browser: "Firefox",
-          browser_version: "120",
-          operating_system: "Mac",
-          operating_system_version: "14"
-        ),
-        build(:pageview,
-          timestamp:
-            Timex.shift(~N[2021-10-20 12:00:00], months: -1) |> NaiveDateTime.truncate(:second),
-          country_code: "EE",
-          browser: "Firefox",
-          browser_version: "120",
-          operating_system: "Mac",
-          operating_system_version: "14"
-        ),
-        build(:pageview,
-          timestamp:
-            Timex.shift(~N[2021-10-20 12:00:00], months: -5) |> NaiveDateTime.truncate(:second),
-          utm_campaign: "ads",
-          country_code: "EE",
-          referrer_source: "Google",
-          browser: "FirefoxNoVersion",
-          operating_system: "MacNoVersion"
-        ),
-        build(:event,
-          timestamp:
-            Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
-          name: "Signup",
-          "meta.key": ["variant"],
-          "meta.value": ["A"]
-        )
+      insert(:goal, site: exported_site, event_name: "Outbound Link: Click")
+      insert(:goal, site: exported_site, event_name: "404")
+      insert(:goal, site: exported_site, event_name: "click-button")
+      insert(:goal, site: imported_site, event_name: "Outbound Link: Click")
+      insert(:goal, site: imported_site, event_name: "404")
+      insert(:goal, site: imported_site, event_name: "click-button")
+
+      process_csv = fn path ->
+        [header | rows] = NimbleCSV.RFC4180.parse_string(File.read!(path), skip_headers: false)
+
+        site_id_column_index =
+          Enum.find_index(header, &(&1 == "site_id")) ||
+            raise "couldn't find site_id column in CSV header #{inspect(header)}"
+
+        rows =
+          Enum.map(rows, fn row ->
+            List.replace_at(row, site_id_column_index, exported_site.id)
+          end)
+
+        NimbleCSV.RFC4180.dump_to_iodata([header | rows])
+      end
+
+      Plausible.IngestRepo.query!([
+        "insert into events_v2 format CSVWithNames\n",
+        process_csv.("fixture/markosaric_com_events_v2_2024_04_01_2024_04_30_dump.csv")
+      ])
+
+      Plausible.IngestRepo.query!([
+        "insert into sessions_v2 format CSVWithNames\n",
+        process_csv.("fixture/markosaric_com_sessions_v2_2024_04_01_2024_04_30_dump.csv")
       ])
 
       # export archive to s3
-      Oban.insert!(
-        Plausible.Workers.ExportCSV.new(%{
-          "site_id" => site.id,
-          "email_to" => user.email,
-          "s3_bucket" => "exports",
-          "s3_path" => "#{site.id}/Plausible.zip",
-          "s3_config_overrides" => Map.new(MinioContainer.connection_opts(minio))
-        })
-      )
+      on_ee do
+        assert {:ok, _job} = Plausible.Exports.schedule_s3_export(exported_site.id, user.email)
+      else
+        assert {:ok, %{args: %{"local_path" => local_path}}} =
+                 Plausible.Exports.schedule_local_export(exported_site.id, user.email)
+      end
 
-      assert %{success: 1} = Oban.drain_queue(queue: :s3_csv_export, with_safety: false)
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_exports, with_safety: false)
+
+      assert %{success: 1} =
+               Oban.drain_queue(queue: :notify_exported_analytics, with_safety: false)
+
+      # check mailbox
+      assert_receive {:delivered_email, email}, _within = :timer.seconds(5)
+      assert email.to == [{user.name, user.email}]
+
+      assert email.html_body =~
+               ~s[Please click <a href="http://localhost:8000/#{URI.encode_www_form(exported_site.domain)}/download/export">here</a> to start the download process.]
 
       # download archive
-      s3.(
-        ExAws.S3.download_file(
-          "exports",
-          "/#{site.id}/Plausible.zip",
-          Path.join(tmp_dir, "Plausible.zip")
+      on_ee do
+        ExAws.request!(
+          ExAws.S3.download_file(
+            Plausible.S3.exports_bucket(),
+            to_string(exported_site.id),
+            Path.join(tmp_dir, "plausible-export.zip")
+          )
         )
-      )
+      else
+        File.rename!(local_path, Path.join(tmp_dir, "plausible-export.zip"))
+      end
 
       # unzip archive
-      {:ok, files} = :zip.unzip(to_charlist(Path.join(tmp_dir, "Plausible.zip")), cwd: tmp_dir)
+      {:ok, files} =
+        :zip.unzip(to_charlist(Path.join(tmp_dir, "plausible-export.zip")), cwd: tmp_dir)
 
       # upload csvs
       uploads =
         Enum.map(files, fn file ->
-          key = "#{site.id}/#{Path.basename(file)}"
-          s3.(ExAws.S3.put_object("imports", key, File.read!(file)))
-          %{"filename" => Path.basename(file), "s3_url" => minio_url(minio, "imports", key)}
+          on_ee do
+            %{s3_url: s3_url} = Plausible.S3.import_presign_upload(imported_site.id, file)
+            [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
+            ExAws.request!(ExAws.S3.put_object(bucket, key, File.read!(file)))
+            %{"filename" => Path.basename(file), "s3_url" => s3_url}
+          else
+            %{"filename" => Path.basename(file), "local_path" => file}
+          end
         end)
 
       # run importer
-      {:ok, job} =
-        CSVImporter.new_import(
-          site,
-          user,
-          start_date: ~D[1970-01-01],
-          end_date: ~D[1970-01-01],
-          uploads: uploads
+      date_range = CSVImporter.date_range(uploads)
+
+      {:ok, _job} =
+        CSVImporter.new_import(imported_site, user,
+          start_date: date_range.first,
+          end_date: date_range.last,
+          uploads: uploads,
+          storage: on_ee(do: "s3", else: "local")
         )
 
-      job = Repo.reload!(job)
-      assert :ok = Plausible.Workers.ImportAnalytics.perform(job)
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety: false)
 
       # validate import
       assert %SiteImport{
-               start_date: ~D[2021-05-20],
-               end_date: ~D[2021-10-20],
+               start_date: ~D[2024-04-01],
+               end_date: ~D[2024-04-30],
                source: :csv,
                status: :completed
-             } = Repo.get_by!(SiteImport, site_id: site.id)
+             } = Repo.get_by!(SiteImport, site_id: imported_site.id)
 
-      assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 5
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(exported_site) == 0
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(imported_site) == 1745
+
+      # compare original and imported data via stats api requests
+      results = fn path, params ->
+        get(conn, path, params)
+        |> json_response(200)
+        |> Map.fetch!("results")
+      end
+
+      timeseries = fn params ->
+        results.("/api/v1/stats/timeseries", params)
+      end
+
+      common_params = fn site ->
+        %{
+          "site_id" => site.domain,
+          "period" => "custom",
+          "date" => "2024-04-01,2024-04-30",
+          "with_imported" => true
+        }
+      end
+
+      breakdown = fn params_or_site, by ->
+        by_without_prefix = by |> Plausible.Stats.Filters.without_prefix() |> to_string()
+
+        params =
+          case params_or_site do
+            %Plausible.Site{} = site ->
+              common_params.(site)
+              |> Map.put("metrics", "visitors,visits,pageviews,visit_duration,bounce_rate")
+              |> Map.put("limit", 1000)
+              |> Map.put("property", by)
+
+            params ->
+              params
+          end
+
+        Enum.sort_by(
+          results.("/api/v1/stats/breakdown", params),
+          &Map.fetch!(&1, by_without_prefix)
+        )
+      end
+
+      goal_breakdown = fn site, by, filters ->
+        by_without_prefix = by |> Plausible.Stats.Filters.without_prefix() |> to_string()
+
+        params =
+          common_params.(site)
+          |> Map.put("metrics", "visitors,events,conversion_rate")
+          |> Map.put("filters", filters)
+          |> Map.put("limit", 1000)
+          |> Map.put("property", by)
+
+        Enum.sort_by(
+          results.("/api/v1/stats/breakdown", params),
+          &Map.fetch!(&1, by_without_prefix)
+        )
+      end
+
+      # timeseries
+      timeseries_params = fn site ->
+        Map.put(
+          common_params.(site),
+          "metrics",
+          "visitors,visits,pageviews,views_per_visit,visit_duration,bounce_rate"
+        )
+      end
+
+      exported_timeseries = timeseries.(timeseries_params.(exported_site))
+      imported_timeseries = timeseries.(timeseries_params.(imported_site))
+
+      pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
+        assert exported["date"] == imported["date"]
+        assert exported["pageviews"] == imported["pageviews"]
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+        assert_in_delta exported["visitors"], imported["visitors"], 1
+        assert exported["visits"] == imported["visits"]
+        assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
+      end)
+
+      # timeseries' views per visit difference is within 3%
+      assert summary(field(exported_timeseries, "views_per_visit")) ==
+               [0.98, 1.2025, 1.29, 1.3699999999999999, 1.64]
+
+      assert summary(field(imported_timeseries, "views_per_visit")) ==
+               [0.98, 1.1925, 1.29, 1.375, 1.64]
+
+      assert summary(
+               pairwise(exported_timeseries, imported_timeseries, fn exported, imported ->
+                 abs(1 - imported["views_per_visit"] / exported["views_per_visit"])
+               end)
+             ) == [0.0, 0.0, 0.0, 0.0, 0.0325203252032521]
+
+      # pages
+      pages_params = fn site ->
+        common_params.(site)
+        |> Map.put("metrics", "visitors,visits,pageviews,time_on_page,visit_duration,bounce_rate")
+        |> Map.put("limit", 1000)
+        |> Map.put("property", "event:page")
+      end
+
+      exported_pages = breakdown.(pages_params.(exported_site), "visit:page")
+      imported_pages = breakdown.(pages_params.(imported_site), "visit:page")
+
+      pairwise(exported_pages, imported_pages, fn exported, imported ->
+        assert exported["page"] == imported["page"]
+        assert exported["pageviews"] == imported["pageviews"]
+        assert exported["visit_duration"] == imported["visit_duration"]
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+
+        # time on page is not being exported/imported right now
+        assert imported["time_on_page"] == 0
+      end)
+
+      # NOTE: page breakdown's visitors difference is up to 28%
+      assert summary(field(exported_pages, "visitors")) == [1, 1.0, 5.5, 17.75, 495]
+      assert summary(field(imported_pages, "visitors")) == [1, 1.75, 5.5, 20.0, 511]
+
+      assert summary(
+               pairwise(exported_pages, imported_pages, fn exported, imported ->
+                 e = exported["visitors"]
+                 i = imported["visitors"]
+
+                 # only consider non tiny readings
+                 if e > 5, do: abs(1 - e / i), else: 0
+               end)
+             ) == [0, 0.0, 0.0, 0.0, 0.2857142857142857]
+
+      # page breakdown's visits difference is within 6% for non-tiny values
+      assert summary(field(exported_pages, "visits")) == [1, 1.75, 5.5, 20.25, 526]
+      assert summary(field(imported_pages, "visits")) == [1, 1.75, 5.5, 20.25, 527]
+
+      assert summary(
+               pairwise(exported_pages, imported_pages, fn exported, imported ->
+                 e = exported["visits"]
+                 i = imported["visits"]
+
+                 # only consider non tiny readings
+                 if e > 4, do: abs(1 - e / i), else: 0
+               end)
+             ) == [0, 0.0, 0.0, 0.0, 0.06666666666666665]
+
+      # sources
+      exported_sources = breakdown.(exported_site, "visit:source")
+      imported_sources = breakdown.(imported_site, "visit:source")
+
+      pairwise(exported_sources, imported_sources, fn exported, imported ->
+        assert exported["source"] == imported["source"]
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+        assert exported["visits"] == imported["visits"]
+        assert exported["pageviews"] == imported["pageviews"]
+        assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
+      end)
+
+      # NOTE: source breakdown's visitors difference is up to 12%
+      assert summary(field(exported_sources, "visitors")) == [1, 1.0, 1.0, 7.25, 582]
+      assert summary(field(imported_sources, "visitors")) == [1, 1.0, 1.0, 7.25, 587]
+
+      assert summary(
+               pairwise(exported_sources, imported_sources, fn exported, imported ->
+                 abs(1 - exported["visitors"] / imported["visitors"])
+               end)
+             ) == [0.0, 0.0, 0.0, 0.0, 0.11111111111111116]
+
+      # utm mediums
+      assert breakdown.(exported_site, "visit:utm_medium") ==
+               breakdown.(imported_site, "visit:utm_medium")
+
+      # entry pages
+      exported_entry_pages = breakdown.(exported_site, "visit:entry_page")
+      imported_entry_pages = breakdown.(imported_site, "visit:entry_page")
+
+      pairwise(exported_entry_pages, imported_entry_pages, fn exported, imported ->
+        assert exported["entry_page"] == imported["entry_page"]
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+        assert exported["visits"] == imported["visits"]
+        assert exported["pageviews"] == imported["pageviews"]
+        assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
+      end)
+
+      # NOTE: entry page breakdown's visitors difference is up to almost 50%
+      assert summary(field(exported_entry_pages, "visitors")) == [1, 1.0, 5.0, 12.5, 458]
+      assert summary(field(imported_entry_pages, "visitors")) == [1, 1.0, 5.0, 12.5, 473]
+
+      assert summary(
+               pairwise(exported_entry_pages, imported_entry_pages, fn exported, imported ->
+                 abs(1 - exported["visitors"] / imported["visitors"])
+               end)
+             ) == [0, 0, 0, 0, 0.5]
+
+      # cities
+      exported_cities = breakdown.(exported_site, "visit:city")
+      imported_cities = breakdown.(imported_site, "visit:city")
+
+      pairwise(exported_cities, imported_cities, fn exported, imported ->
+        assert exported["city"] == imported["city"]
+        assert exported["pageviews"] == imported["pageviews"]
+        assert_in_delta exported["visits"], imported["visits"], 1
+      end)
+
+      # NOTE: city breakdown's bounce rate difference is up to 4%
+      assert summary(field(exported_cities, "bounce_rate")) == [0, 87.0, 100.0, 100.0, 100]
+      assert summary(field(imported_cities, "bounce_rate")) == [0.0, 87.0, 100.0, 100.0, 100.0]
+
+      assert summary(
+               pairwise(exported_cities, imported_cities, fn exported, imported ->
+                 e = exported["bounce_rate"]
+                 i = imported["bounce_rate"]
+
+                 if is_number(e) and is_number(i) and i > 0 do
+                   abs(1 - e / i)
+                 else
+                   # both nil or both zero
+                   assert e == i
+                   _no_diff = 0
+                 end
+               end)
+             ) == [0.0, 0.0, 0.0, 0.0, 0.03614457831325302]
+
+      # NOTE: city breakdown's visit duration difference is up to 14%
+      assert summary(field(exported_cities, "visit_duration")) == [0, 0.0, 0.0, 1.0, 1718]
+      assert summary(field(imported_cities, "visit_duration")) == [0.0, 0.0, 0.0, 1.0, 1718.0]
+
+      assert summary(
+               pairwise(exported_cities, imported_cities, fn exported, imported ->
+                 e = exported["visit_duration"]
+                 i = imported["visit_duration"]
+
+                 if is_number(e) and is_number(i) and i > 0 do
+                   abs(1 - e / i)
+                 else
+                   # both nil or both zero
+                   assert e == i
+                   _no_diff = 0
+                 end
+               end)
+             ) == [0, 0.0, 0.0, 0.0, 0.1428571428571429]
+
+      # NOTE: city breakdown's visitors relative difference is up to 27%
+      assert summary(field(exported_cities, "visitors")) == [1, 1.0, 1.0, 2.0, 22]
+      assert summary(field(imported_cities, "visitors")) == [1, 1.0, 1.0, 2.0, 30]
+
+      assert summary(
+               pairwise(exported_cities, imported_cities, fn exported, imported ->
+                 e = exported["visitors"]
+                 i = imported["visitors"]
+
+                 # only consider non tiny readings
+                 if e > 3, do: abs(1 - e / i), else: 0
+               end)
+             ) == [0, 0.0, 0.0, 0.0, 0.2666666666666667]
+
+      # devices
+      exported_devices = breakdown.(exported_site, "visit:device")
+      imported_devices = breakdown.(imported_site, "visit:device")
+
+      pairwise(exported_devices, imported_devices, fn exported, imported ->
+        assert exported["device"] == imported["device"]
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+        assert exported["visits"] == imported["visits"]
+        assert exported["pageviews"] == imported["pageviews"]
+        assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
+      end)
+
+      # NOTE: device breakdown's visitors difference is up to 3%
+      assert summary(field(exported_devices, "visitors")) == [3, 21.75, 242.0, 535.25, 773]
+      assert summary(field(imported_devices, "visitors")) == [3, 21.75, 249.5, 551.0, 791]
+
+      assert summary(
+               pairwise(exported_devices, imported_devices, fn exported, imported ->
+                 abs(1 - exported["visitors"] / imported["visitors"])
+               end)
+             ) == [0.0, 0.0, 0.011378002528445008, 0.025028787232157956, 0.031847133757961776]
+
+      # browsers
+      exported_browsers = breakdown.(exported_site, "visit:browser")
+      imported_browsers = breakdown.(imported_site, "visit:browser")
+
+      pairwise(exported_browsers, imported_browsers, fn exported, imported ->
+        assert exported["browser"] == imported["browser"]
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+        assert exported["visits"] == imported["visits"]
+        assert exported["pageviews"] == imported["pageviews"]
+        assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
+      end)
+
+      # NOTE: browser breakdown's visitors difference is up to 4%
+      assert summary(field(exported_browsers, "visitors")) == [1, 1.5, 8.0, 34.0, 572]
+      assert summary(field(imported_browsers, "visitors")) == [1, 1.5, 8.0, 34.0, 588]
+
+      assert summary(
+               pairwise(exported_browsers, imported_browsers, fn exported, imported ->
+                 abs(1 - exported["visitors"] / imported["visitors"])
+               end)
+             ) == [0.0, 0.0, 0.0, 0.0, 0.037122969837587005]
+
+      # os
+      exported_os = breakdown.(exported_site, "visit:os")
+      imported_os = breakdown.(imported_site, "visit:os")
+
+      pairwise(exported_os, imported_os, fn exported, imported ->
+        assert exported["os"] == imported["os"]
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+        assert exported["visits"] == imported["visits"]
+        assert exported["pageviews"] == imported["pageviews"]
+        assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
+      end)
+
+      # NOTE: os breakdown's visitors difference is up to 5%
+      assert summary(field(exported_os, "visitors")) == [3, 11.0, 56.0, 311.0, 390]
+      assert summary(field(imported_os, "visitors")) == [3, 11.0, 57.0, 315.0, 403]
+
+      assert summary(
+               pairwise(exported_os, imported_os, fn exported, imported ->
+                 abs(1 - exported["visitors"] / imported["visitors"])
+               end)
+             ) == [0.0, 0.0, 0.0, 0.01754385964912286, 0.045592705167173286]
+
+      # os versions
+      exported_os_versions = breakdown.(exported_site, "visit:os_version")
+      imported_os_versions = breakdown.(imported_site, "visit:os_version")
+
+      pairwise(exported_os_versions, imported_os_versions, fn exported, imported ->
+        assert exported["os_version"] == imported["os_version"]
+        assert exported["bounce_rate"] == imported["bounce_rate"]
+        assert exported["visits"] == imported["visits"]
+        assert exported["pageviews"] == imported["pageviews"]
+        assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
+      end)
+
+      # NOTE: os version breakdown's visitors difference is up to almost 34%
+      assert summary(field(exported_os_versions, "visitors")) == [1, 1.0, 2.0, 7.0, 380]
+      assert summary(field(imported_os_versions, "visitors")) == [1, 1.0, 2.0, 7.0, 393]
+
+      assert summary(
+               pairwise(exported_os_versions, imported_os_versions, fn exported, imported ->
+                 abs(1 - exported["visitors"] / imported["visitors"])
+               end)
+             ) == [0.0, 0.0, 0.0, 0.0, 0.33333333333333337]
+
+      # goals
+      exported_goals = goal_breakdown.(exported_site, "event:goal", "")
+      imported_goals = goal_breakdown.(imported_site, "event:goal", "")
+
+      # NOTE: goal breakdown's visitors difference is up to 20%
+      assert summary(field(exported_goals, "visitors")) == [1, 6.5, 12.0, 41.0, 70]
+      assert summary(field(imported_goals, "visitors")) == [1, 6.5, 12.0, 50.0, 88]
+
+      assert summary(
+               pairwise(exported_goals, imported_goals, fn exported, imported ->
+                 abs(1 - exported["visitors"] / imported["visitors"])
+               end)
+             ) == [0.0, 0.0, 0.0, 0.10227272727272729, 0.20454545454545459]
+
+      pairwise(exported_goals, imported_goals, fn exported, imported ->
+        assert exported["events"] == imported["events"]
+      end)
+
+      # NOTE: goal breakdown's conversion rate difference is up to 18%
+      assert summary(field(exported_goals, "conversion_rate")) == [
+               0.1,
+               0.55,
+               1.0,
+               3.3,
+               5.6
+             ]
+
+      assert summary(field(imported_goals, "conversion_rate")) == [
+               0.1,
+               0.5,
+               0.9,
+               3.8499999999999996,
+               6.8
+             ]
+
+      assert summary(
+               pairwise(exported_goals, imported_goals, fn exported, imported ->
+                 abs(1 - exported["conversion_rate"] / imported["conversion_rate"])
+               end)
+             ) == [
+               0.0,
+               0.05555555555555558,
+               0.11111111111111116,
+               0.14379084967320266,
+               0.17647058823529416
+             ]
+
+      # url property breakdown
+      exported_url_props =
+        goal_breakdown.(exported_site, "event:props:url", "event:goal==Outbound Link: Click")
+
+      imported_url_props =
+        goal_breakdown.(imported_site, "event:props:url", "event:goal==Outbound Link: Click")
+
+      pairwise(exported_url_props, imported_url_props, fn exported, imported ->
+        assert exported["visitors"] == imported["visitors"]
+        assert exported["events"] == imported["events"]
+      end)
+
+      # NOTE: url property breakdown's conversion rate difference is up to 20%
+      assert summary(field(exported_url_props, "conversion_rate")) == [0.1, 0.1, 0.1, 0.1, 0.8]
+      assert summary(field(imported_url_props, "conversion_rate")) == [0.1, 0.1, 0.1, 0.1, 0.8]
+
+      assert summary(
+               pairwise(exported_url_props, imported_url_props, fn exported, imported ->
+                 abs(1 - exported["conversion_rate"] / imported["conversion_rate"])
+               end)
+             ) == [0.0, 0.0, 0.0, 0.0, 0.19999999999999996]
+
+      # path property breakdown
+      exported_path_props = goal_breakdown.(exported_site, "event:props:path", "event:goal==404")
+      imported_path_props = goal_breakdown.(imported_site, "event:props:path", "event:goal==404")
+
+      pairwise(exported_path_props, imported_path_props, fn exported, imported ->
+        assert exported["visitors"] == imported["visitors"]
+        assert exported["events"] == imported["events"]
+        assert exported["conversion_rate"] == imported["conversion_rate"]
+      end)
     end
   end
 
-  defp minio_url(minio, bucket, key) do
-    port = minio |> MinioContainer.connection_opts() |> Keyword.fetch!(:port)
-    Path.join(["http://172.17.0.1:#{port}", bucket, key])
+  defp clean_buckets(_context) do
+    on_ee do
+      clean_bucket = fn bucket ->
+        ExAws.S3.list_objects_v2(bucket)
+        |> ExAws.stream!()
+        |> Stream.each(fn objects ->
+          keys = objects |> List.wrap() |> Enum.map(& &1.key)
+          ExAws.request!(ExAws.S3.delete_all_objects(bucket, keys))
+        end)
+        |> Stream.run()
+      end
+
+      clean_bucket.(Plausible.S3.imports_bucket())
+      clean_bucket.(Plausible.S3.exports_bucket())
+
+      on_exit(fn ->
+        clean_bucket.(Plausible.S3.imports_bucket())
+        clean_bucket.(Plausible.S3.exports_bucket())
+      end)
+    else
+      :ok
+    end
+  end
+
+  defp pairwise(left, right, f) do
+    assert length(left) == length(right)
+    zipped = Enum.zip(left, right)
+    Enum.map(zipped, fn {left, right} -> f.(left, right) end)
+  end
+
+  defp field(results, field) do
+    results
+    |> Enum.map(&Map.fetch!(&1, field))
+    |> Enum.filter(&is_number/1)
+  end
+
+  defp summary(values) do
+    values = Enum.sort(values)
+
+    percentile = fn n ->
+      r = n / 100.0 * (length(values) - 1)
+      f = :erlang.trunc(r)
+      lower = Enum.at(values, f)
+      upper = Enum.at(values, f + 1)
+      lower + (upper - lower) * (r - f)
+    end
+
+    [
+      List.first(values),
+      percentile.(25),
+      percentile.(50),
+      percentile.(75),
+      List.last(values)
+    ]
   end
 end

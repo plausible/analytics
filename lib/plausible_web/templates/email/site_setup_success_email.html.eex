@@ -8,6 +8,6 @@ Something looks off? Take a look at our <%= link("installation troubleshooting g
   You're on a 30-day free trial with no obligations so do take your time to explore Plausible. Here's how to get <%= link("the most out of your Plausible experience", to: "https://plausible.io/docs/your-plausible-experience") %>. 
   <br /><br />
 <% end %>
-PS: You can import your historical Google Analytics (Universal Analytics) stats into your Plausible dashboard. <%= link("Learn how our GA importer works", to: "https://plausible.io/docs/google-analytics-import") %>.
+PS: You can import your historical Google Analytics stats into your Plausible dashboard. <%= link("Learn how our GA importer works", to: "https://plausible.io/docs/google-analytics-import") %>.
 <br /><br />
 Do reply back to this email if you have any questions. We're here to help.

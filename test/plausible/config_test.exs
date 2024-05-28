@@ -198,7 +198,8 @@ defmodule Plausible.ConfigTest do
         {"S3_SECRET_ACCESS_KEY", nil},
         {"S3_REGION", nil},
         {"S3_ENDPOINT", nil},
-        {"S3_EXPORTS_BUCKET", nil}
+        {"S3_EXPORTS_BUCKET", nil},
+        {"S3_IMPORTS_BUCKET", nil}
       ]
 
       result =
@@ -211,13 +212,14 @@ defmodule Plausible.ConfigTest do
       assert %ArgumentError{} = result
 
       assert Exception.message(result) == """
-             Missing S3 configuration. Please set S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_REGION, S3_ENDPOINT, S3_EXPORTS_BUCKET environment variable(s):
+             Missing S3 configuration. Please set S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_REGION, S3_ENDPOINT, S3_EXPORTS_BUCKET, S3_IMPORTS_BUCKET environment variable(s):
 
              \tS3_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
              \tS3_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
              \tS3_REGION=us-east-1
              \tS3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
              \tS3_EXPORTS_BUCKET=my-csv-exports-bucket
+             \tS3_IMPORTS_BUCKET=my-csv-imports-bucket
              """
     end
 
@@ -227,7 +229,8 @@ defmodule Plausible.ConfigTest do
         {"S3_SECRET_ACCESS_KEY", nil},
         {"S3_REGION", "eu-north-1"},
         {"S3_ENDPOINT", nil},
-        {"S3_EXPORTS_BUCKET", "my-exports"}
+        {"S3_EXPORTS_BUCKET", "my-exports"},
+        {"S3_IMPORTS_BUCKET", nil}
       ]
 
       result =
@@ -240,10 +243,11 @@ defmodule Plausible.ConfigTest do
       assert %ArgumentError{} = result
 
       assert Exception.message(result) == """
-             Missing S3 configuration. Please set S3_SECRET_ACCESS_KEY, S3_ENDPOINT environment variable(s):
+             Missing S3 configuration. Please set S3_SECRET_ACCESS_KEY, S3_ENDPOINT, S3_IMPORTS_BUCKET environment variable(s):
 
              \tS3_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
              \tS3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+             \tS3_IMPORTS_BUCKET=my-csv-imports-bucket
              """
     end
 
@@ -253,7 +257,8 @@ defmodule Plausible.ConfigTest do
         {"S3_SECRET_ACCESS_KEY", "minioadmin"},
         {"S3_REGION", "us-east-1"},
         {"S3_ENDPOINT", "http://localhost:6000"},
-        {"S3_EXPORTS_BUCKET", "my-exports"}
+        {"S3_EXPORTS_BUCKET", "my-exports"},
+        {"S3_IMPORTS_BUCKET", "my-imports"}
       ]
 
       config = runtime_config(env)
@@ -266,9 +271,63 @@ defmodule Plausible.ConfigTest do
                s3: [scheme: "http://", host: "localhost", port: 6000]
              ]
 
-      assert get_in(runtime_config(env), [:plausible, Plausible.S3]) == [
-               exports_bucket: "my-exports"
+      assert get_in(config, [:plausible, Plausible.S3]) == [
+               exports_bucket: "my-exports",
+               imports_bucket: "my-imports"
              ]
+    end
+  end
+
+  describe "storage" do
+    test "with only DATA_DIR set" do
+      env = [
+        {"MAXMIND_LICENSE_KEY", "abc"},
+        {"PERSISTENT_CACHE_DIR", nil},
+        {"DATA_DIR", "/data"}
+      ]
+
+      config = runtime_config(env)
+
+      # exports/imports
+      assert get_in(config, [:plausible, :data_dir]) == "/data"
+      # locus (mmdb cache)
+      assert get_in(config, [:plausible, Plausible.Geo, :cache_dir]) == "/data"
+      # tzdata (timezones cache)
+      assert get_in(config, [:tzdata, :data_dir]) == "/data/tzdata_data"
+    end
+
+    test "with only PERSISTENT_CACHE_DIR set" do
+      env = [
+        {"MAXMIND_LICENSE_KEY", "abc"},
+        {"PERSISTENT_CACHE_DIR", "/cache"},
+        {"DATA_DIR", nil}
+      ]
+
+      config = runtime_config(env)
+
+      # exports/imports
+      assert get_in(config, [:plausible, :data_dir]) == "/cache"
+      # locus (mmdb cache)
+      assert get_in(config, [:plausible, Plausible.Geo, :cache_dir]) == "/cache"
+      # tzdata (timezones cache)
+      assert get_in(config, [:tzdata, :data_dir]) == "/cache/tzdata_data"
+    end
+
+    test "with both DATA_DIR and PERSISTENT_CACHE_DIR set" do
+      env = [
+        {"MAXMIND_LICENSE_KEY", "abc"},
+        {"PERSISTENT_CACHE_DIR", "/cache"},
+        {"DATA_DIR", "/data"}
+      ]
+
+      config = runtime_config(env)
+
+      # exports/imports
+      assert get_in(config, [:plausible, :data_dir]) == "/data"
+      # locus (mmdb cache)
+      assert get_in(config, [:plausible, Plausible.Geo, :cache_dir]) == "/cache"
+      # tzdata (timezones cache)
+      assert get_in(config, [:tzdata, :data_dir]) == "/cache/tzdata_data"
     end
   end
 

@@ -33,7 +33,7 @@
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') {
       return onIgnoredEvent('localhost', options)
     }
-    if (window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) {
+    if ((window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) && !window.__plausible) {
       return onIgnoredEvent(null, options)
     }
     {{/unless}}
@@ -115,7 +115,7 @@
 
     request.onreadystatechange = function() {
       if (request.readyState === 4) {
-        options && options.callback && options.callback()
+        options && options.callback && options.callback({status: request.status})
       }
     }
   }

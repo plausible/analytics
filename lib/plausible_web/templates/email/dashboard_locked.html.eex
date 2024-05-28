@@ -1,4 +1,4 @@
-Last week we sent a reminder that your site traffic has exceeded the limits of your Plausible Analytics subscription tier for two consecutive months. Since we haven't received a response, we've had to temporarily lock access to your stats.
+Last week we sent a reminder that your site traffic has exceeded the limits of your <%= Plausible.product_name() %> subscription tier for two consecutive months. Since we haven't received a response, we've had to temporarily lock access to your stats.
 <br /><br />
 Your subscription is still active, we're still counting your stats and haven't deleted any of your data but as you have outgrown your subscription tier, we kindly ask you to upgrade to match your new traffic levels. Upon upgrading to a suitable tier, your dashboard access will be immediately restored.
 <br /><br />

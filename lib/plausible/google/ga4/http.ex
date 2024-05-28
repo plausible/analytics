@@ -31,6 +31,7 @@ defmodule Plausible.Google.GA4.HTTP do
               desc: true
             }
           ],
+          dimensionFilter: report_request.dimension_filter,
           limit: report_request.limit,
           offset: report_request.offset
         }
@@ -49,12 +50,21 @@ defmodule Plausible.Google.GA4.HTTP do
       )
 
     with {:ok, %{body: body}} <- response,
-         # File.write!("fixture/ga4_report_#{report_request.dataset}.json", Jason.encode!(body)),
          {:ok, report} <- parse_report_from_response(body),
-         row_count <- Map.get(report, "rowCount"),
+         row_count <- Map.get(report, "rowCount", 0),
          {:ok, report} <- convert_to_maps(report) do
       {:ok, {report, row_count}}
     else
+      {:error, %{reason: %{status: 429, body: body}}} ->
+        Logger.debug(
+          "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset} due to exceeding rate limit."
+        )
+
+        Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: 429}})
+
+        {:error,
+         {:rate_limit_exceeded, dataset: report_request.dataset, offset: report_request.offset}}
+
       {:error, %{reason: %{status: status, body: body}}} ->
         Logger.debug(
           "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset} with code #{status}: #{inspect(body)}"
@@ -120,6 +130,10 @@ defmodule Plausible.Google.GA4.HTTP do
     {:ok, report}
   end
 
+  defp convert_to_maps(%{"dimensionHeaders" => _, "metricHeaders" => _}) do
+    {:ok, []}
+  end
+
   defp convert_to_maps(response) do
     Logger.error(
       "Google Analytics 4: Failed to read report in response. Reason: #{inspect(response)}"
@@ -130,7 +144,7 @@ defmodule Plausible.Google.GA4.HTTP do
   end
 
   def list_accounts_for_user(access_token) do
-    url = "#{admin_api_url()}/v1beta/accountSummaries"
+    url = "#{admin_api_url()}/v1beta/accountSummaries?pageSize=200"
 
     headers = [{"Authorization", "Bearer #{access_token}"}]
 
@@ -138,17 +152,64 @@ defmodule Plausible.Google.GA4.HTTP do
       {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, body}
 
+      {:error, %HTTPClient.Non200Error{reason: %{status: 429}}} ->
+        {:error, :rate_limit_exceeded}
+
       {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
         {:error, :authentication_failed}
 
-      {:error, %HTTPClient.Non200Error{} = error} ->
-        Sentry.capture_message("Error listing Google accounts for user", extra: %{error: error})
+      {:error, %{reason: :timeout}} ->
+        {:error, :timeout}
+
+      {:error, error} ->
+        Sentry.capture_message("Error listing GA4 accounts for user", extra: %{error: error})
+        {:error, :unknown}
+    end
+  end
+
+  def get_property(access_token, property) do
+    url = "#{admin_api_url()}/v1beta/#{property}"
+
+    headers = [{"Authorization", "Bearer #{access_token}"}]
+
+    case HTTPClient.impl().get(url, headers) do
+      {:ok, %Finch.Response{body: body, status: 200}} ->
+        {:ok, body}
+
+      {:error, %HTTPClient.Non200Error{reason: %{status: 429}}} ->
+        {:error, :rate_limit_exceeded}
+
+      {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
+        {:error, :authentication_failed}
+
+      {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [404] ->
+        {:error, :not_found}
+
+      {:error, %{reason: :timeout}} ->
+        {:error, :timeout}
+
+      {:error, error} ->
+        Sentry.capture_message("Error retrieving GA4 property #{property}",
+          extra: %{error: error}
+        )
+
         {:error, :unknown}
     end
   end
 
   @earliest_valid_date "2015-08-14"
+
   def get_analytics_start_date(access_token, property) do
+    get_analytics_boundary_date(access_token, property, :start)
+  end
+
+  def get_analytics_end_date(access_token, property) do
+    get_analytics_boundary_date(access_token, property, :end)
+  end
+
+  defp get_analytics_boundary_date(access_token, property, edge) do
+    descending? = edge == :end
+
     params = %{
       requests: [
         %{
@@ -159,7 +220,7 @@ defmodule Plausible.Google.GA4.HTTP do
           dimensions: [%{name: "date"}],
           metrics: [%{name: "screenPageViews"}],
           orderBys: [
-            %{dimension: %{dimensionName: "date", orderType: "ALPHANUMERIC"}, desc: false}
+            %{dimension: %{dimensionName: "date", orderType: "ALPHANUMERIC"}, desc: descending?}
           ],
           limit: 1
         }
@@ -184,13 +245,21 @@ defmodule Plausible.Google.GA4.HTTP do
 
         {:ok, date}
 
-      {:error, %{reason: %Finch.Response{body: body}}} ->
-        Sentry.capture_message("Error fetching GA4 start date", extra: %{body: inspect(body)})
-        {:error, body}
+      {:error, %HTTPClient.Non200Error{reason: %{status: 429}}} ->
+        {:error, :rate_limit_exceeded}
 
-      {:error, %{reason: reason} = e} ->
-        Sentry.capture_message("Error fetching GA4 start date", extra: %{error: inspect(e)})
-        {:error, reason}
+      {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
+        {:error, :authentication_failed}
+
+      {:error, %{reason: :timeout}} ->
+        {:error, :timeout}
+
+      {:error, error} ->
+        Sentry.capture_message("Error retrieving GA4 #{edge} date",
+          extra: %{error: error}
+        )
+
+        {:error, :unknown}
     end
   end
 

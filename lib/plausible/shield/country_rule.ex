@@ -24,7 +24,7 @@ defmodule Plausible.Shield.CountryRule do
     |> cast(attrs, [:site_id, :country_code])
     |> validate_required([:site_id, :country_code])
     |> validate_length(:country_code, is: 2)
-    |> Ecto.Changeset.validate_change(:country_code, fn :country_code, cc ->
+    |> validate_change(:country_code, fn :country_code, cc ->
       if cc in Enum.map(Location.Country.all(), & &1.alpha_2) do
         []
       else

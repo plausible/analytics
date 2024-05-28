@@ -4,15 +4,18 @@ defmodule Plausible.Stats.Query do
   defstruct date_range: nil,
             interval: nil,
             period: nil,
-            filters: %{},
+            property: nil,
+            filters: [],
             sample_threshold: 20_000_000,
             imported_data_requested: false,
             include_imported: false,
+            skip_imported_reason: nil,
             now: nil,
-            experimental_session_count?: false
+            experimental_session_count?: false,
+            experimental_reduced_joins?: false
 
   require OpenTelemetry.Tracer, as: Tracer
-  alias Plausible.Stats.{Filters, Interval}
+  alias Plausible.Stats.{Filters, Interval, Imported}
 
   @type t :: %__MODULE__{}
 
@@ -22,25 +25,42 @@ defmodule Plausible.Stats.Query do
     query =
       __MODULE__
       |> struct!(now: now)
-      |> put_experimental_session_count(params)
+      |> put_experimental_session_count(site, params)
+      |> put_experimental_reduced_joins(site, params)
       |> put_period(site, params)
+      |> put_breakdown_property(params)
       |> put_interval(params)
       |> put_parsed_filters(params)
       |> put_imported_opts(site, params)
-      |> maybe_drop_prop_filter(site)
 
-    on_full_build do
+    on_ee do
       query = Plausible.Stats.Sampling.put_threshold(query, params)
     end
 
     query
   end
 
-  defp put_experimental_session_count(query, params) do
-    if Map.get(params, "experimental_session_count") == "true" do
-      struct!(query, experimental_session_count?: true)
+  defp put_experimental_session_count(query, site, params) do
+    if Map.has_key?(params, "experimental_session_count") do
+      struct!(query,
+        experimental_session_count?: Map.get(params, "experimental_session_count") == "true"
+      )
     else
-      query
+      struct!(query,
+        experimental_session_count?: FunWithFlags.enabled?(:experimental_session_count, for: site)
+      )
+    end
+  end
+
+  defp put_experimental_reduced_joins(query, site, params) do
+    if Map.has_key?(params, "experimental_reduced_joins") do
+      struct!(query,
+        experimental_reduced_joins?: Map.get(params, "experimental_reduced_joins") == "true"
+      )
+    else
+      struct!(query,
+        experimental_reduced_joins?: FunWithFlags.enabled?(:experimental_reduced_joins, for: site)
+      )
     end
   end
 
@@ -131,7 +151,7 @@ defmodule Plausible.Stats.Query do
 
   defp put_period(query, site, %{"period" => "all"}) do
     now = today(site.timezone)
-    start_date = Plausible.Sites.local_start_date(site) || now
+    start_date = Plausible.Sites.stats_start_date(site) || now
 
     struct!(query,
       period: "all",
@@ -163,6 +183,10 @@ defmodule Plausible.Stats.Query do
     put_period(query, site, Map.merge(params, %{"period" => "30d"}))
   end
 
+  defp put_breakdown_property(query, params) do
+    struct!(query, property: params["property"])
+  end
+
   defp put_interval(%{:period => "all"} = query, params) do
     interval = Map.get(params, "interval", Interval.default_for_date_range(query.date_range))
     struct!(query, interval: interval)
@@ -177,50 +201,36 @@ defmodule Plausible.Stats.Query do
     struct!(query, filters: Filters.parse(params["filters"]))
   end
 
-  def put_filter(query, key, val) do
-    parsed_val =
-      if is_binary(val) do
-        Filters.DashboardFilterParser.filter_value(key, val)
-      else
-        val
-      end
-
+  def put_filter(query, filter) do
     struct!(query,
-      filters: Map.put(query.filters, key, parsed_val)
+      filters: query.filters ++ [filter]
     )
   end
 
-  def remove_event_filters(query, opts) do
+  def remove_filters(query, prefixes) do
     new_filters =
-      Enum.filter(query.filters, fn {filter_key, _} ->
-        cond do
-          :page in opts && filter_key == "event:page" -> false
-          :goal in opts && filter_key == "event:goal" -> false
-          :props in opts && filter_key && String.starts_with?(filter_key, "event:props:") -> false
-          true -> true
-        end
+      Enum.reject(query.filters, fn [_, filter_key | _rest] ->
+        Enum.any?(prefixes, &String.starts_with?(filter_key, &1))
       end)
-      |> Enum.into(%{})
 
     struct!(query, filters: new_filters)
   end
 
   def has_event_filters?(query) do
-    Enum.any?(query.filters, fn
-      {"event:" <> _, _} -> true
-      _ -> false
+    Enum.any?(query.filters, fn [_op, prop | _rest] ->
+      String.starts_with?(prop, "event:")
     end)
   end
 
   def get_filter_by_prefix(query, prefix) do
-    Enum.find(query.filters, fn {prop, _value} ->
+    Enum.find(query.filters, fn [_op, prop | _rest] ->
       String.starts_with?(prop, prefix)
     end)
   end
 
-  def get_all_filters_by_prefix(query, prefix) do
-    Enum.filter(query.filters, fn {prop, _value} ->
-      String.starts_with?(prop, prefix)
+  def get_filter(query, name) do
+    Enum.find(query.filters, fn [_op, prop | _rest] ->
+      prop == name
     end)
   end
 
@@ -239,44 +249,48 @@ defmodule Plausible.Stats.Query do
   defp put_imported_opts(query, site, params) do
     requested? = params["with_imported"] == "true"
 
-    struct!(query,
-      imported_data_requested: requested?,
-      include_imported: include_imported?(query, site, requested?)
-    )
-  end
+    case ensure_include_imported(query, site) do
+      :ok ->
+        struct!(query,
+          imported_data_requested: requested?,
+          include_imported: requested?
+        )
 
-  defp maybe_drop_prop_filter(query, site) do
-    prop_filter? = Map.has_key?(query.filters, "props")
-
-    props_available? = fn ->
-      site = Plausible.Repo.preload(site, :owner)
-      Plausible.Billing.Feature.Props.check_availability(site.owner) == :ok
+      {:error, reason} ->
+        struct!(query,
+          imported_data_requested: requested?,
+          include_imported: false,
+          skip_imported_reason: reason
+        )
     end
-
-    if prop_filter? && !props_available?.(),
-      do: struct!(query, filters: Map.drop(query.filters, ["props"])),
-      else: query
   end
 
-  @spec include_imported?(t(), Plausible.Site.t(), boolean()) :: boolean()
-  def include_imported?(query, site, requested?) do
+  @spec ensure_include_imported(t(), Plausible.Site.t()) ::
+          :ok | {:error, :no_imported_data | :out_of_range | :unsupported_query}
+  def ensure_include_imported(query, site) do
     cond do
-      is_nil(site.earliest_import_end_date) -> false
-      Date.after?(query.date_range.first, site.earliest_import_end_date) -> false
-      Enum.any?(query.filters) -> false
-      query.period == "realtime" -> false
-      true -> requested?
+      is_nil(site.latest_import_end_date) -> {:error, :no_imported_data}
+      Date.after?(query.date_range.first, site.latest_import_end_date) -> {:error, :out_of_range}
+      not Imported.schema_supports_query?(query) -> {:error, :unsupported_query}
+      query.period == "realtime" -> {:error, :unsupported_query}
+      true -> :ok
     end
   end
 
   @spec trace(%__MODULE__{}, [atom()]) :: %__MODULE__{}
   def trace(%__MODULE__{} = query, metrics) do
-    filter_keys = Map.keys(query.filters) |> Enum.sort() |> Enum.join(";")
+    filter_keys =
+      query.filters
+      |> Enum.map(fn [_op, prop | _rest] -> prop end)
+      |> Enum.sort()
+      |> Enum.join(";")
+
     metrics = metrics |> Enum.sort() |> Enum.join(";")
 
     Tracer.set_attributes([
       {"plausible.query.interval", query.interval},
       {"plausible.query.period", query.period},
+      {"plausible.query.breakdown_property", query.property},
       {"plausible.query.include_imported", query.include_imported},
       {"plausible.query.filter_keys", filter_keys},
       {"plausible.query.metrics", metrics}

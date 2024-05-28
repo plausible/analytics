@@ -1,7 +1,10 @@
 defmodule Plausible.Site.Memberships.CreateInvitationTest do
   alias Plausible.Site.Memberships.CreateInvitation
+  use Plausible
   use Plausible.DataCase
   use Bamboo.Test
+
+  @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
   describe "create_invitation/4" do
     test "creates an invitation" do
@@ -49,7 +52,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert_email_delivered_with(
         to: [nil: invitee.email],
-        subject: "[Plausible Analytics] You've been invited to #{site.domain}"
+        subject: @subject_prefix <> "You've been invited to #{site.domain}"
       )
     end
 
@@ -62,11 +65,11 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert_email_delivered_with(
         to: [nil: "vini@plausible.test"],
-        subject: "[Plausible Analytics] You've been invited to #{site.domain}"
+        subject: @subject_prefix <> "You've been invited to #{site.domain}"
       )
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "returns error when owner is over their team member limit" do
       [owner, inviter, invitee] = insert_list(3, :user)
 
@@ -82,7 +85,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "allows inviting users who were already invited to other sites, within the limit" do
       owner = insert(:user)
 
@@ -107,7 +110,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       assert {:ok, _} = invite.(site2, "i3@example.com")
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "allows inviting users who are already members of other sites, within the limit" do
       [u1, u2, u3, u4] = insert_list(4, :user)
 
@@ -143,7 +146,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert_email_delivered_with(
         to: [nil: "vini@plausible.test"],
-        subject: "[Plausible Analytics] Request to transfer ownership of #{site.domain}"
+        subject: @subject_prefix <> "Request to transfer ownership of #{site.domain}"
       )
     end
 
@@ -261,7 +264,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert_email_delivered_with(
         to: [nil: new_owner.email],
-        subject: "[Plausible Analytics] Request to transfer ownership of #{site1.domain}"
+        subject: @subject_prefix <> "Request to transfer ownership of #{site1.domain}"
       )
 
       assert Repo.exists?(
@@ -275,7 +278,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert_email_delivered_with(
         to: [nil: new_owner.email],
-        subject: "[Plausible Analytics] Request to transfer ownership of #{site2.domain}"
+        subject: @subject_prefix <> "Request to transfer ownership of #{site2.domain}"
       )
 
       assert_invitation_exists(site2, new_owner.email, :owner)
@@ -299,7 +302,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert_email_delivered_with(
         to: [nil: new_owner.email],
-        subject: "[Plausible Analytics] Request to transfer ownership of #{site1.domain}"
+        subject: @subject_prefix <> "Request to transfer ownership of #{site1.domain}"
       )
 
       assert Repo.exists?(
@@ -313,7 +316,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert_email_delivered_with(
         to: [nil: new_owner.email],
-        subject: "[Plausible Analytics] Request to transfer ownership of #{site2.domain}"
+        subject: @subject_prefix <> "Request to transfer ownership of #{site2.domain}"
       )
 
       assert_invitation_exists(site2, new_owner.email, :owner)
@@ -385,7 +388,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
              )
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "does not allow transferring ownership to a non-member user when at team members limit" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))
@@ -401,7 +404,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "allows transferring ownership to existing site member when at team members limit" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))
@@ -420,7 +423,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "does not allow transferring ownership when sites limit exceeded" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))
@@ -433,7 +436,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "exceeding limits error takes precedence over missing features" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))

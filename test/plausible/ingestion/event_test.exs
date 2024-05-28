@@ -6,7 +6,7 @@ defmodule Plausible.Ingestion.EventTest do
   alias Plausible.Ingestion.Request
   alias Plausible.Ingestion.Event
 
-  test "event pipeline processes a request into an event" do
+  test "processes a request into an event" do
     site = insert(:site)
 
     payload = %{
@@ -20,7 +20,25 @@ defmodule Plausible.Ingestion.EventTest do
     assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
   end
 
-  test "event pipeline drops a request when site does not exists" do
+  test "drops verification agent" do
+    site = insert(:site)
+
+    payload = %{
+      name: "pageview",
+      url: "http://#{site.domain}"
+    }
+
+    conn =
+      build_conn(:post, "/api/events", payload)
+      |> Plug.Conn.put_req_header("user-agent", Plausible.Verification.user_agent())
+
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+    assert dropped.drop_reason == :verification_agent
+  end
+
+  test "drops a request when site does not exists" do
     payload = %{
       name: "pageview",
       url: "http://dummy.site"
@@ -33,7 +51,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :not_found
   end
 
-  test "event pipeline drops a request when referrer is spam" do
+  test "drops a request when referrer is spam" do
     site = insert(:site)
 
     payload = %{
@@ -50,7 +68,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :spam_referrer
   end
 
-  test "event pipeline drops a request when referrer is spam for multiple domains" do
+  test "drops a request when referrer is spam for multiple domains" do
     site = insert(:site)
 
     payload = %{
@@ -67,7 +85,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :spam_referrer
   end
 
-  test "event pipeline selectively drops an event for multiple domains" do
+  test "selectively drops an event for multiple domains" do
     site = insert(:site)
 
     payload = %{
@@ -83,7 +101,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :not_found
   end
 
-  test "event pipeline selectively drops an event when rate-limited" do
+  test "selectively drops an event when rate-limited" do
     site = insert(:site, ingest_rate_limit_threshold: 1)
 
     payload = %{
@@ -100,7 +118,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :throttle
   end
 
-  test "event pipeline drops a request when header x-plausible-ip-type is dc_ip" do
+  test "drops a request when header x-plausible-ip-type is dc_ip" do
     site = insert(:site)
 
     payload = %{
@@ -117,7 +135,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :dc_ip
   end
 
-  test "event pipeline drops a request when ip is on blocklist" do
+  test "drops a request when ip is on blocklist" do
     site = insert(:site)
 
     payload = %{
@@ -137,7 +155,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :site_ip_blocklist
   end
 
-  test "event pipeline drops a request when country is on blocklist" do
+  test "drops a request when country is on blocklist" do
     site = insert(:site)
 
     payload = %{
@@ -158,7 +176,63 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :site_country_blocklist
   end
 
-  test "event pipeline drops events for site with accept_trafic_until in the past" do
+  test "drops a request when page is on blocklist" do
+    site = insert(:site)
+
+    payload = %{
+      name: "pageview",
+      url: "http://dummy.site/blocked/page",
+      domain: site.domain
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    {:ok, _} = Plausible.Shields.add_page_rule(site, %{"page_path" => "/blocked/**"})
+
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+    assert dropped.drop_reason == :site_page_blocklist
+  end
+
+  test "drops a request when hostname allowlist is defined and hostname is not on the list" do
+    site = insert(:site)
+
+    payload = %{
+      name: "pageview",
+      url: "http://dummy.site",
+      domain: site.domain
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    {:ok, _} = Plausible.Shields.add_hostname_rule(site, %{"hostname" => "subdomain.dummy.site"})
+
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+    assert dropped.drop_reason == :site_hostname_allowlist
+  end
+
+  test "passes a request when hostname allowlist is defined and hostname is on the list" do
+    site = insert(:site)
+
+    payload = %{
+      name: "pageview",
+      url: "http://subdomain.dummy.site",
+      domain: site.domain
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    {:ok, _} = Plausible.Shields.add_hostname_rule(site, %{"hostname" => "subdomain.dummy.site"})
+
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
+  end
+
+  test "drops events for site with accept_trafic_until in the past" do
     yesterday = Date.add(Date.utc_today(), -1)
 
     site =
@@ -180,7 +254,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :payment_required
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   test "saves revenue amount" do
     site = insert(:site)
     _goal = insert(:goal, event_name: "checkout", currency: "USD", site: site)

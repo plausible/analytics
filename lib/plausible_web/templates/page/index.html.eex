@@ -1,6 +1,6 @@
 <div class="mt-12 w-full md:max-w-xl md:mx-auto bg-white dark:bg-gray-800 md:shadow-md md:rounded px-8 py-6">
   <p class="text-gray-900 text-xl font-black dark:text-gray-100">
-    Welcome to Plausible Analytics!
+    Welcome to Plausible!
   </p>
   <p class="mt-4 text-gray-600 dark:text-gray-200">
   <a href="https://plausible.io/" class="border-b text-indigo-700 font-semibold dark:text-indigo-400 border-indigo-700 dark:border-indigo-500">Plausible Analytics</a> is a simple, open source, lightweight (&lt; 1 KB) and privacy-friendly alternative to Google Analytics. We're completely independent and solely funded by our 10,000+ paying subscribers. Read more <a href="https://plausible.io/about" class="border-b font-semibold text-indigo-700 dark:text-indigo-400 border-indigo-700 dark:border-indigo-500">about us.</a>

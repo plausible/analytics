@@ -5,20 +5,9 @@ defmodule Plausible.Stats.Aggregate do
   import Ecto.Query
   alias Plausible.Stats.{Query, Util}
 
-  @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
-
-  @event_metrics [
-                   :visitors,
-                   :pageviews,
-                   :events,
-                   :sample_percent
-                 ] ++ @revenue_metrics
-
-  @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit, :sample_percent]
-
   def aggregate(site, query, metrics) do
     {currency, metrics} =
-      on_full_build do
+      on_ee do
         Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
       else
         {nil, metrics}
@@ -26,18 +15,17 @@ defmodule Plausible.Stats.Aggregate do
 
     Query.trace(query, metrics)
 
-    event_metrics =
+    {event_metrics, session_metrics, other_metrics} =
       metrics
       |> Util.maybe_add_visitors_metric()
-      |> Enum.filter(&(&1 in @event_metrics))
+      |> Plausible.Stats.TableDecider.partition_metrics(query)
 
     event_task = fn -> aggregate_events(site, query, event_metrics) end
 
-    session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
     session_task = fn -> aggregate_sessions(site, query, session_metrics) end
 
     time_on_page_task =
-      if :time_on_page in metrics do
+      if :time_on_page in other_metrics do
         fn -> aggregate_time_on_page(site, query) end
       else
         fn -> %{} end
@@ -45,7 +33,6 @@ defmodule Plausible.Stats.Aggregate do
 
     Plausible.ClickhouseRepo.parallel_tasks([session_task, event_task, time_on_page_task])
     |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)
-    |> maybe_put_cr(site, query, metrics)
     |> Util.keep_requested_metrics(metrics)
     |> cast_revenue_metrics_to_money(currency)
     |> Enum.map(&maybe_round_value/1)
@@ -53,46 +40,21 @@ defmodule Plausible.Stats.Aggregate do
     |> Enum.into(%{})
   end
 
-  defp maybe_put_cr(aggregate_result, site, query, metrics) do
-    if :conversion_rate in metrics do
-      all =
-        query
-        |> Query.remove_event_filters([:goal, :props])
-        |> then(fn query -> aggregate_events(site, query, [:visitors]) end)
-        |> Map.fetch!(:visitors)
-
-      converted = aggregate_result.visitors
-
-      cr = Util.calculate_cr(all, converted)
-
-      aggregate_result = Map.put(aggregate_result, :conversion_rate, cr)
-
-      if :total_visitors in metrics do
-        Map.put(aggregate_result, :total_visitors, all)
-      else
-        aggregate_result
-      end
-    else
-      aggregate_result
-    end
-  end
-
   defp aggregate_events(_, _, []), do: %{}
 
   defp aggregate_events(site, query, metrics) do
-    from(e in base_event_query(site, query), select: %{})
-    |> select_event_metrics(metrics)
-    |> merge_imported(site, query, :aggregate, metrics)
+    from(e in base_event_query(site, query), select: ^select_event_metrics(metrics))
+    |> merge_imported(site, query, metrics)
+    |> maybe_add_conversion_rate(site, query, metrics)
     |> ClickhouseRepo.one()
   end
 
   defp aggregate_sessions(_, _, []), do: %{}
 
   defp aggregate_sessions(site, query, metrics) do
-    from(e in query_sessions(site, query), select: %{})
+    from(e in query_sessions(site, query), select: ^select_session_metrics(metrics, query))
     |> filter_converted_sessions(site, query)
-    |> select_session_metrics(metrics, query)
-    |> merge_imported(site, query, :aggregate, metrics)
+    |> merge_imported(site, query, metrics)
     |> ClickhouseRepo.one()
     |> Util.keep_requested_metrics(metrics)
   end
@@ -108,10 +70,7 @@ defmodule Plausible.Stats.Aggregate do
   defp neighbor_aggregate_time_on_page(site, query) do
     q =
       from(
-        e in base_event_query(site, %Query{
-          query
-          | filters: Map.delete(query.filters, "event:page")
-        }),
+        e in base_event_query(site, Query.remove_filters(query, ["event:page"])),
         select: {
           fragment("? as p", e.pathname),
           fragment("? as t", e.timestamp),
@@ -124,32 +83,32 @@ defmodule Plausible.Stats.Aggregate do
     where_param_idx = length(base_query_raw_params)
 
     {where_clause, where_arg} =
-      case query.filters["event:page"] do
-        {:is, page} ->
+      case Query.get_filter(query, "event:page") do
+        [:is, _, page] ->
           {"p = {$#{where_param_idx}:String}", page}
 
-        {:is_not, page} ->
+        [:is_not, _, page] ->
           {"p != {$#{where_param_idx}:String}", page}
 
-        {:member, page} ->
+        [:member, _, page] ->
           {"p IN {$#{where_param_idx}:Array(String)}", page}
 
-        {:not_member, page} ->
+        [:not_member, _, page] ->
           {"p NOT IN {$#{where_param_idx}:Array(String)}", page}
 
-        {:matches, expr} ->
+        [:matches, _, expr] ->
           regex = page_regex(expr)
           {"match(p, {$#{where_param_idx}:String})", regex}
 
-        {:matches_member, exprs} ->
+        [:matches_member, _, exprs] ->
           page_regexes = Enum.map(exprs, &page_regex/1)
           {"multiMatchAny(p, {$#{where_param_idx}:Array(String)})", page_regexes}
 
-        {:not_matches_member, exprs} ->
+        [:not_matches_member, _, exprs] ->
           page_regexes = Enum.map(exprs, &page_regex/1)
           {"not(multiMatchAny(p, {$#{where_param_idx}:Array(String)}))", page_regexes}
 
-        {:does_not_match, expr} ->
+        [:does_not_match, _, expr] ->
           regex = page_regex(expr)
           {"not(match(p, {$#{where_param_idx}:String}))", regex}
       end
@@ -186,29 +145,29 @@ defmodule Plausible.Stats.Aggregate do
 
   defp window_aggregate_time_on_page(site, query) do
     windowed_pages_q =
-      from e in base_event_query(site, %Query{
-             query
-             | filters: Map.delete(query.filters, "event:page")
-           }),
-           select: %{
-             next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
-             next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
-             timestamp: e.timestamp,
-             pathname: e.pathname,
-             session_id: e.session_id
-           },
-           windows: [
-             event_horizon: [
-               partition_by: e.session_id,
-               order_by: e.timestamp,
-               frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-             ]
-           ]
+      from e in base_event_query(site, Query.remove_filters(query, ["event:page"])),
+        select: %{
+          next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
+          next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
+          timestamp: e.timestamp,
+          pathname: e.pathname,
+          session_id: e.session_id
+        },
+        windows: [
+          event_horizon: [
+            partition_by: e.session_id,
+            order_by: e.timestamp,
+            frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+          ]
+        ]
+
+    event_page_filter = Query.get_filter(query, "event:page")
 
     timed_page_transitions_q =
       from e in Ecto.Query.subquery(windowed_pages_q),
         group_by: [e.pathname, e.next_pathname, e.session_id],
-        where: ^Plausible.Stats.Base.dynamic_filter_condition(query, "event:page", :pathname),
+        where:
+          ^Plausible.Stats.Filters.WhereBuilder.build_condition(:pathname, event_page_filter),
         where: e.next_timestamp != 0,
         select: %{
           pathname: e.pathname,
@@ -238,7 +197,7 @@ defmodule Plausible.Stats.Aggregate do
 
   defp maybe_round_value(entry), do: entry
 
-  on_full_build do
+  on_ee do
     defp cast_revenue_metrics_to_money(results, revenue_goals) do
       Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
     end

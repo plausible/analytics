@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
   use PlausibleWeb.ConnCase
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns breakdown by a custom property", %{conn: conn, site: site} do
       prop_key = "parim_s6ber"
@@ -745,7 +745,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
              ]
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "returns revenue metrics when filtering by a revenue goal", %{conn: conn, site: site} do
       prop_key = "logged_in"
 
@@ -803,7 +803,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
              ]
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "returns revenue metrics when filtering by many revenue goals with same currency", %{
       conn: conn,
       site: site
@@ -1130,6 +1130,66 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                "error" =>
                  "Custom Properties is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
              }
+    end
+  end
+
+  describe "with imported data" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    for goal_name <- ["Outbound Link: Click", "File Download"] do
+      test "returns url breakdown for #{goal_name} goal", %{conn: conn, site: site} do
+        insert(:goal, event_name: unquote(goal_name), site: site)
+        site_import = insert(:site_import, site: site)
+
+        populate_stats(site, site_import.id, [
+          build(:event,
+            name: unquote(goal_name),
+            "meta.key": ["url"],
+            "meta.value": ["https://one.com"]
+          ),
+          build(:imported_custom_events,
+            name: unquote(goal_name),
+            visitors: 2,
+            events: 5,
+            link_url: "https://one.com"
+          ),
+          build(:imported_custom_events,
+            name: unquote(goal_name),
+            visitors: 5,
+            events: 10,
+            link_url: "https://two.com"
+          ),
+          build(:imported_custom_events,
+            name: "view_search_results",
+            visitors: 100,
+            events: 200
+          ),
+          build(:imported_visitors, visitors: 9)
+        ])
+
+        filters = Jason.encode!(%{goal: unquote(goal_name)})
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/custom-prop-values/url?period=day&with_imported=true&filters=#{filters}"
+          )
+
+        assert json_response(conn, 200) == [
+                 %{
+                   "visitors" => 5,
+                   "name" => "https://two.com",
+                   "events" => 10,
+                   "conversion_rate" => 50.0
+                 },
+                 %{
+                   "visitors" => 3,
+                   "name" => "https://one.com",
+                   "events" => 6,
+                   "conversion_rate" => 30.0
+                 }
+               ]
+      end
     end
   end
 end

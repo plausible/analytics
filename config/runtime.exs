@@ -6,11 +6,11 @@ if config_env() in [:dev, :test] do
   Envy.load(["config/.env.#{config_env()}"])
 end
 
-if config_env() == :small_dev do
+if config_env() == :ce_dev do
   Envy.load(["config/.env.dev"])
 end
 
-if config_env() == :small_test do
+if config_env() == :ce_test do
   Envy.load(["config/.env.test"])
 end
 
@@ -66,7 +66,7 @@ port = get_var_from_path_or_env(config_dir, "PORT") || 8000
 base_url = get_var_from_path_or_env(config_dir, "BASE_URL")
 
 if !base_url do
-  raise "BASE_URL configuration option is required. See https://plausible.io/docs/self-hosting-configuration#server"
+  raise "BASE_URL configuration option is required. See https://github.com/plausible/community-edition/tree/v2.1.0?tab=readme-ov-file#quick-start"
 end
 
 base_url = URI.parse(base_url)
@@ -79,10 +79,10 @@ secret_key_base = get_var_from_path_or_env(config_dir, "SECRET_KEY_BASE", nil)
 
 case secret_key_base do
   nil ->
-    raise "SECRET_KEY_BASE configuration option is required. See https://plausible.io/docs/self-hosting-configuration#server"
+    raise "SECRET_KEY_BASE configuration option is required. See https://github.com/plausible/community-edition/tree/v2.1.0?tab=readme-ov-file#quick-start"
 
   key when byte_size(key) < 32 ->
-    raise "SECRET_KEY_BASE must be at least 32 bytes long. See https://plausible.io/docs/self-hosting-configuration#server"
+    raise "SECRET_KEY_BASE must be at least 32 bytes long. See https://github.com/plausible/community-edition/tree/v2.1.0?tab=readme-ov-file#quick-start"
 
   _ ->
     nil
@@ -157,11 +157,11 @@ totp_vault_key = get_var_from_path_or_env(config_dir, "TOTP_VAULT_KEY", nil)
 
 case totp_vault_key do
   nil ->
-    raise "TOTP_VAULT_KEY configuration option is required. See https://plausible.io/docs/self-hosting-configuration#server"
+    raise "TOTP_VAULT_KEY configuration option is required. See https://github.com/plausible/community-edition/tree/v2.1.0?tab=readme-ov-file#quick-start"
 
   key ->
     if byte_size(Base.decode64!(key)) != 32 do
-      raise "TOTP_VAULT_KEY must exactly 32 bytes long. See https://plausible.io/docs/self-hosting-configuration#server"
+      raise "TOTP_VAULT_KEY must exactly 32 bytes long. See https://github.com/plausible/community-edition/tree/v2.1.0?tab=readme-ov-file#quick-start"
     end
 end
 
@@ -229,7 +229,11 @@ ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", ge
 geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
 maxmind_license_key = get_var_from_path_or_env(config_dir, "MAXMIND_LICENSE_KEY")
 maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLite2-City")
+data_dir = get_var_from_path_or_env(config_dir, "DATA_DIR")
 persistent_cache_dir = get_var_from_path_or_env(config_dir, "PERSISTENT_CACHE_DIR")
+
+data_dir = data_dir || persistent_cache_dir
+persistent_cache_dir = persistent_cache_dir || data_dir
 
 enable_email_verification =
   config_dir
@@ -250,7 +254,7 @@ disable_registration =
   |> String.to_existing_atom()
 
 if disable_registration not in [true, false, :invite_only] do
-  raise "DISABLE_REGISTRATION must be one of `true`, `false`, or `invite_only`. See https://plausible.io/docs/self-hosting-configuration#server"
+  raise "DISABLE_REGISTRATION must be one of `true`, `false`, or `invite_only`. See https://github.com/plausible/community-edition/tree/v2.1.0?tab=readme-ov-file#disable_registration"
 end
 
 hcaptcha_sitekey = get_var_from_path_or_env(config_dir, "HCAPTCHA_SITEKEY")
@@ -296,7 +300,8 @@ config :plausible,
   is_selfhost: is_selfhost,
   custom_script_name: custom_script_name,
   log_failed_login_attempts: log_failed_login_attempts,
-  license_key: license_key
+  license_key: license_key,
+  data_dir: data_dir
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
@@ -385,7 +390,7 @@ config :plausible, Plausible.ClickhouseRepo,
   transport_opts: ch_transport_opts,
   settings: [
     readonly: 1,
-    join_algorithm: "direct,parallel_hash"
+    join_algorithm: "direct,parallel_hash,hash"
   ]
 
 config :plausible, Plausible.IngestRepo,
@@ -523,7 +528,9 @@ cloud_cron = [
   # Every midnight
   {"0 0 * * *", Plausible.Workers.LockSites},
   # Daily at 8
-  {"0 8 * * *", Plausible.Workers.AcceptTrafficUntil}
+  {"0 8 * * *", Plausible.Workers.AcceptTrafficUntil},
+  # First sunday of the month, 4:00 UTC
+  {"0 4 1-7 * SUN", Plausible.Workers.ClickhouseCleanSites}
 ]
 
 crontab = if(is_selfhost, do: base_cron, else: base_cron ++ cloud_cron)
@@ -537,10 +544,10 @@ base_queues = [
   site_setup_emails: 1,
   clean_invitations: 1,
   analytics_imports: 1,
+  analytics_exports: 1,
+  notify_exported_analytics: 1,
   domain_change_transition: 1,
-  check_accept_traffic_until: 1,
-  # NOTE: maybe move s3_csv_export to cloud_queues?
-  s3_csv_export: 1
+  check_accept_traffic_until: 1
 ]
 
 cloud_queues = [
@@ -555,25 +562,23 @@ cron_enabled = !disable_cron
 
 thirty_days_in_seconds = 60 * 60 * 24 * 30
 
-cond do
-  config_env() == :prod ->
-    config :plausible, Oban,
-      repo: Plausible.Repo,
-      plugins: [
-        # Keep 30 days history
-        {Oban.Plugins.Pruner, max_age: thirty_days_in_seconds},
-        {Oban.Plugins.Cron, crontab: if(cron_enabled, do: crontab, else: [])},
-        # Rescue orphaned jobs after 2 hours
-        {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)}
-      ],
-      queues: if(cron_enabled, do: queues, else: []),
-      peer: if(cron_enabled, do: Oban.Peers.Postgres, else: false)
-
-  true ->
-    config :plausible, Oban,
-      repo: Plausible.Repo,
-      queues: queues,
-      plugins: false
+if config_env() in [:prod, :ce] do
+  config :plausible, Oban,
+    repo: Plausible.Repo,
+    plugins: [
+      # Keep 30 days history
+      {Oban.Plugins.Pruner, max_age: thirty_days_in_seconds},
+      {Oban.Plugins.Cron, crontab: if(cron_enabled, do: crontab, else: [])},
+      # Rescue orphaned jobs after 2 hours
+      {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)}
+    ],
+    queues: if(cron_enabled, do: queues, else: []),
+    peer: if(cron_enabled, do: Oban.Peers.Postgres, else: false)
+else
+  config :plausible, Oban,
+    repo: Plausible.Repo,
+    queues: queues,
+    plugins: false
 end
 
 config :plausible, :hcaptcha,
@@ -595,7 +600,7 @@ config :ref_inspector,
 config :ua_inspector,
   init: {Plausible.Release, :configure_ua_inspector}
 
-if config_env() in [:dev, :staging, :prod] do
+if config_env() in [:dev, :staging, :prod, :test] do
   config :kaffy,
     otp_app: :plausible,
     ecto_repo: Plausible.Repo,
@@ -696,6 +701,15 @@ config :plausible, Plausible.PromEx,
   grafana: :disabled,
   metrics_server: :disabled
 
+config :plausible, Plausible.Verification,
+  enabled?:
+    get_var_from_path_or_env(config_dir, "VERIFICATION_ENABLED", "false")
+    |> String.to_existing_atom()
+
+config :plausible, Plausible.Verification.Checks.Installation,
+  token: get_var_from_path_or_env(config_dir, "BROWSERLESS_TOKEN", "dummy_token"),
+  endpoint: get_var_from_path_or_env(config_dir, "BROWSERLESS_ENDPOINT", "http://0.0.0.0:3000")
+
 if not is_selfhost do
   site_default_ingest_threshold =
     case System.get_env("SITE_DEFAULT_INGEST_THRESHOLD") do
@@ -736,6 +750,10 @@ unless s3_disabled? do
     %{
       name: "S3_EXPORTS_BUCKET",
       example: "my-csv-exports-bucket"
+    },
+    %{
+      name: "S3_IMPORTS_BUCKET",
+      example: "my-csv-imports-bucket"
     }
   ]
 
@@ -771,5 +789,7 @@ unless s3_disabled? do
     host: s3_host,
     port: s3_port
 
-  config :plausible, Plausible.S3, exports_bucket: s3_env_value.("S3_EXPORTS_BUCKET")
+  config :plausible, Plausible.S3,
+    exports_bucket: s3_env_value.("S3_EXPORTS_BUCKET"),
+    imports_bucket: s3_env_value.("S3_IMPORTS_BUCKET")
 end

@@ -47,9 +47,11 @@
     <% end %>
     <%= @inner_content %>
 
-    <p class="text-center text-gray-500 text-xs py-8">
-      © <%= DateTime.utc_now().year() %> Plausible Analytics. All rights reserved.
-    </p>
+    <%= if ee?() do %>
+      <p class="text-center text-gray-500 text-xs py-8">
+        © <%= DateTime.utc_now().year() %> Plausible Analytics. All rights reserved.
+      </p>
+    <% end %>
 
     <PlausibleWeb.Components.Layout.theme_script current_user={assigns[:current_user]} />
 

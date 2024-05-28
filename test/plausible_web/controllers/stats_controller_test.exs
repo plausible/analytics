@@ -16,6 +16,18 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       assert text_of_attr(resp, @react_container, "data-domain") == site.domain
       assert text_of_attr(resp, @react_container, "data-is-dbip") == "false"
+      assert text_of_attr(resp, @react_container, "data-has-goals") == "false"
+      assert text_of_attr(resp, @react_container, "data-conversions-opted-out") == "false"
+      assert text_of_attr(resp, @react_container, "data-funnels-opted-out") == "false"
+      assert text_of_attr(resp, @react_container, "data-props-opted-out") == "false"
+      assert text_of_attr(resp, @react_container, "data-props-available") == "true"
+      assert text_of_attr(resp, @react_container, "data-funnels-available") == "true"
+      assert text_of_attr(resp, @react_container, "data-has-props") == "false"
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
+      assert text_of_attr(resp, @react_container, "data-embedded") == ""
+
+      [{"div", attrs, _}] = find(resp, @react_container)
+      assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
 
       assert ["noindex, nofollow"] ==
                resp
@@ -61,7 +73,19 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "can view stats of a website I've created", %{conn: conn, site: site} do
       populate_stats(site, [build(:pageview)])
       conn = get(conn, "/" <> site.domain)
-      assert html_response(conn, 200) =~ "stats-react-container"
+      resp = html_response(conn, 200)
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
+    end
+
+    test "can view stats of a website I've created, enforcing pageviews check skip", %{
+      conn: conn,
+      site: site
+    } do
+      resp = conn |> get("/" <> site.domain) |> html_response(200)
+      refute text_of_attr(resp, @react_container, "data-logged-in") == "true"
+
+      resp = conn |> get("/" <> site.domain <> "?skip_to_dashboard=true") |> html_response(200)
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
     end
 
     test "shows locked page if page is locked", %{conn: conn, user: user} do
@@ -78,7 +102,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:website - as a super admin" do
-    @describetag :full_build_only
+    @describetag :ee_only
     setup [:create_user, :make_user_super_admin, :log_in]
 
     test "can view a private dashboard with stats", %{conn: conn} do
@@ -102,8 +126,11 @@ defmodule PlausibleWeb.StatsControllerTest do
       populate_stats(site, [build(:pageview)])
 
       conn = get(conn, "/" <> site.domain)
-      assert html_response(conn, 200) =~ "stats-react-container"
-      assert html_response(conn, 200) =~ "This dashboard is actually locked"
+      resp = html_response(conn, 200)
+      assert resp =~ "This dashboard is actually locked"
+
+      [{"div", attrs, _}] = find(resp, @react_container)
+      assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
     end
 
     test "can view a private locked dashboard without stats", %{conn: conn} do
@@ -120,7 +147,10 @@ defmodule PlausibleWeb.StatsControllerTest do
       populate_stats(site, [build(:pageview)])
 
       conn = get(conn, "/" <> site.domain)
-      assert html_response(conn, 200) =~ "stats-react-container"
+      resp = html_response(conn, 200)
+
+      [{"div", attrs, _}] = find(resp, @react_container)
+      assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
     end
   end
 
@@ -285,7 +315,7 @@ defmodule PlausibleWeb.StatsControllerTest do
                ["2021-09-27", "0", "0", "0", "0.0", "", ""],
                ["2021-10-04", "0", "0", "0", "0.0", "", ""],
                ["2021-10-11", "0", "0", "0", "0.0", "", ""],
-               ["2021-10-18", "3", "3", "3", "1.0", "67", "20"],
+               ["2021-10-18", "3", "4", "3", "1.33", "33", "40"],
                [""]
              ]
     end
@@ -321,6 +351,213 @@ defmodule PlausibleWeb.StatsControllerTest do
                ["Mac", "13", "1"],
                [""]
              ]
+    end
+
+    test "exports imported data when requested", %{conn: conn, site: site} do
+      site_import = insert(:site_import, site: site)
+
+      insert(:goal, site: site, event_name: "Outbound Link: Click")
+
+      populate_stats(site, site_import.id, [
+        build(:imported_visitors, visitors: 9),
+        build(:imported_browsers, browser: "Chrome", pageviews: 1),
+        build(:imported_devices, device: "Desktop", pageviews: 1),
+        build(:imported_entry_pages, entry_page: "/test", pageviews: 1),
+        build(:imported_exit_pages, exit_page: "/test", pageviews: 1),
+        build(:imported_locations,
+          country: "PL",
+          region: "PL-22",
+          city: 3_099_434,
+          pageviews: 1
+        ),
+        build(:imported_operating_systems, operating_system: "Mac", pageviews: 1),
+        build(:imported_pages, page: "/test", pageviews: 1),
+        build(:imported_sources,
+          source: "Google",
+          utm_medium: "search",
+          utm_campaign: "ads",
+          utm_source: "google",
+          utm_content: "content",
+          utm_term: "term",
+          pageviews: 1
+        ),
+        build(:imported_custom_events,
+          name: "Outbound Link: Click",
+          link_url: "https://example.com",
+          visitors: 5,
+          events: 10
+        )
+      ])
+
+      conn = get(conn, "/#{site.domain}/export?with_imported=true")
+
+      assert response = response(conn, 200)
+      {:ok, zip} = :zip.unzip(response, [:memory])
+
+      filenames = zip |> Enum.map(fn {filename, _} -> to_string(filename) end)
+
+      # NOTE: currently, custom_props.csv is not populated from imported data
+      expected_filenames = [
+        "visitors.csv",
+        "sources.csv",
+        "utm_mediums.csv",
+        "utm_sources.csv",
+        "utm_campaigns.csv",
+        "utm_contents.csv",
+        "utm_terms.csv",
+        "pages.csv",
+        "entry_pages.csv",
+        "exit_pages.csv",
+        "countries.csv",
+        "regions.csv",
+        "cities.csv",
+        "browsers.csv",
+        "browser_versions.csv",
+        "operating_systems.csv",
+        "operating_system_versions.csv",
+        "devices.csv",
+        "conversions.csv",
+        "referrers.csv"
+      ]
+
+      Enum.each(expected_filenames, fn expected ->
+        assert expected in filenames
+      end)
+
+      Enum.each(zip, fn
+        {~c"visitors.csv", data} ->
+          csv = parse_csv(data)
+
+          assert List.first(csv) == [
+                   "date",
+                   "visitors",
+                   "pageviews",
+                   "visits",
+                   "views_per_visit",
+                   "bounce_rate",
+                   "visit_duration"
+                 ]
+
+          assert Enum.at(csv, -2) ==
+                   [Date.to_iso8601(Date.utc_today()), "9", "1", "1", "1.0", "0.0", "10.0"]
+
+        {~c"sources.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "bounce_rate", "visit_duration"],
+                   ["Google", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+
+        {~c"utm_mediums.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "bounce_rate", "visit_duration"],
+                   ["search", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+
+        {~c"utm_sources.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "bounce_rate", "visit_duration"],
+                   ["google", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+
+        {~c"utm_campaigns.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "bounce_rate", "visit_duration"],
+                   ["ads", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+
+        {~c"utm_contents.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "bounce_rate", "visit_duration"],
+                   ["content", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+
+        {~c"utm_terms.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "bounce_rate", "visit_duration"],
+                   ["term", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+
+        {~c"pages.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "pageviews", "bounce_rate", "time_on_page"],
+                   ["/test", "1", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+
+        {~c"entry_pages.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "unique_entrances", "total_entrances", "visit_duration"],
+                   ["/test", "1", "1", "10.0"],
+                   [""]
+                 ]
+
+        {~c"exit_pages.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "unique_exits", "total_exits", "exit_rate"],
+                   ["/test", "1", "1", "100.0"],
+                   [""]
+                 ]
+
+        {~c"countries.csv", data} ->
+          assert parse_csv(data) == [["name", "visitors"], ["Poland", "1"], [""]]
+
+        {~c"regions.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors"],
+                   ["Pomerania", "1"],
+                   [""]
+                 ]
+
+        {~c"cities.csv", data} ->
+          assert parse_csv(data) == [["name", "visitors"], ["Gdańsk", "1"], [""]]
+
+        {~c"browsers.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors"],
+                   ["Chrome", "1"],
+                   [""]
+                 ]
+
+        {~c"browser_versions.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "version", "visitors"],
+                   ["Chrome", "(not set)", "1"],
+                   [""]
+                 ]
+
+        {~c"operating_systems.csv", data} ->
+          assert parse_csv(data) == [["name", "visitors"], ["Mac", "1"], [""]]
+
+        {~c"operating_system_versions.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "version", "visitors"],
+                   ["Mac", "(not set)", "1"],
+                   [""]
+                 ]
+
+        {~c"devices.csv", data} ->
+          assert parse_csv(data) == [["name", "visitors"], ["Desktop", "1"], [""]]
+
+        {~c"conversions.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "unique_conversions", "total_conversions"],
+                   ["Outbound Link: Click", "5", "10"],
+                   [""]
+                 ]
+
+        {~c"referrers.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "bounce_rate", "visit_duration"],
+                   ["Direct / None", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+      end)
     end
   end
 
@@ -469,7 +706,17 @@ defmodule PlausibleWeb.StatsControllerTest do
         browser: "FirefoxNoVersion",
         operating_system: "MacNoVersion"
       ),
+      build(:pageview,
+        user_id: 456,
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], days: -1, minutes: -1)
+          |> NaiveDateTime.truncate(:second),
+        pathname: "/signup",
+        "meta.key": ["variant"],
+        "meta.value": ["A"]
+      ),
       build(:event,
+        user_id: 456,
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
         name: "Signup",
@@ -606,7 +853,24 @@ defmodule PlausibleWeb.StatsControllerTest do
       link = insert(:shared_link, site: site)
 
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
+      resp = html_response(conn, 200)
+      assert text_of_attr(resp, @react_container, "data-embedded") == "false"
       assert Plug.Conn.get_resp_header(conn, "x-frame-options") == []
+    end
+
+    test "returns page embedded page", %{
+      conn: conn
+    } do
+      site = insert(:site, domain: "test-site.com")
+      link = insert(:shared_link, site: site)
+
+      conn = get(conn, "/share/test-site.com/?auth=#{link.slug}&embed=true")
+      resp = html_response(conn, 200)
+      assert text_of_attr(resp, @react_container, "data-embedded") == "true"
+      assert Plug.Conn.get_resp_header(conn, "x-frame-options") == []
+
+      [{"div", attrs, _}] = find(resp, @react_container)
+      assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
     end
 
     test "shows locked page if page is locked", %{conn: conn} do

@@ -4,27 +4,25 @@ defmodule Plausible.Stats.Goal.Revenue do
   """
   import Ecto.Query
 
+  alias Plausible.Stats.Query
+
   @revenue_metrics [:average_revenue, :total_revenue]
 
   def revenue_metrics() do
     @revenue_metrics
   end
 
-  def total_revenue_query(query) do
-    from(e in query,
-      select_merge: %{
-        total_revenue:
-          fragment("toDecimal64(sum(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
-      }
+  def total_revenue_query() do
+    dynamic(
+      [e],
+      fragment("toDecimal64(sum(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
     )
   end
 
-  def average_revenue_query(query) do
-    from(e in query,
-      select_merge: %{
-        average_revenue:
-          fragment("toDecimal64(avg(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
-      }
+  def average_revenue_query() do
+    dynamic(
+      [e],
+      fragment("toDecimal64(avg(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
     )
   end
 
@@ -41,10 +39,10 @@ defmodule Plausible.Stats.Goal.Revenue do
   """
   def get_revenue_tracking_currency(site, query, metrics) do
     goal_filters =
-      case query.filters do
-        %{"event:goal" => {:is, {_, goal_name}}} -> [goal_name]
-        %{"event:goal" => {:member, list}} -> Enum.map(list, fn {_, goal_name} -> goal_name end)
-        _any -> []
+      case Query.get_filter(query, "event:goal") do
+        [:is, "event:goal", {_, goal_name}] -> [goal_name]
+        [:member, "event:goal", list] -> Enum.map(list, fn {_, goal_name} -> goal_name end)
+        _ -> []
       end
 
     requested_revenue_metrics? = Enum.any?(metrics, &(&1 in @revenue_metrics))

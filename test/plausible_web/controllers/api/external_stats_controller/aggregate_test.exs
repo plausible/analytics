@@ -59,6 +59,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    test "ignores a given property parameter", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "property" => "event:props:author",
+          "metrics" => "visit_duration"
+        })
+
+      assert json_response(conn, 200)
+    end
+
     test "validates that period can be parsed", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/aggregate", %{
@@ -473,10 +484,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   end
 
   describe "with imported data" do
-    setup :add_imported_data
+    setup :create_site_import
 
-    test "does not count imported stats unless specified", %{conn: conn, site: site} do
-      populate_stats(site, [
+    test "does not count imported stats unless specified", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
         build(:imported_visitors, date: ~D[2023-01-01]),
         build(:pageview, timestamp: ~N[2023-01-01 00:00:00])
       ])
@@ -499,10 +514,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       assert json_response(conn2, 200)["results"] == %{
                "pageviews" => %{"value" => 2}
              }
+
+      refute json_response(conn2, 200)["warning"]
     end
 
-    test "counts imported stats when comparing with previous period", %{conn: conn, site: site} do
-      populate_stats(site, [
+    test "counts imported stats when comparing with previous period", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
         build(:imported_visitors,
           visits: 2,
           bounces: 1,
@@ -540,8 +561,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
-    test "ignores imported data when filters are applied", %{conn: conn, site: site} do
-      populate_stats(site, [
+    test "ignores imported data when filters are applied", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
         build(:imported_visitors, date: ~D[2023-01-01]),
         build(:imported_sources, date: ~D[2023-01-01]),
         build(:pageview,
@@ -566,22 +591,95 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
-    test "events metric with imported data is disallowed", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:imported_visitors, date: ~D[2023-01-01])
+    test "adds a warning when query params are not supported for imported data", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        ),
+        build(:imported_visitors, visitors: 9)
       ])
 
       conn =
         get(conn, "/api/v1/stats/aggregate", %{
           "site_id" => site.domain,
           "period" => "day",
-          "date" => "2023-01-02",
-          "metrics" => "events",
+          "metrics" => "visitors",
+          "filters" => "event:props:package==large",
+          "compare" => "previous_period",
           "with_imported" => "true"
         })
 
-      assert %{"error" => msg} = json_response(conn, 400)
-      assert msg == "Metric `events` cannot be queried with imported data"
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"change" => 100, "value" => 1}
+             }
+
+      assert json_response(conn, 200)["warning"] =~
+               "Imported stats are not included in the results because query parameters are not supported."
+    end
+
+    test "does not add a warning when there are no site imports", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      Plausible.Repo.delete!(site_import)
+
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors",
+          "filters" => "event:props:package==large",
+          "compare" => "previous_period",
+          "with_imported" => "true"
+        })
+
+      refute json_response(conn, 200)["warning"]
+    end
+
+    test "does not add a warning when import is out of queried date range", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      site_import
+      |> Ecto.Changeset.change(end_date: Date.add(Date.utc_today(), -3))
+      |> Plausible.Repo.update!()
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        ),
+        build(:imported_visitors, visitors: 9)
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors",
+          "filters" => "event:props:package==large",
+          "compare" => "previous_period",
+          "with_imported" => "true"
+        })
+
+      refute json_response(conn, 200)["warning"]
     end
   end
 
@@ -595,6 +693,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
 
       assert %{"error" => msg} = json_response(conn, 400)
       assert msg =~ "The goal `Register` is not configured for this site. Find out how"
+    end
+
+    test "validates that filters are valid", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "property" => "event:page",
+          "filters" => "badproperty==bar"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Invalid filter property 'badproperty'. Please provide a valid filter property: https://plausible.io/docs/stats-api#properties"
+             }
     end
 
     test "can filter by source", %{conn: conn, site: site} do
@@ -1027,6 +1139,36 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    test "can filter by hostname", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          hostname: "one.example.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          hostname: "example.com",
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "metrics" => "pageviews,visitors,bounce_rate,visit_duration",
+          "filters" => "event:hostname==*.example.com|example.com"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "pageviews" => %{"value" => 2},
+               "visitors" => %{"value" => 2},
+               "bounce_rate" => %{"value" => 100},
+               "visit_duration" => %{"value" => 0}
+             }
+    end
+
     test "filtering by event:name", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event,
@@ -1355,50 +1497,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 3}}
     end
 
-    test "joins correctly with the sessions (CollapsingMergeTree) table", %{
+    test "handles filtering by visit country", %{
       conn: conn,
       site: site
     } do
-      create_sessions([
-        %{
-          site_id: site.id,
-          session_id: 1000,
-          country_code: "EE",
-          sign: 1,
-          events: 1
-        },
-        %{
-          site_id: site.id,
-          session_id: 1000,
-          country_code: "EE",
-          sign: -1,
-          events: 1
-        },
-        %{
-          site_id: site.id,
-          session_id: 1000,
-          country_code: "EE",
-          sign: 1,
-          events: 2
-        }
-      ])
-
-      create_events([
-        %{
-          site_id: site.id,
-          session_id: 1000,
-          name: "pageview"
-        },
-        %{
-          site_id: site.id,
-          session_id: 1000,
-          name: "pageview"
-        },
-        %{
-          site_id: site.id,
-          session_id: 1000,
-          name: "pageview"
-        }
+      populate_stats(site, [
+        build(:pageview, country_code: "EE"),
+        build(:pageview, country_code: "EE"),
+        build(:pageview, country_code: "EE")
       ])
 
       conn =
@@ -1568,6 +1674,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                "events" => %{"value" => 2}
              } =
                json_response(conn, 200)["results"]
+    end
+
+    test "conversion_rate for the filtered goal is 0 when no stats exist", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "conversion_rate",
+          "filters" => "event:goal==Signup"
+        })
+
+      assert json_response(conn, 200)["results"] == %{"conversion_rate" => %{"value" => 0}}
     end
   end
 end

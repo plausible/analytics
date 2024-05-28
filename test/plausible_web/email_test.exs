@@ -31,6 +31,7 @@ defmodule PlausibleWeb.EmailTest do
       assert email.html_body =~ plausible_link()
     end
 
+    @tag :ee_only
     test "renders unsubscribe placeholder" do
       email =
         Email.base_email()

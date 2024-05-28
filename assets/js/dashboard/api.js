@@ -1,4 +1,5 @@
 import { formatISO } from './util/date'
+import { serializeApiFilters } from './util/filters'
 
 let abortController = new AbortController()
 let SHARED_LINK_AUTH = null
@@ -30,19 +31,13 @@ export function cancelAll() {
   abortController = new AbortController()
 }
 
-function serializeFilters(filters) {
-  const cleaned = {}
-  Object.entries(filters).forEach(([key, val]) => val ? cleaned[key] = val : null);
-  return JSON.stringify(cleaned)
-}
-
 export function serializeQuery(query, extraQuery = []) {
   const queryObj = {}
   if (query.period) { queryObj.period = query.period }
   if (query.date) { queryObj.date = formatISO(query.date) }
   if (query.from) { queryObj.from = formatISO(query.from) }
   if (query.to) { queryObj.to = formatISO(query.to) }
-  if (query.filters) { queryObj.filters = serializeFilters(query.filters) }
+  if (query.filters) { queryObj.filters = serializeApiFilters(query.filters) }
   if (query.experimental_session_count) { queryObj.experimental_session_count = query.experimental_session_count }
   if (query.with_imported) { queryObj.with_imported = query.with_imported }
   if (SHARED_LINK_AUTH) { queryObj.auth = SHARED_LINK_AUTH }

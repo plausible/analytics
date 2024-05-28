@@ -164,6 +164,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       ])
 
     subscription_deleted = Subscription.Status.deleted?(subscription)
+    usage_check = check_usage_within_plan_limits(assigns)
 
     {checkout_disabled, disabled_message} =
       cond do
@@ -173,7 +174,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
         change_plan_link_text == "Currently on this plan" && not subscription_deleted ->
           {true, nil}
 
-        assigns.available && !usage_within_plan_limits?(assigns) ->
+        usage_check != :ok ->
           {true, "Your usage exceeds this plan"}
 
         billing_details_expired ->
@@ -181,6 +182,15 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
         true ->
           {false, nil}
+      end
+
+    exceeded_plan_limits =
+      case usage_check do
+        {:error, {:over_plan_limits, limits}} ->
+          limits
+
+        _ ->
+          []
       end
 
     features_to_lose = assigns.usage.features -- assigns.plan_to_render.features
@@ -191,6 +201,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       |> assign(:change_plan_link_text, change_plan_link_text)
       |> assign(:checkout_disabled, checkout_disabled)
       |> assign(:disabled_message, disabled_message)
+      |> assign(:exceeded_plan_limits, exceeded_plan_limits)
       |> assign(:confirm_message, losing_features_message(features_to_lose))
 
     ~H"""
@@ -201,13 +212,37 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
         Upgrade
       </PlausibleWeb.Components.Billing.paddle_button>
     <% end %>
-    <p :if={@disabled_message} class="h-0 text-center text-sm text-red-700 dark:text-red-500">
-      <%= @disabled_message %>
+    <p
+      :if={@disabled_message}
+      class="h-0 text-center text-sm text-red-700 dark:text-red-500 disabled-message"
+    >
+      <%= if @exceeded_plan_limits != [] do %>
+        <PlausibleWeb.Components.Generic.tooltip class="text-sm text-red-700 dark:text-red-500 mt-1 justify-center">
+          <%= @disabled_message %>
+          <:tooltip_content>
+            Your usage exceeds the following limit(s):<br /><br />
+            <p :for={limit <- @exceeded_plan_limits}>
+              <%= Phoenix.Naming.humanize(limit) %><br />
+            </p>
+          </:tooltip_content>
+        </PlausibleWeb.Components.Generic.tooltip>
+      <% else %>
+        <%= @disabled_message %>
+      <% end %>
     </p>
     """
   end
 
-  defp usage_within_plan_limits?(%{usage: usage, user: user, plan_to_render: plan}) do
+  defp check_usage_within_plan_limits(%{available: false}) do
+    {:error, :plan_unavailable}
+  end
+
+  defp check_usage_within_plan_limits(%{
+         available: true,
+         usage: usage,
+         user: user,
+         plan_to_render: plan
+       }) do
     # At this point, the user is *not guaranteed* to have a `trial_expiry_date`,
     # because in the past we've let users upgrade without that constraint, as
     # well as transfer sites to those accounts. to these accounts we won't be
@@ -232,7 +267,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
           []
       end
 
-    Quota.ensure_within_plan_limits(usage, plan, limit_checking_opts) == :ok
+    Quota.ensure_within_plan_limits(usage, plan, limit_checking_opts)
   end
 
   defp get_paddle_product_id(%Plan{monthly_product_id: plan_id}, :monthly), do: plan_id

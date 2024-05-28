@@ -7,7 +7,7 @@ import * as api from '../../api'
 import * as url from "../../util/url";
 import numberFormatter from '../../util/number-formatter'
 import { parseQuery } from '../../query'
-import { escapeFilterValue } from '../../util/filters'
+import { replaceFilterByPrefix } from '../../util/filters'
 
 /*global BUILD_EXTRA*/
 /*global require*/
@@ -60,9 +60,8 @@ function ConversionsModal(props) {
   }
 
   function filterSearchLink(listItem) {
-    const searchParams = new URLSearchParams(window.location.search)
-    searchParams.set('goal', escapeFilterValue(listItem.name))
-    return searchParams.toString()
+    const filters = replaceFilterByPrefix(query, "goal", ["is", "goal", [listItem.name]])
+    return url.updatedQuery({ filters })
   }
 
   function renderListItem(listItem, hasRevenue) {

@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert text(html) =~ "You don't have any sites yet"
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "renders ownership transfer invitation for a case with no plan", %{
       conn: conn,
       user: user
@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert get_in(invitation_data, ["invitations", invitation.invitation_id, "no_plan"])
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "renders ownership transfer invitation for a case with exceeded limits", %{
       conn: conn,
       user: user
@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Live.SitesTest do
                "site limit"
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "renders ownership transfer invitation for a case with missing features", %{
       conn: conn,
       user: user

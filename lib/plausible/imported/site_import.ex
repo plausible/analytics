@@ -18,6 +18,7 @@ defmodule Plausible.Imported.SiteImport do
   schema "site_imports" do
     field :start_date, :date
     field :end_date, :date
+    field :label, :string
     field :source, Ecto.Enum, values: ImportSources.names()
     field :status, Ecto.Enum, values: @statuses
     field :legacy, :boolean, default: false
@@ -32,35 +33,15 @@ defmodule Plausible.Imported.SiteImport do
     defmacro unquote(status)(), do: unquote(status)
   end
 
-  # NOTE: this is necessary for backwards compatibility
-  # with legacy imports
-  @spec label(t() | Site.ImportedData.t()) :: String.t()
-  def label(%__MODULE__{source: source}), do: ImportSources.by_name(source).label()
-  def label(%Site.ImportedData{source: source}), do: source
-
-  @spec from_legacy(Site.ImportedData.t()) :: t()
-  def from_legacy(%Site.ImportedData{} = data) do
-    status =
-      case data.status do
-        "ok" -> completed()
-        "error" -> failed()
-        _ -> importing()
-      end
-
-    %__MODULE__{
-      id: 0,
-      legacy: true,
-      start_date: data.start_date,
-      end_date: data.end_date,
-      source: :universal_analytics,
-      status: status
-    }
+  @spec label(t()) :: String.t()
+  def label(%{source: source, label: label}) do
+    build_label(ImportSources.by_name(source).label(), label)
   end
 
   @spec create_changeset(Site.t(), User.t(), map()) :: Ecto.Changeset.t()
   def create_changeset(site, user, params) do
     %__MODULE__{}
-    |> cast(params, [:source, :start_date, :end_date, :legacy])
+    |> cast(params, [:label, :source, :start_date, :end_date, :legacy])
     |> validate_required([:source])
     |> put_assoc(:site, site)
     |> put_assoc(:imported_by, user)
@@ -85,4 +66,7 @@ defmodule Plausible.Imported.SiteImport do
   def fail_changeset(site_import) do
     change(site_import, status: failed())
   end
+
+  defp build_label(source, nil), do: source
+  defp build_label(source, label), do: "#{source} (#{label})"
 end

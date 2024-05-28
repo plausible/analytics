@@ -329,6 +329,137 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  test "breaks down all metrics by visit:referrer with imported data", %{conn: conn, site: site} do
+    site_import =
+      insert(:site_import,
+        site: site,
+        start_date: ~D[2005-01-01],
+        end_date: Timex.today(),
+        source: :universal_analytics
+      )
+
+    populate_stats(site, site_import.id, [
+      build(:pageview, referrer: "site.com", timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, referrer: "site.com/1", timestamp: ~N[2021-01-01 00:00:00]),
+      build(:imported_sources,
+        referrer: "site.com",
+        date: ~D[2021-01-01],
+        visitors: 2,
+        visits: 2,
+        pageviews: 2,
+        bounces: 1,
+        visit_duration: 120
+      ),
+      build(:imported_sources,
+        referrer: "site.com/2",
+        date: ~D[2021-01-01],
+        visitors: 2,
+        visits: 2,
+        pageviews: 2,
+        bounces: 2,
+        visit_duration: 0
+      ),
+      build(:imported_sources,
+        date: ~D[2021-01-01],
+        visitors: 10,
+        visits: 11,
+        pageviews: 50,
+        bounces: 0,
+        visit_duration: 1100
+      )
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "metrics" => "visitors,visits,pageviews,bounce_rate,visit_duration",
+        "date" => "2021-01-01",
+        "property" => "visit:referrer",
+        "with_imported" => "true"
+      })
+
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{
+                 "referrer" => "Direct / None",
+                 "visitors" => 10,
+                 "visits" => 11,
+                 "pageviews" => 50,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 100
+               },
+               %{
+                 "referrer" => "site.com",
+                 "visitors" => 3,
+                 "visits" => 3,
+                 "pageviews" => 3,
+                 "bounce_rate" => 67.0,
+                 "visit_duration" => 40
+               },
+               %{
+                 "referrer" => "site.com/2",
+                 "visitors" => 2,
+                 "visits" => 2,
+                 "pageviews" => 2,
+                 "bounce_rate" => 100.0,
+                 "visit_duration" => 0
+               },
+               %{
+                 "referrer" => "site.com/1",
+                 "visitors" => 1,
+                 "visits" => 1,
+                 "pageviews" => 1,
+                 "bounce_rate" => 100.0,
+                 "visit_duration" => 0
+               }
+             ]
+           }
+  end
+
+  for {property, attr} <- [
+        {"visit:utm_campaign", :utm_campaign},
+        {"visit:utm_source", :utm_source},
+        {"visit:utm_term", :utm_term},
+        {"visit:utm_content", :utm_content}
+      ] do
+    test "breakdown by #{property} when filtered by hostname", %{conn: conn, site: site} do
+      populate_stats(site, [
+        # session starts at two.example.com with utm_param=ad
+        build(
+          :pageview,
+          [
+            {unquote(attr), "ad"},
+            {:user_id, @user_id},
+            {:hostname, "two.example.com"},
+            {:timestamp, ~N[2021-01-01 00:00:00]}
+          ]
+        ),
+        # session continues on one.example.com without any utm_params
+        build(
+          :pageview,
+          [
+            {:user_id, @user_id},
+            {:hostname, "one.example.com"},
+            {:timestamp, ~N[2021-01-01 00:15:00]}
+          ]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "filters" => "event:hostname==one.example.com",
+          "property" => unquote(property)
+        })
+
+      # nobody landed on one.example.com from utm_param=ad
+      assert json_response(conn, 200) == %{"results" => []}
+    end
+  end
+
   test "breakdown by visit:utm_medium", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview,
@@ -387,6 +518,86 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     assert json_response(conn, 200) == %{
              "results" => [
                %{"utm_source" => "Google", "visitors" => 2}
+             ]
+           }
+  end
+
+  test "breaks down all metrics by visit:utm_source with imported data", %{conn: conn, site: site} do
+    site_import =
+      insert(:site_import,
+        site: site,
+        start_date: ~D[2005-01-01],
+        end_date: Timex.today(),
+        source: :universal_analytics
+      )
+
+    populate_stats(site, site_import.id, [
+      build(:pageview, utm_source: "SomeUTMSource", timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, utm_source: "SomeUTMSource-1", timestamp: ~N[2021-01-01 00:00:00]),
+      build(:imported_sources,
+        utm_source: "SomeUTMSource",
+        date: ~D[2021-01-01],
+        visitors: 2,
+        visits: 2,
+        pageviews: 2,
+        bounces: 1,
+        visit_duration: 120
+      ),
+      build(:imported_sources,
+        utm_source: "SomeUTMSource-2",
+        date: ~D[2021-01-01],
+        visitors: 2,
+        visits: 2,
+        pageviews: 2,
+        bounces: 2,
+        visit_duration: 0
+      ),
+      build(:imported_sources,
+        date: ~D[2021-01-01],
+        visitors: 10,
+        visits: 11,
+        pageviews: 50,
+        bounces: 0,
+        visit_duration: 1100
+      )
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "metrics" => "visitors,visits,pageviews,bounce_rate,visit_duration",
+        "date" => "2021-01-01",
+        "property" => "visit:utm_source",
+        "with_imported" => "true"
+      })
+
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{
+                 "utm_source" => "SomeUTMSource",
+                 "visitors" => 3,
+                 "visits" => 3,
+                 "pageviews" => 3,
+                 "bounce_rate" => 67.0,
+                 "visit_duration" => 40
+               },
+               %{
+                 "utm_source" => "SomeUTMSource-2",
+                 "visitors" => 2,
+                 "visits" => 2,
+                 "pageviews" => 2,
+                 "bounce_rate" => 100.0,
+                 "visit_duration" => 0
+               },
+               %{
+                 "utm_source" => "SomeUTMSource-1",
+                 "visitors" => 1,
+                 "visits" => 1,
+                 "pageviews" => 1,
+                 "bounce_rate" => 100.0,
+                 "visit_duration" => 0
+               }
              ]
            }
   end
@@ -637,12 +848,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
   test "pageviews breakdown by event:page - imported data having pageviews=0 and visitors=n should be bypassed",
        %{conn: conn, site: site} do
-    site =
-      site
-      |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
-      |> Plausible.Repo.update!()
+    site_import =
+      insert(:site_import,
+        site: site,
+        start_date: ~D[2005-01-01],
+        end_date: Timex.today(),
+        source: :universal_analytics
+      )
 
-    populate_stats(site, [
+    populate_stats(site, site_import.id, [
       build(:pageview, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
       build(:pageview, pathname: "/", timestamp: ~N[2021-01-01 00:25:00]),
       build(:pageview,
@@ -733,6 +947,109 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       })
 
     assert json_response(conn, 200) == %{"results" => []}
+  end
+
+  test "attempting to breakdown by event:hostname returns an error", %{conn: conn, site: site} do
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "property" => "event:hostname",
+        "with_imported" => "true"
+      })
+
+    assert %{
+             "error" => error
+           } = json_response(conn, 400)
+
+    assert error =~ "Property 'event:hostname' is currently not supported for breakdowns."
+  end
+
+  describe "breakdown by visit:exit_page" do
+    setup %{site: site} do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          pathname: "/a",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          pathname: "/a",
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          pathname: "/b",
+          timestamp: ~N[2021-01-01 00:35:00]
+        ),
+        build(:imported_exit_pages,
+          exit_page: "/b",
+          exits: 3,
+          visitors: 2,
+          pageviews: 5,
+          date: ~D[2021-01-01]
+        )
+      ])
+    end
+
+    test "can breakdown by visit:exit_page", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:exit_page",
+          "with_imported" => "true"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"exit_page" => "/b", "visitors" => 3},
+                 %{"exit_page" => "/a", "visitors" => 1}
+               ]
+             }
+    end
+
+    test "handles all applicable metrics with graceful fallback for imported data when needed", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:exit_page",
+          "metrics" => "visitors,visits,pageviews,bounce_rate,visit_duration,events",
+          "with_imported" => "true"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "bounce_rate" => 0.0,
+                   "events" => 7,
+                   "exit_page" => "/b",
+                   "pageviews" => 7,
+                   "visit_duration" => 150.0,
+                   "visitors" => 3,
+                   "visits" => 4
+                 },
+                 %{
+                   "bounce_rate" => 100.0,
+                   "events" => 1,
+                   "exit_page" => "/a",
+                   "pageviews" => 1,
+                   "visit_duration" => 0.0,
+                   "visitors" => 1,
+                   "visits" => 1
+                 }
+               ]
+             }
+    end
   end
 
   describe "custom events" do
@@ -1013,6 +1330,32 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    test "can filter event:hostname with a wildcard", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, hostname: "alice.example.com", pathname: "/a"),
+        build(:pageview, hostname: "anna.example.com", pathname: "/a"),
+        build(:pageview, hostname: "adam.example.com", pathname: "/a"),
+        build(:pageview, hostname: "bob.example.com", pathname: "/b")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "event:page",
+          "filters" => "event:hostname==a*.example.com"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"page" => "/a", "visitors" => 3}
+               ]
+             }
+    end
+
     test "breakdown by custom event property", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event,
@@ -1054,6 +1397,42 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                "results" => [
                  %{"package" => "business", "visitors" => 2},
                  %{"package" => "personal", "visitors" => 1}
+               ]
+             }
+    end
+
+    test "breakdown by custom event property, with pageviews metric", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["package"],
+          "meta.value": ["personal"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:props:package",
+          "metrics" => "pageviews"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"package" => "business", "pageviews" => 2},
+                 %{"package" => "personal", "pageviews" => 1}
                ]
              }
     end
@@ -1302,6 +1681,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert msg =~ "The goal `Register` is not configured for this site. Find out how"
     end
 
+    test "validates that filters are valid", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "event:page",
+          "filters" => "badproperty==bar"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Invalid filter property 'badproperty'. Please provide a valid filter property: https://plausible.io/docs/stats-api#properties"
+             }
+    end
+
     test "event:page filter for breakdown by session props", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -1392,6 +1785,66 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                  ]
                }
       end
+    end
+
+    test "top sources for a custom goal and filtered by hostname", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          hostname: "blog.example.com",
+          referrer_source: "Facebook",
+          user_id: @user_id
+        ),
+        build(:pageview,
+          hostname: "app.example.com",
+          pathname: "/register",
+          user_id: @user_id
+        ),
+        build(:event,
+          name: "Signup",
+          hostname: "app.example.com",
+          pathname: "/register",
+          user_id: @user_id
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "visit:source",
+          "filters" => "event:hostname==app.example.com"
+        })
+
+      assert json_response(conn, 200) == %{"results" => []}
+    end
+
+    test "top sources for a custom goal and filtered by hostname (2)", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          hostname: "app.example.com",
+          referrer_source: "Facebook",
+          pathname: "/register",
+          user_id: @user_id
+        ),
+        build(:event,
+          name: "Signup",
+          hostname: "app.example.com",
+          pathname: "/register",
+          user_id: @user_id
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "visit:source",
+          "filters" => "event:hostname==app.example.com"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [%{"source" => "Facebook", "visitors" => 1}]
+             }
     end
 
     test "event:page filter is interpreted as entry_page filter only for bounce_rate", %{
@@ -2037,12 +2490,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
   describe "metrics" do
     test "returns time_on_page with imported data", %{conn: conn, site: site} do
-      site =
-        site
-        |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
-        |> Plausible.Repo.update!()
+      site_import =
+        insert(:site_import,
+          site: site,
+          start_date: ~D[2005-01-01],
+          end_date: Timex.today(),
+          source: :universal_analytics
+        )
 
-      populate_stats(site, [
+      populate_stats(site, site_import.id, [
         build(:imported_pages, page: "/A", time_on_page: 40, date: ~D[2021-01-01]),
         build(:imported_pages, page: "/A", time_on_page: 110, date: ~D[2021-01-01]),
         build(:imported_pages, page: "/B", time_on_page: 499, date: ~D[2021-01-01]),
@@ -2698,6 +3154,329 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                  }
                ]
              }
+    end
+  end
+
+  describe "imported data" do
+    test "returns custom event goals and pageview goals", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Purchase")
+      insert(:goal, site: site, page_path: "/test")
+
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          timestamp: ~N[2021-01-01 00:00:01],
+          pathname: "/test"
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:imported_custom_events,
+          name: "Purchase",
+          visitors: 3,
+          events: 5,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages,
+          page: "/test",
+          visitors: 2,
+          pageviews: 2,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:goal",
+          "metrics" => "visitors,events,pageviews,conversion_rate",
+          "with_imported" => "true"
+        })
+
+      assert [
+               %{
+                 "goal" => "Purchase",
+                 "visitors" => 5,
+                 "events" => 7,
+                 "pageviews" => 0,
+                 "conversion_rate" => 62.5
+               },
+               %{
+                 "goal" => "Visit /test",
+                 "visitors" => 3,
+                 "events" => 3,
+                 "pageviews" => 3,
+                 "conversion_rate" => 37.5
+               }
+             ] = json_response(conn, 200)["results"]
+    end
+
+    test "pageviews are returned as events for breakdown reports other than custom events", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:imported_browsers, browser: "Chrome", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_devices, device: "Desktop", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_entry_pages, entry_page: "/test", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_exit_pages, exit_page: "/test", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_locations, country: "EE", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_operating_systems,
+          operating_system: "Mac",
+          pageviews: 1,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages, page: "/test", pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_sources, source: "Google", pageviews: 1, date: ~D[2021-01-01])
+      ])
+
+      params = %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "metrics" => "events",
+        "with_imported" => "true"
+      }
+
+      breakdown_and_first = fn property ->
+        conn
+        |> get("/api/v1/stats/breakdown", Map.put(params, "property", property))
+        |> json_response(200)
+        |> Map.get("results")
+        |> List.first()
+      end
+
+      assert %{"browser" => "Chrome", "events" => 1} = breakdown_and_first.("visit:browser")
+      assert %{"device" => "Desktop", "events" => 1} = breakdown_and_first.("visit:device")
+      assert %{"entry_page" => "/test", "events" => 1} = breakdown_and_first.("visit:entry_page")
+      assert %{"exit_page" => "/test", "events" => 1} = breakdown_and_first.("visit:exit_page")
+      assert %{"country" => "EE", "events" => 1} = breakdown_and_first.("visit:country")
+      assert %{"os" => "Mac", "events" => 1} = breakdown_and_first.("visit:os")
+      assert %{"page" => "/test", "events" => 1} = breakdown_and_first.("event:page")
+      assert %{"source" => "Google", "events" => 1} = breakdown_and_first.("visit:source")
+    end
+
+    for goal_name <- Plausible.Imported.goals_with_url() do
+      test "returns url breakdown for #{goal_name} goal", %{conn: conn, site: site} do
+        insert(:goal, event_name: unquote(goal_name), site: site)
+        site_import = insert(:site_import, site: site)
+
+        populate_stats(site, site_import.id, [
+          build(:event,
+            name: unquote(goal_name),
+            "meta.key": ["url"],
+            "meta.value": ["https://one.com"]
+          ),
+          build(:imported_custom_events,
+            name: unquote(goal_name),
+            visitors: 2,
+            events: 5,
+            link_url: "https://one.com"
+          ),
+          build(:imported_custom_events,
+            name: unquote(goal_name),
+            visitors: 5,
+            events: 10,
+            link_url: "https://two.com"
+          ),
+          build(:imported_custom_events,
+            name: "some goal",
+            visitors: 5,
+            events: 10
+          ),
+          build(:imported_visitors, visitors: 9)
+        ])
+
+        conn =
+          get(conn, "/api/v1/stats/breakdown", %{
+            "site_id" => site.domain,
+            "period" => "day",
+            "property" => "event:props:url",
+            "filters" => "event:goal==#{unquote(goal_name)}",
+            "metrics" => "visitors,events,conversion_rate",
+            "with_imported" => "true"
+          })
+
+        assert json_response(conn, 200)["results"] == [
+                 %{
+                   "visitors" => 5,
+                   "url" => "https://two.com",
+                   "events" => 10,
+                   "conversion_rate" => 50.0
+                 },
+                 %{
+                   "visitors" => 3,
+                   "url" => "https://one.com",
+                   "events" => 6,
+                   "conversion_rate" => 30.0
+                 }
+               ]
+
+        refute json_response(conn, 200)["warning"]
+      end
+    end
+
+    for goal_name <- Plausible.Imported.goals_with_path() do
+      test "returns path breakdown for #{goal_name} goal", %{conn: conn, site: site} do
+        insert(:goal, event_name: unquote(goal_name), site: site)
+        site_import = insert(:site_import, site: site)
+
+        populate_stats(site, site_import.id, [
+          build(:event,
+            name: unquote(goal_name),
+            "meta.key": ["path"],
+            "meta.value": ["/one"]
+          ),
+          build(:imported_custom_events,
+            name: unquote(goal_name),
+            visitors: 2,
+            events: 5,
+            path: "/one"
+          ),
+          build(:imported_custom_events,
+            name: unquote(goal_name),
+            visitors: 5,
+            events: 10,
+            path: "/two"
+          ),
+          build(:imported_custom_events,
+            name: "some goal",
+            visitors: 5,
+            events: 10
+          ),
+          build(:imported_visitors, visitors: 9)
+        ])
+
+        conn =
+          get(conn, "/api/v1/stats/breakdown", %{
+            "site_id" => site.domain,
+            "period" => "day",
+            "property" => "event:props:path",
+            "filters" => "event:goal==#{unquote(goal_name)}",
+            "metrics" => "visitors,events,conversion_rate",
+            "with_imported" => "true"
+          })
+
+        assert json_response(conn, 200)["results"] == [
+                 %{
+                   "visitors" => 5,
+                   "path" => "/two",
+                   "events" => 10,
+                   "conversion_rate" => 50.0
+                 },
+                 %{
+                   "visitors" => 3,
+                   "path" => "/one",
+                   "events" => 6,
+                   "conversion_rate" => 30.0
+                 }
+               ]
+
+        refute json_response(conn, 200)["warning"]
+      end
+    end
+
+    test "adds a warning when query params are not supported for imported data", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      insert(:goal, event_name: "Signup", site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        ),
+        build(:imported_visitors, visitors: 9)
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "event:props:package",
+          "filters" => "event:goal==Signup",
+          "metrics" => "visitors",
+          "with_imported" => "true"
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "package" => "large",
+                 "visitors" => 1
+               }
+             ]
+
+      assert json_response(conn, 200)["warning"] =~
+               "Imported stats are not included in the results because query parameters are not supported."
+    end
+
+    test "does not add a warning when there are no site imports", %{conn: conn, site: site} do
+      insert(:goal, event_name: "Signup", site: site)
+
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "event:props:package",
+          "filters" => "event:goal==Signup",
+          "metrics" => "visitors",
+          "with_imported" => "true"
+        })
+
+      refute json_response(conn, 200)["warning"]
+    end
+
+    test "does not add a warning when import is out of queried date range", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site, end_date: Date.add(Date.utc_today(), -3))
+
+      insert(:goal, event_name: "Signup", site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        ),
+        build(:imported_visitors, visitors: 9)
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "event:props:package",
+          "filters" => "event:goal==Signup",
+          "metrics" => "visitors",
+          "with_imported" => "true"
+        })
+
+      refute json_response(conn, 200)["warning"]
     end
   end
 end

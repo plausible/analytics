@@ -1,4 +1,4 @@
-Thanks for being a Plausible Analytics subscriber!
+Thanks for being a <%= Plausible.product_name() %> subscriber!
 <br /><br />
 This is a friendly reminder that your traffic has exceeded your subscription tier for two consecutive months. Congrats on all that traffic!
 <br /><br />

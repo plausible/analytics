@@ -11,6 +11,7 @@ defmodule Plausible.Imported.EntryPage do
     field :visitors, Ch, type: "UInt64"
     field :entrances, Ch, type: "UInt64"
     field :visit_duration, Ch, type: "UInt64"
+    field :pageviews, Ch, type: "UInt64"
     field :bounces, Ch, type: "UInt32"
   end
 end

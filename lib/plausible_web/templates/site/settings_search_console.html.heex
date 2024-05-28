@@ -82,7 +82,7 @@
     <% else %>
       <PlausibleWeb.Components.Google.button
         id="search-console-connect"
-        to={Plausible.Google.API.search_console_authorize_url(@site.id, "search-console")}
+        to={Plausible.Google.API.search_console_authorize_url(@site.id)}
       />
       <div class="text-gray-700 dark:text-gray-300 mt-8">
         NB: You also need to set up your site on
@@ -116,7 +116,7 @@
         </path>
       </svg>
       <p class="text-gray-900 dark:text-gray-200">
-        An extra step is needed to set up your Plausible Analytics Self Hosted for the Google Search Console integration.
+        An extra step is needed to set up your <%= Plausible.product_name() %> for the Google Search Console integration.
         Find instructions <%= link("here",
           to: "https://plausible.io/docs/self-hosting-configuration#google-search-integration",
           class: "text-indigo-500"

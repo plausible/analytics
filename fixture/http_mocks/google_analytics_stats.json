@@ -4,7 +4,7 @@
     "url": "https://www.googleapis.com/webmasters/v3/sites/sc-domain%3Adummy.test/searchAnalytics/query",
     "method": "post",
     "request_body": {
-      "dimensionFilterGroups": {},
+      "dimensionFilterGroups": [],
       "dimensions": [
         "query"
       ],
@@ -16,23 +16,17 @@
       "responseAggregationType": "auto",
       "rows": [
         {
-          "clicks": 25.0,
-          "ctr": 0.3,
-          "impressions": 50.0,
-          "keys": [
-            "keyword1",
-            "keyword2"
-          ],
-          "position": 2.0
+          "clicks": 25,
+          "ctr": 0.3679,
+          "impressions": 50,
+          "keys": ["keyword1"],
+          "position": 2.2312312
         },
         {
-          "clicks": 15.0,
+          "clicks": 15,
           "ctr": 0.5,
-          "impressions": 25.0,
-          "keys": [
-            "keyword3",
-            "keyword4"
-          ],
+          "impressions": 25,
+          "keys": ["keyword3"],
           "position": 4.0
         }
       ]

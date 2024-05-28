@@ -444,11 +444,31 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.referrer_source == "indiehackers.com"
     end
 
-    test "if the referrer is not http or https, it is ignored", %{conn: conn, site: site} do
+    test "if the referrer is not http, https, or android it is ignored", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
         url: "http://example.com/",
-        referrer: "android-app://random",
+        referrer: "ftp://wat",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      pageview = get_event(site)
+
+      assert response(conn, 202) == "ok"
+      assert pageview.referrer_source == ""
+      assert pageview.referrer == ""
+    end
+
+    test "stores referrer from android app", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com/",
+        referrer: "android-app://some.android.app",
         domain: site.domain
       }
 
@@ -460,7 +480,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.referrer_source == ""
+      assert session.referrer == "android-app://some.android.app"
+      assert session.referrer_source == "android-app://some.android.app"
     end
 
     test "screen size is calculated from user agent", %{conn: conn, site: site} do
@@ -706,7 +727,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert Map.get(event, :"meta.value") == ["true"]
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "converts revenue values into the goal currency", %{conn: conn, site: site} do
       params = %{
         name: "Payment",
@@ -723,7 +744,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert Decimal.equal?(Decimal.new("7.14"), amount)
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "revenue values can be sent with minified keys", %{conn: conn, site: site} do
       params = %{
         "n" => "Payment",
@@ -740,7 +761,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert Decimal.equal?(Decimal.new("7.14"), amount)
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "saves the exact same amount when goal currency is the same as the event", %{
       conn: conn,
       site: site

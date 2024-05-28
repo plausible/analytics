@@ -2,10 +2,6 @@
   site={@site}
   search_console_domains={@search_console_domains}
 />
-<PlausibleWeb.Components.Settings.settings_google_import
-  site={@site}
-  imported_pageviews={@imported_pageviews}
-/>
 
 <section
   :if={@has_plugins_tokens? || @conn.query_params["new_token"]}
@@ -14,10 +10,10 @@
   <div class="py-6 px-4 sm:p-6">
     <header class="relative">
       <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-        Plugins API Tokens
+        Plugin Tokens
       </h2>
       <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-        Control Plugins API Access
+        Control Plugin Access
       </p>
     </header>
 

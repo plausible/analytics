@@ -16,7 +16,10 @@ function EntryPages({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    return { entry_page: listItem['name'] }
+    return {
+      prefix: 'entry_page',
+      filter: ["is", "entry_page", [listItem['name']]]
+    }
   }
 
   return (
@@ -43,7 +46,10 @@ function ExitPages({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    return { exit_page: listItem['name'] }
+    return {
+      prefix: 'exit_page',
+      filter: ["is", "exit_page", [listItem['name']]]
+    }
   }
 
   return (
@@ -70,7 +76,10 @@ function TopPages({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    return { page: listItem['name'] }
+    return {
+      prefix: 'page',
+      filter: ["is", "page", [listItem['name']]]
+    }
   }
 
   return (

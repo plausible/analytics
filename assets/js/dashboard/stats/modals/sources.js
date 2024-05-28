@@ -5,6 +5,8 @@ import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { parseQuery } from '../../query'
+import { updatedQuery } from "../../util/url";
+import { FILTER_OPERATIONS, hasGoalFilter, replaceFilterByPrefix } from "../../util/filters";
 
 const TITLES = {
   sources: 'Top Sources',
@@ -32,7 +34,7 @@ class SourcesModal extends React.Component {
     const { query, page, sources } = this.state
 
     const detailed = this.showExtra()
-    api.get(`/api/stats/${encodeURIComponent(site.domain)}/${this.currentFilter()}`, query, { limit: 100, page, detailed })
+    api.get(`/api/stats/${encodeURIComponent(site.domain)}/${this.currentView()}`, query, { limit: 100, page, detailed })
       .then((res) => this.setState({ loading: false, sources: sources.concat(res), moreResultsAvailable: res.length === 100 }))
   }
 
@@ -46,17 +48,27 @@ class SourcesModal extends React.Component {
     }
   }
 
-  currentFilter() {
+  currentView() {
     const urlparts = this.props.location.pathname.split('/')
     return urlparts[urlparts.length - 1]
   }
 
+  filterKey() {
+    const view = this.currentView()
+    if (view === 'sources') return 'source'
+    if (view === 'utm_mediums') return 'utm_medium'
+    if (view === 'utm_sources') return 'utm_source'
+    if (view === 'utm_campaigns') return 'utm_campaign'
+    if (view === 'utm_contents') return 'utm_content'
+    if (view === 'utm_terms') return 'utm_term'
+  }
+
   showExtra() {
-    return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
+    return this.state.query.period !== 'realtime' && !hasGoalFilter(this.state.query)
   }
 
   showConversionRate() {
-    return !!this.state.query.filters.goal
+    return hasGoalFilter(this.state.query)
   }
 
   loadMore() {
@@ -80,7 +92,7 @@ class SourcesModal extends React.Component {
   }
 
   icon(source) {
-    if (this.currentFilter() === 'sources') {
+    if (this.currentView() === 'sources') {
       return (
         <img
           src={`/favicon/sources/${encodeURIComponent(source.name)}`}
@@ -91,20 +103,13 @@ class SourcesModal extends React.Component {
   }
 
   renderSource(source) {
-    const query = new URLSearchParams(window.location.search)
-    const filter = this.currentFilter()
-    if (filter === 'sources') query.set('source', source.name)
-    if (filter === 'utm_mediums') query.set('utm_medium', source.name)
-    if (filter === 'utm_sources') query.set('utm_source', source.name)
-    if (filter === 'utm_campaigns') query.set('utm_campaign', source.name)
-    if (filter === 'utm_contents') query.set('utm_content', source.name)
-    if (filter === 'utm_terms') query.set('utm_term', source.name)
+    const filters = replaceFilterByPrefix(this.state.query, this.filterKey(), [FILTER_OPERATIONS.is, this.filterKey(), [source.name]])
 
     return (
       <tr className="text-sm dark:text-gray-200" key={source.name}>
         <td className="p-2">
           {this.icon(source)}
-          <Link className="hover:underline" to={{ search: query.toString(), pathname: '/' + encodeURIComponent(this.props.site.domain) }}>{source.name}</Link>
+          <Link className="hover:underline" to={{ search: updatedQuery({ filters }), pathname: '/' + encodeURIComponent(this.props.site.domain) }}>{source.name}</Link>
         </td>
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(source.total_visitors)}</td>}
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(source.visitors)}</td>
@@ -142,7 +147,7 @@ class SourcesModal extends React.Component {
   }
 
   title() {
-    return TITLES[this.currentFilter()]
+    return TITLES[this.currentView()]
   }
 
   render() {

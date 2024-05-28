@@ -22,7 +22,8 @@ defmodule Plausible.Ingestion.Event.Revenue do
         }
 
       matching_goal.currency != revenue_source.currency ->
-        converted = Money.to_currency!(revenue_source, matching_goal.currency)
+        converted =
+          Money.to_currency!(revenue_source, matching_goal.currency)
 
         %{
           revenue_source_amount: Money.to_decimal(revenue_source),

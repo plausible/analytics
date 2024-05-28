@@ -23,11 +23,22 @@ defmodule Plausible.Stats.Filters do
     :region,
     :city,
     :entry_page,
-    :exit_page
+    :exit_page,
+    :entry_page_hostname,
+    :exit_page_hostname
   ]
   def visit_props(), do: @visit_props |> Enum.map(&to_string/1)
 
-  @event_props [:name, :page, :goal]
+  @event_table_visit_props @visit_props --
+                             [
+                               :entry_page,
+                               :exit_page,
+                               :entry_page_hostname,
+                               :exit_page_hostname
+                             ]
+  def event_table_visit_props(), do: @event_table_visit_props |> Enum.map(&to_string/1)
+
+  @event_props [:name, :page, :goal, :hostname]
 
   def event_props(), do: @event_props |> Enum.map(&to_string/1)
 
@@ -45,24 +56,24 @@ defmodule Plausible.Stats.Filters do
   ### Examples:
 
       iex> Filters.parse("{\\"page\\":\\"/blog/**\\"}")
-      %{"event:page" => {:matches, "/blog/**"}}
+      [[:matches, "event:page", "/blog/**"]]
 
       iex> Filters.parse("visit:browser!=Chrome")
-      %{"visit:browser" => {:is_not, "Chrome"}}
+      [[:is_not, "visit:browser", "Chrome"]]
 
       iex> Filters.parse(nil)
-      %{}
+      []
   """
   def parse(filters) when is_binary(filters) do
     case Jason.decode(filters) do
       {:ok, filters} when is_map(filters) -> DashboardFilterParser.parse_and_prefix(filters)
-      {:ok, _} -> %{}
+      {:ok, _} -> []
       {:error, err} -> StatsAPIFilterParser.parse_filter_expression(err.data)
     end
   end
 
   def parse(filters) when is_map(filters), do: DashboardFilterParser.parse_and_prefix(filters)
-  def parse(_), do: %{}
+  def parse(_), do: []
 
   def without_prefix(property) do
     property

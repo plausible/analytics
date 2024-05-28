@@ -3,7 +3,7 @@ import { Link, withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
-import numberFormatter from '../../util/number-formatter'
+import numberFormatter, { percentageFormatter } from '../../util/number-formatter'
 import {parseQuery} from '../../query'
 import RocketIcon from './rocket-icon'
 
@@ -17,49 +17,31 @@ class GoogleKeywordsModal extends React.Component {
   }
 
   componentDidMount() {
-    if (this.state.query.filters.goal) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/goal/referrers/Google`, this.state.query, {limit: 100})
-        .then((res) => this.setState({
-          loading: false,
-          searchTerms: res.search_terms,
-          totalVisitors: res.total_visitors,
-          notConfigured: res.not_configured,
-          isOwner: res.is_owner
-        }))
-    } else {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.state.query, {limit: 100})
-        .then((res) => this.setState({
-          loading: false,
-          searchTerms: res.search_terms,
-          totalVisitors: res.total_visitors,
-          notConfigured: res.not_configured,
-          isOwner: res.is_owner
-        }))
-    }
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.state.query, {limit: 100})
+      .then((res) => this.setState({
+        loading: false,
+        searchTerms: res.search_terms,
+        notConfigured: res.not_configured,
+        isOwner: res.is_owner
+      }))
   }
 
   renderTerm(term) {
     return (
       <React.Fragment key={term.name}>
-
         <tr className="text-sm dark:text-gray-200" key={term.name}>
-          <td className="p-2 truncate">{term.name}</td>
+          <td className="p-2">{term.name}</td>
           <td className="p-2 w-32 font-medium" align="right">{numberFormatter(term.visitors)}</td>
+          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(term.impressions)}</td>
+          <td className="p-2 w-32 font-medium" align="right">{percentageFormatter(term.ctr)}</td>
+          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(term.position)}</td>
         </tr>
       </React.Fragment>
     )
   }
 
   renderKeywords() {
-    if (this.state.query.filters.goal) {
-      return (
-        <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
-          <RocketIcon />
-          <div className="text-lg">Sorry, we cannot show which keywords converted best for goal <b>{this.state.query.filters.goal}</b></div>
-          <div className="text-lg">Google does not share this information</div>
-        </div>
-      )
-    } else if (this.state.notConfigured) {
+    if (this.state.notConfigured) {
       if (this.state.isOwner) {
         return (
           <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
@@ -84,7 +66,10 @@ class GoogleKeywordsModal extends React.Component {
           <thead>
             <tr>
               <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Search Term</th>
-              <th className="p-2 w-32 lg:w-1/2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visitors</th>
+              <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visitors</th>
+              <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Impressions</th>
+              <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">CTR</th>
+              <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Position</th>
             </tr>
           </thead>
           <tbody>
@@ -102,14 +87,6 @@ class GoogleKeywordsModal extends React.Component {
     }
   }
 
-  renderGoalText() {
-    if (this.state.query.filters.goal) {
-      return (
-        <h1 className="text-xl font-semibold text-gray-500 dark:text-gray-200 leading-none">completed {this.state.query.filters.goal}</h1>
-      )
-    }
-  }
-
   renderBody() {
     if (this.state.loading) {
       return (
@@ -122,10 +99,6 @@ class GoogleKeywordsModal extends React.Component {
 
           <div className="my-4 border-b border-gray-300 dark:border-gray-500"></div>
           <main className="modal__content">
-            <h1 className="text-xl font-semibold mb-0 leading-none dark:text-gray-200">
-              {this.state.totalVisitors} visitors from Google<br />
-            </h1>
-            {this.renderGoalText()}
             { this.renderKeywords() }
           </main>
         </React.Fragment>

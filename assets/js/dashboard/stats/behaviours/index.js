@@ -8,6 +8,7 @@ import GoalConversions, { specialTitleWhenGoalFilter } from './goal-conversions'
 import Properties from './props'
 import { FeatureSetupNotice } from '../../components/notice'
 import { SPECIAL_GOALS } from './goal-conversions'
+import { hasGoalFilter } from '../../util/filters'
 
 /*global BUILD_EXTRA*/
 /*global require*/
@@ -59,12 +60,12 @@ export default function Behaviours(props) {
   }, [])
 
   useEffect(() => {
-    const justRemovedGoalFilter = !query.filters.goal
+    const justRemovedGoalFilter = !hasGoalFilter(query)
     if (mode === PROPS && justRemovedGoalFilter && showingPropsForGoalFilter) {
       setShowingPropsForGoalFilter(false)
       setMode(CONVERSIONS)
     }
-  }, [!!query.filters.goal])
+  }, [hasGoalFilter(query)])
 
   useEffect(() => {
     setMode(defaultMode())
@@ -200,7 +201,7 @@ export default function Behaviours(props) {
     }
     else if (Funnel && adminAccess) {
       let callToAction
-      
+
       if (site.funnelsAvailable) {
         callToAction = {action: 'Set up funnels', link: `/${encodeURIComponent(site.domain)}/settings/funnels`}
       } else {

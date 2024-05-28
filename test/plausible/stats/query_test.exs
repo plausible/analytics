@@ -105,7 +105,7 @@ defmodule Plausible.Stats.QueryTest do
     site = Map.put(site, :timezone, "America/Cancun")
     q = Query.from(site, %{"period" => "all"})
 
-    assert q.date_range.first == ~D[2019-12-31]
+    assert q.date_range.first == ~D[2020-01-01]
     assert q.date_range.last == Timex.today("America/Cancun")
   end
 
@@ -177,13 +177,13 @@ defmodule Plausible.Stats.QueryTest do
     assert q.interval == "date"
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   test "adds sample_threshold :infinite to query struct", %{site: site} do
     q = Query.from(site, %{"period" => "30d", "sample_threshold" => "infinite"})
     assert q.sample_threshold == :infinite
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   test "casts sample_threshold to integer in query struct", %{site: site} do
     q = Query.from(site, %{"period" => "30d", "sample_threshold" => "30000000"})
     assert q.sample_threshold == 30_000_000
@@ -194,30 +194,89 @@ defmodule Plausible.Stats.QueryTest do
       filters = Jason.encode!(%{"goal" => "Signup"})
       q = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      assert q.filters["event:goal"] == {:is, {:event, "Signup"}}
+      assert q.filters == [[:is, "event:goal", {:event, "Signup"}]]
     end
 
     test "parses source filter", %{site: site} do
       filters = Jason.encode!(%{"source" => "Twitter"})
       q = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      assert q.filters["visit:source"] == {:is, "Twitter"}
+      assert q.filters == [[:is, "visit:source", "Twitter"]]
+    end
+  end
+
+  describe "include_imported" do
+    setup [:create_site]
+
+    test "is true when requested via params and imported data exists", %{site: site} do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: true} =
+               Query.from(site, %{"period" => "day", "with_imported" => "true"})
     end
 
-    test "allows prop filters when site owner is on a business plan", %{site: site, user: user} do
-      insert(:business_subscription, user: user)
-      filters = Jason.encode!(%{"props" => %{"author" => "!John Doe"}})
-      query = Query.from(site, %{"period" => "6mo", "filters" => filters})
-
-      assert Map.has_key?(query.filters, "event:props:author")
+    test "is false when imported data does not exist", %{site: site} do
+      assert %{include_imported: false, skip_imported_reason: :no_imported_data} =
+               Query.from(site, %{"period" => "day", "with_imported" => "true"})
     end
 
-    test "drops prop filter when site owner is on a growth plan", %{site: site, user: user} do
-      insert(:growth_subscription, user: user)
-      filters = Jason.encode!(%{"props" => %{"author" => "!John Doe"}})
-      query = Query.from(site, %{"period" => "6mo", "filters" => filters})
+    test "is false when imported data exists but is out of the date range", %{site: site} do
+      insert(:site_import, site: site, start_date: ~D[2021-01-01], end_date: ~D[2022-01-01])
+      site = Plausible.Imported.load_import_data(site)
 
-      refute Map.has_key?(query.filters, "props")
+      assert %{include_imported: false, skip_imported_reason: :out_of_range} =
+               Query.from(site, %{"period" => "day", "with_imported" => "true"})
+    end
+
+    test "is false in realtime even when imported data from today exists", %{site: site} do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: false, skip_imported_reason: :unsupported_query} =
+               Query.from(site, %{"period" => "realtime", "with_imported" => "true"})
+    end
+
+    test "is false when an arbitrary custom property filter is used", %{site: site} do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: false, skip_imported_reason: :unsupported_query} =
+               Query.from(site, %{
+                 "period" => "day",
+                 "with_imported" => "true",
+                 "property" => "event:props:url",
+                 "filters" => Jason.encode!(%{"props" => %{"author" => "!John Doe"}})
+               })
+    end
+
+    test "is true when breaking down by url and filtering by outbound link or file download goal",
+         %{site: site} do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      Enum.each(["Outbound Link: Click", "File Download"], fn goal_name ->
+        assert %{include_imported: true} =
+                 Query.from(site, %{
+                   "period" => "day",
+                   "with_imported" => "true",
+                   "property" => "event:props:url",
+                   "filters" => Jason.encode!(%{"goal" => goal_name})
+                 })
+      end)
+    end
+
+    test "is false when breaking down by url but without a special goal filter",
+         %{site: site} do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: false} =
+               Query.from(site, %{
+                 "period" => "day",
+                 "with_imported" => "true",
+                 "property" => "event:props:url"
+               })
     end
   end
 end

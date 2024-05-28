@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   @user_id 123
 
   describe "GET /api/stats/main-graph - plot" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "displays pageviews for the last 30 minutes in realtime graph", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.any?(plot, fn pageviews -> pageviews > 0 end)
     end
 
-    test "displays visitors for a day", %{conn: conn, site: site} do
+    test "displays pageviews for a day", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-01 23:00:00])
@@ -70,7 +70,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imported_source" => "Google Analytics", "with_imported" => true} =
+      assert %{"plot" => plot, "imports_exist" => true, "with_imported" => true} =
                json_response(conn, 200)
 
       assert plot == [2] ++ List.duplicate(0, 23)
@@ -137,7 +137,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imported_source" => "Google Analytics", "with_imported" => true} =
+      assert %{"plot" => plot, "imports_exist" => true, "with_imported" => true} =
                json_response(conn, 200)
 
       assert Enum.count(plot) == 31
@@ -158,7 +158,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imported_source" => "Google Analytics", "with_imported" => true} =
+      assert %{"plot" => plot, "imports_exist" => true, "with_imported" => true} =
                json_response(conn, 200)
 
       assert Enum.count(plot) == 31
@@ -368,7 +368,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - pageviews plot" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "displays pageviews for a month", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -433,8 +433,270 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
+  describe "GET /api/stats/main-graph - visitors plot" do
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+
+    test "displays visitors per hour with short visits", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00], user_id: 1),
+        build(:pageview, timestamp: ~N[2021-01-01 00:10:00], user_id: 1),
+        build(:pageview, timestamp: ~N[2021-01-01 00:20:00])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&metric=visitors&interval=hour"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 24
+      assert List.first(plot) == 2
+      assert Enum.sum(plot) == 2
+    end
+
+    test "displays visitors realtime with visits spanning multiple minutes", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, timestamp: relative_time(minutes: -35), user_id: 1),
+        build(:pageview, timestamp: relative_time(minutes: -20), user_id: 1),
+        build(:pageview, timestamp: relative_time(minutes: -25), user_id: 2),
+        build(:pageview, timestamp: relative_time(minutes: -15), user_id: 2),
+        build(:pageview, timestamp: relative_time(minutes: -5), user_id: 3),
+        build(:pageview, timestamp: relative_time(minutes: -3), user_id: 3)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=realtime&metric=visitors"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      expected_plot =
+        if FunWithFlags.enabled?(:experimental_session_count) do
+          ~w[1 1 1 1 1 2 2 2 2 2 2 1 1 1 1 1 0 0 0 0 0 0 0 0 0 1 1 1 0 0]
+        else
+          ~w[0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 1 0 0]
+        end
+
+      assert plot == Enum.map(expected_plot, &String.to_integer/1)
+    end
+
+    test "displays visitors per hour with visits spanning multiple hours", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2020-12-31 23:45:00], user_id: 1),
+        build(:pageview, timestamp: ~N[2021-01-01 00:10:00], user_id: 1),
+        build(:pageview, timestamp: ~N[2021-01-01 00:15:00], user_id: 1),
+        build(:pageview, timestamp: ~N[2021-01-01 00:35:00], user_id: 2),
+        build(:pageview, timestamp: ~N[2021-01-01 01:00:00], user_id: 2),
+        build(:pageview, timestamp: ~N[2021-01-01 01:25:00], user_id: 2),
+        build(:pageview, timestamp: ~N[2021-01-01 01:50:00], user_id: 2),
+        build(:pageview, timestamp: ~N[2021-01-01 02:05:00], user_id: 2),
+        build(:pageview, timestamp: ~N[2021-01-01 23:45:00], user_id: 3),
+        build(:pageview, timestamp: ~N[2021-01-02 00:05:00], user_id: 3)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&metric=visitors&interval=hour"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      zeroes = List.duplicate(0, 20)
+      assert [2, 1, 1] ++ zeroes ++ [1] == plot
+    end
+
+    test "displays visitors per day with visits showed only in last time bucket", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2020-12-31 23:45:00], user_id: 1),
+        build(:pageview, timestamp: ~N[2021-01-01 00:10:00], user_id: 1),
+        build(:pageview, timestamp: ~N[2020-01-02 23:45:00], user_id: 2),
+        build(:pageview, timestamp: ~N[2021-01-03 00:10:00], user_id: 2),
+        build(:pageview, timestamp: ~N[2020-01-03 23:45:00], user_id: 3),
+        build(:pageview, timestamp: ~N[2021-01-04 00:10:00], user_id: 3),
+        build(:pageview, timestamp: ~N[2020-01-07 23:45:00], user_id: 4),
+        build(:pageview, timestamp: ~N[2021-01-08 00:10:00], user_id: 4)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-07&metric=visitors&interval=date"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+      assert plot == [1, 0, 1, 1, 0, 0, 0]
+    end
+
+    test "displays visitors per week with visits showed only in last time bucket", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2020-12-31 23:45:00], user_id: 1),
+        build(:pageview, timestamp: ~N[2021-01-01 00:10:00], user_id: 1),
+        build(:pageview, timestamp: ~N[2020-01-03 23:45:00], user_id: 2),
+        build(:pageview, timestamp: ~N[2021-01-04 00:10:00], user_id: 2),
+        build(:pageview, timestamp: ~N[2021-01-31 23:45:00], user_id: 3),
+        build(:pageview, timestamp: ~N[2021-02-01 00:05:00], user_id: 3)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=visitors&interval=week"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      if FunWithFlags.enabled?(:experimental_session_count) do
+        assert plot == [1, 1, 0, 0, 0]
+      else
+        assert plot == [1, 1, 0, 0, 1]
+      end
+    end
+  end
+
+  describe "GET /api/stats/main-graph - conversion_rate plot" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    test "returns 400 when conversion rate is queried without a goal filter", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=conversion_rate"
+        )
+
+      assert %{"error" => error} = json_response(conn, 400)
+      assert error =~ "can only be queried with a goal filter"
+    end
+
+    test "displays conversion_rate for a month", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-31 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-31 00:00:00])
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=conversion_rate&filters=#{filters}"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+      assert Enum.count(plot) == 31
+
+      assert List.first(plot) == 33.3
+      assert Enum.at(plot, 10) == 0.0
+      assert List.last(plot) == 50.0
+    end
+  end
+
+  describe "GET /api/stats/main-graph - events (total conversions) plot" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    test "returns 400 when the `events` metric is queried without a goal filter", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=events"
+        )
+
+      assert %{"error" => error} = json_response(conn, 400)
+      assert error =~ "`events` can only be queried with a goal filter"
+    end
+
+    test "displays total conversions for a goal", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:event, name: "Different", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-31 00:00:00]),
+        build(:event, name: "Signup", user_id: 123, timestamp: ~N[2021-01-31 00:00:00]),
+        build(:event, name: "Signup", user_id: 123, timestamp: ~N[2021-01-31 00:00:00]),
+        build(:event, name: "Signup", user_id: 123, timestamp: ~N[2021-01-31 00:00:00])
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=events&filters=#{filters}"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+      assert Enum.count(plot) == 31
+
+      assert List.first(plot) == 2
+      assert Enum.at(plot, 10) == 0.0
+      assert List.last(plot) == 3
+    end
+
+    test "displays total conversions per hour with previous day comparison plot", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:event, name: "Different", timestamp: ~N[2021-01-10 05:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-10 05:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-10 05:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-10 19:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-10 19:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-11 04:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-11 05:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-11 18:00:00])
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-11&metric=events&filters=#{filters}&comparison=previous_period"
+        )
+
+      assert %{"plot" => curr, "comparison_plot" => prev} = json_response(conn, 200)
+      assert [0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0] = prev
+      assert [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0] = curr
+    end
+  end
+
   describe "GET /api/stats/main-graph - bounce_rate plot" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "displays bounce_rate for a month", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -498,7 +760,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - visit_duration plot" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "displays visit_duration for a month", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -793,7 +1055,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - comparisons" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "returns past month stats when period=30d and comparison=previous_period", %{
       conn: conn,
@@ -885,17 +1147,6 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
 
-      site
-      |> Ecto.Changeset.change(
-        imported_data: %{
-          start_date: ~D[2005-01-01],
-          end_date: ~D[2020-01-31],
-          source: "Google Analytics",
-          status: "ok"
-        }
-      )
-      |> Plausible.Repo.update!()
-
       conn =
         get(
           conn,
@@ -905,7 +1156,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{
                "plot" => plot,
                "comparison_plot" => comparison_plot,
-               "imported_source" => "Google Analytics",
+               "imports_exist" => true,
                "with_imported" => true
              } = json_response(conn, 200)
 
@@ -942,17 +1193,6 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
 
-      site
-      |> Ecto.Changeset.change(
-        imported_data: %{
-          start_date: ~D[2005-01-01],
-          end_date: ~D[2020-01-31],
-          source: "Google Analytics",
-          status: "ok"
-        }
-      )
-      |> Plausible.Repo.update!()
-
       conn =
         get(
           conn,
@@ -962,18 +1202,48 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{
                "plot" => plot,
                "comparison_plot" => comparison_plot,
-               "imported_source" => "Google Analytics",
+               "imports_exist" => true,
                "with_imported" => false
              } = json_response(conn, 200)
 
       assert 4 == Enum.sum(plot)
       assert 0 == Enum.sum(comparison_plot)
     end
+
+    test "plots conversion rate previous period comparison", %{site: site, conn: conn} do
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:01:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-08 00:01:00]),
+        build(:pageview, timestamp: ~N[2021-01-08 00:01:00])
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-14&comparison=previous_period&metric=conversion_rate&filters=#{filters}"
+        )
+
+      assert %{
+               "plot" => this_week_plot,
+               "comparison_plot" => last_week_plot,
+               "imports_exist" => true,
+               "with_imported" => false
+             } = json_response(conn, 200)
+
+      assert this_week_plot == [50.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      assert last_week_plot == [33.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    end
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   describe "GET /api/stats/main-graph - total_revenue plot" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "plots total_revenue for a month", %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Payment", currency: "USD")
@@ -1051,9 +1321,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
-  @tag :full_build_only
+  @tag :ee_only
   describe "GET /api/stats/main-graph - average_revenue plot" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "plots total_revenue for a month", %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Payment", currency: "USD")

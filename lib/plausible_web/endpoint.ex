@@ -33,14 +33,24 @@ defmodule PlausibleWeb.Endpoint do
   plug(PlausibleWeb.Tracker)
   plug(PlausibleWeb.Favicon)
 
+  static_paths = ~w(css js images favicon.ico)
+
+  static_paths =
+    on_ee do
+      # NOTE: The Cloud uses custom robots.txt from https://github.com/plausible/website: https://plausible.io/robots.txt
+      static_paths
+    else
+      static_paths ++ ["robots.txt"]
+    end
+
   plug(Plug.Static,
     at: "/",
     from: :plausible,
     gzip: false,
-    only: ~w(css js images favicon.ico robots.txt)
+    only: static_paths
   )
 
-  on_full_build do
+  on_ee do
     plug(Plug.Static,
       at: "/kaffy",
       from: :kaffy,
@@ -59,7 +69,7 @@ defmodule PlausibleWeb.Endpoint do
 
   plug(Plug.RequestId)
   plug(PromEx.Plug, prom_ex_module: Plausible.PromEx)
-  plug(Plug.Telemetry, event_prefix: [:phoenix, :endpoint])
+  plug(Plug.Telemetry, event_prefix: [:phoenix, :endpoint], log: false)
 
   plug(Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],

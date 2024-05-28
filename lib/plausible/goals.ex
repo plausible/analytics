@@ -22,7 +22,7 @@ defmodule Plausible.Goals do
     Repo.transaction(fn ->
       case insert_goal(site, params, upsert?) do
         {:ok, :insert, goal} ->
-          on_full_build do
+          on_ee do
             now = Keyword.get(opts, :now, DateTime.utc_now())
             # credo:disable-for-next-line Credo.Check.Refactor.Nesting
             if Plausible.Goal.Revenue.revenue?(goal) do
@@ -80,6 +80,14 @@ defmodule Plausible.Goals do
 
   def find_or_create(_, %{"goal_type" => "page"}), do: {:missing, "page_path"}
 
+  def list_revenue_goals(site) do
+    from(g in Plausible.Goal,
+      where: g.site_id == ^site.id and not is_nil(g.currency),
+      select: %{event_name: g.event_name, currency: g.currency}
+    )
+    |> Plausible.Repo.all()
+  end
+
   def for_site(site, opts \\ []) do
     site
     |> for_site_query(opts)
@@ -95,7 +103,7 @@ defmodule Plausible.Goals do
         order_by: [desc: g.id],
         preload: [:site]
 
-    if opts[:preload_funnels?] == true and full_build?() do
+    if opts[:preload_funnels?] == true and ee?() do
       from(g in query,
         left_join: assoc(g, :funnels),
         group_by: g.id,
@@ -104,6 +112,15 @@ defmodule Plausible.Goals do
     else
       query
     end
+  end
+
+  def batch_create_event_goals(names, site) do
+    Enum.reduce(names, [], fn name, acc ->
+      case insert_goal(site, %{event_name: name}, true) do
+        {:ok, _, goal} -> acc ++ [goal]
+        _ -> acc
+      end
+    end)
   end
 
   @doc """
@@ -128,7 +145,7 @@ defmodule Plausible.Goals do
         where: g.site_id == ^site_id
       )
 
-    goal_query = on_full_build(do: preload(goal_query, funnels: :steps), else: goal_query)
+    goal_query = on_ee(do: preload(goal_query, funnels: :steps), else: goal_query)
 
     result =
       Multi.new()

@@ -5,8 +5,6 @@ defmodule Plausible.Imported.UniversalAnalytics do
 
   use Plausible.Imported.Importer
 
-  alias Plausible.Repo
-
   @missing_values ["(none)", "(not set)", "(not provided)", "(other)"]
 
   @impl true
@@ -17,49 +15,6 @@ defmodule Plausible.Imported.UniversalAnalytics do
 
   @impl true
   def email_template(), do: "google_analytics_import.html"
-
-  @impl true
-  def before_start(site_import) do
-    if site_import.legacy do
-      site = Repo.preload(site_import, :site).site
-
-      site
-      |> Plausible.Site.start_import(
-        site_import.start_date,
-        site_import.end_date,
-        label()
-      )
-      |> Repo.update!()
-    end
-
-    :ok
-  end
-
-  @impl true
-  def on_success(site_import, _extra_data) do
-    if site_import.legacy do
-      site = Repo.preload(site_import, :site).site
-
-      site
-      |> Plausible.Site.import_success()
-      |> Repo.update!()
-    end
-
-    :ok
-  end
-
-  @impl true
-  def on_failure(site_import) do
-    if site_import.legacy do
-      site = Repo.preload(site_import, :site).site
-
-      site
-      |> Plausible.Site.import_failure()
-      |> Repo.update!()
-    end
-
-    :ok
-  end
 
   @impl true
   def parse_args(

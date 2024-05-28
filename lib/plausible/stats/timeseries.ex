@@ -3,10 +3,12 @@ defmodule Plausible.Stats.Timeseries do
   use Plausible
   alias Plausible.Stats.{Query, Util}
   import Plausible.Stats.{Base}
+  import Ecto.Query
   use Plausible.Stats.Fragments
 
   @typep metric ::
            :pageviews
+           | :events
            | :visitors
            | :visits
            | :bounce_rate
@@ -16,18 +18,14 @@ defmodule Plausible.Stats.Timeseries do
   @typep value :: nil | integer() | float()
   @type results :: nonempty_list(%{required(:date) => Date.t(), required(metric()) => value()})
 
-  @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
-
-  @event_metrics [:visitors, :pageviews, :events] ++ @revenue_metrics
-  @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit]
   def timeseries(site, query, metrics) do
     steps = buckets(query)
 
-    event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
-    session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
+    {event_metrics, session_metrics, _} =
+      Plausible.Stats.TableDecider.partition_metrics(metrics, query)
 
     {currency, event_metrics} =
-      on_full_build do
+      on_ee do
         Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, event_metrics)
       else
         {nil, event_metrics}
@@ -48,14 +46,17 @@ defmodule Plausible.Stats.Timeseries do
       |> Map.update!(:date, &date_format/1)
       |> cast_revenue_metrics_to_money(currency)
     end)
+    |> Util.keep_requested_metrics(metrics)
   end
 
   defp events_timeseries(_, _, []), do: []
 
   defp events_timeseries(site, query, metrics) do
-    from(e in base_event_query(site, query), select: %{})
-    |> select_bucket(site, query)
-    |> select_event_metrics(metrics)
+    metrics = Util.maybe_add_visitors_metric(metrics)
+
+    from(e in base_event_query(site, query), select: ^select_event_metrics(metrics))
+    |> select_bucket(:events, site, query)
+    |> maybe_add_timeseries_conversion_rate(site, query, metrics)
     |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
   end
@@ -63,10 +64,9 @@ defmodule Plausible.Stats.Timeseries do
   defp sessions_timeseries(_, _, []), do: []
 
   defp sessions_timeseries(site, query, metrics) do
-    from(e in query_sessions(site, query), select: %{})
+    from(e in query_sessions(site, query), select: ^select_session_metrics(metrics, query))
     |> filter_converted_sessions(site, query)
-    |> select_bucket(site, query)
-    |> select_session_metrics(metrics, query)
+    |> select_bucket(:sessions, site, query)
     |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
     |> Util.keep_requested_metrics(metrics)
@@ -152,7 +152,7 @@ defmodule Plausible.Stats.Timeseries do
     date
   end
 
-  defp select_bucket(q, site, %Query{interval: "month"}) do
+  defp select_bucket(q, _table, site, %Query{interval: "month"}) do
     from(
       e in q,
       group_by: fragment("toStartOfMonth(toTimeZone(?, ?))", e.timestamp, ^site.timezone),
@@ -163,7 +163,7 @@ defmodule Plausible.Stats.Timeseries do
     )
   end
 
-  defp select_bucket(q, site, %Query{interval: "week"} = query) do
+  defp select_bucket(q, _table, site, %Query{interval: "week"} = query) do
     {first_datetime, _} = utc_boundaries(query, site)
 
     from(
@@ -174,7 +174,7 @@ defmodule Plausible.Stats.Timeseries do
     )
   end
 
-  defp select_bucket(q, site, %Query{interval: "date"}) do
+  defp select_bucket(q, _table, site, %Query{interval: "date"}) do
     from(
       e in q,
       group_by: fragment("toDate(toTimeZone(?, ?))", e.timestamp, ^site.timezone),
@@ -185,7 +185,14 @@ defmodule Plausible.Stats.Timeseries do
     )
   end
 
-  defp select_bucket(q, site, %Query{interval: "hour"}) do
+  defp select_bucket(q, :sessions, site, %Query{
+         interval: "hour",
+         experimental_session_count?: true
+       }) do
+    bucket_with_timeslots(q, site, 3600)
+  end
+
+  defp select_bucket(q, _table, site, %Query{interval: "hour"}) do
     from(
       e in q,
       group_by: fragment("toStartOfHour(toTimeZone(?, ?))", e.timestamp, ^site.timezone),
@@ -196,7 +203,30 @@ defmodule Plausible.Stats.Timeseries do
     )
   end
 
-  defp select_bucket(q, _site, %Query{interval: "minute", period: "30m"}) do
+  defp select_bucket(q, :sessions, _site, %Query{
+         interval: "minute",
+         period: "30m",
+         experimental_session_count?: true
+       }) do
+    from(
+      s in q,
+      array_join:
+        bucket in fragment(
+          "timeSlots(?, toUInt32(timeDiff(?, ?)), ?)",
+          s.start,
+          s.start,
+          s.timestamp,
+          60
+        ),
+      group_by: fragment("dateDiff('minute', now(), ?)", bucket),
+      order_by: fragment("dateDiff('minute', now(), ?)", bucket),
+      select_merge: %{
+        date: fragment("dateDiff('minute', now(), ?)", bucket)
+      }
+    )
+  end
+
+  defp select_bucket(q, _table, _site, %Query{interval: "minute", period: "30m"}) do
     from(
       e in q,
       group_by: fragment("dateDiff('minute', now(), ?)", e.timestamp),
@@ -207,13 +237,42 @@ defmodule Plausible.Stats.Timeseries do
     )
   end
 
-  defp select_bucket(q, site, %Query{interval: "minute"}) do
+  defp select_bucket(q, _table, site, %Query{interval: "minute"}) do
     from(
       e in q,
       group_by: fragment("toStartOfMinute(toTimeZone(?, ?))", e.timestamp, ^site.timezone),
       order_by: fragment("toStartOfMinute(toTimeZone(?, ?))", e.timestamp, ^site.timezone),
       select_merge: %{
         date: fragment("toStartOfMinute(toTimeZone(?, ?))", e.timestamp, ^site.timezone)
+      }
+    )
+  end
+
+  defp select_bucket(q, :sessions, site, %Query{
+         interval: "minute",
+         experimental_session_count?: true
+       }) do
+    bucket_with_timeslots(q, site, 60)
+  end
+
+  # Includes session in _every_ time bucket it was active in.
+  # Only done in hourly and minute graphs for performance reasons.
+  defp bucket_with_timeslots(q, site, period_in_seconds) do
+    from(
+      s in q,
+      array_join:
+        bucket in fragment(
+          "timeSlots(toTimeZone(?, ?), toUInt32(timeDiff(?, ?)), toUInt32(?))",
+          s.start,
+          ^site.timezone,
+          s.start,
+          s.timestamp,
+          ^period_in_seconds
+        ),
+      group_by: bucket,
+      order_by: bucket,
+      select_merge: %{
+        date: fragment("?", bucket)
       }
     )
   end
@@ -236,6 +295,7 @@ defmodule Plausible.Stats.Timeseries do
         :visitors -> Map.merge(row, %{visitors: 0})
         :visits -> Map.merge(row, %{visits: 0})
         :views_per_visit -> Map.merge(row, %{views_per_visit: 0.0})
+        :conversion_rate -> Map.merge(row, %{conversion_rate: 0.0})
         :bounce_rate -> Map.merge(row, %{bounce_rate: nil})
         :visit_duration -> Map.merge(row, %{visit_duration: nil})
         :average_revenue -> Map.merge(row, %{average_revenue: nil})
@@ -244,11 +304,40 @@ defmodule Plausible.Stats.Timeseries do
     end)
   end
 
-  on_full_build do
+  on_ee do
     defp cast_revenue_metrics_to_money(results, revenue_goals) do
       Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
     end
   else
     defp cast_revenue_metrics_to_money(results, _revenue_goals), do: results
+  end
+
+  defp maybe_add_timeseries_conversion_rate(q, site, query, metrics) do
+    if :conversion_rate in metrics do
+      totals_query = query |> Query.remove_filters(["event:goal", "event:props"])
+
+      totals_timeseries_q =
+        from(e in base_event_query(site, totals_query),
+          select: ^select_event_metrics([:visitors])
+        )
+        |> select_bucket(:events, site, query)
+
+      from(e in subquery(q),
+        left_join: c in subquery(totals_timeseries_q),
+        on: e.date == c.date,
+        select_merge: %{
+          total_visitors: c.visitors,
+          conversion_rate:
+            fragment(
+              "if(? > 0, round(? / ? * 100, 1), 0)",
+              c.visitors,
+              e.visitors,
+              c.visitors
+            )
+        }
+      )
+    else
+      q
+    end
   end
 end

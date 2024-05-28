@@ -25,7 +25,10 @@ function AllSources(props) {
   }
 
   function getFilterFor(listItem) {
-    return { source: listItem['name'] }
+    return {
+      prefix: 'source',
+      filter: ["is", "source", [listItem['name']]]
+    }
   }
 
   function renderIcon(listItem) {
@@ -60,7 +63,10 @@ function UTMSources(props) {
   }
 
   function getFilterFor(listItem) {
-    return { [props.tab]: listItem['name'] }
+    return {
+      prefix: props.tab,
+      filter: ["is", props.tab, [listItem['name']]]
+    }
   }
 
   return (

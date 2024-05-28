@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.Email do
+  use Plausible
   use Bamboo.Phoenix, view: PlausibleWeb.EmailView
   import Bamboo.PostmarkHelper
 
@@ -223,7 +224,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(invitation.email)
     |> tag("new-user-invitation")
-    |> subject("[Plausible Analytics] You've been invited to #{invitation.site.domain}")
+    |> subject("[#{Plausible.product_name()}] You've been invited to #{invitation.site.domain}")
     |> render("new_user_invitation.html",
       invitation: invitation
     )
@@ -233,7 +234,7 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(invitation.email)
     |> tag("existing-user-invitation")
-    |> subject("[Plausible Analytics] You've been invited to #{invitation.site.domain}")
+    |> subject("[#{Plausible.product_name()}] You've been invited to #{invitation.site.domain}")
     |> render("existing_user_invitation.html",
       invitation: invitation
     )
@@ -243,7 +244,9 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(invitation.email)
     |> tag("ownership-transfer-request")
-    |> subject("[Plausible Analytics] Request to transfer ownership of #{invitation.site.domain}")
+    |> subject(
+      "[#{Plausible.product_name()}] Request to transfer ownership of #{invitation.site.domain}"
+    )
     |> render("ownership_transfer_request.html",
       invitation: invitation,
       new_owner_account: new_owner_account
@@ -255,7 +258,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("invitation-accepted")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} accepted your invitation to #{invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{invitation.email} accepted your invitation to #{invitation.site.domain}"
     )
     |> render("invitation_accepted.html",
       user: invitation.inviter,
@@ -268,7 +271,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("invitation-rejected")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} rejected your invitation to #{invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{invitation.email} rejected your invitation to #{invitation.site.domain}"
     )
     |> render("invitation_rejected.html",
       user: invitation.inviter,
@@ -281,7 +284,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("ownership-transfer-accepted")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} accepted the ownership transfer of #{invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{invitation.email} accepted the ownership transfer of #{invitation.site.domain}"
     )
     |> render("ownership_transfer_accepted.html",
       user: invitation.inviter,
@@ -294,7 +297,7 @@ defmodule PlausibleWeb.Email do
     |> to(invitation.inviter.email)
     |> tag("ownership-transfer-rejected")
     |> subject(
-      "[Plausible Analytics] #{invitation.email} rejected the ownership transfer of #{invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{invitation.email} rejected the ownership transfer of #{invitation.site.domain}"
     )
     |> render("ownership_transfer_rejected.html",
       user: invitation.inviter,
@@ -306,7 +309,9 @@ defmodule PlausibleWeb.Email do
     priority_email()
     |> to(membership.user.email)
     |> tag("site-member-removed")
-    |> subject("[Plausible Analytics] Your access to #{membership.site.domain} has been revoked")
+    |> subject(
+      "[#{Plausible.product_name()}] Your access to #{membership.site.domain} has been revoked"
+    )
     |> render("site_member_removed.html",
       user: membership.user,
       membership: membership
@@ -344,6 +349,41 @@ defmodule PlausibleWeb.Email do
       user: user,
       success: false
     })
+  end
+
+  def export_success(user, site, expires_at) do
+    expires_in =
+      if expires_at do
+        Timex.Format.DateTime.Formatters.Relative.format!(
+          expires_at,
+          "{relative}"
+        )
+      end
+
+    download_url =
+      PlausibleWeb.Router.Helpers.site_url(
+        PlausibleWeb.Endpoint,
+        :download_export,
+        site.domain
+      )
+
+    priority_email()
+    |> to(user)
+    |> tag("export-success")
+    |> subject("[#{Plausible.product_name()}] Your export is now ready for download")
+    |> render("export_success.html",
+      user: user,
+      site: site,
+      download_url: download_url,
+      expires_in: expires_in
+    )
+  end
+
+  def export_failure(user, site) do
+    priority_email()
+    |> to(user)
+    |> subject("[#{Plausible.product_name()}] Your export has failed")
+    |> render("export_failure.html", user: user, site: site)
   end
 
   def error_report(reported_by, trace_id, feedback) do

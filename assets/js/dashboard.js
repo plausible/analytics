@@ -6,6 +6,7 @@ import Router from './dashboard/router'
 import ErrorBoundary from './dashboard/error-boundary'
 import * as api from './dashboard/api'
 import * as timer from './dashboard/util/realtime-update-timer'
+import { filtersBackwardsCompatibilityRedirect } from './dashboard/query';
 
 timer.start()
 
@@ -22,6 +23,7 @@ if (container) {
     conversionsOptedOut: container.dataset.conversionsOptedOut === 'true',
     funnelsOptedOut: container.dataset.funnelsOptedOut === 'true',
     propsOptedOut: container.dataset.propsOptedOut === 'true',
+    revenueGoals: JSON.parse(container.dataset.revenueGoals),
     funnels: JSON.parse(container.dataset.funnels),
     statsBegin: container.dataset.statsBegin,
     nativeStatsBegin: container.dataset.nativeStatsBegin,
@@ -38,6 +40,8 @@ if (container) {
   if (sharedLinkAuth) {
     api.setSharedLinkAuth(sharedLinkAuth)
   }
+
+  filtersBackwardsCompatibilityRedirect()
 
   const app = (
     <ErrorBoundary>
