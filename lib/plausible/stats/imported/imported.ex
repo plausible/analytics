@@ -715,7 +715,7 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp select_joined_metrics(q, []), do: q
-  # TODO: Reverse-engineering the native data bounces and total visit
+  # NOTE: Reverse-engineering the native data bounces and total visit
   # durations to combine with imported data is inefficient. Instead both
   # queries should fetch bounces/total_visit_duration and visits and be
   # used as subqueries to a main query that then find the bounce rate/avg
