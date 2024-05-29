@@ -172,14 +172,14 @@ export default function Behaviours(props) {
     )
   }
 
-  function afterFetchGoalData(apiResponse) {
+  function afterFetchData(apiResponse) {
     const unsupportedQuery = apiResponse.skip_imported_reason === 'unsupported_query'
     setImportedQueryUnsupported(unsupportedQuery && !isRealtime())
   }
 
   function renderConversions() {
     if (site.hasGoals) {
-      return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} afterFetchData={afterFetchGoalData}/>
+      return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} afterFetchData={afterFetchData}/>
     }
     else if (adminAccess) {
       return (
@@ -231,7 +231,7 @@ export default function Behaviours(props) {
 
   function renderProps() {
     if (site.hasProps && site.propsAvailable) {
-      return <Properties site={site} query={query} />
+      return <Properties site={site} query={query} afterFetchData={afterFetchData}/>
     } else if (adminAccess) {
       let callToAction
 
@@ -342,6 +342,7 @@ export default function Behaviours(props) {
                 {sectionTitle() + (isRealtime() ? ' (last 30min)' : '')}
               </h3>
               <ImportedQueryUnsupportedWarning condition={mode === CONVERSIONS  && importedQueryUnsupported}/>
+              <ImportedQueryUnsupportedWarning condition={mode === PROPS && importedQueryUnsupported} message="Imported data is unavailable in this view"/>
             </div>
             {tabs()}
           </div>
