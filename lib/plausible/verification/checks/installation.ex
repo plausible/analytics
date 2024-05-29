@@ -19,7 +19,7 @@ defmodule Plausible.Verification.Checks.Installation do
   use Plausible.Verification.Check
 
   @impl true
-  def friendly_name, do: "We're verifying that your visitors are being counted correctly"
+  def report_progress_as, do: "We're verifying that your visitors are being counted correctly"
 
   @impl true
   def perform(%State{url: url} = state) do
