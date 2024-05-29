@@ -6,7 +6,7 @@ defmodule Plausible.Verification.Checks.CSP do
   use Plausible.Verification.Check
 
   @impl true
-  def friendly_name, do: "We're visiting your site to ensure that everything is working"
+  def report_progress_as, do: "We're visiting your site to ensure that everything is working"
 
   @impl true
   def perform(%State{assigns: %{headers: headers}} = state) do

@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
         :if={not @finished? or (not @modal? and @success?)}
         class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-gray-700"
       >
-        <div class="block pulsating-circle" }></div>
+        <div class="block pulsating-circle"></div>
       </div>
 
       <div
@@ -67,10 +67,12 @@ defmodule PlausibleWeb.Live.Components.Verification do
         </p>
         <p :if={not @finished?} class="mt-2 animate-pulse" id="progress"><%= @message %></p>
 
-        <.recommendations
-          :if={@finished? and not @success? and @interpretation}
-          interpretation={@interpretation}
-        />
+        <p :if={@finished? and not @success? and @interpretation} class="mt-2" id="recommendation">
+          <span><%= List.first(@interpretation.recommendations).text %>.&nbsp;</span>
+          <.styled_link href={List.first(@interpretation.recommendations).url} new_tab={true}>
+            Learn more
+          </.styled_link>
+        </p>
       </div>
 
       <div :if={@finished?} class="mt-auto">
@@ -113,21 +115,6 @@ defmodule PlausibleWeb.Live.Components.Verification do
         <% end %>
       </div>
     </div>
-    """
-  end
-
-  def recommendations(assigns) do
-    ~H"""
-    <p class="mt-2" id="recommendations">
-      <span :for={recommendation <- @interpretation.recommendations} class="recommendation">
-        <span :if={is_binary(recommendation)}><%= recommendation %></span>
-        <span :if={is_tuple(recommendation)}><%= elem(recommendation, 0) %>.&nbsp;</span>
-        <.styled_link :if={is_tuple(recommendation)} href={elem(recommendation, 1)} new_tab={true}>
-          Learn more
-        </.styled_link>
-        <br />
-      </span>
-    </p>
     """
   end
 end
