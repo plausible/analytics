@@ -1,43 +1,18 @@
 defmodule Plausible.Stats.Imported do
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Query, Base, Imported}
 
   import Ecto.Query
   import Plausible.Stats.Fragments
+
+  alias Plausible.Stats.Base
+  alias Plausible.Stats.Imported
+  alias Plausible.Stats.Query
 
   @no_ref "Direct / None"
   @not_set "(not set)"
   @none "(none)"
 
-  @property_to_table_mappings %{
-    "visit:source" => "imported_sources",
-    "visit:referrer" => "imported_sources",
-    "visit:utm_source" => "imported_sources",
-    "visit:utm_medium" => "imported_sources",
-    "visit:utm_campaign" => "imported_sources",
-    "visit:utm_term" => "imported_sources",
-    "visit:utm_content" => "imported_sources",
-    "visit:entry_page" => "imported_entry_pages",
-    "visit:exit_page" => "imported_exit_pages",
-    "visit:country" => "imported_locations",
-    "visit:region" => "imported_locations",
-    "visit:city" => "imported_locations",
-    "visit:device" => "imported_devices",
-    "visit:browser" => "imported_browsers",
-    "visit:browser_version" => "imported_browsers",
-    "visit:os" => "imported_operating_systems",
-    "visit:os_version" => "imported_operating_systems",
-    "event:page" => "imported_pages",
-    "event:name" => "imported_custom_events",
-    "event:props:url" => "imported_custom_events",
-    "event:props:path" => "imported_custom_events",
-
-    # NOTE: these properties can be only filtered by
-    "visit:screen" => "imported_devices",
-    "event:hostname" => "imported_pages"
-  }
-
-  def property_to_table_mappings(), do: @property_to_table_mappings
+  @property_to_table_mappings Imported.Base.property_to_table_mappings()
 
   @imported_properties Map.keys(@property_to_table_mappings)
 
@@ -60,47 +35,7 @@ defmodule Plausible.Stats.Imported do
   (see `@goals_with_url` and `@goals_with_path`).
   """
   def schema_supports_query?(query) do
-    query = transform_filters(query)
-
     not is_nil(Imported.Base.decide_table(query))
-  end
-
-  @doc """
-  This function gets rid of filters that do not make sense in the context
-  of imported data, for example `event:name == "pageview"`. They will be
-  ignored when deciding whether to include imported data in the query or
-  not, as well as when actually applying those filters to the query.
-  """
-  def transform_filters(query) do
-    new_filters =
-      query.filters
-      |> Enum.reject(fn
-        [:is, "event:name", "pageview"] -> true
-        _ -> false
-      end)
-      |> Enum.map(fn filter ->
-        case filter do
-          [:is, "event:goal", {:event, name}] ->
-            [[:is, "event:name", name]]
-
-          [:is, "event:goal", {:page, page}] ->
-            [[:is, "event:page", page]]
-
-          [:member, "event:goal", events] ->
-            events
-            |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
-            |> Enum.map(fn
-              {:event, names} -> [:member, "event:name", names]
-              {:page, pages} -> [:member, "event:page", pages]
-            end)
-
-          filter ->
-            [filter]
-        end
-      end)
-      |> Enum.concat()
-
-    struct!(query, filters: new_filters)
   end
 
   def merge_imported_country_suggestions(native_q, _site, %Plausible.Stats.Query{
@@ -386,12 +321,7 @@ defmodule Plausible.Stats.Imported do
   def merge_imported_pageview_goals(q, _, %Query{include_imported: false}, _, _), do: q
 
   def merge_imported_pageview_goals(q, site, query, page_exprs, metrics) do
-    query_table =
-      query
-      |> transform_filters()
-      |> Imported.Base.decide_table()
-
-    if query_table == "imported_pages" do
+    if Imported.Base.decide_table(query) == "imported_pages" do
       page_regexes = Enum.map(page_exprs, &Base.page_regex/1)
 
       imported_q =
