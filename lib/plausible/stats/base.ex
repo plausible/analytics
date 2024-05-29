@@ -308,13 +308,17 @@ defmodule Plausible.Stats.Base do
 
   def add_percentage_metric(q, site, query, metrics) do
     if :percentage in metrics do
-      query =
-        query
-        |> Query.set_property(nil)
-        |> Query.exclude_imported()
+      total_query = Query.set_property(query, nil)
+
+      total_query =
+        if has_custom_property?(query) do
+          Query.exclude_imported(total_query)
+        else
+          total_query
+        end
 
       q
-      |> select_merge(^%{__total_visitors: total_visitors_subquery(site, query)})
+      |> select_merge(^%{__total_visitors: total_visitors_subquery(site, total_query)})
       |> select_merge(%{
         percentage:
           fragment(
@@ -339,14 +343,8 @@ defmodule Plausible.Stats.Base do
         |> Query.remove_filters(["event:goal", "event:props"])
         |> Query.set_property(nil)
 
-      has_custom_prop_filters? =
-        Enum.any?(query.filters, fn
-          [_, "event:props:" <> prop, _] -> prop not in Plausible.Imported.imported_custom_props()
-          _ -> false
-        end)
-
       total_query =
-        if has_custom_prop_filters? do
+        if has_custom_prop_filters?(query) do
           Query.exclude_imported(total_query)
         else
           total_query
@@ -366,6 +364,24 @@ defmodule Plausible.Stats.Base do
       })
     else
       q
+    end
+  end
+
+  defp has_custom_property?(query) do
+    case query.property do
+      "event:props:" <> prop -> prop not in Plausible.Imported.imported_custom_props()
+      _ -> false
+    end
+  end
+
+  defp has_custom_prop_filters?(query) do
+    if query.filters == [] do
+      false
+    else
+      Enum.any?(query.filters, fn
+        [_, "event:props:" <> prop, _] -> prop not in Plausible.Imported.imported_custom_props()
+        _ -> false
+      end)
     end
   end
 end

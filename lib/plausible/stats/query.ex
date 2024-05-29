@@ -203,7 +203,7 @@ defmodule Plausible.Stats.Query do
     struct!(query, filters: Filters.parse(params["filters"]))
   end
 
-  @spec set_property(t(), String.t()) :: t()
+  @spec set_property(t(), String.t() | nil) :: t()
   def set_property(query, property) do
     query
     |> struct!(property: property)
