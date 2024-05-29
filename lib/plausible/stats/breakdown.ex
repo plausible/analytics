@@ -37,16 +37,11 @@ defmodule Plausible.Stats.Breakdown do
     {event_goals, pageview_goals} = Enum.split_with(site.goals, & &1.event_name)
     events = Enum.map(event_goals, & &1.event_name)
 
-    event_query = %Query{
-      query
-      | filters: query.filters ++ [[:member, "event:name", events]],
-        property: "event:name"
-    }
-
     event_query =
-      struct!(event_query,
-        include_imported: event_query.include_imported && schema_supports_query?(event_query)
-      )
+      query
+      |> Query.put_filter([:member, "event:name", events])
+      |> Query.set_property("event:name")
+      |> Query.refresh(site)
 
     if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
 
@@ -81,10 +76,9 @@ defmodule Plausible.Stats.Breakdown do
       if Enum.any?(pageview_goals) do
         page_query = struct!(query, property: "event:page")
 
-        page_query =
-          struct!(page_query,
-            include_imported: page_query.include_imported && schema_supports_query?(page_query)
-          )
+        query
+        |> Query.set_property("event:page")
+        |> Query.refresh(site)
 
         page_exprs = Enum.map(pageview_goals, & &1.page_path)
         page_regexes = Enum.map(page_exprs, &page_regex/1)
@@ -194,14 +188,9 @@ defmodule Plausible.Stats.Breakdown do
           query
           |> Query.remove_filters(["event:page"])
           |> Query.put_filter([:member, "visit:entry_page", Enum.map(pages, & &1[:page])])
-          |> struct!(property: "visit:entry_page")
+          |> Query.set_property("visit:entry_page")
+          |> Query.refresh(site)
       end
-
-    entry_page_query =
-      struct!(entry_page_query,
-        include_imported:
-          entry_page_query.include_imported && schema_supports_query?(entry_page_query)
-      )
 
     if Enum.any?(event_metrics) && Enum.empty?(event_result) do
       []

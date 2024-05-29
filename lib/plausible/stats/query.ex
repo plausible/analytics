@@ -19,6 +19,7 @@ defmodule Plausible.Stats.Query do
 
   @type t :: %__MODULE__{}
 
+  @spec from(Plausible.Site.t(), map()) :: t()
   def from(site, params) do
     now = NaiveDateTime.utc_now(:second)
 
@@ -201,10 +202,20 @@ defmodule Plausible.Stats.Query do
     struct!(query, filters: Filters.parse(params["filters"]))
   end
 
+  @spec set_property(t(), String.t()) :: t()
+  def set_property(query, property) do
+    struct!(query, property: property)
+  end
+
   def put_filter(query, filter) do
     struct!(query,
       filters: query.filters ++ [filter]
     )
+  end
+
+  @spec refresh(t(), Plausible.Site.t()) :: t()
+  def refresh(query, site) do
+    put_imported_opts(query, site)
   end
 
   def remove_filters(query, prefixes) do
@@ -246,8 +257,8 @@ defmodule Plausible.Stats.Query do
     end
   end
 
-  defp put_imported_opts(query, site, params) do
-    requested? = params["with_imported"] == "true"
+  defp put_imported_opts(query, site, params \\ %{}) do
+    requested? = params["with_imported"] == "true" || query.imported_data_requested
 
     case ensure_include_imported(query, site, requested?) do
       :ok ->
