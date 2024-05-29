@@ -79,12 +79,14 @@ seeded_token = Plausible.Plugins.API.Token.generate("seed-token")
 {:ok, _goal5} = Plausible.Goals.create(site, %{"page_path" => Enum.random(long_random_paths)})
 {:ok, outbound} = Plausible.Goals.create(site, %{"event_name" => "Outbound Link: Click"})
 
-{:ok, _funnel} =
-  Plausible.Funnels.create(site, "From homepage to login", [
-    %{"goal_id" => goal1.id},
-    %{"goal_id" => goal2.id},
-    %{"goal_id" => goal3.id}
-  ])
+if Plausible.ee?() do
+  {:ok, _funnel} =
+    Plausible.Funnels.create(site, "From homepage to login", [
+      %{"goal_id" => goal1.id},
+      %{"goal_id" => goal2.id},
+      %{"goal_id" => goal3.id}
+    ])
+end
 
 put_random_time = fn
   date, 0 ->

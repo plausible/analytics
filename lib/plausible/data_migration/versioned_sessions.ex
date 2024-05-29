@@ -1,6 +1,11 @@
 defmodule Plausible.DataMigration.VersionedSessions do
   @moduledoc """
-  Sessions CollapsingMergeTree -> VersionedCollapsingMergeTree migration, SQL files available at:
+  !!!WARNING!!!: This script is used in migrations. Please take special care
+  when altering it.
+
+  Sessions CollapsingMergeTree -> VersionedCollapsingMergeTree migration,
+  SQL files available at:
+
   priv/data_migrations/VersionedSessions/sql
   """
   use Plausible.DataMigration, dir: "VersionedSessions", repo: Plausible.IngestRepo
