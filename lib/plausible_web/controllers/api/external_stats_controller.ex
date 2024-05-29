@@ -380,7 +380,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp maybe_add_warning(payload, %{skip_imported_reason: reason})
-       when reason in [nil, :not_requested, :no_imported_data, :out_of_range] do
+       when reason in [nil, :not_requested, :no_imported_data, :out_of_range, :manual_exclusion] do
     payload
   end
 

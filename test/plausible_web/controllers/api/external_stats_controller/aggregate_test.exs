@@ -681,6 +681,34 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
 
       refute json_response(conn, 200)["warning"]
     end
+
+    test "excludes imported data from conversion rate computation when query filters by non-imported props",
+         %{conn: conn, site: site, site_import: site_import} do
+      insert(:goal, site: site, event_name: "Purchase")
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        ),
+        build(:imported_visitors, visitors: 9)
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors,conversion_rate",
+          "filters" => "event:goal==Purchase;event:props:package==large",
+          "with_imported" => "true"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"value" => 1},
+               "conversion_rate" => %{"value" => 100.0}
+             }
+    end
   end
 
   describe "filters" do

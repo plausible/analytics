@@ -41,7 +41,6 @@ defmodule Plausible.Stats.Breakdown do
       query
       |> Query.put_filter([:member, "event:name", events])
       |> Query.set_property("event:name")
-      |> Query.refresh(site)
 
     if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
 
@@ -74,11 +73,7 @@ defmodule Plausible.Stats.Breakdown do
 
     page_q =
       if Enum.any?(pageview_goals) do
-        page_query = struct!(query, property: "event:page")
-
-        query
-        |> Query.set_property("event:page")
-        |> Query.refresh(site)
+        page_query = Query.set_property(query, "event:page")
 
         page_exprs = Enum.map(pageview_goals, & &1.page_path)
         page_regexes = Enum.map(page_exprs, &page_regex/1)
@@ -189,7 +184,6 @@ defmodule Plausible.Stats.Breakdown do
           |> Query.remove_filters(["event:page"])
           |> Query.put_filter([:member, "visit:entry_page", Enum.map(pages, & &1[:page])])
           |> Query.set_property("visit:entry_page")
-          |> Query.refresh(site)
       end
 
     if Enum.any?(event_metrics) && Enum.empty?(event_result) do
@@ -269,7 +263,8 @@ defmodule Plausible.Stats.Breakdown do
         query
 
       [op, "event:hostname", value] ->
-        Plausible.Stats.Query.put_filter(query, [op, visit_prop, value])
+        query
+        |> Query.put_filter([op, visit_prop, value])
     end
   end
 

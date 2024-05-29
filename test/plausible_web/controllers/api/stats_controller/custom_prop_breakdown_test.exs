@@ -65,6 +65,8 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                  "percentage" => 100.0
                }
              ]
+
+      refute json_response(conn, 200)["warning"]
     end
 
     test "returns (none) values in the breakdown", %{conn: conn, site: site} do

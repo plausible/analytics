@@ -308,7 +308,10 @@ defmodule Plausible.Stats.Base do
 
   def add_percentage_metric(q, site, query, metrics) do
     if :percentage in metrics do
-      query = struct!(query, property: nil)
+      query =
+        query
+        |> Query.set_property(nil)
+        |> Query.exclude_imported()
 
       q
       |> select_merge(^%{__total_visitors: total_visitors_subquery(site, query)})
@@ -334,7 +337,20 @@ defmodule Plausible.Stats.Base do
       total_query =
         query
         |> Query.remove_filters(["event:goal", "event:props"])
-        |> struct!(property: nil)
+        |> Query.set_property(nil)
+
+      has_custom_prop_filters? =
+        Enum.any?(query.filters, fn
+          [_, "event:props:" <> prop, _] -> prop not in Plausible.Imported.imported_custom_props()
+          _ -> false
+        end)
+
+      total_query =
+        if has_custom_prop_filters? do
+          Query.exclude_imported(total_query)
+        else
+          total_query
+        end
 
       # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
       subquery(q)
