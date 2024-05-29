@@ -252,18 +252,18 @@ defmodule Plausible.Stats.Breakdown do
               "visit:entry_page",
               "visit:referrer"
             ] do
-    update_hostname(query, "visit:entry_page_hostname")
+    update_hostname_filter_prop(query, "visit:entry_page_hostname")
   end
 
   defp maybe_update_breakdown_filters(%Query{property: "visit:exit_page"} = query) do
-    update_hostname(query, "visit:exit_page_hostname")
+    update_hostname_filter_prop(query, "visit:exit_page_hostname")
   end
 
   defp maybe_update_breakdown_filters(query) do
     query
   end
 
-  defp update_hostname(query, visit_prop) do
+  defp update_hostname_filter_prop(query, visit_prop) do
     case Query.get_filter(query, "event:hostname") do
       nil ->
         query
