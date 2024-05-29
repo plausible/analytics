@@ -44,7 +44,7 @@ function PropsModal(props) {
         setLoading(false)
         setList(list.concat(results))
         setPage(page + 1)
-        setMoreResultsAvailable(results >= 100)
+        setMoreResultsAvailable(results.length >= 100)
       })
   }
 
