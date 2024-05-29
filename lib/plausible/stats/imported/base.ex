@@ -93,18 +93,18 @@ defmodule Plausible.Stats.Imported.Base do
       end)
       |> Enum.map(fn filter ->
         case filter do
-          [:is, "event:goal", {:event, name}] ->
-            [[:is, "event:name", name]]
+          [op, "event:goal", {:event, name}] ->
+            [[op, "event:name", name]]
 
-          [:is, "event:goal", {:page, page}] ->
-            [[:is, "event:page", page]]
+          [op, "event:goal", {:page, page}] ->
+            [[op, "event:page", page]]
 
-          [:member, "event:goal", events] ->
+          [op, "event:goal", events] ->
             events
             |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
             |> Enum.map(fn
-              {:event, names} -> [:member, "event:name", names]
-              {:page, pages} -> [:member, "event:page", pages]
+              {:event, names} -> [op, "event:name", names]
+              {:page, pages} -> [op, "event:page", pages]
             end)
 
           filter ->
