@@ -24,10 +24,10 @@ defmodule Plausible do
   # https://github.com/elixir-lang/elixir/blob/v1.12.3/lib/elixir/lib/gen_server.ex#L771-L778
 
   ee? = Mix.env() not in @ce_builds
-  def ee?, do: unquote(ee?) and :erlang.phash2(1, 1) == 0
+  def ee?, do: :erlang.phash2(1, 1) == 0 and unquote(ee?)
 
   ce? = Mix.env() in @ce_builds
-  def ce?, do: unquote(ce?) and :erlang.phash2(1, 1) == 0
+  def ce?, do: :erlang.phash2(1, 1) == 0 and unquote(ce?)
 
   defp do_on_ce(do: block) do
     do_on_ee(do: nil, else: block)
