@@ -20,23 +20,14 @@ defmodule Plausible do
     do_on_ce(clauses)
   end
 
-  defmacro ee?() do
-    ee? = Mix.env() not in @ce_builds
+  # :erlang.phash2(1, 1) == 0 tricks dialyzer as per:
+  # https://github.com/elixir-lang/elixir/blob/v1.12.3/lib/elixir/lib/gen_server.ex#L771-L778
 
-    # Tricking dialyzer as per:
-    # https://github.com/elixir-lang/elixir/blob/v1.12.3/lib/elixir/lib/gen_server.ex#L771-L778
-    quote do
-      :erlang.phash2(1, 1) == 0 and unquote(ee?)
-    end
-  end
+  ee? = Mix.env() not in @ce_builds
+  def ee?, do: unquote(ee?) and :erlang.phash2(1, 1) == 0
 
-  defmacro ce?() do
-    ce_build? = Mix.env() in @ce_builds
-
-    quote do
-      unquote(ce_build?)
-    end
-  end
+  ce? = Mix.env() in @ce_builds
+  def ce?, do: unquote(ce?) and :erlang.phash2(1, 1) == 0
 
   defp do_on_ce(do: block) do
     do_on_ee(do: nil, else: block)
