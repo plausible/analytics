@@ -31,7 +31,7 @@ function Historical(props) {
           <ComparisonInput site={props.site} query={props.query} />
         </div>
       </div>
-      <VisitorGraph site={props.site} query={props.query} />
+      <VisitorGraph site={props.site} query={props.query} updateImportedDataInView={props.updateImportedDataInView}/>
 
       <div className="w-full md:flex">
         <div className={ statsBoxClass }>
@@ -51,7 +51,7 @@ function Historical(props) {
         </div>
       </div>
 
-      <Behaviours site={props.site} query={props.query} currentUserRole={props.currentUserRole} />
+      <Behaviours site={props.site} query={props.query} currentUserRole={props.currentUserRole} importedDataInView={props.importedDataInView}/>
     </div>
   )
 }

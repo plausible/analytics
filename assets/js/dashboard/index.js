@@ -13,8 +13,10 @@ class Dashboard extends React.Component {
   constructor(props) {
     super(props)
     this.updateLastLoadTimestamp = this.updateLastLoadTimestamp.bind(this)
+    this.updateImportedDataInView = this.updateImportedDataInView.bind(this)
     this.state = {
       query: parseQuery(props.location.search, this.props.site),
+      importedDataInView: false,
       lastLoadTimestamp: new Date()
     }
   }
@@ -35,6 +37,10 @@ class Dashboard extends React.Component {
     this.setState({lastLoadTimestamp: new Date()})
   }
 
+  updateImportedDataInView(newBoolean) {
+    this.setState({importedDataInView: newBoolean})
+  }
+
   render() {
     const { site, loggedIn, currentUserRole } = this.props
     const { query, lastLoadTimestamp } = this.state
@@ -42,7 +48,7 @@ class Dashboard extends React.Component {
     if (this.state.query.period === 'realtime') {
       return <Realtime site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} query={query} lastLoadTimestamp={lastLoadTimestamp}/>
     } else {
-      return <Historical site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} query={query} lastLoadTimestamp={lastLoadTimestamp}/>
+      return <Historical site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} query={query} lastLoadTimestamp={lastLoadTimestamp} importedDataInView={this.state.importedDataInView} updateImportedDataInView={this.updateImportedDataInView}/>
     }
   }
 }

@@ -343,6 +343,7 @@ export default function Behaviours(props) {
               </h3>
               <ImportedQueryUnsupportedWarning condition={mode === CONVERSIONS  && importedQueryUnsupported}/>
               <ImportedQueryUnsupportedWarning condition={mode === PROPS && importedQueryUnsupported} message="Imported data is unavailable in this view"/>
+              <ImportedQueryUnsupportedWarning condition={mode === FUNNELS && props.importedDataInView} message="Imported data is unavailable in this view"/>
             </div>
             {tabs()}
           </div>

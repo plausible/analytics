@@ -81,6 +81,9 @@ export default function VisitorGraph(props) {
   function fetchTopStatsAndGraphData() {
     fetchTopStats(site, query)
       .then((res) => {
+        if (props.updateImportedDataInView) {
+          props.updateImportedDataInView(res.includes_imported)
+        }
         setTopStatData(res)
         setTopStatsLoading(false)
       })
