@@ -31,7 +31,7 @@ class PagesModal extends React.Component {
 
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, query, { limit: 100, page, detailed })
       .then((response) => {
-        const results = !!response.results ? response.results : response
+        const results = response.results ? response.results : response
         this.setState((state) => ({ loading: false, pages: state.pages.concat(results), moreResultsAvailable: results.length === 100 }))
       })
   }

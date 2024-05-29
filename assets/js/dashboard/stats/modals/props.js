@@ -39,7 +39,7 @@ function PropsModal(props) {
   function fetchData() {
     api.get(url.apiPath(site, `/custom-prop-values/${propKey}`), query, { limit: 100, page })
       .then((response) => {
-        const results = !!response.results ? response.results : response
+        const results = response.results ? response.results : response
 
         setLoading(false)
         setList(list.concat(results))

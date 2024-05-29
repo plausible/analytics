@@ -34,7 +34,7 @@ class EntryPagesModal extends React.Component {
       { limit: 100, page }
     )
       .then((response) => {
-        const results = !!response.results ? response.results : response
+        const results = response.results ? response.results : response
         
         this.setState((state) => ({
           loading: false,
