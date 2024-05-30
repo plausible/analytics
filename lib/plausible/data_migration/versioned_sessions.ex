@@ -59,7 +59,7 @@ defmodule Plausible.DataMigration.VersionedSessions do
         nil
 
       # Docker containers don't seem to support EXCHANGE TABLE, hack around this with a non-atomic swap
-      {:error, %Ch.Error{code: 1}} ->
+      {:error, %Ch.Error{code: code}} when code in [1, 48] ->
         IO.puts("Exchanging sessions_v2 and sessions_v2_tmp_versioned non-atomically")
 
         {:ok, _} =
