@@ -37,8 +37,7 @@ defmodule Plausible.Stats.Imported.Base do
     "event:hostname" => "imported_pages"
   }
 
-  @goals_with_url Imported.goals_with_url()
-  @goals_with_path Imported.goals_with_path()
+  @imported_custom_props Imported.imported_custom_props()
 
   @db_field_mappings %{
     referrer_source: :source,
@@ -117,26 +116,24 @@ defmodule Plausible.Stats.Imported.Base do
   end
 
   defp do_decide_table(%Query{filters: [], property: nil}), do: "imported_visitors"
-  defp do_decide_table(%Query{filters: [], property: "event:props:url"}), do: nil
-  defp do_decide_table(%Query{filters: [], property: "event:props:path"}), do: nil
 
-  defp do_decide_table(%Query{filters: filters, property: "event:props:url"}) do
-    case filters do
-      [[:is, "event:name", name]] when name in @goals_with_url ->
-        "imported_custom_events"
+  defp do_decide_table(%Query{filters: filters, property: "event:props:" <> prop_key = property})
+       when prop_key in @imported_custom_props do
+    has_required_name_filter? =
+      Enum.any?(filters, fn
+        [:is, "event:name", name] -> name in special_goals_for(prop_key)
+        _ -> false
+      end)
 
-      _ ->
-        nil
-    end
-  end
+    has_unsupported_filters? =
+      Enum.any?(filters, fn [_, filtered_prop | _] ->
+        filtered_prop not in [property, "event:name"]
+      end)
 
-  defp do_decide_table(%Query{filters: filters, property: "event:props:path"}) do
-    case filters do
-      [[:is, "event:name", name]] when name in @goals_with_path ->
-        "imported_custom_events"
-
-      _ ->
-        nil
+    if has_required_name_filter? && not has_unsupported_filters? do
+      "imported_custom_events"
+    else
+      nil
     end
   end
 
@@ -189,4 +186,7 @@ defmodule Plausible.Stats.Imported.Base do
       where(q, ^condition)
     end)
   end
+
+  def special_goals_for("url"), do: Imported.goals_with_url()
+  def special_goals_for("path"), do: Imported.goals_with_path()
 end
