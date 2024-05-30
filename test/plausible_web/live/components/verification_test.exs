@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
   @pulsating_circle ~s|div#progress-indicator div.pulsating-circle|
   @check_circle ~s|div#progress-indicator #check-circle|
   @error_circle ~s|div#progress-indicator #error-circle|
-  @recommendations ~s|#recommendations .recommendation|
+  @recommendations ~s|#recommendation|
 
   test "renders initial state" do
     html = render_component(@component, domain: "example.com")

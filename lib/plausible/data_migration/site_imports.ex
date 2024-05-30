@@ -1,9 +1,10 @@
 defmodule Plausible.DataMigration.SiteImports do
   @moduledoc """
+  !!!WARNING!!!: This script is used in migrations. Please take special care
+  when altering it.
+
   Site imports migration backfilling SiteImport entries for old imports
   and alters import end dates to match actual end date of respective import stats.
-
-
   """
 
   import Ecto.Query

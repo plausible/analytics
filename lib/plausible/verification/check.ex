@@ -1,13 +1,13 @@
 defmodule Plausible.Verification.Check do
   @moduledoc """
   Behaviour to be implemented by specific site verification checks.
-  `friendly_name()` doesn't necessarily reflect the actual check description,
+  `report_progress_as()` doesn't necessarily reflect the actual check description,
   it serves as a user-facing message grouping mechanism, to prevent frequent message flashing when checks rotate often.
   Each check operates on `state()` and is expected to return it, optionally modified, by all means.
   `perform_safe/1` is used to guarantee no exceptions are thrown by faulty implementations, not to interrupt LiveView.
   """
   @type state() :: Plausible.Verification.State.t()
-  @callback friendly_name() :: String.t()
+  @callback report_progress_as() :: String.t()
   @callback perform(state()) :: state()
 
   defmacro __using__(_) do
@@ -30,7 +30,7 @@ defmodule Plausible.Verification.Check do
             "Error running check #{inspect(__MODULE__)} on #{state.url}: #{inspect(e)}"
           )
 
-          put_diagnostics(state, service_error: true)
+          put_diagnostics(state, service_error: e)
       end
     end
   end

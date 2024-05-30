@@ -7,7 +7,7 @@ defmodule Plausible.Verification.Checks.Snippet do
   use Plausible.Verification.Check
 
   @impl true
-  def friendly_name, do: "We're looking for the Plausible snippet on your site"
+  def report_progress_as, do: "We're looking for the Plausible snippet on your site"
 
   @impl true
   def perform(%State{assigns: %{document: document}} = state) do

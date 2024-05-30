@@ -320,7 +320,7 @@ defmodule Plausible.Verification.Diagnostics do
     %Result{
       ok?: false,
       errors: [error.message],
-      recommendations: [{error.recommendation, error.url}]
+      recommendations: [%{text: error.recommendation, url: error.url}]
     }
   end
 
