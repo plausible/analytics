@@ -34,6 +34,12 @@ export const OPERATION_PREFIX = {
   [FILTER_OPERATIONS.is]: ''
 };
 
+export const BACKEND_OPERATION = {
+  [FILTER_OPERATIONS.is]: 'member',
+  [FILTER_OPERATIONS.isNot]: 'not_member',
+  [FILTER_OPERATIONS.contains]: 'matches_member'
+}
+
 export function supportsIsNot(filterName) {
   return !['goal', 'prop_key'].includes(filterName)
 }
@@ -52,17 +58,6 @@ try {
 }
 
 const ESCAPED_PIPE = '\\|'
-
-function escapeFilterValue(value) {
-  return value.replaceAll(NON_ESCAPED_PIPE_REGEX, ESCAPED_PIPE)
-}
-
-function toFilterQuery(type, clauses) {
-  const prefix = OPERATION_PREFIX[type];
-  const result = clauses.map(clause => escapeFilterValue(clause.toString().trim())).join('|')
-  return prefix + result;
-}
-
 
 export function getLabel(labels, filterKey, value) {
   if (['country', 'region', 'city'].includes(filterKey)) {
@@ -141,19 +136,21 @@ export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
   return result
 }
 
+const EVENT_FILTER_KEYS = new Set(["name", "page", "goal", "hostname"])
 
-// :TODO: New schema for filters in the BE
 export function serializeApiFilters(filters) {
-  const cleaned = {}
-  filters.forEach(([operation, filterKey, clauses]) => {
-    if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
-      cleaned.props ||= {}
-      cleaned.props[getPropertyKeyFromFilterKey(filterKey)] = toFilterQuery(operation, clauses)
-    } else {
-      cleaned[filterKey] = toFilterQuery(operation, clauses)
+  const apiFilters = filters.map(([operation, filterKey, clauses]) => {
+    let apiFilterKey = `visit:${filterKey}`
+    if (filterKey.startsWith(EVENT_PROPS_PREFIX) || EVENT_FILTER_KEYS.has(filterKey)) {
+      apiFilterKey = `event:${filterKey}`
     }
+    if (operation == FILTER_OPERATIONS.contains) {
+      clauses = clauses.map((value) => `**${value}**`)
+    }
+    return [BACKEND_OPERATION[operation], apiFilterKey, clauses]
   })
-  return JSON.stringify(cleaned)
+
+  return JSON.stringify(apiFilters)
 }
 
 export function fetchSuggestions(apiPath, query, input, additionalFilter) {

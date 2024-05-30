@@ -23,7 +23,7 @@ export default function FilterModalGroup({
     [filterGroup, rows]
   )
 
-  const showAddRow = filterGroup == 'props'
+  const showAddRow = site.flags.multiple_filters ? filterGroup != 'goal' : filterGroup == 'props'
   const showTitle = filterGroup != 'props'
 
   return (
