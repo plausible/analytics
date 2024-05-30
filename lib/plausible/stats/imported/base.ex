@@ -119,7 +119,7 @@ defmodule Plausible.Stats.Imported.Base do
   defp custom_prop_query?(query) do
     query.filters
     |> Enum.map(&Enum.at(&1, 1))
-    |> Enum.concat([query.property])
+    |> Enum.concat(query.dimensions)
     |> Enum.any?(&(&1 in @imported_custom_props))
   end
 
