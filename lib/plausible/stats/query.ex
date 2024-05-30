@@ -13,7 +13,10 @@ defmodule Plausible.Stats.Query do
             now: nil,
             experimental_session_count?: false,
             experimental_reduced_joins?: false,
-            latest_import_end_date: nil
+            latest_import_end_date: nil,
+            metrics: [],
+            order_by: [],
+            timezone: nil
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{Filters, Interval, Imported}

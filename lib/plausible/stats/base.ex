@@ -62,7 +62,10 @@ defmodule Plausible.Stats.Base do
       pageviews:
         dynamic(
           [e],
-          fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name)
+          selected_as(
+            fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name),
+            :pageviews
+          )
         )
     }
   end
