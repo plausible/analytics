@@ -1048,6 +1048,49 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ] = json_response(conn, 200)["results"]
     end
 
+    test "returns pageview goals with a page filter", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, page_path: "/blog/two")
+      insert(:goal, site: site, page_path: "/blog/thr**")
+      insert(:goal, site: site, page_path: "/blog/*")
+
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:imported_pages, page: "/", visitors: 1, pageviews: 1, date: ~D[2021-01-01]),
+        build(:imported_pages, page: "/blog/one", visitors: 2, pageviews: 2, date: ~D[2021-01-01]),
+        build(:imported_pages, page: "/blog/two", visitors: 3, pageviews: 3, date: ~D[2021-01-01]),
+        build(:imported_pages,
+          page: "/blog/three",
+          visitors: 4,
+          pageviews: 4,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_visitors, visitors: 10, date: ~D[2021-01-01])
+      ])
+
+      filters = Jason.encode!(%{page: "/blog/one|/blog/two"})
+      q = "?filters=#{filters}&period=day&date=2021-01-01&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/conversions#{q}")
+
+      assert [
+               %{
+                 "name" => "Visit /blog/*",
+                 "visitors" => 5,
+                 "events" => 5,
+                 "conversion_rate" => 100.0
+               },
+               %{
+                 "name" => "Visit /blog/two",
+                 "visitors" => 3,
+                 "events" => 3,
+                 "conversion_rate" => 60.0
+               }
+             ] = json_response(conn, 200)["results"]
+    end
+
     test "calculates conversion_rate for goals with glob pattern with imported data", %{
       conn: conn,
       site: site

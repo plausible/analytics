@@ -877,6 +877,36 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "returns imported pages with a pageview goal filter", %{conn: conn, site: site} do
+      insert(:goal, site: site, page_path: "/blog**")
+
+      populate_stats(site, [
+        build(:imported_pages, page: "/blog"),
+        build(:imported_pages, page: "/not-this"),
+        build(:imported_pages, page: "/blog/post-1", visitors: 2),
+        build(:imported_visitors, visitors: 4)
+      ])
+
+      filters = Jason.encode!(%{goal: "Visit /blog**"})
+      q = "?period=day&filters=#{filters}&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/pages#{q}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "visitors" => 2,
+                 "name" => "/blog/post-1",
+                 "conversion_rate" => 100.0,
+                 "total_visitors" => 2
+               },
+               %{
+                 "visitors" => 1,
+                 "name" => "/blog",
+                 "conversion_rate" => 100.0,
+                 "total_visitors" => 1
+               }
+             ]
+    end
+
     test "calculates bounce rate and time on page for pages", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
