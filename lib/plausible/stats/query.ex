@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Query do
   defstruct date_range: nil,
             interval: nil,
             period: nil,
-            property: nil,
+            dimensions: [],
             filters: [],
             sample_threshold: 20_000_000,
             imported_data_requested: false,
@@ -30,7 +30,7 @@ defmodule Plausible.Stats.Query do
       |> put_experimental_session_count(site, params)
       |> put_experimental_reduced_joins(site, params)
       |> put_period(site, params)
-      |> put_breakdown_property(params)
+      |> put_dimensions(params)
       |> put_interval(params)
       |> put_parsed_filters(params)
       |> put_imported_opts(site, params)
@@ -185,8 +185,12 @@ defmodule Plausible.Stats.Query do
     put_period(query, site, Map.merge(params, %{"period" => "30d"}))
   end
 
-  defp put_breakdown_property(query, params) do
-    struct!(query, property: params["property"])
+  defp put_dimensions(query, params) do
+    if not is_nil(params["property"]) do
+      struct!(query, dimensions: [params["property"]])
+    else
+      struct!(query, dimensions: Map.get(params, "dimensions", []))
+    end
   end
 
   defp put_interval(%{:period => "all"} = query, params) do
@@ -203,10 +207,10 @@ defmodule Plausible.Stats.Query do
     struct!(query, filters: Filters.parse(params["filters"]))
   end
 
-  @spec set_property(t(), String.t() | nil) :: t()
-  def set_property(query, property) do
+  @spec set_dimensions(t(), list(String.t())) :: t()
+  def set_dimensions(query, property) do
     query
-    |> struct!(property: property)
+    |> struct!(query, property: property)
     |> refresh_imported_opts()
   end
 
@@ -322,7 +326,7 @@ defmodule Plausible.Stats.Query do
     Tracer.set_attributes([
       {"plausible.query.interval", query.interval},
       {"plausible.query.period", query.period},
-      {"plausible.query.breakdown_property", query.property},
+      {"plausible.query.dimensions", query.dimensions |> Enum.join(";")},
       {"plausible.query.include_imported", query.include_imported},
       {"plausible.query.filter_keys", filter_keys},
       {"plausible.query.metrics", metrics}
