@@ -98,4 +98,12 @@ defmodule Plausible.Stats.FiltersTest do
       |> assert_parsed([])
     end
   end
+
+  describe "parses filters list" do
+    test "simple" do
+      [["member", "event:name", ["pageview"]]]
+      |> Jason.encode!()
+      |> assert_parsed([[:member, "event:name", ["pageview"]]])
+    end
+  end
 end
