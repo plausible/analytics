@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Timeseries do
   use Plausible.ClickhouseRepo
   use Plausible
-  alias Plausible.Stats.{Query, Util}
+  alias Plausible.Stats.{Query, Util, Imported}
   import Plausible.Stats.{Base}
   import Ecto.Query
   use Plausible.Stats.Fragments
@@ -56,8 +56,8 @@ defmodule Plausible.Stats.Timeseries do
 
     from(e in base_event_query(site, query), select: ^select_event_metrics(metrics))
     |> select_bucket(:events, site, query)
+    |> Imported.merge_imported_timeseries(site, query, metrics)
     |> maybe_add_timeseries_conversion_rate(site, query, metrics)
-    |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
   end
 
@@ -67,7 +67,7 @@ defmodule Plausible.Stats.Timeseries do
     from(e in query_sessions(site, query), select: ^select_session_metrics(metrics, query))
     |> filter_converted_sessions(site, query)
     |> select_bucket(:sessions, site, query)
-    |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
+    |> Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
     |> Util.keep_requested_metrics(metrics)
   end
@@ -314,13 +314,16 @@ defmodule Plausible.Stats.Timeseries do
 
   defp maybe_add_timeseries_conversion_rate(q, site, query, metrics) do
     if :conversion_rate in metrics do
-      totals_query = query |> Query.remove_filters(["event:goal", "event:props"])
+      totals_query =
+        query
+        |> Query.remove_filters(["event:goal", "event:props"], skip_refresh: true)
 
       totals_timeseries_q =
         from(e in base_event_query(site, totals_query),
           select: ^select_event_metrics([:visitors])
         )
-        |> select_bucket(:events, site, query)
+        |> select_bucket(:events, site, totals_query)
+        |> Imported.merge_imported_timeseries(site, totals_query, [:visitors])
 
       from(e in subquery(q),
         left_join: c in subquery(totals_timeseries_q),
