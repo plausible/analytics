@@ -85,32 +85,18 @@ defmodule Plausible.Stats.Aggregate do
     {where_clause, where_arg} =
       case Query.get_filter(query, "event:page") do
         [:is, _, page] ->
-          {"p = {$#{where_param_idx}:String}", page}
-
-        [:is_not, _, page] ->
-          {"p != {$#{where_param_idx}:String}", page}
-
-        [:member, _, page] ->
           {"p IN {$#{where_param_idx}:Array(String)}", page}
 
-        [:not_member, _, page] ->
+        [:is_not, _, page] ->
           {"p NOT IN {$#{where_param_idx}:Array(String)}", page}
 
-        [:matches, _, expr] ->
-          regex = page_regex(expr)
-          {"match(p, {$#{where_param_idx}:String})", regex}
-
-        [:matches_member, _, exprs] ->
+        [:matches, _, exprs] ->
           page_regexes = Enum.map(exprs, &page_regex/1)
           {"multiMatchAny(p, {$#{where_param_idx}:Array(String)})", page_regexes}
 
-        [:not_matches_member, _, exprs] ->
+        [:does_not_match, _, exprs] ->
           page_regexes = Enum.map(exprs, &page_regex/1)
           {"not(multiMatchAny(p, {$#{where_param_idx}:Array(String)}))", page_regexes}
-
-        [:does_not_match, _, expr] ->
-          regex = page_regex(expr)
-          {"not(match(p, {$#{where_param_idx}:String}))", regex}
       end
 
     params = base_query_raw_params ++ [where_arg]
