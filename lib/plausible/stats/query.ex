@@ -207,13 +207,15 @@ defmodule Plausible.Stats.Query do
   def set_property(query, property, opts \\ []) do
     query = struct!(query, property: property)
 
-    if Keyword.get(opts, :skip_refresh), do: query, else: refresh(query)
+    if Keyword.get(opts, :skip_refresh_imported_opts),
+      do: query,
+      else: refresh_imported_opts(query)
   end
 
   def put_filter(query, filter) do
     query
     |> struct!(filters: query.filters ++ [filter])
-    |> refresh()
+    |> refresh_imported_opts()
   end
 
   def remove_filters(query, prefixes, opts \\ []) do
@@ -224,7 +226,9 @@ defmodule Plausible.Stats.Query do
 
     query = struct!(query, filters: new_filters)
 
-    if Keyword.get(opts, :skip_refresh), do: query, else: refresh(query)
+    if Keyword.get(opts, :skip_refresh_imported_opts),
+      do: query,
+      else: refresh_imported_opts(query)
   end
 
   def exclude_imported(query) do
@@ -234,8 +238,8 @@ defmodule Plausible.Stats.Query do
     )
   end
 
-  defp refresh(query) do
-    refresh_imported_opts(query)
+  defp refresh_imported_opts(query) do
+    put_imported_opts(query, nil, %{})
   end
 
   def has_event_filters?(query) do
@@ -266,10 +270,6 @@ defmodule Plausible.Stats.Query do
       date when is_binary(date) -> Date.from_iso8601!(date)
       _ -> today(tz)
     end
-  end
-
-  defp refresh_imported_opts(query) do
-    put_imported_opts(query, nil, %{})
   end
 
   defp put_imported_opts(query, site, params) do

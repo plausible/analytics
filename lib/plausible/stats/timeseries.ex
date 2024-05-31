@@ -316,7 +316,7 @@ defmodule Plausible.Stats.Timeseries do
     if :conversion_rate in metrics do
       totals_query =
         query
-        |> Query.remove_filters(["event:goal", "event:props"], skip_refresh: true)
+        |> Query.remove_filters(["event:goal", "event:props"], skip_refresh_imported_opts: true)
 
       totals_timeseries_q =
         from(e in base_event_query(site, totals_query),
