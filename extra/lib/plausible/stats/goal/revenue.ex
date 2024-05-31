@@ -40,8 +40,7 @@ defmodule Plausible.Stats.Goal.Revenue do
   def get_revenue_tracking_currency(site, query, metrics) do
     goal_filters =
       case Query.get_filter(query, "event:goal") do
-        [:is, "event:goal", {_, goal_name}] -> [goal_name]
-        [:member, "event:goal", list] -> Enum.map(list, fn {_, goal_name} -> goal_name end)
+        [:is, "event:goal", list] -> Enum.map(list, fn {_, goal_name} -> goal_name end)
         _ -> []
       end
 

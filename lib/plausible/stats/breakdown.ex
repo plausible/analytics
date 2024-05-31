@@ -39,7 +39,7 @@ defmodule Plausible.Stats.Breakdown do
 
     event_query =
       query
-      |> Query.put_filter([:member, "event:name", events])
+      |> Query.put_filter([:is, "event:name", events])
       |> Query.set_dimensions(["event:name"])
 
     if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
@@ -182,7 +182,7 @@ defmodule Plausible.Stats.Breakdown do
         pages ->
           query
           |> Query.remove_filters(["event:page"])
-          |> Query.put_filter([:member, "visit:entry_page", Enum.map(pages, & &1[:page])])
+          |> Query.put_filter([:is, "visit:entry_page", Enum.map(pages, & &1[:page])])
           |> Query.set_dimensions(["visit:entry_page"])
       end
 
