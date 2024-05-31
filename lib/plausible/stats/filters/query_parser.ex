@@ -72,11 +72,13 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_filter_rest(:matches, filter), do: parse_clauses_list(filter)
   defp parse_filter_rest(:does_not_match, filter), do: parse_clauses_list(filter)
 
-  defp parse_clauses_list([_, _, list] = filter) when is_list(list) do
-    if Enum.all?(list, &is_bitstring/1) do
-      {:ok, [list]}
-    else
-      {:error, "Invalid filter '#{inspect(filter)}'"}
+  defp parse_clauses_list([_operation, filter_key, list] = filter) when is_list(list) do
+    all_strings? = Enum.all?(list, &is_bitstring/1)
+
+    cond do
+      filter_key == "event:goal" && all_strings? -> {:ok, [Filters.Utils.wrap_goal_value(list)]}
+      filter_key != "event:goal" && all_strings? -> {:ok, [list]}
+      true -> {:error, "Invalid filter '#{inspect(filter)}'"}
     end
   end
 
