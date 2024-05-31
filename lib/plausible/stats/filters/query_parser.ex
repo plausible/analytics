@@ -72,8 +72,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_filter_rest(:matches, filter), do: parse_clauses_list(filter)
   defp parse_filter_rest(:does_not_match, filter), do: parse_clauses_list(filter)
 
-  defp parse_filter_rest(_operator, filter), do: {:error, "Invalid filter '#{inspect(filter)}'"}
-
   defp parse_clauses_list([_, _, list] = filter) when is_list(list) do
     if Enum.all?(list, &is_bitstring/1) do
       {:ok, [list]}
