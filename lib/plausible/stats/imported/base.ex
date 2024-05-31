@@ -90,7 +90,7 @@ defmodule Plausible.Stats.Imported.Base do
         [:is, "event:name", "pageview"] -> true
         _ -> false
       end)
-      |> Enum.map(fn filter ->
+      |> Enum.flat_map(fn filter ->
         case filter do
           [op, "event:goal", {:event, name}] ->
             [[op, "event:name", name]]
@@ -110,7 +110,6 @@ defmodule Plausible.Stats.Imported.Base do
             [filter]
         end
       end)
-      |> Enum.concat()
 
     struct!(query, filters: new_filters)
   end
