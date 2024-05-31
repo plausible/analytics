@@ -35,9 +35,9 @@ export const OPERATION_PREFIX = {
 };
 
 export const BACKEND_OPERATION = {
-  [FILTER_OPERATIONS.is]: 'member',
-  [FILTER_OPERATIONS.isNot]: 'not_member',
-  [FILTER_OPERATIONS.contains]: 'matches_member'
+  [FILTER_OPERATIONS.is]: 'is',
+  [FILTER_OPERATIONS.isNot]: 'is_not',
+  [FILTER_OPERATIONS.contains]: 'matches'
 }
 
 export function supportsIsNot(filterName) {
