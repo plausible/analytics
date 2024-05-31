@@ -59,10 +59,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_operator(["is_not" | _rest]), do: {:ok, :is_not}
   defp parse_operator(["matches" | _rest]), do: {:ok, :matches}
   defp parse_operator(["does_not_match" | _rest]), do: {:ok, :does_not_match}
-  defp parse_operator(["matches_member" | _rest]), do: {:ok, :matches_member}
-  defp parse_operator(["not_matches_member" | _rest]), do: {:ok, :not_matches_member}
-  defp parse_operator(["member" | _rest]), do: {:ok, :member}
-  defp parse_operator(["not_member" | _rest]), do: {:ok, :not_member}
   defp parse_operator(filter), do: {:error, "Unknown operator for filter '#{inspect(filter)}'"}
 
   defp parse_filter_key([_operator, filter_key | _rest] = filter) do
@@ -71,17 +67,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_filter_key(filter), do: {:error, "Invalid filter '#{inspect(filter)}'"}
 
-  defp parse_filter_rest(:is, [_, _, value]) when is_bitstring(value), do: {:ok, [value]}
-  defp parse_filter_rest(:is_not, [_, _, value]) when is_bitstring(value), do: {:ok, [value]}
-  defp parse_filter_rest(:matches, [_, _, value]) when is_bitstring(value), do: {:ok, [value]}
-
-  defp parse_filter_rest(:does_not_match, [_, _, value]) when is_bitstring(value),
-    do: {:ok, [value]}
-
-  defp parse_filter_rest(:matches_member, filter), do: parse_clauses_list(filter)
-  defp parse_filter_rest(:not_matches_member, filter), do: parse_clauses_list(filter)
-  defp parse_filter_rest(:member, filter), do: parse_clauses_list(filter)
-  defp parse_filter_rest(:not_member, filter), do: parse_clauses_list(filter)
+  defp parse_filter_rest(:is, filter), do: parse_clauses_list(filter)
+  defp parse_filter_rest(:is_not, filter), do: parse_clauses_list(filter)
+  defp parse_filter_rest(:matches, filter), do: parse_clauses_list(filter)
+  defp parse_filter_rest(:does_not_match, filter), do: parse_clauses_list(filter)
 
   defp parse_filter_rest(_operator, filter), do: {:error, "Invalid filter '#{inspect(filter)}'"}
 

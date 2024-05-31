@@ -79,38 +79,6 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           "metrics" => ["visitors"],
           "date_range" => "all",
           "filters" => [
-            [Atom.to_string(unquote(operation)), "event:name", "foo"]
-          ]
-        }
-        |> check_success(%{
-          metrics: [:visitors],
-          date_range: "all",
-          filters: [
-            [unquote(operation), "event:name", "foo"]
-          ],
-          dimensions: [],
-          order_by: nil
-        })
-      end
-
-      test "#{operation} filter with invalid clause" do
-        %{
-          "metrics" => ["visitors"],
-          "date_range" => "all",
-          "filters" => [
-            [Atom.to_string(unquote(operation)), "event:name", ["foo"]]
-          ]
-        }
-        |> check_error(~r/Invalid filter/)
-      end
-    end
-
-    for operation <- [:member, :not_member, :matches_member, :not_matches_member] do
-      test "#{operation} filter" do
-        %{
-          "metrics" => ["visitors"],
-          "date_range" => "all",
-          "filters" => [
             [Atom.to_string(unquote(operation)), "event:name", ["foo"]]
           ]
         }
@@ -153,14 +121,14 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [
-          ["member", "event:props:foobar", ["value"]]
+          ["is", "event:props:foobar", ["value"]]
         ]
       }
       |> check_success(%{
         metrics: [:visitors],
         date_range: "all",
         filters: [
-          [:member, "event:props:foobar", ["value"]]
+          [:is, "event:props:foobar", ["value"]]
         ],
         dimensions: [],
         order_by: nil
@@ -173,14 +141,14 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           "metrics" => ["visitors"],
           "date_range" => "all",
           "filters" => [
-            ["member", "event:#{unquote(dimension)}", ["foo"]]
+            ["is", "event:#{unquote(dimension)}", ["foo"]]
           ]
         }
         |> check_success(%{
           metrics: [:visitors],
           date_range: "all",
           filters: [
-            [:member, "event:#{unquote(dimension)}", ["foo"]]
+            [:is, "event:#{unquote(dimension)}", ["foo"]]
           ],
           dimensions: [],
           order_by: nil
@@ -194,14 +162,14 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           "metrics" => ["visitors"],
           "date_range" => "all",
           "filters" => [
-            ["member", "visit:#{unquote(dimension)}", ["foo"]]
+            ["is", "visit:#{unquote(dimension)}", ["foo"]]
           ]
         }
         |> check_success(%{
           metrics: [:visitors],
           date_range: "all",
           filters: [
-            [:member, "visit:#{unquote(dimension)}", ["foo"]]
+            [:is, "visit:#{unquote(dimension)}", ["foo"]]
           ],
           dimensions: [],
           order_by: nil
@@ -214,7 +182,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [
-          ["member", "event:device", ["foo"]]
+          ["is", "event:device", ["foo"]]
         ]
       }
       |> check_error(~r/Invalid filter /)
@@ -225,7 +193,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [
-          ["member", "visit:name", ["foo"]]
+          ["is", "visit:name", ["foo"]]
         ]
       }
       |> check_error(~r/Invalid filter /)
