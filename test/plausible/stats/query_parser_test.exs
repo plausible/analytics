@@ -136,23 +136,25 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
 
     for dimension <- Filters.event_props() do
-      test "filtering by event:#{dimension} filter" do
-        %{
-          "metrics" => ["visitors"],
-          "date_range" => "all",
-          "filters" => [
-            ["is", "event:#{unquote(dimension)}", ["foo"]]
-          ]
-        }
-        |> check_success(%{
-          metrics: [:visitors],
-          date_range: "all",
-          filters: [
-            [:is, "event:#{unquote(dimension)}", ["foo"]]
-          ],
-          dimensions: [],
-          order_by: nil
-        })
+      if dimension != "goal" do
+        test "filtering by event:#{dimension} filter" do
+          %{
+            "metrics" => ["visitors"],
+            "date_range" => "all",
+            "filters" => [
+              ["is", "event:#{unquote(dimension)}", ["foo"]]
+            ]
+          }
+          |> check_success(%{
+            metrics: [:visitors],
+            date_range: "all",
+            filters: [
+              [:is, "event:#{unquote(dimension)}", ["foo"]]
+            ],
+            dimensions: [],
+            order_by: nil
+          })
+        end
       end
     end
 
@@ -175,6 +177,25 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           order_by: nil
         })
       end
+    end
+
+    test "filtering by event:goal" do
+      %{
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [
+          ["is", "event:goal", ["Signup", "Visit /thank-you"]]
+        ]
+      }
+      |> check_success(%{
+        metrics: [:visitors],
+        date_range: "all",
+        filters: [
+          [:is, "event:goal", [{:event, "Signup"}, {:page, "/thank-you"}]]
+        ],
+        dimensions: [],
+        order_by: nil
+      })
     end
 
     test "invalid event filter" do
