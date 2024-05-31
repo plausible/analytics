@@ -7,7 +7,7 @@ export default function ImportedQueryUnsupportedWarning({condition, message}) {
   if (condition) {
     return (
       <span tooltip={tooltipMessage}>
-        <ExclamationCircleIcon className="w-6 h-6" />
+        <ExclamationCircleIcon className="w-6 h-6 dark:text-gray-100" />
       </span>
     )
   } else {
