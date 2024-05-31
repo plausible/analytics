@@ -145,7 +145,7 @@ export function serializeApiFilters(filters) {
       apiFilterKey = `event:${filterKey}`
     }
     if (operation == FILTER_OPERATIONS.contains) {
-      clauses = clauses.map((value) => `**${value}**`)
+      clauses = clauses.map((value) => value.includes('*') ? value : `**${value}**`)
     }
     return [BACKEND_OPERATION[operation], apiFilterKey, clauses]
   })
