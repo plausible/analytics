@@ -11,9 +11,7 @@ import { getFiltersByKeyPrefix } from '../../util/filters';
 
 function Countries({query, site, onClick}) {
   function fetchData() {
-    return api.get(apiPath(site, '/countries'), query, {limit: 9}).then((res) => {
-      return res.map(row => Object.assign({}, row, {percentage: undefined}))
-    })
+    return api.get(apiPath(site, '/countries'), query, { limit: 9 })
   }
 
   function renderIcon(country) {

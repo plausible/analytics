@@ -33,13 +33,15 @@ class EntryPagesModal extends React.Component {
       query,
       { limit: 100, page }
     )
-      .then(
-        (res) => this.setState((state) => ({
+      .then((response) => {
+        const results = response.results ? response.results : response
+        
+        this.setState((state) => ({
           loading: false,
-          pages: state.pages.concat(res),
-          moreResultsAvailable: res.length === 100
+          pages: state.pages.concat(results),
+          moreResultsAvailable: results.length === 100
         }))
-      )
+      })
   }
 
   loadMore() {
