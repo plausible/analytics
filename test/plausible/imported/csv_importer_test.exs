@@ -407,8 +407,8 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety?: false)
 
       assert %SiteImport{
-               start_date: ~D[2011-12-30],
-               end_date: ~D[2022-01-02],
+               start_date: ~D[2011-12-25],
+               end_date: ~D[2022-12-30],
                source: :csv,
                status: :completed
              } = Repo.get_by!(SiteImport, site_id: site.id)
