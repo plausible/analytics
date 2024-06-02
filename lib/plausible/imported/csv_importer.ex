@@ -122,7 +122,7 @@ defmodule Plausible.Imported.CSVImporter do
             SELECT {site_id:UInt64}, {import_id:UInt64}, * \
             FROM input({input_structure:String}) \
             WHERE date >= {start_date:Date} AND date <= {end_date:Date} \
-            FORMAT CSVWithNames\
+            FORMAT CSVWithNames
             """
 
           params = %{
