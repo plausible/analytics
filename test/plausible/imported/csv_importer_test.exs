@@ -408,7 +408,7 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       assert %SiteImport{
                start_date: ~D[2011-12-25],
-               end_date: ~D[2022-12-30],
+               end_date: ~D[2011-12-30],
                source: :csv,
                status: :completed
              } = Repo.get_by!(SiteImport, site_id: site.id)
