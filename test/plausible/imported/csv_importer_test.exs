@@ -362,6 +362,60 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 99
     end
 
+    test "accepts cells without quotes", %{site: site, user: user} = ctx do
+      _ = ctx
+
+      csvs = [
+        %{
+          name: "imported_visitors_20111225_20111230.csv",
+          body: """
+          date,visitors,pageviews,bounces,visits,visit_duration
+          2011-12-25,5,50,2,7,8640
+          2011-12-26,3,4,2,3,43
+          2011-12-27,3,6,2,4,2313
+          2011-12-28,6,30,4,8,2264
+          2011-12-29,4,8,5,6,136
+          2011-12-30,1,1,1,1,0
+          """
+        }
+      ]
+
+      uploads =
+        for %{name: name, body: body} <- csvs do
+          on_ee do
+            %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, name)
+            [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
+            ExAws.request!(ExAws.S3.put_object(bucket, key, body))
+            %{"filename" => name, "s3_url" => s3_url}
+          else
+            local_path = Path.join(ctx.tmp_dir, name)
+            File.write!(local_path, body)
+            %{"filename" => name, "local_path" => local_path}
+          end
+        end
+
+      date_range = CSVImporter.date_range(uploads)
+
+      {:ok, _job} =
+        CSVImporter.new_import(site, user,
+          start_date: date_range.first,
+          end_date: date_range.last,
+          uploads: uploads,
+          storage: on_ee(do: "s3", else: "local")
+        )
+
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_imports, with_safety?: false)
+
+      assert %SiteImport{
+               start_date: ~D[2011-12-25],
+               end_date: ~D[2011-12-30],
+               source: :csv,
+               status: :completed
+             } = Repo.get_by!(SiteImport, site_id: site.id)
+
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 99
+    end
+
     test "fails on invalid CSV", %{site: site, user: user} = ctx do
       _ = ctx
 
