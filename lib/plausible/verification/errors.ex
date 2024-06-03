@@ -13,7 +13,7 @@ defmodule Plausible.Verification.Errors do
     gtm_cookie_banner: %{
       message: "We couldn't verify your website",
       recommendation:
-        "As you're using Google Tag Manager, you'll need to use a GTM-specific Plausible snippet. Please make sure no cookie consent banner is blocking our script.",
+        "As you're using Google Tag Manager, you'll need to use a GTM-specific Plausible snippet. Please make sure no cookie consent banner is blocking our script",
       url: "https://plausible.io/docs/google-tag-manager"
     },
     csp: %{
@@ -147,4 +147,10 @@ defmodule Plausible.Verification.Errors do
   }
 
   def all(), do: @errors
+
+  for {_, %{message: message, recommendation: recommendation} = e} <- @errors do
+    if String.ends_with?(message, ".") or String.ends_with?(recommendation, ".") do
+      raise "Error message/recommendation should not end with a period: #{inspect(e)}"
+    end
+  end
 end
