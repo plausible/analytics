@@ -67,7 +67,11 @@ defmodule PlausibleWeb.Live.Components.Verification do
         </p>
         <p :if={not @finished?} class="mt-2 animate-pulse" id="progress"><%= @message %></p>
 
-        <p :if={@finished? and not @success? and @interpretation} class="mt-2" id="recommendation">
+        <p
+          :if={@finished? and not @success? and @interpretation}
+          class="mt-2 text-ellipsis overflow-hidden"
+          id="recommendation"
+        >
           <span><%= List.first(@interpretation.recommendations).text %>.&nbsp;</span>
           <.styled_link href={List.first(@interpretation.recommendations).url} new_tab={true}>
             Learn more
