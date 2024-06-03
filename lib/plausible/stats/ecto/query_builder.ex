@@ -10,7 +10,7 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
   @not_set "(not set)"
 
   def build(query, site) do
-    {event_metrics, sessions_metrics, other_metrics} =
+    {event_metrics, sessions_metrics, _other_metrics} =
       TableDecider.partition_metrics(query.metrics, query)
 
     {
@@ -18,6 +18,8 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
       build_sessions_query(site, query, sessions_metrics)
     }
   end
+
+  def build_events_query(_, _, []), do: nil
 
   def build_events_query(site, query, event_metrics) do
     q =
@@ -32,9 +34,34 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     end
 
     q
+    |> join_sessions_if_needed(site, query)
     |> build_group_by(query)
     |> build_order_by(query)
+    |> Base.maybe_add_conversion_rate(site, query, event_metrics)
   end
+
+  defp join_sessions_if_needed(q, site, query) do
+    if TableDecider.events_join_sessions?(query) do
+      sessions_q =
+        from(
+          s in Base.query_sessions(site, query),
+          select: %{session_id: s.session_id},
+          where: s.sign == 1,
+          group_by: s.session_id
+        )
+
+      q =
+        from(
+          e in q,
+          join: sq in subquery(sessions_q),
+          on: e.session_id == sq.session_id
+        )
+    else
+      q
+    end
+  end
+
+  def build_sessions_query(_, _, []), do: nil
 
   def build_sessions_query(site, query, session_metrics) do
     q =
