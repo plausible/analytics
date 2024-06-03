@@ -15,23 +15,26 @@ defmodule Plausible.Stats.Aggregate do
 
     Query.trace(query, metrics)
 
-    {event_metrics, session_metrics, other_metrics} =
-      metrics
-      |> Util.maybe_add_visitors_metric()
-      |> Plausible.Stats.TableDecider.partition_metrics(query)
+    query_with_metrics = %Plausible.Stats.Query{
+      query
+      | metrics: Util.maybe_add_visitors_metric(metrics)
+    }
 
-    event_task = fn -> aggregate_events(site, query, event_metrics) end
-
-    session_task = fn -> aggregate_sessions(site, query, session_metrics) end
+    {event_query, session_query} =
+      Plausible.Stats.Ecto.QueryBuilder.build(query_with_metrics, site)
 
     time_on_page_task =
-      if :time_on_page in other_metrics do
+      if :time_on_page in query_with_metrics.metrics do
         fn -> aggregate_time_on_page(site, query) end
       else
         fn -> %{} end
       end
 
-    Plausible.ClickhouseRepo.parallel_tasks([session_task, event_task, time_on_page_task])
+    Plausible.ClickhouseRepo.parallel_tasks([
+      run_query_task(event_query),
+      run_query_task(session_query),
+      time_on_page_task
+    ])
     |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)
     |> Util.keep_requested_metrics(metrics)
     |> cast_revenue_metrics_to_money(currency)
@@ -39,6 +42,9 @@ defmodule Plausible.Stats.Aggregate do
     |> Enum.map(fn {metric, value} -> {metric, %{value: value}} end)
     |> Enum.into(%{})
   end
+
+  defp run_query_task(nil), do: fn -> %{} end
+  defp run_query_task(q), do: fn -> ClickhouseRepo.one(q) end
 
   defp aggregate_events(_, _, []), do: %{}
 

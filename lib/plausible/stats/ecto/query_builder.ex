@@ -9,10 +9,14 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
   @no_ref "Direct / None"
   @not_set "(not set)"
 
-  def build(site, query) do
-    {event_metrics, sessions_metrics} = TableDecider.partition_metrics(query.metrics, query)
+  def build(query, site) do
+    {event_metrics, sessions_metrics, other_metrics} =
+      TableDecider.partition_metrics(query.metrics, query)
 
-    build_events_query(site, query, event_metrics)
+    {
+      build_events_query(site, query, event_metrics),
+      build_sessions_query(site, query, sessions_metrics)
+    }
   end
 
   def build_events_query(site, query, event_metrics) do
@@ -21,6 +25,23 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
         e in "events_v2",
         where: ^Filters.WhereBuilder.build(:events, site, query),
         select: ^Base.select_event_metrics(event_metrics)
+      )
+
+    on_ee do
+      q = Plausible.Stats.Sampling.add_query_hint(q, query)
+    end
+
+    q
+    |> build_group_by(query)
+    |> build_order_by(query)
+  end
+
+  def build_sessions_query(site, query, session_metrics) do
+    q =
+      from(
+        e in "sessions_v2",
+        where: ^Filters.WhereBuilder.build(:sessions, site, query),
+        select: ^Base.select_session_metrics(session_metrics, query)
       )
 
     on_ee do
