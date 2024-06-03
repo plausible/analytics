@@ -28,6 +28,18 @@ defmodule Plausible.Verification.Checks.ScanBodyTest do
 
     assert state.diagnostics.gtm_likely?
     refute state.diagnostics.wordpress_likely?
+    refute state.diagnostics.cookie_banner_likely?
+  end
+
+  test "detects GTM and cookie banner" do
+    state =
+      %State{}
+      |> State.assign(raw_body: "...googletagmanager.com/gtm.js...cookiebot...")
+      |> @check.perform()
+
+    assert state.diagnostics.gtm_likely?
+    assert state.diagnostics.cookie_banner_likely?
+    refute state.diagnostics.wordpress_likely?
   end
 
   for signature <- ["wp-content", "wp-includes", "wp-json"] do

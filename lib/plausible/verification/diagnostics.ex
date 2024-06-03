@@ -15,6 +15,7 @@ defmodule Plausible.Verification.Diagnostics do
             service_error: nil,
             body_fetched?: false,
             wordpress_likely?: false,
+            cookie_banner_likely?: false,
             gtm_likely?: false,
             callback_status: 0,
             proxy_likely?: false,
@@ -47,6 +48,13 @@ defmodule Plausible.Verification.Diagnostics do
       )
       when callback_status in [200, 202] do
     %Result{ok?: true}
+  end
+
+  def interpret(
+        %__MODULE__{plausible_installed?: false, gtm_likely?: true, cookie_banner_likely?: true},
+        _url
+      ) do
+    error(@errors.gtm_cookie_banner)
   end
 
   def interpret(%__MODULE__{plausible_installed?: false, gtm_likely?: true}, _url) do

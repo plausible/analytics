@@ -10,6 +10,12 @@ defmodule Plausible.Verification.Errors do
         "As you're using Google Tag Manager, you'll need to use a GTM-specific Plausible snippet",
       url: "https://plausible.io/docs/google-tag-manager"
     },
+    gtm_cookie_banner: %{
+      message: "We couldn't verify your website",
+      recommendation:
+        "As you're using Google Tag Manager, you'll need to use a GTM-specific Plausible snippet. Please make sure no cookie consent banner is blocking our script.",
+      url: "https://plausible.io/docs/google-tag-manager"
+    },
     csp: %{
       message: "We encountered an issue with your site's CSP",
       recommendation:
