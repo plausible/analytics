@@ -27,6 +27,7 @@ defmodule Plausible.Verification.Checks.SnippetTest do
     refute state.diagnostics.data_domain_mismatch?
     refute state.diagnostics.snippet_unknown_attributes?
     refute state.diagnostics.proxy_likely?
+    refute state.diagnostics.manual_script_extension?
   end
 
   @multi_domain """
@@ -46,6 +47,7 @@ defmodule Plausible.Verification.Checks.SnippetTest do
     refute state.diagnostics.data_domain_mismatch?
     refute state.diagnostics.snippet_unknown_attributes?
     refute state.diagnostics.proxy_likely?
+    refute state.diagnostics.manual_script_extension?
   end
 
   @crazy """
@@ -67,6 +69,7 @@ defmodule Plausible.Verification.Checks.SnippetTest do
 
     assert state.diagnostics.snippets_found_in_head == 2
     assert state.diagnostics.snippets_found_in_body == 3
+    refute state.diagnostics.manual_script_extension?
   end
 
   test "figures out data-domain mismatch" do
@@ -80,6 +83,7 @@ defmodule Plausible.Verification.Checks.SnippetTest do
     assert state.diagnostics.data_domain_mismatch?
     refute state.diagnostics.snippet_unknown_attributes?
     refute state.diagnostics.proxy_likely?
+    refute state.diagnostics.manual_script_extension?
   end
 
   @proxy_likely """
@@ -99,6 +103,22 @@ defmodule Plausible.Verification.Checks.SnippetTest do
     refute state.diagnostics.data_domain_mismatch?
     refute state.diagnostics.snippet_unknown_attributes?
     assert state.diagnostics.proxy_likely?
+    refute state.diagnostics.manual_script_extension?
+  end
+
+  @manual_extension """
+  <head>
+  <script defer data-domain="example.com" event-author="Me" src="http://localhost:8000/js/script.manual.js"></script>
+  </head>
+  """
+
+  test "figures out manual script extension" do
+    state =
+      @manual_extension
+      |> new_state()
+      |> @check.perform()
+
+    assert state.diagnostics.manual_script_extension?
   end
 
   @unknown_attributes """

@@ -254,6 +254,27 @@ defmodule Plausible.Verification.ChecksTest do
       |> assert_error(@errors.multiple_snippets)
     end
 
+    @many_snippets_ok """
+    <html>
+    <head>
+    <script defer data-domain="example.com" src="https://plausible.io/js/script.js"></script>
+    <script defer data-domain="example.com" src="https://plausible.io/js/script.manual.js"></script>
+    </head>
+    <body>
+    Hello
+    </body>
+    </html>
+    """
+
+    test "skipping many snippets when manual found" do
+      stub_fetch_body(200, @many_snippets_ok)
+      stub_installation()
+
+      run_checks()
+      |> Checks.interpret_diagnostics()
+      |> assert_ok()
+    end
+
     test "detecting snippet after busting cache" do
       stub_fetch_body(fn conn ->
         conn = fetch_query_params(conn)
