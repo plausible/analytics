@@ -317,7 +317,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
           {:noreply, push_event(socket, "send-metrics", metrics_params)}
         else
-          {:noreply, socket}
+          {:noreply, assign(socket, trigger_submit: true)}
         end
 
       {:error, changeset} ->
