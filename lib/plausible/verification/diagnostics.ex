@@ -216,26 +216,28 @@ defmodule Plausible.Verification.Diagnostics do
   def interpret(
         %__MODULE__{
           plausible_installed?: true,
-          callback_status: 202,
+          callback_status: callback_status,
           snippet_found_after_busting_cache?: true,
           wordpress_likely?: true,
           wordpress_plugin?: true
         },
         _url
-      ) do
+      )
+      when callback_status in [200, 202] do
     error(@errors.cache_wp_plugin)
   end
 
   def interpret(
         %__MODULE__{
           plausible_installed?: true,
-          callback_status: 202,
+          callback_status: callback_status,
           snippet_found_after_busting_cache?: true,
           wordpress_likely?: true,
           wordpress_plugin?: false
         },
         _url
-      ) do
+      )
+      when callback_status in [200, 202] do
     error(@errors.cache_wp_no_plugin)
   end
 
