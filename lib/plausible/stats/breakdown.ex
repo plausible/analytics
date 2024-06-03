@@ -37,11 +37,10 @@ defmodule Plausible.Stats.Breakdown do
     {event_goals, pageview_goals} = Enum.split_with(site.goals, & &1.event_name)
     events = Enum.map(event_goals, & &1.event_name)
 
-    event_query = %Query{
+    event_query =
       query
-      | filters: query.filters ++ [[:member, "event:name", events]],
-        property: "event:name"
-    }
+      |> Query.put_filter([:member, "event:name", events])
+      |> Query.set_property("event:name")
 
     if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
 
@@ -74,12 +73,14 @@ defmodule Plausible.Stats.Breakdown do
 
     page_q =
       if Enum.any?(pageview_goals) do
+        page_query = Query.set_property(query, "event:page")
+
         page_exprs = Enum.map(pageview_goals, & &1.page_path)
         page_regexes = Enum.map(page_exprs, &page_regex/1)
 
         select_columns = metrics_to_select |> select_event_metrics |> mark_revenue_as_nil
 
-        from(e in base_event_query(site, query),
+        from(e in base_event_query(site, page_query),
           order_by: [desc: fragment("uniq(?)", e.user_id)],
           where:
             fragment(
@@ -94,7 +95,7 @@ defmodule Plausible.Stats.Breakdown do
           }
         )
         |> select_merge(^select_columns)
-        |> merge_imported_pageview_goals(site, query, page_exprs, metrics_to_select)
+        |> merge_imported_pageview_goals(site, page_query, page_exprs, metrics_to_select)
         |> apply_pagination(pagination)
       else
         nil
@@ -180,8 +181,9 @@ defmodule Plausible.Stats.Breakdown do
 
         pages ->
           query
+          |> Query.remove_filters(["event:page"])
           |> Query.put_filter([:member, "visit:entry_page", Enum.map(pages, & &1[:page])])
-          |> struct!(property: "visit:entry_page")
+          |> Query.set_property("visit:entry_page")
       end
 
     if Enum.any?(event_metrics) && Enum.empty?(event_result) do
@@ -244,24 +246,25 @@ defmodule Plausible.Stats.Breakdown do
               "visit:entry_page",
               "visit:referrer"
             ] do
-    update_hostname(query, "visit:entry_page_hostname")
+    update_hostname_filter_prop(query, "visit:entry_page_hostname")
   end
 
   defp maybe_update_breakdown_filters(%Query{property: "visit:exit_page"} = query) do
-    update_hostname(query, "visit:exit_page_hostname")
+    update_hostname_filter_prop(query, "visit:exit_page_hostname")
   end
 
   defp maybe_update_breakdown_filters(query) do
     query
   end
 
-  defp update_hostname(query, visit_prop) do
+  defp update_hostname_filter_prop(query, visit_prop) do
     case Query.get_filter(query, "event:hostname") do
       nil ->
         query
 
       [op, "event:hostname", value] ->
-        Plausible.Stats.Query.put_filter(query, [op, visit_prop, value])
+        query
+        |> Query.put_filter([op, visit_prop, value])
     end
   end
 

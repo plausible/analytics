@@ -21,10 +21,7 @@ class ReferrerDrilldownModal extends React.Component {
     const detailed = this.showExtra()
 
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100, detailed})
-      .then((response) => {
-        const results = response.results ? response.results : response
-        this.setState({loading: false, referrers: results})
-      })
+      .then((response) => this.setState({loading: false, referrers: response.results}))
   }
 
   showExtra() {

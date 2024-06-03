@@ -1647,5 +1647,240 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
 
       refute json_response(conn, 200)["warning"]
     end
+
+    test "returns all metrics based on imported/native data when filtering by browser", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, browser: "Chrome", user_id: 1, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, browser: "Chrome", user_id: 1, timestamp: ~N[2021-01-01 00:03:00]),
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:imported_browsers, browser: "Firefox", date: ~D[2021-01-02]),
+        build(:imported_browsers,
+          browser: "Chrome",
+          visitors: 1,
+          pageviews: 1,
+          bounces: 1,
+          visit_duration: 3,
+          visits: 1,
+          date: ~D[2021-01-03]
+        ),
+        build(:pageview, browser: "Chrome", user_id: 2, timestamp: ~N[2021-01-04 00:00:00]),
+        build(:event,
+          name: "Signup",
+          browser: "Chrome",
+          user_id: 2,
+          timestamp: ~N[2021-01-04 00:10:00]
+        ),
+        build(:imported_browsers,
+          browser: "Chrome",
+          visitors: 4,
+          pageviews: 6,
+          bounces: 1,
+          visit_duration: 300,
+          visits: 5,
+          date: ~D[2021-01-04]
+        )
+      ])
+
+      results =
+        conn
+        |> get("/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "custom",
+          "date" => "2021-01-01,2021-01-04",
+          "metrics" =>
+            "visitors,pageviews,events,visits,views_per_visit,bounce_rate,visit_duration",
+          "filters" => "visit:browser==Chrome",
+          "with_imported" => "true"
+        })
+        |> json_response(200)
+        |> Map.get("results")
+
+      assert results == [
+               %{
+                 "bounce_rate" => 0.0,
+                 "date" => "2021-01-01",
+                 "events" => 2,
+                 "pageviews" => 2,
+                 "views_per_visit" => 2.0,
+                 "visit_duration" => 180.0,
+                 "visitors" => 1,
+                 "visits" => 1
+               },
+               %{
+                 "bounce_rate" => nil,
+                 "date" => "2021-01-02",
+                 "events" => 0,
+                 "pageviews" => 0,
+                 "views_per_visit" => 0.0,
+                 "visit_duration" => nil,
+                 "visitors" => 0,
+                 "visits" => 0
+               },
+               %{
+                 "bounce_rate" => 100,
+                 "date" => "2021-01-03",
+                 "events" => 1,
+                 "pageviews" => 1,
+                 "views_per_visit" => 1.0,
+                 "visit_duration" => 3,
+                 "visitors" => 1,
+                 "visits" => 1
+               },
+               %{
+                 "bounce_rate" => 17.0,
+                 "date" => "2021-01-04",
+                 "events" => 8,
+                 "pageviews" => 7,
+                 "views_per_visit" => 1.17,
+                 "visit_duration" => 150,
+                 "visitors" => 5,
+                 "visits" => 6
+               }
+             ]
+    end
+
+    test "returns conversion rate timeseries with a goal filter", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      insert(:goal, site: site, event_name: "Outbound Link: Click")
+
+      populate_stats(site, site_import.id, [
+        # 2021-01-01
+        build(:event, name: "Outbound Link: Click", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:imported_custom_events, name: "Outbound Link: Click", date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-01-01], visitors: 4),
+        # 2021-01-02
+        build(:event, name: "Outbound Link: Click", timestamp: ~N[2021-01-02 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 00:00:00]),
+        # 2021-01-03
+        build(:imported_custom_events, name: "Outbound Link: Click", date: ~D[2021-01-03]),
+        build(:imported_visitors, date: ~D[2021-01-03]),
+        # 2021-01-04
+        build(:event, name: "Outbound Link: Click", timestamp: ~N[2021-01-04 00:00:00]),
+        build(:imported_visitors, date: ~D[2021-01-04], visitors: 2)
+      ])
+
+      results =
+        conn
+        |> get("/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "custom",
+          "date" => "2021-01-01,2021-01-04",
+          "metrics" => "conversion_rate",
+          "filters" => "event:goal==Outbound Link: Click",
+          "with_imported" => "true"
+        })
+        |> json_response(200)
+        |> Map.get("results")
+
+      assert results == [
+               %{
+                 "date" => "2021-01-01",
+                 "conversion_rate" => 40.0
+               },
+               %{
+                 "date" => "2021-01-02",
+                 "conversion_rate" => 50.0
+               },
+               %{
+                 "date" => "2021-01-03",
+                 "conversion_rate" => 100.0
+               },
+               %{
+                 "date" => "2021-01-04",
+                 "conversion_rate" => 33.3
+               }
+             ]
+    end
+
+    test "returns conversion rate timeseries with a goal + custom prop filter", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      insert(:goal, site: site, event_name: "Outbound Link: Click")
+
+      populate_stats(site, site_import.id, [
+        # 2021-01-01
+        build(:event,
+          name: "Outbound Link: Click",
+          "meta.key": ["url"],
+          "meta.value": ["https://site.com"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:imported_custom_events,
+          name: "Outbound Link: Click",
+          link_url: "https://site.com",
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_custom_events,
+          name: "File Download",
+          link_url: "https://site.com",
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_custom_events,
+          name: "Outbound Link: Click",
+          link_url: "https://notthis.com",
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_visitors, date: ~D[2021-01-01], visitors: 4),
+        # 2021-01-03
+        build(:imported_custom_events,
+          name: "Outbound Link: Click",
+          link_url: "https://site.com",
+          date: ~D[2021-01-03]
+        ),
+        build(:imported_visitors, date: ~D[2021-01-03]),
+        # 2021-01-04
+        build(:event,
+          name: "Outbound Link: Click",
+          "meta.key": ["url"],
+          "meta.value": ["https://site.com"],
+          timestamp: ~N[2021-01-04 00:00:00]
+        ),
+        build(:imported_visitors, date: ~D[2021-01-04], visitors: 2)
+      ])
+
+      results =
+        conn
+        |> get("/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "custom",
+          "date" => "2021-01-01,2021-01-04",
+          "metrics" => "conversion_rate",
+          "filters" => "event:goal==Outbound Link: Click;event:props:url==https://site.com",
+          "with_imported" => "true"
+        })
+        |> json_response(200)
+        |> Map.get("results")
+
+      assert results == [
+               %{
+                 "date" => "2021-01-01",
+                 "conversion_rate" => 40.0
+               },
+               %{
+                 "date" => "2021-01-02",
+                 "conversion_rate" => 0.0
+               },
+               %{
+                 "date" => "2021-01-03",
+                 "conversion_rate" => 100.0
+               },
+               %{
+                 "date" => "2021-01-04",
+                 "conversion_rate" => 33.3
+               }
+             ]
+    end
   end
 end

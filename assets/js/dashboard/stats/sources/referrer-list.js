@@ -1,12 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import * as api from '../../api'
 import * as url from '../../util/url'
 import { VISITORS_METRIC, maybeWithCR } from '../reports/metrics'
 import ListReport from '../reports/list'
+import ImportedQueryUnsupportedWarning from '../../stats/imported-query-unsupported-warning'
 
 export default function Referrers({source, site, query}) {
+  const [importedQueryUnsupported, setImportedQueryUnsupported] = useState(false)
+
   function fetchReferrers() {
     return api.get(url.apiPath(site, `/referrers/${encodeURIComponent(source)}`), query, {limit: 9})
+  }
+
+  function afterFetchReferrers(apiResponse) {
+    const unsupportedQuery = apiResponse.skip_imported_reason === 'unsupported_query'
+    const isRealtime = query.period === 'realtime'
+    setImportedQueryUnsupported(unsupportedQuery && !isRealtime)
   }
 
   function externalLinkDest(referrer) {
@@ -35,9 +44,13 @@ export default function Referrers({source, site, query}) {
 
   return (
     <div className="flex flex-col flex-grow">
-      <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
+      <div className="flex gap-x-1">
+        <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
+        <ImportedQueryUnsupportedWarning condition={importedQueryUnsupported}/>
+      </div>
       <ListReport
         fetchData={fetchReferrers}
+        afterFetchData={afterFetchReferrers}
         getFilterFor={getFilterFor}
         keyLabel="Referrer"
         metrics={maybeWithCR([VISITORS_METRIC], query)}

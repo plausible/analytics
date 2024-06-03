@@ -76,8 +76,11 @@ class Countries extends React.Component {
   fetchCountries() {
     return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, this.props.query, {limit: 300})
       .then((response) => {
-        const results = response.results ? response.results : response
-        this.setState({loading: false, countries: results})
+        if (this.props.afterFetchData) {
+          this.props.afterFetchData(response)
+        }
+
+        this.setState({loading: false, countries: response.results})
       })
   }
 

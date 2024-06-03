@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Snippet integration verification
+- Limited filtering support for imported data in the dashboard and via Stats API
 
 ### Removed
 

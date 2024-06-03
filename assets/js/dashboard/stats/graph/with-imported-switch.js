@@ -22,7 +22,7 @@ export default function WithImportedSwitch({site, topStatData}) {
   const isComparingImportedPeriod = isBeforeNativeStats(topStatData.comparing_from)
 
   if (isQueryingImportedPeriod || isComparingImportedPeriod) {
-    const withImported = topStatData.with_imported;
+    const withImported = topStatData.includes_imported;
     const toggleColor = withImported ? " dark:text-gray-300 text-gray-700" : " dark:text-gray-500 text-gray-400"
     const target = url.setQuery('with_imported', (!withImported).toString())
     const tip = withImported ? "" : "do not ";

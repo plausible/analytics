@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
     test "returns top cities by new visitors", %{conn: conn, site: site} do
       conn = get(conn, "/api/stats/#{site.domain}/regions?period=day")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"code" => "EE-37", "country_flag" => "🇪🇪", "name" => "Harjumaa", "visitors" => 3},
                %{"code" => "EE-39", "country_flag" => "🇪🇪", "name" => "Hiiumaa", "visitors" => 2}
              ]
@@ -47,7 +47,7 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
       filters = Jason.encode!(%{region: "EE-39"})
       conn = get(conn, "/api/stats/#{site.domain}/regions?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"code" => "EE-39", "country_flag" => "🇪🇪", "name" => "Hiiumaa", "visitors" => 2}
              ]
     end

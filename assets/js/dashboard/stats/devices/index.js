@@ -1,13 +1,13 @@
-import React from 'react';
-
+import React, {useState} from 'react';
 import * as storage from '../../util/storage'
 import { getFiltersByKeyPrefix, isFilteringOnFixedValue } from '../../util/filters'
 import ListReport from '../reports/list'
 import * as api from '../../api'
 import * as url from '../../util/url'
 import { VISITORS_METRIC, PERCENTAGE_METRIC, maybeWithCR } from '../reports/metrics';
+import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 
-function Browsers({ query, site }) {
+function Browsers({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/browsers'), query)
   }
@@ -22,6 +22,7 @@ function Browsers({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Browser"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
@@ -30,7 +31,7 @@ function Browsers({ query, site }) {
   )
 }
 
-function BrowserVersions({ query, site }) {
+function BrowserVersions({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/browser-versions'), query)
   }
@@ -48,6 +49,7 @@ function BrowserVersions({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Browser version"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
@@ -57,7 +59,7 @@ function BrowserVersions({ query, site }) {
 
 }
 
-function OperatingSystems({ query, site }) {
+function OperatingSystems({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/operating-systems'), query)
   }
@@ -72,6 +74,7 @@ function OperatingSystems({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Operating system"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
@@ -80,7 +83,7 @@ function OperatingSystems({ query, site }) {
   )
 }
 
-function OperatingSystemVersions({ query, site }) {
+function OperatingSystemVersions({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/operating-system-versions'), query)
   }
@@ -98,6 +101,7 @@ function OperatingSystemVersions({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Operating System Version"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
@@ -107,7 +111,7 @@ function OperatingSystemVersions({ query, site }) {
 
 }
 
-function ScreenSizes({ query, site }) {
+function ScreenSizes({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/screen-sizes'), query)
   }
@@ -126,6 +130,7 @@ function ScreenSizes({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Screen size"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
@@ -157,45 +162,44 @@ function iconFor(screenSize) {
   }
 }
 
-export default class Devices extends React.Component {
-  constructor(props) {
-    super(props)
-    this.tabKey = `deviceTab__${props.site.domain}`
-    const storedTab = storage.getItem(this.tabKey)
-    this.state = {
-      mode: storedTab || 'browser'
-    }
+export default function Devices(props) {
+  const {site, query} = props
+  const tabKey = `deviceTab__${site.domain}`
+  const storedTab = storage.getItem(tabKey)
+  const [mode, setMode] = useState(storedTab || 'browser')
+  const [importedQueryUnsupported, setImportedQueryUnsupported] = useState(false)
+
+  function switchTab(mode) {
+    storage.setItem(tabKey, mode)
+    setMode(mode)
   }
 
-  setMode(mode) {
-    return () => {
-      storage.setItem(this.tabKey, mode)
-      this.setState({ mode })
-    }
+  function afterFetchData(apiResponse) {
+    const unsupportedQuery = apiResponse.skip_imported_reason === 'unsupported_query'
+    const isRealtime = query.period === 'realtime'
+    setImportedQueryUnsupported(unsupportedQuery && !isRealtime)
   }
 
-  renderContent() {
-    switch (this.state.mode) {
+  function renderContent() {
+    switch (mode) {
       case 'browser':
-        if (isFilteringOnFixedValue(this.props.query, 'browser')) {
-          return <BrowserVersions site={this.props.site} query={this.props.query} />
+        if (isFilteringOnFixedValue(query, 'browser')) {
+          return <BrowserVersions site={site} query={query} afterFetchData={afterFetchData} />
         }
-        return <Browsers site={this.props.site} query={this.props.query} />
+        return <Browsers site={site} query={query} afterFetchData={afterFetchData} />
       case 'os':
-        if (isFilteringOnFixedValue(this.props.query, 'os')) {
-          return <OperatingSystemVersions site={this.props.site} query={this.props.query} />
+        if (isFilteringOnFixedValue(query, 'os')) {
+          return <OperatingSystemVersions site={site} query={query} afterFetchData={afterFetchData} />
         }
-        return <OperatingSystems site={this.props.site} query={this.props.query} />
+        return <OperatingSystems site={site} query={query} afterFetchData={afterFetchData} />
       case 'size':
       default:
-        return (
-          <ScreenSizes site={this.props.site} query={this.props.query} />
-        )
+        return <ScreenSizes site={site} query={query} afterFetchData={afterFetchData} />
     }
   }
 
-  renderPill(name, mode) {
-    const isActive = this.state.mode === mode
+  function renderPill(name, pill) {
+    const isActive = mode === pill
 
     if (isActive) {
       return (
@@ -210,28 +214,29 @@ export default class Devices extends React.Component {
     return (
       <button
         className="cursor-pointer hover:text-indigo-600"
-        onClick={this.setMode(mode)}
+        onClick={() => switchTab(pill)}
       >
         {name}
       </button>
     )
   }
 
-  render() {
-    return (
-      <div>
-        <div className="flex justify-between w-full">
+  return (
+    <div>
+      <div className="flex justify-between w-full">
+        <div className="flex gap-x-1">
           <h3 className="font-bold dark:text-gray-100">Devices</h3>
-          <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-            {this.renderPill('Browser', 'browser')}
-            {this.renderPill('OS', 'os')}
-            {this.renderPill('Size', 'size')}
-          </div>
+          <ImportedQueryUnsupportedWarning condition={importedQueryUnsupported}/>
         </div>
-        {this.renderContent()}
+        <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
+          {renderPill('Browser', 'browser')}
+          {renderPill('OS', 'os')}
+          {renderPill('Size', 'size')}
+        </div>
       </div>
-    )
-  }
+      {renderContent()}
+    </div>
+  )
 }
 
 function getSingleFilter(query, filterKey) {
