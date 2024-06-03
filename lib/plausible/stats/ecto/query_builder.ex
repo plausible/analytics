@@ -50,12 +50,11 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
           group_by: s.session_id
         )
 
-      q =
-        from(
-          e in q,
-          join: sq in subquery(sessions_q),
-          on: e.session_id == sq.session_id
-        )
+      from(
+        e in q,
+        join: sq in subquery(sessions_q),
+        on: e.session_id == sq.session_id
+      )
     else
       q
     end
@@ -76,8 +75,33 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     end
 
     q
+    |> join_events_if_needed(site, query)
     |> build_group_by(query)
     |> build_order_by(query)
+  end
+
+  def join_events_if_needed(q, site, query) do
+    if Query.has_event_filters?(query) do
+      events_q =
+        from(e in "events_v2",
+          where: ^Filters.WhereBuilder.build(:events, site, query),
+          select: %{
+            session_id: fragment("DISTINCT ?", e.session_id),
+            _sample_factor: fragment("_sample_factor")
+          }
+        )
+
+      on_ee do
+        events_q = Plausible.Stats.Sampling.add_query_hint(events_q, query)
+      end
+
+      from(s in q,
+        join: e in subquery(events_q),
+        on: s.session_id == e.session_id
+      )
+    else
+      q
+    end
   end
 
   defp build_group_by(q, %Query{dimensions: nil}), do: q
