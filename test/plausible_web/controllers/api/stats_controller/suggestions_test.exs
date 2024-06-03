@@ -749,6 +749,44 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       end
     end
 
+    test "handles invalid region codes in imported data gracefully (GA4)", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      # NOTE: Currently, the regions imported from GA4 do not conform to region code standard
+      # we are using. Instead, literal region names are persisted. Those names often do not
+      # match the names from our region databases either. Regardless of that, we still consider
+      # them when filtering suggestions.
+
+      populate_stats(site, site_import.id, [
+        build(:imported_locations, country: "EE", region: "EE-37", pageviews: 2),
+        build(:imported_locations, country: "EE", region: "Hiiumaa", pageviews: 1)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/region?q=&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"value" => "EE-37", "label" => "Harjumaa"},
+               %{"value" => "Hiiumaa", "label" => "Hiiumaa"}
+             ]
+
+      conn2 =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/region?q=H&with_imported=true"
+        )
+
+      assert json_response(conn2, 200) == [
+               %{"value" => "EE-37", "label" => "Harjumaa"},
+               %{"value" => "Hiiumaa", "label" => "Hiiumaa"}
+             ]
+    end
+
     test "ignores imported data in region suggestions when a different property is filtered by",
          %{
            conn: conn,

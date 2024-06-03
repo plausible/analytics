@@ -47,27 +47,52 @@ defmodule Plausible.Stats.FilterSuggestions do
     |> Enum.map(fn c ->
       subdiv = Location.get_subdivision(c)
 
-      %{
-        value: c,
-        label: subdiv.name
-      }
+      if subdiv do
+        %{
+          value: c,
+          label: subdiv.name
+        }
+      else
+        %{
+          value: c,
+          label: c
+        }
+      end
     end)
   end
 
   def filter_suggestions(site, query, "region", filter_search) do
     matches = Location.search_subdivision(filter_search)
+    filter_search = String.downcase(filter_search)
 
     q =
       from(
         e in query_sessions(site, query),
         group_by: e.subdivision1_code,
         order_by: [desc: fragment("count(*)")],
-        select: e.subdivision1_code
+        select: e.subdivision1_code,
+        where: e.subdivision1_code != ""
       )
       |> Imported.merge_imported_region_suggestions(site, query)
 
     ClickhouseRepo.all(q)
-    |> Enum.map(fn c -> Enum.find(matches, fn x -> x.code == c end) end)
+    |> Enum.map(fn c ->
+      match = Enum.find(matches, fn x -> x.code == c end)
+
+      cond do
+        match ->
+          match
+
+        String.contains?(String.downcase(c), filter_search) ->
+          %{
+            code: c,
+            name: c
+          }
+
+        true ->
+          nil
+      end
+    end)
     |> Enum.filter(& &1)
     |> Enum.slice(0..24)
     |> Enum.map(fn subdiv ->
