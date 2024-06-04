@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Fix CSV import by adding a newline to the INSERT statement plausible/analytics#4172
+- Fix url parameters escaping of = sign plausible/analytics#4185
 
 ## v2.1.0 - 2024-05-23
 
