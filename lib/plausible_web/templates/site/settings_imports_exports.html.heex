@@ -30,7 +30,7 @@
     session: %{
       "site_id" => @site.id,
       "email_to" => @current_user.email,
-      "storage" => on_ee(do: "s3", else: "local")
+      "storage" => if(Plausible.ee?(), do: "s3", else: "local")
     }
   ) %>
 </div>

@@ -41,7 +41,7 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def logo_path(filename) do
-    if ee?() do
+    if Plausible.ee?() do
       Path.join("/images/ee/", filename)
     else
       Path.join("/images/ce/", filename)
@@ -54,7 +54,7 @@ defmodule PlausibleWeb.LayoutView do
       %{key: "People", value: "people", icon: :users},
       %{key: "Visibility", value: "visibility", icon: :eye},
       %{key: "Goals", value: "goals", icon: :check_circle},
-      on_ee do
+      if Plausible.ee?() do
         %{key: "Funnels", value: "funnels", icon: :funnel}
       end,
       %{key: "Custom Properties", value: "properties", icon: :document_text},
@@ -63,14 +63,12 @@ defmodule PlausibleWeb.LayoutView do
       %{
         key: "Shields",
         icon: :shield_exclamation,
-        value:
-          [
-            %{key: "IP Addresses", value: "shields/ip_addresses"},
-            %{key: "Countries", value: "shields/countries"},
-            %{key: "Pages", value: "shields/pages"},
-            %{key: "Hostnames", value: "shields/hostnames"}
-          ]
-          |> Enum.reject(&is_nil/1)
+        value: [
+          %{key: "IP Addresses", value: "shields/ip_addresses"},
+          %{key: "Countries", value: "shields/countries"},
+          %{key: "Pages", value: "shields/pages"},
+          %{key: "Hostnames", value: "shields/hostnames"}
+        ]
       },
       %{key: "Email Reports", value: "email-reports", icon: :envelope},
       if conn.assigns[:current_user_role] == :owner do

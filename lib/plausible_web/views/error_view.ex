@@ -1,18 +1,15 @@
 defmodule PlausibleWeb.ErrorView do
-  use Plausible
   use PlausibleWeb, :view
 
   def render("500.json", %{conn: %{assigns: %{plugins_api: true}}}) do
-    contact_support_note =
-      on_ee do
-        "If the problem persists please contact support@plausible.io"
+    detail =
+      if Plausible.ee?() do
+        "Internal server error, please try again. If the problem persists please contact support@plausible.io"
+      else
+        "Internal server error, please try again."
       end
 
-    %{
-      errors: [
-        %{detail: "Internal server error, please try again. #{contact_support_note}"}
-      ]
-    }
+    %{errors: [%{detail: detail}]}
   end
 
   def render("500.json", _assigns) do

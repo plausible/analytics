@@ -45,7 +45,7 @@
             method: :post
           ) %> to <%= @conn.assigns[:current_user].email %>
         </li>
-        <%= if ee?() do %>
+        <%= if Plausible.ee?() do %>
           <li>
             <a class="underline text-indigo-600" href="https://plausible.io/contact">
               Contact us

@@ -165,7 +165,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         </div>
 
         <div
-          :if={ee?()}
+          :if={Plausible.ee?()}
           class="mt-6 space-y-3"
           x-data={
             Jason.encode!(%{
@@ -235,8 +235,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
                     input, options ->
                       ComboBox.StaticSearch.suggest(input, options, weight_threshold: 0.8)
                   end
+                else
+                  raise "unreachable"
                 end
-              }
               }
             />
           </div>

@@ -1,7 +1,6 @@
 defmodule Plausible.Workers.ClickhouseCleanSitesTest do
   use Plausible.DataCase
   use Plausible.TestUtils
-  use Plausible
   import Plausible.Factory
 
   alias Plausible.Workers.ClickhouseCleanSites

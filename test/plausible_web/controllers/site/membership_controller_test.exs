@@ -1,12 +1,11 @@
 defmodule PlausibleWeb.Site.MembershipControllerTest do
-  use Plausible
   use PlausibleWeb.ConnCase
   use Plausible.Repo
   use Bamboo.Test
 
   import Plausible.Test.Support.HTML
 
-  @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
+  @subject_prefix if Plausible.ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
   setup [:create_user, :log_in]
 
