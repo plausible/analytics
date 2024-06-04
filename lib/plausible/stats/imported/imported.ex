@@ -266,7 +266,7 @@ defmodule Plausible.Stats.Imported do
 
   def merge_imported(q, _, %Query{include_imported: false}, _), do: q
 
-  def merge_imported(q, site, %Query{dimensons: [dimension]} = query, metrics)
+  def merge_imported(q, site, %Query{dimensions: [dimension]} = query, metrics)
       when dimension in @imported_properties do
     dim = Plausible.Stats.Filters.without_prefix(dimension)
 

@@ -208,8 +208,8 @@ defmodule Plausible.Stats.Query do
   end
 
   @spec set_dimensions(t(), list(String.t()) | nil, Keyword.t()) :: t()
-  def set_dimensions(query, property, opts \\ []) do
-    query = struct!(query, property: property)
+  def set_dimensions(query, dimensions, opts \\ []) do
+    query = struct!(query, dimensions: dimensions)
 
     if Keyword.get(opts, :skip_refresh_imported_opts),
       do: query,
