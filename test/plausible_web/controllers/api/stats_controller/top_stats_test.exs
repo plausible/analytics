@@ -628,6 +628,139 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
     end
   end
 
+  describe "GET /api/stats/top-stats - with_imported_switch info" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    setup context do
+      insert(:site_import,
+        site: context.site,
+        start_date: ~D[2021-03-01],
+        end_date: ~D[2021-03-31]
+      )
+
+      context
+    end
+
+    test "visible is false in realtime", %{conn: conn, site: site} do
+      q = "?period=realtime"
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => false,
+               "togglable" => false,
+               "tooltip_msg" => nil
+             }
+    end
+
+    test "when the site has no imported data", %{conn: conn, site: site} do
+      Plausible.Imported.delete_imports_for_site(site)
+
+      q = "?period=day&date=2021-01-01&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => false,
+               "togglable" => false,
+               "tooltip_msg" => nil
+             }
+    end
+
+    test "when imported data does not exist in the queried period", %{conn: conn, site: site} do
+      q = "?period=day&date=2022-05-05&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => false,
+               "togglable" => false,
+               "tooltip_msg" => nil
+             }
+    end
+
+    test "when imported data is requested, in range, and can be included", %{
+      conn: conn,
+      site: site
+    } do
+      q = "?period=day&date=2021-03-15&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => true,
+               "togglable" => true,
+               "tooltip_msg" => "Click to exclude imported data"
+             }
+    end
+
+    test "when imported data is not requested, but in range and can be included", %{
+      conn: conn,
+      site: site
+    } do
+      q = "?period=day&date=2021-03-15&with_imported=false"
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => true,
+               "togglable" => true,
+               "tooltip_msg" => "Click to include imported data"
+             }
+    end
+
+    test "when imported data is requested and in range, but cannot be included", %{
+      conn: conn,
+      site: site
+    } do
+      filters = Jason.encode!(%{goal: "Signup", page: "/register"})
+      q = "?period=day&date=2021-03-15&with_imported=true&filters=#{filters}"
+
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => true,
+               "togglable" => false,
+               "tooltip_msg" => "Imported data cannot be included"
+             }
+    end
+
+    test "when imported data is requested and in comparison range", %{conn: conn, site: site} do
+      q = "?period=day&date=2022-03-15&with_imported=true&comparison=year_over_year"
+
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => true,
+               "togglable" => true,
+               "tooltip_msg" => "Click to exclude imported data"
+             }
+    end
+
+    test "when imported data is not requested and in comparison range", %{conn: conn, site: site} do
+      q = "?period=day&date=2022-03-15&with_imported=false&comparison=year_over_year"
+
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => true,
+               "togglable" => true,
+               "tooltip_msg" => "Click to include imported data"
+             }
+    end
+  end
+
   describe "GET /api/stats/top-stats - realtime" do
     setup [:create_user, :log_in, :create_new_site]
 

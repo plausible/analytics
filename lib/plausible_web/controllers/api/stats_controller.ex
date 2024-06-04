@@ -217,6 +217,7 @@ defmodule PlausibleWeb.Api.StatsController do
       top_stats: top_stats,
       interval: query.interval,
       sample_percent: sample_percent,
+      with_imported_switch: with_imported_switch_info(query, comparison_query),
       includes_imported: includes_imported?(query, comparison_query),
       imports_exist: site.complete_import_ids != [],
       comparing_from: comparison_query && comparison_query.date_range.first,
@@ -224,6 +225,38 @@ defmodule PlausibleWeb.Api.StatsController do
       from: query.date_range.first,
       to: query.date_range.last
     })
+  end
+
+  defp with_imported_switch_info(%Query{period: "realtime"}, _) do
+    %{visible: false, togglable: false, tooltip_msg: nil}
+  end
+
+  defp with_imported_switch_info(query, nil) do
+    with_imported_switch_info(query.skip_imported_reason)
+  end
+
+  defp with_imported_switch_info(query, comparison_query) do
+    case {query.skip_imported_reason, comparison_query.skip_imported_reason} do
+      {:out_of_range, nil} -> with_imported_switch_info(nil)
+      {:out_of_range, :not_requested} -> with_imported_switch_info(:not_requested)
+      {reason, _} -> with_imported_switch_info(reason)
+    end
+  end
+
+  defp with_imported_switch_info(skip_reason) do
+    case skip_reason do
+      reason when reason in [:no_imported_data, :out_of_range] ->
+        %{visible: false, togglable: false, tooltip_msg: nil}
+
+      :unsupported_query ->
+        %{visible: true, togglable: false, tooltip_msg: "Imported data cannot be included"}
+
+      :not_requested ->
+        %{visible: true, togglable: true, tooltip_msg: "Click to include imported data"}
+
+      nil ->
+        %{visible: true, togglable: true, tooltip_msg: "Click to exclude imported data"}
+    end
   end
 
   defp present_index_for(site, query, dates) do

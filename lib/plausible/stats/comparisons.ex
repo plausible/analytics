@@ -169,7 +169,8 @@ defmodule Plausible.Stats.Comparisons do
       :ok ->
         struct!(query,
           imported_data_requested: true,
-          include_imported: true
+          include_imported: true,
+          skip_imported_reason: nil
         )
 
       {:error, reason} ->
