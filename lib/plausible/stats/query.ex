@@ -301,14 +301,14 @@ defmodule Plausible.Stats.Query do
   end
 
   @spec ensure_include_imported(t(), boolean()) ::
-          :ok | {:error, :not_requested | :no_imported_data | :out_of_range | :unsupported_query}
+          :ok | {:error, :no_imported_data | :out_of_range | :unsupported_query | :not_requested}
   def ensure_include_imported(query, requested?) do
     cond do
-      not requested? -> {:error, :not_requested}
       is_nil(query.latest_import_end_date) -> {:error, :no_imported_data}
       Date.after?(query.date_range.first, query.latest_import_end_date) -> {:error, :out_of_range}
       not Imported.schema_supports_query?(query) -> {:error, :unsupported_query}
       query.period == "realtime" -> {:error, :unsupported_query}
+      not requested? -> {:error, :not_requested}
       true -> :ok
     end
   end
