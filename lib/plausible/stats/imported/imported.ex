@@ -14,7 +14,8 @@ defmodule Plausible.Stats.Imported do
 
   @property_to_table_mappings Imported.Base.property_to_table_mappings()
 
-  @imported_properties Map.keys(@property_to_table_mappings)
+  @imported_properties Map.keys(@property_to_table_mappings) ++
+                         Plausible.Imported.imported_custom_props()
 
   @goals_with_url Plausible.Imported.goals_with_url()
 
@@ -273,7 +274,6 @@ defmodule Plausible.Stats.Imported do
       site
       |> Imported.Base.query_imported(query)
       |> where([i], i.visitors > 0)
-      |> maybe_apply_filter(query, property, dim)
       |> group_imported_by(dim)
       |> select_imported_metrics(metrics)
 
@@ -355,13 +355,6 @@ defmodule Plausible.Stats.Imported do
     site
     |> Imported.Base.query_imported(query)
     |> select_merge([i], %{total_visitors: fragment("sum(?)", i.visitors)})
-  end
-
-  defp maybe_apply_filter(q, query, property, dim) do
-    case Query.get_filter(query, property) do
-      [:member, _, list] -> where(q, [i], field(i, ^dim) in ^list)
-      _ -> q
-    end
   end
 
   defp select_imported_metrics(q, []), do: q

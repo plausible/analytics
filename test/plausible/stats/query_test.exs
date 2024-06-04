@@ -278,5 +278,143 @@ defmodule Plausible.Stats.QueryTest do
                  "property" => "event:props:url"
                })
     end
+
+    test "is false when breaking down by url but with a mismatched special goal filter",
+         %{site: site} do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: false} =
+               Query.from(site, %{
+                 "period" => "day",
+                 "with_imported" => "true",
+                 "property" => "event:props:url",
+                 "filters" => Jason.encode!(%{"goal" => "404"})
+               })
+    end
+
+    test "is false when breaking down by url but with a special goal filter and an arbitrary filter",
+         %{site: site} do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: false} =
+               Query.from(site, %{
+                 "period" => "day",
+                 "with_imported" => "true",
+                 "property" => "event:props:url",
+                 "filters" =>
+                   Jason.encode!(%{"goal" => "Outbound Link: Click", "page" => "/example"})
+               })
+    end
+
+    for property <- [nil, "event:goal", "event:name"] do
+      test "is true when filtering by custom prop and special goal when breakdown prop is #{property}",
+           %{site: site} do
+        insert(:site_import, site: site)
+        site = Plausible.Imported.load_import_data(site)
+
+        assert %{include_imported: true} =
+                 Query.from(site, %{
+                   "period" => "day",
+                   "with_imported" => "true",
+                   "property" => unquote(property),
+                   "filters" =>
+                     Jason.encode!(%{
+                       "goal" => "Outbound Link: Click",
+                       "props" => %{"url" => "https://example.com"}
+                     })
+                 })
+      end
+    end
+
+    test "is true when filtering by matching multiple custom prop values and special goal", %{
+      site: site
+    } do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: true} =
+               Query.from(site, %{
+                 "period" => "day",
+                 "with_imported" => "true",
+                 "property" => nil,
+                 "filters" =>
+                   Jason.encode!(%{
+                     "goal" => "Outbound Link: Click",
+                     "props" => %{"url" => "https://example.com|https://another.example.com"}
+                   })
+               })
+    end
+
+    test "is false when filtering by mismatched custom prop values and special goal", %{
+      site: site
+    } do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: false} =
+               Query.from(site, %{
+                 "period" => "day",
+                 "with_imported" => "true",
+                 "property" => nil,
+                 "filters" =>
+                   Jason.encode!(%{
+                     "goal" => "Outbound Link: Click",
+                     "props" => %{"url" => "https://example.com", "path" => "/whatever"}
+                   })
+               })
+    end
+
+    test "is false with a custom prop + mismatched special goal filter",
+         %{site: site} do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: false} =
+               Query.from(site, %{
+                 "period" => "day",
+                 "with_imported" => "true",
+                 "property" => nil,
+                 "filters" =>
+                   Jason.encode!(%{"goal" => "404", "props" => %{"url" => "https://example.com"}})
+               })
+    end
+
+    test "is false with a custom prop + required goal + arbitrary filter",
+         %{site: site} do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: false} =
+               Query.from(site, %{
+                 "period" => "day",
+                 "with_imported" => "true",
+                 "property" => nil,
+                 "filters" =>
+                   Jason.encode!(%{
+                     "goal" => "Outbound Link: Click",
+                     "page" => "/example",
+                     "props" => %{"url" => "https://example.com"}
+                   })
+               })
+    end
+
+    test "is false with a custom prop filter and non-matching property", %{site: site} do
+      insert(:site_import, site: site)
+      site = Plausible.Imported.load_import_data(site)
+
+      assert %{include_imported: false} =
+               Query.from(site, %{
+                 "period" => "day",
+                 "with_imported" => "true",
+                 "property" => "visit:source",
+                 "filters" =>
+                   Jason.encode!(%{
+                     "goal" => "Outbound Link: Click",
+                     "props" => %{"url" => "https://example.com"}
+                   })
+               })
+    end
   end
 end
