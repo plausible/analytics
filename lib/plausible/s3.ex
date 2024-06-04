@@ -122,16 +122,14 @@ defmodule Plausible.S3 do
     new_buffer = [prev_buffer | data]
 
     if new_buffer_size > min_part_size do
-      # NOTE: PR to make ExAws.Operation.ExAws.Operation.S3.put_content_length_header/3 accept iodata
-      {:cont, IO.iodata_to_binary(new_buffer), %{acc | buffer_size: 0, buffer: []}}
+      {:cont, new_buffer, %{acc | buffer_size: 0, buffer: []}}
     else
       {:cont, %{acc | buffer_size: new_buffer_size, buffer: new_buffer}}
     end
   end
 
   defp flush_leftovers(acc) do
-    # NOTE: PR to make ExAws.Operation.ExAws.Operation.S3.put_content_length_header/3 accept iodata
-    {:cont, IO.iodata_to_binary(acc.buffer), %{acc | buffer_size: 0, buffer: []}}
+    {:cont, acc.buffer, %{acc | buffer_size: 0, buffer: []}}
   end
 
   @doc """
