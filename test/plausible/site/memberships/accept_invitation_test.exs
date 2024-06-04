@@ -1,12 +1,11 @@
 defmodule Plausible.Site.Memberships.AcceptInvitationTest do
-  use Plausible
   require Plausible.Billing.Subscription.Status
   use Plausible.DataCase, async: true
   use Bamboo.Test
 
   alias Plausible.Site.Memberships.AcceptInvitation
 
-  @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
+  @subject_prefix if Plausible.ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
   describe "transfer_ownership/3" do
     test "transfers ownership successfully" do

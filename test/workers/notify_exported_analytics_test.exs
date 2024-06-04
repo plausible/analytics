@@ -1,5 +1,4 @@
 defmodule Plausible.Workers.NotifyExportedAnalyticsTest do
-  use Plausible
   use Plausible.DataCase
   use Bamboo.Test
 
@@ -15,7 +14,7 @@ defmodule Plausible.Workers.NotifyExportedAnalyticsTest do
       job =
         Plausible.Workers.NotifyExportedAnalytics.new(%{
           "status" => "failure",
-          "storage" => on_ee(do: "s3", else: "local"),
+          "storage" => if(Plausible.ee?(), do: "s3", else: "local"),
           "email_to" => user.email,
           "site_id" => site.id
         })

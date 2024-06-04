@@ -8,7 +8,7 @@
   Unfortunately, your Google Analytics import for <%= @site_import.site.domain %> did not complete successfully. Sorry about that!
   <br /><br />
   Please try to do the import once again. Sometimes the Google Analytics API just randomly returns empty data. It's intermittent and random. Trying to do the import again may return what you need.
-  <%= if ee?() do %>
+  <%= if Plausible.ee?() do %>
     <br /> <br />
     Please reply to this email to let us know if you're still experiencing issues with the import.
   <% end %>

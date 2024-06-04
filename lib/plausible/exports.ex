@@ -3,7 +3,6 @@ defmodule Plausible.Exports do
   Contains functions to export data for events and sessions as Zip archives.
   """
 
-  use Plausible
   use Plausible.Stats.Fragments
   import Ecto.Query
 
@@ -245,7 +244,7 @@ defmodule Plausible.Exports do
     }
   end
 
-  on_ee do
+  if Plausible.ee?() do
     defp sampled(table) do
       Plausible.Stats.Sampling.add_query_hint(from(table))
     end

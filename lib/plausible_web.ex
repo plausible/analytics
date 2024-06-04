@@ -1,7 +1,7 @@
 defmodule PlausibleWeb do
   def live_view(opts \\ []) do
     quote do
-      use Plausible
+      # use Plausible
       use Phoenix.LiveView, global_prefixes: ~w(x-)
       use PlausibleWeb.Live.Flash
 

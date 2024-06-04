@@ -1,5 +1,5 @@
 <div x-data="{disable2FAOpen: false, regenerate2FAOpen: false}">
-  <%= if ee?() do %>
+  <%= if Plausible.ee?() do %>
     <div class="max-w-2xl px-8 pt-4 pb-8 mx-auto mt-24 bg-white border-t-2 border-orange-200 rounded rounded-t-none shadow-md dark:bg-gray-800 dark:border-orange-200 ">
       <div class="flex flex-wrap justify-between">
         <h2 class="text-xl font-black dark:text-gray-100 w-max mr-4 mt-2">Subscription Plan</h2>

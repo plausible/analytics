@@ -1,9 +1,8 @@
 defmodule Plausible.Site.Memberships.RejectInvitationTest do
-  use Plausible
   use Plausible.DataCase, async: true
   use Bamboo.Test
 
-  @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
+  @subject_prefix if Plausible.ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
   alias Plausible.Site.Memberships.RejectInvitation
 

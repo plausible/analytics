@@ -3,7 +3,6 @@ defmodule Plausible.Plugins.API.Goals do
   Plugins API context module for Goals.
   All high level Goal operations should be implemented here.
   """
-  use Plausible
 
   import Ecto.Query
   import Plausible.Pagination

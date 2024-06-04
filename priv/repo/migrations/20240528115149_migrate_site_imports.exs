@@ -1,9 +1,8 @@
 defmodule Plausible.Repo.Migrations.MigrateSiteImports do
-  use Plausible
   use Ecto.Migration
 
   def up do
-    if ce?() do
+    if Plausible.ce?() do
       Plausible.DataMigration.SiteImports.run(dry_run?: false)
     end
   end

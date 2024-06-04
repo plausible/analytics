@@ -1,9 +1,8 @@
 defmodule Plausible.Site.AdminTest do
-  use Plausible
   use Plausible.DataCase, async: true
   use Bamboo.Test
 
-  @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
+  @subject_prefix if Plausible.ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
   setup do
     admin_user = insert(:user)

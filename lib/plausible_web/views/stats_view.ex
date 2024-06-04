@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.StatsView do
   use PlausibleWeb, :view
-  use Plausible
 
   def plausible_url do
     PlausibleWeb.Endpoint.url()

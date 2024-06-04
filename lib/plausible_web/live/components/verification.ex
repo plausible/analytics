@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Live.Components.Verification do
   and diagnostics.
   """
   use Phoenix.LiveComponent
-  use Plausible
 
   import PlausibleWeb.Components.Generic
 
@@ -99,7 +98,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
         }
         class="mt-auto text-sm"
       >
-        <%= if ee?() and @finished? and not @success? and @attempts >= 3 do %>
+        <%= if Plausible.ee?() and @finished? and not @success? and @attempts >= 3 do %>
           Need further help with your integration? Do
           <.styled_link href="https://plausible.io/contact">
             contact us

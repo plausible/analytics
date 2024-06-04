@@ -1,10 +1,9 @@
 defmodule Plausible.Site.Memberships.CreateInvitationTest do
   alias Plausible.Site.Memberships.CreateInvitation
-  use Plausible
   use Plausible.DataCase
   use Bamboo.Test
 
-  @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
+  @subject_prefix if Plausible.ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
   describe "create_invitation/4" do
     test "creates an invitation" do

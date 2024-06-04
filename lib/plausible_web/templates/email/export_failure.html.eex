@@ -2,4 +2,4 @@ Your <%= Plausible.product_name() %> export for <%= @site.domain %> has encounte
 Sorry for the trouble this may have caused.
 <br/><br/>
 Please attempt to export your data again.
-<%= if ee?() do %>Should the problem persist, do reply to this email so we can assist. Thanks!<% end %>
+<%= if Plausible.ee?() do %>Should the problem persist, do reply to this email so we can assist. Thanks!<% end %>

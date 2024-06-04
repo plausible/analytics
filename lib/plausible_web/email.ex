@@ -1,5 +1,4 @@
 defmodule PlausibleWeb.Email do
-  use Plausible
   use Bamboo.Phoenix, view: PlausibleWeb.EmailView
   import Bamboo.PostmarkHelper
 

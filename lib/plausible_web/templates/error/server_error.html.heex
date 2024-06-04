@@ -22,14 +22,14 @@
         <div class="ml-3">
           <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-400">
             There has been a server error.
-            <%= if ee?() do %>
+            <%= if Plausible.ee?() do %>
               But don't worry, we're on it!
             <% end %>
           </h3>
 
           <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
             <p>
-              <%= if assigns[:trace_id] && ee?() do %>
+              <%= if assigns[:trace_id] && Plausible.ee?() do %>
                 If you would like to help, tell us what you were trying to do. Our development team will receive your report.
               <% else %>
                 We have been notified.
@@ -40,7 +40,7 @@
       </div>
     </div>
 
-    <%= if ee?() do %>
+    <%= if Plausible.ee?() do %>
       <%= if assigns[:trace_id] do %>
         <div class="my-6">
           <%= form_for :error, Routes.error_report_path(PlausibleWeb.Endpoint, :submit_error_report), fn f -> %>

@@ -1,5 +1,4 @@
 defmodule Plausible.Billing do
-  use Plausible
   use Plausible.Repo
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscriptions

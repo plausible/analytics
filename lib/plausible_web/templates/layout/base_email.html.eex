@@ -4,7 +4,7 @@
 <%= @inner_content %>
 <br /><br />
 
-<%= if ee?() do %>Regards,<br />
+<%= if Plausible.ee?() do %>Regards,<br />
 The Plausible Team 💌
 <br /><br /><% end %>
 
@@ -12,4 +12,4 @@ The Plausible Team 💌
 <br /><br />
 <%= link(plausible_url(), to: plausible_url()) %><br />
 
-<%= if ee?() do %>{{{ pm:unsubscribe }}}<% end %>
+<%= if Plausible.ee?() do %>{{{ pm:unsubscribe }}}<% end %>
