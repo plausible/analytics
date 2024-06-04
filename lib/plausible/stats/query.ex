@@ -208,9 +208,9 @@ defmodule Plausible.Stats.Query do
   end
 
   @spec set_dimensions(t(), list(String.t())) :: t()
-  def set_dimensions(query, property) do
+  def set_dimensions(query, dimensions) do
     query
-    |> struct!(query, property: property)
+    |> struct!(query, dimensions: dimensions)
     |> refresh_imported_opts()
   end
 
