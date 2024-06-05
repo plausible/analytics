@@ -2,12 +2,10 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
   use Plausible
 
   import Ecto.Query
+  import Plausible.Stats.Imported
 
   alias Plausible.Stats.{Base, Query, TableDecider, Filters}
   alias Plausible.Stats.Ecto.Expression
-
-  @no_ref "Direct / None"
-  @not_set "(not set)"
 
   def build(query, site) do
     {event_metrics, sessions_metrics, _other_metrics} =
@@ -37,6 +35,7 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     |> join_sessions_if_needed(site, query)
     |> build_group_by(query)
     |> build_order_by(query)
+    |> merge_imported(site, query, event_metrics)
     |> Base.maybe_add_conversion_rate(site, query, event_metrics)
   end
 
@@ -78,6 +77,7 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     |> join_events_if_needed(site, query)
     |> build_group_by(query)
     |> build_order_by(query)
+    |> merge_imported(site, query, session_metrics)
   end
 
   def join_events_if_needed(q, site, query) do

@@ -31,7 +31,7 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  defp query_events(site, query) do
+  def query_events(site, query) do
     q = from(e in "events_v2", where: ^Filters.WhereBuilder.build(:events, site, query))
 
     on_ee do
