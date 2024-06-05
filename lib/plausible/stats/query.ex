@@ -45,6 +45,12 @@ defmodule Plausible.Stats.Query do
     query
   end
 
+  def build(site, params) do
+    with {:ok, query_data} <- Filters.QueryParser.parse(site, params) do
+      {:ok, struct!(__MODULE__, Map.to_list(query_data))}
+    end
+  end
+
   defp put_experimental_session_count(query, site, params) do
     if Map.has_key?(params, "experimental_session_count") do
       struct!(query,

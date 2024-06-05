@@ -1,5 +1,6 @@
 defmodule Plausible.Stats do
   use Plausible
+  use Plausible.ClickhouseRepo
 
   alias Plausible.Stats.{
     Breakdown,
@@ -31,6 +32,16 @@ defmodule Plausible.Stats do
     CurrentVisitors.current_visitors(site)
   end
 
+  def query(site, query) do
+    optimized_query = Plausible.Stats.QueryOptimizer.optimize(query)
+    {event_q, session_q} = Plausible.Stats.Ecto.QueryBuilder.build(optimized_query, site)
+
+    Plausible.ClickhouseRepo.parallel_tasks([
+      run_query_task(event_q),
+      run_query_task(session_q)
+    ])
+  end
+
   on_ee do
     def funnel(site, query, funnel) do
       include_sentry_replay_info()
@@ -42,4 +53,7 @@ defmodule Plausible.Stats do
     include_sentry_replay_info()
     FilterSuggestions.filter_suggestions(site, query, filter_name, filter_search)
   end
+
+  defp run_query_task(nil), do: fn -> %{} end
+  defp run_query_task(q), do: fn -> ClickhouseRepo.one(q) end
 end

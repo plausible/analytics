@@ -3,10 +3,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   alias Plausible.Stats.Filters
 
-  def parse(params) when is_map(params) do
+  def parse(site, params) when is_map(params) do
     with {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
-         {:ok, date_range} <- parse_date_range(Map.get(params, "date_range")),
+         {:ok, date_range} <- parse_date_range(site, Map.get(params, "date_range")),
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          query = %{
@@ -86,16 +86,22 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{inspect(filter)}'"}
 
-  defp parse_date_range("day"), do: {:ok, "day"}
-  defp parse_date_range("7d"), do: {:ok, "7d"}
-  defp parse_date_range("30d"), do: {:ok, "30d"}
-  defp parse_date_range("month"), do: {:ok, "month"}
-  defp parse_date_range("6mo"), do: {:ok, "6mo"}
-  defp parse_date_range("12mo"), do: {:ok, "6mo"}
-  defp parse_date_range("year"), do: {:ok, "year"}
-  defp parse_date_range("all"), do: {:ok, "all"}
+  defp parse_date_range(_site, "day"), do: {:ok, "day"}
+  defp parse_date_range(_site, "7d"), do: {:ok, "7d"}
+  defp parse_date_range(_site, "30d"), do: {:ok, "30d"}
+  defp parse_date_range(_site, "month"), do: {:ok, "month"}
+  defp parse_date_range(_site, "6mo"), do: {:ok, "6mo"}
+  defp parse_date_range(_site, "12mo"), do: {:ok, "6mo"}
+  defp parse_date_range(_site, "year"), do: {:ok, "year"}
 
-  defp parse_date_range([from_date_string, to_date_string])
+  defp parse_date_range(site, "all") do
+    now = Timex.now(site.timezone) |> Timex.to_date()
+    start_date = Plausible.Sites.stats_start_date(site) || now
+
+    {:ok, Date.range(start_date, now)}
+  end
+
+  defp parse_date_range(_site, [from_date_string, to_date_string])
        when is_bitstring(from_date_string) and is_bitstring(to_date_string) do
     with {:ok, from_date} <- Date.from_iso8601(from_date_string),
          {:ok, to_date} <- Date.from_iso8601(to_date_string) do
@@ -105,7 +111,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp parse_date_range(unknown), do: {:error, "Invalid date range '#{inspect(unknown)}'"}
+  defp parse_date_range(_site, unknown), do: {:error, "Invalid date range '#{inspect(unknown)}'"}
 
   defp parse_dimensions(dimensions) when is_list(dimensions) do
     if length(dimensions) == length(Enum.uniq(dimensions)) do
