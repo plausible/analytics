@@ -55,5 +55,5 @@ defmodule Plausible.Stats do
   end
 
   defp run_query_task(nil), do: fn -> %{} end
-  defp run_query_task(q), do: fn -> ClickhouseRepo.one(q) end
+  defp run_query_task(q), do: fn -> ClickhouseRepo.all(q) end
 end

@@ -14,7 +14,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
            filters: filters,
            date_range: date_range,
            dimensions: dimensions,
-           order_by: order_by
+           order_by: order_by,
+           timezone: site.timezone
          },
          :ok <- validate_order_by(query) do
       {:ok, query}
@@ -117,7 +118,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     if length(dimensions) == length(Enum.uniq(dimensions)) do
       parse_list(
         dimensions,
-        &parse_filter_key_string(&1, "Invalid dimensions '#{inspect(dimensions)}'")
+        &parse_dimension_entry(&1, "Invalid dimensions '#{inspect(dimensions)}'")
       )
     else
       {:error, "Some dimensions are listed multiple times"}
@@ -134,19 +135,41 @@ defmodule Plausible.Stats.Filters.QueryParser do
   def parse_order_by(order_by), do: {:error, "Invalid order_by '#{inspect(order_by)}'"}
 
   def parse_order_by_entry(entry) do
-    with {:ok, metric_or_dimension} <- parse_metric_or_dimension(entry),
+    with {:ok, value} <- parse_metric_or_dimension(entry),
          {:ok, order_direction} <- parse_order_direction(entry) do
-      {:ok, {metric_or_dimension, order_direction}}
+      {:ok, {value, order_direction}}
     end
   end
 
-  def parse_metric_or_dimension([metric_or_dimension, _] = entry) do
-    case {parse_metric(metric_or_dimension), parse_filter_key_string(metric_or_dimension)} do
-      {{:ok, metric}, _} -> {:ok, metric}
-      {_, {:ok, dimension}} -> {:ok, dimension}
+  def parse_dimension_entry(key, error_message) do
+    case {
+      parse_time(key),
+      parse_filter_key_string(key)
+    } do
+      {{:ok, time}, _} -> {:ok, time}
+      {_, {:ok, filter_key}} -> {:ok, filter_key}
+      _ -> {:error, error_message}
+    end
+  end
+
+  def parse_metric_or_dimension([value, _] = entry) do
+    case {
+      parse_time(value),
+      parse_metric(value),
+      parse_filter_key_string(value)
+    } do
+      {{:ok, time}, _, _} -> {:ok, time}
+      {_, {:ok, metric}, _} -> {:ok, metric}
+      {_, _, {:ok, dimension}} -> {:ok, dimension}
       _ -> {:error, "Invalid order_by entry '#{inspect(entry)}'"}
     end
   end
+
+  def parse_time("time"), do: {:ok, "time"}
+  def parse_time("time:day"), do: {:ok, "time:day"}
+  def parse_time("time:week"), do: {:ok, "time:week"}
+  def parse_time("time:month"), do: {:ok, "time:month"}
+  def parse_time("time:year"), do: {:ok, "time:year"}
 
   def parse_order_direction([_, "asc"]), do: {:ok, :asc}
   def parse_order_direction([_, "desc"]), do: {:ok, :desc}
