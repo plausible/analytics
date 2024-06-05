@@ -143,7 +143,7 @@ export default function VisitorGraph(props) {
           <div className="absolute right-4 -top-8 py-1 flex items-center">
             {!isRealtime && <StatsExport site={site} query={query} />}
             <SamplingNotice samplePercent={topStatData}/>
-            <WithImportedSwitch site={site} topStatData={topStatData} />
+            <WithImportedSwitch query={query} info={topStatData && topStatData.with_imported_switch} />
             <IntervalPicker site={site} query={query} onIntervalUpdate={onIntervalUpdate} />
           </div>
           <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} query={query} />

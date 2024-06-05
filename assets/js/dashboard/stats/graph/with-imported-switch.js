@@ -3,36 +3,27 @@ import { parseNaiveDate, isBefore } from '../../util/date'
 import { Link } from 'react-router-dom'
 import * as url from '../../util/url'
 import { BarsArrowUpIcon } from '@heroicons/react/20/solid'
+import classNames from "classnames"
 
-export default function WithImportedSwitch({site, topStatData}) {
-  if (!topStatData?.imports_exist) {
-    return null
-  }
+export default function WithImportedSwitch({query, info}) {
+  if (info && info.visible) {
+    const {togglable, tooltip_msg} = info
+    const enabled = togglable && query.with_imported
+    const target = url.setQuery('with_imported', (!enabled).toString())
 
-  function isBeforeNativeStats(date) {
-    if (!date) return false
-
-    const nativeStatsBegin = parseNaiveDate(site.nativeStatsBegin)
-    const parsedDate = parseNaiveDate(date)
-
-    return isBefore(parsedDate, nativeStatsBegin, "day")
-  }
-
-  const isQueryingImportedPeriod = isBeforeNativeStats(topStatData.from)
-  const isComparingImportedPeriod = isBeforeNativeStats(topStatData.comparing_from)
-
-  if (isQueryingImportedPeriod || isComparingImportedPeriod) {
-    const withImported = topStatData.includes_imported;
-    const toggleColor = withImported ? " dark:text-gray-300 text-gray-700" : " dark:text-gray-500 text-gray-400"
-    const target = url.setQuery('with_imported', (!withImported).toString())
-    const tip = withImported ? "" : "do not ";
-
+    const linkClass = classNames({
+      "dark:text-gray-300 text-gray-700": enabled,
+      "dark:text-gray-500 text-gray-400": !enabled,
+      "cursor-pointer": togglable,
+      "pointer-events-none": !togglable,
+    })
+    
     return (
-      <Link to={target} className="w-4 h-4 mx-2">
-        <div tooltip={`Stats ${tip}include imported data.`} className="cursor-pointer w-4 h-4">
-          <BarsArrowUpIcon className={"absolute " + toggleColor} />
-        </div>
-      </Link>
+      <div tooltip={tooltip_msg} className="w-4 h-4 mx-2">
+        <Link to={target} className={linkClass}>
+          <BarsArrowUpIcon className="mt-0.5"/>
+        </Link>
+      </div>
     )
   } else {
     return null
