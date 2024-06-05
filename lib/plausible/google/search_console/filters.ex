@@ -39,7 +39,7 @@ defmodule Plausible.Google.SearchConsole.Filters do
   end
 
   defp transform_filter(_property, [:is, "visit:screen", devices]) when is_list(devices) do
-    expression = devices |> Enum.map(&search_console_device/1) |> Enum.join("|")
+    expression = Enum.map_join(devices, "|", &search_console_device/1)
     %{dimension: "device", operator: "includingRegex", expression: expression}
   end
 

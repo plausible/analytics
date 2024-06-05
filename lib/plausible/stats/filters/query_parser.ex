@@ -1,4 +1,6 @@
 defmodule Plausible.Stats.Filters.QueryParser do
+  @moduledoc false
+
   alias Plausible.Stats.Filters
 
   def parse(params) when is_map(params) do
