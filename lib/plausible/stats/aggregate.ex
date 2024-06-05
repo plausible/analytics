@@ -46,25 +46,6 @@ defmodule Plausible.Stats.Aggregate do
   defp run_query_task(nil), do: fn -> %{} end
   defp run_query_task(q), do: fn -> ClickhouseRepo.one(q) end
 
-  defp aggregate_events(_, _, []), do: %{}
-
-  defp aggregate_events(site, query, metrics) do
-    from(e in base_event_query(site, query), select: ^select_event_metrics(metrics))
-    |> merge_imported(site, query, metrics)
-    |> maybe_add_conversion_rate(site, query, metrics)
-    |> ClickhouseRepo.one()
-  end
-
-  defp aggregate_sessions(_, _, []), do: %{}
-
-  defp aggregate_sessions(site, query, metrics) do
-    from(e in query_sessions(site, query), select: ^select_session_metrics(metrics, query))
-    |> filter_converted_sessions(site, query)
-    |> merge_imported(site, query, metrics)
-    |> ClickhouseRepo.one()
-    |> Util.keep_requested_metrics(metrics)
-  end
-
   defp aggregate_time_on_page(site, query) do
     windowed_pages_q =
       from e in base_event_query(site, Query.remove_filters(query, ["event:page"])),
