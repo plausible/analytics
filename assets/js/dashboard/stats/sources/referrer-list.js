@@ -6,16 +6,14 @@ import ListReport from '../reports/list'
 import ImportedQueryUnsupportedWarning from '../../stats/imported-query-unsupported-warning'
 
 export default function Referrers({source, site, query}) {
-  const [importedQueryUnsupported, setImportedQueryUnsupported] = useState(false)
+  const [skipImportedReason, setSkipImportedReason] = useState(null)
 
   function fetchReferrers() {
     return api.get(url.apiPath(site, `/referrers/${encodeURIComponent(source)}`), query, {limit: 9})
   }
 
   function afterFetchReferrers(apiResponse) {
-    const unsupportedQuery = apiResponse.skip_imported_reason === 'unsupported_query'
-    const isRealtime = query.period === 'realtime'
-    setImportedQueryUnsupported(unsupportedQuery && !isRealtime)
+    setSkipImportedReason(apiResponse.skip_imported_reason)
   }
 
   function externalLinkDest(referrer) {
@@ -46,7 +44,7 @@ export default function Referrers({source, site, query}) {
     <div className="flex flex-col flex-grow">
       <div className="flex gap-x-1">
         <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
-        <ImportedQueryUnsupportedWarning condition={importedQueryUnsupported}/>
+        <ImportedQueryUnsupportedWarning skipImportedReason={skipImportedReason}/>
       </div>
       <ListReport
         fetchData={fetchReferrers}

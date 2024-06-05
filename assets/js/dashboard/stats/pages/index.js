@@ -111,7 +111,7 @@ export default function Pages(props) {
   const tabKey = `pageTab__${site.domain}`
   const storedTab = storage.getItem(tabKey)
   const [mode, setMode] = useState(storedTab || 'pages')
-  const [importedQueryUnsupported, setImportedQueryUnsupported] = useState(false)
+  const [skipImportedReason, setSkipImportedReason] = useState(null)
 
   function switchTab(mode) {
     storage.setItem(tabKey, mode)
@@ -119,9 +119,7 @@ export default function Pages(props) {
   }
 
   function afterFetchData(apiResponse) {
-    const unsupportedQuery = apiResponse.skip_imported_reason === 'unsupported_query'
-    const isRealtime = query.period === 'realtime'
-    setImportedQueryUnsupported(unsupportedQuery && !isRealtime)
+    setSkipImportedReason(apiResponse.skip_imported_reason)
   }
 
   function renderContent() {
@@ -168,7 +166,7 @@ export default function Pages(props) {
           <h3 className="font-bold dark:text-gray-100">
             {labelFor[mode] || 'Page Visits'}
           </h3>
-          <ImportedQueryUnsupportedWarning condition={importedQueryUnsupported}/>
+          <ImportedQueryUnsupportedWarning skipImportedReason={skipImportedReason} />
         </div>
         <div className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
           {renderPill('Top Pages', 'pages')}

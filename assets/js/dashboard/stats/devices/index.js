@@ -167,7 +167,7 @@ export default function Devices(props) {
   const tabKey = `deviceTab__${site.domain}`
   const storedTab = storage.getItem(tabKey)
   const [mode, setMode] = useState(storedTab || 'browser')
-  const [importedQueryUnsupported, setImportedQueryUnsupported] = useState(false)
+  const [skipImportedReason, setSkipImportedReason] = useState(null)
 
   function switchTab(mode) {
     storage.setItem(tabKey, mode)
@@ -175,9 +175,7 @@ export default function Devices(props) {
   }
 
   function afterFetchData(apiResponse) {
-    const unsupportedQuery = apiResponse.skip_imported_reason === 'unsupported_query'
-    const isRealtime = query.period === 'realtime'
-    setImportedQueryUnsupported(unsupportedQuery && !isRealtime)
+    setSkipImportedReason(apiResponse.skip_imported_reason)
   }
 
   function renderContent() {
@@ -226,7 +224,7 @@ export default function Devices(props) {
       <div className="flex justify-between w-full">
         <div className="flex gap-x-1">
           <h3 className="font-bold dark:text-gray-100">Devices</h3>
-          <ImportedQueryUnsupportedWarning condition={importedQueryUnsupported}/>
+          <ImportedQueryUnsupportedWarning skipImportedReason={skipImportedReason}/>
         </div>
         <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
           {renderPill('Browser', 'browser')}

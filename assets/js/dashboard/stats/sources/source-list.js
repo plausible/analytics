@@ -90,7 +90,7 @@ export default function SourceList(props) {
   const tabKey = 'sourceTab__' + props.site.domain
   const storedTab = storage.getItem(tabKey)
   const [currentTab, setCurrentTab] = useState(storedTab || 'all')
-  const [importedQueryUnsupported, setImportedQueryUnsupported] = useState(false)
+  const [skipImportedReason, setSkipImportedReason] = useState(null)
 
   function setTab(tab) {
     return () => {
@@ -163,9 +163,7 @@ export default function SourceList(props) {
   }
 
   function afterFetchData(apiResponse) {
-    const unsupportedQuery = apiResponse.skip_imported_reason === 'unsupported_query'
-    const isRealtime = query.period === 'realtime'
-    setImportedQueryUnsupported(unsupportedQuery && !isRealtime)
+    setSkipImportedReason(apiResponse.skip_imported_reason)
   }
 
   return (
@@ -176,7 +174,7 @@ export default function SourceList(props) {
           <h3 className="font-bold dark:text-gray-100">
             Top Sources
           </h3>
-          <ImportedQueryUnsupportedWarning condition={importedQueryUnsupported}/>
+          <ImportedQueryUnsupportedWarning skipImportedReason={skipImportedReason}/>
         </div>
         {renderTabs()}
       </div>

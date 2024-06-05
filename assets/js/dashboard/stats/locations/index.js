@@ -125,7 +125,7 @@ export default class Locations extends React.Component {
     const storedTab = storage.getItem(this.tabKey)
     this.state = {
       mode: storedTab || 'map',
-      importedQueryUnsupported: false
+      skipImportedReason: null
     }
   }
 
@@ -163,9 +163,7 @@ export default class Locations extends React.Component {
   }
 
   afterFetchData(apiResponse) {
-    const unsupportedQuery = apiResponse.skip_imported_reason === 'unsupported_query'
-    const isRealtime = this.props.query.period === 'realtime'
-    this.setState({importedQueryUnsupported: unsupportedQuery && !isRealtime})
+    this.setState({skipImportedReason: apiResponse.skip_imported_reason})
   }
 
 	renderContent() {
@@ -213,7 +211,7 @@ export default class Locations extends React.Component {
             <h3 className="font-bold dark:text-gray-100">
               {labelFor[this.state.mode] || 'Locations'}
             </h3>
-            <ImportedQueryUnsupportedWarning condition={this.state.importedQueryUnsupported} />
+            <ImportedQueryUnsupportedWarning skipImportedReason={this.state.skipImportedReason} />
           </div>
           <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
             { this.renderPill('Map', 'map') }

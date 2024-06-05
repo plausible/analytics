@@ -48,7 +48,7 @@ export default function Behaviours(props) {
 
   const [showingPropsForGoalFilter, setShowingPropsForGoalFilter] = useState(false)
 
-  const [importedQueryUnsupported, setImportedQueryUnsupported] = useState(false)
+  const [skipImportedReason, setSkipImportedReason] = useState(null)
 
   const onGoalFilterClick = useCallback((e) => {
     const goalName = e.target.innerHTML
@@ -173,8 +173,7 @@ export default function Behaviours(props) {
   }
 
   function afterFetchData(apiResponse) {
-    const unsupportedQuery = apiResponse.skip_imported_reason === 'unsupported_query'
-    setImportedQueryUnsupported(unsupportedQuery && !isRealtime())
+    setSkipImportedReason(apiResponse.skip_imported_reason)
   }
 
   function renderConversions() {
@@ -332,6 +331,16 @@ export default function Behaviours(props) {
     }
   }
 
+  function renderImportedQueryUnsupportedWarning() {
+    if (mode === CONVERSIONS) {
+      return <ImportedQueryUnsupportedWarning skipImportedReason={skipImportedReason}/>
+    } else if (mode === PROPS) {
+      return <ImportedQueryUnsupportedWarning skipImportedReason={skipImportedReason} message="Imported data is unavailable in this view"/>
+    } else {
+      return <ImportedQueryUnsupportedWarning alt_condition={props.importedDataInView} message="Imported data is unavailable in this view"/>
+    }
+  }
+
   if (mode) {
     return (
       <div className="items-start justify-between block w-full mt-6 md:flex">
@@ -341,9 +350,7 @@ export default function Behaviours(props) {
               <h3 className="font-bold dark:text-gray-100">
                 {sectionTitle() + (isRealtime() ? ' (last 30min)' : '')}
               </h3>
-              <ImportedQueryUnsupportedWarning condition={mode === CONVERSIONS  && importedQueryUnsupported}/>
-              <ImportedQueryUnsupportedWarning condition={mode === PROPS && importedQueryUnsupported} message="Imported data is unavailable in this view"/>
-              <ImportedQueryUnsupportedWarning condition={mode === FUNNELS && props.importedDataInView} message="Imported data is unavailable in this view"/>
+              { renderImportedQueryUnsupportedWarning()}
             </div>
             {tabs()}
           </div>
