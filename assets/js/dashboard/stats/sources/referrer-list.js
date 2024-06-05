@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as api from '../../api'
 import * as url from '../../util/url'
 import { VISITORS_METRIC, maybeWithCR } from '../reports/metrics'
@@ -7,12 +7,16 @@ import ImportedQueryUnsupportedWarning from '../../stats/imported-query-unsuppor
 
 export default function Referrers({source, site, query}) {
   const [skipImportedReason, setSkipImportedReason] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => setLoading(true), [query])
 
   function fetchReferrers() {
     return api.get(url.apiPath(site, `/referrers/${encodeURIComponent(source)}`), query, {limit: 9})
   }
 
   function afterFetchReferrers(apiResponse) {
+    setLoading(false)
     setSkipImportedReason(apiResponse.skip_imported_reason)
   }
 
@@ -44,7 +48,7 @@ export default function Referrers({source, site, query}) {
     <div className="flex flex-col flex-grow">
       <div className="flex gap-x-1">
         <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
-        <ImportedQueryUnsupportedWarning query={query} skipImportedReason={skipImportedReason}/>
+        <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason}/>
       </div>
       <ListReport
         fetchData={fetchReferrers}

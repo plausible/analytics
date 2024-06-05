@@ -42,6 +42,7 @@ export default function Behaviours(props) {
   const funnelKey = `behavioursTabFunnel__${site.domain}`
   const [enabledModes, setEnabledModes] = useState(getEnabledModes())
   const [mode, setMode] = useState(defaultMode())
+  const [loading, setLoading] = useState(true)
 
   const [funnelNames, _setFunnelNames] = useState(site.funnels.map(({ name }) => name))
   const [selectedFunnel, setSelectedFunnel] = useState(defaultSelectedFunnel())
@@ -72,6 +73,8 @@ export default function Behaviours(props) {
   useEffect(() => {
     setMode(defaultMode())
   }, [enabledModes])
+
+  useEffect(() => setLoading(true), [query, mode])
 
   function disableMode(mode) {
     setEnabledModes(enabledModes.filter((m) => { return m !== mode }))
@@ -173,6 +176,7 @@ export default function Behaviours(props) {
   }
 
   function afterFetchData(apiResponse) {
+    setLoading(false)
     setSkipImportedReason(apiResponse.skip_imported_reason)
   }
 
@@ -333,11 +337,11 @@ export default function Behaviours(props) {
 
   function renderImportedQueryUnsupportedWarning() {
     if (mode === CONVERSIONS) {
-      return <ImportedQueryUnsupportedWarning query={query} skipImportedReason={skipImportedReason}/>
+      return <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason}/>
     } else if (mode === PROPS) {
-      return <ImportedQueryUnsupportedWarning query={query} skipImportedReason={skipImportedReason} message="Imported data is unavailable in this view"/>
+      return <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason} message="Imported data is unavailable in this view"/>
     } else {
-      return <ImportedQueryUnsupportedWarning alt_condition={props.importedDataInView} message="Imported data is unavailable in this view"/>
+      return <ImportedQueryUnsupportedWarning loading={loading} alt_condition={props.importedDataInView} message="Imported data is unavailable in this view"/>
     }
   }
 
