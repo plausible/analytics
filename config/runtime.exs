@@ -329,9 +329,11 @@ maybe_pg_ipv6 =
 db_cacertfile = get_var_from_path_or_env(config_dir, "DATABASE_CACERTFILE", CAStore.file_path())
 
 if is_nil(db_socket_dir) do
+  pg_socket_options = if maybe_pg_ipv6, do: [:inet6, :inet], else: []
+
   config :plausible, Plausible.Repo,
     url: db_url,
-    socket_options: if(maybe_pg_ipv6, do: [:inet6], else: []),
+    socket_options: pg_socket_options,
     ssl_opts: [
       cacertfile: db_cacertfile,
       verify: :verify_peer,
