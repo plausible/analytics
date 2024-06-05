@@ -44,7 +44,7 @@ export default function Referrers({source, site, query}) {
     <div className="flex flex-col flex-grow">
       <div className="flex gap-x-1">
         <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
-        <ImportedQueryUnsupportedWarning skipImportedReason={skipImportedReason}/>
+        <ImportedQueryUnsupportedWarning query={query} skipImportedReason={skipImportedReason}/>
       </div>
       <ListReport
         fetchData={fetchReferrers}

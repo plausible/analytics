@@ -211,7 +211,7 @@ export default class Locations extends React.Component {
             <h3 className="font-bold dark:text-gray-100">
               {labelFor[this.state.mode] || 'Locations'}
             </h3>
-            <ImportedQueryUnsupportedWarning skipImportedReason={this.state.skipImportedReason} />
+            <ImportedQueryUnsupportedWarning query={this.props.query} skipImportedReason={this.state.skipImportedReason} />
           </div>
           <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
             { this.renderPill('Map', 'map') }

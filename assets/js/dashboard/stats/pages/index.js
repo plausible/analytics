@@ -166,7 +166,7 @@ export default function Pages(props) {
           <h3 className="font-bold dark:text-gray-100">
             {labelFor[mode] || 'Page Visits'}
           </h3>
-          <ImportedQueryUnsupportedWarning skipImportedReason={skipImportedReason} />
+          <ImportedQueryUnsupportedWarning query={query} skipImportedReason={skipImportedReason} />
         </div>
         <div className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
           {renderPill('Top Pages', 'pages')}

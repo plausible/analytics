@@ -174,7 +174,7 @@ export default function SourceList(props) {
           <h3 className="font-bold dark:text-gray-100">
             Top Sources
           </h3>
-          <ImportedQueryUnsupportedWarning skipImportedReason={skipImportedReason}/>
+          <ImportedQueryUnsupportedWarning query={query} skipImportedReason={skipImportedReason}/>
         </div>
         {renderTabs()}
       </div>

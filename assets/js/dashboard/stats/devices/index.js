@@ -224,7 +224,7 @@ export default function Devices(props) {
       <div className="flex justify-between w-full">
         <div className="flex gap-x-1">
           <h3 className="font-bold dark:text-gray-100">Devices</h3>
-          <ImportedQueryUnsupportedWarning skipImportedReason={skipImportedReason}/>
+          <ImportedQueryUnsupportedWarning query={query} skipImportedReason={skipImportedReason}/>
         </div>
         <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
           {renderPill('Browser', 'browser')}
