@@ -341,7 +341,7 @@ export default function Behaviours(props) {
     } else if (mode === PROPS) {
       return <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason} message="Imported data is unavailable in this view"/>
     } else {
-      return <ImportedQueryUnsupportedWarning loading={loading} alt_condition={props.importedDataInView} message="Imported data is unavailable in this view"/>
+      return <ImportedQueryUnsupportedWarning alt_condition={props.importedDataInView} message="Imported data is unavailable in this view"/>
     }
   }
 
