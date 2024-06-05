@@ -11,10 +11,11 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     {event_metrics, sessions_metrics, _other_metrics} =
       TableDecider.partition_metrics(query.metrics, query)
 
-    {
+    join_query_results(
       build_events_query(site, query, event_metrics),
-      build_sessions_query(site, query, sessions_metrics)
-    }
+      build_sessions_query(site, query, sessions_metrics),
+      query
+    )
   end
 
   def build_events_query(_, _, []), do: nil
@@ -34,7 +35,7 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     q
     |> join_sessions_if_needed(site, query)
     |> build_group_by(query)
-    |> build_order_by(query)
+    # |> build_order_by(query)
     |> merge_imported(site, query, event_metrics)
     |> Base.maybe_add_conversion_rate(site, query, event_metrics)
   end
@@ -76,7 +77,7 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     q
     |> join_events_if_needed(site, query)
     |> build_group_by(query)
-    |> build_order_by(query)
+    # |> build_order_by(query)
     |> merge_imported(site, query, session_metrics)
   end
 
@@ -104,12 +105,12 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     end
   end
 
-  defp build_group_by(q, %Query{dimensions: nil}), do: q
-
   defp build_group_by(q, query) do
     Enum.reduce(query.dimensions, q, fn dimension, q ->
       q
-      |> select_merge(^%{dimension => Expression.dimension(dimension, query, :label)})
+      |> select_merge(
+        ^%{String.to_atom(dimension) => Expression.dimension(dimension, query, :label)}
+      )
       |> group_by(^Expression.dimension(dimension, query, :group_by))
     end)
   end
@@ -123,21 +124,23 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
       )
     end)
   end
+
+  defp join_query_results(nil, nil, _query), do: nil
+  defp join_query_results(events_q, nil, _query), do: events_q
+  defp join_query_results(nil, sessions_q, _query), do: sessions_q
+
+  defp join_query_results(events_q, sessions_q, query) do
+    join(subquery(events_q), :left, [e], s in subquery(sessions_q),
+      on: ^build_group_by_join(query)
+    )
+  end
+
+  defp build_group_by_join(%Query{dimensions: []}), do: true
+
+  defp build_group_by_join(query) do
+    query.dimensions
+    |> Enum.map(&String.to_atom/1)
+    |> Enum.map(fn dim -> dynamic([e, s], field(e, ^dim) == field(s, ^dim)) end)
+    |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
+  end
 end
-
-# alias Plausible.Stats.Query
-# alias Plausible.Stats.Ecto.QueryBuilder
-
-# site = Plausible.Repo.get_by(Plausible.Site, domain: "dummy.site")
-# query = (Query.from(site, %{"period" => "all"})
-#   |> Map.put(:dimensions, ["time:month", "event:props:amount"])
-#   |> Map.put(:order_by, [{"time:month", :desc}])
-#   |> Map.put(:timezone, site.timezone))
-
-# query2 = (Query.from(site, %{"period" => "all"})
-#   |> Map.put(:timezone, site.timezone))
-
-# q = QueryBuilder.build_events_query(site, query, [:events, :pageviews])
-# Plausible.ClickhouseRepo.all(q)
-
-# q = QueryBuilder.build_events_query(site, query2, [:events, :pageviews])
