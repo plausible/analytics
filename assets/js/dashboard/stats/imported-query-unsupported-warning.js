@@ -4,7 +4,7 @@ import FadeIn from "../fade-in";
 
 export default function ImportedQueryUnsupportedWarning({query, loading, skipImportedReason, alt_condition, message}) {
   const tooltipMessage = message || "Imported data is excluded due to applied filters"
-  const show = query && query.with_imported && skipImportedReason === "unsupported_query"
+  const show = query && query.with_imported && skipImportedReason === "unsupported_query" && query.period !== 'realtime'
 
   if (show || alt_condition) {
     return (
