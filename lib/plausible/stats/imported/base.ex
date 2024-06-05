@@ -143,8 +143,6 @@ defmodule Plausible.Stats.Imported.Base do
     end
   end
 
-  defp do_decide_custom_prop_table(_query), do: nil
-
   defp do_decide_custom_prop_table(query, property) do
     has_required_name_filter? =
       query.filters
