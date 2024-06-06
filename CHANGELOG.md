@@ -5,13 +5,19 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Snippet integration verification
-- Limited filtering support for imported data in the dashboard and via Stats API
-- Automatic sites.imported_data -> site_imports data migration in CE plausible/analytics#4155
-
 ### Removed
 
 ### Changed
+
+### Fixed
+
+## v2.1.1 - 2024-06-06
+
+### Added
+
+- Snippet integration verification
+- Limited filtering support for imported data in the dashboard and via Stats API
+- Automatic sites.imported_data -> site_imports data migration in CE plausible/analytics#4155
 
 ### Fixed
 
