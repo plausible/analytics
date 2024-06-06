@@ -5,7 +5,6 @@ import Historical from './historical'
 import Realtime from './realtime'
 import {parseQuery} from './query'
 import * as api from './api'
-import { withComparisonProvider } from './comparison-provider-hoc';
 
 export const statsBoxClass = "stats-item relative w-full mt-6 p-4 flex flex-col bg-white dark:bg-gray-825 shadow-xl rounded"
 
@@ -53,4 +52,4 @@ class Dashboard extends React.Component {
   }
 }
 
-export default withRouter(withComparisonProvider(Dashboard))
+export default withRouter(Dashboard)
