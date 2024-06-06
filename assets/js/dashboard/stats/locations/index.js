@@ -125,11 +125,12 @@ export default class Locations extends React.Component {
     const storedTab = storage.getItem(this.tabKey)
     this.state = {
       mode: storedTab || 'map',
-      importedQueryUnsupported: false
+      loading: true,
+      skipImportedReason: null
     }
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     const isRemovingFilter = (filterName) => {
       return getFiltersByKeyPrefix(prevProps.query, filterName).length > 0 &&
         getFiltersByKeyPrefix(this.props.query, filterName).length == 0
@@ -141,6 +142,10 @@ export default class Locations extends React.Component {
 
     if (this.state.mode === 'regions' && isRemovingFilter('country')) {
       this.setMode(this.countriesRestoreMode || 'countries')()
+    }
+
+    if (this.props.query !== prevProps.query || this.state.mode !== prevState.mode) {
+      this.setState({loading: true})
     }
   }
 
@@ -163,9 +168,7 @@ export default class Locations extends React.Component {
   }
 
   afterFetchData(apiResponse) {
-    const unsupportedQuery = apiResponse.skip_imported_reason === 'unsupported_query'
-    const isRealtime = this.props.query.period === 'realtime'
-    this.setState({importedQueryUnsupported: unsupportedQuery && !isRealtime})
+    this.setState({loading: false, skipImportedReason: apiResponse.skip_imported_reason})
   }
 
 	renderContent() {
@@ -213,7 +216,7 @@ export default class Locations extends React.Component {
             <h3 className="font-bold dark:text-gray-100">
               {labelFor[this.state.mode] || 'Locations'}
             </h3>
-            <ImportedQueryUnsupportedWarning condition={this.state.importedQueryUnsupported} />
+            <ImportedQueryUnsupportedWarning loading={this.state.loading} query={this.props.query} skipImportedReason={this.state.skipImportedReason} />
           </div>
           <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
             { this.renderPill('Map', 'map') }

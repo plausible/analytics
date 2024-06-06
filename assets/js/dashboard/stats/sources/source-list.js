@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 
 import * as storage from '../../util/storage'
 import * as url from '../../util/url'
@@ -90,7 +90,10 @@ export default function SourceList(props) {
   const tabKey = 'sourceTab__' + props.site.domain
   const storedTab = storage.getItem(tabKey)
   const [currentTab, setCurrentTab] = useState(storedTab || 'all')
-  const [importedQueryUnsupported, setImportedQueryUnsupported] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [skipImportedReason, setSkipImportedReason] = useState(null)
+
+  useEffect(() => setLoading(true), [query, currentTab])
 
   function setTab(tab) {
     return () => {
@@ -163,9 +166,8 @@ export default function SourceList(props) {
   }
 
   function afterFetchData(apiResponse) {
-    const unsupportedQuery = apiResponse.skip_imported_reason === 'unsupported_query'
-    const isRealtime = query.period === 'realtime'
-    setImportedQueryUnsupported(unsupportedQuery && !isRealtime)
+    setLoading(false)
+    setSkipImportedReason(apiResponse.skip_imported_reason)
   }
 
   return (
@@ -176,7 +178,7 @@ export default function SourceList(props) {
           <h3 className="font-bold dark:text-gray-100">
             Top Sources
           </h3>
-          <ImportedQueryUnsupportedWarning condition={importedQueryUnsupported}/>
+          <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason}/>
         </div>
         {renderTabs()}
       </div>
