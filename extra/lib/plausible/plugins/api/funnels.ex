@@ -19,11 +19,10 @@ defmodule Plausible.Plugins.API.Funnels do
           {:ok, Plausible.Funnel.t()}
           | {:error, Ecto.Changeset.t()}
           | {:error, :upgrade_required}
-  def create(site, funnel_create_request) do
-    # get_or_create_funnel
+  def create(site, create_request) do
     Repo.transaction(fn ->
-      with {:ok, goals} <- Plausible.Plugins.API.Goals.create(site, funnel_create_request.steps),
-           {:ok, funnel} <- get_or_create(site, funnel_create_request.name, goals) do
+      with {:ok, goals} <- Plausible.Plugins.API.Goals.create(site, create_request.funnel.steps),
+           {:ok, funnel} <- get_or_create(site, create_request.funnel.name, goals) do
         funnel
       else
         {:error, error} ->
@@ -56,7 +55,6 @@ defmodule Plausible.Plugins.API.Funnels do
     {:ok, paginate(query, params, cursor_fields: [{:id, :desc}])}
   end
 
-  #
   @spec get(Plausible.Site.t(), pos_integer() | String.t()) :: nil | Plausible.Funnel.t()
   def get(site, by) when is_integer(by) or is_binary(by) do
     Plausible.Funnels.get(site, by)

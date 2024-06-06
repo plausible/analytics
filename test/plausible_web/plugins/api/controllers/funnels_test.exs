@@ -199,6 +199,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
         url = Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :create)
 
         payload = %{
+          funnel: %{
           name: "My Test Funnel",
           steps: [
             %{
@@ -214,6 +215,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
               goal: %{event_name: "Purchase", currency: "EUR"}
             }
           ]
+          }
         }
 
         assert_request_schema(payload, "Funnel.CreateRequest", spec())
@@ -248,6 +250,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
         url = Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :create)
 
         payload = %{
+          funnel: %{
           name: "My Test Funnel",
           steps: [
             %{
@@ -259,6 +262,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
               goal: %{path: "/checkout"}
             }
           ]
+          }
         }
 
         assert_request_schema(payload, "Funnel.CreateRequest", spec())
@@ -279,6 +283,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
         url = Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :create)
 
         payload = %{
+          funnel: %{
           name: "My Test Funnel",
           steps: [
             %{
@@ -286,6 +291,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
               goal: %{event_name: "Signup"}
             }
           ]
+          }
         }
 
         resp =
@@ -306,6 +312,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
           Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
 
         payload = %{
+          funnel: %{
           name: "My Test Funnel",
           steps: [
             %{
@@ -321,6 +328,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
               goal: %{event_name: "Purchase", currency: "EUR"}
             }
           ]
+          }
         }
 
         assert_request_schema(payload, "Funnel.CreateRequest", spec())
@@ -356,6 +364,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
           Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "USD"})
 
         payload = %{
+          funnel: %{
           name: "My Test Funnel",
           steps: [
             %{
@@ -371,6 +380,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
               goal: %{event_name: "Purchase", currency: "EUR"}
             }
           ]
+          }
         }
 
         assert_request_schema(payload, "Funnel.CreateRequest", spec())
