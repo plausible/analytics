@@ -78,35 +78,11 @@ defmodule Plausible.Funnels do
   end
 
   def get(site_id, funnel_name) when is_integer(site_id) and is_binary(funnel_name) do
-    q =
-      from(f in Funnel,
-        where: f.site_id == ^site_id,
-        where: f.name == ^funnel_name,
-        inner_join: steps in assoc(f, :steps),
-        inner_join: goal in assoc(steps, :goal),
-        order_by: steps.step_order,
-        preload: [
-          steps: {steps, goal: goal}
-        ]
-      )
-
-    Repo.one(q)
+    site_id |> base_get_query() |> where([f], f.name == ^funnel_name) |> Repo.one()
   end
 
   def get(site_id, funnel_id) when is_integer(site_id) and is_integer(funnel_id) do
-    q =
-      from(f in Funnel,
-        where: f.site_id == ^site_id,
-        where: f.id == ^funnel_id,
-        inner_join: steps in assoc(f, :steps),
-        inner_join: goal in assoc(steps, :goal),
-        order_by: steps.step_order,
-        preload: [
-          steps: {steps, goal: goal}
-        ]
-      )
-
-    Repo.one(q)
+    site_id |> base_get_query() |> where([f], f.id == ^funnel_id) |> Repo.one()
   end
 
   @spec for_site_query(Plausible.Site.t(), Keyword.t()) :: Ecto.Query.t()
@@ -128,5 +104,17 @@ defmodule Plausible.Funnels do
         select: %{name: f.name, id: f.id, steps_count: count(steps)}
       )
     end
+  end
+
+  defp base_get_query(site_id) do
+    from(f in Funnel,
+      where: f.site_id == ^site_id,
+      inner_join: steps in assoc(f, :steps),
+      inner_join: goal in assoc(steps, :goal),
+      order_by: steps.step_order,
+      preload: [
+        steps: {steps, goal: goal}
+      ]
+    )
   end
 end
