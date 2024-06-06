@@ -30,7 +30,7 @@ jobs:
             type=ref,event=pr
             type=ref,event=branch
             type=ref,event=tag
-            type=sha
+            type=edge
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
