@@ -16,7 +16,9 @@ defmodule PlausibleWeb.Live.GoalSettings do
     socket =
       socket
       |> assign_new(:site, fn ->
-        Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+        user_id
+        |> Sites.get_for_user!(domain, [:owner, :admin, :super_admin])
+        |> Plausible.Imported.load_import_data()
       end)
       |> assign_new(:all_goals, fn %{site: site} ->
         Goals.for_site(site, preload_funnels?: true)
