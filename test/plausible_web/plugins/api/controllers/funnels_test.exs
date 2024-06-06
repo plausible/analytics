@@ -200,21 +200,21 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
 
         payload = %{
           funnel: %{
-          name: "My Test Funnel",
-          steps: [
-            %{
-              goal_type: "Goal.CustomEvent",
-              goal: %{event_name: "Signup"}
-            },
-            %{
-              goal_type: "Goal.Pageview",
-              goal: %{path: "/checkout"}
-            },
-            %{
-              goal_type: "Goal.Revenue",
-              goal: %{event_name: "Purchase", currency: "EUR"}
-            }
-          ]
+            name: "My Test Funnel",
+            steps: [
+              %{
+                goal_type: "Goal.CustomEvent",
+                goal: %{event_name: "Signup"}
+              },
+              %{
+                goal_type: "Goal.Pageview",
+                goal: %{path: "/checkout"}
+              },
+              %{
+                goal_type: "Goal.Revenue",
+                goal: %{event_name: "Purchase", currency: "EUR"}
+              }
+            ]
           }
         }
 
@@ -251,17 +251,17 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
 
         payload = %{
           funnel: %{
-          name: "My Test Funnel",
-          steps: [
-            %{
-              goal_type: "Goal.CustomEvent",
-              goal: %{event_name: "Signup"}
-            },
-            %{
-              goal_type: "Goal.Pageview",
-              goal: %{path: "/checkout"}
-            }
-          ]
+            name: "My Test Funnel",
+            steps: [
+              %{
+                goal_type: "Goal.CustomEvent",
+                goal: %{event_name: "Signup"}
+              },
+              %{
+                goal_type: "Goal.Pageview",
+                goal: %{path: "/checkout"}
+              }
+            ]
           }
         }
 
@@ -284,13 +284,13 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
 
         payload = %{
           funnel: %{
-          name: "My Test Funnel",
-          steps: [
-            %{
-              goal_type: "Goal.CustomEvent",
-              goal: %{event_name: "Signup"}
-            }
-          ]
+            name: "My Test Funnel",
+            steps: [
+              %{
+                goal_type: "Goal.CustomEvent",
+                goal: %{event_name: "Signup"}
+              }
+            ]
           }
         }
 
@@ -313,21 +313,21 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
 
         payload = %{
           funnel: %{
-          name: "My Test Funnel",
-          steps: [
-            %{
-              goal_type: "Goal.CustomEvent",
-              goal: %{event_name: "Signup"}
-            },
-            %{
-              goal_type: "Goal.Pageview",
-              goal: %{path: "/checkout"}
-            },
-            %{
-              goal_type: "Goal.Revenue",
-              goal: %{event_name: "Purchase", currency: "EUR"}
-            }
-          ]
+            name: "My Test Funnel",
+            steps: [
+              %{
+                goal_type: "Goal.CustomEvent",
+                goal: %{event_name: "Signup"}
+              },
+              %{
+                goal_type: "Goal.Pageview",
+                goal: %{path: "/checkout"}
+              },
+              %{
+                goal_type: "Goal.Revenue",
+                goal: %{event_name: "Purchase", currency: "EUR"}
+              }
+            ]
           }
         }
 
@@ -365,21 +365,21 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
 
         payload = %{
           funnel: %{
-          name: "My Test Funnel",
-          steps: [
-            %{
-              goal_type: "Goal.CustomEvent",
-              goal: %{event_name: "Signup"}
-            },
-            %{
-              goal_type: "Goal.Pageview",
-              goal: %{path: "/checkout"}
-            },
-            %{
-              goal_type: "Goal.Revenue",
-              goal: %{event_name: "Purchase", currency: "EUR"}
-            }
-          ]
+            name: "My Test Funnel",
+            steps: [
+              %{
+                goal_type: "Goal.CustomEvent",
+                goal: %{event_name: "Signup"}
+              },
+              %{
+                goal_type: "Goal.Pageview",
+                goal: %{path: "/checkout"}
+              },
+              %{
+                goal_type: "Goal.Revenue",
+                goal: %{event_name: "Purchase", currency: "EUR"}
+              }
+            ]
           }
         }
 
