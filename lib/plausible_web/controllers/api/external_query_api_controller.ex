@@ -5,7 +5,6 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
   alias Plausible.Stats.Query
 
   def query(conn, params) do
-    IO.inspect(params)
     site = Repo.preload(conn.assigns.site, :owner)
 
     with {:ok, query} <- Query.build(site, params) do
@@ -24,8 +23,6 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
   end
 
   defp send_json_error_response(conn, {:error, msg}) do
-    IO.inspect({:error, msg})
-
     conn
     |> put_status(400)
     |> json(%{error: msg})

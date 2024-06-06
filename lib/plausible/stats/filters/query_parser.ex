@@ -170,6 +170,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   def parse_time("time:week"), do: {:ok, "time:week"}
   def parse_time("time:month"), do: {:ok, "time:month"}
   def parse_time("time:year"), do: {:ok, "time:year"}
+  def parse_time(_), do: :error
 
   def parse_order_direction([_, "asc"]), do: {:ok, :asc}
   def parse_order_direction([_, "desc"]), do: {:ok, :desc}
