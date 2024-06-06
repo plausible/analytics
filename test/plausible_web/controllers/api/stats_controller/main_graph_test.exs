@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
 
       zeroes = List.duplicate(0, 30)
-      assert %{"plot" => ^zeroes, "with_imported" => false} = json_response(conn, 200)
+      assert %{"plot" => ^zeroes, "includes_imported" => false} = json_response(conn, 200)
     end
 
     test "displays visitors for a day with imported data", %{conn: conn, site: site} do
@@ -70,7 +70,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imports_exist" => true, "with_imported" => true} =
+      assert %{"plot" => plot, "imports_exist" => true, "includes_imported" => true} =
                json_response(conn, 200)
 
       assert plot == [2] ++ List.duplicate(0, 23)
@@ -137,7 +137,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imports_exist" => true, "with_imported" => true} =
+      assert %{"plot" => plot, "imports_exist" => true, "includes_imported" => true} =
                json_response(conn, 200)
 
       assert Enum.count(plot) == 31
@@ -158,7 +158,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imports_exist" => true, "with_imported" => true} =
+      assert %{"plot" => plot, "imports_exist" => true, "includes_imported" => true} =
                json_response(conn, 200)
 
       assert Enum.count(plot) == 31
@@ -1157,7 +1157,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                "plot" => plot,
                "comparison_plot" => comparison_plot,
                "imports_exist" => true,
-               "with_imported" => true
+               "includes_imported" => true
              } = json_response(conn, 200)
 
       assert 4 == Enum.sum(plot)
@@ -1203,7 +1203,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                "plot" => plot,
                "comparison_plot" => comparison_plot,
                "imports_exist" => true,
-               "with_imported" => false
+               "includes_imported" => false
              } = json_response(conn, 200)
 
       assert 4 == Enum.sum(plot)
@@ -1233,7 +1233,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                "plot" => this_week_plot,
                "comparison_plot" => last_week_plot,
                "imports_exist" => true,
-               "with_imported" => false
+               "includes_imported" => false
              } = json_response(conn, 200)
 
       assert this_week_plot == [50.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]

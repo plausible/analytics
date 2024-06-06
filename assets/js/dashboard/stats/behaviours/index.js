@@ -3,7 +3,7 @@ import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
-
+import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
 import GoalConversions, { specialTitleWhenGoalFilter } from './goal-conversions'
 import Properties from './props'
 import { FeatureSetupNotice } from '../../components/notice'
@@ -42,11 +42,14 @@ export default function Behaviours(props) {
   const funnelKey = `behavioursTabFunnel__${site.domain}`
   const [enabledModes, setEnabledModes] = useState(getEnabledModes())
   const [mode, setMode] = useState(defaultMode())
+  const [loading, setLoading] = useState(true)
 
   const [funnelNames, _setFunnelNames] = useState(site.funnels.map(({ name }) => name))
   const [selectedFunnel, setSelectedFunnel] = useState(defaultSelectedFunnel())
 
   const [showingPropsForGoalFilter, setShowingPropsForGoalFilter] = useState(false)
+
+  const [skipImportedReason, setSkipImportedReason] = useState(null)
 
   const onGoalFilterClick = useCallback((e) => {
     const goalName = e.target.innerHTML
@@ -70,6 +73,8 @@ export default function Behaviours(props) {
   useEffect(() => {
     setMode(defaultMode())
   }, [enabledModes])
+
+  useEffect(() => setLoading(true), [query, mode])
 
   function disableMode(mode) {
     setEnabledModes(enabledModes.filter((m) => { return m !== mode }))
@@ -170,9 +175,14 @@ export default function Behaviours(props) {
     )
   }
 
+  function afterFetchData(apiResponse) {
+    setLoading(false)
+    setSkipImportedReason(apiResponse.skip_imported_reason)
+  }
+
   function renderConversions() {
     if (site.hasGoals) {
-      return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} />
+      return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} afterFetchData={afterFetchData}/>
     }
     else if (adminAccess) {
       return (
@@ -224,7 +234,7 @@ export default function Behaviours(props) {
 
   function renderProps() {
     if (site.hasProps && site.propsAvailable) {
-      return <Properties site={site} query={query} />
+      return <Properties site={site} query={query} afterFetchData={afterFetchData}/>
     } else if (adminAccess) {
       let callToAction
 
@@ -325,14 +335,27 @@ export default function Behaviours(props) {
     }
   }
 
+  function renderImportedQueryUnsupportedWarning() {
+    if (mode === CONVERSIONS) {
+      return <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason}/>
+    } else if (mode === PROPS) {
+      return <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason} message="Imported data is unavailable in this view"/>
+    } else {
+      return <ImportedQueryUnsupportedWarning altCondition={props.importedDataInView} message="Imported data is unavailable in this view"/>
+    }
+  }
+
   if (mode) {
     return (
       <div className="items-start justify-between block w-full mt-6 md:flex">
         <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
           <div className="flex justify-between w-full">
-            <h3 className="font-bold dark:text-gray-100">
-              {sectionTitle() + (isRealtime() ? ' (last 30min)' : '')}
-            </h3>
+            <div className="flex gap-x-1">
+              <h3 className="font-bold dark:text-gray-100">
+                {sectionTitle() + (isRealtime() ? ' (last 30min)' : '')}
+              </h3>
+              { renderImportedQueryUnsupportedWarning()}
+            </div>
             {tabs()}
           </div>
           {renderContent()}

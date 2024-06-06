@@ -54,6 +54,12 @@ defmodule Plausible.Imported do
     @max_complete_imports
   end
 
+  @spec imported_custom_props() :: [String.t()]
+  def imported_custom_props do
+    Plausible.Props.internal_keys()
+    |> Enum.map(&("event:props:" <> &1))
+  end
+
   @spec goals_with_url() :: [String.t()]
   def goals_with_url() do
     @goals_with_url

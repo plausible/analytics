@@ -5,13 +5,26 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Snippet integration verification
-
 ### Removed
 
 ### Changed
 
 ### Fixed
+
+## v2.1.1 - 2024-06-06
+
+### Added
+
+- Snippet integration verification
+- Limited filtering support for imported data in the dashboard and via Stats API
+- Automatic sites.imported_data -> site_imports data migration in CE plausible/analytics#4155
+
+### Fixed
+
+- Fix CSV import by adding a newline to the INSERT statement plausible/analytics#4172
+- Fix url parameters escaping of = sign plausible/analytics#4185
+- Fix redirect after registration in CE plausible/analytics#4165
+- Fix VersionedSessions migration in ClickHouse v24 plausible/analytics#4162
 
 ## v2.1.0 - 2024-05-23
 

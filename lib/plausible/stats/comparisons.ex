@@ -63,7 +63,7 @@ defmodule Plausible.Stats.Comparisons do
 
     with :ok <- validate_mode(source_query, mode),
          {:ok, comparison_query} <- do_compare(source_query, mode, opts),
-         comparison_query <- maybe_include_imported(comparison_query, source_query, site),
+         comparison_query <- maybe_include_imported(comparison_query, source_query),
          do: {:ok, comparison_query}
   end
 
@@ -162,21 +162,20 @@ defmodule Plausible.Stats.Comparisons do
     Date.add(date, -days_to_subtract)
   end
 
-  defp maybe_include_imported(query, %Query{imported_data_requested: false}, _site) do
-    %Stats.Query{query | include_imported: false}
-  end
+  defp maybe_include_imported(query, source_query) do
+    requested? = source_query.imported_data_requested
 
-  defp maybe_include_imported(query, _source_query, site) do
-    case Query.ensure_include_imported(query, site) do
+    case Query.ensure_include_imported(query, requested?) do
       :ok ->
         struct!(query,
           imported_data_requested: true,
-          include_imported: true
+          include_imported: true,
+          skip_imported_reason: nil
         )
 
       {:error, reason} ->
         struct!(query,
-          imported_data_requested: true,
+          imported_data_requested: requested?,
           include_imported: false,
           skip_imported_reason: reason
         )

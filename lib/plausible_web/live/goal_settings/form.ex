@@ -319,7 +319,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   def suggest_page_paths(input, _options, site) do
-    query = Plausible.Stats.Query.from(site, %{})
+    query = Plausible.Stats.Query.from(site, %{"with_imported" => "true", "period" => "all"})
 
     site
     |> Plausible.Stats.filter_suggestions(query, "page", input)

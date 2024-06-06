@@ -8,12 +8,11 @@ import {apiPath, sitePath} from '../../util/url'
 import ListReport from '../reports/list'
 import { VISITORS_METRIC, maybeWithCR } from '../reports/metrics';
 import { getFiltersByKeyPrefix } from '../../util/filters';
+import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 
-function Countries({query, site, onClick}) {
+function Countries({query, site, onClick, afterFetchData}) {
   function fetchData() {
-    return api.get(apiPath(site, '/countries'), query, {limit: 9}).then((res) => {
-      return res.map(row => Object.assign({}, row, {percentage: undefined}))
-    })
+    return api.get(apiPath(site, '/countries'), query, { limit: 9 })
   }
 
   function renderIcon(country) {
@@ -31,6 +30,7 @@ function Countries({query, site, onClick}) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       onClick={onClick}
       keyLabel="Country"
@@ -43,7 +43,7 @@ function Countries({query, site, onClick}) {
   )
 }
 
-function Regions({query, site, onClick}) {
+function Regions({query, site, onClick, afterFetchData}) {
   function fetchData() {
     return api.get(apiPath(site, '/regions'), query, {limit: 9})
   }
@@ -63,6 +63,7 @@ function Regions({query, site, onClick}) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       onClick={onClick}
       keyLabel="Region"
@@ -75,7 +76,7 @@ function Regions({query, site, onClick}) {
   )
 }
 
-function Cities({query, site}) {
+function Cities({query, site, afterFetchData}) {
   function fetchData() {
     return api.get(apiPath(site, '/cities'), query, {limit: 9})
   }
@@ -95,6 +96,7 @@ function Cities({query, site}) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="City"
       metrics={maybeWithCR([VISITORS_METRIC], query)}
@@ -118,14 +120,17 @@ export default class Locations extends React.Component {
     super(props)
     this.onCountryFilter = this.onCountryFilter.bind(this)
     this.onRegionFilter = this.onRegionFilter.bind(this)
+    this.afterFetchData = this.afterFetchData.bind(this)
     this.tabKey = `geoTab__${  props.site.domain}`
     const storedTab = storage.getItem(this.tabKey)
     this.state = {
-      mode: storedTab || 'map'
+      mode: storedTab || 'map',
+      loading: true,
+      skipImportedReason: null
     }
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     const isRemovingFilter = (filterName) => {
       return getFiltersByKeyPrefix(prevProps.query, filterName).length > 0 &&
         getFiltersByKeyPrefix(this.props.query, filterName).length == 0
@@ -137,6 +142,10 @@ export default class Locations extends React.Component {
 
     if (this.state.mode === 'regions' && isRemovingFilter('country')) {
       this.setMode(this.countriesRestoreMode || 'countries')()
+    }
+
+    if (this.props.query !== prevProps.query || this.state.mode !== prevState.mode) {
+      this.setState({loading: true})
     }
   }
 
@@ -158,17 +167,21 @@ export default class Locations extends React.Component {
     this.setMode('cities')()
   }
 
+  afterFetchData(apiResponse) {
+    this.setState({loading: false, skipImportedReason: apiResponse.skip_imported_reason})
+  }
+
 	renderContent() {
     switch(this.state.mode) {
 		case "cities":
-      return <Cities site={this.props.site} query={this.props.query} />
+      return <Cities site={this.props.site} query={this.props.query} afterFetchData={this.afterFetchData} />
 		case "regions":
-      return <Regions onClick={this.onRegionFilter} site={this.props.site} query={this.props.query} />
+      return <Regions onClick={this.onRegionFilter} site={this.props.site} query={this.props.query} afterFetchData={this.afterFetchData} />
 		case "countries":
-      return <Countries onClick={this.onCountryFilter('countries')} site={this.props.site} query={this.props.query} />
+      return <Countries onClick={this.onCountryFilter('countries')} site={this.props.site} query={this.props.query} afterFetchData={this.afterFetchData} />
     case "map":
     default:
-      return <CountriesMap onClick={this.onCountryFilter('map')} site={this.props.site} query={this.props.query}/>
+      return <CountriesMap onClick={this.onCountryFilter('map')} site={this.props.site} query={this.props.query} afterFetchData={this.afterFetchData} />
     }
   }
 
@@ -199,9 +212,12 @@ export default class Locations extends React.Component {
     return (
       <div>
         <div className="w-full flex justify-between">
-          <h3 className="font-bold dark:text-gray-100">
-            {labelFor[this.state.mode] || 'Locations'}
-          </h3>
+          <div className="flex gap-x-1">
+            <h3 className="font-bold dark:text-gray-100">
+              {labelFor[this.state.mode] || 'Locations'}
+            </h3>
+            <ImportedQueryUnsupportedWarning loading={this.state.loading} query={this.props.query} skipImportedReason={this.state.skipImportedReason} />
+          </div>
           <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
             { this.renderPill('Map', 'map') }
             { this.renderPill('Countries', 'countries') }

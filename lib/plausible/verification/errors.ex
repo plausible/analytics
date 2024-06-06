@@ -10,6 +10,12 @@ defmodule Plausible.Verification.Errors do
         "As you're using Google Tag Manager, you'll need to use a GTM-specific Plausible snippet",
       url: "https://plausible.io/docs/google-tag-manager"
     },
+    gtm_cookie_banner: %{
+      message: "We couldn't verify your website",
+      recommendation:
+        "As you're using Google Tag Manager, you'll need to use a GTM-specific Plausible snippet. Please make sure no cookie consent banner is blocking our script",
+      url: "https://plausible.io/docs/google-tag-manager"
+    },
     csp: %{
       message: "We encountered an issue with your site's CSP",
       recommendation:
@@ -107,7 +113,7 @@ defmodule Plausible.Verification.Errors do
     },
     different_data_domain: %{
       message: "Your data-domain is different",
-      recommendation: "Please ensure that the data-domain is an exact match to <%= @domain %>",
+      recommendation: "Please ensure that the data-domain matches <%= @domain %> exactly",
       url:
         "https://plausible.io/docs/troubleshoot-integration#have-you-added-the-correct-data-domain-attribute-in-the-plausible-snippet"
     },
@@ -141,4 +147,10 @@ defmodule Plausible.Verification.Errors do
   }
 
   def all(), do: @errors
+
+  for {_, %{message: message, recommendation: recommendation} = e} <- @errors do
+    if String.ends_with?(message, ".") or String.ends_with?(recommendation, ".") do
+      raise "Error message/recommendation should not end with a period: #{inspect(e)}"
+    end
+  end
 end

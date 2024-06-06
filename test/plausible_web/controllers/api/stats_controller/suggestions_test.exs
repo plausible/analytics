@@ -634,4 +634,611 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
              }
     end
   end
+
+  describe "imported data" do
+    setup [:create_user, :log_in, :create_site, :create_site_import]
+
+    test "merges country suggestions from native and imported data", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:01], country_code: "US"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:30:01], country_code: "US"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:40:01], country_code: "US"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:01], country_code: "GB"),
+        build(:imported_locations, date: ~D[2019-01-01], country: "GB", pageviews: 3)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/country?period=month&date=2019-01-01&q=Unit&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"value" => "GB", "label" => "United Kingdom"},
+               %{"value" => "US", "label" => "United States"}
+             ]
+    end
+
+    test "ignores imported data in country suggestions when a different property is filtered by",
+         %{
+           conn: conn,
+           site: site,
+           site_import: site_import
+         } do
+      populate_stats(site, site_import.id, [
+        build(:pageview, country_code: "EE", referrer_source: "Bing"),
+        build(:imported_locations, country: "GB")
+      ])
+
+      filters = Jason.encode!(%{source: "Bing"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/country?filters=#{filters}&q=&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [%{"value" => "EE", "label" => "Estonia"}]
+    end
+
+    test "queries imported countries when filtering by country", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:imported_locations, date: ~D[2019-01-01], country: "EE")
+      ])
+
+      filters = Jason.encode!(%{country: "EE"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/country?period=month&date=2019-01-01&filters=#{filters}&q=&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [%{"value" => "EE", "label" => "Estonia"}]
+    end
+
+    test "ignores imported country data when not requested", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:imported_locations, date: ~D[2019-01-01], country: "GB", pageviews: 3)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/country?period=month&date=2019-01-01&q="
+        )
+
+      assert json_response(conn, 200) == []
+    end
+
+    for {q, label} <- [{"", "without filter"}, {"H", "with filter"}] do
+      test "merges region suggestions from native and imported data #{label}", %{
+        conn: conn,
+        site: site,
+        site_import: site_import
+      } do
+        populate_stats(site, site_import.id, [
+          build(:pageview, country_code: "EE", subdivision1_code: "EE-37"),
+          build(:pageview, country_code: "EE", subdivision1_code: "EE-39"),
+          build(:pageview, country_code: "EE", subdivision1_code: "EE-39"),
+          build(:imported_locations, country: "EE", region: "EE-37", pageviews: 2)
+        ])
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/suggestions/region?q=#{unquote(q)}&with_imported=true"
+          )
+
+        assert json_response(conn, 200) == [
+                 %{"value" => "EE-37", "label" => "Harjumaa"},
+                 %{"value" => "EE-39", "label" => "Hiiumaa"}
+               ]
+      end
+    end
+
+    test "handles invalid region codes in imported data gracefully (GA4)", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      # NOTE: Currently, the regions imported from GA4 do not conform to region code standard
+      # we are using. Instead, literal region names are persisted. Those names often do not
+      # match the names from our region databases either. Regardless of that, we still consider
+      # them when filtering suggestions.
+
+      populate_stats(site, site_import.id, [
+        build(:imported_locations, country: "EE", region: "EE-37", pageviews: 2),
+        build(:imported_locations, country: "EE", region: "Hiiumaa", pageviews: 1)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/region?q=&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"value" => "EE-37", "label" => "Harjumaa"},
+               %{"value" => "Hiiumaa", "label" => "Hiiumaa"}
+             ]
+
+      conn2 =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/region?q=H&with_imported=true"
+        )
+
+      assert json_response(conn2, 200) == [
+               %{"value" => "EE-37", "label" => "Harjumaa"},
+               %{"value" => "Hiiumaa", "label" => "Hiiumaa"}
+             ]
+    end
+
+    test "ignores imported data in region suggestions when a different property is filtered by",
+         %{
+           conn: conn,
+           site: site,
+           site_import: site_import
+         } do
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          country_code: "EE",
+          subdivision1_code: "EE-39",
+          referrer_source: "Bing"
+        ),
+        build(:imported_locations, country: "EE", region: "EE-37")
+      ])
+
+      filters = Jason.encode!(%{source: "Bing"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/region?filters=#{filters}&q=&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [%{"value" => "EE-39", "label" => "Hiiumaa"}]
+    end
+
+    test "queries imported regions when filtering by region", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:imported_locations, date: ~D[2019-01-01], region: "EE-39")
+      ])
+
+      filters = Jason.encode!(%{region: "EE-39"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/region?period=month&date=2019-01-01&filters=#{filters}&q=&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [%{"value" => "EE-39", "label" => "Hiiumaa"}]
+    end
+
+    test "ignores imported region data when not requested", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:imported_locations, country: "EE", region: "EE-37", pageviews: 2)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/region?q="
+        )
+
+      assert json_response(conn, 200) == []
+    end
+
+    for {q, label} <- [{"", "without filter"}, {"l", "with filter"}] do
+      test "merges city suggestions from native and imported data #{label}", %{
+        conn: conn,
+        site: site,
+        site_import: site_import
+      } do
+        populate_stats(site, site_import.id, [
+          build(:pageview,
+            country_code: "EE",
+            subdivision1_code: "EE-37",
+            city_geoname_id: 588_409
+          ),
+          build(:pageview,
+            country_code: "EE",
+            subdivision1_code: "EE-39",
+            city_geoname_id: 591_632
+          ),
+          build(:pageview,
+            country_code: "EE",
+            subdivision1_code: "EE-39",
+            city_geoname_id: 591_632
+          ),
+          build(:imported_locations, country: "EE", region: "EE-37", city: 588_409, pageviews: 2)
+        ])
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/suggestions/city?q=#{unquote(q)}&with_imported=true"
+          )
+
+        assert json_response(conn, 200) == [
+                 %{"value" => "588409", "label" => "Tallinn"},
+                 %{"value" => "591632", "label" => "Kärdla"}
+               ]
+      end
+    end
+
+    test "ignores imported data in city suggestions when a different property is filtered by", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          country_code: "EE",
+          subdivision1_code: "EE-39",
+          city_geoname_id: 591_632,
+          referrer_source: "Bing"
+        ),
+        build(:imported_locations, country: "EE", region: "EE-37", city: 588_409)
+      ])
+
+      filters = Jason.encode!(%{source: "Bing"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/city?filters=#{filters}&q=&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [%{"value" => "591632", "label" => "Kärdla"}]
+    end
+
+    test "queries imported cities when filtering by city", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:imported_locations, date: ~D[2019-01-01], city: 591_632)
+      ])
+
+      filters = Jason.encode!(%{city: "591632"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/city?period=month&date=2019-01-01&filters=#{filters}&q=&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [%{"value" => "591632", "label" => "Kärdla"}]
+    end
+
+    test "ignores imported city data when not requested", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:imported_locations, country: "EE", region: "EE-37", city: 588_409, pageviews: 2)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/city?q="
+        )
+
+      assert json_response(conn, 200) == []
+    end
+
+    test "ignores imported data when asking for prop key and value suggestions", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          "meta.key": ["url"],
+          "meta.value": ["http://example1.com"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:imported_custom_events,
+          date: ~D[2022-01-01],
+          name: "Outbound Link: Click",
+          link_url: "http://example2.com"
+        ),
+        build(:imported_custom_events,
+          date: ~D[2022-01-01],
+          name: "404",
+          path: "/dev/null"
+        )
+      ])
+
+      key_conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01&with_imported=true"
+        )
+
+      assert json_response(key_conn, 200) == [%{"label" => "url", "value" => "url"}]
+
+      filters = Jason.encode!(%{props: %{url: "!(none)"}})
+
+      value_conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/prop_value?period=day&date=2022-01-01&with_imported=true&filters=#{filters}"
+        )
+
+      assert json_response(value_conn, 200) == [
+               %{"label" => "http://example1.com", "value" => "http://example1.com"}
+             ]
+    end
+
+    for {q, label} <- [{"", "without filter"}, {"g", "with filter"}] do
+      test "merges source suggestions from native and imported data #{label}", %{
+        conn: conn,
+        site: site,
+        site_import: site_import
+      } do
+        populate_stats(site, site_import.id, [
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], referrer_source: "Bing"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:30:01], referrer_source: "Bing"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:40:01], referrer_source: "Bing"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], referrer_source: "Google"),
+          build(:imported_sources, date: ~D[2019-01-01], source: "Google", pageviews: 3)
+        ])
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/suggestions/source?period=month&date=2019-01-01&q=#{unquote(q)}&with_imported=true"
+          )
+
+        assert json_response(conn, 200) == [
+                 %{"value" => "Google", "label" => "Google"},
+                 %{"value" => "Bing", "label" => "Bing"}
+               ]
+      end
+    end
+
+    for {q, label} <- [{"", "without filter"}, {"o", "with filter"}] do
+      test "merges screen suggestions from native and imported data #{label}", %{
+        conn: conn,
+        site: site,
+        site_import: site_import
+      } do
+        populate_stats(site, site_import.id, [
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], screen_size: "Mobile"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:30:01], screen_size: "Mobile"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:40:01], screen_size: "Mobile"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], screen_size: "Desktop"),
+          build(:imported_devices, date: ~D[2019-01-01], device: "Desktop", pageviews: 3)
+        ])
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/suggestions/screen?period=month&date=2019-01-01&q=#{unquote(q)}&with_imported=true"
+          )
+
+        assert json_response(conn, 200) == [
+                 %{"value" => "Desktop", "label" => "Desktop"},
+                 %{"value" => "Mobile", "label" => "Mobile"}
+               ]
+      end
+    end
+
+    for {q, label} <- [{"", "without filter"}, {"o", "with filter"}] do
+      test "merges page suggestions from native and imported data #{label}", %{
+        conn: conn,
+        site: site,
+        site_import: site_import
+      } do
+        populate_stats(site, site_import.id, [
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], pathname: "/welcome"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:30:01], pathname: "/welcome"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:40:01], pathname: "/welcome"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], pathname: "/blog"),
+          build(:imported_pages, date: ~D[2019-01-01], page: "/blog", pageviews: 3)
+        ])
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/suggestions/page?period=month&date=2019-01-01&q=#{unquote(q)}&with_imported=true"
+          )
+
+        assert json_response(conn, 200) == [
+                 %{"value" => "/blog", "label" => "/blog"},
+                 %{"value" => "/welcome", "label" => "/welcome"}
+               ]
+      end
+    end
+
+    for {q, label} <- [{"", "without filter"}, {"o", "with filter"}] do
+      test "merges entry page suggestions from native and imported data #{label}", %{
+        conn: conn,
+        site: site,
+        site_import: site_import
+      } do
+        populate_stats(site, site_import.id, [
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], pathname: "/welcome"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:30:01], pathname: "/welcome"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:40:01], pathname: "/welcome"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], pathname: "/blog"),
+          build(:imported_entry_pages, date: ~D[2019-01-01], entry_page: "/blog", pageviews: 3)
+        ])
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/suggestions/entry_page?period=month&date=2019-01-01&q=#{unquote(q)}&with_imported=true"
+          )
+
+        assert json_response(conn, 200) == [
+                 %{"value" => "/blog", "label" => "/blog"},
+                 %{"value" => "/welcome", "label" => "/welcome"}
+               ]
+      end
+    end
+
+    for {q, label} <- [{"", "without filter"}, {"o", "with filter"}] do
+      test "merges exit page suggestions from native and imported data #{label}", %{
+        conn: conn,
+        site: site,
+        site_import: site_import
+      } do
+        populate_stats(site, site_import.id, [
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], pathname: "/welcome"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:30:01], pathname: "/welcome"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:40:01], pathname: "/welcome"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], pathname: "/blog"),
+          build(:imported_exit_pages, date: ~D[2019-01-01], exit_page: "/blog", pageviews: 3)
+        ])
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/suggestions/exit_page?period=month&date=2019-01-01&q=#{unquote(q)}&with_imported=true"
+          )
+
+        assert json_response(conn, 200) == [
+                 %{"value" => "/blog", "label" => "/blog"},
+                 %{"value" => "/welcome", "label" => "/welcome"}
+               ]
+      end
+    end
+
+    for {q, label} <- [{"", "without filter"}, {"o", "with filter"}] do
+      test "merges browser suggestions from native and imported data #{label}", %{
+        conn: conn,
+        site: site,
+        site_import: site_import
+      } do
+        populate_stats(site, site_import.id, [
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], browser: "Chrome"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:30:01], browser: "Chrome"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:40:01], browser: "Chrome"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], browser: "Firefox"),
+          build(:imported_browsers, date: ~D[2019-01-01], browser: "Firefox", pageviews: 3)
+        ])
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/suggestions/browser?period=month&date=2019-01-01&q=#{unquote(q)}&with_imported=true"
+          )
+
+        assert json_response(conn, 200) == [
+                 %{"value" => "Firefox", "label" => "Firefox"},
+                 %{"value" => "Chrome", "label" => "Chrome"}
+               ]
+      end
+    end
+
+    for {q, label} <- [{"", "without filter"}, {"i", "with filter"}] do
+      test "merges operating system suggestions from native and imported data #{label}", %{
+        conn: conn,
+        site: site,
+        site_import: site_import
+      } do
+        populate_stats(site, site_import.id, [
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], operating_system: "Linux"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:30:01], operating_system: "Linux"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:40:01], operating_system: "Linux"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], operating_system: "Windows"),
+          build(:imported_operating_systems,
+            date: ~D[2019-01-01],
+            operating_system: "Windows",
+            pageviews: 3
+          )
+        ])
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/suggestions/operating_system?period=month&date=2019-01-01&q=#{unquote(q)}&with_imported=true"
+          )
+
+        assert json_response(conn, 200) == [
+                 %{"value" => "Windows", "label" => "Windows"},
+                 %{"value" => "Linux", "label" => "Linux"}
+               ]
+      end
+    end
+
+    test "does not query imported data when a different property is filtered by", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:01],
+          pathname: "/blog",
+          operating_system: "Linux"
+        ),
+        build(:imported_operating_systems, date: ~D[2019-01-01], operating_system: "Windows")
+      ])
+
+      filters = Jason.encode!(%{page: "/blog"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/operating_system?period=month&date=2019-01-01&filters=#{filters}&q=&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [%{"value" => "Linux", "label" => "Linux"}]
+    end
+
+    test "queries imported data when filtering by the same property", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:01],
+          pathname: "/blog",
+          operating_system: "Linux"
+        ),
+        build(:imported_operating_systems, date: ~D[2019-01-01], operating_system: "Windows"),
+        build(:imported_operating_systems, date: ~D[2019-01-01], operating_system: "Linux")
+      ])
+
+      filters = Jason.encode!(%{os: "!Linux"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/operating_system?period=month&date=2019-01-01&filters=#{filters}&q=&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [%{"value" => "Windows", "label" => "Windows"}]
+    end
+  end
 end

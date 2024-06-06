@@ -561,14 +561,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
-    test "ignores imported data when filters are applied", %{
+    test "includes imported data in comparison when filter applied", %{
       conn: conn,
       site: site,
       site_import: site_import
     } do
       populate_stats(site, site_import.id, [
         build(:imported_visitors, date: ~D[2023-01-01]),
-        build(:imported_sources, date: ~D[2023-01-01]),
+        build(:imported_sources, source: "Google", date: ~D[2023-01-01], visitors: 3),
         build(:pageview,
           referrer_source: "Google",
           timestamp: ~N[2023-01-02 00:10:00]
@@ -587,7 +587,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         })
 
       assert json_response(conn, 200)["results"] == %{
-               "visitors" => %{"value" => 1, "change" => 100}
+               "visitors" => %{"value" => 1, "change" => -67}
              }
     end
 
@@ -680,6 +680,60 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         })
 
       refute json_response(conn, 200)["warning"]
+    end
+
+    test "excludes imported data from conversion rate computation when query filters by non-imported props",
+         %{conn: conn, site: site, site_import: site_import} do
+      insert(:goal, site: site, event_name: "Purchase")
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        ),
+        build(:imported_visitors, visitors: 9)
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors,conversion_rate",
+          "filters" => "event:goal==Purchase;event:props:package==large",
+          "with_imported" => "true"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"value" => 1},
+               "conversion_rate" => %{"value" => 100.0}
+             }
+    end
+
+    test "returns stats with page + pageview goal filter",
+         %{conn: conn, site: site, site_import: site_import} do
+      insert(:goal, site: site, page_path: "/blog/**")
+
+      populate_stats(site, site_import.id, [
+        build(:imported_pages, page: "/blog/1", visitors: 1, pageviews: 1),
+        build(:imported_pages, page: "/blog/2", visitors: 2, pageviews: 2),
+        build(:imported_pages, visitors: 3)
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors,events,conversion_rate",
+          "filters" => "event:page==/blog/2;event:goal==Visit /blog/**",
+          "with_imported" => "true"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"value" => 2},
+               "events" => %{"value" => 2},
+               "conversion_rate" => %{"value" => 100.0}
+             }
     end
   end
 

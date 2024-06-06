@@ -20,6 +20,7 @@ defmodule Plausible.Verification.Checks.Snippet do
       snippets_found_in_head: Enum.count(in_head),
       snippets_found_in_body: Enum.count(in_body),
       proxy_likely?: proxy_likely?(all),
+      manual_script_extension?: manual_script_extension?(all),
       snippet_unknown_attributes?: unknown_attributes?(all),
       data_domain_mismatch?:
         data_domain_mismatch?(all, state.data_domain, state.assigns[:final_domain])
@@ -27,6 +28,12 @@ defmodule Plausible.Verification.Checks.Snippet do
   end
 
   def perform(state), do: state
+
+  defp manual_script_extension?(nodes) do
+    nodes
+    |> Floki.attribute("src")
+    |> Enum.any?(&String.contains?(&1, "manual."))
+  end
 
   defp proxy_likely?(nodes) do
     nodes

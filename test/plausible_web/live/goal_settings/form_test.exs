@@ -162,6 +162,30 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert html =~ "/go/home"
       refute html =~ "/go/to/page/1"
     end
+
+    test "pageview combo considers imported pageviews as well", %{conn: conn, site: site} do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:imported_pages, page: "/go/to/page/1", pageviews: 2),
+        build(:imported_pages, page: "/go/home", pageviews: 1)
+      ])
+
+      lv = get_liveview(conn, site)
+      lv |> element(~s/a#pageview-tab/) |> render_click()
+
+      type_into_combo(lv, "page_path_input", "/go/to/p")
+
+      html = render(lv)
+      assert html =~ "Create &quot;/go/to/p&quot;"
+      assert html =~ "/go/to/page/1"
+      refute html =~ "/go/home"
+
+      type_into_combo(lv, "page_path_input", "/go/h")
+      html = render(lv)
+      assert html =~ "/go/home"
+      refute html =~ "/go/to/page/1"
+    end
   end
 
   defp type_into_combo(lv, id, text) do

@@ -15,9 +15,11 @@ defmodule Plausible.Verification.Diagnostics do
             service_error: nil,
             body_fetched?: false,
             wordpress_likely?: false,
+            cookie_banner_likely?: false,
             gtm_likely?: false,
             callback_status: 0,
             proxy_likely?: false,
+            manual_script_extension?: false,
             data_domain_mismatch?: false,
             wordpress_plugin?: false
 
@@ -46,6 +48,13 @@ defmodule Plausible.Verification.Diagnostics do
       )
       when callback_status in [200, 202] do
     %Result{ok?: true}
+  end
+
+  def interpret(
+        %__MODULE__{plausible_installed?: false, gtm_likely?: true, cookie_banner_likely?: true},
+        _url
+      ) do
+    error(@errors.gtm_cookie_banner)
   end
 
   def interpret(%__MODULE__{plausible_installed?: false, gtm_likely?: true}, _url) do
@@ -206,7 +215,11 @@ defmodule Plausible.Verification.Diagnostics do
   end
 
   def interpret(
-        %__MODULE__{snippets_found_in_head: count_head, snippets_found_in_body: count_body},
+        %__MODULE__{
+          snippets_found_in_head: count_head,
+          snippets_found_in_body: count_body,
+          manual_script_extension?: false
+        },
         _url
       )
       when count_head + count_body > 1 do
@@ -216,26 +229,28 @@ defmodule Plausible.Verification.Diagnostics do
   def interpret(
         %__MODULE__{
           plausible_installed?: true,
-          callback_status: 202,
+          callback_status: callback_status,
           snippet_found_after_busting_cache?: true,
           wordpress_likely?: true,
           wordpress_plugin?: true
         },
         _url
-      ) do
+      )
+      when callback_status in [200, 202] do
     error(@errors.cache_wp_plugin)
   end
 
   def interpret(
         %__MODULE__{
           plausible_installed?: true,
-          callback_status: 202,
+          callback_status: callback_status,
           snippet_found_after_busting_cache?: true,
           wordpress_likely?: true,
           wordpress_plugin?: false
         },
         _url
-      ) do
+      )
+      when callback_status in [200, 202] do
     error(@errors.cache_wp_no_plugin)
   end
 
@@ -303,6 +318,21 @@ defmodule Plausible.Verification.Diagnostics do
         _url
       )
       when callback_status in [200, 202] do
+    %Result{ok?: true}
+  end
+
+  def interpret(
+        %__MODULE__{
+          plausible_installed?: true,
+          snippets_found_in_head: count_head,
+          snippets_found_in_body: count_body,
+          callback_status: callback_status,
+          service_error: nil,
+          manual_script_extension?: true
+        },
+        _url
+      )
+      when count_head + count_body > 1 and callback_status in [200, 202] do
     %Result{ok?: true}
   end
 

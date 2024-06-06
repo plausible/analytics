@@ -31,7 +31,7 @@ export function specialTitleWhenGoalFilter(query, defaultTitle) {
 }
 
 function SpecialPropBreakdown(props) {
-  const { site, query, prop } = props
+  const { site, query, prop, afterFetchData } = props
 
   function fetchData() {
     return api.get(url.apiPath(site, `/custom-prop-values/${prop}`), query)
@@ -55,6 +55,7 @@ function SpecialPropBreakdown(props) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel={prop}
       metrics={[
@@ -73,12 +74,12 @@ function SpecialPropBreakdown(props) {
 }
 
 export default function GoalConversions(props) {
-  const {site, query} = props
+  const {site, query, afterFetchData} = props
 
   const specialGoal = getSpecialGoal(query)
   if (specialGoal) {
-    return <SpecialPropBreakdown site={site} query={props.query} prop={specialGoal.prop} />
+    return <SpecialPropBreakdown site={site} query={props.query} prop={specialGoal.prop} afterFetchData={afterFetchData} />
   } else {
-    return <Conversions site={site} query={props.query} onGoalFilterClick={props.onGoalFilterClick}/>
+    return <Conversions site={site} query={props.query} onGoalFilterClick={props.onGoalFilterClick} afterFetchData={afterFetchData} />
   }
 }

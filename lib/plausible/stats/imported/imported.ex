@@ -1,42 +1,29 @@
 defmodule Plausible.Stats.Imported do
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Query, Base}
 
   import Ecto.Query
   import Plausible.Stats.Fragments
+
+  alias Plausible.Stats.Base
+  alias Plausible.Stats.Imported
+  alias Plausible.Stats.Query
 
   @no_ref "Direct / None"
   @not_set "(not set)"
   @none "(none)"
 
-  @property_to_table_mappings %{
-    "visit:source" => "imported_sources",
-    "visit:referrer" => "imported_sources",
-    "visit:utm_source" => "imported_sources",
-    "visit:utm_medium" => "imported_sources",
-    "visit:utm_campaign" => "imported_sources",
-    "visit:utm_term" => "imported_sources",
-    "visit:utm_content" => "imported_sources",
-    "visit:entry_page" => "imported_entry_pages",
-    "visit:exit_page" => "imported_exit_pages",
-    "visit:country" => "imported_locations",
-    "visit:region" => "imported_locations",
-    "visit:city" => "imported_locations",
-    "visit:device" => "imported_devices",
-    "visit:browser" => "imported_browsers",
-    "visit:browser_version" => "imported_browsers",
-    "visit:os" => "imported_operating_systems",
-    "visit:os_version" => "imported_operating_systems",
-    "event:page" => "imported_pages",
-    "event:name" => "imported_custom_events",
-    "event:props:url" => "imported_custom_events",
-    "event:props:path" => "imported_custom_events"
-  }
+  @property_to_table_mappings Imported.Base.property_to_table_mappings()
 
-  @imported_properties Map.keys(@property_to_table_mappings)
+  @imported_properties Map.keys(@property_to_table_mappings) ++
+                         Plausible.Imported.imported_custom_props()
 
   @goals_with_url Plausible.Imported.goals_with_url()
+
+  def goals_with_url(), do: @goals_with_url
+
   @goals_with_path Plausible.Imported.goals_with_path()
+
+  def goals_with_path(), do: @goals_with_path
 
   @doc """
   Returns a boolean indicating whether the combination of filters and
@@ -49,15 +36,191 @@ defmodule Plausible.Stats.Imported do
   (see `@goals_with_url` and `@goals_with_path`).
   """
   def schema_supports_query?(query) do
-    filter_count = length(query.filters)
+    not is_nil(Imported.Base.decide_table(query))
+  end
 
-    case {filter_count, query.property} do
-      {0, "event:props:" <> _} -> false
-      {0, _} -> true
-      {1, "event:props:url"} -> has_special_goal_filter?(query, @goals_with_url)
-      {1, "event:props:path"} -> has_special_goal_filter?(query, @goals_with_path)
-      {_, _} -> false
+  def merge_imported_country_suggestions(native_q, _site, %Plausible.Stats.Query{
+        include_imported: false
+      }) do
+    native_q
+  end
+
+  def merge_imported_country_suggestions(native_q, site, query) do
+    supports_filter_set? =
+      Enum.all?(query.filters, fn filter ->
+        [_, filtered_prop | _] = filter
+        @property_to_table_mappings[filtered_prop] == "imported_locations"
+      end)
+
+    if supports_filter_set? do
+      native_q =
+        native_q
+        |> exclude(:order_by)
+        |> exclude(:select)
+        |> select([e], %{country_code: e.country_code, count: fragment("count(*)")})
+
+      imported_q =
+        from i in Imported.Base.query_imported("imported_locations", site, query),
+          group_by: i.country,
+          select_merge: %{country_code: i.country, count: fragment("sum(?)", i.pageviews)}
+
+      from(s in subquery(native_q),
+        full_join: i in subquery(imported_q),
+        on: s.country_code == i.country_code,
+        select:
+          fragment("if(not empty(?), ?, ?)", s.country_code, s.country_code, i.country_code),
+        order_by: [desc: fragment("? + ?", s.count, i.count)]
+      )
+    else
+      native_q
     end
+  end
+
+  def merge_imported_region_suggestions(native_q, _site, %Plausible.Stats.Query{
+        include_imported: false
+      }) do
+    native_q
+  end
+
+  def merge_imported_region_suggestions(native_q, site, query) do
+    supports_filter_set? =
+      Enum.all?(query.filters, fn filter ->
+        [_, filtered_prop | _] = filter
+        @property_to_table_mappings[filtered_prop] == "imported_locations"
+      end)
+
+    if supports_filter_set? do
+      native_q =
+        native_q
+        |> exclude(:order_by)
+        |> exclude(:select)
+        |> select([e], %{region_code: e.subdivision1_code, count: fragment("count(*)")})
+
+      imported_q =
+        from i in Imported.Base.query_imported("imported_locations", site, query),
+          where: i.region != "",
+          group_by: i.region,
+          select_merge: %{region_code: i.region, count: fragment("sum(?)", i.pageviews)}
+
+      from(s in subquery(native_q),
+        full_join: i in subquery(imported_q),
+        on: s.region_code == i.region_code,
+        select: fragment("if(not empty(?), ?, ?)", s.region_code, s.region_code, i.region_code),
+        order_by: [desc: fragment("? + ?", s.count, i.count)]
+      )
+    else
+      native_q
+    end
+  end
+
+  def merge_imported_city_suggestions(native_q, _site, %Plausible.Stats.Query{
+        include_imported: false
+      }) do
+    native_q
+  end
+
+  def merge_imported_city_suggestions(native_q, site, query) do
+    supports_filter_set? =
+      Enum.all?(query.filters, fn filter ->
+        [_, filtered_prop | _] = filter
+        @property_to_table_mappings[filtered_prop] == "imported_locations"
+      end)
+
+    if supports_filter_set? do
+      native_q =
+        native_q
+        |> exclude(:order_by)
+        |> exclude(:select)
+        |> select([e], %{city_id: e.city_geoname_id, count: fragment("count(*)")})
+
+      imported_q =
+        from i in Imported.Base.query_imported("imported_locations", site, query),
+          where: i.city != 0,
+          group_by: i.city,
+          select_merge: %{city_id: i.city, count: fragment("sum(?)", i.pageviews)}
+
+      from(s in subquery(native_q),
+        full_join: i in subquery(imported_q),
+        on: s.city_id == i.city_id,
+        select: fragment("if(? > 0, ?, ?)", s.city_id, s.city_id, i.city_id),
+        order_by: [desc: fragment("? + ?", s.count, i.count)]
+      )
+    else
+      native_q
+    end
+  end
+
+  def merge_imported_filter_suggestions(
+        native_q,
+        _site,
+        %Plausible.Stats.Query{include_imported: false},
+        _filter_name,
+        _filter_search
+      ) do
+    native_q
+  end
+
+  def merge_imported_filter_suggestions(
+        native_q,
+        site,
+        query,
+        filter_name,
+        filter_query
+      ) do
+    {table, db_field} = expand_suggestions_field(filter_name)
+
+    supports_filter_set? =
+      Enum.all?(query.filters, fn filter ->
+        [_, filtered_prop | _] = filter
+        @property_to_table_mappings[filtered_prop] == table
+      end)
+
+    if supports_filter_set? do
+      native_q =
+        native_q
+        |> exclude(:order_by)
+        |> exclude(:select)
+        |> select([e], %{name: field(e, ^filter_name), count: fragment("count(*)")})
+
+      imported_q =
+        from i in Imported.Base.query_imported(table, site, query),
+          where: fragment("? ilike ?", field(i, ^db_field), ^filter_query),
+          group_by: field(i, ^db_field),
+          select_merge: %{name: field(i, ^db_field), count: fragment("sum(?)", i.pageviews)}
+
+      from(s in subquery(native_q),
+        full_join: i in subquery(imported_q),
+        on: s.name == i.name,
+        select: fragment("if(not empty(?), ?, ?)", s.name, s.name, i.name),
+        order_by: [desc: fragment("? + ?", s.count, i.count)],
+        limit: 25
+      )
+    else
+      native_q
+    end
+  end
+
+  @filter_suggestions_mapping %{
+    referrer_source: :source,
+    screen_size: :device,
+    pathname: :page
+  }
+
+  defp expand_suggestions_field(filter_name) do
+    db_field = Map.get(@filter_suggestions_mapping, filter_name, filter_name)
+
+    property =
+      case db_field do
+        :operating_system -> :os
+        :operating_system_version -> :os_version
+        other -> other
+      end
+
+    table_by_visit = Map.get(@property_to_table_mappings, "visit:#{property}")
+    table_by_event = Map.get(@property_to_table_mappings, "event:#{property}")
+    table = table_by_visit || table_by_event
+
+    {table, db_field}
   end
 
   def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{include_imported: false}, _),
@@ -69,15 +232,9 @@ defmodule Plausible.Stats.Imported do
         query,
         metrics
       ) do
-    import_ids = site.complete_import_ids
-
     imported_q =
-      from(v in "imported_visitors",
-        where: v.site_id == ^site.id,
-        where: v.import_id in ^import_ids,
-        where: v.date >= ^query.date_range.first and v.date <= ^query.date_range.last,
-        select: %{}
-      )
+      site
+      |> Imported.Base.query_imported(query)
       |> select_imported_metrics(metrics)
       |> apply_interval(query, site)
 
@@ -111,20 +268,12 @@ defmodule Plausible.Stats.Imported do
 
   def merge_imported(q, site, %Query{property: property} = query, metrics)
       when property in @imported_properties do
-    table = Map.fetch!(@property_to_table_mappings, property)
     dim = Plausible.Stats.Filters.without_prefix(property)
-    import_ids = site.complete_import_ids
 
     imported_q =
-      from(
-        i in table,
-        where: i.site_id == ^site.id,
-        where: i.import_id in ^import_ids,
-        where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
-        where: i.visitors > 0,
-        select: %{}
-      )
-      |> maybe_apply_filter(query, property, dim)
+      site
+      |> Imported.Base.query_imported(query)
+      |> where([i], i.visitors > 0)
       |> group_imported_by(dim)
       |> select_imported_metrics(metrics)
 
@@ -155,7 +304,8 @@ defmodule Plausible.Stats.Imported do
 
   def merge_imported(q, site, %Query{property: nil} = query, metrics) do
     imported_q =
-      imported_visitors(site, query)
+      site
+      |> Imported.Base.query_imported(query)
       |> select_imported_metrics(metrics)
 
     from(
@@ -171,90 +321,40 @@ defmodule Plausible.Stats.Imported do
   def merge_imported_pageview_goals(q, _, %Query{include_imported: false}, _, _), do: q
 
   def merge_imported_pageview_goals(q, site, query, page_exprs, metrics) do
-    page_regexes = Enum.map(page_exprs, &Base.page_regex/1)
+    if Imported.Base.decide_table(query) == "imported_pages" do
+      page_regexes = Enum.map(page_exprs, &Base.page_regex/1)
 
-    imported_q =
-      from(
-        i in "imported_pages",
-        where: i.site_id == ^site.id,
-        where: i.import_id in ^site.complete_import_ids,
-        where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
-        where: i.visitors > 0,
-        where:
-          fragment(
-            "notEmpty(multiMatchAllIndices(?, ?) as indices)",
-            i.page,
-            ^page_regexes
-          ),
-        array_join: index in fragment("indices"),
-        group_by: index,
-        select: %{
+      imported_q =
+        "imported_pages"
+        |> Imported.Base.query_imported(site, query)
+        |> where([i], i.visitors > 0)
+        |> where(
+          [i],
+          fragment("notEmpty(multiMatchAllIndices(?, ?) as indices)", i.page, ^page_regexes)
+        )
+        |> join(:array, index in fragment("indices"))
+        |> group_by([_i, index], index)
+        |> select_merge([_i, index], %{
           name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
-        }
-      )
-      |> select_imported_metrics(metrics)
+        })
+        |> select_imported_metrics(metrics)
 
-    from(s in Ecto.Query.subquery(q),
-      full_join: i in subquery(imported_q),
-      on: s.name == i.name,
-      select: %{}
-    )
-    |> select_joined_dimension(:name)
-    |> select_joined_metrics(metrics)
+      from(s in Ecto.Query.subquery(q),
+        full_join: i in subquery(imported_q),
+        on: s.name == i.name,
+        select: %{}
+      )
+      |> select_joined_dimension(:name)
+      |> select_joined_metrics(metrics)
+    else
+      q
+    end
   end
 
   def total_imported_visitors(site, query) do
-    imported_visitors(site, query)
+    site
+    |> Imported.Base.query_imported(query)
     |> select_merge([i], %{total_visitors: fragment("sum(?)", i.visitors)})
-  end
-
-  defp imported_visitors(site, query) do
-    import_ids = site.complete_import_ids
-
-    from(
-      i in "imported_visitors",
-      where: i.site_id == ^site.id,
-      where: i.import_id in ^import_ids,
-      where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
-      select: %{}
-    )
-  end
-
-  defp maybe_apply_filter(q, query, "event:props:url", _) do
-    if name = find_special_goal_filter(query, @goals_with_url) do
-      where(q, [i], i.name == ^name)
-    else
-      q
-    end
-  end
-
-  defp maybe_apply_filter(q, query, "event:props:path", _) do
-    if name = find_special_goal_filter(query, @goals_with_path) do
-      where(q, [i], i.name == ^name)
-    else
-      q
-    end
-  end
-
-  defp maybe_apply_filter(q, query, property, dim) do
-    case Query.get_filter(query, property) do
-      [:member, _, list] -> where(q, [i], field(i, ^dim) in ^list)
-      _ -> q
-    end
-  end
-
-  defp has_special_goal_filter?(query, event_names) do
-    not is_nil(find_special_goal_filter(query, event_names))
-  end
-
-  defp find_special_goal_filter(query, event_names) do
-    case Query.get_filter(query, "event:goal") do
-      [:is, "event:goal", {:event, name}] ->
-        if name in event_names, do: name, else: nil
-
-      _ ->
-        nil
-    end
   end
 
   defp select_imported_metrics(q, []), do: q
@@ -321,6 +421,18 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_pages", _}}} = q,
+         [:bounce_rate | rest]
+       ) do
+    q
+    |> select_merge([i], %{
+      bounces: 0,
+      __internal_visits: 0
+    })
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
          %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
          [:bounce_rate | rest]
        ) do
@@ -354,6 +466,18 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_pages", _}}} = q,
+         [:visit_duration | rest]
+       ) do
+    q
+    |> select_merge([i], %{
+      visit_duration: 0,
+      __internal_visits: 0
+    })
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
          %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
          [:visit_duration | rest]
        ) do
@@ -382,6 +506,32 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([i], %{
       visit_duration: sum(i.visit_duration),
       __internal_visits: sum(i.visits)
+    })
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
+         [:views_per_visit | rest]
+       ) do
+    q
+    |> where([i], i.pageviews > 0)
+    |> select_merge([i], %{
+      pageviews: sum(i.pageviews),
+      __internal_visits: sum(i.entrances)
+    })
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_exit_pages", _}}} = q,
+         [:views_per_visit | rest]
+       ) do
+    q
+    |> where([i], i.pageviews > 0)
+    |> select_merge([i], %{
+      pageviews: sum(i.pageviews),
+      __internal_visits: sum(i.exits)
     })
     |> select_imported_metrics(rest)
   end
@@ -558,7 +708,7 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp select_joined_metrics(q, []), do: q
-  # TODO: Reverse-engineering the native data bounces and total visit
+  # NOTE: Reverse-engineering the native data bounces and total visit
   # durations to combine with imported data is inefficient. Instead both
   # queries should fetch bounces/total_visit_duration and visits and be
   # used as subqueries to a main query that then find the bounce rate/avg

@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import * as storage from '../../util/storage'
 import * as url from '../../util/url'
 import * as api from '../../api'
 import ListReport from './../reports/list'
 import { VISITORS_METRIC, maybeWithCR } from './../reports/metrics';
+import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 
-function EntryPages({ query, site }) {
+function EntryPages({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/entry-pages'), query, { limit: 9 })
   }
@@ -25,6 +26,7 @@ function EntryPages({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Entry page"
       metrics={maybeWithCR([{ ...VISITORS_METRIC, label: 'Unique Entrances' }], query)}
@@ -36,7 +38,7 @@ function EntryPages({ query, site }) {
   )
 }
 
-function ExitPages({ query, site }) {
+function ExitPages({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/exit-pages'), query, { limit: 9 })
   }
@@ -55,6 +57,7 @@ function ExitPages({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Exit page"
       metrics={maybeWithCR([{ ...VISITORS_METRIC, label: "Unique Exits" }], query)}
@@ -66,7 +69,7 @@ function ExitPages({ query, site }) {
   )
 }
 
-function TopPages({ query, site }) {
+function TopPages({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/pages'), query, { limit: 9 })
   }
@@ -85,6 +88,7 @@ function TopPages({ query, site }) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Page"
       metrics={maybeWithCR([VISITORS_METRIC], query)}
@@ -102,38 +106,41 @@ const labelFor = {
   'exit-pages': 'Exit Pages',
 }
 
-export default class Pages extends React.Component {
-  constructor(props) {
-    super(props)
-    this.tabKey = `pageTab__${props.site.domain}`
-    const storedTab = storage.getItem(this.tabKey)
-    this.state = {
-      mode: storedTab || 'pages'
-    }
+export default function Pages(props) {
+  const {site, query} = props
+  const tabKey = `pageTab__${site.domain}`
+  const storedTab = storage.getItem(tabKey)
+  const [mode, setMode] = useState(storedTab || 'pages')
+  const [loading, setLoading] = useState(true)
+  const [skipImportedReason, setSkipImportedReason] = useState(null)
+
+  function switchTab(mode) {
+    storage.setItem(tabKey, mode)
+    setMode(mode)
   }
 
-  setMode(mode) {
-    return () => {
-      storage.setItem(this.tabKey, mode)
-      this.setState({ mode })
-    }
+  function afterFetchData(apiResponse) {
+    setLoading(false)
+    setSkipImportedReason(apiResponse.skip_imported_reason)
   }
 
-  renderContent() {
-    switch (this.state.mode) {
+  useEffect(() => setLoading(true), [query, mode])
+
+  function renderContent() {
+    switch (mode) {
       case "entry-pages":
-        return <EntryPages site={this.props.site} query={this.props.query} />
+        return <EntryPages site={site} query={query} afterFetchData={afterFetchData} />
       case "exit-pages":
-        return <ExitPages site={this.props.site} query={this.props.query} />
+        return <ExitPages site={site} query={query} afterFetchData={afterFetchData} />
       case "pages":
       default:
-        return <TopPages site={this.props.site} query={this.props.query} />
+        return <TopPages site={site} query={query} afterFetchData={afterFetchData} />
     }
   }
 
 
-  renderPill(name, mode) {
-    const isActive = this.state.mode === mode
+  function renderPill(name, pill) {
+    const isActive = mode === pill
 
     if (isActive) {
       return (
@@ -148,30 +155,31 @@ export default class Pages extends React.Component {
     return (
       <button
         className="hover:text-indigo-600 cursor-pointer"
-        onClick={this.setMode(mode)}
+        onClick={() => switchTab(pill)}
       >
         {name}
       </button>
     )
   }
 
-  render() {
-    return (
-      <div>
-        {/* Header Container */}
-        <div className="w-full flex justify-between">
+  return (
+    <div>
+      {/* Header Container */}
+      <div className="w-full flex justify-between">
+        <div className="flex gap-x-1">
           <h3 className="font-bold dark:text-gray-100">
-            {labelFor[this.state.mode] || 'Page Visits'}
+            {labelFor[mode] || 'Page Visits'}
           </h3>
-          <div className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
-            {this.renderPill('Top Pages', 'pages')}
-            {this.renderPill('Entry Pages', 'entry-pages')}
-            {this.renderPill('Exit Pages', 'exit-pages')}
-          </div>
+          <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason} />
         </div>
-        {/* Main Contents */}
-        {this.renderContent()}
+        <div className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
+          {renderPill('Top Pages', 'pages')}
+          {renderPill('Entry Pages', 'entry-pages')}
+          {renderPill('Exit Pages', 'exit-pages')}
+        </div>
       </div>
-    )
-  }
+      {/* Main Contents */}
+      {renderContent()}
+    </div>
+  )
 }

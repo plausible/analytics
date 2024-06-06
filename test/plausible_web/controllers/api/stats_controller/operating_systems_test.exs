@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/operating-systems?period=day")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "Mac", "visitors" => 2, "percentage" => 66.7},
                %{"name" => "Android", "visitors" => 1, "percentage" => 33.3}
              ]
@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/operating-systems?period=day")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "(not set)", "visitors" => 1, "percentage" => 50},
                %{"name" => "Linux", "visitors" => 1, "percentage" => 50}
              ]
@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       conn =
         get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "(not set)", "visitors" => 1, "percentage" => 100}
              ]
     end
@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       conn =
         get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&with_imported=true")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "(not set)", "visitors" => 2, "percentage" => 100.0}
              ]
     end
@@ -74,7 +74,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       conn =
         get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Mac",
                  "total_visitors" => 2,
@@ -114,7 +114,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       conn =
         get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "Mac", "visitors" => 1, "percentage" => 100}
              ]
     end
@@ -151,7 +151,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       conn =
         get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "Android", "visitors" => 1, "percentage" => 50},
                %{"name" => "Mac", "visitors" => 1, "percentage" => 50}
              ]
@@ -172,7 +172,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/operating-systems?period=day")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "Mac", "visitors" => 2, "percentage" => 66.7},
                %{"name" => "Android", "visitors" => 1, "percentage" => 33.3}
              ]
@@ -180,7 +180,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       conn =
         get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&with_imported=true")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "Mac", "visitors" => 3, "percentage" => 60},
                %{"name" => "Android", "visitors" => 2, "percentage" => 40}
              ]
@@ -199,7 +199,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       conn =
         get(conn, "/api/stats/#{site.domain}/operating-systems?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Mac",
                  "total_visitors" => 2,
@@ -241,7 +241,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
           "/api/stats/#{site.domain}/operating-system-versions?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "10.16", "visitors" => 2, "percentage" => 66.7, "os" => "Mac"},
                %{"name" => "10.15", "visitors" => 1, "percentage" => 33.3, "os" => "Mac"}
              ]
@@ -281,7 +281,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
           "/api/stats/#{site.domain}/operating-system-versions?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "os" => "(not set)",
                  "name" => "(not set)",

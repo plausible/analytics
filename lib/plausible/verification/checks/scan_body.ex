@@ -13,6 +13,7 @@ defmodule Plausible.Verification.Checks.ScanBody do
     |> scan_wp_plugin()
     |> scan_gtm()
     |> scan_wp()
+    |> scan_cookie_banners()
   end
 
   def perform(state), do: state
@@ -61,5 +62,21 @@ defmodule Plausible.Verification.Checks.ScanBody do
     else
       state
     end
+  end
+
+  defp scan_cookie_banners(%{assigns: %{raw_body: body}} = state) do
+    # We'll start with CookieBot. Not using the selectors yet, as seen at
+    # https://github.com/cavi-au/Consent-O-Matic/blob/master/rules/cookiebot.json
+    # because those don't seem to be appearing without JS evaluation. 
+    # If this ever becomes an issue, we'll have to move that check to headless.
+    if String.contains?(body, "cookiebot") do
+      put_diagnostics(state, cookie_banner_likely?: true)
+    else
+      state
+    end
+  end
+
+  defp scan_cookie_banners(state) do
+    state
   end
 end

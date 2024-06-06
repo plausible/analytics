@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "Chrome", "visitors" => 2, "percentage" => 66.7},
                %{"name" => "Firefox", "visitors" => 1, "percentage" => 33.3}
              ]
@@ -47,7 +47,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       filters = Jason.encode!(%{props: %{"author" => "John Doe"}})
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "Chrome", "visitors" => 1, "percentage" => 100}
              ]
     end
@@ -82,7 +82,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       filters = Jason.encode!(%{props: %{"author" => "!John Doe"}})
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "Firefox", "visitors" => 1, "percentage" => 50},
                %{"name" => "Safari", "visitors" => 1, "percentage" => 50}
              ]
@@ -99,7 +99,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "Chrome",
                  "total_visitors" => 2,
@@ -123,13 +123,13 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "Chrome", "visitors" => 1, "percentage" => 100}
              ]
 
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&with_imported=true")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "Chrome", "visitors" => 2, "percentage" => 66.7},
                %{"name" => "Firefox", "visitors" => 1, "percentage" => 33.3}
              ]
@@ -154,7 +154,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&with_imported=true")
 
-      assert json_response(conn, 200) == []
+      assert json_response(conn, 200)["results"] == []
     end
 
     test "returns (not set) when appropriate", %{conn: conn, site: site} do
@@ -167,7 +167,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "(not set)", "visitors" => 1, "percentage" => 100.0}
              ]
     end
@@ -185,7 +185,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&with_imported=true")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "(not set)", "visitors" => 2, "percentage" => 100.0}
              ]
     end
@@ -220,6 +220,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
           "/api/stats/#{site.domain}/browser-versions?period=day&filters=#{filters}"
         )
         |> json_response(200)
+        |> Map.get("results")
 
       assert %{
                "browser" => "Chrome",
@@ -254,7 +255,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
           "/api/stats/#{site.domain}/browser-versions?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "78.0", "visitors" => 2, "percentage" => 66.7, "browser" => "Chrome"},
                %{"name" => "77.0", "visitors" => 1, "percentage" => 33.3, "browser" => "Chrome"}
              ]
@@ -273,7 +274,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
           "/api/stats/#{site.domain}/browser-versions?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "(not set)",
                  "visitors" => 1,
@@ -317,7 +318,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
           "/api/stats/#{site.domain}/browser-versions?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "browser" => "(not set)",
                  "name" => "(not set)",

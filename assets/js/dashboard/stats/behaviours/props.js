@@ -75,6 +75,7 @@ export default function Properties(props) {
     return (
       <ListReport
         fetchData={fetchProps}
+        afterFetchData={props.afterFetchData}
         getFilterFor={getFilterFor}
         keyLabel={propKey}
         metrics={[

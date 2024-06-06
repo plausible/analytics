@@ -530,6 +530,235 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                %{"name" => "Visit duration", "value" => 303, "graph_metric" => "visit_duration"}
              ]
     end
+
+    test ":member filter on country", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          country_code: "EE",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          country_code: "EE",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:imported_locations,
+          country: "EE",
+          date: ~D[2021-01-01],
+          visitors: 1,
+          visits: 3,
+          pageviews: 34,
+          bounces: 0,
+          visit_duration: 420
+        ),
+        build(:imported_locations,
+          country: "FR",
+          date: ~D[2021-01-01],
+          visitors: 3,
+          visits: 7,
+          pageviews: 65,
+          bounces: 1,
+          visit_duration: 300
+        ),
+        build(:imported_locations, country: "US", date: ~D[2021-01-01], visitors: 999)
+      ])
+
+      filters = Jason.encode!(%{country: "EE|FR"})
+      q = "?period=day&date=2021-01-01&with_imported=true&filters=#{filters}"
+
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["top_stats"] == [
+               %{"name" => "Unique visitors", "value" => 5, "graph_metric" => "visitors"},
+               %{"name" => "Total visits", "value" => 11, "graph_metric" => "visits"},
+               %{"name" => "Total pageviews", "value" => 101, "graph_metric" => "pageviews"},
+               %{
+                 "name" => "Views per visit",
+                 "value" => 9.18,
+                 "graph_metric" => "views_per_visit"
+               },
+               %{"name" => "Bounce rate", "value" => 9, "graph_metric" => "bounce_rate"},
+               %{"name" => "Visit duration", "value" => 71, "graph_metric" => "visit_duration"}
+             ]
+    end
+
+    test ":is filter on page returns only visitors, visits and pageviews", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:imported_pages,
+          page: "/",
+          date: ~D[2021-01-01],
+          visitors: 1,
+          visits: 3,
+          pageviews: 34
+        ),
+        build(:imported_pages, page: "/ignored", date: ~D[2021-01-01], visitors: 999)
+      ])
+
+      filters = Jason.encode!(%{page: "/"})
+      q = "?period=day&date=2021-01-01&with_imported=true&filters=#{filters}"
+
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["top_stats"] == [
+               %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"},
+               %{"name" => "Total visits", "value" => 4, "graph_metric" => "visits"},
+               %{"name" => "Total pageviews", "value" => 36, "graph_metric" => "pageviews"}
+             ]
+    end
+  end
+
+  describe "GET /api/stats/top-stats - with_imported_switch info" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    setup context do
+      insert(:site_import,
+        site: context.site,
+        start_date: ~D[2021-03-01],
+        end_date: ~D[2021-03-31]
+      )
+
+      context
+    end
+
+    test "visible is false in realtime", %{conn: conn, site: site} do
+      q = "?period=realtime"
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => false,
+               "togglable" => false,
+               "tooltip_msg" => nil
+             }
+    end
+
+    test "when the site has no imported data", %{conn: conn, site: site} do
+      Plausible.Imported.delete_imports_for_site(site)
+
+      q = "?period=day&date=2021-01-01&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => false,
+               "togglable" => false,
+               "tooltip_msg" => nil
+             }
+    end
+
+    test "when imported data does not exist in the queried period", %{conn: conn, site: site} do
+      q = "?period=day&date=2022-05-05&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => false,
+               "togglable" => false,
+               "tooltip_msg" => nil
+             }
+    end
+
+    test "when imported data is requested, in range, and can be included", %{
+      conn: conn,
+      site: site
+    } do
+      q = "?period=day&date=2021-03-15&with_imported=true"
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => true,
+               "togglable" => true,
+               "tooltip_msg" => "Click to exclude imported data"
+             }
+    end
+
+    test "when imported data is not requested, but in range and can be included", %{
+      conn: conn,
+      site: site
+    } do
+      q = "?period=day&date=2021-03-15&with_imported=false"
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => true,
+               "togglable" => true,
+               "tooltip_msg" => "Click to include imported data"
+             }
+    end
+
+    test "when imported data is requested and in range, but cannot be included", %{
+      conn: conn,
+      site: site
+    } do
+      filters = Jason.encode!(%{goal: "Signup", page: "/register"})
+      q = "?period=day&date=2021-03-15&with_imported=true&filters=#{filters}"
+
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => true,
+               "togglable" => false,
+               "tooltip_msg" => "Imported data cannot be included"
+             }
+    end
+
+    test "when imported data is requested and in comparison range", %{conn: conn, site: site} do
+      q = "?period=day&date=2022-03-15&with_imported=true&comparison=year_over_year"
+
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => true,
+               "togglable" => true,
+               "tooltip_msg" => "Click to exclude imported data"
+             }
+    end
+
+    test "when imported data is not requested and in comparison range", %{conn: conn, site: site} do
+      q = "?period=day&date=2022-03-15&with_imported=false&comparison=year_over_year"
+
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats#{q}")
+
+      res = json_response(conn, 200)
+
+      assert res["with_imported_switch"] == %{
+               "visible" => true,
+               "togglable" => true,
+               "tooltip_msg" => "Click to include imported data"
+             }
+    end
   end
 
   describe "GET /api/stats/top-stats - realtime" do
@@ -1358,7 +1587,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
           "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=true&comparison=year_over_year"
         )
 
-      assert %{"top_stats" => top_stats, "with_imported" => true} = json_response(conn, 200)
+      assert %{"top_stats" => top_stats, "includes_imported" => true} = json_response(conn, 200)
 
       assert %{
                "change" => 100,
@@ -1388,7 +1617,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
           "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=false&comparison=year_over_year"
         )
 
-      assert %{"top_stats" => top_stats, "with_imported" => false} = json_response(conn, 200)
+      assert %{"top_stats" => top_stats, "includes_imported" => false} = json_response(conn, 200)
 
       assert %{
                "change" => 100,

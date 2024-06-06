@@ -2,9 +2,12 @@ defmodule Plausible.Stats.FilterSuggestions do
   use Plausible.Repo
   use Plausible.ClickhouseRepo
   use Plausible.Stats.Fragments
+
   import Plausible.Stats.Base
   import Ecto.Query
+
   alias Plausible.Stats.Query
+  alias Plausible.Stats.Imported
 
   def filter_suggestions(site, query, "country", filter_search) do
     matches = Location.search_country(filter_search)
@@ -16,6 +19,7 @@ defmodule Plausible.Stats.FilterSuggestions do
         order_by: [desc: fragment("count(*)")],
         select: e.country_code
       )
+      |> Imported.merge_imported_country_suggestions(site, query)
 
     ClickhouseRepo.all(q)
     |> Enum.map(fn c -> Enum.find(matches, fn x -> x.alpha_2 == c end) end)
@@ -35,33 +39,60 @@ defmodule Plausible.Stats.FilterSuggestions do
       group_by: e.subdivision1_code,
       order_by: [desc: fragment("count(*)")],
       select: e.subdivision1_code,
-      where: e.subdivision1_code != "",
-      limit: 24
+      where: e.subdivision1_code != ""
     )
+    |> Imported.merge_imported_region_suggestions(site, query)
+    |> limit(24)
     |> ClickhouseRepo.all()
     |> Enum.map(fn c ->
       subdiv = Location.get_subdivision(c)
 
-      %{
-        value: c,
-        label: subdiv.name
-      }
+      if subdiv do
+        %{
+          value: c,
+          label: subdiv.name
+        }
+      else
+        %{
+          value: c,
+          label: c
+        }
+      end
     end)
   end
 
   def filter_suggestions(site, query, "region", filter_search) do
     matches = Location.search_subdivision(filter_search)
+    filter_search = String.downcase(filter_search)
 
     q =
       from(
         e in query_sessions(site, query),
         group_by: e.subdivision1_code,
         order_by: [desc: fragment("count(*)")],
-        select: e.subdivision1_code
+        select: e.subdivision1_code,
+        where: e.subdivision1_code != ""
       )
+      |> Imported.merge_imported_region_suggestions(site, query)
 
     ClickhouseRepo.all(q)
-    |> Enum.map(fn c -> Enum.find(matches, fn x -> x.code == c end) end)
+    |> Enum.map(fn c ->
+      match = Enum.find(matches, fn x -> x.code == c end)
+
+      cond do
+        match ->
+          match
+
+        String.contains?(String.downcase(c), filter_search) ->
+          %{
+            code: c,
+            name: c
+          }
+
+        true ->
+          nil
+      end
+    end)
     |> Enum.filter(& &1)
     |> Enum.slice(0..24)
     |> Enum.map(fn subdiv ->
@@ -78,9 +109,10 @@ defmodule Plausible.Stats.FilterSuggestions do
       group_by: e.city_geoname_id,
       order_by: [desc: fragment("count(*)")],
       select: e.city_geoname_id,
-      where: e.city_geoname_id != 0,
-      limit: 24
+      where: e.city_geoname_id != 0
     )
+    |> Imported.merge_imported_city_suggestions(site, query)
+    |> limit(24)
     |> ClickhouseRepo.all()
     |> Enum.map(fn c ->
       city = Location.get_city(c)
@@ -101,9 +133,10 @@ defmodule Plausible.Stats.FilterSuggestions do
         group_by: e.city_geoname_id,
         order_by: [desc: fragment("count(*)")],
         select: e.city_geoname_id,
-        where: e.city_geoname_id != 0,
-        limit: 5000
+        where: e.city_geoname_id != 0
       )
+      |> Imported.merge_imported_city_suggestions(site, query)
+      |> limit(5000)
 
     ClickhouseRepo.all(q)
     |> Enum.map(fn c -> Location.get_city(c) end)
@@ -223,10 +256,16 @@ defmodule Plausible.Stats.FilterSuggestions do
       where: fragment("? ilike ?", field(e, ^filter_name), ^filter_query),
       select: field(e, ^filter_name),
       group_by: ^filter_name,
-      order_by: [desc: fragment("count(*)")],
-      limit: 25
+      order_by: [desc: fragment("count(*)")]
     )
     |> apply_additional_filters(filter_name, site)
+    |> Imported.merge_imported_filter_suggestions(
+      site,
+      query,
+      filter_name,
+      filter_query
+    )
+    |> limit(25)
     |> ClickhouseRepo.all()
     |> Enum.filter(fn suggestion -> suggestion != "" end)
     |> wrap_suggestions()

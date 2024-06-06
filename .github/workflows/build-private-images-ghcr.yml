@@ -24,12 +24,15 @@ jobs:
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5.0.0
+        env:
+          DOCKER_METADATA_PR_HEAD_SHA: true
         with:
           images: ghcr.io/plausible/analytics/ee
           tags: |
             type=ref,event=pr
             type=ref,event=branch
             type=ref,event=tag
+            type=sha
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

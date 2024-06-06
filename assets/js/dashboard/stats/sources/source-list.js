@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 
 import * as storage from '../../util/storage'
 import * as url from '../../util/url'
@@ -8,6 +8,7 @@ import { VISITORS_METRIC, maybeWithCR } from '../reports/metrics';
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
+import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 
 const UTM_TAGS = {
   utm_medium: { label: 'UTM Medium', shortLabel: 'UTM Medium', endpoint: '/utm_mediums' },
@@ -43,6 +44,7 @@ function AllSources(props) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={props.afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Source"
       metrics={maybeWithCR([VISITORS_METRIC], query)}
@@ -72,6 +74,7 @@ function UTMSources(props) {
   return (
     <ListReport
       fetchData={fetchData}
+      afterFetchData={props.afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel={utmTag.label}
       metrics={maybeWithCR([VISITORS_METRIC], query)}
@@ -87,6 +90,10 @@ export default function SourceList(props) {
   const tabKey = 'sourceTab__' + props.site.domain
   const storedTab = storage.getItem(tabKey)
   const [currentTab, setCurrentTab] = useState(storedTab || 'all')
+  const [loading, setLoading] = useState(true)
+  const [skipImportedReason, setSkipImportedReason] = useState(null)
+
+  useEffect(() => setLoading(true), [query, currentTab])
 
   function setTab(tab) {
     return () => {
@@ -152,19 +159,27 @@ export default function SourceList(props) {
 
   function renderContent() {
     if (currentTab === 'all') {
-      return <AllSources site={site} query={query} />
+      return <AllSources site={site} query={query} afterFetchData={afterFetchData} />
     } else {
-      return <UTMSources tab={currentTab} site={site} query={query} />
+      return <UTMSources tab={currentTab} site={site} query={query} afterFetchData={afterFetchData} />
     }
+  }
+
+  function afterFetchData(apiResponse) {
+    setLoading(false)
+    setSkipImportedReason(apiResponse.skip_imported_reason)
   }
 
   return (
     <div>
       {/* Header Container */}
       <div className="w-full flex justify-between">
-        <h3 className="font-bold dark:text-gray-100">
-          Top Sources
-        </h3>
+        <div className="flex gap-x-1">
+          <h3 className="font-bold dark:text-gray-100">
+            Top Sources
+          </h3>
+          <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason}/>
+        </div>
         {renderTabs()}
       </div>
       {/* Main Contents */}

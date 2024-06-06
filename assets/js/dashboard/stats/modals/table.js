@@ -19,7 +19,7 @@ class ModalTable extends React.Component {
 
   componentDidMount() {
     api.get(this.props.endpoint, this.state.query, {limit: 100})
-      .then((res) => this.setState({loading: false, list: res}))
+      .then((response) => this.setState({loading: false, list: response.results}))
   }
 
   showConversionRate() {

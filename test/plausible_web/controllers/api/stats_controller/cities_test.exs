@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Api.StatsController.CitiesTest do
     test "returns top cities by new visitors", %{conn: conn, site: site} do
       conn = get(conn, "/api/stats/#{site.domain}/cities?period=day")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"code" => 588_409, "country_flag" => "🇪🇪", "name" => "Tallinn", "visitors" => 3},
                %{"code" => 591_632, "country_flag" => "🇪🇪", "name" => "Kärdla", "visitors" => 2}
              ]
@@ -47,7 +47,7 @@ defmodule PlausibleWeb.Api.StatsController.CitiesTest do
       filters = Jason.encode!(%{city: "591632"})
       conn = get(conn, "/api/stats/#{site.domain}/cities?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"code" => 591_632, "country_flag" => "🇪🇪", "name" => "Kärdla", "visitors" => 2}
              ]
     end
@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Api.StatsController.CitiesTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/cities?period=day&with_imported=true")
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn, 200)["results"] == [
                %{"code" => 588_409, "country_flag" => "🇪🇪", "name" => "Tallinn", "visitors" => 4},
                %{"code" => 591_632, "country_flag" => "🇪🇪", "name" => "Kärdla", "visitors" => 2}
              ]

@@ -43,8 +43,8 @@ export function parseQuery(querystring, site) {
     match_day_of_week: matchDayOfWeek == 'true',
     with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
     experimental_session_count: q.get('experimental_session_count'),
-    filters: JsonURL.parse(q.get('filters')) || [],
-    labels: JsonURL.parse(q.get('labels')) || {}
+    filters: parseJsonUrl(q.get('filters'), []),
+    labels: parseJsonUrl(q.get('labels'), {})
   }
 }
 
@@ -57,6 +57,13 @@ export function navigateToQuery(history, queryFrom, newData) {
 
   // then push the new query to the history
   history.push({ search: updatedQuery(newData) })
+}
+
+function parseJsonUrl(value, defaultValue) {
+  if (!value) {
+    return defaultValue
+  }
+  return JsonURL.parse(value.replaceAll("=", "%3D"))
 }
 
 const LEGACY_URL_PARAMETERS = {

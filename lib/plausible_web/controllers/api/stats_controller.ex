@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     * `interval` - the interval used for querying.
 
-    * `with_imported` - boolean indicating whether the Google Analytics data
+    * `includes_imported` - boolean indicating whether imported data
       was queried or not.
 
     * `imports_exist` - boolean indicating whether there are any completed
@@ -92,7 +92,7 @@ defmodule PlausibleWeb.Api.StatsController do
     "labels" => ["2021-09-01", "2021-10-01", "2021-11-01", "2021-12-01"],
     "plot" => [0, 0, 0, 0],
     "present_index" => nil,
-    "with_imported" => false
+    "includes_imported" => false
   }
   ```
 
@@ -137,7 +137,7 @@ defmodule PlausibleWeb.Api.StatsController do
         comparison_labels: comparison_result && label_timeseries(comparison_result, nil),
         present_index: present_index,
         interval: query.interval,
-        with_imported: with_imported?(query, comparison_query),
+        includes_imported: includes_imported?(query, comparison_query),
         imports_exist: site.complete_import_ids != [],
         full_intervals: full_intervals
       })
@@ -217,13 +217,46 @@ defmodule PlausibleWeb.Api.StatsController do
       top_stats: top_stats,
       interval: query.interval,
       sample_percent: sample_percent,
-      with_imported: with_imported?(query, comparison_query),
+      with_imported_switch: with_imported_switch_info(query, comparison_query),
+      includes_imported: includes_imported?(query, comparison_query),
       imports_exist: site.complete_import_ids != [],
       comparing_from: comparison_query && comparison_query.date_range.first,
       comparing_to: comparison_query && comparison_query.date_range.last,
       from: query.date_range.first,
       to: query.date_range.last
     })
+  end
+
+  defp with_imported_switch_info(%Query{period: "realtime"}, _) do
+    %{visible: false, togglable: false, tooltip_msg: nil}
+  end
+
+  defp with_imported_switch_info(query, nil) do
+    with_imported_switch_info(query.skip_imported_reason)
+  end
+
+  defp with_imported_switch_info(query, comparison_query) do
+    case {query.skip_imported_reason, comparison_query.skip_imported_reason} do
+      {:out_of_range, nil} -> with_imported_switch_info(nil)
+      {:out_of_range, :not_requested} -> with_imported_switch_info(:not_requested)
+      {reason, _} -> with_imported_switch_info(reason)
+    end
+  end
+
+  defp with_imported_switch_info(skip_reason) do
+    case skip_reason do
+      reason when reason in [:no_imported_data, :out_of_range] ->
+        %{visible: false, togglable: false, tooltip_msg: nil}
+
+      :unsupported_query ->
+        %{visible: true, togglable: false, tooltip_msg: "Imported data cannot be included"}
+
+      :not_requested ->
+        %{visible: true, togglable: true, tooltip_msg: "Click to include imported data"}
+
+      nil ->
+        %{visible: true, togglable: true, tooltip_msg: "Click to exclude imported data"}
+    end
   end
 
   defp present_index_for(site, query, dates) do
@@ -381,26 +414,15 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_other_top_stats(site, query, comparison_query) do
+    page_filter? = Query.get_filter(query, "event:page")
+
+    metrics = [:visitors, :visits, :pageviews, :sample_percent]
+
     metrics =
-      if Query.get_filter(query, "event:page") do
-        [
-          :visitors,
-          :visits,
-          :pageviews,
-          :bounce_rate,
-          :time_on_page,
-          :sample_percent
-        ]
-      else
-        [
-          :visitors,
-          :visits,
-          :pageviews,
-          :views_per_visit,
-          :bounce_rate,
-          :visit_duration,
-          :sample_percent
-        ]
+      cond do
+        page_filter? && query.include_imported -> metrics
+        page_filter? -> metrics ++ [:bounce_rate, :time_on_page]
+        true -> metrics ++ [:views_per_visit, :bounce_rate, :visit_duration]
       end
 
     current_results = Stats.aggregate(site, query, metrics)
@@ -492,7 +514,10 @@ defmodule PlausibleWeb.Api.StatsController do
         res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
-      json(conn, res)
+      json(conn, %{
+        results: res,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -570,7 +595,10 @@ defmodule PlausibleWeb.Api.StatsController do
         res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
-      json(conn, res)
+      json(conn, %{
+        results: res,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -594,7 +622,10 @@ defmodule PlausibleWeb.Api.StatsController do
         res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
-      json(conn, res)
+      json(conn, %{
+        results: res,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -618,7 +649,10 @@ defmodule PlausibleWeb.Api.StatsController do
         res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
-      json(conn, res)
+      json(conn, %{
+        results: res,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -642,7 +676,10 @@ defmodule PlausibleWeb.Api.StatsController do
         res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
-      json(conn, res)
+      json(conn, %{
+        results: res,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -666,7 +703,10 @@ defmodule PlausibleWeb.Api.StatsController do
         res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
-      json(conn, res)
+      json(conn, %{
+        results: res,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -690,7 +730,10 @@ defmodule PlausibleWeb.Api.StatsController do
         res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
       end
     else
-      json(conn, res)
+      json(conn, %{
+        results: res,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -743,7 +786,10 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, metrics, pagination)
       |> transform_keys(%{referrer: :name})
 
-    json(conn, referrers)
+    json(conn, %{
+      results: referrers,
+      skip_imported_reason: query.skip_imported_reason
+    })
   end
 
   def pages(conn, params) do
@@ -772,7 +818,10 @@ defmodule PlausibleWeb.Api.StatsController do
         pages |> to_csv([:name, :visitors, :pageviews, :bounce_rate, :time_on_page])
       end
     else
-      json(conn, pages)
+      json(conn, %{
+        results: pages,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -803,7 +852,10 @@ defmodule PlausibleWeb.Api.StatsController do
         ])
       end
     else
-      json(conn, entry_pages)
+      json(conn, %{
+        results: entry_pages,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -835,7 +887,10 @@ defmodule PlausibleWeb.Api.StatsController do
         ])
       end
     else
-      json(conn, exit_pages)
+      json(conn, %{
+        results: exit_pages,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -845,14 +900,15 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       pages = Enum.map(breakdown_results, & &1[:exit_page])
 
-      total_visits_query =
+      total_pageviews_query =
         query
+        |> Query.remove_filters(["visit:exit_page"])
         |> Query.put_filter([:member, "event:page", pages])
         |> Query.put_filter([:is, "event:name", "pageview"])
-        |> struct!(property: "event:page")
+        |> Query.set_property("event:page")
 
       total_pageviews =
-        Stats.breakdown(site, total_visits_query, [:pageviews], {limit, 1})
+        Stats.breakdown(site, total_pageviews_query, [:pageviews], {limit, 1})
 
       Enum.map(breakdown_results, fn result ->
         exit_rate =
@@ -917,7 +973,10 @@ defmodule PlausibleWeb.Api.StatsController do
           end
         end)
 
-      json(conn, countries)
+      json(conn, %{
+        results: countries,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -952,7 +1011,10 @@ defmodule PlausibleWeb.Api.StatsController do
         regions |> to_csv([:name, :visitors])
       end
     else
-      json(conn, regions)
+      json(conn, %{
+        results: regions,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -992,7 +1054,10 @@ defmodule PlausibleWeb.Api.StatsController do
         cities |> to_csv([:name, :visitors])
       end
     else
-      json(conn, cities)
+      json(conn, %{
+        results: cities,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -1016,7 +1081,10 @@ defmodule PlausibleWeb.Api.StatsController do
         browsers |> to_csv([:name, :visitors])
       end
     else
-      json(conn, browsers)
+      json(conn, %{
+        results: browsers,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -1046,7 +1114,10 @@ defmodule PlausibleWeb.Api.StatsController do
         |> to_csv([:name, :version, :visitors])
       end
     else
-      json(conn, versions)
+      json(conn, %{
+        results: versions,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -1070,7 +1141,10 @@ defmodule PlausibleWeb.Api.StatsController do
         systems |> to_csv([:name, :visitors])
       end
     else
-      json(conn, systems)
+      json(conn, %{
+        results: systems,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -1096,7 +1170,10 @@ defmodule PlausibleWeb.Api.StatsController do
         |> to_csv([:name, :version, :visitors])
       end
     else
-      json(conn, versions)
+      json(conn, %{
+        results: versions,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -1120,7 +1197,10 @@ defmodule PlausibleWeb.Api.StatsController do
         sizes |> to_csv([:name, :visitors])
       end
     else
-      json(conn, sizes)
+      json(conn, %{
+        results: sizes,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -1156,7 +1236,10 @@ defmodule PlausibleWeb.Api.StatsController do
         :total_conversions
       ])
     else
-      json(conn, conversions)
+      json(conn, %{
+        results: conversions,
+        skip_imported_reason: query.skip_imported_reason
+      })
     end
   end
 
@@ -1166,8 +1249,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     case Plausible.Props.ensure_prop_key_accessible(prop_key, site.owner) do
       :ok ->
-        props = breakdown_custom_prop_values(site, params)
-        json(conn, props)
+        json(conn, breakdown_custom_prop_values(site, params))
 
       {:error, :upgrade_required} ->
         H.payment_required(
@@ -1195,6 +1277,7 @@ defmodule PlausibleWeb.Api.StatsController do
         prop_names
         |> Enum.map(fn prop_key ->
           breakdown_custom_prop_values(site, Map.put(params, "prop_key", prop_key))
+          |> Map.get(:results)
           |> Enum.map(&Map.put(&1, :property, prop_key))
           |> transform_keys(%{:name => :value})
         end)
@@ -1224,12 +1307,15 @@ defmodule PlausibleWeb.Api.StatsController do
         [:visitors, :events, :percentage] ++ @revenue_metrics
       end
 
-    Stats.breakdown(site, query, metrics, pagination)
-    |> transform_keys(%{prop_key => :name})
-    |> Enum.map(fn entry ->
-      Enum.map(entry, &format_revenue_metric/1)
-      |> Map.new()
-    end)
+    props =
+      Stats.breakdown(site, query, metrics, pagination)
+      |> transform_keys(%{prop_key => :name})
+      |> Enum.map(fn entry ->
+        Enum.map(entry, &format_revenue_metric/1)
+        |> Map.new()
+      end)
+
+    %{results: props, skip_imported_reason: query.skip_imported_reason}
   end
 
   def current_visitors(conn, _) do
@@ -1401,7 +1487,7 @@ defmodule PlausibleWeb.Api.StatsController do
     ]
   end
 
-  defp with_imported?(source_query, comparison_query) do
+  defp includes_imported?(source_query, comparison_query) do
     cond do
       source_query.include_imported -> true
       comparison_query && comparison_query.include_imported -> true
