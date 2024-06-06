@@ -67,7 +67,6 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
         assert %{errors: [%{detail: "Plugins API: resource not found"}]} = resp
       end
 
-      @tag :ee_only
       test "retrieves funnel by ID", %{conn: conn, site: site, token: token} do
         {:ok, g1} = Plausible.Goals.create(site, %{"page_path" => "/product/123"})
 
