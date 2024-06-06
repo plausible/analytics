@@ -39,10 +39,11 @@ defmodule Plausible.Plugins.API.Funnels do
 
       nil ->
         case Plausible.Funnels.create(site, name, goals) do
-          {:ok, funnel} -> 
+          {:ok, funnel} ->
             # reload result with steps included
             {:ok, get(site, funnel.id)}
-          error -> 
+
+          error ->
             error
         end
     end
