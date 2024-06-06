@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Funnel do
             type: :array,
             minItems: 2,
             maxItems: Funnel.Const.max_steps(),
-            items: Schemas.Goal,
+            items: Schemas.Goal
           }
         }
       }

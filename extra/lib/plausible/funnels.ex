@@ -20,13 +20,15 @@ defmodule Plausible.Funnels do
       when is_list(steps) and length(steps) in Funnel.min_steps()..Funnel.max_steps() do
     site = Plausible.Repo.preload(site, :owner)
 
-        case Plausible.Billing.Feature.Funnels.check_availability(site.owner) do
-          {:error, _} = error -> error
-          :ok -> 
-            site
-            |> create_changeset(name, steps)
-            |> Repo.insert()
-        end
+    case Plausible.Billing.Feature.Funnels.check_availability(site.owner) do
+      {:error, _} = error ->
+        error
+
+      :ok ->
+        site
+        |> create_changeset(name, steps)
+        |> Repo.insert()
+    end
   end
 
   def create(_site, _name, _goals) do
