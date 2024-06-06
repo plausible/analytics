@@ -229,6 +229,11 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
           |> json_response(201)
           |> assert_schema("Funnel", spec())
 
+        [location] = get_resp_header(conn, "location")
+
+        assert location ==
+                 Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :get, resp.funnel.id)
+
         funnel = Plausible.Funnels.get(site, resp.funnel.id)
 
         assert funnel.name == resp.funnel.name

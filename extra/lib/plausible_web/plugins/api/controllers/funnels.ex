@@ -25,10 +25,10 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Funnels do
 
     case Plausible.Plugins.API.Funnels.create(site, body_params) do
       {:ok, funnel} ->
-        location_header = plugins_api_funnels_url(conn, :get, funnel.id)
+        headers = [{"location", plugins_api_funnels_url(conn, :get, funnel.id)}]
 
         conn
-        |> prepend_resp_headers([location_header])
+        |> prepend_resp_headers(headers)
         |> put_view(Views.Funnel)
         |> put_status(:created)
         |> render("funnel.json", funnel: funnel, authorized_site: site)
