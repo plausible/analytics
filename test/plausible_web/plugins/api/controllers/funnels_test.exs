@@ -236,7 +236,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
         assert Enum.count(funnel.steps) == 3
       end
 
-      test "fails for insuficient plan", %{conn: conn, token: token, site: site} do
+      test "fails for insufficient plan", %{conn: conn, token: token, site: site} do
         site = Plausible.Repo.preload(site, :owner)
         insert(:growth_subscription, user: site.owner)
 
