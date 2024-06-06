@@ -13,7 +13,9 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
 
     join_query_results(
       build_events_query(site, query, event_metrics),
+      event_metrics,
       build_sessions_query(site, query, sessions_metrics),
+      sessions_metrics,
       query
     )
   end
@@ -125,14 +127,15 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     end)
   end
 
-  defp join_query_results(nil, nil, _query), do: nil
-  defp join_query_results(events_q, nil, _query), do: events_q
-  defp join_query_results(nil, sessions_q, _query), do: sessions_q
+  defp join_query_results(nil, _, nil, _, _query), do: nil
+  defp join_query_results(events_q, _, nil, _, _query), do: events_q
+  defp join_query_results(nil, _, sessions_q, _, _query), do: sessions_q
 
-  defp join_query_results(events_q, sessions_q, query) do
+  defp join_query_results(events_q, _event_metrics, sessions_q, sessions_metrics, query) do
     join(subquery(events_q), :left, [e], s in subquery(sessions_q),
       on: ^build_group_by_join(query)
     )
+    |> select_join_fields(sessions_metrics)
   end
 
   defp build_group_by_join(%Query{dimensions: []}), do: true
@@ -142,5 +145,11 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     |> Enum.map(&String.to_atom/1)
     |> Enum.map(fn dim -> dynamic([e, s], field(e, ^dim) == field(s, ^dim)) end)
     |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
+  end
+
+  defp select_join_fields(q, sessions_metrics) do
+    Enum.reduce(sessions_metrics, q, fn metric, q ->
+      select_merge(q, ^%{metric => dynamic([e, s], field(s, ^metric))})
+    end)
   end
 end

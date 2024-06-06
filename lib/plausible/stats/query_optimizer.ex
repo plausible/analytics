@@ -15,9 +15,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   end
 
   defp add_missing_order_by(%Query{order_by: nil} = query) do
-    order_by = query.metrics |> Enum.map(&{&1, :desc})
-
-    %Query{query | order_by: order_by}
+    %Query{query | order_by: [{hd(query.metrics), :desc}]}
   end
 
   defp add_missing_order_by(query), do: query

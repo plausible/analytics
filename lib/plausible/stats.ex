@@ -1,5 +1,6 @@
 defmodule Plausible.Stats do
   use Plausible
+  alias Plausible.Stats.QueryResult
   use Plausible.ClickhouseRepo
 
   alias Plausible.Stats.{
@@ -35,10 +36,12 @@ defmodule Plausible.Stats do
   end
 
   def query(site, query) do
-    query
-    |> QueryOptimizer.optimize()
+    optimized_query = QueryOptimizer.optimize(query)
+
+    optimized_query
     |> Ecto.QueryBuilder.build(site)
     |> ClickhouseRepo.all()
+    |> QueryResult.from(optimized_query)
   end
 
   on_ee do

@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
-  alias Plausible.Stats.{Query, Compare, Comparisons, Metrics}
+  alias Plausible.Stats.Query
 
   def query(conn, params) do
     IO.inspect(params)
@@ -13,7 +13,6 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
       json(conn, results)
     else
       err_tuple ->
-        IO.inspect(err_tuple)
         send_json_error_response(conn, err_tuple)
     end
   end
