@@ -37,7 +37,7 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     q
     |> join_sessions_if_needed(site, query)
     |> build_group_by(query)
-    # |> build_order_by(query)
+    |> build_order_by(query)
     |> merge_imported(site, query, event_metrics)
     |> Base.maybe_add_conversion_rate(site, query, event_metrics)
   end
@@ -79,7 +79,7 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     q
     |> join_events_if_needed(site, query)
     |> build_group_by(query)
-    # |> build_order_by(query)
+    |> build_order_by(query)
     |> merge_imported(site, query, session_metrics)
   end
 
@@ -122,7 +122,14 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
       order_by(
         q,
         [t],
-        ^{order_direction, Expression.dimension(metric_or_dimension, query, :order_by)}
+        ^{
+          order_direction,
+          if(
+            Enum.member?(query.metrics, metric_or_dimension),
+            do: dynamic([], selected_as(^metric_or_dimension)),
+            else: Expression.dimension(metric_or_dimension, query, :order_by)
+          )
+        }
       )
     end)
   end
