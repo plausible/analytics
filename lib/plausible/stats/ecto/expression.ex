@@ -6,13 +6,20 @@ defmodule Plausible.Stats.Ecto.Expression do
   @no_ref "Direct / None"
   @not_set "(not set)"
 
-  defmacrop field_or_blank_value(expr, :group_by) do
+  defmacrop field_or_blank_value(expr, mode, empty_value) do
     quote do
-      fragment("if(empty(?), ?, ?)", unquote(expr), @no_ref, unquote(expr))
+      case unquote(mode) do
+        :label ->
+          dynamic(
+            [t],
+            fragment("if(empty(?), ?, ?)", unquote(expr), unquote(empty_value), unquote(expr))
+          )
+
+        _ ->
+          dynamic([t], unquote(expr))
+      end
     end
   end
-
-  defmacrop field_or_blank_value(expr, _), do: expr
 
   def dimension("time:hour", query, _mode) do
     dynamic([t], fragment("toStartOfHour(toTimeZone(?, ?))", t.timestamp, ^query.timezone))
@@ -44,31 +51,40 @@ defmodule Plausible.Stats.Ecto.Expression do
   def dimension("visit:entry_page", _query, _mode), do: dynamic([t], t.entry_page)
   def dimension("visit:exit_page", _query, _mode), do: dynamic([t], t.exit_page)
 
-  def dimension("visit:utm_medium", _query, _mode), do: dynamic([t], t.utm_medium)
-  def dimension("visit:utm_source", _query, _mode), do: dynamic([t], t.utm_source)
-  def dimension("visit:utm_campaign", _query, _mode), do: dynamic([t], t.utm_campaign)
-  def dimension("visit:utm_content", _query, _mode), do: dynamic([t], t.utm_content)
-  def dimension("visit:utm_term", _query, _mode), do: dynamic([t], t.utm_term)
+  def dimension("visit:utm_medium", _query, mode),
+    do: field_or_blank_value(t.utm_medium, mode, @not_set)
 
-  def dimension("visit:source", _query, _mode),
-    do: dynamic([t], field_or_blank_value(t.source, mode))
+  def dimension("visit:utm_source", _query, mode),
+    do: field_or_blank_value(t.utm_source, mode, @not_set)
 
-  def dimension("visit:referrer", _query, _mode),
-    do: dynamic([t], field_or_blank_value(t.referrer, mode))
+  def dimension("visit:utm_campaign", _query, mode),
+    do: field_or_blank_value(t.utm_campaign, mode, @not_set)
 
-  def dimension("visit:device", _query, _mode),
-    do: dynamic([t], field_or_blank_value(t.device, mode))
+  def dimension("visit:utm_content", _query, mode),
+    do: field_or_blank_value(t.utm_content, mode, @not_set)
 
-  def dimension("visit:os", _query, _mode), do: dynamic([t], field_or_blank_value(t.os, mode))
+  def dimension("visit:utm_term", _query, mode),
+    do: field_or_blank_value(t.utm_term, mode, @not_set)
 
-  def dimension("visit:os_version", _query, _mode),
-    do: dynamic([t], field_or_blank_value(t.os_version, mode))
+  def dimension("visit:source", _query, mode),
+    do: field_or_blank_value(t.source, mode, @no_ref)
 
-  def dimension("visit:browser", _query, _mode),
-    do: dynamic([t], field_or_blank_value(t.browser, mode))
+  def dimension("visit:referrer", _query, mode),
+    do: field_or_blank_value(t.referrer, mode, @no_ref)
 
-  def dimension("visit:browser_version", _query, _mode),
-    do: dynamic([t], field_or_blank_value(t.browser_version, mode))
+  def dimension("visit:device", _query, mode),
+    do: field_or_blank_value(t.device, mode, @not_set)
+
+  def dimension("visit:os", _query, mode), do: field_or_blank_value(t.os, mode, @not_set)
+
+  def dimension("visit:os_version", _query, mode),
+    do: field_or_blank_value(t.os_version, mode, @not_set)
+
+  def dimension("visit:browser", _query, mode),
+    do: field_or_blank_value(t.browser, mode, @not_set)
+
+  def dimension("visit:browser_version", _query, mode),
+    do: field_or_blank_value(t.browser_version, mode, @not_set)
 
   # :TODO: Locations also set extra filters
   def dimension("visit:country", _query, _mode), do: dynamic([t], t.country)
