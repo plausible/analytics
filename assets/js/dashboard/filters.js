@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import { Link, withRouter } from 'react-router-dom'
 import { AdjustmentsVerticalIcon, MagnifyingGlassIcon, XMarkIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
@@ -119,52 +119,31 @@ function DropdownContent({ history, site, query, wrapped }) {
   )
 }
 
-class Filters extends React.Component {
-  constructor(props) {
-    super(props);
+function Filters(props) {
+  const { history, query, site } = props
+  const [wrapped, setWrapped] = useState(1) // 0=unwrapped, 1=waiting to check, 2=wrapped
+  const [viewport, setViewport] = useState(1080)
 
-    this.state = {
-      wrapped: 1, // 0=unwrapped, 1=waiting to check, 2=wrapped
-      viewport: 1080,
-    };
-
-    this.renderDropDown = this.renderDropDown.bind(this);
-    this.handleResize = this.handleResize.bind(this);
-    this.handleKeyup = this.handleKeyup.bind(this)
-  }
-
-  componentDidMount() {
-    document.addEventListener('mousedown', this.handleClick, false);
-    window.addEventListener('resize', this.handleResize, false);
-    document.addEventListener('keyup', this.handleKeyup);
-
-    this.handleResize();
-    this.rewrapFilters();
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    const { query } = this.props;
-    const { viewport, wrapped } = this.state;
-
-    if (JSON.stringify(query) !== JSON.stringify(prevProps.query) || viewport !== prevState.viewport) {
-      // eslint-disable-next-line react/no-did-update-set-state
-      this.setState({ wrapped: 1 });
+  useEffect(() => {
+    window.addEventListener('resize', handleResize, false)
+    document.addEventListener('keyup', handleKeyup)
+  
+    return () => {
+      window.removeEventListener('resize', handleResize, false)
+      document.removeEventListener("keyup", handleKeyup)
     }
+  }, [])
 
-    if (wrapped === 1 && prevState.wrapped !== 1) {
-      this.rewrapFilters();
-    }
-  }
+  useEffect(() => {
+    setWrapped(1)
+  }, [query, viewport])
 
-  componentWillUnmount() {
-    document.removeEventListener("keyup", this.handleKeyup);
-    document.removeEventListener('mousedown', this.handleClick, false);
-    window.removeEventListener('resize', this.handleResize, false);
-  }
+  useEffect(() => {
+    if (wrapped === 1) { updateDisplayMode() }
+  }, [wrapped])
 
-  handleKeyup(e) {
-    const { query, history } = this.props
 
+  function handleKeyup(e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return
 
     if (e.key === 'Escape') {
@@ -172,41 +151,34 @@ class Filters extends React.Component {
     }
   }
 
-  handleResize() {
-    this.setState({ viewport: window.innerWidth || 639 });
+  function handleResize() {
+    setViewport(window.innerWidth || 639)
   }
 
   // Checks if the filter container is wrapping items
-  rewrapFilters() {
-    const items = document.getElementById('filters');
-    const { wrapped, viewport } = this.state;
+  function updateDisplayMode() {
+    const container = document.getElementById('filters')
+    const children = container && [...container.childNodes] || []
 
     // Always wrap on mobile
-    if (this.props.query.filters.length > 0 && viewport <= 768) {
-      this.setState({ wrapped: 2 })
-      return;
+    if (query.filters.length > 0 && viewport <= 768) {
+      setWrapped(2)
+      return
     }
 
-    this.setState({ wrapped: 0 });
+    setWrapped(0)
 
-    // Don't rewrap if we're already properly wrapped, there are no DOM children, or there is only filter
-    if (wrapped !== 1 || !items || this.props.query.filters.length === 1) {
-      return;
-    };
-
-    let prevItem = null;
-
-    // For every filter DOM Node, check if its y value is higher than the previous (this indicates a wrap)
-    [...(items.childNodes)].forEach(item => {
-      const currItem = item.getBoundingClientRect();
-      if (prevItem && prevItem.top < currItem.top) {
-        this.setState({ wrapped: 2 });
+    // Check for different y value between all child nodes - this indicates a wrap
+    children.forEach(child => {
+      const currentChildY = child.getBoundingClientRect().top
+      const firstChildY = children[0].getBoundingClientRect().top
+      if (currentChildY !== firstChildY) {
+        setWrapped(2)
       }
-      prevItem = currItem;
-    });
-  };
+    })
+  }
 
-  renderListFilter(filterIndex, filter, history, query) {
+  function renderListFilter(filterIndex, filter) {
     const text = filterText(query, filter)
     const [_operation, filterKey, _clauses] = filter
     const type = filterKey.startsWith(EVENT_PROPS_PREFIX) ? 'props' : filterKey
@@ -216,7 +188,7 @@ class Filters extends React.Component {
           title={`Edit filter: ${formattedFilters[type]}`}
           className="flex w-full h-full items-center py-2 pl-3"
           to={{
-            pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`,
+            pathname: `/${encodeURIComponent(site.domain)}/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`,
             search: window.location.search
           }}
         >
@@ -233,9 +205,9 @@ class Filters extends React.Component {
     )
   }
 
-  renderDropdownButton() {
-    if (this.state.wrapped === 2) {
-      const filterCount = this.props.query.filters.length
+  function renderDropdownButton() {
+    if (wrapped === 2) {
+      const filterCount = query.filters.length
       return (
         <>
           <AdjustmentsVerticalIcon className="-ml-1 mr-1 h-4 w-4" aria-hidden="true" />
@@ -253,20 +225,18 @@ class Filters extends React.Component {
     )
   }
 
-  trackFilterMenu() {
+  function trackFilterMenu() {
     window.plausible && window.plausible('Filter Menu: Open', {u: `${window.location.protocol}//${window.location.hostname}/:dashboard`})
   }
 
-  renderDropDown() {
-    const { history, query, site } = this.props;
-
+  function renderDropDown() {
     return (
       <Menu as="div" className="md:relative ml-auto">
         {({ open }) => (
           <>
             <div>
-              <Menu.Button onClick={this.trackFilterMenu} className="flex items-center text-xs md:text-sm font-medium leading-tight px-3 py-2 cursor-pointer ml-auto text-gray-500 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900 rounded">
-                {this.renderDropdownButton()}
+              <Menu.Button onClick={trackFilterMenu} className="flex items-center text-xs md:text-sm font-medium leading-tight px-3 py-2 cursor-pointer ml-auto text-gray-500 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900 rounded">
+                {renderDropdownButton()}
               </Menu.Button>
             </div>
 
@@ -288,7 +258,7 @@ class Filters extends React.Component {
                   className="rounded-md shadow-lg  bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5
                   font-medium text-gray-800 dark:text-gray-200"
                 >
-                  <DropdownContent history={history} query={query} site={site} wrapped={this.state.wrapped} />
+                  <DropdownContent history={history} query={query} site={site} wrapped={wrapped} />
                 </div>
               </Menu.Items>
             </Transition>
@@ -298,28 +268,27 @@ class Filters extends React.Component {
     );
   }
 
-  renderFilterList() {
-    const { history, query } = this.props;
-
-    if (this.state.wrapped !== 2) {
+  function renderFilterList() {
+    // The filters are rendered even when `wrapped === 1`. Otherwise,
+    // if they don't exist in the DOM, we can't check whether the
+    // flex-wrap is actually putting them on multiple lines.
+    if (wrapped !== 2) {
       return (
         <div id="filters" className="flex flex-wrap">
-          {query.filters.map((filter, index) => this.renderListFilter(index, filter, history, query))}
+          {query.filters.map((filter, index) => renderListFilter(index, filter))}
         </div>
-      );
+      )
     }
 
     return null
   }
 
-  render() {
-    return (
-      <>
-        {this.renderFilterList()}
-        {this.renderDropDown()}
-      </>
-    )
-  }
+  return (
+    <>
+      {renderFilterList()}
+      {renderDropDown()}
+    </>
+  )
 }
 
 export default withRouter(Filters);
