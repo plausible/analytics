@@ -34,7 +34,7 @@ defmodule Plausible.Stats.Ecto.Expression do
   end
 
   def dimension("event:name", _query, _mode), do: dynamic([t], t.name)
-  def dimension("event:page", _query, _mode), do: dynamic([t], t.page)
+  def dimension("event:page", _query, _mode), do: dynamic([t], t.pathname)
   def dimension("event:hostname", _query, _mode), do: dynamic([t], t.hostname)
 
   def dimension("event:props:" <> property_name, _query, _mode) do
