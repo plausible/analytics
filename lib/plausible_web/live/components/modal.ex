@@ -104,27 +104,13 @@ defmodule PlausibleWeb.Live.Components.Modal do
   end
 
   @impl true
-  def update(%{live_cids: live_cids}, socket) do
-    socket =
-      if live_cids == [] do
-        assign(socket, load_content?: true)
-      else
-        track_live_cids(socket)
-        socket
-      end
-
-    {:ok, put_private(socket, :live_cids, live_cids)}
-  end
-
   def update(assigns, socket) do
     socket =
-      socket
-      |> assign(
+      assign(socket,
         id: assigns.id,
         inner_block: assigns.inner_block,
         load_content?: true
       )
-      |> put_private(:live_cids, [])
 
     {:ok, socket}
   end
@@ -141,14 +127,14 @@ defmodule PlausibleWeb.Live.Components.Modal do
 
     assigns =
       assign(assigns,
-        class: ["modal-dialog relative opacity-0 translate-y-4 sm:translate-y-0 z-[51]" | class],
+        class: ["modal-dialog relative opacity-0 translate-y-4 sm:translate-y-0" | class],
         dialog_id: assigns.id <> "-dialog"
       )
 
     ~H"""
     <div
       id={@id}
-      class="relative z-[49] [&[data-phx-ref]_div.modal-dialog]:hidden"
+      class="relative z-[49] [&[data-phx-ref]_div.modal-dialog]:hidden [&[data-phx-ref]_div.modal-loading]:block"
       data-modal
       x-cloak
       x-data="{
@@ -158,6 +144,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
           document.body.style['overflow-y'] = 'hidden';
 
           if (this.firstLoadDone) {
+            liveSocket.execJS($el, $el.dataset.onclose);
             liveSocket.execJS($el, $el.dataset.onopen);
           } else {
             this.firstLoadDone = true;
@@ -167,7 +154,6 @@ defmodule PlausibleWeb.Live.Components.Modal do
         },
         closeModal() {
           this.modalOpen = false;
-          liveSocket.execJS($el, $el.dataset.onclose);
 
           setTimeout(function() {
             document.body.style['overflow-y'] = 'auto';
@@ -220,7 +206,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
         >
           <%= render_slot(@inner_block) %>
         </Phoenix.Component.focus_wrap>
-        <div class="modal-loading absolute w-full self-center">
+        <div class="modal-loading hidden w-full self-center">
           <div class="text-center">
             <PlausibleWeb.Components.Generic.spinner class="inline-block h-8 w-8" />
           </div>
@@ -232,34 +218,10 @@ defmodule PlausibleWeb.Live.Components.Modal do
 
   @impl true
   def handle_event("open", _, socket) do
-    track_live_cids(socket)
-
-    {:noreply, socket}
+    {:noreply, assign(socket, load_content?: true)}
   end
 
   def handle_event("close", _, socket) do
-    socket = put_private(socket, :live_cids, socket.private.children_cids)
     {:noreply, assign(socket, load_content?: false)}
-  end
-
-  defp track_live_cids(socket) do
-    if socket.private.live_cids != [] do
-      pid = self()
-
-      Task.start(fn ->
-        Process.sleep(60)
-
-        {cid_to_component, _, _} = :sys.get_state(pid).components
-        existing_cids = Map.keys(cid_to_component)
-
-        new_live_cids = Enum.filter(socket.private.live_cids, &(&1 in existing_cids))
-
-        send_update(pid, socket.assigns.myself, live_cids: new_live_cids)
-      end)
-    else
-      send_update(socket.assigns.myself, live_cids: [])
-    end
-
-    socket
   end
 end
