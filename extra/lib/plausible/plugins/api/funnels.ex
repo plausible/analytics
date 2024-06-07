@@ -50,8 +50,7 @@ defmodule Plausible.Plugins.API.Funnels do
 
   @spec get_funnels(Plausible.Site.t(), map()) :: {:ok, Paginator.Page.t()}
   def get_funnels(site, params) do
-    query = Plausible.Funnels.for_site_query(site, preload_goals?: true)
-
+    query = Plausible.Funnels.with_goals_query(site)
     {:ok, paginate(query, params, cursor_fields: [{:id, :desc}])}
   end
 

@@ -52,7 +52,16 @@ defmodule Plausible.Funnels do
           %{name: String.t(), id: pos_integer(), steps_count: pos_integer()}
         ]
   def list(%Plausible.Site{} = site) do
-    Repo.all(for_site_query(site))
+    q =
+      from(f in Funnel,
+        inner_join: steps in assoc(f, :steps),
+        where: f.site_id == ^site.id,
+        group_by: f.id,
+        order_by: [desc: :id],
+        select: %{name: f.name, id: f.id, steps_count: count(steps)}
+      )
+
+    Repo.all(q)
   end
 
   @spec delete(Plausible.Site.t() | pos_integer(), pos_integer()) :: :ok
@@ -85,25 +94,15 @@ defmodule Plausible.Funnels do
     site_id |> base_get_query() |> where([f], f.id == ^funnel_id) |> Repo.one()
   end
 
-  @spec for_site_query(Plausible.Site.t(), Keyword.t()) :: Ecto.Query.t()
-  def for_site_query(site, opts \\ []) do
-    if opts[:preload_goals?] do
-      from(f in Funnel,
-        inner_join: steps in assoc(f, :steps),
-        where: f.site_id == ^site.id,
-        group_by: f.id,
-        order_by: [desc: :id],
-        preload: [steps: :goal]
-      )
-    else
-      from(f in Funnel,
-        inner_join: steps in assoc(f, :steps),
-        where: f.site_id == ^site.id,
-        group_by: f.id,
-        order_by: [desc: :id],
-        select: %{name: f.name, id: f.id, steps_count: count(steps)}
-      )
-    end
+  @spec with_goals_query(Plausible.Site.t()) :: Ecto.Query.t()
+  def with_goals_query(site) do
+    from(f in Funnel,
+      inner_join: steps in assoc(f, :steps),
+      where: f.site_id == ^site.id,
+      group_by: f.id,
+      order_by: [desc: :id],
+      preload: [steps: :goal]
+    )
   end
 
   defp base_get_query(site_id) do

@@ -159,12 +159,14 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
 
         {:ok, g3} = Plausible.Goals.create(site, %{"event_name" => "FiveStarReview"})
 
+        initial_order = Enum.shuffle([g1, g2, g3])
+
         for i <- 1..3 do
           {:ok, _} =
             Plausible.Funnels.create(
               site,
               "Funnel #{i}",
-              [g1, g2, g3]
+              initial_order
             )
         end
 
@@ -180,6 +182,9 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
         assert Enum.count(page1.funnels) == 2
         assert page1.meta.pagination.has_next_page == true
         assert page1.meta.pagination.has_prev_page == false
+
+        assert [%{funnel: %{steps: steps}}, %{funnel: %{steps: steps}}] = page1.funnels
+        assert Enum.map(steps, & &1.goal.id) == Enum.map(initial_order, & &1.id)
 
         page2 =
           initial_conn
