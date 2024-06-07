@@ -121,6 +121,7 @@ Plausible.PaddleApi.Mock.html
 Plausible.Pagination.html
 Plausible.Plugins.API.Capabilities.html
 Plausible.Plugins.API.CustomProps.html
+Plausible.Plugins.API.Funnels.html
 Plausible.Plugins.API.Goals.html
 Plausible.Plugins.API.SharedLinks.html
 Plausible.Plugins.API.Token.html
@@ -320,6 +321,7 @@ PlausibleWeb.PageController.html
 PlausibleWeb.PageView.html
 PlausibleWeb.Plugins.API.Controllers.Capabilities.html
 PlausibleWeb.Plugins.API.Controllers.CustomProps.html
+PlausibleWeb.Plugins.API.Controllers.Funnels.html
 PlausibleWeb.Plugins.API.Controllers.Goals.html
 PlausibleWeb.Plugins.API.Controllers.SharedLinks.html
 PlausibleWeb.Plugins.API.Errors.html
@@ -329,6 +331,9 @@ PlausibleWeb.Plugins.API.Schemas.CustomProp.EnableRequest.html
 PlausibleWeb.Plugins.API.Schemas.CustomProp.ListResponse.html
 PlausibleWeb.Plugins.API.Schemas.CustomProp.html
 PlausibleWeb.Plugins.API.Schemas.Error.html
+PlausibleWeb.Plugins.API.Schemas.Funnel.CreateRequest.html
+PlausibleWeb.Plugins.API.Schemas.Funnel.ListResponse.html
+PlausibleWeb.Plugins.API.Schemas.Funnel.html
 PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest.CustomEvent.html
 PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest.Pageview.html
 PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest.Revenue.html
@@ -353,6 +358,7 @@ PlausibleWeb.Plugins.API.Spec.html
 PlausibleWeb.Plugins.API.Views.Capabilities.html
 PlausibleWeb.Plugins.API.Views.CustomProp.html
 PlausibleWeb.Plugins.API.Views.Error.html
+PlausibleWeb.Plugins.API.Views.Funnel.html
 PlausibleWeb.Plugins.API.Views.Goal.html
 PlausibleWeb.Plugins.API.Views.Pagination.html
 PlausibleWeb.Plugins.API.Views.SharedLink.html
@@ -408,8 +414,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-D579B358.js
-dist/sidebar_items-04905ADA.js
+dist/search_data-F7924686.js
+dist/sidebar_items-3260C515.js
 index.html
 readme.html
 search.html

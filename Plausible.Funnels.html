@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-04905ADA.js"></script>
+    <script src="dist/sidebar_items-3260C515.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -209,6 +209,14 @@ See <a href="Plausible.Stats.Funnel.html"><code class="inline">Plausible.Stats.F
 
     </div>
 
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#with_goals_query/1" translate="no">with_goals_query(site)</a>
+
+      </div>
+
+    </div>
+
 </div>
 
   </section>
@@ -245,7 +253,7 @@ See <a href="Plausible.Stats.Funnel.html"><code class="inline">Plausible.Stats.F
 
           <pre translate="no"><span class="attribute">@spec</span> create(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()]) ::
   {:ok, <a href="Plausible.Funnel.html#t:t/0">Plausible.Funnel.t</a>()}
-  | {:error, <a href="https://hexdocs.pm/ecto/3.11.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>() | :invalid_funnel_size}</pre>
+  | {:error, <a href="https://hexdocs.pm/ecto/3.11.2/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>() | :invalid_funnel_size | :upgrade_required}</pre>
 
       </div>
 
@@ -261,7 +269,7 @@ See <a href="Plausible.Stats.Funnel.html"><code class="inline">Plausible.Stats.F
     </a>
     <h1 class="signature" translate="no">create_changeset(site, name, steps)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/funnels.ex#L32" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/funnels.ex#L40" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -289,7 +297,7 @@ See <a href="Plausible.Stats.Funnel.html"><code class="inline">Plausible.Stats.F
     </a>
     <h1 class="signature" translate="no">delete(site_id, funnel_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/funnels.ex#L59" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/funnels.ex#L68" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -317,7 +325,7 @@ See <a href="Plausible.Stats.Funnel.html"><code class="inline">Plausible.Stats.F
     </a>
     <h1 class="signature" translate="no">ephemeral_definition(site, name, steps)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/funnels.ex#L37" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/funnels.ex#L45" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -346,7 +354,7 @@ See <a href="Plausible.Stats.Funnel.html"><code class="inline">Plausible.Stats.F
     </a>
     <h1 class="signature" translate="no">get(site_id, by)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/funnels.ex#L76" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/funnels.ex#L85" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -358,7 +366,7 @@ See <a href="Plausible.Stats.Funnel.html"><code class="inline">Plausible.Stats.F
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> get(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>() | <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
   <a href="Plausible.Funnel.html#t:t/0">Plausible.Funnel.t</a>() | nil</pre>
 
       </div>
@@ -375,7 +383,7 @@ See <a href="Plausible.Stats.Funnel.html"><code class="inline">Plausible.Stats.F
     </a>
     <h1 class="signature" translate="no">list(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/funnels.ex#L46" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/funnels.ex#L54" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -390,6 +398,34 @@ See <a href="Plausible.Stats.Funnel.html"><code class="inline">Plausible.Stats.F
           <pre translate="no"><span class="attribute">@spec</span> list(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: [
   %{name: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), id: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(), steps_count: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()}
 ]</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="with_goals_query/1">
+
+  <div class="detail-header">
+    <a href="#with_goals_query/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">with_goals_query(site)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/funnels.ex#L98" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> with_goals_query(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.11.2/Ecto.Query.html#t:t/0">Ecto.Query.t</a>()</pre>
 
       </div>
 
