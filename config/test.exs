@@ -10,7 +10,7 @@ config :plausible, Plausible.Repo, pool: Ecto.Adapters.SQL.Sandbox
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
-  pool_size: 5
+  pool_size: 15
 
 config :plausible, Plausible.Mailer, adapter: Bamboo.TestAdapter
 

@@ -118,6 +118,12 @@ defmodule PlausibleWeb.Router do
       get("/goals/:id", Goals, :get)
       put("/goals", Goals, :create)
 
+      on_ee do
+        get("/funnels/:id", Funnels, :get)
+        get("/funnels", Funnels, :index)
+        put("/funnels", Funnels, :create)
+      end
+
       delete("/goals/:id", Goals, :delete)
       delete("/goals", Goals, :delete_bulk)
 

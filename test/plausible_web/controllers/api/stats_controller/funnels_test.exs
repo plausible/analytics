@@ -228,8 +228,8 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
         user: user,
         site: site
       } do
-        insert(:growth_subscription, user: user)
         {:ok, funnel} = setup_funnel(site, @build_funnel_with)
+        insert(:growth_subscription, user: user)
 
         resp =
           conn
