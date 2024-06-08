@@ -27,6 +27,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       socket
       |> assign(
         id: assigns.id,
+        suffix: assigns.suffix,
         form: form,
         event_name_options_count: length(assigns.event_name_options),
         current_user: assigns.current_user,
@@ -65,6 +66,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           :if={@selected_tab == "custom_events"}
           x-show="!tabSelectionInProgress"
           f={f}
+          suffix={@suffix}
           current_user={@current_user}
           site={@site}
           existing_goals={@existing_goals}
@@ -75,6 +77,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           :if={@selected_tab == "pageviews"}
           x-show="!tabSelectionInProgress"
           f={f}
+          suffix={@suffix}
           site={@site}
           x-init="tabSelectionInProgress = false"
         />
@@ -106,6 +109,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   attr(:f, Phoenix.HTML.Form)
   attr(:site, Plausible.Site)
+  attr(:suffix, :string)
 
   attr(:rest, :global)
 
@@ -117,7 +121,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       </.label>
 
       <.live_component
-        id="page_path_input"
+        id={"page_path_input_#{@suffix}"}
         submit_name="goal[page_path]"
         class={[
           "py-2"
@@ -139,6 +143,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   attr(:f, Phoenix.HTML.Form)
   attr(:site, Plausible.Site)
   attr(:current_user, Plausible.Auth.User)
+  attr(:suffix, :string)
   attr(:existing_goals, :list)
   attr(:has_access_to_revenue_goals?, :boolean)
 
@@ -158,12 +163,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         </div>
 
         <div>
-          <.label for="event_name_input">
+          <.label for={"event_name_input_#{@suffix}"}>
             Event Name
           </.label>
 
           <.live_component
-            id="event_name_input"
+            id={"event_name_input_#{@suffix}"}
             submit_name="goal[event_name]"
             placeholder="e.g. Signup"
             class={[
@@ -234,7 +239,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
           <div x-show="active">
             <.live_component
-              id="currency_input"
+              id={"currency_input_#{@suffix}"}
               submit_name={@f[:currency].name}
               module={ComboBox}
               suggest_fun={
