@@ -317,7 +317,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   def handle_event("switch-tab", %{"tab" => tab}, socket) do
-    {:noreply, assign(socket, selected_tab: tab)}
+    {:noreply, assign(socket, selected_tab: tab, suffix: Plausible.RandomID.generate())}
   end
 
   def handle_event("save-goal", %{"goal" => goal}, socket) do
