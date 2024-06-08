@@ -9,6 +9,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Increase hourly request limit for API keys in CE from 600 to 1000000 (practically removing the limit) plausible/analytics#4200
+
 ### Fixed
 
 ## v2.1.1 - 2024-06-06
