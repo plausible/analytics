@@ -349,10 +349,11 @@ defmodule Plausible.ConfigTest do
 
   describe "postgres" do
     test "default" do
-      config = runtime_config(_env = [])
+      env = [{"DATABASE_URL", nil}]
+      config = runtime_config(env)
 
       assert get_in(config, [:plausible, Plausible.Repo]) == [
-               url: "postgres://postgres:postgres@127.0.0.1:5432/plausible_test?pool_size=40",
+               url: "postgres://postgres:postgres@plausible_db:5432/plausible_db",
                socket_options: [],
                ssl_opts: [
                  cacertfile: CAStore.file_path(),
