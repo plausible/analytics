@@ -247,7 +247,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
                   end
                 end
               }
-              }
             />
           </div>
         </div>
