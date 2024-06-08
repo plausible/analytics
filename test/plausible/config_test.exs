@@ -347,6 +347,73 @@ defmodule Plausible.ConfigTest do
     end
   end
 
+  describe "postgres" do
+    test "default" do
+      config = runtime_config(_env = [])
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               url: "postgres://postgres:postgres@127.0.0.1:5432/plausible_test?pool_size=40",
+               socket_options: [],
+               ssl_opts: [
+                 cacertfile: CAStore.file_path(),
+                 verify: :verify_peer,
+                 customize_hostname_check: [
+                   match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+                 ]
+               ]
+             ]
+    end
+
+    test "socket_dir in hostname" do
+      env = [{"DATABASE_URL", "postgresql://postgres:postgres@%2Frun%2Fpostgresql/plausible_db"}]
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               socket_dir: "/run/postgresql",
+               database: "plausible_db",
+               username: "postgres",
+               password: "postgres"
+             ]
+    end
+
+    test "socket_dir in query" do
+      env = [{"DATABASE_URL", "postgresql:///plausible_db?host=/run/postgresql"}]
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               socket_dir: "/run/postgresql",
+               database: "plausible_db"
+             ]
+    end
+
+    test "socket_dir missing" do
+      env = [{"DATABASE_URL", "postgresql:///plausible_db"}]
+      assert_raise ArgumentError, ~r/doesn't include host info/, fn -> runtime_config(env) end
+    end
+
+    test "custom URL" do
+      env = [
+        {"DATABASE_URL",
+         "postgresql://your_username:your_password@cluster-do-user-1234567-0.db.ondigitalocean.com:25060/defaultdb"}
+      ]
+
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               url:
+                 "postgresql://your_username:your_password@cluster-do-user-1234567-0.db.ondigitalocean.com:25060/defaultdb",
+               socket_options: [],
+               ssl_opts: [
+                 cacertfile: CAStore.file_path(),
+                 verify: :verify_peer,
+                 customize_hostname_check: [
+                   match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+                 ]
+               ]
+             ]
+    end
+  end
+
   describe "extra config" do
     test "no-op when no extra path is set" do
       put_system_env_undo({"EXTRA_CONFIG_PATH", nil})

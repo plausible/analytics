@@ -88,15 +88,6 @@ case secret_key_base do
     nil
 end
 
-db_url =
-  get_var_from_path_or_env(
-    config_dir,
-    "DATABASE_URL",
-    "postgres://postgres:postgres@plausible_db:5432/plausible_db"
-  )
-
-db_socket_dir = get_var_from_path_or_env(config_dir, "DATABASE_SOCKET_DIR")
-
 super_admin_user_ids =
   get_var_from_path_or_env(config_dir, "ADMIN_USER_IDS", "")
   |> String.split(",")
@@ -333,7 +324,7 @@ config :plausible, PlausibleWeb.Endpoint,
   websocket_url: websocket_url,
   secure_cookie: secure_cookie
 
-maybe_ipv6 =
+db_maybe_ipv6 =
   if get_var_from_path_or_env(config_dir, "ECTO_IPV6") do
     if config_env() in [:ce, :ce_dev, :ce_test] do
       Logger.warning(
@@ -346,12 +337,56 @@ maybe_ipv6 =
     []
   end
 
-db_cacertfile = get_var_from_path_or_env(config_dir, "DATABASE_CACERTFILE", CAStore.file_path())
+db_url =
+  get_var_from_path_or_env(
+    config_dir,
+    "DATABASE_URL",
+    "postgres://postgres:postgres@plausible_db:5432/plausible_db"
+  )
 
-if is_nil(db_socket_dir) do
+if db_socket_dir = get_var_from_path_or_env(config_dir, "DATABASE_SOCKET_DIR") do
+  Logger.warning("""
+  DATABASE_SOCKET_DIR is deprecated, please use DATABASE_URL instead:
+
+      DATABASE_URL=postgresql://postgres:postgres@#{URI.encode_www_form(db_socket_dir)}/plausible_db
+
+  or
+
+      DATABASE_URL=postgresql:///plausible_db?host=#{db_socket_dir}"
+
+  """)
+end
+
+db_cacertfile = get_var_from_path_or_env(config_dir, "DATABASE_CACERTFILE", CAStore.file_path())
+%URI{host: db_host} = db_uri = URI.parse(db_url)
+db_socket_dir? = String.starts_with?(db_host, "%2F") or db_host == ""
+
+if db_socket_dir? do
+  [database] = String.split(db_uri.path, "/", trim: true)
+
+  socket_dir =
+    if db_host == "" do
+      db_host = (db_uri.query || "") |> URI.decode_query() |> Map.get("host")
+      db_host || raise ArgumentError, "DATABASE_URL=#{db_url} doesn't include host info"
+    else
+      URI.decode_www_form(db_host)
+    end
+
+  config :plausible, Plausible.Repo,
+    socket_dir: socket_dir,
+    database: database
+
+  if userinfo = db_uri.userinfo do
+    [username, password] = String.split(userinfo, ":")
+
+    config :plausible, Plausible.Repo,
+      username: username,
+      password: password
+  end
+else
   config :plausible, Plausible.Repo,
     url: db_url,
-    socket_options: maybe_ipv6,
+    socket_options: db_maybe_ipv6,
     ssl_opts: [
       cacertfile: db_cacertfile,
       verify: :verify_peer,
@@ -359,10 +394,6 @@ if is_nil(db_socket_dir) do
         match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
       ]
     ]
-else
-  config :plausible, Plausible.Repo,
-    socket_dir: db_socket_dir,
-    database: get_var_from_path_or_env(config_dir, "DATABASE_NAME", "plausible")
 end
 
 sentry_app_version = runtime_metadata[:version] || app_version
