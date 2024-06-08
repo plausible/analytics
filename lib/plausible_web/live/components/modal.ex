@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Live.Components.Modal do
-  @moduledoc """
+  @moduledoc ~S"""
   LiveView implementation of modal component.
 
   This component is a general purpose modal implementation for LiveView
@@ -13,10 +13,10 @@ defmodule PlausibleWeb.Live.Components.Modal do
   existing live view which allows adding new entries of some kind:
 
   ```
-  <.live_component module={Modal} id="some-form-modal">
+  <.live_component module={Modal} id="some-form-modal" :let={modal_unique_id}>
     <.live_component
       module={SomeForm}
-      id="some-form"
+      id={"some-form-#{modal_unique_id}"}
       on_save_form={
         fn entry, socket ->
           send(self(), {:entry_added, entry})
@@ -42,7 +42,15 @@ defmodule PlausibleWeb.Live.Components.Modal do
   is called on it. On subsequent openings within the same session
   the contents of the modal are completely remounted. This assures
   that any stateful components inside the modal are reset to their
-  initial state.
+  initial state. The modal component provides `modal_unique_id`
+  as an argument to its inner block. Appending this ID to every
+  live components' ID nested inside the modal is important for
+  consistent state reset on every reopening. This also applies
+  to live components nested inside live components embedded directly
+  in the modal's inner block - then the unique ID should be also
+  passed down as an attribute and appended accordingly. Appending can
+  be skipped if embedded component handles state reset explicitly
+  (via, for instance, `phx-click-away` callback).
 
   `Modal` exposes two functions for managing window state:
 
@@ -109,7 +117,13 @@ defmodule PlausibleWeb.Live.Components.Modal do
       assign(socket,
         id: assigns.id,
         inner_block: assigns.inner_block,
-        load_content?: true
+        # Initial value is constant, as dead view ID
+        # must match the ID after the connection is
+        # established. Otherwise, there will be problems
+        # with live components relying on ID for setup
+        # on mount (using AlpineJS, for instance).
+        load_content?: true,
+        modal_unique_id: "In1t1al"
       )
 
     {:ok, socket}
@@ -144,7 +158,6 @@ defmodule PlausibleWeb.Live.Components.Modal do
           document.body.style['overflow-y'] = 'hidden';
 
           if (this.firstLoadDone) {
-            liveSocket.execJS($el, $el.dataset.onclose);
             liveSocket.execJS($el, $el.dataset.onopen);
           } else {
             this.firstLoadDone = true;
@@ -154,6 +167,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
         },
         closeModal() {
           this.modalOpen = false;
+          liveSocket.execJS($el, $el.dataset.onclose);
 
           setTimeout(function() {
             document.body.style['overflow-y'] = 'auto';
@@ -204,7 +218,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
           x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           x-on:click.outside="closeModal()"
         >
-          <%= render_slot(@inner_block) %>
+          <%= render_slot(@inner_block, @modal_unique_id) %>
         </Phoenix.Component.focus_wrap>
         <div class="modal-loading hidden w-full self-center">
           <div class="text-center">
@@ -222,6 +236,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
   end
 
   def handle_event("close", _, socket) do
-    {:noreply, assign(socket, load_content?: false)}
+    {:noreply,
+     assign(socket, load_content?: false, modal_unique_id: Plausible.RandomID.generate())}
   end
 end
