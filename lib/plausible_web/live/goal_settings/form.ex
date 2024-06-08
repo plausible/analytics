@@ -87,6 +87,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
         <button
           :if={@selected_tab == "custom_events" && @event_name_options_count > 0}
+          x-show="!tabSelectionInProgress"
           class="mt-2 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
           phx-click="autoconfigure"
           phx-target={@myself}
