@@ -123,7 +123,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
         # with live components relying on ID for setup
         # on mount (using AlpineJS, for instance).
         load_content?: true,
-        modal_unique_id: "In1t1al"
+        modal_sequence_id: 0
       )
 
     {:ok, socket}
@@ -218,7 +218,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
           x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           x-on:click.outside="closeModal()"
         >
-          <%= render_slot(@inner_block, @modal_unique_id) %>
+          <%= render_slot(@inner_block, modal_unique_id(@modal_sequence_id)) %>
         </Phoenix.Component.focus_wrap>
         <div class="modal-loading hidden w-full self-center">
           <div class="text-center">
@@ -236,7 +236,15 @@ defmodule PlausibleWeb.Live.Components.Modal do
   end
 
   def handle_event("close", _, socket) do
-    {:noreply,
-     assign(socket, load_content?: false, modal_unique_id: Plausible.RandomID.generate())}
+    socket =
+      socket
+      |> assign(:load_content?, false)
+      |> update(:modal_sequence_id, &(&1 + 1))
+
+    {:noreply, socket}
+  end
+
+  defp modal_unique_id(sequence_id) do
+    "modalseq#{sequence_id}"
   end
 end

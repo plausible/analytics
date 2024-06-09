@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
         <.live_component
           module={PlausibleWeb.Live.GoalSettings.Form}
           id={"goals-form-#{modal_unique_id}"}
-          suffix={modal_unique_id}
+          context_unique_id={modal_unique_id}
           event_name_options={@event_name_options}
           domain={@domain}
           site={@site}

@@ -27,12 +27,13 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       socket
       |> assign(
         id: assigns.id,
-        suffix: assigns.suffix,
+        context_unique_id: assigns.context_unique_id,
         form: form,
         event_name_options_count: length(assigns.event_name_options),
         current_user: assigns.current_user,
         domain: assigns.domain,
         selected_tab: "custom_events",
+        tab_sequence_id: 0,
         site: site,
         has_access_to_revenue_goals?: has_access_to_revenue_goals?,
         existing_goals: assigns.existing_goals,
@@ -66,7 +67,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           :if={@selected_tab == "custom_events"}
           x-show="!tabSelectionInProgress"
           f={f}
-          suffix={@suffix}
+          suffix={suffix(@context_unique_id, @tab_sequence_id)}
           current_user={@current_user}
           site={@site}
           existing_goals={@existing_goals}
@@ -77,7 +78,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           :if={@selected_tab == "pageviews"}
           x-show="!tabSelectionInProgress"
           f={f}
-          suffix={@suffix}
+          suffix={suffix(@context_unique_id, @tab_sequence_id)}
           site={@site}
           x-init="tabSelectionInProgress = false"
         />
@@ -116,7 +117,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   def pageview_fields(assigns) do
     ~H"""
     <div id="pageviews-form" class="py-2" {@rest}>
-      <.label for="page_path_input">
+      <.label for={"page_path_input_#{@suffix}"}>
         Page Path
       </.label>
 
@@ -317,7 +318,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   def handle_event("switch-tab", %{"tab" => tab}, socket) do
-    {:noreply, assign(socket, selected_tab: tab, suffix: Plausible.RandomID.generate())}
+    socket =
+      socket
+      |> assign(:selected_tab, tab)
+      |> update(:tab_sequence_id, &(&1 + 1))
+
+    {:noreply, socket}
   end
 
   def handle_event("save-goal", %{"goal" => goal}, socket) do
@@ -356,5 +362,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     site
     |> Plausible.Stats.GoalSuggestions.suggest_event_names(input, exclude: existing_names)
     |> Enum.map(fn name -> {name, name} end)
+  end
+
+  defp suffix(context_unique_id, tab_sequence_id) do
+    "#{context_unique_id}-tabseq#{tab_sequence_id}"
   end
 end
