@@ -164,7 +164,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
 
       assert element_exists?(
                html,
-               ~s/div#goals-form form[phx-submit="save-goal"]/
+               ~s/#goals-form-modal form[phx-submit="save-goal"]/
              )
     end
 
@@ -189,7 +189,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
 
       # Add one goal
       lv
-      |> element("#goals-form form")
+      |> element("#goals-form-modal form")
       |> render_submit(%{goal: %{event_name: "Signup"}})
 
       html = render(lv)
