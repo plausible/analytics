@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
           </PlausibleWeb.Components.Generic.notice>
         </div>
 
-        <.live_component module={Modal} id="page-rule-form-modal">
+        <.live_component :let={modal_unique_id} module={Modal} id="page-rule-form-modal">
           <.form
             :let={f}
             for={@form}
@@ -85,7 +85,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
               display_value={f[:page_path].value || ""}
               module={PlausibleWeb.Live.Components.ComboBox}
               suggest_fun={fn input, options -> suggest_page_paths(input, options, @site) end}
-              id={f[:page_path].id}
+              id={"#{f[:page_path].id}-#{modal_unique_id}"}
               creatable
             />
 
@@ -210,12 +210,6 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
             page_rules_count: socket.assigns.page_rules_count + 1,
             redundant_rules: detect_redundancy(page_rules)
           )
-
-        # Make sure to clear the combobox input after adding a page rule, on subsequent modal reopening
-        send_update(PlausibleWeb.Live.Components.ComboBox,
-          id: "page_rule_page_code",
-          display_value: ""
-        )
 
         send_flash(
           :success,
