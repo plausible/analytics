@@ -242,60 +242,60 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   #   end
   # end
 
-  # test "breakdown by visit:source", %{conn: conn, site: site} do
-  #   populate_stats(site, [
-  #     build(:pageview,
-  #       referrer_source: "Google",
-  #       timestamp: ~N[2021-01-01 00:00:00]
-  #     ),
-  #     build(:pageview,
-  #       referrer_source: "Google",
-  #       timestamp: ~N[2021-01-01 00:25:00]
-  #     ),
-  #     build(:pageview,
-  #       referrer_source: "",
-  #       timestamp: ~N[2021-01-01 00:00:00]
-  #     )
-  #   ])
+  test "breakdown by visit:source", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:pageview,
+        referrer_source: "Google",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:pageview,
+        referrer_source: "Google",
+        timestamp: ~N[2021-01-01 00:25:00]
+      ),
+      build(:pageview,
+        referrer_source: "",
+        timestamp: ~N[2021-01-01 00:00:00]
+      )
+    ])
 
-  #   conn =
-  #     get(conn, "/api/v1/stats/breakdown", %{
-  #       "site_id" => site.domain,
-  #       "period" => "day",
-  #       "date" => "2021-01-01",
-  #       "property" => "visit:source"
-  #     })
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["visit:source"]
+      })
 
-  #   assert json_response(conn, 200) == %{
-  #            "results" => [
-  #              %{"source" => "Google", "visitors" => 2},
-  #              %{"source" => "Direct / None", "visitors" => 1}
-  #            ]
-  #          }
-  # end
+    %{"results" => results} = json_response(conn, 200)
 
-  # test "breakdown by visit:country", %{conn: conn, site: site} do
-  #   populate_stats(site, [
-  #     build(:pageview, country_code: "EE", timestamp: ~N[2021-01-01 00:00:00]),
-  #     build(:pageview, country_code: "EE", timestamp: ~N[2021-01-01 00:25:00]),
-  #     build(:pageview, country_code: "US", timestamp: ~N[2021-01-01 00:00:00])
-  #   ])
+    assert results == [
+             %{"dimensions" => ["Google"], "metrics" => [2]},
+             %{"dimensions" => ["Direct / None"], "metrics" => [1]}
+           ]
+  end
 
-  #   conn =
-  #     get(conn, "/api/v1/stats/breakdown", %{
-  #       "site_id" => site.domain,
-  #       "period" => "day",
-  #       "date" => "2021-01-01",
-  #       "property" => "visit:country"
-  #     })
+  test "breakdown by visit:country", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:pageview, country_code: "EE", timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, country_code: "EE", timestamp: ~N[2021-01-01 00:25:00]),
+      build(:pageview, country_code: "US", timestamp: ~N[2021-01-01 00:00:00])
+    ])
 
-  #   assert json_response(conn, 200) == %{
-  #            "results" => [
-  #              %{"country" => "EE", "visitors" => 2},
-  #              %{"country" => "US", "visitors" => 1}
-  #            ]
-  #          }
-  # end
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["visit:country"]
+      })
+
+    %{"results" => results} = json_response(conn, 200)
+
+    assert results == [
+             %{"dimensions" => ["EE"], "metrics" => [2]},
+             %{"dimensions" => ["US"], "metrics" => [1]}
+           ]
+  end
 
   # test "breaks down all metrics by visit:referrer with imported data", %{conn: conn, site: site} do
   #   site_import =
@@ -383,6 +383,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   #              }
   #            ]
   #          }
+
+  #   conn =
+  #     post(conn, "/api/v2/query", %{
+  #       "site_id" => site.domain,
+  #       "metrics" => ["visitors", "visits", "pageviews", "bounce_rate", "visit_duration"],
+  #       "date_range" => "all",
+  #       "dimensions" => ["visit:referrer"],
+  #     })
+
+  #   %{"results" => results} = json_response(conn, 200)
+
+  #   assert results == [
+  #     %{"dimensions" => ["EE"], "metrics" => [2]},
+  #     %{"dimensions" => ["US"], "metrics" => [1]},
+  #          ]
   # end
 
   # for {property, attr} <- [
@@ -580,85 +595,85 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            ]
   end
 
-  # test "breaks down all metrics by visit:utm_source with imported data", %{conn: conn, site: site} do
-  #   site_import =
-  #     insert(:site_import,
-  #       site: site,
-  #       start_date: ~D[2005-01-01],
-  #       end_date: Timex.today(),
-  #       source: :universal_analytics
-  #     )
+  test "breaks down all metrics by visit:utm_source with imported data", %{conn: conn, site: site} do
+    site_import =
+      insert(:site_import,
+        site: site,
+        start_date: ~D[2005-01-01],
+        end_date: Timex.today(),
+        source: :universal_analytics
+      )
 
-  #   populate_stats(site, site_import.id, [
-  #     build(:pageview, utm_source: "SomeUTMSource", timestamp: ~N[2021-01-01 00:00:00]),
-  #     build(:pageview, utm_source: "SomeUTMSource-1", timestamp: ~N[2021-01-01 00:00:00]),
-  #     build(:imported_sources,
-  #       utm_source: "SomeUTMSource",
-  #       date: ~D[2021-01-01],
-  #       visitors: 2,
-  #       visits: 2,
-  #       pageviews: 2,
-  #       bounces: 1,
-  #       visit_duration: 120
-  #     ),
-  #     build(:imported_sources,
-  #       utm_source: "SomeUTMSource-2",
-  #       date: ~D[2021-01-01],
-  #       visitors: 2,
-  #       visits: 2,
-  #       pageviews: 2,
-  #       bounces: 2,
-  #       visit_duration: 0
-  #     ),
-  #     build(:imported_sources,
-  #       date: ~D[2021-01-01],
-  #       visitors: 10,
-  #       visits: 11,
-  #       pageviews: 50,
-  #       bounces: 0,
-  #       visit_duration: 1100
-  #     )
-  #   ])
+    populate_stats(site, site_import.id, [
+      build(:pageview, utm_source: "SomeUTMSource", timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, utm_source: "SomeUTMSource-1", timestamp: ~N[2021-01-01 00:00:00]),
+      build(:imported_sources,
+        utm_source: "SomeUTMSource",
+        date: ~D[2021-01-01],
+        visitors: 2,
+        visits: 2,
+        pageviews: 2,
+        bounces: 1,
+        visit_duration: 120
+      ),
+      build(:imported_sources,
+        utm_source: "SomeUTMSource-2",
+        date: ~D[2021-01-01],
+        visitors: 2,
+        visits: 2,
+        pageviews: 2,
+        bounces: 2,
+        visit_duration: 0
+      ),
+      build(:imported_sources,
+        date: ~D[2021-01-01],
+        visitors: 10,
+        visits: 11,
+        pageviews: 50,
+        bounces: 0,
+        visit_duration: 1100
+      )
+    ])
 
-  #   conn =
-  #     get(conn, "/api/v1/stats/breakdown", %{
-  #       "site_id" => site.domain,
-  #       "period" => "day",
-  #       "metrics" => "visitors,visits,pageviews,bounce_rate,visit_duration",
-  #       "date" => "2021-01-01",
-  #       "property" => "visit:utm_source",
-  #       "with_imported" => "true"
-  #     })
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "metrics" => "visitors,visits,pageviews,bounce_rate,visit_duration",
+        "date" => "2021-01-01",
+        "property" => "visit:utm_source",
+        "with_imported" => "true"
+      })
 
-  #   assert json_response(conn, 200) == %{
-  #            "results" => [
-  #              %{
-  #                "utm_source" => "SomeUTMSource",
-  #                "visitors" => 3,
-  #                "visits" => 3,
-  #                "pageviews" => 3,
-  #                "bounce_rate" => 67.0,
-  #                "visit_duration" => 40
-  #              },
-  #              %{
-  #                "utm_source" => "SomeUTMSource-2",
-  #                "visitors" => 2,
-  #                "visits" => 2,
-  #                "pageviews" => 2,
-  #                "bounce_rate" => 100.0,
-  #                "visit_duration" => 0
-  #              },
-  #              %{
-  #                "utm_source" => "SomeUTMSource-1",
-  #                "visitors" => 1,
-  #                "visits" => 1,
-  #                "pageviews" => 1,
-  #                "bounce_rate" => 100.0,
-  #                "visit_duration" => 0
-  #              }
-  #            ]
-  #          }
-  # end
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{
+                 "utm_source" => "SomeUTMSource",
+                 "visitors" => 3,
+                 "visits" => 3,
+                 "pageviews" => 3,
+                 "bounce_rate" => 67.0,
+                 "visit_duration" => 40
+               },
+               %{
+                 "utm_source" => "SomeUTMSource-2",
+                 "visitors" => 2,
+                 "visits" => 2,
+                 "pageviews" => 2,
+                 "bounce_rate" => 100.0,
+                 "visit_duration" => 0
+               },
+               %{
+                 "utm_source" => "SomeUTMSource-1",
+                 "visitors" => 1,
+                 "visits" => 1,
+                 "pageviews" => 1,
+                 "bounce_rate" => 100.0,
+                 "visit_duration" => 0
+               }
+             ]
+           }
+  end
 
   # test "pageviews breakdown by event:page - imported data having pageviews=0 and visitors=n should be bypassed",
   #      %{conn: conn, site: site} do
