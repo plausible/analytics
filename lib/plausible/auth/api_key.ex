@@ -1,4 +1,5 @@
 defmodule Plausible.Auth.ApiKey do
+  use Plausible
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -9,7 +10,7 @@ defmodule Plausible.Auth.ApiKey do
   schema "api_keys" do
     field :name, :string
     field :scopes, {:array, :string}, default: ["stats:read:*"]
-    field :hourly_request_limit, :integer, default: 600
+    field :hourly_request_limit, :integer, default: on_ee(do: 600, else: 1_000_000)
 
     field :key, :string, virtual: true
     field :key_hash, :string
