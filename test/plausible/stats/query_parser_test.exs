@@ -193,26 +193,6 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       end
     end
 
-    test "filtering by event:goal", %{site: site} do
-      %{
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "filters" => [
-          ["is", "event:goal", ["Signup", "Visit /thank-you"]]
-        ]
-      }
-      |> check_success(site, %{
-        metrics: [:visitors],
-        date_range: @date_range,
-        filters: [
-          [:is, "event:goal", [{:event, "Signup"}, {:page, "/thank-you"}]]
-        ],
-        dimensions: [],
-        order_by: nil,
-        timezone: site.timezone
-      })
-    end
-
     test "invalid event filter", %{site: site} do
       %{
         "metrics" => ["visitors"],
@@ -242,6 +222,53 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "filters" => "foobar"
       }
       |> check_error(site, ~r/Invalid filters passed/)
+    end
+  end
+
+  describe "event:goal filter validation" do
+    test "valid filters", %{site: site} do
+      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, page_path: "/thank-you"})
+
+      %{
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [
+          ["is", "event:goal", ["Signup", "Visit /thank-you"]]
+        ]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        date_range: @date_range,
+        filters: [
+          [:is, "event:goal", [{:event, "Signup"}, {:page, "/thank-you"}]]
+        ],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone
+      })
+    end
+
+    test "invalid event filter", %{site: site} do
+      %{
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [
+          ["is", "event:goal", ["Signup"]]
+        ]
+      }
+      |> check_error(site, ~r/The goal `Signup` is not configured for this site/)
+    end
+
+    test "invalid page filter", %{site: site} do
+      %{
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [
+          ["is", "event:goal", ["Visit /thank-you"]]
+        ]
+      }
+      |> check_error(site, ~r/The goal `Visit \/thank-you` is not configured for this site/)
     end
   end
 

@@ -1495,17 +1495,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   # end
 
   # describe "filtering" do
-  #   test "event:goal filter returns 400 when goal not configured", %{conn: conn, site: site} do
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain,
-  #         "property" => "event:page",
-  #         "filters" => "event:goal==Register"
-  #       })
+  test "event:goal filter returns 400 when goal not configured", %{conn: conn, site: site} do
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["visit:browser"],
+        "filters" => [
+          ["is", "event:goal", ["Register"]]
+        ]
+      })
 
-  #     assert %{"error" => msg} = json_response(conn, 400)
-  #     assert msg =~ "The goal `Register` is not configured for this site. Find out how"
-  #   end
+    assert %{"error" => msg} = json_response(conn, 400)
+    assert msg =~ "The goal `Register` is not configured for this site. Find out how"
+  end
 
   #   test "validates that filters are valid", %{conn: conn, site: site} do
   #     conn =

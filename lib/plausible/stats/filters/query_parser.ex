@@ -17,7 +17,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
            order_by: order_by,
            timezone: site.timezone
          },
-         :ok <- validate_order_by(query) do
+         :ok <- validate_order_by(query),
+         {:ok, _} <- validate_goal_filters(site, query) do
       {:ok, query}
     end
   end
@@ -219,6 +220,32 @@ defmodule Plausible.Stats.Filters.QueryParser do
       end
     else
       :ok
+    end
+  end
+
+  defp validate_goal_filters(site, query) do
+    configured_goals =
+      Plausible.Goals.for_site(site)
+      |> Enum.map(fn
+        %{page_path: path} when is_binary(path) -> {:page, path}
+        %{event_name: event_name} -> {:event, event_name}
+      end)
+
+    goal_filter_clauses =
+      Enum.flat_map(query.filters, fn
+        [_operation, "event:goal", clauses] -> clauses
+        _ -> []
+      end)
+
+    parse_list(goal_filter_clauses, &validate_goal_filter(&1, configured_goals))
+  end
+
+  defp validate_goal_filter(clause, configured_goals) do
+    if Enum.member?(configured_goals, clause) do
+      {:ok, nil}
+    else
+      {:error,
+       "The goal `#{Filters.Utils.unwrap_goal_value(clause)}` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"}
     end
   end
 
