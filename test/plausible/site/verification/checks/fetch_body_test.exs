@@ -32,13 +32,10 @@ defmodule Plausible.Verification.Checks.FetchBodyTest do
     assert state.diagnostics.body_fetched?
   end
 
-  test "doesn't extract on non-2xx", %{state: state} do
+  test "does extract on non-2xx", %{state: state} do
     stub(400)
     state = @check.perform(state)
-
-    assert map_size(state.assigns) == 0
-
-    refute state.diagnostics.body_fetched?
+    assert state.diagnostics.body_fetched?
   end
 
   test "doesn't extract non-HTML", %{state: state} do

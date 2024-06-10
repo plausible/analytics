@@ -2,6 +2,7 @@ defmodule Plausible.Verification.ChecksTest do
   use Plausible.DataCase, async: true
 
   alias Plausible.Verification.Checks
+  alias Plausible.Verification.Diagnostics
   alias Plausible.Verification.State
 
   import ExUnit.CaptureLog
@@ -198,15 +199,6 @@ defmodule Plausible.Verification.ChecksTest do
       assert_receive :redirect_sent
       assert_receive :redirect_sent
       refute_receive _
-    end
-
-    test "fetching body fails at non-2xx status, but installation is ok" do
-      stub_fetch_body(599, "boo")
-      stub_installation()
-
-      run_checks()
-      |> Checks.interpret_diagnostics()
-      |> assert_error(@errors.unreachable, url: "https://example.com")
     end
 
     @snippet_in_body """
@@ -758,6 +750,37 @@ defmodule Plausible.Verification.ChecksTest do
     end
   end
 
+  describe "unhhandled cases from sentry" do
+    test "APP-58: 4b1435e3f8a048eb949cc78fa578d1e4" do
+      %Plausible.Verification.Diagnostics{
+        plausible_installed?: true,
+        snippets_found_in_head: 0,
+        snippets_found_in_body: 0,
+        snippet_found_after_busting_cache?: false,
+        snippet_unknown_attributes?: false,
+        disallowed_via_csp?: false,
+        service_error: nil,
+        body_fetched?: true,
+        wordpress_likely?: true,
+        cookie_banner_likely?: false,
+        gtm_likely?: false,
+        callback_status: -1,
+        proxy_likely?: false,
+        manual_script_extension?: false,
+        data_domain_mismatch?: false,
+        wordpress_plugin?: false
+      }
+      |> interpret_sentry_case()
+      |> assert_error(@errors.old_script_wp_no_plugin)
+    end
+  end
+
+  defp interpret_sentry_case(diagnostics) do
+    diagnostics
+    |> Diagnostics.interpret("example.com")
+    |> refute_unhandled()
+  end
+
   defp run_checks(extra_opts \\ []) do
     Checks.run(
       "https://example.com",
@@ -792,6 +815,18 @@ defmodule Plausible.Verification.ChecksTest do
 
   defp plausible_installed(bool \\ true, callback_status \\ 202) do
     %{"data" => %{"plausibleInstalled" => bool, "callbackStatus" => callback_status}}
+  end
+
+  defp refute_unhandled(interpretation) do
+    refute interpretation.errors == [
+             @errors.unknown.message
+           ]
+
+    refute interpretation.recommendations == [
+             @errors.unknown.recommendation
+           ]
+
+    interpretation
   end
 
   defp assert_error(interpretation, error) do
