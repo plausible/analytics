@@ -203,13 +203,11 @@ defmodule Plausible.Stats.Query do
     struct!(query, filters: Filters.parse(params["filters"]))
   end
 
-  @spec set_property(t(), String.t() | nil, Keyword.t()) :: t()
-  def set_property(query, property, opts \\ []) do
-    query = struct!(query, property: property)
-
-    if Keyword.get(opts, :skip_refresh_imported_opts),
-      do: query,
-      else: refresh_imported_opts(query)
+  @spec set_property(t(), String.t() | nil) :: t()
+  def set_property(query, property) do
+    query
+    |> struct!(property: property)
+    |> refresh_imported_opts()
   end
 
   def put_filter(query, filter) do
@@ -218,17 +216,15 @@ defmodule Plausible.Stats.Query do
     |> refresh_imported_opts()
   end
 
-  def remove_filters(query, prefixes, opts \\ []) do
+  def remove_filters(query, prefixes) do
     new_filters =
       Enum.reject(query.filters, fn [_, filter_key | _rest] ->
         Enum.any?(prefixes, &String.starts_with?(filter_key, &1))
       end)
 
-    query = struct!(query, filters: new_filters)
-
-    if Keyword.get(opts, :skip_refresh_imported_opts),
-      do: query,
-      else: refresh_imported_opts(query)
+    query
+    |> struct!(filters: new_filters)
+    |> refresh_imported_opts()
   end
 
   def exclude_imported(query) do
