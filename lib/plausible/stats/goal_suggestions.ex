@@ -33,6 +33,8 @@ defmodule Plausible.Stats.GoalSuggestions do
       from(e in base_event_query(site, query),
         where: fragment("? ilike ?", e.name, ^matches),
         where: e.name != "pageview",
+        where: fragment("trim(?)", e.name) != "",
+        where: e.name == fragment("trim(?)", e.name),
         where: e.name not in ^excluded,
         select: %{
           name: e.name,
@@ -50,6 +52,8 @@ defmodule Plausible.Stats.GoalSuggestions do
         where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
         where: i.visitors > 0,
         where: fragment("? ilike ?", i.name, ^matches),
+        where: fragment("trim(?)", i.name) != "",
+        where: i.name == fragment("trim(?)", i.name),
         where: i.name not in ^excluded,
         select: %{
           name: i.name,
