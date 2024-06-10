@@ -134,29 +134,28 @@ export function filtersBackwardsCompatibilityRedirect() {
   }
 }
 
-class QueryLink extends React.Component {
-  constructor(props) {
-    super(props)
-    this.onClick = this.onClick.bind(this)
-  }
+function QueryLink(props) {
+  const {query, history, to, className, children} = props
 
-  onClick(e) {
+  function onClick(e) {
     e.preventDefault()
-    navigateToQuery(this.props.history, this.props.query, this.props.to)
-    if (this.props.onClick) this.props.onClick(e)
+    navigateToQuery(history, query, to)
+    if (props.onClick) {
+      props.onClick(e)
+    }
   }
 
-  render() {
-    const { to, ...props } = this.props
-    return (
-      <Link
-        {...props}
-        to={{ pathname: window.location.pathname, search: updatedQuery(to) }}
-        onClick={this.onClick}
-      />
-    )
-  }
+  return (
+    <Link
+      to={{ pathname: window.location.pathname, search: updatedQuery(to) }}
+      className={className}
+      onClick={onClick}
+    >
+      {children}
+    </Link>
+  )
 }
+
 const QueryLinkWithRouter = withRouter(QueryLink)
 export { QueryLinkWithRouter as QueryLink };
 
