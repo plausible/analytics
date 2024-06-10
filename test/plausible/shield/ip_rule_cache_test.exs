@@ -33,7 +33,7 @@ defmodule Plausible.Shield.IPRuleCacheTest do
       refute IPRuleCache.get({site.domain, "3.3.3.3"}, cache_name: test, force?: true)
     end
 
-    test "cache allows lookups for sites with changed domain", %{test: test} do
+    test "cache allows IP lookups for sites with changed domain", %{test: test} do
       {:ok, _} = start_test_cache(test)
       site = insert(:site, domain: "new.example.com", domain_changed_from: "old.example.com")
 
