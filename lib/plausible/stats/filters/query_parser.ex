@@ -1,6 +1,7 @@
 defmodule Plausible.Stats.Filters.QueryParser do
   @moduledoc false
 
+  alias Plausible.Stats.TableDecider
   alias Plausible.Stats.Filters
   alias Plausible.Stats.Query
 
@@ -283,6 +284,11 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   def validate_metrics(query) do
     validate_list(query.metrics, &validate_metric(&1, query))
+
+    with :ok <- validate_list(query.metrics, &validate_metric(&1, query)),
+         :ok <- validate_no_metrics_filters_conflict(query) do
+      :ok
+    end
   end
 
   defp validate_metric(:conversion_rate = metric, query) do
@@ -295,6 +301,18 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp validate_metric(_, _), do: :ok
+
+  defp validate_no_metrics_filters_conflict(query) do
+    {_event_metrics, sessions_metrics, _other_metrics} =
+      TableDecider.partition_metrics(query.metrics, query)
+
+    if Enum.empty?(sessions_metrics) or not TableDecider.event_filters?(query) do
+      :ok
+    else
+      {:error,
+       "Session metric(s) `#{sessions_metrics |> Enum.join(", ")}` cannot be queried along with event filters or dimensions"}
+    end
+  end
 
   defp parse_list(list, parser_function) do
     Enum.reduce_while(list, {:ok, []}, fn value, {:ok, results} ->

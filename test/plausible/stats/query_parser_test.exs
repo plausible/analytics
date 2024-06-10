@@ -506,4 +506,46 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       })
     end
   end
+
+  describe "session metrics" do
+    test "single session metric succeeds", %{site: site} do
+      %{
+        "metrics" => ["bounce_rate"],
+        "date_range" => "all",
+        "dimensions" => ["visit:device"]
+      }
+      |> check_success(site, %{
+        metrics: [:bounce_rate],
+        date_range: @date_range,
+        filters: [],
+        dimensions: ["visit:device"],
+        order_by: nil,
+        timezone: site.timezone
+      })
+    end
+
+    test "fails if using session metric with event dimension", %{site: site} do
+      %{
+        "metrics" => ["bounce_rate"],
+        "date_range" => "all",
+        "dimensions" => ["event:props:foo"]
+      }
+      |> check_error(
+        site,
+        "Session metric(s) `bounce_rate` cannot be queried along with event filters or dimensions"
+      )
+    end
+
+    test "fails if using session metric with event filter", %{site: site} do
+      %{
+        "metrics" => ["bounce_rate"],
+        "date_range" => "all",
+        "filters" => [["is", "event:props:foo", ["(none)"]]]
+      }
+      |> check_error(
+        site,
+        "Session metric(s) `bounce_rate` cannot be queried along with event filters or dimensions"
+      )
+    end
+  end
 end
