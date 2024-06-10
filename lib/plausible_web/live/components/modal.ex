@@ -220,7 +220,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
         >
           <%= render_slot(@inner_block, modal_unique_id(@modal_sequence_id)) %>
         </Phoenix.Component.focus_wrap>
-        <div class="modal-loading hidden w-full self-center">
+        <div x-show="modalOpen" class="modal-loading hidden w-full self-center">
           <div class="text-center">
             <PlausibleWeb.Components.Generic.spinner class="inline-block h-8 w-8" />
           </div>
