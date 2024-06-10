@@ -29,7 +29,10 @@ defmodule PlausibleWeb.Live.GoalSettings do
           |> Enum.reject(&is_nil(&1.event_name))
           |> Enum.map(& &1.event_name)
 
-        Plausible.Stats.GoalSuggestions.suggest_event_names(site, "", exclude: exclude)
+        Plausible.Stats.GoalSuggestions.suggest_event_names(site, "",
+          exclude: exclude,
+          limit: :unlimited
+        )
       end)
       |> assign_new(:current_user, fn ->
         Plausible.Repo.get(Plausible.Auth.User, user_id)
