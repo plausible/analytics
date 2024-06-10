@@ -314,9 +314,14 @@ defmodule Plausible.Stats.Timeseries do
 
   defp maybe_add_timeseries_conversion_rate(q, site, query, metrics) do
     if :conversion_rate in metrics do
+      # Having removed some filters, the query might become eligible
+      # for including imported data. However, we still want to make
+      # sure that that include_imported is in sync between original
+      # and the totals query.
       totals_query =
         query
-        |> Query.remove_filters(["event:goal", "event:props"], skip_refresh_imported_opts: true)
+        |> Query.remove_filters(["event:goal", "event:props"])
+        |> struct!(include_imported: query.include_imported)
 
       totals_timeseries_q =
         from(e in base_event_query(site, totals_query),

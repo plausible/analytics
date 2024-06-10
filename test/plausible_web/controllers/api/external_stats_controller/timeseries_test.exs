@@ -1801,6 +1801,44 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
              ]
     end
 
+    test "ignores imported data in conversion rate total calculation when imported data cannot be included",
+         %{
+           conn: conn,
+           site: site
+         } do
+      site_import = insert(:site_import, site: site)
+
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, site_import.id, [
+        build(:event, name: "Signup", pathname: "/register", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:imported_custom_events, name: "Signup", date: ~D[2021-01-01], visitors: 1),
+        build(:imported_pages, page: "/register", date: ~D[2021-01-01], visitors: 2)
+      ])
+
+      %{"results" => results, "warning" => warning} =
+        conn
+        |> get("/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "custom",
+          "date" => "2021-01-01,2021-01-01",
+          "interval" => "date",
+          "metrics" => "conversion_rate",
+          "filters" => "event:goal==Signup;event:page==/register",
+          "with_imported" => "true"
+        })
+        |> json_response(200)
+
+      assert results == [
+               %{
+                 "date" => "2021-01-01",
+                 "conversion_rate" => 100.0
+               }
+             ]
+
+      assert warning =~ "Imported stats are not included in the results"
+    end
+
     test "returns conversion rate timeseries with a goal + custom prop filter", %{
       conn: conn,
       site: site

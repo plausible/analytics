@@ -291,7 +291,20 @@ defmodule Plausible.Stats.Base do
     |> select([e], total_visitors: fragment(@uniq_users_expression, e.user_id))
   end
 
-  defp total_visitors_subquery(site, %Query{include_imported: true} = query) do
+  # `total_visitors_subquery` returns a subquery which selects `total_visitors` -
+  # the number used as the denominator in the calculation of `conversion_rate` and
+  # `percentage` metrics.
+
+  # Usually, when calculating the totals, a new query is passed into this function,
+  # where certain filters (e.g. goal, props) are removed. That might make the query
+  # able to include imported data. However, we always want to include imported data
+  # only if it's included in the base query - otherwise the total will be based on
+  # a different data set, making the metric inaccurate. This is why we're using an
+  # explicit `include_imported` argument here.
+  @spec total_visitors_subquery(Plausible.Site.t(), Query.t(), boolean()) :: :ok
+  defp total_visitors_subquery(site, query, include_imported)
+
+  defp total_visitors_subquery(site, query, true = _include_imported) do
     dynamic(
       [e],
       selected_as(
@@ -302,16 +315,18 @@ defmodule Plausible.Stats.Base do
     )
   end
 
-  defp total_visitors_subquery(site, query) do
+  defp total_visitors_subquery(site, query, false = _include_imported) do
     dynamic([e], selected_as(subquery(total_visitors(site, query)), :__total_visitors))
   end
 
   def add_percentage_metric(q, site, query, metrics) do
     if :percentage in metrics do
-      total_query = Query.set_property(query, nil, skip_refresh_imported_opts: true)
+      total_query = Query.set_property(query, nil)
 
       q
-      |> select_merge(^%{__total_visitors: total_visitors_subquery(site, total_query)})
+      |> select_merge(
+        ^%{__total_visitors: total_visitors_subquery(site, total_query, query.include_imported)}
+      )
       |> select_merge(%{
         percentage:
           fragment(
@@ -333,12 +348,14 @@ defmodule Plausible.Stats.Base do
     if :conversion_rate in metrics do
       total_query =
         query
-        |> Query.remove_filters(["event:goal", "event:props"], skip_refresh_imported_opts: true)
-        |> Query.set_property(nil, skip_refresh_imported_opts: true)
+        |> Query.remove_filters(["event:goal", "event:props"])
+        |> Query.set_property(nil)
 
       # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
       subquery(q)
-      |> select_merge(^%{total_visitors: total_visitors_subquery(site, total_query)})
+      |> select_merge(
+        ^%{total_visitors: total_visitors_subquery(site, total_query, query.include_imported)}
+      )
       |> select_merge([e], %{
         conversion_rate:
           fragment(
