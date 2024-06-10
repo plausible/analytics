@@ -16,6 +16,8 @@ import {
   getLabel
 } from "./util/filters"
 
+const WRAPSTATE = { unwrapped: 0, waiting: 1, wrapped: 2 }
+
 function removeFilter(filterIndex, history, query) {
   const newFilters = query.filters.filter((_filter, index) => filterIndex != index)
   const newLabels = cleanLabels(newFilters, query.labels)
@@ -94,10 +96,10 @@ function filterDropdownOption(site, option) {
   )
 }
 
-function DropdownContent({ history, site, query, wrapped }) {
+function DropdownContent({ history, site, query, wrapState }) {
   const [addingFilter, setAddingFilter] = useState(false);
 
-  if (wrapped === 0 || addingFilter) {
+  if (wrapState === WRAPSTATE.unwrapped || addingFilter) {
     let filterModals = {...FILTER_MODAL_TO_FILTER_GROUP}
     if (!site.propsAvailable) delete filterModals.props
 
@@ -121,7 +123,7 @@ function DropdownContent({ history, site, query, wrapped }) {
 
 function Filters(props) {
   const { history, query, site } = props
-  const [wrapped, setWrapped] = useState(1) // 0=unwrapped, 1=waiting to check, 2=wrapped
+  const [wrapped, setWrapped] = useState(WRAPSTATE.waiting)
   const [viewport, setViewport] = useState(1080)
 
   useEffect(() => {
@@ -135,11 +137,11 @@ function Filters(props) {
   }, [])
 
   useEffect(() => {
-    setWrapped(1)
+    setWrapped(WRAPSTATE.waiting)
   }, [query, viewport])
 
   useEffect(() => {
-    if (wrapped === 1) { updateDisplayMode() }
+    if (wrapped === WRAPSTATE.waiting) { updateDisplayMode() }
   }, [wrapped])
 
 
@@ -162,18 +164,18 @@ function Filters(props) {
 
     // Always wrap on mobile
     if (query.filters.length > 0 && viewport <= 768) {
-      setWrapped(2)
+      setWrapped(WRAPSTATE.wrapped)
       return
     }
 
-    setWrapped(0)
+    setWrapped(WRAPSTATE.unwrapped)
 
     // Check for different y value between all child nodes - this indicates a wrap
     children.forEach(child => {
       const currentChildY = child.getBoundingClientRect().top
       const firstChildY = children[0].getBoundingClientRect().top
       if (currentChildY !== firstChildY) {
-        setWrapped(2)
+        setWrapped(WRAPSTATE.wrapped)
       }
     })
   }
@@ -206,7 +208,7 @@ function Filters(props) {
   }
 
   function renderDropdownButton() {
-    if (wrapped === 2) {
+    if (wrapped === WRAPSTATE.wrapped) {
       const filterCount = query.filters.length
       return (
         <>
@@ -269,10 +271,10 @@ function Filters(props) {
   }
 
   function renderFilterList() {
-    // The filters are rendered even when `wrapped === 1`. Otherwise,
-    // if they don't exist in the DOM, we can't check whether the
-    // flex-wrap is actually putting them on multiple lines.
-    if (wrapped !== 2) {
+    // The filters are rendered even when `wrapped === WRAPSTATE.waiting`.
+    // Otherwise, if they don't exist in the DOM, we can't check whether
+    // the flex-wrap is actually putting them on multiple lines.
+    if (wrapped !== WRAPSTATE.wrapped) {
       return (
         <div id="filters" className="flex flex-wrap">
           {query.filters.map((filter, index) => renderListFilter(index, filter))}
