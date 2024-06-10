@@ -132,32 +132,29 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert json_response(conn, 400)["error"] =~ "Invalid dimensions"
     end
 
-    #   test "validates that correct period is used", %{conn: conn, site: site} do
-    #     conn =
-    #       get(conn, "/api/v1/stats/breakdown", %{
-    #         "site_id" => site.domain,
-    #         "period" => "bad_period"
-    #       })
+    test "validates that correct period is used", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "bad_period",
+          "dimensions" => ["event:name"]
+        })
 
-    #     assert json_response(conn, 400) == %{
-    #              "error" =>
-    #                "Error parsing `period` parameter: invalid period `bad_period`. Please find accepted values in our docs: https://plausible.io/docs/stats-api#time-periods"
-    #            }
-    #   end
+      assert json_response(conn, 400)["error"] =~ "Invalid date range"
+    end
 
-    #   test "fails when an invalid metric is provided", %{conn: conn, site: site} do
-    #     conn =
-    #       get(conn, "/api/v1/stats/breakdown", %{
-    #         "property" => "event:page",
-    #         "metrics" => "visitors,baa",
-    #         "site_id" => site.domain
-    #       })
+    test "fails when an invalid metric is provided", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "baa"],
+          "date_range" => "all",
+          "dimensions" => ["event:name"]
+        })
 
-    #     assert json_response(conn, 400) == %{
-    #              "error" =>
-    #                "The metric `baa` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#metrics"
-    #            }
-    #   end
+      assert json_response(conn, 400)["error"] =~ "Unknown metric '\"baa\"'"
+    end
 
     #   test "session metrics cannot be used with event:name property", %{conn: conn, site: site} do
     #     conn =
