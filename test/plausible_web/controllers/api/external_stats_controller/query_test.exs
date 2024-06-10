@@ -1511,19 +1511,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     assert msg =~ "The goal `Register` is not configured for this site. Find out how"
   end
 
-  #   test "validates that filters are valid", %{conn: conn, site: site} do
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain,
-  #         "property" => "event:page",
-  #         "filters" => "badproperty==bar"
-  #       })
+  test "validates that filters are valid", %{conn: conn, site: site} do
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["visit:browser"],
+        "filters" => [
+          ["is", "badproperty", ["bar"]]
+        ]
+      })
 
-  #     assert json_response(conn, 400) == %{
-  #              "error" =>
-  #                "Invalid filter property 'badproperty'. Please provide a valid filter property: https://plausible.io/docs/stats-api#properties"
-  #            }
-  #   end
+    assert %{"error" => msg} = json_response(conn, 400)
+    assert msg =~ "Invalid filter"
+  end
 
   test "event:page filter for breakdown by session props", %{conn: conn, site: site} do
     populate_stats(site, [
