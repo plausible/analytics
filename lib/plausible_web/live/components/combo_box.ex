@@ -135,7 +135,6 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
           target={@myself}
           creatable={@creatable}
           display_value={@display_value}
-          submit_value={@submit_value}
         />
       </div>
     </div>
@@ -171,7 +170,6 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:target, :any)
   attr(:creatable, :boolean, required: true)
   attr(:display_value, :string, required: true)
-  attr(:submit_value, :string, required: true)
 
   def dropdown(assigns) do
     ~H"""
@@ -204,7 +202,6 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         idx={idx}
         submit_value={submit_value}
         display_value={display_value}
-        current_value={@submit_value}
         target={@target}
         ref={@ref}
       />
@@ -227,7 +224,6 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
   attr(:display_value, :string, required: true)
   attr(:submit_value, :string, required: true)
-  attr(:current_value, :string, default: "")
   attr(:ref, :string, required: true)
   attr(:target, :any)
   attr(:idx, :integer, required: true)
@@ -248,10 +244,8 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     >
       <a
         x-ref={"dropdown-#{@ref}-option-#{@idx}"}
-        x-on:click={not @creatable && @submit_value != @current_value && "selectionInProgress = true"}
-        phx-click={
-          @submit_value != @current_value && select_option(@ref, @submit_value, @display_value)
-        }
+        x-on:click={not @creatable && "selectionInProgress = true"}
+        phx-click={select_option(@ref, @submit_value, @display_value)}
         phx-value-submit-value={@submit_value}
         phx-value-display-value={@display_value}
         phx-target={@target}
