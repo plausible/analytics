@@ -135,8 +135,6 @@ defmodule Plausible.Verification.Diagnostics do
 
   def interpret(
         %__MODULE__{
-          snippets_found_in_body: 0,
-          snippets_found_in_head: 1,
           plausible_installed?: true,
           wordpress_likely?: false,
           callback_status: -1
@@ -148,8 +146,6 @@ defmodule Plausible.Verification.Diagnostics do
 
   def interpret(
         %__MODULE__{
-          snippets_found_in_body: 0,
-          snippets_found_in_head: 1,
           plausible_installed?: true,
           wordpress_likely?: true,
           wordpress_plugin?: false,
@@ -162,8 +158,6 @@ defmodule Plausible.Verification.Diagnostics do
 
   def interpret(
         %__MODULE__{
-          snippets_found_in_body: 0,
-          snippets_found_in_head: 1,
           plausible_installed?: true,
           wordpress_likely?: true,
           wordpress_plugin?: true,
@@ -336,10 +330,12 @@ defmodule Plausible.Verification.Diagnostics do
     %Result{ok?: true}
   end
 
-  def interpret(rating, url) do
-    Sentry.capture_message("Unhandled case for site verification: #{url}",
+  def interpret(diagnostics, url) do
+    Sentry.capture_message("Unhandled case for site verification",
       extra: %{
-        message: inspect(rating)
+        message: inspect(diagnostics),
+        url: url,
+        hash: :erlang.phash2(diagnostics)
       }
     )
 
