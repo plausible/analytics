@@ -30,6 +30,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         context_unique_id: assigns.context_unique_id,
         form: form,
         event_name_options_count: length(assigns.event_name_options),
+        event_name_options: Enum.map(assigns.event_name_options, &{&1, &1}),
         current_user: assigns.current_user,
         domain: assigns.domain,
         selected_tab: "custom_events",
@@ -71,6 +72,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           current_user={@current_user}
           site={@site}
           existing_goals={@existing_goals}
+          goal_options={@event_name_options}
           has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
           x-init="tabSelectionInProgress = false"
         />
@@ -146,6 +148,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   attr(:current_user, Plausible.Auth.User)
   attr(:suffix, :string)
   attr(:existing_goals, :list)
+  attr(:goal_options, :list)
   attr(:has_access_to_revenue_goals?, :boolean)
 
   attr(:rest, :global)
@@ -177,6 +180,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
             ]}
             module={ComboBox}
             suggest_fun={fn input, _options -> suggest_event_names(input, @site, @existing_goals) end}
+            options={@goal_options}
             creatable
           />
         </div>

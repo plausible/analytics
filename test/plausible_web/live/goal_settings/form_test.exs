@@ -192,6 +192,45 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert html =~ "/go/home"
       refute html =~ "/go/to/page/1"
     end
+
+    test "event name combo suggestions update on input", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "EventOne"),
+        build(:event, name: "EventTwo"),
+        build(:event, name: "EventThree")
+      ])
+
+      lv = get_liveview(conn, site)
+
+      type_into_combo(lv, "event_name_input_modalseq0-tabseq0", "One")
+      html = render(lv)
+
+      assert text_of_element(html, "#goals-form-modalseq0") =~ "EventOne"
+      refute text_of_element(html, "#goals-form-modalseq0") =~ "EventTwo"
+      refute text_of_element(html, "#goals-form-modalseq0") =~ "EventThree"
+    end
+
+    test "event name combo suggestions are up to date after deletion", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "EventOne")
+      insert(:goal, site: site, event_name: "EventTwo")
+      insert(:goal, site: site, event_name: "EventThree")
+
+      populate_stats(site, [
+        build(:event, name: "EventOne"),
+        build(:event, name: "EventTwo"),
+        build(:event, name: "EventThree")
+      ])
+
+      lv = get_liveview(conn, site)
+
+      # Delete the goal
+      goal = Plausible.Repo.get_by(Plausible.Goal, site_id: site.id, event_name: "EventOne")
+      html = lv |> element(~s/button#delete-goal-#{goal.id}/) |> render_click()
+
+      assert text_of_element(html, "#goals-form-modalseq0") =~ "EventOne"
+      refute text_of_element(html, "#goals-form-modalseq0") =~ "EventTwo"
+      refute text_of_element(html, "#goals-form-modalseq0") =~ "EventThree"
+    end
   end
 
   defp type_into_combo(lv, id, text) do
