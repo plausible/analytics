@@ -258,7 +258,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.referrer_source == "Facebook"
     end
 
-    test "strips trailing slash from referrer", %{conn: conn, site: site} do
+    test "does not strip trailing slash from referrer", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
         url: "http://example.com/",
@@ -275,7 +275,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       event = get_event(site)
 
       assert response(conn, 202) == "ok"
-      assert session.referrer == "facebook.com/page"
+      assert session.referrer == "facebook.com/page/"
       assert session.referrer_source == "Facebook"
       assert event.referrer == session.referrer
       assert event.referrer_source == session.referrer_source

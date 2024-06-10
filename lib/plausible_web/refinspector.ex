@@ -16,7 +16,7 @@ defmodule PlausibleWeb.RefInspector do
   end
 
   def format_referrer(uri) do
-    path = String.trim_trailing(uri.path || "", "/")
+    path = uri.path || ""
     format_referrer_host(uri) <> path
   end
 
