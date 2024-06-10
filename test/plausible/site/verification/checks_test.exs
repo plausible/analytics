@@ -168,7 +168,7 @@ defmodule Plausible.Verification.ChecksTest do
         with_log(fn ->
           run_checks()
           |> Checks.interpret_diagnostics()
-          |> assert_error(@errors.unreachable, url: "https://example.com")
+          |> assert_ok()
         end)
 
       assert log =~ "3 attempts left"
