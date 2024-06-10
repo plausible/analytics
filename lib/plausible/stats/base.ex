@@ -291,17 +291,16 @@ defmodule Plausible.Stats.Base do
     |> select([e], total_visitors: fragment(@uniq_users_expression, e.user_id))
   end
 
-  # `total_visitors_subquery` returns a subquery to fetch the total number
-  # of visitors. The number returned is used as the denominator in the
-  # calculation of `conversion_rate` and `percentage` metrics.
+  # `total_visitors_subquery` returns a subquery which selects `total_visitors` -
+  # the number used as the denominator in the calculation of `conversion_rate` and
+  # `percentage` metrics.
 
-  # Usually, when calculating the totals, a new query is passed into this
-  # function, where certain filters (e.g. goal, props) are removed. That
-  # might make the query able to include imported data. However, we always
-  # want to include imported data only if it's included in the base query -
-  # otherwise the total will be based on a different data set, making the
-  # metrics inaccurate. This is we're using an explicit `include_imported`
-  # argument here.
+  # Usually, when calculating the totals, a new query is passed into this function,
+  # where certain filters (e.g. goal, props) are removed. That might make the query
+  # able to include imported data. However, we always want to include imported data
+  # only if it's included in the base query - otherwise the total will be based on
+  # a different data set, making the metric inaccurate. This is why we're using an
+  # explicit `include_imported` argument here.
   @spec total_visitors_subquery(Plausible.Site.t(), Query.t(), boolean()) :: :ok
   defp total_visitors_subquery(site, query, include_imported)
 
