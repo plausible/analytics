@@ -6,241 +6,250 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
   setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
 
-  # describe "feature access" do
-  #   test "cannot break down by a custom prop without access to the props feature", %{
-  #     conn: conn,
-  #     user: user,
-  #     site: site
-  #   } do
-  #     ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
-  #     insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+  describe "feature access" do
+    test "cannot break down by a custom prop without access to the props feature", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
+      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
 
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain,
-  #         "property" => "event:props:author"
-  #       })
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["event:props:author"]
+        })
 
-  #     assert json_response(conn, 402)["error"] ==
-  #              "The owner of this site does not have access to the custom properties feature"
-  #   end
+      assert json_response(conn, 400)["error"] ==
+               "The owner of this site does not have access to the custom properties feature"
+    end
 
-  #   test "can break down by an internal prop key without access to the props feature", %{
-  #     conn: conn,
-  #     user: user,
-  #     site: site
-  #   } do
-  #     ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
-  #     insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+    test "can break down by an internal prop key without access to the props feature", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
+      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
 
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain,
-  #         "property" => "event:props:path"
-  #       })
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["event:props:path"]
+        })
 
-  #     assert json_response(conn, 200)["results"]
-  #   end
+      assert json_response(conn, 200)["results"]
+    end
 
-  #   test "cannot filter by a custom prop without access to the props feature", %{
-  #     conn: conn,
-  #     user: user,
-  #     site: site
-  #   } do
-  #     ep =
-  #       insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
+    test "cannot filter by a custom prop without access to the props feature", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      ep =
+        insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
 
-  #     insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
 
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain,
-  #         "property" => "visit:source",
-  #         "filters" => "event:props:author==Uku"
-  #       })
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["visit:source"],
+          "filters" => [["is", "event:props:author", ["Uku"]]]
+        })
 
-  #     assert json_response(conn, 402)["error"] ==
-  #              "The owner of this site does not have access to the custom properties feature"
-  #   end
+      assert json_response(conn, 400)["error"] ==
+               "The owner of this site does not have access to the custom properties feature"
+    end
 
-  #   test "can filter by an internal prop key without access to the props feature", %{
-  #     conn: conn,
-  #     user: user,
-  #     site: site
-  #   } do
-  #     ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
-  #     insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+    test "can filter by an internal prop key without access to the props feature", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
+      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
 
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain,
-  #         "property" => "visit:source",
-  #         "filters" => "event:props:url==whatever"
-  #       })
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["visit:source"],
+          "filters" => [["is", "event:props:url", ["whatever"]]]
+        })
 
-  #     assert json_response(conn, 200)["results"]
-  #   end
-  # end
+      assert json_response(conn, 200)["results"]
+    end
 
-  # describe "param validation" do
-  #   test "time_on_page is not supported in breakdown queries other than by event:page", %{
-  #     conn: conn,
-  #     site: site
-  #   } do
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain,
-  #         "property" => "visit:source",
-  #         "filters" => "event:page==/A",
-  #         "metrics" => "time_on_page"
-  #       })
+    # end
 
-  #     assert json_response(conn, 400) == %{
-  #              "error" =>
-  #                "Metric `time_on_page` is not supported in breakdown queries (except `event:page` breakdown)"
-  #            }
-  #   end
+    # describe "param validation" do
+    #   test "time_on_page is not supported in breakdown queries other than by event:page", %{
+    #     conn: conn,
+    #     site: site
+    #   } do
+    #     conn =
+    #       get(conn, "/api/v1/stats/breakdown", %{
+    #         "site_id" => site.domain,
+    #         "property" => "visit:source",
+    #         "filters" => "event:page==/A",
+    #         "metrics" => "time_on_page"
+    #       })
 
-  #   test "does not allow querying conversion_rate without a goal filter", %{
-  #     conn: conn,
-  #     site: site
-  #   } do
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain,
-  #         "property" => "event:page",
-  #         "metrics" => "conversion_rate"
-  #       })
+    #     assert json_response(conn, 400) == %{
+    #              "error" =>
+    #                "Metric `time_on_page` is not supported in breakdown queries (except `event:page` breakdown)"
+    #            }
+    #   end
 
-  #     assert json_response(conn, 400) == %{
-  #              "error" =>
-  #                "Metric `conversion_rate` can only be queried in a goal breakdown or with a goal filter"
-  #            }
-  #   end
+    #   test "does not allow querying conversion_rate without a goal filter", %{
+    #     conn: conn,
+    #     site: site
+    #   } do
+    #     conn =
+    #       get(conn, "/api/v1/stats/breakdown", %{
+    #         "site_id" => site.domain,
+    #         "property" => "event:page",
+    #         "metrics" => "conversion_rate"
+    #       })
 
-  #   test "validates that property is required", %{conn: conn, site: site} do
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain
-  #       })
+    #     assert json_response(conn, 400) == %{
+    #              "error" =>
+    #                "Metric `conversion_rate` can only be queried in a goal breakdown or with a goal filter"
+    #            }
+    #   end
 
-  #     assert json_response(conn, 400) == %{
-  #              "error" =>
-  #                "The `property` parameter is required. Please provide at least one property to show a breakdown by."
-  #            }
-  #   end
+    #   test "validates that property is required", %{conn: conn, site: site} do
+    #     conn =
+    #       get(conn, "/api/v1/stats/breakdown", %{
+    #         "site_id" => site.domain
+    #       })
 
-  #   test "validates that property is valid", %{conn: conn, site: site} do
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain,
-  #         "property" => "badproperty"
-  #       })
+    #     assert json_response(conn, 400) == %{
+    #              "error" =>
+    #                "The `property` parameter is required. Please provide at least one property to show a breakdown by."
+    #            }
+    #   end
 
-  #     assert json_response(conn, 400) == %{
-  #              "error" =>
-  #                "Invalid property 'badproperty'. Please provide a valid property for the breakdown endpoint: https://plausible.io/docs/stats-api#properties"
-  #            }
-  #   end
+    #   test "validates that property is valid", %{conn: conn, site: site} do
+    #     conn =
+    #       get(conn, "/api/v1/stats/breakdown", %{
+    #         "site_id" => site.domain,
+    #         "property" => "badproperty"
+    #       })
 
-  #   test "empty custom prop is invalid", %{conn: conn, site: site} do
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain,
-  #         "property" => "event:props:"
-  #       })
+    #     assert json_response(conn, 400) == %{
+    #              "error" =>
+    #                "Invalid property 'badproperty'. Please provide a valid property for the breakdown endpoint: https://plausible.io/docs/stats-api#properties"
+    #            }
+    #   end
 
-  #     assert json_response(conn, 400) == %{
-  #              "error" =>
-  #                "Invalid property 'event:props:'. Please provide a valid property for the breakdown endpoint: https://plausible.io/docs/stats-api#properties"
-  #            }
-  #   end
+    #   test "empty custom prop is invalid", %{conn: conn, site: site} do
+    #     conn =
+    #       get(conn, "/api/v1/stats/breakdown", %{
+    #         "site_id" => site.domain,
+    #         "property" => "event:props:"
+    #       })
 
-  #   test "validates that correct period is used", %{conn: conn, site: site} do
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain,
-  #         "period" => "bad_period"
-  #       })
+    #     assert json_response(conn, 400) == %{
+    #              "error" =>
+    #                "Invalid property 'event:props:'. Please provide a valid property for the breakdown endpoint: https://plausible.io/docs/stats-api#properties"
+    #            }
+    #   end
 
-  #     assert json_response(conn, 400) == %{
-  #              "error" =>
-  #                "Error parsing `period` parameter: invalid period `bad_period`. Please find accepted values in our docs: https://plausible.io/docs/stats-api#time-periods"
-  #            }
-  #   end
+    #   test "validates that correct period is used", %{conn: conn, site: site} do
+    #     conn =
+    #       get(conn, "/api/v1/stats/breakdown", %{
+    #         "site_id" => site.domain,
+    #         "period" => "bad_period"
+    #       })
 
-  #   test "fails when an invalid metric is provided", %{conn: conn, site: site} do
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "property" => "event:page",
-  #         "metrics" => "visitors,baa",
-  #         "site_id" => site.domain
-  #       })
+    #     assert json_response(conn, 400) == %{
+    #              "error" =>
+    #                "Error parsing `period` parameter: invalid period `bad_period`. Please find accepted values in our docs: https://plausible.io/docs/stats-api#time-periods"
+    #            }
+    #   end
 
-  #     assert json_response(conn, 400) == %{
-  #              "error" =>
-  #                "The metric `baa` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#metrics"
-  #            }
-  #   end
+    #   test "fails when an invalid metric is provided", %{conn: conn, site: site} do
+    #     conn =
+    #       get(conn, "/api/v1/stats/breakdown", %{
+    #         "property" => "event:page",
+    #         "metrics" => "visitors,baa",
+    #         "site_id" => site.domain
+    #       })
 
-  #   test "session metrics cannot be used with event:name property", %{conn: conn, site: site} do
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "property" => "event:name",
-  #         "metrics" => "visitors,bounce_rate",
-  #         "site_id" => site.domain
-  #       })
+    #     assert json_response(conn, 400) == %{
+    #              "error" =>
+    #                "The metric `baa` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#metrics"
+    #            }
+    #   end
 
-  #     assert json_response(conn, 400) == %{
-  #              "error" =>
-  #                "Session metric `bounce_rate` cannot be queried for breakdown by `event:name`."
-  #            }
-  #   end
+    #   test "session metrics cannot be used with event:name property", %{conn: conn, site: site} do
+    #     conn =
+    #       get(conn, "/api/v1/stats/breakdown", %{
+    #         "property" => "event:name",
+    #         "metrics" => "visitors,bounce_rate",
+    #         "site_id" => site.domain
+    #       })
 
-  #   test "session metrics cannot be used with event:props:* property", %{conn: conn, site: site} do
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "property" => "event:props:url",
-  #         "metrics" => "visitors,bounce_rate",
-  #         "site_id" => site.domain
-  #       })
+    #     assert json_response(conn, 400) == %{
+    #              "error" =>
+    #                "Session metric `bounce_rate` cannot be queried for breakdown by `event:name`."
+    #            }
+    #   end
 
-  #     assert json_response(conn, 400) == %{
-  #              "error" =>
-  #                "Session metric `bounce_rate` cannot be queried for breakdown by `event:props:url`."
-  #            }
-  #   end
+    #   test "session metrics cannot be used with event:props:* property", %{conn: conn, site: site} do
+    #     conn =
+    #       get(conn, "/api/v1/stats/breakdown", %{
+    #         "property" => "event:props:url",
+    #         "metrics" => "visitors,bounce_rate",
+    #         "site_id" => site.domain
+    #       })
 
-  #   test "session metrics cannot be used with event:name filter", %{conn: conn, site: site} do
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "property" => "event:page",
-  #         "filters" => "event:name==Signup",
-  #         "metrics" => "visitors,bounce_rate",
-  #         "site_id" => site.domain
-  #       })
+    #     assert json_response(conn, 400) == %{
+    #              "error" =>
+    #                "Session metric `bounce_rate` cannot be queried for breakdown by `event:props:url`."
+    #            }
+    #   end
 
-  #     assert json_response(conn, 400) == %{
-  #              "error" =>
-  #                "Session metric `bounce_rate` cannot be queried when using a filter on `event:name`."
-  #            }
-  #   end
+    #   test "session metrics cannot be used with event:name filter", %{conn: conn, site: site} do
+    #     conn =
+    #       get(conn, "/api/v1/stats/breakdown", %{
+    #         "property" => "event:page",
+    #         "filters" => "event:name==Signup",
+    #         "metrics" => "visitors,bounce_rate",
+    #         "site_id" => site.domain
+    #       })
 
-  #   test "session metrics cannot be used with event:props:* filter", %{conn: conn, site: site} do
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "property" => "event:page",
-  #         "filters" => "event:props:url==google.com",
-  #         "metrics" => "visitors,bounce_rate",
-  #         "site_id" => site.domain
-  #       })
+    #     assert json_response(conn, 400) == %{
+    #              "error" =>
+    #                "Session metric `bounce_rate` cannot be queried when using a filter on `event:name`."
+    #            }
+    #   end
 
-  #     assert json_response(conn, 400) == %{
-  #              "error" =>
-  #                "Session metric `bounce_rate` cannot be queried when using a filter on `event:props:url`."
-  #            }
-  #   end
-  # end
+    #   test "session metrics cannot be used with event:props:* filter", %{conn: conn, site: site} do
+    #     conn =
+    #       get(conn, "/api/v1/stats/breakdown", %{
+    #         "property" => "event:page",
+    #         "filters" => "event:props:url==google.com",
+    #         "metrics" => "visitors,bounce_rate",
+    #         "site_id" => site.domain
+    #       })
+
+    #     assert json_response(conn, 400) == %{
+    #              "error" =>
+    #                "Session metric `bounce_rate` cannot be queried when using a filter on `event:props:url`."
+    #            }
+    #   end
+  end
 
   test "breakdown by visit:source", %{conn: conn, site: site} do
     populate_stats(site, [

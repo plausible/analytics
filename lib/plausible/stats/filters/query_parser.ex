@@ -18,7 +18,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
            timezone: site.timezone
          },
          :ok <- validate_order_by(query),
-         {:ok, _} <- validate_goal_filters(site, query) do
+         {:ok, _} <- validate_goal_filters(site, query),
+         :ok <- validate_custom_props_access(site, query) do
       {:ok, query}
     end
   end
@@ -246,6 +247,31 @@ defmodule Plausible.Stats.Filters.QueryParser do
     else
       {:error,
        "The goal `#{Filters.Utils.unwrap_goal_value(clause)}` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"}
+    end
+  end
+
+  defp validate_custom_props_access(site, query) do
+    allowed_props = Plausible.Props.allowed_for(site, bypass_setup?: true)
+
+    validate_custom_props_access(site, query, allowed_props)
+  end
+
+  defp validate_custom_props_access(_site, _query, :all), do: :ok
+
+  defp validate_custom_props_access(_site, query, allowed_props) do
+    valid? =
+      query.filters
+      |> Enum.map(fn [_operation, filter_key | _rest] -> filter_key end)
+      |> Enum.concat(query.dimensions)
+      |> Enum.all?(fn
+        "event:props:" <> prop -> prop in allowed_props
+        _ -> true
+      end)
+
+    if valid? do
+      :ok
+    else
+      {:error, "The owner of this site does not have access to the custom properties feature"}
     end
   end
 

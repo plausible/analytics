@@ -4,12 +4,9 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   alias Plausible.Stats.Filters
   import Plausible.Stats.Filters.QueryParser
 
-  @date_range Date.range(Timex.today(), Timex.today())
+  setup [:create_user, :create_new_site]
 
-  setup do
-    site = insert(:site)
-    {:ok, %{site: site}}
-  end
+  @date_range Date.range(Timex.today(), Timex.today())
 
   def check_success(params, site, expected_result) do
     assert parse(site, params) == {:ok, expected_result}
@@ -415,6 +412,42 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "order_by" => [["event:name", "desc"]]
       }
       |> check_error(site, ~r/Entry is not a queried metric or dimension/)
+    end
+  end
+
+  describe "custom props access" do
+    test "error if invalid filter", %{site: site, user: user} do
+      ep =
+        insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
+
+      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+
+      %{
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "event:props:foobar", ["foo"]]]
+      }
+      |> check_error(
+        site,
+        ~r/The owner of this site does not have access to the custom properties feature/
+      )
+    end
+
+    test "error if invalid dimension", %{site: site, user: user} do
+      ep =
+        insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
+
+      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+
+      %{
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["event:props:foobar"]
+      }
+      |> check_error(
+        site,
+        ~r/The owner of this site does not have access to the custom properties feature/
+      )
     end
   end
 end
