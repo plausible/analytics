@@ -120,7 +120,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
           <input
             type="hidden"
-            x-init={"trackSubmitValueChange('#{@submit_value}')"}
+            x-init={"trackSubmitValueChange('#{Phoenix.HTML.javascript_escape(to_string(@submit_value))}')"}
             name={@submit_name}
             value={@submit_value}
             phx-target={@myself}
