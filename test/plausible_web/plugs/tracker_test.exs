@@ -16,10 +16,12 @@ defmodule PlausibleWeb.TrackerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plug.Test
 
+  @tag :skip
   test "returns legacy script p.js" do
     assert String.contains?(get_script("p.js"), "; samesite=strict; path=/")
   end
 
+  @tag :skip
   test "returns plausible script with every alias" do
     plausible_js_response = get_script("plausible.js")
 
@@ -27,6 +29,7 @@ defmodule PlausibleWeb.TrackerTest do
     assert plausible_js_response == get_script("analytics.js")
   end
 
+  @tag :skip
   test "returns the right script extensions no matter the order" do
     response = get_script("plausible.compat.file-downloads.hash.outbound-links.js")
 

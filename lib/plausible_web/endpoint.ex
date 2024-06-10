@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Endpoint do
 
   plug(Plug.Static,
     at: "/",
-    from: :plausible,
+    from: {:analytics_flask, "priv/static"},
     gzip: false,
     only: static_paths
   )
