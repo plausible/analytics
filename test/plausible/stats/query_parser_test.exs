@@ -323,6 +323,15 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       })
     end
 
+    test "invalid custom property dimension", %{site: site} do
+      %{
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["event:props:"]
+      }
+      |> check_error(site, ~r/Invalid dimensions/)
+    end
+
     test "invalid dimension name passed", %{site: site} do
       %{
         "metrics" => ["visitors"],

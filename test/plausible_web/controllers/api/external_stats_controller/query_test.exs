@@ -108,31 +108,29 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                "Metric `conversion_rate` can only be queried with event:goal filters or dimensions"
     end
 
-    #   test "validates that property is valid", %{conn: conn, site: site} do
-    #     conn =
-    #       get(conn, "/api/v1/stats/breakdown", %{
-    #         "site_id" => site.domain,
-    #         "property" => "badproperty"
-    #       })
+    test "validates that property is valid", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["badproperty"]
+        })
 
-    #     assert json_response(conn, 400) == %{
-    #              "error" =>
-    #                "Invalid property 'badproperty'. Please provide a valid property for the breakdown endpoint: https://plausible.io/docs/stats-api#properties"
-    #            }
-    #   end
+      assert json_response(conn, 400)["error"] =~ "Invalid dimensions"
+    end
 
-    #   test "empty custom prop is invalid", %{conn: conn, site: site} do
-    #     conn =
-    #       get(conn, "/api/v1/stats/breakdown", %{
-    #         "site_id" => site.domain,
-    #         "property" => "event:props:"
-    #       })
+    test "empty custom prop is invalid", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["event:props:"]
+        })
 
-    #     assert json_response(conn, 400) == %{
-    #              "error" =>
-    #                "Invalid property 'event:props:'. Please provide a valid property for the breakdown endpoint: https://plausible.io/docs/stats-api#properties"
-    #            }
-    #   end
+      assert json_response(conn, 400)["error"] =~ "Invalid dimensions"
+    end
 
     #   test "validates that correct period is used", %{conn: conn, site: site} do
     #     conn =

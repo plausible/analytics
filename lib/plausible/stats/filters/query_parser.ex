@@ -182,8 +182,12 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_filter_key_string(filter_key, error_message \\ "") do
     case filter_key do
-      "event:props:" <> _property_name ->
-        {:ok, filter_key}
+      "event:props:" <> property_name ->
+        if String.length(property_name) > 0 do
+          {:ok, filter_key}
+        else
+          {:error, error_message}
+        end
 
       "event:" <> key ->
         if key in Filters.event_props() do
