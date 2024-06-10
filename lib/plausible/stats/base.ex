@@ -301,7 +301,6 @@ defmodule Plausible.Stats.Base do
   # only if it's included in the base query - otherwise the total will be based on
   # a different data set, making the metric inaccurate. This is why we're using an
   # explicit `include_imported` argument here.
-  @spec total_visitors_subquery(Plausible.Site.t(), Query.t(), boolean()) :: :ok
   defp total_visitors_subquery(site, query, include_imported)
 
   defp total_visitors_subquery(site, query, true = _include_imported) do
