@@ -2768,35 +2768,50 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   #            }
   #   end
 
-  #   test "returns conversion_rate alone in a goal filtered visit:screen_size breakdown", %{
-  #     conn: conn,
-  #     site: site
-  #   } do
-  #     populate_stats(site, [
-  #       build(:event, screen_size: "Mobile", name: "pageview"),
-  #       build(:event, screen_size: "Mobile", name: "AddToCart")
-  #     ])
+  test "returns conversion_rate alone in a goal filtered visit:screen_size breakdown", %{
+    conn: conn,
+    site: site
+  } do
+    populate_stats(site, [
+      build(:event, screen_size: "Mobile", name: "pageview"),
+      build(:event, screen_size: "Mobile", name: "AddToCart")
+    ])
 
-  #     insert(:goal, %{site: site, event_name: "AddToCart"})
+    insert(:goal, %{site: site, event_name: "AddToCart"})
 
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain,
-  #         "period" => "day",
-  #         "property" => "visit:device",
-  #         "filters" => "event:goal==AddToCart",
-  #         "metrics" => "conversion_rate"
-  #       })
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["conversion_rate"],
+        "date_range" => "all",
+        "dimensions" => ["visit:device"],
+        "filters" => [["is", "event:goal", ["AddToCart"]]]
+      })
 
-  #     assert json_response(conn, 200) == %{
-  #              "results" => [
-  #                %{
-  #                  "device" => "Mobile",
-  #                  "conversion_rate" => 50
-  #                }
-  #              ]
-  #            }
-  #   end
+    %{"results" => results} = json_response(conn, 200)
+
+    assert results == [
+             %{"dimensions" => ["Mobile"], "metrics" => [50]}
+           ]
+
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "property" => "visit:device",
+        "filters" => "event:goal==AddToCart",
+        "metrics" => "conversion_rate"
+      })
+
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{
+                 "device" => "Mobile",
+                 "conversion_rate" => 50
+               }
+             ]
+           }
+  end
 
   #   test "returns conversion_rate for a browser_version breakdown with pagination limit", %{
   #     site: site,

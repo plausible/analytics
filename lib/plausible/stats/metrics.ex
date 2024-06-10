@@ -21,6 +21,8 @@ defmodule Plausible.Stats.Metrics do
 
   @metric_mappings Enum.into(@all_metrics, %{}, fn metric -> {to_string(metric), metric} end)
 
+  def metric?(value), do: Enum.member?(@all_metrics, value)
+
   def from_string!(str) do
     Map.fetch!(@metric_mappings, str)
   end

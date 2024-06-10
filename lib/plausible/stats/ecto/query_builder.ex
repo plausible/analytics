@@ -4,12 +4,14 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
   import Ecto.Query
   import Plausible.Stats.Imported
 
-  alias Plausible.Stats.{Base, Query, TableDecider, Filters}
+  alias Plausible.Stats.{Base, Query, TableDecider, Util, Filters, Metrics}
   alias Plausible.Stats.Ecto.Expression
 
   def build(query, site) do
     {event_metrics, sessions_metrics, _other_metrics} =
-      TableDecider.partition_metrics(query.metrics, query)
+      query.metrics
+      |> Util.maybe_add_visitors_metric()
+      |> TableDecider.partition_metrics(query)
 
     join_query_results(
       build_events_query(site, query, event_metrics),
@@ -126,7 +128,7 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
       ^{
         order_direction,
         if(
-          Enum.member?(query.metrics, metric_or_dimension),
+          Metrics.metric?(metric_or_dimension),
           do: dynamic([], selected_as(^metric_or_dimension)),
           else: Expression.dimension(metric_or_dimension, query, :order_by)
         )
@@ -134,9 +136,9 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     )
   end
 
-  def build_order_by(q, query, {metric_or_dimension, order_direction}, :outer) do
+  def build_order_by(q, _query, {metric_or_dimension, order_direction}, :outer) do
     as_atom =
-      if(Enum.member?(query.metrics, metric_or_dimension),
+      if(Metrics.metric?(metric_or_dimension),
         do: metric_or_dimension,
         else: String.to_atom(metric_or_dimension)
       )
