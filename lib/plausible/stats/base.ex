@@ -325,7 +325,9 @@ defmodule Plausible.Stats.Base do
       total_query = Query.set_property(query, nil)
 
       q
-      |> select_merge(^%{__total_visitors: total_visitors_subquery(site, total_query, query.include_imported)})
+      |> select_merge(
+        ^%{__total_visitors: total_visitors_subquery(site, total_query, query.include_imported)}
+      )
       |> select_merge(%{
         percentage:
           fragment(
@@ -352,7 +354,9 @@ defmodule Plausible.Stats.Base do
 
       # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
       subquery(q)
-      |> select_merge(^%{total_visitors: total_visitors_subquery(site, total_query, query.include_imported)})
+      |> select_merge(
+        ^%{total_visitors: total_visitors_subquery(site, total_query, query.include_imported)}
+      )
       |> select_merge([e], %{
         conversion_rate:
           fragment(
