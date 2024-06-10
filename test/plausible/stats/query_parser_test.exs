@@ -44,7 +44,6 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       %{
         "metrics" => [
           "time_on_page",
-          "conversion_rate",
           "visitors",
           "pageviews",
           "visits",
@@ -57,7 +56,6 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       |> check_success(site, %{
         metrics: [
           :time_on_page,
-          :conversion_rate,
           :visitors,
           :pageviews,
           :visits,
@@ -448,6 +446,55 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         site,
         ~r/The owner of this site does not have access to the custom properties feature/
       )
+    end
+  end
+
+  describe "conversion_rate metric" do
+    test "fails validation on its own", %{site: site} do
+      %{
+        "metrics" => ["conversion_rate"],
+        "date_range" => "all"
+      }
+      |> check_error(
+        site,
+        ~r/Metric `conversion_rate` can only be queried with event:goal filters or dimensions/
+      )
+    end
+
+    test "succeeds with event:goal filter", %{site: site} do
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      %{
+        "metrics" => ["conversion_rate"],
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Signup"]]]
+      }
+      |> check_success(site, %{
+        metrics: [:conversion_rate],
+        date_range: @date_range,
+        filters: [[:is, "event:goal", [event: "Signup"]]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone
+      })
+    end
+
+    test "succeeds with event:goal dimension", %{site: site} do
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      %{
+        "metrics" => ["conversion_rate"],
+        "date_range" => "all",
+        "dimensions" => ["event:goal"]
+      }
+      |> check_success(site, %{
+        metrics: [:conversion_rate],
+        date_range: @date_range,
+        filters: [],
+        dimensions: ["event:goal"],
+        order_by: nil,
+        timezone: site.timezone
+      })
     end
   end
 end

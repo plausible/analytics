@@ -88,56 +88,25 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
       assert json_response(conn, 200)["results"]
     end
+  end
 
-    # end
+  describe "param validation" do
+    test "does not allow querying conversion_rate without a goal filter", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["conversion_rate"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"],
+          "filters" => [["is", "event:props:author", ["Uku"]]]
+        })
 
-    # describe "param validation" do
-    #   test "time_on_page is not supported in breakdown queries other than by event:page", %{
-    #     conn: conn,
-    #     site: site
-    #   } do
-    #     conn =
-    #       get(conn, "/api/v1/stats/breakdown", %{
-    #         "site_id" => site.domain,
-    #         "property" => "visit:source",
-    #         "filters" => "event:page==/A",
-    #         "metrics" => "time_on_page"
-    #       })
-
-    #     assert json_response(conn, 400) == %{
-    #              "error" =>
-    #                "Metric `time_on_page` is not supported in breakdown queries (except `event:page` breakdown)"
-    #            }
-    #   end
-
-    #   test "does not allow querying conversion_rate without a goal filter", %{
-    #     conn: conn,
-    #     site: site
-    #   } do
-    #     conn =
-    #       get(conn, "/api/v1/stats/breakdown", %{
-    #         "site_id" => site.domain,
-    #         "property" => "event:page",
-    #         "metrics" => "conversion_rate"
-    #       })
-
-    #     assert json_response(conn, 400) == %{
-    #              "error" =>
-    #                "Metric `conversion_rate` can only be queried in a goal breakdown or with a goal filter"
-    #            }
-    #   end
-
-    #   test "validates that property is required", %{conn: conn, site: site} do
-    #     conn =
-    #       get(conn, "/api/v1/stats/breakdown", %{
-    #         "site_id" => site.domain
-    #       })
-
-    #     assert json_response(conn, 400) == %{
-    #              "error" =>
-    #                "The `property` parameter is required. Please provide at least one property to show a breakdown by."
-    #            }
-    #   end
+      assert json_response(conn, 400)["error"] ==
+               "Metric `conversion_rate` can only be queried with event:goal filters or dimensions"
+    end
 
     #   test "validates that property is valid", %{conn: conn, site: site} do
     #     conn =

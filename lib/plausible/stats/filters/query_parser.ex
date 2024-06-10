@@ -2,6 +2,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   @moduledoc false
 
   alias Plausible.Stats.Filters
+  alias Plausible.Stats.Query
 
   def parse(site, params) when is_map(params) do
     with {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
@@ -18,8 +19,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
            timezone: site.timezone
          },
          :ok <- validate_order_by(query),
-         {:ok, _} <- validate_goal_filters(site, query),
-         :ok <- validate_custom_props_access(site, query) do
+         :ok <- validate_goal_filters(site, query),
+         :ok <- validate_custom_props_access(site, query),
+         :ok <- validate_metrics(query) do
       {:ok, query}
     end
   end
@@ -238,12 +240,12 @@ defmodule Plausible.Stats.Filters.QueryParser do
         _ -> []
       end)
 
-    parse_list(goal_filter_clauses, &validate_goal_filter(&1, configured_goals))
+    validate_list(goal_filter_clauses, &validate_goal_filter(&1, configured_goals))
   end
 
   defp validate_goal_filter(clause, configured_goals) do
     if Enum.member?(configured_goals, clause) do
-      {:ok, nil}
+      :ok
     else
       {:error,
        "The goal `#{Filters.Utils.unwrap_goal_value(clause)}` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"}
@@ -275,10 +277,34 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
+  def validate_metrics(query) do
+    validate_list(query.metrics, &validate_metric(&1, query))
+  end
+
+  defp validate_metric(:conversion_rate = metric, query) do
+    if Enum.member?(query.dimensions, "event:goal") or
+         not is_nil(Query.get_filter(query, "event:goal")) do
+      :ok
+    else
+      {:error, "Metric `#{metric}` can only be queried with event:goal filters or dimensions"}
+    end
+  end
+
+  defp validate_metric(_, _), do: :ok
+
   defp parse_list(list, parser_function) do
     Enum.reduce_while(list, {:ok, []}, fn value, {:ok, results} ->
       case parser_function.(value) do
         {:ok, result} -> {:cont, {:ok, results ++ [result]}}
+        {:error, _} = error -> {:halt, error}
+      end
+    end)
+  end
+
+  defp validate_list(list, parser_function) do
+    Enum.reduce_while(list, :ok, fn value, :ok ->
+      case parser_function.(value) do
+        :ok -> {:cont, :ok}
         {:error, _} = error -> {:halt, error}
       end
     end)
