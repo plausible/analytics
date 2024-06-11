@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { withRouter } from 'react-router-dom'
 
+import { useMountedEffect } from './custom-hooks';
 import Historical from './historical'
 import Realtime from './realtime'
 import {parseQuery} from './query'
@@ -23,7 +24,7 @@ function Dashboard(props) {
     }
   }, [])
 
-  useEffect(() => {
+  useMountedEffect(() => {
     api.cancelAll()
     setQuery(parseQuery(location.search, site))
     updateLastLoadTimestamp()
