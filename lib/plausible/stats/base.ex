@@ -114,10 +114,7 @@ defmodule Plausible.Stats.Base do
       sample_percent:
         dynamic(
           [],
-          selected_as(
-            fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)"),
-            :sample_percent
-          )
+          fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
         )
     }
   end

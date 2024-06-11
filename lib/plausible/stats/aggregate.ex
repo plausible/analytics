@@ -20,8 +20,7 @@ defmodule Plausible.Stats.Aggregate do
       | metrics: Util.maybe_add_visitors_metric(metrics)
     }
 
-    {event_query, session_query} =
-      Plausible.Stats.Ecto.QueryBuilder.build(query_with_metrics, site)
+    q = Plausible.Stats.Ecto.QueryBuilder.build(query_with_metrics, site)
 
     time_on_page_task =
       if :time_on_page in query_with_metrics.metrics do
@@ -31,8 +30,7 @@ defmodule Plausible.Stats.Aggregate do
       end
 
     Plausible.ClickhouseRepo.parallel_tasks([
-      run_query_task(event_query),
-      run_query_task(session_query),
+      run_query_task(q),
       time_on_page_task
     ])
     |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)

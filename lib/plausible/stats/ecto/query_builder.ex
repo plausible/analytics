@@ -182,7 +182,7 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     )
     |> select_join_fields(query.dimensions, e)
     |> select_join_fields(event_metrics, e)
-    |> select_join_fields(sessions_metrics, s)
+    |> select_join_fields(List.delete(sessions_metrics, :sample_percent), s)
     |> build_order_by(query, :outer)
   end
 
