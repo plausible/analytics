@@ -1,4 +1,6 @@
 defmodule Plausible.Stats.Ecto.QueryBuilder do
+  @moduledoc false
+
   use Plausible
 
   import Ecto.Query

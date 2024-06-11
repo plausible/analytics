@@ -295,9 +295,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp validate_metrics(query) do
     validate_list(query.metrics, &validate_metric(&1, query))
 
-    with :ok <- validate_list(query.metrics, &validate_metric(&1, query)),
-         :ok <- validate_no_metrics_filters_conflict(query) do
-      :ok
+    with :ok <- validate_list(query.metrics, &validate_metric(&1, query)) do
+      validate_no_metrics_filters_conflict(query)
     end
   end
 
