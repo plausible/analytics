@@ -258,15 +258,19 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_utm_tags(%__MODULE__{} = event) do
-    query_params = event.request.query_params
+    if !event.request.props[Plausible.dogfood_prop_key()] do
+      query_params = event.request.query_params
 
-    update_session_attrs(event, %{
-      utm_medium: query_params["utm_medium"],
-      utm_source: query_params["utm_source"],
-      utm_campaign: query_params["utm_campaign"],
-      utm_content: query_params["utm_content"],
-      utm_term: query_params["utm_term"]
-    })
+      update_session_attrs(event, %{
+        utm_medium: query_params["utm_medium"],
+        utm_source: query_params["utm_source"],
+        utm_campaign: query_params["utm_campaign"],
+        utm_content: query_params["utm_content"],
+        utm_term: query_params["utm_term"]
+      })
+    else
+      event
+    end
   end
 
   defp put_geolocation(%__MODULE__{} = event) do
@@ -295,7 +299,10 @@ defmodule Plausible.Ingestion.Event do
 
   defp put_props(%__MODULE__{request: %{props: %{} = props}} = event) do
     # defensive: ensuring the keys/values are always in the same order
-    {keys, values} = Enum.unzip(props)
+    {keys, values} =
+      props
+      |> Enum.reject(fn {key, _} -> key == Plausible.dogfood_prop_key() end)
+      |> Enum.unzip()
 
     update_event_attrs(event, %{
       "meta.key": keys,
@@ -386,9 +393,11 @@ defmodule Plausible.Ingestion.Event do
 
   defp get_referrer_source(request, ref) do
     source =
-      request.query_params["utm_source"] ||
-        request.query_params["source"] ||
-        request.query_params["ref"]
+      if !request.props[Plausible.dogfood_prop_key()] do
+        request.query_params["utm_source"] ||
+          request.query_params["source"] ||
+          request.query_params["ref"]
+      end
 
     source || PlausibleWeb.RefInspector.parse(ref)
   end
