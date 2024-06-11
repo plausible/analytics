@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-C1EAEF64.js"></script>
+    <script src="dist/sidebar_items-808B55A7.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -189,7 +189,23 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#last_usage_cycle_below_limit?/2" translate="no">last_usage_cycle_below_limit?(usage, limit)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#least/2" translate="no">least(left, right)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#maybe_remove_grace_period/2" translate="no">maybe_remove_grace_period(subscriber, quota_mod)</a>
 
       </div>
 
@@ -225,7 +241,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">check_enterprise_subscriber(subscriber, quota_mod)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L68" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L136" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -271,7 +287,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">exceeds_last_two_usage_cycles?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L123" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L78" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -317,6 +333,38 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="last_usage_cycle_below_limit?/2">
+
+  <div class="detail-header">
+    <a href="#last_usage_cycle_below_limit?/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">last_usage_cycle_below_limit?(usage, limit)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L89" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> last_usage_cycle_below_limit?(
+  <a href="Plausible.Billing.Quota.html#t:monthly_pageview_usage/0">Plausible.Billing.Quota.monthly_pageview_usage</a>(),
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()
+) ::
+  <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="least/2">
 
   <div class="detail-header">
@@ -333,6 +381,28 @@ Pages
 
 
       <span class="note">(macro)</span>
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="maybe_remove_grace_period/2">
+
+  <div class="detail-header">
+    <a href="#maybe_remove_grace_period/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">maybe_remove_grace_period(subscriber, quota_mod)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L106" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
 
   </div>
 
