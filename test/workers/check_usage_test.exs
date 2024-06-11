@@ -184,7 +184,68 @@ defmodule Plausible.Workers.CheckUsageTest do
     assert html_body =~ "We recommend you upgrade to the 100k/mo plan"
   end
 
+  test "clears grace period when plan is applicable again", %{user: user} do
+    quota_stub =
+      Plausible.Billing.Quota
+      |> stub(:monthly_pageview_usage, fn _user ->
+        %{
+          penultimate_cycle: %{date_range: @date_range, total: 11_000},
+          last_cycle: %{date_range: @date_range, total: 11_000}
+        }
+      end)
+
+    insert(:subscription,
+      user: user,
+      paddle_plan_id: @paddle_id_10k,
+      last_bill_date: Timex.shift(Timex.today(), days: -1)
+    )
+
+    CheckUsage.perform(nil, quota_stub)
+    assert user |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
+
+    quota_stub =
+      Plausible.Billing.Quota
+      |> stub(:monthly_pageview_usage, fn _user ->
+        %{
+          penultimate_cycle: %{date_range: @date_range, total: 11_000},
+          last_cycle: %{date_range: @date_range, total: 9_000}
+        }
+      end)
+
+    CheckUsage.perform(nil, quota_stub)
+    refute user |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
+  end
+
   describe "enterprise customers" do
+    test "skips checking enterprise users who already have a grace period", %{user: user} do
+      %{grace_period: existing_grace_period} =
+        user
+        |> Plausible.Auth.GracePeriod.start_manual_lock_changeset()
+        |> Repo.update!()
+
+      quota_stub =
+        Plausible.Billing.Quota
+        |> stub(:monthly_pageview_usage, fn _user ->
+          %{
+            penultimate_cycle: %{date_range: @date_range, total: 1_100_000},
+            last_cycle: %{date_range: @date_range, total: 1_100_000}
+          }
+        end)
+
+      enterprise_plan = insert(:enterprise_plan, user: user, monthly_pageview_limit: 1_000_000)
+
+      insert(:subscription,
+        user: user,
+        paddle_plan_id: enterprise_plan.paddle_plan_id,
+        last_bill_date: Timex.shift(Timex.today(), days: -1)
+      )
+
+      CheckUsage.perform(nil, quota_stub)
+
+      assert_no_emails_delivered()
+      assert Repo.reload(user).grace_period.id == existing_grace_period.id
+    end
+
     test "checks billable pageview usage for enterprise customer, sends usage information to enterprise@plausible.io",
          %{
            user: user
