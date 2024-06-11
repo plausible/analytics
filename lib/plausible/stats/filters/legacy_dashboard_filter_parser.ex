@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.Filters.DashboardFilterParser do
+defmodule Plausible.Stats.Filters.LegacyDashboardFilterParser do
   @moduledoc false
 
   import Plausible.Stats.Filters.Utils

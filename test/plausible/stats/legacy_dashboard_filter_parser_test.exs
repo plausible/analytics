@@ -1,9 +1,9 @@
-defmodule Plausible.Stats.DashboardFilterParserTest do
+defmodule Plausible.Stats.LegacyDashboardFilterParserTest do
   use ExUnit.Case, async: true
-  alias Plausible.Stats.Filters.DashboardFilterParser
+  alias Plausible.Stats.Filters.LegacyDashboardFilterParser
 
   def assert_parsed(filters, expected_output) do
-    assert DashboardFilterParser.parse_and_prefix(filters) == expected_output
+    assert LegacyDashboardFilterParser.parse_and_prefix(filters) == expected_output
   end
 
   describe "adding prefix" do

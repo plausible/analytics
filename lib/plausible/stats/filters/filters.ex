@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Filters do
   """
 
   alias Plausible.Stats.Filters.QueryParser
-  alias Plausible.Stats.Filters.{DashboardFilterParser, StatsAPIFilterParser}
+  alias Plausible.Stats.Filters.{LegacyDashboardFilterParser, StatsAPIFilterParser}
 
   @visit_props [
     :source,
@@ -73,7 +73,8 @@ defmodule Plausible.Stats.Filters do
     end
   end
 
-  def parse(filters) when is_map(filters), do: DashboardFilterParser.parse_and_prefix(filters)
+  def parse(filters) when is_map(filters),
+    do: LegacyDashboardFilterParser.parse_and_prefix(filters)
 
   def parse(filters) when is_list(filters) do
     {:ok, parsed_filters} = QueryParser.parse_filters(filters)
