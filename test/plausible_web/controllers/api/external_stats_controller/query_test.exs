@@ -199,6 +199,74 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     end
   end
 
+  test "aggregates a single metric", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:25:00]),
+      build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+    ])
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["pageviews"],
+        "date_range" => "all"
+      })
+
+    assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
+  end
+
+  test "aggregate views_per_visit rounds to two decimal places", %{
+    conn: conn,
+    site: site
+  } do
+    populate_stats(site, [
+      build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:25:00]),
+      build(:pageview, user_id: 456, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, user_id: 456, timestamp: ~N[2021-01-01 00:25:00]),
+      build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+    ])
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["views_per_visit"],
+        "date_range" => "all"
+      })
+
+    assert json_response(conn, 200)["results"] == [%{"metrics" => [1.67], "dimensions" => []}]
+  end
+
+  test "aggregates all metrics in a single query", %{
+    conn: conn,
+    site: site
+  } do
+    populate_stats(site, [
+      build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:25:00]),
+      build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+    ])
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "date_range" => "all",
+        "metrics" => [
+          "pageviews",
+          "visits",
+          "views_per_visit",
+          "visitors",
+          "bounce_rate",
+          "visit_duration"
+        ]
+      })
+
+    assert json_response(conn, 200)["results"] == [
+             %{"metrics" => [3, 2, 1.5, 2, 50, 750], "dimensions" => []}
+           ]
+  end
+
   test "breakdown by visit:source", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview,

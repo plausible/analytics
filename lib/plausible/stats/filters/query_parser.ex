@@ -49,6 +49,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_metric("visits"), do: {:ok, :visits}
   defp parse_metric("bounce_rate"), do: {:ok, :bounce_rate}
   defp parse_metric("visit_duration"), do: {:ok, :visit_duration}
+  defp parse_metric("views_per_visit"), do: {:ok, :views_per_visit}
   defp parse_metric(unknown_metric), do: {:error, "Unknown metric '#{inspect(unknown_metric)}'"}
 
   def parse_filters(filters) when is_list(filters) do
