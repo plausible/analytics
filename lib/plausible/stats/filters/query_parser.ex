@@ -11,13 +11,15 @@ defmodule Plausible.Stats.Filters.QueryParser do
          {:ok, date_range} <- parse_date_range(site, Map.get(params, "date_range")),
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
+         {:ok, include} <- parse_include(Map.get(params, "include", %{})),
          query = %{
            metrics: metrics,
            filters: filters,
            date_range: date_range,
            dimensions: dimensions,
            order_by: order_by,
-           timezone: site.timezone
+           timezone: site.timezone,
+           imported_data_requested: Map.get(include, :imports, false)
          },
          :ok <- validate_order_by(query),
          :ok <- validate_goal_filters(site, query),
@@ -132,21 +134,21 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_dimensions(dimensions), do: {:error, "Invalid dimensions '#{inspect(dimensions)}'"}
 
-  def parse_order_by(order_by) when is_list(order_by) do
+  defp parse_order_by(order_by) when is_list(order_by) do
     parse_list(order_by, &parse_order_by_entry/1)
   end
 
-  def parse_order_by(nil), do: {:ok, nil}
-  def parse_order_by(order_by), do: {:error, "Invalid order_by '#{inspect(order_by)}'"}
+  defp parse_order_by(nil), do: {:ok, nil}
+  defp parse_order_by(order_by), do: {:error, "Invalid order_by '#{inspect(order_by)}'"}
 
-  def parse_order_by_entry(entry) do
+  defp parse_order_by_entry(entry) do
     with {:ok, value} <- parse_metric_or_dimension(entry),
          {:ok, order_direction} <- parse_order_direction(entry) do
       {:ok, {value, order_direction}}
     end
   end
 
-  def parse_dimension_entry(key, error_message) do
+  defp parse_dimension_entry(key, error_message) do
     case {
       parse_time(key),
       parse_filter_key_string(key)
@@ -157,7 +159,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  def parse_metric_or_dimension([value, _] = entry) do
+  defp parse_metric_or_dimension([value, _] = entry) do
     case {
       parse_time(value),
       parse_metric(value),
@@ -170,16 +172,20 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  def parse_time("time"), do: {:ok, "time"}
-  def parse_time("time:day"), do: {:ok, "time:day"}
-  def parse_time("time:week"), do: {:ok, "time:week"}
-  def parse_time("time:month"), do: {:ok, "time:month"}
-  def parse_time("time:year"), do: {:ok, "time:year"}
-  def parse_time(_), do: :error
+  defp parse_time("time"), do: {:ok, "time"}
+  defp parse_time("time:day"), do: {:ok, "time:day"}
+  defp parse_time("time:week"), do: {:ok, "time:week"}
+  defp parse_time("time:month"), do: {:ok, "time:month"}
+  defp parse_time("time:year"), do: {:ok, "time:year"}
+  defp parse_time(_), do: :error
 
-  def parse_order_direction([_, "asc"]), do: {:ok, :asc}
-  def parse_order_direction([_, "desc"]), do: {:ok, :desc}
-  def parse_order_direction(entry), do: {:error, "Invalid order_by entry '#{inspect(entry)}'"}
+  defp parse_order_direction([_, "asc"]), do: {:ok, :asc}
+  defp parse_order_direction([_, "desc"]), do: {:ok, :desc}
+  defp parse_order_direction(entry), do: {:error, "Invalid order_by entry '#{inspect(entry)}'"}
+
+  defp parse_include(%{"imports" => value}) when is_boolean(value), do: {:ok, %{imports: value}}
+  defp parse_include(%{}), do: {:ok, %{}}
+  defp parse_include(include), do: {:error, "Invalid include passed '#{inspect(include)}'"}
 
   defp parse_filter_key_string(filter_key, error_message \\ "") do
     case filter_key do
@@ -209,7 +215,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  def validate_order_by(query) do
+  defp validate_order_by(query) do
     if query.order_by do
       valid_values = query.metrics ++ query.dimensions
 
@@ -282,7 +288,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  def validate_metrics(query) do
+  defp validate_metrics(query) do
     validate_list(query.metrics, &validate_metric(&1, query))
 
     with :ok <- validate_list(query.metrics, &validate_metric(&1, query)),

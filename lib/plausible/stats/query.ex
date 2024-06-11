@@ -47,7 +47,13 @@ defmodule Plausible.Stats.Query do
 
   def build(site, params) do
     with {:ok, query_data} <- Filters.QueryParser.parse(site, params) do
-      {:ok, struct!(__MODULE__, Map.to_list(query_data))}
+      query =
+        struct!(__MODULE__, Map.to_list(query_data))
+        |> put_imported_opts(site, %{})
+        |> put_experimental_session_count(site, params)
+        |> put_experimental_reduced_joins(site, params)
+
+      {:ok, query}
     end
   end
 

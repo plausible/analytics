@@ -31,7 +31,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         filters: [],
         dimensions: [],
         order_by: nil,
-        timezone: site.timezone
+        timezone: site.timezone,
+        imported_data_requested: false
       })
     end
 
@@ -67,7 +68,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         filters: [],
         dimensions: [],
         order_by: nil,
-        timezone: site.timezone
+        timezone: site.timezone,
+        imported_data_requested: false
       })
     end
 
@@ -95,7 +97,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           ],
           dimensions: [],
           order_by: nil,
-          timezone: site.timezone
+          timezone: site.timezone,
+          imported_data_requested: false
         })
       end
 
@@ -138,7 +141,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         ],
         dimensions: [],
         order_by: nil,
-        timezone: site.timezone
+        timezone: site.timezone,
+        imported_data_requested: false
       })
     end
 
@@ -160,7 +164,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             ],
             dimensions: [],
             order_by: nil,
-            timezone: site.timezone
+            timezone: site.timezone,
+            imported_data_requested: false
           })
         end
       end
@@ -183,7 +188,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           ],
           dimensions: [],
           order_by: nil,
-          timezone: site.timezone
+          timezone: site.timezone,
+          imported_data_requested: false
         })
       end
     end
@@ -220,6 +226,34 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
   end
 
+  describe "include validation" do
+    test "setting include.imports", %{site: site} do
+      %{
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "include" => %{"imports" => true}
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        date_range: @date_range,
+        filters: [],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        imported_data_requested: true
+      })
+    end
+
+    test "setting invalid imports value", %{site: site} do
+      %{
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "include" => "foobar"
+      }
+      |> check_error(site, ~r/Invalid include passed/)
+    end
+  end
+
   describe "event:goal filter validation" do
     test "valid filters", %{site: site} do
       insert(:goal, %{site: site, event_name: "Signup"})
@@ -240,7 +274,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         ],
         dimensions: [],
         order_by: nil,
-        timezone: site.timezone
+        timezone: site.timezone,
+        imported_data_requested: false
       })
     end
 
@@ -284,7 +319,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           filters: [],
           dimensions: ["event:#{unquote(dimension)}"],
           order_by: nil,
-          timezone: site.timezone
+          timezone: site.timezone,
+          imported_data_requested: false
         })
       end
     end
@@ -302,7 +338,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           filters: [],
           dimensions: ["visit:#{unquote(dimension)}"],
           order_by: nil,
-          timezone: site.timezone
+          timezone: site.timezone,
+          imported_data_requested: false
         })
       end
     end
@@ -319,7 +356,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         filters: [],
         dimensions: ["event:props:foobar"],
         order_by: nil,
-        timezone: site.timezone
+        timezone: site.timezone,
+        imported_data_requested: false
       })
     end
 
@@ -373,7 +411,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         filters: [],
         dimensions: [],
         order_by: [{:events, :desc}, {:visitors, :asc}],
-        timezone: site.timezone
+        timezone: site.timezone,
+        imported_data_requested: false
       })
     end
 
@@ -390,7 +429,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         filters: [],
         dimensions: ["event:name"],
         order_by: [{"event:name", :desc}],
-        timezone: site.timezone
+        timezone: site.timezone,
+        imported_data_requested: false
       })
     end
 
@@ -484,7 +524,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         filters: [[:is, "event:goal", [event: "Signup"]]],
         dimensions: [],
         order_by: nil,
-        timezone: site.timezone
+        timezone: site.timezone,
+        imported_data_requested: false
       })
     end
 
@@ -502,7 +543,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         filters: [],
         dimensions: ["event:goal"],
         order_by: nil,
-        timezone: site.timezone
+        timezone: site.timezone,
+        imported_data_requested: false
       })
     end
   end
@@ -520,7 +562,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         filters: [],
         dimensions: ["visit:device"],
         order_by: nil,
-        timezone: site.timezone
+        timezone: site.timezone,
+        imported_data_requested: false
       })
     end
 
