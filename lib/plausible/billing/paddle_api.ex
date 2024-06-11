@@ -108,7 +108,6 @@ defmodule Plausible.Billing.PaddleApi do
       Enum.sort(response, fn %{"payout_date" => d1}, %{"payout_date" => d2} ->
         Date.compare(Date.from_iso8601!(d1), Date.from_iso8601!(d2)) == :gt
       end)
-      |> Enum.take(12)
       |> then(&{:ok, &1})
     else
       error ->
