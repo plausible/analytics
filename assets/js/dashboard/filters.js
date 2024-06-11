@@ -127,6 +127,8 @@ function Filters(props) {
   const [viewport, setViewport] = useState(1080)
 
   useEffect(() => {
+    handleResize()
+
     window.addEventListener('resize', handleResize, false)
     document.addEventListener('keyup', handleKeyup)
   
