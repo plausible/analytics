@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Comparisons}
-  alias Plausible.Stats.Filters.DashboardFilterParser
+  alias Plausible.Stats.Filters.LegacyDashboardFilterParser
   alias PlausibleWeb.Api.Helpers, as: H
 
   require Logger
@@ -769,7 +769,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:referrer")
 
-    referrer_filter = DashboardFilterParser.filter_value("visit:source", referrer)
+    referrer_filter = LegacyDashboardFilterParser.filter_value("visit:source", referrer)
 
     query =
       Query.from(site, params)
@@ -903,9 +903,9 @@ defmodule PlausibleWeb.Api.StatsController do
       total_pageviews_query =
         query
         |> Query.remove_filters(["visit:exit_page"])
-        |> Query.put_filter([:member, "event:page", pages])
-        |> Query.put_filter([:is, "event:name", "pageview"])
-        |> Query.set_property("event:page")
+        |> Query.put_filter([:is, "event:page", pages])
+        |> Query.put_filter([:is, "event:name", ["pageview"]])
+        |> Query.set_dimensions(["event:page"])
 
       total_pageviews =
         Stats.breakdown(site, total_pageviews_query, [:pageviews], {limit, 1})
