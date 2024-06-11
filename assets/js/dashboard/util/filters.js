@@ -147,6 +147,7 @@ export function serializeApiFilters(filters) {
     if (operation == FILTER_OPERATIONS.contains) {
       clauses = clauses.map((value) => value.includes('*') ? value : `**${value}**`)
     }
+    clauses = clauses.map((value) => value.toString())
     return [BACKEND_OPERATION[operation], apiFilterKey, clauses]
   })
 
