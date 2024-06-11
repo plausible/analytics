@@ -24,6 +24,7 @@ defmodule Plausible.Stats.GoalSuggestions do
       |> Plausible.Imported.load_import_data()
 
     excluded = Keyword.get(opts, :exclude, [])
+    limit = Keyword.get(opts, :limit, 25)
 
     params = %{"with_imported" => "true", "period" => "6mo"}
     query = Query.from(site, params)
@@ -32,15 +33,17 @@ defmodule Plausible.Stats.GoalSuggestions do
       from(e in base_event_query(site, query),
         where: fragment("? ilike ?", e.name, ^matches),
         where: e.name != "pageview",
+        where: fragment("trim(?)", e.name) != "",
+        where: e.name == fragment("trim(?)", e.name),
         where: e.name not in ^excluded,
         select: %{
           name: e.name,
           visitors: visitors(e)
         },
         order_by: selected_as(:visitors),
-        group_by: e.name,
-        limit: 25
+        group_by: e.name
       )
+      |> maybe_set_limit(limit)
 
     imported_q =
       from(i in "imported_custom_events",
@@ -49,24 +52,34 @@ defmodule Plausible.Stats.GoalSuggestions do
         where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
         where: i.visitors > 0,
         where: fragment("? ilike ?", i.name, ^matches),
+        where: fragment("trim(?)", i.name) != "",
+        where: i.name == fragment("trim(?)", i.name),
         where: i.name not in ^excluded,
         select: %{
           name: i.name,
           visitors: selected_as(sum(i.visitors), :visitors)
         },
         order_by: selected_as(:visitors),
-        group_by: i.name,
-        limit: 25
+        group_by: i.name
       )
+      |> maybe_set_limit(limit)
 
     from(e in Ecto.Query.subquery(native_q),
       full_join: i in subquery(imported_q),
       on: e.name == i.name,
       select: selected_as(fragment("if(empty(?), ?, ?)", e.name, i.name, e.name), :name),
-      order_by: [desc: e.visitors + i.visitors],
-      limit: 25
+      order_by: [desc: e.visitors + i.visitors]
     )
+    |> maybe_set_limit(limit)
     |> ClickhouseRepo.all()
     |> Enum.reject(&(String.length(&1) > Plausible.Goal.max_event_name_length()))
+  end
+
+  defp maybe_set_limit(q, :unlimited) do
+    q
+  end
+
+  defp maybe_set_limit(q, limit) when is_integer(limit) and limit > 0 do
+    limit(q, ^limit)
   end
 end

@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
           </PlausibleWeb.Components.Generic.notice>
         </div>
 
-        <.live_component module={Modal} id="hostname-rule-form-modal">
+        <.live_component :let={modal_unique_id} module={Modal} id="hostname-rule-form-modal">
           <.form
             :let={f}
             for={@form}
@@ -85,7 +85,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
               display_value={f[:hostname].value || ""}
               module={PlausibleWeb.Live.Components.ComboBox}
               suggest_fun={fn input, options -> suggest_hostnames(input, options, @site) end}
-              id={f[:hostname].id}
+              id={"#{f[:hostname].id}-#{modal_unique_id}"}
               creatable
             />
 
@@ -218,12 +218,6 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
             hostname_rules_count: socket.assigns.hostname_rules_count + 1,
             redundant_rules: detect_redundancy(hostname_rules)
           )
-
-        # Make sure to clear the combobox input after adding a hostname rule, on subsequent modal reopening
-        send_update(PlausibleWeb.Live.Components.ComboBox,
-          id: "hostname_rule_hostname_code",
-          display_value: ""
-        )
 
         send_flash(
           :success,

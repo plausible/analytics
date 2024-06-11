@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
           </PlausibleWeb.Components.Generic.notice>
         </div>
 
-        <.live_component module={Modal} id="country-rule-form-modal">
+        <.live_component :let={modal_unique_id} module={Modal} id="country-rule-form-modal">
           <.form
             :let={f}
             for={@form}
@@ -80,7 +80,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
               display_value=""
               module={PlausibleWeb.Live.Components.ComboBox}
               suggest_fun={&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest/2}
-              id={f[:country_code].id}
+              id={"#{f[:country_code].id}-#{modal_unique_id}"}
               suggestions_limit={300}
               options={options(@country_rules)}
             />
@@ -190,12 +190,6 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
             country_rules: country_rules,
             country_rules_count: socket.assigns.country_rules_count + 1
           )
-
-        # Make sure to clear the combobox input after adding a country rule, on subsequent modal reopening
-        send_update(PlausibleWeb.Live.Components.ComboBox,
-          id: "country_rule_country_code",
-          display_value: ""
-        )
 
         send_flash(
           :success,
