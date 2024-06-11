@@ -321,7 +321,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {_event_metrics, sessions_metrics, _other_metrics} =
       TableDecider.partition_metrics(query.metrics, query)
 
-    if Enum.empty?(sessions_metrics) or not TableDecider.event_filters?(query) do
+    if Enum.empty?(sessions_metrics) or not TableDecider.event_dimensions?(query) do
       :ok
     else
       {:error,
