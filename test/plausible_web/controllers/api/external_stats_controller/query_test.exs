@@ -156,7 +156,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 400)["error"] =~ "Unknown metric '\"baa\"'"
     end
 
-    test "session metrics cannot be used with event:name property", %{conn: conn, site: site} do
+    test "session metrics cannot be used with event:name dimension", %{conn: conn, site: site} do
       conn =
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
@@ -169,29 +169,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
                "Session metric(s) `bounce_rate` cannot be queried along with event filters or dimensions"
     end
 
-    test "session metrics cannot be used with event:props:* property", %{conn: conn, site: site} do
+    test "session metrics cannot be used with event:props:* dimension", %{conn: conn, site: site} do
       conn =
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["visitors", "bounce_rate"],
           "date_range" => "all",
           "dimensions" => ["event:props:url"]
-        })
-
-      assert json_response(conn, 400)["error"] =~
-               "Session metric(s) `bounce_rate` cannot be queried along with event filters or dimensions"
-    end
-
-    test "session metrics cannot be used with event:name filter", %{conn: conn, site: site} do
-      conn =
-        post(conn, "/api/v2/query", %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors", "bounce_rate"],
-          "date_range" => "all",
-          "dimensions" => ["visit:device"],
-          "filters" => [
-            ["is", "event:name", ["pageview"]]
-          ]
         })
 
       assert json_response(conn, 400)["error"] =~
