@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useState } from 'react';
 import { Link, withRouter } from 'react-router-dom'
 import { AdjustmentsVerticalIcon, MagnifyingGlassIcon, XMarkIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
@@ -15,8 +15,6 @@ import {
   getPropertyKeyFromFilterKey,
   getLabel
 } from "./util/filters"
-
-const WRAPSTATE = { unwrapped: 0, waiting: 1, wrapped: 2 }
 
 function removeFilter(filterIndex, history, query) {
   const newFilters = query.filters.filter((_filter, index) => filterIndex != index)
@@ -96,10 +94,10 @@ function filterDropdownOption(site, option) {
   )
 }
 
-function DropdownContent({ history, site, query, wrapState }) {
+function DropdownContent({ history, site, query, wrapped }) {
   const [addingFilter, setAddingFilter] = useState(false);
 
-  if (wrapState === WRAPSTATE.unwrapped || addingFilter) {
+  if (wrapped === 0 || addingFilter) {
     let filterModals = {...FILTER_MODAL_TO_FILTER_GROUP}
     if (!site.propsAvailable) delete filterModals.props
 
@@ -121,31 +119,52 @@ function DropdownContent({ history, site, query, wrapState }) {
   )
 }
 
-function Filters(props) {
-  const { history, query, site } = props
-  const [wrapped, setWrapped] = useState(WRAPSTATE.waiting)
-  const [viewport, setViewport] = useState(1080)
+class Filters extends React.Component {
+  constructor(props) {
+    super(props);
 
-  useEffect(() => {
-    window.addEventListener('resize', handleResize, false)
-    document.addEventListener('keyup', handleKeyup)
-  
-    return () => {
-      window.removeEventListener('resize', handleResize, false)
-      document.removeEventListener("keyup", handleKeyup)
+    this.state = {
+      wrapped: 1, // 0=unwrapped, 1=waiting to check, 2=wrapped
+      viewport: 1080,
+    };
+
+    this.renderDropDown = this.renderDropDown.bind(this);
+    this.handleResize = this.handleResize.bind(this);
+    this.handleKeyup = this.handleKeyup.bind(this)
+  }
+
+  componentDidMount() {
+    document.addEventListener('mousedown', this.handleClick, false);
+    window.addEventListener('resize', this.handleResize, false);
+    document.addEventListener('keyup', this.handleKeyup);
+
+    this.handleResize();
+    this.rewrapFilters();
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    const { query } = this.props;
+    const { viewport, wrapped } = this.state;
+
+    if (JSON.stringify(query) !== JSON.stringify(prevProps.query) || viewport !== prevState.viewport) {
+      // eslint-disable-next-line react/no-did-update-set-state
+      this.setState({ wrapped: 1 });
     }
-  }, [])
 
-  useEffect(() => {
-    setWrapped(WRAPSTATE.waiting)
-  }, [query, viewport])
+    if (wrapped === 1 && prevState.wrapped !== 1) {
+      this.rewrapFilters();
+    }
+  }
 
-  useEffect(() => {
-    if (wrapped === WRAPSTATE.waiting) { updateDisplayMode() }
-  }, [wrapped])
+  componentWillUnmount() {
+    document.removeEventListener("keyup", this.handleKeyup);
+    document.removeEventListener('mousedown', this.handleClick, false);
+    window.removeEventListener('resize', this.handleResize, false);
+  }
 
+  handleKeyup(e) {
+    const { query, history } = this.props
 
-  function handleKeyup(e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return
 
     if (e.key === 'Escape') {
@@ -153,34 +172,41 @@ function Filters(props) {
     }
   }
 
-  function handleResize() {
-    setViewport(window.innerWidth || 639)
+  handleResize() {
+    this.setState({ viewport: window.innerWidth || 639 });
   }
 
   // Checks if the filter container is wrapping items
-  function updateDisplayMode() {
-    const container = document.getElementById('filters')
-    const children = container && [...container.childNodes] || []
+  rewrapFilters() {
+    const items = document.getElementById('filters');
+    const { wrapped, viewport } = this.state;
 
     // Always wrap on mobile
-    if (query.filters.length > 0 && viewport <= 768) {
-      setWrapped(WRAPSTATE.wrapped)
-      return
+    if (this.props.query.filters.length > 0 && viewport <= 768) {
+      this.setState({ wrapped: 2 })
+      return;
     }
 
-    setWrapped(WRAPSTATE.unwrapped)
+    this.setState({ wrapped: 0 });
 
-    // Check for different y value between all child nodes - this indicates a wrap
-    children.forEach(child => {
-      const currentChildY = child.getBoundingClientRect().top
-      const firstChildY = children[0].getBoundingClientRect().top
-      if (currentChildY !== firstChildY) {
-        setWrapped(WRAPSTATE.wrapped)
+    // Don't rewrap if we're already properly wrapped, there are no DOM children, or there is only filter
+    if (wrapped !== 1 || !items || this.props.query.filters.length === 1) {
+      return;
+    };
+
+    let prevItem = null;
+
+    // For every filter DOM Node, check if its y value is higher than the previous (this indicates a wrap)
+    [...(items.childNodes)].forEach(item => {
+      const currItem = item.getBoundingClientRect();
+      if (prevItem && prevItem.top < currItem.top) {
+        this.setState({ wrapped: 2 });
       }
-    })
-  }
+      prevItem = currItem;
+    });
+  };
 
-  function renderListFilter(filterIndex, filter) {
+  renderListFilter(filterIndex, filter, history, query) {
     const text = filterText(query, filter)
     const [_operation, filterKey, _clauses] = filter
     const type = filterKey.startsWith(EVENT_PROPS_PREFIX) ? 'props' : filterKey
@@ -190,7 +216,7 @@ function Filters(props) {
           title={`Edit filter: ${formattedFilters[type]}`}
           className="flex w-full h-full items-center py-2 pl-3"
           to={{
-            pathname: `/${encodeURIComponent(site.domain)}/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`,
+            pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`,
             search: window.location.search
           }}
         >
@@ -207,9 +233,9 @@ function Filters(props) {
     )
   }
 
-  function renderDropdownButton() {
-    if (wrapped === WRAPSTATE.wrapped) {
-      const filterCount = query.filters.length
+  renderDropdownButton() {
+    if (this.state.wrapped === 2) {
+      const filterCount = this.props.query.filters.length
       return (
         <>
           <AdjustmentsVerticalIcon className="-ml-1 mr-1 h-4 w-4" aria-hidden="true" />
@@ -227,18 +253,20 @@ function Filters(props) {
     )
   }
 
-  function trackFilterMenu() {
+  trackFilterMenu() {
     window.plausible && window.plausible('Filter Menu: Open', {u: `${window.location.protocol}//${window.location.hostname}/:dashboard`})
   }
 
-  function renderDropDown() {
+  renderDropDown() {
+    const { history, query, site } = this.props;
+
     return (
       <Menu as="div" className="md:relative ml-auto">
         {({ open }) => (
           <>
             <div>
-              <Menu.Button onClick={trackFilterMenu} className="flex items-center text-xs md:text-sm font-medium leading-tight px-3 py-2 cursor-pointer ml-auto text-gray-500 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900 rounded">
-                {renderDropdownButton()}
+              <Menu.Button onClick={this.trackFilterMenu} className="flex items-center text-xs md:text-sm font-medium leading-tight px-3 py-2 cursor-pointer ml-auto text-gray-500 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900 rounded">
+                {this.renderDropdownButton()}
               </Menu.Button>
             </div>
 
@@ -260,7 +288,7 @@ function Filters(props) {
                   className="rounded-md shadow-lg  bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5
                   font-medium text-gray-800 dark:text-gray-200"
                 >
-                  <DropdownContent history={history} query={query} site={site} wrapped={wrapped} />
+                  <DropdownContent history={history} query={query} site={site} wrapped={this.state.wrapped} />
                 </div>
               </Menu.Items>
             </Transition>
@@ -270,27 +298,28 @@ function Filters(props) {
     );
   }
 
-  function renderFilterList() {
-    // The filters are rendered even when `wrapped === WRAPSTATE.waiting`.
-    // Otherwise, if they don't exist in the DOM, we can't check whether
-    // the flex-wrap is actually putting them on multiple lines.
-    if (wrapped !== WRAPSTATE.wrapped) {
+  renderFilterList() {
+    const { history, query } = this.props;
+
+    if (this.state.wrapped !== 2) {
       return (
         <div id="filters" className="flex flex-wrap">
-          {query.filters.map((filter, index) => renderListFilter(index, filter))}
+          {query.filters.map((filter, index) => this.renderListFilter(index, filter, history, query))}
         </div>
-      )
+      );
     }
 
     return null
   }
 
-  return (
-    <>
-      {renderFilterList()}
-      {renderDropDown()}
-    </>
-  )
+  render() {
+    return (
+      <>
+        {this.renderFilterList()}
+        {this.renderDropDown()}
+      </>
+    )
+  }
 }
 
 export default withRouter(Filters);
