@@ -87,6 +87,6 @@ defmodule Plausible.Stats.Filters do
     property
     |> String.split(":")
     |> List.last()
-    |> String.to_existing_atom()
+    |> String.to_atom()
   end
 end

@@ -668,6 +668,14 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
+  defp group_imported_by(q, :path, query) when query.v2 do
+    q
+    |> group_by([i], i.path)
+    |> select_merge([i], %{
+      path: fragment("if(not empty(?), ?, ?)", i.path, i.path, @none)
+    })
+  end
+
   defp group_imported_by(q, :path, _query) do
     q
     |> group_by([i], i.path)
