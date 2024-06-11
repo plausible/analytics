@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Aggregate do
   use Plausible.ClickhouseRepo
   use Plausible
-  import Plausible.Stats.{Base, Imported}
+  import Plausible.Stats.Base
   import Ecto.Query
   alias Plausible.Stats.{Query, Util}
 
