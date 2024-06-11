@@ -22,9 +22,13 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     )
   end
 
-  def build_events_query(_, _, []), do: nil
+  def shortname(metric) when is_atom(metric), do: metric
+  def shortname("event:" <> name), do: String.to_atom(name)
+  def shortname("visit:" <> name), do: String.to_atom(name)
 
-  def build_events_query(site, query, event_metrics) do
+  defp build_events_query(_, _, []), do: nil
+
+  defp build_events_query(site, query, event_metrics) do
     q =
       from(
         e in "events_v2",
@@ -110,9 +114,7 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
   defp build_group_by(q, query) do
     Enum.reduce(query.dimensions, q, fn dimension, q ->
       q
-      |> select_merge(
-        ^%{String.to_atom(dimension) => Expression.dimension(dimension, query, :label)}
-      )
+      |> select_merge(^%{shortname(dimension) => Expression.dimension(dimension, query, :label)})
       |> group_by(^Expression.dimension(dimension, query, :group_by))
     end)
   end
@@ -129,7 +131,7 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
         order_direction,
         if(
           Metrics.metric?(metric_or_dimension),
-          do: dynamic([], selected_as(^metric_or_dimension)),
+          do: dynamic([], selected_as(^shortname(metric_or_dimension))),
           else: Expression.dimension(metric_or_dimension, query, :order_by)
         )
       }
@@ -137,18 +139,12 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
   end
 
   def build_order_by(q, _query, {metric_or_dimension, order_direction}, :outer) do
-    as_atom =
-      if(Metrics.metric?(metric_or_dimension),
-        do: metric_or_dimension,
-        else: String.to_atom(metric_or_dimension)
-      )
-
     order_by(
       q,
       [t],
       ^{
         order_direction,
-        dynamic([], selected_as(^as_atom))
+        dynamic([], selected_as(^shortname(metric_or_dimension)))
       }
     )
   end
@@ -159,12 +155,12 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
         select_merge(
           q,
           ^%{
-            metric_or_dimension =>
+            shortname(metric_or_dimension) =>
               dynamic(
                 [e, s],
                 selected_as(
-                  field(unquote(table_name), ^metric_or_dimension),
-                  ^metric_or_dimension
+                  field(unquote(table_name), ^shortname(metric_or_dimension)),
+                  ^shortname(metric_or_dimension)
                 )
               )
           }
@@ -185,7 +181,7 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
     join(subquery(events_q), :left, [e], s in subquery(sessions_q),
       on: ^build_group_by_join(query)
     )
-    |> select_join_fields(Enum.map(query.dimensions, &String.to_atom/1), e)
+    |> select_join_fields(query.dimensions, e)
     |> select_join_fields(event_metrics, e)
     |> select_join_fields(sessions_metrics, s)
     |> build_order_by(query, :outer)
@@ -195,8 +191,9 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
 
   defp build_group_by_join(query) do
     query.dimensions
-    |> Enum.map(&String.to_atom/1)
-    |> Enum.map(fn dim -> dynamic([e, s], field(e, ^dim) == field(s, ^dim)) end)
+    |> Enum.map(fn dim ->
+      dynamic([e, s], field(e, ^shortname(dim)) == field(s, ^shortname(dim)))
+    end)
     |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
   end
 end

@@ -1,6 +1,7 @@
 defmodule Plausible.Stats.QueryResult do
   @moduledoc false
 
+  alias Plausible.Stats.Ecto.QueryBuilder
   alias Plausible.Stats.Filters
 
   @derive Jason.Encoder
@@ -12,7 +13,7 @@ defmodule Plausible.Stats.QueryResult do
       results
       |> Enum.map(fn entry ->
         %{
-          dimensions: Enum.map(query.dimensions, &Map.get(entry, String.to_atom(&1))),
+          dimensions: Enum.map(query.dimensions, &Map.get(entry, QueryBuilder.shortname(&1))),
           metrics: Enum.map(query.metrics, &Map.get(entry, &1))
         }
       end)
