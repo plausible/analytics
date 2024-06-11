@@ -96,10 +96,10 @@ function filterDropdownOption(site, option) {
   )
 }
 
-function DropdownContent({ history, site, query, wrapState }) {
+function DropdownContent({ history, site, query, wrapped }) {
   const [addingFilter, setAddingFilter] = useState(false);
 
-  if (wrapState === WRAPSTATE.unwrapped || addingFilter) {
+  if (wrapped === WRAPSTATE.unwrapped || addingFilter) {
     let filterModals = {...FILTER_MODAL_TO_FILTER_GROUP}
     if (!site.propsAvailable) delete filterModals.props
 
