@@ -3000,7 +3000,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                  %{"dimensions" => ["https://one.com"], "metrics" => [3, 6]}
                ]
 
-        refute json_response(conn, 200)["warning"]
+        refute json_response(conn, 200)["meta"]["warning"]
       end
     end
 
@@ -3053,159 +3053,169 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                  %{"dimensions" => ["/one"], "metrics" => [3, 6]}
                ]
 
-        refute json_response(conn, 200)["warning"]
+        refute json_response(conn, 200)["meta"]["warning"]
       end
     end
 
-    #   test "adds a warning when query params are not supported for imported data", %{
-    #     conn: conn,
-    #     site: site
-    #   } do
-    #     site_import = insert(:site_import, site: site)
+    test "adds a warning when query params are not supported for imported data", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
 
-    #     insert(:goal, event_name: "Signup", site: site)
+      insert(:goal, event_name: "Signup", site: site)
 
-    #     populate_stats(site, site_import.id, [
-    #       build(:event,
-    #         name: "Signup",
-    #         "meta.key": ["package"],
-    #         "meta.value": ["large"]
-    #       ),
-    #       build(:imported_visitors, visitors: 9)
-    #     ])
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        ),
+        build(:imported_visitors, visitors: 9)
+      ])
 
-    #     conn =
-    #       get(conn, "/api/v1/stats/breakdown", %{
-    #         "site_id" => site.domain,
-    #         "period" => "day",
-    #         "property" => "event:props:package",
-    #         "filters" => "event:goal==Signup",
-    #         "metrics" => "visitors",
-    #         "with_imported" => "true"
-    #       })
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["event:props:package"],
+          "filters" => [
+            ["is", "event:goal", ["Signup"]]
+          ],
+          "include" => %{"imports" => true}
+        })
 
-    #     assert json_response(conn, 200)["results"] == [
-    #              %{
-    #                "package" => "large",
-    #                "visitors" => 1
-    #              }
-    #            ]
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["large"], "metrics" => [1]}
+             ]
 
-    #     assert json_response(conn, 200)["warning"] =~
-    #              "Imported stats are not included in the results because query parameters are not supported."
-    #   end
+      assert json_response(conn, 200)["meta"]["warning"] =~
+               "Imported stats are not included in the results because query parameters are not supported."
+    end
 
-    #   test "does not add a warning when there are no site imports", %{conn: conn, site: site} do
-    #     insert(:goal, event_name: "Signup", site: site)
+    test "does not add a warning when there are no site imports", %{conn: conn, site: site} do
+      insert(:goal, event_name: "Signup", site: site)
 
-    #     populate_stats(site, [
-    #       build(:event,
-    #         name: "Signup",
-    #         "meta.key": ["package"],
-    #         "meta.value": ["large"]
-    #       )
-    #     ])
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        )
+      ])
 
-    #     conn =
-    #       get(conn, "/api/v1/stats/breakdown", %{
-    #         "site_id" => site.domain,
-    #         "period" => "day",
-    #         "property" => "event:props:package",
-    #         "filters" => "event:goal==Signup",
-    #         "metrics" => "visitors",
-    #         "with_imported" => "true"
-    #       })
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["event:props:package"],
+          "filters" => [
+            ["is", "event:goal", ["Signup"]]
+          ],
+          "include" => %{"imports" => true}
+        })
 
-    #     refute json_response(conn, 200)["warning"]
-    #   end
+      refute json_response(conn, 200)["meta"]["warning"]
+    end
 
-    #   test "does not add a warning when import is out of queried date range", %{
-    #     conn: conn,
-    #     site: site
-    #   } do
-    #     site_import = insert(:site_import, site: site, end_date: Date.add(Date.utc_today(), -3))
+    test "does not add a warning when import is out of queried date range", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site, end_date: Date.add(Date.utc_today(), -3))
 
-    #     insert(:goal, event_name: "Signup", site: site)
+      insert(:goal, event_name: "Signup", site: site)
 
-    #     populate_stats(site, site_import.id, [
-    #       build(:event,
-    #         name: "Signup",
-    #         "meta.key": ["package"],
-    #         "meta.value": ["large"]
-    #       ),
-    #       build(:imported_visitors, visitors: 9)
-    #     ])
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["package"],
+          "meta.value": ["large"]
+        ),
+        build(:imported_visitors, visitors: 9)
+      ])
 
-    #     conn =
-    #       get(conn, "/api/v1/stats/breakdown", %{
-    #         "site_id" => site.domain,
-    #         "period" => "day",
-    #         "property" => "event:props:package",
-    #         "filters" => "event:goal==Signup",
-    #         "metrics" => "visitors",
-    #         "with_imported" => "true"
-    #       })
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "day",
+          "dimensions" => ["event:props:package"],
+          "filters" => [
+            ["is", "event:goal", ["Signup"]]
+          ],
+          "include" => %{"imports" => true}
+        })
 
-    #     refute json_response(conn, 200)["warning"]
-    #   end
+      refute json_response(conn, 200)["meta"]["warning"]
+    end
 
-    #   test "applies multiple filters if the properties belong to the same table", %{
-    #     conn: conn,
-    #     site: site
-    #   } do
-    #     site_import = insert(:site_import, site: site)
+    test "applies multiple filters if the properties belong to the same table", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
 
-    #     populate_stats(site, site_import.id, [
-    #       build(:imported_sources, source: "Google", utm_medium: "organic", utm_term: "one"),
-    #       build(:imported_sources, source: "Twitter", utm_medium: "organic", utm_term: "two"),
-    #       build(:imported_sources,
-    #         source: "Facebook",
-    #         utm_medium: "something_else",
-    #         utm_term: "one"
-    #       )
-    #     ])
+      populate_stats(site, site_import.id, [
+        build(:imported_sources, source: "Google", utm_medium: "organic", utm_term: "one"),
+        build(:imported_sources, source: "Twitter", utm_medium: "organic", utm_term: "two"),
+        build(:imported_sources,
+          source: "Facebook",
+          utm_medium: "something_else",
+          utm_term: "one"
+        )
+      ])
 
-    #     conn =
-    #       get(conn, "/api/v1/stats/breakdown", %{
-    #         "site_id" => site.domain,
-    #         "period" => "day",
-    #         "property" => "visit:source",
-    #         "filters" => "visit:utm_medium==organic;visit:utm_term==one",
-    #         "with_imported" => "true"
-    #       })
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "day",
+          "dimensions" => ["visit:source"],
+          "filters" => [
+            ["is", "visit:utm_medium", ["organic"]],
+            ["is", "visit:utm_term", ["one"]]
+          ],
+          "include" => %{"imports" => true}
+        })
 
-    #     assert json_response(conn, 200) == %{
-    #              "results" => [%{"source" => "Google", "visitors" => 1}]
-    #            }
-    #   end
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Google"], "metrics" => [1]}
+             ]
+    end
 
-    #   test "ignores imported data if filtered property belongs to a different table than the breakdown property",
-    #        %{
-    #          conn: conn,
-    #          site: site
-    #        } do
-    #     site_import = insert(:site_import, site: site)
+    test "ignores imported data if filtered property belongs to a different table than the breakdown property",
+         %{
+           conn: conn,
+           site: site
+         } do
+      site_import = insert(:site_import, site: site)
 
-    #     populate_stats(site, site_import.id, [
-    #       build(:imported_sources, source: "Google"),
-    #       build(:imported_devices, device: "Desktop")
-    #     ])
+      populate_stats(site, site_import.id, [
+        build(:imported_sources, source: "Google"),
+        build(:imported_devices, device: "Desktop")
+      ])
 
-    #     conn =
-    #       get(conn, "/api/v1/stats/breakdown", %{
-    #         "site_id" => site.domain,
-    #         "period" => "day",
-    #         "property" => "visit:source",
-    #         "filters" => "visit:device==Desktop",
-    #         "with_imported" => "true"
-    #       })
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "day",
+          "dimensions" => ["visit:source"],
+          "filters" => [
+            ["is", "visit:device", ["Desktop"]]
+          ],
+          "include" => %{"imports" => true}
+        })
 
-    #     assert %{
-    #              "results" => [],
-    #              "warning" => warning
-    #            } = json_response(conn, 200)
+      assert %{
+               "results" => [],
+               "meta" => meta
+             } = json_response(conn, 200)
 
-    #     assert warning =~ "Imported stats are not included in the results"
-    #   end
+      assert meta["warning"] =~ "Imported stats are not included in the results"
+    end
   end
 end

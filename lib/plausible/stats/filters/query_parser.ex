@@ -94,7 +94,11 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{inspect(filter)}'"}
 
-  defp parse_date_range(_site, "day"), do: {:ok, "day"}
+  defp parse_date_range(site, "day") do
+    now = Timex.now(site.timezone) |> Timex.to_date()
+    {:ok, Date.range(now, now)}
+  end
+
   defp parse_date_range(_site, "7d"), do: {:ok, "7d"}
   defp parse_date_range(_site, "30d"), do: {:ok, "30d"}
   defp parse_date_range(_site, "month"), do: {:ok, "month"}
