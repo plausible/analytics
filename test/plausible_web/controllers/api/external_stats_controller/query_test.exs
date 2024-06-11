@@ -108,7 +108,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
                "Metric `conversion_rate` can only be queried with event:goal filters or dimensions"
     end
 
-    test "validates that property is valid", %{conn: conn, site: site} do
+    test "validates that dimensions are valid", %{conn: conn, site: site} do
       conn =
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
@@ -120,7 +120,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 400)["error"] =~ "Invalid dimensions"
     end
 
-    test "empty custom prop is invalid", %{conn: conn, site: site} do
+    test "empty custom property is invalid", %{conn: conn, site: site} do
       conn =
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
@@ -132,7 +132,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 400)["error"] =~ "Invalid dimensions"
     end
 
-    test "validates that correct period is used", %{conn: conn, site: site} do
+    test "validates that correct date range is used", %{conn: conn, site: site} do
       conn =
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
