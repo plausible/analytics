@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
+defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   use PlausibleWeb.ConnCase
   alias Plausible.Billing.Feature
 

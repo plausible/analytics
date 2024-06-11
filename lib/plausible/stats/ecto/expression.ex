@@ -1,4 +1,6 @@
 defmodule Plausible.Stats.Ecto.Expression do
+  @moduledoc false
+
   import Ecto.Query
 
   use Plausible.Stats.Fragments
