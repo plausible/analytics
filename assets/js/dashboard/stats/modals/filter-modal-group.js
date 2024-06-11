@@ -17,17 +17,18 @@ export default function FilterModalGroup({
     () => Object.entries(filterState).filter(([_, filter]) => getFilterGroup(filter) == filterGroup).map(([id, filter]) => ({ id, filter })),
     [filterGroup, filterState]
   )
+
   const disabledOptions = useMemo(
     () => (filterGroup == 'props') ? rows.map(({ filter }) => ({ value: getPropertyKeyFromFilterKey(filter[1]) })) : null,
     [filterGroup, rows]
   )
 
-  const showAddRow = site.flags.multiple_filters ? !['goal', 'hostname'].includes(filterGroup) : filterGroup == 'props'
+  const showAddRow = filterGroup == 'props'
   const showTitle = filterGroup != 'props'
 
   return (
     <>
-      <div className="mt-6">
+      <div className="mt-4">
         {showTitle && (<div className="text-sm font-medium text-gray-700 dark:text-gray-300">{formattedFilters[filterGroup]}</div>)}
         {rows.map(({ id, filter }) =>
           filterGroup === 'props' ? (
@@ -54,7 +55,7 @@ export default function FilterModalGroup({
         )}
       </div>
       {showAddRow && (
-        <div className="mt-2">
+        <div className="mt-6">
           <a className="underline text-indigo-500 text-sm cursor-pointer" onClick={() => onAddRow(filterGroup)}>
             + Add another
           </a>

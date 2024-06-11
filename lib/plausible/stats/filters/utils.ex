@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.Filters.Utils do
   @moduledoc """
-  Contains utility functions shared between `LegacyDashboardFilterParser`
+  Contains utility functions shared between `DashboardFilterParser`
   and `StatsAPIFilterParser`.
   """
 

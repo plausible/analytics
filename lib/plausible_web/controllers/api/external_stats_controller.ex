@@ -124,14 +124,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     prop_filter = Query.get_filter_by_prefix(query, "event:props:")
 
     query_allowed? =
-      case {prop_filter, query.dimensions, allowed_props} do
+      case {prop_filter, query.property, allowed_props} do
         {_, _, :all} ->
           true
 
         {[_, "event:props:" <> prop | _], _property, allowed_props} ->
           prop in allowed_props
 
-        {_filter, ["event:props:" <> prop], allowed_props} ->
+        {_filter, "event:props:" <> prop, allowed_props} ->
           prop in allowed_props
 
         _ ->
@@ -171,10 +171,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       Query.get_filter(query, "event:name") ->
         {:error, "Metric `#{metric}` cannot be queried when filtering by `event:name`"}
 
-      query.dimensions == ["event:page"] ->
+      query.property == "event:page" ->
         {:ok, metric}
 
-      not Enum.empty?(query.dimensions) ->
+      not is_nil(query.property) ->
         {:error,
          "Metric `#{metric}` is not supported in breakdown queries (except `event:page` breakdown)"}
 
@@ -189,7 +189,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp validate_metric("conversion_rate" = metric, query) do
     cond do
-      query.dimensions == ["event:goal"] ->
+      query.property == "event:goal" ->
         {:ok, metric}
 
       Query.get_filter(query, "event:goal") ->
@@ -210,7 +210,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       Query.get_filter(query, "event:page") ->
         {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`."}
 
-      not Enum.empty?(query.dimensions) ->
+      query.property != nil ->
         {:error, "Metric `#{metric}` is not supported in breakdown queries."}
 
       true ->
@@ -230,9 +230,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp validate_session_metric(metric, query) do
     cond do
-      length(query.dimensions) == 1 and event_only_property?(hd(query.dimensions)) ->
+      event_only_property?(query.property) ->
         {:error,
-         "Session metric `#{metric}` cannot be queried for breakdown by `#{query.dimensions}`."}
+         "Session metric `#{metric}` cannot be queried for breakdown by `#{query.property}`."}
 
       event_only_filter = find_event_only_filter(query) ->
         {:error,
