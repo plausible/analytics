@@ -85,7 +85,7 @@ defmodule Plausible.Site do
     )
     |> unique_constraint(:domain,
       name: "domain_change_disallowed",
-            message: @domain_unique_error
+      message: @domain_unique_error
     )
     |> put_change(
       :ingest_rate_limit_threshold,
