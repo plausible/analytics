@@ -23,8 +23,7 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
   end
 
   def shortname(metric) when is_atom(metric), do: metric
-  def shortname("event:" <> name), do: String.to_atom(name)
-  def shortname("visit:" <> name), do: String.to_atom(name)
+  def shortname(dimension), do: Plausible.Stats.Filters.without_prefix(dimension)
 
   defp build_events_query(_, _, []), do: nil
 
