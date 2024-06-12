@@ -181,6 +181,57 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 400)["error"] =~
                "Session metric(s) `bounce_rate` cannot be queried along with event dimensions"
     end
+
+    test "validates that metric views_per_visit cannot be used with event:page filter", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["views_per_visit"],
+          "filters" => [["is", "event:page", ["/something"]]]
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Metric `views_per_visit` cannot be queried with a filter on `event:page`"
+             }
+    end
+
+    test "validates that metric views_per_visit cannot be used together with dimensions", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["views_per_visit"],
+          "dimensions" => ["event:name"]
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "Metric `views_per_visit` cannot be queried with `dimensions`"
+             }
+    end
+
+    test "validates a metric can't be asked multiple times", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["views_per_visit", "visitors", "visitors"]
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "Metrics cannot be queried multiple times"
+             }
+    end
   end
 
   test "aggregates a single metric", %{conn: conn, site: site} do
