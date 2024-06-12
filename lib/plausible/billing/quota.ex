@@ -11,15 +11,16 @@ defmodule Plausible.Billing.Quota do
   alias Plausible.Billing.{Plan, Plans, Subscription, Subscriptions, EnterprisePlan, Feature}
   alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props, StatsAPI}
 
-  @type limit() :: :site_limit | :pageview_limit | :team_member_limit
-
   @type over_limits_error() :: {:over_plan_limits, [limit()]}
+  @typep limit() :: :site_limit | :pageview_limit | :team_member_limit
 
-  @type monthly_pageview_usage() :: %{period() => usage_cycle()}
+  @typep cycle :: :current_cycle | :last_cycle | :penultimate_cycle
 
-  @type period :: :last_30_days | :current_cycle | :last_cycle | :penultimate_cycle
+  @typep cycles_usage() :: %{cycle() => usage_cycle()}
+  @typep last_30_days_usage() :: %{:last_30_days => usage_cycle()}
+  @typep monthly_pageview_usage() :: cycles_usage() | last_30_days_usage()
 
-  @type usage_cycle :: %{
+  @typep usage_cycle :: %{
           date_range: Date.Range.t(),
           pageviews: non_neg_integer(),
           custom_events: non_neg_integer(),
@@ -27,8 +28,6 @@ defmodule Plausible.Billing.Quota do
         }
 
   @pageview_allowance_margin 0.1
-
-  def pageview_allowance_margin(), do: @pageview_allowance_margin
 
   def usage(user, opts \\ []) do
     basic_usage = %{
@@ -195,8 +194,7 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @spec usage_cycle(User.t(), period(), list() | nil, Date.t()) :: usage_cycle()
-
+  @spec usage_cycle(User.t(), :last_30_days | cycle(), list() | nil, Date.t()) :: usage_cycle()
   def usage_cycle(user, cycle, owned_site_ids \\ nil, today \\ Timex.today())
 
   def usage_cycle(user, cycle, nil, today) do
@@ -398,6 +396,25 @@ defmodule Plausible.Billing.Quota do
     for {f_mod, used?} <- used_features, used?, f_mod.enabled?(site), do: f_mod
   end
 
+  @spec exceeds_last_two_usage_cycles?(cycles_usage(), non_neg_integer()) :: boolean()
+  def exceeds_last_two_usage_cycles?(cycles_usage, allowed_volume) do
+    exceeded = exceeded_cycles(cycles_usage, allowed_volume)
+    :penultimate_cycle in exceeded && :last_cycle in exceeded
+  end
+
+  @spec exceeded_cycles(cycles_usage(), non_neg_integer()) :: list()
+  def exceeded_cycles(cycles_usage, allowed_volume) do
+    limit = pageview_limit_with_margin(allowed_volume)
+
+    Enum.reduce(cycles_usage, [], fn {cycle, %{total: total}}, exceeded_cycles ->
+      if below_limit?(total, limit) do
+        exceeded_cycles
+      else
+        exceeded_cycles ++ [cycle]
+      end
+    end)
+  end
+
   @doc """
   Ensures that the given user (or the usage map) is within the limits
   of the given plan.
@@ -443,19 +460,18 @@ defmodule Plausible.Billing.Quota do
     else
       case usage do
         %{last_30_days: %{total: total}} ->
-          !within_limit?(total, pageview_limit_with_margin(plan, opts))
+          margin = Keyword.get(opts, :pageview_allowance_margin)
+          limit = pageview_limit_with_margin(plan.monthly_pageview_limit, margin)
+          !within_limit?(total, limit)
 
-        billing_cycles_usage ->
-          Plausible.Workers.CheckUsage.exceeds_last_two_usage_cycles?(
-            billing_cycles_usage,
-            plan.monthly_pageview_limit
-          )
+        cycles_usage ->
+          exceeds_last_two_usage_cycles?(cycles_usage, plan.monthly_pageview_limit)
       end
     end
   end
 
-  defp pageview_limit_with_margin(%{monthly_pageview_limit: limit}, opts) do
-    margin = Keyword.get(opts, :pageview_allowance_margin, @pageview_allowance_margin)
+  defp pageview_limit_with_margin(limit, margin \\ nil) do
+    margin = if margin, do: margin, else: @pageview_allowance_margin
     ceil(limit * (1 + margin))
   end
 

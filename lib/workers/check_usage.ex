@@ -72,26 +72,6 @@ defmodule Plausible.Workers.CheckUsage do
     :ok
   end
 
-  @spec exceeds_last_two_usage_cycles?(Quota.monthly_pageview_usage(), non_neg_integer()) ::
-          boolean()
-
-  def exceeds_last_two_usage_cycles?(usage, limit) when is_integer(limit) do
-    limit = ceil(limit * (1 + Quota.pageview_allowance_margin()))
-
-    Enum.all?([usage.last_cycle, usage.penultimate_cycle], fn usage ->
-      not Quota.below_limit?(usage.total, limit)
-    end)
-  end
-
-  @spec last_usage_cycle_below_limit?(Quota.monthly_pageview_usage(), non_neg_integer()) ::
-          boolean()
-
-  def last_usage_cycle_below_limit?(usage, limit) when is_integer(limit) do
-    limit = ceil(limit * (1 + Quota.pageview_allowance_margin()))
-
-    Quota.below_limit?(usage.last_cycle.total, limit)
-  end
-
   defp check_site_usage_for_enterprise(subscriber) do
     limit = subscriber.enterprise_plan.site_limit
     usage = Quota.site_usage(subscriber)
@@ -160,7 +140,7 @@ defmodule Plausible.Workers.CheckUsage do
     usage = quota_mod.monthly_pageview_usage(subscriber)
     limit = Quota.monthly_pageview_limit(subscriber)
 
-    if exceeds_last_two_usage_cycles?(usage, limit) do
+    if Quota.exceeds_last_two_usage_cycles?(usage, limit) do
       {:over_limit, usage}
     else
       {:below_limit, usage}
@@ -171,10 +151,10 @@ defmodule Plausible.Workers.CheckUsage do
     usage = quota_mod.monthly_pageview_usage(subscriber)
     limit = Quota.monthly_pageview_limit(subscriber)
 
-    if last_usage_cycle_below_limit?(usage, limit) do
-      {:below_limit, usage}
-    else
+    if :last_cycle in Quota.exceeded_cycles(usage, limit) do
       {:over_limit, usage}
+    else
+      {:below_limit, usage}
     end
   end
 end
