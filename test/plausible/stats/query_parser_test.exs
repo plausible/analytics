@@ -575,7 +575,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Session metric(s) `bounce_rate` cannot be queried along with event filters or dimensions"
+        "Session metric(s) `bounce_rate` cannot be queried along with event dimensions"
       )
     end
 
