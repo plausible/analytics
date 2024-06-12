@@ -364,7 +364,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/snippet?site_created=true"
-      assert Plausible.Billing.Quota.site_usage(user) == 3
+      assert Plausible.Billing.Quota.Usage.site_usage(user) == 3
     end
 
     for url <- ["https://Example.com/", "HTTPS://EXAMPLE.COM/", "/Example.com/", "//Example.com/"] do

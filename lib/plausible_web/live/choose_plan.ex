@@ -22,12 +22,12 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         Users.with_subscription(user_id)
       end)
       |> assign_new(:usage, fn %{user: user} ->
-        Quota.usage(user, with_features: true)
+        Quota.Usage.usage(user, with_features: true)
       end)
       |> assign_new(:last_30_days_usage, fn %{user: user, usage: usage} ->
         case usage do
           %{last_30_days: usage_cycle} -> usage_cycle.total
-          _ -> Quota.usage_cycle(user, :last_30_days).total
+          _ -> Quota.Usage.usage_cycle(user, :last_30_days).total
         end
       end)
       |> assign_new(:owned_plan, fn %{user: %{subscription: subscription}} ->

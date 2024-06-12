@@ -234,7 +234,7 @@ defmodule Plausible.Billing.Plans do
         []
       end
 
-    if Enum.any?(Quota.features_usage(user), &(&1 not in growth_features)) do
+    if Enum.any?(Quota.Usage.features_usage(user), &(&1 not in growth_features)) do
       :business
     else
       :growth

@@ -66,7 +66,7 @@ defmodule Plausible.Site.Memberships.Invitations do
 
   on_ee do
     @spec ensure_can_take_ownership(Site.t(), Auth.User.t()) ::
-            :ok | {:error, Quota.over_limits_error() | :no_plan}
+            :ok | {:error, Quota.Limits.over_limits_error() | :no_plan}
     def ensure_can_take_ownership(site, new_owner) do
       site = Repo.preload(site, :owner)
       new_owner = Plausible.Users.with_subscription(new_owner)
@@ -78,7 +78,7 @@ defmodule Plausible.Site.Memberships.Invitations do
         usage_after_transfer = %{
           monthly_pageviews: monthly_pageview_usage_after_transfer(site, new_owner),
           team_members: team_member_usage_after_transfer(site, new_owner),
-          sites: Quota.site_usage(new_owner) + 1
+          sites: Quota.Usage.site_usage(new_owner) + 1
         }
 
         Quota.ensure_within_plan_limits(usage_after_transfer, plan)
@@ -88,8 +88,8 @@ defmodule Plausible.Site.Memberships.Invitations do
     end
 
     defp team_member_usage_after_transfer(site, new_owner) do
-      current_usage = Quota.team_member_usage(new_owner)
-      site_usage = Quota.team_member_usage(site.owner, site: site)
+      current_usage = Quota.Usage.team_member_usage(new_owner)
+      site_usage = Quota.Usage.team_member_usage(site.owner, site: site)
 
       extra_usage =
         if Plausible.Sites.is_member?(new_owner.id, site), do: 0, else: 1
@@ -99,7 +99,7 @@ defmodule Plausible.Site.Memberships.Invitations do
 
     defp monthly_pageview_usage_after_transfer(site, new_owner) do
       site_ids = Plausible.Sites.owned_site_ids(new_owner) ++ [site.id]
-      Quota.monthly_pageview_usage(new_owner, site_ids)
+      Quota.Usage.monthly_pageview_usage(new_owner, site_ids)
     end
   else
     @spec ensure_can_take_ownership(Site.t(), Auth.User.t()) :: :ok
@@ -117,7 +117,7 @@ defmodule Plausible.Site.Memberships.Invitations do
   def check_feature_access(site, new_owner, false = _selfhost?) do
     missing_features =
       site
-      |> Quota.features_usage()
+      |> Quota.Usage.features_usage()
       |> Enum.filter(&(&1.check_availability(new_owner) != :ok))
 
     if missing_features == [] do
