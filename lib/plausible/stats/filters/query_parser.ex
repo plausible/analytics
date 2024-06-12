@@ -323,7 +323,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
       :ok
     else
       {:error,
-       "Session metric(s) `#{sessions_metrics |> Enum.join(", ")}` cannot be queried along with event filters or dimensions"}
+       "Session metric(s) `#{sessions_metrics |> Enum.join(", ")}` cannot be queried along with event dimensions"}
     end
   end
 
