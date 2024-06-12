@@ -549,6 +549,51 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
   end
 
+  describe "views_per_visit metric" do
+    test "succeeds with normal filters", %{site: site} do
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      %{
+        "metrics" => ["views_per_visit"],
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Signup"]]]
+      }
+      |> check_success(site, %{
+        metrics: [:views_per_visit],
+        date_range: @date_range,
+        filters: [[:is, "event:goal", [event: "Signup"]]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        imported_data_requested: false
+      })
+    end
+
+    test "fails validation if event:page filter specified", %{site: site} do
+      %{
+        "metrics" => ["views_per_visit"],
+        "date_range" => "all",
+        "filters" => [["is", "event:page", ["/"]]]
+      }
+      |> check_error(
+        site,
+        ~r/Metric `views_per_visit` cannot be queried with a filter on `event:page`/
+      )
+    end
+
+    test "fails validation with dimensions", %{site: site} do
+      %{
+        "metrics" => ["views_per_visit"],
+        "date_range" => "all",
+        "dimensions" => ["event:name"]
+      }
+      |> check_error(
+        site,
+        ~r/Metric `views_per_visit` cannot be queried with `dimensions`/
+      )
+    end
+  end
+
   describe "session metrics" do
     test "single session metric succeeds", %{site: site} do
       %{

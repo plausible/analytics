@@ -313,6 +313,19 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
+  defp validate_metric(:views_per_visit = metric, query) do
+    cond do
+      not is_nil(Query.get_filter(query, "event:page")) ->
+        {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`"}
+
+      length(query.dimensions) > 0 ->
+        {:error, "Metric `#{metric}` cannot be queried with `dimensions`"}
+
+      true ->
+        :ok
+    end
+  end
+
   defp validate_metric(_, _), do: :ok
 
   defp validate_no_metrics_filters_conflict(query) do
