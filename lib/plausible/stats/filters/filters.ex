@@ -3,8 +3,7 @@ defmodule Plausible.Stats.Filters do
   A module for parsing filters used in stat queries.
   """
 
-  alias Plausible.Stats.Filters.QueryParser
-  alias Plausible.Stats.Filters.{LegacyDashboardFilterParser, StatsAPIFilterParser}
+  alias Plausible.Stats.Filters.{DashboardFilterParser, StatsAPIFilterParser}
 
   @visit_props [
     :source,
@@ -48,39 +47,32 @@ defmodule Plausible.Stats.Filters do
 
   Depending on the format and type of the `filters` argument, returns:
 
-    * a decoded list, when `filters` is encoded JSON
-    * a parsed filter list, when `filters` is a filter expression string
-    * the same list, when `filters` is a map
+    * a decoded map, when `filters` is encoded JSON
+    * a parsed filter map, when `filters` is a filter expression string
+    * the same map, when `filters` is a map
 
-  Returns an empty list when argument type is unexpected (e.g. `nil`).
+  Returns an empty map when argument type is unexpected (e.g. `nil`).
 
   ### Examples:
 
       iex> Filters.parse("{\\"page\\":\\"/blog/**\\"}")
-      [[:matches, "event:page", ["/blog/**"]]]
+      [[:matches, "event:page", "/blog/**"]]
 
       iex> Filters.parse("visit:browser!=Chrome")
-      [[:is_not, "visit:browser", ["Chrome"]]]
+      [[:is_not, "visit:browser", "Chrome"]]
 
       iex> Filters.parse(nil)
       []
   """
   def parse(filters) when is_binary(filters) do
     case Jason.decode(filters) do
-      {:ok, filters} when is_map(filters) or is_list(filters) -> parse(filters)
+      {:ok, filters} when is_map(filters) -> DashboardFilterParser.parse_and_prefix(filters)
       {:ok, _} -> []
       {:error, err} -> StatsAPIFilterParser.parse_filter_expression(err.data)
     end
   end
 
-  def parse(filters) when is_map(filters),
-    do: LegacyDashboardFilterParser.parse_and_prefix(filters)
-
-  def parse(filters) when is_list(filters) do
-    {:ok, parsed_filters} = QueryParser.parse_filters(filters)
-    parsed_filters
-  end
-
+  def parse(filters) when is_map(filters), do: DashboardFilterParser.parse_and_prefix(filters)
   def parse(_), do: []
 
   def without_prefix(property) do
