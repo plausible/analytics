@@ -242,20 +242,24 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp validate_goal_filters(site, query) do
-    configured_goals =
-      Plausible.Goals.for_site(site)
-      |> Enum.map(fn
-        %{page_path: path} when is_binary(path) -> {:page, path}
-        %{event_name: event_name} -> {:event, event_name}
-      end)
-
     goal_filter_clauses =
       Enum.flat_map(query.filters, fn
         [_operation, "event:goal", clauses] -> clauses
         _ -> []
       end)
 
-    validate_list(goal_filter_clauses, &validate_goal_filter(&1, configured_goals))
+    if length(goal_filter_clauses) > 0 do
+      configured_goals =
+        Plausible.Goals.for_site(site)
+        |> Enum.map(fn
+          %{page_path: path} when is_binary(path) -> {:page, path}
+          %{event_name: event_name} -> {:event, event_name}
+        end)
+
+      validate_list(goal_filter_clauses, &validate_goal_filter(&1, configured_goals))
+    else
+      :ok
+    end
   end
 
   defp validate_goal_filter(clause, configured_goals) do
