@@ -68,17 +68,35 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     )
   end
 
-  defp add_filter(:events, _query, [:is, "event:name", list]) do
+  defp add_filter(:events, _query, [:is, "event:name", name]) do
+    dynamic([e], e.name == ^name)
+  end
+
+  defp add_filter(:events, _query, [:member, "event:name", list]) do
     dynamic([e], e.name in ^list)
   end
 
-  defp add_filter(:events, _query, [:is, "event:goal", clauses]) do
+  defp add_filter(:events, _query, [:is, "event:goal", {:page, path}]) do
+    dynamic([e], e.pathname == ^path and e.name == "pageview")
+  end
+
+  defp add_filter(:events, _query, [:matches, "event:goal", {:page, expr}]) do
+    regex = page_regex(expr)
+
+    dynamic([e], fragment("match(?, ?)", e.pathname, ^regex) and e.name == "pageview")
+  end
+
+  defp add_filter(:events, _query, [:is, "event:goal", {:event, event}]) do
+    dynamic([e], e.name == ^event)
+  end
+
+  defp add_filter(:events, _query, [:member, "event:goal", clauses]) do
     {events, pages} = split_goals(clauses)
 
     dynamic([e], (e.pathname in ^pages and e.name == "pageview") or e.name in ^events)
   end
 
-  defp add_filter(:events, _query, [:matches, "event:goal", clauses]) do
+  defp add_filter(:events, _query, [:matches_member, "event:goal", clauses]) do
     {events, pages} = split_goals(clauses, &page_regex/1)
 
     event_clause =
@@ -151,7 +169,39 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     true
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:is, _, values]) do
+  defp filter_custom_prop(prop_name, column_name, [:is, _, "(none)"]) do
+    dynamic([t], not has_key(t, column_name, ^prop_name))
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:is, _, value]) do
+    dynamic(
+      [t],
+      has_key(t, column_name, ^prop_name) and get_by_key(t, column_name, ^prop_name) == ^value
+    )
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:is_not, _, "(none)"]) do
+    dynamic([t], has_key(t, column_name, ^prop_name))
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:is_not, _, value]) do
+    dynamic(
+      [t],
+      not has_key(t, column_name, ^prop_name) or get_by_key(t, column_name, ^prop_name) != ^value
+    )
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:matches, _, value]) do
+    regex = page_regex(value)
+
+    dynamic(
+      [t],
+      has_key(t, column_name, ^prop_name) and
+        fragment("match(?, ?)", get_by_key(t, column_name, ^prop_name), ^regex)
+    )
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:member, _, values]) do
     none_value_included = Enum.member?(values, "(none)")
 
     dynamic(
@@ -161,7 +211,7 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:is_not, _, values]) do
+  defp filter_custom_prop(prop_name, column_name, [:not_member, _, values]) do
     none_value_included = Enum.member?(values, "(none)")
 
     dynamic(
@@ -175,7 +225,7 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:matches, _, clauses]) do
+  defp filter_custom_prop(prop_name, column_name, [:matches_member, _, clauses]) do
     regexes = Enum.map(clauses, &page_regex/1)
 
     dynamic(
@@ -189,22 +239,42 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     )
   end
 
-  defp filter_field(db_field, [:matches, _key, glob_exprs]) do
+  defp filter_field(db_field, [:is, _key, value]) do
+    value = db_field_val(db_field, value)
+    dynamic([x], field(x, ^db_field) == ^value)
+  end
+
+  defp filter_field(db_field, [:is_not, _key, value]) do
+    value = db_field_val(db_field, value)
+    dynamic([x], field(x, ^db_field) != ^value)
+  end
+
+  defp filter_field(db_field, [:matches_member, _key, glob_exprs]) do
     page_regexes = Enum.map(glob_exprs, &page_regex/1)
     dynamic([x], fragment("multiMatchAny(?, ?)", field(x, ^db_field), ^page_regexes))
   end
 
-  defp filter_field(db_field, [:does_not_match, _key, glob_exprs]) do
+  defp filter_field(db_field, [:not_matches_member, _key, glob_exprs]) do
     page_regexes = Enum.map(glob_exprs, &page_regex/1)
     dynamic([x], fragment("not(multiMatchAny(?, ?))", field(x, ^db_field), ^page_regexes))
   end
 
-  defp filter_field(db_field, [:is, _key, list]) do
+  defp filter_field(db_field, [:matches, _key, glob_expr]) do
+    regex = page_regex(glob_expr)
+    dynamic([x], fragment("match(?, ?)", field(x, ^db_field), ^regex))
+  end
+
+  defp filter_field(db_field, [:does_not_match, _key, glob_expr]) do
+    regex = page_regex(glob_expr)
+    dynamic([x], fragment("not(match(?, ?))", field(x, ^db_field), ^regex))
+  end
+
+  defp filter_field(db_field, [:member, _key, list]) do
     list = Enum.map(list, &db_field_val(db_field, &1))
     dynamic([x], field(x, ^db_field) in ^list)
   end
 
-  defp filter_field(db_field, [:is_not, _key, list]) do
+  defp filter_field(db_field, [:not_member, _key, list]) do
     list = Enum.map(list, &db_field_val(db_field, &1))
     dynamic([x], field(x, ^db_field) not in ^list)
   end
