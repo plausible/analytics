@@ -1,4 +1,6 @@
 defmodule Plausible.Billing.Quota.Limits do
+  @moduledoc false
+
   use Plausible
   alias Plausible.Users
   alias Plausible.Auth.User

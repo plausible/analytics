@@ -1,4 +1,6 @@
 defmodule Plausible.Billing.Quota.Usage do
+  @moduledoc false
+
   use Plausible
   import Ecto.Query
   alias Plausible.Users
