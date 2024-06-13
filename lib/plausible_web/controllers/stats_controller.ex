@@ -55,7 +55,7 @@ defmodule PlausibleWeb.StatsController do
     stats_start_date = Plausible.Sites.stats_start_date(site)
     can_see_stats? = not Sites.locked?(site) or conn.assigns[:current_user_role] == :super_admin
     demo = site.domain == PlausibleWeb.Endpoint.host()
-    dogfood_page_path = if !demo, do: "/:dashboard"
+    dogfood_page_path = if demo, do: "/#{site.domain}", else: "/:dashboard"
     skip_to_dashboard? = conn.params["skip_to_dashboard"] == "true"
 
     cond do
