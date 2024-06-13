@@ -95,22 +95,22 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{inspect(filter)}'"}
 
   defp parse_date_range(site, "day") do
-    now = Timex.now(site.timezone) |> Timex.to_date()
-    {:ok, Date.range(now, now)}
+    today = DateTime.now!(site.timezone) |> DateTime.to_date()
+    {:ok, Date.range(today, today)}
   end
 
   defp parse_date_range(_site, "7d"), do: {:ok, "7d"}
   defp parse_date_range(_site, "30d"), do: {:ok, "30d"}
   defp parse_date_range(_site, "month"), do: {:ok, "month"}
   defp parse_date_range(_site, "6mo"), do: {:ok, "6mo"}
-  defp parse_date_range(_site, "12mo"), do: {:ok, "6mo"}
+  defp parse_date_range(_site, "12mo"), do: {:ok, "12mo"}
   defp parse_date_range(_site, "year"), do: {:ok, "year"}
 
   defp parse_date_range(site, "all") do
-    now = Timex.now(site.timezone) |> Timex.to_date()
-    start_date = Plausible.Sites.stats_start_date(site) || now
+    today = DateTime.now!(site.timezone) |> DateTime.to_date()
+    start_date = Plausible.Sites.stats_start_date(site) || today
 
-    {:ok, Date.range(start_date, now)}
+    {:ok, Date.range(start_date, today)}
   end
 
   defp parse_date_range(_site, [from_date_string, to_date_string])
