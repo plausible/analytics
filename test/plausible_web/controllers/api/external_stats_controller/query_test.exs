@@ -1065,6 +1065,36 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     end
   end
 
+  describe "aggregation with imported data" do
+    setup :create_site_import
+
+    test "does not count imported stats unless specified", %{
+      conn: conn,
+      site: site,
+      site_import: site_import
+    } do
+      populate_stats(site, site_import.id, [
+        build(:imported_visitors, date: ~D[2023-01-01]),
+        build(:pageview, timestamp: ~N[2023-01-01 00:00:00])
+      ])
+
+      query_params = %{
+        "site_id" => site.domain,
+        "date_range" => "all",
+        "metrics" => ["pageviews"]
+      }
+
+      conn1 = post(conn, "/api/v2/query", query_params)
+
+      assert json_response(conn1, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
+
+      conn2 = post(conn, "/api/v2/query", Map.put(query_params, "include", %{"imports" => true}))
+
+      assert json_response(conn2, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
+      refute json_response(conn2, 200)["meta"]["warning"]
+    end
+  end
+
   test "breakdown by visit:source", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview,
