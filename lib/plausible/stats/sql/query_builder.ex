@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.Ecto.QueryBuilder do
+defmodule Plausible.Stats.SQL.QueryBuilder do
   @moduledoc false
 
   use Plausible
@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Ecto.QueryBuilder do
   import Plausible.Stats.Imported
 
   alias Plausible.Stats.{Base, Query, TableDecider, Util, Filters, Metrics}
-  alias Plausible.Stats.Ecto.Expression
+  alias Plausible.Stats.SQL.Expression
 
   def build(query, site) do
     {event_metrics, sessions_metrics, _other_metrics} =

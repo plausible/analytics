@@ -20,7 +20,7 @@ defmodule Plausible.Stats.Aggregate do
       | metrics: Util.maybe_add_visitors_metric(metrics)
     }
 
-    q = Plausible.Stats.Ecto.QueryBuilder.build(query_with_metrics, site)
+    q = Plausible.Stats.SQL.QueryBuilder.build(query_with_metrics, site)
 
     time_on_page_task =
       if :time_on_page in query_with_metrics.metrics do

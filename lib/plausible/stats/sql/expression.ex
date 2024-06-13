@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.Ecto.Expression do
+defmodule Plausible.Stats.SQL.Expression do
   @moduledoc false
 
   import Ecto.Query

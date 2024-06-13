@@ -10,7 +10,7 @@ defmodule Plausible.Stats do
     CurrentVisitors,
     FilterSuggestions,
     QueryOptimizer,
-    Ecto
+    SQL
   }
 
   use Plausible.DebugReplayInfo
@@ -39,7 +39,7 @@ defmodule Plausible.Stats do
     optimized_query = QueryOptimizer.optimize(query)
 
     optimized_query
-    |> Ecto.QueryBuilder.build(site)
+    |> SQL.QueryBuilder.build(site)
     |> ClickhouseRepo.all()
     |> QueryResult.from(optimized_query)
   end
