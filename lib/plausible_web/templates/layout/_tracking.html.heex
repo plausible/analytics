@@ -19,7 +19,6 @@
       plausible('pageview', {
         u: pageUrl,
         props: {
-          <%= Plausible.dogfood_prop_key() %>: true,
           logged_in: <%= is_map(@conn.assigns[:current_user]) %>,
           theme: '<%= if @conn.assigns[:current_user], do: @conn.assigns[:current_user].theme, else: "system" %>',
           browser_language: navigator.language || navigator.userLanguage

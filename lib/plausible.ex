@@ -58,8 +58,4 @@ defmodule Plausible do
       "Plausible Analytics"
     end
   end
-
-  def dogfood_prop_key do
-    "__plausible_dogfood"
-  end
 end

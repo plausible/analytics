@@ -20,53 +20,6 @@ defmodule Plausible.Ingestion.EventTest do
     assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
   end
 
-  test "does not parse source and UTM props from URL when event is dogfooded from demo dashboard" do
-    site = insert(:site)
-
-    payload = %{
-      name: "pageview",
-      url:
-        "https://#{site.domain}/#{site.domain}/sources?source=Direct%20/%20None&utm_campaign=ads",
-      props: %{
-        Plausible.dogfood_prop_key() => true,
-        "logged_in" => true,
-        "theme" => "system",
-        "browser_language" => "en-GB"
-      }
-    }
-
-    conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request} = Request.build(conn)
-
-    assert {:ok, %{buffered: [buffered], dropped: []}} = Event.build_and_buffer(request)
-
-    assert buffered.clickhouse_event.utm_campaign == nil
-    assert buffered.clickhouse_event.referrer_source == nil
-    assert Plausible.dogfood_prop_key() not in Map.fetch!(buffered.clickhouse_event, :"meta.key")
-  end
-
-  test "parses source and UTM props from URL when event is dogfooded from anywhere else than demo dashboard" do
-    site = insert(:site)
-
-    payload = %{
-      name: "pageview",
-      url: "https://#{site.domain}?source=Direct%20/%20None&utm_campaign=ads",
-      props: %{
-        "logged_in" => true,
-        "theme" => "system",
-        "browser_language" => "en-GB"
-      }
-    }
-
-    conn = build_conn(:post, "/api/events", payload)
-    assert {:ok, request} = Request.build(conn)
-
-    assert {:ok, %{buffered: [buffered], dropped: []}} = Event.build_and_buffer(request)
-
-    assert buffered.clickhouse_event.utm_campaign == "ads"
-    assert buffered.clickhouse_event.referrer_source == "Direct / None"
-  end
-
   test "drops verification agent" do
     site = insert(:site)
 
