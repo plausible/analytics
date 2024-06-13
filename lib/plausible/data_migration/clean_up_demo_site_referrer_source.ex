@@ -14,8 +14,8 @@ defmodule Plausible.DataMigration.CleanUpDemoSiteReferrerSource do
 
     for table <- ["sessions_v2", "events_v2"] do
       IngestRepo.query!(
-        "ALTER TABLE {$0:Identifier} UPDATE referrer_source = '' " <>
-          "WHERE site_id = {$1:UInt64} AND referrer_source = 'Direct / None'",
+        "ALTER TABLE {$0:Identifier} UPDATE referrer_source = '' WHERE " <>
+          "site_id = {$1:UInt64} AND referrer_source = 'Direct / None'",
         [table, demo_site_id],
         settings: [mutations_sync: 1],
         timeout: timeout
