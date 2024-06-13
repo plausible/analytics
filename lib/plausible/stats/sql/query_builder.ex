@@ -115,8 +115,8 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   defp build_group_by(q, query) do
     Enum.reduce(query.dimensions, q, fn dimension, q ->
       q
-      |> select_merge(^%{shortname(dimension) => Expression.dimension(dimension, query, :label)})
-      |> group_by(^Expression.dimension(dimension, query, :group_by))
+      |> select_merge(^%{shortname(dimension) => Expression.dimension(dimension, query)})
+      |> group_by(^Expression.dimension(dimension, query))
     end)
   end
 
@@ -133,7 +133,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
         if(
           Metrics.metric?(metric_or_dimension),
           do: dynamic([], selected_as(^shortname(metric_or_dimension))),
-          else: Expression.dimension(metric_or_dimension, query, :order_by)
+          else: Expression.dimension(metric_or_dimension, query)
         )
       }
     )
