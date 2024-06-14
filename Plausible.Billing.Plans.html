@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-5477B38E.js"></script>
+    <script src="dist/sidebar_items-94182B37.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -205,7 +205,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_price_for/1" translate="no">get_price_for(enterprise_plan)</a>
+        <a href="#get_price_for/2" translate="no">get_price_for(enterprise_plan, customer_ip)</a>
 
       </div>
 
@@ -239,7 +239,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#latest_enterprise_plan_with_price/1" translate="no">latest_enterprise_plan_with_price(user)</a>
+        <a href="#latest_enterprise_plan_with_price/2" translate="no">latest_enterprise_plan_with_price(user, customer_ip)</a>
 
       </div>
 
@@ -274,7 +274,7 @@ given cycle.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#with_prices/1" translate="no">with_prices(plans)</a>
+        <a href="#with_prices/2" translate="no">with_prices(plans, customer_ip)</a>
 
       </div>
 
@@ -317,7 +317,7 @@ given plan and returns the new list of plans with completed information.</p></di
     </a>
     <h1 class="signature" translate="no">all()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L244" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L245" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -385,7 +385,7 @@ given plan and returns the new list of plans with completed information.</p></di
     </a>
     <h1 class="signature" translate="no">business_tier?(subscription)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L188" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L189" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -429,7 +429,7 @@ given plan and returns the new list of plans with completed information.</p></di
     </a>
     <h1 class="signature" translate="no">find(product_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L92" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L93" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -442,16 +442,16 @@ given plan and returns the new list of plans with completed information.</p></di
 
   </section>
 </section>
-<section class="detail" id="get_price_for/1">
+<section class="detail" id="get_price_for/2">
 
   <div class="detail-header">
-    <a href="#get_price_for/1" class="detail-link" title="Link to this function">
+    <a href="#get_price_for/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">get_price_for(enterprise_plan)</h1>
+    <h1 class="signature" translate="no">get_price_for(enterprise_plan, customer_ip)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L174" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L175" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -475,7 +475,7 @@ given plan and returns the new list of plans with completed information.</p></di
     </a>
     <h1 class="signature" translate="no">get_regular_plan(subscription, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L162" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L163" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -497,7 +497,7 @@ given plan and returns the new list of plans with completed information.</p></di
     </a>
     <h1 class="signature" translate="no">get_subscription_plan(subscription)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L100" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L101" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -539,16 +539,16 @@ given plan and returns the new list of plans with completed information.</p></di
 still choose from old plans.</p>
   </section>
 </section>
-<section class="detail" id="latest_enterprise_plan_with_price/1">
+<section class="detail" id="latest_enterprise_plan_with_price/2">
 
   <div class="detail-header">
-    <a href="#latest_enterprise_plan_with_price/1" class="detail-link" title="Link to this function">
+    <a href="#latest_enterprise_plan_with_price/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">latest_enterprise_plan_with_price(user)</h1>
+    <h1 class="signature" translate="no">latest_enterprise_plan_with_price(user, customer_ip)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L110" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L111" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -570,7 +570,7 @@ still choose from old plans.</p>
     </a>
     <h1 class="signature" translate="no">subscription_interval(subscription)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L123" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L124" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -592,7 +592,7 @@ still choose from old plans.</p>
     </a>
     <h1 class="signature" translate="no">suggest(user, usage_during_cycle)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L210" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L211" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -625,7 +625,7 @@ plan's limit from the available options for the user.</p>
     </a>
     <h1 class="signature" translate="no">suggest_tier(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L229" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L230" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -638,16 +638,16 @@ plan's limit from the available options for the user.</p>
 
   </section>
 </section>
-<section class="detail" id="with_prices/1">
+<section class="detail" id="with_prices/2">
 
   <div class="detail-header">
-    <a href="#with_prices/1" class="detail-link" title="Link to this function">
+    <a href="#with_prices/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">with_prices(plans)</h1>
+    <h1 class="signature" translate="no">with_prices(plans, customer_ip)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L146" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L147" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -672,7 +672,7 @@ given plan and returns the new list of plans with completed information.</p>
     </a>
     <h1 class="signature" translate="no">yearly_product_ids()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L86" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L87" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
