@@ -11,6 +11,20 @@ defmodule PlausibleWeb.AdminControllerTest do
       conn = get(conn, "/crm/auth/user/1/usage")
       assert response(conn, 403) == "Not allowed"
     end
+
+    @tag :ee_only
+    test "returns usage data as a standalone page", %{conn: conn, user: user} do
+      patch_env(:super_admin_user_ids, [user.id])
+      conn = get(conn, "/crm/auth/user/#{user.id}/usage")
+      assert response(conn, 200) =~ "<html"
+    end
+
+    @tag :ee_only
+    test "returns usage data in embeddable form when requested", %{conn: conn, user: user} do
+      patch_env(:super_admin_user_ids, [user.id])
+      conn = get(conn, "/crm/auth/user/#{user.id}/usage?embed=true")
+      refute response(conn, 200) =~ "<html"
+    end
   end
 
   describe "POST /crm/sites/site/:site_id" do
