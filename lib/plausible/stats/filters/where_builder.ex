@@ -188,6 +188,44 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     )
   end
 
+  defp filter_custom_prop(prop_name, column_name, [:does_not_match, _, clauses]) do
+    regexes = Enum.map(clauses, &page_regex/1)
+
+    dynamic(
+      [t],
+      has_key(t, column_name, ^prop_name) and
+        fragment(
+          "not(arrayExists(k -> match(?, k), ?))",
+          get_by_key(t, column_name, ^prop_name),
+          ^regexes
+        )
+    )
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:contains, _, clauses]) do
+    dynamic(
+      [t],
+      has_key(t, column_name, ^prop_name) and
+        fragment(
+          "multiSearchAny(?, ?)",
+          get_by_key(t, column_name, ^prop_name),
+          ^clauses
+        )
+    )
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:does_not_contain, _, clauses]) do
+    dynamic(
+      [t],
+      has_key(t, column_name, ^prop_name) and
+        fragment(
+          "not(multiSearchAny(?, ?))",
+          get_by_key(t, column_name, ^prop_name),
+          ^clauses
+        )
+    )
+  end
+
   defp filter_field(db_field, [:matches, _key, glob_exprs]) do
     page_regexes = Enum.map(glob_exprs, &page_regex/1)
     dynamic([x], fragment("multiMatchAny(?, ?)", field(x, ^db_field), ^page_regexes))

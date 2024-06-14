@@ -1858,5 +1858,133 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
 
       assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 2}}
     end
+
+    test "matches custom event property", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["large-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["small-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["small-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["small-2"]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors",
+          "filters" => [
+            ["matches", "event:props:tier", ["small*"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 3}}
+    end
+
+    test "does_not_match custom event property", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["large-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["small-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["small-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["small-2"]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors",
+          "filters" => [
+            ["does_not_match", "event:props:tier", ["small*"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 1}}
+    end
+
+    test "contains custom event property", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["large-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["small-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["small-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["small-2"]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors",
+          "filters" => [
+            ["contains", "event:props:tier", ["small"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 3}}
+    end
+
+    test "does_not_contain custom event property", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["large-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["small-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["small-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["small-2"]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors",
+          "filters" => [
+            ["does_not_contain", "event:props:tier", ["small"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 1}}
+    end
   end
 end
