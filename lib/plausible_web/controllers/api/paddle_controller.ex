@@ -54,7 +54,6 @@ defmodule PlausibleWeb.Api.PaddleController do
       {:ok, currency} ->
         conn
         |> put_status(200)
-        |> Plug.Conn.put_resp_header("cache-control", "max-age=86400, must-revalidate)")
         |> json(%{currency: Cldr.Currency.currency_for_code!(currency).narrow_symbol})
 
       {:error, :fetch_prices_failed} ->
