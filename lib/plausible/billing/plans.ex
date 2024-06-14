@@ -71,7 +71,8 @@ defmodule Plausible.Billing.Plans do
 
     plans =
       if Keyword.get(opts, :with_prices) do
-        with_prices(plans)
+        customer_ip = Keyword.fetch!(opts, :customer_ip)
+        with_prices(plans, customer_ip)
       else
         plans
       end
@@ -107,7 +108,7 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  def latest_enterprise_plan_with_price(user) do
+  def latest_enterprise_plan_with_price(user, customer_ip) do
     enterprise_plan =
       Repo.one!(
         from(e in EnterprisePlan,
@@ -117,7 +118,7 @@ defmodule Plausible.Billing.Plans do
         )
       )
 
-    {enterprise_plan, get_price_for(enterprise_plan)}
+    {enterprise_plan, get_price_for(enterprise_plan, customer_ip)}
   end
 
   def subscription_interval(subscription) do
@@ -143,10 +144,10 @@ defmodule Plausible.Billing.Plans do
   response, fills in the `monthly_cost` and `yearly_cost` fields for each
   given plan and returns the new list of plans with completed information.
   """
-  def with_prices([_ | _] = plans) do
+  def with_prices([_ | _] = plans, customer_ip) do
     product_ids = Enum.flat_map(plans, &[&1.monthly_product_id, &1.yearly_product_id])
 
-    case Plausible.Billing.paddle_api().fetch_prices(product_ids) do
+    case Plausible.Billing.paddle_api().fetch_prices(product_ids, customer_ip) do
       {:ok, prices} ->
         Enum.map(plans, fn plan ->
           plan
@@ -171,8 +172,8 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  def get_price_for(%EnterprisePlan{paddle_plan_id: product_id}) do
-    case Plausible.Billing.paddle_api().fetch_prices([product_id]) do
+  def get_price_for(%EnterprisePlan{paddle_plan_id: product_id}, customer_ip) do
+    case Plausible.Billing.paddle_api().fetch_prices([product_id], customer_ip) do
       {:ok, prices} -> Map.fetch!(prices, product_id)
       {:error, :api_error} -> nil
     end
