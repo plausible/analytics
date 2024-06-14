@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.PaddleController do
   use Plausible.Repo
   require Logger
 
-  plug :verify_signature
+  plug :verify_signature when action in [:webhook]
 
   def webhook(conn, %{"alert_name" => "subscription_created"} = params) do
     Plausible.Billing.subscription_created(params)
@@ -29,6 +29,43 @@ defmodule PlausibleWeb.Api.PaddleController do
     send_resp(conn, 404, "") |> halt
   end
 
+  @default_currency_fallback :EUR
+
+  def currency(conn, _params) do
+    plan_id = get_currency_reference_plan_id()
+    customer_ip = PlausibleWeb.RemoteIP.get(conn)
+
+    result =
+      Plausible.Cache.Adapter.fetch(:customer_currency, {plan_id, customer_ip}, fn ->
+        case Plausible.Billing.PaddleApi.fetch_prices([plan_id], customer_ip) do
+          {:ok, %{^plan_id => money}} ->
+            {:ok, money.currency}
+
+          error ->
+            Sentry.capture_message("Failed to fetch currency reference plan",
+              extra: %{error: inspect(error)}
+            )
+
+            {:error, :fetch_prices_failed}
+        end
+      end)
+
+    case result do
+      {:ok, currency} ->
+        conn
+        |> put_status(200)
+        |> Plug.Conn.put_resp_header("cache-control", "max-age=86400, must-revalidate)")
+        |> json(%{currency: Cldr.Currency.currency_for_code!(currency).narrow_symbol})
+
+      {:error, :fetch_prices_failed} ->
+        conn
+        |> put_status(200)
+        |> json(%{
+          currency: Cldr.Currency.currency_for_code!(@default_currency_fallback).narrow_symbol
+        })
+    end
+  end
+
   def verify_signature(conn, _opts) do
     signature = Base.decode64!(conn.params["p_signature"])
 
@@ -49,18 +86,14 @@ defmodule PlausibleWeb.Api.PaddleController do
     end
   end
 
-  def verified_signature?(params) do
-    signature = Base.decode64!(params["p_signature"])
-
-    msg =
-      Map.delete(params, "p_signature")
-      |> Enum.map(fn {key, val} -> {key, "#{val}"} end)
-      |> List.keysort(0)
-      |> PhpSerializer.serialize()
-
-    [key_entry] = :public_key.pem_decode(get_paddle_key())
-    public_key = :public_key.pem_entry_decode(key_entry)
-    :public_key.verify(msg, :sha, signature, public_key)
+  @paddle_currency_reference_plan_id "857097"
+  @paddle_sandbox_currency_reference_plan_id "63842"
+  defp get_currency_reference_plan_id() do
+    if Application.get_env(:plausible, :environment) in ["dev", "staging"] do
+      @paddle_sandbox_currency_reference_plan_id
+    else
+      @paddle_currency_reference_plan_id
+    end
   end
 
   @paddle_prod_key File.read!("priv/paddle.pem")
