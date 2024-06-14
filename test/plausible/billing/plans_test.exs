@@ -123,7 +123,7 @@ defmodule Plausible.Billing.PlansTest do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
 
       %{growth: growth_plans, business: business_plans} =
-        Plans.available_plans_for(user, with_prices: true)
+        Plans.available_plans_for(user, with_prices: true, customer_ip: "127.0.0.1")
 
       assert Enum.find(growth_plans, fn plan ->
                (%Money{} = plan.monthly_cost) && plan.monthly_product_id == @v2_plan_id
@@ -156,7 +156,7 @@ defmodule Plausible.Billing.PlansTest do
         inserted_at: Timex.shift(Timex.now(), minutes: -2)
       )
 
-      {enterprise_plan, price} = Plans.latest_enterprise_plan_with_price(user)
+      {enterprise_plan, price} = Plans.latest_enterprise_plan_with_price(user, "127.0.0.1")
 
       assert enterprise_plan.paddle_plan_id == "123"
       assert price == Money.new(:EUR, "10.0")

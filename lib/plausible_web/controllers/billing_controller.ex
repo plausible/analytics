@@ -31,7 +31,8 @@ defmodule PlausibleWeb.BillingController do
   def upgrade_to_enterprise_plan(conn, _params) do
     user = Plausible.Users.with_subscription(conn.assigns.current_user)
 
-    {latest_enterprise_plan, price} = Plans.latest_enterprise_plan_with_price(user)
+    {latest_enterprise_plan, price} =
+      Plans.latest_enterprise_plan_with_price(user, PlausibleWeb.RemoteIP.get(conn))
 
     subscription_resumable? = Plausible.Billing.Subscriptions.resumable?(user.subscription)
 

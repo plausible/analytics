@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   @contact_link "https://plausible.io/contact"
   @billing_faq_link "https://plausible.io/docs/billing"
 
-  def mount(_params, %{"current_user_id" => user_id}, socket) do
+  def mount(_params, %{"current_user_id" => user_id, "remote_ip" => remote_ip}, socket) do
     socket =
       socket
       |> assign_new(:user, fn ->
@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         current_user_subscription_interval(user.subscription)
       end)
       |> assign_new(:available_plans, fn %{user: user} ->
-        Plans.available_plans_for(user, with_prices: true)
+        Plans.available_plans_for(user, with_prices: true, customer_ip: remote_ip)
       end)
       |> assign_new(:available_volumes, fn %{available_plans: available_plans} ->
         get_available_volumes(available_plans)

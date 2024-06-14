@@ -1,4 +1,5 @@
+<% remote_ip = PlausibleWeb.RemoteIP.get(@conn) %>
 <%= live_render(@conn, PlausibleWeb.Live.ChoosePlan,
   id: "choose-plan",
-  session: %{"current_user_id" => @user.id}
+  session: %{"current_user_id" => @user.id, "remote_ip" => remote_ip}
 ) %>

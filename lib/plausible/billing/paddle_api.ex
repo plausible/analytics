@@ -119,8 +119,10 @@ defmodule Plausible.Billing.PaddleApi do
     end
   end
 
-  def fetch_prices([_ | _] = product_ids) do
-    case HTTPClient.impl().get(prices_url(), @headers, %{product_ids: Enum.join(product_ids, ",")}) do
+  def fetch_prices([_ | _] = product_ids, customer_ip) do
+    params = %{product_ids: Enum.join(product_ids, ","), customer_ip: customer_ip}
+
+    case HTTPClient.impl().get(prices_url(), @headers, params) do
       {:ok, %{body: %{"success" => true, "response" => %{"products" => products}}}} ->
         products =
           Enum.into(products, %{}, fn %{
