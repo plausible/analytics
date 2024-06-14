@@ -29,6 +29,25 @@ defmodule Plausible.CrmExtensions do
       [
         Phoenix.HTML.raw("""
         <script type="text/javascript">
+          (() => {
+            const monthlyPageviewLimitField = document.getElementById("enterprise_plan_monthly_pageview_limit")
+
+            monthlyPageviewLimitField.type = "input"
+            monthlyPageviewLimitField.addEventListener("keyup", numberFormatCallback)
+            monthlyPageviewLimitField.addEventListener("change", numberFormatCallback)
+
+            monthlyPageviewLimitField.dispatchEvent(new Event("change"))
+
+            function numberFormatCallback(e) {
+              const numeric = Number(e.target.value.replace(/[^0-9]/g, ''))
+              const value = numeric > 0 ? new Intl.NumberFormat("en-GB").format(numeric) : ''
+              e.target.value = value
+            }
+          })()
+        </script>
+        """),
+        Phoenix.HTML.raw("""
+        <script type="text/javascript">
           (async () => {
             const userIdField = document.getElementById("enterprise_plan_user_id")
             let planRequest
