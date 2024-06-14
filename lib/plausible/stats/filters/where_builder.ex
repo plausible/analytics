@@ -198,6 +198,14 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
     dynamic([x], fragment("not(multiMatchAny(?, ?))", field(x, ^db_field), ^page_regexes))
   end
 
+  defp filter_field(db_field, [:contains, _key, values]) do
+    dynamic([x], fragment("multiSearchAny(?, ?)", field(x, ^db_field), ^values))
+  end
+
+  defp filter_field(db_field, [:does_not_contain, _key, values]) do
+    dynamic([x], fragment("not(multiSearchAny(?, ?))", field(x, ^db_field), ^values))
+  end
+
   defp filter_field(db_field, [:is, _key, list]) do
     list = Enum.map(list, &db_field_val(db_field, &1))
     dynamic([x], field(x, ^db_field) in ^list)

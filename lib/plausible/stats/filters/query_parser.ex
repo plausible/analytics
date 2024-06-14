@@ -61,6 +61,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_operator(["is_not" | _rest]), do: {:ok, :is_not}
   defp parse_operator(["matches" | _rest]), do: {:ok, :matches}
   defp parse_operator(["does_not_match" | _rest]), do: {:ok, :does_not_match}
+  defp parse_operator(["contains" | _rest]), do: {:ok, :contains}
+  defp parse_operator(["does_not_contain" | _rest]), do: {:ok, :does_not_contain}
   defp parse_operator(filter), do: {:error, "Unknown operator for filter '#{inspect(filter)}'"}
 
   defp parse_filter_key([_operator, filter_key | _rest] = filter) do
@@ -69,10 +71,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_filter_key(filter), do: {:error, "Invalid filter '#{inspect(filter)}'"}
 
-  defp parse_filter_rest(:is, filter), do: parse_clauses_list(filter)
-  defp parse_filter_rest(:is_not, filter), do: parse_clauses_list(filter)
-  defp parse_filter_rest(:matches, filter), do: parse_clauses_list(filter)
-  defp parse_filter_rest(:does_not_match, filter), do: parse_clauses_list(filter)
+  defp parse_filter_rest(operator, filter)
+       when operator in [:is, :is_not, :matches, :does_not_match, :contains, :does_not_contain],
+       do: parse_clauses_list(filter)
 
   defp parse_clauses_list([_operation, filter_key, list] = filter) when is_list(list) do
     all_strings? = Enum.all?(list, &is_bitstring/1)
