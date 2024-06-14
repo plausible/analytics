@@ -23,22 +23,18 @@ export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_MOD
 export const EVENT_PROPS_PREFIX = "props:"
 
 export const FILTER_OPERATIONS = {
+  is: 'is',
   isNot: 'is_not',
   contains: 'contains',
-  is: 'is'
+  does_not_contain: 'does_not_contain'
 };
 
-export const OPERATION_PREFIX = {
+const OPERATION_PREFIX = {
   [FILTER_OPERATIONS.isNot]: '!',
   [FILTER_OPERATIONS.contains]: '~',
   [FILTER_OPERATIONS.is]: ''
 };
 
-export const BACKEND_OPERATION = {
-  [FILTER_OPERATIONS.is]: 'is',
-  [FILTER_OPERATIONS.isNot]: 'is_not',
-  [FILTER_OPERATIONS.contains]: 'matches'
-}
 
 export function supportsIsNot(filterName) {
   return !['goal', 'prop_key'].includes(filterName)
@@ -144,11 +140,8 @@ export function serializeApiFilters(filters) {
     if (filterKey.startsWith(EVENT_PROPS_PREFIX) || EVENT_FILTER_KEYS.has(filterKey)) {
       apiFilterKey = `event:${filterKey}`
     }
-    if (operation == FILTER_OPERATIONS.contains) {
-      clauses = clauses.map((value) => value.includes('*') ? value : `**${value}**`)
-    }
     clauses = clauses.map((value) => value.toString())
-    return [BACKEND_OPERATION[operation], apiFilterKey, clauses]
+    return [operation, apiFilterKey, clauses]
   })
 
   return JSON.stringify(apiFilters)
