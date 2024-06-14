@@ -17,39 +17,47 @@ defmodule PlausibleWeb.AdminController do
       team_members: Quota.Limits.team_member_limit(user)
     }
 
-    html_response = usage_and_limits_html(user, usage, limits)
+    html_response = usage_and_limits_html(user, usage, limits, params["embed"] == "true")
 
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, html_response)
   end
 
-  defp usage_and_limits_html(user, usage, limits) do
-    """
-    <!DOCTYPE html>
-    <html lang="en">
-
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Usage - user:#{user.id}</title>
-      <style>
-        ul, li {margin-top: 10px;}
-        body {padding-top: 10px;}
-      </style>
-    </head>
-
-    <body>
+  defp usage_and_limits_html(user, usage, limits, embed?) do
+    content = """
       <ul>
         <li>Sites: <b>#{usage.sites}</b> / #{limits.sites}</li>
         <li>Team members: <b>#{usage.team_members}</b> / #{limits.team_members}</li>
         <li>Features: #{features_usage(usage.features)}</li>
         <li>Monthly pageviews: #{monthly_pageviews_usage(usage.monthly_pageviews, limits.monthly_pageviews)}</li>
       </ul>
-    </body>
-
-    </html>
     """
+
+    if embed? do
+      content
+    else
+      """
+      <!DOCTYPE html>
+      <html lang="en">
+
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Usage - user:#{user.id}</title>
+        <style>
+          ul, li {margin-top: 10px;}
+          body {padding-top: 10px;}
+        </style>
+      </head>
+
+      <body>
+        #{content}
+      </body>
+
+      </html>
+      """
+    end
   end
 
   defp features_usage(features_module_list) do
