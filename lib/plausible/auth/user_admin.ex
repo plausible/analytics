@@ -110,12 +110,7 @@ defmodule Plausible.Auth.UserAdmin do
       quota = PlausibleWeb.AuthView.subscription_quota(user.subscription)
       interval = PlausibleWeb.AuthView.subscription_interval(user.subscription)
 
-      manage_url =
-        Plausible.Billing.PaddleApi.vendors_domain() <>
-          "/subscriptions/customers/manage/" <>
-          user.subscription.paddle_subscription_id
-
-      {:safe, ~s(<a href="#{manage_url}">#{quota} \(#{interval}\)</a>)}
+      {:safe, ~s(<a href="#{manage_url(user.subscription)}">#{quota} \(#{interval}\)</a>)}
     else
       "--"
     end
@@ -124,7 +119,13 @@ defmodule Plausible.Auth.UserAdmin do
   defp subscription_status(user) do
     cond do
       user.subscription ->
-        PlausibleWeb.AuthView.present_subscription_status(user.subscription.status)
+        status_str = PlausibleWeb.AuthView.present_subscription_status(user.subscription.status)
+
+        if user.subscription.paddle_subscription_id do
+          {:safe, ~s(<a href="#{manage_url(user.subscription)}">#{status_str}</a>)}
+        else
+          status_str
+        end
 
       Plausible.Users.on_trial?(user) ->
         "On trial"
@@ -132,6 +133,11 @@ defmodule Plausible.Auth.UserAdmin do
       true ->
         "Trial expired"
     end
+  end
+
+  defp manage_url(%{paddle_subscription_id: paddle_id} = _subscription) do
+    Plausible.Billing.PaddleApi.vendors_domain() <>
+      "/subscriptions/customers/manage/" <> paddle_id
   end
 
   on_ee do
