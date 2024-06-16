@@ -319,14 +319,19 @@ config :plausible, PlausibleWeb.Endpoint,
   websocket_url: websocket_url,
   secure_cookie: secure_cookie
 
-maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
+default_pg_ipv6 = to_string(is_selfhost)
+
+maybe_pg_ipv6 =
+  config_dir
+  |> get_var_from_path_or_env("ECTO_IPV6", default_pg_ipv6)
+  |> String.to_existing_atom()
 
 db_cacertfile = get_var_from_path_or_env(config_dir, "DATABASE_CACERTFILE", CAStore.file_path())
 
 if is_nil(db_socket_dir) do
   config :plausible, Plausible.Repo,
     url: db_url,
-    socket_options: maybe_ipv6,
+    socket_options: if(maybe_pg_ipv6, do: [:inet6], else: []),
     ssl_opts: [
       cacertfile: db_cacertfile,
       verify: :verify_peer,
@@ -364,8 +369,11 @@ config :plausible, :google,
 config :plausible, :imported,
   max_buffer_size: get_int_from_path_or_env(config_dir, "IMPORTED_MAX_BUFFER_SIZE", 10_000)
 
+default_ch_ipv6 = to_string(is_selfhost)
+
 maybe_ch_ipv6 =
-  get_var_from_path_or_env(config_dir, "ECTO_CH_IPV6", "false")
+  config_dir
+  |> get_var_from_path_or_env("ECTO_CH_IPV6", default_ch_ipv6)
   |> String.to_existing_atom()
 
 ch_cacertfile = get_var_from_path_or_env(config_dir, "CLICKHOUSE_CACERTFILE")
@@ -793,3 +801,12 @@ unless s3_disabled? do
     exports_bucket: s3_env_value.("S3_EXPORTS_BUCKET"),
     imports_bucket: s3_env_value.("S3_IMPORTS_BUCKET")
 end
+
+default_finch_ipv6 = to_string(is_selfhost)
+
+maybe_finch_ipv6 =
+  config_dir
+  |> get_var_from_path_or_env("FINCH_IPV6", default_finch_ipv6)
+  |> String.to_existing_atom()
+
+config :plausible, Plausible.Finch, transport_opts: [inet6: maybe_finch_ipv6]

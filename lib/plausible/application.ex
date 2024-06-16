@@ -118,22 +118,26 @@ defmodule Plausible.Application do
   end
 
   defp finch_pool_config() do
+    default_config = Application.fetch_env!(:plausible, Plausible.Finch)
+    default_transport_opts = Keyword.get(default_config, :transport_opts, [])
+    transport_opts = fn overrides -> Keyword.merge(default_transport_opts, overrides) end
+
     base_config = %{
       "https://icons.duckduckgo.com" => [
-        conn_opts: [transport_opts: [timeout: 15_000]]
+        conn_opts: [transport_opts: transport_opts.(timeout: 15_000)]
       ]
     }
 
     base_config
-    |> maybe_add_sentry_pool()
+    |> maybe_add_sentry_pool(transport_opts)
     |> maybe_add_paddle_pool()
-    |> maybe_add_google_pools()
+    |> maybe_add_google_pools(transport_opts)
   end
 
-  defp maybe_add_sentry_pool(pool_config) do
+  defp maybe_add_sentry_pool(pool_config, transport_opts) do
     case Sentry.Config.dsn() do
       {"http" <> _rest = url, _, _} ->
-        Map.put(pool_config, url, size: 50)
+        Map.put(pool_config, url, size: 50, conn_opts: [transport_opts: transport_opts.([])])
 
       nil ->
         pool_config
@@ -154,15 +158,17 @@ defmodule Plausible.Application do
     end
   end
 
-  defp maybe_add_google_pools(pool_config) do
+  defp maybe_add_google_pools(pool_config, transport_opts) do
     google_conf = Application.get_env(:plausible, :google)
 
     cond do
       google_conf[:client_id] && google_conf[:client_secret] ->
         pool_config
-        |> Map.put(google_conf[:api_url], conn_opts: [transport_opts: [timeout: 15_000]])
+        |> Map.put(google_conf[:api_url],
+          conn_opts: [transport_opts: transport_opts.(timeout: 15_000)]
+        )
         |> Map.put(google_conf[:reporting_api_url],
-          conn_opts: [transport_opts: [timeout: 15_000]]
+          conn_opts: [transport_opts: transport_opts.(timeout: 15_000)]
         )
 
       true ->
