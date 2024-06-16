@@ -1,5 +1,6 @@
 defmodule Plausible.ConfigTest do
   use ExUnit.Case
+  doctest Plausible.ConfigHelpers, import: true
 
   describe "mailer" do
     test "mailer email default" do
@@ -144,7 +145,9 @@ defmodule Plausible.ConfigTest do
       env = [{"MAILER_ADAPTER", "Bamboo.Mua"}]
 
       assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
-               {:adapter, Bamboo.Mua}
+               adapter: Bamboo.Mua,
+               tcp: [inet6: false],
+               ssl: [inet6: false]
              ]
     end
 
@@ -158,10 +161,12 @@ defmodule Plausible.ConfigTest do
       ]
 
       assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
-               {:adapter, Bamboo.Mua},
-               {:auth, [username: "neo", password: "one"]},
-               {:relay, "localhost"},
-               {:port, 2525}
+               adapter: Bamboo.Mua,
+               auth: [username: "neo", password: "one"],
+               relay: "localhost",
+               port: 2525,
+               tcp: [inet6: false],
+               ssl: [inet6: false]
              ]
     end
 

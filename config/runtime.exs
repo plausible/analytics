@@ -342,13 +342,15 @@ if is_nil(db_socket_dir) do
   if maybe_pg_ipv6 do
     %URI{host: host, port: port} = URI.parse(db_url)
 
-    default_endpoints = [{host, port}]
+    # default_endpoint is what Postgrex would've connected to by default, with :url option
+    default_endpoint = {host, port}
     ipv4_endpoints = :inet_res.lookup(to_charlist(host), :in, :a)
     ipv6_endpoints = :inet_res.lookup(to_charlist(host), :in, :aaaa)
+    fallback_endpoints = ConfigHelpers.join_intersperse(ipv6_endpoints, ipv4_endpoints)
 
     config :plausible, Plausible.Repo,
       port: port,
-      endpoints: default_endpoints ++ ipv4_endpoints ++ ipv6_endpoints
+      endpoints: [default_endpoint | fallback_endpoints]
   else
     config :plausible, Plausible.Repo, url: db_url
   end
