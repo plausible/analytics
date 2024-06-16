@@ -319,6 +319,7 @@ config :plausible, PlausibleWeb.Endpoint,
   websocket_url: websocket_url,
   secure_cookie: secure_cookie
 
+# self-hosted deployments default to ipv6-enabled
 default_pg_ipv6 = to_string(is_selfhost)
 
 maybe_pg_ipv6 =
@@ -329,11 +330,7 @@ maybe_pg_ipv6 =
 db_cacertfile = get_var_from_path_or_env(config_dir, "DATABASE_CACERTFILE", CAStore.file_path())
 
 if is_nil(db_socket_dir) do
-  pg_socket_options = if maybe_pg_ipv6, do: [:inet6, :inet], else: []
-
   config :plausible, Plausible.Repo,
-    url: db_url,
-    socket_options: pg_socket_options,
     ssl_opts: [
       cacertfile: db_cacertfile,
       verify: :verify_peer,
@@ -341,6 +338,20 @@ if is_nil(db_socket_dir) do
         match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
       ]
     ]
+
+  if maybe_pg_ipv6 do
+    %URI{host: host, port: port} = URI.parse(db_url)
+
+    default_endpoints = [{host, port}]
+    ipv4_endpoints = :inet_res.lookup(to_charlist(host), :in, :a)
+    ipv6_endpoints = :inet_res.lookup(to_charlist(host), :in, :aaaa)
+
+    config :plausible, Plausible.Repo,
+      port: port,
+      endpoints: default_endpoints ++ ipv4_endpoints ++ ipv6_endpoints
+  else
+    config :plausible, Plausible.Repo, url: db_url
+  end
 else
   config :plausible, Plausible.Repo,
     socket_dir: db_socket_dir,
@@ -371,6 +382,7 @@ config :plausible, :google,
 config :plausible, :imported,
   max_buffer_size: get_int_from_path_or_env(config_dir, "IMPORTED_MAX_BUFFER_SIZE", 10_000)
 
+# self-hosted deployments default to ipv6-enabled
 default_ch_ipv6 = to_string(is_selfhost)
 
 maybe_ch_ipv6 =
@@ -496,6 +508,7 @@ case mailer_adapter do
         port: port
     end
 
+    # self-hosted deployments default to ipv6-enabled
     default_mua_ipv6 = to_string(is_selfhost)
 
     maybe_mua_ipv6 =
@@ -503,7 +516,9 @@ case mailer_adapter do
       |> get_var_from_path_or_env("MUA_IPV6", default_mua_ipv6)
       |> String.to_existing_atom()
 
-    config :plausible, Plausible.Mailer, transport_opts: [inet6: maybe_mua_ipv6]
+    config :plausible, Plausible.Mailer,
+      tcp: [inet6: maybe_mua_ipv6],
+      ssl: [inet6: maybe_mua_ipv6]
 
   "Bamboo.LocalAdapter" ->
     config :plausible, Plausible.Mailer, adapter: Bamboo.LocalAdapter
@@ -813,6 +828,7 @@ unless s3_disabled? do
     imports_bucket: s3_env_value.("S3_IMPORTS_BUCKET")
 end
 
+# self-hosted deployments default to ipv6-enabled
 default_finch_ipv6 = to_string(is_selfhost)
 
 maybe_finch_ipv6 =
@@ -820,4 +836,4 @@ maybe_finch_ipv6 =
   |> get_var_from_path_or_env("FINCH_IPV6", default_finch_ipv6)
   |> String.to_existing_atom()
 
-config :plausible, Plausible.Finch, transport_opts: [inet6: maybe_finch_ipv6]
+config :plausible, Plausible.Finch, conn_opts: [transport_opts: [inet6: maybe_finch_ipv6]]
