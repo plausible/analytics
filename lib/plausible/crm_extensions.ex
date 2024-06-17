@@ -49,7 +49,7 @@ defmodule Plausible.CrmExtensions do
         Phoenix.HTML.raw("""
         <script type="text/javascript">
           (async () => {
-            const userIdField = document.getElementById("enterprise_plan_user_id")
+            const userIdField = document.getElementById("enterprise_plan_user_id") || document.getElementById("user_id")
             let planRequest
             let lastValue = Number(userIdField.value)
             let scheduledCheck
