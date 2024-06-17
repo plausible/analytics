@@ -125,7 +125,7 @@ defmodule Plausible.Verification.Diagnostics do
         },
         _url
       ) do
-    error(@errors.timeout)
+    error(@errors.generic)
   end
 
   def interpret(
@@ -158,7 +158,7 @@ defmodule Plausible.Verification.Diagnostics do
         },
         _url
       ) do
-    error(@errors.old_script)
+    error(@errors.generic)
   end
 
   def interpret(

@@ -704,7 +704,7 @@ defmodule Plausible.Verification.ChecksTest do
 
       run_checks()
       |> Checks.interpret_diagnostics()
-      |> assert_error(@errors.old_script)
+      |> assert_error(@errors.generic)
     end
 
     test "callback handling not found for wordpress site" do
@@ -809,7 +809,7 @@ defmodule Plausible.Verification.ChecksTest do
         wordpress_plugin?: false
       }
       |> interpret_sentry_case()
-      |> assert_error(@errors.timeout)
+      |> assert_error(@errors.generic)
     end
   end
 
