@@ -61,6 +61,7 @@ Plausible.ClickhouseRepo.html
 Plausible.ClickhouseSessionV2.BoolUInt8.html
 Plausible.ClickhouseSessionV2.html
 Plausible.ConfigHelpers.html
+Plausible.CrmExtensions.html
 Plausible.DataCase.html
 Plausible.DataMigration.CleanUpDemoSiteReferrerSource.html
 Plausible.DataMigration.NumericIDs.html
@@ -415,8 +416,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-E8DC58B4.js
-dist/sidebar_items-B8EA437E.js
+dist/search_data-E8D978BE.js
+dist/sidebar_items-36D41CC9.js
 index.html
 readme.html
 search.html
