@@ -96,6 +96,21 @@ defmodule Plausible.Verification.Diagnostics do
 
   def interpret(
         %__MODULE__{
+          plausible_installed?: true,
+          snippets_found_in_head: 0,
+          snippets_found_in_body: 0,
+          body_fetched?: true,
+          gtm_likely?: false,
+          callback_status: callback_status
+        },
+        _url
+      )
+      when is_integer(callback_status) and callback_status > 202 do
+    error(@errors.no_snippet)
+  end
+
+  def interpret(
+        %__MODULE__{
           plausible_installed?: false,
           snippets_found_in_head: 0,
           snippets_found_in_body: 0,

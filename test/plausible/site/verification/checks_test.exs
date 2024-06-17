@@ -811,6 +811,29 @@ defmodule Plausible.Verification.ChecksTest do
       |> interpret_sentry_case()
       |> assert_error(@errors.generic)
     end
+
+    test "malformed snippet code, that headless somewhat accepts" do
+      %Plausible.Verification.Diagnostics{
+        plausible_installed?: true,
+        snippets_found_in_head: 0,
+        snippets_found_in_body: 0,
+        snippet_found_after_busting_cache?: false,
+        snippet_unknown_attributes?: false,
+        disallowed_via_csp?: false,
+        service_error: nil,
+        body_fetched?: true,
+        wordpress_likely?: false,
+        cookie_banner_likely?: false,
+        gtm_likely?: false,
+        callback_status: 405,
+        proxy_likely?: false,
+        manual_script_extension?: false,
+        data_domain_mismatch?: false,
+        wordpress_plugin?: false
+      }
+      |> interpret_sentry_case()
+      |> assert_error(@errors.no_snippet)
+    end
   end
 
   defp interpret_sentry_case(diagnostics) do
