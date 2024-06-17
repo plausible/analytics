@@ -1,6 +1,6 @@
 defmodule Plausible.Repo.Migrations.IncreaseSubscriptionTimestampsPrecision do
   use Ecto.Migration
-  
+
   @disable_ddl_transaction true
   @disable_migration_lock true
 
