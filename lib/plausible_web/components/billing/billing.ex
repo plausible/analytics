@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Components.Billing do
       <div class="mb-3">
         <ol class="divide-y divide-gray-300 dark:divide-gray-600 rounded-md border dark:border-gray-600 md:flex md:flex-row-reverse md:divide-y-0 md:overflow-hidden">
           <.billing_cycle_tab
-            name="Ongoing cycle"
+            name="Upcoming cycle"
             tab={:current_cycle}
             date_range={@usage.current_cycle.date_range}
             with_separator={true}
