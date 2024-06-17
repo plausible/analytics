@@ -49,32 +49,31 @@ defmodule Plausible.CrmExtensions do
         Phoenix.HTML.raw("""
         <script type="text/javascript">
           (async () => {
+            const CHECK_INTERVAL = 300
             const userIdField = document.getElementById("enterprise_plan_user_id") || document.getElementById("user_id")
             let planRequest
             let lastValue = Number(userIdField.value)
-            let scheduledCheck
+            let currentValue = lastValue
 
-            userIdField.addEventListener("change", async () => {
-              if (scheduledCheck) clearTimeout(scheduledCheck)
+            setTimeout(prefillCallback, CHECK_INTERVAL)
 
-              scheduledCheck = setTimeout(async () => {
-                const currentValue = Number(userIdField.value)
-                if (Number.isInteger(currentValue)
-                      && currentValue > 0
-                      && currentValue != lastValue
-                      && !planRequest) {
-                  planRequest = await fetch("/crm/billing/user/" + currentValue + "/current_plan")
-                  const result = await planRequest.json()
+            async function prefillCallback() {
+              currentValue = Number(userIdField.value)
+              if (Number.isInteger(currentValue)
+                    && currentValue > 0
+                    && currentValue != lastValue
+                    && !planRequest) {
+                planRequest = await fetch("/crm/billing/user/" + currentValue + "/current_plan")
+                const result = await planRequest.json()
 
-                  fillForm(result)
+                fillForm(result)
 
-                  lastValue = currentValue
-                  planRequest = null
-                }
-              }, 300)
-            })
+                lastValue = currentValue
+                planRequest = null
+              }
 
-            userIdField.dispatchEvent(new Event("change"))
+              setTimeout(prefillCallback, CHECK_INTERVAL)
+            }
 
             function fillForm(result) {
               [
