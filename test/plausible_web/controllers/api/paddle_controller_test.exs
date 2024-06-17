@@ -2,7 +2,10 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
 
-  @body %{
+  import Mox
+  setup :verify_on_exit!
+
+  @webhook_body %{
     "alert_id" => "16173800",
     "alert_name" => "subscription_created",
     "cancel_url" =>
@@ -29,15 +32,114 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
   describe "webhook verification" do
     test "is verified when signature is correct", %{conn: conn} do
       insert(:user, id: 235)
-      conn = post(conn, "/api/paddle/webhook", @body)
+      conn = post(conn, Routes.paddle_path(conn, :webhook), @webhook_body)
 
       assert conn.status == 200
     end
 
     test "not verified when signature is corrupted", %{conn: conn} do
-      corrupted = Map.put(@body, "p_signature", Base.encode64("123 fake signature"))
-      conn = post(conn, "/api/paddle/webhook", corrupted)
+      corrupted = Map.put(@webhook_body, "p_signature", Base.encode64("123 fake signature"))
+      conn = post(conn, Routes.paddle_path(conn, :webhook), corrupted)
       assert conn.status == 400
+    end
+  end
+
+  describe "fetching currency" do
+    test "retrieves successfully", %{conn: conn} do
+      expect_get_prices_response(get_prices_body("USD"))
+
+      conn = get(conn, Routes.paddle_path(conn, :currency))
+      assert_receive :paddle_queried
+      assert json_response(conn, 200) == %{"currency" => "$"}
+    end
+
+    test "caches per ip", %{conn: initial_conn} do
+      expect_get_prices_response(get_prices_body("USD"))
+
+      conn = get(initial_conn, Routes.paddle_path(initial_conn, :currency))
+      assert json_response(conn, 200) == %{"currency" => "$"}
+      assert_receive :paddle_queried
+
+      expect_get_prices_response(get_prices_body("GBP"))
+
+      conn = get(initial_conn, Routes.paddle_path(initial_conn, :currency))
+      assert json_response(conn, 200) == %{"currency" => "$"}
+      refute_receive :paddle_queried
+
+      new_ip =
+        Plug.Conn.put_req_header(initial_conn, "x-forwarded-for", Plausible.TestUtils.random_ip())
+
+      conn = get(new_ip, Routes.paddle_path(initial_conn, :currency))
+      assert json_response(conn, 200) == %{"currency" => "£"}
+      assert_receive :paddle_queried
+    end
+
+    test "falls back to EUR when paddle fails to respond", %{conn: conn} do
+      expect_get_prices_response(%{"response" => %{}})
+
+      conn = get(conn, Routes.paddle_path(conn, :currency))
+      assert_receive :paddle_queried
+      assert json_response(conn, 200) == %{"currency" => "€"}
+    end
+
+    test "does not cache failed fetches", %{conn: initial_conn} do
+      expect_get_prices_response(%{"response" => %{}})
+
+      conn = get(initial_conn, Routes.paddle_path(initial_conn, :currency))
+      assert json_response(conn, 200) == %{"currency" => "€"}
+
+      expect_get_prices_response(get_prices_body("USD"))
+
+      conn = get(initial_conn, Routes.paddle_path(initial_conn, :currency))
+      assert json_response(conn, 200) == %{"currency" => "$"}
+    end
+
+    defp expect_get_prices_response(body) do
+      test = self()
+
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn "https://checkout.paddle.com/api/2.0/prices",
+           _,
+           %{customer_ip: _customer_ip, product_ids: "857097"} ->
+          send(test, :paddle_queried)
+
+          {:ok,
+           %Finch.Response{
+             status: 200,
+             headers: [{"content-type", "application/json"}],
+             body: body
+           }}
+        end
+      )
+    end
+
+    defp get_prices_body(currency) do
+      %{
+        "response" => %{
+          "customer_country" => "PL",
+          "products" => [
+            %{
+              "applied_coupon" => [],
+              "currency" => currency,
+              "list_price" => %{"gross" => 49.0, "net" => 49.0, "tax" => 0.0},
+              "price" => %{"gross" => 49.0, "net" => 49.0, "tax" => 0.0},
+              "product_id" => 857_097,
+              "product_title" => "random",
+              "subscription" => %{
+                "frequency" => 1,
+                "interval" => "month",
+                "list_price" => %{"gross" => 49.0, "net" => 49.0, "tax" => 0.0},
+                "price" => %{"gross" => 49.0, "net" => 49.0, "tax" => 0.0},
+                "trial_days" => 0
+              },
+              "vendor_set_prices_included_tax" => false
+            }
+          ]
+        },
+        "success" => true
+      }
     end
   end
 end
