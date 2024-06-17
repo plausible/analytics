@@ -46,6 +46,13 @@ defmodule Plausible.Verification.Errors do
       url:
         "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
     },
+    timeout: %{
+      message: "We couldn't verify your website",
+      recommendation:
+        "We've tried several times, but your website is very slow to respond to us and we had to give up",
+      url:
+        "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
+    },
     old_script: %{
       message: "We couldn't verify your website",
       recommendation:

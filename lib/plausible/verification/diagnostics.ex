@@ -121,6 +121,16 @@ defmodule Plausible.Verification.Diagnostics do
   def interpret(
         %__MODULE__{
           plausible_installed?: false,
+          service_error: :timeout
+        },
+        _url
+      ) do
+    error(@errors.timeout)
+  end
+
+  def interpret(
+        %__MODULE__{
+          plausible_installed?: false,
           service_error: service_error
         },
         _url
