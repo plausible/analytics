@@ -94,7 +94,7 @@ defmodule Plausible.Application do
     setup_sentry()
     setup_opentelemetry()
 
-    setup_geolocation()
+    setup_geolocation(false)
     Location.load_all()
     Plausible.Geo.await_loader()
 
@@ -193,7 +193,8 @@ defmodule Plausible.Application do
     OpentelemetryOban.setup()
   end
 
-  defp setup_geolocation do
+  defp setup_geolocation(false), do: :ok
+  defp setup_geolocation(true) do
     opts = Application.fetch_env!(:plausible, Plausible.Geo)
     :ok = Plausible.Geo.load_db(opts)
   end
