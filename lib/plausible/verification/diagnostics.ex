@@ -51,6 +51,13 @@ defmodule Plausible.Verification.Diagnostics do
   end
 
   def interpret(
+        %__MODULE__{plausible_installed?: false, gtm_likely?: true, disallowed_via_csp?: true},
+        _url
+      ) do
+    error(@errors.csp)
+  end
+
+  def interpret(
         %__MODULE__{plausible_installed?: false, gtm_likely?: true, cookie_banner_likely?: true},
         _url
       ) do

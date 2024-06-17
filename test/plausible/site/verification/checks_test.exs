@@ -524,6 +524,21 @@ defmodule Plausible.Verification.ChecksTest do
     </html>
     """
 
+    test "disallowd via content-security-policy and GTM should make CSP a priority" do
+      stub_fetch_body(fn conn ->
+        conn
+        |> put_resp_header("content-security-policy", "default-src 'self' foo.local")
+        |> put_resp_content_type("text/html")
+        |> send_resp(200, @gtm_body)
+      end)
+
+      stub_installation(200, plausible_installed(false))
+
+      run_checks()
+      |> Checks.interpret_diagnostics()
+      |> assert_error(@errors.csp)
+    end
+
     test "detecting gtm" do
       stub_fetch_body(200, @gtm_body)
       stub_installation(200, plausible_installed(false))
