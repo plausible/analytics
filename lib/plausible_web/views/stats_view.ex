@@ -35,7 +35,7 @@ defmodule PlausibleWeb.StatsView do
           "#{billions}B"
         end
 
-      true ->
+      is_integer(n) ->
         Integer.to_string(n)
     end
   end
