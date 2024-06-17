@@ -9,12 +9,12 @@ defmodule PlausibleWeb.AdminController do
       |> String.to_integer()
       |> Plausible.Users.with_subscription()
 
-    usage = Quota.usage(user, with_features: true)
+    usage = Quota.Usage.usage(user, with_features: true)
 
     limits = %{
-      monthly_pageviews: Quota.monthly_pageview_limit(user),
-      sites: Quota.site_limit(user),
-      team_members: Quota.team_member_limit(user)
+      monthly_pageviews: Quota.Limits.monthly_pageview_limit(user),
+      sites: Quota.Limits.site_limit(user),
+      team_members: Quota.Limits.team_member_limit(user)
     }
 
     html_response = usage_and_limits_html(user, usage, limits)

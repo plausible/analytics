@@ -41,7 +41,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
           {:ok, [Membership.t()]}
           | {:error,
              invite_error()
-             | Quota.over_limits_error()}
+             | Quota.Limits.over_limits_error()}
   def bulk_transfer_ownership_direct(sites, new_owner) do
     Plausible.Repo.transaction(fn ->
       for site <- sites do
@@ -134,8 +134,8 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
 
   defp check_team_member_limit(site, _role, invitee_email) do
     site = Plausible.Repo.preload(site, :owner)
-    limit = Quota.team_member_limit(site.owner)
-    usage = Quota.team_member_usage(site.owner, exclude_emails: invitee_email)
+    limit = Quota.Limits.team_member_limit(site.owner)
+    usage = Quota.Usage.team_member_usage(site.owner, exclude_emails: invitee_email)
 
     if Quota.below_limit?(usage, limit),
       do: :ok,

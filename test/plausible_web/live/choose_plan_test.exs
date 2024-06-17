@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   alias Plausible.{Repo, Billing.Subscription}
 
   @v1_10k_yearly_plan_id "572810"
+  @v4_growth_10k_yearly_plan_id "857079"
   @v4_growth_200k_yearly_plan_id "857081"
   @v4_business_5m_monthly_plan_id "857111"
   @v3_business_10k_monthly_plan_id "857481"
@@ -358,16 +359,18 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                "https://plausible.io/white-label-web-analytics"
     end
 
-    test "displays usage", %{conn: conn, site: site} do
+    test "displays usage in the last cycle", %{conn: conn, site: site} do
+      yesterday = NaiveDateTime.utc_now() |> NaiveDateTime.add(-1, :day)
+
       populate_stats(site, [
-        build(:pageview),
-        build(:pageview)
+        build(:pageview, timestamp: yesterday),
+        build(:pageview, timestamp: yesterday)
       ])
 
       {:ok, _lv, doc} = get_liveview(conn)
       assert doc =~ "You have used"
       assert doc =~ "<b>2</b>"
-      assert doc =~ "billable pageviews in the last 30 days"
+      assert doc =~ "billable pageviews in the last billing cycle"
     end
 
     test "gets default selected interval from current subscription plan", %{conn: conn} do
@@ -375,9 +378,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert class_of_element(doc, @yearly_interval_button) =~ @interval_button_active_class
     end
 
-    test "gets default pageview limit from current subscription plan", %{conn: conn} do
+    test "sets pageview slider according to last cycle usage", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
-      assert text_of_element(doc, @slider_value) == "200k"
+      assert text_of_element(doc, @slider_value) == "10k"
     end
 
     test "pageview slider changes selected volume", %{conn: conn} do
@@ -401,7 +404,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
 
     test "checkout button text and click-disabling CSS classes are dynamic", %{conn: conn} do
-      {:ok, lv, doc} = get_liveview(conn)
+      {:ok, lv, _doc} = get_liveview(conn)
+
+      doc = set_slider(lv, "200k")
 
       assert text_of_element(doc, @growth_checkout_button) == "Currently on this plan"
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none bg-gray-400"
@@ -431,7 +436,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       growth_checkout_button = find(doc, @growth_checkout_button)
 
       assert text_of_attr(growth_checkout_button, "onclick") =~
-               "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v4_growth_200k_yearly_plan_id)}'}"
+               "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v4_growth_10k_yearly_plan_id)}'}"
 
       set_slider(lv, "5M")
       doc = element(lv, @monthly_interval_button) |> render_click()
@@ -446,9 +451,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   describe "for a user with a v4 business subscription plan" do
     setup [:create_user, :create_site, :log_in, :subscribe_v4_business]
 
-    test "gets default pageview limit from current subscription plan", %{conn: conn} do
+    test "sets pageview slider according to last cycle usage", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
-      assert text_of_element(doc, @slider_value) == "5M"
+      assert text_of_element(doc, @slider_value) == "10k"
     end
 
     test "makes it clear that the user is currently on a business tier", %{conn: conn} do
@@ -462,11 +467,12 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
 
     test "checkout button text and click-disabling CSS classes are dynamic", %{conn: conn} do
-      {:ok, lv, doc} = get_liveview(conn)
+      {:ok, lv, _doc} = get_liveview(conn)
+
+      doc = set_slider(lv, "5M")
 
       assert text_of_element(doc, @business_checkout_button) == "Currently on this plan"
       assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none bg-gray-400"
-      assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
 
       doc = element(lv, @yearly_interval_button) |> render_click()
 
@@ -634,7 +640,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "checkout buttons are disabled + notice about billing details (unless plan owned already)",
          %{conn: conn} do
-      {:ok, lv, doc} = get_liveview(conn)
+      {:ok, lv, _doc} = get_liveview(conn)
+
+      doc = set_slider(lv, "200k")
+
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none bg-gray-400"
       assert text_of_element(doc, @growth_checkout_button) =~ "Currently on this plan"
       refute element_exists?(doc, "#{@growth_checkout_button} + p")
@@ -664,7 +673,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "checkout buttons are disabled + notice about billing details when plan not owned already",
          %{conn: conn} do
-      {:ok, lv, doc} = get_liveview(conn)
+      {:ok, lv, _doc} = get_liveview(conn)
+
+      doc = set_slider(lv, "200k")
+
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none bg-gray-400"
       assert text_of_element(doc, @growth_checkout_button) =~ "Currently on this plan"
       refute element_exists?(doc, "#{@growth_checkout_button} + p")

@@ -10,7 +10,7 @@ defmodule PlausibleWeb.AuthView do
 
   def subscription_quota(subscription, options) do
     subscription
-    |> Plausible.Billing.Quota.monthly_pageview_limit()
+    |> Plausible.Billing.Quota.Limits.monthly_pageview_limit()
     |> PlausibleWeb.StatsView.large_number_format()
     |> then(fn quota ->
       if Keyword.get(options, :format) == :long,

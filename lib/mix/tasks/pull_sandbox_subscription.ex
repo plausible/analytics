@@ -48,6 +48,7 @@ defmodule Mix.Tasks.PullSandboxSubscription do
             update_url: res["update_url"],
             user_id: user.id,
             status: res["state"],
+            last_bill_date: res["last_payment"]["date"],
             next_bill_date: res["next_payment"]["date"],
             next_bill_amount: res["next_payment"]["amount"] |> to_string(),
             currency_code: res["next_payment"]["currency"]

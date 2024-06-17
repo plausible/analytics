@@ -633,12 +633,12 @@ defmodule PlausibleWeb.AuthController do
       subscription: user.subscription,
       invoices: Plausible.Billing.paddle_api().get_invoices(user.subscription),
       theme: user.theme || "system",
-      team_member_limit: Quota.team_member_limit(user),
-      team_member_usage: Quota.team_member_usage(user),
-      site_limit: Quota.site_limit(user),
-      site_usage: Quota.site_usage(user),
-      pageview_limit: Quota.monthly_pageview_limit(user),
-      pageview_usage: Quota.monthly_pageview_usage(user),
+      team_member_limit: Quota.Limits.team_member_limit(user),
+      team_member_usage: Quota.Usage.team_member_usage(user),
+      site_limit: Quota.Limits.site_limit(user),
+      site_usage: Quota.Usage.site_usage(user),
+      pageview_limit: Quota.Limits.monthly_pageview_limit(user),
+      pageview_usage: Quota.Usage.monthly_pageview_usage(user),
       totp_enabled?: Auth.TOTP.enabled?(user)
     )
   end
