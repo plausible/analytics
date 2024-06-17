@@ -1,6 +1,15 @@
 defmodule Plausible.Billing.EnterprisePlanAdmin do
   use Plausible.Repo
 
+  @numeric_fields [
+    "user_id",
+    "paddle_plan_id",
+    "monthly_pageview_limit",
+    "site_limit",
+    "team_member_limit",
+    "hourly_api_request_limit"
+  ]
+
   def search_fields(_schema) do
     [
       :paddle_plan_id,
@@ -40,8 +49,42 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
 
   defp get_user_email(plan), do: plan.user.email
 
+  def create_changeset(schema, attrs) do
+    attrs = sanitize_attrs(attrs)
+    Plausible.Billing.EnterprisePlan.changeset(schema, attrs)
+  end
+
   def update_changeset(enterprise_plan, attrs) do
-    attrs = Map.put_new(attrs, "features", [])
+    attrs =
+      attrs
+      |> Map.put_new("features", [])
+      |> sanitize_attrs()
+
     Plausible.Billing.EnterprisePlan.changeset(enterprise_plan, attrs)
+  end
+
+  defp sanitize_attrs(attrs) do
+    attrs
+    |> Enum.map(&clear_attr/1)
+    |> Enum.reject(&(&1 == ""))
+    |> Map.new()
+  end
+
+  defp clear_attr({key, value}) when key in @numeric_fields do
+    value =
+      value
+      |> to_string()
+      |> String.replace(~r/[^0-9-]/, "")
+      |> String.trim()
+
+    {key, value}
+  end
+
+  defp clear_attr({key, value}) when is_binary(value) do
+    {key, String.trim(value)}
+  end
+
+  defp clear_attr(other) do
+    other
   end
 end

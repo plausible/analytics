@@ -24,6 +24,38 @@ defmodule PlausibleWeb.AdminController do
     |> send_resp(200, html_response)
   end
 
+  def current_plan(conn, params) do
+    user =
+      params["user_id"]
+      |> String.to_integer()
+      |> Plausible.Users.with_subscription()
+
+    plan =
+      case user && user.subscription &&
+             Plausible.Billing.Plans.get_subscription_plan(user.subscription) do
+        %{} = plan ->
+          plan
+          |> Map.take([
+            :billing_interval,
+            :monthly_pageview_limit,
+            :site_limit,
+            :team_member_limit,
+            :hourly_api_request_limit,
+            :features
+          ])
+          |> Map.update(:features, [], fn features -> Enum.map(features, & &1.name()) end)
+
+        _ ->
+          %{features: []}
+      end
+
+    json_response = Jason.encode!(plan)
+
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(200, json_response)
+  end
+
   defp usage_and_limits_html(user, usage, limits, embed?) do
     content = """
       <ul>

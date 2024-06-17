@@ -76,6 +76,7 @@ defmodule PlausibleWeb.Router do
     scope "/crm", PlausibleWeb do
       pipe_through :flags
       get "/auth/user/:user_id/usage", AdminController, :usage
+      get "/billing/user/:user_id/current_plan", AdminController, :current_plan
     end
   end
 
