@@ -36,7 +36,7 @@ function AllSources(props) {
     return (
       <img
         src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
-        className="inline w-4 h-4 mr-2 -mt-px align-middle"
+        className="w-4 h-4 mr-2"
       />
     )
   }

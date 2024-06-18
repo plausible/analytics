@@ -7,6 +7,27 @@ import * as url from '../../util/url'
 import { VISITORS_METRIC, PERCENTAGE_METRIC, maybeWithCR } from '../reports/metrics';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 
+// Icons copied from https://github.com/alrra/browser-logos
+const BROWSER_ICONS = {
+  'Chrome': 'chrome.svg',
+  'Safari': 'safari.svg',
+  'Firefox': 'firefox.svg',
+  'Microsoft Edge': 'edge.svg',
+  'Vivaldi': 'vivaldi.svg',
+  'Opera': 'opera.svg',
+  'Samsung Browser': 'samsung-internet.svg',
+  'Chromium': 'chromium.svg',
+  'UC Browser': 'uc.svg',
+  'Yandex Browser': 'yandex.png', // Only PNG available in browser-logos
+  // Logos underneath this line are not available in browser-logos. Grabbed from random places on the internets.
+  'DuckDuckGo Privacy Browser': 'duckduckgo.svg',
+  'MIUI Browser': 'miui.webp',
+  'Huawei Browser Mobile': 'huawei.png',
+  'QQ Browser': 'qq.png',
+  'Ecosia': 'ecosia.png',
+  'vivo Browser': 'vivo.png'
+}
+
 function Browsers({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/browsers'), query)
@@ -19,6 +40,17 @@ function Browsers({ query, site, afterFetchData }) {
     }
   }
 
+  function renderIcon(listItem) {
+    const filename = BROWSER_ICONS[listItem.name] || 'fallback.svg'
+
+    return (
+      <img
+        src={`/images/icon/browser/${filename}`}
+        className="w-4 h-4 mr-2"
+      />
+    )
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
@@ -27,6 +59,7 @@ function Browsers({ query, site, afterFetchData }) {
       keyLabel="Browser"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
       query={query}
+      renderIcon={renderIcon}
     />
   )
 }

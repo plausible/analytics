@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Icons for browsers plausible/analytics#4239
 
 ### Removed
 
