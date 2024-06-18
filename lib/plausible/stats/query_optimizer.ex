@@ -16,7 +16,8 @@ defmodule Plausible.Stats.QueryOptimizer do
   defp pipeline() do
     [
       &update_group_by_time/1,
-      &add_missing_order_by/1
+      &add_missing_order_by/1,
+      &update_time_in_order_by/1
     ]
   end
 
@@ -50,4 +51,17 @@ defmodule Plausible.Stats.QueryOptimizer do
   end
 
   defp update_group_by_time(query), do: query
+
+  defp update_time_in_order_by(%Query{dimensions: ["time:" <> _ = time_dimension | _]} = query) do
+    order_by =
+      query.order_by
+      |> Enum.map(fn
+        {"time", direction} -> {time_dimension, direction}
+        entry -> entry
+      end)
+
+    %Query{query | order_by: order_by}
+  end
+
+  defp update_time_in_order_by(query), do: query
 end
