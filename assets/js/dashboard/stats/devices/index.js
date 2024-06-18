@@ -19,7 +19,8 @@ const BROWSER_ICONS = {
   'Chromium': 'chromium.svg',
   'UC Browser': 'uc.svg',
   'Yandex Browser': 'yandex.png', // Only PNG available in browser-logos
-  'DuckDuckGo Privacy Browser': 'duckduckgo.svg' // Not available in browser-logos repo, this one is from https://www.vectorlogo.zone/logos/duckduckgo/
+  'DuckDuckGo Privacy Browser': 'duckduckgo.svg', // Not available in browser-logos repo, this one is from https://www.vectorlogo.zone/logos/duckduckgo/
+  'MIUI Browser': 'miui.webp'
 }
 
 function Browsers({ query, site, afterFetchData }) {
