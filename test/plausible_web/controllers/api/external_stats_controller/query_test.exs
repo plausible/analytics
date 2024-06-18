@@ -141,7 +141,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "dimensions" => ["event:name"]
         })
 
-      assert json_response(conn, 400)["error"] =~ "Invalid date range"
+      assert json_response(conn, 400)["error"] =~ "Invalid date_range"
     end
 
     test "fails when an invalid metric is provided", %{conn: conn, site: site} do
@@ -1114,6 +1114,150 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 200)["results"] == [
                %{"dimensions" => ["2021-01-01T00:00:00Z"], "metrics" => [1, 2, 1, 600, 0]},
                %{"dimensions" => ["2021-01-01T23:00:00Z"], "metrics" => [1, 1, 1, 0, 100]}
+             ]
+    end
+
+    test "shows last 7 days of visitors", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-07 23:59:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => %{
+            "period" => "7d",
+            "to_date" => "2021-01-07"
+          },
+          "dimensions" => ["time"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01"], "metrics" => [1]},
+               %{"dimensions" => ["2021-01-07"], "metrics" => [1]}
+             ]
+    end
+
+    test "shows last 6 months of visitors", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2020-08-13 00:00:00]),
+        build(:pageview, timestamp: ~N[2020-12-31 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => %{
+            "period" => "6mo",
+            "to_date" => "2021-01-01"
+          },
+          "dimensions" => ["time"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2020-08-01"], "metrics" => [1]},
+               %{"dimensions" => ["2020-12-01"], "metrics" => [1]},
+               %{"dimensions" => ["2021-01-01"], "metrics" => [2]}
+             ]
+    end
+
+    test "shows last 12 months of visitors", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2020-02-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2020-12-31 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => %{
+            "to_date" => "2021-01-01",
+            "period" => "12mo"
+          },
+          "dimensions" => ["time"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2020-02-01"], "metrics" => [1]},
+               %{"dimensions" => ["2020-12-01"], "metrics" => [1]},
+               %{"dimensions" => ["2021-01-01"], "metrics" => [2]}
+             ]
+    end
+
+    test "shows last 12 months of visitors with interval daily", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2020-02-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2020-12-31 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => %{
+            "to_date" => "2021-01-01",
+            "period" => "12mo"
+          },
+          "dimensions" => ["time:day"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2020-02-01"], "metrics" => [1]},
+               %{"dimensions" => ["2020-12-31"], "metrics" => [1]},
+               %{"dimensions" => ["2021-01-01"], "metrics" => [2]}
+             ]
+    end
+
+    test "shows a custom range with daily interval", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => ["2021-01-01", "2021-01-02"],
+          "dimensions" => ["time:day"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01"], "metrics" => [2]},
+               %{"dimensions" => ["2021-01-02"], "metrics" => [1]}
+             ]
+    end
+
+    test "shows a custom range with monthly interval", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: @user_id, timestamp: ~N[2020-12-01 00:00:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2020-12-01 00:05:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+          "date_range" => ["2020-12-01", "2021-01-02"],
+          "dimensions" => ["time:month"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2020-12-01"], "metrics" => [2, 1, 0, 300]},
+               %{"dimensions" => ["2021-01-01"], "metrics" => [2, 2, 100, 0]}
              ]
     end
   end

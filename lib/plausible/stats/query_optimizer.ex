@@ -15,8 +15,8 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp pipeline() do
     [
-      &add_missing_order_by/1,
-      &update_group_by_time/1
+      &update_group_by_time/1,
+      &add_missing_order_by/1
     ]
   end
 
@@ -27,8 +27,8 @@ defmodule Plausible.Stats.QueryOptimizer do
   defp add_missing_order_by(query), do: query
 
   defp missing_order_by(metrics, [time_dimension | dimensions])
-       when time_dimension in ["time", "time:hour", "time:day", "time:month"] do
-    [{"time", :asc}] ++ missing_order_by(metrics, dimensions)
+       when time_dimension in ["time:hour", "time:day", "time:month"] do
+    [{time_dimension, :asc}] ++ missing_order_by(metrics, dimensions)
   end
 
   defp missing_order_by([metric | _rest], _dimensions), do: [{metric, :desc}]
@@ -42,9 +42,8 @@ defmodule Plausible.Stats.QueryOptimizer do
     time_dimension =
       cond do
         Timex.diff(last, first, :hours) <= 48 -> "time:hour"
-        Timex.diff(last, first, :days) <= 14 -> "time:day"
-        Timex.diff(last, first, :months) < 24 -> "time:month"
-        true -> "time:year"
+        Timex.diff(last, first, :days) <= 40 -> "time:day"
+        true -> "time:month"
       end
 
     %Query{query | dimensions: [time_dimension | dimensions]}
