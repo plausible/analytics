@@ -89,6 +89,7 @@ defmodule Plausible.AuthTest do
                 [constraint: :unique, constraint_name: "api_keys_key_hash_index"]}
     end
 
+    @tag :ee_only
     test "returns error when user is on a growth plan" do
       user = insert(:user, subscription: build(:growth_subscription))
 
