@@ -23,8 +23,12 @@ defmodule Plausible.Stats.IntervalTest do
     end
 
     test "adds time and first metric to order_by if order_by not specified" do
-      assert perform(%{metrics: [:pageviews, :visitors], dimensions: ["time", "event:page"]}).order_by ==
-               [{"time", :asc}, {:pageviews, :desc}]
+      assert perform(%{
+               date_range: Date.range(~N[2022-01-01 00:00:00], ~N[2022-02-01 00:00:00]),
+               metrics: [:pageviews, :visitors],
+               dimensions: ["time", "event:page"]
+             }).order_by ==
+               [{"time:day", :asc}, {:pageviews, :desc}]
     end
   end
 
@@ -65,7 +69,7 @@ defmodule Plausible.Stats.IntervalTest do
       assert perform(%{
                date_range: Date.range(~D[2022-01-01], ~D[2022-01-16]),
                dimensions: ["time"]
-             }).dimensions == ["time:month"]
+             }).dimensions == ["time:day"]
 
       assert perform(%{
                date_range: Date.range(~D[2022-01-01], ~D[2022-02-16]),
@@ -90,12 +94,12 @@ defmodule Plausible.Stats.IntervalTest do
       assert perform(%{
                date_range: Date.range(~D[2022-01-01], ~D[2024-01-16]),
                dimensions: ["time"]
-             }).dimensions == ["time:year"]
+             }).dimensions == ["time:month"]
 
       assert perform(%{
                date_range: Date.range(~D[2022-01-01], ~D[2026-01-01]),
                dimensions: ["time"]
-             }).dimensions == ["time:year"]
+             }).dimensions == ["time:month"]
     end
   end
 end
