@@ -259,6 +259,12 @@ defmodule PlausibleWeb.Router do
   end
 
   scope "/", PlausibleWeb do
+    pipe_through [:public_api]
+
+    get("/health_check", HealthCheckController, :index)
+  end
+
+  scope "/", PlausibleWeb do
     pipe_through [:browser, :csrf]
 
     get "/logout", AuthController, :logout
