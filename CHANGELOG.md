@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Fix access to Stats API feature in CE plausible/analytics#4244
+
 ## v2.1.1 - 2024-06-06
 
 ### Added
