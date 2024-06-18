@@ -1805,22 +1805,30 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   #   assert json_response(conn, 200) == %{"results" => []}
   # end
 
-  # test "attempting to breakdown by event:hostname returns an error", %{conn: conn, site: site} do
-  #   conn =
-  #     get(conn, "/api/v1/stats/breakdown", %{
-  #       "site_id" => site.domain,
-  #       "period" => "day",
-  #       "date" => "2021-01-01",
-  #       "property" => "event:hostname",
-  #       "with_imported" => "true"
-  #     })
+  test "attempting to breakdown by event:hostname returns an error", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:pageview, hostname: "a.example.com"),
+      build(:pageview, hostname: "a.example.com"),
+      build(:pageview, hostname: "a.example.com"),
+      build(:pageview, hostname: "b.example.com")
+    ])
 
-  #   assert %{
-  #            "error" => error
-  #          } = json_response(conn, 400)
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "date_range" => "all",
+        "metrics" => ["pageviews"],
+        "dimensions" => ["event:hostname"],
+        "with_imported" => "true"
+      })
 
-  #   assert error =~ "Property 'event:hostname' is currently not supported for breakdowns."
-  # end
+    %{"results" => results} = json_response(conn, 200)
+
+    assert results == [
+             %{"dimensions" => ["a.example.com"], "metrics" => [3]},
+             %{"dimensions" => ["b.example.com"], "metrics" => [1]}
+           ]
+  end
 
   describe "breakdown by visit:exit_page" do
     setup %{site: site} do
