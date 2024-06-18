@@ -26,7 +26,8 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp add_missing_order_by(query), do: query
 
-  defp missing_order_by(metrics, ["time" | dimensions]) do
+  defp missing_order_by(metrics, [time_dimension | dimensions])
+       when time_dimension in ["time", "time:hour", "time:day", "time:month"] do
     [{"time", :asc}] ++ missing_order_by(metrics, dimensions)
   end
 
@@ -42,7 +43,6 @@ defmodule Plausible.Stats.QueryOptimizer do
       cond do
         Timex.diff(last, first, :hours) <= 48 -> "time:hour"
         Timex.diff(last, first, :days) <= 14 -> "time:day"
-        Timex.diff(last, first, :weeks) <= 8 -> "time:week"
         Timex.diff(last, first, :months) < 24 -> "time:month"
         true -> "time:year"
       end

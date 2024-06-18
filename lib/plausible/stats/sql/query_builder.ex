@@ -25,6 +25,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   end
 
   def shortname(metric) when is_atom(metric), do: metric
+  def shortname("time:" <> _), do: :time
   def shortname(dimension), do: Plausible.Stats.Filters.without_prefix(dimension)
 
   defp build_events_query(_, _, []), do: nil

@@ -5,10 +5,11 @@ defmodule Plausible.Stats.Filters.QueryParser do
   alias Plausible.Stats.Filters
   alias Plausible.Stats.Query
 
-  def parse(site, params) when is_map(params) do
+  def parse(site, params, now \\ nil) when is_map(params) do
     with {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
-         {:ok, date_range} <- parse_date_range(site, Map.get(params, "date_range")),
+         {:ok, date_range} <-
+           parse_date_range(site, Map.get(params, "date_range"), now || today(site)),
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          {:ok, include} <- parse_include(Map.get(params, "include", %{})),
@@ -96,26 +97,61 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{inspect(filter)}'"}
 
-  defp parse_date_range(site, "day") do
-    today = DateTime.now!(site.timezone) |> DateTime.to_date()
-    {:ok, Date.range(today, today)}
+  defp parse_date_range(_site, "day", date) do
+    {:ok, Date.range(date, date)}
   end
 
-  defp parse_date_range(_site, "7d"), do: {:ok, "7d"}
-  defp parse_date_range(_site, "30d"), do: {:ok, "30d"}
-  defp parse_date_range(_site, "month"), do: {:ok, "month"}
-  defp parse_date_range(_site, "6mo"), do: {:ok, "6mo"}
-  defp parse_date_range(_site, "12mo"), do: {:ok, "12mo"}
-  defp parse_date_range(_site, "year"), do: {:ok, "year"}
+  defp parse_date_range(_site, "7d", last) do
+    first = last |> Timex.shift(days: -6)
+    {:ok, Date.range(first, last)}
+  end
 
-  defp parse_date_range(site, "all") do
-    today = DateTime.now!(site.timezone) |> DateTime.to_date()
+  defp parse_date_range(_site, "30d", last) do
+    first = last |> Timex.shift(days: -30)
+    {:ok, Date.range(first, last)}
+  end
+
+  defp parse_date_range(_site, "month", today) do
+    last = today |> Timex.end_of_month()
+    first = last |> Timex.beginning_of_month()
+    {:ok, Date.range(first, last)}
+  end
+
+  defp parse_date_range(_site, "6mo", today) do
+    last = today |> Timex.end_of_month()
+
+    first =
+      last
+      |> Timex.shift(months: -5)
+      |> Timex.beginning_of_month()
+
+    {:ok, Date.range(first, last)}
+  end
+
+  defp parse_date_range(_site, "12mo", today) do
+    last = today |> Timex.end_of_month()
+
+    first =
+      last
+      |> Timex.shift(months: -11)
+      |> Timex.beginning_of_month()
+
+    {:ok, Date.range(first, last)}
+  end
+
+  defp parse_date_range(_site, "year", today) do
+    last = today |> Timex.end_of_year()
+    first = last |> Timex.beginning_of_year()
+    {:ok, Date.range(first, last)}
+  end
+
+  defp parse_date_range(site, "all", today) do
     start_date = Plausible.Sites.stats_start_date(site) || today
 
     {:ok, Date.range(start_date, today)}
   end
 
-  defp parse_date_range(_site, [from_date_string, to_date_string])
+  defp parse_date_range(_site, [from_date_string, to_date_string], _date)
        when is_bitstring(from_date_string) and is_bitstring(to_date_string) do
     with {:ok, from_date} <- Date.from_iso8601(from_date_string),
          {:ok, to_date} <- Date.from_iso8601(to_date_string) do
@@ -125,7 +161,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp parse_date_range(_site, unknown), do: {:error, "Invalid date range '#{inspect(unknown)}'"}
+  defp parse_date_range(_site, unknown, _),
+    do: {:error, "Invalid date_range '#{inspect(unknown)}'"}
+
+  defp today(site), do: DateTime.now!(site.timezone) |> DateTime.to_date()
 
   defp parse_dimensions(dimensions) when is_list(dimensions) do
     if length(dimensions) == length(Enum.uniq(dimensions)) do
@@ -179,8 +218,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_time("time"), do: {:ok, "time"}
+  defp parse_time("time:hour"), do: {:ok, "time:hour"}
   defp parse_time("time:day"), do: {:ok, "time:day"}
-  defp parse_time("time:week"), do: {:ok, "time:week"}
   defp parse_time("time:month"), do: {:ok, "time:month"}
   defp parse_time("time:year"), do: {:ok, "time:year"}
   defp parse_time(_), do: :error

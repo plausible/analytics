@@ -1095,6 +1095,29 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     end
   end
 
+  describe "timeseries" do
+    test "shows hourly data for a certain date", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 23:59:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "pageviews", "visits", "visit_duration", "bounce_rate"],
+          "date_range" => ["2021-01-01", "2021-01-01"],
+          "dimensions" => ["time:hour"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01T00:00:00Z"], "metrics" => [1, 2, 1, 600, 0]},
+               %{"dimensions" => ["2021-01-01T23:00:00Z"], "metrics" => [1, 1, 1, 0, 100]}
+             ]
+    end
+  end
+
   test "breakdown by visit:source", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview,
