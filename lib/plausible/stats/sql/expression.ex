@@ -1,5 +1,8 @@
 defmodule Plausible.Stats.SQL.Expression do
-  @moduledoc false
+  @moduledoc """
+  This module is responsible for generating SQL/Ecto expressions
+  for dimensions used in query select, group_by and order_by.
+  """
 
   import Ecto.Query
 
