@@ -137,7 +137,22 @@ defmodule Plausible.Billing do
   defp handle_subscription_updated(params) do
     subscription = Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
 
-    if subscription do
+    # In a situation where the subscription is paused and a payment succeeds, we
+    # get notified of two "subscription_updated" webhook alerts from Paddle at the
+    # same time.
+    #
+    #   * one with an `old_status` of "paused", and a `status` of "past_due"
+    #   * the other with an `old_status` of "past_due", and a `status` of "active"
+    #
+    # https://developer.paddle.com/classic/guides/zg9joji1mzu0mduy-payment-failures
+    #
+    # Relying on the time when the webhooks are sent has caused issues where
+    # subscriptions have ended up `past_due` after a successful payment. Therefore,
+    # we're now explicitly ignoring the first webhook (with the update that's not
+    # relevant to us).
+    irrelevant? = params["old_status"] == "paused" && params["status"] == "past_due"
+
+    if subscription && not irrelevant? do
       subscription
       |> Subscription.changeset(format_subscription(params))
       |> Repo.update!()
