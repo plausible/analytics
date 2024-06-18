@@ -4195,4 +4195,39 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert meta["warning"] =~ "Imported stats are not included in the results"
     end
   end
+
+  test "multiple breakdown timeseries with sources", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:pageview,
+        referrer_source: "Google",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:pageview, timestamp: ~N[2021-01-02 00:00:00]),
+      build(:pageview,
+        referrer_source: "Google",
+        timestamp: ~N[2021-01-02 00:00:00]
+      ),
+      build(:pageview, timestamp: ~N[2021-01-03 00:00:00]),
+      build(:pageview,
+        referrer_source: "Twitter",
+        timestamp: ~N[2021-01-03 00:00:00]
+      )
+    ])
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => ["2021-01-01", "2021-01-03"],
+        "dimensions" => ["time", "visit:source"]
+      })
+
+    assert json_response(conn, 200)["results"] == [
+             %{"dimensions" => ["2021-01-01T00:00:00Z", "Google"], "metrics" => [1]},
+             %{"dimensions" => ["2021-01-02T00:00:00Z", "Google"], "metrics" => [1]},
+             %{"dimensions" => ["2021-01-02T00:00:00Z", "Direct / None"], "metrics" => [1]},
+             %{"dimensions" => ["2021-01-03T00:00:00Z", "Direct / None"], "metrics" => [1]},
+             %{"dimensions" => ["2021-01-03T00:00:00Z", "Twitter"], "metrics" => [1]}
+           ]
+  end
 end
