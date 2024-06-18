@@ -202,33 +202,38 @@ defmodule Plausible.Billing.Feature.StatsAPI do
     name: :stats_api,
     display_name: "Stats API"
 
-  @impl true
-  @doc """
-  Checks whether the user has access to Stats API or not.
+  if Plausible.ee?() do
+    @impl true
+    @doc """
+    Checks whether the user has access to Stats API or not.
 
-  Before the business tier, users who had not yet started their trial had
-  access to Stats API. With the business tier work, access is blocked and they
-  must either start their trial or subscribe to a plan. This is common when a
-  site owner invites a new user. In such cases, using the owner's API key is
-  recommended.
-  """
-  def check_availability(%Plausible.Auth.User{} = user) do
-    user = Plausible.Users.with_subscription(user)
-    unlimited_trial? = is_nil(user.trial_expiry_date)
-    subscription? = Plausible.Billing.Subscriptions.active?(user.subscription)
+    Before the business tier, users who had not yet started their trial had
+    access to Stats API. With the business tier work, access is blocked and they
+    must either start their trial or subscribe to a plan. This is common when a
+    site owner invites a new user. In such cases, using the owner's API key is
+    recommended.
+    """
+    def check_availability(%Plausible.Auth.User{} = user) do
+      user = Plausible.Users.with_subscription(user)
+      unlimited_trial? = is_nil(user.trial_expiry_date)
+      subscription? = Plausible.Billing.Subscriptions.active?(user.subscription)
 
-    pre_business_tier_account? =
-      Timex.before?(user.inserted_at, Plausible.Billing.Plans.business_tier_launch())
+      pre_business_tier_account? =
+        Timex.before?(user.inserted_at, Plausible.Billing.Plans.business_tier_launch())
 
-    cond do
-      !subscription? && unlimited_trial? && pre_business_tier_account? ->
-        :ok
+      cond do
+        !subscription? && unlimited_trial? && pre_business_tier_account? ->
+          :ok
 
-      !subscription? && unlimited_trial? && !pre_business_tier_account? ->
-        {:error, :upgrade_required}
+        !subscription? && unlimited_trial? && !pre_business_tier_account? ->
+          {:error, :upgrade_required}
 
-      true ->
-        super(user)
+        true ->
+          super(user)
+      end
     end
+  else
+    @impl true
+    def check_availability(_user), do: :ok
   end
 end
