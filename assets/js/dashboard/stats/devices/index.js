@@ -12,15 +12,20 @@ const BROWSER_ICONS = {
   'Chrome': 'chrome.svg',
   'Safari': 'safari.svg',
   'Firefox': 'firefox.svg',
-  'Edge': 'edge.svg',
+  'Microsoft Edge': 'edge.svg',
   'Vivaldi': 'vivaldi.svg',
   'Opera': 'opera.svg',
   'Samsung Browser': 'samsung-internet.svg',
   'Chromium': 'chromium.svg',
   'UC Browser': 'uc.svg',
   'Yandex Browser': 'yandex.png', // Only PNG available in browser-logos
-  'DuckDuckGo Privacy Browser': 'duckduckgo.svg', // Not available in browser-logos repo, this one is from https://www.vectorlogo.zone/logos/duckduckgo/
-  'MIUI Browser': 'miui.webp'
+  // Logos underneath this line are not available in browser-logos. Grabbed from random places on the internets.
+  'DuckDuckGo Privacy Browser': 'duckduckgo.svg',
+  'MIUI Browser': 'miui.webp',
+  'Huawei Browser Mobile': 'huawei.png',
+  'QQ Browser': 'qq.png',
+  'Ecosia': 'ecosia.png',
+  'vivo Browser': 'vivo.png'
 }
 
 function Browsers({ query, site, afterFetchData }) {
