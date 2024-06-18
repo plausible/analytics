@@ -1,5 +1,11 @@
 defmodule Plausible.Stats.QueryOptimizer do
-  @moduledoc false
+  @moduledoc """
+    This module manipulates an existing query, updating it according to business logic.
+
+    For example, it:
+    1. Adds a missing order_by clause to a query
+    2. Figures out what the right granularity to group by is
+  """
 
   alias Plausible.Stats.Query
 
@@ -15,13 +21,33 @@ defmodule Plausible.Stats.QueryOptimizer do
   end
 
   defp add_missing_order_by(%Query{order_by: nil} = query) do
-    %Query{query | order_by: [{hd(query.metrics), :desc}]}
+    %Query{query | order_by: missing_order_by(query.metrics, query.dimensions)}
   end
 
   defp add_missing_order_by(query), do: query
 
-  defp update_group_by_time(%Query{dimensions: ["time" | rest]} = query) do
-    %Query{query | dimensions: ["time:month" | rest]}
+  defp missing_order_by(metrics, ["time" | dimensions]) do
+    [{"time", :asc}] ++ missing_order_by(metrics, dimensions)
+  end
+
+  defp missing_order_by([metric | _rest], _dimensions), do: [{metric, :desc}]
+
+  defp update_group_by_time(
+         %Query{
+           date_range: %Date.Range{first: first, last: last},
+           dimensions: ["time" | dimensions]
+         } = query
+       ) do
+    time_dimension =
+      cond do
+        Timex.diff(last, first, :hours) <= 48 -> "time:hour"
+        Timex.diff(last, first, :days) <= 14 -> "time:day"
+        Timex.diff(last, first, :weeks) <= 8 -> "time:week"
+        Timex.diff(last, first, :months) < 24 -> "time:month"
+        true -> "time:year"
+      end
+
+    %Query{query | dimensions: [time_dimension | dimensions]}
   end
 
   defp update_group_by_time(query), do: query
