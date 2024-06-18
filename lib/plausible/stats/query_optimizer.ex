@@ -22,46 +22,54 @@ defmodule Plausible.Stats.QueryOptimizer do
   end
 
   defp add_missing_order_by(%Query{order_by: nil} = query) do
-    %Query{query | order_by: missing_order_by(query.metrics, query.dimensions)}
+    order_by =
+      case time_dimension(query) do
+        nil -> [{hd(query.metrics), :desc}]
+        time_dimension -> [{time_dimension, :asc}, {hd(query.metrics), :desc}]
+      end
+
+    %Query{query | order_by: order_by}
   end
 
   defp add_missing_order_by(query), do: query
 
-  defp missing_order_by(metrics, [time_dimension | dimensions])
-       when time_dimension in ["time:hour", "time:day", "time:month"] do
-    [{time_dimension, :asc}] ++ missing_order_by(metrics, dimensions)
-  end
-
-  defp missing_order_by([metric | _rest], _dimensions), do: [{metric, :desc}]
-
   defp update_group_by_time(
          %Query{
-           date_range: %Date.Range{first: first, last: last},
-           dimensions: ["time" | dimensions]
+           date_range: %Date.Range{first: first, last: last}
          } = query
        ) do
-    time_dimension =
-      cond do
-        Timex.diff(last, first, :hours) <= 48 -> "time:hour"
-        Timex.diff(last, first, :days) <= 40 -> "time:day"
-        true -> "time:month"
-      end
+    dimensions =
+      query.dimensions
+      |> Enum.map(fn
+        "time" -> resolve_time_dimension(first, last)
+        entry -> entry
+      end)
 
-    %Query{query | dimensions: [time_dimension | dimensions]}
+    %Query{query | dimensions: dimensions}
   end
 
   defp update_group_by_time(query), do: query
 
-  defp update_time_in_order_by(%Query{dimensions: ["time:" <> _ = time_dimension | _]} = query) do
+  defp resolve_time_dimension(first, last) do
+    cond do
+      Timex.diff(last, first, :hours) <= 48 -> "time:hour"
+      Timex.diff(last, first, :days) <= 40 -> "time:day"
+      true -> "time:month"
+    end
+  end
+
+  defp update_time_in_order_by(query) do
     order_by =
       query.order_by
       |> Enum.map(fn
-        {"time", direction} -> {time_dimension, direction}
+        {"time", direction} -> {time_dimension(query), direction}
         entry -> entry
       end)
 
     %Query{query | order_by: order_by}
   end
 
-  defp update_time_in_order_by(query), do: query
+  defp time_dimension(query) do
+    Enum.find(query.dimensions, &String.starts_with?(&1, "time"))
+  end
 end
