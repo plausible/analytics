@@ -102,4 +102,14 @@ defmodule Plausible.Stats.IntervalTest do
              }).dimensions == ["time:month"]
     end
   end
+
+  describe "update_time_in_order_by" do
+    test "updates explicit time dimension in order_by" do
+      assert perform(%{
+               date_range: Date.range(~N[2022-01-01 00:00:00], ~N[2022-01-01 05:00:00]),
+               dimensions: ["time:hour"],
+               order_by: [{"time", :asc}]
+             }).order_by == [{"time:hour", :asc}]
+    end
+  end
 end

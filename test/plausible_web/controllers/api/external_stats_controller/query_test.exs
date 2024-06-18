@@ -1260,6 +1260,35 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
                %{"dimensions" => ["2021-01-01"], "metrics" => [2, 2, 100, 0]}
              ]
     end
+
+    test "timeseries with explicit order_by", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-03 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-03 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-04 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-04 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["pageviews"],
+          "date_range" => ["2020-12-01", "2021-01-04"],
+          "dimensions" => ["time"],
+          "order_by" => [["pageviews", "desc"], ["time", "asc"]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-02"], "metrics" => [3]},
+               %{"dimensions" => ["2021-01-03"], "metrics" => [2]},
+               %{"dimensions" => ["2021-01-04"], "metrics" => [2]},
+               %{"dimensions" => ["2021-01-01"], "metrics" => [1]}
+             ]
+    end
   end
 
   test "breakdown by visit:source", %{conn: conn, site: site} do
