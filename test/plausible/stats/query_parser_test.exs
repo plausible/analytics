@@ -6,15 +6,29 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
   setup [:create_user, :create_new_site]
 
-  @date_range Date.range(Timex.today(), Timex.today())
+  @today ~D[2021-05-05]
+  @date_range Date.range(@today, @today)
 
   def check_success(params, site, expected_result) do
-    assert parse(site, params) == {:ok, expected_result}
+    assert parse(site, params, @today) == {:ok, expected_result}
   end
 
   def check_error(params, site, expected_error_message) do
-    {:error, message} = parse(site, params)
+    {:error, message} = parse(site, params, @today)
     assert message =~ expected_error_message
+  end
+
+  def check_date_range(date_range, site, expected_date_range) do
+    %{"metrics" => ["visitors", "events"], "date_range" => date_range}
+    |> check_success(site, %{
+      metrics: [:visitors, :events],
+      date_range: expected_date_range,
+      filters: [],
+      dimensions: [],
+      order_by: nil,
+      timezone: site.timezone,
+      imported_data_requested: false
+    })
   end
 
   test "parsing empty map fails", %{site: site} do
@@ -303,6 +317,42 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   end
 
   describe "date range validation" do
+    test "parsing shortcut options", %{site: site} do
+      check_date_range("day", site, Date.range(~D[2021-05-05], ~D[2021-05-05]))
+      check_date_range("7d", site, Date.range(~D[2021-04-29], ~D[2021-05-05]))
+      check_date_range("30d", site, Date.range(~D[2021-04-05], ~D[2021-05-05]))
+      check_date_range("month", site, Date.range(~D[2021-05-01], ~D[2021-05-31]))
+      check_date_range("6mo", site, Date.range(~D[2020-12-01], ~D[2021-05-31]))
+      check_date_range("12mo", site, Date.range(~D[2020-06-01], ~D[2021-05-31]))
+      check_date_range("year", site, Date.range(~D[2021-01-01], ~D[2021-12-31]))
+    end
+
+    test "parsing `all` with previous data", %{site: site} do
+      site = Map.put(site, :stats_start_date, ~D[2020-01-01])
+      check_date_range("all", site, Date.range(~D[2020-01-01], ~D[2021-05-05]))
+    end
+
+    test "parsing `all` with no previous data", %{site: site} do
+      site = Map.put(site, :stats_start_date, nil)
+
+      check_date_range("all", site, Date.range(~D[2021-05-05], ~D[2021-05-05]))
+    end
+
+    test "parsing custom date range", %{site: site} do
+      check_date_range(
+        ["2021-05-05", "2021-05-05"],
+        site,
+        Date.range(~D[2021-05-05], ~D[2021-05-05])
+      )
+    end
+
+    test "parsing invalid custom date range", %{site: site} do
+      %{"date_range" => "foo", "metrics" => ["visitors"]}
+      |> check_error(site, ~r/Invalid date_range '\"foo\"'/)
+
+      %{"date_range" => ["21415-00", "eee"], "metrics" => ["visitors"]}
+      |> check_error(site, ~r/Invalid date_range /)
+    end
   end
 
   describe "dimensions validation" do

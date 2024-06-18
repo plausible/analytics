@@ -65,12 +65,12 @@ defmodule Plausible.Stats.IntervalTest do
       assert perform(%{
                date_range: Date.range(~D[2022-01-01], ~D[2022-01-16]),
                dimensions: ["time"]
-             }).dimensions == ["time:week"]
+             }).dimensions == ["time:month"]
 
       assert perform(%{
                date_range: Date.range(~D[2022-01-01], ~D[2022-02-16]),
                dimensions: ["time"]
-             }).dimensions == ["time:week"]
+             }).dimensions == ["time:month"]
 
       assert perform(%{
                date_range: Date.range(~D[2022-01-01], ~D[2022-03-16]),
