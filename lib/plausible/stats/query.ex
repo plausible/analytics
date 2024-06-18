@@ -15,7 +15,7 @@ defmodule Plausible.Stats.Query do
             experimental_reduced_joins?: false,
             latest_import_end_date: nil,
             metrics: [],
-            order_by: [],
+            order_by: nil,
             timezone: nil,
             v2: false
 
