@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   alias Plausible.{Repo, Billing.Subscription}
 
   @v1_10k_yearly_plan_id "572810"
+  @v1_50m_yearly_plan_id "650653"
   @v4_growth_10k_yearly_plan_id "857079"
   @v4_growth_200k_yearly_plan_id "857081"
   @v4_business_5m_monthly_plan_id "857111"
@@ -728,16 +729,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
   end
 
-  describe "for a grandfathered user" do
+  describe "for a grandfathered user with a high volume plan" do
     setup [:create_user, :create_site, :log_in]
 
-    setup %{user: user} = context do
-      create_subscription_for(user, paddle_plan_id: @v1_10k_yearly_plan_id)
-      {:ok, context}
-    end
+    test "on a 50M v1 plan, Growth tiers are available at 20M, 50M, 50M+, but Business tiers are not",
+         %{conn: conn, user: user} do
+      create_subscription_for(user, paddle_plan_id: @v1_50m_yearly_plan_id)
 
-    test "on a v1 plan, Growth tiers are available at 20M, 50M, 50M+, but Business tiers are not",
-         %{conn: conn} do
       {:ok, lv, _doc} = get_liveview(conn)
 
       doc = set_slider(lv, 8)
@@ -761,6 +759,15 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @slider_value) == "10M"
       refute text_of_element(doc, @business_plan_box) =~ "Contact us"
       refute text_of_element(doc, @growth_plan_box) =~ "Contact us"
+    end
+  end
+
+  describe "for a grandfathered user" do
+    setup [:create_user, :create_site, :log_in]
+
+    setup %{user: user} = context do
+      create_subscription_for(user, paddle_plan_id: @v1_10k_yearly_plan_id)
+      {:ok, context}
     end
 
     test "displays grandfathering notice in the Growth box instead of benefits", %{conn: conn} do
