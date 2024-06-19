@@ -9,6 +9,8 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   alias Plausible.Stats.{Base, Query, TableDecider, Util, Filters, Metrics}
   alias Plausible.Stats.SQL.Expression
 
+  require Plausible.Stats.SQL.Expression
+
   def build(query, site) do
     {event_metrics, sessions_metrics, _other_metrics} =
       query.metrics
@@ -114,11 +116,26 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   end
 
   defp build_group_by(q, query) do
-    Enum.reduce(query.dimensions, q, fn dimension, q ->
-      q
-      |> select_merge(^%{shortname(dimension) => Expression.dimension(dimension, query)})
-      |> group_by(^Expression.dimension(dimension, query))
-    end)
+    Enum.reduce(query.dimensions, q, &dimension_group_by(&2, query, &1))
+  end
+
+  defp dimension_group_by(q, query, "event:goal") do
+    {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
+
+    from(e in q,
+      array_join: goal in Expression.event_goal_join(events, page_regexes),
+      group_by: goal,
+      where: goal != 0,
+      select_merge: %{
+        goal: fragment("?", goal)
+      }
+    )
+  end
+
+  defp dimension_group_by(q, query, dimension) do
+    q
+    |> select_merge(^%{shortname(dimension) => Expression.dimension(dimension, query)})
+    |> group_by(^Expression.dimension(dimension, query))
   end
 
   defp build_order_by(q, query, mode) do
