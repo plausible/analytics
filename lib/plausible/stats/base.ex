@@ -121,6 +121,7 @@ defmodule Plausible.Stats.Base do
 
   defp select_event_metric(:percentage), do: %{}
   defp select_event_metric(:conversion_rate), do: %{}
+  defp select_event_metric(:group_conversion_rate), do: %{}
   defp select_event_metric(:total_visitors), do: %{}
 
   defp select_event_metric(unknown), do: raise("Unknown metric: #{unknown}")
@@ -344,9 +345,9 @@ defmodule Plausible.Stats.Base do
   # only if it's included in the base query - otherwise the total will be based on
   # a different data set, making the metric inaccurate. This is why we're using an
   # explicit `include_imported` argument here.
-  defp total_visitors_subquery(site, query, include_imported)
+  def total_visitors_subquery(site, query, include_imported)
 
-  defp total_visitors_subquery(site, query, true = _include_imported) do
+  def total_visitors_subquery(site, query, true = _include_imported) do
     dynamic(
       [e],
       selected_as(
@@ -357,7 +358,7 @@ defmodule Plausible.Stats.Base do
     )
   end
 
-  defp total_visitors_subquery(site, query, false = _include_imported) do
+  def total_visitors_subquery(site, query, false = _include_imported) do
     dynamic([e], selected_as(subquery(total_visitors(site, query)), :__total_visitors))
   end
 

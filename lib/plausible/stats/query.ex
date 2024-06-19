@@ -232,6 +232,12 @@ defmodule Plausible.Stats.Query do
     |> refresh_imported_opts()
   end
 
+  def set_metrics(query, metrics) do
+    query
+    |> struct!(metrics: metrics)
+    |> refresh_imported_opts()
+  end
+
   def put_filter(query, filter) do
     query
     |> struct!(filters: query.filters ++ [filter])
