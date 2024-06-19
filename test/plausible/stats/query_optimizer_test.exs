@@ -112,4 +112,36 @@ defmodule Plausible.Stats.IntervalTest do
              }).order_by == [{"time:hour", :asc}]
     end
   end
+
+  describe "extend_hostname_filters_to_visit" do
+    test "updates filters it filtering by event:hostname and visit:referrer and visit:exit_page dimensions" do
+      assert perform(%{
+               date_range: Date.range(~N[2022-01-01 00:00:00], ~N[2022-01-01 05:00:00]),
+               filters: [
+                 [:is, "event:hostname", ["example.com"]],
+                 [:matches, "event:hostname", ["*.com"]]
+               ],
+               dimensions: ["visit:referrer", "visit:exit_page"]
+             }).filters == [
+               [:is, "event:hostname", ["example.com"]],
+               [:matches, "event:hostname", ["*.com"]],
+               [:is, "visit:entry_page_hostname", ["example.com"]],
+               [:matches, "visit:entry_page_hostname", ["*.com"]],
+               [:is, "visit:exit_page_hostname", ["example.com"]],
+               [:matches, "visit:exit_page_hostname", ["*.com"]]
+             ]
+    end
+
+    test "does not update filters if not needed" do
+      assert perform(%{
+               date_range: Date.range(~N[2022-01-01 00:00:00], ~N[2022-01-01 05:00:00]),
+               filters: [
+                 [:is, "event:hostname", ["example.com"]]
+               ],
+               dimensions: ["time", "event:hostname"]
+             }).filters == [
+               [:is, "event:hostname", ["example.com"]]
+             ]
+    end
+  end
 end
