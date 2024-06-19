@@ -15,7 +15,7 @@ defmodule Plausible.Stats.QueryResult do
       results
       |> Enum.map(fn entry ->
         %{
-          dimensions: Enum.map(query.dimensions, &Map.get(entry, QueryBuilder.shortname(&1))),
+          dimensions: Enum.map(query.dimensions, &map_dimension(&1, entry, query)),
           metrics: Enum.map(query.metrics, &Map.get(entry, &1))
         }
       end)
@@ -43,6 +43,20 @@ defmodule Plausible.Stats.QueryResult do
   end
 
   defp meta(_), do: %{}
+
+  defp map_dimension("event:goal", entry, query) do
+    {events, paths} = Filters.Utils.split_goals(query.preloaded_goals)
+
+    cond do
+      entry.goal == 0 -> "N/A"
+      entry.goal < 0 -> Enum.at(events, -entry.goal - 1) |> Filters.Utils.unwrap_goal_value()
+      entry.goal > 0 -> Enum.at(paths, entry.goal - 1) |> Filters.Utils.unwrap_goal_value()
+    end
+  end
+
+  defp map_dimension(dimension, entry, _query) do
+    Map.get(entry, QueryBuilder.shortname(dimension))
+  end
 
   defp serializable_filter([operation, "event:goal", clauses]) do
     [operation, "event:goal", Enum.map(clauses, &Filters.Utils.unwrap_goal_value/1)]

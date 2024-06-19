@@ -66,4 +66,26 @@ defmodule Plausible.Stats.Filters.Utils do
   def unwrap_goal_value(goals) when is_list(goals), do: Enum.map(goals, &unwrap_goal_value/1)
   def unwrap_goal_value({:page, page}), do: "Visit " <> page
   def unwrap_goal_value({:event, event}), do: event
+
+  def load_goals(site) do
+    Plausible.Goals.for_site(site)
+    |> Enum.map(fn
+      %{page_path: path} when is_binary(path) -> {:page, path}
+      %{event_name: event_name} -> {:event, event_name}
+    end)
+  end
+
+  def split_goals(goals) do
+    Enum.split_with(goals, fn {type, _} -> type == :event end)
+  end
+
+  def split_goals_query_expressions(goals) do
+    {event_goals, pageview_goals} = split_goals(goals)
+    events = Enum.map(event_goals, fn {_, event} -> event end)
+
+    page_regexes =
+      Enum.map(pageview_goals, fn {_, path} -> Plausible.Stats.Base.page_regex(path) end)
+
+    {events, page_regexes}
+  end
 end

@@ -89,4 +89,21 @@ defmodule Plausible.Stats.SQL.Expression do
   def dimension("visit:country", _query), do: dynamic([t], t.country)
   def dimension("visit:region", _query), do: dynamic([t], t.region)
   def dimension("visit:city", _query), do: dynamic([t], t.city)
+
+  defmacro event_goal_join(events, page_regexes) do
+    quote do
+      fragment(
+        """
+        arrayPushFront(
+          CAST(multiMatchAllIndices(?, ?) AS Array(Int64)),
+          -indexOf(?, ?)
+        )
+        """,
+        e.pathname,
+        type(^unquote(page_regexes), {:array, :string}),
+        type(^unquote(events), {:array, :string}),
+        e.name
+      )
+    end
+  end
 end

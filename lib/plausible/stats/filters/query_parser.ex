@@ -13,6 +13,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          {:ok, include} <- parse_include(Map.get(params, "include", %{})),
+         preloaded_goals <- preload_goals_if_needed(site, filters, dimensions),
          query = %{
            metrics: metrics,
            filters: filters,
@@ -20,10 +21,11 @@ defmodule Plausible.Stats.Filters.QueryParser do
            dimensions: dimensions,
            order_by: order_by,
            timezone: site.timezone,
-           imported_data_requested: Map.get(include, :imports, false)
+           imported_data_requested: Map.get(include, :imports, false),
+           preloaded_goals: preloaded_goals
          },
          :ok <- validate_order_by(query),
-         :ok <- validate_goal_filters(site, query),
+         :ok <- validate_goal_filters(query),
          :ok <- validate_custom_props_access(site, query),
          :ok <- validate_metrics(query) do
       {:ok, query}
@@ -288,7 +290,18 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp validate_goal_filters(site, query) do
+  defp preload_goals_if_needed(site, filters, dimensions) do
+    goal_filters? =
+      Enum.any?(filters, fn [_, filter_key | _rest] -> filter_key == "event:goal" end)
+
+    if goal_filters? or Enum.member?(dimensions, "event:goal") do
+      Filters.Utils.load_goals(site)
+    else
+      []
+    end
+  end
+
+  defp validate_goal_filters(query) do
     goal_filter_clauses =
       Enum.flat_map(query.filters, fn
         [_operation, "event:goal", clauses] -> clauses
@@ -296,14 +309,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
       end)
 
     if length(goal_filter_clauses) > 0 do
-      configured_goals =
-        Plausible.Goals.for_site(site)
-        |> Enum.map(fn
-          %{page_path: path} when is_binary(path) -> {:page, path}
-          %{event_name: event_name} -> {:event, event_name}
-        end)
-
-      validate_list(goal_filter_clauses, &validate_goal_filter(&1, configured_goals))
+      validate_list(goal_filter_clauses, &validate_goal_filter(&1, query.preloaded_goals))
     else
       :ok
     end
