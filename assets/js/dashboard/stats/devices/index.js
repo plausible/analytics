@@ -150,7 +150,9 @@ function ScreenSizes({ query, site, afterFetchData }) {
   }
 
   function renderIcon(screenSize) {
-    return iconFor(screenSize.name)
+    return (
+      <span className="mr-1.5">{iconFor(screenSize.name)}</span>
+    )
   }
 
   function getFilterFor(listItem) {
