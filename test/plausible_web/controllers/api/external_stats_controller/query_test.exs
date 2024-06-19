@@ -1346,108 +1346,62 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
            ]
   end
 
-  # test "breaks down all metrics by visit:referrer with imported data", %{conn: conn, site: site} do
-  #   site_import =
-  #     insert(:site_import,
-  #       site: site,
-  #       start_date: ~D[2005-01-01],
-  #       end_date: Timex.today(),
-  #       source: :universal_analytics
-  #     )
+  test "breaks down all metrics by visit:referrer with imported data", %{conn: conn, site: site} do
+    site_import =
+      insert(:site_import,
+        site: site,
+        start_date: ~D[2005-01-01],
+        end_date: Timex.today(),
+        source: :universal_analytics
+      )
 
-  #   populate_stats(site, site_import.id, [
-  #     build(:pageview, referrer: "site.com", timestamp: ~N[2021-01-01 00:00:00]),
-  #     build(:pageview, referrer: "site.com/1", timestamp: ~N[2021-01-01 00:00:00]),
-  #     build(:imported_sources,
-  #       referrer: "site.com",
-  #       date: ~D[2021-01-01],
-  #       visitors: 2,
-  #       visits: 2,
-  #       pageviews: 2,
-  #       bounces: 1,
-  #       visit_duration: 120
-  #     ),
-  #     build(:imported_sources,
-  #       referrer: "site.com/2",
-  #       date: ~D[2021-01-01],
-  #       visitors: 2,
-  #       visits: 2,
-  #       pageviews: 2,
-  #       bounces: 2,
-  #       visit_duration: 0
-  #     ),
-  #     build(:imported_sources,
-  #       date: ~D[2021-01-01],
-  #       visitors: 10,
-  #       visits: 11,
-  #       pageviews: 50,
-  #       bounces: 0,
-  #       visit_duration: 1100
-  #     )
-  #   ])
+    populate_stats(site, site_import.id, [
+      build(:pageview, referrer: "site.com", timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, referrer: "site.com/1", timestamp: ~N[2021-01-01 00:00:00]),
+      build(:imported_sources,
+        referrer: "site.com",
+        date: ~D[2021-01-01],
+        visitors: 2,
+        visits: 2,
+        pageviews: 2,
+        bounces: 1,
+        visit_duration: 120
+      ),
+      build(:imported_sources,
+        referrer: "site.com/2",
+        date: ~D[2021-01-01],
+        visitors: 2,
+        visits: 2,
+        pageviews: 2,
+        bounces: 2,
+        visit_duration: 0
+      ),
+      build(:imported_sources,
+        date: ~D[2021-01-01],
+        visitors: 10,
+        visits: 11,
+        pageviews: 50,
+        bounces: 0,
+        visit_duration: 1100
+      )
+    ])
 
-  #   conn =
-  #     get(conn, "/api/v1/stats/breakdown", %{
-  #       "site_id" => site.domain,
-  #       "period" => "day",
-  #       "metrics" => "visitors,visits,pageviews,bounce_rate,visit_duration",
-  #       "date" => "2021-01-01",
-  #       "property" => "visit:referrer",
-  #       "with_imported" => "true"
-  #     })
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors", "visits", "pageviews", "bounce_rate", "visit_duration"],
+        "date_range" => "all",
+        "dimensions" => ["visit:referrer"],
+        "include" => %{"imports" => true}
+      })
 
-  #   assert json_response(conn, 200) == %{
-  #            "results" => [
-  #              %{
-  #                "referrer" => "Direct / None",
-  #                "visitors" => 10,
-  #                "visits" => 11,
-  #                "pageviews" => 50,
-  #                "bounce_rate" => 0,
-  #                "visit_duration" => 100
-  #              },
-  #              %{
-  #                "referrer" => "site.com",
-  #                "visitors" => 3,
-  #                "visits" => 3,
-  #                "pageviews" => 3,
-  #                "bounce_rate" => 67.0,
-  #                "visit_duration" => 40
-  #              },
-  #              %{
-  #                "referrer" => "site.com/2",
-  #                "visitors" => 2,
-  #                "visits" => 2,
-  #                "pageviews" => 2,
-  #                "bounce_rate" => 100.0,
-  #                "visit_duration" => 0
-  #              },
-  #              %{
-  #                "referrer" => "site.com/1",
-  #                "visitors" => 1,
-  #                "visits" => 1,
-  #                "pageviews" => 1,
-  #                "bounce_rate" => 100.0,
-  #                "visit_duration" => 0
-  #              }
-  #            ]
-  #          }
-
-  #   conn =
-  #     post(conn, "/api/v2/query", %{
-  #       "site_id" => site.domain,
-  #       "metrics" => ["visitors", "visits", "pageviews", "bounce_rate", "visit_duration"],
-  #       "date_range" => "all",
-  #       "dimensions" => ["visit:referrer"],
-  #     })
-
-  #   %{"results" => results} = json_response(conn, 200)
-
-  #   assert results == [
-  #     %{"dimensions" => ["EE"], "metrics" => [2]},
-  #     %{"dimensions" => ["US"], "metrics" => [1]},
-  #          ]
-  # end
+    assert json_response(conn, 200)["results"] == [
+             %{"dimensions" => ["Direct / None"], "metrics" => [10, 11, 50, 0.0, 100.0]},
+             %{"dimensions" => ["site.com"], "metrics" => [3, 3, 3, 67.0, 40.0]},
+             %{"dimensions" => ["site.com/2"], "metrics" => [2, 2, 2, 100.0, 0.0]},
+             %{"dimensions" => ["site.com/1"], "metrics" => [1, 1, 1, 100.0, 0.0]}
+           ]
+  end
 
   for {dimension, attr} <- [
         {"visit:utm_campaign", :utm_campaign},
@@ -2590,62 +2544,55 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
            ]
   end
 
-  #   test "event:page filter is interpreted as entry_page filter only for bounce_rate", %{
-  #     conn: conn,
-  #     site: site
-  #   } do
-  #     populate_stats(site, [
-  #       build(:pageview,
-  #         browser: "Chrome",
-  #         user_id: @user_id,
-  #         pathname: "/ignore",
-  #         timestamp: ~N[2021-01-01 00:00:00]
-  #       ),
-  #       build(:pageview,
-  #         browser: "Chrome",
-  #         user_id: @user_id,
-  #         pathname: "/plausible.io",
-  #         timestamp: ~N[2021-01-01 00:01:00]
-  #       ),
-  #       build(:pageview,
-  #         browser: "Chrome",
-  #         user_id: 456,
-  #         pathname: "/important-page",
-  #         timestamp: ~N[2021-01-01 00:00:00]
-  #       ),
-  #       build(:pageview,
-  #         browser: "Chrome",
-  #         user_id: 456,
-  #         pathname: "/",
-  #         timestamp: ~N[2021-01-01 00:01:00]
-  #       ),
-  #       build(:pageview,
-  #         browser: "Chrome",
-  #         pathname: "/plausible.io",
-  #         timestamp: ~N[2021-01-01 00:01:00]
-  #       )
-  #     ])
+  test "event:page filter is interpreted as entry_page filter only for bounce_rate", %{
+    conn: conn,
+    site: site
+  } do
+    populate_stats(site, [
+      build(:pageview,
+        browser: "Chrome",
+        user_id: @user_id,
+        pathname: "/ignore",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:pageview,
+        browser: "Chrome",
+        user_id: @user_id,
+        pathname: "/plausible.io",
+        timestamp: ~N[2021-01-01 00:01:00]
+      ),
+      build(:pageview,
+        browser: "Chrome",
+        user_id: 456,
+        pathname: "/important-page",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:pageview,
+        browser: "Chrome",
+        user_id: 456,
+        pathname: "/",
+        timestamp: ~N[2021-01-01 00:01:00]
+      ),
+      build(:pageview,
+        browser: "Chrome",
+        pathname: "/plausible.io",
+        timestamp: ~N[2021-01-01 00:01:00]
+      )
+    ])
 
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain,
-  #         "period" => "day",
-  #         "date" => "2021-01-01",
-  #         "metrics" => "visitors,bounce_rate",
-  #         "property" => "visit:browser",
-  #         "filters" => "event:page == /plausible.io|/important-page"
-  #       })
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "date_range" => "all",
+        "metrics" => ["visitors", "bounce_rate"],
+        "filters" => [["is", "event:page", ["/plausible.io", "/important-page"]]],
+        "dimensions" => ["visit:browser"]
+      })
 
-  #     assert json_response(conn, 200) == %{
-  #              "results" => [
-  #                %{
-  #                  "browser" => "Chrome",
-  #                  "bounce_rate" => 50,
-  #                  "visitors" => 3
-  #                }
-  #              ]
-  #            }
-  #   end
+    assert json_response(conn, 200)["results"] == [
+             %{"dimensions" => ["Chrome"], "metrics" => [3, 50]}
+           ]
+  end
 
   test "event:goal pageview filter for breakdown by visit source", %{conn: conn, site: site} do
     insert(:goal, %{site: site, page_path: "/plausible.io"})
@@ -3159,481 +3106,442 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
            ]
   end
 
-  # describe "metrics" do
-  test "returns conversion_rate in an event:goal breakdown", %{conn: conn, site: site} do
-    populate_stats(site, [
-      build(:event, name: "Signup", user_id: 1),
-      build(:event, name: "Signup", user_id: 1),
-      build(:pageview, pathname: "/blog"),
-      build(:pageview, pathname: "/blog/post"),
-      build(:pageview)
-    ])
+  describe "metrics" do
+    test "returns conversion_rate in an event:goal breakdown", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "Signup", user_id: 1),
+        build(:event, name: "Signup", user_id: 1),
+        build(:pageview, pathname: "/blog"),
+        build(:pageview, pathname: "/blog/post"),
+        build(:pageview)
+      ])
 
-    insert(:goal, %{site: site, event_name: "Signup"})
-    insert(:goal, %{site: site, page_path: "/blog**"})
+      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, page_path: "/blog**"})
 
-    conn =
-      post(conn, "/api/v2/query", %{
-        "site_id" => site.domain,
-        "date_range" => "all",
-        "metrics" => ["visitors", "events", "conversion_rate"],
-        "dimensions" => ["event:goal"]
-      })
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors", "events", "conversion_rate"],
+          "dimensions" => ["event:goal"]
+        })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["Visit /blog**"], "metrics" => [2, 2, 50.0]},
-             %{"dimensions" => ["Signup"], "metrics" => [1, 2, 25.0]}
-           ]
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Visit /blog**"], "metrics" => [2, 2, 50.0]},
+               %{"dimensions" => ["Signup"], "metrics" => [1, 2, 25.0]}
+             ]
+    end
+
+    test "returns conversion_rate alone in an event:goal breakdown", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "Signup", user_id: 1),
+        build(:pageview)
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["conversion_rate"],
+          "dimensions" => ["event:goal"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Signup"], "metrics" => [50.0]}
+             ]
+    end
+
+    test "returns conversion_rate in a goal filtered custom prop breakdown", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog/1", "meta.key": ["author"], "meta.value": ["Uku"]),
+        build(:pageview, pathname: "/blog/2", "meta.key": ["author"], "meta.value": ["Uku"]),
+        build(:pageview, pathname: "/blog/3", "meta.key": ["author"], "meta.value": ["Uku"]),
+        build(:pageview, pathname: "/blog/1", "meta.key": ["author"], "meta.value": ["Marko"]),
+        build(:pageview,
+          pathname: "/blog/2",
+          "meta.key": ["author"],
+          "meta.value": ["Marko"],
+          user_id: 1
+        ),
+        build(:pageview,
+          pathname: "/blog/3",
+          "meta.key": ["author"],
+          "meta.value": ["Marko"],
+          user_id: 1
+        ),
+        build(:pageview, pathname: "/blog"),
+        build(:pageview, "meta.key": ["author"], "meta.value": ["Marko"]),
+        build(:pageview)
+      ])
+
+      insert(:goal, %{site: site, page_path: "/blog**"})
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "filters" => [["matches", "event:goal", ["Visit /blog**"]]],
+          "metrics" => ["visitors", "events", "conversion_rate"],
+          "dimensions" => ["event:props:author"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Uku"], "metrics" => [3, 3, 37.5]},
+               %{"dimensions" => ["Marko"], "metrics" => [2, 3, 25.0]},
+               %{"dimensions" => ["(none)"], "metrics" => [1, 1, 12.5]}
+             ]
+    end
+
+    test "returns conversion_rate alone in a goal filtered custom prop breakdown", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog/1", "meta.key": ["author"], "meta.value": ["Uku"]),
+        build(:pageview)
+      ])
+
+      insert(:goal, %{site: site, page_path: "/blog**"})
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["conversion_rate"],
+          "date_range" => "all",
+          "dimensions" => ["event:props:author"],
+          "filters" => [["matches", "event:goal", ["Visit /blog**"]]]
+        })
+
+      %{"results" => results} = json_response(conn, 200)
+
+      assert results == [
+               %{"dimensions" => ["Uku"], "metrics" => [50]}
+             ]
+    end
+
+    #   test "returns conversion_rate in a goal filtered event:page breakdown", %{
+    #     conn: conn,
+    #     site: site
+    #   } do
+    #     populate_stats(site, [
+    #       build(:event, pathname: "/en/register", name: "pageview"),
+    #       build(:event, pathname: "/en/register", name: "Signup"),
+    #       build(:event, pathname: "/en/register", name: "Signup"),
+    #       build(:event, pathname: "/it/register", name: "Signup", user_id: 1),
+    #       build(:event, pathname: "/it/register", name: "Signup", user_id: 1),
+    #       build(:event, pathname: "/it/register", name: "pageview")
+    #     ])
+
+    #     insert(:goal, %{site: site, event_name: "Signup"})
+
+    #     conn =
+    #       get(conn, "/api/v1/stats/breakdown", %{
+    #         "site_id" => site.domain,
+    #         "period" => "day",
+    #         "property" => "event:page",
+    #         "filters" => "event:goal==Signup",
+    #         "metrics" => "visitors,events,conversion_rate"
+    #       })
+
+    #     assert json_response(conn, 200) == %{
+    #              "results" => [
+    #                %{
+    #                  "page" => "/en/register",
+    #                  "visitors" => 2,
+    #                  "events" => 2,
+    #                  "conversion_rate" => 66.7
+    #                },
+    #                %{
+    #                  "page" => "/it/register",
+    #                  "visitors" => 1,
+    #                  "events" => 2,
+    #                  "conversion_rate" => 50
+    #                }
+    #              ]
+    #            }
+    #   end
+
+    # test "returns conversion_rate alone in a goal filtered event:page breakdown", %{
+    #   conn: conn,
+    #   site: site
+    # } do
+    #   populate_stats(site, [
+    #     build(:event, pathname: "/en/register", name: "pageview"),
+    #     build(:event, pathname: "/en/register", name: "Signup")
+    #   ])
+
+    #   insert(:goal, %{site: site, event_name: "Signup"})
+
+    #   conn =
+    #     post(conn, "/api/v2/query", %{
+    #       "site_id" => site.domain,
+    #       "date_range" => "all",
+    #       "filters" => [["is", "event:goal", ["Signup"]]],
+    #       "metrics" => ["group_conversion_rate"],
+    #       "dimensions" => ["event:page"]
+    #     })
+
+    #   assert json_response(conn, 200) == %{
+    #            "results" => [
+    #              %{
+    #                "page" => "/en/register",
+    #                "conversion_rate" => 50
+    #              }
+    #            ]
+    #          }
+    # end
+
+    test "returns conversion_rate in a multi-goal filtered visit:screen_size breakdown", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, screen_size: "Mobile", name: "pageview"),
+        build(:event, screen_size: "Mobile", name: "AddToCart"),
+        build(:event, screen_size: "Mobile", name: "AddToCart"),
+        build(:event, screen_size: "Desktop", name: "AddToCart", user_id: 1),
+        build(:event, screen_size: "Desktop", name: "Purchase", user_id: 1),
+        build(:event, screen_size: "Desktop", name: "pageview")
+      ])
+
+      # Make sure that revenue goals are treated the same
+      # way as regular custom event goals
+      insert(:goal, %{site: site, event_name: "Purchase", currency: :EUR})
+      insert(:goal, %{site: site, event_name: "AddToCart"})
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "events", "group_conversion_rate"],
+          "date_range" => "all",
+          "dimensions" => ["visit:device"],
+          "filters" => [["is", "event:goal", ["AddToCart", "Purchase"]]]
+        })
+
+      %{"results" => results} = json_response(conn, 200)
+
+      assert results == [
+               %{"dimensions" => ["Mobile"], "metrics" => [2, 2, 66.7]},
+               %{"dimensions" => ["Desktop"], "metrics" => [1, 2, 50]}
+             ]
+    end
+
+    test "returns conversion_rate alone in a goal filtered visit:screen_size breakdown", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, screen_size: "Mobile", name: "pageview"),
+        build(:event, screen_size: "Mobile", name: "AddToCart")
+      ])
+
+      insert(:goal, %{site: site, event_name: "AddToCart"})
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["conversion_rate"],
+          "date_range" => "all",
+          "dimensions" => ["visit:device"],
+          "filters" => [["is", "event:goal", ["AddToCart"]]]
+        })
+
+      %{"results" => results} = json_response(conn, 200)
+
+      assert results == [
+               %{"dimensions" => ["Mobile"], "metrics" => [50]}
+             ]
+    end
+
+    test "all metrics for breakdown by visit prop", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          referrer_source: "Google",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "signup",
+          user_id: 1,
+          referrer_source: "Google",
+          timestamp: ~N[2021-01-01 00:05:00]
+        ),
+        build(:pageview,
+          user_id: 1,
+          referrer_source: "Google",
+          timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview,
+          referrer_source: "Twitter",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => [
+            "visitors",
+            "visits",
+            "pageviews",
+            "events",
+            "bounce_rate",
+            "visit_duration"
+          ],
+          "date_range" => "all",
+          "dimensions" => ["visit:source"],
+          "filters" => []
+        })
+
+      %{"results" => results} = json_response(conn, 200)
+
+      assert results == [
+               %{"dimensions" => ["Google"], "metrics" => [2, 2, 3, 4, 50, 300]},
+               %{"dimensions" => ["Twitter"], "metrics" => [1, 1, 1, 1, 100, 0]}
+             ]
+    end
+
+    test "metrics=bounce_rate does not add visits to the response", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          pathname: "/entry-page-1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: 1,
+          pathname: "/some-page",
+          timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:pageview,
+          user_id: 2,
+          pathname: "/entry-page-2",
+          referrer_source: "Google",
+          timestamp: ~N[2021-01-01 00:05:00]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["bounce_rate"],
+          "date_range" => "all",
+          "dimensions" => ["visit:entry_page"],
+          "order_by" => [["visit:entry_page", "asc"]]
+        })
+
+      %{"results" => results} = json_response(conn, 200)
+
+      assert results == [
+               %{"dimensions" => ["/entry-page-1"], "metrics" => [0]},
+               %{"dimensions" => ["/entry-page-2"], "metrics" => [100]}
+             ]
+    end
+
+    test "filter by custom event property", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          browser: "Chrome",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          browser: "Safari",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          browser: "Safari",
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["personal"],
+          browser: "IE",
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["visit:browser"],
+          "filters" => [
+            ["is", "event:name", ["Purchase"]],
+            ["is", "event:props:package", ["business"]]
+          ]
+        })
+
+      %{"results" => results} = json_response(conn, 200)
+
+      assert results == [
+               %{"dimensions" => ["Safari"], "metrics" => [2]},
+               %{"dimensions" => ["Chrome"], "metrics" => [1]}
+             ]
+    end
+
+    test "all metrics for breakdown by event prop", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: 1,
+          pathname: "/plausible.io",
+          timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:pageview, pathname: "/", timestamp: ~N[2021-01-01 00:25:00]),
+        build(:pageview,
+          pathname: "/plausible.io",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => [
+            "visitors",
+            # "visits",
+            "pageviews",
+            "events"
+            # "bounce_rate",
+            # "visit_duration"
+          ],
+          "date_range" => "all",
+          "dimensions" => ["event:page"]
+        })
+
+      %{"results" => results} = json_response(conn, 200)
+
+      assert results == [
+               %{"dimensions" => ["/"], "metrics" => [2, 2, 2]},
+               %{"dimensions" => ["/plausible.io"], "metrics" => [2, 2, 2]}
+             ]
+    end
   end
-
-  test "returns conversion_rate alone in an event:goal breakdown", %{conn: conn, site: site} do
-    populate_stats(site, [
-      build(:event, name: "Signup", user_id: 1),
-      build(:pageview)
-    ])
-
-    insert(:goal, %{site: site, event_name: "Signup"})
-
-    conn =
-      post(conn, "/api/v2/query", %{
-        "site_id" => site.domain,
-        "date_range" => "all",
-        "metrics" => ["conversion_rate"],
-        "dimensions" => ["event:goal"]
-      })
-
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["Signup"], "metrics" => [50.0]}
-           ]
-  end
-
-  test "returns conversion_rate in a goal filtered custom prop breakdown", %{
-    conn: conn,
-    site: site
-  } do
-    populate_stats(site, [
-      build(:pageview, pathname: "/blog/1", "meta.key": ["author"], "meta.value": ["Uku"]),
-      build(:pageview, pathname: "/blog/2", "meta.key": ["author"], "meta.value": ["Uku"]),
-      build(:pageview, pathname: "/blog/3", "meta.key": ["author"], "meta.value": ["Uku"]),
-      build(:pageview, pathname: "/blog/1", "meta.key": ["author"], "meta.value": ["Marko"]),
-      build(:pageview,
-        pathname: "/blog/2",
-        "meta.key": ["author"],
-        "meta.value": ["Marko"],
-        user_id: 1
-      ),
-      build(:pageview,
-        pathname: "/blog/3",
-        "meta.key": ["author"],
-        "meta.value": ["Marko"],
-        user_id: 1
-      ),
-      build(:pageview, pathname: "/blog"),
-      build(:pageview, "meta.key": ["author"], "meta.value": ["Marko"]),
-      build(:pageview)
-    ])
-
-    insert(:goal, %{site: site, page_path: "/blog**"})
-
-    conn =
-      post(conn, "/api/v2/query", %{
-        "site_id" => site.domain,
-        "date_range" => "all",
-        "filters" => [["matches", "event:goal", ["Visit /blog**"]]],
-        "metrics" => ["visitors", "events", "conversion_rate"],
-        "dimensions" => ["event:props:author"]
-      })
-
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["Uku"], "metrics" => [3, 3, 37.5]},
-             %{"dimensions" => ["Marko"], "metrics" => [2, 3, 25.0]},
-             %{"dimensions" => ["(none)"], "metrics" => [1, 1, 12.5]}
-           ]
-  end
-
-  test "returns conversion_rate alone in a goal filtered custom prop breakdown", %{
-    conn: conn,
-    site: site
-  } do
-    populate_stats(site, [
-      build(:pageview, pathname: "/blog/1", "meta.key": ["author"], "meta.value": ["Uku"]),
-      build(:pageview)
-    ])
-
-    insert(:goal, %{site: site, page_path: "/blog**"})
-
-    conn =
-      post(conn, "/api/v2/query", %{
-        "site_id" => site.domain,
-        "metrics" => ["conversion_rate"],
-        "date_range" => "all",
-        "dimensions" => ["event:props:author"],
-        "filters" => [["matches", "event:goal", ["Visit /blog**"]]]
-      })
-
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Uku"], "metrics" => [50]}
-           ]
-  end
-
-  #   test "returns conversion_rate in a goal filtered event:page breakdown", %{
-  #     conn: conn,
-  #     site: site
-  #   } do
-  #     populate_stats(site, [
-  #       build(:event, pathname: "/en/register", name: "pageview"),
-  #       build(:event, pathname: "/en/register", name: "Signup"),
-  #       build(:event, pathname: "/en/register", name: "Signup"),
-  #       build(:event, pathname: "/it/register", name: "Signup", user_id: 1),
-  #       build(:event, pathname: "/it/register", name: "Signup", user_id: 1),
-  #       build(:event, pathname: "/it/register", name: "pageview")
-  #     ])
-
-  #     insert(:goal, %{site: site, event_name: "Signup"})
-
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain,
-  #         "period" => "day",
-  #         "property" => "event:page",
-  #         "filters" => "event:goal==Signup",
-  #         "metrics" => "visitors,events,conversion_rate"
-  #       })
-
-  #     assert json_response(conn, 200) == %{
-  #              "results" => [
-  #                %{
-  #                  "page" => "/en/register",
-  #                  "visitors" => 2,
-  #                  "events" => 2,
-  #                  "conversion_rate" => 66.7
-  #                },
-  #                %{
-  #                  "page" => "/it/register",
-  #                  "visitors" => 1,
-  #                  "events" => 2,
-  #                  "conversion_rate" => 50
-  #                }
-  #              ]
-  #            }
-  #   end
-
-  # test "returns conversion_rate alone in a goal filtered event:page breakdown", %{
-  #   conn: conn,
-  #   site: site
-  # } do
-  #   populate_stats(site, [
-  #     build(:event, pathname: "/en/register", name: "pageview"),
-  #     build(:event, pathname: "/en/register", name: "Signup")
-  #   ])
-
-  #   insert(:goal, %{site: site, event_name: "Signup"})
-
-  #   conn =
-  #     post(conn, "/api/v2/query", %{
-  #       "site_id" => site.domain,
-  #       "date_range" => "all",
-  #       "filters" => [["is", "event:goal", ["Signup"]]],
-  #       "metrics" => ["group_conversion_rate"],
-  #       "dimensions" => ["event:page"]
-  #     })
-
-  #   assert json_response(conn, 200) == %{
-  #            "results" => [
-  #              %{
-  #                "page" => "/en/register",
-  #                "conversion_rate" => 50
-  #              }
-  #            ]
-  #          }
-  # end
-
-  test "returns conversion_rate in a multi-goal filtered visit:screen_size breakdown", %{
-    conn: conn,
-    site: site
-  } do
-    populate_stats(site, [
-      build(:event, screen_size: "Mobile", name: "pageview"),
-      build(:event, screen_size: "Mobile", name: "AddToCart"),
-      build(:event, screen_size: "Mobile", name: "AddToCart"),
-      build(:event, screen_size: "Desktop", name: "AddToCart", user_id: 1),
-      build(:event, screen_size: "Desktop", name: "Purchase", user_id: 1),
-      build(:event, screen_size: "Desktop", name: "pageview")
-    ])
-
-    # Make sure that revenue goals are treated the same
-    # way as regular custom event goals
-    insert(:goal, %{site: site, event_name: "Purchase", currency: :EUR})
-    insert(:goal, %{site: site, event_name: "AddToCart"})
-
-    conn =
-      post(conn, "/api/v2/query", %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors", "events", "group_conversion_rate"],
-        "date_range" => "all",
-        "dimensions" => ["visit:device"],
-        "filters" => [["is", "event:goal", ["AddToCart", "Purchase"]]]
-      })
-
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Mobile"], "metrics" => [2, 2, 66.7]},
-             %{"dimensions" => ["Desktop"], "metrics" => [1, 2, 50]}
-           ]
-  end
-
-  test "returns conversion_rate alone in a goal filtered visit:screen_size breakdown", %{
-    conn: conn,
-    site: site
-  } do
-    populate_stats(site, [
-      build(:event, screen_size: "Mobile", name: "pageview"),
-      build(:event, screen_size: "Mobile", name: "AddToCart")
-    ])
-
-    insert(:goal, %{site: site, event_name: "AddToCart"})
-
-    conn =
-      post(conn, "/api/v2/query", %{
-        "site_id" => site.domain,
-        "metrics" => ["conversion_rate"],
-        "date_range" => "all",
-        "dimensions" => ["visit:device"],
-        "filters" => [["is", "event:goal", ["AddToCart"]]]
-      })
-
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Mobile"], "metrics" => [50]}
-           ]
-  end
-
-  #   test "returns conversion_rate for a browser_version breakdown with pagination limit", %{
-  #     site: site,
-  #     conn: conn
-  #   } do
-  #     populate_stats(site, [
-  #       build(:pageview, browser: "Firefox", browser_version: "110"),
-  #       build(:pageview, browser: "Firefox", browser_version: "110"),
-  #       build(:pageview, browser: "Chrome", browser_version: "110"),
-  #       build(:pageview, browser: "Chrome", browser_version: "110"),
-  #       build(:pageview, browser: "Avast Secure Browser", browser_version: "110"),
-  #       build(:pageview, browser: "Avast Secure Browser", browser_version: "110"),
-  #       build(:event, name: "Signup", browser: "Edge", browser_version: "110")
-  #     ])
-
-  #     insert(:goal, site: site, event_name: "Signup")
-
-  #     conn =
-  #       get(conn, "/api/v1/stats/breakdown", %{
-  #         "site_id" => site.domain,
-  #         "period" => "day",
-  #         "property" => "visit:browser_version",
-  #         "filters" => "event:goal==Signup",
-  #         "metrics" => "visitors,conversion_rate",
-  #         "page" => 1,
-  #         "limit" => 1
-  #       })
-
-  #     assert json_response(conn, 200) == %{
-  #              "results" => [
-  #                %{
-  #                  "browser" => "Edge",
-  #                  "browser_version" => "110",
-  #                  "visitors" => 1,
-  #                  "conversion_rate" => 100.0
-  #                }
-  #              ]
-  #            }
-  #   end
-
-  test "all metrics for breakdown by visit prop", %{conn: conn, site: site} do
-    populate_stats(site, [
-      build(:pageview,
-        user_id: 1,
-        referrer_source: "Google",
-        timestamp: ~N[2021-01-01 00:00:00]
-      ),
-      build(:event,
-        name: "signup",
-        user_id: 1,
-        referrer_source: "Google",
-        timestamp: ~N[2021-01-01 00:05:00]
-      ),
-      build(:pageview,
-        user_id: 1,
-        referrer_source: "Google",
-        timestamp: ~N[2021-01-01 00:10:00]
-      ),
-      build(:pageview,
-        referrer_source: "Google",
-        timestamp: ~N[2021-01-01 00:25:00]
-      ),
-      build(:pageview,
-        referrer_source: "Twitter",
-        timestamp: ~N[2021-01-01 00:00:00]
-      )
-    ])
-
-    conn =
-      post(conn, "/api/v2/query", %{
-        "site_id" => site.domain,
-        "metrics" => [
-          "visitors",
-          "visits",
-          "pageviews",
-          "events",
-          "bounce_rate",
-          "visit_duration"
-        ],
-        "date_range" => "all",
-        "dimensions" => ["visit:source"],
-        "filters" => []
-      })
-
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Google"], "metrics" => [2, 2, 3, 4, 50, 300]},
-             %{"dimensions" => ["Twitter"], "metrics" => [1, 1, 1, 1, 100, 0]}
-           ]
-  end
-
-  test "metrics=bounce_rate does not add visits to the response", %{conn: conn, site: site} do
-    populate_stats(site, [
-      build(:pageview,
-        user_id: 1,
-        pathname: "/entry-page-1",
-        timestamp: ~N[2021-01-01 00:00:00]
-      ),
-      build(:pageview,
-        user_id: 1,
-        pathname: "/some-page",
-        timestamp: ~N[2021-01-01 00:10:00]
-      ),
-      build(:pageview,
-        user_id: 2,
-        pathname: "/entry-page-2",
-        referrer_source: "Google",
-        timestamp: ~N[2021-01-01 00:05:00]
-      )
-    ])
-
-    conn =
-      post(conn, "/api/v2/query", %{
-        "site_id" => site.domain,
-        "metrics" => ["bounce_rate"],
-        "date_range" => "all",
-        "dimensions" => ["visit:entry_page"],
-        "order_by" => [["visit:entry_page", "asc"]]
-      })
-
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["/entry-page-1"], "metrics" => [0]},
-             %{"dimensions" => ["/entry-page-2"], "metrics" => [100]}
-           ]
-  end
-
-  test "filter by custom event property", %{conn: conn, site: site} do
-    populate_stats(site, [
-      build(:event,
-        name: "Purchase",
-        "meta.key": ["package"],
-        "meta.value": ["business"],
-        browser: "Chrome",
-        timestamp: ~N[2021-01-01 00:00:00]
-      ),
-      build(:event,
-        name: "Purchase",
-        "meta.key": ["package"],
-        "meta.value": ["business"],
-        browser: "Safari",
-        timestamp: ~N[2021-01-01 00:00:00]
-      ),
-      build(:event,
-        name: "Purchase",
-        "meta.key": ["package"],
-        "meta.value": ["business"],
-        browser: "Safari",
-        timestamp: ~N[2021-01-01 00:25:00]
-      ),
-      build(:event,
-        name: "Purchase",
-        "meta.key": ["package"],
-        "meta.value": ["personal"],
-        browser: "IE",
-        timestamp: ~N[2021-01-01 00:25:00]
-      )
-    ])
-
-    conn =
-      post(conn, "/api/v2/query", %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "dimensions" => ["visit:browser"],
-        "filters" => [
-          ["is", "event:name", ["Purchase"]],
-          ["is", "event:props:package", ["business"]]
-        ]
-      })
-
-    %{"results" => results} = json_response(conn, 200)
-
-    assert results == [
-             %{"dimensions" => ["Safari"], "metrics" => [2]},
-             %{"dimensions" => ["Chrome"], "metrics" => [1]}
-           ]
-  end
-
-  # test "all metrics for breakdown by event prop", %{conn: conn, site: site} do
-  #   populate_stats(site, [
-  #     build(:pageview,
-  #       user_id: 1,
-  #       pathname: "/",
-  #       timestamp: ~N[2021-01-01 00:00:00]
-  #     ),
-  #     build(:pageview,
-  #       user_id: 1,
-  #       pathname: "/plausible.io",
-  #       timestamp: ~N[2021-01-01 00:10:00]
-  #     ),
-  #     build(:pageview, pathname: "/", timestamp: ~N[2021-01-01 00:25:00]),
-  #     build(:pageview,
-  #       pathname: "/plausible.io",
-  #       timestamp: ~N[2021-01-01 00:00:00]
-  #     )
-  #   ])
-
-  #   conn =
-  #     post(conn, "/api/v2/query", %{
-  #       "site_id" => site.domain,
-  #       "metrics" => [
-  #         "visitors",
-  #         "visits",
-  #         "pageviews",
-  #         "events",
-  #         "bounce_rate",
-  #         "visit_duration"
-  #       ],
-  #       "date_range" => "all",
-  #       "dimensions" => ["event:page"],
-  #     })
-
-  #   %{"results" => results} = json_response(conn, 200)
-
-  #   assert results == [
-  #            %{"dimensions" => ["/"], "metrics" => [2, 2, 3, 4, 50, 300]},
-  #            %{"dimensions" => ["/plausible.io"], "metrics" => [1, 1, 1, 1, 100, 0]}
-  #          ]
-  # end
-  # end
 
   describe "imported data" do
     test "returns screen sizes breakdown when filtering by screen size", %{conn: conn, site: site} do
@@ -3669,67 +3577,67 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert results == [%{"dimensions" => ["Mobile"], "metrics" => [4, 6]}]
     end
 
-    #   test "returns custom event goals and pageview goals", %{conn: conn, site: site} do
-    #     insert(:goal, site: site, event_name: "Purchase")
-    #     insert(:goal, site: site, page_path: "/test")
+    # :TODO: Imports with event:goal breakdown
+    # test "returns custom event goals and pageview goals", %{conn: conn, site: site} do
+    #   insert(:goal, site: site, event_name: "Purchase")
+    #   insert(:goal, site: site, page_path: "/test")
 
-    #     site_import = insert(:site_import, site: site)
+    #   site_import = insert(:site_import, site: site)
 
-    #     populate_stats(site, site_import.id, [
-    #       build(:pageview,
-    #         timestamp: ~N[2021-01-01 00:00:01],
-    #         pathname: "/test"
-    #       ),
-    #       build(:event,
-    #         name: "Purchase",
-    #         timestamp: ~N[2021-01-01 00:00:03]
-    #       ),
-    #       build(:event,
-    #         name: "Purchase",
-    #         timestamp: ~N[2021-01-01 00:00:03]
-    #       ),
-    #       build(:imported_custom_events,
-    #         name: "Purchase",
-    #         visitors: 3,
-    #         events: 5,
-    #         date: ~D[2021-01-01]
-    #       ),
-    #       build(:imported_pages,
-    #         page: "/test",
-    #         visitors: 2,
-    #         pageviews: 2,
-    #         date: ~D[2021-01-01]
-    #       ),
-    #       build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
-    #     ])
+    #   populate_stats(site, site_import.id, [
+    #     build(:pageview,
+    #       timestamp: ~N[2021-01-01 00:00:01],
+    #       pathname: "/test"
+    #     ),
+    #     build(:event,
+    #       name: "Purchase",
+    #       timestamp: ~N[2021-01-01 00:00:03]
+    #     ),
+    #     build(:event,
+    #       name: "Purchase",
+    #       timestamp: ~N[2021-01-01 00:00:03]
+    #     ),
+    #     build(:imported_custom_events,
+    #       name: "Purchase",
+    #       visitors: 3,
+    #       events: 5,
+    #       date: ~D[2021-01-01]
+    #     ),
+    #     build(:imported_pages,
+    #       page: "/test",
+    #       visitors: 2,
+    #       pageviews: 2,
+    #       date: ~D[2021-01-01]
+    #     ),
+    #     build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
+    #   ])
 
-    #     conn =
-    #       get(conn, "/api/v1/stats/breakdown", %{
-    #         "site_id" => site.domain,
-    #         "period" => "day",
-    #         "date" => "2021-01-01",
-    #         "property" => "event:goal",
-    #         "metrics" => "visitors,events,pageviews,conversion_rate",
-    #         "with_imported" => "true"
-    #       })
+    #   conn =
+    #     post(conn, "/api/v2/query", %{
+    #       "site_id" => site.domain,
+    #       "date_range" => "all",
+    #       "dimensions" => ["event:goal"],
+    #       "metrics" => ["visitors", "events", "pageviews", "conversion_rate"],
+    #       "include" => %{"imports" => true}
+    #     })
 
-    #     assert [
-    #              %{
-    #                "goal" => "Purchase",
-    #                "visitors" => 5,
-    #                "events" => 7,
-    #                "pageviews" => 0,
-    #                "conversion_rate" => 62.5
-    #              },
-    #              %{
-    #                "goal" => "Visit /test",
-    #                "visitors" => 3,
-    #                "events" => 3,
-    #                "pageviews" => 3,
-    #                "conversion_rate" => 37.5
-    #              }
-    #            ] = json_response(conn, 200)["results"]
-    #   end
+    #   assert json_response(conn, 200)["results"] == [
+    #            %{
+    #              "goal" => "Purchase",
+    #              "visitors" => 5,
+    #              "events" => 7,
+    #              "pageviews" => 0,
+    #              "conversion_rate" => 62.5
+    #            },
+    #            %{
+    #              "goal" => "Visit /test",
+    #              "visitors" => 3,
+    #              "events" => 3,
+    #              "pageviews" => 3,
+    #              "conversion_rate" => 37.5
+    #            }
+    #          ]
+    # end
 
     test "pageviews are returned as events for breakdown reports other than custom events", %{
       conn: conn,
