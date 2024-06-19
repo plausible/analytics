@@ -46,6 +46,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_metric("time_on_page"), do: {:ok, :time_on_page}
   defp parse_metric("conversion_rate"), do: {:ok, :conversion_rate}
+  defp parse_metric("group_conversion_rate"), do: {:ok, :group_conversion_rate}
   defp parse_metric("visitors"), do: {:ok, :visitors}
   defp parse_metric("pageviews"), do: {:ok, :pageviews}
   defp parse_metric("events"), do: {:ok, :events}
@@ -355,7 +356,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp validate_metric(:conversion_rate = metric, query) do
+  defp validate_metric(metric, query) when metric in [:conversion_rate, :group_conversion_rate] do
     if Enum.member?(query.dimensions, "event:goal") or
          not is_nil(Query.get_filter(query, "event:goal")) do
       :ok
