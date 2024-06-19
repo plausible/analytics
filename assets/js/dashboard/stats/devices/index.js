@@ -10,7 +10,7 @@ import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warni
 // Icons copied from https://github.com/alrra/browser-logos
 const BROWSER_ICONS = {
   'Chrome': 'chrome.svg',
-  'Safari': 'safari.svg',
+  'Safari': 'safari.png',
   'Firefox': 'firefox.svg',
   'Microsoft Edge': 'edge.svg',
   'Vivaldi': 'vivaldi.svg',
