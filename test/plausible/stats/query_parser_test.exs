@@ -27,7 +27,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       dimensions: [],
       order_by: nil,
       timezone: site.timezone,
-      imported_data_requested: false
+      imported_data_requested: false,
+      preloaded_goals: []
     })
   end
 
@@ -46,7 +47,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        imported_data_requested: false
+        imported_data_requested: false,
+        preloaded_goals: []
       })
     end
 
@@ -83,7 +85,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        imported_data_requested: false
+        imported_data_requested: false,
+        preloaded_goals: []
       })
     end
 
@@ -112,7 +115,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           dimensions: [],
           order_by: nil,
           timezone: site.timezone,
-          imported_data_requested: false
+          imported_data_requested: false,
+          preloaded_goals: []
         })
       end
 
@@ -156,7 +160,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        imported_data_requested: false
+        imported_data_requested: false,
+        preloaded_goals: []
       })
     end
 
@@ -179,7 +184,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             dimensions: [],
             order_by: nil,
             timezone: site.timezone,
-            imported_data_requested: false
+            imported_data_requested: false,
+            preloaded_goals: []
           })
         end
       end
@@ -203,7 +209,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           dimensions: [],
           order_by: nil,
           timezone: site.timezone,
-          imported_data_requested: false
+          imported_data_requested: false,
+          preloaded_goals: []
         })
       end
     end
@@ -254,7 +261,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        imported_data_requested: true
+        imported_data_requested: true,
+        preloaded_goals: []
       })
     end
 
@@ -289,7 +297,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        imported_data_requested: false
+        imported_data_requested: false,
+        preloaded_goals: [{:page, "/thank-you"}, {:event, "Signup"}]
       })
     end
 
@@ -370,7 +379,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           dimensions: ["event:#{unquote(dimension)}"],
           order_by: nil,
           timezone: site.timezone,
-          imported_data_requested: false
+          imported_data_requested: false,
+          preloaded_goals: []
         })
       end
     end
@@ -389,7 +399,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           dimensions: ["visit:#{unquote(dimension)}"],
           order_by: nil,
           timezone: site.timezone,
-          imported_data_requested: false
+          imported_data_requested: false,
+          preloaded_goals: []
         })
       end
     end
@@ -407,7 +418,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: ["event:props:foobar"],
         order_by: nil,
         timezone: site.timezone,
-        imported_data_requested: false
+        imported_data_requested: false,
+        preloaded_goals: []
       })
     end
 
@@ -462,7 +474,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: [{:events, :desc}, {:visitors, :asc}],
         timezone: site.timezone,
-        imported_data_requested: false
+        imported_data_requested: false,
+        preloaded_goals: []
       })
     end
 
@@ -480,7 +493,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: ["event:name"],
         order_by: [{"event:name", :desc}],
         timezone: site.timezone,
-        imported_data_requested: false
+        imported_data_requested: false,
+        preloaded_goals: []
       })
     end
 
@@ -575,7 +589,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        imported_data_requested: false
+        imported_data_requested: false,
+        preloaded_goals: [event: "Signup"]
       })
     end
 
@@ -594,7 +609,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: ["event:goal"],
         order_by: nil,
         timezone: site.timezone,
-        imported_data_requested: false
+        imported_data_requested: false,
+        preloaded_goals: [event: "Signup"]
       })
     end
   end
@@ -615,7 +631,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        imported_data_requested: false
+        imported_data_requested: false,
+        preloaded_goals: [event: "Signup"]
       })
     end
 
@@ -658,7 +675,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: ["visit:device"],
         order_by: nil,
         timezone: site.timezone,
-        imported_data_requested: false
+        imported_data_requested: false,
+        preloaded_goals: []
       })
     end
 
@@ -687,7 +705,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        imported_data_requested: false
+        imported_data_requested: false,
+        preloaded_goals: []
       })
     end
   end
