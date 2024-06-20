@@ -103,7 +103,26 @@ function BrowserVersions({ query, site, afterFetchData }) {
       query={query}
     />
   )
+}
 
+// Icons copied from https://github.com/ngeenx/operating-system-logos
+const OS_ICONS = {
+  'iOS': 'ios.png',
+  'Mac': 'mac.png',
+  'Windows': 'windows.png',
+  'Windows Phone': 'windows.png',
+  'Android': 'android.png',
+  'GNU/Linux': 'gnu_linux.png',
+  'Ubuntu': 'ubuntu.png',
+  'Chrome OS': 'chrome_os.png',
+  'iPadOS': 'ipad_os.png',
+  'Fire OS': 'fire_os.png',
+  'HarmonyOS': 'harmony_os.png',
+  'Tizen': 'tizen.png',
+  'PlayStation': 'playstation.png',
+  'KaiOS': 'kai_os.png',
+  'Fedora': 'fedora.png',
+  'FreeBSD': 'freebsd.png',
 }
 
 function OperatingSystems({ query, site, afterFetchData }) {
@@ -118,11 +137,23 @@ function OperatingSystems({ query, site, afterFetchData }) {
     }
   }
 
+  function renderIcon(listItem) {
+    const filename = OS_ICONS[listItem.name] || 'fallback.svg'
+
+    return (
+      <img
+        src={`/images/icon/os/${filename}`}
+        className="w-4 h-4 mr-2"
+      />
+    )
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
+      renderIcon={renderIcon}
       keyLabel="Operating system"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
       query={query}
