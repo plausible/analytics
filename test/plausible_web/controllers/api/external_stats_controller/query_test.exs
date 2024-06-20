@@ -3488,11 +3488,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "site_id" => site.domain,
           "metrics" => [
             "visitors",
-            # "visits",
+            "visits",
             "pageviews",
-            "events"
-            # "bounce_rate",
-            # "visit_duration"
+            "events",
+            "bounce_rate",
+            "visit_duration"
           ],
           "date_range" => "all",
           "dimensions" => ["event:page"]
@@ -3501,8 +3501,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       %{"results" => results} = json_response(conn, 200)
 
       assert results == [
-               %{"dimensions" => ["/"], "metrics" => [2, 2, 2]},
-               %{"dimensions" => ["/plausible.io"], "metrics" => [2, 2, 2]}
+               %{"dimensions" => ["/"], "metrics" => [2, 2, 2, 2, 50, 300]},
+               %{"dimensions" => ["/plausible.io"], "metrics" => [2, 1, 2, 2, 100, 0]}
              ]
     end
   end
