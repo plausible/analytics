@@ -31,6 +31,9 @@ export default function Properties(props) {
   }
 
   useEffect(() => {
+    setPropKeyLoading(true)
+    setPropKey(null)
+
     fetchPropKeyOptions()("").then((propKeys) => {
       const propKeyValues = propKeys.map(entry => entry.value)
 
