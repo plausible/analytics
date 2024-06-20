@@ -10,7 +10,7 @@ import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warni
 // Icons copied from https://github.com/alrra/browser-logos
 const BROWSER_ICONS = {
   'Chrome': 'chrome.svg',
-  'Safari': 'safari.svg',
+  'Safari': 'safari.png',
   'Firefox': 'firefox.svg',
   'Microsoft Edge': 'edge.svg',
   'Vivaldi': 'vivaldi.svg',
@@ -28,6 +28,17 @@ const BROWSER_ICONS = {
   'vivo Browser': 'vivo.png'
 }
 
+function browserIconFor(browser) {
+  const filename = BROWSER_ICONS[browser] || 'fallback.svg'
+
+  return (
+    <img
+      src={`/images/icon/browser/${filename}`}
+      className="w-4 h-4 mr-2"
+    />
+  )
+}
+
 function Browsers({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/browsers'), query)
@@ -41,14 +52,7 @@ function Browsers({ query, site, afterFetchData }) {
   }
 
   function renderIcon(listItem) {
-    const filename = BROWSER_ICONS[listItem.name] || 'fallback.svg'
-
-    return (
-      <img
-        src={`/images/icon/browser/${filename}`}
-        className="w-4 h-4 mr-2"
-      />
-    )
+    return browserIconFor(listItem.name)
   }
 
   return (
@@ -67,6 +71,15 @@ function Browsers({ query, site, afterFetchData }) {
 function BrowserVersions({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/browser-versions'), query)
+      .then(res => {
+        return {...res, results: res.results.map((row => {
+          return {...row, name: `${row.browser} ${row.name}`}
+        }))}
+      })
+  }
+
+  function renderIcon(listItem) {
+    return browserIconFor(listItem.browser)
   }
 
   function getFilterFor(listItem) {
@@ -86,6 +99,7 @@ function BrowserVersions({ query, site, afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Browser version"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
+      renderIcon={renderIcon}
       query={query}
     />
   )
@@ -150,7 +164,9 @@ function ScreenSizes({ query, site, afterFetchData }) {
   }
 
   function renderIcon(screenSize) {
-    return iconFor(screenSize.name)
+    return (
+      <span className="mr-1.5">{iconFor(screenSize.name)}</span>
+    )
   }
 
   function getFilterFor(listItem) {
