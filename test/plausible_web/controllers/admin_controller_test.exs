@@ -27,6 +27,39 @@ defmodule PlausibleWeb.AdminControllerTest do
     end
   end
 
+  describe "GET /crm/sites/site" do
+    setup [:create_user, :log_in]
+
+    @tag :ee_only
+    test "pagination works correctly when multiple memberships per site present", %{
+      conn: conn,
+      user: user
+    } do
+      patch_env(:super_admin_user_ids, [user.id])
+
+      s1 = insert(:site)
+      insert_list(3, :site_membership, site: s1)
+      s2 = insert(:site)
+      insert_list(3, :site_membership, site: s2)
+      s3 = insert(:site)
+      insert_list(3, :site_membership, site: s3)
+
+      conn1 = get(conn, "/crm/sites/site", %{"limit" => "2"})
+      page1_html = html_response(conn1, 200)
+
+      assert page1_html =~ s1.domain
+      assert page1_html =~ s2.domain
+      refute page1_html =~ s3.domain
+
+      conn2 = get(conn, "/crm/sites/site", %{"page" => "2", "limit" => "2"})
+      page2_html = html_response(conn2, 200)
+
+      refute page2_html =~ s1.domain
+      refute page2_html =~ s2.domain
+      assert page2_html =~ s3.domain
+    end
+  end
+
   describe "POST /crm/sites/site/:site_id" do
     setup [:create_user, :log_in]
 
