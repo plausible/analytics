@@ -25,6 +25,26 @@ defmodule Plausible.CrmExtensions do
       ]
     end
 
+    def javascripts(%{assigns: %{context: "sites", resource: "site", entry: %{domain: domain}}}) do
+      base_url = PlausibleWeb.Endpoint.url()
+
+      [
+        Phoenix.HTML.raw("""
+        <script type="text/javascript">
+          (() => {
+            const cardBody = document.querySelector(".card-body")
+            if (cardBody) {
+              const buttonDOM = document.createElement("div")
+              buttonDOM.className = "mb-3 w-full text-right"
+              buttonDOM.innerHTML = '<div><a class="btn btn-outline-primary" href="#{base_url <> "/" <> domain}" target="_blank">Open Dashboard</a></div>'
+              cardBody.prepend(buttonDOM)
+            }
+          })()
+        </script>
+        """)
+      ]
+    end
+
     def javascripts(%{assigns: %{context: "billing", resource: "enterprise_plan", changeset: %{}}}) do
       [
         Phoenix.HTML.raw("""
