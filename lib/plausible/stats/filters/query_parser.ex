@@ -89,7 +89,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
        do: parse_clauses_list(filter)
 
   defp parse_clauses_list([_operation, filter_key, list] = filter) when is_list(list) do
-    all_strings? = Enum.all?(list, &is_bitstring/1)
+    all_strings? = Enum.all?(list, &is_binary/1)
 
     cond do
       filter_key == "event:goal" && all_strings? -> {:ok, [Filters.Utils.wrap_goal_value(list)]}
@@ -155,7 +155,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_date_range(_site, [from_date_string, to_date_string], _date)
-       when is_bitstring(from_date_string) and is_bitstring(to_date_string) do
+       when is_binary(from_date_string) and is_binary(to_date_string) do
     with {:ok, from_date} <- Date.from_iso8601(from_date_string),
          {:ok, to_date} <- Date.from_iso8601(to_date_string) do
       {:ok, Date.range(from_date, to_date)}
@@ -165,7 +165,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_date_range(site, %{"period" => period, "to_date" => to_date_string}, _date)
-       when is_bitstring(period) and is_bitstring(to_date_string) do
+       when is_binary(period) and is_binary(to_date_string) do
     with {:ok, to_date} <- Date.from_iso8601(to_date_string) do
       parse_date_range(site, period, to_date)
     end
