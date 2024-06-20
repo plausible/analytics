@@ -692,6 +692,24 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
     end
 
+    test "does not fail if using session metric with event:page dimension", %{site: site} do
+      %{
+        "metrics" => ["bounce_rate"],
+        "date_range" => "all",
+        "dimensions" => ["event:page"]
+      }
+      |> check_success(site, %{
+        metrics: [:bounce_rate],
+        date_range: @date_range,
+        filters: [],
+        dimensions: ["event:page"],
+        order_by: nil,
+        timezone: site.timezone,
+        imported_data_requested: false,
+        preloaded_goals: []
+      })
+    end
+
     test "does not fail if using session metric with event filter", %{site: site} do
       %{
         "metrics" => ["bounce_rate"],

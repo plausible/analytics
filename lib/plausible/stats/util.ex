@@ -41,7 +41,8 @@ defmodule Plausible.Stats.Util do
   for any of the other metrics to be calculated.
   """
   def maybe_add_visitors_metric(metrics) do
-    needed? = Enum.any?([:conversion_rate, :time_on_page], &(&1 in metrics))
+    needed? =
+      Enum.any?([:conversion_rate, :group_conversion_rate, :time_on_page], &(&1 in metrics))
 
     if needed? and :visitors not in metrics do
       metrics ++ [:visitors]
