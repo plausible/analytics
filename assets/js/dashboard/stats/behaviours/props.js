@@ -6,6 +6,7 @@ import * as url from '../../util/url'
 import { CR_METRIC, PERCENTAGE_METRIC } from "../reports/metrics";
 import * as storage from "../../util/storage";
 import { EVENT_PROPS_PREFIX, getGoalFilter, FILTER_OPERATIONS, hasGoalFilter } from "../../util/filters"
+import classNames from "classnames";
 
 
 export default function Properties(props) {
@@ -108,15 +109,19 @@ export default function Properties(props) {
     filter: ["is", `${EVENT_PROPS_PREFIX}${propKey}`, [listItem.name]]
   })
 
+  const comboboxDisabled = !propKeyLoading && !propKey
+  const comboboxPlaceholder = comboboxDisabled ? 'No custom properties found' : ''
   const comboboxValues = propKey ? [{ value: propKey, label: propKey }] : []
-  const boxClass = 'pl-2 pr-8 py-1 bg-transparent dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-500'
+  const boxClass = classNames('pl-2 pr-8 py-1 bg-transparent dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-500', {
+    'pointer-events-none': comboboxDisabled
+  })
 
   const COMBOBOX_HEIGHT = 40
 
   return (
     <div className="w-full mt-4" style={{ minHeight: `${COMBOBOX_HEIGHT + MIN_HEIGHT}px` }}>
       <div style={{ minHeight: `${COMBOBOX_HEIGHT}px` }}>
-        <Combobox boxClass={boxClass} forceLoading={propKeyLoading} fetchOptions={fetchPropKeyOptions()} singleOption={true} values={comboboxValues} onSelect={onPropKeySelect()} placeholder={''} />
+        <Combobox boxClass={boxClass} forceLoading={propKeyLoading} fetchOptions={fetchPropKeyOptions()} singleOption={true} values={comboboxValues} onSelect={onPropKeySelect()} placeholder={comboboxPlaceholder} />
       </div>
       {propKey && renderBreakdown()}
     </div>
