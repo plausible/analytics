@@ -296,7 +296,11 @@ defmodule Plausible.Stats.Filters.QueryParser do
       Enum.any?(filters, fn [_, filter_key | _rest] -> filter_key == "event:goal" end)
 
     if goal_filters? or Enum.member?(dimensions, "event:goal") do
-      Filters.Utils.load_goals(site)
+      Plausible.Goals.for_site(site)
+      |> Enum.map(fn
+        %{page_path: path} when is_binary(path) -> {:page, path}
+        %{event_name: event_name} -> {:event, event_name}
+      end)
     else
       []
     end
