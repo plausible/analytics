@@ -1,17 +1,40 @@
 defmodule Plausible.Stats.QueryOptimizer do
   @moduledoc """
+  Methods to manipulate Query for business logic reasons before building an ecto query.
+  """
+
+  alias Plausible.Stats.{Query, TableDecider, Util}
+
+  @doc """
     This module manipulates an existing query, updating it according to business logic.
 
     For example, it:
     1. Figures out what the right granularity to group by time is
     2. Adds a missing order_by clause to a query
     3. Updating "time" dimension in order_by to the right granularity
+
   """
-
-  alias Plausible.Stats.Query
-
   def optimize(query) do
     Enum.reduce(pipeline(), query, fn step, acc -> step.(acc) end)
+  end
+
+  @doc """
+  Splits a query into event and sessions subcomponents as not all metrics can be
+  queried from a single table.
+
+  event:page dimension is treated in a special way, doing a breakdown of visit:entry_page
+  for sessions.
+  """
+  def split(query) do
+    {event_metrics, sessions_metrics, _other_metrics} =
+      query.metrics
+      |> Util.maybe_add_visitors_metric()
+      |> TableDecider.partition_metrics(query)
+
+    {
+      Query.set_metrics(query, event_metrics),
+      split_sessions_query(query, sessions_metrics)
+    }
   end
 
   defp pipeline() do
@@ -115,5 +138,18 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp time_dimension(query) do
     Enum.find(query.dimensions, &String.starts_with?(&1, "time"))
+  end
+
+  defp split_sessions_query(query, session_metrics) do
+    dimensions =
+      query.dimensions
+      |> Enum.map(fn
+        "event:page" -> "visit:entry_page"
+        dimension -> dimension
+      end)
+
+    query
+    |> Query.set_metrics(session_metrics)
+    |> Query.set_dimensions(dimensions)
   end
 end

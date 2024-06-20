@@ -1,6 +1,7 @@
 defmodule Plausible.Stats.QueryResult do
   @moduledoc false
 
+  alias Plausible.Stats.Util
   alias Plausible.Stats.SQL.QueryBuilder
   alias Plausible.Stats.Filters
   alias Plausible.Stats.Query
@@ -54,8 +55,8 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
-  defp dimension_label(dimension, entry, _query) do
-    Map.get(entry, QueryBuilder.shortname(dimension))
+  defp dimension_label(dimension, entry, query) do
+    Map.get(entry, Util.shortname(query, dimension))
   end
 
   defp serializable_filter([operation, "event:goal", clauses]) do
