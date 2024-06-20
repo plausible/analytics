@@ -1127,10 +1127,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["visitors"],
-          "date_range" => %{
-            "period" => "7d",
-            "to_date" => "2021-01-07"
-          },
+          "date_range" => ["2021-01-01", "2021-01-07"],
           "dimensions" => ["time"]
         })
 
@@ -1152,10 +1149,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["visitors"],
-          "date_range" => %{
-            "period" => "6mo",
-            "to_date" => "2021-01-01"
-          },
+          "date_range" => ["2020-07-01", "2021-01-31"],
           "dimensions" => ["time"]
         })
 
@@ -1178,10 +1172,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["visitors"],
-          "date_range" => %{
-            "to_date" => "2021-01-01",
-            "period" => "12mo"
-          },
+          "date_range" => ["2020-01-01", "2021-01-01"],
           "dimensions" => ["time"]
         })
 
@@ -1204,10 +1195,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["visitors"],
-          "date_range" => %{
-            "to_date" => "2021-01-01",
-            "period" => "12mo"
-          },
+          "date_range" => ["2020-01-01", "2021-01-07"],
           "dimensions" => ["time:day"]
         })
 

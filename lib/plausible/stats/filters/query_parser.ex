@@ -164,13 +164,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp parse_date_range(site, %{"period" => period, "to_date" => to_date_string}, _date)
-       when is_binary(period) and is_binary(to_date_string) do
-    with {:ok, to_date} <- Date.from_iso8601(to_date_string) do
-      parse_date_range(site, period, to_date)
-    end
-  end
-
   defp parse_date_range(_site, unknown, _),
     do: {:error, "Invalid date_range '#{inspect(unknown)}'"}
 
