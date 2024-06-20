@@ -140,7 +140,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   end
 
   defp build_order_by(q, query, mode) do
-    Enum.reduce(query.order_by, q, &build_order_by(&2, query, &1, mode))
+    Enum.reduce(query.order_by || [], q, &build_order_by(&2, query, &1, mode))
   end
 
   def build_order_by(q, query, {metric_or_dimension, order_direction}, :inner) do
