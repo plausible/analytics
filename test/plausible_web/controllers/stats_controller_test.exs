@@ -99,6 +99,11 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, "/" <> site.domain)
       assert html_response(conn, 404) =~ "There's nothing here"
     end
+
+    test "does not show CRM link to the site", %{conn: conn, site: site} do
+      conn = get(conn, "/" <> site.domain)
+      refute html_response(conn, 200) =~ "/crm/sites/site/#{site.id}"
+    end
   end
 
   describe "GET /:website - as a super admin" do
@@ -151,6 +156,12 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       [{"div", attrs, _}] = find(resp, @react_container)
       assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
+    end
+
+    test "shows CRM link to the site", %{conn: conn} do
+      site = insert(:site)
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "/crm/sites/site/#{site.id}"
     end
   end
 
