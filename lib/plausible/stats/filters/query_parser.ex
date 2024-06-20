@@ -105,39 +105,39 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_date_range(_site, "7d", last) do
-    first = last |> Timex.shift(days: -6)
+    first = last |> Date.add(-6)
     {:ok, Date.range(first, last)}
   end
 
   defp parse_date_range(_site, "30d", last) do
-    first = last |> Timex.shift(days: -30)
+    first = last |> Date.add(-30)
     {:ok, Date.range(first, last)}
   end
 
   defp parse_date_range(_site, "month", today) do
-    last = today |> Timex.end_of_month()
-    first = last |> Timex.beginning_of_month()
+    last = today |> Date.end_of_month()
+    first = last |> Date.beginning_of_month()
     {:ok, Date.range(first, last)}
   end
 
   defp parse_date_range(_site, "6mo", today) do
-    last = today |> Timex.end_of_month()
+    last = today |> Date.end_of_month()
 
     first =
       last
       |> Timex.shift(months: -5)
-      |> Timex.beginning_of_month()
+      |> Date.beginning_of_month()
 
     {:ok, Date.range(first, last)}
   end
 
   defp parse_date_range(_site, "12mo", today) do
-    last = today |> Timex.end_of_month()
+    last = today |> Date.end_of_month()
 
     first =
       last
       |> Timex.shift(months: -11)
-      |> Timex.beginning_of_month()
+      |> Date.beginning_of_month()
 
     {:ok, Date.range(first, last)}
   end
