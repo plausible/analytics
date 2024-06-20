@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from "react"
-import ListReport from "../reports/list";
+import React, { useCallback, useEffect, useState } from "react"
+import ListReport, { MIN_HEIGHT } from "../reports/list";
 import Combobox from '../../components/combobox'
 import * as api from '../../api'
 import * as url from '../../util/url'
@@ -16,7 +16,7 @@ export default function Properties(props) {
     return `${goal}__prop_key__${site.domain}`
   }
 
-  const [propKey, setPropKey] = useState(choosePropKey())
+  const [propKey, setPropKey] = useState(null)
 
   function singleGoalFilterApplied() {
     const goalFilter = getGoalFilter(query)
@@ -28,14 +28,30 @@ export default function Properties(props) {
     }
   }
 
-  function choosePropKey() {
+  useEffect(() => {
+    fetchPropKeyOptions()("").then((propKeys) => {
+      const propKeyValues = propKeys.map(entry => entry.value)
+
+      if (propKeyValues.length > 0) {
+        const existingKey = getExistingPropKey()
+
+        if (propKeyValues.includes(existingKey)) {
+          setPropKey(existingKey)
+        } else {
+          setPropKey(propKeys[0].value)
+        }
+      }
+    })
+  }, [])
+
+  function getExistingPropKey() {
     const propFilters = getFiltersByKeyPrefix(query, EVENT_PROPS_PREFIX)
     if (propFilters.length > 0) {
       const [_operation, filterKey, _clauses] = propFilters[0]
       return getPropertyKeyFromFilterKey(filterKey)
-    } else {
-      return getPropKeyFromStorage()
     }
+
+    return getPropKeyFromStorage()
   }
 
   function getPropKeyFromStorage() {
@@ -102,9 +118,11 @@ export default function Properties(props) {
   const comboboxValues = propKey ? [{ value: propKey, label: propKey }] : []
   const boxClass = 'pl-2 pr-8 py-1 bg-transparent dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-500'
 
+  const COMBOBOX_HEIGHT = 40
+
   return (
-    <div className="w-full mt-4">
-      <div>
+    <div className="w-full mt-4" style={{ minHeight: `${COMBOBOX_HEIGHT + MIN_HEIGHT}px` }}>
+      <div style={{ minHeight: `${COMBOBOX_HEIGHT}px` }}>
         <Combobox boxClass={boxClass} fetchOptions={fetchPropKeyOptions()} singleOption={true} values={comboboxValues} onSelect={onPropKeySelect()} placeholder={'Select a property'} />
       </div>
       {propKey && renderBreakdown()}
