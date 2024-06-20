@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Icons for browsers plausible/analytics#4239
+- Automatic custom property selection in the dashboard Properties report
 
 ### Removed
 
