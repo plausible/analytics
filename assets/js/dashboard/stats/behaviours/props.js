@@ -5,7 +5,7 @@ import * as api from '../../api'
 import * as url from '../../util/url'
 import { CR_METRIC, PERCENTAGE_METRIC } from "../reports/metrics";
 import * as storage from "../../util/storage";
-import { getFiltersByKeyPrefix, EVENT_PROPS_PREFIX, getPropertyKeyFromFilterKey, getGoalFilter, FILTER_OPERATIONS, hasGoalFilter } from "../../util/filters"
+import { EVENT_PROPS_PREFIX, getGoalFilter, FILTER_OPERATIONS, hasGoalFilter } from "../../util/filters"
 
 
 export default function Properties(props) {
@@ -33,26 +33,16 @@ export default function Properties(props) {
       const propKeyValues = propKeys.map(entry => entry.value)
 
       if (propKeyValues.length > 0) {
-        const existingKey = getExistingPropKey()
+        const storedPropKey = getPropKeyFromStorage()
 
-        if (propKeyValues.includes(existingKey)) {
-          setPropKey(existingKey)
+        if (propKeyValues.includes(storedPropKey)) {
+          setPropKey(storedPropKey)
         } else {
           setPropKey(propKeys[0].value)
         }
       }
     })
   }, [query])
-
-  function getExistingPropKey() {
-    const propFilters = getFiltersByKeyPrefix(query, EVENT_PROPS_PREFIX)
-    if (propFilters.length > 0) {
-      const [_operation, filterKey, _clauses] = propFilters[0]
-      return getPropertyKeyFromFilterKey(filterKey)
-    }
-
-    return getPropKeyFromStorage()
-  }
 
   function getPropKeyFromStorage() {
     if (singleGoalFilterApplied()) {
