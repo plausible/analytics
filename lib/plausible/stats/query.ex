@@ -238,6 +238,12 @@ defmodule Plausible.Stats.Query do
     |> refresh_imported_opts()
   end
 
+  def set_order_by(query, order_by) do
+    query
+    |> struct!(order_by: order_by)
+    |> refresh_imported_opts()
+  end
+
   def put_filter(query, filter) do
     query
     |> struct!(filters: query.filters ++ [filter])

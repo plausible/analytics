@@ -381,12 +381,21 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {_event_metrics, sessions_metrics, _other_metrics} =
       TableDecider.partition_metrics(query.metrics, query)
 
-    if Enum.empty?(sessions_metrics) or not TableDecider.event_dimensions?(query) do
+    if Enum.empty?(sessions_metrics) or
+         not event_dimensions_not_allowing_session_metrics?(query.dimensions) do
       :ok
     else
       {:error,
        "Session metric(s) `#{sessions_metrics |> Enum.join(", ")}` cannot be queried along with event dimensions"}
     end
+  end
+
+  def event_dimensions_not_allowing_session_metrics?(dimensions) do
+    Enum.any?(dimensions, fn
+      "event:page" -> false
+      "event:" <> _ -> true
+      _ -> false
+    end)
   end
 
   defp parse_list(list, parser_function) do

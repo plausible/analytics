@@ -233,6 +233,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
         query
         |> Query.remove_filters(["event:goal", "event:props"])
         |> Query.set_metrics([:visitors])
+        |> Query.set_order_by([])
 
       from(e in subquery(q),
         left_join: c in subquery(build(group_totals_query, site)),
@@ -240,11 +241,14 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
         select_merge: %{
           total_visitors: c.visitors,
           group_conversion_rate:
-            fragment(
-              "if(? > 0, round(? / ? * 100, 1), 0)",
-              c.visitors,
-              e.visitors,
-              c.visitors
+            selected_as(
+              fragment(
+                "if(? > 0, round(? / ? * 100, 1), 0)",
+                c.visitors,
+                e.visitors,
+                c.visitors
+              ),
+              :group_conversion_rate
             )
         }
       )
