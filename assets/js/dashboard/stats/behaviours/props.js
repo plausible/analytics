@@ -42,7 +42,7 @@ export default function Properties(props) {
         }
       }
     })
-  }, [])
+  }, [query])
 
   function getExistingPropKey() {
     const propFilters = getFiltersByKeyPrefix(query, EVENT_PROPS_PREFIX)
