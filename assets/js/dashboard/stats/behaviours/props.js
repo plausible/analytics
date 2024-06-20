@@ -53,12 +53,14 @@ export default function Properties(props) {
     return storage.getItem(propKeyStorageName)
   }
 
-  function fetchProps() {
+  async function fetchProps() {
+    await new Promise(r => setTimeout(r, 600))
     return api.get(url.apiPath(site, `/custom-prop-values/${encodeURIComponent(propKey)}`), query)
   }
 
   const fetchPropKeyOptions = useCallback(() => {
-    return (input) => {
+    return async (input) => {
+      await new Promise(r => setTimeout(r, 600))
       return api.get(url.apiPath(site, "/suggestions/prop_key"), query, { q: input.trim() })
     }
   }, [query])
