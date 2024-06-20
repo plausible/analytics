@@ -199,7 +199,6 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
         |> Query.remove_filters(["event:goal", "event:props"])
         |> Query.set_dimensions([])
 
-      # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
       q
       |> select_merge(
         ^%{
@@ -223,6 +222,17 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     end
   end
 
+  # This function injects a group_conversion_rate metric into
+  # a dimensional query. It is calculated as X / Y, where:
+  #
+  #   * X is the number of conversions for a set of dimensions
+  #     result (conversion = number of visitors who
+  #     completed the filtered goal with the filtered
+  #     custom properties).
+  #
+  #  * Y is the number of all visitors for this set of dimensions
+  #    result without the `event:goal` and `event:props:*`
+  #    filters.
   def maybe_add_group_conversion_rate(q, site, query, event_metrics) do
     if :group_conversion_rate in query.metrics do
       group_totals_query =
