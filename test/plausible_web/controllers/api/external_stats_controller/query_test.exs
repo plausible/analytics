@@ -3688,8 +3688,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         conn =
           post(conn, "/api/v2/query", %{
             "site_id" => site.domain,
-            "metrics" => ["visitors", "events"],
-            # "metrics" => ["visitors", "events", "conversion_rate"],
+            "metrics" => ["visitors", "events", "conversion_rate"],
             "date_range" => "all",
             "dimensions" => ["event:props:url"],
             "filters" => [
@@ -3699,8 +3698,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           })
 
         assert json_response(conn, 200)["results"] == [
-                 %{"dimensions" => ["https://two.com"], "metrics" => [5, 10]},
-                 %{"dimensions" => ["https://one.com"], "metrics" => [3, 6]}
+                 %{"dimensions" => ["https://two.com"], "metrics" => [5, 10, 50]},
+                 %{"dimensions" => ["https://one.com"], "metrics" => [3, 6, 30]}
                ]
 
         refute json_response(conn, 200)["meta"]["warning"]
@@ -3741,8 +3740,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         conn =
           post(conn, "/api/v2/query", %{
             "site_id" => site.domain,
-            "metrics" => ["visitors", "events"],
-            # "metrics" => ["visitors", "events", "conversion_rate"],
+            "metrics" => ["visitors", "events", "conversion_rate"],
             "date_range" => "all",
             "dimensions" => ["event:props:path"],
             "filters" => [
@@ -3752,8 +3750,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           })
 
         assert json_response(conn, 200)["results"] == [
-                 %{"dimensions" => ["/two"], "metrics" => [5, 10]},
-                 %{"dimensions" => ["/one"], "metrics" => [3, 6]}
+                 %{"dimensions" => ["/two"], "metrics" => [5, 10, 50]},
+                 %{"dimensions" => ["/one"], "metrics" => [3, 6, 30]}
                ]
 
         refute json_response(conn, 200)["meta"]["warning"]
