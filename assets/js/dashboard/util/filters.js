@@ -29,6 +29,13 @@ export const FILTER_OPERATIONS = {
   does_not_contain: 'does_not_contain'
 };
 
+export const FILTER_OPERATIONS_DISPLAY_NAMES = {
+  [FILTER_OPERATIONS.is]: 'is',
+  [FILTER_OPERATIONS.isNot]: 'is not',
+  [FILTER_OPERATIONS.contains]: 'contains',
+  [FILTER_OPERATIONS.does_not_contain]: 'does not contain'
+}
+
 const OPERATION_PREFIX = {
   [FILTER_OPERATIONS.isNot]: '!',
   [FILTER_OPERATIONS.contains]: '~',

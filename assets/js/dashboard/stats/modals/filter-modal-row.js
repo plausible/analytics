@@ -43,14 +43,14 @@ export default function FilterModalRow({
 
   return (
     <div className="grid grid-cols-11 mt-1">
-      <div className="col-span-3 mr-2">
+      <div className="col-span-3">
         <FilterOperatorSelector
           forFilter={filterKey}
           onSelect={(newOperation) => onUpdate([newOperation, filterKey, clauses], labels)}
           selectedType={operation}
         />
       </div>
-      <div className="col-span-8">
+      <div className="col-span-8 ml-2">
         <Combobox
           fetchOptions={fetchOptions}
           freeChoice={isFreeChoiceFilter(filterKey)}
