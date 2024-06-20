@@ -125,6 +125,17 @@ const OS_ICONS = {
   'FreeBSD': 'freebsd.png',
 }
 
+function osIconFor(os) {
+  const filename = OS_ICONS[os] || 'fallback.svg'
+
+  return (
+    <img
+      src={`/images/icon/os/${filename}`}
+      className="w-4 h-4 mr-2"
+    />
+  )
+}
+
 function OperatingSystems({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/operating-systems'), query)
@@ -138,14 +149,7 @@ function OperatingSystems({ query, site, afterFetchData }) {
   }
 
   function renderIcon(listItem) {
-    const filename = OS_ICONS[listItem.name] || 'fallback.svg'
-
-    return (
-      <img
-        src={`/images/icon/os/${filename}`}
-        className="w-4 h-4 mr-2"
-      />
-    )
+    return osIconFor(listItem.name)
   }
 
   return (
@@ -164,6 +168,15 @@ function OperatingSystems({ query, site, afterFetchData }) {
 function OperatingSystemVersions({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/operating-system-versions'), query)
+      .then(res => {
+        return {...res, results: res.results.map((row => {
+          return {...row, name: `${row.os} ${row.name}`}
+        }))}
+      })
+  }
+
+  function renderIcon(listItem) {
+    return osIconFor(listItem.os)
   }
 
   function getFilterFor(listItem) {
@@ -179,6 +192,7 @@ function OperatingSystemVersions({ query, site, afterFetchData }) {
   return (
     <ListReport
       fetchData={fetchData}
+      renderIcon={renderIcon}
       afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Operating System Version"
