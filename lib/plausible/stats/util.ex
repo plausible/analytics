@@ -49,4 +49,12 @@ defmodule Plausible.Stats.Util do
       metrics
     end
   end
+
+  def shortname(_query, metric) when is_atom(metric), do: metric
+  def shortname(_query, "time:" <> _), do: :time
+
+  def shortname(query, dimension) do
+    index = Enum.find_index(query.dimensions, &(&1 == dimension))
+    :"dim#{index}"
+  end
 end

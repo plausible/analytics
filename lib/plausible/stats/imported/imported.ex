@@ -289,7 +289,7 @@ defmodule Plausible.Stats.Imported do
           dynamic([s, i], s.browser == i.browser and s.browser_version == i.browser_version)
 
         dim ->
-          dynamic([s, i], field(s, ^dim) == field(i, ^dim))
+          dynamic([s, i], field(s, ^shortname(query, dim)) == field(i, ^shortname(query, dim)))
       end
 
     from(s in Ecto.Query.subquery(q),
@@ -356,6 +356,10 @@ defmodule Plausible.Stats.Imported do
     |> Imported.Base.query_imported(query)
     |> select_merge([i], %{total_visitors: fragment("sum(?)", i.visitors)})
   end
+
+  # :TRICKY: Handle backwards compatibility with old breakdown module
+  defp shortname(query, _dim) when query.v2, do: :dim0
+  defp shortname(_query, dim), do: dim
 
   defp select_imported_metrics(q, []), do: q
 
@@ -551,63 +555,71 @@ defmodule Plausible.Stats.Imported do
     |> select_imported_metrics(rest)
   end
 
-  defp group_imported_by(q, dim, _query) when dim in [:source, :referrer] do
+  defp group_imported_by(q, dim, query) when dim in [:source, :referrer] do
     q
     |> group_by([i], field(i, ^dim))
     |> select_merge([i], %{
-      ^dim => fragment("if(empty(?), ?, ?)", field(i, ^dim), @no_ref, field(i, ^dim))
+      ^shortname(query, dim) =>
+        fragment(
+          "if(empty(?), ?, ?)",
+          field(i, ^dim),
+          @no_ref,
+          field(i, ^dim)
+        )
     })
   end
 
-  defp group_imported_by(q, dim, _query)
+  defp group_imported_by(q, dim, query)
        when dim in [:utm_source, :utm_medium, :utm_campaign, :utm_term, :utm_content] do
     q
     |> group_by([i], field(i, ^dim))
     |> where([i], fragment("not empty(?)", field(i, ^dim)))
-    |> select_merge([i], %{^dim => field(i, ^dim)})
+    |> select_merge([i], %{^shortname(query, dim) => field(i, ^dim)})
   end
 
-  defp group_imported_by(q, :page, _query) do
+  defp group_imported_by(q, :page, query) do
     q
     |> group_by([i], i.page)
-    |> select_merge([i], %{page: i.page, time_on_page: sum(i.time_on_page)})
+    |> select_merge([i], %{^shortname(query, :page) => i.page, time_on_page: sum(i.time_on_page)})
   end
 
-  defp group_imported_by(q, :country, _query) do
+  defp group_imported_by(q, :country, query) do
     q
     |> group_by([i], i.country)
     |> where([i], i.country != "ZZ")
-    |> select_merge([i], %{country: i.country})
+    |> select_merge([i], %{^shortname(query, :country) => i.country})
   end
 
-  defp group_imported_by(q, :region, _query) do
+  defp group_imported_by(q, :region, query) do
     q
     |> group_by([i], i.region)
     |> where([i], i.region != "")
-    |> select_merge([i], %{region: i.region})
+    |> select_merge([i], %{^shortname(query, :region) => i.region})
   end
 
-  defp group_imported_by(q, :city, _query) do
+  defp group_imported_by(q, :city, query) do
     q
     |> group_by([i], i.city)
     |> where([i], i.city != 0 and not is_nil(i.city))
-    |> select_merge([i], %{city: i.city})
+    |> select_merge([i], %{^shortname(query, :city) => i.city})
   end
 
-  defp group_imported_by(q, dim, _query) when dim in [:device, :browser] do
+  defp group_imported_by(q, dim, query) when dim in [:device, :browser] do
     q
     |> group_by([i], field(i, ^dim))
     |> select_merge([i], %{
-      ^dim => fragment("if(empty(?), ?, ?)", field(i, ^dim), @not_set, field(i, ^dim))
+      ^shortname(query, dim) =>
+        fragment("if(empty(?), ?, ?)", field(i, ^dim), @not_set, field(i, ^dim))
     })
   end
 
-  defp group_imported_by(q, :browser_version, _query) do
+  defp group_imported_by(q, :browser_version, query) do
     q
     |> group_by([i], [i.browser, i.browser_version])
     |> select_merge([i], %{
-      browser: fragment("if(empty(?), ?, ?)", i.browser, @not_set, i.browser),
-      browser_version:
+      ^shortname(query, :browser) =>
+        fragment("if(empty(?), ?, ?)", i.browser, @not_set, i.browser),
+      ^shortname(query, :browser_version) =>
         fragment(
           "if(empty(?), ?, ?)",
           i.browser_version,
@@ -617,20 +629,22 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
-  defp group_imported_by(q, :os, _query) do
+  defp group_imported_by(q, :os, query) do
     q
     |> group_by([i], i.operating_system)
     |> select_merge([i], %{
-      os: fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system)
+      ^shortname(query, :os) =>
+        fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system)
     })
   end
 
-  defp group_imported_by(q, :os_version, _query) do
+  defp group_imported_by(q, :os_version, query) do
     q
     |> group_by([i], [i.operating_system, i.operating_system_version])
     |> select_merge([i], %{
-      os: fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system),
-      os_version:
+      ^shortname(query, :os) =>
+        fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system),
+      ^shortname(query, :os_version) =>
         fragment(
           "if(empty(?), ?, ?)",
           i.operating_system_version,
@@ -640,23 +654,23 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
-  defp group_imported_by(q, dim, _query) when dim in [:entry_page, :exit_page] do
+  defp group_imported_by(q, dim, query) when dim in [:entry_page, :exit_page] do
     q
     |> group_by([i], field(i, ^dim))
-    |> select_merge([i], %{^dim => field(i, ^dim)})
+    |> select_merge([i], %{^shortname(query, dim) => field(i, ^dim)})
   end
 
-  defp group_imported_by(q, :name, _query) do
+  defp group_imported_by(q, :name, query) do
     q
     |> group_by([i], i.name)
-    |> select_merge([i], %{name: i.name})
+    |> select_merge([i], %{^shortname(query, :name) => i.name})
   end
 
   defp group_imported_by(q, :url, query) when query.v2 do
     q
     |> group_by([i], i.link_url)
     |> select_merge([i], %{
-      url: fragment("if(not empty(?), ?, ?)", i.link_url, i.link_url, @none)
+      ^shortname(query, :url) => fragment("if(not empty(?), ?, ?)", i.link_url, i.link_url, @none)
     })
   end
 
@@ -672,7 +686,7 @@ defmodule Plausible.Stats.Imported do
     q
     |> group_by([i], i.path)
     |> select_merge([i], %{
-      path: fragment("if(not empty(?), ?, ?)", i.path, i.path, @none)
+      ^shortname(query, :path) => fragment("if(not empty(?), ?, ?)", i.path, i.path, @none)
     })
   end
 
@@ -684,9 +698,9 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
-  defp select_joined_dimension(q, :city, _query) do
+  defp select_joined_dimension(q, :city, query) do
     select_merge(q, [s, i], %{
-      city: fragment("greatest(?,?)", i.city, s.city)
+      ^shortname(query, :city) => fragment("greatest(?,?)", i.city, s.city)
     })
   end
 
@@ -717,9 +731,15 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
-  defp select_joined_dimension(q, dim, _query) do
+  defp select_joined_dimension(q, dim, query) do
     select_merge(q, [s, i], %{
-      ^dim => fragment("if(empty(?), ?, ?)", field(s, ^dim), field(i, ^dim), field(s, ^dim))
+      ^shortname(query, dim) =>
+        fragment(
+          "if(empty(?), ?, ?)",
+          field(s, ^shortname(query, dim)),
+          field(i, ^shortname(query, dim)),
+          field(s, ^shortname(query, dim))
+        )
     })
   end
 
