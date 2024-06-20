@@ -17,6 +17,7 @@ export default function Properties(props) {
   }
 
   const [propKey, setPropKey] = useState(null)
+  const [propKeyLoading, setPropKeyLoading] = useState(true)
 
   function singleGoalFilterApplied() {
     const goalFilter = getGoalFilter(query)
@@ -41,6 +42,8 @@ export default function Properties(props) {
           setPropKey(propKeys[0].value)
         }
       }
+
+      setPropKeyLoading(false)
     })
   }, [query])
 
@@ -115,7 +118,7 @@ export default function Properties(props) {
   return (
     <div className="w-full mt-4" style={{ minHeight: `${COMBOBOX_HEIGHT + MIN_HEIGHT}px` }}>
       <div style={{ minHeight: `${COMBOBOX_HEIGHT}px` }}>
-        <Combobox boxClass={boxClass} fetchOptions={fetchPropKeyOptions()} singleOption={true} values={comboboxValues} onSelect={onPropKeySelect()} placeholder={'Select a property'} />
+        <Combobox boxClass={boxClass} forceLoading={propKeyLoading} fetchOptions={fetchPropKeyOptions()} singleOption={true} values={comboboxValues} onSelect={onPropKeySelect()} placeholder={''} />
       </div>
       {propKey && renderBreakdown()}
     </div>
