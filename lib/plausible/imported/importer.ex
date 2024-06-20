@@ -102,7 +102,7 @@ defmodule Plausible.Imported.Importer do
 
   @callback name() :: atom()
   @callback label() :: String.t()
-  @callback email_template() :: String.t()
+  @callback email_template() :: atom | String.t()
   @callback parse_args(map()) :: Keyword.t()
   @callback import_data(SiteImport.t(), Keyword.t()) ::
               :ok | {:error, any()} | {:error, any(), Keyword.t()}

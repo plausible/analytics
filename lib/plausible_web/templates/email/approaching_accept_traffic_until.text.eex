@@ -1,0 +1,7 @@
+You used to have an active account with <%= Plausible.product_name() %>, a simple, lightweight, open source and privacy-first Google Analytics alternative.
+
+We've noticed that you're still sending us stats so we're writing to inform you that we'll stop accepting stats from your sites <%= @time %>. We're an independent, bootstrapped service and we don't sell your data, so this will reduce our server costs and help keep us sustainable.
+
+If you'd like to continue counting your site stats in a privacy-friendly way, please login to your Plausible account at <%= plausible_url() %> and start a subscription.
+
+Do you have any questions or need help with anything? Just reply to this email and we'll gladly help.

@@ -1,0 +1,3 @@
+An administrator of <%= @membership.site.domain %> has removed you as a member. You won't be able to see the stats anymore.
+
+Visit <%= Routes.site_url(PlausibleWeb.Endpoint, :index) %> to view your sites.

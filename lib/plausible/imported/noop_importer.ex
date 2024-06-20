@@ -13,7 +13,7 @@ defmodule Plausible.Imported.NoopImporter do
 
   # reusing existing template from another source
   @impl true
-  def email_template(), do: "google_analytics_import.html"
+  def email_template(), do: :google_analytics_import
 
   @impl true
   def parse_args(opts), do: opts

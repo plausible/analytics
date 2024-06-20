@@ -7,7 +7,7 @@ defmodule PlausibleWeb.EmailTest do
     test "greets user by first name if user in template assigns" do
       email =
         Email.base_email()
-        |> Email.render("welcome_email.html", %{
+        |> Email.render(:welcome_email, %{
           user: build(:user, name: "John Doe"),
           code: "123"
         })
@@ -18,7 +18,7 @@ defmodule PlausibleWeb.EmailTest do
     test "greets impersonally when user not in template assigns" do
       email =
         Email.base_email()
-        |> Email.render("welcome_email.html")
+        |> Email.render(:welcome_email)
 
       assert email.html_body =~ "Hey,"
     end
@@ -26,7 +26,7 @@ defmodule PlausibleWeb.EmailTest do
     test "renders plausible link" do
       email =
         Email.base_email()
-        |> Email.render("welcome_email.html")
+        |> Email.render(:welcome_email)
 
       assert email.html_body =~ plausible_link()
     end
@@ -35,7 +35,7 @@ defmodule PlausibleWeb.EmailTest do
     test "renders unsubscribe placeholder" do
       email =
         Email.base_email()
-        |> Email.render("welcome_email.html")
+        |> Email.render(:welcome_email)
 
       assert email.html_body =~ "{{{ pm:unsubscribe }}}"
     end
@@ -43,7 +43,7 @@ defmodule PlausibleWeb.EmailTest do
     test "can be disabled with a nil layout" do
       email =
         Email.base_email(%{layout: nil})
-        |> Email.render("welcome_email.html", %{
+        |> Email.render(:welcome_email, %{
           user: build(:user, name: "John Doe")
         })
 
@@ -56,7 +56,7 @@ defmodule PlausibleWeb.EmailTest do
     test "uses the `priority` message stream in Postmark" do
       email =
         Email.priority_email()
-        |> Email.render("activation_email.html", %{
+        |> Email.render(:activation_email, %{
           user: build(:user, name: "John Doe"),
           code: "123"
         })
@@ -67,7 +67,7 @@ defmodule PlausibleWeb.EmailTest do
     test "greets user by first name if user in template assigns" do
       email =
         Email.priority_email()
-        |> Email.render("activation_email.html", %{
+        |> Email.render(:activation_email, %{
           user: build(:user, name: "John Doe"),
           code: "123"
         })
@@ -78,7 +78,7 @@ defmodule PlausibleWeb.EmailTest do
     test "greets impersonally when user not in template assigns" do
       email =
         Email.priority_email()
-        |> Email.render("password_reset_email.html", %{
+        |> Email.render(:password_reset_email, %{
           reset_link: "imaginary"
         })
 
@@ -88,7 +88,7 @@ defmodule PlausibleWeb.EmailTest do
     test "renders plausible link" do
       email =
         Email.priority_email()
-        |> Email.render("password_reset_email.html", %{
+        |> Email.render(:password_reset_email, %{
           reset_link: "imaginary"
         })
 
@@ -98,7 +98,7 @@ defmodule PlausibleWeb.EmailTest do
     test "does not render unsubscribe placeholder" do
       email =
         Email.priority_email()
-        |> Email.render("password_reset_email.html", %{
+        |> Email.render(:password_reset_email, %{
           reset_link: "imaginary"
         })
 
@@ -108,7 +108,7 @@ defmodule PlausibleWeb.EmailTest do
     test "can be disabled with a nil layout" do
       email =
         Email.priority_email(%{layout: nil})
-        |> Email.render("password_reset_email.html", %{
+        |> Email.render(:password_reset_email, %{
           reset_link: "imaginary"
         })
 

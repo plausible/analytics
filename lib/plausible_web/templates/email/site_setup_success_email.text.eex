@@ -1,0 +1,13 @@
+Congrats! We've recorded the first visitor on <%= @site.domain %>. Your traffic is now being counted without compromising the user experience and privacy of your visitors.
+
+Do check out your easy to use, fast-loading and privacy-friendly dashboard: <%= "#{plausible_url()}/#{URI.encode_www_form(@site.domain)}" %>.
+
+Something looks off? Take a look at our installation troubleshooting guide: https://plausible.io/docs/troubleshoot-integration.
+
+<%= if Plausible.Users.on_trial?(@user) do %>
+You're on a 30-day free trial with no obligations so do take your time to explore Plausible. Here's how to get the most out of your Plausible experience: https://plausible.io/docs/your-plausible-experience.
+<% end %>
+
+PS: You can import your historical Google Analytics stats into your Plausible dashboard. Learn how our GA importer works: https://plausible.io/docs/google-analytics-import.
+
+Do reply back to this email if you have any questions. We're here to help.

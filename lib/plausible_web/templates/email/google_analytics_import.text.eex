@@ -1,0 +1,12 @@
+<%= if @success do %>
+Your Google Analytics import has completed successfully. The Plausible dashboard for <%= @site_import.site.domain %> now contains historical imported data from <%= date_format(@site_import.start_date) %> to <%= date_format(@site_import.end_date) %>
+
+Visit <%= @link %> to view your dashboard.
+<% else %>
+Unfortunately, your Google Analytics import for <%= @site_import.site.domain %> did not complete successfully. Sorry about that!
+
+Please try to do the import once again. Sometimes the Google Analytics API just randomly returns empty data. It's intermittent and random. Trying to do the import again may return what you need.
+<%= if ee?() do %>
+Please reply to this email to let us know if you're still experiencing issues with the import.
+<% end %>
+<% end %>

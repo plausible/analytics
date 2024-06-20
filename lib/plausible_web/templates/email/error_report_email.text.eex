@@ -1,0 +1,7 @@
+Error report
+
+Reported by: <%= @reported_by %>
+Sentry trace: <%= sentry_link(@trace_id) %> (<%= @trace_id %>)
+
+User feedback:
+<%= @feedback %>

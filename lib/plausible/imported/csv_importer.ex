@@ -13,7 +13,7 @@ defmodule Plausible.Imported.CSVImporter do
   def label(), do: "CSV"
 
   @impl true
-  def email_template(), do: "csv_import.html"
+  def email_template(), do: :csv_import
 
   @impl true
   def parse_args(%{"uploads" => uploads, "storage" => storage}) do

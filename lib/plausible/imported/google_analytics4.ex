@@ -17,7 +17,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
   def label(), do: "Google Analytics 4"
 
   @impl true
-  def email_template(), do: "google_analytics_import.html"
+  def email_template(), do: :google_analytics_import
 
   @impl true
   def before_start(site_import, opts) do

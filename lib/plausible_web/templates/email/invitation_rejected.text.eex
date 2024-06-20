@@ -1,0 +1,3 @@
+<%= @invitation.email %> has rejected your invitation to <%= @invitation.site.domain %>.
+
+Visit <%= Routes.site_url(PlausibleWeb.Endpoint, :settings_general, @invitation.site.domain) %> to view site settings.

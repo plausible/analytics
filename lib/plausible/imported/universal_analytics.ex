@@ -14,7 +14,7 @@ defmodule Plausible.Imported.UniversalAnalytics do
   def label(), do: "Google Analytics"
 
   @impl true
-  def email_template(), do: "google_analytics_import.html"
+  def email_template(), do: :google_analytics_import
 
   @impl true
   def parse_args(

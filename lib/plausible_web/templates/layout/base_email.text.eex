@@ -1,0 +1,10 @@
+<%= PlausibleWeb.EmailView.greet_recipient(assigns) %>
+
+<%= @inner_content %>
+
+<%= if ee?() do %>Regards,
+The Plausible Team 💌<% end %>
+
+--
+
+<%= plausible_url() %>
