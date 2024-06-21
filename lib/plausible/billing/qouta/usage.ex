@@ -221,76 +221,66 @@ defmodule Plausible.Billing.Quota.Usage do
     end
   end
 
-  @spec features_usage(User.t() | Site.t()) :: [atom()]
+  @spec features_usage(User.t() | nil, list() | nil) :: [atom()]
   @doc """
-  Given a user, this function returns the features used across all the sites
-  this user owns + StatsAPI if the user has a configured Stats API key.
+  Given only a user, this function returns the features used across all the
+  sites this user owns + StatsAPI if the user has a configured Stats API key.
 
-  Given a site, returns the features used by the site.
+  Given a user, and a list of site_ids, returns the features used by those
+  sites instead + StatsAPI if the user has a configured Stats API key.
+
+  The user can also be passed as `nil`, in which case we will never return
+  Stats API as a used feature.
   """
-  def features_usage(%User{} = user) do
-    props_usage_query =
+  def features_usage(user, site_ids \\ nil)
+
+  def features_usage(%User{} = user, nil) do
+    site_ids = Plausible.Sites.owned_site_ids(user)
+    features_usage(user, site_ids)
+  end
+
+  def features_usage(%User{} = user, site_ids) when is_list(site_ids) do
+    site_scoped_feature_usage = features_usage(nil, site_ids)
+
+    stats_api_used? =
+      from(a in Plausible.Auth.ApiKey, where: a.user_id == ^user.id)
+      |> Plausible.Repo.exists?()
+
+    if stats_api_used? do
+      site_scoped_feature_usage ++ [StatsAPI]
+    else
+      site_scoped_feature_usage
+    end
+  end
+
+  def features_usage(nil, site_ids) when is_list(site_ids) do
+    props_usage_q =
       from s in Site,
-        inner_join: os in subquery(owned_sites_query(user)),
-        on: s.id == os.site_id,
-        where: fragment("cardinality(?) > 0", s.allowed_event_props)
+        where: s.id in ^site_ids and fragment("cardinality(?) > 0", s.allowed_event_props)
 
-    revenue_goals_usage =
+    revenue_goals_usage_q =
       from g in Plausible.Goal,
-        inner_join: os in subquery(owned_sites_query(user)),
-        on: g.site_id == os.site_id,
-        where: not is_nil(g.currency)
-
-    stats_api_usage = from a in Plausible.Auth.ApiKey, where: a.user_id == ^user.id
+        where: g.site_id in ^site_ids and not is_nil(g.currency)
 
     queries =
       on_ee do
-        funnels_usage_query =
-          from f in "funnels",
-            inner_join: os in subquery(owned_sites_query(user)),
-            on: f.site_id == os.site_id
+        funnels_usage_q = from f in "funnels", where: f.site_id in ^site_ids
 
         [
-          {Props, props_usage_query},
-          {Funnels, funnels_usage_query},
-          {RevenueGoals, revenue_goals_usage},
-          {StatsAPI, stats_api_usage}
+          {Props, props_usage_q},
+          {Funnels, funnels_usage_q},
+          {RevenueGoals, revenue_goals_usage_q}
         ]
       else
         [
           {Props, props_usage_query},
-          {RevenueGoals, revenue_goals_usage},
-          {StatsAPI, stats_api_usage}
+          {RevenueGoals, revenue_goals_usage}
         ]
       end
 
     Enum.reduce(queries, [], fn {feature, query}, acc ->
       if Plausible.Repo.exists?(query), do: acc ++ [feature], else: acc
     end)
-  end
-
-  def features_usage(%Site{} = site) do
-    props_exist = is_list(site.allowed_event_props) && site.allowed_event_props != []
-
-    funnels_exist =
-      on_ee do
-        Plausible.Repo.exists?(from f in Plausible.Funnel, where: f.site_id == ^site.id)
-      else
-        false
-      end
-
-    revenue_goals_exist =
-      Plausible.Repo.exists?(
-        from g in Plausible.Goal, where: g.site_id == ^site.id and not is_nil(g.currency)
-      )
-
-    used_features = [
-      {Props, props_exist},
-      {Funnels, funnels_exist},
-      {RevenueGoals, revenue_goals_exist}
-    ]
-
-    for {f_mod, used?} <- used_features, used?, f_mod.enabled?(site), do: f_mod
   end
 
   defp owned_sites_query(user) do

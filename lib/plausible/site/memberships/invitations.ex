@@ -116,8 +116,7 @@ defmodule Plausible.Site.Memberships.Invitations do
 
   def check_feature_access(site, new_owner, false = _selfhost?) do
     missing_features =
-      site
-      |> Quota.Usage.features_usage()
+      Quota.Usage.features_usage(nil, [site.id])
       |> Enum.filter(&(&1.check_availability(new_owner) != :ok))
 
     if missing_features == [] do

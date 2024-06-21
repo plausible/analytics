@@ -441,10 +441,10 @@ defmodule Plausible.Billing.QuotaTest do
     end
   end
 
-  describe "features_usage/1" do
+  describe "features_usage/2" do
     test "returns an empty list for a user/site who does not use any feature" do
       assert [] == Quota.Usage.features_usage(insert(:user))
-      assert [] == Quota.Usage.features_usage(insert(:site))
+      assert [] == Quota.Usage.features_usage(nil, [insert(:site).id])
     end
 
     test "returns [Props] when user/site uses custom props" do
@@ -456,7 +456,7 @@ defmodule Plausible.Billing.QuotaTest do
           memberships: [build(:site_membership, user: user, role: :owner)]
         )
 
-      assert [Props] == Quota.Usage.features_usage(site)
+      assert [Props] == Quota.Usage.features_usage(nil, [site.id])
       assert [Props] == Quota.Usage.features_usage(user)
     end
 
@@ -469,7 +469,7 @@ defmodule Plausible.Billing.QuotaTest do
         steps = Enum.map(goals, &%{"goal_id" => &1.id})
         Plausible.Funnels.create(site, "dummy", steps)
 
-        assert [Funnels] == Quota.Usage.features_usage(site)
+        assert [Funnels] == Quota.Usage.features_usage(nil, [site.id])
         assert [Funnels] == Quota.Usage.features_usage(user)
       end
 
@@ -478,7 +478,7 @@ defmodule Plausible.Billing.QuotaTest do
         site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
         insert(:goal, currency: :USD, site: site, event_name: "Purchase")
 
-        assert [RevenueGoals] == Quota.Usage.features_usage(site)
+        assert [RevenueGoals] == Quota.Usage.features_usage(nil, [site.id])
         assert [RevenueGoals] == Quota.Usage.features_usage(user)
       end
     end
@@ -490,9 +490,23 @@ defmodule Plausible.Billing.QuotaTest do
       assert [StatsAPI] == Quota.Usage.features_usage(user)
     end
 
+    test "returns feature usage based on a user and a custom list of site_ids" do
+      user = insert(:user)
+      insert(:api_key, user: user)
+
+      site_using_props = insert(:site, allowed_event_props: ["dummy"])
+
+      site_using_revenue_goals = insert(:site)
+      insert(:goal, currency: :USD, site: site_using_revenue_goals, event_name: "Purchase")
+
+      site_ids = [site_using_props.id, site_using_revenue_goals.id]
+      assert [Props, RevenueGoals, StatsAPI] == Quota.Usage.features_usage(user, site_ids)
+    end
+
     on_ee do
-      test "returns multiple features" do
+      test "returns multiple features used by the user" do
         user = insert(:user)
+        insert(:api_key, user: user)
 
         site =
           insert(:site,
@@ -506,8 +520,7 @@ defmodule Plausible.Billing.QuotaTest do
         steps = Enum.map(goals, &%{"goal_id" => &1.id})
         Plausible.Funnels.create(site, "dummy", steps)
 
-        assert [Props, Funnels, RevenueGoals] == Quota.Usage.features_usage(site)
-        assert [Props, Funnels, RevenueGoals] == Quota.Usage.features_usage(user)
+        assert [Props, Funnels, RevenueGoals, StatsAPI] == Quota.Usage.features_usage(user)
       end
     end
 
