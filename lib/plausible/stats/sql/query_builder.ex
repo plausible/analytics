@@ -114,16 +114,16 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     Enum.reduce(query.dimensions, q, &dimension_group_by(&2, query, &1))
   end
 
-  defp dimension_group_by(q, query, "event:goal") do
+  defp dimension_group_by(q, query, "event:goal" = dimension) do
     {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
 
     from(e in q,
       array_join: goal in Expression.event_goal_join(events, page_regexes),
-      group_by: goal,
-      where: goal != 0,
       select_merge: %{
-        goal: fragment("?", goal)
-      }
+        ^shortname(query, dimension) => fragment("?", goal)
+      },
+      group_by: goal,
+      where: goal != 0
     )
   end
 

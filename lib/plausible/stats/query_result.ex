@@ -47,10 +47,12 @@ defmodule Plausible.Stats.QueryResult do
   defp dimension_label("event:goal", entry, query) do
     {events, paths} = Filters.Utils.split_goals(query.preloaded_goals)
 
+    goal_index = Map.get(entry, Util.shortname(query, "event:goal"))
+
     # Closely coupled logic with Plausible.Stats.SQL.Expression.event_goal_join/2
     cond do
-      entry.goal < 0 -> Enum.at(events, -entry.goal - 1) |> Filters.Utils.unwrap_goal_value()
-      entry.goal > 0 -> Enum.at(paths, entry.goal - 1) |> Filters.Utils.unwrap_goal_value()
+      goal_index < 0 -> Enum.at(events, -goal_index - 1) |> Filters.Utils.unwrap_goal_value()
+      goal_index > 0 -> Enum.at(paths, goal_index - 1) |> Filters.Utils.unwrap_goal_value()
     end
   end
 
