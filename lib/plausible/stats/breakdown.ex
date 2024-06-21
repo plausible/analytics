@@ -1,4 +1,5 @@
 defmodule Plausible.Stats.Breakdown do
+  alias Plausible.Stats.QueryOptimizer
   use Plausible.ClickhouseRepo
   use Plausible
   use Plausible.Stats.Fragments
@@ -23,27 +24,30 @@ defmodule Plausible.Stats.Breakdown do
   # the breakdown results later on.
   @computed_metrics [:conversion_rate, :total_visitors]
 
-  def breakdown(site, query, metrics, pagination, opts \\ []) do
+  def breakdown(site, %Query{dimensions: [dimension]} = query, metrics, pagination, _opts \\ []) do
     # :TODO: Order by as usual
     # :TODO: Implicit multiple breakdowns
     metrics_with_visitors = if(:visitors in metrics, do: metrics, else: metrics ++ [:visitors])
 
-    query_with_metrics = %Query{
-      query
-      | metrics: metrics,
-        order_by: [{:visitors, :desc}],
-        v2: true
-    }
+    query_with_metrics =
+      %Query{
+        query
+        | metrics: metrics_with_visitors,
+          order_by: [{:visitors, :desc}],
+          dimensions: transform_dimensions(dimension),
+          filters: query.filters ++ dimension_filters(dimension),
+          v2: true
+      }
+      |> QueryOptimizer.optimize()
 
     q = SQL.QueryBuilder.build(query_with_metrics, site)
 
-    IO.inspect(q: q, query: query_with_metrics, metrics: metrics)
-
     q
+    |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
     |> QueryResult.from(query_with_metrics)
-    |> IO.inspect()
     |> build_breakdown_result(query_with_metrics, metrics)
+    |> maybe_add_time_on_page(site, query_with_metrics, metrics)
   end
 
   defp build_breakdown_result(query_result, query, metrics) do
@@ -348,7 +352,6 @@ defmodule Plausible.Stats.Breakdown do
       select: ^select_session_metrics(metrics, query)
     )
     |> filter_converted_sessions(site, query)
-    |> do_group_by(dimension)
     |> merge_imported(site, query, metrics)
     |> add_percentage_metric(site, query, metrics)
   end
@@ -358,7 +361,6 @@ defmodule Plausible.Stats.Breakdown do
       order_by: [desc: fragment("uniq(?)", e.user_id)],
       select: %{}
     )
-    |> do_group_by(dimension)
     |> select_merge(^select_event_metrics(metrics))
     |> merge_imported(site, query, metrics)
     |> add_percentage_metric(site, query, metrics)
@@ -374,12 +376,12 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp maybe_add_time_on_page(event_results, site, query, metrics) do
-    if :time_on_page in metrics do
-      pages = Enum.map(event_results, & &1[:page])
+    if query.dimensions == ["event:page"] and :time_on_page in metrics do
+      pages = Enum.map(event_results, & &1["page"])
       time_on_page_result = breakdown_time_on_page(site, query, pages)
 
       Enum.map(event_results, fn row ->
-        Map.put(row, :time_on_page, time_on_page_result[row[:page]])
+        Map.put(row, :time_on_page, time_on_page_result[row["page"]])
       end)
     else
       event_results
@@ -469,244 +471,32 @@ defmodule Plausible.Stats.Breakdown do
     |> Map.new()
   end
 
-  defp do_group_by(
-         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events" <> _, _}}} = q,
-         "event:props:" <> prop
-       ) do
-    from(
-      e in q,
-      select_merge: %{
-        breakdown_prop_value:
-          selected_as(
-            fragment(
-              "if(not empty(?), ?, '(none)')",
-              get_by_key(e, :meta, ^prop),
-              get_by_key(e, :meta, ^prop)
-            ),
-            :breakdown_prop_value
-          )
-      },
-      group_by: selected_as(:breakdown_prop_value),
-      order_by: {:asc, selected_as(:breakdown_prop_value)}
-    )
+  def transform_dimensions("visit:browser_version"),
+    do: ["visit:browser", "visit:browser_version"]
+
+  def transform_dimensions("visit:os_version"), do: ["visit:os", "visit:os_version"]
+  def transform_dimensions(dimension), do: [dimension]
+
+  @filter_dimensions_not %{
+    "visit:city" => [0],
+    "visit:region" => ["\0\0", "ZZ"],
+    "visit:country" => [""],
+    "visit:utm_medium" => [""],
+    "visit:utm_source" => [""],
+    "visit:utm_campaign" => [""],
+    "visit:utm_content" => [""],
+    "visit:utm_term" => [""],
+    "visit:entry_page" => [""],
+    "visit:exit_page" => [""]
+  }
+
+  @extra_filter_dimensions Map.keys(@filter_dimensions_not)
+
+  defp dimension_filters(dimension) when dimension in @extra_filter_dimensions do
+    [[:is_not, dimension, Map.get(@filter_dimensions_not, dimension)]]
   end
 
-  defp do_group_by(
-         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events" <> _, _}}} = q,
-         "event:name"
-       ) do
-    from(
-      e in q,
-      group_by: e.name,
-      select_merge: %{name: e.name},
-      order_by: {:asc, e.name}
-    )
-  end
-
-  defp do_group_by(
-         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events" <> _, _}}} = q,
-         "event:page"
-       ) do
-    from(
-      e in q,
-      group_by: e.pathname,
-      select_merge: %{page: e.pathname},
-      order_by: {:asc, e.pathname}
-    )
-  end
-
-  defp do_group_by(q, "visit:source") do
-    from(
-      s in q,
-      group_by: s.source,
-      select_merge: %{
-        source: fragment("if(empty(?), ?, ?)", s.source, @no_ref, s.source)
-      },
-      order_by: {:asc, s.source}
-    )
-  end
-
-  defp do_group_by(q, "visit:country") do
-    from(
-      s in q,
-      where: s.country != "\0\0" and s.country != "ZZ",
-      group_by: s.country,
-      select_merge: %{country: s.country},
-      order_by: {:asc, s.country}
-    )
-  end
-
-  defp do_group_by(q, "visit:region") do
-    from(
-      s in q,
-      where: s.region != "",
-      group_by: s.region,
-      select_merge: %{region: s.region},
-      order_by: {:asc, s.region}
-    )
-  end
-
-  defp do_group_by(q, "visit:city") do
-    from(
-      s in q,
-      where: s.city != 0,
-      group_by: s.city,
-      select_merge: %{city: s.city},
-      order_by: {:asc, s.city}
-    )
-  end
-
-  defp do_group_by(q, "visit:entry_page") do
-    from(
-      s in q,
-      # Sessions without pageviews don't get entry_page assigned, hence they should get ignored
-      where: s.entry_page != "",
-      group_by: s.entry_page,
-      select_merge: %{entry_page: s.entry_page},
-      order_by: {:asc, s.entry_page}
-    )
-  end
-
-  defp do_group_by(q, "visit:exit_page") do
-    from(
-      s in q,
-      # Sessions without pageviews don't get entry_page assigned, hence they should get ignored
-      where: s.entry_page != "",
-      group_by: s.exit_page,
-      select_merge: %{exit_page: s.exit_page},
-      order_by: {:asc, s.exit_page}
-    )
-  end
-
-  defp do_group_by(q, "visit:referrer") do
-    from(
-      s in q,
-      group_by: s.referrer,
-      select_merge: %{
-        referrer: fragment("if(empty(?), ?, ?)", s.referrer, @no_ref, s.referrer)
-      },
-      order_by: {:asc, s.referrer}
-    )
-  end
-
-  defp do_group_by(q, "visit:utm_medium") do
-    from(
-      s in q,
-      where: fragment("not empty(?)", s.utm_medium),
-      group_by: s.utm_medium,
-      select_merge: %{
-        utm_medium: s.utm_medium
-      }
-    )
-  end
-
-  defp do_group_by(q, "visit:utm_source") do
-    from(
-      s in q,
-      where: fragment("not empty(?)", s.utm_source),
-      group_by: s.utm_source,
-      select_merge: %{
-        utm_source: s.utm_source
-      }
-    )
-  end
-
-  defp do_group_by(q, "visit:utm_campaign") do
-    from(
-      s in q,
-      where: fragment("not empty(?)", s.utm_campaign),
-      group_by: s.utm_campaign,
-      select_merge: %{
-        utm_campaign: s.utm_campaign
-      }
-    )
-  end
-
-  defp do_group_by(q, "visit:utm_content") do
-    from(
-      s in q,
-      where: fragment("not empty(?)", s.utm_content),
-      group_by: s.utm_content,
-      select_merge: %{
-        utm_content: s.utm_content
-      }
-    )
-  end
-
-  defp do_group_by(q, "visit:utm_term") do
-    from(
-      s in q,
-      where: fragment("not empty(?)", s.utm_term),
-      group_by: s.utm_term,
-      select_merge: %{
-        utm_term: s.utm_term
-      }
-    )
-  end
-
-  defp do_group_by(q, "visit:device") do
-    from(
-      s in q,
-      group_by: s.device,
-      select_merge: %{
-        device: fragment("if(empty(?), ?, ?)", s.device, @not_set, s.device)
-      },
-      order_by: {:asc, s.device}
-    )
-  end
-
-  defp do_group_by(q, "visit:os") do
-    from(
-      s in q,
-      group_by: s.os,
-      select_merge: %{
-        os: fragment("if(empty(?), ?, ?)", s.os, @not_set, s.os)
-      },
-      order_by: {:asc, s.os}
-    )
-  end
-
-  defp do_group_by(q, "visit:os_version") do
-    from(
-      s in q,
-      group_by: [s.os, s.os_version],
-      select_merge: %{
-        os: fragment("if(empty(?), ?, ?)", s.os, @not_set, s.os),
-        os_version:
-          fragment(
-            "if(empty(?), ?, ?)",
-            s.os_version,
-            @not_set,
-            s.os_version
-          )
-      },
-      order_by: {:asc, s.os_version}
-    )
-  end
-
-  defp do_group_by(q, "visit:browser") do
-    from(
-      s in q,
-      group_by: s.browser,
-      select_merge: %{
-        browser: fragment("if(empty(?), ?, ?)", s.browser, @not_set, s.browser)
-      },
-      order_by: {:asc, s.browser}
-    )
-  end
-
-  defp do_group_by(q, "visit:browser_version") do
-    from(
-      s in q,
-      group_by: [s.browser, s.browser_version],
-      select_merge: %{
-        browser: fragment("if(empty(?), ?, ?)", s.browser, @not_set, s.browser),
-        browser_version:
-          fragment("if(empty(?), ?, ?)", s.browser_version, @not_set, s.browser_version)
-      },
-      order_by: {:asc, s.browser_version}
-    )
-  end
+  defp dimension_filters(_), do: []
 
   defp group_by_field_names("event:props:" <> _prop), do: [:name]
   defp group_by_field_names("visit:os_version"), do: [:os, :os_version]
