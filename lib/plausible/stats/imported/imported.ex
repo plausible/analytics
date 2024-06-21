@@ -289,7 +289,11 @@ defmodule Plausible.Stats.Imported do
       |> where([i], i.visitors > 0)
       |> where(
         [i],
-        fragment("notEmpty(multiMatchAllIndices(?, ?) as indices)", i.page, ^page_regexes)
+        fragment(
+          "notEmpty(multiMatchAllIndices(?, ?) as indices)",
+          i.page,
+          type(^page_regexes, {:array, :string})
+        )
       )
       |> join(:array, index in fragment("indices"))
       |> group_by([_i, index], index)
