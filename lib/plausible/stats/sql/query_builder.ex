@@ -128,31 +128,18 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   end
 
   defp dimension_group_by(q, query, dimension) do
+    key = shortname(query, dimension)
+
     q
-    |> select_merge(^%{shortname(query, dimension) => Expression.dimension(dimension, query)})
-    |> group_by(^Expression.dimension(dimension, query))
+    |> select_merge(^%{key => Expression.dimension(dimension, query, key)})
+    |> group_by([], selected_as(^key))
   end
 
-  defp build_order_by(q, query, mode) do
-    Enum.reduce(query.order_by || [], q, &build_order_by(&2, query, &1, mode))
+  defp build_order_by(q, query) do
+    Enum.reduce(query.order_by || [], q, &build_order_by(&2, query, &1))
   end
 
-  def build_order_by(q, query, {metric_or_dimension, order_direction}, :inner) do
-    order_by(
-      q,
-      [t],
-      ^{
-        order_direction,
-        if(
-          Metrics.metric?(metric_or_dimension),
-          do: dynamic([], selected_as(^shortname(query, metric_or_dimension))),
-          else: Expression.dimension(metric_or_dimension, query)
-        )
-      }
-    )
-  end
-
-  def build_order_by(q, query, {metric_or_dimension, order_direction}, :outer) do
+  def build_order_by(q, query, {metric_or_dimension, order_direction}) do
     order_by(
       q,
       [t],
@@ -262,10 +249,10 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   defp join_query_results({nil, _}, {nil, _}), do: nil
 
   defp join_query_results({events_q, events_query}, {nil, _}),
-    do: events_q |> build_order_by(events_query, :inner)
+    do: events_q |> build_order_by(events_query)
 
   defp join_query_results({nil, _}, {sessions_q, sessions_query}),
-    do: sessions_q |> build_order_by(sessions_query, :inner)
+    do: sessions_q |> build_order_by(sessions_query)
 
   defp join_query_results({events_q, events_query}, {sessions_q, sessions_query}) do
     join(subquery(events_q), :left, [e], s in subquery(sessions_q),
@@ -274,7 +261,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> select_join_fields(events_query, events_query.dimensions, e)
     |> select_join_fields(events_query, events_query.metrics, e)
     |> select_join_fields(sessions_query, List.delete(sessions_query.metrics, :sample_percent), s)
-    |> build_order_by(events_query, :outer)
+    |> build_order_by(events_query)
   end
 
   defp build_group_by_join(%Query{dimensions: []}), do: true
