@@ -14,7 +14,7 @@ defmodule Plausible.Google.UA.API do
           expires_at :: String.t()
         }
 
-  @per_page 7_500
+  @per_page 100_000
   @backoff_factor :timer.seconds(10)
   @max_attempts 5
 
