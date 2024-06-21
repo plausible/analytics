@@ -4,14 +4,19 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Icons for browsers plausible/analytics#4239
+- Automatic custom property selection in the dashboard Properties report
 
 ### Removed
 
 ### Changed
 
 - Increase hourly request limit for API keys in CE from 600 to 1000000 (practically removing the limit) plausible/analytics#4200
+- Add `does_not_contain` filter support to dashboard
 
 ### Fixed
+
+- Fix access to Stats API feature in CE plausible/analytics#4244
 
 ## v2.1.1 - 2024-06-06
 

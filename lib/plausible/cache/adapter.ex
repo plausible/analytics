@@ -52,6 +52,15 @@ defmodule Plausible.Cache.Adapter do
       nil
   end
 
+  @spec fetch(atom(), any(), (-> any())) :: any()
+  def fetch(cache_name, key, fallback_fn) do
+    ConCache.fetch_or_store(cache_name, key, fallback_fn)
+  catch
+    :exit, _ ->
+      Logger.error("Error fetching key from '#{inspect(cache_name)}'")
+      nil
+  end
+
   @spec put(atom(), any(), any()) :: any()
   def put(cache_name, key, value) do
     :ok = ConCache.put(cache_name, key, value)

@@ -16,7 +16,7 @@ function Countries({query, site, onClick, afterFetchData}) {
   }
 
   function renderIcon(country) {
-    return <span className="mr-1">{country.flag}</span>
+    return <span className="mr-2">{country.flag}</span>
   }
 
   function getFilterFor(listItem) {
@@ -49,7 +49,7 @@ function Regions({query, site, onClick, afterFetchData}) {
   }
 
   function renderIcon(region) {
-    return <span className="mr-1">{region.country_flag}</span>
+    return <span className="mr-2">{region.country_flag}</span>
   }
 
   function getFilterFor(listItem) {
@@ -82,7 +82,7 @@ function Cities({query, site, afterFetchData}) {
   }
 
   function renderIcon(city) {
-    return <span className="mr-1">{city.country_flag}</span>
+    return <span className="mr-2">{city.country_flag}</span>
   }
 
   function getFilterFor(listItem) {

@@ -212,6 +212,21 @@ defmodule Plausible.BillingTest do
       assert subscription.next_bill_amount == "12.00"
     end
 
+    test "status update from 'paused' to 'past_due' is ignored" do
+      user = insert(:user)
+      subscription = insert(:subscription, user: user, status: Subscription.Status.paused())
+
+      %{@subscription_updated_params | "old_status" => "paused", "status" => "past_due"}
+      |> Map.merge(%{
+        "subscription_id" => subscription.paddle_subscription_id,
+        "passthrough" => user.id
+      })
+      |> Billing.subscription_updated()
+
+      subscription = Repo.get_by(Subscription, user_id: user.id)
+      assert subscription.status == Subscription.Status.paused()
+    end
+
     test "unlocks sites if subscription is changed from past_due to active" do
       user = insert(:user)
       subscription = insert(:subscription, user: user, status: Subscription.Status.past_due())

@@ -150,6 +150,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
     })
   end
 
+  @tag :ee_only
   test "returns HTTP 402 when user is on a growth plan", %{
     conn: conn,
     user: user,

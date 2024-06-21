@@ -46,12 +46,12 @@ defmodule Plausible.Verification.Errors do
       url:
         "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
     },
-    old_script: %{
-      message: "We couldn't verify your website",
+    generic: %{
+      message: "We couldn't automatically verify your website",
       recommendation:
-        "You're running an older version of our script so we cannot verify it automatically. Please update to the latest script",
+        "Please manually check your integration by following the instructions provided",
       url:
-        "https://plausible.io/docs/troubleshoot-integration#are-you-using-an-older-version-of-our-script"
+        "https://plausible.io/docs/troubleshoot-integration#how-to-manually-check-your-integration"
     },
     old_script_wp_no_plugin: %{
       message: "We couldn't verify your website",

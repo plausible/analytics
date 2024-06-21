@@ -61,6 +61,7 @@ defmodule Plausible.Billing.FeatureTest do
     assert :ok == Plausible.Billing.Feature.StatsAPI.check_availability(user)
   end
 
+  @tag :ee_only
   test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns error when user is on a growth plan" do
     user = insert(:user, subscription: build(:growth_subscription))
 
@@ -79,6 +80,7 @@ defmodule Plausible.Billing.FeatureTest do
     assert :ok == Plausible.Billing.Feature.StatsAPI.check_availability(user)
   end
 
+  @tag :ee_only
   test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns error when user trial hasn't started and was created after the business tier launch" do
     user = insert(:user, trial_expiry_date: nil)
 

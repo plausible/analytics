@@ -10,25 +10,19 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   alias PlausibleWeb.Components.Billing.{PlanBox, PlanBenefits, Notice, PageviewSlider}
   alias Plausible.Site
   alias Plausible.Users
-  alias Plausible.Billing.{Plans, Plan, Quota}
+  alias Plausible.Billing.{Plans, Quota}
 
   @contact_link "https://plausible.io/contact"
   @billing_faq_link "https://plausible.io/docs/billing"
 
-  def mount(_params, %{"current_user_id" => user_id}, socket) do
+  def mount(_params, %{"current_user_id" => user_id, "remote_ip" => remote_ip}, socket) do
     socket =
       socket
       |> assign_new(:user, fn ->
         Users.with_subscription(user_id)
       end)
       |> assign_new(:usage, fn %{user: user} ->
-        Quota.usage(user, with_features: true)
-      end)
-      |> assign_new(:last_30_days_usage, fn %{user: user, usage: usage} ->
-        case usage do
-          %{last_30_days: usage_cycle} -> usage_cycle.total
-          _ -> Quota.usage_cycle(user, :last_30_days).total
-        end
+        Quota.Usage.usage(user, with_features: true)
       end)
       |> assign_new(:owned_plan, fn %{user: %{subscription: subscription}} ->
         Plans.get_regular_plan(subscription, only_non_expired: true)
@@ -57,17 +51,16 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         current_user_subscription_interval(user.subscription)
       end)
       |> assign_new(:available_plans, fn %{user: user} ->
-        Plans.available_plans_for(user, with_prices: true)
+        Plans.available_plans_for(user, with_prices: true, customer_ip: remote_ip)
       end)
       |> assign_new(:available_volumes, fn %{available_plans: available_plans} ->
         get_available_volumes(available_plans)
       end)
       |> assign_new(:selected_volume, fn %{
-                                           owned_plan: owned_plan,
-                                           last_30_days_usage: last_30_days_usage,
+                                           usage: usage,
                                            available_volumes: available_volumes
                                          } ->
-        default_selected_volume(owned_plan, last_30_days_usage, available_volumes)
+        default_selected_volume(usage.monthly_pageviews, available_volumes)
       end)
       |> assign_new(:selected_interval, fn %{current_interval: current_interval} ->
         current_interval || :monthly
@@ -149,8 +142,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           <PlanBox.enterprise benefits={@enterprise_benefits} />
         </div>
         <p class="mx-auto mt-8 max-w-2xl text-center text-lg leading-8 text-gray-600 dark:text-gray-400">
-          You have used <b><%= PlausibleWeb.AuthView.delimit_integer(@last_30_days_usage) %></b>
-          billable pageviews in the last 30 days
+          <.render_usage pageview_usage={@usage.monthly_pageviews} />
         </p>
         <.pageview_limit_notice :if={!@owned_plan} />
         <.help_links />
@@ -158,6 +150,22 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     </div>
     <PlausibleWeb.Components.Billing.paddle_script />
     """
+  end
+
+  defp render_usage(assigns) do
+    case assigns.pageview_usage do
+      %{last_30_days: _} ->
+        ~H"""
+        You have used
+        <b><%= PlausibleWeb.AuthView.delimit_integer(@pageview_usage.last_30_days.total) %></b> billable pageviews in the last 30 days
+        """
+
+      %{last_cycle: _} ->
+        ~H"""
+        You have used
+        <b><%= PlausibleWeb.AuthView.delimit_integer(@pageview_usage.last_cycle.total) %></b> billable pageviews in the last billing cycle
+        """
+    end
   end
 
   def handle_event("set_interval", %{"interval" => interval}, socket) do
@@ -189,10 +197,14 @@ defmodule PlausibleWeb.Live.ChoosePlan do
      )}
   end
 
-  defp default_selected_volume(%Plan{monthly_pageview_limit: limit}, _, _), do: limit
+  defp default_selected_volume(pageview_usage, available_volumes) do
+    total =
+      case pageview_usage do
+        %{last_30_days: usage} -> usage.total
+        %{last_cycle: usage} -> usage.total
+      end
 
-  defp default_selected_volume(_, last_30_days_usage, available_volumes) do
-    Enum.find(available_volumes, &(last_30_days_usage < &1)) || :enterprise
+    Enum.find(available_volumes, &(total < &1)) || :enterprise
   end
 
   defp current_user_subscription_interval(subscription) do

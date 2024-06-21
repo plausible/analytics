@@ -4,26 +4,26 @@ defmodule PlausibleWeb.RemoteIP do
   """
 
   def get(conn) do
-    x_plausible_ip = List.first(Plug.Conn.get_req_header(conn, "x-plausible-ip"))
-    cf_connecting_ip = List.first(Plug.Conn.get_req_header(conn, "cf-connecting-ip"))
-    x_forwarded_for = List.first(Plug.Conn.get_req_header(conn, "x-forwarded-for"))
-    b_forwarded_for = List.first(Plug.Conn.get_req_header(conn, "b-forwarded-for"))
-    forwarded = List.first(Plug.Conn.get_req_header(conn, "forwarded"))
+    x_plausible_ip = List.first(Plug.Conn.get_req_header(conn, "x-plausible-ip")) || ""
+    cf_connecting_ip = List.first(Plug.Conn.get_req_header(conn, "cf-connecting-ip")) || ""
+    x_forwarded_for = List.first(Plug.Conn.get_req_header(conn, "x-forwarded-for")) || ""
+    b_forwarded_for = List.first(Plug.Conn.get_req_header(conn, "b-forwarded-for")) || ""
+    forwarded = List.first(Plug.Conn.get_req_header(conn, "forwarded")) || ""
 
     cond do
-      x_plausible_ip ->
+      byte_size(x_plausible_ip) > 0 ->
         clean_ip(x_plausible_ip)
 
-      cf_connecting_ip ->
+      byte_size(cf_connecting_ip) > 0 ->
         clean_ip(cf_connecting_ip)
 
-      b_forwarded_for ->
+      byte_size(b_forwarded_for) > 0 ->
         parse_forwarded_for(b_forwarded_for)
 
-      x_forwarded_for ->
+      byte_size(x_forwarded_for) > 0 ->
         parse_forwarded_for(x_forwarded_for)
 
-      forwarded ->
+      byte_size(forwarded) > 0 ->
         Regex.named_captures(~r/for=(?<for>[^;,]+).*$/, forwarded)
         |> Map.get("for")
         # IPv6 addresses are enclosed in quote marks and square brackets: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Forwarded

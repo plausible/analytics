@@ -18,7 +18,7 @@ defmodule Plausible.OpenTelemetry.Sampler do
   require OpenTelemetry.Tracer, as: Tracer
 
   @routes_to_ignore ["/api/event", "/api/event/"]
-  @tables_to_ignore ["oban_jobs"]
+  @tables_to_ignore ["oban_jobs", "site_imports"]
 
   @impl true
   def setup(%{ratio: ratio}) when is_number(ratio) do

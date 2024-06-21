@@ -524,6 +524,21 @@ defmodule Plausible.Verification.ChecksTest do
     </html>
     """
 
+    test "disallowd via content-security-policy and GTM should make CSP a priority" do
+      stub_fetch_body(fn conn ->
+        conn
+        |> put_resp_header("content-security-policy", "default-src 'self' foo.local")
+        |> put_resp_content_type("text/html")
+        |> send_resp(200, @gtm_body)
+      end)
+
+      stub_installation(200, plausible_installed(false))
+
+      run_checks()
+      |> Checks.interpret_diagnostics()
+      |> assert_error(@errors.csp)
+    end
+
     test "detecting gtm" do
       stub_fetch_body(200, @gtm_body)
       stub_installation(200, plausible_installed(false))
@@ -689,7 +704,7 @@ defmodule Plausible.Verification.ChecksTest do
 
       run_checks()
       |> Checks.interpret_diagnostics()
-      |> assert_error(@errors.old_script)
+      |> assert_error(@errors.generic)
     end
 
     test "callback handling not found for wordpress site" do
@@ -772,6 +787,52 @@ defmodule Plausible.Verification.ChecksTest do
       }
       |> interpret_sentry_case()
       |> assert_error(@errors.old_script_wp_no_plugin)
+    end
+
+    test "service timeout" do
+      %Plausible.Verification.Diagnostics{
+        plausible_installed?: false,
+        snippets_found_in_head: 1,
+        snippets_found_in_body: 0,
+        snippet_found_after_busting_cache?: false,
+        snippet_unknown_attributes?: false,
+        disallowed_via_csp?: false,
+        service_error: :timeout,
+        body_fetched?: true,
+        wordpress_likely?: true,
+        cookie_banner_likely?: false,
+        gtm_likely?: false,
+        callback_status: 0,
+        proxy_likely?: true,
+        manual_script_extension?: false,
+        data_domain_mismatch?: false,
+        wordpress_plugin?: false
+      }
+      |> interpret_sentry_case()
+      |> assert_error(@errors.generic)
+    end
+
+    test "malformed snippet code, that headless somewhat accepts" do
+      %Plausible.Verification.Diagnostics{
+        plausible_installed?: true,
+        snippets_found_in_head: 0,
+        snippets_found_in_body: 0,
+        snippet_found_after_busting_cache?: false,
+        snippet_unknown_attributes?: false,
+        disallowed_via_csp?: false,
+        service_error: nil,
+        body_fetched?: true,
+        wordpress_likely?: false,
+        cookie_banner_likely?: false,
+        gtm_likely?: false,
+        callback_status: 405,
+        proxy_likely?: false,
+        manual_script_extension?: false,
+        data_domain_mismatch?: false,
+        wordpress_plugin?: false
+      }
+      |> interpret_sentry_case()
+      |> assert_error(@errors.no_snippet)
     end
   end
 

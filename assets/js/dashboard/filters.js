@@ -13,7 +13,8 @@ import {
   formattedFilters,
   EVENT_PROPS_PREFIX,
   getPropertyKeyFromFilterKey,
-  getLabel
+  getLabel,
+  FILTER_OPERATIONS_DISPLAY_NAMES
 } from "./util/filters"
 
 const WRAPSTATE = { unwrapped: 0, waiting: 1, wrapped: 2 }
@@ -41,10 +42,10 @@ function filterText(query, [operation, filterKey, clauses]) {
   const formattedFilter = formattedFilters[filterKey]
 
   if (formattedFilter) {
-    return <>{formattedFilter} {operation} {clauses.map((value) => <b key={value}>{getLabel(query.labels, filterKey, value)}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+    return <>{formattedFilter} {FILTER_OPERATIONS_DISPLAY_NAMES[operation]} {clauses.map((value) => <b key={value}>{getLabel(query.labels, filterKey, value)}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
     const propKey = getPropertyKeyFromFilterKey(filterKey)
-    return <>Property <b>{propKey}</b> {operation} {clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+    return <>Property <b>{propKey}</b> {FILTER_OPERATIONS_DISPLAY_NAMES[operation]} {clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   }
 
   throw new Error(`Unknown filter: ${filterKey}`)
@@ -131,7 +132,7 @@ function Filters(props) {
 
     window.addEventListener('resize', handleResize, false)
     document.addEventListener('keyup', handleKeyup)
-  
+
     return () => {
       window.removeEventListener('resize', handleResize, false)
       document.removeEventListener("keyup", handleKeyup)
