@@ -1,4 +1,5 @@
 defmodule Plausible.Stats.Breakdown do
+  alias Plausible.Stats.Filters.QueryParser
   alias Plausible.Stats.QueryOptimizer
   use Plausible.ClickhouseRepo
   use Plausible
@@ -36,6 +37,7 @@ defmodule Plausible.Stats.Breakdown do
           order_by: [{:visitors, :desc}],
           dimensions: transform_dimensions(dimension),
           filters: query.filters ++ dimension_filters(dimension),
+          preloaded_goals: QueryParser.preload_goals_if_needed(site, query.filters, [dimension]),
           v2: true
       }
       |> QueryOptimizer.optimize()
@@ -380,9 +382,11 @@ defmodule Plausible.Stats.Breakdown do
       pages = Enum.map(event_results, & &1["page"])
       time_on_page_result = breakdown_time_on_page(site, query, pages)
 
-      Enum.map(event_results, fn row ->
+      event_results
+      |> Enum.map(fn row ->
         Map.put(row, :time_on_page, time_on_page_result[row["page"]])
       end)
+      |> sort_results(metrics)
     else
       event_results
     end

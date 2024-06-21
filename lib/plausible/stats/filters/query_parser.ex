@@ -284,7 +284,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp preload_goals_if_needed(site, filters, dimensions) do
+  def preload_goals_if_needed(site, filters, dimensions) do
     goal_filters? =
       Enum.any?(filters, fn [_, filter_key | _rest] -> filter_key == "event:goal" end)
 
