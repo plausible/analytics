@@ -28,13 +28,12 @@ defmodule Plausible.Stats.Breakdown do
   def breakdown(site, %Query{dimensions: [dimension]} = query, metrics, pagination, _opts \\ []) do
     # :TODO: Order by as usual
     # :TODO: Implicit multiple breakdowns
-    metrics_with_visitors = if(:visitors in metrics, do: metrics, else: metrics ++ [:visitors])
 
     query_with_metrics =
       %Query{
         query
-        | metrics: metrics_with_visitors,
-          order_by: [{:visitors, :desc}],
+        | metrics: transform_metrics(metrics, dimension),
+          order_by: dimension_order_by(dimension),
           dimensions: transform_dimensions(dimension),
           filters: query.filters ++ dimension_filters(dimension),
           preloaded_goals: QueryParser.preload_goals_if_needed(site, query.filters, [dimension]),
@@ -474,6 +473,22 @@ defmodule Plausible.Stats.Breakdown do
     |> Plausible.ClickhouseRepo.all()
     |> Map.new()
   end
+
+  defp transform_metrics(metrics, dimension) do
+    metrics = if(:visitors in metrics, do: metrics, else: metrics ++ [:visitors])
+
+    Enum.map(metrics, fn metric ->
+      case {metric, dimension} do
+        {:conversion_rate, "event:props:" <> _} -> :conversion_rate
+        {:conversion_rate, "event:goal"} -> :conversion_rate
+        {:conversion_rate, _} -> :group_conversion_rate
+        _ -> metric
+      end
+    end)
+  end
+
+  defp dimension_order_by("event:goal"), do: [{:visitors, :desc}]
+  defp dimension_order_by(dimension), do: [{:visitors, :desc}, {dimension, :asc}]
 
   def transform_dimensions("visit:browser_version"),
     do: ["visit:browser", "visit:browser_version"]
