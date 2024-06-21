@@ -3541,67 +3541,54 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert results == [%{"dimensions" => ["Mobile"], "metrics" => [4, 6]}]
     end
 
-    # :TODO: Imports with event:goal breakdown
-    # test "returns custom event goals and pageview goals", %{conn: conn, site: site} do
-    #   insert(:goal, site: site, event_name: "Purchase")
-    #   insert(:goal, site: site, page_path: "/test")
+    test "returns custom event goals and pageview goals", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Purchase")
+      insert(:goal, site: site, page_path: "/test")
 
-    #   site_import = insert(:site_import, site: site)
+      site_import = insert(:site_import, site: site)
 
-    #   populate_stats(site, site_import.id, [
-    #     build(:pageview,
-    #       timestamp: ~N[2021-01-01 00:00:01],
-    #       pathname: "/test"
-    #     ),
-    #     build(:event,
-    #       name: "Purchase",
-    #       timestamp: ~N[2021-01-01 00:00:03]
-    #     ),
-    #     build(:event,
-    #       name: "Purchase",
-    #       timestamp: ~N[2021-01-01 00:00:03]
-    #     ),
-    #     build(:imported_custom_events,
-    #       name: "Purchase",
-    #       visitors: 3,
-    #       events: 5,
-    #       date: ~D[2021-01-01]
-    #     ),
-    #     build(:imported_pages,
-    #       page: "/test",
-    #       visitors: 2,
-    #       pageviews: 2,
-    #       date: ~D[2021-01-01]
-    #     ),
-    #     build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
-    #   ])
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          timestamp: ~N[2021-01-01 00:00:01],
+          pathname: "/test"
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03]
+        ),
+        build(:imported_custom_events,
+          name: "Purchase",
+          visitors: 3,
+          events: 5,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_pages,
+          page: "/test",
+          visitors: 2,
+          pageviews: 2,
+          date: ~D[2021-01-01]
+        ),
+        build(:imported_visitors, visitors: 5, date: ~D[2021-01-01])
+      ])
 
-    #   conn =
-    #     post(conn, "/api/v2/query", %{
-    #       "site_id" => site.domain,
-    #       "date_range" => "all",
-    #       "dimensions" => ["event:goal"],
-    #       "metrics" => ["visitors", "events", "pageviews", "conversion_rate"],
-    #       "include" => %{"imports" => true}
-    #     })
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "dimensions" => ["event:goal"],
+          "metrics" => ["visitors", "events", "pageviews", "conversion_rate"],
+          "include" => %{"imports" => true}
+        })
 
-    #   assert json_response(conn, 200)["results"] == [
-    #            %{
-    #              "goal" => "Purchase",
-    #              "visitors" => 5,
-    #              "events" => 7,
-    #              "pageviews" => 0,
-    #              "conversion_rate" => 62.5
-    #            },
-    #            %{
-    #              "goal" => "Visit /test",
-    #              "visitors" => 3,
-    #              "events" => 3,
-    #              "pageviews" => 3,
-    #              "conversion_rate" => 37.5
-    #            }
-    #          ]
-    # end
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["Purchase"], "metrics" => [5, 7, 0, 62.5]},
+               %{"dimensions" => ["Visit /test"], "metrics" => [3, 3, 3, 37.5]}
+             ]
+    end
 
     test "pageviews are returned as events for breakdown reports other than custom events", %{
       conn: conn,

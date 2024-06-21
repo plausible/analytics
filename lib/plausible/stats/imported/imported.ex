@@ -1,4 +1,5 @@
 defmodule Plausible.Stats.Imported do
+  alias Plausible.Stats.Filters
   use Plausible.ClickhouseRepo
 
   import Ecto.Query
@@ -265,6 +266,42 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, _, %Query{include_imported: false}, _), do: q
+
+  # Note: Only called for APIv2, old APIs use merge_imported_pageview_goals
+  def merge_imported(q, site, %Query{dimensions: ["event:goal"]} = query, metrics)
+      when query.v2 do
+    {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
+
+    events_q =
+      "imported_custom_events"
+      |> Imported.Base.query_imported(site, query)
+      |> where([i], i.visitors > 0)
+      |> select_merge([i], %{
+        dim0: selected_as(fragment("-indexOf(?, ?)", ^events, i.name), :dim0)
+      })
+      |> select_imported_metrics(metrics)
+      |> group_by([], selected_as(:dim0))
+      |> where([], selected_as(:dim0) != 0)
+
+    pages_q =
+      "imported_pages"
+      |> Imported.Base.query_imported(site, query)
+      |> where([i], i.visitors > 0)
+      |> where(
+        [i],
+        fragment("notEmpty(multiMatchAllIndices(?, ?) as indices)", i.page, ^page_regexes)
+      )
+      |> join(:array, index in fragment("indices"))
+      |> group_by([_i, index], index)
+      |> select_merge([_i, index], %{
+        dim0: type(fragment("?", index), :integer)
+      })
+      |> select_imported_metrics(metrics)
+
+    q
+    |> naive_dimension_join(events_q, metrics)
+    |> naive_dimension_join(pages_q, metrics)
+  end
 
   def merge_imported(q, site, %Query{dimensions: [dimension]} = query, metrics)
       when dimension in @imported_properties do
@@ -851,4 +888,15 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp apply_order_by(q, _), do: q
+
+  defp naive_dimension_join(q1, q2, metrics) do
+    from(a in Ecto.Query.subquery(q1),
+      full_join: b in subquery(q2),
+      on: a.dim0 == b.dim0,
+      select: %{
+        dim0: fragment("coalesce(?, ?)", a.dim0, b.dim0)
+      }
+    )
+    |> select_joined_metrics(metrics)
+  end
 end
