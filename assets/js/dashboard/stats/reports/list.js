@@ -11,14 +11,14 @@ import classNames from 'classnames'
 import { trimURL, updatedQuery } from '../../util/url'
 import { cleanLabels, hasGoalFilter, replaceFilterByPrefix } from '../../util/filters'
 const MAX_ITEMS = 9
-const MIN_HEIGHT = 380
+export const MIN_HEIGHT = 380
 const ROW_HEIGHT = 32
 const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT = (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
 const COL_MIN_WIDTH = 70
 
 function FilterLink({ filterQuery, onClick, children }) {
-  const className = classNames('max-w-max w-full flex md:overflow-hidden', {
+  const className = classNames('max-w-max w-full flex items-center md:overflow-hidden', {
     'hover:underline': !!filterQuery
   })
 
@@ -276,11 +276,7 @@ export default function ListReport(props) {
 
   function maybeRenderIconFor(listItem) {
     if (props.renderIcon) {
-      return (
-        <span className="pr-1">
-          {props.renderIcon(listItem)}
-        </span>
-      )
+      return props.renderIcon(listItem)
     }
   }
 

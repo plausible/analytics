@@ -24,6 +24,10 @@ defmodule Plausible.Application do
       Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
       Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
       ReferrerBlocklist,
+      Plausible.Cache.Adapter.child_spec(:customer_currency, :cache_customer_currency,
+        ttl_check_interval: :timer.minutes(5),
+        global_ttl: :timer.minutes(60)
+      ),
       Plausible.Cache.Adapter.child_spec(:user_agents, :cache_user_agents,
         ttl_check_interval: :timer.seconds(5),
         global_ttl: :timer.minutes(60)

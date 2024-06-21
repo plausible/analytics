@@ -37,13 +37,15 @@ function optionId(index) {
 
 export default function PlausibleCombobox(props) {
   const [options, setOptions] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [isLoading, setLoading] = useState(false)
   const [isOpen, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const [highlightedIndex, setHighlightedIndex] = useState(0)
   const searchRef = useRef(null)
   const containerRef = useRef(null)
   const listRef = useRef(null)
+
+  const loading = isLoading || !!props.forceLoading
 
   const visibleOptions = [...options]
   if (props.freeChoice && input.length > 0 && options.every(option => option.value !== input)) {

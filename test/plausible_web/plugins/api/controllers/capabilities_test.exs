@@ -85,6 +85,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
       assert_schema(resp, "Capabilities", spec())
     end
 
+    @tag :ee_only
     test "growth", %{conn: conn, site: site, token: token} do
       site = Plausible.Repo.preload(site, :owner)
       insert(:growth_subscription, user: site.owner)

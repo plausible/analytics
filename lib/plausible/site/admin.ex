@@ -17,8 +17,7 @@ defmodule Plausible.SiteAdmin do
   def custom_index_query(_conn, _schema, query) do
     from(r in query,
       inner_join: o in assoc(r, :owner),
-      inner_join: m in assoc(r, :memberships),
-      preload: [owner: o, memberships: {m, :user}]
+      preload: [owner: o, memberships: :user]
     )
   end
 

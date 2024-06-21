@@ -77,7 +77,7 @@ defmodule Plausible.Auth do
   end
 
   @spec create_api_key(Auth.User.t(), String.t(), String.t()) ::
-          {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t()}
+          {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t() | :upgrade_required}
   def create_api_key(user, name, key) do
     params = %{name: name, user_id: user.id, key: key}
     changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, params)

@@ -144,7 +144,9 @@ defmodule PlausibleWeb.Live.RegisterForm do
             >
             </div>
             <%= if @captcha_error do %>
-              <div class="text-red-500 text-xs italic mt-3"><%= @captcha_error %></div>
+              <div class="text-red-500 text-xs italic mt-3" x-data x-init="hcaptcha.reset()">
+                <%= @captcha_error %>
+              </div>
             <% end %>
             <script
               phx-update="ignore"
@@ -256,7 +258,12 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
     password_strength = Auth.User.password_strength(changeset)
 
-    {:noreply, assign(socket, form: to_form(changeset), password_strength: password_strength)}
+    {:noreply,
+     assign(socket,
+       form: to_form(changeset),
+       password_strength: password_strength,
+       captcha_error: nil
+     )}
   end
 
   def handle_event(

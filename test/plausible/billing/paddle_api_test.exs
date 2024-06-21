@@ -23,7 +23,10 @@ defmodule Plausible.Billing.PaddleApiTest do
         end
       )
 
-      assert Plausible.Billing.PaddleApi.fetch_prices(["19878", "20127", "20657", "20658"]) ==
+      assert Plausible.Billing.PaddleApi.fetch_prices(
+               ["19878", "20127", "20657", "20658"],
+               "127.0.0.1"
+             ) ==
                {:ok,
                 %{
                   "19878" => Money.new(:EUR, "6.0"),

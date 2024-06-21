@@ -606,6 +606,7 @@ if config_env() in [:dev, :staging, :prod, :test] do
     ecto_repo: Plausible.Repo,
     router: PlausibleWeb.Router,
     admin_title: "Plausible Admin",
+    extensions: [Plausible.CrmExtensions],
     resources: [
       auth: [
         resources: [

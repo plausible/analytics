@@ -8,7 +8,7 @@ export default async function({ page, context }) {
 	await page.goto(context.url);
 
 	try {
-		await page.waitForFunction('window.plausible', { timeout: 4000 });
+		await page.waitForFunction('window.plausible', { timeout: 5000 });
 		await page.evaluate(() => {
 			window.__plausible = true;
 			window.plausible('verification-agent-test', {
@@ -19,7 +19,7 @@ export default async function({ page, context }) {
 		});
 
 		try {
-			await page.waitForFunction('window.plausibleCallbackResult', { timeout: 3000 });
+			await page.waitForFunction('window.plausibleCallbackResult', { timeout: 5000 });
 			const status = await page.evaluate(() => { return window.plausibleCallbackResult() });
 			return { data: { plausibleInstalled: true, callbackStatus: status } };
 		} catch ({ err, message }) {

@@ -75,7 +75,7 @@ defmodule Plausible.PaddleApi.Mock do
   # to give a reasonable testing structure for monthly and yearly plan
   # prices, this function returns prices with the following logic:
   # 10, 100, 20, 200, 30, 300, ...and so on.
-  def fetch_prices([_ | _] = product_ids) do
+  def fetch_prices([_ | _] = product_ids, _customer_ip) do
     {prices, _index} =
       Enum.reduce(product_ids, {%{}, 1}, fn p, {acc, i} ->
         price =
