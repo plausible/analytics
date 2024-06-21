@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-76B64739.js"></script>
+    <script src="dist/sidebar_items-C6E6398A.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -235,7 +235,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#set_property/2" translate="no">set_property(query, property)</a>
+        <a href="#set_dimensions/2" translate="no">set_dimensions(query, dimensions)</a>
 
       </div>
 
@@ -285,6 +285,7 @@ Pages
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Plausible.Stats.Query{
   date_range: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  dimensions: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   experimental_reduced_joins?: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   experimental_session_count?: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   filters: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -294,7 +295,6 @@ Pages
   latest_import_end_date: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   now: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   period: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  property: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   sample_threshold: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   skip_imported_reason: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
 }</pre>
@@ -325,7 +325,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">ensure_include_imported(query, requested?)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L301" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L305" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -356,7 +356,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">exclude_imported(query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L230" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L234" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -406,7 +406,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">get_filter(query, name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L253" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L257" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -428,7 +428,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">get_filter_by_prefix(query, prefix)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L247" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L251" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -450,7 +450,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">has_event_filters?(query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L241" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L245" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -472,7 +472,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">put_filter(query, filter)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L213" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L217" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -494,7 +494,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">remove_filters(query, prefixes)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L219" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L223" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -507,16 +507,16 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="set_property/2">
+<section class="detail" id="set_dimensions/2">
 
   <div class="detail-header">
-    <a href="#set_property/2" class="detail-link" title="Link to this function">
+    <a href="#set_dimensions/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">set_property(query, property)</h1>
+    <h1 class="signature" translate="no">set_dimensions(query, dimensions)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L207" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L211" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -528,7 +528,7 @@ Pages
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> set_property(<a href="#t:t/0">t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil) :: <a href="#t:t/0">t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> set_dimensions(<a href="#t:t/0">t</a>(), [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]) :: <a href="#t:t/0">t</a>()</pre>
 
       </div>
 
@@ -544,7 +544,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">trace(query, metrics)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L313" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L317" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -559,6 +559,7 @@ Pages
           <pre translate="no"><span class="attribute">@spec</span> trace(
   %Plausible.Stats.Query{
     date_range: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    dimensions: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     experimental_reduced_joins?: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     experimental_session_count?: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     filters: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -568,13 +569,13 @@ Pages
     latest_import_end_date: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     now: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     period: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-    property: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     sample_threshold: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     skip_imported_reason: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
   },
   [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()]
 ) :: %Plausible.Stats.Query{
   date_range: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  dimensions: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   experimental_reduced_joins?: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   experimental_session_count?: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   filters: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -584,7 +585,6 @@ Pages
   latest_import_end_date: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   now: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   period: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  property: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   sample_threshold: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   skip_imported_reason: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
 }</pre>
