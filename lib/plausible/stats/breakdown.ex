@@ -5,7 +5,7 @@ defmodule Plausible.Stats.Breakdown do
 
   import Plausible.Stats.{Base, Imported}
   import Ecto.Query
-  alias Plausible.Stats.{Query, Util, TableDecider}
+  alias Plausible.Stats.{Query, Util, TableDecider, QueryResult, SQL}
 
   @no_ref "Direct / None"
   @not_set "(not set)"
@@ -23,7 +23,45 @@ defmodule Plausible.Stats.Breakdown do
   # the breakdown results later on.
   @computed_metrics [:conversion_rate, :total_visitors]
 
-  def breakdown(site, query, metrics, pagination, opts \\ [])
+  def breakdown(site, query, metrics, pagination, opts \\ []) do
+    # :TODO: Order by as usual
+    # :TODO: Implicit multiple breakdowns
+    metrics_with_visitors = if(:visitors in metrics, do: metrics, else: metrics ++ [:visitors])
+
+    query_with_metrics = %Query{
+      query
+      | metrics: metrics,
+        order_by: [{:visitors, :desc}],
+        v2: true
+    }
+
+    q = SQL.QueryBuilder.build(query_with_metrics, site)
+
+    IO.inspect(q: q, query: query_with_metrics, metrics: metrics)
+
+    q
+    |> ClickhouseRepo.all()
+    |> QueryResult.from(query_with_metrics)
+    |> IO.inspect()
+    |> build_breakdown_result(query_with_metrics, metrics)
+  end
+
+  defp build_breakdown_result(query_result, query, metrics) do
+    query_result.results
+    |> Enum.map(fn %{dimensions: dimensions, metrics: entry_metrics} ->
+      dimension_map =
+        query.dimensions |> Enum.map(&result_key/1) |> Enum.zip(dimensions) |> Enum.into(%{})
+
+      metrics_map = Enum.zip(metrics, entry_metrics) |> Enum.into(%{})
+
+      Map.merge(dimension_map, metrics_map)
+    end)
+  end
+
+  defp result_key("event:props:" <> custom_property), do: custom_property
+  defp result_key("event:" <> key), do: key
+  defp result_key("visit:" <> key), do: key
+  defp result_key(dimension), do: dimension
 
   def breakdown(
         site,
