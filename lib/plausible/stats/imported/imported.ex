@@ -336,7 +336,7 @@ defmodule Plausible.Stats.Imported do
     )
     |> select_joined_dimension(dim, query)
     |> select_joined_metrics(metrics)
-    |> apply_order_by(metrics)
+    |> apply_order_by(query, metrics)
   end
 
   def merge_imported(q, site, %Query{dimensions: []} = query, metrics) do
@@ -882,12 +882,14 @@ defmodule Plausible.Stats.Imported do
     |> select_joined_metrics(rest)
   end
 
-  defp apply_order_by(q, [:visitors | rest]) do
+  defp apply_order_by(q, %Query{v2: true}, _), do: q
+
+  defp apply_order_by(q, query, [:visitors | rest]) do
     order_by(q, [s, i], desc: s.visitors + i.visitors)
-    |> apply_order_by(rest)
+    |> apply_order_by(query, rest)
   end
 
-  defp apply_order_by(q, _), do: q
+  defp apply_order_by(q, _query, _), do: q
 
   defp naive_dimension_join(q1, q2, metrics) do
     from(a in Ecto.Query.subquery(q1),
