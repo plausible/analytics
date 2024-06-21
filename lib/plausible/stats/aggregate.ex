@@ -15,15 +15,10 @@ defmodule Plausible.Stats.Aggregate do
 
     Query.trace(query, metrics)
 
-    query_with_metrics = %Plausible.Stats.Query{
-      query
-      | metrics: Util.maybe_add_visitors_metric(metrics)
-    }
-
-    q = Plausible.Stats.SQL.QueryBuilder.build(query_with_metrics, site)
+    q = Plausible.Stats.SQL.QueryBuilder.build(query, site)
 
     time_on_page_task =
-      if :time_on_page in query_with_metrics.metrics do
+      if :time_on_page in query.metrics do
         fn -> aggregate_time_on_page(site, query) end
       else
         fn -> %{} end
