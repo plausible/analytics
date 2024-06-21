@@ -3631,6 +3631,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert %{"dimensions" => ["Desktop"], "metrics" => [1]} =
                breakdown_and_first.("visit:device")
 
+      # :TODO: These should not pass validation - not available on events.
+      # visit dimension and event-only metric
       # assert %{"dimensions" => ["/test"], "metrics" => [1]} = breakdown_and_first.("visit:entry_page")
       # assert %{"dimensions" => ["/test"], "metrics" => [1]} = breakdown_and_first.("visit:exit_page")
       assert %{"dimensions" => ["EE"], "metrics" => [1]} = breakdown_and_first.("visit:country")
