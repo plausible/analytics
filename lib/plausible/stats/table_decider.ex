@@ -24,37 +24,52 @@ defmodule Plausible.Stats.TableDecider do
     } =
       partition(metrics, query, &metric_partitioner/2)
 
+    # :TODO: We can't lump dimensions and filters into one.
+    #   For filters we can join, but not for dimensions (these need to be on main table)
     %{event: event_only_filters, session: session_only_filters} =
       query
       |> filter_keys()
       |> partition(query, &filters_partitioner/2)
 
+    %{event: event_only_dimensions, session: session_only_dimensions} =
+      partition(query.dimensions, query, &filters_partitioner/2)
+
+    # IO.inspect(%{
+    #   event_only_metrics: event_only_metrics,
+    #   event_only_filters: event_only_filters,
+    #   event_only_dimensions: event_only_dimensions,
+    #   session_only_metrics: session_only_metrics,
+    #   session_only_filters: session_only_filters,
+    #   session_only_dimensions: session_only_dimensions,
+    # })
+
     cond do
       # Only one table needs to be queried
-      empty?(event_only_metrics) && empty?(event_only_filters) ->
+      empty?(event_only_metrics) && empty?(event_only_filters) && empty?(event_only_dimensions) ->
         {[], session_only_metrics ++ either_metrics ++ sample_percent, other_metrics}
 
-      empty?(session_only_metrics) && empty?(session_only_filters) ->
+      empty?(session_only_metrics) && empty?(session_only_filters) &&
+          empty?(session_only_dimensions) ->
         {event_only_metrics ++ either_metrics ++ sample_percent, [], other_metrics}
 
-      # Filters on both events and sessions, but only one kind of metric
-      empty?(event_only_metrics) ->
+      # Filters and/or dimensions on both events and sessions, but only one kind of metric
+      empty?(event_only_metrics) && empty?(event_only_dimensions) ->
         {[], session_only_metrics ++ either_metrics ++ sample_percent, other_metrics}
 
-      empty?(session_only_metrics) ->
+      empty?(session_only_metrics) && empty?(session_only_dimensions) ->
         {event_only_metrics ++ either_metrics ++ sample_percent, [], other_metrics}
 
       # Default: prefer sessions
       true ->
-        {event_only_metrics ++ sample_percent,
-         session_only_metrics ++ either_metrics ++ sample_percent, other_metrics}
+        # :TODO: Why does this work?
+        {event_only_metrics ++ either_metrics ++ sample_percent,
+         session_only_metrics ++ sample_percent, other_metrics}
     end
   end
 
   defp filter_keys(query) do
     query.filters
     |> Enum.map(fn [_, filter_key | _rest] -> filter_key end)
-    |> Enum.concat(query.dimensions)
   end
 
   defp metric_partitioner(_, :conversion_rate), do: :event
@@ -72,7 +87,7 @@ defmodule Plausible.Stats.TableDecider do
   defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :visitors), do: :either
 
   defp metric_partitioner(_, :visits), do: :session
-  defp metric_partitioner(_, :visitors), do: :event
+  defp metric_partitioner(_, :visitors), do: :either
   # Calculated metrics - handled on callsite separately from other metrics.
   defp metric_partitioner(_, :time_on_page), do: :other
   defp metric_partitioner(_, :total_visitors), do: :other
