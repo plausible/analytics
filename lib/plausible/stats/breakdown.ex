@@ -23,17 +23,16 @@ defmodule Plausible.Stats.Breakdown do
   # or `bounce_rate` - we cannot currently "select them" directly in
   # the db queries. Instead, we need to artificially append them to
   # the breakdown results later on.
-  @computed_metrics [:conversion_rate, :total_visitors]
+  @computed_metrics [:time_on_page]
 
   def breakdown(site, %Query{dimensions: [dimension]} = query, metrics, pagination, _opts \\ []) do
-    # :TODO: Order by as usual
-    # :TODO: Implicit multiple breakdowns
+    transformed_metrics = transform_metrics(metrics, dimension)
 
     query_with_metrics =
       %Query{
         query
-        | metrics: transform_metrics(metrics, dimension),
-          order_by: dimension_order_by(dimension),
+        | metrics: transformed_metrics,
+          order_by: infer_order_by(transformed_metrics, dimension),
           dimensions: transform_dimensions(dimension),
           filters: query.filters ++ dimension_filters(dimension),
           preloaded_goals: QueryParser.preload_goals_if_needed(site, query.filters, [dimension]),
@@ -41,10 +40,13 @@ defmodule Plausible.Stats.Breakdown do
       }
       |> QueryOptimizer.optimize()
 
+    # |> IO.inspect
+
     q = SQL.QueryBuilder.build(query_with_metrics, site)
 
     q
     |> apply_pagination(pagination)
+    # |> IO.inspect
     |> ClickhouseRepo.all()
     |> QueryResult.from(query_with_metrics)
     |> build_breakdown_result(query_with_metrics, metrics)
@@ -475,7 +477,12 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp transform_metrics(metrics, dimension) do
-    metrics = if(:visitors in metrics, do: metrics, else: metrics ++ [:visitors])
+    metrics =
+      if is_nil(metric_to_order_by(metrics)) do
+        metrics ++ [:visitors]
+      else
+        metrics
+      end
 
     Enum.map(metrics, fn metric ->
       case {metric, dimension} do
@@ -487,8 +494,15 @@ defmodule Plausible.Stats.Breakdown do
     end)
   end
 
-  defp dimension_order_by("event:goal"), do: [{:visitors, :desc}]
-  defp dimension_order_by(dimension), do: [{:visitors, :desc}, {dimension, :asc}]
+  defp infer_order_by(metrics, "event:goal"), do: [{metric_to_order_by(metrics), :desc}]
+  defp infer_order_by(metrics, "event:page"), do: [{metric_to_order_by(metrics), :desc}]
+
+  defp infer_order_by(metrics, dimension),
+    do: [{metric_to_order_by(metrics), :desc}, {dimension, :asc}]
+
+  defp metric_to_order_by(metrics) do
+    Enum.find(metrics, &(&1 not in @computed_metrics))
+  end
 
   def transform_dimensions("visit:browser_version"),
     do: ["visit:browser", "visit:browser_version"]
