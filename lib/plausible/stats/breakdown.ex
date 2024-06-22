@@ -66,8 +66,8 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp result_key("event:props:" <> custom_property), do: custom_property
-  defp result_key("event:" <> key), do: key
-  defp result_key("visit:" <> key), do: key
+  defp result_key("event:" <> key), do: key |> String.to_atom()
+  defp result_key("visit:" <> key), do: key |> String.to_atom()
   defp result_key(dimension), do: dimension
 
   def breakdown(
