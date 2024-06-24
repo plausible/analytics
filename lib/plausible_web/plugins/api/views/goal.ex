@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Plugins.API.Views.Goal do
         conn: conn
       }) do
     %{
-      goals: render_many(goals, __MODULE__, "goal.json", authorized_site: site),
+      goals: render_many(goals, __MODULE__, "goal.json", authorized_site: site, as: :goal),
       meta: render_metadata_links(metadata, :plugins_api_goals_url, :index, conn.query_params)
     }
   end
@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Plugins.API.Views.Goal do
         conn: conn
       }) do
     %{
-      goals: render_many(goals, __MODULE__, "goal.json", authorized_site: site),
+      goals: render_many(goals, __MODULE__, "goal.json", authorized_site: site, as: :goal),
       meta: render_metadata_links(%{}, :plugins_api_goals_url, :index, conn.query_params)
     }
   end

@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Plugins.API.Views.Funnel do
         conn: conn
       }) do
     %{
-      funnels: render_many(funnels, __MODULE__, "funnel.json", authorized_site: site),
+      funnels: render_many(funnels, __MODULE__, "funnel.json", authorized_site: site, as: :funnel),
       meta: render_metadata_links(metadata, :plugins_api_funnels_url, :index, conn.query_params)
     }
   end
@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Plugins.API.Views.Funnel do
         conn: conn
       }) do
     %{
-      funnels: render_many(funnels, __MODULE__, "funnel.json", authorized_site: site),
+      funnels: render_many(funnels, __MODULE__, "funnel.json", authorized_site: site, as: :funnel),
       meta: render_metadata_links(%{}, :plugins_api_funnels_url, :index, conn.query_params)
     }
   end
@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Plugins.API.Views.Funnel do
         id: funnel.id,
         steps:
           render_many(goals, PlausibleWeb.Plugins.API.Views.Goal, "goal.json",
-            authorized_site: site
+            authorized_site: site, as: :goal
           )
       }
     }
