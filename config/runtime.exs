@@ -319,7 +319,18 @@ config :plausible, PlausibleWeb.Endpoint,
   websocket_url: websocket_url,
   secure_cookie: secure_cookie
 
-maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
+maybe_ipv6 =
+  if get_var_from_path_or_env(config_dir, "ECTO_IPV6") do
+    if config_env() in [:ce, :ce_dev, :ce_test] do
+      Logger.warning(
+        "ECTO_IPV6 is no longer necessary as all TCP connections now try IPv6 automatically with IPv4 fallback"
+      )
+    end
+
+    [:inet6]
+  else
+    []
+  end
 
 db_cacertfile = get_var_from_path_or_env(config_dir, "DATABASE_CACERTFILE", CAStore.file_path())
 
@@ -367,6 +378,12 @@ config :plausible, :imported,
 maybe_ch_ipv6 =
   get_var_from_path_or_env(config_dir, "ECTO_CH_IPV6", "false")
   |> String.to_existing_atom()
+
+if maybe_ch_ipv6 && config_env() in [:ce, :ce_dev, :ce_test] do
+  Logger.warning(
+    "ECTO_CH_IPV6 is no longer necessary as all TCP connections now try IPv6 automatically with IPv4 fallback"
+  )
+end
 
 ch_cacertfile = get_var_from_path_or_env(config_dir, "CLICKHOUSE_CACERTFILE")
 

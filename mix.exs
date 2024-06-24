@@ -143,7 +143,8 @@ defmodule Plausible.MixProject do
       {:sweet_xml, "~> 0.7.4"},
       {:zstream, "~> 0.6.4"},
       {:con_cache, "~> 1.1.0"},
-      {:req, "~> 0.5.0"}
+      {:req, "~> 0.5.0"},
+      {:happy_tcp, github: "ruslandoga/happy_tcp", only: [:ce, :ce_dev, :ce_test]}
     ]
   end
 
