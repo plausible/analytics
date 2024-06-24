@@ -28,7 +28,7 @@ COPY mix.lock ./
 COPY config ./config
 RUN mix local.hex --force && \
   mix local.rebar --force && \
-  mix deps.get --only prod && \
+  mix deps.get --only ${MIX_ENV} && \
   mix deps.compile
 
 COPY assets/package.json assets/package-lock.json ./assets/
