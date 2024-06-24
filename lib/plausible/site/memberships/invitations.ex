@@ -75,31 +75,12 @@ defmodule Plausible.Site.Memberships.Invitations do
       active_subscription? = Plausible.Billing.Subscriptions.active?(new_owner.subscription)
 
       if active_subscription? && plan != :free_10k do
-        usage_after_transfer = %{
-          monthly_pageviews: monthly_pageview_usage_after_transfer(site, new_owner),
-          team_members: team_member_usage_after_transfer(site, new_owner),
-          sites: Quota.Usage.site_usage(new_owner) + 1
-        }
-
-        Quota.ensure_within_plan_limits(usage_after_transfer, plan)
+        new_owner
+        |> Quota.Usage.usage(pending_ownership_site_ids: [site.id])
+        |> Quota.ensure_within_plan_limits(plan)
       else
         {:error, :no_plan}
       end
-    end
-
-    defp team_member_usage_after_transfer(site, new_owner) do
-      current_usage = Quota.Usage.team_member_usage(new_owner)
-      site_usage = Quota.Usage.team_member_usage(site.owner, site: site)
-
-      extra_usage =
-        if Plausible.Sites.is_member?(new_owner.id, site), do: 0, else: 1
-
-      current_usage + site_usage + extra_usage
-    end
-
-    defp monthly_pageview_usage_after_transfer(site, new_owner) do
-      site_ids = Plausible.Sites.owned_site_ids(new_owner) ++ [site.id]
-      Quota.Usage.monthly_pageview_usage(new_owner, site_ids)
     end
   else
     @spec ensure_can_take_ownership(Site.t(), Auth.User.t()) :: :ok

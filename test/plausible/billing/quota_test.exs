@@ -244,7 +244,7 @@ defmodule Plausible.Billing.QuotaTest do
     end
   end
 
-  describe "team_member_usage/1" do
+  describe "team_member_usage/2" do
     test "returns the number of members in all of the sites the user owns" do
       me = insert(:user)
 
@@ -335,13 +335,69 @@ defmodule Plausible.Billing.QuotaTest do
       assert Quota.Usage.team_member_usage(me) == 3
     end
 
-    test "does not count ownership transfer as a team member" do
+    test "does not count ownership transfer as a team member by default" do
       me = insert(:user)
       site_i_own = insert(:site, memberships: [build(:site_membership, user: me, role: :owner)])
 
       insert(:invitation, site: site_i_own, inviter: me, role: :owner)
 
       assert Quota.Usage.team_member_usage(me) == 0
+    end
+
+    test "counts team members from pending ownerships when specified" do
+      me = insert(:user)
+
+      user_1 = insert(:user)
+      user_2 = insert(:user)
+
+      pending_ownership_site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user_1, role: :owner),
+            build(:site_membership, user: user_2, role: :admin)
+          ]
+        )
+
+      insert(:invitation,
+        site: pending_ownership_site,
+        inviter: user_1,
+        email: me.email,
+        role: :owner
+      )
+
+      assert Quota.Usage.team_member_usage(me,
+               pending_ownership_site_ids: [pending_ownership_site.id]
+             ) == 2
+    end
+
+    test "counts invitations towards team members from pending ownership sites" do
+      me = insert(:user)
+
+      user_1 = insert(:user)
+      user_2 = insert(:user)
+
+      pending_ownership_site =
+        insert(:site,
+          memberships: [build(:site_membership, user: user_1, role: :owner)]
+        )
+
+      insert(:invitation,
+        site: pending_ownership_site,
+        inviter: user_1,
+        email: me.email,
+        role: :owner
+      )
+
+      insert(:invitation,
+        site: pending_ownership_site,
+        inviter: user_1,
+        email: user_2.email,
+        role: :admin
+      )
+
+      assert Quota.Usage.team_member_usage(me,
+               pending_ownership_site_ids: [pending_ownership_site.id]
+             ) == 2
     end
 
     test "returns zero when user does not have any site" do
@@ -378,9 +434,9 @@ defmodule Plausible.Billing.QuotaTest do
       invitation = insert(:invitation, site: site_i_own, inviter: me, email: "foo@example.com")
 
       assert Quota.Usage.team_member_usage(me) == 4
-      assert Quota.Usage.team_member_usage(me, exclude_emails: "arbitrary@example.com") == 4
-      assert Quota.Usage.team_member_usage(me, exclude_emails: member.email) == 3
-      assert Quota.Usage.team_member_usage(me, exclude_emails: invitation.email) == 3
+      assert Quota.Usage.team_member_usage(me, exclude_emails: ["arbitrary@example.com"]) == 4
+      assert Quota.Usage.team_member_usage(me, exclude_emails: [member.email]) == 3
+      assert Quota.Usage.team_member_usage(me, exclude_emails: [invitation.email]) == 3
 
       assert Quota.Usage.team_member_usage(me, exclude_emails: [member.email, invitation.email]) ==
                2
