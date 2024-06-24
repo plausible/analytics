@@ -11,7 +11,7 @@ import classNames from 'classnames'
 import { trimURL, updatedQuery } from '../../util/url'
 import { cleanLabels, hasGoalFilter, replaceFilterByPrefix } from '../../util/filters'
 const MAX_ITEMS = 9
-const MIN_HEIGHT = 380
+export const MIN_HEIGHT = 380
 const ROW_HEIGHT = 32
 const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT = (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
