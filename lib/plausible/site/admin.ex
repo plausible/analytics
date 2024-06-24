@@ -17,8 +17,7 @@ defmodule Plausible.SiteAdmin do
   def custom_index_query(_conn, _schema, query) do
     from(r in query,
       inner_join: o in assoc(r, :owner),
-      inner_join: m in assoc(r, :memberships),
-      preload: [owner: o, memberships: {m, :user}]
+      preload: [owner: o, memberships: :user]
     )
   end
 
@@ -165,11 +164,14 @@ defmodule Plausible.SiteAdmin do
     owner = site.owner
 
     if owner do
+      escaped_name = Phoenix.HTML.html_escape(owner.name) |> Phoenix.HTML.safe_to_string()
+      escaped_email = Phoenix.HTML.html_escape(owner.email) |> Phoenix.HTML.safe_to_string()
+
       {:safe,
        """
-        <a href="/crm/auth/user/#{owner.id}">#{owner.name}</a>
+        <a href="/crm/auth/user/#{owner.id}">#{escaped_name}</a>
         <br/><br/>
-        #{owner.email}
+        #{escaped_email}
        """}
     end
   end

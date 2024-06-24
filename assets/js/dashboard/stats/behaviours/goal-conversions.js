@@ -7,10 +7,11 @@ import * as api from "../../api"
 import { EVENT_PROPS_PREFIX, getGoalFilter } from "../../util/filters"
 
 export const SPECIAL_GOALS = {
-  '404': {title: '404 Pages', prop: 'path'},
-  'Outbound Link: Click': {title: 'Outbound Links', prop: 'url'},
-  'Cloaked Link: Click': {title: 'Cloaked Links', prop: 'url'},
-  'File Download': {title: 'File Downloads', prop: 'url'}
+  '404': { title: '404 Pages', prop: 'path' },
+  'Outbound Link: Click': { title: 'Outbound Links', prop: 'url' },
+  'Cloaked Link: Click': { title: 'Cloaked Links', prop: 'url' },
+  'File Download': { title: 'File Downloads', prop: 'url' },
+  'WP Search Queries': { title: 'WordPress Search Queries', prop: 'search_query' },
 }
 
 function getSpecialGoal(query) {
@@ -59,8 +60,8 @@ function SpecialPropBreakdown(props) {
       getFilterFor={getFilterFor}
       keyLabel={prop}
       metrics={[
-        {name: 'visitors', label: 'Visitors', plot: true},
-        {name: 'events', label: 'Events', hiddenOnMobile: true},
+        { name: 'visitors', label: 'Visitors', plot: true },
+        { name: 'events', label: 'Events', hiddenOnMobile: true },
         CR_METRIC
       ]}
       detailsLink={url.sitePath(site, `/custom-prop-values/${prop}`)}
@@ -74,7 +75,7 @@ function SpecialPropBreakdown(props) {
 }
 
 export default function GoalConversions(props) {
-  const {site, query, afterFetchData} = props
+  const { site, query, afterFetchData } = props
 
   const specialGoal = getSpecialGoal(query)
   if (specialGoal) {

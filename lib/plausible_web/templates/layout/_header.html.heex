@@ -27,6 +27,18 @@
         <%= cond do %>
           <% @conn.assigns[:current_user] -> %>
             <ul class="flex items-center w-full sm:w-auto">
+              <li :if={
+                ee?() && @conn.assigns[:site] &&
+                  Plausible.Auth.is_super_admin?(@conn.assigns[:current_user])
+              }>
+                <.styled_link
+                  class="text-sm"
+                  href={PlausibleWeb.Endpoint.url() <> "/crm/sites/site/#{@conn.assigns[:site].id}"}
+                  new_tab={true}
+                >
+                  CRM
+                </.styled_link>
+              </li>
               <li
                 :if={ee?() and Plausible.Users.on_trial?(@conn.assigns[:current_user])}
                 class="hidden mr-6 sm:block"

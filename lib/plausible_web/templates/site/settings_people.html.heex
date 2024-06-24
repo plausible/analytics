@@ -20,6 +20,13 @@
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
                 <%= membership.user.name %>
+                <PlausibleWeb.Components.Generic.styled_link
+                  :if={ee?() and Plausible.Auth.is_super_admin?(@current_user)}
+                  new_tab={true}
+                  href={PlausibleWeb.Endpoint.url() <> "/crm/auth/user/#{@current_user.id}"}
+                >
+                  CRM
+                </PlausibleWeb.Components.Generic.styled_link>
               </p>
               <p class="text-sm text-gray-400 truncate">
                 <%= membership.user.email %>

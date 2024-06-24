@@ -45,8 +45,8 @@ defmodule Plausible.Billing.Plans do
       is_nil(owned_plan) -> @plans_v4
       user.subscription && Subscriptions.expired?(user.subscription) -> @plans_v4
       owned_plan.kind == :business -> @plans_v4
-      owned_plan.generation == 1 -> @plans_v1
-      owned_plan.generation == 2 -> @plans_v2
+      owned_plan.generation == 1 -> @plans_v1 |> drop_high_plans(owned_plan)
+      owned_plan.generation == 2 -> @plans_v2 |> drop_high_plans(owned_plan)
       owned_plan.generation == 3 -> @plans_v3
       owned_plan.generation == 4 -> @plans_v4
     end
@@ -78,6 +78,14 @@ defmodule Plausible.Billing.Plans do
       end
 
     Enum.group_by(plans, & &1.kind)
+  end
+
+  @high_legacy_volumes [20_000_000, 50_000_000]
+  defp drop_high_plans(plans, %Plan{monthly_pageview_limit: current_volume} = _owned) do
+    plans
+    |> Enum.reject(fn %Plan{monthly_pageview_limit: plan_volume} ->
+      plan_volume in @high_legacy_volumes and current_volume < plan_volume
+    end)
   end
 
   @spec yearly_product_ids() :: [String.t()]
