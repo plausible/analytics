@@ -27,8 +27,9 @@ function ScrollToTop() {
 }
 
 export default function Router({ site, loggedIn, currentUserRole }) {
+  console.info('xxx', site);
   return (
-    <BrowserRouter basename={encodeURI(site.domain)}>
+    <BrowserRouter basename={site.shared ? `/share/${encodeURI(site.domain)}` : encodeURI(site.domain)}>
       <Route path="/">
         <ScrollToTop />
         <Dash site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} />
