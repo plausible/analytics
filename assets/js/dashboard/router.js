@@ -27,9 +27,10 @@ function ScrollToTop() {
 }
 
 export default function Router({ site, loggedIn, currentUserRole }) {
+  console.info('xxx', site);
   return (
-    <BrowserRouter>
-      <Route path="/:domain">
+    <BrowserRouter basename={site.shared ? `/share/${encodeURI(site.domain)}` : encodeURI(site.domain)}>
+      <Route path="/">
         <ScrollToTop />
         <Dash site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} />
         <Switch>
@@ -52,7 +53,7 @@ export default function Router({ site, loggedIn, currentUserRole }) {
             <ExitPagesModal site={site} />
           </Route>
           <Route path="/:domain/countries">
-            <ModalTable title="Top countries" site={site} endpoint={url.apiPath(site, '/countries')} filterKey="country" keyLabel="Country" renderIcon={renderCountryIcon} showPercentage={true}/>
+            <ModalTable title="Top countries" site={site} endpoint={url.apiPath(site, '/countries')} filterKey="country" keyLabel="Country" renderIcon={renderCountryIcon} showPercentage={true} />
           </Route>
           <Route path="/:domain/regions">
             <ModalTable title="Top regions" site={site} endpoint={url.apiPath(site, '/regions')} filterKey="region" keyLabel="Region" renderIcon={renderRegionIcon} />
@@ -71,7 +72,7 @@ export default function Router({ site, loggedIn, currentUserRole }) {
           </Route>
         </Switch>
       </Route>
-    </BrowserRouter>
+    </BrowserRouter >
   );
 }
 
