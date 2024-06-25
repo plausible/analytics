@@ -4,7 +4,7 @@ import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
-import numberFormatter, {percentageFormatter} from '../../util/number-formatter'
+import numberFormatter, { percentageFormatter } from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import { trimURL, updatedQuery } from '../../util/url'
 import { hasGoalFilter, replaceFilterByPrefix } from "../../util/filters";
@@ -62,7 +62,7 @@ class ExitPagesModal extends React.Component {
         <td className="p-2 truncate">
           <Link
             to={{
-              pathname: `/${encodeURIComponent(this.props.site.domain)}`,
+              pathname: `/`,
               search: updatedQuery({ filters })
             }}
             className="hover:underline"

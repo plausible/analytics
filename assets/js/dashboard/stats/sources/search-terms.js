@@ -10,7 +10,7 @@ import LazyLoader from '../../components/lazy-loader'
 export default class SearchTerms extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {loading: true}
+    this.state = { loading: true }
     this.onVisible = this.onVisible.bind(this)
     this.fetchSearchTerms = this.fetchSearchTerms.bind(this)
   }
@@ -24,7 +24,7 @@ export default class SearchTerms extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
-      this.setState({loading: true, terms: null})
+      this.setState({ loading: true, terms: null })
       this.fetchSearchTerms()
     }
   }
@@ -41,10 +41,9 @@ export default class SearchTerms extends React.Component {
         notConfigured: res.not_configured,
         isAdmin: res.is_admin,
         unsupportedFilters: res.unsupported_filters
-      })).catch((error) =>
-        {
-            this.setState({ loading: false, searchTerms: [], notConfigured: true, error: true, isAdmin: error.payload.is_admin })
-        }
+      })).catch((error) => {
+        this.setState({ loading: false, searchTerms: [], notConfigured: true, error: true, isAdmin: error.payload.is_admin })
+      }
       )
   }
 
@@ -59,7 +58,7 @@ export default class SearchTerms extends React.Component {
         >
           <span className="flex px-2 py-1.5 dark:text-gray-300 z-9 relative break-all">
             <span className="md:truncate block">
-              { term.name }
+              {term.name}
             </span>
           </span>
         </Bar>
@@ -69,7 +68,7 @@ export default class SearchTerms extends React.Component {
   }
 
   renderList() {
-   if (this.state.unsupportedFilters)  {
+    if (this.state.unsupportedFilters) {
       return (
         <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
           <RocketIcon />
@@ -81,10 +80,10 @@ export default class SearchTerms extends React.Component {
         <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
           <RocketIcon />
           <div>
-          This site is not connected to Search Console so we cannot show the search terms
-          {this.state.isAdmin && this.state.error && <><br/><br/><p>Please click below to connect your Search Console account.</p></>}
+            This site is not connected to Search Console so we cannot show the search terms
+            {this.state.isAdmin && this.state.error && <><br /><br /><p>Please click below to connect your Search Console account.</p></>}
           </div>
-          {this.state.isAdmin && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/integrations`} className="button mt-4">Connect with Google</a> }
+          {this.state.isAdmin && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/integrations`} className="button mt-4">Connect with Google</a>}
         </div>
       )
     } else if (this.state.searchTerms.length > 0) {
@@ -114,8 +113,8 @@ export default class SearchTerms extends React.Component {
       return (
         <React.Fragment>
           <h3 className="font-bold dark:text-gray-100">Search Terms</h3>
-          { this.renderList() }
-          <MoreLink site={this.props.site} list={this.state.searchTerms} endpoint="referrers/Google" className="w-full pb-4 absolute bottom-0 left-0"/>
+          {this.renderList()}
+          <MoreLink list={this.state.searchTerms} endpoint="referrers/Google" className="w-full pb-4 absolute bottom-0 left-0" />
         </React.Fragment>
       )
     }
@@ -124,10 +123,10 @@ export default class SearchTerms extends React.Component {
   render() {
     return (
       <div>
-        { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
+        {this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div>}
         <FadeIn show={!this.state.loading} className="flex-grow">
           <LazyLoader onVisible={this.onVisible}>
-            { this.renderContent() }
+            {this.renderContent()}
           </LazyLoader>
         </FadeIn>
       </div>

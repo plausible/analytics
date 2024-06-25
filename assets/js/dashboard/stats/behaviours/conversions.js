@@ -34,7 +34,7 @@ export default function Conversions(props) {
         BUILD_EXTRA && { name: 'total_revenue', label: 'Revenue', hiddenOnMobile: true },
         BUILD_EXTRA && { name: 'average_revenue', label: 'Average', hiddenOnMobile: true }
       ]}
-      detailsLink={url.sitePath(site, '/conversions')}
+      detailsLink={url.sitePath('conversions')}
       maybeHideDetails={true}
       query={query}
       color="bg-red-50"

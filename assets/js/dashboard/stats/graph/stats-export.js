@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import * as api from '../../api'
 import { getCurrentInterval } from "./interval-picker"
 
-export default function StatsExport({site, query}) {  
+export default function StatsExport({ site, query }) {
   const [exporting, setExporting] = useState(false)
 
   function startExport() {

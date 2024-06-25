@@ -2,9 +2,9 @@ import React from "react";
 import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
-import { EVENT_PROPS_PREFIX, FILTER_GROUP_TO_MODAL_TYPE, formatFilterGroup, FILTER_OPERATIONS, getFilterGroup, FILTER_MODAL_TO_FILTER_GROUP} from '../../util/filters'
+import { EVENT_PROPS_PREFIX, FILTER_GROUP_TO_MODAL_TYPE, formatFilterGroup, FILTER_OPERATIONS, getFilterGroup, FILTER_MODAL_TO_FILTER_GROUP } from '../../util/filters'
 import { parseQuery } from '../../query'
-import { siteBasePath, updatedQuery } from '../../util/url'
+import { updatedQuery } from '../../util/url'
 import { shouldIgnoreKeypress } from '../../keybinding'
 import { cleanLabels } from "../../util/filters"
 import FilterModalGroup from "./filter-modal-group"
@@ -83,7 +83,7 @@ class FilterModal extends React.Component {
 
   selectFiltersAndCloseModal(filters) {
     this.props.history.replace({
-      pathname: siteBasePath(this.props.site),
+      pathname: '/',
       search: updatedQuery({
         filters: filters,
         labels: cleanLabels(filters, this.state.labelState)
@@ -125,7 +125,7 @@ class FilterModal extends React.Component {
 
   onDeleteRow(id) {
     this.setState(prevState => {
-      const filterState = {...prevState.filterState}
+      const filterState = { ...prevState.filterState }
       delete filterState[id]
       return { filterState }
     })

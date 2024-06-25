@@ -5,7 +5,7 @@ function detailsIcon() {
   return (
     <svg
       className="feather mr-1"
-      style={{marginTop: '-2px'}}
+      style={{ marginTop: '-2px' }}
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="none"
@@ -20,17 +20,17 @@ function detailsIcon() {
   )
 }
 
-export default function MoreLink({url, site, list, endpoint, className, onClick}) {
+export default function MoreLink({ url, list, endpoint, className, onClick }) {
   if (list.length > 0) {
     return (
       <div className={`w-full text-center ${className ? className : ''}`}>
         <Link
-          to={url || `/${encodeURIComponent(site.domain)}/${endpoint}${window.location.search}`}
+          to={url || `/${endpoint}${window.location.search}`}
           // eslint-disable-next-line max-len
           className="leading-snug font-bold text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition tracking-wide"
           onClick={onClick}
         >
-          { detailsIcon() }
+          {detailsIcon()}
           DETAILS
         </Link>
       </div>
