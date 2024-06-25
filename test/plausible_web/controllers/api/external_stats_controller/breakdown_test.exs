@@ -890,8 +890,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     assert json_response(conn, 200) == %{
              "results" => [
                %{"page" => "/", "pageviews" => 2},
-               %{"page" => "/plausible.io", "pageviews" => 1},
-               %{"page" => "/include-me", "pageviews" => 1}
+               %{"page" => "/include-me", "pageviews" => 1},
+               %{"page" => "/plausible.io", "pageviews" => 1}
              ]
            }
   end
