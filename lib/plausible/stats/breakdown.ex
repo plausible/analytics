@@ -496,7 +496,6 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp infer_order_by(metrics, "event:goal"), do: [{metric_to_order_by(metrics), :desc}]
-  defp infer_order_by(metrics, "event:page"), do: [{metric_to_order_by(metrics), :desc}]
 
   defp infer_order_by(metrics, dimension),
     do: [{metric_to_order_by(metrics), :desc}, {dimension, :asc}]
