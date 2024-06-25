@@ -4,6 +4,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   alias Plausible.Stats.TableDecider
   alias Plausible.Stats.Filters
   alias Plausible.Stats.Query
+  alias Plausible.Stats.Metrics
 
   def parse(site, params, now \\ nil) when is_map(params) do
     with {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
@@ -44,17 +45,12 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_metrics(_invalid_metrics), do: {:error, "Invalid metrics passed"}
 
-  defp parse_metric("time_on_page"), do: {:ok, :time_on_page}
-  defp parse_metric("conversion_rate"), do: {:ok, :conversion_rate}
-  defp parse_metric("group_conversion_rate"), do: {:ok, :group_conversion_rate}
-  defp parse_metric("visitors"), do: {:ok, :visitors}
-  defp parse_metric("pageviews"), do: {:ok, :pageviews}
-  defp parse_metric("events"), do: {:ok, :events}
-  defp parse_metric("visits"), do: {:ok, :visits}
-  defp parse_metric("bounce_rate"), do: {:ok, :bounce_rate}
-  defp parse_metric("visit_duration"), do: {:ok, :visit_duration}
-  defp parse_metric("views_per_visit"), do: {:ok, :views_per_visit}
-  defp parse_metric(unknown_metric), do: {:error, "Unknown metric '#{inspect(unknown_metric)}'"}
+  defp parse_metric(metric_str) do
+    case Metrics.from_string(metric_str) do
+      {:ok, metric} -> {:ok, metric}
+      _ -> {:error, "Unknown metric '#{inspect(metric_str)}'"}
+    end
+  end
 
   def parse_filters(filters) when is_list(filters) do
     parse_list(filters, &parse_filter/1)

@@ -27,4 +27,8 @@ defmodule Plausible.Stats.Metrics do
   def from_string!(str) do
     Map.fetch!(@metric_mappings, str)
   end
+
+  def from_string(str) do
+    Map.fetch(@metric_mappings, str)
+  end
 end
