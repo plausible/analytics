@@ -285,7 +285,12 @@ defmodule Plausible.Stats.Imported do
 
   # Note: Only called for APIv2, old APIs use merge_imported_pageview_goals
   def merge_imported(q, site, %Query{dimensions: ["event:goal"]} = query, metrics) do
-    {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
+    {events, page_regexes} =
+      query.preloaded_goals
+      |> filter_goals(query)
+      |> Filters.Utils.split_goals_query_expressions()
+
+    query = Query.remove_filters(query, ["event:goal"])
 
     events_q =
       "imported_custom_events"
@@ -387,6 +392,20 @@ defmodule Plausible.Stats.Imported do
     site
     |> Imported.Base.query_imported(query)
     |> select_merge([i], %{total_visitors: fragment("sum(?)", i.visitors)})
+  end
+
+  defp filter_goals(goals, query) do
+    goal_filters =
+      query.filters
+      |> Enum.filter(&(Enum.at(&1, 1) == "event:goal"))
+
+    if length(goal_filters) > 0 do
+      Enum.filter(goals, fn goal ->
+        Enum.all?(goal_filters, fn [_, _, clauses] -> goal in clauses end)
+      end)
+    else
+      goals
+    end
   end
 
   defp select_imported_metrics(q, []), do: q
