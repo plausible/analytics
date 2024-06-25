@@ -41,18 +41,12 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign_new(:owned_tier, fn %{owned_plan: owned_plan} ->
         if owned_plan, do: Map.get(owned_plan, :kind), else: nil
       end)
-      |> assign_new(:eligible_for_upgrade?, fn %{user: user, usage: usage} ->
-        has_sites? = usage.sites > 0
-        has_pending_ownerships? = Site.Memberships.pending_ownerships?(user.email)
-
-        has_sites? or has_pending_ownerships?
-      end)
       |> assign_new(:recommended_tier, fn %{
                                             owned_plan: owned_plan,
-                                            eligible_for_upgrade?: eligible_for_upgrade?,
+                                            usage: usage,
                                             user: user
                                           } ->
-        if owned_plan != nil or not eligible_for_upgrade? do
+        if owned_plan != nil or not Quota.eligible_for_upgrade?(usage) do
           nil
         else
           Plans.suggest_tier(user)
@@ -120,7 +114,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         />
         <Notice.subscription_past_due class="pb-6" subscription={@user.subscription} />
         <Notice.subscription_paused class="pb-6" subscription={@user.subscription} />
-        <Notice.upgrade_ineligible :if={not @eligible_for_upgrade?} />
+        <Notice.upgrade_ineligible :if={not Quota.eligible_for_upgrade?(@usage)} />
         <div class="mx-auto max-w-4xl text-center">
           <p class="text-4xl font-bold tracking-tight lg:text-5xl">
             <%= if @owned_plan,

@@ -56,6 +56,8 @@ defmodule Plausible.Billing.Quota do
 
   def ensure_within_plan_limits(_, _, _), do: :ok
 
+  def eligible_for_upgrade?(usage), do: usage.sites > 0
+
   defp exceeded_limits(usage, plan, opts) do
     for {limit, exceeded?} <- [
           {:team_member_limit, not within_limit?(usage.team_members, plan.team_member_limit)},
