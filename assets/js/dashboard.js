@@ -28,6 +28,7 @@ if (container) {
     statsBegin: container.dataset.statsBegin,
     nativeStatsBegin: container.dataset.nativeStatsBegin,
     embedded: container.dataset.embedded,
+    shared: container.dataset.shared,
     background: container.dataset.background,
     isDbip: container.dataset.isDbip === 'true',
     flags: JSON.parse(container.dataset.flags),

@@ -26,9 +26,17 @@ function ScrollToTop() {
   return null;
 }
 
+function basename(site) {
+  if (site.shared) {
+    return `/share/${site.domain}`
+  } else {
+    return `/${site.domain}`
+  }
+}
+
 export default function Router({ site, loggedIn, currentUserRole }) {
   return (
-    <BrowserRouter basename={site.domain}>
+    <BrowserRouter basename={basename(site)}>
       <Route path="/">
         <ScrollToTop />
         <Dash site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} />
