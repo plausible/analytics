@@ -38,7 +38,7 @@ defmodule Plausible.Stats.Breakdown do
           preloaded_goals: QueryParser.preload_goals_if_needed(site, query.filters, [dimension]),
           v2: true
       }
-      |> QueryOptimizer.optimize()
+      |> QueryOptimizer.optimize(site)
 
     # |> IO.inspect
 
@@ -50,6 +50,7 @@ defmodule Plausible.Stats.Breakdown do
     |> ClickhouseRepo.all()
     |> QueryResult.from(query_with_metrics)
     |> build_breakdown_result(query_with_metrics, metrics)
+    |> Enum.map(&cast_revenue_metrics_to_money(&1, query.currency))
     |> maybe_add_time_on_page(site, query_with_metrics, metrics)
   end
 
