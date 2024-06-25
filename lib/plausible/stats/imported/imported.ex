@@ -731,7 +731,7 @@ defmodule Plausible.Stats.Imported do
 
   defp select_joined_dimension(q, :city, _query, key) do
     select_merge(q, [s, i], %{
-      ^key => selected_as(fragment("greatest(?,?)", i.city, s.city), ^key)
+      ^key => selected_as(fragment("greatest(?,?)", field(i, ^key), field(s, ^key)), ^key)
     })
   end
 

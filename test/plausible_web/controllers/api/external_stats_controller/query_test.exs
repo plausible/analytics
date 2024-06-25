@@ -3907,6 +3907,56 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
       assert meta["warning"] =~ "Imported stats are not included in the results"
     end
+
+    test "imported country, region and city data",
+         %{
+           conn: conn,
+           site: site
+         } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          timestamp: ~N[2021-01-01 00:15:00],
+          country_code: "DE",
+          subdivision1_code: "DE-BE",
+          city_geoname_id: 2_950_159
+        ),
+        build(:pageview,
+          timestamp: ~N[2021-01-01 00:15:00],
+          country_code: "DE",
+          subdivision1_code: "DE-BE",
+          city_geoname_id: 2_950_159
+        ),
+        build(:pageview,
+          timestamp: ~N[2021-01-01 00:15:00],
+          country_code: "EE",
+          subdivision1_code: "EE-37",
+          city_geoname_id: 588_409
+        ),
+        build(:imported_locations, country: "EE", region: "EE-37", city: 588_409, visitors: 33)
+      ])
+
+      for {dimension, stats_value, imports_value} <- [
+            {"visit:country", "DE", "EE"},
+            {"visit:region", "DE-BE", "EE-37"},
+            {"visit:city", 2_950_159, 588_409}
+          ] do
+        conn =
+          post(conn, "/api/v2/query", %{
+            "site_id" => site.domain,
+            "metrics" => ["visitors"],
+            "date_range" => "all",
+            "dimensions" => [dimension],
+            "include" => %{"imports" => true}
+          })
+
+        assert json_response(conn, 200)["results"] == [
+                 %{"dimensions" => [imports_value], "metrics" => [34]},
+                 %{"dimensions" => [stats_value], "metrics" => [2]}
+               ]
+      end
+    end
   end
 
   test "multiple breakdown timeseries with sources", %{conn: conn, site: site} do
