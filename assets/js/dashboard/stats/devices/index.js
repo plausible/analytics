@@ -170,7 +170,7 @@ function OperatingSystemVersions({ query, site, afterFetchData }) {
     return api.get(url.apiPath(site, '/operating-system-versions'), query)
       .then(res => {
         return {...res, results: res.results.map((row => {
-          return {...row, name: `${row.os} ${row.name}`}
+          return {...row, name: `${row.os} ${row.name}`, version: row.name}
         }))}
       })
   }
@@ -185,7 +185,7 @@ function OperatingSystemVersions({ query, site, afterFetchData }) {
     }
     return {
       prefix: 'os_version',
-      filter: ["is", "os_version", [listItem['name']]]
+      filter: ["is", "os_version", [listItem.version]]
     }
   }
 
