@@ -712,7 +712,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
              "time_on_page" => 10.0,
              "visitors" => 1,
              "visits" => 1,
-             "bounce_rate" => nil,
+             "bounce_rate" => 0,
              "visit_duration" => nil
            }
   end

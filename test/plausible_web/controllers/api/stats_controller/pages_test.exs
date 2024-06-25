@@ -340,7 +340,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/blog/other-post",
                  "visitors" => 1,
                  "pageviews" => 1,
-                 "bounce_rate" => nil,
+                 "bounce_rate" => 0,
                  "time_on_page" => nil
                }
              ]
@@ -392,7 +392,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/blog/other-post",
                  "visitors" => 1,
                  "pageviews" => 1,
-                 "bounce_rate" => nil,
+                 "bounce_rate" => 0,
                  "time_on_page" => nil
                }
              ]
@@ -744,7 +744,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/blog/post-2",
                  "visitors" => 1,
                  "pageviews" => 1,
-                 "bounce_rate" => nil,
+                 "bounce_rate" => 0,
                  "time_on_page" => nil
                }
              ]
@@ -789,7 +789,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/blog/(/post-2",
                  "visitors" => 1,
                  "pageviews" => 1,
-                 "bounce_rate" => nil,
+                 "bounce_rate" => 0,
                  "time_on_page" => nil
                }
              ]
@@ -842,7 +842,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/about",
                  "visitors" => 1,
                  "pageviews" => 1,
-                 "bounce_rate" => nil,
+                 "bounce_rate" => 0,
                  "time_on_page" => nil
                }
              ]
@@ -940,7 +940,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/"
                },
                %{
-                 "bounce_rate" => nil,
+                 "bounce_rate" => 0,
                  "time_on_page" => nil,
                  "visitors" => 1,
                  "pageviews" => 1,
@@ -1066,7 +1066,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2
                },
                %{
-                 "bounce_rate" => nil,
+                 "bounce_rate" => 0,
                  "name" => "/exit-blog",
                  "pageviews" => 1,
                  "time_on_page" => nil,
@@ -1192,7 +1192,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/"
                },
                %{
-                 "bounce_rate" => nil,
+                 "bounce_rate" => 0,
                  "time_on_page" => 60,
                  "visitors" => 2,
                  "pageviews" => 2,
