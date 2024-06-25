@@ -36,7 +36,7 @@ defmodule Plausible.Stats do
   end
 
   def query(site, query) do
-    optimized_query = QueryOptimizer.optimize(query)
+    optimized_query = QueryOptimizer.optimize(query, site)
 
     optimized_query
     |> SQL.QueryBuilder.build(site)
