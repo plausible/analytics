@@ -1477,7 +1477,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       conn =
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
-          "metrics" => ["visitors"],
+          "metrics" => ["visitors", "percentage"],
           "date_range" => ["2021-01-01", "2021-01-01"],
           "dimensions" => [unquote(dimension)]
         })
@@ -1485,9 +1485,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       %{"results" => results} = json_response(conn, 200)
 
       assert results == [
-               %{"dimensions" => [unquote(value1)], "metrics" => [3]},
-               %{"dimensions" => [unquote(value2)], "metrics" => [2]},
-               %{"dimensions" => [unquote(blank_value)], "metrics" => [1]}
+               %{"dimensions" => [unquote(value1)], "metrics" => [3, 50]},
+               %{"dimensions" => [unquote(value2)], "metrics" => [2, 33.3]},
+               %{"dimensions" => [unquote(blank_value)], "metrics" => [1, 16.7]}
              ]
     end
   end

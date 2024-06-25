@@ -7,7 +7,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   import Plausible.Stats.Imported
   import Plausible.Stats.Util
 
-  alias Plausible.Stats.{Base, Query, QueryOptimizer, TableDecider, Filters, Metrics}
+  alias Plausible.Stats.{Base, Query, QueryOptimizer, TableDecider, Filters}
   alias Plausible.Stats.SQL.Expression
 
   require Plausible.Stats.SQL.Expression
@@ -45,6 +45,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> merge_imported(site, events_query, events_query.metrics)
     |> maybe_add_global_conversion_rate(site, events_query)
     |> maybe_add_group_conversion_rate(site, events_query)
+    |> Base.add_percentage_metric(site, events_query, events_query.metrics)
   end
 
   defp join_sessions_if_needed(q, site, query) do
@@ -85,6 +86,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> join_events_if_needed(site, sessions_query)
     |> build_group_by(sessions_query)
     |> merge_imported(site, sessions_query, sessions_query.metrics)
+    |> Base.add_percentage_metric(site, sessions_query, sessions_query.metrics)
   end
 
   def join_events_if_needed(q, site, query) do
