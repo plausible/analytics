@@ -256,8 +256,8 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   defp join_query_results({events_q, events_query}, {nil, _}),
     do: events_q |> build_order_by(events_query)
 
-  defp join_query_results({nil, _}, {sessions_q, sessions_query}),
-    do: sessions_q |> build_order_by(sessions_query)
+  defp join_query_results({nil, events_query}, {sessions_q, _}),
+    do: sessions_q |> build_order_by(events_query)
 
   defp join_query_results({events_q, events_query}, {sessions_q, sessions_query}) do
     join(subquery(events_q), :left, [e], s in subquery(sessions_q),

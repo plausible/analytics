@@ -2172,8 +2172,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
       assert json_response(conn, 200) == %{
                "results" => [
-                 %{"page" => "/plausible.io", "bounce_rate" => 100},
-                 %{"page" => "/important-page", "bounce_rate" => 100}
+                 %{"page" => "/important-page", "bounce_rate" => 100},
+                 %{"page" => "/plausible.io", "bounce_rate" => 100}
                ]
              }
     end
