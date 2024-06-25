@@ -86,6 +86,8 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> join_events_if_needed(site, sessions_query)
     |> build_group_by(sessions_query)
     |> merge_imported(site, sessions_query, sessions_query.metrics)
+    |> maybe_add_global_conversion_rate(site, sessions_query)
+    |> maybe_add_group_conversion_rate(site, sessions_query)
     |> Base.add_percentage_metric(site, sessions_query, sessions_query.metrics)
   end
 

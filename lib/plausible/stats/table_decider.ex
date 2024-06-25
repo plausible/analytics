@@ -72,8 +72,8 @@ defmodule Plausible.Stats.TableDecider do
     |> Enum.map(fn [_, filter_key | _rest] -> filter_key end)
   end
 
-  defp metric_partitioner(_, :conversion_rate), do: :event
-  defp metric_partitioner(_, :group_conversion_rate), do: :event
+  defp metric_partitioner(_, :conversion_rate), do: :either
+  defp metric_partitioner(_, :group_conversion_rate), do: :either
   defp metric_partitioner(_, :average_revenue), do: :event
   defp metric_partitioner(_, :total_revenue), do: :event
   defp metric_partitioner(_, :pageviews), do: :event
