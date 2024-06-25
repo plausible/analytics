@@ -552,11 +552,8 @@ defmodule Plausible.Billing.QuotaTest do
 
       site_using_props = insert(:site, allowed_event_props: ["dummy"])
 
-      site_using_revenue_goals = insert(:site)
-      insert(:goal, currency: :USD, site: site_using_revenue_goals, event_name: "Purchase")
-
-      site_ids = [site_using_props.id, site_using_revenue_goals.id]
-      assert [Props, RevenueGoals, StatsAPI] == Quota.Usage.features_usage(user, site_ids)
+      site_ids = [site_using_props.id]
+      assert [Props, StatsAPI] == Quota.Usage.features_usage(user, site_ids)
     end
 
     on_ee do
