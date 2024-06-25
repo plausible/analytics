@@ -21,13 +21,19 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign_new(:user, fn ->
         Users.with_subscription(user_id)
       end)
-      |> assign_new(:pending_ownerhsip_site_ids, fn %{user: user} ->
+      |> assign_new(:pending_ownership_site_ids, fn %{user: user} ->
         user.email
-        |> Plausible.Site.Memberships.all_pending_ownerships()
+        |> Site.Memberships.all_pending_ownerships()
         |> Enum.map(& &1.site_id)
       end)
-      |> assign_new(:usage, fn %{user: user} ->
-        Quota.Usage.usage(user, with_features: true)
+      |> assign_new(:usage, fn %{
+                                 user: user,
+                                 pending_ownership_site_ids: pending_ownership_site_ids
+                               } ->
+        Quota.Usage.usage(user,
+          with_features: true,
+          pending_ownership_site_ids: pending_ownership_site_ids
+        )
       end)
       |> assign_new(:owned_plan, fn %{user: %{subscription: subscription}} ->
         Plans.get_regular_plan(subscription, only_non_expired: true)
@@ -110,7 +116,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       <div class="mx-auto max-w-7xl px-6 lg:px-20">
         <Notice.pending_site_ownerships_notice
           class="pb-6"
-          pending_ownership_count={length(@pending_ownerhsip_site_ids)}
+          pending_ownership_count={length(@pending_ownership_site_ids)}
         />
         <Notice.subscription_past_due class="pb-6" subscription={@user.subscription} />
         <Notice.subscription_paused class="pb-6" subscription={@user.subscription} />
