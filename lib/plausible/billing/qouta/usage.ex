@@ -6,8 +6,7 @@ defmodule Plausible.Billing.Quota.Usage do
   alias Plausible.Users
   alias Plausible.Auth.User
   alias Plausible.Site
-  alias Plausible.Billing.{Subscriptions}
-  alias Plausible.Billing.Feature.{RevenueGoals, Funnels, Props, StatsAPI}
+  alias Plausible.Billing.{Subscriptions, Feature}
 
   @type cycles_usage() :: %{cycle() => usage_cycle()}
 
@@ -257,7 +256,7 @@ defmodule Plausible.Billing.Quota.Usage do
       |> Plausible.Repo.exists?()
 
     if stats_api_used? do
-      site_scoped_feature_usage ++ [StatsAPI]
+      site_scoped_feature_usage ++ [Feature.StatsAPI]
     else
       site_scoped_feature_usage
     end
@@ -277,14 +276,14 @@ defmodule Plausible.Billing.Quota.Usage do
         funnels_usage_q = from f in "funnels", where: f.site_id in ^site_ids
 
         [
-          {Props, props_usage_q},
-          {Funnels, funnels_usage_q},
-          {RevenueGoals, revenue_goals_usage_q}
+          {Feature.Props, props_usage_q},
+          {Feature.Funnels, funnels_usage_q},
+          {Feature.RevenueGoals, revenue_goals_usage_q}
         ]
       else
         [
-          {Props, props_usage_q},
-          {RevenueGoals, revenue_goals_usage_q}
+          {Feature.Props, props_usage_q},
+          {Feature.RevenueGoals, revenue_goals_usage_q}
         ]
       end
 
