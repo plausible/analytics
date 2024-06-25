@@ -325,6 +325,7 @@ defmodule Plausible.Stats.Imported do
     q
     |> naive_dimension_join(events_q, metrics)
     |> naive_dimension_join(pages_q, metrics)
+    |> where([], selected_as(:dim0) != 0)
   end
 
   def merge_imported(q, site, %Query{dimensions: dimensions} = query, metrics) do
