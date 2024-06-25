@@ -2879,8 +2879,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       })
 
     assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["/plausible.io"], "metrics" => [100]},
-             %{"dimensions" => ["/important-page"], "metrics" => [100]}
+             %{"dimensions" => ["/important-page"], "metrics" => [100]},
+             %{"dimensions" => ["/plausible.io"], "metrics" => [100]}
            ]
   end
 
