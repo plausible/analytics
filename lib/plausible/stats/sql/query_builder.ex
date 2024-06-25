@@ -267,9 +267,9 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> build_order_by(events_query)
   end
 
-  defp build_group_by_join(%Query{dimensions: []}), do: true
+  def build_group_by_join(%Query{dimensions: []}), do: true
 
-  defp build_group_by_join(query) do
+  def build_group_by_join(query) do
     query.dimensions
     |> Enum.map(fn dim ->
       dynamic([e, s], field(e, ^shortname(query, dim)) == field(s, ^shortname(query, dim)))
