@@ -381,12 +381,12 @@ defmodule Plausible.Stats.Breakdown do
 
   defp maybe_add_time_on_page(event_results, site, query, metrics) do
     if query.dimensions == ["event:page"] and :time_on_page in metrics do
-      pages = Enum.map(event_results, & &1["page"])
+      pages = Enum.map(event_results, & &1[:page])
       time_on_page_result = breakdown_time_on_page(site, query, pages)
 
       event_results
       |> Enum.map(fn row ->
-        Map.put(row, :time_on_page, time_on_page_result[row["page"]])
+        Map.put(row, :time_on_page, time_on_page_result[row[:page]])
       end)
       |> sort_results(metrics)
     else
