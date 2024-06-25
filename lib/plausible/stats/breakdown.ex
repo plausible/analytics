@@ -513,8 +513,8 @@ defmodule Plausible.Stats.Breakdown do
 
   @filter_dimensions_not %{
     "visit:city" => [0],
-    "visit:region" => ["\0\0", "ZZ"],
-    "visit:country" => [""],
+    "visit:country" => ["\0\0", "ZZ"],
+    "visit:region" => [""],
     "visit:utm_medium" => [""],
     "visit:utm_source" => [""],
     "visit:utm_campaign" => [""],
