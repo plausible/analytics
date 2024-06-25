@@ -283,8 +283,8 @@ defmodule Plausible.Billing.Quota.Usage do
         ]
       else
         [
-          {Props, props_usage_query},
-          {RevenueGoals, revenue_goals_usage}
+          {Props, props_usage_q},
+          {RevenueGoals, revenue_goals_usage_q}
         ]
       end
 
