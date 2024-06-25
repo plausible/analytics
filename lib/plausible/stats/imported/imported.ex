@@ -39,7 +39,7 @@ defmodule Plausible.Stats.Imported do
   (see `@goals_with_url` and `@goals_with_path`).
   """
   def schema_supports_query?(query) do
-    not is_nil(Imported.Base.decide_table(query))
+    length(Imported.Base.decide_tables(query)) > 0
   end
 
   def merge_imported_country_suggestions(native_q, _site, %Plausible.Stats.Query{
@@ -285,47 +285,45 @@ defmodule Plausible.Stats.Imported do
 
   # Note: Only called for APIv2, old APIs use merge_imported_pageview_goals
   def merge_imported(q, site, %Query{dimensions: ["event:goal"]} = query, metrics) do
-    {events, page_regexes} =
-      query.preloaded_goals
-      |> filter_goals(query)
-      |> Filters.Utils.split_goals_query_expressions()
+    {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
 
-    query = Query.remove_filters(query, ["event:goal"])
+    Imported.Base.decide_tables(query)
+    |> Enum.map(fn
+      "imported_custom_events" ->
+        Imported.Base.query_imported("imported_custom_events", site, query)
+        |> where([i], i.visitors > 0)
+        |> select_merge([i], %{
+          dim0:
+            selected_as(
+              fragment("-indexOf(?, ?)", type(^events, {:array, :string}), i.name),
+              :dim0
+            )
+        })
+        |> select_imported_metrics(metrics)
+        |> group_by([], selected_as(:dim0))
+        |> where([], selected_as(:dim0) != 0)
 
-    events_q =
-      "imported_custom_events"
-      |> Imported.Base.query_imported(site, query)
-      |> where([i], i.visitors > 0)
-      |> select_merge([i], %{
-        dim0: selected_as(fragment("-indexOf(?, ?)", ^events, i.name), :dim0)
-      })
-      |> select_imported_metrics(metrics)
-      |> group_by([], selected_as(:dim0))
-      |> where([], selected_as(:dim0) != 0)
-
-    pages_q =
-      "imported_pages"
-      |> Imported.Base.query_imported(site, query)
-      |> where([i], i.visitors > 0)
-      |> where(
-        [i],
-        fragment(
-          "notEmpty(multiMatchAllIndices(?, ?) as indices)",
-          i.page,
-          type(^page_regexes, {:array, :string})
+      "imported_pages" ->
+        Imported.Base.query_imported("imported_pages", site, query)
+        |> where([i], i.visitors > 0)
+        |> where(
+          [i],
+          fragment(
+            "notEmpty(multiMatchAllIndices(?, ?) as indices)",
+            i.page,
+            type(^page_regexes, {:array, :string})
+          )
         )
-      )
-      |> join(:array, index in fragment("indices"))
-      |> group_by([_i, index], index)
-      |> select_merge([_i, index], %{
-        dim0: selected_as(type(fragment("?", index), :integer), :dim0)
-      })
-      |> select_imported_metrics(metrics)
-
-    q
-    |> naive_dimension_join(events_q, metrics)
-    |> naive_dimension_join(pages_q, metrics)
-    |> where([], selected_as(:dim0) != 0)
+        |> join(:array, index in fragment("indices"))
+        |> group_by([_i, index], index)
+        |> select_merge([_i, index], %{
+          dim0: selected_as(type(fragment("?", index), :integer), :dim0)
+        })
+        |> select_imported_metrics(metrics)
+    end)
+    |> Enum.reduce(q, fn imports_q, q ->
+      naive_dimension_join(q, imports_q, metrics)
+    end)
   end
 
   def merge_imported(q, site, %Query{dimensions: dimensions} = query, metrics) do
@@ -359,7 +357,7 @@ defmodule Plausible.Stats.Imported do
   def merge_imported_pageview_goals(q, _, %Query{include_imported: false}, _, _), do: q
 
   def merge_imported_pageview_goals(q, site, query, page_exprs, metrics) do
-    if Imported.Base.decide_table(query) == "imported_pages" do
+    if Imported.Base.decide_tables(query) == "imported_pages" do
       page_regexes = Enum.map(page_exprs, &Base.page_regex/1)
 
       imported_q =
@@ -393,20 +391,6 @@ defmodule Plausible.Stats.Imported do
     site
     |> Imported.Base.query_imported(query)
     |> select_merge([i], %{total_visitors: fragment("sum(?)", i.visitors)})
-  end
-
-  defp filter_goals(goals, query) do
-    goal_filters =
-      query.filters
-      |> Enum.filter(&(Enum.at(&1, 1) == "event:goal"))
-
-    if length(goal_filters) > 0 do
-      Enum.filter(goals, fn goal ->
-        Enum.all?(goal_filters, fn [_, _, clauses] -> goal in clauses end)
-      end)
-    else
-      goals
-    end
   end
 
   defp select_imported_metrics(q, []), do: q
@@ -881,11 +865,11 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp naive_dimension_join(q1, q2, metrics) do
-    from(a in Ecto.Query.subquery(q1),
+    from(a in subquery(q1),
       full_join: b in subquery(q2),
       on: a.dim0 == b.dim0,
       select: %{
-        dim0: selected_as(fragment("coalesce(?, ?)", a.dim0, b.dim0), :dim0)
+        dim0: selected_as(fragment("if(? != 0, ?, ?)", a.dim0, a.dim0, b.dim0), :dim0)
       }
     )
     |> select_joined_metrics(metrics)
