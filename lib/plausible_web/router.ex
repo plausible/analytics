@@ -175,6 +175,12 @@ defmodule PlausibleWeb.Router do
     get "/timeseries", ExternalStatsController, :timeseries
   end
 
+  scope "/api/v2", PlausibleWeb.Api do
+    pipe_through [:public_api, PlausibleWeb.AuthorizeStatsApiPlug]
+
+    post "/query", ExternalQueryApiController, :query
+  end
+
   on_ee do
     scope "/api/v1/sites", PlausibleWeb.Api do
       pipe_through [:public_api, PlausibleWeb.AuthorizeSitesApiPlug]

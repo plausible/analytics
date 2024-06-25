@@ -9,10 +9,18 @@ defmodule Plausible.Stats.TableDecider do
   alias Plausible.Stats.Query
 
   def events_join_sessions?(query) do
-    Enum.any?(query.filters, &(filters_partitioner(query, &1) == :session))
+    query
+    |> filter_keys()
+    |> Enum.any?(&(filters_partitioner(query, &1) == :session))
   end
 
-  def partition_metrics(metrics, query, breakdown_property \\ nil) do
+  def event_filters?(query) do
+    query
+    |> filter_keys()
+    |> Enum.any?(&(filters_partitioner(query, &1) == :event))
+  end
+
+  def partition_metrics(metrics, query) do
     %{
       event: event_only_metrics,
       session: session_only_metrics,
@@ -22,16 +30,10 @@ defmodule Plausible.Stats.TableDecider do
     } =
       partition(metrics, query, &metric_partitioner/2)
 
-    # Treat breakdown property as yet another filter
-    query =
-      if breakdown_property do
-        Query.put_filter(query, [:is, breakdown_property, []])
-      else
-        query
-      end
-
     %{event: event_only_filters, session: session_only_filters} =
-      partition(query.filters, query, &filters_partitioner/2)
+      query
+      |> filter_keys()
+      |> partition(query, &filters_partitioner/2)
 
     cond do
       # Only one table needs to be queried
@@ -53,6 +55,12 @@ defmodule Plausible.Stats.TableDecider do
         {event_only_metrics ++ sample_percent,
          session_only_metrics ++ either_metrics ++ sample_percent, other_metrics}
     end
+  end
+
+  defp filter_keys(query) do
+    query.filters
+    |> Enum.map(fn [_, filter_key | _rest] -> filter_key end)
+    |> Enum.concat(query.dimensions)
   end
 
   defp metric_partitioner(_, :conversion_rate), do: :event
@@ -83,16 +91,16 @@ defmodule Plausible.Stats.TableDecider do
 
   defp metric_partitioner(_, _), do: :either
 
-  defp filters_partitioner(_, [_, "event:" <> _ | _rest]), do: :event
-  defp filters_partitioner(_, [_, "visit:entry_page" | _rest]), do: :session
-  defp filters_partitioner(_, [_, "visit:entry_page_hostname" | _rest]), do: :session
-  defp filters_partitioner(_, [_, "visit:exit_page" | _rest]), do: :session
-  defp filters_partitioner(_, [_, "visit:exit_page_hostname" | _rest]), do: :session
+  defp filters_partitioner(_, "event:" <> _), do: :event
+  defp filters_partitioner(_, "visit:entry_page"), do: :session
+  defp filters_partitioner(_, "visit:entry_page_hostname"), do: :session
+  defp filters_partitioner(_, "visit:exit_page"), do: :session
+  defp filters_partitioner(_, "visit:exit_page_hostname"), do: :session
 
-  defp filters_partitioner(%Query{experimental_reduced_joins?: true}, [_, "visit:" <> _ | _rest]),
+  defp filters_partitioner(%Query{experimental_reduced_joins?: true}, "visit:" <> _),
     do: :either
 
-  defp filters_partitioner(_, [_, "visit:" <> _ | _rest]),
+  defp filters_partitioner(_, "visit:" <> _),
     do: :session
 
   defp filters_partitioner(%Query{experimental_reduced_joins?: false}, {unknown, _}) do
