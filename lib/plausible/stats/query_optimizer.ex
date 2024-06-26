@@ -151,9 +151,18 @@ defmodule Plausible.Stats.QueryOptimizer do
         dimension -> dimension
       end)
 
-    query
-    |> Query.set_metrics(session_metrics)
-    |> Query.set_dimensions(dimensions)
+    filters =
+      if "event:page" in query.dimensions do
+        query.filters
+        |> Enum.map(fn
+          [op, "event:page" | rest] -> [op, "visit:entry_page" | rest]
+          filter -> filter
+        end)
+      else
+        query.filters
+      end
+
+    Query.set(query, filters: filters, metrics: session_metrics, dimensions: dimensions)
   end
 
   defp update_revenue_metrics(site, query) do
