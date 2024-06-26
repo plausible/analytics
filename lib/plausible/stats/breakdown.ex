@@ -38,7 +38,7 @@ defmodule Plausible.Stats.Breakdown do
           preloaded_goals: QueryParser.preload_goals_if_needed(site, query.filters, [dimension]),
           v2: true
       }
-      |> QueryOptimizer.optimize(site)
+      |> QueryOptimizer.optimize()
 
     # |> IO.inspect
 
@@ -46,11 +46,11 @@ defmodule Plausible.Stats.Breakdown do
 
     q
     |> apply_pagination(pagination)
-    # |> IO.inspect
     |> ClickhouseRepo.all()
     |> QueryResult.from(query_with_metrics)
     |> build_breakdown_result(query_with_metrics, metrics)
     |> maybe_add_time_on_page(site, query_with_metrics, metrics)
+    |> update_currency_metrics(site, query_with_metrics)
   end
 
   defp build_breakdown_result(query_result, query, metrics) do
@@ -70,195 +70,195 @@ defmodule Plausible.Stats.Breakdown do
   defp result_key("visit:" <> key), do: key |> String.to_atom()
   defp result_key(dimension), do: dimension
 
-  def breakdown(
-        site,
-        %Query{dimensions: ["event:goal"]} = query,
-        metrics,
-        pagination,
-        opts
-      ) do
-    site = Plausible.Repo.preload(site, :goals)
+  # def breakdown(
+  #       site,
+  #       %Query{dimensions: ["event:goal"]} = query,
+  #       metrics,
+  #       pagination,
+  #       opts
+  #     ) do
+  #   site = Plausible.Repo.preload(site, :goals)
 
-    {event_goals, pageview_goals} = Enum.split_with(site.goals, & &1.event_name)
-    events = Enum.map(event_goals, & &1.event_name)
+  #   {event_goals, pageview_goals} = Enum.split_with(site.goals, & &1.event_name)
+  #   events = Enum.map(event_goals, & &1.event_name)
 
-    event_query =
-      query
-      |> Query.put_filter([:is, "event:name", events])
-      |> Query.set_dimensions(["event:name"])
+  #   event_query =
+  #     query
+  #     |> Query.put_filter([:is, "event:name", events])
+  #     |> Query.set_dimensions(["event:name"])
 
-    if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
+  #   if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
 
-    no_revenue = {nil, metrics -- @revenue_metrics}
+  #   no_revenue = {nil, metrics -- @revenue_metrics}
 
-    {revenue_goals, metrics} =
-      on_ee do
-        if Plausible.Billing.Feature.RevenueGoals.enabled?(site) do
-          revenue_goals = Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
-          metrics = if Enum.empty?(revenue_goals), do: metrics -- @revenue_metrics, else: metrics
+  #   {revenue_goals, metrics} =
+  #     on_ee do
+  #       if Plausible.Billing.Feature.RevenueGoals.enabled?(site) do
+  #         revenue_goals = Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
+  #         metrics = if Enum.empty?(revenue_goals), do: metrics -- @revenue_metrics, else: metrics
 
-          {revenue_goals, metrics}
-        else
-          no_revenue
-        end
-      else
-        no_revenue
-      end
+  #         {revenue_goals, metrics}
+  #       else
+  #         no_revenue
+  #       end
+  #     else
+  #       no_revenue
+  #     end
 
-    metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @computed_metrics
+  #   metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @computed_metrics
 
-    event_q =
-      if Enum.any?(event_goals) do
-        site
-        |> breakdown_events(event_query, metrics_to_select)
-        |> apply_pagination(pagination)
-      else
-        nil
-      end
+  #   event_q =
+  #     if Enum.any?(event_goals) do
+  #       site
+  #       |> breakdown_events(event_query, metrics_to_select)
+  #       |> apply_pagination(pagination)
+  #     else
+  #       nil
+  #     end
 
-    page_q =
-      if Enum.any?(pageview_goals) do
-        page_query = Query.set_dimensions(query, ["event:page"])
+  #   page_q =
+  #     if Enum.any?(pageview_goals) do
+  #       page_query = Query.set_dimensions(query, ["event:page"])
 
-        page_exprs = Enum.map(pageview_goals, & &1.page_path)
-        page_regexes = Enum.map(page_exprs, &page_regex/1)
+  #       page_exprs = Enum.map(pageview_goals, & &1.page_path)
+  #       page_regexes = Enum.map(page_exprs, &page_regex/1)
 
-        select_columns = metrics_to_select |> select_event_metrics |> mark_revenue_as_nil
+  #       select_columns = metrics_to_select |> select_event_metrics |> mark_revenue_as_nil
 
-        from(e in base_event_query(site, page_query),
-          order_by: [desc: fragment("uniq(?)", e.user_id)],
-          where:
-            fragment(
-              "notEmpty(multiMatchAllIndices(?, ?) as indices)",
-              e.pathname,
-              ^page_regexes
-            ) and e.name == "pageview",
-          array_join: index in fragment("indices"),
-          group_by: index,
-          select: %{
-            name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
-          }
-        )
-        |> select_merge(^select_columns)
-        |> merge_imported_pageview_goals(site, page_query, page_exprs, metrics_to_select)
-        |> apply_pagination(pagination)
-      else
-        nil
-      end
+  #       from(e in base_event_query(site, page_query),
+  #         order_by: [desc: fragment("uniq(?)", e.user_id)],
+  #         where:
+  #           fragment(
+  #             "notEmpty(multiMatchAllIndices(?, ?) as indices)",
+  #             e.pathname,
+  #             ^page_regexes
+  #           ) and e.name == "pageview",
+  #         array_join: index in fragment("indices"),
+  #         group_by: index,
+  #         select: %{
+  #           name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
+  #         }
+  #       )
+  #       |> select_merge(^select_columns)
+  #       |> merge_imported_pageview_goals(site, page_query, page_exprs, metrics_to_select)
+  #       |> apply_pagination(pagination)
+  #     else
+  #       nil
+  #     end
 
-    full_q =
-      case {event_q, page_q} do
-        {nil, nil} ->
-          nil
+  #   full_q =
+  #     case {event_q, page_q} do
+  #       {nil, nil} ->
+  #         nil
 
-        {event_q, nil} ->
-          event_q
+  #       {event_q, nil} ->
+  #         event_q
 
-        {nil, page_q} ->
-          page_q
+  #       {nil, page_q} ->
+  #         page_q
 
-        {event_q, page_q} ->
-          from(
-            e in subquery(union_all(event_q, ^page_q)),
-            order_by: [desc: e.visitors]
-          )
-          |> apply_pagination(pagination)
-      end
+  #       {event_q, page_q} ->
+  #         from(
+  #           e in subquery(union_all(event_q, ^page_q)),
+  #           order_by: [desc: e.visitors]
+  #         )
+  #         |> apply_pagination(pagination)
+  #     end
 
-    if full_q do
-      full_q
-      |> maybe_add_conversion_rate(site, query, metrics)
-      |> ClickhouseRepo.all()
-      |> transform_keys(%{name: :goal})
-      |> cast_revenue_metrics_to_money(revenue_goals)
-      |> Util.keep_requested_metrics(metrics)
-    else
-      []
-    end
-  end
+  #   if full_q do
+  #     full_q
+  #     |> maybe_add_conversion_rate(site, query, metrics)
+  #     |> ClickhouseRepo.all()
+  #     |> transform_keys(%{name: :goal})
+  #     |> cast_revenue_metrics_to_money(revenue_goals)
+  #     |> Util.keep_requested_metrics(metrics)
+  #   else
+  #     []
+  #   end
+  # end
 
-  def breakdown(
-        site,
-        %Query{dimensions: ["event:props:" <> custom_prop]} = query,
-        metrics,
-        pagination,
-        opts
-      ) do
-    {currency, metrics} =
-      on_ee do
-        Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
-      else
-        {nil, metrics}
-      end
+  # def breakdown(
+  #       site,
+  #       %Query{dimensions: ["event:props:" <> custom_prop]} = query,
+  #       metrics,
+  #       pagination,
+  #       opts
+  #     ) do
+  #   {currency, metrics} =
+  #     on_ee do
+  #       Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
+  #     else
+  #       {nil, metrics}
+  #     end
 
-    metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @computed_metrics
+  #   metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @computed_metrics
 
-    if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
+  #   if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
 
-    breakdown_events(site, query, metrics_to_select)
-    |> maybe_add_conversion_rate(site, query, metrics)
-    |> paginate_and_execute(metrics, pagination)
-    |> transform_keys(%{breakdown_prop_value: custom_prop})
-    |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
-  end
+  #   breakdown_events(site, query, metrics_to_select)
+  #   |> maybe_add_conversion_rate(site, query, metrics)
+  #   |> paginate_and_execute(metrics, pagination)
+  #   |> transform_keys(%{breakdown_prop_value: custom_prop})
+  #   |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
+  # end
 
-  def breakdown(site, %Query{dimensions: ["event:page"]} = query, metrics, pagination, opts) do
-    event_metrics =
-      metrics
-      |> Util.maybe_add_visitors_metric()
-      |> Enum.filter(&(&1 in @event_metrics))
+  # def breakdown(site, %Query{dimensions: ["event:page"]} = query, metrics, pagination, opts) do
+  #   event_metrics =
+  #     metrics
+  #     |> Util.maybe_add_visitors_metric()
+  #     |> Enum.filter(&(&1 in @event_metrics))
 
-    if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
+  #   if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
 
-    event_result =
-      site
-      |> breakdown_events(query, event_metrics)
-      |> maybe_add_group_conversion_rate(&breakdown_events/3, site, query, metrics)
-      |> paginate_and_execute(metrics, pagination)
-      |> maybe_add_time_on_page(site, query, metrics)
+  #   event_result =
+  #     site
+  #     |> breakdown_events(query, event_metrics)
+  #     |> maybe_add_group_conversion_rate(&breakdown_events/3, site, query, metrics)
+  #     |> paginate_and_execute(metrics, pagination)
+  #     |> maybe_add_time_on_page(site, query, metrics)
 
-    session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
+  #   session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
-    entry_page_query =
-      case event_result do
-        [] ->
-          query
+  #   entry_page_query =
+  #     case event_result do
+  #       [] ->
+  #         query
 
-        pages ->
-          query
-          |> Query.remove_filters(["event:page"])
-          |> Query.put_filter([:is, "visit:entry_page", Enum.map(pages, & &1[:page])])
-          |> Query.set_dimensions(["visit:entry_page"])
-      end
+  #       pages ->
+  #         query
+  #         |> Query.remove_filters(["event:page"])
+  #         |> Query.put_filter([:is, "visit:entry_page", Enum.map(pages, & &1[:page])])
+  #         |> Query.set_dimensions(["visit:entry_page"])
+  #     end
 
-    if Enum.any?(event_metrics) && Enum.empty?(event_result) do
-      []
-    else
-      {limit, _page} = pagination
+  #   if Enum.any?(event_metrics) && Enum.empty?(event_result) do
+  #     []
+  #   else
+  #     {limit, _page} = pagination
 
-      session_result =
-        breakdown_sessions(site, entry_page_query, session_metrics)
-        |> paginate_and_execute(session_metrics, {limit, 1})
-        |> transform_keys(%{entry_page: :page})
+  #     session_result =
+  #       breakdown_sessions(site, entry_page_query, session_metrics)
+  #       |> paginate_and_execute(session_metrics, {limit, 1})
+  #       |> transform_keys(%{entry_page: :page})
 
-      metrics = metrics ++ [:page]
+  #     metrics = metrics ++ [:page]
 
-      zip_results(
-        event_result,
-        session_result,
-        :page,
-        metrics
-      )
-      |> Enum.map(&Map.take(&1, metrics))
-    end
-  end
+  #     zip_results(
+  #       event_result,
+  #       session_result,
+  #       :page,
+  #       metrics
+  #     )
+  #     |> Enum.map(&Map.take(&1, metrics))
+  #   end
+  # end
 
-  def breakdown(site, %Query{dimensions: ["event:name"]} = query, metrics, pagination, opts) do
-    if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
+  # def breakdown(site, %Query{dimensions: ["event:name"]} = query, metrics, pagination, opts) do
+  #   if !Keyword.get(opts, :skip_tracing), do: Query.trace(query, metrics)
 
-    breakdown_events(site, query, metrics)
-    |> paginate_and_execute(metrics, pagination)
-  end
+  #   breakdown_events(site, query, metrics)
+  #   |> paginate_and_execute(metrics, pagination)
+  # end
 
   def breakdown(site, query, metrics, pagination, opts) do
     query = maybe_update_breakdown_filters(query)
@@ -640,10 +640,39 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   on_ee do
-    defp cast_revenue_metrics_to_money(results, revenue_goals) do
-      Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
+    defp update_currency_metrics(results, site, %Query{dimensions: ["event:goal"]}) do
+      site = Plausible.Repo.preload(site, :goals)
+
+      {event_goals, _pageview_goals} = Enum.split_with(site.goals, & &1.event_name)
+      revenue_goals = Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
+
+      if length(revenue_goals) > 0 and Plausible.Billing.Feature.RevenueGoals.enabled?(site) do
+        Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
+      else
+        remove_revenue_metrics(results)
+      end
+    end
+
+    defp update_currency_metrics(results, site, query) do
+      {currency, _metrics} =
+        Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, query.metrics)
+
+      if currency do
+        results
+        |> Enum.map(&Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(&1, currency))
+      else
+        remove_revenue_metrics(results)
+      end
     end
   else
-    defp cast_revenue_metrics_to_money(results, _revenue_goals), do: results
+    defp update_currency_metrics(results, _site, _query), do: remove_revenue_metrics(results)
+  end
+
+  defp remove_revenue_metrics(results) do
+    Enum.map(results, fn map ->
+      map
+      |> Map.delete(:total_revenue)
+      |> Map.delete(:average_revenue)
+    end)
   end
 end

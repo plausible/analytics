@@ -5,9 +5,9 @@ defmodule Plausible.Stats.QueryOptimizerTest do
 
   @default_params %{metrics: [:visitors]}
 
-  def perform(params, site \\ nil) do
+  def perform(params) do
     params = Map.merge(@default_params, params) |> Map.to_list()
-    struct!(Query, params) |> QueryOptimizer.optimize(site)
+    struct!(Query, params) |> QueryOptimizer.optimize()
   end
 
   describe "add_missing_order_by" do

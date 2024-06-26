@@ -18,8 +18,7 @@ defmodule Plausible.Stats.Query do
             order_by: nil,
             timezone: nil,
             v2: false,
-            preloaded_goals: [],
-            currency: nil
+            preloaded_goals: []
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{Filters, Interval, Imported}
