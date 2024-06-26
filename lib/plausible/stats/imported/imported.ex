@@ -335,7 +335,7 @@ defmodule Plausible.Stats.Imported do
         |> group_imported_by(query)
         |> select_imported_metrics(metrics)
 
-      from(s in Ecto.Query.subquery(q),
+      from(s in subquery(q),
         full_join: i in subquery(imported_q),
         on: ^QueryBuilder.build_group_by_join(query),
         select: %{}
