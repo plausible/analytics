@@ -171,7 +171,11 @@ defmodule Plausible.Stats.Imported.Base do
   end
 
   defp do_decide_tables(%Query{filters: [], dimensions: [dimension]}) do
-    [@property_to_table_mappings[dimension]]
+    if Map.has_key?(@property_to_table_mappings, dimension) do
+      [@property_to_table_mappings[dimension]]
+    else
+      []
+    end
   end
 
   defp do_decide_tables(%Query{filters: filters, dimensions: ["event:goal"]}) do
@@ -196,11 +200,12 @@ defmodule Plausible.Stats.Imported.Base do
       |> Enum.concat(dimensions)
       |> Enum.map(fn
         "visit:screen" -> "visit:device"
-        prop -> prop
+        dimension -> dimension
       end)
       |> Enum.map(&@property_to_table_mappings[&1])
 
     case Enum.uniq(table_candidates) do
+      [nil] -> []
       [candidate] -> [candidate]
       _ -> []
     end
