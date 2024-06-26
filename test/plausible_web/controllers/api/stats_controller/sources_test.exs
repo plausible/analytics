@@ -455,6 +455,9 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         ),
         build(:imported_sources,
           source: "DuckDuckGo"
+        ),
+        build(:imported_sources,
+          source: "DuckDuckGo"
         )
       ])
 
@@ -467,7 +470,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn = get(conn, "/api/stats/#{site.domain}/sources?limit=1&page=2&with_imported=true")
 
       assert json_response(conn, 200)["results"] == [
-               %{"name" => "DuckDuckGo", "visitors" => 2}
+               %{"name" => "Google", "visitors" => 2}
              ]
     end
 
