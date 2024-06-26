@@ -75,6 +75,7 @@ defmodule Plausible.Stats.TableDecider do
   defp metric_partitioner(%Query{v2: true}, :conversion_rate), do: :either
   defp metric_partitioner(%Query{v2: true}, :group_conversion_rate), do: :either
   defp metric_partitioner(%Query{v2: true}, :visitors), do: :either
+  defp metric_partitioner(%Query{v2: true}, :visits), do: :either
 
   defp metric_partitioner(_, :conversion_rate), do: :event
   defp metric_partitioner(_, :group_conversion_rate), do: :event
