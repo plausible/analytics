@@ -3993,35 +3993,4 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              %{"dimensions" => ["2021-01-03T00:00:00Z", "Twitter"], "metrics" => [1]}
            ]
   end
-
-  describe "revenue metrics" do
-    test "does not return revenue metrics if result would be nil", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview,
-          referrer_source: "Google",
-          timestamp: ~N[2021-01-01 00:00:00]
-        ),
-        build(:pageview, timestamp: ~N[2021-01-02 00:00:00]),
-        build(:pageview,
-          referrer_source: "Google",
-          timestamp: ~N[2021-01-02 00:00:00]
-        ),
-        build(:pageview, timestamp: ~N[2021-01-03 00:00:00]),
-        build(:pageview,
-          referrer_source: "Twitter",
-          timestamp: ~N[2021-01-03 00:00:00]
-        )
-      ])
-
-      conn =
-        post(conn, "/api/v2/query", %{
-          "site_id" => site.domain,
-          "metrics" => ["visitors", "average_revenue", "total_revenue"],
-          "date_range" => "all"
-        })
-
-      assert json_response(conn, 200)["results"] == [%{"dimensions" => [], "metrics" => [5]}]
-      assert json_response(conn, 200)["query"]["metrics"] == ["visitors"]
-    end
-  end
 end

@@ -18,7 +18,7 @@ defmodule Plausible.Stats.QueryResult do
       |> Enum.map(fn entry ->
         %{
           dimensions: Enum.map(query.dimensions, &dimension_label(&1, entry, query)),
-          metrics: Enum.map(query.metrics, &metric_value(&1, entry, query))
+          metrics: Enum.map(query.metrics, &Map.get(entry, &1))
         }
       end)
 
@@ -60,16 +60,6 @@ defmodule Plausible.Stats.QueryResult do
 
   defp dimension_label(dimension, entry, query) do
     Map.get(entry, Util.shortname(query, dimension))
-  end
-
-  defp metric_value(metric, entry, query) do
-    value = Map.get(entry, metric)
-
-    on_ee do
-      Plausible.Stats.Goal.Revenue.cast_metric_to_money(metric, value, query.currency)
-    else
-      value
-    end
   end
 
   defp serializable_filter([operation, "event:goal", clauses]) do
