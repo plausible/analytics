@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.Components.Billing.NoticeTest do
   use Plausible.DataCase
-  import Phoenix.LiveViewTest
+  import Plausible.LiveViewTest, only: [render_component: 2]
   alias PlausibleWeb.Components.Billing.Notice
 
   test "premium_feature/1 does not render a notice when user is on trial" do

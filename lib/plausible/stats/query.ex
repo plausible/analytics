@@ -13,7 +13,11 @@ defmodule Plausible.Stats.Query do
             now: nil,
             experimental_session_count?: false,
             experimental_reduced_joins?: false,
-            latest_import_end_date: nil
+            latest_import_end_date: nil,
+            metrics: [],
+            order_by: [],
+            timezone: nil,
+            v2: false
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{Filters, Interval, Imported}
@@ -40,6 +44,19 @@ defmodule Plausible.Stats.Query do
     end
 
     query
+  end
+
+  def build(site, params) do
+    with {:ok, query_data} <- Filters.QueryParser.parse(site, params) do
+      query =
+        struct!(__MODULE__, Map.to_list(query_data))
+        |> put_imported_opts(site, %{})
+        |> put_experimental_session_count(site, params)
+        |> put_experimental_reduced_joins(site, params)
+        |> struct!(v2: true)
+
+      {:ok, query}
+    end
   end
 
   defp put_experimental_session_count(query, site, params) do

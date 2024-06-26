@@ -276,8 +276,8 @@ defmodule Plausible.Stats.Breakdown do
   defp breakdown_table(%Query{dimensions: ["visit:exit_page"]}, _metrics), do: :session
   defp breakdown_table(%Query{dimensions: ["visit:exit_page_hostname"]}, _metrics), do: :session
 
-  defp breakdown_table(%Query{dimensions: [dimension]} = query, metrics) do
-    {_, session_metrics, _} = TableDecider.partition_metrics(metrics, query, dimension)
+  defp breakdown_table(%Query{dimensions: [_dimension]} = query, metrics) do
+    {_, session_metrics, _} = TableDecider.partition_metrics(metrics, query)
 
     if not Enum.empty?(session_metrics) do
       :session
