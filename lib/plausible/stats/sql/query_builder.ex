@@ -128,7 +128,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
         ^shortname(query, dimension) => fragment("?", goal)
       },
       group_by: goal,
-      where: goal != 0
+      where: goal != 0 and (e.name == "pageview" or goal < 0)
     )
   end
 
