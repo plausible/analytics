@@ -50,7 +50,6 @@ defmodule Plausible.Stats.Breakdown do
     |> ClickhouseRepo.all()
     |> QueryResult.from(query_with_metrics)
     |> build_breakdown_result(query_with_metrics, metrics)
-    |> Enum.map(&cast_revenue_metrics_to_money(&1, query.currency))
     |> maybe_add_time_on_page(site, query_with_metrics, metrics)
   end
 
