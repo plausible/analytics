@@ -283,7 +283,6 @@ defmodule Plausible.Stats.Imported do
     |> select_joined_metrics(metrics)
   end
 
-  # Note: Only called for APIv2, old APIs use merge_imported_pageview_goals
   def merge_imported(q, site, %Query{dimensions: ["event:goal"]} = query, metrics) do
     {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
 
@@ -352,39 +351,6 @@ defmodule Plausible.Stats.Imported do
   defp merge_imported_dimensions?(dimensions) do
     dimensions in [["visit:browser", "visit:browser_version"], ["visit:os", "visit:os_version"]] or
       (length(dimensions) == 1 and hd(dimensions) in @imported_dimensions)
-  end
-
-  def merge_imported_pageview_goals(q, _, %Query{include_imported: false}, _, _), do: q
-
-  def merge_imported_pageview_goals(q, site, query, page_exprs, metrics) do
-    if Imported.Base.decide_tables(query) == "imported_pages" do
-      page_regexes = Enum.map(page_exprs, &Base.page_regex/1)
-
-      imported_q =
-        "imported_pages"
-        |> Imported.Base.query_imported(site, query)
-        |> where([i], i.visitors > 0)
-        |> where(
-          [i],
-          fragment("notEmpty(multiMatchAllIndices(?, ?) as indices)", i.page, ^page_regexes)
-        )
-        |> join(:array, index in fragment("indices"))
-        |> group_by([_i, index], index)
-        |> select_merge([_i, index], %{
-          name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
-        })
-        |> select_imported_metrics(metrics)
-
-      from(s in Ecto.Query.subquery(q),
-        full_join: i in subquery(imported_q),
-        on: s.name == i.name,
-        select: %{}
-      )
-      |> select_joined_dimension(:name, query, :dim0)
-      |> select_joined_metrics(metrics)
-    else
-      q
-    end
   end
 
   def total_imported_visitors(site, query) do

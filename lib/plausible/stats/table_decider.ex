@@ -34,15 +34,6 @@ defmodule Plausible.Stats.TableDecider do
     %{event: event_only_dimensions, session: session_only_dimensions} =
       partition(query.dimensions, query, &filters_partitioner/2)
 
-    # IO.inspect(%{
-    #   event_only_metrics: event_only_metrics,
-    #   event_only_filters: event_only_filters,
-    #   event_only_dimensions: event_only_dimensions,
-    #   session_only_metrics: session_only_metrics,
-    #   session_only_filters: session_only_filters,
-    #   session_only_dimensions: session_only_dimensions,
-    # })
-
     cond do
       # Only one table needs to be queried
       empty?(event_only_metrics) && empty?(event_only_filters) && empty?(event_only_dimensions) ->
