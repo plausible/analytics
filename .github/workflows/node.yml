@@ -1,12 +1,11 @@
 name: NPM CI
 
 on:
-  push:
-    branches: [master, stable]
   pull_request:
+  workflow_call:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-node
   cancel-in-progress: true
 
 jobs:
