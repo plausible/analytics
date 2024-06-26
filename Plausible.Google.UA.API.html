@@ -450,7 +450,7 @@ Pages
 
       </div>
 
-<p>Imports stats from a Google Analytics UA view to a Plausible site.</p><p>This function fetches Google Analytics reports in batches of 7500 per
+<p>Imports stats from a Google Analytics UA view to a Plausible site.</p><p>This function fetches Google Analytics reports in batches of 100000 per
 request. The batches are then passed to persist callback.</p><p>Requests to Google Analytics can fail, and are retried at most
 5 times with an exponential backoff. Returns <code class="inline">:ok</code> when
 importing has finished or <code class="inline">{:error, term()}</code> when a request to GA failed too
