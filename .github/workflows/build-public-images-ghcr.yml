@@ -5,12 +5,17 @@ on:
     tags: ['v*']
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-public-ghcr
   cancel-in-progress: true
 
 jobs:
+  npm-ci:
+    uses: ./.github/workflows/node.yml
+  elixir-ci:
+    uses: ./.github/workflows/elixir.yml
   build:
     runs-on: buildjet-16vcpu-ubuntu-2204
+    needs: [npm-ci, elixir-ci]
 
     permissions:
       contents: read

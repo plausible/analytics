@@ -8,13 +8,18 @@ on:
     types: [synchronize, labeled]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-private-dockerhub
   cancel-in-progress: true
 
 jobs:
+  npm-ci:
+    uses: ./.github/workflows/node.yml
+  elixir-ci:
+    uses: ./.github/workflows/elixir.yml
   build:
-    if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'deploy-to-staging') }}
+    if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'preview') }}
     runs-on: buildjet-16vcpu-ubuntu-2204
+    needs: [npm-ci, elixir-ci]
 
     steps:
       - name: Docker meta

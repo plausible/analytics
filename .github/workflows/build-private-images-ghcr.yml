@@ -8,7 +8,7 @@ on:
     types: [synchronize, labeled]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-private-images
+  group: ${{ github.workflow }}-${{ github.ref }}-private-ghcr
   cancel-in-progress: true
 
 jobs:
