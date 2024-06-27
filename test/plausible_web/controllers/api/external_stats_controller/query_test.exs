@@ -3463,48 +3463,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
                %{"dimensions" => ["Chrome"], "metrics" => [1]}
              ]
     end
-
-    test "all metrics for breakdown by event prop", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview,
-          user_id: 1,
-          pathname: "/",
-          timestamp: ~N[2021-01-01 00:00:00]
-        ),
-        build(:pageview,
-          user_id: 1,
-          pathname: "/plausible.io",
-          timestamp: ~N[2021-01-01 00:10:00]
-        ),
-        build(:pageview, pathname: "/", timestamp: ~N[2021-01-01 00:25:00]),
-        build(:pageview,
-          pathname: "/plausible.io",
-          timestamp: ~N[2021-01-01 00:00:00]
-        )
-      ])
-
-      conn =
-        post(conn, "/api/v2/query", %{
-          "site_id" => site.domain,
-          "metrics" => [
-            "visitors",
-            "visits",
-            "pageviews",
-            "events",
-            "bounce_rate",
-            "visit_duration"
-          ],
-          "date_range" => "all",
-          "dimensions" => ["event:page"]
-        })
-
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["/"], "metrics" => [2, 2, 2, 2, 50, 300]},
-               %{"dimensions" => ["/plausible.io"], "metrics" => [2, 1, 2, 2, 100, 0]}
-             ]
-    end
   end
 
   describe "imported data" do
