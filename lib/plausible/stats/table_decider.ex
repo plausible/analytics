@@ -24,8 +24,6 @@ defmodule Plausible.Stats.TableDecider do
     } =
       partition(metrics, query, &metric_partitioner/2)
 
-    # :TODO: We can't lump dimensions and filters into one.
-    #   For filters we can join, but not for dimensions (these need to be on main table)
     %{event: event_only_filters, session: session_only_filters} =
       query
       |> filter_keys()
@@ -50,9 +48,8 @@ defmodule Plausible.Stats.TableDecider do
       empty?(session_only_metrics) && empty?(session_only_dimensions) ->
         {event_only_metrics ++ either_metrics ++ sample_percent, [], other_metrics}
 
-      # Default: prefer sessions
+      # Default: prefer events
       true ->
-        # :TODO: Why does this work?
         {event_only_metrics ++ either_metrics ++ sample_percent,
          session_only_metrics ++ sample_percent, other_metrics}
     end
