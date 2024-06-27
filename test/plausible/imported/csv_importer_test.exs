@@ -622,7 +622,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           case params_or_site do
             %Plausible.Site{} = site ->
               common_params.(site)
-              |> Map.put("metrics", "visitors,visits,pageviews,visit_duration,bounce_rate")
+              |> Map.put("metrics", "visitors,visits,visit_duration,bounce_rate")
               |> Map.put("limit", 1000)
               |> Map.put("property", by)
 
