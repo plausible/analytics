@@ -6,7 +6,6 @@ defmodule Plausible.Stats.Imported do
   import Plausible.Stats.Fragments
   import Plausible.Stats.Util, only: [shortname: 2]
 
-  alias Plausible.Stats.Base
   alias Plausible.Stats.Imported
   alias Plausible.Stats.Query
   alias Plausible.Stats.SQL.QueryBuilder
@@ -701,19 +700,17 @@ defmodule Plausible.Stats.Imported do
 
   defp select_joined_dimensions(q, query) do
     Enum.reduce(query.dimensions, q, fn dimension, q ->
-      dim = Plausible.Stats.Filters.without_prefix(dimension)
-
-      select_joined_dimension(q, dim, query, shortname(query, dimension))
+      select_joined_dimension(q, dimension, shortname(query, dimension))
     end)
   end
 
-  defp select_joined_dimension(q, :city, _query, key) do
+  defp select_joined_dimension(q, "visit:city", key) do
     select_merge(q, [s, i], %{
       ^key => selected_as(fragment("greatest(?,?)", field(i, ^key), field(s, ^key)), ^key)
     })
   end
 
-  defp select_joined_dimension(q, _dim, _query, key) do
+  defp select_joined_dimension(q, _dimension, key) do
     select_merge(q, [s, i], %{
       ^key =>
         selected_as(
