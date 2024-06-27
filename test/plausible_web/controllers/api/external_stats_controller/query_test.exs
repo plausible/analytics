@@ -3502,7 +3502,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
       assert results == [
                %{"dimensions" => ["/"], "metrics" => [2, 2, 2, 2, 50, 300]},
-               %{"dimensions" => ["/plausible.io"], "metrics" => [2, 1, 2, 2, 100, 0]}
+               %{"dimensions" => ["/plausible.io"], "metrics" => [2, 2, 2, 2, 100, 0]}
              ]
     end
   end
