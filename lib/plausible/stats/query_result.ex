@@ -1,8 +1,6 @@
 defmodule Plausible.Stats.QueryResult do
   @moduledoc false
 
-  use Plausible
-
   alias Plausible.Stats.Util
   alias Plausible.Stats.Filters
   alias Plausible.Stats.Query
