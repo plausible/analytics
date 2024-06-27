@@ -47,8 +47,8 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp result_key("event:props:" <> custom_property), do: custom_property
-  defp result_key("event:" <> key), do: key |> String.to_atom()
-  defp result_key("visit:" <> key), do: key |> String.to_atom()
+  defp result_key("event:" <> key), do: key |> String.to_existing_atom()
+  defp result_key("visit:" <> key), do: key |> String.to_existing_atom()
   defp result_key(dimension), do: dimension
 
   defp maybe_add_time_on_page(event_results, site, query, metrics) do
