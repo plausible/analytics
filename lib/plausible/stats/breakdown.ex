@@ -12,15 +12,15 @@ defmodule Plausible.Stats.Breakdown do
     transformed_metrics = transform_metrics(metrics, dimension)
 
     query_with_metrics =
-      %Query{
-        query
-        | metrics: transformed_metrics,
-          order_by: infer_order_by(transformed_metrics, dimension),
-          dimensions: transform_dimensions(dimension),
-          filters: query.filters ++ dimension_filters(dimension),
-          preloaded_goals: QueryParser.preload_goals_if_needed(site, query.filters, [dimension]),
-          v2: true
-      }
+      Query.set(
+        query,
+        metrics: transformed_metrics,
+        order_by: infer_order_by(transformed_metrics, dimension),
+        dimensions: transform_dimensions(dimension),
+        filters: query.filters ++ dimension_filters(dimension),
+        preloaded_goals: QueryParser.preload_goals_if_needed(site, query.filters, [dimension]),
+        v2: true
+      )
       |> QueryOptimizer.optimize()
 
     q = SQL.QueryBuilder.build(query_with_metrics, site)
