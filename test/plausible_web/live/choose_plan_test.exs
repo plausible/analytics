@@ -375,6 +375,75 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert doc =~ "billable pageviews in the last billing cycle"
     end
 
+    test "renders notice about pending ownerships and counts their usage", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      yesterday = NaiveDateTime.utc_now() |> NaiveDateTime.add(-1, :day)
+
+      populate_stats(site, [
+        build(:pageview, timestamp: yesterday)
+      ])
+
+      another_user = insert(:user)
+
+      pending_site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, role: :owner, user: another_user),
+            build(:site_membership, role: :admin, user: build(:user)),
+            build(:site_membership, role: :viewer, user: build(:user)),
+            build(:site_membership, role: :viewer, user: build(:user))
+          ]
+        )
+
+      populate_stats(pending_site, [
+        build(:pageview, timestamp: yesterday)
+      ])
+
+      insert(:invitation,
+        site: pending_site,
+        inviter: another_user,
+        email: user.email,
+        role: :owner
+      )
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert doc =~ "Your account has been invited to become the owner of a site"
+
+      assert text_of_element(doc, @growth_plan_tooltip) ==
+               "Your usage exceeds the following limit(s): Team member limit"
+
+      assert doc =~ "<b>2</b>"
+      assert doc =~ "billable pageviews in the last billing cycle"
+    end
+
+    test "warns about losing access to a feature used by a pending ownership site", %{
+      conn: conn,
+      user: user
+    } do
+      another_user = insert(:user)
+      pending_site = insert(:site, members: [another_user])
+
+      Plausible.Props.allow(pending_site, ["author"])
+
+      insert(:invitation,
+        site: pending_site,
+        inviter: another_user,
+        email: user.email,
+        role: :owner
+      )
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert doc =~ "Your account has been invited to become the owner of a site"
+
+      assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
+               "if (confirm(\"This plan does not support Custom Properties, which you are currently using. Please note that by subscribing to this plan you will lose access to this feature.\")) {window.location = "
+    end
+
     test "gets default selected interval from current subscription plan", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
       assert class_of_element(doc, @yearly_interval_button) =~ @interval_button_active_class

@@ -6,8 +6,7 @@ defmodule Plausible.Billing.Quota.Usage do
   alias Plausible.Users
   alias Plausible.Auth.User
   alias Plausible.Site
-  alias Plausible.Billing.{Subscriptions}
-  alias Plausible.Billing.Feature.{RevenueGoals, Funnels, Props, StatsAPI}
+  alias Plausible.Billing.{Subscriptions, Feature}
 
   @type cycles_usage() :: %{cycle() => usage_cycle()}
 
@@ -22,16 +21,36 @@ defmodule Plausible.Billing.Quota.Usage do
            total: non_neg_integer()
          }
 
+  @doc """
+  Returns a full usage report for the user.
+
+  ### Options
+
+  * `pending_ownership_site_ids` - a list of site IDs from which to count
+    additional usage. This allows us to look at the total usage from pending
+    ownerships and owned sites at the same time, which is useful, for example,
+    when deciding whether to let the user upgrade to a plan, or accept a site
+    ownership.
+
+  * `with_features` - when `true`, the returned map will contain features
+    usage. Also counts usage from `pending_ownership_site_ids` if that option
+    is given.
+  """
   def usage(user, opts \\ []) do
+    owned_site_ids = Plausible.Sites.owned_site_ids(user)
+    pending_ownership_site_ids = Keyword.get(opts, :pending_ownership_site_ids, [])
+    all_site_ids = Enum.uniq(owned_site_ids ++ pending_ownership_site_ids)
+
     basic_usage = %{
-      monthly_pageviews: monthly_pageview_usage(user),
-      team_members: team_member_usage(user),
-      sites: site_usage(user)
+      monthly_pageviews: monthly_pageview_usage(user, all_site_ids),
+      team_members:
+        team_member_usage(user, pending_ownership_site_ids: pending_ownership_site_ids),
+      sites: length(all_site_ids)
     }
 
     if Keyword.get(opts, :with_features) == true do
       basic_usage
-      |> Map.put(:features, features_usage(user))
+      |> Map.put(:features, features_usage(user, all_site_ids))
     else
       basic_usage
     end
@@ -151,151 +170,125 @@ defmodule Plausible.Billing.Quota.Usage do
     }
   end
 
-  @spec team_member_usage(User.t()) :: integer()
+  @spec team_member_usage(User.t(), Keyword.t()) :: non_neg_integer()
   @doc """
   Returns the total count of team members associated with the user's sites.
 
   * The given user (i.e. the owner) is not counted as a team member.
 
-  * Pending invitations are counted as team members even before accepted.
+  * Pending invitations (but not ownership transfers) are counted as team
+    members even before accepted.
 
   * Users are counted uniquely - i.e. even if an account is associated with
     many sites owned by the given user, they still count as one team member.
 
-  * Specific e-mails can be excluded from the count, so that where necessary,
-    we can ensure inviting the same person(s) to more than 1 sites is allowed
-  """
-  def team_member_usage(user, opts \\ []) do
-    {:ok, opts} = Keyword.validate(opts, site: nil, exclude_emails: [])
+  ### Options
 
-    user
-    |> team_member_usage_query(opts)
+  * `exclude_emails` - a list of emails to not count towards the usage. This
+    allows us to exclude a user from being counted as a team member when
+    checking whether a site invitation can be created for that same user.
+
+  * `pending_ownership_site_ids` - a list of site IDs from which to count
+    additional team member usage. Without this option, usage is queried only
+    across sites owned by the given user.
+  """
+  def team_member_usage(user, opts \\ [])
+
+  def team_member_usage(%User{} = user, opts) do
+    exclude_emails = Keyword.get(opts, :exclude_emails, []) ++ [user.email]
+
+    q =
+      user
+      |> Plausible.Sites.owned_site_ids()
+      |> query_team_member_emails()
+
+    q =
+      case Keyword.get(opts, :pending_ownership_site_ids) do
+        [_ | _] = site_ids -> union(q, ^query_team_member_emails(site_ids))
+        _ -> q
+      end
+
+    from(u in subquery(q),
+      where: u.email not in ^exclude_emails,
+      distinct: u.email
+    )
     |> Plausible.Repo.aggregate(:count)
   end
 
-  defp team_member_usage_query(user, opts) do
-    owned_sites_query = owned_sites_query(user)
-
-    excluded_emails =
-      opts
-      |> Keyword.get(:exclude_emails, [])
-      |> List.wrap()
-
-    site = opts[:site]
-
-    owned_sites_query =
-      if site do
-        where(owned_sites_query, [os], os.site_id == ^site.id)
-      else
-        owned_sites_query
-      end
-
-    team_members_query =
-      from os in subquery(owned_sites_query),
-        inner_join: sm in Site.Membership,
-        on: sm.site_id == os.site_id,
+  def query_team_member_emails(site_ids) do
+    memberships_q =
+      from sm in Site.Membership,
+        where: sm.site_id in ^site_ids,
         inner_join: u in assoc(sm, :user),
-        where: sm.role != :owner,
-        select: u.email
+        select: %{email: u.email}
 
-    team_members_query =
-      if excluded_emails != [] do
-        team_members_query |> where([..., u], u.email not in ^excluded_emails)
-      else
-        team_members_query
-      end
-
-    query =
+    invitations_q =
       from i in Plausible.Auth.Invitation,
-        inner_join: os in subquery(owned_sites_query),
-        on: i.site_id == os.site_id,
-        where: i.role != :owner,
-        select: i.email,
-        union: ^team_members_query
+        where: i.site_id in ^site_ids and i.role != :owner,
+        select: %{email: i.email}
 
-    if excluded_emails != [] do
-      query
-      |> where([i], i.email not in ^excluded_emails)
+    union(memberships_q, ^invitations_q)
+  end
+
+  @spec features_usage(User.t() | nil, list() | nil) :: [atom()]
+  @doc """
+  Given only a user, this function returns the features used across all the
+  sites this user owns + StatsAPI if the user has a configured Stats API key.
+
+  Given a user, and a list of site_ids, returns the features used by those
+  sites instead + StatsAPI if the user has a configured Stats API key.
+
+  The user can also be passed as `nil`, in which case we will never return
+  Stats API as a used feature.
+  """
+  def features_usage(user, site_ids \\ nil)
+
+  def features_usage(%User{} = user, nil) do
+    site_ids = Plausible.Sites.owned_site_ids(user)
+    features_usage(user, site_ids)
+  end
+
+  def features_usage(%User{} = user, site_ids) when is_list(site_ids) do
+    site_scoped_feature_usage = features_usage(nil, site_ids)
+
+    stats_api_used? =
+      from(a in Plausible.Auth.ApiKey, where: a.user_id == ^user.id)
+      |> Plausible.Repo.exists?()
+
+    if stats_api_used? do
+      site_scoped_feature_usage ++ [Feature.StatsAPI]
     else
-      query
+      site_scoped_feature_usage
     end
   end
 
-  @spec features_usage(User.t() | Site.t()) :: [atom()]
-  @doc """
-  Given a user, this function returns the features used across all the sites
-  this user owns + StatsAPI if the user has a configured Stats API key.
-
-  Given a site, returns the features used by the site.
-  """
-  def features_usage(%User{} = user) do
-    props_usage_query =
+  def features_usage(nil, site_ids) when is_list(site_ids) do
+    props_usage_q =
       from s in Site,
-        inner_join: os in subquery(owned_sites_query(user)),
-        on: s.id == os.site_id,
-        where: fragment("cardinality(?) > 0", s.allowed_event_props)
+        where: s.id in ^site_ids and fragment("cardinality(?) > 0", s.allowed_event_props)
 
-    revenue_goals_usage =
+    revenue_goals_usage_q =
       from g in Plausible.Goal,
-        inner_join: os in subquery(owned_sites_query(user)),
-        on: g.site_id == os.site_id,
-        where: not is_nil(g.currency)
-
-    stats_api_usage = from a in Plausible.Auth.ApiKey, where: a.user_id == ^user.id
+        where: g.site_id in ^site_ids and not is_nil(g.currency)
 
     queries =
       on_ee do
-        funnels_usage_query =
-          from f in "funnels",
-            inner_join: os in subquery(owned_sites_query(user)),
-            on: f.site_id == os.site_id
+        funnels_usage_q = from f in "funnels", where: f.site_id in ^site_ids
 
         [
-          {Props, props_usage_query},
-          {Funnels, funnels_usage_query},
-          {RevenueGoals, revenue_goals_usage},
-          {StatsAPI, stats_api_usage}
+          {Feature.Props, props_usage_q},
+          {Feature.Funnels, funnels_usage_q},
+          {Feature.RevenueGoals, revenue_goals_usage_q}
         ]
       else
         [
-          {Props, props_usage_query},
-          {RevenueGoals, revenue_goals_usage},
-          {StatsAPI, stats_api_usage}
+          {Feature.Props, props_usage_q},
+          {Feature.RevenueGoals, revenue_goals_usage_q}
         ]
       end
 
     Enum.reduce(queries, [], fn {feature, query}, acc ->
       if Plausible.Repo.exists?(query), do: acc ++ [feature], else: acc
     end)
-  end
-
-  def features_usage(%Site{} = site) do
-    props_exist = is_list(site.allowed_event_props) && site.allowed_event_props != []
-
-    funnels_exist =
-      on_ee do
-        Plausible.Repo.exists?(from f in Plausible.Funnel, where: f.site_id == ^site.id)
-      else
-        false
-      end
-
-    revenue_goals_exist =
-      Plausible.Repo.exists?(
-        from g in Plausible.Goal, where: g.site_id == ^site.id and not is_nil(g.currency)
-      )
-
-    used_features = [
-      {Props, props_exist},
-      {Funnels, funnels_exist},
-      {RevenueGoals, revenue_goals_exist}
-    ]
-
-    for {f_mod, used?} <- used_features, used?, f_mod.enabled?(site), do: f_mod
-  end
-
-  defp owned_sites_query(user) do
-    from sm in Site.Membership,
-      where: sm.role == :owner and sm.user_id == ^user.id,
-      select: %{site_id: sm.site_id}
   end
 end
