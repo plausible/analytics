@@ -2593,12 +2593,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert json_response(conn, 200) == %{
                "results" => [
                  %{
-                   "page" => "/B",
-                   "time_on_page" => 90.0
-                 },
-                 %{
                    "page" => "/A",
                    "time_on_page" => 60.0
+                 },
+                 %{
+                   "page" => "/B",
+                   "time_on_page" => 90.0
                  },
                  %{
                    "page" => "/C",
