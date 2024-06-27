@@ -32,9 +32,7 @@ defmodule Plausible.Stats.Goal.Revenue do
     )
   end
 
-  @spec get_revenue_tracking_currency(Plausible.Site.t() | nil, Plausible.Stats.Query.t(), [
-          atom()
-        ]) ::
+  @spec get_revenue_tracking_currency(Plausible.Site.t(), Plausible.Stats.Query.t(), [atom()]) ::
           {atom() | nil, [atom()]}
   @doc """
   Returns the common currency for the goal filters in a query. If there are no
@@ -60,7 +58,7 @@ defmodule Plausible.Stats.Goal.Revenue do
       Plausible.Billing.Feature.RevenueGoals.check_availability(site.owner) == :ok
     end
 
-    if site && requested_revenue_metrics? && filtering_by_goal? && revenue_goals_available?.() do
+    if requested_revenue_metrics? && filtering_by_goal? && revenue_goals_available?.() do
       revenue_goals_currencies =
         Plausible.Repo.all(
           from rg in Ecto.assoc(site, :revenue_goals),
