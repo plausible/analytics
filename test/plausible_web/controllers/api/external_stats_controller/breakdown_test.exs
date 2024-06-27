@@ -3287,10 +3287,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
       assert %{"browser" => "Chrome", "events" => 1} = breakdown_and_first.("visit:browser")
       assert %{"device" => "Desktop", "events" => 1} = breakdown_and_first.("visit:device")
-      # :TODO: These should not pass validation - not available on events.
-      # visit dimension and event-only metric
-      # assert %{"entry_page" => "/test", "events" => 1} = breakdown_and_first.("visit:entry_page")
-      # assert %{"exit_page" => "/test", "events" => 1} = breakdown_and_first.("visit:exit_page")
       assert %{"country" => "EE", "events" => 1} = breakdown_and_first.("visit:country")
       assert %{"os" => "Mac", "events" => 1} = breakdown_and_first.("visit:os")
       assert %{"page" => "/test", "events" => 1} = breakdown_and_first.("event:page")
