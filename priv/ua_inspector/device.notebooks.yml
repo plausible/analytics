@@ -100,7 +100,7 @@ Schneider:
   model: 'Notebook 14" Cherry Trail'
 
 Thomson:
-  regex: 'FBMD/TH360R12.32CTW;'
+  regex: 'FBMD/TH360R12\.32CTW;'
   device: 'desktop'
   model: 'Prestige TH-360R12.32CTW'
 

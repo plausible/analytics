@@ -127,6 +127,18 @@ TCL:
   device: 'tv'
   model: ''
 
+# RCA Tablets (RCA) (https://www.rca.com/)
+RCA Tablets:
+  regex: 'TCL/RCA-'
+  device: 'tv'
+  model: ''
+
+# Thomson
+Thomson:
+  regex: 'TCL/THOM-'
+  device: 'tv'
+  model: ''
+
 DEXP:
   regex: 'DEXP Shell'
   device: 'tv'
