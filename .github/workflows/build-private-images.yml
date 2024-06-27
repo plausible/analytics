@@ -14,8 +14,10 @@ concurrency:
 jobs:
   npm-ci:
     uses: ./.github/workflows/node.yml
+    if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'preview') }}
   elixir-ci:
     uses: ./.github/workflows/elixir.yml
+    if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'preview') }}
   build:
     if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'preview') }}
     runs-on: buildjet-16vcpu-ubuntu-2204
