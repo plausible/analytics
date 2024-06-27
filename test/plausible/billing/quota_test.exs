@@ -244,7 +244,7 @@ defmodule Plausible.Billing.QuotaTest do
     end
   end
 
-  describe "team_member_usage/1" do
+  describe "team_member_usage/2" do
     test "returns the number of members in all of the sites the user owns" do
       me = insert(:user)
 
@@ -335,13 +335,69 @@ defmodule Plausible.Billing.QuotaTest do
       assert Quota.Usage.team_member_usage(me) == 3
     end
 
-    test "does not count ownership transfer as a team member" do
+    test "does not count ownership transfer as a team member by default" do
       me = insert(:user)
       site_i_own = insert(:site, memberships: [build(:site_membership, user: me, role: :owner)])
 
       insert(:invitation, site: site_i_own, inviter: me, role: :owner)
 
       assert Quota.Usage.team_member_usage(me) == 0
+    end
+
+    test "counts team members from pending ownerships when specified" do
+      me = insert(:user)
+
+      user_1 = insert(:user)
+      user_2 = insert(:user)
+
+      pending_ownership_site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user_1, role: :owner),
+            build(:site_membership, user: user_2, role: :admin)
+          ]
+        )
+
+      insert(:invitation,
+        site: pending_ownership_site,
+        inviter: user_1,
+        email: me.email,
+        role: :owner
+      )
+
+      assert Quota.Usage.team_member_usage(me,
+               pending_ownership_site_ids: [pending_ownership_site.id]
+             ) == 2
+    end
+
+    test "counts invitations towards team members from pending ownership sites" do
+      me = insert(:user)
+
+      user_1 = insert(:user)
+      user_2 = insert(:user)
+
+      pending_ownership_site =
+        insert(:site,
+          memberships: [build(:site_membership, user: user_1, role: :owner)]
+        )
+
+      insert(:invitation,
+        site: pending_ownership_site,
+        inviter: user_1,
+        email: me.email,
+        role: :owner
+      )
+
+      insert(:invitation,
+        site: pending_ownership_site,
+        inviter: user_1,
+        email: user_2.email,
+        role: :admin
+      )
+
+      assert Quota.Usage.team_member_usage(me,
+               pending_ownership_site_ids: [pending_ownership_site.id]
+             ) == 2
     end
 
     test "returns zero when user does not have any site" do
@@ -378,9 +434,9 @@ defmodule Plausible.Billing.QuotaTest do
       invitation = insert(:invitation, site: site_i_own, inviter: me, email: "foo@example.com")
 
       assert Quota.Usage.team_member_usage(me) == 4
-      assert Quota.Usage.team_member_usage(me, exclude_emails: "arbitrary@example.com") == 4
-      assert Quota.Usage.team_member_usage(me, exclude_emails: member.email) == 3
-      assert Quota.Usage.team_member_usage(me, exclude_emails: invitation.email) == 3
+      assert Quota.Usage.team_member_usage(me, exclude_emails: ["arbitrary@example.com"]) == 4
+      assert Quota.Usage.team_member_usage(me, exclude_emails: [member.email]) == 3
+      assert Quota.Usage.team_member_usage(me, exclude_emails: [invitation.email]) == 3
 
       assert Quota.Usage.team_member_usage(me, exclude_emails: [member.email, invitation.email]) ==
                2
@@ -441,10 +497,10 @@ defmodule Plausible.Billing.QuotaTest do
     end
   end
 
-  describe "features_usage/1" do
+  describe "features_usage/2" do
     test "returns an empty list for a user/site who does not use any feature" do
       assert [] == Quota.Usage.features_usage(insert(:user))
-      assert [] == Quota.Usage.features_usage(insert(:site))
+      assert [] == Quota.Usage.features_usage(nil, [insert(:site).id])
     end
 
     test "returns [Props] when user/site uses custom props" do
@@ -456,7 +512,7 @@ defmodule Plausible.Billing.QuotaTest do
           memberships: [build(:site_membership, user: user, role: :owner)]
         )
 
-      assert [Props] == Quota.Usage.features_usage(site)
+      assert [Props] == Quota.Usage.features_usage(nil, [site.id])
       assert [Props] == Quota.Usage.features_usage(user)
     end
 
@@ -469,7 +525,7 @@ defmodule Plausible.Billing.QuotaTest do
         steps = Enum.map(goals, &%{"goal_id" => &1.id})
         Plausible.Funnels.create(site, "dummy", steps)
 
-        assert [Funnels] == Quota.Usage.features_usage(site)
+        assert [Funnels] == Quota.Usage.features_usage(nil, [site.id])
         assert [Funnels] == Quota.Usage.features_usage(user)
       end
 
@@ -478,7 +534,7 @@ defmodule Plausible.Billing.QuotaTest do
         site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
         insert(:goal, currency: :USD, site: site, event_name: "Purchase")
 
-        assert [RevenueGoals] == Quota.Usage.features_usage(site)
+        assert [RevenueGoals] == Quota.Usage.features_usage(nil, [site.id])
         assert [RevenueGoals] == Quota.Usage.features_usage(user)
       end
     end
@@ -490,9 +546,20 @@ defmodule Plausible.Billing.QuotaTest do
       assert [StatsAPI] == Quota.Usage.features_usage(user)
     end
 
+    test "returns feature usage based on a user and a custom list of site_ids" do
+      user = insert(:user)
+      insert(:api_key, user: user)
+
+      site_using_props = insert(:site, allowed_event_props: ["dummy"])
+
+      site_ids = [site_using_props.id]
+      assert [Props, StatsAPI] == Quota.Usage.features_usage(user, site_ids)
+    end
+
     on_ee do
-      test "returns multiple features" do
+      test "returns multiple features used by the user" do
         user = insert(:user)
+        insert(:api_key, user: user)
 
         site =
           insert(:site,
@@ -506,8 +573,7 @@ defmodule Plausible.Billing.QuotaTest do
         steps = Enum.map(goals, &%{"goal_id" => &1.id})
         Plausible.Funnels.create(site, "dummy", steps)
 
-        assert [Props, Funnels, RevenueGoals] == Quota.Usage.features_usage(site)
-        assert [Props, Funnels, RevenueGoals] == Quota.Usage.features_usage(user)
+        assert [Props, Funnels, RevenueGoals, StatsAPI] == Quota.Usage.features_usage(user)
       end
     end
 

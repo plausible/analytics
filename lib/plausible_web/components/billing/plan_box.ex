@@ -168,7 +168,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
     {checkout_disabled, disabled_message} =
       cond do
-        not assigns.eligible_for_upgrade? ->
+        not Quota.eligible_for_upgrade?(assigns.usage) ->
           {true, nil}
 
         change_plan_link_text == "Currently on this plan" && not subscription_deleted ->

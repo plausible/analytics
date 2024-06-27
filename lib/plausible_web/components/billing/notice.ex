@@ -217,6 +217,31 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     """
   end
 
+  def pending_site_ownerships_notice(%{pending_ownership_count: count} = assigns) do
+    if count > 0 do
+      message =
+        "Your account has been invited to become the owner of " <>
+          if(count == 1, do: "a site, which is", else: "#{count} sites, which are") <>
+          " being counted towards the usage of your account."
+
+      assigns = assign(assigns, message: message)
+
+      ~H"""
+      <aside class={@class}>
+        <.notice title="Pending ownership transfers" class="shadow-md dark:shadow-none mt-4">
+          <%= @message %> To exclude pending sites from your usage, please go to
+          <.link href="https://plausible.io/sites" class="whitespace-nowrap font-semibold">
+            plausible.io/sites
+          </.link>
+          and reject the invitations.
+        </.notice>
+      </aside>
+      """
+    else
+      ~H""
+    end
+  end
+
   def growth_grandfathered(assigns) do
     ~H"""
     <div class="mt-8 space-y-3 text-sm leading-6 text-gray-600 text-justify dark:text-gray-100 xl:mt-10">
