@@ -160,18 +160,17 @@ defmodule Plausible.Stats.Base do
   def total_visitors_subquery(site, query, include_imported)
 
   def total_visitors_subquery(site, query, true = _include_imported) do
-    dynamic(
-      [e],
-      selected_as(
+    wrap_expression([e], %{
+      total_visitors:
         subquery(total_visitors(site, query)) +
-          subquery(Plausible.Stats.Imported.total_imported_visitors(site, query)),
-        :__total_visitors
-      )
-    )
+          subquery(Plausible.Stats.Imported.total_imported_visitors(site, query))
+    })
   end
 
   def total_visitors_subquery(site, query, false = _include_imported) do
-    dynamic([e], selected_as(subquery(total_visitors(site, query)), :__total_visitors))
+    wrap_expression([e], %{
+      total_visitors: subquery(total_visitors(site, query))
+    })
   end
 
   def add_percentage_metric(q, site, query, metrics) do
@@ -179,19 +178,14 @@ defmodule Plausible.Stats.Base do
       total_query = Query.set_dimensions(query, [])
 
       q
-      |> select_merge(
-        ^%{__total_visitors: total_visitors_subquery(site, total_query, query.include_imported)}
-      )
-      |> select_merge(%{
+      |> select_merge(^total_visitors_subquery(site, total_query, query.include_imported))
+      |> select_merge_as([], %{
         percentage:
-          selected_as(
-            fragment(
-              "if(? > 0, round(? / ? * 100, 1), null)",
-              selected_as(:__total_visitors),
-              selected_as(:visitors),
-              selected_as(:__total_visitors)
-            ),
-            :percentage
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), null)",
+            selected_as(:total_visitors),
+            selected_as(:visitors),
+            selected_as(:total_visitors)
           )
       })
     else
@@ -211,19 +205,14 @@ defmodule Plausible.Stats.Base do
 
       # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
       subquery(q)
-      |> select_merge(
-        ^%{total_visitors: total_visitors_subquery(site, total_query, query.include_imported)}
-      )
-      |> select_merge([e], %{
+      |> select_merge(^total_visitors_subquery(site, total_query, query.include_imported))
+      |> select_merge_as([e], %{
         conversion_rate:
-          selected_as(
-            fragment(
-              "if(? > 0, round(? / ? * 100, 1), 0)",
-              selected_as(:__total_visitors),
-              e.visitors,
-              selected_as(:__total_visitors)
-            ),
-            :conversion_rate
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), 0)",
+            selected_as(:total_visitors),
+            e.visitors,
+            selected_as(:total_visitors)
           )
       })
     else

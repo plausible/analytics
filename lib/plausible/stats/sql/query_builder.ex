@@ -182,18 +182,14 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
         |> Query.set_dimensions([])
 
       q
-      |> select_merge(
-        ^%{
-          total_visitors: Base.total_visitors_subquery(site, total_query, query.include_imported)
-        }
-      )
+      |> select_merge(^Base.total_visitors_subquery(site, total_query, query.include_imported))
       |> select_merge_as([e], %{
         conversion_rate:
           fragment(
             "if(? > 0, round(? / ? * 100, 1), 0)",
-            selected_as(:__total_visitors),
+            selected_as(:total_visitors),
             selected_as(:visitors),
-            selected_as(:__total_visitors)
+            selected_as(:total_visitors)
           )
       })
     else
