@@ -158,17 +158,13 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   defmacrop select_join_fields(q, query, list, table_name) do
     quote do
       Enum.reduce(unquote(list), unquote(q), fn metric_or_dimension, q ->
-        select_merge(
+        key = shortname(unquote(query), metric_or_dimension)
+
+        select_merge_as(
           q,
-          ^%{
-            shortname(unquote(query), metric_or_dimension) =>
-              dynamic(
-                [e, s],
-                selected_as(
-                  field(unquote(table_name), ^shortname(unquote(query), metric_or_dimension)),
-                  ^shortname(unquote(query), metric_or_dimension)
-                )
-              )
+          [e, s],
+          %{
+            ^key => field(unquote(table_name), ^key)
           }
         )
       end)
