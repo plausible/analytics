@@ -3,11 +3,9 @@ defmodule Plausible.Stats.Base do
   use Plausible
   use Plausible.Stats.SQL.Fragments
 
-  alias Plausible.Stats.{Query, Filters, TableDecider}
+  alias Plausible.Stats.{Query, Filters, TableDecider, SQL}
   alias Plausible.Timezones
   import Ecto.Query
-
-  @uniq_users_expression "toUInt64(round(uniq(?) * any(_sample_factor)))"
 
   def base_event_query(site, query) do
     events_q = query_events(site, query)
@@ -53,149 +51,15 @@ defmodule Plausible.Stats.Base do
 
   def select_event_metrics(metrics) do
     metrics
-    |> Enum.map(&select_event_metric/1)
+    |> Enum.map(&SQL.Expression.event_metric/1)
     |> Enum.reduce(%{}, &Map.merge/2)
   end
-
-  defp select_event_metric(:pageviews) do
-    wrap_select_columns([e], %{
-      pageviews:
-        fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name)
-    })
-  end
-
-  defp select_event_metric(:events) do
-    wrap_select_columns([], %{
-      events: fragment("toUInt64(round(count(*) * any(_sample_factor)))")
-    })
-  end
-
-  defp select_event_metric(:visitors) do
-    wrap_select_columns([e], %{
-      visitors: fragment(@uniq_users_expression, e.user_id)
-    })
-  end
-
-  defp select_event_metric(:visits) do
-    wrap_select_columns([e], %{
-      visits: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.session_id)
-    })
-  end
-
-  on_ee do
-    defp select_event_metric(:total_revenue) do
-      wrap_select_columns(
-        [e],
-        %{
-          total_revenue:
-            fragment("toDecimal64(sum(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
-        }
-      )
-    end
-
-    defp select_event_metric(:average_revenue) do
-      wrap_select_columns(
-        [e],
-        %{
-          average_revenue:
-            fragment("toDecimal64(avg(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
-        }
-      )
-    end
-  end
-
-  defp select_event_metric(:sample_percent) do
-    wrap_select_columns([], %{
-      sample_percent:
-        fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
-    })
-  end
-
-  defp select_event_metric(:percentage), do: %{}
-  defp select_event_metric(:conversion_rate), do: %{}
-  defp select_event_metric(:group_conversion_rate), do: %{}
-  defp select_event_metric(:total_visitors), do: %{}
-
-  defp select_event_metric(unknown), do: raise("Unknown metric: #{unknown}")
 
   def select_session_metrics(metrics, query) do
     metrics
-    |> Enum.map(&select_session_metric(&1, query))
+    |> Enum.map(&SQL.Expression.session_metric(&1, query))
     |> Enum.reduce(%{}, &Map.merge/2)
   end
-
-  defp select_session_metric(:bounce_rate, query) do
-    # :TRICKY: If page is passed to query, we only count bounce rate where users _entered_ at page.
-    event_page_filter = Query.get_filter(query, "event:page")
-    condition = Filters.WhereBuilder.build_condition(:entry_page, event_page_filter)
-
-    wrap_select_columns([], %{
-      bounce_rate:
-        fragment(
-          "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
-          ^condition,
-          ^condition
-        ),
-      __internal_visits: fragment("toUInt32(sum(sign))")
-    })
-  end
-
-  defp select_session_metric(:visits, _query) do
-    wrap_select_columns([s], %{
-      visits: fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign)
-    })
-  end
-
-  defp select_session_metric(:pageviews, _query) do
-    wrap_select_columns([s], %{
-      pageviews:
-        fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
-    })
-  end
-
-  defp select_session_metric(:events, _query) do
-    wrap_select_columns([s], %{
-      events: fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
-    })
-  end
-
-  defp select_session_metric(:visitors, _query) do
-    wrap_select_columns([s], %{
-      visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id)
-    })
-  end
-
-  defp select_session_metric(:visit_duration, _query) do
-    wrap_select_columns([], %{
-      visit_duration:
-        fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))"),
-      __internal_visits: fragment("toUInt32(sum(sign))")
-    })
-  end
-
-  defp select_session_metric(:views_per_visit, _query) do
-    wrap_select_columns([s], %{
-      views_per_visit:
-        fragment(
-          "ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)",
-          s.sign,
-          s.pageviews,
-          s.sign
-        ),
-      __internal_visits: fragment("toUInt32(sum(sign))")
-    })
-  end
-
-  defp select_session_metric(:sample_percent, _query) do
-    wrap_select_columns([], %{
-      sample_percent:
-        fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
-    })
-  end
-
-  defp select_session_metric(:percentage, _query), do: %{}
-  defp select_session_metric(:conversion_rate, _query), do: %{}
-  defp select_session_metric(:group_conversion_rate, _query), do: %{}
 
   def filter_converted_sessions(db_query, site, query) do
     if Query.has_event_filters?(query) do
@@ -278,7 +142,9 @@ defmodule Plausible.Stats.Base do
 
   defp total_visitors(site, query) do
     base_event_query(site, query)
-    |> select([e], total_visitors: fragment(@uniq_users_expression, e.user_id))
+    |> select([e],
+      total_visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
+    )
   end
 
   # `total_visitors_subquery` returns a subquery which selects `total_visitors` -
