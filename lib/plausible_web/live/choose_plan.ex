@@ -41,22 +41,21 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign_new(:owned_tier, fn %{owned_plan: owned_plan} ->
         if owned_plan, do: Map.get(owned_plan, :kind), else: nil
       end)
-      |> assign_new(:recommended_tier, fn %{
-                                            owned_plan: owned_plan,
-                                            usage: usage,
-                                            user: user
-                                          } ->
-        if owned_plan != nil or not Quota.eligible_for_upgrade?(usage) do
-          nil
-        else
-          Plans.suggest_tier(user)
-        end
-      end)
       |> assign_new(:current_interval, fn %{user: user} ->
         current_user_subscription_interval(user.subscription)
       end)
       |> assign_new(:available_plans, fn %{user: user} ->
         Plans.available_plans_for(user, with_prices: true, customer_ip: remote_ip)
+      end)
+      |> assign_new(:recommended_tier, fn %{usage: usage, available_plans: available_plans} ->
+        if Quota.eligible_for_upgrade?(usage) do
+          highest_growth_plan = List.last(available_plans.growth)
+          highest_business_plan = List.last(available_plans.business)
+
+          Quota.suggest_tier(usage, highest_growth_plan, highest_business_plan)
+        else
+          nil
+        end
       end)
       |> assign_new(:available_volumes, fn %{available_plans: available_plans} ->
         get_available_volumes(available_plans)

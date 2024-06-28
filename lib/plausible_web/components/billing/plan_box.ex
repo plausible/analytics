@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
   def standard(assigns) do
     highlight =
       cond do
-        assigns.owned -> "Current"
+        assigns.owned && assigns.recommended -> "Current"
         assigns.recommended -> "Recommended"
         true -> nil
       end
@@ -193,7 +193,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
           []
       end
 
-    features_to_lose = assigns.usage.features -- assigns.plan_to_render.features
+    feature_usage_check = Quota.ensure_feature_access(assigns.usage, assigns.plan_to_render)
 
     assigns =
       assigns
@@ -202,7 +202,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       |> assign(:checkout_disabled, checkout_disabled)
       |> assign(:disabled_message, disabled_message)
       |> assign(:exceeded_plan_limits, exceeded_plan_limits)
-      |> assign(:confirm_message, losing_features_message(features_to_lose))
+      |> assign(:confirm_message, losing_features_message(feature_usage_check))
 
     ~H"""
     <%= if @owned_plan && Plausible.Billing.Subscriptions.resumable?(@user.subscription) do %>
@@ -325,15 +325,15 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     """
   end
 
-  defp losing_features_message([]), do: nil
+  defp losing_features_message(:ok), do: nil
 
-  defp losing_features_message(features_to_lose) do
+  defp losing_features_message({:error, {:unavailable_features, features}}) do
     features_list_str =
-      features_to_lose
+      features
       |> Enum.map(fn feature_mod -> feature_mod.display_name() end)
       |> PlausibleWeb.TextHelpers.pretty_join()
 
-    "This plan does not support #{features_list_str}, which you are currently using. Please note that by subscribing to this plan you will lose access to #{if length(features_to_lose) == 1, do: "this feature", else: "these features"}."
+    "This plan does not support #{features_list_str}, which you are currently using. Please note that by subscribing to this plan you will lose access to #{if length(features) == 1, do: "this feature", else: "these features"}."
   end
 
   defp contact_button(assigns) do
