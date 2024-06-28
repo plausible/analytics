@@ -5,13 +5,15 @@ defmodule Plausible.Stats.Filters.QueryParser do
   alias Plausible.Stats.Filters
   alias Plausible.Stats.Query
 
-  def parse(site, params) when is_map(params) do
+  def parse(site, params, now \\ nil) when is_map(params) do
     with {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
-         {:ok, date_range} <- parse_date_range(site, Map.get(params, "date_range")),
+         {:ok, date_range} <-
+           parse_date_range(site, Map.get(params, "date_range"), now || today(site)),
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          {:ok, include} <- parse_include(Map.get(params, "include", %{})),
+         preloaded_goals <- preload_goals_if_needed(site, filters, dimensions),
          query = %{
            metrics: metrics,
            filters: filters,
@@ -19,10 +21,11 @@ defmodule Plausible.Stats.Filters.QueryParser do
            dimensions: dimensions,
            order_by: order_by,
            timezone: site.timezone,
-           imported_data_requested: Map.get(include, :imports, false)
+           imported_data_requested: Map.get(include, :imports, false),
+           preloaded_goals: preloaded_goals
          },
          :ok <- validate_order_by(query),
-         :ok <- validate_goal_filters(site, query),
+         :ok <- validate_goal_filters(query),
          :ok <- validate_custom_props_access(site, query),
          :ok <- validate_metrics(query) do
       {:ok, query}
@@ -43,12 +46,14 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_metric("time_on_page"), do: {:ok, :time_on_page}
   defp parse_metric("conversion_rate"), do: {:ok, :conversion_rate}
+  defp parse_metric("group_conversion_rate"), do: {:ok, :group_conversion_rate}
   defp parse_metric("visitors"), do: {:ok, :visitors}
   defp parse_metric("pageviews"), do: {:ok, :pageviews}
   defp parse_metric("events"), do: {:ok, :events}
   defp parse_metric("visits"), do: {:ok, :visits}
   defp parse_metric("bounce_rate"), do: {:ok, :bounce_rate}
   defp parse_metric("visit_duration"), do: {:ok, :visit_duration}
+  defp parse_metric("views_per_visit"), do: {:ok, :views_per_visit}
   defp parse_metric(unknown_metric), do: {:error, "Unknown metric '#{inspect(unknown_metric)}'"}
 
   def parse_filters(filters) when is_list(filters) do
@@ -84,7 +89,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
        do: parse_clauses_list(filter)
 
   defp parse_clauses_list([_operation, filter_key, list] = filter) when is_list(list) do
-    all_strings? = Enum.all?(list, &is_bitstring/1)
+    all_strings? = Enum.all?(list, &is_binary/1)
 
     cond do
       filter_key == "event:goal" && all_strings? -> {:ok, [Filters.Utils.wrap_goal_value(list)]}
@@ -95,27 +100,62 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{inspect(filter)}'"}
 
-  defp parse_date_range(site, "day") do
-    today = DateTime.now!(site.timezone) |> DateTime.to_date()
-    {:ok, Date.range(today, today)}
+  defp parse_date_range(_site, "day", date) do
+    {:ok, Date.range(date, date)}
   end
 
-  defp parse_date_range(_site, "7d"), do: {:ok, "7d"}
-  defp parse_date_range(_site, "30d"), do: {:ok, "30d"}
-  defp parse_date_range(_site, "month"), do: {:ok, "month"}
-  defp parse_date_range(_site, "6mo"), do: {:ok, "6mo"}
-  defp parse_date_range(_site, "12mo"), do: {:ok, "12mo"}
-  defp parse_date_range(_site, "year"), do: {:ok, "year"}
+  defp parse_date_range(_site, "7d", last) do
+    first = last |> Date.add(-6)
+    {:ok, Date.range(first, last)}
+  end
 
-  defp parse_date_range(site, "all") do
-    today = DateTime.now!(site.timezone) |> DateTime.to_date()
+  defp parse_date_range(_site, "30d", last) do
+    first = last |> Date.add(-30)
+    {:ok, Date.range(first, last)}
+  end
+
+  defp parse_date_range(_site, "month", today) do
+    last = today |> Date.end_of_month()
+    first = last |> Date.beginning_of_month()
+    {:ok, Date.range(first, last)}
+  end
+
+  defp parse_date_range(_site, "6mo", today) do
+    last = today |> Date.end_of_month()
+
+    first =
+      last
+      |> Timex.shift(months: -5)
+      |> Date.beginning_of_month()
+
+    {:ok, Date.range(first, last)}
+  end
+
+  defp parse_date_range(_site, "12mo", today) do
+    last = today |> Date.end_of_month()
+
+    first =
+      last
+      |> Timex.shift(months: -11)
+      |> Date.beginning_of_month()
+
+    {:ok, Date.range(first, last)}
+  end
+
+  defp parse_date_range(_site, "year", today) do
+    last = today |> Timex.end_of_year()
+    first = last |> Timex.beginning_of_year()
+    {:ok, Date.range(first, last)}
+  end
+
+  defp parse_date_range(site, "all", today) do
     start_date = Plausible.Sites.stats_start_date(site) || today
 
     {:ok, Date.range(start_date, today)}
   end
 
-  defp parse_date_range(_site, [from_date_string, to_date_string])
-       when is_bitstring(from_date_string) and is_bitstring(to_date_string) do
+  defp parse_date_range(_site, [from_date_string, to_date_string], _date)
+       when is_binary(from_date_string) and is_binary(to_date_string) do
     with {:ok, from_date} <- Date.from_iso8601(from_date_string),
          {:ok, to_date} <- Date.from_iso8601(to_date_string) do
       {:ok, Date.range(from_date, to_date)}
@@ -124,7 +164,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp parse_date_range(_site, unknown), do: {:error, "Invalid date range '#{inspect(unknown)}'"}
+  defp parse_date_range(_site, unknown, _),
+    do: {:error, "Invalid date_range '#{inspect(unknown)}'"}
+
+  defp today(site), do: DateTime.now!(site.timezone) |> DateTime.to_date()
 
   defp parse_dimensions(dimensions) when is_list(dimensions) do
     if length(dimensions) == length(Enum.uniq(dimensions)) do
@@ -178,10 +221,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_time("time"), do: {:ok, "time"}
+  defp parse_time("time:hour"), do: {:ok, "time:hour"}
   defp parse_time("time:day"), do: {:ok, "time:day"}
-  defp parse_time("time:week"), do: {:ok, "time:week"}
   defp parse_time("time:month"), do: {:ok, "time:month"}
-  defp parse_time("time:year"), do: {:ok, "time:year"}
   defp parse_time(_), do: :error
 
   defp parse_order_direction([_, "asc"]), do: {:ok, :asc}
@@ -242,7 +284,22 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp validate_goal_filters(site, query) do
+  defp preload_goals_if_needed(site, filters, dimensions) do
+    goal_filters? =
+      Enum.any?(filters, fn [_, filter_key | _rest] -> filter_key == "event:goal" end)
+
+    if goal_filters? or Enum.member?(dimensions, "event:goal") do
+      Plausible.Goals.for_site(site)
+      |> Enum.map(fn
+        %{page_path: path} when is_binary(path) -> {:page, path}
+        %{event_name: event_name} -> {:event, event_name}
+      end)
+    else
+      []
+    end
+  end
+
+  defp validate_goal_filters(query) do
     goal_filter_clauses =
       Enum.flat_map(query.filters, fn
         [_operation, "event:goal", clauses] -> clauses
@@ -250,14 +307,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
       end)
 
     if length(goal_filter_clauses) > 0 do
-      configured_goals =
-        Plausible.Goals.for_site(site)
-        |> Enum.map(fn
-          %{page_path: path} when is_binary(path) -> {:page, path}
-          %{event_name: event_name} -> {:event, event_name}
-        end)
-
-      validate_list(goal_filter_clauses, &validate_goal_filter(&1, configured_goals))
+      validate_list(goal_filter_clauses, &validate_goal_filter(&1, query.preloaded_goals))
     else
       :ok
     end
@@ -298,19 +348,30 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp validate_metrics(query) do
-    validate_list(query.metrics, &validate_metric(&1, query))
-
     with :ok <- validate_list(query.metrics, &validate_metric(&1, query)) do
       validate_no_metrics_filters_conflict(query)
     end
   end
 
-  defp validate_metric(:conversion_rate = metric, query) do
+  defp validate_metric(metric, query) when metric in [:conversion_rate, :group_conversion_rate] do
     if Enum.member?(query.dimensions, "event:goal") or
          not is_nil(Query.get_filter(query, "event:goal")) do
       :ok
     else
       {:error, "Metric `#{metric}` can only be queried with event:goal filters or dimensions"}
+    end
+  end
+
+  defp validate_metric(:views_per_visit = metric, query) do
+    cond do
+      not is_nil(Query.get_filter(query, "event:page")) ->
+        {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`"}
+
+      length(query.dimensions) > 0 ->
+        {:error, "Metric `#{metric}` cannot be queried with `dimensions`"}
+
+      true ->
+        :ok
     end
   end
 
@@ -320,12 +381,21 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {_event_metrics, sessions_metrics, _other_metrics} =
       TableDecider.partition_metrics(query.metrics, query)
 
-    if Enum.empty?(sessions_metrics) or not TableDecider.event_filters?(query) do
+    if Enum.empty?(sessions_metrics) or
+         not event_dimensions_not_allowing_session_metrics?(query.dimensions) do
       :ok
     else
       {:error,
-       "Session metric(s) `#{sessions_metrics |> Enum.join(", ")}` cannot be queried along with event filters or dimensions"}
+       "Session metric(s) `#{sessions_metrics |> Enum.join(", ")}` cannot be queried along with event dimensions"}
     end
+  end
+
+  def event_dimensions_not_allowing_session_metrics?(dimensions) do
+    Enum.any?(dimensions, fn
+      "event:page" -> false
+      "event:" <> _ -> true
+      _ -> false
+    end)
   end
 
   defp parse_list(list, parser_function) do

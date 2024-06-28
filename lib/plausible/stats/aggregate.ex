@@ -15,10 +15,7 @@ defmodule Plausible.Stats.Aggregate do
 
     Query.trace(query, metrics)
 
-    query_with_metrics = %Plausible.Stats.Query{
-      query
-      | metrics: Util.maybe_add_visitors_metric(metrics)
-    }
+    query_with_metrics = %Query{query | metrics: metrics}
 
     q = Plausible.Stats.SQL.QueryBuilder.build(query_with_metrics, site)
 
