@@ -19,7 +19,7 @@ defmodule Plausible.Stats.SQL.Expression do
 
   defmacrop field_or_blank_value(key, expr, empty_value) do
     quote do
-      wrap_select_columns([t], %{
+      wrap_expression([t], %{
         unquote(key) =>
           fragment("if(empty(?), ?, ?)", unquote(expr), unquote(empty_value), unquote(expr))
       })
@@ -27,34 +27,34 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def dimension(key, "time:hour", query) do
-    wrap_select_columns([t], %{
+    wrap_expression([t], %{
       key => fragment("toStartOfHour(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 
   def dimension(key, "time:day", query) do
-    wrap_select_columns([t], %{
+    wrap_expression([t], %{
       key => fragment("toDate(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 
   def dimension(key, "time:month", query) do
-    wrap_select_columns([t], %{
+    wrap_expression([t], %{
       key => fragment("toStartOfMonth(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 
   def dimension(key, "event:name", _query),
-    do: wrap_select_columns([t], %{key => t.name})
+    do: wrap_expression([t], %{key => t.name})
 
   def dimension(key, "event:page", _query),
-    do: wrap_select_columns([t], %{key => t.pathname})
+    do: wrap_expression([t], %{key => t.pathname})
 
   def dimension(key, "event:hostname", _query),
-    do: wrap_select_columns([t], %{key => t.hostname})
+    do: wrap_expression([t], %{key => t.hostname})
 
   def dimension(key, "event:props:" <> property_name, _query) do
-    wrap_select_columns([t], %{
+    wrap_expression([t], %{
       key =>
         fragment(
           "if(not empty(?), ?, '(none)')",
@@ -65,10 +65,10 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def dimension(key, "visit:entry_page", _query),
-    do: wrap_select_columns([t], %{key => t.entry_page})
+    do: wrap_expression([t], %{key => t.entry_page})
 
   def dimension(key, "visit:exit_page", _query),
-    do: wrap_select_columns([t], %{key => t.exit_page})
+    do: wrap_expression([t], %{key => t.exit_page})
 
   def dimension(key, "visit:utm_medium", _query),
     do: field_or_blank_value(key, t.utm_medium, @not_set)
@@ -107,42 +107,42 @@ defmodule Plausible.Stats.SQL.Expression do
     do: field_or_blank_value(key, t.browser_version, @not_set)
 
   def dimension(key, "visit:country", _query),
-    do: wrap_select_columns([t], %{key => t.country})
+    do: wrap_expression([t], %{key => t.country})
 
   def dimension(key, "visit:region", _query),
-    do: wrap_select_columns([t], %{key => t.region})
+    do: wrap_expression([t], %{key => t.region})
 
   def dimension(key, "visit:city", _query),
-    do: wrap_select_columns([t], %{key => t.city})
+    do: wrap_expression([t], %{key => t.city})
 
   def event_metric(:pageviews) do
-    wrap_select_columns([e], %{
+    wrap_expression([e], %{
       pageviews:
         fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name)
     })
   end
 
   def event_metric(:events) do
-    wrap_select_columns([], %{
+    wrap_expression([], %{
       events: fragment("toUInt64(round(count(*) * any(_sample_factor)))")
     })
   end
 
   def event_metric(:visitors) do
-    wrap_select_columns([e], %{
+    wrap_expression([e], %{
       visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
     })
   end
 
   def event_metric(:visits) do
-    wrap_select_columns([e], %{
+    wrap_expression([e], %{
       visits: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.session_id)
     })
   end
 
   on_ee do
     def event_metric(:total_revenue) do
-      wrap_select_columns(
+      wrap_expression(
         [e],
         %{
           total_revenue:
@@ -152,7 +152,7 @@ defmodule Plausible.Stats.SQL.Expression do
     end
 
     def event_metric(:average_revenue) do
-      wrap_select_columns(
+      wrap_expression(
         [e],
         %{
           average_revenue:
@@ -163,7 +163,7 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def event_metric(:sample_percent) do
-    wrap_select_columns([], %{
+    wrap_expression([], %{
       sample_percent:
         fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
     })
@@ -181,7 +181,7 @@ defmodule Plausible.Stats.SQL.Expression do
     event_page_filter = Query.get_filter(query, "event:page")
     condition = SQL.WhereBuilder.build_condition(:entry_page, event_page_filter)
 
-    wrap_select_columns([], %{
+    wrap_expression([], %{
       bounce_rate:
         fragment(
           "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
@@ -193,32 +193,32 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def session_metric(:visits, _query) do
-    wrap_select_columns([s], %{
+    wrap_expression([s], %{
       visits: fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign)
     })
   end
 
   def session_metric(:pageviews, _query) do
-    wrap_select_columns([s], %{
+    wrap_expression([s], %{
       pageviews:
         fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
     })
   end
 
   def session_metric(:events, _query) do
-    wrap_select_columns([s], %{
+    wrap_expression([s], %{
       events: fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
     })
   end
 
   def session_metric(:visitors, _query) do
-    wrap_select_columns([s], %{
+    wrap_expression([s], %{
       visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id)
     })
   end
 
   def session_metric(:visit_duration, _query) do
-    wrap_select_columns([], %{
+    wrap_expression([], %{
       visit_duration:
         fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))"),
       __internal_visits: fragment("toUInt32(sum(sign))")
@@ -226,7 +226,7 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def session_metric(:views_per_visit, _query) do
-    wrap_select_columns([s], %{
+    wrap_expression([s], %{
       views_per_visit:
         fragment(
           "ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)",
@@ -239,7 +239,7 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def session_metric(:sample_percent, _query) do
-    wrap_select_columns([], %{
+    wrap_expression([], %{
       sample_percent:
         fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
     })

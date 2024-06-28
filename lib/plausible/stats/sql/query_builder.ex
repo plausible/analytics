@@ -164,7 +164,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
           q,
           [e, s],
           %{
-            ^key => field(unquote(table_name), ^key)
+            key => field(unquote(table_name), ^key)
           }
         )
       end)

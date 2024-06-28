@@ -156,35 +156,26 @@ defmodule Plausible.Stats.SQL.Fragments do
   def meta_value_column(:meta), do: :"meta.value"
   def meta_value_column(:entry_meta), do: :"entry_meta.value"
 
-  @doc """
-  Convenience Ecto macro for wrapping select_merge where each value gets in turn passed to selected_as.
-
-  ### Examples
-
-    iex> select_merge_as(q, [t], %{ foo: t.column }) |> expand_macro_once
-    "select_merge(q, [t], %{foo: selected_as(t.column, :foo)})"
-  """
-  defmacro select_merge_as(q, binding, map_literal) do
-    selected_as_map =
-      update_literal_map_values(map_literal, fn {key, expr} ->
-        quote(do: selected_as(unquote(expr), unquote(key)))
+  defp update_literal_map_values({:%{}, ctx, keyword_list}, mapper_fn) do
+    {
+      :%{},
+      ctx,
+      Enum.map(keyword_list, fn {key, expr} ->
+        {key, mapper_fn.({key, expr})}
       end)
-
-    quote do
-      select_merge(unquote(q), unquote(binding), unquote(selected_as_map))
-    end
+    }
   end
 
   @doc """
-  Convenience Ecto macro for wrapping a map passed to select_merge such that each
+  Convenience Ecto macro for wrapping a map passed to select_merge_as such that each
   expression gets wrapped in dynamic and set as selected_as.
 
   ### Examples
 
-    iex> wrap_select_columns([t], %{ foo: t.column }) |> expand_macro_once
+    iex> wrap_expression([t], %{ foo: t.column }) |> expand_macro_once
     "%{foo: dynamic([t], selected_as(t.column, :foo))}"
   """
-  defmacro wrap_select_columns(binding, map_literal) do
+  defmacro wrap_expression(binding, map_literal) do
     update_literal_map_values(map_literal, fn {key, expr} ->
       key_expr =
         if Macro.quoted_literal?(key) do
@@ -197,13 +188,17 @@ defmodule Plausible.Stats.SQL.Fragments do
     end)
   end
 
-  defp update_literal_map_values({:%{}, ctx, keyword_list}, mapper_fn) do
-    {
-      :%{},
-      ctx,
-      Enum.map(keyword_list, fn {key, expr} ->
-        {key, mapper_fn.({key, expr})}
-      end)
-    }
+  @doc """
+  Convenience Ecto macro for wrapping select_merge where each value gets in turn passed to selected_as.
+
+  ### Examples
+
+    iex> select_merge_as(q, [t], %{ foo: t.column }) |> expand_macro_once
+    "select_merge(q, [], ^wrap_expression([t], %{foo: t.column}))"
+  """
+  defmacro select_merge_as(q, binding, map_literal) do
+    quote do
+      select_merge(unquote(q), [], ^wrap_expression(unquote(binding), unquote(map_literal)))
+    end
   end
 end

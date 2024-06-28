@@ -560,7 +560,7 @@ defmodule Plausible.Stats.Imported do
     q
     |> group_by([i], field(i, ^dim))
     |> select_merge_as([i], %{
-      ^key => fragment("if(empty(?), ?, ?)", field(i, ^dim), @no_ref, field(i, ^dim))
+      key => fragment("if(empty(?), ?, ?)", field(i, ^dim), @no_ref, field(i, ^dim))
     })
   end
 
@@ -569,41 +569,41 @@ defmodule Plausible.Stats.Imported do
     q
     |> group_by([i], field(i, ^dim))
     |> where([i], fragment("not empty(?)", field(i, ^dim)))
-    |> select_merge_as([i], %{^key => field(i, ^dim)})
+    |> select_merge_as([i], %{key => field(i, ^dim)})
   end
 
   defp group_imported_by(q, :page, key) do
     q
     |> group_by([i], i.page)
-    |> select_merge_as([i], %{^key => i.page, time_on_page: sum(i.time_on_page)})
+    |> select_merge_as([i], %{key => i.page, time_on_page: sum(i.time_on_page)})
   end
 
   defp group_imported_by(q, :country, key) do
     q
     |> group_by([i], i.country)
     |> where([i], i.country != "ZZ")
-    |> select_merge_as([i], %{^key => i.country})
+    |> select_merge_as([i], %{key => i.country})
   end
 
   defp group_imported_by(q, :region, key) do
     q
     |> group_by([i], i.region)
     |> where([i], i.region != "")
-    |> select_merge_as([i], %{^key => i.region})
+    |> select_merge_as([i], %{key => i.region})
   end
 
   defp group_imported_by(q, :city, key) do
     q
     |> group_by([i], i.city)
     |> where([i], i.city != 0 and not is_nil(i.city))
-    |> select_merge_as([i], %{^key => i.city})
+    |> select_merge_as([i], %{key => i.city})
   end
 
   defp group_imported_by(q, dim, key) when dim in [:device, :browser] do
     q
     |> group_by([i], field(i, ^dim))
     |> select_merge_as([i], %{
-      ^key => fragment("if(empty(?), ?, ?)", field(i, ^dim), @not_set, field(i, ^dim))
+      key => fragment("if(empty(?), ?, ?)", field(i, ^dim), @not_set, field(i, ^dim))
     })
   end
 
@@ -611,7 +611,7 @@ defmodule Plausible.Stats.Imported do
     q
     |> group_by([i], [i.browser_version])
     |> select_merge_as([i], %{
-      ^key => fragment("if(empty(?), ?, ?)", i.browser_version, @not_set, i.browser_version)
+      key => fragment("if(empty(?), ?, ?)", i.browser_version, @not_set, i.browser_version)
     })
   end
 
@@ -619,7 +619,7 @@ defmodule Plausible.Stats.Imported do
     q
     |> group_by([i], i.operating_system)
     |> select_merge_as([i], %{
-      ^key => fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system)
+      key => fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system)
     })
   end
 
@@ -627,7 +627,7 @@ defmodule Plausible.Stats.Imported do
     q
     |> group_by([i], [i.operating_system_version])
     |> select_merge_as([i], %{
-      ^key =>
+      key =>
         fragment(
           "if(empty(?), ?, ?)",
           i.operating_system_version,
@@ -640,20 +640,20 @@ defmodule Plausible.Stats.Imported do
   defp group_imported_by(q, dim, key) when dim in [:entry_page, :exit_page] do
     q
     |> group_by([i], field(i, ^dim))
-    |> select_merge([i], %{^key => selected_as(field(i, ^dim), ^key)})
+    |> select_merge_as([i], %{key => field(i, ^dim)})
   end
 
   defp group_imported_by(q, :name, key) do
     q
     |> group_by([i], i.name)
-    |> select_merge_as([i], %{^key => i.name})
+    |> select_merge_as([i], %{key => i.name})
   end
 
   defp group_imported_by(q, :url, key) do
     q
     |> group_by([i], i.link_url)
     |> select_merge_as([i], %{
-      ^key => fragment("if(not empty(?), ?, ?)", i.link_url, i.link_url, @none)
+      key => fragment("if(not empty(?), ?, ?)", i.link_url, i.link_url, @none)
     })
   end
 
@@ -661,7 +661,7 @@ defmodule Plausible.Stats.Imported do
     q
     |> group_by([i], i.path)
     |> select_merge_as([i], %{
-      ^key => fragment("if(not empty(?), ?, ?)", i.path, i.path, @none)
+      key => fragment("if(not empty(?), ?, ?)", i.path, i.path, @none)
     })
   end
 
@@ -673,13 +673,13 @@ defmodule Plausible.Stats.Imported do
 
   defp select_joined_dimension(q, "visit:city", key) do
     select_merge_as(q, [s, i], %{
-      ^key => fragment("greatest(?,?)", field(i, ^key), field(s, ^key))
+      key => fragment("greatest(?,?)", field(i, ^key), field(s, ^key))
     })
   end
 
   defp select_joined_dimension(q, _dimension, key) do
     select_merge_as(q, [s, i], %{
-      ^key => fragment("if(empty(?), ?, ?)", field(s, ^key), field(i, ^key), field(s, ^key))
+      key => fragment("if(empty(?), ?, ?)", field(s, ^key), field(i, ^key), field(s, ^key))
     })
   end
 
