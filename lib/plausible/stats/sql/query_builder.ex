@@ -148,9 +148,9 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     order_by(
       q,
       [t],
-      ^{
-        order_direction,
-        dynamic([], selected_as(^shortname(query, metric_or_dimension)))
+      {
+        ^order_direction,
+        selected_as(^shortname(query, metric_or_dimension))
       }
     )
   end
