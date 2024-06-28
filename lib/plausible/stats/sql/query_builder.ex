@@ -2,6 +2,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   @moduledoc false
 
   use Plausible
+  use Plausible.Stats.SQL.Fragments
 
   import Ecto.Query
   import Plausible.Stats.Imported
@@ -190,16 +191,13 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
           total_visitors: Base.total_visitors_subquery(site, total_query, query.include_imported)
         }
       )
-      |> select_merge([e], %{
+      |> select_merge_as([e], %{
         conversion_rate:
-          selected_as(
-            fragment(
-              "if(? > 0, round(? / ? * 100, 1), 0)",
-              selected_as(:__total_visitors),
-              selected_as(:visitors),
-              selected_as(:__total_visitors)
-            ),
-            :conversion_rate
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), 0)",
+            selected_as(:__total_visitors),
+            selected_as(:visitors),
+            selected_as(:__total_visitors)
           )
       })
     else
@@ -228,21 +226,18 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
       from(e in subquery(q),
         left_join: c in subquery(build(group_totals_query, site)),
-        on: ^build_group_by_join(query),
-        select_merge: %{
-          total_visitors: c.visitors,
-          group_conversion_rate:
-            selected_as(
-              fragment(
-                "if(? > 0, round(? / ? * 100, 1), 0)",
-                c.visitors,
-                e.visitors,
-                c.visitors
-              ),
-              :group_conversion_rate
-            )
-        }
+        on: ^build_group_by_join(query)
       )
+      |> select_merge_as([e, c], %{
+        total_visitors: c.visitors,
+        group_conversion_rate:
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), 0)",
+            c.visitors,
+            e.visitors,
+            c.visitors
+          )
+      })
       |> select_join_fields(query, query.dimensions, e)
       |> select_join_fields(query, List.delete(query.metrics, :group_conversion_rate), e)
     else

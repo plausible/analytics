@@ -1,4 +1,11 @@
 defmodule Plausible.Stats.SQL.Fragments do
+  defmacro __using__(_) do
+    quote do
+      import Plausible.Stats.SQL.Fragments
+      require Plausible.Stats.SQL.Fragments
+    end
+  end
+
   defmacro uniq(user_id) do
     quote do
       fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", unquote(user_id))
@@ -56,21 +63,23 @@ defmodule Plausible.Stats.SQL.Fragments do
   `not_before` boundary is set to the past Saturday, which is before the
   weekstart, therefore the cap does not apply.
 
-    iex> this_wednesday = ~D[2022-11-09]
-    ...> past_saturday = ~D[2022-11-05]
-    ...> weekstart_not_before(this_wednesday, past_saturday)
+    ```
+    > this_wednesday = ~D[2022-11-09]
+    > past_saturday = ~D[2022-11-05]
+    > weekstart_not_before(this_wednesday, past_saturday)
     ~D[2022-11-07]
-
+    ```
 
   In this other example, the fragment returns Tuesday and not the weekstart.
   The `not_before` boundary is set to Tuesday, which is past the weekstart,
   therefore the cap applies.
 
-    iex> this_wednesday = ~D[2022-11-09]
-    ...> this_tuesday = ~D[2022-11-08]
-    ...> weekstart_not_before(this_wednesday, this_tuesday)
+    ```
+    > this_wednesday = ~D[2022-11-09]
+    > this_tuesday = ~D[2022-11-08]
+    > weekstart_not_before(this_wednesday, this_tuesday)
     ~D[2022-11-08]
-
+    ```
   """
   defmacro weekstart_not_before(date, not_before) do
     quote do
@@ -143,9 +152,29 @@ defmodule Plausible.Stats.SQL.Fragments do
   def meta_value_column(:meta), do: :"meta.value"
   def meta_value_column(:entry_meta), do: :"entry_meta.value"
 
-  defmacro __using__(_) do
+  @doc """
+  Convenience Ecto macro for wrapping select_merge where each value gets in turn passed to selected_as.
+
+  ### Examples
+
+    iex> select_merge_as(q, [t], %{ foo: t.column }) |> expand_macro_once
+    "select_merge(q, [t], %{foo: selected_as(t.column, :foo)})"
+  """
+  defmacro select_merge_as(q, binding, values_map) do
+    selected_as_map = select_as_each(values_map)
+
     quote do
-      import Plausible.Stats.SQL.Fragments
+      select_merge(unquote(q), unquote(binding), unquote(selected_as_map))
     end
+  end
+
+  defp select_as_each({:%{}, ctx, keyword_list}) do
+    {
+      :%{},
+      ctx,
+      Enum.map(keyword_list, fn {key, value} ->
+        {key, quote(do: selected_as(unquote(value), unquote(key)))}
+      end)
+    }
   end
 end
