@@ -74,9 +74,8 @@ defmodule Plausible.Billing.Quota do
   """
   def suggest_tier(usage, highest_growth_plan, highest_business_plan) do
     growth_check =
-      with :ok <- ensure_within_plan_limits(usage, highest_growth_plan),
-           :ok <- ensure_feature_access(usage, highest_growth_plan) do
-        :ok
+      with :ok <- ensure_within_plan_limits(usage, highest_growth_plan) do
+        ensure_feature_access(usage, highest_growth_plan)
       end
 
     cond do
