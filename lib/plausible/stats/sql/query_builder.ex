@@ -124,19 +124,19 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
     from(e in q,
       array_join: goal in Expression.event_goal_join(events, page_regexes),
-      select_merge: %{
-        ^shortname(query, dimension) => fragment("?", goal)
-      },
       group_by: goal,
       where: goal != 0 and (e.name == "pageview" or goal < 0)
     )
+    |> select_merge_as([e, goal], %{
+      shortname(query, dimension) => fragment("?", goal)
+    })
   end
 
   defp dimension_group_by(q, query, dimension) do
     key = shortname(query, dimension)
 
     q
-    |> select_merge(^Expression.dimension(key, dimension, query))
+    |> select_merge_as([], Expression.dimension(key, dimension, query))
     |> group_by([], selected_as(^key))
   end
 
@@ -160,13 +160,9 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       Enum.reduce(unquote(list), unquote(q), fn metric_or_dimension, q ->
         key = shortname(unquote(query), metric_or_dimension)
 
-        select_merge_as(
-          q,
-          [e, s],
-          %{
-            key => field(unquote(table_name), ^key)
-          }
-        )
+        select_merge_as(q, [e, s], %{
+          key => field(unquote(table_name), ^key)
+        })
       end)
     end
   end
@@ -182,7 +178,10 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
         |> Query.set_dimensions([])
 
       q
-      |> select_merge(^Base.total_visitors_subquery(site, total_query, query.include_imported))
+      |> select_merge_as(
+        [],
+        Base.total_visitors_subquery(site, total_query, query.include_imported)
+      )
       |> select_merge_as([e], %{
         conversion_rate:
           fragment(

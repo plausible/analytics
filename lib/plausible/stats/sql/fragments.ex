@@ -166,6 +166,8 @@ defmodule Plausible.Stats.SQL.Fragments do
     }
   end
 
+  defp update_literal_map_values(ast, _), do: ast
+
   @doc """
   Convenience Ecto macro for wrapping a map passed to select_merge_as such that each
   expression gets wrapped in dynamic and set as selected_as.
