@@ -6,7 +6,6 @@ defmodule Plausible.Stats.Util do
   @manually_removable_metrics [
     :__internal_visits,
     :visitors,
-    :__total_visitors,
     :__breakdown_value,
     :total_visitors
   ]

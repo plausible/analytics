@@ -156,18 +156,6 @@ defmodule Plausible.Stats.SQL.Fragments do
   def meta_value_column(:meta), do: :"meta.value"
   def meta_value_column(:entry_meta), do: :"entry_meta.value"
 
-  defp update_literal_map_values({:%{}, ctx, keyword_list}, mapper_fn) do
-    {
-      :%{},
-      ctx,
-      Enum.map(keyword_list, fn {key, expr} ->
-        {key, mapper_fn.({key, expr})}
-      end)
-    }
-  end
-
-  defp update_literal_map_values(ast, _), do: ast
-
   @doc """
   Convenience Ecto macro for wrapping a map passed to select_merge_as such that each
   expression gets wrapped in dynamic and set as selected_as.
@@ -203,4 +191,16 @@ defmodule Plausible.Stats.SQL.Fragments do
       select_merge(unquote(q), [], ^wrap_expression(unquote(binding), unquote(map_literal)))
     end
   end
+
+  defp update_literal_map_values({:%{}, ctx, keyword_list}, mapper_fn) do
+    {
+      :%{},
+      ctx,
+      Enum.map(keyword_list, fn {key, expr} ->
+        {key, mapper_fn.({key, expr})}
+      end)
+    }
+  end
+
+  defp update_literal_map_values(ast, _), do: ast
 end

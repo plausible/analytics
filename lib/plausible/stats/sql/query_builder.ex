@@ -124,12 +124,12 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
     from(e in q,
       array_join: goal in Expression.event_goal_join(events, page_regexes),
+      select_merge: %{
+        ^shortname(query, dimension) => fragment("?", goal)
+      },
       group_by: goal,
       where: goal != 0 and (e.name == "pageview" or goal < 0)
     )
-    |> select_merge_as([e, goal], %{
-      shortname(query, dimension) => fragment("?", goal)
-    })
   end
 
   defp dimension_group_by(q, query, dimension) do
