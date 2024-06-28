@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Base do
   use Plausible
   use Plausible.Stats.SQL.Fragments
 
-  alias Plausible.Stats.{Query, Filters, TableDecider, SQL}
+  alias Plausible.Stats.{Query, TableDecider, SQL}
   alias Plausible.Timezones
   import Ecto.Query
 
@@ -30,7 +30,7 @@ defmodule Plausible.Stats.Base do
   end
 
   def query_events(site, query) do
-    q = from(e in "events_v2", where: ^Filters.WhereBuilder.build(:events, site, query))
+    q = from(e in "events_v2", where: ^SQL.WhereBuilder.build(:events, site, query))
 
     on_ee do
       q = Plausible.Stats.Sampling.add_query_hint(q, query)
@@ -40,7 +40,7 @@ defmodule Plausible.Stats.Base do
   end
 
   def query_sessions(site, query) do
-    q = from(s in "sessions_v2", where: ^Filters.WhereBuilder.build(:sessions, site, query))
+    q = from(s in "sessions_v2", where: ^SQL.WhereBuilder.build(:sessions, site, query))
 
     on_ee do
       q = Plausible.Stats.Sampling.add_query_hint(q, query)

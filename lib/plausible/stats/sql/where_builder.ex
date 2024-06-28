@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.Filters.WhereBuilder do
+defmodule Plausible.Stats.SQL.WhereBuilder do
   @moduledoc """
   A module for building am ecto where clause of a query out of a query.
   """

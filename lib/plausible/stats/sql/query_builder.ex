@@ -8,7 +8,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   import Plausible.Stats.Imported
   import Plausible.Stats.Util
 
-  alias Plausible.Stats.{Base, Query, QueryOptimizer, TableDecider, Filters}
+  alias Plausible.Stats.{Base, Filters, Query, QueryOptimizer, TableDecider, SQL}
   alias Plausible.Stats.SQL.Expression
 
   require Plausible.Stats.SQL.Expression
@@ -31,7 +31,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     q =
       from(
         e in "events_v2",
-        where: ^Filters.WhereBuilder.build(:events, site, events_query),
+        where: ^SQL.WhereBuilder.build(:events, site, events_query),
         select: ^Base.select_event_metrics(events_query.metrics)
       )
 
@@ -74,7 +74,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     q =
       from(
         e in "sessions_v2",
-        where: ^Filters.WhereBuilder.build(:sessions, site, sessions_query),
+        where: ^SQL.WhereBuilder.build(:sessions, site, sessions_query),
         select: ^Base.select_session_metrics(sessions_query.metrics, sessions_query)
       )
 
@@ -95,7 +95,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     if Query.has_event_filters?(query) do
       events_q =
         from(e in "events_v2",
-          where: ^Filters.WhereBuilder.build(:events, site, query),
+          where: ^SQL.WhereBuilder.build(:events, site, query),
           select: %{
             session_id: fragment("DISTINCT ?", e.session_id),
             _sample_factor: fragment("_sample_factor")

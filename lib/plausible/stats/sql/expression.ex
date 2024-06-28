@@ -12,7 +12,7 @@ defmodule Plausible.Stats.SQL.Expression do
 
   import Ecto.Query
 
-  alias Plausible.Stats.{Query, Filters}
+  alias Plausible.Stats.{Query, SQL}
 
   @no_ref "Direct / None"
   @not_set "(not set)"
@@ -179,7 +179,7 @@ defmodule Plausible.Stats.SQL.Expression do
   def session_metric(:bounce_rate, query) do
     # :TRICKY: If page is passed to query, we only count bounce rate where users _entered_ at page.
     event_page_filter = Query.get_filter(query, "event:page")
-    condition = Filters.WhereBuilder.build_condition(:entry_page, event_page_filter)
+    condition = SQL.WhereBuilder.build_condition(:entry_page, event_page_filter)
 
     wrap_select_columns([], %{
       bounce_rate:

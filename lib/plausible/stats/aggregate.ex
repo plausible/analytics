@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Aggregate do
   use Plausible
   import Plausible.Stats.Base
   import Ecto.Query
-  alias Plausible.Stats.{Query, Util}
+  alias Plausible.Stats.{Query, Util, SQL}
 
   def aggregate(site, query, metrics) do
     {currency, metrics} =
@@ -64,8 +64,7 @@ defmodule Plausible.Stats.Aggregate do
     timed_page_transitions_q =
       from e in Ecto.Query.subquery(windowed_pages_q),
         group_by: [e.pathname, e.next_pathname, e.session_id],
-        where:
-          ^Plausible.Stats.Filters.WhereBuilder.build_condition(:pathname, event_page_filter),
+        where: ^SQL.WhereBuilder.build_condition(:pathname, event_page_filter),
         where: e.next_timestamp != 0,
         select: %{
           pathname: e.pathname,
