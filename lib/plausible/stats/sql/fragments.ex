@@ -1,4 +1,8 @@
 defmodule Plausible.Stats.SQL.Fragments do
+  @moduledoc """
+  Various macros and common SQL fragments used in Stats code.
+  """
+
   defmacro __using__(_) do
     quote do
       import Plausible.Stats.SQL.Fragments
