@@ -16,6 +16,7 @@ defmodule Plausible.Stats.Metrics do
                  :visit_duration,
                  :events,
                  :conversion_rate,
+                 :group_conversion_rate,
                  :time_on_page
                ] ++ on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
