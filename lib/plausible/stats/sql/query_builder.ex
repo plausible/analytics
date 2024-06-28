@@ -136,7 +136,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     key = shortname(query, dimension)
 
     q
-    |> select_merge(^%{key => Expression.dimension(dimension, query, key)})
+    |> select_merge(^Expression.dimension(key, dimension, query))
     |> group_by([], selected_as(^key))
   end
 

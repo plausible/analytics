@@ -160,20 +160,45 @@ defmodule Plausible.Stats.SQL.Fragments do
     iex> select_merge_as(q, [t], %{ foo: t.column }) |> expand_macro_once
     "select_merge(q, [t], %{foo: selected_as(t.column, :foo)})"
   """
-  defmacro select_merge_as(q, binding, values_map) do
-    selected_as_map = select_as_each(values_map)
+  defmacro select_merge_as(q, binding, map_literal) do
+    selected_as_map =
+      update_literal_map_values(map_literal, fn {key, expr} ->
+        quote(do: selected_as(unquote(expr), unquote(key)))
+      end)
 
     quote do
       select_merge(unquote(q), unquote(binding), unquote(selected_as_map))
     end
   end
 
-  defp select_as_each({:%{}, ctx, keyword_list}) do
+  @doc """
+  Convenience Ecto macro for wrapping a map passed to select_merge such that each
+  expression gets wrapped in dynamic and set as selected_as.
+
+  ### Examples
+
+    iex> wrap_select_columns([t], %{ foo: t.column }) |> expand_macro_once
+    "%{foo: dynamic([t], selected_as(t.column, :foo))}"
+  """
+  defmacro wrap_select_columns(binding, map_literal) do
+    update_literal_map_values(map_literal, fn {key, expr} ->
+      key_expr =
+        if Macro.quoted_literal?(key) do
+          key
+        else
+          quote(do: ^unquote(key))
+        end
+
+      quote(do: dynamic(unquote(binding), selected_as(unquote(expr), unquote(key_expr))))
+    end)
+  end
+
+  defp update_literal_map_values({:%{}, ctx, keyword_list}, mapper_fn) do
     {
       :%{},
       ctx,
-      Enum.map(keyword_list, fn {key, value} ->
-        {key, quote(do: selected_as(unquote(value), unquote(key)))}
+      Enum.map(keyword_list, fn {key, expr} ->
+        {key, mapper_fn.({key, expr})}
       end)
     }
   end

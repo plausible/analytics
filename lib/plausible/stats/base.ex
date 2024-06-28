@@ -58,65 +58,57 @@ defmodule Plausible.Stats.Base do
   end
 
   defp select_event_metric(:pageviews) do
-    %{
+    wrap_select_columns([e], %{
       pageviews:
-        dynamic(
-          [e],
-          selected_as(
-            fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name),
-            :pageviews
-          )
-        )
-    }
+        fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name)
+    })
   end
 
   defp select_event_metric(:events) do
-    %{
-      events:
-        dynamic(
-          [],
-          selected_as(fragment("toUInt64(round(count(*) * any(_sample_factor)))"), :events)
-        )
-    }
+    wrap_select_columns([], %{
+      events: fragment("toUInt64(round(count(*) * any(_sample_factor)))")
+    })
   end
 
   defp select_event_metric(:visitors) do
-    %{
-      visitors: dynamic([e], selected_as(fragment(@uniq_users_expression, e.user_id), :visitors))
-    }
+    wrap_select_columns([e], %{
+      visitors: fragment(@uniq_users_expression, e.user_id)
+    })
   end
 
   defp select_event_metric(:visits) do
-    %{
-      visits:
-        dynamic(
-          [e],
-          selected_as(
-            fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.session_id),
-            :visits
-          )
-        )
-    }
+    wrap_select_columns([e], %{
+      visits: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.session_id)
+    })
   end
 
   on_ee do
     defp select_event_metric(:total_revenue) do
-      %{total_revenue: Plausible.Stats.Goal.Revenue.total_revenue_query()}
+      wrap_select_columns(
+        [e],
+        %{
+          total_revenue:
+            fragment("toDecimal64(sum(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
+        }
+      )
     end
 
     defp select_event_metric(:average_revenue) do
-      %{average_revenue: Plausible.Stats.Goal.Revenue.average_revenue_query()}
+      wrap_select_columns(
+        [e],
+        %{
+          average_revenue:
+            fragment("toDecimal64(avg(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
+        }
+      )
     end
   end
 
   defp select_event_metric(:sample_percent) do
-    %{
+    wrap_select_columns([], %{
       sample_percent:
-        dynamic(
-          [],
-          fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
-        )
-    }
+        fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
+    })
   end
 
   defp select_event_metric(:percentage), do: %{}
@@ -137,116 +129,68 @@ defmodule Plausible.Stats.Base do
     event_page_filter = Query.get_filter(query, "event:page")
     condition = Filters.WhereBuilder.build_condition(:entry_page, event_page_filter)
 
-    %{
+    wrap_select_columns([], %{
       bounce_rate:
-        dynamic(
-          [],
-          selected_as(
-            fragment(
-              "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
-              ^condition,
-              ^condition
-            ),
-            :bounce_rate
-          )
+        fragment(
+          "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
+          ^condition,
+          ^condition
         ),
-      __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
-    }
+      __internal_visits: fragment("toUInt32(sum(sign))")
+    })
   end
 
   defp select_session_metric(:visits, _query) do
-    %{
-      visits:
-        dynamic(
-          [s],
-          selected_as(
-            fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign),
-            :visits
-          )
-        )
-    }
+    wrap_select_columns([s], %{
+      visits: fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign)
+    })
   end
 
   defp select_session_metric(:pageviews, _query) do
-    %{
+    wrap_select_columns([s], %{
       pageviews:
-        dynamic(
-          [s],
-          selected_as(
-            fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews),
-            :pageviews
-          )
-        )
-    }
+        fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
+    })
   end
 
   defp select_session_metric(:events, _query) do
-    %{
-      events:
-        dynamic(
-          [s],
-          selected_as(
-            fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events),
-            :events
-          )
-        )
-    }
+    wrap_select_columns([s], %{
+      events: fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
+    })
   end
 
   defp select_session_metric(:visitors, _query) do
-    %{
-      visitors:
-        dynamic(
-          [s],
-          selected_as(
-            fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id),
-            :visitors
-          )
-        )
-    }
+    wrap_select_columns([s], %{
+      visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id)
+    })
   end
 
   defp select_session_metric(:visit_duration, _query) do
-    %{
+    wrap_select_columns([], %{
       visit_duration:
-        dynamic(
-          [],
-          selected_as(
-            fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))"),
-            :visit_duration
-          )
-        ),
-      __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
-    }
+        fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))"),
+      __internal_visits: fragment("toUInt32(sum(sign))")
+    })
   end
 
   defp select_session_metric(:views_per_visit, _query) do
-    %{
+    wrap_select_columns([s], %{
       views_per_visit:
-        dynamic(
-          [s],
-          selected_as(
-            fragment(
-              "ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)",
-              s.sign,
-              s.pageviews,
-              s.sign
-            ),
-            :views_per_visit
-          )
+        fragment(
+          "ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)",
+          s.sign,
+          s.pageviews,
+          s.sign
         ),
-      __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
-    }
+      __internal_visits: fragment("toUInt32(sum(sign))")
+    })
   end
 
   defp select_session_metric(:sample_percent, _query) do
-    %{
+    wrap_select_columns([], %{
       sample_percent:
-        dynamic(
-          [],
-          fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
-        )
-    }
+        fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
+    })
   end
 
   defp select_session_metric(:percentage, _query), do: %{}

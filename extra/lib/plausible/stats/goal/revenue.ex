@@ -12,26 +12,6 @@ defmodule Plausible.Stats.Goal.Revenue do
     @revenue_metrics
   end
 
-  def total_revenue_query() do
-    dynamic(
-      [e],
-      selected_as(
-        fragment("toDecimal64(sum(?) * any(_sample_factor), 3)", e.revenue_reporting_amount),
-        :total_revenue
-      )
-    )
-  end
-
-  def average_revenue_query() do
-    dynamic(
-      [e],
-      selected_as(
-        fragment("toDecimal64(avg(?) * any(_sample_factor), 3)", e.revenue_reporting_amount),
-        :average_revenue
-      )
-    )
-  end
-
   @spec get_revenue_tracking_currency(Plausible.Site.t(), Plausible.Stats.Query.t(), [atom()]) ::
           {atom() | nil, [atom()]}
   @doc """
