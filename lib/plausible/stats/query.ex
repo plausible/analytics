@@ -7,7 +7,6 @@ defmodule Plausible.Stats.Query do
             dimensions: [],
             filters: [],
             sample_threshold: 20_000_000,
-            imported_data_requested: false,
             include_imported: false,
             skip_imported_reason: nil,
             now: nil,
@@ -314,7 +313,7 @@ defmodule Plausible.Stats.Query do
   end
 
   defp put_imported_opts(query, site, params) do
-    requested? = params["with_imported"] == "true" || query.imported_data_requested
+    requested? = params["with_imported"] == "true" || query.include.imports
 
     latest_import_end_date =
       if site do
@@ -328,15 +327,15 @@ defmodule Plausible.Stats.Query do
     case ensure_include_imported(query, requested?) do
       :ok ->
         struct!(query,
-          imported_data_requested: true,
-          include_imported: true
+          include_imported: true,
+          include: Map.put(query.include, :imports, true)
         )
 
       {:error, reason} ->
         struct!(query,
-          imported_data_requested: requested?,
           include_imported: false,
-          skip_imported_reason: reason
+          skip_imported_reason: reason,
+          include: Map.put(query.include, :imports, requested?)
         )
     end
   end

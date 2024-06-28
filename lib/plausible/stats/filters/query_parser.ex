@@ -6,6 +6,11 @@ defmodule Plausible.Stats.Filters.QueryParser do
   alias Plausible.Stats.Query
   alias Plausible.Stats.Metrics
 
+  @default_include %{
+    imports: false,
+    time_labels: false
+  }
+
   def parse(site, params, now \\ nil) when is_map(params) do
     with {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
@@ -22,8 +27,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
            dimensions: dimensions,
            order_by: order_by,
            timezone: site.timezone,
-           imported_data_requested: Map.get(include, :imports, false),
-           preloaded_goals: preloaded_goals
+           preloaded_goals: preloaded_goals,
+           include: include
          },
          :ok <- validate_order_by(query),
          :ok <- validate_goal_filters(query),
@@ -226,9 +231,24 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_order_direction([_, "desc"]), do: {:ok, :desc}
   defp parse_order_direction(entry), do: {:error, "Invalid order_by entry '#{inspect(entry)}'"}
 
-  defp parse_include(%{"imports" => value}) when is_boolean(value), do: {:ok, %{imports: value}}
-  defp parse_include(%{}), do: {:ok, %{}}
-  defp parse_include(include), do: {:error, "Invalid include passed '#{inspect(include)}'"}
+  defp parse_include(include) when is_map(include) do
+    with {:ok, parsed_include_list} <- parse_list(include, &parse_include_value/1) do
+      include = Map.merge(@default_include, Enum.into(parsed_include_list, %{}))
+
+      {:ok, include}
+    end
+  end
+
+  defp parse_include(entry), do: {:error, "Invalid include passed '#{inspect(entry)}'"}
+
+  defp parse_include_value({"imports", value}) when is_boolean(value),
+    do: {:ok, {:imports, value}}
+
+  defp parse_include_value({"time_labels", value}) when is_boolean(value),
+    do: {:ok, {:time_labels, value}}
+
+  defp parse_include_value({key, value}),
+    do: {:error, "Invalid include entry '#{inspect(%{key => value})}'"}
 
   defp parse_filter_key_string(filter_key, error_message \\ "") do
     case filter_key do
