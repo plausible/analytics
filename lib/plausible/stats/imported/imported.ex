@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Imported do
   use Plausible.ClickhouseRepo
 
   import Ecto.Query
-  import Plausible.Stats.Fragments
+  import Plausible.Stats.SQL.Fragments
   import Plausible.Stats.Util, only: [shortname: 2]
 
   alias Plausible.Stats.Imported

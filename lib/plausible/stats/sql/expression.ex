@@ -6,7 +6,7 @@ defmodule Plausible.Stats.SQL.Expression do
 
   import Ecto.Query
 
-  use Plausible.Stats.Fragments
+  use Plausible.Stats.SQL.Fragments
 
   @no_ref "Direct / None"
   @not_set "(not set)"

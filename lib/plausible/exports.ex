@@ -4,7 +4,7 @@ defmodule Plausible.Exports do
   """
 
   use Plausible
-  use Plausible.Stats.Fragments
+  use Plausible.Stats.SQL.Fragments
   import Ecto.Query
 
   @doc "Schedules CSV export job to S3 storage"

@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
 
   alias Plausible.Stats.Query
 
-  use Plausible.Stats.Fragments
+  use Plausible.Stats.SQL.Fragments
 
   require Logger
 

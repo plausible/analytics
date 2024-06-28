@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.Fragments do
+defmodule Plausible.Stats.SQL.Fragments do
   defmacro uniq(user_id) do
     quote do
       fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", unquote(user_id))
@@ -85,7 +85,7 @@ defmodule Plausible.Stats.Fragments do
   end
 
   @doc """
-  Same as Plausible.Stats.Fragments.weekstart_not_before/2 but converts dates to
+  Same as Plausible.Stats.SQL.Fragments.weekstart_not_before/2 but converts dates to
   the specified timezone.
   """
   defmacro weekstart_not_before(date, not_before, timezone) do
@@ -145,7 +145,7 @@ defmodule Plausible.Stats.Fragments do
 
   defmacro __using__(_) do
     quote do
-      import Plausible.Stats.Fragments
+      import Plausible.Stats.SQL.Fragments
     end
   end
 end

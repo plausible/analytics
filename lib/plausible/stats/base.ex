@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Base do
   use Plausible.ClickhouseRepo
   use Plausible
-  use Plausible.Stats.Fragments
+  use Plausible.Stats.SQL.Fragments
 
   alias Plausible.Stats.{Query, Filters, TableDecider}
   alias Plausible.Timezones

@@ -2,7 +2,7 @@ defmodule Plausible.Stats.Clickhouse do
   use Plausible
   use Plausible.Repo
   use Plausible.ClickhouseRepo
-  use Plausible.Stats.Fragments
+  use Plausible.Stats.SQL.Fragments
 
   import Ecto.Query, only: [from: 2]
 
