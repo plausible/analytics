@@ -483,7 +483,11 @@ case mailer_adapter do
       port: get_var_from_path_or_env(config_dir, "SMTP_HOST_PORT", "25"),
       username: get_var_from_path_or_env(config_dir, "SMTP_USER_NAME"),
       password: get_var_from_path_or_env(config_dir, "SMTP_USER_PWD"),
-      tls: :if_available,
+      tls: case get_var_from_path_or_env(config_dir, "SMTP_HOST_TLS_ENABLED", "if_available") do
+        "true" -> :always
+        "false" -> false
+        _ -> :if_available
+      end,
       allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
       ssl: get_var_from_path_or_env(config_dir, "SMTP_HOST_SSL_ENABLED") || false,
       retries: get_var_from_path_or_env(config_dir, "SMTP_RETRIES") || 2,
