@@ -133,7 +133,7 @@ class FilterModal extends React.Component {
 
   render() {
     return (
-      <Modal site={this.props.site} maxWidth="460px">
+      <Modal maxWidth="460px">
         <h1 className="text-xl font-bold dark:text-gray-100">Filter by {formatFilterGroup(this.state.modalType)}</h1>
 
         <div className="mt-4 border-b border-gray-300"></div>

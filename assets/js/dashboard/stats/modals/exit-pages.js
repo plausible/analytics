@@ -124,7 +124,7 @@ class ExitPagesModal extends React.Component {
 
   render() {
     return (
-      <Modal site={this.props.site}>
+      <Modal>
         {this.renderBody()}
         {this.renderLoading()}
       </Modal>

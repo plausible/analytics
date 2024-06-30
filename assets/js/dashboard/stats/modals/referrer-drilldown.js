@@ -3,8 +3,8 @@ import { Link, withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
-import numberFormatter, {durationFormatter} from '../../util/number-formatter'
-import {parseQuery} from '../../query'
+import numberFormatter, { durationFormatter } from '../../util/number-formatter'
+import { parseQuery } from '../../query'
 import { updatedQuery } from "../../util/url";
 import { hasGoalFilter, replaceFilterByPrefix } from "../../util/filters";
 
@@ -20,8 +20,8 @@ class ReferrerDrilldownModal extends React.Component {
   componentDidMount() {
     const detailed = this.showExtra()
 
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${this.props.match.params.referrer}`, this.state.query, {limit: 100, detailed})
-      .then((response) => this.setState({loading: false, referrers: response.results}))
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${this.props.match.params.referrer}`, this.state.query, { limit: 100, detailed })
+      .then((response) => this.setState({ loading: false, referrers: response.results }))
   }
 
   showExtra() {
@@ -45,7 +45,7 @@ class ReferrerDrilldownModal extends React.Component {
   }
 
   formatBounceRate(ref) {
-    if (typeof(ref.bounce_rate) === 'number') {
+    if (typeof (ref.bounce_rate) === 'number') {
       return ref.bounce_rate + '%'
     } else {
       return '-'
@@ -53,7 +53,7 @@ class ReferrerDrilldownModal extends React.Component {
   }
 
   formatDuration(referrer) {
-    if (typeof(referrer.visit_duration) === 'number') {
+    if (typeof (referrer.visit_duration) === 'number') {
       return durationFormatter(referrer.visit_duration)
     } else {
       return '-'
@@ -77,12 +77,12 @@ class ReferrerDrilldownModal extends React.Component {
         <img src={`/favicon/sources/${referrer.name}`} referrerPolicy="no-referrer" className="h-4 w-4 mr-2 inline" />
         <Link
           className="block truncate hover:underline dark:text-gray-200"
-          to={{search: updatedQuery({ filters }), pathname: '/' + this.props.site.domain}}
+          to={{ search: updatedQuery({ filters }), pathname: '/' + this.props.site.domain }}
           title={referrer.name}
         >
           {referrer.name}
         </Link>
-        { this.renderExternalLink(referrer.name) }
+        {this.renderExternalLink(referrer.name)}
       </span>
     )
   }
@@ -91,13 +91,13 @@ class ReferrerDrilldownModal extends React.Component {
     return (
       <tr className="text-sm dark:text-gray-200" key={referrer.name}>
         <td className="p-2">
-          { this.renderReferrerName(referrer) }
+          {this.renderReferrerName(referrer)}
         </td>
-        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.total_visitors)}</td> }
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.total_visitors)}</td>}
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.visitors)}</td>
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td> }
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatDuration(referrer)}</td> }
-        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{referrer.conversion_rate}%</td> }
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td>}
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatDuration(referrer)}</td>}
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{referrer.conversion_rate}%</td>}
       </tr>
     )
   }
@@ -126,7 +126,7 @@ class ReferrerDrilldownModal extends React.Component {
                 </tr>
               </thead>
               <tbody>
-                { this.state.referrers.map(this.renderReferrer.bind(this)) }
+                {this.state.referrers.map(this.renderReferrer.bind(this))}
               </tbody>
             </table>
           </main>
@@ -137,8 +137,8 @@ class ReferrerDrilldownModal extends React.Component {
 
   render() {
     return (
-      <Modal site={this.props.site}>
-        { this.renderBody() }
+      <Modal>
+        {this.renderBody()}
       </Modal>
     )
   }

@@ -110,7 +110,7 @@ class ModalTable extends React.Component {
 
   render() {
     return (
-      <Modal site={this.props.site} show={!this.state.loading}>
+      <Modal show={!this.state.loading}>
         {this.renderBody()}
       </Modal>
     )

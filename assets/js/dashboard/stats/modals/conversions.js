@@ -117,7 +117,7 @@ function ConversionsModal(props) {
   }
 
   return (
-    <Modal site={site}>
+    <Modal>
       {renderBody()}
       {loading && renderLoading()}
       {!loading && moreResultsAvailable && renderLoadMore()}
