@@ -11,8 +11,8 @@ defmodule Plausible.Verification.Checks.Snippet do
 
   @impl true
   def perform(%State{assigns: %{document: document}} = state) do
-    in_head = Floki.find(document, "head script[data-domain]")
-    in_body = Floki.find(document, "body script[data-domain]")
+    in_head = Floki.find(document, "head script[data-domain][src]")
+    in_body = Floki.find(document, "body script[data-domain][src]")
 
     all = in_head ++ in_body
 
