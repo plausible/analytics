@@ -102,7 +102,7 @@ defmodule PlausibleWeb.Endpoint do
     # websocket requests within single root domain, in case websocket_url()
     # returns a ws{s}:// scheme (in which case SameSite=Lax is not applicable).
     @session_options
-    # |> Keyword.put(:domain, host())
+    |> Keyword.put(:domain, host())
     |> Keyword.put(:key, "_plausible_#{Application.fetch_env!(:plausible, :environment)}")
     |> Keyword.put(:secure, secure_cookie?())
   end
