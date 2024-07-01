@@ -1023,7 +1023,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "period" => "day",
           "date" => "2021-01-01",
           "property" => "visit:exit_page",
-          "metrics" => "visitors,visits,bounce_rate,visit_duration",
+          "metrics" => "visitors,visits,bounce_rate,visit_duration,events,pageviews",
           "with_imported" => "true"
         })
 
@@ -1034,14 +1034,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "exit_page" => "/b",
                    "visit_duration" => 150.0,
                    "visitors" => 3,
-                   "visits" => 4
+                   "visits" => 4,
+                   "events" => 7,
+                   "pageviews" => 7
                  },
                  %{
                    "bounce_rate" => 100.0,
                    "exit_page" => "/a",
                    "visit_duration" => 0.0,
                    "visitors" => 1,
-                   "visits" => 1
+                   "visits" => 1,
+                   "events" => 1,
+                   "pageviews" => 1
                  }
                ]
              }
