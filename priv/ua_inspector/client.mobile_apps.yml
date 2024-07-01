@@ -5,6 +5,31 @@
 # @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
 ###############
 
+# Report Runner (https://reportrunner.com/)
+- regex: 'Report Runner'
+  name: 'Report Runner'
+  version: ''
+
+# Ameba (https://ameblo.jp/ | https://play.google.com/store/apps/details?id=jp.ameba)
+- regex: 'jpameblo;(\d+\.[\.\d]+)'
+  name: 'Ameba'
+  version: '$1'
+
+# CSDN (https://apps.apple.com/us/app/csdn-%E6%8A%80%E6%9C%AF%E5%BC%80%E5%8F%91%E8%80%85%E7%A4%BE%E5%8C%BA/id1437086352)
+- regex: 'CSDNApp/(\d+\.[\.\d]+)'
+  name: 'CSDN'
+  version: '$1'
+
+# Moya (https://play.google.com/store/apps/details?id=nu.bi.moya | https://apps.apple.com/za/app/moya-app-datafree/id1623208355)
+- regex: 'binu(?:/(\d+[\.\d]+))?'
+  name: 'Moya'
+  version: ''
+
+# KPN Veilig (https://play.google.com/store/apps/details?id=com.fsecure.ms.kpn.veilig | https://apps.apple.com/nl/app/kpn-veilig-browser/id983576415)
+- regex: 'KPN_Veilig[ /](\d+\.[\.\d]+)'
+  name: 'KPN Veilig'
+  version: '$1'
+
 # Naver (https://apps.apple.com/app/id393499958)
 - regex: 'NAVER/(\d+[\.\d]+) CFNetwork'
   name: 'Naver'
@@ -16,6 +41,11 @@
   version: '$1'
 - regex: 'NAVER\(inapp; search; .+; (\d+[\.\d]+)\)'
   name: 'Naver'
+  version: '$1'
+
+# NAVER Dictionary (https://apps.apple.com/us/app/naver-dictionary/id673085116)
+- regex: 'NAVER\(inapp; naverdicapp; .+; (\d+[\.\d]+)\)'
+  name: 'NAVER Dictionary'
   version: '$1'
 
 # Soldier
@@ -34,7 +64,7 @@
   version: '$1'
 
 # Apple TV
-- regex: 'appletv.client'
+- regex: 'appletv\.client'
   name: 'Apple TV'
   version: ''
 
@@ -43,18 +73,18 @@
   name: 'Facebook Audience Network'
   version: '$1'
 
-# Facebook Messenger (https://play.google.com/store/apps/details?id=com.facebook.orca)
-- regex: '(?:MessengerForiOS|MESSENGER|FB_IAB/Orca-Android).(?:FBAV)(?:[ /]([\d\.]+))?'
-  name: 'Facebook Messenger'
-  version: '$1'
-
 # Facebook Messenger Lite
-- regex: '(?:mLite|MessengerLite(?:ForiOS)?).(?:FBAV)(?:[ /]([\d\.]+))?'
+- regex: '(?:mLite|MessengerLite(?:ForiOS)?).*(?:FBAV)(?:[ /]([\d\.]+))?'
   name: 'Facebook Messenger Lite'
   version: '$1'
 
+# Facebook Messenger (https://play.google.com/store/apps/details?id=com.facebook.orca)
+- regex: '(?:MessengerForiOS|MESSENGER|FB_IAB/Orca-Android).*(?:FBAV)(?:[ /]([\d\.]+))?'
+  name: 'Facebook Messenger'
+  version: '$1'
+
 # Facebook Groups
-- regex: '(?:GroupsForiOS).(?:FBAV)(?:[ /]([\d\.]+))?'
+- regex: '(?:GroupsForiOS).*(?:FBAV)(?:[ /]([\d\.]+))?'
   name: 'Facebook Groups'
   version: '$1'
 
@@ -69,41 +99,56 @@
   version: '$1'
 
 # Facebook
-- regex: '(?:FBAV|com.facebook.katana|facebook-mobile/1.0|facebook-mobile/|Facebook/)(?:[ /]([\d\.]+))?'
+- regex: '(?:FBAV|com\.facebook\.katana|facebook-mobile/1\.0|facebook-mobile/|Facebook/)(?:[ /]([\d\.]+))?'
   name: 'Facebook'
   version: '$1'
 - regex: '(?:FBAN|FBSV|FBID|FBBV)/'
   name: 'Facebook'
   version: ''
 
+# Instagram
+- regex: 'Instagram[ /]([\d\.]+)?'
+  name: 'Instagram'
+  version: '$1'
+
+# Threads
+- regex: 'Barcelona[ /]([\d\.]+)?'
+  name: 'Threads'
+  version: '$1'
+
 # FeedR
-- regex: 'FeedR(?:/([\d\.]+))?'
+- regex: 'FeedR(?!eader)(?:/([\d\.]+))?'
   name: 'FeedR'
   version: '$1'
 
 # Google Go
-- regex: 'com.google.android.apps.searchlite'
+- regex: 'com\.google\.android\.apps\.searchlite'
   name: 'Google Go'
   version: ''
 
 # Google Photos
-- regex: 'com.google.android.apps.photos'
+- regex: 'com\.google\.android\.apps\.photos'
   name: 'Google Photos'
   version: ''
 
 # Google Play Kiosk
-- regex: 'com.google.android.apps.magazines'
+- regex: 'com\.google\.android\.apps\.magazines'
   name: 'Google Play Newsstand'
   version: ''
 
 # Google Plus
-- regex: 'com.google.GooglePlus'
+- regex: 'com\.google\.GooglePlus'
   name: 'Google Plus'
   version: ''
 
 # Google Drive (https://apps.apple.com/us/app/google-drive/id507874739)
-- regex: 'Google.DriveExtension(?:/([\d\.]+))?'
+- regex: 'Google\.DriveExtension(?:/([\d\.]+))?'
   name: 'Google Drive'
+  version: '$1'
+
+# Google Assistant (https://assistant.google.com/)
+- regex: 'OPA/([\d\.]+)'
+  name: 'Google Assistant'
   version: '$1'
 
 # WeChat
@@ -138,7 +183,7 @@
   version: ''
 
 # YouTube
-- regex: 'com.google.android.youtube(?:/([\d\.]+))?'
+- regex: 'com\.google\.android\.youtube(?:/([\d\.]+))?'
   name: 'YouTube'
   version: '$1'
 
@@ -148,7 +193,7 @@
   version: '$1'
 
 # Netflix (https://play.google.com/store/apps/details?id=com.netflix.mediaclient)
-- regex: 'com.netflix.mediaclient(?:/(\d+\.[\d\.]+))?'
+- regex: 'com\.netflix\.mediaclient(?:/(\d+\.[\d\.]+))?'
   name: 'Netflix'
   version: '$1'
 
@@ -161,15 +206,9 @@
 - regex: 'Flipp-iOS/.+CFNetwork'
   name: 'Flipp'
   version: ''
-
 - regex: 'Flipp-iOS/(\d+[\.\d]+)'
   name: 'Flipp'
   version: '$1'
-
-# AFNetworking generic
-- regex: '(?!AlohaBrowser)([^/;]*)/(\d+\.[\d.]+) \((?:iPhone|iPad); (?:iOS|iPadOS) [0-9\.]+; Scale/[0-9\.]+\)'
-  name: '$1'
-  version: '$2'
 
 # Signal uses WhatsApp user agent
 - regex: 'WhatsApp(?:/2)?$'
@@ -206,6 +245,16 @@
   name: 'Yo WhatsApp'
   version: '$1'
 
+# AN WhatsApp (https://anwhats.com/)
+- regex: 'ANWhatsApp(?:/(\d+[\.\d]+))?'
+  name: 'AN WhatsApp'
+  version: '$1'
+
+# https://music.youtube.com
+- regex: '(?:^com\.google\.android\.apps\.youtube\.music/|^YouTubeMusic(?:Dev)?/)([\d\.]+)?'
+  name: 'Youtube Music'
+  version: '$1'
+
 # Line
 - regex: 'Line(?:[ /]([\d\.]+))'
   name: 'Line'
@@ -228,7 +277,7 @@
 - regex: '(?:^Overcast/([\d\.]+)|^Overcast.*Apple Watch)'
   name: 'Overcast'
   version: '$1'
-- regex: '(?:CastBox|fm.castbox.audiobook.radio.podcast)/?([\d\.]+)?'
+- regex: '(?:CastBox|fm\.castbox\.audiobook\.radio\.podcast)/?([\d\.]+)?'
   name: 'CastBox'
   version: '$1'
 - regex: 'Podkicker( (?:Pro|Classic))?/([\d\.]+)'
@@ -262,9 +311,12 @@
 - regex: 'YelpApp/([\d\.]+)'
   name: 'Yelp Mobile'
   version: '$1'
-- regex: 'jp.co.yahoo.android.yjtop/([\d\.]+)'
+
+# Yahoo! Japan (https://play.google.com/store/apps/details?id=jp.co.yahoo.android.yjtop | https://apps.apple.com/jp/app/yahoo-japan/id299147843)
+- regex: 'jp\.co\.yahoo\.(?:android\.yjtop|ipn\.appli)/([\d\.]+)'
   name: 'Yahoo! Japan'
   version: '$1'
+
 - regex: 'RSSRadio/([\d]+)?'
   name: 'RSSRadio'
   version: '$1'
@@ -280,17 +332,20 @@
 - regex: 'com\.douban\.group/([\d\.]+)?'
   name: 'douban App'
   version: '$1'
-- regex: 'BingWeb/([\d\.]+)?'
-  name: 'BingWebApp'
-  version: '$1'
-- regex: '(?:com.google.GoogleMobile|GSA|GoogleApp)/([\d.]+)?'
+- regex: '(?:com\.google\.GoogleMobile|GSA|GoogleApp)/([\d.]+)?'
   name: 'Google Search App'
   version: '$1'
+- regex: 'Google/(\d+[\.\d]+)? CFNetwork'
+  name: 'Google Search App'
+  version: '$1'
+
+# Google Lens (https://play.google.com/store/apps/details?id=com.google.ar.lens | https://apps.apple.com/us/app/google/id284815942)
+- regex: '(?:Google|SearchWith)Lens/(\d+[\.\d]+)?'
+  name: 'Google Lens'
+  version: '$1'
+
 - regex: 'Flipboard/([\d\.]+)?'
   name: 'Flipboard App'
-  version: '$1'
-- regex: 'Instagram[ /]([\d\.]+)?'
-  name: 'Instagram App'
   version: '$1'
 - regex: 'baiduboxapp/([\d\.]+)?'
   name: 'Baidu Box App'
@@ -299,7 +354,7 @@
   name: 'Baidu Input'
   version: '$1'
 - regex: 'PetalSearch/([\d\.]+)?'
-  name: 'Petal Search App'
+  name: 'Petal Search'
   version: '$1'
 - regex: 'Crosswalk(?!.*(?:Streamy|QwantMobile))/([\d\.]+)?'
   name: 'CrosswalkApp'
@@ -313,15 +368,16 @@
 - regex: 'TwitterAndroid[/]?([\d\.]+)?'
   name: 'Twitter'
   version: '$1'
+
 # Pocket Casts (https://pocketcasts.com)
 - regex: '^Pocket Casts'
   name: 'Pocket Casts'
   version: ''
+
 # Podcast app from India (https://gaana.com)
 - regex: '(?:^GaanaAndroid-|^Gaana-iOS|^Gaana/)([\d\.]+)?'
   name: 'Gaana'
   version: '$1'
-
 
 - regex: 'TopBuzz/([\d\.]+)'
   name: 'TopBuzz'
@@ -377,7 +433,7 @@
   name: 'Siri'
   version: '1.0'
 
-- regex: 'LinkedIn(?:App)?(?:/([\d\.]+))?'
+- regex: 'LinkedIn(?:App)?(?:\]?/([\d\.]+))?'
   name: 'LinkedIn'
   version: '$1'
 
@@ -460,6 +516,9 @@
 - regex: 'Microsoft Lync ([\d\.]+)'
   name: 'Microsoft Lync'
   version: '$1'
+- regex: 'Microsoft\.Data\.Mashup'
+  name: 'Microsoft Power Query' # It can be Excel or Power BI
+  version: ''
 
 # https://play.google.com/store/apps/details?id=cn.wps.moffice_eng
 - regex: 'WpsM?office/([\d\.]+)'
@@ -499,7 +558,7 @@
   version: '$1'
 
 # TikTok (https://apps.apple.com/app/id835599320 | https://play.google.com/store/apps/details?id=com.zhiliaoapp.musically)
-- regex: '(?:TikTok[/ ]|com.zhiliaoapp.musically|musical_ly_|AppName/musical_ly app_version/)(\d+\.(?:[\.\d]+))?'
+- regex: '(?:TikTok[/ ]|com\.zhiliaoapp\.musically|musical_ly_|AppName/musical_ly app_version/)(\d+\.(?:[\.\d]+))?'
   name: 'TikTok'
   version: '$1'
 
@@ -527,7 +586,7 @@
 - regex: 'Slack/(\d+[\.\d]+) CFNetwork'
   name: 'Slack'
   version: ''
-- regex: 'com.tinyspeck.chatlyio/(\d+[\.\d]+)'
+- regex: 'com\.tinyspeck\.chatlyio/(\d+[\.\d]+)'
   name: 'Slack'
   version: '$1'
 
@@ -582,7 +641,7 @@
   version: '$1'
 
 # https://apps.apple.com/us/app/zalo/id579523206
-- regex: 'Zalo/([\d\.]+)|Zalo android'
+- regex: 'Zalo/([\d\.]+)|Zalo (?:android|iOS)'
   name: 'Zalo'
   version: '$1'
 
@@ -590,6 +649,11 @@
 - regex: 'Yandex/([\d\.]+)'
   name: 'Yandex'
   version: ''
+
+# Zen (Дзен) (https://play.google.com/store/apps/details?id=ru.zen.android)
+- regex: 'ZenKit/([\d\.]+)'
+  name: 'Zen'
+  version: '$1'
 
 - regex: 'Zoho%20Chat/([\d\.]+)'
   name: 'Zoho Chat'
@@ -608,10 +672,6 @@
 # Podbean (http://podbean.com | https://play.google.com/store/apps/details?id=com.podbean.app.podcast)
 - regex: '(?:Podbean/.+App |Podbean/Android generic |Podbean/iOS \([^)]+\) )(\d+[\.\d]+)'
   name: 'Podbean'
-  version: '$1'
-
-- regex: '(?:AlexaMediaPlayer/|^AlexaMediaPlayer/|^Echo/|^AlexaService/|^Alexa Mobile Voice/)([a-z\d]+\.[a-z.\d]+)?'
-  name: 'Alexa Media Player'
   version: '$1'
 
 - regex: 'TuneIn Radio Pro(?:[^/]*)/(\d+[\.\d]+)'
@@ -642,11 +702,11 @@
   version: '$1'
 
 # Evolve Podcast (https://apps.apple.com/us/app/id1199070742)
-- regex: 'com.evolve.podcast/(\d+[\.\d]+)'
+- regex: 'com\.evolve\.podcast/(\d+[\.\d]+)'
   name: 'Evolve Podcast'
   version: '$1'
 
-- regex: ' Rocket.Chat\+?/(\d+[\.\d]+)'
+- regex: ' Rocket\.Chat\+?/(\d+[\.\d]+)'
   name: 'Rocket Chat'
   version: '$1'
 
@@ -720,7 +780,7 @@
   version: '$1'
 
 # Microsoft Teams (https://www.microsoft.com/en/microsoft-teams/group-chat-software)
-- regex: 'Teams/(\d+[\.\d]+)'
+- regex: '(?:maglev|Teams)/(\d+[\.\d]+)'
   name: 'Teams'
   version: '$1'
 
@@ -856,7 +916,6 @@
   name: 'Google Podcasts'
   version: '$1'
 
-
 # Windows CryptoAPI (https://www.microsoft.com/en-us/)
 - regex: 'Microsoft-CryptoAPI/(\d+[\.\d]+)'
   name: 'Windows CryptoAPI'
@@ -968,7 +1027,7 @@
   version: ''
 
 # Battle.net  (https://eu.shop.battle.net/en-us)
-- regex: 'Battle.net/(\d+[\.\d]+)'
+- regex: 'Battle\.net/(\d+[\.\d]+)'
   name: 'Battle.net'
   version: '$1'
 
@@ -988,7 +1047,7 @@
   version: '$1'
 
 # Bible KJV (https://apps.apple.com/us/app/bible-kjv/id544098932)
-- regex: 'com.meevii.bibleKJV/(\d+[\.\d]+)'
+- regex: 'com\.meevii\.bibleKJV/(\d+[\.\d]+)'
   name: 'Bible KJV'
   version: '$1'
 
@@ -998,7 +1057,7 @@
   version: '$1'
 
 # Paint by Number (https://apps.apple.com/us/app/paint-by-number-coloring-games/id1420058690)
-- regex: 'com.paint.bynumber/(\d+[\.\d]+)'
+- regex: 'com\.paint\.bynumber/(\d+[\.\d]+)'
   name: 'Paint by Number'
   version: '$1'
 
@@ -1028,13 +1087,9 @@
   version: '$1'
 
 # Blackboard (https://apps.apple.com/us/app/blackboard/id950424861)
-- regex: 'Blackboard/(\d+[\.\d]+)'
+- regex: 'Blackboard/(\d+[\.\d]+)?'
   name: 'Blackboard'
   version: '$1'
-
-- regex: 'Blackboard/unspecified'
-  name: 'Blackboard'
-  version: ''
 
 # QQMusic (https://apps.apple.com/cn/app/qq%E9%9F%B3%E4%B9%90-%E5%90%AC%E6%88%91%E6%83%B3%E5%90%AC/id414603431)
 - regex: 'QQMusic/(\d+[\.\d]+)'
@@ -1097,9 +1152,9 @@
   version: '$1'
 
 # Instabridge (https://instabridge.com/en/)
-- regex: 'Instabridge'
+- regex: 'Instabridge(?:/([\d\.]+))?'
   name: 'Instabridge'
-  version: ''
+  version: '$1'
 
 # Be Focused (https://apps.apple.com/app/id973130201)
 - regex: 'Be Focused/(\d+\.[\.\d]+)?'
@@ -1127,7 +1182,7 @@
   version: '$1'
 
 # IMO.IM HD Version https://play.google.com/store/apps/details?id=com.imo.android.imoimhd
-- regex: 'imoAndroid/(20\d{2}.[\.\d]+)'
+- regex: 'imoAndroid/(20\d{2}\.[\.\d]+)'
   name: 'IMO HD Video Calls & Chat'
   version: '$1'
 
@@ -1136,14 +1191,22 @@
   name: 'IMO International Calls & Chat'
   version: '$1'
 
-# Microsoft Bing Search (https://play.google.com/store/apps/details?id=com.microsoft.bing | https://apps.apple.com/us/app/microsoft-bing-search/id345323231)
+# Microsoft Bing (https://play.google.com/store/apps/details?id=com.microsoft.bing | https://apps.apple.com/us/app/bing-chat-with-ai-gpt-4/id345323231)
 - regex: '(?:Bing)?Sapphire/(\d+\.[\.\d]+)'
-  name: 'Microsoft Bing Search'
+  name: 'Microsoft Bing'
+  version: '$1'
+- regex: 'BingWeb(?:/([\d\.]+))?|bingipadclient'
+  name: 'Microsoft Bing'
   version: '$1'
 
 # Microsoft Start (https://play.google.com/store/apps/details?id=com.microsoft.amp.apps.bingnews | https://apps.apple.com/us/app/microsoft-start/id945416273)
 - regex: 'NewsSapphire/(\d+\.[\.\d]+)'
   name: 'Microsoft Start'
+  version: '$1'
+
+# Microsoft Copilot (https://play.google.com/store/apps/details?id=com.microsoft.copilot | https://apps.apple.com/us/app/microsoft-copilot/id6472538445)
+- regex: 'CopilotSapphire/(\d+\.[\.\d]+)'
+  name: 'Microsoft Copilot'
   version: '$1'
 
 # HiSearch
@@ -1177,12 +1240,12 @@
   version: ''
 
 # Q-municate (https://www.qmunicateh10.com | https://apps.apple.com/gb/app/q-municate/id909698517)
-- regex: 'com.Nanoteq.QmunicateH10p.+/(\d+\.[\.\d]+) \('
+- regex: 'com\.Nanoteq\.QmunicateH10p.+/(\d+\.[\.\d]+) \('
   name: 'Q-municate'
   version: '$1'
 
 # NET.mede (https://apps.apple.com/us/app/net-mede/id597007101)
-- regex: 'NET.mede'
+- regex: 'NET\.mede'
   name: 'NET.mede'
   version: ''
 
@@ -1227,7 +1290,7 @@
   version: '$1'
 
 # Safari Search Helper
-- regex: 'com.apple.Safari.SearchHelper/(\d+\.[\.\d]+)'
+- regex: 'com\.apple\.Safari\.SearchHelper/(\d+\.[\.\d]+)'
   name: 'Safari Search Helper'
   version: '$1'
 
@@ -1237,7 +1300,7 @@
   version: ''
 
 # Mercantile Bank of Michigan (https://apps.apple.com/us/app/mercantile-bank-of-michigan/id428982831)
-- regex: 'com.mercbank.s1mobileipad'
+- regex: 'com\.mercbank\.s1mobileipad'
   name: 'Mercantile Bank of Michigan'
   version: ''
 
@@ -1285,8 +1348,8 @@
   name: 'SafeIP'
   version: ''
 
-# Surfshark (https://play.google.com/store/apps/details?id=com.surfshark.vpnclient.android)
-- regex: 'SurfsharkAndroid/(\d+\.[\.\d]+)'
+# Surfshark (https://play.google.com/store/apps/details?id=com.surfshark.vpnclient.android | https://apps.apple.com/app/apple-store/id1391782046)
+- regex: 'Surfshark(?:Android)?/([\d\.]+)'
   name: 'Surfshark'
   version: '$1'
 
@@ -1321,15 +1384,15 @@
   version: '$1'
 
 # Amazon Shopping (https://play.google.com/store/apps/details?id=com.amazon.mShop.android.shopping)
-- regex: 'Amazon.com/(\d+\.[\.\d]+)'
+- regex: 'Amazon\.com/(\d+\.[\.\d]+)'
   name: 'Amazon Shopping'
   version: '$1'
 
 # mobile.de (https://play.google.com/store/apps/details?id=de.mobile.android.app)
-- regex: 'de.mobile.android.app/(\d+\.[\.\d]+)'
+- regex: 'de\.mobile\.android\.app/(\d+\.[\.\d]+)'
   name: 'mobile.de'
   version: '$1'
-- regex: 'de.mobile.android.app/(.*) \((\d+\.[\.\d]+)\)'
+- regex: 'de\.mobile\.android\.app/(.*) \((\d+\.[\.\d]+)\)'
   name: 'mobile.de'
   version: '$2'
 
@@ -1341,11 +1404,6 @@
 # Don't Waste My Time! (https://apps.apple.com/us/app/dont-waste-my-time/id1503883738)
 - regex: 'Waste My Time! Extension/(\d+\.[\.\d]+)'
   name: "Don't Waste My Time!"
-  version: '$1'
-
-# Surfshark (https://apps.apple.com/app/apple-store/id1391782046)
-- regex: 'Surfshark/(\d+\.[\.\d]+)'
-  name: 'Surfshark'
   version: '$1'
 
 # 1Password (https://apps.apple.com/us/app/1password-password-manager/id568903335)
@@ -1368,14 +1426,14 @@
   name: 'Yahoo OneSearch'
   version: '$1'
 
-# Bing iPad
-- regex: 'bingipadclient'
-  name: 'Bing iPad'
-  version: ''
-
 # AntiBrowserSpy (https://www.abelssoft.de/en/windows/security-privacy/antibrowserspy)
 - regex: 'anonymized by Abelssoft'
   name: 'AntiBrowserSpy'
+  version: ''
+
+# Browser-Anonymizer (https://www.almisoft.de/)
+- regex: 'Anonymisiert durch AlMiSoft(?! Browser-Maulkorb)'
+  name: 'Browser-Anonymizer'
   version: ''
 
 # 다음 or Daum
@@ -1424,12 +1482,12 @@
   version: ''
 
 # Audible
-- regex: '^(?:Audible, Android, |com.audible.playersdk.player/|Audible/)(\d+\.[.\d]+)?'
+- regex: '^(?:Audible, Android, |com\.audible\.playersdk\.player/|Audible/)(\d+\.[.\d]+)?'
   name: 'Audible'
   version: '$1'
 
 # Overcast (http://overcast.fm/)
-- regex: 'Overcast/?(\d+\.[.\d]+)? \(\+http://overcast.fm/; (?:Apple Watch|iOS) podcast'
+- regex: 'Overcast/?(\d+\.[.\d]+)? \(\+http://overcast\.fm/; (?:Apple Watch|iOS) podcast'
   name: 'Overcast'
   version: '$1'
 
@@ -1449,7 +1507,7 @@
   version: '$1'
 
 # jj2go https://apps.apple.com/us/app/jj2go/id1438749275
-- regex: 'RelesysApp/(\d+\.[.\d]+) \(\d{1,2}\) net.relesysapp.jj2go'
+- regex: 'RelesysApp/(\d+\.[.\d]+) \(\d{1,2}\) net\.relesysapp\.jj2go'
   name: 'JJ2GO'
   version: '$1'
 
@@ -1656,9 +1714,9 @@
   name: 'Damus'
   version: '$1'
 
-- regex: 'be\.standaard\.audio'
+- regex: '(?:be\.standaard\.audio|^DS podcast/|DS%20Podcast/)([\d\.]+)?'
   name: 'De Standaard'
-  version: ''
+  version: '$1'
 
 - regex: '^DManager/([\d\.]+)'
   name: 'DManager'
@@ -1799,7 +1857,8 @@
   name: 'JioSaavn'
   version: '$1'
 
-- regex: ' Kajabi|KajabiPodcast'
+# Kajabi (https://kajabi.com/)
+- regex: 'KajabiMobileApp|KajabiPodcast'
   name: 'Kajabi'
   version: ''
 
@@ -1886,7 +1945,7 @@
   version: '$1'
 
 # The free NRC app offers you the latest news and the digital version of the paper newspaper.
-- regex: '(?:NRC-Nieuws/|nl.nrc.nrcapp )([\d\.]+)'
+- regex: '(?:NRC-Nieuws/|nl\.nrc\.nrcapp |com\.twipemobile\.nrc )([\d\.]+)'
   name: 'NRC'
   version: '$1'
 
@@ -2179,10 +2238,6 @@
   name: 'Yapa'
   version: '$1'
 
-- regex: '^Zeno$'
-  name: 'Radio Zeno'
-  version: ''
-
 - regex: 'Zune/(\d+\.[.\d]+)'
   name: 'Zune'
   version: ''
@@ -2191,8 +2246,8 @@
   name: 'UCast'
   version: '$1'
 
-- regex: '(?:^NPROneAndroid$|^NPR%20One/([\d\.]+))'
-  name: 'NPR One'
+- regex: '(?:^NPROneAndroid$|(?:^NPR%20One|nprone_android)/([\d\.]+))'
+  name: 'NPR'
   version: '$1'
 
 - regex: 'Uforia/([\d\.]+)'
@@ -2228,8 +2283,32 @@
   name: 'IPTV Pro'
   version: '$1'
 
+- regex: '^com\.audials(?:\.paid)?/([\d\.]+)'
+  name: 'Audials'
+  version: '$1'
+
+- regex: '^CoolerFM/([\d\.]+)'
+  name: 'Cooler'
+  version: '$1'
+
+- regex: '^Metacast/([\d\.]+)'
+  name: 'Metacast'
+  version: '$1'
+
+- regex: '^mowPod/([\d\.]+)'
+  name: 'mowPod'
+  version: '$1'
+
+- regex: 'com\.meecel\.feedreader\.RssDemonAd'
+  name: 'RSSDemon'
+  version: ''
+
+- regex: '^Virgin(?:%20|\s)Radio/([\d\.]+)'
+  name: 'Virgin Radio'
+  version: '$1'
+
 # MetaMask (https://apps.apple.com/us/app/metamask-blockchain-wallet/id1438144202)
-- regex: 'MetaMask/'
+- regex: 'MetaMask(?:Mobile)?'
   name: 'MetaMask'
   version: ''
 
@@ -2282,3 +2361,138 @@
 - regex: 'Stream Master$'
   name: 'Stream Master'
   version: ''
+
+# Freespoke (https://freespoke.com/)
+- regex: 'Freespoke/(\d+\.[\.\d]+)'
+  name: 'Freespoke'
+  version: '$1'
+
+# Whatplay (https://play.google.com/store/apps/details?id=com.repotools.whatplay)
+- regex: 'Whatplay'
+  name: 'Whatplay'
+  version: ''
+
+# Lark (https://www.larksuite.com/)
+- regex: 'Lark/(\d+[\.\d]+)'
+  name: 'Lark'
+  version: '$1'
+
+# SearchCraft (https://secr.baidu.com/)
+- regex: 'SearchCraft/(\d+[\.\d]+)'
+  name: 'SearchCraft'
+  version: '$1'
+
+# Crypto.com DeFi Wallet (https://apps.apple.com/us/app/crypto-com-l-defi-wallet/id1512048310)
+- regex: 'DeFiWallet/(\d+[\.\d]+)'
+  name: 'Crypto.com DeFi Wallet'
+  version: '$1'
+
+# Clipbox+ (https://clipbox-official.com/)
+- regex: 'Clipbox\+/(\d+[\.\d]+)'
+  name: 'Clipbox+'
+  version: '$1'
+
+# HideX (com.flatfish.cal.privacy)
+- regex: 'appname/HideX'
+  name: 'HideX'
+  version: ''
+
+# Huawei Mobile Services
+- regex: 'HMSCore(?:[ /]([\d\.]+))?(?!.*HuaweiBrowser)'
+  name: 'Huawei Mobile Services'
+  version: '$1'
+
+# PLAYit (https://play.google.com/store/apps/details?id=com.playit.videoplayer)
+- regex: 'appname/PLAYit'
+  name: 'PLAYit'
+  version: ''
+
+# Autoplius.lt
+- regex: 'Autopliuslt(?:/([\d\.]+))?'
+  name: 'Autoplius.lt'
+  version: '$1'
+
+# Hotels.com (https://play.google.com/store/apps/details?id=com.hcom.android)
+- regex: 'HCom(?:/([\d\.]+))?'
+  name: 'Hotels.com'
+  version: '$1'
+
+# Coinbase (https://apps.apple.com/us/app/coinbase-buy-bitcoin-ether/id886427730)
+- regex: 'CoinbaseRetail(?:/([\d\.]+))?'
+  name: 'Coinbase'
+  version: '$1'
+
+# De Telegraaf (https://play.google.com/store/apps/details?id=nl.telegraaf)
+- regex: 'De Telegraaf(?:/([\d\.]+))?'
+  name: 'De Telegraaf'
+  version: '$1'
+
+# waipu.tv (https://www.waipu.tv/)
+- regex: 'waipu/([\d\.]+)'
+  name: 'waipu.tv'
+  version: '$1'
+
+# Redditor (https://apps.apple.com/us/app/redditor-the-perfect-client/id596236434)
+- regex: 'Redditor'
+  name: 'Redditor'
+  version: ''
+
+# BuzzVideo
+- regex: 'com\.topbuzz\.videoen/([\d\.]+)'
+  name: 'BuzzVideo'
+  version: '$1'
+
+# GlobalProtect (https://www.paloaltonetworks.com/sase/globalprotect)
+- regex: 'GlobalProtect'
+  name: 'GlobalProtect'
+  version: ''
+
+# Trade Me (https://play.google.com/store/apps/details?id=nz.co.trademe.trademe)
+- regex: 'Trade Me(?:/([\d\.]+))?'
+  name: 'Trade Me'
+  version: '$1'
+
+# XING (https://www.xing.com/)
+- regex: 'XING(?:-iPhone)?/([\d\.]+)'
+  name: 'XING'
+  version: '$1'
+
+# Bridge (https://quixel.com/bridge)
+- regex: 'Bridge/([\d\.]+)'
+  name: 'Bridge'
+  version: '$1'
+
+# iPlayTV (https://apps.apple.com/us/app/iplaytv-iptv-m3u-player/id1072226801)
+- regex: 'iPlayTV/([\d\.]+)'
+  name: 'iPlayTV'
+  version: '$1'
+
+# MOMO (https://www.immomo.com/)
+- regex: 'momoWebView/([\d\.]+)'
+  name: 'MOMO'
+  version: '$1'
+
+# nate (https://play.google.com/store/apps/details?id=com.nate.android.portalmini)
+- regex: 'nate_app;appver:([\d\.]+)'
+  name: 'nate'
+  version: '$1'
+
+# SoFi (https://play.google.com/store/apps/details?id=com.sofi.mobile)
+- regex: 'SOFI_APP_VERSION=([\d\.]+)'
+  name: 'SoFi'
+  version: '$1'
+
+# Electron generic apps
+- regex:  ' (?!(?:AppleWebKit|brave|Franz|Mailspring|Notion|Basecamp|Evernote|catalyst|ramboxpro|BlueMail|BeakerBrowser|TweakStyle|Colibri|Polypane|VibeMate|(?:d|LT|Glass|Sushi|Flash|OhHai)Browser|Sizzy))([a-z0-9]*)(?:-desktop|-electron-app)?/(\d+\.[\d.]+).*Electron/'
+  name: '$1'
+  version: '$2'
+
+# Generic app
+- regex: 'appname/([^/; ]*)'
+  name: '$1'
+  version: ''
+
+# AFNetworking generic
+- regex: '(?!AlohaBrowser)([^/;]*)/(\d+\.[\d.]+) \((?:iPhone|iPad); (?:iOS|iPadOS) [0-9\.]+; Scale/[0-9\.]+\)'
+  name: '$1'
+  version: '$2'

@@ -108,7 +108,7 @@
 - regex: 'RSSOwl(?:[/ ](\d+[\.\d]+))?'
   name: 'RSSOwl'
   version: '$1'
-  url: 'http://www.rssowl.org/'
+  url: 'https://www.rssowl.org/'
 
 - regex: 'Stringer'
   name: 'Stringer'

@@ -35,10 +35,19 @@ OUYA:
   device: 'console'
   model: 'OUYA'
 
-Sega:
-  regex: 'Dreamcast'
+Sanyo:
+  regex: 'Aplix_SANYO'
   device: 'console'
-  model: 'Dreamcast'
+  model: '3DO TRY'
+
+Sega:
+  regex: 'Dreamcast|Aplix_SEGASATURN'
+  device: 'console'
+  models:
+    - regex: 'Dreamcast'
+      model: 'Dreamcast'
+    - regex: 'Aplix_SEGASATURN'
+      model: 'Saturn'
 
 JXD:
   regex: 'JXD_S601WIFI'
