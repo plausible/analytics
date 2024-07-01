@@ -494,13 +494,24 @@ case mailer_adapter do
 
     if relay = get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR") do
       port = get_int_from_path_or_env(config_dir, "SMTP_HOST_PORT", 25)
-      username = get_var_from_path_or_env(config_dir, "SMTP_USER_NAME")
-      password = get_var_from_path_or_env(config_dir, "SMTP_USER_PWD")
+      config :plausible, Plausible.Mailer, relay: relay, port: port
+    end
 
-      config :plausible, Plausible.Mailer,
-        auth: [username: username, password: password],
-        relay: relay,
-        port: port
+    username = get_var_from_path_or_env(config_dir, "SMTP_USER_NAME")
+    password = get_var_from_path_or_env(config_dir, "SMTP_USER_PWD")
+
+    cond do
+      username && password ->
+        config :plausible, Plausible.Mailer, auth: [username: username, password: password]
+
+      username || password ->
+        raise ArgumentError, """
+        Both SMTP_USER_NAME and SMTP_USER_PWD must be set for SMTP authentication.
+        Please provide values for both environment variables.
+        """
+
+      _both_nil = true ->
+        nil
     end
 
   "Bamboo.LocalAdapter" ->
