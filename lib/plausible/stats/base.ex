@@ -250,8 +250,6 @@ defmodule Plausible.Stats.Base do
   end
 
   defp select_session_metric(:percentage, _query), do: %{}
-  defp select_session_metric(:conversion_rate, _query), do: %{}
-  defp select_session_metric(:group_conversion_rate, _query), do: %{}
 
   def filter_converted_sessions(db_query, site, query) do
     if Query.has_event_filters?(query) do

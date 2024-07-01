@@ -1477,7 +1477,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       conn =
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
-          "metrics" => ["visitors", "percentage"],
+          "metrics" => ["visitors"],
           "date_range" => ["2021-01-01", "2021-01-01"],
           "dimensions" => [unquote(dimension)]
         })
@@ -1485,9 +1485,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       %{"results" => results} = json_response(conn, 200)
 
       assert results == [
-               %{"dimensions" => [unquote(value1)], "metrics" => [3, 50]},
-               %{"dimensions" => [unquote(value2)], "metrics" => [2, 33.3]},
-               %{"dimensions" => [unquote(blank_value)], "metrics" => [1, 16.7]}
+               %{"dimensions" => [unquote(value1)], "metrics" => [3]},
+               %{"dimensions" => [unquote(value2)], "metrics" => [2]},
+               %{"dimensions" => [unquote(blank_value)], "metrics" => [1]}
              ]
     end
   end
@@ -3463,48 +3463,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
                %{"dimensions" => ["Chrome"], "metrics" => [1]}
              ]
     end
-
-    test "all metrics for breakdown by event prop", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview,
-          user_id: 1,
-          pathname: "/",
-          timestamp: ~N[2021-01-01 00:00:00]
-        ),
-        build(:pageview,
-          user_id: 1,
-          pathname: "/plausible.io",
-          timestamp: ~N[2021-01-01 00:10:00]
-        ),
-        build(:pageview, pathname: "/", timestamp: ~N[2021-01-01 00:25:00]),
-        build(:pageview,
-          pathname: "/plausible.io",
-          timestamp: ~N[2021-01-01 00:00:00]
-        )
-      ])
-
-      conn =
-        post(conn, "/api/v2/query", %{
-          "site_id" => site.domain,
-          "metrics" => [
-            "visitors",
-            "visits",
-            "pageviews",
-            "events",
-            "bounce_rate",
-            "visit_duration"
-          ],
-          "date_range" => "all",
-          "dimensions" => ["event:page"]
-        })
-
-      %{"results" => results} = json_response(conn, 200)
-
-      assert results == [
-               %{"dimensions" => ["/"], "metrics" => [2, 2, 2, 2, 50, 300]},
-               %{"dimensions" => ["/plausible.io"], "metrics" => [2, 2, 2, 2, 100, 0]}
-             ]
-    end
   end
 
   describe "imported data" do
@@ -3631,6 +3589,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert %{"dimensions" => ["Desktop"], "metrics" => [1]} =
                breakdown_and_first.("visit:device")
 
+      # :TODO: These should not pass validation - not available on events.
+      # visit dimension and event-only metric
+      # assert %{"dimensions" => ["/test"], "metrics" => [1]} = breakdown_and_first.("visit:entry_page")
+      # assert %{"dimensions" => ["/test"], "metrics" => [1]} = breakdown_and_first.("visit:exit_page")
       assert %{"dimensions" => ["EE"], "metrics" => [1]} = breakdown_and_first.("visit:country")
       assert %{"dimensions" => ["Mac"], "metrics" => [1]} = breakdown_and_first.("visit:os")
       assert %{"dimensions" => ["/test"], "metrics" => [1]} = breakdown_and_first.("event:page")
@@ -3902,56 +3864,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              } = json_response(conn, 200)
 
       assert meta["warning"] =~ "Imported stats are not included in the results"
-    end
-
-    test "imported country, region and city data",
-         %{
-           conn: conn,
-           site: site
-         } do
-      site_import = insert(:site_import, site: site)
-
-      populate_stats(site, site_import.id, [
-        build(:pageview,
-          timestamp: ~N[2021-01-01 00:15:00],
-          country_code: "DE",
-          subdivision1_code: "DE-BE",
-          city_geoname_id: 2_950_159
-        ),
-        build(:pageview,
-          timestamp: ~N[2021-01-01 00:15:00],
-          country_code: "DE",
-          subdivision1_code: "DE-BE",
-          city_geoname_id: 2_950_159
-        ),
-        build(:pageview,
-          timestamp: ~N[2021-01-01 00:15:00],
-          country_code: "EE",
-          subdivision1_code: "EE-37",
-          city_geoname_id: 588_409
-        ),
-        build(:imported_locations, country: "EE", region: "EE-37", city: 588_409, visitors: 33)
-      ])
-
-      for {dimension, stats_value, imports_value} <- [
-            {"visit:country", "DE", "EE"},
-            {"visit:region", "DE-BE", "EE-37"},
-            {"visit:city", 2_950_159, 588_409}
-          ] do
-        conn =
-          post(conn, "/api/v2/query", %{
-            "site_id" => site.domain,
-            "metrics" => ["visitors"],
-            "date_range" => "all",
-            "dimensions" => [dimension],
-            "include" => %{"imports" => true}
-          })
-
-        assert json_response(conn, 200)["results"] == [
-                 %{"dimensions" => [imports_value], "metrics" => [34]},
-                 %{"dimensions" => [stats_value], "metrics" => [2]}
-               ]
-      end
     end
   end
 

@@ -4,11 +4,10 @@ defmodule Plausible.Stats.Imported do
 
   import Ecto.Query
   import Plausible.Stats.Fragments
-  import Plausible.Stats.Util, only: [shortname: 2]
 
+  alias Plausible.Stats.Base
   alias Plausible.Stats.Imported
   alias Plausible.Stats.Query
-  alias Plausible.Stats.SQL.QueryBuilder
 
   @no_ref "Direct / None"
   @not_set "(not set)"
@@ -16,7 +15,7 @@ defmodule Plausible.Stats.Imported do
 
   @property_to_table_mappings Imported.Base.property_to_table_mappings()
 
-  @imported_dimensions Map.keys(@property_to_table_mappings) ++
+  @imported_properties Map.keys(@property_to_table_mappings) ++
                          Plausible.Imported.imported_custom_props()
 
   @goals_with_url Plausible.Imported.goals_with_url()
@@ -38,7 +37,7 @@ defmodule Plausible.Stats.Imported do
   (see `@goals_with_url` and `@goals_with_path`).
   """
   def schema_supports_query?(query) do
-    length(Imported.Base.decide_tables(query)) > 0
+    not is_nil(Imported.Base.decide_table(query))
   end
 
   def merge_imported_country_suggestions(native_q, _site, %Plausible.Stats.Query{
@@ -268,6 +267,78 @@ defmodule Plausible.Stats.Imported do
 
   def merge_imported(q, _, %Query{include_imported: false}, _), do: q
 
+  # Note: Only called for APIv2, old APIs use merge_imported_pageview_goals
+  def merge_imported(q, site, %Query{dimensions: ["event:goal"]} = query, metrics)
+      when query.v2 do
+    {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
+
+    events_q =
+      "imported_custom_events"
+      |> Imported.Base.query_imported(site, query)
+      |> where([i], i.visitors > 0)
+      |> select_merge([i], %{
+        dim0: selected_as(fragment("-indexOf(?, ?)", ^events, i.name), :dim0)
+      })
+      |> select_imported_metrics(metrics)
+      |> group_by([], selected_as(:dim0))
+      |> where([], selected_as(:dim0) != 0)
+
+    pages_q =
+      "imported_pages"
+      |> Imported.Base.query_imported(site, query)
+      |> where([i], i.visitors > 0)
+      |> where(
+        [i],
+        fragment("notEmpty(multiMatchAllIndices(?, ?) as indices)", i.page, ^page_regexes)
+      )
+      |> join(:array, index in fragment("indices"))
+      |> group_by([_i, index], index)
+      |> select_merge([_i, index], %{
+        dim0: type(fragment("?", index), :integer)
+      })
+      |> select_imported_metrics(metrics)
+
+    q
+    |> naive_dimension_join(events_q, metrics)
+    |> naive_dimension_join(pages_q, metrics)
+  end
+
+  def merge_imported(q, site, %Query{dimensions: [dimension]} = query, metrics)
+      when dimension in @imported_properties do
+    dim = Plausible.Stats.Filters.without_prefix(dimension)
+
+    imported_q =
+      site
+      |> Imported.Base.query_imported(query)
+      |> where([i], i.visitors > 0)
+      |> group_imported_by(dim, query)
+      |> select_imported_metrics(metrics)
+
+    join_on =
+      case dim do
+        _ when dim in [:url, :path] and not query.v2 ->
+          dynamic([s, i], s.breakdown_prop_value == i.breakdown_prop_value)
+
+        :os_version when not query.v2 ->
+          dynamic([s, i], s.os == i.os and s.os_version == i.os_version)
+
+        :browser_version when not query.v2 ->
+          dynamic([s, i], s.browser == i.browser and s.browser_version == i.browser_version)
+
+        dim ->
+          dynamic([s, i], field(s, ^shortname(query, dim)) == field(i, ^shortname(query, dim)))
+      end
+
+    from(s in Ecto.Query.subquery(q),
+      full_join: i in subquery(imported_q),
+      on: ^join_on,
+      select: %{}
+    )
+    |> select_joined_dimension(dim, query)
+    |> select_joined_metrics(metrics)
+    |> apply_order_by(query, metrics)
+  end
+
   def merge_imported(q, site, %Query{dimensions: []} = query, metrics) do
     imported_q =
       site
@@ -282,74 +353,39 @@ defmodule Plausible.Stats.Imported do
     |> select_joined_metrics(metrics)
   end
 
-  def merge_imported(q, site, %Query{dimensions: ["event:goal"]} = query, metrics) do
-    {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
+  def merge_imported(q, _, _, _), do: q
 
-    Imported.Base.decide_tables(query)
-    |> Enum.map(fn
-      "imported_custom_events" ->
-        Imported.Base.query_imported("imported_custom_events", site, query)
-        |> where([i], i.visitors > 0)
-        |> select_merge([i], %{
-          dim0:
-            selected_as(
-              fragment("-indexOf(?, ?)", type(^events, {:array, :string}), i.name),
-              :dim0
-            )
-        })
-        |> select_imported_metrics(metrics)
-        |> group_by([], selected_as(:dim0))
-        |> where([], selected_as(:dim0) != 0)
+  def merge_imported_pageview_goals(q, _, %Query{include_imported: false}, _, _), do: q
 
-      "imported_pages" ->
-        Imported.Base.query_imported("imported_pages", site, query)
+  def merge_imported_pageview_goals(q, site, query, page_exprs, metrics) do
+    if Imported.Base.decide_table(query) == "imported_pages" do
+      page_regexes = Enum.map(page_exprs, &Base.page_regex/1)
+
+      imported_q =
+        "imported_pages"
+        |> Imported.Base.query_imported(site, query)
         |> where([i], i.visitors > 0)
         |> where(
           [i],
-          fragment(
-            "notEmpty(multiMatchAllIndices(?, ?) as indices)",
-            i.page,
-            type(^page_regexes, {:array, :string})
-          )
+          fragment("notEmpty(multiMatchAllIndices(?, ?) as indices)", i.page, ^page_regexes)
         )
         |> join(:array, index in fragment("indices"))
         |> group_by([_i, index], index)
         |> select_merge([_i, index], %{
-          dim0: selected_as(type(fragment("?", index), :integer), :dim0)
+          name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
         })
         |> select_imported_metrics(metrics)
-    end)
-    |> Enum.reduce(q, fn imports_q, q ->
-      naive_dimension_join(q, imports_q, metrics)
-    end)
-  end
 
-  def merge_imported(q, site, %Query{dimensions: dimensions} = query, metrics) do
-    if merge_imported_dimensions?(dimensions) do
-      imported_q =
-        site
-        |> Imported.Base.query_imported(query)
-        |> where([i], i.visitors > 0)
-        |> group_imported_by(query)
-        |> select_imported_metrics(metrics)
-
-      from(s in subquery(q),
+      from(s in Ecto.Query.subquery(q),
         full_join: i in subquery(imported_q),
-        on: ^QueryBuilder.build_group_by_join(query),
+        on: s.name == i.name,
         select: %{}
       )
-      |> select_joined_dimensions(query)
+      |> select_joined_dimension(:name, query)
       |> select_joined_metrics(metrics)
     else
       q
     end
-  end
-
-  def merge_imported(q, _, _, _), do: q
-
-  defp merge_imported_dimensions?(dimensions) do
-    dimensions in [["visit:browser", "visit:browser_version"], ["visit:os", "visit:os_version"]] or
-      (length(dimensions) == 1 and hd(dimensions) in @imported_dimensions)
   end
 
   def total_imported_visitors(site, query) do
@@ -357,6 +393,10 @@ defmodule Plausible.Stats.Imported do
     |> Imported.Base.query_imported(query)
     |> select_merge([i], %{total_visitors: fragment("sum(?)", i.visitors)})
   end
+
+  # :TRICKY: Handle backwards compatibility with old breakdown module
+  defp shortname(query, _dim) when query.v2, do: :dim0
+  defp shortname(_query, dim), do: dim
 
   defp select_imported_metrics(q, []), do: q
 
@@ -552,175 +592,190 @@ defmodule Plausible.Stats.Imported do
     |> select_imported_metrics(rest)
   end
 
-  defp group_imported_by(q, query) do
-    Enum.reduce(query.dimensions, q, fn dimension, q ->
-      dim = Plausible.Stats.Filters.without_prefix(dimension)
-
-      group_imported_by(q, dim, shortname(query, dimension))
-    end)
-  end
-
-  defp group_imported_by(q, dim, key) when dim in [:source, :referrer] do
+  defp group_imported_by(q, dim, query) when dim in [:source, :referrer] do
     q
     |> group_by([i], field(i, ^dim))
     |> select_merge([i], %{
-      ^key =>
-        selected_as(
-          fragment(
-            "if(empty(?), ?, ?)",
-            field(i, ^dim),
-            @no_ref,
-            field(i, ^dim)
-          ),
-          ^key
+      ^shortname(query, dim) =>
+        fragment(
+          "if(empty(?), ?, ?)",
+          field(i, ^dim),
+          @no_ref,
+          field(i, ^dim)
         )
     })
   end
 
-  defp group_imported_by(q, dim, key)
+  defp group_imported_by(q, dim, query)
        when dim in [:utm_source, :utm_medium, :utm_campaign, :utm_term, :utm_content] do
     q
     |> group_by([i], field(i, ^dim))
     |> where([i], fragment("not empty(?)", field(i, ^dim)))
-    |> select_merge([i], %{^key => selected_as(field(i, ^dim), ^key)})
+    |> select_merge([i], %{^shortname(query, dim) => field(i, ^dim)})
   end
 
-  defp group_imported_by(q, :page, key) do
+  defp group_imported_by(q, :page, query) do
     q
     |> group_by([i], i.page)
-    |> select_merge([i], %{^key => selected_as(i.page, ^key), time_on_page: sum(i.time_on_page)})
+    |> select_merge([i], %{^shortname(query, :page) => i.page, time_on_page: sum(i.time_on_page)})
   end
 
-  defp group_imported_by(q, :country, key) do
+  defp group_imported_by(q, :country, query) do
     q
     |> group_by([i], i.country)
     |> where([i], i.country != "ZZ")
-    |> select_merge([i], %{^key => selected_as(i.country, ^key)})
+    |> select_merge([i], %{^shortname(query, :country) => i.country})
   end
 
-  defp group_imported_by(q, :region, key) do
+  defp group_imported_by(q, :region, query) do
     q
     |> group_by([i], i.region)
     |> where([i], i.region != "")
-    |> select_merge([i], %{^key => selected_as(i.region, ^key)})
+    |> select_merge([i], %{^shortname(query, :region) => i.region})
   end
 
-  defp group_imported_by(q, :city, key) do
+  defp group_imported_by(q, :city, query) do
     q
     |> group_by([i], i.city)
     |> where([i], i.city != 0 and not is_nil(i.city))
-    |> select_merge([i], %{^key => selected_as(i.city, ^key)})
+    |> select_merge([i], %{^shortname(query, :city) => i.city})
   end
 
-  defp group_imported_by(q, dim, key) when dim in [:device, :browser] do
+  defp group_imported_by(q, dim, query) when dim in [:device, :browser] do
     q
     |> group_by([i], field(i, ^dim))
     |> select_merge([i], %{
-      ^key =>
-        selected_as(
-          fragment("if(empty(?), ?, ?)", field(i, ^dim), @not_set, field(i, ^dim)),
-          ^key
-        )
+      ^shortname(query, dim) =>
+        fragment("if(empty(?), ?, ?)", field(i, ^dim), @not_set, field(i, ^dim))
     })
   end
 
-  defp group_imported_by(q, :browser_version, key) do
+  defp group_imported_by(q, :browser_version, query) do
     q
-    |> group_by([i], [i.browser_version])
+    |> group_by([i], [i.browser, i.browser_version])
     |> select_merge([i], %{
-      ^key =>
-        selected_as(
-          fragment(
-            "if(empty(?), ?, ?)",
-            i.browser_version,
-            @not_set,
-            i.browser_version
-          ),
-          ^key
+      ^shortname(query, :browser) =>
+        fragment("if(empty(?), ?, ?)", i.browser, @not_set, i.browser),
+      ^shortname(query, :browser_version) =>
+        fragment(
+          "if(empty(?), ?, ?)",
+          i.browser_version,
+          @not_set,
+          i.browser_version
         )
     })
   end
 
-  defp group_imported_by(q, :os, key) do
+  defp group_imported_by(q, :os, query) do
     q
     |> group_by([i], i.operating_system)
     |> select_merge([i], %{
-      ^key =>
-        selected_as(
-          fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system),
-          ^key
-        )
+      ^shortname(query, :os) =>
+        fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system)
     })
   end
 
-  defp group_imported_by(q, :os_version, key) do
+  defp group_imported_by(q, :os_version, query) do
     q
-    |> group_by([i], [i.operating_system_version])
+    |> group_by([i], [i.operating_system, i.operating_system_version])
     |> select_merge([i], %{
-      ^key =>
-        selected_as(
-          fragment(
-            "if(empty(?), ?, ?)",
-            i.operating_system_version,
-            @not_set,
-            i.operating_system_version
-          ),
-          ^key
+      ^shortname(query, :os) =>
+        fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system),
+      ^shortname(query, :os_version) =>
+        fragment(
+          "if(empty(?), ?, ?)",
+          i.operating_system_version,
+          @not_set,
+          i.operating_system_version
         )
     })
   end
 
-  defp group_imported_by(q, dim, key) when dim in [:entry_page, :exit_page] do
+  defp group_imported_by(q, dim, query) when dim in [:entry_page, :exit_page] do
     q
     |> group_by([i], field(i, ^dim))
-    |> select_merge([i], %{^key => selected_as(field(i, ^dim), ^key)})
+    |> select_merge([i], %{^shortname(query, dim) => field(i, ^dim)})
   end
 
-  defp group_imported_by(q, :name, key) do
+  defp group_imported_by(q, :name, query) do
     q
     |> group_by([i], i.name)
-    |> select_merge([i], %{^key => selected_as(i.name, ^key)})
+    |> select_merge([i], %{^shortname(query, :name) => i.name})
   end
 
-  defp group_imported_by(q, :url, key) do
+  defp group_imported_by(q, :url, query) when query.v2 do
     q
     |> group_by([i], i.link_url)
     |> select_merge([i], %{
-      ^key => selected_as(fragment("if(not empty(?), ?, ?)", i.link_url, i.link_url, @none), ^key)
+      ^shortname(query, :url) => fragment("if(not empty(?), ?, ?)", i.link_url, i.link_url, @none)
     })
   end
 
-  defp group_imported_by(q, :path, key) do
+  defp group_imported_by(q, :url, _query) do
+    q
+    |> group_by([i], i.link_url)
+    |> select_merge([i], %{
+      breakdown_prop_value: fragment("if(not empty(?), ?, ?)", i.link_url, i.link_url, @none)
+    })
+  end
+
+  defp group_imported_by(q, :path, query) when query.v2 do
     q
     |> group_by([i], i.path)
     |> select_merge([i], %{
-      ^key => selected_as(fragment("if(not empty(?), ?, ?)", i.path, i.path, @none), ^key)
+      ^shortname(query, :path) => fragment("if(not empty(?), ?, ?)", i.path, i.path, @none)
     })
   end
 
-  defp select_joined_dimensions(q, query) do
-    Enum.reduce(query.dimensions, q, fn dimension, q ->
-      select_joined_dimension(q, dimension, shortname(query, dimension))
-    end)
-  end
-
-  defp select_joined_dimension(q, "visit:city", key) do
-    select_merge(q, [s, i], %{
-      ^key => selected_as(fragment("greatest(?,?)", field(i, ^key), field(s, ^key)), ^key)
+  defp group_imported_by(q, :path, _query) do
+    q
+    |> group_by([i], i.path)
+    |> select_merge([i], %{
+      breakdown_prop_value: fragment("if(not empty(?), ?, ?)", i.path, i.path, @none)
     })
   end
 
-  defp select_joined_dimension(q, _dimension, key) do
+  defp select_joined_dimension(q, :city, query) do
     select_merge(q, [s, i], %{
-      ^key =>
-        selected_as(
-          fragment(
-            "if(empty(?), ?, ?)",
-            field(s, ^key),
-            field(i, ^key),
-            field(s, ^key)
-          ),
-          ^key
+      ^shortname(query, :city) => fragment("greatest(?,?)", i.city, s.city)
+    })
+  end
+
+  defp select_joined_dimension(q, :os_version, query) when not query.v2 do
+    select_merge(q, [s, i], %{
+      os: fragment("if(empty(?), ?, ?)", s.os, i.os, s.os),
+      os_version: fragment("if(empty(?), ?, ?)", s.os_version, i.os_version, s.os_version)
+    })
+  end
+
+  defp select_joined_dimension(q, :browser_version, query) when not query.v2 do
+    select_merge(q, [s, i], %{
+      browser: fragment("if(empty(?), ?, ?)", s.browser, i.browser, s.browser),
+      browser_version:
+        fragment("if(empty(?), ?, ?)", s.browser_version, i.browser_version, s.browser_version)
+    })
+  end
+
+  defp select_joined_dimension(q, dim, query) when dim in [:url, :path] and not query.v2 do
+    select_merge(q, [s, i], %{
+      breakdown_prop_value:
+        fragment(
+          "if(empty(?), ?, ?)",
+          s.breakdown_prop_value,
+          i.breakdown_prop_value,
+          s.breakdown_prop_value
+        )
+    })
+  end
+
+  defp select_joined_dimension(q, dim, query) do
+    select_merge(q, [s, i], %{
+      ^shortname(query, dim) =>
+        fragment(
+          "if(empty(?), ?, ?)",
+          field(s, ^shortname(query, dim)),
+          field(i, ^shortname(query, dim)),
+          field(s, ^shortname(query, dim))
         )
     })
   end
@@ -827,12 +882,21 @@ defmodule Plausible.Stats.Imported do
     |> select_joined_metrics(rest)
   end
 
+  defp apply_order_by(q, %Query{v2: true}, _), do: q
+
+  defp apply_order_by(q, query, [:visitors | rest]) do
+    order_by(q, [s, i], desc: s.visitors + i.visitors)
+    |> apply_order_by(query, rest)
+  end
+
+  defp apply_order_by(q, _query, _), do: q
+
   defp naive_dimension_join(q1, q2, metrics) do
-    from(a in subquery(q1),
+    from(a in Ecto.Query.subquery(q1),
       full_join: b in subquery(q2),
       on: a.dim0 == b.dim0,
       select: %{
-        dim0: selected_as(fragment("if(? != 0, ?, ?)", a.dim0, a.dim0, b.dim0), :dim0)
+        dim0: fragment("coalesce(?, ?)", a.dim0, b.dim0)
       }
     )
     |> select_joined_metrics(metrics)
