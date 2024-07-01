@@ -48,14 +48,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         Plans.available_plans_for(user, with_prices: true, customer_ip: remote_ip)
       end)
       |> assign_new(:recommended_tier, fn %{usage: usage, available_plans: available_plans} ->
-        if Quota.eligible_for_upgrade?(usage) do
           highest_growth_plan = List.last(available_plans.growth)
           highest_business_plan = List.last(available_plans.business)
-
           Quota.suggest_tier(usage, highest_growth_plan, highest_business_plan)
-        else
-          nil
-        end
       end)
       |> assign_new(:available_volumes, fn %{available_plans: available_plans} ->
         get_available_volumes(available_plans)
@@ -147,7 +142,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
             available={!!@selected_business_plan}
             {assigns}
           />
-          <PlanBox.enterprise benefits={@enterprise_benefits} />
+          <PlanBox.enterprise
+            benefits={@enterprise_benefits}
+            recommended={@recommended_tier == :custom}
+          />
         </div>
         <p class="mx-auto mt-8 max-w-2xl text-center text-lg leading-8 text-gray-600 dark:text-gray-400">
           <.render_usage pageview_usage={@usage.monthly_pageviews} />

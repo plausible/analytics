@@ -69,19 +69,27 @@ defmodule Plausible.Billing.Quota do
   Suggests a suitable tier (Growth or Business) for the given usage map.
 
   If even the highest Business plan does not accommodate the usage, then
-  `nil` is returned. This means that this kind of usage should get on a
-  custom plan.
+  `:custom` is returned. This means that this kind of usage should get on
+  a custom plan.
+
+  `nil` is returned if the usage is not eligible for upgrade.
   """
   def suggest_tier(usage, highest_growth_plan, highest_business_plan) do
-    growth_check =
-      with :ok <- ensure_within_plan_limits(usage, highest_growth_plan) do
-        ensure_feature_access(usage, highest_growth_plan)
+    if eligible_for_upgrade?(usage) do
+      cond do
+        usage_fits_plan?(usage, highest_growth_plan) -> :growth
+        usage_fits_plan?(usage, highest_business_plan) -> :business
+        true -> :custom
       end
+    end
+  end
 
-    cond do
-      growth_check == :ok -> :growth
-      ensure_within_plan_limits(usage, highest_business_plan) == :ok -> :business
-      true -> nil
+  defp usage_fits_plan?(usage, plan) do
+    with :ok <- ensure_within_plan_limits(usage, plan),
+         :ok <- ensure_feature_access(usage, plan) do
+      true
+    else
+      _ -> false
     end
   end
 

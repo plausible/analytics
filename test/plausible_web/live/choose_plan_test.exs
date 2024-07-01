@@ -35,6 +35,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @business_checkout_button "#business-checkout"
 
   @enterprise_plan_box "#enterprise-plan-box"
+  @enterprise_highlight_pill "#enterprise-highlight-pill"
 
   @slider_volumes ["10k", "100k", "200k", "500k", "1M", "2M", "5M", "10M", "10M+"]
 
@@ -636,7 +637,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute element_exists?(doc, @business_highlight_pill)
     end
 
-    test "does not recommend any tier when site limit exceeds Business tier due to pending ownerships",
+    test "recommends Enterprise when site limit exceeds Business tier due to pending ownerships",
          %{
            conn: conn,
            user: user
@@ -656,6 +657,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       {:ok, _lv, doc} = get_liveview(conn)
 
+      assert text_of_element(doc, @enterprise_highlight_pill) == "Recommended"
       refute element_exists?(doc, @business_highlight_pill)
       refute element_exists?(doc, @growth_highlight_pill)
     end

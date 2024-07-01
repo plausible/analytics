@@ -57,9 +57,28 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     ~H"""
     <div
       id="enterprise-plan-box"
-      class="rounded-3xl px-6 sm:px-8 py-4 sm:py-6 bg-gray-900 shadow-xl dark:bg-gray-800 dark:ring-gray-600"
+      class={[
+        "rounded-3xl px-6 sm:px-8 py-4 sm:py-6 bg-gray-900 shadow-xl dark:bg-gray-800",
+        !@recommended && "dark:ring-gray-600",
+        @recommended && "ring-4 ring-indigo-500 dark:ring-2 dark:ring-indigo-300"
+      ]}
     >
-      <h3 class="text-lg font-semibold leading-8 text-white dark:text-gray-100">Enterprise</h3>
+      <div class="flex items-center justify-between gap-x-4">
+        <h3 class={[
+          "text-lg font-semibold leading-8",
+          !@recommended && "text-white dark:text-gray-100",
+          @recommended && "text-indigo-400 dark:text-indigo-300"
+        ]}>
+          Enterprise
+        </h3>
+        <span
+          :if={@recommended}
+          id="enterprise-highlight-pill"
+          class="rounded-full ring-1 ring-indigo-500 px-2.5 py-1 text-xs font-semibold leading-5 text-indigo-400 dark:text-indigo-300 dark:ring-1 dark:ring-indigo-300/50"
+        >
+          Recommended
+        </span>
+      </div>
       <p class="mt-6 flex items-baseline gap-x-1">
         <span class="text-4xl font-bold tracking-tight text-white dark:text-gray-100">
           Custom
