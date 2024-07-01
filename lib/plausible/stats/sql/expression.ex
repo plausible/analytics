@@ -38,6 +38,12 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
+  def dimension(key, "time:week", query) do
+    wrap_expression([t], %{
+      key => weekstart_not_before(t.timestamp, ^query.date_range.first, ^query.timezone)
+    })
+  end
+
   def dimension(key, "time:month", query) do
     wrap_expression([t], %{
       key => fragment("toStartOfMonth(toTimeZone(?, ?))", t.timestamp, ^query.timezone)

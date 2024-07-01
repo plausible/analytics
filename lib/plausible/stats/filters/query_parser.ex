@@ -225,6 +225,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_time("time"), do: {:ok, "time"}
   defp parse_time("time:hour"), do: {:ok, "time:hour"}
   defp parse_time("time:day"), do: {:ok, "time:day"}
+  defp parse_time("time:week"), do: {:ok, "time:week"}
   defp parse_time("time:month"), do: {:ok, "time:month"}
   defp parse_time(_), do: :error
 

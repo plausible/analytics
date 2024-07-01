@@ -28,8 +28,7 @@ defmodule Plausible.Stats.Timeseries do
   defp time_dimension(query) do
     case query.interval do
       "month" -> "time:month"
-      # :TODO:
-      "week" -> "time:month"
+      "week" -> "time:week"
       "date" -> "time:day"
       "hour" -> "time:hour"
     end
@@ -55,6 +54,23 @@ defmodule Plausible.Stats.Timeseries do
         key,
         empty_row(key, query.metrics)
       )
+    end)
+  end
+
+  defp empty_row(date, metrics) do
+    Enum.reduce(metrics, %{date: date}, fn metric, row ->
+      case metric do
+        :pageviews -> Map.merge(row, %{pageviews: 0})
+        :events -> Map.merge(row, %{events: 0})
+        :visitors -> Map.merge(row, %{visitors: 0})
+        :visits -> Map.merge(row, %{visits: 0})
+        :views_per_visit -> Map.merge(row, %{views_per_visit: 0.0})
+        :conversion_rate -> Map.merge(row, %{conversion_rate: 0.0})
+        :bounce_rate -> Map.merge(row, %{bounce_rate: 0.0})
+        :visit_duration -> Map.merge(row, %{visit_duration: nil})
+        :average_revenue -> Map.merge(row, %{average_revenue: nil})
+        :total_revenue -> Map.merge(row, %{total_revenue: nil})
+      end
     end)
   end
 end

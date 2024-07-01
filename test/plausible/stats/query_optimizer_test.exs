@@ -74,17 +74,17 @@ defmodule Plausible.Stats.QueryOptimizerTest do
       assert perform(%{
                date_range: Date.range(~D[2022-01-01], ~D[2022-02-16]),
                dimensions: ["time"]
-             }).dimensions == ["time:month"]
+             }).dimensions == ["time:week"]
 
       assert perform(%{
                date_range: Date.range(~D[2022-01-01], ~D[2022-03-16]),
                dimensions: ["time"]
-             }).dimensions == ["time:month"]
+             }).dimensions == ["time:week"]
 
       assert perform(%{
                date_range: Date.range(~D[2022-01-01], ~D[2022-03-16]),
                dimensions: ["time"]
-             }).dimensions == ["time:month"]
+             }).dimensions == ["time:week"]
 
       assert perform(%{
                date_range: Date.range(~D[2022-01-01], ~D[2023-11-16]),
