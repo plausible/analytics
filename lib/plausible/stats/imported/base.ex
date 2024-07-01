@@ -29,9 +29,14 @@ defmodule Plausible.Stats.Imported.Base do
     "event:page" => "imported_pages",
     "event:name" => "imported_custom_events",
 
-    # NOTE: these properties can be only filtered by
+    # NOTE: these dimensions can be only filtered by
     "visit:screen" => "imported_devices",
-    "event:hostname" => "imported_pages"
+    "event:hostname" => "imported_pages",
+
+    # NOTE: These dimensions are only used in group by
+    "time:month" => "imported_visitors",
+    "time:week" => "imported_visitors",
+    "time:day" => "imported_visitors"
   }
 
   @imported_custom_props Imported.imported_custom_props()
