@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Tracker do
       end
 
     if filename && MapSet.member?(files_available, filename) do
-      location = Application.app_dir(:analytics_flask, "priv/tracker/js/" <> filename)
+      location = Application.app_dir(:plausible, "priv/tracker/js/" <> filename)
 
       conn
       |> put_resp_header("content-type", "application/javascript")
