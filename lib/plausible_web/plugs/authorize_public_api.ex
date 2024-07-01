@@ -40,7 +40,7 @@ defmodule PlausibleWeb.AuthorizePublicApiPlug do
   # set as their valid scopes. We always consider implicit scopes as
   # present in addition to whatever else is provided for a particular
   # API key.
-  @implicit_scopes ["stats:read:*"]
+  @implicit_scopes ["stats:read:*", "sites:read:*"]
 
   def init(opts) do
     opts

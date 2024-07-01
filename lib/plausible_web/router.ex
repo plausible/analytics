@@ -185,6 +185,12 @@ defmodule PlausibleWeb.Router do
     scope "/api/v1/sites", PlausibleWeb.Api do
       pipe_through :public_api
 
+      scope assigns: %{api_scope: "sites:read:*"} do
+        pipe_through PlausibleWeb.AuthorizePublicApiPlug
+
+        get "/:site_id", ExternalSitesController, :get_site
+      end
+
       scope assigns: %{api_scope: "sites:provision:*"} do
         pipe_through PlausibleWeb.AuthorizePublicApiPlug
 
@@ -192,7 +198,6 @@ defmodule PlausibleWeb.Router do
         put "/shared-links", ExternalSitesController, :find_or_create_shared_link
         put "/goals", ExternalSitesController, :find_or_create_goal
         delete "/goals/:goal_id", ExternalSitesController, :delete_goal
-        get "/:site_id", ExternalSitesController, :get_site
         put "/:site_id", ExternalSitesController, :update_site
         delete "/:site_id", ExternalSitesController, :delete_site
       end
