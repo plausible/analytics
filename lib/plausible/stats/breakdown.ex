@@ -19,7 +19,9 @@ defmodule Plausible.Stats.Breakdown do
         dimensions: transform_dimensions(dimension),
         filters: query.filters ++ dimension_filters(dimension),
         preloaded_goals: QueryParser.preload_goals_if_needed(site, query.filters, [dimension]),
-        v2: true
+        v2: true,
+        # Allow pageview and event metrics to be queried off of sessions table
+        legacy_breakdown: true
       )
       |> QueryOptimizer.optimize()
 

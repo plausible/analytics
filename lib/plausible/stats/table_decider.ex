@@ -64,9 +64,9 @@ defmodule Plausible.Stats.TableDecider do
   defp metric_partitioner(%Query{v2: true}, :group_conversion_rate), do: :either
   defp metric_partitioner(%Query{v2: true}, :visitors), do: :either
   defp metric_partitioner(%Query{v2: true}, :visits), do: :either
-  # Note: These are not very accurate on shorter time ranges
-  defp metric_partitioner(%Query{v2: true}, :pageviews), do: :either
-  defp metric_partitioner(%Query{v2: true}, :events), do: :either
+  # Note: This is inaccurate when filtering but required for old backwards compatibility
+  defp metric_partitioner(%Query{legacy_breakdown: true}, :pageviews), do: :either
+  defp metric_partitioner(%Query{legacy_breakdown: true}, :events), do: :either
 
   defp metric_partitioner(_, :conversion_rate), do: :event
   defp metric_partitioner(_, :group_conversion_rate), do: :event
