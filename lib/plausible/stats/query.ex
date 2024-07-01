@@ -35,7 +35,7 @@ defmodule Plausible.Stats.Query do
 
     query =
       __MODULE__
-      |> struct!(now: now)
+      |> struct!(now: now, timezone: site.timezone)
       |> put_experimental_session_count(site, params)
       |> put_experimental_reduced_joins(site, params)
       |> put_period(site, params)
