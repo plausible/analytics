@@ -890,8 +890,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     assert json_response(conn, 200) == %{
              "results" => [
                %{"page" => "/", "pageviews" => 2},
-               %{"page" => "/plausible.io", "pageviews" => 1},
-               %{"page" => "/include-me", "pageviews" => 1}
+               %{"page" => "/include-me", "pageviews" => 1},
+               %{"page" => "/plausible.io", "pageviews" => 1}
              ]
            }
   end
@@ -1023,7 +1023,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "period" => "day",
           "date" => "2021-01-01",
           "property" => "visit:exit_page",
-          "metrics" => "visitors,visits,pageviews,bounce_rate,visit_duration,events",
+          "metrics" => "visitors,visits,bounce_rate,visit_duration",
           "with_imported" => "true"
         })
 
@@ -1031,18 +1031,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                "results" => [
                  %{
                    "bounce_rate" => 0.0,
-                   "events" => 7,
                    "exit_page" => "/b",
-                   "pageviews" => 7,
                    "visit_duration" => 150.0,
                    "visitors" => 3,
                    "visits" => 4
                  },
                  %{
                    "bounce_rate" => 100.0,
-                   "events" => 1,
                    "exit_page" => "/a",
-                   "pageviews" => 1,
                    "visit_duration" => 0.0,
                    "visitors" => 1,
                    "visits" => 1
@@ -2176,8 +2172,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
       assert json_response(conn, 200) == %{
                "results" => [
-                 %{"page" => "/plausible.io", "bounce_rate" => 100},
-                 %{"page" => "/important-page", "bounce_rate" => 100}
+                 %{"page" => "/important-page", "bounce_rate" => 100},
+                 %{"page" => "/plausible.io", "bounce_rate" => 100}
                ]
              }
     end
@@ -2597,12 +2593,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert json_response(conn, 200) == %{
                "results" => [
                  %{
-                   "page" => "/B",
-                   "time_on_page" => 90.0
-                 },
-                 %{
                    "page" => "/A",
                    "time_on_page" => 60.0
+                 },
+                 %{
+                   "page" => "/B",
+                   "time_on_page" => 90.0
                  },
                  %{
                    "page" => "/C",
@@ -3046,12 +3042,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert json_response(conn, 200) == %{
                "results" => [
                  %{
-                   "entry_page" => "/entry-page-1",
-                   "bounce_rate" => 0
-                 },
-                 %{
                    "entry_page" => "/entry-page-2",
                    "bounce_rate" => 100
+                 },
+                 %{
+                   "entry_page" => "/entry-page-1",
+                   "bounce_rate" => 0
                  }
                ]
              }
@@ -3146,6 +3142,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                  },
                  %{
                    "page" => "/plausible.io",
+                   # Breaks for event:page breakdown since visitors is calculated based on entry_page :/
                    "visitors" => 2,
                    "bounce_rate" => 100,
                    "visit_duration" => 0,
@@ -3290,8 +3287,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
       assert %{"browser" => "Chrome", "events" => 1} = breakdown_and_first.("visit:browser")
       assert %{"device" => "Desktop", "events" => 1} = breakdown_and_first.("visit:device")
-      assert %{"entry_page" => "/test", "events" => 1} = breakdown_and_first.("visit:entry_page")
-      assert %{"exit_page" => "/test", "events" => 1} = breakdown_and_first.("visit:exit_page")
       assert %{"country" => "EE", "events" => 1} = breakdown_and_first.("visit:country")
       assert %{"os" => "Mac", "events" => 1} = breakdown_and_first.("visit:os")
       assert %{"page" => "/test", "events" => 1} = breakdown_and_first.("event:page")

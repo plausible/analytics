@@ -54,10 +54,12 @@ defmodule Plausible.Stats.Imported.Base do
   def property_to_table_mappings(), do: @property_to_table_mappings
 
   def query_imported(site, query) do
-    query
-    |> transform_filters()
-    |> decide_table()
-    |> query_imported(site, query)
+    [table] =
+      query
+      |> transform_filters()
+      |> decide_tables()
+
+    query_imported(table, site, query)
   end
 
   def query_imported(table, site, query) do
@@ -75,13 +77,13 @@ defmodule Plausible.Stats.Imported.Base do
     |> apply_filter(query)
   end
 
-  def decide_table(query) do
+  def decide_tables(query) do
     query = transform_filters(query)
 
     if custom_prop_query?(query) do
       do_decide_custom_prop_table(query)
     else
-      do_decide_table(query)
+      do_decide_tables(query)
     end
   end
 
@@ -92,19 +94,17 @@ defmodule Plausible.Stats.Imported.Base do
         [:is, "event:name", ["pageview"]] -> true
         _ -> false
       end)
-      |> Enum.flat_map(fn filter ->
-        case filter do
-          [op, "event:goal", events] ->
-            events
-            |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
-            |> Enum.map(fn
-              {:event, names} -> [op, "event:name", names]
-              {:page, pages} -> [op, "event:page", pages]
-            end)
+      |> Enum.flat_map(fn
+        [op, "event:goal", clauses] ->
+          clauses
+          |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+          |> Enum.map(fn
+            {:event, names} -> [op, "event:name", names]
+            {:page, pages} -> [op, "event:page", pages]
+          end)
 
-          filter ->
-            [filter]
-        end
+        filter ->
+          [filter]
       end)
 
     struct!(query, filters: new_filters)
@@ -136,10 +136,10 @@ defmodule Plausible.Stats.Imported.Base do
           do_decide_custom_prop_table(query, custom_prop_filter)
 
         _ ->
-          nil
+          []
       end
     else
-      nil
+      []
     end
   end
 
@@ -158,23 +158,27 @@ defmodule Plausible.Stats.Imported.Base do
       end)
 
     if has_required_name_filter? and not has_unsupported_filters? do
-      "imported_custom_events"
+      ["imported_custom_events"]
     else
-      nil
+      []
     end
   end
 
-  defp do_decide_table(%Query{filters: [], dimensions: []}), do: "imported_visitors"
+  defp do_decide_tables(%Query{filters: [], dimensions: []}), do: ["imported_visitors"]
 
-  defp do_decide_table(%Query{filters: [], dimensions: ["event:goal"]}) do
-    "imported_custom_events"
+  defp do_decide_tables(%Query{filters: [], dimensions: ["event:goal"]}) do
+    ["imported_pages", "imported_custom_events"]
   end
 
-  defp do_decide_table(%Query{filters: [], dimensions: [dimension]}) do
-    @property_to_table_mappings[dimension]
+  defp do_decide_tables(%Query{filters: [], dimensions: [dimension]}) do
+    if Map.has_key?(@property_to_table_mappings, dimension) do
+      [@property_to_table_mappings[dimension]]
+    else
+      []
+    end
   end
 
-  defp do_decide_table(%Query{filters: filters, dimensions: ["event:goal"]}) do
+  defp do_decide_tables(%Query{filters: filters, dimensions: ["event:goal"]}) do
     filter_props = Enum.map(filters, &Enum.at(&1, 1))
 
     any_event_name_filters? = "event:name" in filter_props
@@ -182,27 +186,28 @@ defmodule Plausible.Stats.Imported.Base do
     any_other_filters? = Enum.any?(filter_props, &(&1 not in ["event:page", "event:name"]))
 
     cond do
-      any_other_filters? -> nil
-      any_event_name_filters? and not any_page_filters? -> "imported_custom_events"
-      any_page_filters? and not any_event_name_filters? -> "imported_pages"
-      true -> nil
+      any_other_filters? -> []
+      any_event_name_filters? and not any_page_filters? -> ["imported_custom_events"]
+      any_page_filters? and not any_event_name_filters? -> ["imported_pages"]
+      true -> []
     end
   end
 
-  defp do_decide_table(%Query{filters: filters, dimensions: dimensions}) do
+  defp do_decide_tables(%Query{filters: filters, dimensions: dimensions}) do
     table_candidates =
       filters
       |> Enum.map(fn [_, filter_key | _] -> filter_key end)
       |> Enum.concat(dimensions)
       |> Enum.map(fn
         "visit:screen" -> "visit:device"
-        prop -> prop
+        dimension -> dimension
       end)
       |> Enum.map(&@property_to_table_mappings[&1])
 
     case Enum.uniq(table_candidates) do
-      [candidate] -> candidate
-      _ -> nil
+      [nil] -> []
+      [candidate] -> [candidate]
+      _ -> []
     end
   end
 

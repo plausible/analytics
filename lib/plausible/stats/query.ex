@@ -225,6 +225,12 @@ defmodule Plausible.Stats.Query do
     struct!(query, filters: Filters.parse(params["filters"]))
   end
 
+  def set(query, keywords) do
+    query
+    |> struct!(keywords)
+    |> refresh_imported_opts()
+  end
+
   @spec set_dimensions(t(), list(String.t())) :: t()
   def set_dimensions(query, dimensions) do
     query
