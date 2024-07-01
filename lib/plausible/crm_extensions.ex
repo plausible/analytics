@@ -36,7 +36,7 @@ defmodule Plausible.CrmExtensions do
             if (cardBody) {
               const buttonDOM = document.createElement("div")
               buttonDOM.className = "mb-3 w-full text-right"
-              buttonDOM.innerHTML = '<div><a class="btn btn-outline-primary" href="#{base_url <> "/" <> domain}" target="_blank">Open Dashboard</a></div>'
+              buttonDOM.innerHTML = '<div><a class="btn btn-outline-primary" href="#{base_url <> "/" <> URI.encode_www_form(domain)}" target="_blank">Open Dashboard</a></div>'
               cardBody.prepend(buttonDOM)
             }
           })()
