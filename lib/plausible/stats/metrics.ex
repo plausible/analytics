@@ -17,7 +17,8 @@ defmodule Plausible.Stats.Metrics do
                  :events,
                  :conversion_rate,
                  :group_conversion_rate,
-                 :time_on_page
+                 :time_on_page,
+                 :percentage
                ] ++ on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
   @metric_mappings Enum.into(@all_metrics, %{}, fn metric -> {to_string(metric), metric} end)
@@ -26,5 +27,9 @@ defmodule Plausible.Stats.Metrics do
 
   def from_string!(str) do
     Map.fetch!(@metric_mappings, str)
+  end
+
+  def from_string(str) do
+    Map.fetch(@metric_mappings, str)
   end
 end

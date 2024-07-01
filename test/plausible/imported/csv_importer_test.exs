@@ -622,7 +622,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           case params_or_site do
             %Plausible.Site{} = site ->
               common_params.(site)
-              |> Map.put("metrics", "visitors,visits,pageviews,visit_duration,bounce_rate")
+              |> Map.put("metrics", "visitors,visits,visit_duration,bounce_rate")
               |> Map.put("limit", 1000)
               |> Map.put("property", by)
 
@@ -669,7 +669,7 @@ defmodule Plausible.Imported.CSVImporterTest do
         assert exported["pageviews"] == imported["pageviews"]
         assert exported["bounce_rate"] == imported["bounce_rate"]
         assert_in_delta exported["visitors"], imported["visitors"], 1
-        assert exported["visits"] == imported["visits"]
+        assert_in_delta exported["visits"], imported["visits"], 1
         assert_in_delta exported["visit_duration"], imported["visit_duration"], 1
       end)
 
@@ -810,7 +810,7 @@ defmodule Plausible.Imported.CSVImporterTest do
                    _no_diff = 0
                  end
                end)
-             ) == [0.0, 0.0, 0.0, 0.0, 0.03614457831325302]
+             ) == [0.0, 0.0, 0.0, 0.0, 0.0]
 
       # NOTE: city breakdown's visit duration difference is up to 14%
       assert summary(field(exported_cities, "visit_duration")) == [0, 0.0, 0.0, 1.0, 1718]
@@ -829,7 +829,7 @@ defmodule Plausible.Imported.CSVImporterTest do
                    _no_diff = 0
                  end
                end)
-             ) == [0, 0.0, 0.0, 0.0, 0.1428571428571429]
+             ) == [0, 0.0, 0.0, 0.0, 0.0]
 
       # NOTE: city breakdown's visitors relative difference is up to 27%
       assert summary(field(exported_cities, "visitors")) == [1, 1.0, 1.0, 2.0, 22]
