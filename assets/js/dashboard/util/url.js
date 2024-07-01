@@ -1,15 +1,11 @@
 import JsonURL from '@jsonurl/jsonurl'
 
 export function apiPath(site, path = '') {
-  return `/api/stats/${encodeURIComponent(site.domain)}${path}`
+  return `/api/stats/${encodeURIComponent(site.domain)}${path}/`
 }
 
-export function siteBasePath(site, path = '') {
-  return `/${encodeURIComponent(site.domain)}${path}`
-}
-
-export function sitePath(site, path = '') {
-  return siteBasePath(site, path) + window.location.search
+export function sitePath(path = '') {
+  return `/${path}` + window.location.search
 }
 
 export function setQuery(key, value) {

@@ -57,7 +57,7 @@ class Modal extends React.Component {
   }
 
   close() {
-    this.props.history.push(`/${encodeURIComponent(this.props.site.domain)}${this.props.location.search}`)
+    this.props.history.push(`/${this.props.location.search}`)
   }
 
   /**

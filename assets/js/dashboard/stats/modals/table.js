@@ -4,7 +4,7 @@ import { Link, withRouter } from 'react-router-dom'
 import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter from '../../util/number-formatter'
-import {parseQuery} from '../../query'
+import { parseQuery } from '../../query'
 import { cleanLabels, hasGoalFilter, replaceFilterByPrefix } from "../../util/filters";
 import { updatedQuery } from "../../util/url";
 
@@ -18,8 +18,8 @@ class ModalTable extends React.Component {
   }
 
   componentDidMount() {
-    api.get(this.props.endpoint, this.state.query, {limit: 100})
-      .then((response) => this.setState({loading: false, list: response.results}))
+    api.get(this.props.endpoint, this.state.query, { limit: 100 })
+      .then((response) => this.setState({ loading: false, list: response.results }))
   }
 
   showConversionRate() {
@@ -56,7 +56,7 @@ class ModalTable extends React.Component {
             className="hover:underline"
             to={{
               search: updatedQuery({ filters, labels }),
-              pathname: `/${encodeURIComponent(this.props.site.domain)}`
+              pathname: `/`
             }}
           >
             {this.props.renderIcon && this.props.renderIcon(tableItem)}
@@ -97,7 +97,7 @@ class ModalTable extends React.Component {
                 </tr>
               </thead>
               <tbody>
-                { this.state.list.map(this.renderTableItem.bind(this)) }
+                {this.state.list.map(this.renderTableItem.bind(this))}
               </tbody>
             </table>
           </main>
@@ -110,8 +110,8 @@ class ModalTable extends React.Component {
 
   render() {
     return (
-      <Modal site={this.props.site} show={!this.state.loading}>
-        { this.renderBody() }
+      <Modal show={!this.state.loading}>
+        {this.renderBody()}
       </Modal>
     )
   }
