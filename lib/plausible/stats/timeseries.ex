@@ -6,18 +6,6 @@ defmodule Plausible.Stats.Timeseries do
   import Ecto.Query
   use Plausible.Stats.SQL.Fragments
 
-  @typep metric ::
-           :pageviews
-           | :events
-           | :visitors
-           | :visits
-           | :bounce_rate
-           | :visit_duration
-           | :average_revenue
-           | :total_revenue
-  @typep value :: nil | integer() | float()
-  @type results :: nonempty_list(%{required(:date) => Date.t(), required(metric()) => value()})
-
   def timeseries(site, query, metrics) do
     steps = buckets(query)
 
