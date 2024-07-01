@@ -33,7 +33,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
          :ok <- validate_order_by(query),
          :ok <- validate_goal_filters(query),
          :ok <- validate_custom_props_access(site, query),
-         :ok <- validate_metrics(query) do
+         :ok <- validate_metrics(query),
+         :ok <- validate_include(query) do
       {:ok, query}
     end
   end
@@ -406,12 +407,22 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  def event_dimensions_not_allowing_session_metrics?(dimensions) do
+  defp event_dimensions_not_allowing_session_metrics?(dimensions) do
     Enum.any?(dimensions, fn
       "event:page" -> false
       "event:" <> _ -> true
       _ -> false
     end)
+  end
+
+  defp validate_include(query) do
+    time_dimension? = Enum.any?(query.dimensions, &String.starts_with?(&1, "time"))
+
+    if query.include.time_labels and not time_dimension? do
+      {:error, "Invalid include.time_labels: requires a time dimension"}
+    else
+      :ok
+    end
   end
 
   defp parse_list(list, parser_function) do

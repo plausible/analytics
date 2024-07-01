@@ -1096,7 +1096,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   end
 
   describe "timeseries" do
-    test "shows hourly data for a certain date", %{conn: conn, site: site} do
+    test "shows hourly data for a certain date with time_labels", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00]),
@@ -1108,16 +1108,44 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "site_id" => site.domain,
           "metrics" => ["visitors", "pageviews", "visits", "visit_duration", "bounce_rate"],
           "date_range" => ["2021-01-01", "2021-01-01"],
-          "dimensions" => ["time:hour"]
+          "dimensions" => ["time:hour"],
+          "include" => %{"time_labels" => true}
         })
 
       assert json_response(conn, 200)["results"] == [
                %{"dimensions" => ["2021-01-01T00:00:00Z"], "metrics" => [1, 2, 1, 600, 0]},
                %{"dimensions" => ["2021-01-01T23:00:00Z"], "metrics" => [1, 1, 1, 0, 100]}
              ]
+
+      assert json_response(conn, 200)["meta"]["time_labels"] == [
+               "2021-01-01T00:00:00Z",
+               "2021-01-01T01:00:00Z",
+               "2021-01-01T02:00:00Z",
+               "2021-01-01T03:00:00Z",
+               "2021-01-01T04:00:00Z",
+               "2021-01-01T05:00:00Z",
+               "2021-01-01T06:00:00Z",
+               "2021-01-01T07:00:00Z",
+               "2021-01-01T08:00:00Z",
+               "2021-01-01T09:00:00Z",
+               "2021-01-01T10:00:00Z",
+               "2021-01-01T11:00:00Z",
+               "2021-01-01T12:00:00Z",
+               "2021-01-01T13:00:00Z",
+               "2021-01-01T14:00:00Z",
+               "2021-01-01T15:00:00Z",
+               "2021-01-01T16:00:00Z",
+               "2021-01-01T17:00:00Z",
+               "2021-01-01T18:00:00Z",
+               "2021-01-01T19:00:00Z",
+               "2021-01-01T20:00:00Z",
+               "2021-01-01T21:00:00Z",
+               "2021-01-01T22:00:00Z",
+               "2021-01-01T23:00:00Z"
+             ]
     end
 
-    test "shows last 7 days of visitors", %{conn: conn, site: site} do
+    test "shows last 7 days of visitors with time labels", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-07 23:59:00])
@@ -1128,12 +1156,23 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "site_id" => site.domain,
           "metrics" => ["visitors"],
           "date_range" => ["2021-01-01", "2021-01-07"],
-          "dimensions" => ["time"]
+          "dimensions" => ["time"],
+          "include" => %{"time_labels" => true}
         })
 
       assert json_response(conn, 200)["results"] == [
                %{"dimensions" => ["2021-01-01"], "metrics" => [1]},
                %{"dimensions" => ["2021-01-07"], "metrics" => [1]}
+             ]
+
+      assert json_response(conn, 200)["meta"]["time_labels"] == [
+               "2021-01-01",
+               "2021-01-02",
+               "2021-01-03",
+               "2021-01-04",
+               "2021-01-05",
+               "2021-01-06",
+               "2021-01-07"
              ]
     end
 

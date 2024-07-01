@@ -103,4 +103,57 @@ defmodule Plausible.Stats.Interval do
   def valid_for_period?(period, interval, opts \\ []) do
     interval in Map.get(valid_by_period(opts), period, [])
   end
+
+  @doc """
+  Returns list of time bucket labels for the given query.
+  """
+  def time_dimension(query) do
+    Enum.find(query.dimensions, &String.starts_with?(&1, "time"))
+  end
+
+  def time_labels(query) do
+    time_labels_for_dimension(time_dimension(query), query)
+  end
+
+  defp time_labels_for_dimension("time:month", query) do
+    n_buckets =
+      Timex.diff(
+        query.date_range.last,
+        Date.beginning_of_month(query.date_range.first),
+        :months
+      )
+
+    Enum.map(n_buckets..0, fn shift ->
+      query.date_range.last
+      |> Date.beginning_of_month()
+      |> Timex.shift(months: -shift)
+    end)
+  end
+
+  defp time_labels_for_dimension("time:day", query) do
+    query.date_range
+    |> Enum.into([])
+  end
+
+  @full_day_in_hours 23
+  defp time_labels_for_dimension("time:hour", query) do
+    n_buckets =
+      if query.date_range.first == query.date_range.last do
+        @full_day_in_hours
+      else
+        end_time =
+          query.date_range.last
+          |> Timex.to_datetime()
+          |> Timex.end_of_day()
+
+        Timex.diff(end_time, query.date_range.first, :hours)
+      end
+
+    Enum.map(0..n_buckets, fn step ->
+      query.date_range.first
+      |> Timex.to_datetime()
+      |> Timex.shift(hours: step)
+      |> DateTime.truncate(:second)
+    end)
+  end
 end

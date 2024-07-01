@@ -252,13 +252,14 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       %{
         "metrics" => ["visitors"],
         "date_range" => "all",
+        "dimensions" => ["time"],
         "include" => %{"imports" => true, "time_labels" => true}
       }
       |> check_success(site, %{
         metrics: [:visitors],
         date_range: @date_range,
         filters: [],
-        dimensions: [],
+        dimensions: ["time"],
         order_by: nil,
         timezone: site.timezone,
         include: %{imports: true, time_labels: true},
@@ -273,6 +274,15 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "include" => "foobar"
       }
       |> check_error(site, ~r/Invalid include passed/)
+    end
+
+    test "setting include.time_labels without time dimension", %{site: site} do
+      %{
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "include" => %{"time_labels" => true}
+      }
+      |> check_error(site, ~r/Invalid include.time_labels: requires a time dimension/)
     end
   end
 
