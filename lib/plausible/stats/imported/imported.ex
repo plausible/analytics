@@ -256,8 +256,10 @@ defmodule Plausible.Stats.Imported do
 
   defp apply_interval(imported_q, %Plausible.Stats.Query{interval: "week"} = query, _site) do
     imported_q
-    |> group_by([i], weekstart_not_before(i.date, ^query.date_range.first))
-    |> select_merge([i], %{date: weekstart_not_before(i.date, ^query.date_range.first)})
+    |> group_by([i], weekstart_not_before(i.date, ^query.date_range.first, ^query.timezone))
+    |> select_merge([i], %{
+      date: weekstart_not_before(i.date, ^query.date_range.first, ^query.timezone)
+    })
   end
 
   defp apply_interval(imported_q, _query, _site) do
