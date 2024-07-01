@@ -602,15 +602,15 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
 
         assert json_response(conn, 200)["results"] == [
                  %{
-                   "name" => "ad",
-                   "visitors" => 2,
-                   "bounce_rate" => 100.0,
-                   "visit_duration" => 50.0
-                 },
-                 %{
                    "name" => "blog",
                    "visitors" => 2,
                    "bounce_rate" => 50.0,
+                   "visit_duration" => 50.0
+                 },
+                 %{
+                   "name" => "ad",
+                   "visitors" => 2,
+                   "bounce_rate" => 100.0,
                    "visit_duration" => 50.0
                  }
                ]
@@ -708,7 +708,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
 
         assert json_response(conn, 200)["results"] == [
                  %{
-                   "bounce_rate" => 0,
+                   "bounce_rate" => nil,
                    "time_on_page" => 60,
                    "visitors" => 3,
                    "pageviews" => 4,

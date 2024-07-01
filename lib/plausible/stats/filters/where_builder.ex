@@ -10,8 +10,6 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
 
   use Plausible.Stats.Fragments
 
-  require Logger
-
   @sessions_only_visit_fields [
     :entry_page,
     :exit_page,
@@ -150,15 +148,6 @@ defmodule Plausible.Stats.Filters.WhereBuilder do
   defp add_filter(:sessions, _query, [_, "event:" <> _ | _rest]) do
     # Cannot apply sessions filters directly on session query where clause.
     true
-  end
-
-  defp add_filter(table, _query, filter) do
-    Logger.info("Unable to process garbage filter. No results are returned",
-      table: table,
-      filter: filter
-    )
-
-    false
   end
 
   defp filter_custom_prop(prop_name, column_name, [:is, _, values]) do

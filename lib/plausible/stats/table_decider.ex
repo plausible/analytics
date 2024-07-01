@@ -29,41 +29,33 @@ defmodule Plausible.Stats.TableDecider do
       |> filter_keys()
       |> partition(query, &filters_partitioner/2)
 
-    %{event: event_only_dimensions, session: session_only_dimensions} =
-      partition(query.dimensions, query, &filters_partitioner/2)
-
     cond do
       # Only one table needs to be queried
-      empty?(event_only_metrics) && empty?(event_only_filters) && empty?(event_only_dimensions) ->
+      empty?(event_only_metrics) && empty?(event_only_filters) ->
         {[], session_only_metrics ++ either_metrics ++ sample_percent, other_metrics}
 
-      empty?(session_only_metrics) && empty?(session_only_filters) &&
-          empty?(session_only_dimensions) ->
+      empty?(session_only_metrics) && empty?(session_only_filters) ->
         {event_only_metrics ++ either_metrics ++ sample_percent, [], other_metrics}
 
-      # Filters and/or dimensions on both events and sessions, but only one kind of metric
-      empty?(event_only_metrics) && empty?(event_only_dimensions) ->
+      # Filters on both events and sessions, but only one kind of metric
+      empty?(event_only_metrics) ->
         {[], session_only_metrics ++ either_metrics ++ sample_percent, other_metrics}
 
-      empty?(session_only_metrics) && empty?(session_only_dimensions) ->
+      empty?(session_only_metrics) ->
         {event_only_metrics ++ either_metrics ++ sample_percent, [], other_metrics}
 
-      # Default: prefer events
+      # Default: prefer sessions
       true ->
-        {event_only_metrics ++ either_metrics ++ sample_percent,
-         session_only_metrics ++ sample_percent, other_metrics}
+        {event_only_metrics ++ sample_percent,
+         session_only_metrics ++ either_metrics ++ sample_percent, other_metrics}
     end
   end
 
   defp filter_keys(query) do
     query.filters
     |> Enum.map(fn [_, filter_key | _rest] -> filter_key end)
+    |> Enum.concat(query.dimensions)
   end
-
-  defp metric_partitioner(%Query{v2: true}, :conversion_rate), do: :either
-  defp metric_partitioner(%Query{v2: true}, :group_conversion_rate), do: :either
-  defp metric_partitioner(%Query{v2: true}, :visitors), do: :either
-  defp metric_partitioner(%Query{v2: true}, :visits), do: :either
 
   defp metric_partitioner(_, :conversion_rate), do: :event
   defp metric_partitioner(_, :group_conversion_rate), do: :event
@@ -84,7 +76,7 @@ defmodule Plausible.Stats.TableDecider do
   # Calculated metrics - handled on callsite separately from other metrics.
   defp metric_partitioner(_, :time_on_page), do: :other
   defp metric_partitioner(_, :total_visitors), do: :other
-  defp metric_partitioner(_, :percentage), do: :either
+  defp metric_partitioner(_, :percentage), do: :other
   # Sample percentage is included in both tables if queried.
   defp metric_partitioner(_, :sample_percent), do: :sample_percent
 

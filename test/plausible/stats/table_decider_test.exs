@@ -76,7 +76,7 @@ defmodule Plausible.Stats.TableDeciderTest do
       query = make_query(false, [])
 
       assert partition_metrics([:time_on_page, :percentage, :total_visitors], query) ==
-               {[], [:percentage], [:time_on_page, :total_visitors]}
+               {[], [], [:time_on_page, :percentage, :total_visitors]}
     end
 
     test "raises if unknown metric" do
@@ -108,11 +108,11 @@ defmodule Plausible.Stats.TableDeciderTest do
                {[], [:visit_duration, :visits], []}
     end
 
-    test "metrics that can be calculated on either are biased to events" do
+    test "metrics that can be calculated on either are biased to sessions" do
       query = make_query(true, [])
 
       assert partition_metrics([:bounce_rate, :total_revenue, :visitors], query) ==
-               {[:total_revenue, :visitors], [:bounce_rate], []}
+               {[:total_revenue], [:bounce_rate, :visitors], []}
     end
 
     test "sample_percent is handled with either metrics" do

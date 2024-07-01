@@ -455,9 +455,6 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         ),
         build(:imported_sources,
           source: "DuckDuckGo"
-        ),
-        build(:imported_sources,
-          source: "DuckDuckGo"
         )
       ])
 
@@ -470,7 +467,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn = get(conn, "/api/stats/#{site.domain}/sources?limit=1&page=2&with_imported=true")
 
       assert json_response(conn, 200)["results"] == [
-               %{"name" => "Google", "visitors" => 2}
+               %{"name" => "DuckDuckGo", "visitors" => 2}
              ]
     end
 
@@ -594,16 +591,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       assert json_response(conn, 200)["results"] == [
                %{
-                 "name" => "email",
-                 "visitors" => 1,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0
-               },
-               %{
                  "name" => "social",
                  "visitors" => 1,
                  "bounce_rate" => 0,
                  "visit_duration" => 900
+               },
+               %{
+                 "name" => "email",
+                 "visitors" => 1,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0
                }
              ]
 
@@ -615,16 +612,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       assert json_response(conn, 200)["results"] == [
                %{
-                 "name" => "email",
-                 "visitors" => 2,
-                 "bounce_rate" => 50,
-                 "visit_duration" => 50
-               },
-               %{
                  "name" => "social",
                  "visitors" => 2,
                  "bounce_rate" => 50,
                  "visit_duration" => 800.0
+               },
+               %{
+                 "name" => "email",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 50
                }
              ]
     end

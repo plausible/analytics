@@ -7,7 +7,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   import Plausible.Stats.Imported
   import Plausible.Stats.Util
 
-  alias Plausible.Stats.{Base, Query, QueryOptimizer, TableDecider, Filters}
+  alias Plausible.Stats.{Base, Query, QueryOptimizer, TableDecider, Filters, Metrics}
   alias Plausible.Stats.SQL.Expression
 
   require Plausible.Stats.SQL.Expression
@@ -44,7 +44,6 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> merge_imported(site, events_query, events_query.metrics)
     |> maybe_add_global_conversion_rate(site, events_query)
     |> maybe_add_group_conversion_rate(site, events_query)
-    |> Base.add_percentage_metric(site, events_query, events_query.metrics)
   end
 
   defp join_sessions_if_needed(q, site, query) do
@@ -85,9 +84,6 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> join_events_if_needed(site, sessions_query)
     |> build_group_by(sessions_query)
     |> merge_imported(site, sessions_query, sessions_query.metrics)
-    |> maybe_add_global_conversion_rate(site, sessions_query)
-    |> maybe_add_group_conversion_rate(site, sessions_query)
-    |> Base.add_percentage_metric(site, sessions_query, sessions_query.metrics)
   end
 
   def join_events_if_needed(q, site, query) do
@@ -127,23 +123,36 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
         ^shortname(query, dimension) => fragment("?", goal)
       },
       group_by: goal,
-      where: goal != 0 and (e.name == "pageview" or goal < 0)
+      where: goal != 0
     )
   end
 
   defp dimension_group_by(q, query, dimension) do
-    key = shortname(query, dimension)
-
     q
-    |> select_merge(^%{key => Expression.dimension(dimension, query, key)})
-    |> group_by([], selected_as(^key))
+    |> select_merge(^%{shortname(query, dimension) => Expression.dimension(dimension, query)})
+    |> group_by(^Expression.dimension(dimension, query))
   end
 
-  defp build_order_by(q, query) do
-    Enum.reduce(query.order_by || [], q, &build_order_by(&2, query, &1))
+  defp build_order_by(q, query, mode) do
+    Enum.reduce(query.order_by || [], q, &build_order_by(&2, query, &1, mode))
   end
 
-  def build_order_by(q, query, {metric_or_dimension, order_direction}) do
+  def build_order_by(q, query, {metric_or_dimension, order_direction}, :inner) do
+    order_by(
+      q,
+      [t],
+      ^{
+        order_direction,
+        if(
+          Metrics.metric?(metric_or_dimension),
+          do: dynamic([], selected_as(^shortname(query, metric_or_dimension))),
+          else: Expression.dimension(metric_or_dimension, query)
+        )
+      }
+    )
+  end
+
+  def build_order_by(q, query, {metric_or_dimension, order_direction}, :outer) do
     order_by(
       q,
       [t],
@@ -253,10 +262,10 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   defp join_query_results({nil, _}, {nil, _}), do: nil
 
   defp join_query_results({events_q, events_query}, {nil, _}),
-    do: events_q |> build_order_by(events_query)
+    do: events_q |> build_order_by(events_query, :inner)
 
-  defp join_query_results({nil, events_query}, {sessions_q, _}),
-    do: sessions_q |> build_order_by(events_query)
+  defp join_query_results({nil, _}, {sessions_q, sessions_query}),
+    do: sessions_q |> build_order_by(sessions_query, :inner)
 
   defp join_query_results({events_q, events_query}, {sessions_q, sessions_query}) do
     join(subquery(events_q), :left, [e], s in subquery(sessions_q),
@@ -265,12 +274,12 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> select_join_fields(events_query, events_query.dimensions, e)
     |> select_join_fields(events_query, events_query.metrics, e)
     |> select_join_fields(sessions_query, List.delete(sessions_query.metrics, :sample_percent), s)
-    |> build_order_by(events_query)
+    |> build_order_by(events_query, :outer)
   end
 
-  def build_group_by_join(%Query{dimensions: []}), do: true
+  defp build_group_by_join(%Query{dimensions: []}), do: true
 
-  def build_group_by_join(query) do
+  defp build_group_by_join(query) do
     query.dimensions
     |> Enum.map(fn dim ->
       dynamic([e, s], field(e, ^shortname(query, dim)) == field(s, ^shortname(query, dim)))
