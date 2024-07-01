@@ -5,7 +5,7 @@ export function apiPath(site, path = '') {
 }
 
 export function sitePath(path = '') {
-  return `/${path}` + window.location.search
+  return (path.startsWith('/') ? path : '/' + path) + window.location.search
 }
 
 export function setQuery(key, value) {
