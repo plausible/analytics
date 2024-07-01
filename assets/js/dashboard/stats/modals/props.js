@@ -25,7 +25,8 @@ const Money = maybeRequire().default
 function PropsModal(props) {
   const site = props.site
   const query = parseQuery(props.location.search, site)
-  const propKey = props.location.pathname.split('/').pop()
+
+  const propKey = props.location.pathname.split('/').filter(i => i).pop()
 
   const [loading, setLoading] = useState(true)
   const [moreResultsAvailable, setMoreResultsAvailable] = useState(false)
@@ -71,7 +72,7 @@ function PropsModal(props) {
       <tr className="text-sm dark:text-gray-200" key={listItem.name}>
         <td className="p-2">
           <Link
-            to={{ pathname: url.siteBasePath(site), search: filterSearchLink(listItem) }}
+            to={{ pathname: '/', search: filterSearchLink(listItem) }}
             className="hover:underline block truncate">
             {url.trimURL(listItem.name, 30)}
           </Link>
@@ -125,7 +126,7 @@ function PropsModal(props) {
   }
 
   return (
-    <Modal site={site}>
+    <Modal>
       {renderBody()}
       {loading && renderLoading()}
       {!loading && moreResultsAvailable && renderLoadMore()}
