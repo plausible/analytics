@@ -258,7 +258,9 @@ Express LUCK:
 Finlux:
   regex: 'FINLUX[;,]'
   device: 'tv'
-  model: ''
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
 
 # F&U (https://www.fandu.gr/)
 'F&U':
@@ -357,6 +359,8 @@ Hitachi:
   models:
     - regex: '49D2900'
       model: '49D2900'
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
 
 # HOFER (https://www.hofer.at/)
 HOFER:
@@ -577,7 +581,7 @@ LG:
       model: 'KEY0000213F'
     - regex: 'KEY000000(2E|2F|3B|3F)'
       model: 'KEY000000$1'
-    - regex: '(NetCast [0-9]{1}.[0-9]{1}|GLOBAL_PLAT3)'
+    - regex: '(NetCast [0-9]{1}\.[0-9]{1}|GLOBAL_PLAT3)'
       model: '$1'
     - regex: '(OLED[0-9]{2}[A-Z0-9]{3}[A-Z]{2})'
       model: '$1'
@@ -612,7 +616,9 @@ Lifemaxx:
 Linsar:
   regex: 'LINSAR[;,]'
   device: 'tv'
-  model: ''
+  models:
+    - regex: '_TV_[A-Z0-9]+_([0-9]{4});'
+      model: 'Smart TV ($1)'
 
 # Loewe
 Loewe:

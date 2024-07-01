@@ -28,50 +28,50 @@ function ScrollToTop() {
 
 export default function Router({ site, loggedIn, currentUserRole }) {
   return (
-    <BrowserRouter>
-      <Route path="/:domain">
+    <BrowserRouter basename={site.shared ? `/share/${encodeURIComponent(site.domain)}` : encodeURIComponent(site.domain)}>
+      <Route path="/">
         <ScrollToTop />
         <Dash site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} />
         <Switch>
-          <Route exact path={["/:domain/sources", "/:domain/utm_mediums", "/:domain/utm_sources", "/:domain/utm_campaigns", "/:domain/utm_contents", "/:domain/utm_terms"]}>
+          <Route exact path={["/sources", "/utm_mediums", "/utm_sources", "/utm_campaigns", "/utm_contents", "/utm_terms"]}>
             <SourcesModal site={site} />
           </Route>
-          <Route exact path="/:domain/referrers/Google">
+          <Route exact path="/referrers/Google">
             <GoogleKeywordsModal site={site} />
           </Route>
-          <Route exact path="/:domain/referrers/:referrer">
+          <Route exact path="/referrers/:referrer">
             <ReferrersDrilldownModal site={site} />
           </Route>
-          <Route path="/:domain/pages">
+          <Route path="/pages">
             <PagesModal site={site} />
           </Route>
-          <Route path="/:domain/entry-pages">
+          <Route path="/entry-pages">
             <EntryPagesModal site={site} />
           </Route>
-          <Route path="/:domain/exit-pages">
+          <Route path="/exit-pages">
             <ExitPagesModal site={site} />
           </Route>
-          <Route path="/:domain/countries">
-            <ModalTable title="Top countries" site={site} endpoint={url.apiPath(site, '/countries')} filterKey="country" keyLabel="Country" renderIcon={renderCountryIcon} showPercentage={true}/>
+          <Route path="/countries">
+            <ModalTable title="Top countries" site={site} endpoint={url.apiPath(site, '/countries')} filterKey="country" keyLabel="Country" renderIcon={renderCountryIcon} showPercentage={true} />
           </Route>
-          <Route path="/:domain/regions">
+          <Route path="/regions">
             <ModalTable title="Top regions" site={site} endpoint={url.apiPath(site, '/regions')} filterKey="region" keyLabel="Region" renderIcon={renderRegionIcon} />
           </Route>
-          <Route path="/:domain/cities">
+          <Route path="/cities">
             <ModalTable title="Top cities" site={site} endpoint={url.apiPath(site, '/cities')} filterKey="city" keyLabel="City" renderIcon={renderCityIcon} />
           </Route>
-          <Route path="/:domain/custom-prop-values/:prop_key">
+          <Route path="/custom-prop-values/:prop_key">
             <PropsModal site={site} />
           </Route>
-          <Route path="/:domain/conversions">
+          <Route path="/conversions">
             <ConversionsModal site={site} />
           </Route>
-          <Route path={["/:domain/filter/:field"]}>
+          <Route path={["/filter/:field"]}>
             <FilterModal site={site} />
           </Route>
         </Switch>
       </Route>
-    </BrowserRouter>
+    </BrowserRouter >
   );
 }
 

@@ -4,7 +4,7 @@ import { Link, withRouter } from 'react-router-dom'
 import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter, { percentageFormatter } from '../../util/number-formatter'
-import {parseQuery} from '../../query'
+import { parseQuery } from '../../query'
 import RocketIcon from './rocket-icon'
 
 class GoogleKeywordsModal extends React.Component {
@@ -17,7 +17,7 @@ class GoogleKeywordsModal extends React.Component {
   }
 
   componentDidMount() {
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.state.query, {limit: 100})
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.state.query, { limit: 100 })
       .then((res) => this.setState({
         loading: false,
         searchTerms: res.search_terms,
@@ -99,7 +99,7 @@ class GoogleKeywordsModal extends React.Component {
 
           <div className="my-4 border-b border-gray-300 dark:border-gray-500"></div>
           <main className="modal__content">
-            { this.renderKeywords() }
+            {this.renderKeywords()}
           </main>
         </React.Fragment>
       )
@@ -108,8 +108,8 @@ class GoogleKeywordsModal extends React.Component {
 
   render() {
     return (
-      <Modal site={this.props.site} show={!this.state.loading}>
-        { this.renderBody() }
+      <Modal show={!this.state.loading}>
+        {this.renderBody()}
       </Modal>
     )
   }
