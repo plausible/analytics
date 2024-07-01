@@ -117,7 +117,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
       breakdown_params =
         common_params
-        |> Map.put("metrics", "visitors,visits,pageviews,visit_duration,bounce_rate")
+        |> Map.put("metrics", "visitors,visits,visit_duration,bounce_rate")
         |> Map.put("limit", 1000)
 
       %{key: api_key} = insert(:api_key, user: user)
@@ -467,7 +467,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
     assert List.first(results) == %{
              "bounce_rate" => 35.0,
-             "pageviews" => 6229,
              "visit_duration" => 40.0,
              "visitors" => 4671,
              "visits" => 4917,
@@ -475,12 +474,11 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
            }
 
     assert List.last(results) == %{
-             "bounce_rate" => 100.0,
-             "pageviews" => 1,
-             "visit_duration" => 0.0,
+             "bounce_rate" => 0.0,
+             "source" => "yahoo",
+             "visit_duration" => 41.0,
              "visitors" => 1,
-             "visits" => 1,
-             "source" => "petalsearch.com"
+             "visits" => 1
            }
   end
 
@@ -493,7 +491,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     assert [
              %{
                "bounce_rate" => 35.0,
-               "pageviews" => 6399,
                "utm_medium" => "organic",
                "visit_duration" => 40.0,
                "visitors" => 4787,
@@ -501,7 +498,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
              },
              %{
                "bounce_rate" => 58.0,
-               "pageviews" => 491,
                "utm_medium" => "referral",
                "visit_duration" => 27.0,
                "visitors" => 294,
@@ -520,7 +516,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
     assert List.first(results) == %{
              "bounce_rate" => 35.0,
-             "pageviews" => 838,
              "visit_duration" => 43.0,
              "visitors" => 675,
              "visits" => 712,
@@ -529,11 +524,10 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
     assert List.last(results) == %{
              "bounce_rate" => 0.0,
-             "pageviews" => 1,
-             "visit_duration" => 27.0,
+             "entry_page" => "/znamenitosti-rima-koje-treba-vidjeti",
+             "visit_duration" => 40.0,
              "visitors" => 1,
-             "visits" => 1,
-             "entry_page" => "/kad-lisce-pada"
+             "visits" => 1
            }
   end
 
@@ -543,12 +537,11 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     %{"results" => results} =
       get(conn, "/api/v1/stats/breakdown", params) |> json_response(200)
 
-    assert length(results) == 488
+    assert length(results) == 494
 
     assert List.first(results) == %{
              "bounce_rate" => 35.0,
              "city" => 792_680,
-             "pageviews" => 1650,
              "visit_duration" => 39.0,
              "visitors" => 1233,
              "visits" => 1273
@@ -556,9 +549,8 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
     assert List.last(results) == %{
              "bounce_rate" => 0.0,
-             "city" => 4_399_605,
-             "pageviews" => 7,
-             "visit_duration" => 128.0,
+             "city" => 11_951_298,
+             "visit_duration" => 271.0,
              "visitors" => 1,
              "visits" => 1
            }
@@ -574,7 +566,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
     assert List.first(results) == %{
              "bounce_rate" => 38.0,
-             "pageviews" => 7041,
              "visit_duration" => 37.0,
              "visitors" => 5277,
              "visits" => 5532,
@@ -583,7 +574,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
     assert List.last(results) == %{
              "bounce_rate" => 37.0,
-             "pageviews" => 143,
              "visit_duration" => 60.0,
              "visitors" => 97,
              "visits" => 100,
@@ -601,7 +591,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
     assert List.first(results) == %{
              "bounce_rate" => 33.0,
-             "pageviews" => 8143,
              "visit_duration" => 50.0,
              "visitors" => 4625,
              "visits" => 4655,
@@ -610,7 +599,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
     assert List.last(results) == %{
              "bounce_rate" => 0.0,
-             "pageviews" => 6,
              "visit_duration" => 0.0,
              "visitors" => 1,
              "visits" => 1,
@@ -628,7 +616,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
     assert List.first(results) == %{
              "bounce_rate" => 34.0,
-             "pageviews" => 5827,
              "visit_duration" => 41.0,
              "visitors" => 4319,
              "visits" => 4495,
@@ -637,7 +624,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
     assert List.last(results) == %{
              "bounce_rate" => 0.0,
-             "pageviews" => 6,
              "visit_duration" => 0.0,
              "visitors" => 1,
              "visits" => 1,
@@ -657,7 +643,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
              "bounce_rate" => 32.0,
              "os" => "Android",
              "os_version" => "13.0.0",
-             "pageviews" => 1673,
              "visit_duration" => 42.0,
              "visitors" => 1247,
              "visits" => 1295
@@ -665,17 +650,16 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
 
     assert List.last(results) == %{
              "bounce_rate" => 0.0,
-             "os" => "iOS",
-             "os_version" => "15.1",
-             "pageviews" => 1,
-             "visit_duration" => 54.0,
+             "os" => "Chrome OS",
+             "os_version" => "x86_64 15662.76.0",
+             "visit_duration" => 16.0,
              "visitors" => 1,
              "visits" => 1
            }
   end
 
   defp assert_pages(conn, params) do
-    metrics = "visitors,visits,pageviews,time_on_page,visit_duration,bounce_rate"
+    metrics = "visitors,visits,time_on_page,visit_duration,bounce_rate"
 
     params =
       params
@@ -686,7 +670,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     %{"results" => results} =
       get(conn, "/api/v1/stats/breakdown", params) |> json_response(200)
 
-    assert length(results) == 729
+    assert length(results) == 730
 
     # The `event:page` breakdown is currently using the `entry_page`
     # property to allow querying session metrics.
@@ -696,7 +680,6 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     # it will allow us to assert on the session metrics as well.
     assert Enum.at(results, 2) == %{
              "page" => "/",
-             "pageviews" => 5537,
              "time_on_page" => 17.677262055264585,
              "visitors" => 371,
              "visits" => 212,
@@ -707,13 +690,12 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
     # This page was never an entry_page in the imported data, and
     # therefore the session metrics are returned as `nil`.
     assert List.last(results) == %{
-             "page" => "/5-dobrih-razloga-zasto-zapoceti-dan-zobenom-kasom/",
-             "pageviews" => 2,
-             "time_on_page" => 10.0,
+             "bounce_rate" => 0.0,
+             "page" => "/znamenitosti-rima-koje-treba-vidjeti/",
+             "time_on_page" => 40.0,
+             "visit_duration" => 0.0,
              "visitors" => 1,
-             "visits" => 1,
-             "bounce_rate" => nil,
-             "visit_duration" => nil
+             "visits" => 1
            }
   end
 end

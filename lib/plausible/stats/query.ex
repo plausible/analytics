@@ -18,7 +18,12 @@ defmodule Plausible.Stats.Query do
             order_by: nil,
             timezone: nil,
             v2: false,
-            preloaded_goals: []
+            legacy_breakdown: false,
+            preloaded_goals: [],
+            include: %{
+              imports: false,
+              time_labels: false
+            }
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{Filters, Interval, Imported}
@@ -223,6 +228,12 @@ defmodule Plausible.Stats.Query do
 
   defp put_parsed_filters(query, params) do
     struct!(query, filters: Filters.parse(params["filters"]))
+  end
+
+  def set(query, keywords) do
+    query
+    |> struct!(keywords)
+    |> refresh_imported_opts()
   end
 
   @spec set_dimensions(t(), list(String.t())) :: t()
