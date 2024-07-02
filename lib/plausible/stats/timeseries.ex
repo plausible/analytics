@@ -2,6 +2,13 @@ defmodule Plausible.Stats.Timeseries do
   use Plausible.ClickhouseRepo
   alias Plausible.Stats.{Query, QueryOptimizer, QueryResult, SQL}
 
+  @time_dimension %{
+    "month" => "time:month",
+    "week" => "time:week",
+    "date" => "time:day",
+    "hour" => "time:hour"
+  }
+
   def timeseries(site, query, metrics) do
     query_with_metrics =
       Query.set(
@@ -23,14 +30,7 @@ defmodule Plausible.Stats.Timeseries do
     |> transform_keys(%{group_conversion_rate: :conversion_rate})
   end
 
-  defp time_dimension(query) do
-    case query.interval do
-      "month" -> "time:month"
-      "week" -> "time:week"
-      "date" -> "time:day"
-      "hour" -> "time:hour"
-    end
-  end
+  defp time_dimension(query), do: Map.fetch!(@time_dimension, query.interval)
 
   defp build_timeseries_result(query_result, query) do
     results_map =

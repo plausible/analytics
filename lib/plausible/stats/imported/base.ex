@@ -202,9 +202,12 @@ defmodule Plausible.Stats.Imported.Base do
       filters
       |> Enum.map(fn [_, filter_key | _] -> filter_key end)
       |> Enum.concat(dimensions)
-      |> Enum.map(fn
-        "visit:screen" -> "visit:device"
-        dimension -> dimension
+      |> Enum.flat_map(fn
+        "time:month" -> []
+        "time:week" -> []
+        "time:day" -> []
+        "visit:screen" -> ["visit:device"]
+        dimension -> [dimension]
       end)
       |> Enum.map(&@property_to_table_mappings[&1])
 
