@@ -6,7 +6,7 @@ defmodule Plausible.Stats.Timeseries do
     query_with_metrics =
       Query.set(
         query,
-        metrics: metrics,
+        metrics: transform_metrics(metrics, %{conversion_rate: :group_conversion_rate}),
         dimensions: [time_dimension(query)],
         order_by: [{time_dimension(query), :asc}],
         v2: true,
@@ -14,15 +14,13 @@ defmodule Plausible.Stats.Timeseries do
       )
       |> QueryOptimizer.optimize()
 
-    IO.inspect(query_with_metrics)
-
     q = SQL.QueryBuilder.build(query_with_metrics, site)
 
     q
-    |> IO.inspect()
     |> ClickhouseRepo.all()
     |> QueryResult.from(query_with_metrics)
     |> build_timeseries_result(query_with_metrics)
+    |> transform_keys(%{group_conversion_rate: :conversion_rate})
   end
 
   defp time_dimension(query) do
@@ -66,11 +64,25 @@ defmodule Plausible.Stats.Timeseries do
         :visits -> Map.merge(row, %{visits: 0})
         :views_per_visit -> Map.merge(row, %{views_per_visit: 0.0})
         :conversion_rate -> Map.merge(row, %{conversion_rate: 0.0})
+        :group_conversion_rate -> Map.merge(row, %{group_conversion_rate: 0.0})
         :bounce_rate -> Map.merge(row, %{bounce_rate: 0.0})
         :visit_duration -> Map.merge(row, %{visit_duration: nil})
         :average_revenue -> Map.merge(row, %{average_revenue: nil})
         :total_revenue -> Map.merge(row, %{total_revenue: nil})
       end
+    end)
+  end
+
+  defp transform_metrics(metrics, to_replace) do
+    Enum.map(metrics, &Map.get(to_replace, &1, &1))
+  end
+
+  defp transform_keys(results, keys_to_replace) do
+    Enum.map(results, fn map ->
+      Enum.map(map, fn {key, val} ->
+        {Map.get(keys_to_replace, key, key), val}
+      end)
+      |> Enum.into(%{})
     end)
   end
 end
