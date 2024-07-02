@@ -144,6 +144,26 @@ defmodule Plausible.Stats.IntervalTest do
              ]
     end
 
+    test "with time:week dimension" do
+      assert time_labels(%{
+               dimensions: ["time:week"],
+               date_range: Date.range(~D[2020-12-20], ~D[2021-01-08])
+             }) == [
+               "2020-12-20",
+               "2020-12-21",
+               "2020-12-28",
+               "2021-01-04"
+             ]
+
+      assert time_labels(%{
+               dimensions: ["time:week"],
+               date_range: Date.range(~D[2020-12-21], ~D[2021-01-03])
+             }) == [
+               "2020-12-21",
+               "2020-12-28"
+             ]
+    end
+
     test "with time:day dimension" do
       assert time_labels(%{
                dimensions: ["time:day"],

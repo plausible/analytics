@@ -136,6 +136,22 @@ defmodule Plausible.Stats.Interval do
     end)
   end
 
+  defp time_labels_for_dimension("time:week", query) do
+    n_buckets =
+      Timex.diff(
+        query.date_range.last,
+        Date.beginning_of_week(query.date_range.first),
+        :weeks
+      )
+
+    Enum.map(0..n_buckets, fn shift ->
+      query.date_range.first
+      |> Timex.shift(weeks: shift)
+      |> date_or_weekstart(query)
+      |> format_datetime()
+    end)
+  end
+
   defp time_labels_for_dimension("time:day", query) do
     query.date_range
     |> Enum.into([])
@@ -163,5 +179,15 @@ defmodule Plausible.Stats.Interval do
       |> DateTime.truncate(:second)
       |> format_datetime()
     end)
+  end
+
+  defp date_or_weekstart(date, query) do
+    weekstart = Timex.beginning_of_week(date)
+
+    if Enum.member?(query.date_range, weekstart) do
+      weekstart
+    else
+      date
+    end
   end
 end
