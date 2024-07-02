@@ -2,12 +2,52 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
+
+  import Plausible.Pagination
+
   alias Plausible.Sites
   alias Plausible.Goals
   alias PlausibleWeb.Api.Helpers, as: H
 
+  def index(conn, params) do
+    user = conn.assigns.current_user
+
+    page =
+      user
+      |> Sites.for_user_query()
+      |> paginate(params, cursor_fields: [{:id, :desc}])
+
+    json(conn, %{
+      sites: page.entries,
+      meta: pagination_meta(page.metadata)
+    })
+  end
+
+  def goals_index(conn, params) do
+    user = conn.assigns.current_user
+
+    with {:ok, site_id} <- expect_param_key(params, "site_id"),
+         {:ok, site} <- get_site(user, site_id, [:owner, :admin]) do
+      page =
+        site
+        |> Plausible.Goals.for_site_query()
+        |> paginate(params, cursor_fields: [{:id, :desc}])
+
+      json(conn, %{
+        goals: page.entries,
+        meta: pagination_meta(page.metadata)
+      })
+    else
+      {:missing, "site_id"} ->
+        H.bad_request(conn, "Parameter `site_id` is required to list goals")
+
+      {:error, :site_not_found} ->
+        H.not_found(conn, "Site could not be found")
+    end
+  end
+
   def create_site(conn, params) do
-    user = conn.assigns[:current_user]
+    user = conn.assigns.current_user
 
     case Sites.create(user, params) do
       {:ok, %{site: site}} ->
@@ -29,57 +69,50 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def get_site(conn, %{"site_id" => site_id}) do
-    site = Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin])
+    case get_site(conn.assigns.current_user, site_id, [:owner, :admin]) do
+      {:ok, site} ->
+        json(conn, %{
+          domain: site.domain,
+          timezone: site.timezone,
+          allowed_custom_props: site.allowed_event_props || []
+        })
 
-    if site do
-      json(conn, site)
-    else
-      H.not_found(conn, "Site could not be found")
+      {:error, :site_not_found} ->
+        H.not_found(conn, "Site could not be found")
     end
   end
 
   def delete_site(conn, %{"site_id" => site_id}) do
-    site = Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner])
+    case get_site(conn.assigns.current_user, site_id, [:owner]) do
+      {:ok, site} ->
+        {:ok, _} = Plausible.Site.Removal.run(site.domain)
+        json(conn, %{"deleted" => true})
 
-    if site do
-      {:ok, _} = Plausible.Site.Removal.run(site.domain)
-      json(conn, %{"deleted" => true})
-    else
-      H.not_found(conn, "Site could not be found")
+      {:error, :site_not_found} ->
+        H.not_found(conn, "Site could not be found")
     end
   end
 
   def update_site(conn, %{"site_id" => site_id} = params) do
     # for now this only allows to change the domain
-    site = Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin])
-
-    if site do
-      case Plausible.Site.Domain.change(site, params["domain"]) do
-        {:ok, site} ->
-          json(conn, site)
-
-        {:error, changeset} ->
-          conn
-          |> put_status(400)
-          |> json(serialize_errors(changeset))
-      end
+    with {:ok, site} <- get_site(conn.assigns.current_user, site_id, [:owner, :admin]),
+         {:ok, site} <- Plausible.Site.Domain.change(site, params["domain"]) do
+      json(conn, site)
     else
-      H.not_found(conn, "Site could not be found")
-    end
-  end
+      {:error, :site_not_found} ->
+        H.not_found(conn, "Site could not be found")
 
-  defp expect_param_key(params, key) do
-    case Map.fetch(params, key) do
-      :error -> {:missing, key}
-      res -> res
+      {:error, %Ecto.Changeset{} = changeset} ->
+        conn
+        |> put_status(400)
+        |> json(serialize_errors(changeset))
     end
   end
 
   def find_or_create_shared_link(conn, params) do
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
          {:ok, link_name} <- expect_param_key(params, "name"),
-         site when not is_nil(site) <-
-           Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin]) do
+         {:ok, site} <- get_site(conn.assigns.current_user, site_id, [:owner, :admin]) do
       shared_link = Repo.get_by(Plausible.Site.SharedLink, site_id: site.id, name: link_name)
 
       shared_link =
@@ -96,7 +129,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
           })
       end
     else
-      nil ->
+      {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
 
       {:missing, "site_id"} ->
@@ -113,12 +146,11 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   def find_or_create_goal(conn, params) do
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
          {:ok, _} <- expect_param_key(params, "goal_type"),
-         site when not is_nil(site) <-
-           Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin]),
+         {:ok, site} <- get_site(conn.assigns.current_user, site_id, [:owner, :admin]),
          {:ok, goal} <- Goals.find_or_create(site, params) do
       json(conn, goal)
     else
-      nil ->
+      {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
 
       {:missing, param} ->
@@ -132,18 +164,15 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   def delete_goal(conn, params) do
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
          {:ok, goal_id} <- expect_param_key(params, "goal_id"),
-         site when not is_nil(site) <-
-           Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin]) do
-      case Goals.delete(goal_id, site) do
-        :ok ->
-          json(conn, %{"deleted" => true})
-
-        {:error, :not_found} ->
-          H.not_found(conn, "Goal could not be found")
-      end
+         {:ok, site} <- get_site(conn.assigns.current_user, site_id, [:owner, :admin]),
+         :ok <- Goals.delete(goal_id, site) do
+      json(conn, %{"deleted" => true})
     else
-      nil ->
+      {:error, :site_not_found} ->
         H.not_found(conn, "Site could not be found")
+
+      {:error, :not_found} ->
+        H.not_found(conn, "Goal could not be found")
 
       {:missing, "site_id"} ->
         H.bad_request(conn, "Parameter `site_id` is required to delete a goal")
@@ -156,9 +185,31 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  defp pagination_meta(meta) do
+    %{
+      after: meta.after,
+      before: meta.before,
+      limit: meta.limit
+    }
+  end
+
+  defp get_site(user, site_id, roles) do
+    case Sites.get_for_user(user.id, site_id, roles) do
+      nil -> {:error, :site_not_found}
+      site -> {:ok, site}
+    end
+  end
+
   defp serialize_errors(changeset) do
     {field, {msg, _opts}} = List.first(changeset.errors)
     error_msg = Atom.to_string(field) <> ": " <> msg
     %{"error" => error_msg}
+  end
+
+  defp expect_param_key(params, key) do
+    case Map.fetch(params, key) do
+      :error -> {:missing, key}
+      res -> res
+    end
   end
 end

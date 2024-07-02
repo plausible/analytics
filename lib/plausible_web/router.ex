@@ -188,6 +188,8 @@ defmodule PlausibleWeb.Router do
       scope assigns: %{api_scope: "sites:read:*"} do
         pipe_through PlausibleWeb.Plugs.AuthorizePublicAPI
 
+        get "/", ExternalSitesController, :index
+        get "/goals", ExternalSitesController, :goals_index
         get "/:site_id", ExternalSitesController, :get_site
       end
 
