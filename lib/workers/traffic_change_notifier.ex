@@ -1,4 +1,7 @@
 defmodule Plausible.Workers.TrafficChangeNotifier do
+  @moduledoc """
+  Oban service sending out traffic drop/spike notifications
+  """
   use Plausible.Repo
   alias Plausible.Stats.Query
   alias Plausible.Site.TrafficChangeNotification
