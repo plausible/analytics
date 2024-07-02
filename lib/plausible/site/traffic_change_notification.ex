@@ -1,4 +1,7 @@
 defmodule Plausible.Site.TrafficChangeNotification do
+  @moduledoc """
+  Configuration schema for site-specific traffic change notifications.
+  """
   use Ecto.Schema
   import Ecto.Changeset
 
