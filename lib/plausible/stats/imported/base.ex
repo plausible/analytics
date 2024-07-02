@@ -174,14 +174,6 @@ defmodule Plausible.Stats.Imported.Base do
     ["imported_pages", "imported_custom_events"]
   end
 
-  defp do_decide_tables(%Query{filters: [], dimensions: [dimension]}) do
-    if Map.has_key?(@property_to_table_mappings, dimension) do
-      [@property_to_table_mappings[dimension]]
-    else
-      []
-    end
-  end
-
   defp do_decide_tables(%Query{filters: filters, dimensions: ["event:goal"]}) do
     filter_props = Enum.map(filters, &Enum.at(&1, 1))
 
@@ -212,6 +204,7 @@ defmodule Plausible.Stats.Imported.Base do
       |> Enum.map(&@property_to_table_mappings[&1])
 
     case Enum.uniq(table_candidates) do
+      [] -> ["imported_visitors"]
       [nil] -> []
       [candidate] -> [candidate]
       _ -> []
