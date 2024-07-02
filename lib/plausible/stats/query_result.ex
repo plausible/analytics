@@ -46,6 +46,12 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
+  defp dimension_label("time:" <> _ = time_dimension, entry, query) do
+    datetime = Map.get(entry, Util.shortname(query, time_dimension))
+
+    Interval.format_datetime(datetime)
+  end
+
   defp dimension_label(dimension, entry, query) do
     Map.get(entry, Util.shortname(query, dimension))
   end

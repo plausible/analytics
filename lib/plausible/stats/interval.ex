@@ -104,6 +104,11 @@ defmodule Plausible.Stats.Interval do
     interval in Map.get(valid_by_period(opts), period, [])
   end
 
+  def format_datetime(%Date{} = date), do: Date.to_string(date)
+
+  def format_datetime(%DateTime{} = datetime),
+    do: Timex.format!(datetime, "{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
+
   @doc """
   Returns list of time bucket labels for the given query.
   """
@@ -127,12 +132,14 @@ defmodule Plausible.Stats.Interval do
       query.date_range.last
       |> Date.beginning_of_month()
       |> Timex.shift(months: -shift)
+      |> format_datetime()
     end)
   end
 
   defp time_labels_for_dimension("time:day", query) do
     query.date_range
     |> Enum.into([])
+    |> Enum.map(&format_datetime/1)
   end
 
   @full_day_in_hours 23
@@ -154,6 +161,7 @@ defmodule Plausible.Stats.Interval do
       |> Timex.to_datetime()
       |> Timex.shift(hours: step)
       |> DateTime.truncate(:second)
+      |> format_datetime()
     end)
   end
 end
