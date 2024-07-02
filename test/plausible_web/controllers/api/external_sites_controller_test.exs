@@ -509,6 +509,17 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert json_response(conn, 200) == %{"domain" => new_domain, "timezone" => site.timezone}
       end
 
+      test "get a site with basic scope config", %{conn: conn, user: user, site: site} do
+        api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
+
+        conn =
+          conn
+          |> Plug.Conn.put_req_header("authorization", "Bearer #{api_key.key}")
+          |> get("/api/v1/sites/" <> site.domain)
+
+        assert json_response(conn, 200) == %{"domain" => site.domain, "timezone" => site.timezone}
+      end
+
       test "is 404 when site cannot be found", %{conn: conn} do
         conn = get(conn, "/api/v1/sites/foobar.baz")
 
