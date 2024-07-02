@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from 'react-router-dom'
 
 import * as api from '../../api'
+import { addFilter } from '../../query'
+import debounce from 'debounce-promise'
+import { useMountedEffect } from '../../custom-hooks'
 import { trimURL, updatedQuery } from '../../util/url'
 import { replaceFilterByPrefix } from "../../util/filters";
 
@@ -13,19 +16,38 @@ export default function BreakdownModal(props) {
   const metrics = getMetrics(query)
   
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
   const [results, setResults] = useState([])
   const [page, setPage] = useState(1)
   const [moreResultsAvailable, setMoreResultsAvailable] = useState(false)
 
-  useEffect(fetchData, [page])
-
-  function fetchData() {
-    api.get(endpoint, query, { limit: LIMIT, page })
+  const fetchData = useCallback(debounce(() => {
+    api.get(endpoint, withSearch(query), { limit: LIMIT, page: 1 })
       .then((response) => {
         setLoading(false)
-        setResults(results.concat(response.results))
+        setPage(1)
+        setResults(response.results)
         setMoreResultsAvailable(response.results.length === LIMIT)
       })
+  }, 200), [search])
+  
+  useEffect(() => { fetchData() }, [search])
+  useMountedEffect(() => { fetchNextPage() }, [page])
+
+  function fetchNextPage() {
+    if (page > 1) {
+      api.get(endpoint, withSearch(query), { limit: LIMIT, page })
+        .then((response) => {
+          setLoading(false)
+          setResults(results.concat(response.results))
+          setMoreResultsAvailable(response.results.length === LIMIT)
+        })
+    }
+  }
+
+  function withSearch(query) {
+    if (search === '') { return query}
+    return addFilter(query, ['contains', reportInfo.dimension, [search]])
   }
 
   function loadNextPage() {
@@ -82,7 +104,15 @@ export default function BreakdownModal(props) {
     if (results) {
       return (
         <>
-          <h1 className="text-xl font-bold dark:text-gray-100">{ reportInfo.title }</h1>
+          <div className="flex justify-between items-center">
+            <h1 className="text-xl font-bold dark:text-gray-100">{ reportInfo.title }</h1>
+            <input
+              type="text"
+              placeholder="Search"
+              className="shadow-sm dark:bg-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 block sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+              onChange={(e) => { setSearch(e.target.value) }}
+            />
+          </div>
 
           <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content">

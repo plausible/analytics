@@ -48,6 +48,10 @@ export function parseQuery(querystring, site) {
   }
 }
 
+export function addFilter(query, filter) {
+  return {...query, filters: [...query.filters, filter]}
+}
+
 export function navigateToQuery(history, queryFrom, newData) {
   // if we update any data that we store in localstorage, make sure going back in history will
   // revert them
