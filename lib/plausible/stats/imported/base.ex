@@ -128,9 +128,10 @@ defmodule Plausible.Stats.Imported.Base do
     do_decide_custom_prop_table(query, dimension)
   end
 
+  @queriable_custom_prop_dimensions ["event:goal", "event:name"] ++ @queriable_time_dimensions
   defp do_decide_custom_prop_table(%{dimensions: dimensions} = query) do
     if dimensions == [] or
-         (length(dimensions) == 1 and hd(dimensions) in ["event:goal", "event:name"]) do
+         (length(dimensions) == 1 and hd(dimensions) in @queriable_custom_prop_dimensions) do
       custom_prop_filters =
         query.filters
         |> Enum.map(&Enum.at(&1, 1))
