@@ -16,14 +16,13 @@ defmodule PlausibleWeb.AuthorizePublicApiPlug do
   The scope from `:api_scope` is checked for match against all scopes from API key's
   `scopes` field. If the scope is among `@implicit_scopes`, it's considered to be
   present for any valid API key. Scopes are checked for match by prefix, so if we have
-  `some:scope:*` in matching route `:api_scope` and the API key has `some:*` in its'
+  `some:scope:*` in matching route `:api_scope` and the API key has `some:*` in its
   `scopes` field, they will match.
 
   After a match is found, additional verification can be conducted, like in case of
   `stats:read:*`, where valid site ID is expected among parameters too.
 
   All API requests are rate limited per API key, enforcing a given hourly request limit.
-
   """
 
   use Plausible.Repo
