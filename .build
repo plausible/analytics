@@ -251,8 +251,6 @@ PlausibleWeb.AuthController.html
 PlausibleWeb.AuthPlug.html
 PlausibleWeb.AuthView.html
 PlausibleWeb.AuthorizeSiteAccess.html
-PlausibleWeb.AuthorizeSitesApiPlug.html
-PlausibleWeb.AuthorizeStatsApiPlug.html
 PlausibleWeb.AvatarController.html
 PlausibleWeb.BillingController.html
 PlausibleWeb.BillingView.html
@@ -369,6 +367,7 @@ PlausibleWeb.Plugins.API.Views.Pagination.html
 PlausibleWeb.Plugins.API.Views.SharedLink.html
 PlausibleWeb.PluginsAPICase.html
 PlausibleWeb.Plugs.AuthorizePluginsAPI.html
+PlausibleWeb.Plugs.AuthorizePublicAPI.html
 PlausibleWeb.Plugs.ErrorHandler.html
 PlausibleWeb.Plugs.MaybeDisableRegistration.html
 PlausibleWeb.Plugs.NoRobots.html
@@ -419,8 +418,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-3D844909.js
-dist/sidebar_items-DF7D1963.js
+dist/search_data-242689E0.js
+dist/sidebar_items-E986630B.js
 index.html
 readme.html
 search.html
