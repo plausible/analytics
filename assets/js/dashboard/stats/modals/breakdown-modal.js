@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Link } from 'react-router-dom'
 
 import * as api from '../../api'
 import { addFilter } from '../../query'
 import debounce from 'debounce-promise'
 import { useMountedEffect } from '../../custom-hooks'
-import { trimURL, updatedQuery } from '../../util/url'
-import { replaceFilterByPrefix } from "../../util/filters";
+import { trimURL } from '../../util/url'
+import { FilterLink } from "../reports/list";
 
 const LIMIT = 100
 
@@ -56,20 +55,16 @@ export default function BreakdownModal(props) {
   }
 
   function renderRow(item) {
-    const filters = replaceFilterByPrefix(query, reportInfo.dimension, ["is", reportInfo.dimension, [item.name]])
-
     return (
       <tr className="text-sm dark:text-gray-200" key={item.name}>
         <td className="p-2 truncate">
-          <Link
-            to={{
-              pathname: `/${encodeURIComponent(site.domain)}`,
-              search: updatedQuery({ filters })
-            }}
-            className="hover:underline"
+          <FilterLink
+            pathname={`/${encodeURIComponent(site.domain)}`}
+            query={query}
+            filterInfo={props.getFilterInfo(item)}
           >
             {trimURL(item.name, 40)}
-          </Link>
+          </FilterLink>
         </td>
         {metrics.map((metric) => {
           return (

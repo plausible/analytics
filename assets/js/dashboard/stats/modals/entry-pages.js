@@ -16,6 +16,13 @@ function EntryPagesModal(props) {
     dimensionLabel: 'Entry page'
   }
 
+  const getFilterInfo = (listItem) => {
+    return {
+      prefix: reportInfo.dimension,
+      filter: ["is", reportInfo.dimension, [listItem.name]]
+    }
+  }
+
   const getMetrics = useCallback((query) => {
     if (hasGoalFilter(query)) {
       return [
@@ -45,6 +52,7 @@ function EntryPagesModal(props) {
         query={query}
         reportInfo={reportInfo}
         getMetrics={getMetrics}
+        getFilterInfo={getFilterInfo}
       />
     </Modal>
   )

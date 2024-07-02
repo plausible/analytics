@@ -17,18 +17,20 @@ const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT = (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
 const COL_MIN_WIDTH = 70
 
-function FilterLink({ filterQuery, onClick, children }) {
-  const className = classNames('max-w-max w-full flex items-center md:overflow-hidden', {
-    'hover:underline': !!filterQuery
-  })
+export function FilterLink({ pathname, query, filterInfo, onClick, children, extraClass }) {
+  const className = classNames(`${extraClass}`, { 'hover:underline': !!filterInfo })
 
-  if (filterQuery) {
+  if (filterInfo) {
+    const {prefix, filter, labels} = filterInfo
+    const newFilters = replaceFilterByPrefix(query, prefix, filter)
+    const newLabels = cleanLabels(newFilters, query.labels, filter[1], labels)
+    const filterQuery = updatedQuery({ filters: newFilters, labels: newLabels })
+    
+    let linkTo = { search: filterQuery.toString() }
+    if (pathname) { linkTo.pathname = pathname }
+
     return (
-      <Link
-        to={{ search: filterQuery.toString() }}
-        onClick={onClick}
-        className={className}
-      >
+      <Link to={linkTo} onClick={onClick} className={className}>
         {children}
       </Link>
     )
@@ -235,17 +237,6 @@ export default function ListReport(props) {
     )
   }
 
-  function getFilterQuery(listItem) {
-    const prefixAndFilter = props.getFilterFor(listItem)
-    if (!prefixAndFilter) { return null }
-
-    const {prefix, filter, labels} = prefixAndFilter
-    const newFilters = replaceFilterByPrefix(props.query, prefix, filter)
-    const newLabels = cleanLabels(newFilters, props.query.labels, filter[1], labels)
-
-    return updatedQuery({ filters: newFilters, labels: newLabels })
-  }
-
   function renderBarFor(listItem) {
     const lightBackground = props.color || 'bg-green-50'
     const noop = () => { }
@@ -260,7 +251,12 @@ export default function ListReport(props) {
           plot={metricToPlot}
         >
           <div className="flex justify-start px-2 py-1.5 group text-sm dark:text-gray-300 relative z-9 break-all w-full">
-            <FilterLink filterQuery={getFilterQuery(listItem)} onClick={props.onClick || noop}>
+            <FilterLink
+              query={props.query}
+              filterInfo={props.getFilterFor(listItem)}
+              onClick={props.onClick || noop}
+              extraClass="max-w-max w-full flex items-center md:overflow-hidden"
+            >
               {maybeRenderIconFor(listItem)}
 
               <span className="w-full md:truncate">
