@@ -528,7 +528,7 @@ base_cron = [
   # Daily at midday
   {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
   # Every 15 minutes
-  {"*/15 * * * *", Plausible.Workers.SpikeNotifier},
+  {"*/15 * * * *", Plausible.Workers.TrafficChangeNotifier},
   # Every day at 1am
   {"0 1 * * *", Plausible.Workers.CleanInvitations},
   # Every 2 hours
