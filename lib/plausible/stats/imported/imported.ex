@@ -632,9 +632,9 @@ defmodule Plausible.Stats.Imported do
 
   defp group_imported_by(q, :week, key, query) do
     q
-    |> group_by([i], weekstart_not_before(i.date, ^query.date_range.first, ^query.timezone))
+    |> group_by([i], weekstart_not_before(i.date, ^query.date_range.first))
     |> select_merge_as([i], %{
-      key => weekstart_not_before(i.date, ^query.date_range.first, ^query.timezone)
+      key => weekstart_not_before(i.date, ^query.date_range.first)
     })
   end
 

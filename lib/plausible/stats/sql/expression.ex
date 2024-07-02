@@ -40,7 +40,11 @@ defmodule Plausible.Stats.SQL.Expression do
 
   def dimension(key, "time:week", query) do
     wrap_expression([t], %{
-      key => weekstart_not_before(t.timestamp, ^query.date_range.first, ^query.timezone)
+      key =>
+        weekstart_not_before(
+          to_timezone(t.timestamp, ^query.timezone),
+          ^query.date_range.first
+        )
     })
   end
 

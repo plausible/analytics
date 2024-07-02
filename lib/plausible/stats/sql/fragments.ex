@@ -98,19 +98,6 @@ defmodule Plausible.Stats.SQL.Fragments do
   end
 
   @doc """
-  Same as Plausible.Stats.SQL.Fragments.weekstart_not_before/2 but converts dates to
-  the specified timezone.
-  """
-  defmacro weekstart_not_before(date, not_before, timezone) do
-    quote do
-      weekstart_not_before(
-        to_timezone(unquote(date), unquote(timezone)),
-        to_timezone(unquote(not_before), unquote(timezone))
-      )
-    end
-  end
-
-  @doc """
   Returns whether a key (usually property) exists under `meta.key` array or similar.
 
   This macro is used for operating on custom properties.
