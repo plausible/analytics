@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Plugins.API.Views.CustomProp do
 
   def render("index.json", %{props: props}) do
     %{
-      custom_props: render_many(props, __MODULE__, "custom_prop.json")
+      custom_props: render_many(props, __MODULE__, "custom_prop.json", as: :custom_prop)
     }
   end
 

@@ -9,47 +9,87 @@ defmodule PlausibleWeb.AdminController do
       |> String.to_integer()
       |> Plausible.Users.with_subscription()
 
-    usage = Quota.usage(user, with_features: true)
+    usage = Quota.Usage.usage(user, with_features: true)
 
     limits = %{
-      monthly_pageviews: Quota.monthly_pageview_limit(user),
-      sites: Quota.site_limit(user),
-      team_members: Quota.team_member_limit(user)
+      monthly_pageviews: Quota.Limits.monthly_pageview_limit(user),
+      sites: Quota.Limits.site_limit(user),
+      team_members: Quota.Limits.team_member_limit(user)
     }
 
-    html_response = usage_and_limits_html(user, usage, limits)
+    html_response = usage_and_limits_html(user, usage, limits, params["embed"] == "true")
 
     conn
     |> put_resp_content_type("text/html")
     |> send_resp(200, html_response)
   end
 
-  defp usage_and_limits_html(user, usage, limits) do
-    """
-    <!DOCTYPE html>
-    <html lang="en">
+  def current_plan(conn, params) do
+    user =
+      params["user_id"]
+      |> String.to_integer()
+      |> Plausible.Users.with_subscription()
 
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Usage - user:#{user.id}</title>
-      <style>
-        ul, li {margin-top: 10px;}
-        body {padding-top: 10px;}
-      </style>
-    </head>
+    plan =
+      case user && user.subscription &&
+             Plausible.Billing.Plans.get_subscription_plan(user.subscription) do
+        %{} = plan ->
+          plan
+          |> Map.take([
+            :billing_interval,
+            :monthly_pageview_limit,
+            :site_limit,
+            :team_member_limit,
+            :hourly_api_request_limit,
+            :features
+          ])
+          |> Map.update(:features, [], fn features -> Enum.map(features, & &1.name()) end)
 
-    <body>
+        _ ->
+          %{features: []}
+      end
+
+    json_response = Jason.encode!(plan)
+
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(200, json_response)
+  end
+
+  defp usage_and_limits_html(user, usage, limits, embed?) do
+    content = """
       <ul>
         <li>Sites: <b>#{usage.sites}</b> / #{limits.sites}</li>
         <li>Team members: <b>#{usage.team_members}</b> / #{limits.team_members}</li>
         <li>Features: #{features_usage(usage.features)}</li>
         <li>Monthly pageviews: #{monthly_pageviews_usage(usage.monthly_pageviews, limits.monthly_pageviews)}</li>
       </ul>
-    </body>
-
-    </html>
     """
+
+    if embed? do
+      content
+    else
+      """
+      <!DOCTYPE html>
+      <html lang="en">
+
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Usage - user:#{user.id}</title>
+        <style>
+          ul, li {margin-top: 10px;}
+          body {padding-top: 10px;}
+        </style>
+      </head>
+
+      <body>
+        #{content}
+      </body>
+
+      </html>
+      """
+    end
   end
 
   defp features_usage(features_module_list) do

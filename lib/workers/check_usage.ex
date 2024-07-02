@@ -33,7 +33,7 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   @impl Oban.Worker
-  def perform(_job, quota_mod \\ Quota, today \\ Timex.today()) do
+  def perform(_job, usage_mod \\ Quota.Usage, today \\ Timex.today()) do
     yesterday = today |> Timex.shift(days: -1)
 
     active_subscribers =
@@ -43,7 +43,6 @@ defmodule Plausible.Workers.CheckUsage do
           on: s.user_id == u.id,
           left_join: ep in Plausible.Billing.EnterprisePlan,
           on: ep.user_id == u.id,
-          where: is_nil(u.grace_period),
           where: s.status == ^Subscription.Status.active(),
           where: not is_nil(s.last_bill_date),
           # Accounts for situations like last_bill_date==2021-01-31 AND today==2021-03-01. Since February never reaches the 31st day, the account is checked on 2021-03-01.
@@ -55,18 +54,67 @@ defmodule Plausible.Workers.CheckUsage do
       )
 
     for subscriber <- active_subscribers do
-      if subscriber.enterprise_plan do
-        check_enterprise_subscriber(subscriber, quota_mod)
-      else
-        check_regular_subscriber(subscriber, quota_mod)
+      case {subscriber.grace_period, subscriber.enterprise_plan} do
+        {nil, nil} ->
+          check_regular_subscriber(subscriber, usage_mod)
+
+        {nil, _} ->
+          check_enterprise_subscriber(subscriber, usage_mod)
+
+        {_, nil} ->
+          maybe_remove_grace_period(subscriber, usage_mod)
+
+        _ ->
+          :skip
       end
     end
 
     :ok
   end
 
-  def check_enterprise_subscriber(subscriber, quota_mod) do
-    pageview_usage = check_pageview_usage(subscriber, quota_mod)
+  defp check_site_usage_for_enterprise(subscriber) do
+    limit = subscriber.enterprise_plan.site_limit
+    usage = Quota.Usage.site_usage(subscriber)
+
+    if Quota.below_limit?(usage, limit) do
+      {:below_limit, {usage, limit}}
+    else
+      {:over_limit, {usage, limit}}
+    end
+  end
+
+  def maybe_remove_grace_period(subscriber, usage_mod) do
+    case check_pageview_usage_last_cycle(subscriber, usage_mod) do
+      {:below_limit, _} ->
+        subscriber
+        |> Plausible.Auth.GracePeriod.remove_changeset()
+        |> Repo.update()
+
+      _ ->
+        :skip
+    end
+  end
+
+  defp check_regular_subscriber(subscriber, usage_mod) do
+    case check_pageview_usage_two_cycles(subscriber, usage_mod) do
+      {:over_limit, pageview_usage} ->
+        suggested_plan =
+          Plausible.Billing.Plans.suggest(subscriber, pageview_usage.last_cycle.total)
+
+        PlausibleWeb.Email.over_limit_email(subscriber, pageview_usage, suggested_plan)
+        |> Plausible.Mailer.send()
+
+        subscriber
+        |> Plausible.Auth.GracePeriod.start_changeset()
+        |> Repo.update()
+
+      _ ->
+        nil
+    end
+  end
+
+  def check_enterprise_subscriber(subscriber, usage_mod) do
+    pageview_usage = check_pageview_usage_two_cycles(subscriber, usage_mod)
     site_usage = check_site_usage_for_enterprise(subscriber)
 
     case {pageview_usage, site_usage} do
@@ -88,54 +136,25 @@ defmodule Plausible.Workers.CheckUsage do
     end
   end
 
-  defp check_regular_subscriber(subscriber, quota_mod) do
-    case check_pageview_usage(subscriber, quota_mod) do
-      {:over_limit, pageview_usage} ->
-        suggested_plan =
-          Plausible.Billing.Plans.suggest(subscriber, pageview_usage.last_cycle.total)
+  defp check_pageview_usage_two_cycles(subscriber, usage_mod) do
+    usage = usage_mod.monthly_pageview_usage(subscriber)
+    limit = Quota.Limits.monthly_pageview_limit(subscriber)
 
-        PlausibleWeb.Email.over_limit_email(subscriber, pageview_usage, suggested_plan)
-        |> Plausible.Mailer.send()
-
-        subscriber
-        |> Plausible.Auth.GracePeriod.start_changeset()
-        |> Repo.update()
-
-      _ ->
-        nil
-    end
-  end
-
-  defp check_pageview_usage(subscriber, quota_mod) do
-    usage = quota_mod.monthly_pageview_usage(subscriber)
-    limit = Quota.monthly_pageview_limit(subscriber)
-
-    if exceeds_last_two_usage_cycles?(usage, limit) do
+    if Quota.exceeds_last_two_usage_cycles?(usage, limit) do
       {:over_limit, usage}
     else
       {:below_limit, usage}
     end
   end
 
-  @spec exceeds_last_two_usage_cycles?(Quota.monthly_pageview_usage(), non_neg_integer()) ::
-          boolean()
+  defp check_pageview_usage_last_cycle(subscriber, usage_mod) do
+    usage = usage_mod.monthly_pageview_usage(subscriber)
+    limit = Quota.Limits.monthly_pageview_limit(subscriber)
 
-  def exceeds_last_two_usage_cycles?(usage, limit) when is_integer(limit) do
-    limit = ceil(limit * (1 + Quota.pageview_allowance_margin()))
-
-    Enum.all?([usage.last_cycle, usage.penultimate_cycle], fn usage ->
-      not Quota.below_limit?(usage.total, limit)
-    end)
-  end
-
-  defp check_site_usage_for_enterprise(subscriber) do
-    limit = subscriber.enterprise_plan.site_limit
-    usage = Quota.site_usage(subscriber)
-
-    if Quota.below_limit?(usage, limit) do
-      {:below_limit, {usage, limit}}
+    if :last_cycle in Quota.exceeded_cycles(usage, limit) do
+      {:over_limit, usage}
     else
-      {:over_limit, {usage, limit}}
+      {:below_limit, usage}
     end
   end
 end

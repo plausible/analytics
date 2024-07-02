@@ -8,6 +8,7 @@ defmodule Plausible.Application do
 
   def start(_type, _args) do
     on_ee(do: Plausible.License.ensure_valid_license())
+    on_ce(do: :inet_db.set_tcp_module(:happy_tcp))
 
     children = [
       Plausible.Cache.Stats,
@@ -24,6 +25,10 @@ defmodule Plausible.Application do
       Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
       Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
       ReferrerBlocklist,
+      Plausible.Cache.Adapter.child_spec(:customer_currency, :cache_customer_currency,
+        ttl_check_interval: :timer.minutes(5),
+        global_ttl: :timer.minutes(60)
+      ),
       Plausible.Cache.Adapter.child_spec(:user_agents, :cache_user_agents,
         ttl_check_interval: :timer.seconds(5),
         global_ttl: :timer.minutes(60)

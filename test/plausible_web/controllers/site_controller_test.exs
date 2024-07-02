@@ -364,7 +364,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/snippet?site_created=true"
-      assert Plausible.Billing.Quota.site_usage(user) == 3
+      assert Plausible.Billing.Quota.Usage.site_usage(user) == 3
     end
 
     for url <- ["https://Example.com/", "HTTPS://EXAMPLE.COM/", "/Example.com/", "//Example.com/"] do
@@ -436,6 +436,31 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~
                "This domain cannot be registered. Perhaps one of your colleagues registered it?"
     end
+
+    test "allows creating the site if domain was changed by the owner", %{
+      conn: conn,
+      user: user
+    } do
+      :site
+      |> insert(
+        domain: "example.com",
+        memberships: [
+          build(:site_membership, user: user, role: :owner)
+        ]
+      )
+      |> Plausible.Site.Domain.change("new.example.com")
+
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert redirected_to(conn) ==
+               "/example.com/snippet?site_created=true"
+    end
   end
 
   describe "GET /:website/snippet" do
@@ -460,6 +485,31 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "Site Timezone"
       assert resp =~ "Site Domain"
       assert resp =~ "JavaScript Snippet"
+    end
+  end
+
+  describe "GET /:website/settings/people" do
+    setup [:create_user, :log_in, :create_site]
+
+    @tag :ee_only
+    test "shows members page with links to CRM for super admin", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      patch_env(:super_admin_user_ids, [user.id])
+
+      conn = get(conn, "/#{site.domain}/settings/people")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "/crm/auth/user/#{user.id}"
+    end
+
+    test "does not show CRM links to non-super admin user", %{conn: conn, user: user, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/people")
+      resp = html_response(conn, 200)
+
+      refute resp =~ "/crm/auth/user/#{user.id}"
     end
   end
 

@@ -152,7 +152,7 @@ class SourcesModal extends React.Component {
 
   render() {
     return (
-      <Modal site={this.props.site}>
+      <Modal>
         <h1 className="text-xl font-bold dark:text-gray-100">{this.title()}</h1>
 
         <div className="my-4 border-b border-gray-300 dark:border-gray-500"></div>

@@ -5,6 +5,16 @@
 # @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
 ###############
 
+- regex: 'kiwi-tcms/(\d+[\.\d]+)'
+  name: 'Kiwi TCMS'
+  version: '$1'
+  url: 'https://kiwitcms.org'
+
+- regex: 'tcms-api/(\d+[\.\d]+)'
+  name: 'Kiwi TCMS API'
+  version: '$1'
+  url: 'https://kiwitcms.org'
+
 - regex: 'Fuzz Faster U Fool v(\d+[\.\d]+)'
   name: 'FFUF'
   version: '$1'
@@ -240,6 +250,11 @@
   version: '$1'
   url: 'https://github.com/node-fetch/node-fetch'
 
+- regex: 'electron-fetch/?(\d+[\.\d]+)?'
+  name: 'Electron Fetch'
+  version: '$1'
+  url: 'https://github.com/arantes555/electron-fetch'
+
 - regex: 'ReactorNetty/(\d+[\.\d]+)'
   name: 'ReactorNetty'
   version: '$1'
@@ -260,7 +275,7 @@
   version: '$1'
   url: 'https://hc.apache.org/httpclient-3.x'
 
-- regex: 'WinHttp.WinHttpRequest.+([\.\d]+)'
+- regex: 'WinHttp\.WinHttpRequest.+([\.\d]+)'
   name: 'WinHttp WinHttpRequest'
   version: '$1'
 
@@ -542,12 +557,27 @@
   version: '$1'
   url: 'https://bitbucket.org/mailchimp/mandrill-api-php/src/master/'
 
-- regex: 'babashka.http-client(?:/(\d+[\.\d]+))?'
+- regex: '^Podgrab'
+  name: 'Podgrab'
+  version: ''
+  url: 'https://github.com/akhilrex/podgrab'
+
+- regex: '^Podcast Provider.*?Radio Downloader ([\d\.]+)'
+  name: 'Radio Downloader'
+  version: '$1'
+  url: 'https://nerdoftheherd.com/tools/radiodld/'
+
+- regex: '^ESP32 HTTP Client/([\d\.]+)'
+  name: 'ESP32 HTTP Client'
+  version: '$1'
+  url: 'https://github.com/espressif/arduino-esp32'
+
+- regex: 'babashka\.http-client(?:/(\d+[\.\d]+))?'
   name: 'Babashka HTTP Client'
   version: '$1'
   url: 'https://github.com/babashka/http-client'
 
-- regex: 'http.rb(?:/(\d+[\.\d]+))?'
+- regex: 'http\.rb(?:/(\d+[\.\d]+))?'
   name: 'http.rb'
   version: '$1'
   url: 'https://github.com/httprb/http'
@@ -562,7 +592,22 @@
   version: ''
   url: 'https://www.cakephp.org/'
 
-- regex: 'request.js'
+- regex: 'request\.js'
   name: 'request'
   version: ''
   url: 'https://github.com/request/request'
+
+- regex: 'qbhttp(?:/(\d+[\.\d]+))?'
+  name: 'QbHttp'
+  version: '$1'
+  url: 'https://github.com/OpenQb/QbHttp'
+
+- regex: 'httprs(?:/(\d+[\.\d]+))?'
+  name: 'httprs'
+  version: '$1'
+  url: 'https://github.com/http-server-rs/http-server'
+
+- regex: 'Boto3(?:/(\d+[\.\d]+))?'
+  name: 'Boto3'
+  version: '$1'
+  url: 'https://github.com/boto/boto3'

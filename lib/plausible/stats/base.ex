@@ -31,7 +31,7 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  defp query_events(site, query) do
+  def query_events(site, query) do
     q = from(e in "events_v2", where: ^Filters.WhereBuilder.build(:events, site, query))
 
     on_ee do
@@ -62,14 +62,21 @@ defmodule Plausible.Stats.Base do
       pageviews:
         dynamic(
           [e],
-          fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name)
+          selected_as(
+            fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name),
+            :pageviews
+          )
         )
     }
   end
 
   defp select_event_metric(:events) do
     %{
-      events: dynamic([], fragment("toUInt64(round(count(*) * any(_sample_factor)))"))
+      events:
+        dynamic(
+          [],
+          selected_as(fragment("toUInt64(round(count(*) * any(_sample_factor)))"), :events)
+        )
     }
   end
 
@@ -82,7 +89,13 @@ defmodule Plausible.Stats.Base do
   defp select_event_metric(:visits) do
     %{
       visits:
-        dynamic([e], fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.session_id))
+        dynamic(
+          [e],
+          selected_as(
+            fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.session_id),
+            :visits
+          )
+        )
     }
   end
 
@@ -108,6 +121,7 @@ defmodule Plausible.Stats.Base do
 
   defp select_event_metric(:percentage), do: %{}
   defp select_event_metric(:conversion_rate), do: %{}
+  defp select_event_metric(:group_conversion_rate), do: %{}
   defp select_event_metric(:total_visitors), do: %{}
 
   defp select_event_metric(unknown), do: raise("Unknown metric: #{unknown}")
@@ -127,10 +141,13 @@ defmodule Plausible.Stats.Base do
       bounce_rate:
         dynamic(
           [],
-          fragment(
-            "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
-            ^condition,
-            ^condition
+          selected_as(
+            fragment(
+              "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
+              ^condition,
+              ^condition
+            ),
+            :bounce_rate
           )
         ),
       __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
@@ -139,7 +156,14 @@ defmodule Plausible.Stats.Base do
 
   defp select_session_metric(:visits, _query) do
     %{
-      visits: dynamic([s], fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign))
+      visits:
+        dynamic(
+          [s],
+          selected_as(
+            fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign),
+            :visits
+          )
+        )
     }
   end
 
@@ -148,7 +172,10 @@ defmodule Plausible.Stats.Base do
       pageviews:
         dynamic(
           [s],
-          fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
+          selected_as(
+            fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews),
+            :pageviews
+          )
         )
     }
   end
@@ -158,7 +185,10 @@ defmodule Plausible.Stats.Base do
       events:
         dynamic(
           [s],
-          fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
+          selected_as(
+            fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events),
+            :events
+          )
         )
     }
   end
@@ -179,7 +209,13 @@ defmodule Plausible.Stats.Base do
   defp select_session_metric(:visit_duration, _query) do
     %{
       visit_duration:
-        dynamic([], fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))")),
+        dynamic(
+          [],
+          selected_as(
+            fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))"),
+            :visit_duration
+          )
+        ),
       __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
     }
   end
@@ -189,7 +225,15 @@ defmodule Plausible.Stats.Base do
       views_per_visit:
         dynamic(
           [s],
-          fragment("ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)", s.sign, s.pageviews, s.sign)
+          selected_as(
+            fragment(
+              "ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)",
+              s.sign,
+              s.pageviews,
+              s.sign
+            ),
+            :views_per_visit
+          )
         ),
       __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
     }
@@ -206,6 +250,8 @@ defmodule Plausible.Stats.Base do
   end
 
   defp select_session_metric(:percentage, _query), do: %{}
+  defp select_session_metric(:conversion_rate, _query), do: %{}
+  defp select_session_metric(:group_conversion_rate, _query), do: %{}
 
   def filter_converted_sessions(db_query, site, query) do
     if Query.has_event_filters?(query) do
@@ -301,9 +347,9 @@ defmodule Plausible.Stats.Base do
   # only if it's included in the base query - otherwise the total will be based on
   # a different data set, making the metric inaccurate. This is why we're using an
   # explicit `include_imported` argument here.
-  defp total_visitors_subquery(site, query, include_imported)
+  def total_visitors_subquery(site, query, include_imported)
 
-  defp total_visitors_subquery(site, query, true = _include_imported) do
+  def total_visitors_subquery(site, query, true = _include_imported) do
     dynamic(
       [e],
       selected_as(
@@ -314,13 +360,13 @@ defmodule Plausible.Stats.Base do
     )
   end
 
-  defp total_visitors_subquery(site, query, false = _include_imported) do
+  def total_visitors_subquery(site, query, false = _include_imported) do
     dynamic([e], selected_as(subquery(total_visitors(site, query)), :__total_visitors))
   end
 
   def add_percentage_metric(q, site, query, metrics) do
     if :percentage in metrics do
-      total_query = Query.set_property(query, nil)
+      total_query = Query.set_dimensions(query, [])
 
       q
       |> select_merge(
@@ -328,11 +374,14 @@ defmodule Plausible.Stats.Base do
       )
       |> select_merge(%{
         percentage:
-          fragment(
-            "if(? > 0, round(? / ? * 100, 1), null)",
-            selected_as(:__total_visitors),
-            selected_as(:visitors),
-            selected_as(:__total_visitors)
+          selected_as(
+            fragment(
+              "if(? > 0, round(? / ? * 100, 1), null)",
+              selected_as(:__total_visitors),
+              selected_as(:visitors),
+              selected_as(:__total_visitors)
+            ),
+            :percentage
           )
       })
     else
@@ -348,7 +397,7 @@ defmodule Plausible.Stats.Base do
       total_query =
         query
         |> Query.remove_filters(["event:goal", "event:props"])
-        |> Query.set_property(nil)
+        |> Query.set_dimensions([])
 
       # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
       subquery(q)
@@ -357,11 +406,14 @@ defmodule Plausible.Stats.Base do
       )
       |> select_merge([e], %{
         conversion_rate:
-          fragment(
-            "if(? > 0, round(? / ? * 100, 1), 0)",
-            selected_as(:__total_visitors),
-            e.visitors,
-            selected_as(:__total_visitors)
+          selected_as(
+            fragment(
+              "if(? > 0, round(? / ? * 100, 1), 0)",
+              selected_as(:__total_visitors),
+              e.visitors,
+              selected_as(:__total_visitors)
+            ),
+            :conversion_rate
           )
       })
     else

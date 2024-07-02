@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build:
-    if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'deploy-to-staging') }}
+    if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'preview') }}
     runs-on: buildjet-16vcpu-ubuntu-2204
 
     permissions:
@@ -46,7 +46,7 @@ jobs:
 
       - name: Build and push
         id: docker_build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: true
           tags: ${{ steps.meta.outputs.tags }}

@@ -169,7 +169,25 @@ defmodule Plausible.Sites do
   def create(user, params) do
     with :ok <- Quota.ensure_can_add_new_site(user) do
       Ecto.Multi.new()
-      |> Ecto.Multi.insert(:site, Site.new(params))
+      |> Ecto.Multi.put(:site_changeset, Site.new(params))
+      |> Ecto.Multi.run(:clear_changed_from, fn
+        _repo, %{site_changeset: %{changes: %{domain: domain}}} ->
+          case get_for_user(user.id, domain, [:owner]) do
+            %Site{domain_changed_from: ^domain} = site ->
+              site
+              |> Ecto.Changeset.change()
+              |> Ecto.Changeset.put_change(:domain_changed_from, nil)
+              |> Ecto.Changeset.put_change(:domain_changed_at, nil)
+              |> Repo.update()
+
+            _ ->
+              {:ok, :ignore}
+          end
+
+        _repo, _context ->
+          {:ok, :ignore}
+      end)
+      |> Ecto.Multi.insert(:site, fn %{site_changeset: site} -> site end)
       |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
         Site.Membership.new(site, user)
       end)

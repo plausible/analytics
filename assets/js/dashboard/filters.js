@@ -13,7 +13,8 @@ import {
   formattedFilters,
   EVENT_PROPS_PREFIX,
   getPropertyKeyFromFilterKey,
-  getLabel
+  getLabel,
+  FILTER_OPERATIONS_DISPLAY_NAMES
 } from "./util/filters"
 
 const WRAPSTATE = { unwrapped: 0, waiting: 1, wrapped: 2 }
@@ -41,10 +42,10 @@ function filterText(query, [operation, filterKey, clauses]) {
   const formattedFilter = formattedFilters[filterKey]
 
   if (formattedFilter) {
-    return <>{formattedFilter} {operation} {clauses.map((value) => <b key={value}>{getLabel(query.labels, filterKey, value)}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+    return <>{formattedFilter} {FILTER_OPERATIONS_DISPLAY_NAMES[operation]} {clauses.map((value) => <b key={value}>{getLabel(query.labels, filterKey, value)}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
     const propKey = getPropertyKeyFromFilterKey(filterKey)
-    return <>Property <b>{propKey}</b> {operation} {clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+    return <>Property <b>{propKey}</b> {FILTER_OPERATIONS_DISPLAY_NAMES[operation]} {clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   }
 
   throw new Error(`Unknown filter: ${filterKey}`)
@@ -83,7 +84,7 @@ function filterDropdownOption(site, option) {
     <Menu.Item key={option}>
       {({ active }) => (
         <Link
-          to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${option}`, search: window.location.search }}
+          to={{ pathname: `/filter/${option}`, search: window.location.search }}
           className={classNames(
             active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100' : 'text-gray-800 dark:text-gray-300',
             'block px-4 py-2 text-sm font-medium'
@@ -96,11 +97,11 @@ function filterDropdownOption(site, option) {
   )
 }
 
-function DropdownContent({ history, site, query, wrapState }) {
+function DropdownContent({ history, site, query, wrapped }) {
   const [addingFilter, setAddingFilter] = useState(false);
 
-  if (wrapState === WRAPSTATE.unwrapped || addingFilter) {
-    let filterModals = {...FILTER_MODAL_TO_FILTER_GROUP}
+  if (wrapped === WRAPSTATE.unwrapped || addingFilter) {
+    let filterModals = { ...FILTER_MODAL_TO_FILTER_GROUP }
     if (!site.propsAvailable) delete filterModals.props
 
     return Object.keys(filterModals).map((option) => filterDropdownOption(site, option))
@@ -127,9 +128,11 @@ function Filters(props) {
   const [viewport, setViewport] = useState(1080)
 
   useEffect(() => {
+    handleResize()
+
     window.addEventListener('resize', handleResize, false)
     document.addEventListener('keyup', handleKeyup)
-  
+
     return () => {
       window.removeEventListener('resize', handleResize, false)
       document.removeEventListener("keyup", handleKeyup)
@@ -190,7 +193,7 @@ function Filters(props) {
           title={`Edit filter: ${formattedFilters[type]}`}
           className="flex w-full h-full items-center py-2 pl-3"
           to={{
-            pathname: `/${encodeURIComponent(site.domain)}/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`,
+            pathname: `/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`,
             search: window.location.search
           }}
         >
@@ -228,7 +231,7 @@ function Filters(props) {
   }
 
   function trackFilterMenu() {
-    window.plausible && window.plausible('Filter Menu: Open', {u: `${window.location.protocol}//${window.location.hostname}/:dashboard`})
+    window.plausible && window.plausible('Filter Menu: Open', { u: `${window.location.protocol}//${window.location.hostname}/:dashboard` })
   }
 
   function renderDropDown() {

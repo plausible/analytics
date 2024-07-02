@@ -168,7 +168,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
     {checkout_disabled, disabled_message} =
       cond do
-        not assigns.eligible_for_upgrade? ->
+        not Quota.eligible_for_upgrade?(assigns.usage) ->
           {true, nil}
 
         change_plan_link_text == "Currently on this plan" && not subscription_deleted ->
@@ -330,7 +330,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
   defp losing_features_message(features_to_lose) do
     features_list_str =
       features_to_lose
-      |> Enum.map(& &1.display_name)
+      |> Enum.map(fn feature_mod -> feature_mod.display_name() end)
       |> PlausibleWeb.TextHelpers.pretty_join()
 
     "This plan does not support #{features_list_str}, which you are currently using. Please note that by subscribing to this plan you will lose access to #{if length(features_to_lose) == 1, do: "this feature", else: "these features"}."

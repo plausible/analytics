@@ -65,6 +65,27 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
       assert GoalSuggestions.suggest_event_names(site, "") == ["Signup"]
     end
 
+    test "ignores event names with either white space on either end or consisting only of whitespace",
+         %{site: site} do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:event, name: "Signup"),
+        build(:event, name: " Signup2"),
+        build(:event, name: " Signup2 "),
+        build(:event, name: "Signup2 "),
+        build(:event, name: "    "),
+        build(:imported_custom_events, name: "Auth", visitors: 3),
+        build(:imported_custom_events, name: " Auth2", visitors: 3),
+        build(:imported_custom_events, name: " Auth2 ", visitors: 3),
+        build(:imported_custom_events, name: "Auth2 ", visitors: 3),
+        build(:imported_custom_events, name: "            ", visitors: 3),
+        build(:pageview)
+      ])
+
+      assert GoalSuggestions.suggest_event_names(site, "") == ["Auth", "Signup"]
+    end
+
     test "can exclude goals from being suggested", %{site: site} do
       populate_stats(site, [build(:event, name: "Signup")])
 

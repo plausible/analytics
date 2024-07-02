@@ -30,7 +30,7 @@ function EntryPages({ query, site, afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Entry page"
       metrics={maybeWithCR([{ ...VISITORS_METRIC, label: 'Unique Entrances' }], query)}
-      detailsLink={url.sitePath(site, '/entry-pages')}
+      detailsLink={url.sitePath('entry-pages')}
       query={query}
       externalLinkDest={externalLinkDest}
       color="bg-orange-50"
@@ -61,7 +61,7 @@ function ExitPages({ query, site, afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Exit page"
       metrics={maybeWithCR([{ ...VISITORS_METRIC, label: "Unique Exits" }], query)}
-      detailsLink={url.sitePath(site, '/exit-pages')}
+      detailsLink={url.sitePath('exit-pages')}
       query={query}
       externalLinkDest={externalLinkDest}
       color="bg-orange-50"
@@ -92,7 +92,7 @@ function TopPages({ query, site, afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Page"
       metrics={maybeWithCR([VISITORS_METRIC], query)}
-      detailsLink={url.sitePath(site, '/pages')}
+      detailsLink={url.sitePath('pages')}
       query={query}
       externalLinkDest={externalLinkDest}
       color="bg-orange-50"
@@ -107,7 +107,7 @@ const labelFor = {
 }
 
 export default function Pages(props) {
-  const {site, query} = props
+  const { site, query } = props
   const tabKey = `pageTab__${site.domain}`
   const storedTab = storage.getItem(tabKey)
   const [mode, setMode] = useState(storedTab || 'pages')

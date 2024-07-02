@@ -7,6 +7,38 @@ import * as url from '../../util/url'
 import { VISITORS_METRIC, PERCENTAGE_METRIC, maybeWithCR } from '../reports/metrics';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 
+// Icons copied from https://github.com/alrra/browser-logos
+const BROWSER_ICONS = {
+  'Chrome': 'chrome.svg',
+  'Safari': 'safari.png',
+  'Firefox': 'firefox.svg',
+  'Microsoft Edge': 'edge.svg',
+  'Vivaldi': 'vivaldi.svg',
+  'Opera': 'opera.svg',
+  'Samsung Browser': 'samsung-internet.svg',
+  'Chromium': 'chromium.svg',
+  'UC Browser': 'uc.svg',
+  'Yandex Browser': 'yandex.png', // Only PNG available in browser-logos
+  // Logos underneath this line are not available in browser-logos. Grabbed from random places on the internets.
+  'DuckDuckGo Privacy Browser': 'duckduckgo.svg',
+  'MIUI Browser': 'miui.webp',
+  'Huawei Browser Mobile': 'huawei.png',
+  'QQ Browser': 'qq.png',
+  'Ecosia': 'ecosia.png',
+  'vivo Browser': 'vivo.png'
+}
+
+function browserIconFor(browser) {
+  const filename = BROWSER_ICONS[browser] || 'fallback.svg'
+
+  return (
+    <img
+      src={`/images/icon/browser/${filename}`}
+      className="w-4 h-4 mr-2"
+    />
+  )
+}
+
 function Browsers({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/browsers'), query)
@@ -19,6 +51,10 @@ function Browsers({ query, site, afterFetchData }) {
     }
   }
 
+  function renderIcon(listItem) {
+    return browserIconFor(listItem.name)
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
@@ -27,6 +63,7 @@ function Browsers({ query, site, afterFetchData }) {
       keyLabel="Browser"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
       query={query}
+      renderIcon={renderIcon}
     />
   )
 }
@@ -34,6 +71,15 @@ function Browsers({ query, site, afterFetchData }) {
 function BrowserVersions({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/browser-versions'), query)
+      .then(res => {
+        return {...res, results: res.results.map((row => {
+          return {...row, name: `${row.browser} ${row.name}`, version: row.name}
+        }))}
+      })
+  }
+
+  function renderIcon(listItem) {
+    return browserIconFor(listItem.browser)
   }
 
   function getFilterFor(listItem) {
@@ -42,7 +88,7 @@ function BrowserVersions({ query, site, afterFetchData }) {
     }
     return {
       prefix: 'browser_version',
-      filter: ["is", "browser_version", [listItem['name']]]
+      filter: ["is", "browser_version", [listItem.version]]
     }
   }
 
@@ -53,6 +99,7 @@ function BrowserVersions({ query, site, afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Browser version"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
+      renderIcon={renderIcon}
       query={query}
     />
   )
@@ -117,7 +164,9 @@ function ScreenSizes({ query, site, afterFetchData }) {
   }
 
   function renderIcon(screenSize) {
-    return iconFor(screenSize.name)
+    return (
+      <span className="mr-1.5">{iconFor(screenSize.name)}</span>
+    )
   }
 
   function getFilterFor(listItem) {

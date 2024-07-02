@@ -26,6 +26,9 @@
 - regex: 'Goanna'
   name: 'Goanna'
 
+- regex: '(?<!like )Clecko' # fork of Gecko
+  name: 'Clecko'
+
 - regex: '(?<!like )Gecko'
   name: 'Gecko'
 
@@ -43,3 +46,9 @@
 
 - regex: 'Ekioh(?:Flow)?'
   name: 'EkiohFlow'
+
+- regex: 'xChaos_Arachne'
+  name: 'Arachne'
+
+- regex: 'LibWeb\+LibJs'
+  name: 'LibWeb'

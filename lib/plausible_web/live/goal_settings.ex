@@ -29,7 +29,10 @@ defmodule PlausibleWeb.Live.GoalSettings do
           |> Enum.reject(&is_nil(&1.event_name))
           |> Enum.map(& &1.event_name)
 
-        Plausible.Stats.GoalSuggestions.suggest_event_names(site, "", exclude: exclude)
+        Plausible.Stats.GoalSuggestions.suggest_event_names(site, "",
+          exclude: exclude,
+          limit: :unlimited
+        )
       end)
       |> assign_new(:current_user, fn ->
         Plausible.Repo.get(Plausible.Auth.User, user_id)
@@ -50,14 +53,16 @@ defmodule PlausibleWeb.Live.GoalSettings do
     ~H"""
     <div id="goal-settings-main">
       <.flash_messages flash={@flash} />
-      <.live_component module={Modal} id="goals-form-modal">
+      <.live_component :let={modal_unique_id} module={Modal} id="goals-form-modal">
         <.live_component
           module={PlausibleWeb.Live.GoalSettings.Form}
-          id="goals-form"
+          id={"goals-form-#{modal_unique_id}"}
+          context_unique_id={modal_unique_id}
           event_name_options={@event_name_options}
           domain={@domain}
           site={@site}
           current_user={@current_user}
+          existing_goals={@all_goals}
           on_save_goal={
             fn goal, socket ->
               send(self(), {:goal_added, goal})

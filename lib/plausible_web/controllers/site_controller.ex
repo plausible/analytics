@@ -18,8 +18,8 @@ defmodule PlausibleWeb.SiteController do
 
     render(conn, "new.html",
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
-      first_site?: Quota.site_usage(current_user) == 0,
-      site_limit: Quota.site_limit(current_user),
+      first_site?: Quota.Usage.site_usage(current_user) == 0,
+      site_limit: Quota.Limits.site_limit(current_user),
       site_limit_exceeded?: Quota.ensure_can_add_new_site(current_user) != :ok,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
@@ -27,7 +27,7 @@ defmodule PlausibleWeb.SiteController do
 
   def create_site(conn, %{"site" => site_params}) do
     user = conn.assigns[:current_user]
-    first_site? = Quota.site_usage(user) == 0
+    first_site? = Quota.Usage.site_usage(user) == 0
 
     case Sites.create(user, site_params) do
       {:ok, %{site: site}} ->
@@ -53,7 +53,7 @@ defmodule PlausibleWeb.SiteController do
         render(conn, "new.html",
           changeset: changeset,
           first_site?: first_site?,
-          site_limit: Quota.site_limit(user),
+          site_limit: Quota.Limits.site_limit(user),
           site_limit_exceeded?: false,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )

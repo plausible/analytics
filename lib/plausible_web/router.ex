@@ -76,6 +76,7 @@ defmodule PlausibleWeb.Router do
     scope "/crm", PlausibleWeb do
       pipe_through :flags
       get "/auth/user/:user_id/usage", AdminController, :usage
+      get "/billing/user/:user_id/current_plan", AdminController, :current_plan
     end
   end
 
@@ -174,6 +175,12 @@ defmodule PlausibleWeb.Router do
     get "/timeseries", ExternalStatsController, :timeseries
   end
 
+  scope "/api/v2", PlausibleWeb.Api do
+    pipe_through [:public_api, PlausibleWeb.AuthorizeStatsApiPlug]
+
+    post "/query", ExternalQueryApiController, :query
+  end
+
   on_ee do
     scope "/api/v1/sites", PlausibleWeb.Api do
       pipe_through [:public_api, PlausibleWeb.AuthorizeSitesApiPlug]
@@ -197,6 +204,7 @@ defmodule PlausibleWeb.Router do
     get "/system", Api.ExternalController, :info
 
     post "/paddle/webhook", Api.PaddleController, :webhook
+    get "/paddle/currency", Api.PaddleController, :currency
 
     get "/:domain/status", Api.InternalController, :domain_status
     put "/:domain/disable-feature", Api.InternalController, :disable_feature

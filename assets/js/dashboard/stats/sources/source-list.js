@@ -36,7 +36,7 @@ function AllSources(props) {
     return (
       <img
         src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
-        className="inline w-4 h-4 mr-2 -mt-px align-middle"
+        className="w-4 h-4 mr-2"
       />
     )
   }
@@ -48,7 +48,7 @@ function AllSources(props) {
       getFilterFor={getFilterFor}
       keyLabel="Source"
       metrics={maybeWithCR([VISITORS_METRIC], query)}
-      detailsLink={url.sitePath(site, '/sources')}
+      detailsLink={url.sitePath('sources')}
       renderIcon={renderIcon}
       query={query}
       color="bg-blue-50"
@@ -78,7 +78,7 @@ function UTMSources(props) {
       getFilterFor={getFilterFor}
       keyLabel={utmTag.label}
       metrics={maybeWithCR([VISITORS_METRIC], query)}
-      detailsLink={url.sitePath(site, utmTag.endpoint)}
+      detailsLink={url.sitePath(utmTag.endpoint)}
       query={query}
       color="bg-blue-50"
     />
@@ -178,7 +178,7 @@ export default function SourceList(props) {
           <h3 className="font-bold dark:text-gray-100">
             Top Sources
           </h3>
-          <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason}/>
+          <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason} />
         </div>
         {renderTabs()}
       </div>

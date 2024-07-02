@@ -7,7 +7,11 @@ defmodule Plausible.Site.AdminTest do
 
   setup do
     admin_user = insert(:user)
-    conn = %Plug.Conn{assigns: %{current_user: admin_user}}
+
+    conn =
+      %Plug.Conn{assigns: %{current_user: admin_user}}
+      |> Plug.Conn.fetch_query_params()
+
     transfer_action = Plausible.SiteAdmin.list_actions(conn)[:transfer_ownership][:action]
 
     transfer_direct_action =
