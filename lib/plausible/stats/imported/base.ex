@@ -39,6 +39,8 @@ defmodule Plausible.Stats.Imported.Base do
     "time:day" => "imported_visitors"
   }
 
+  @queriable_time_dimensions ["time:month", "time:week", "time:day"]
+
   @imported_custom_props Imported.imported_custom_props()
 
   @db_field_mappings %{
@@ -194,10 +196,8 @@ defmodule Plausible.Stats.Imported.Base do
       filters
       |> Enum.map(fn [_, filter_key | _] -> filter_key end)
       |> Enum.concat(dimensions)
+      |> Enum.reject(&(&1 in @queriable_time_dimensions))
       |> Enum.flat_map(fn
-        "time:month" -> []
-        "time:week" -> []
-        "time:day" -> []
         "visit:screen" -> ["visit:device"]
         dimension -> [dimension]
       end)
