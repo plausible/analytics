@@ -1,7 +1,7 @@
-defmodule PlausibleWeb.AuthorizePublicApiPlugTest do
+defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   use PlausibleWeb.ConnCase, async: false
 
-  alias PlausibleWeb.AuthorizePublicApiPlug
+  alias PlausibleWeb.Plugs.AuthorizePublicAPI
 
   setup %{conn: conn} do
     conn =
@@ -17,7 +17,7 @@ defmodule PlausibleWeb.AuthorizePublicApiPlugTest do
       conn
       |> get("/")
       |> assign(:api_scope, "stats:read:*")
-      |> AuthorizePublicApiPlug.call(nil)
+      |> AuthorizePublicAPI.call(nil)
 
     assert conn.halted
     assert json_response(conn, 401)["error"] =~ "Missing API key."
@@ -29,7 +29,7 @@ defmodule PlausibleWeb.AuthorizePublicApiPlugTest do
       |> put_req_header("authorization", "Bearer invalid")
       |> get("/")
       |> assign(:api_scope, "stats:read:*")
-      |> AuthorizePublicApiPlug.call(nil)
+      |> AuthorizePublicAPI.call(nil)
 
     assert conn.halted
     assert json_response(conn, 401)["error"] =~ "Invalid API key or site ID."
@@ -41,7 +41,7 @@ defmodule PlausibleWeb.AuthorizePublicApiPlugTest do
       |> put_req_header("authorization", "Bearer invalid")
       |> get("/")
       |> assign(:api_scope, "sites:provision:*")
-      |> AuthorizePublicApiPlug.call(nil)
+      |> AuthorizePublicAPI.call(nil)
 
     assert conn.halted
     assert json_response(conn, 401)["error"] =~ "Invalid API key."
@@ -55,7 +55,7 @@ defmodule PlausibleWeb.AuthorizePublicApiPlugTest do
       |> put_req_header("authorization", "Bearer #{api_key.key}")
       |> get("/")
       |> assign(:api_scope, "stats:read:*")
-      |> AuthorizePublicApiPlug.call(nil)
+      |> AuthorizePublicAPI.call(nil)
 
     assert conn.halted
     assert json_response(conn, 400)["error"] =~ "Missing site ID."
@@ -72,7 +72,7 @@ defmodule PlausibleWeb.AuthorizePublicApiPlugTest do
       |> put_req_header("authorization", "Bearer #{api_key.key}")
       |> get("/", %{"site_id" => site.domain})
       |> assign(:api_scope, "stats:read:*")
-      |> AuthorizePublicApiPlug.call(nil)
+      |> AuthorizePublicAPI.call(nil)
 
     assert conn.halted
 
@@ -90,7 +90,7 @@ defmodule PlausibleWeb.AuthorizePublicApiPlugTest do
       |> put_req_header("authorization", "Bearer #{api_key.key}")
       |> get("/", %{"site_id" => site.domain})
       |> assign(:api_scope, "stats:read:*")
-      |> AuthorizePublicApiPlug.call(nil)
+      |> AuthorizePublicAPI.call(nil)
 
     assert conn.halted
     assert json_response(conn, 402)["error"] =~ "This Plausible site is locked"
@@ -106,7 +106,7 @@ defmodule PlausibleWeb.AuthorizePublicApiPlugTest do
       |> put_req_header("authorization", "Bearer #{api_key.key}")
       |> get("/", %{"site_id" => "invalid.domain"})
       |> assign(:api_scope, "stats:read:*")
-      |> AuthorizePublicApiPlug.call(nil)
+      |> AuthorizePublicAPI.call(nil)
 
     assert conn.halted
     assert json_response(conn, 401)["error"] =~ "Invalid API key or site ID."
@@ -124,7 +124,7 @@ defmodule PlausibleWeb.AuthorizePublicApiPlugTest do
       |> put_req_header("authorization", "Bearer #{api_key.key}")
       |> get("/", %{"site_id" => site.domain})
       |> assign(:api_scope, "stats:read:*")
-      |> AuthorizePublicApiPlug.call(nil)
+      |> AuthorizePublicAPI.call(nil)
 
     assert conn.halted
     assert json_response(conn, 401)["error"] =~ "Invalid API key or site ID."
@@ -139,7 +139,7 @@ defmodule PlausibleWeb.AuthorizePublicApiPlugTest do
       |> put_req_header("authorization", "Bearer #{api_key.key}")
       |> get("/")
       |> assign(:api_scope, "sites:provision:*")
-      |> AuthorizePublicApiPlug.call(nil)
+      |> AuthorizePublicAPI.call(nil)
 
     assert conn.halted
     assert json_response(conn, 401)["error"] =~ "Invalid API key."
@@ -155,8 +155,8 @@ defmodule PlausibleWeb.AuthorizePublicApiPlugTest do
       |> get("/")
       |> assign(:api_scope, "sites:read:*")
 
-    first_resp = AuthorizePublicApiPlug.call(conn, nil)
-    second_resp = AuthorizePublicApiPlug.call(conn, nil)
+    first_resp = AuthorizePublicAPI.call(conn, nil)
+    second_resp = AuthorizePublicAPI.call(conn, nil)
 
     refute first_resp.halted
     assert second_resp.halted
@@ -174,7 +174,7 @@ defmodule PlausibleWeb.AuthorizePublicApiPlugTest do
       |> put_req_header("authorization", "Bearer #{api_key.key}")
       |> get("/")
       |> assign(:api_scope, "sites:provision:*")
-      |> AuthorizePublicApiPlug.call(nil)
+      |> AuthorizePublicAPI.call(nil)
 
     refute conn.halted
     assert conn.assigns.current_user.id == user.id
@@ -192,7 +192,7 @@ defmodule PlausibleWeb.AuthorizePublicApiPlugTest do
       |> put_req_header("authorization", "Bearer #{api_key.key}")
       |> get("/", %{"site_id" => site.domain})
       |> assign(:api_scope, "stats:read:*")
-      |> AuthorizePublicApiPlug.call(nil)
+      |> AuthorizePublicAPI.call(nil)
 
     refute conn.halted
     assert conn.assigns.current_user.id == user.id
@@ -211,7 +211,7 @@ defmodule PlausibleWeb.AuthorizePublicApiPlugTest do
       |> put_req_header("authorization", "Bearer #{api_key.key}")
       |> get("/", %{"site_id" => site.domain})
       |> assign(:api_scope, "stats:read:*")
-      |> AuthorizePublicApiPlug.call(nil)
+      |> AuthorizePublicAPI.call(nil)
 
     refute conn.halted
     assert conn.assigns.current_user.id == user.id
@@ -227,7 +227,7 @@ defmodule PlausibleWeb.AuthorizePublicApiPlugTest do
       |> put_req_header("authorization", "Bearer #{api_key.key}")
       |> get("/")
       |> assign(:api_scope, "funnels:read:*")
-      |> AuthorizePublicApiPlug.call(nil)
+      |> AuthorizePublicAPI.call(nil)
 
     refute conn.halted
     assert conn.assigns.current_user.id == user.id

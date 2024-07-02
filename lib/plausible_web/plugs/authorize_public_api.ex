@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.AuthorizePublicApiPlug do
+defmodule PlausibleWeb.Plugs.AuthorizePublicAPI do
   @moduledoc """
   Plug for authorizing access to Stats and Sites APIs.
 

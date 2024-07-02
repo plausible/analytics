@@ -167,7 +167,7 @@ defmodule PlausibleWeb.Router do
   end
 
   scope "/api/v1/stats", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*"} do
-    pipe_through [:public_api, PlausibleWeb.AuthorizePublicApiPlug]
+    pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
     get "/realtime/visitors", ExternalStatsController, :realtime_visitors
     get "/aggregate", ExternalStatsController, :aggregate
@@ -176,7 +176,7 @@ defmodule PlausibleWeb.Router do
   end
 
   scope "/api/v2", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*"} do
-    pipe_through [:public_api, PlausibleWeb.AuthorizePublicApiPlug]
+    pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
     post "/query", ExternalQueryApiController, :query
   end
@@ -186,13 +186,13 @@ defmodule PlausibleWeb.Router do
       pipe_through :public_api
 
       scope assigns: %{api_scope: "sites:read:*"} do
-        pipe_through PlausibleWeb.AuthorizePublicApiPlug
+        pipe_through PlausibleWeb.Plugs.AuthorizePublicAPI
 
         get "/:site_id", ExternalSitesController, :get_site
       end
 
       scope assigns: %{api_scope: "sites:provision:*"} do
-        pipe_through PlausibleWeb.AuthorizePublicApiPlug
+        pipe_through PlausibleWeb.Plugs.AuthorizePublicAPI
 
         post "/", ExternalSitesController, :create_site
         put "/shared-links", ExternalSitesController, :find_or_create_shared_link
