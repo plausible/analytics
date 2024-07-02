@@ -230,9 +230,13 @@ defmodule Plausible.Stats.Query do
   end
 
   def set(query, keywords) do
-    query
-    |> struct!(keywords)
-    |> refresh_imported_opts()
+    new_query = struct!(query, keywords)
+
+    if Keyword.has_key?(keywords, :include_imported) do
+      new_query
+    else
+      refresh_imported_opts(new_query)
+    end
   end
 
   @spec set_dimensions(t(), list(String.t())) :: t()

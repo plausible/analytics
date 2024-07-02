@@ -20,7 +20,11 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
 
   defp maybe_add_percentage_metric(q, site, query) do
     if :percentage in query.metrics do
-      total_query = Query.set_dimensions(query, [])
+      total_query =
+        Query.set(query,
+          dimensions: [],
+          include_imported: query.include_imported
+        )
 
       q
       |> select_merge_as([], total_visitors_subquery(site, total_query, query.include_imported))
@@ -46,7 +50,10 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
       total_query =
         query
         |> Query.remove_filters(["event:goal", "event:props"])
-        |> Query.set_dimensions([])
+        |> Query.set(
+          dimensions: [],
+          include_imported: query.include_imported
+        )
 
       q
       |> select_merge_as(
@@ -83,8 +90,11 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
       group_totals_query =
         query
         |> Query.remove_filters(["event:goal", "event:props"])
-        |> Query.set_metrics([:visitors])
-        |> Query.set_order_by([])
+        |> Query.set(
+          metrics: [:visitors],
+          order_by: [],
+          include_imported: query.include_imported
+        )
 
       from(e in subquery(q),
         left_join: c in subquery(SQL.QueryBuilder.build(group_totals_query, site)),
