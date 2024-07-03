@@ -1,4 +1,5 @@
 defmodule Plausible.Stats.Timeseries do
+  use Plausible
   use Plausible.ClickhouseRepo
   alias Plausible.Stats.{Query, QueryOptimizer, QueryResult, SQL}
 
@@ -10,6 +11,13 @@ defmodule Plausible.Stats.Timeseries do
   }
 
   def timeseries(site, query, metrics) do
+    {currency, metrics} =
+      on_ee do
+        Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
+      else
+        {nil, metrics}
+      end
+
     query_with_metrics =
       Query.set(
         query,
@@ -26,13 +34,13 @@ defmodule Plausible.Stats.Timeseries do
     q
     |> ClickhouseRepo.all()
     |> QueryResult.from(query_with_metrics)
-    |> build_timeseries_result(query_with_metrics)
+    |> build_timeseries_result(query_with_metrics, currency)
     |> transform_keys(%{group_conversion_rate: :conversion_rate})
   end
 
   defp time_dimension(query), do: Map.fetch!(@time_dimension, query.interval)
 
-  defp build_timeseries_result(query_result, query) do
+  defp build_timeseries_result(query_result, query, currency) do
     results_map =
       query_result.results
       |> Enum.map(fn %{dimensions: [time_dimension_value], metrics: entry_metrics} ->
@@ -52,6 +60,7 @@ defmodule Plausible.Stats.Timeseries do
         key,
         empty_row(key, query.metrics)
       )
+      |> cast_revenue_metrics_to_money(currency)
     end)
   end
 
@@ -84,5 +93,13 @@ defmodule Plausible.Stats.Timeseries do
       end)
       |> Enum.into(%{})
     end)
+  end
+
+  on_ee do
+    defp cast_revenue_metrics_to_money(results, revenue_goals) do
+      Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
+    end
+  else
+    defp cast_revenue_metrics_to_money(results, _revenue_goals), do: results
   end
 end
