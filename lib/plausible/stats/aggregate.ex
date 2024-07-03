@@ -1,4 +1,10 @@
 defmodule Plausible.Stats.Aggregate do
+  @moduledoc """
+  Builds aggregate results for v1 of our stats API and dashboards.
+
+  Avoid adding new logic here - update QueryBuilder etc instead.
+  """
+
   use Plausible.ClickhouseRepo
   use Plausible
   import Plausible.Stats.Base
