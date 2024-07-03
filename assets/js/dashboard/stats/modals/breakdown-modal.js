@@ -8,6 +8,53 @@ import { FilterLink } from "../reports/list";
 
 const LIMIT = 100
 
+// The main function component for rendering the "Details" reports on the dashboard,
+// i.e. a breakdown by a single (non-time) dimension, with a given set of metrics.
+
+// BreakdownModal is expected to be rendered inside a `<Modal>`, which has it's own
+// specific URL pathname (e.g. /plausible.io/sources). On the initial render of the
+// parent modal, the query should be parsed from the URL and passed into this
+// component. That query object is not expected to change during that modal's
+// lifecycle.
+
+// ### Search As You Type
+
+// Debounces API requests when a search input changes and applies a `contains` filter
+// on the given breakdown dimension (see the required `addSearchFilter` prop)
+
+// ### Filter Links
+
+// Dimension values can act as links back to the dashboard, where that specific value
+// will be filtered by. (see the `getFilterInfo` required prop)
+
+// ### Pagination
+
+// By default, the component fetches `LIMIT` results. When exactly this number of
+// results is received, a "Load More" button is rendered for fetching the next page
+// of results.
+
+// ### Required Props
+
+//   * `site` - the current dashboard site
+
+//   * `query` - a read-only query object representing the query state of the
+//     dashboard (e.g. `filters`, `period`, `with_imported`, etc)
+
+//   * `title` - title of the report to render on the top left.
+
+//   * `endpoint` - The last part of the endpoint (e.g. "/sources") to query. this
+//     value will be appended to `/${props.site.domain}`
+
+//   * `getMetrics` - a function taking the query object and returning the metrics
+//     that are be expected from the API.
+
+//   * `getFilterInfo` - a function that takes a `listItem` and returns a map with
+//     the necessary information to be able to link to a dashboard where that item
+//     is filtered by. If a list item is not supposed to be a filter link, this
+//     function should return `null` for that item.
+
+//  * `addSearchFilter` - a function that takes a query and the search string as
+//    arguments, and returns a new query with an additional search filter.
 export default function BreakdownModal(props) {
   const {site, query, reportInfo, getMetrics} = props
   const endpoint = `/api/stats/${encodeURIComponent(site.domain)}${reportInfo.endpoint}`
