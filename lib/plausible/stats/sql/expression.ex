@@ -19,7 +19,7 @@ defmodule Plausible.Stats.SQL.Expression do
 
   defmacrop field_or_blank_value(key, expr, empty_value) do
     quote do
-      wrap_expression([t], %{
+      wrap_alias([t], %{
         unquote(key) =>
           fragment("if(empty(?), ?, ?)", unquote(expr), unquote(empty_value), unquote(expr))
       })
@@ -40,13 +40,13 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def dimension(key, "time:month", _table, query) do
-    wrap_expression([t], %{
+    wrap_alias([t], %{
       key => fragment("toStartOfMonth(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 
   def dimension(key, "time:week", _table, query) do
-    wrap_expression([t], %{
+    wrap_alias([t], %{
       key =>
         weekstart_not_before(
           to_timezone(t.timestamp, ^query.timezone),
@@ -56,19 +56,19 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def dimension(key, "time:day", _table, query) do
-    wrap_expression([t], %{
+    wrap_alias([t], %{
       key => fragment("toDate(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 
   def dimension(key, "time:hour", :sessions, query) do
-    wrap_expression([s], %{
+    wrap_alias([s], %{
       key => regular_time_slots(query, 3600)
     })
   end
 
   def dimension(key, "time:hour", _table, query) do
-    wrap_expression([t], %{
+    wrap_alias([t], %{
       key => fragment("toStartOfHour(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
@@ -77,7 +77,7 @@ defmodule Plausible.Stats.SQL.Expression do
   def dimension(key, "time:minute", :sessions, %Query{
         period: "30m"
       }) do
-    wrap_expression([s], %{
+    wrap_alias([s], %{
       key =>
         fragment(
           "arrayJoin(range(dateDiff('minute', now(), ?), dateDiff('minute', now(), ?) + 1))",
@@ -89,36 +89,36 @@ defmodule Plausible.Stats.SQL.Expression do
 
   # :NOTE: This is not exposed in Query APIv2
   def dimension(key, "time:minute", _table, %Query{period: "30m"}) do
-    wrap_expression([t], %{
+    wrap_alias([t], %{
       key => fragment("dateDiff('minute', now(), ?)", t.timestamp)
     })
   end
 
   # :NOTE: This is not exposed in Query APIv2
   def dimension(key, "time:minute", :sessions, query) do
-    wrap_expression([s], %{
+    wrap_alias([s], %{
       key => regular_time_slots(query, 60)
     })
   end
 
   # :NOTE: This is not exposed in Query APIv2
   def dimension(key, "time:minute", _table, query) do
-    wrap_expression([t], %{
+    wrap_alias([t], %{
       key => fragment("toStartOfMinute(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 
   def dimension(key, "event:name", _table, _query),
-    do: wrap_expression([t], %{key => t.name})
+    do: wrap_alias([t], %{key => t.name})
 
   def dimension(key, "event:page", _table, _query),
-    do: wrap_expression([t], %{key => t.pathname})
+    do: wrap_alias([t], %{key => t.pathname})
 
   def dimension(key, "event:hostname", _table, _query),
-    do: wrap_expression([t], %{key => t.hostname})
+    do: wrap_alias([t], %{key => t.hostname})
 
   def dimension(key, "event:props:" <> property_name, _table, _query) do
-    wrap_expression([t], %{
+    wrap_alias([t], %{
       key =>
         fragment(
           "if(not empty(?), ?, '(none)')",
@@ -129,10 +129,10 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def dimension(key, "visit:entry_page", _table, _query),
-    do: wrap_expression([t], %{key => t.entry_page})
+    do: wrap_alias([t], %{key => t.entry_page})
 
   def dimension(key, "visit:exit_page", _table, _query),
-    do: wrap_expression([t], %{key => t.exit_page})
+    do: wrap_alias([t], %{key => t.exit_page})
 
   def dimension(key, "visit:utm_medium", _table, _query),
     do: field_or_blank_value(key, t.utm_medium, @not_set)
@@ -171,42 +171,42 @@ defmodule Plausible.Stats.SQL.Expression do
     do: field_or_blank_value(key, t.browser_version, @not_set)
 
   def dimension(key, "visit:country", _table, _query),
-    do: wrap_expression([t], %{key => t.country})
+    do: wrap_alias([t], %{key => t.country})
 
   def dimension(key, "visit:region", _table, _query),
-    do: wrap_expression([t], %{key => t.region})
+    do: wrap_alias([t], %{key => t.region})
 
   def dimension(key, "visit:city", _table, _query),
-    do: wrap_expression([t], %{key => t.city})
+    do: wrap_alias([t], %{key => t.city})
 
   def event_metric(:pageviews) do
-    wrap_expression([e], %{
+    wrap_alias([e], %{
       pageviews:
         fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name)
     })
   end
 
   def event_metric(:events) do
-    wrap_expression([], %{
+    wrap_alias([], %{
       events: fragment("toUInt64(round(count(*) * any(_sample_factor)))")
     })
   end
 
   def event_metric(:visitors) do
-    wrap_expression([e], %{
+    wrap_alias([e], %{
       visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
     })
   end
 
   def event_metric(:visits) do
-    wrap_expression([e], %{
+    wrap_alias([e], %{
       visits: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.session_id)
     })
   end
 
   on_ee do
     def event_metric(:total_revenue) do
-      wrap_expression(
+      wrap_alias(
         [e],
         %{
           total_revenue:
@@ -216,7 +216,7 @@ defmodule Plausible.Stats.SQL.Expression do
     end
 
     def event_metric(:average_revenue) do
-      wrap_expression(
+      wrap_alias(
         [e],
         %{
           average_revenue:
@@ -227,7 +227,7 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def event_metric(:sample_percent) do
-    wrap_expression([], %{
+    wrap_alias([], %{
       sample_percent:
         fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
     })
@@ -245,7 +245,7 @@ defmodule Plausible.Stats.SQL.Expression do
     event_page_filter = Query.get_filter(query, "event:page")
     condition = SQL.WhereBuilder.build_condition(:entry_page, event_page_filter)
 
-    wrap_expression([], %{
+    wrap_alias([], %{
       bounce_rate:
         fragment(
           "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
@@ -257,32 +257,32 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def session_metric(:visits, _query) do
-    wrap_expression([s], %{
+    wrap_alias([s], %{
       visits: fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign)
     })
   end
 
   def session_metric(:pageviews, _query) do
-    wrap_expression([s], %{
+    wrap_alias([s], %{
       pageviews:
         fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
     })
   end
 
   def session_metric(:events, _query) do
-    wrap_expression([s], %{
+    wrap_alias([s], %{
       events: fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
     })
   end
 
   def session_metric(:visitors, _query) do
-    wrap_expression([s], %{
+    wrap_alias([s], %{
       visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id)
     })
   end
 
   def session_metric(:visit_duration, _query) do
-    wrap_expression([], %{
+    wrap_alias([], %{
       visit_duration:
         fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))"),
       __internal_visits: fragment("toUInt32(sum(sign))")
@@ -290,7 +290,7 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def session_metric(:views_per_visit, _query) do
-    wrap_expression([s], %{
+    wrap_alias([s], %{
       views_per_visit:
         fragment(
           "ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)",
@@ -303,7 +303,7 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def session_metric(:sample_percent, _query) do
-    wrap_expression([], %{
+    wrap_alias([], %{
       sample_percent:
         fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
     })
