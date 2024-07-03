@@ -70,25 +70,6 @@ defmodule Plausible.Stats.Query do
     end
   end
 
-  @spec set_dimensions(t(), list(String.t())) :: t()
-  def set_dimensions(query, dimensions) do
-    query
-    |> struct!(dimensions: dimensions)
-    |> refresh_imported_opts()
-  end
-
-  def set_metrics(query, metrics) do
-    query
-    |> struct!(metrics: metrics)
-    |> refresh_imported_opts()
-  end
-
-  def set_order_by(query, order_by) do
-    query
-    |> struct!(order_by: order_by)
-    |> refresh_imported_opts()
-  end
-
   def add_filter(query, filter) do
     query
     |> struct!(filters: query.filters ++ [filter])

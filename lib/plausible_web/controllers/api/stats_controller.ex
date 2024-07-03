@@ -909,7 +909,7 @@ defmodule PlausibleWeb.Api.StatsController do
         |> Query.remove_filters(["visit:exit_page"])
         |> Query.add_filter([:is, "event:page", pages])
         |> Query.add_filter([:is, "event:name", ["pageview"]])
-        |> Query.set_dimensions(["event:page"])
+        |> Query.set(dimensions: ["event:page"])
 
       total_pageviews =
         Stats.breakdown(site, total_pageviews_query, [:pageviews], {limit, 1})
