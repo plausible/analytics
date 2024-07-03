@@ -42,7 +42,6 @@ export function parseQuery(querystring, site) {
     to: q.get('to') ? dayjs.utc(q.get('to')) : undefined,
     match_day_of_week: matchDayOfWeek == 'true',
     with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
-    experimental_session_count: q.get('experimental_session_count'),
     filters: parseJsonUrl(q.get('filters'), []),
     labels: parseJsonUrl(q.get('labels'), {})
   }

@@ -10,7 +10,6 @@ defmodule Plausible.Stats.Query do
             include_imported: false,
             skip_imported_reason: nil,
             now: nil,
-            experimental_session_count?: false,
             experimental_reduced_joins?: false,
             latest_import_end_date: nil,
             metrics: [],
@@ -36,7 +35,6 @@ defmodule Plausible.Stats.Query do
     query =
       __MODULE__
       |> struct!(now: now, timezone: site.timezone)
-      |> put_experimental_session_count(site, params)
       |> put_experimental_reduced_joins(site, params)
       |> put_period(site, params)
       |> put_dimensions(params)
@@ -56,23 +54,10 @@ defmodule Plausible.Stats.Query do
       query =
         struct!(__MODULE__, Map.to_list(query_data))
         |> put_imported_opts(site, %{})
-        |> put_experimental_session_count(site, params)
         |> put_experimental_reduced_joins(site, params)
         |> struct!(v2: true)
 
       {:ok, query}
-    end
-  end
-
-  defp put_experimental_session_count(query, site, params) do
-    if Map.has_key?(params, "experimental_session_count") do
-      struct!(query,
-        experimental_session_count?: Map.get(params, "experimental_session_count") == "true"
-      )
-    else
-      struct!(query,
-        experimental_session_count?: FunWithFlags.enabled?(:experimental_session_count, for: site)
-      )
     end
   end
 

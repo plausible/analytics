@@ -26,8 +26,7 @@ defmodule Plausible.Stats.Timeseries do
         dimensions: [time_dimension(query)],
         order_by: [{time_dimension(query), :asc}],
         v2: true,
-        include: %{time_labels: true, imports: query.include.imports},
-        experimental_session_count?: true
+        include: %{time_labels: true, imports: query.include.imports}
       )
       |> QueryOptimizer.optimize()
 

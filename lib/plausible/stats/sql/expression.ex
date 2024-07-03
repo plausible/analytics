@@ -61,7 +61,7 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
-  def dimension(key, "time:hour", :sessions, %Query{experimental_session_count?: true} = query) do
+  def dimension(key, "time:hour", :sessions, query) do
     wrap_expression([s], %{
       key => regular_time_slots(query, 3600)
     })
@@ -75,8 +75,7 @@ defmodule Plausible.Stats.SQL.Expression do
 
   # :NOTE: This is not exposed in Query APIv2
   def dimension(key, "time:minute", :sessions, %Query{
-        period: "30m",
-        experimental_session_count?: true
+        period: "30m"
       }) do
     wrap_expression([s], %{
       key =>
@@ -96,7 +95,7 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   # :NOTE: This is not exposed in Query APIv2
-  def dimension(key, "time:minute", :sessions, %Query{experimental_session_count?: true} = query) do
+  def dimension(key, "time:minute", :sessions, query) do
     wrap_expression([s], %{
       key => regular_time_slots(query, 60)
     })
