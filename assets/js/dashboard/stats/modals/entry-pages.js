@@ -3,7 +3,7 @@ import { withRouter } from 'react-router-dom'
 import Modal from './modal'
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { hasGoalFilter } from "../../util/filters";
-import { parseQuery } from '../../query'
+import { addFilter, parseQuery } from '../../query'
 import BreakdownModal from "./breakdown-modal";
 
 function EntryPagesModal(props) {
@@ -21,6 +21,10 @@ function EntryPagesModal(props) {
       prefix: reportInfo.dimension,
       filter: ["is", reportInfo.dimension, [listItem.name]]
     }
+  }
+
+  const addSearchFilter = (query, s) => {
+    return addFilter(query, ['contains', reportInfo.dimension, [s]])
   }
 
   const getMetrics = useCallback((query) => {
@@ -53,6 +57,7 @@ function EntryPagesModal(props) {
         reportInfo={reportInfo}
         getMetrics={getMetrics}
         getFilterInfo={getFilterInfo}
+        addSearchFilter={addSearchFilter}
       />
     </Modal>
   )

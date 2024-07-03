@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 
 import * as api from '../../api'
-import { addFilter } from '../../query'
 import debounce from 'debounce-promise'
 import { useMountedEffect } from '../../custom-hooks'
 import { trimURL } from '../../util/url'
@@ -46,7 +45,7 @@ export default function BreakdownModal(props) {
 
   function withSearch(query) {
     if (search === '') { return query}
-    return addFilter(query, ['contains', reportInfo.dimension, [search]])
+    return props.addSearchFilter(query, search)
   }
 
   function loadNextPage() {
