@@ -501,80 +501,69 @@ defmodule Plausible.Stats.Imported do
     Enum.reduce(query.dimensions, q, fn dimension, q ->
       dim = Plausible.Stats.Filters.without_prefix(dimension)
 
-      group_imported_by(q, dim, shortname(query, dimension), query)
+      q
+      |> select_group_fields(dim, shortname(query, dimension), query)
+      |> filter_group_values(dimension)
+      |> group_by([], selected_as(^shortname(query, dimension)))
     end)
   end
 
-  defp group_imported_by(q, dim, key, _query) when dim in [:source, :referrer] do
+  defp select_group_fields(q, dim, key, _query) when dim in [:source, :referrer] do
     q
-    |> group_by([i], field(i, ^dim))
     |> select_merge_as([i], %{
       key => fragment("if(empty(?), ?, ?)", field(i, ^dim), @no_ref, field(i, ^dim))
     })
   end
 
-  defp group_imported_by(q, dim, key, _query)
+  defp select_group_fields(q, dim, key, _query)
        when dim in [:utm_source, :utm_medium, :utm_campaign, :utm_term, :utm_content] do
     q
-    |> group_by([i], field(i, ^dim))
-    |> where([i], fragment("not empty(?)", field(i, ^dim)))
     |> select_merge_as([i], %{key => field(i, ^dim)})
   end
 
-  defp group_imported_by(q, :page, key, _query) do
+  defp select_group_fields(q, :page, key, _query) do
     q
-    |> group_by([i], i.page)
     |> select_merge_as([i], %{key => i.page, time_on_page: sum(i.time_on_page)})
   end
 
-  defp group_imported_by(q, :country, key, _query) do
+  defp select_group_fields(q, :country, key, _query) do
     q
-    |> group_by([i], i.country)
-    |> where([i], i.country != "ZZ")
     |> select_merge_as([i], %{key => i.country})
   end
 
-  defp group_imported_by(q, :region, key, _query) do
+  defp select_group_fields(q, :region, key, _query) do
     q
-    |> group_by([i], i.region)
-    |> where([i], i.region != "")
     |> select_merge_as([i], %{key => i.region})
   end
 
-  defp group_imported_by(q, :city, key, _query) do
+  defp select_group_fields(q, :city, key, _query) do
     q
-    |> group_by([i], i.city)
-    |> where([i], i.city != 0 and not is_nil(i.city))
     |> select_merge_as([i], %{key => i.city})
   end
 
-  defp group_imported_by(q, dim, key, _query) when dim in [:device, :browser] do
+  defp select_group_fields(q, dim, key, _query) when dim in [:device, :browser] do
     q
-    |> group_by([i], field(i, ^dim))
     |> select_merge_as([i], %{
       key => fragment("if(empty(?), ?, ?)", field(i, ^dim), @not_set, field(i, ^dim))
     })
   end
 
-  defp group_imported_by(q, :browser_version, key, _query) do
+  defp select_group_fields(q, :browser_version, key, _query) do
     q
-    |> group_by([i], [i.browser_version])
     |> select_merge_as([i], %{
       key => fragment("if(empty(?), ?, ?)", i.browser_version, @not_set, i.browser_version)
     })
   end
 
-  defp group_imported_by(q, :os, key, _query) do
+  defp select_group_fields(q, :os, key, _query) do
     q
-    |> group_by([i], i.operating_system)
     |> select_merge_as([i], %{
       key => fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system)
     })
   end
 
-  defp group_imported_by(q, :os_version, key, _query) do
+  defp select_group_fields(q, :os_version, key, _query) do
     q
-    |> group_by([i], [i.operating_system_version])
     |> select_merge_as([i], %{
       key =>
         fragment(
@@ -586,59 +575,71 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
-  defp group_imported_by(q, dim, key, _query) when dim in [:entry_page, :exit_page] do
+  defp select_group_fields(q, dim, key, _query) when dim in [:entry_page, :exit_page] do
     q
-    |> group_by([i], field(i, ^dim))
     |> select_merge_as([i], %{key => field(i, ^dim)})
   end
 
-  defp group_imported_by(q, :name, key, _query) do
+  # :TODO: can merge with the above condition
+  defp select_group_fields(q, :name, key, _query) do
     q
-    |> group_by([i], i.name)
     |> select_merge_as([i], %{key => i.name})
   end
 
-  defp group_imported_by(q, :url, key, _query) do
+  defp select_group_fields(q, :url, key, _query) do
     q
-    |> group_by([i], i.link_url)
     |> select_merge_as([i], %{
       key => fragment("if(not empty(?), ?, ?)", i.link_url, i.link_url, @none)
     })
   end
 
-  defp group_imported_by(q, :path, key, _query) do
+  defp select_group_fields(q, :path, key, _query) do
     q
-    |> group_by([i], i.path)
     |> select_merge_as([i], %{
       key => fragment("if(not empty(?), ?, ?)", i.path, i.path, @none)
     })
   end
 
-  defp group_imported_by(q, :month, key, _query) do
+  defp select_group_fields(q, :month, key, _query) do
     q
-    |> group_by([i], fragment("toStartOfMonth(?)", i.date))
     |> select_merge_as([i], %{key => fragment("toStartOfMonth(?)", i.date)})
   end
 
-  defp group_imported_by(q, :hour, key, _query) do
+  defp select_group_fields(q, :hour, key, _query) do
     q
-    |> group_by([i], i.date)
     |> select_merge_as([i], %{key => i.date})
   end
 
-  defp group_imported_by(q, :week, key, query) do
+  defp select_group_fields(q, :week, key, query) do
     q
-    |> group_by([i], weekstart_not_before(i.date, ^query.date_range.first))
     |> select_merge_as([i], %{
       key => weekstart_not_before(i.date, ^query.date_range.first)
     })
   end
 
-  defp group_imported_by(q, :day, key, _query) do
+  defp select_group_fields(q, :day, key, _query) do
     q
-    |> group_by([i], i.date)
     |> select_merge_as([i], %{key => i.date})
   end
+
+  @utm_dimensions [
+    "visit:utm_source",
+    "visit:utm_medium",
+    "visit:utm_campaign",
+    "visit:utm_term",
+    "visit:utm_content"
+  ]
+  defp filter_group_values(q, dimension) when dimension in @utm_dimensions do
+    dim = Plausible.Stats.Filters.without_prefix(dimension)
+
+    where(q, [i], fragment("not empty(?)", field(i, ^dim)))
+  end
+
+  defp filter_group_values(q, "visit:country"), do: where(q, [i], i.country != "ZZ")
+  defp filter_group_values(q, "visit:region"), do: where(q, [i], i.region != "")
+  defp filter_group_values(q, "visit:city"), do: where(q, [i], i.city != 0 and not is_nil(i.city))
+
+  defp filter_group_values(q, _dimension), do: q
 
   defp select_joined_dimensions(q, query) do
     Enum.reduce(query.dimensions, q, fn dimension, q ->
