@@ -61,25 +61,6 @@ defmodule Plausible.Stats.Base do
     |> Enum.reduce(%{}, &Map.merge/2)
   end
 
-  def filter_converted_sessions(db_query, site, query) do
-    if Query.has_event_filters?(query) do
-      converted_sessions =
-        from(e in query_events(site, query),
-          select: %{
-            session_id: fragment("DISTINCT ?", e.session_id),
-            _sample_factor: fragment("_sample_factor")
-          }
-        )
-
-      from(s in db_query,
-        join: cs in subquery(converted_sessions),
-        on: s.session_id == cs.session_id
-      )
-    else
-      db_query
-    end
-  end
-
   defp beginning_of_time(candidate, native_stats_start_at) do
     if Timex.after?(native_stats_start_at, candidate) do
       native_stats_start_at
