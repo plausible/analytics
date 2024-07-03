@@ -1,6 +1,6 @@
 defmodule Plausible.Google.SearchConsole.Filters do
   @moduledoc false
-  import Plausible.Stats.Base, only: [page_regex: 1]
+  import Plausible.Stats.Filters.Utils, only: [page_regex: 1]
 
   def transform(property, plausible_filters) do
     search_console_filters =

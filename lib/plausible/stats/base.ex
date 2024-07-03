@@ -97,15 +97,4 @@ defmodule Plausible.Stats.Base do
 
     {first_datetime, last_datetime}
   end
-
-  def page_regex(expr) do
-    escaped =
-      expr
-      |> Regex.escape()
-      |> String.replace("\\|", "|")
-      |> String.replace("\\*\\*", ".*")
-      |> String.replace("\\*", ".*")
-
-    "^#{escaped}$"
-  end
 end
