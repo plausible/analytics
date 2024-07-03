@@ -1,5 +1,5 @@
 defmodule Plausible.Stats.SQL.SpecialMetrics do
-  @doc """
+  @moduledoc """
   This module defines how special metrics like `conversion_rate` and
   `percentage` are calculated.
   """
