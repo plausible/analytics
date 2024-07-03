@@ -49,18 +49,6 @@ defmodule Plausible.Stats.Base do
     q
   end
 
-  def select_event_metrics(metrics) do
-    metrics
-    |> Enum.map(&SQL.Expression.event_metric/1)
-    |> Enum.reduce(%{}, &Map.merge/2)
-  end
-
-  def select_session_metrics(metrics, query) do
-    metrics
-    |> Enum.map(&SQL.Expression.session_metric(&1, query))
-    |> Enum.reduce(%{}, &Map.merge/2)
-  end
-
   defp beginning_of_time(candidate, native_stats_start_at) do
     if Timex.after?(native_stats_start_at, candidate) do
       native_stats_start_at

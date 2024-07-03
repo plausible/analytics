@@ -32,7 +32,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       from(
         e in "events_v2",
         where: ^SQL.WhereBuilder.build(:events, site, events_query),
-        select: ^Base.select_event_metrics(events_query.metrics)
+        select: ^select_event_metrics(events_query)
       )
 
     on_ee do
@@ -73,7 +73,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       from(
         e in "sessions_v2",
         where: ^SQL.WhereBuilder.build(:sessions, site, sessions_query),
-        select: ^Base.select_session_metrics(sessions_query.metrics, sessions_query)
+        select: ^select_session_metrics(sessions_query)
       )
 
     on_ee do
@@ -109,6 +109,18 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     else
       q
     end
+  end
+
+  defp select_event_metrics(query) do
+    query.metrics
+    |> Enum.map(&SQL.Expression.event_metric/1)
+    |> Enum.reduce(%{}, &Map.merge/2)
+  end
+
+  defp select_session_metrics(query) do
+    query.metrics
+    |> Enum.map(&SQL.Expression.session_metric(&1, query))
+    |> Enum.reduce(%{}, &Map.merge/2)
   end
 
   defp build_group_by(q, table, query) do
