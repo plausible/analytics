@@ -509,41 +509,35 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp select_group_fields(q, dim, key, _query) when dim in [:source, :referrer] do
-    q
-    |> select_merge_as([i], %{
+    select_merge_as(q, [i], %{
       key => fragment("if(empty(?), ?, ?)", field(i, ^dim), @no_ref, field(i, ^dim))
     })
   end
 
   defp select_group_fields(q, :page, key, _query) do
-    q
-    |> select_merge_as([i], %{key => i.page, time_on_page: sum(i.time_on_page)})
+    select_merge_as(q, [i], %{key => i.page, time_on_page: sum(i.time_on_page)})
   end
 
   defp select_group_fields(q, dim, key, _query) when dim in [:device, :browser] do
-    q
-    |> select_merge_as([i], %{
+    select_merge_as(q, [i], %{
       key => fragment("if(empty(?), ?, ?)", field(i, ^dim), @not_set, field(i, ^dim))
     })
   end
 
   defp select_group_fields(q, :browser_version, key, _query) do
-    q
-    |> select_merge_as([i], %{
+    select_merge_as(q, [i], %{
       key => fragment("if(empty(?), ?, ?)", i.browser_version, @not_set, i.browser_version)
     })
   end
 
   defp select_group_fields(q, :os, key, _query) do
-    q
-    |> select_merge_as([i], %{
+    select_merge_as(q, [i], %{
       key => fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system)
     })
   end
 
   defp select_group_fields(q, :os_version, key, _query) do
-    q
-    |> select_merge_as([i], %{
+    select_merge_as(q, [i], %{
       key =>
         fragment(
           "if(empty(?), ?, ?)",
@@ -555,44 +549,37 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp select_group_fields(q, :url, key, _query) do
-    q
-    |> select_merge_as([i], %{
+    select_merge_as(q, [i], %{
       key => fragment("if(not empty(?), ?, ?)", i.link_url, i.link_url, @none)
     })
   end
 
   defp select_group_fields(q, :path, key, _query) do
-    q
-    |> select_merge_as([i], %{
+    select_merge_as(q, [i], %{
       key => fragment("if(not empty(?), ?, ?)", i.path, i.path, @none)
     })
   end
 
   defp select_group_fields(q, :month, key, _query) do
-    q
-    |> select_merge_as([i], %{key => fragment("toStartOfMonth(?)", i.date)})
+    select_merge_as(q, [i], %{key => fragment("toStartOfMonth(?)", i.date)})
   end
 
   defp select_group_fields(q, :hour, key, _query) do
-    q
-    |> select_merge_as([i], %{key => i.date})
+    select_merge_as(q, [i], %{key => i.date})
   end
 
   defp select_group_fields(q, :week, key, query) do
-    q
-    |> select_merge_as([i], %{
+    select_merge_as(q, [i], %{
       key => weekstart_not_before(i.date, ^query.date_range.first)
     })
   end
 
   defp select_group_fields(q, :day, key, _query) do
-    q
-    |> select_merge_as([i], %{key => i.date})
+    select_merge_as(q, [i], %{key => i.date})
   end
 
   defp select_group_fields(q, dim, key, _query) do
-    q
-    |> select_merge_as([i], %{key => field(i, ^dim)})
+    select_merge_as(q, [i], %{key => field(i, ^dim)})
   end
 
   @utm_dimensions [
