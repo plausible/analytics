@@ -160,7 +160,7 @@ defmodule Plausible.Stats.Base do
   def total_visitors_subquery(site, query, include_imported)
 
   def total_visitors_subquery(site, query, true = _include_imported) do
-    wrap_expression([], %{
+    wrap_alias([], %{
       total_visitors:
         subquery(total_visitors(site, query)) +
           subquery(Plausible.Stats.Imported.total_imported_visitors(site, query))
@@ -168,7 +168,7 @@ defmodule Plausible.Stats.Base do
   end
 
   def total_visitors_subquery(site, query, false = _include_imported) do
-    wrap_expression([], %{
+    wrap_alias([], %{
       total_visitors: subquery(total_visitors(site, query))
     })
   end
