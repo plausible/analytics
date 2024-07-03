@@ -62,12 +62,16 @@ defmodule Plausible.Stats.QueryResult do
 
   defp serializable_filter(filter), do: filter
 
-  @import_warning "Imported stats are not included in the results because query parameters are not supported. " <>
-                    "For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats"
+  @imports_unsupported_query_warning "Imported stats are not included in the results because query parameters are not supported. " <>
+                                       "For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats"
 
   defp meta(query) do
     %{
-      warning: if(query.skip_imported_reason, do: @import_warning, else: nil),
+      warning:
+        case query.skip_imported_reason do
+          :unsupported_query -> @imports_unsupported_query_warning
+          _ -> nil
+        end,
       time_labels: if(query.include.time_labels, do: Interval.time_labels(query), else: nil)
     }
     |> Enum.reject(fn {_, value} -> is_nil(value) end)
