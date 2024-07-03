@@ -16,9 +16,6 @@ defmodule Plausible.Stats.Imported do
 
   @property_to_table_mappings Imported.Base.property_to_table_mappings()
 
-  @imported_dimensions Map.keys(@property_to_table_mappings) ++
-                         Plausible.Imported.imported_custom_props()
-
   @goals_with_url Plausible.Imported.goals_with_url()
 
   def goals_with_url(), do: @goals_with_url
@@ -279,8 +276,8 @@ defmodule Plausible.Stats.Imported do
     end)
   end
 
-  def merge_imported(q, site, %Query{dimensions: dimensions} = query, metrics) do
-    if merge_imported_dimensions?(dimensions) do
+  def merge_imported(q, site, query, metrics) do
+    if schema_supports_query?(query) do
       imported_q =
         site
         |> Imported.Base.query_imported(query)
@@ -298,13 +295,6 @@ defmodule Plausible.Stats.Imported do
     else
       q
     end
-  end
-
-  def merge_imported(q, _, _, _), do: q
-
-  defp merge_imported_dimensions?(dimensions) do
-    dimensions in [["visit:browser", "visit:browser_version"], ["visit:os", "visit:os_version"]] or
-      (length(dimensions) == 1 and hd(dimensions) in @imported_dimensions)
   end
 
   def total_imported_visitors(site, query) do
