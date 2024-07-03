@@ -1241,7 +1241,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "site_id" => site.domain,
           "metrics" => ["visitors"],
           "date_range" => ["2020-01-01", "2021-01-01"],
-          "dimensions" => ["time"]
+          "dimensions" => ["time:month"]
         })
 
       assert json_response(conn, 200)["results"] == [
@@ -1264,7 +1264,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "site_id" => site.domain,
           "metrics" => ["visitors"],
           "date_range" => ["2020-01-01", "2021-01-07"],
-          "dimensions" => ["time:day"]
+          "dimensions" => ["time:day"],
+          "include" => %{"time_labels" => true}
         })
 
       assert json_response(conn, 200)["results"] == [
@@ -1272,6 +1273,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
                %{"dimensions" => ["2020-12-31"], "metrics" => [1]},
                %{"dimensions" => ["2021-01-01"], "metrics" => [2]}
              ]
+
+      assert length(json_response(conn, 200)["meta"]["time_labels"]) == 373
     end
 
     test "shows a custom range with daily interval", %{conn: conn, site: site} do
