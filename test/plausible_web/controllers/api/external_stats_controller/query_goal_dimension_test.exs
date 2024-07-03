@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
+defmodule PlausibleWeb.Api.ExternalStatsController.QueryGoalDimensionTest do
   use PlausibleWeb.ConnCase
 
   @user_id 1231
