@@ -4,6 +4,7 @@ defmodule Plausible.Stats.Time do
   """
 
   alias Plausible.Stats.Query
+  alias Plausible.Timezones
 
   def utc_boundaries(%Query{period: "realtime", now: now}, site) do
     last_datetime =

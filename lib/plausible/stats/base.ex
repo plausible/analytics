@@ -1,10 +1,7 @@
 defmodule Plausible.Stats.Base do
-  use Plausible.ClickhouseRepo
   use Plausible
-  use Plausible.Stats.SQL.Fragments
 
-  alias Plausible.Stats.{Query, TableDecider, SQL}
-  alias Plausible.Timezones
+  alias Plausible.Stats.{TableDecider, SQL}
   import Ecto.Query
 
   def base_event_query(site, query) do
