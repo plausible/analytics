@@ -89,7 +89,7 @@ defmodule Plausible.Stats.Query do
     |> refresh_imported_opts()
   end
 
-  def put_filter(query, filter) do
+  def add_filter(query, filter) do
     query
     |> struct!(filters: query.filters ++ [filter])
     |> refresh_imported_opts()
