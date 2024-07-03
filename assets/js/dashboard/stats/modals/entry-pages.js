@@ -16,16 +16,16 @@ function EntryPagesModal(props) {
     dimensionLabel: 'Entry page'
   }
 
-  const getFilterInfo = (listItem) => {
+  const getFilterInfo = useCallback((listItem) => {
     return {
       prefix: reportInfo.dimension,
       filter: ["is", reportInfo.dimension, [listItem.name]]
     }
-  }
+  }, [])
 
-  const addSearchFilter = (query, s) => {
+  const addSearchFilter = useCallback((query, s) => {
     return addFilter(query, ['contains', reportInfo.dimension, [s]])
-  }
+  }, [])
 
   const getMetrics = useCallback((query) => {
     if (hasGoalFilter(query)) {
