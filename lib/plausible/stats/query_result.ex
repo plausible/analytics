@@ -1,7 +1,6 @@
 defmodule Plausible.Stats.QueryResult do
   @moduledoc false
 
-  alias Plausible.Stats.Interval
   alias Plausible.Stats.Util
   alias Plausible.Stats.Filters
 
@@ -49,7 +48,7 @@ defmodule Plausible.Stats.QueryResult do
   defp dimension_label("time:" <> _ = time_dimension, entry, query) do
     datetime = Map.get(entry, Util.shortname(query, time_dimension))
 
-    Interval.format_datetime(datetime)
+    Plausible.Stats.Time.format_datetime(datetime)
   end
 
   defp dimension_label(dimension, entry, query) do
@@ -72,7 +71,8 @@ defmodule Plausible.Stats.QueryResult do
           :unsupported_query -> @imports_unsupported_query_warning
           _ -> nil
         end,
-      time_labels: if(query.include.time_labels, do: Interval.time_labels(query), else: nil)
+      time_labels:
+        if(query.include.time_labels, do: Plausible.Stats.Time.time_labels(query), else: nil)
     }
     |> Enum.reject(fn {_, value} -> is_nil(value) end)
     |> Enum.into(%{})
