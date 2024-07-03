@@ -16,6 +16,8 @@ defmodule Plausible.Stats do
   use Plausible.DebugReplayInfo
 
   def query(site, query) do
+    include_sentry_replay_info()
+
     optimized_query = QueryOptimizer.optimize(query)
 
     optimized_query
