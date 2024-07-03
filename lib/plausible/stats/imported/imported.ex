@@ -630,6 +630,12 @@ defmodule Plausible.Stats.Imported do
     |> select_merge_as([i], %{key => fragment("toStartOfMonth(?)", i.date)})
   end
 
+  defp group_imported_by(q, :hour, key, _query) do
+    q
+    |> group_by([i], i.date)
+    |> select_merge_as([i], %{key => i.date})
+  end
+
   defp group_imported_by(q, :week, key, query) do
     q
     |> group_by([i], weekstart_not_before(i.date, ^query.date_range.first))

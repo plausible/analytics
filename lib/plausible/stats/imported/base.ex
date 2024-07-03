@@ -36,10 +36,11 @@ defmodule Plausible.Stats.Imported.Base do
     # NOTE: These dimensions are only used in group by
     "time:month" => "imported_visitors",
     "time:week" => "imported_visitors",
-    "time:day" => "imported_visitors"
+    "time:day" => "imported_visitors",
+    "time:hour" => "imported_visitors"
   }
 
-  @queriable_time_dimensions ["time:month", "time:week", "time:day"]
+  @queriable_time_dimensions ["time:month", "time:week", "time:day", "time:hour"]
 
   @imported_custom_props Imported.imported_custom_props()
 
