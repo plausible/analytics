@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.LegacyQueryBuilder do
   use Plausible
 
-  alias Plausible.Stats.{Interval, Query}
+  alias Plausible.Stats.{Filters, Interval, Query}
 
   def from(site, params) do
     now = NaiveDateTime.utc_now(:second)

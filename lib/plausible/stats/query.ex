@@ -34,7 +34,7 @@ defmodule Plausible.Stats.Query do
         struct!(__MODULE__, Map.to_list(query_data))
         |> put_imported_opts(site, %{})
         |> put_experimental_reduced_joins(site, params)
-        |> struct!(v2: true)
+        |> struct!(v2: true, now: NaiveDateTime.utc_now(:second))
 
       {:ok, query}
     end
@@ -104,13 +104,6 @@ defmodule Plausible.Stats.Query do
     query
     |> struct!(filters: new_filters)
     |> refresh_imported_opts()
-  end
-
-  def exclude_imported(query) do
-    struct!(query,
-      include_imported: false,
-      skip_imported_reason: :manual_exclusion
-    )
   end
 
   defp refresh_imported_opts(query) do
