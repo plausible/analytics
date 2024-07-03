@@ -2254,21 +2254,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     ])
 
     conn =
-      get(conn, "/api/v1/stats/breakdown", %{
-        "site_id" => site.domain,
-        "period" => "day",
-        "property" => "event:page",
-        "filters" => "event:goal == Register"
-      })
-
-    assert json_response(conn, 200) == %{
-             "results" => [
-               %{"page" => "/en/register", "visitors" => 2},
-               %{"page" => "/it/register", "visitors" => 1}
-             ]
-           }
-
-    conn =
       post(conn, "/api/v2/query", %{
         "site_id" => site.domain,
         "metrics" => ["visitors"],
