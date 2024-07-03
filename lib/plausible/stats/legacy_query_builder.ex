@@ -1,4 +1,6 @@
 defmodule Plausible.Stats.LegacyQueryBuilder do
+  @moduledoc false
+
   use Plausible
 
   alias Plausible.Stats.{Filters, Interval, Query}
