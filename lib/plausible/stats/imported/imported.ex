@@ -1,11 +1,11 @@
 defmodule Plausible.Stats.Imported do
-  alias Plausible.Stats.Filters
   use Plausible.ClickhouseRepo
+  use Plausible.Stats.SQL.Fragments
 
   import Ecto.Query
-  import Plausible.Stats.Fragments
   import Plausible.Stats.Util, only: [shortname: 2]
 
+  alias Plausible.Stats.Filters
   alias Plausible.Stats.Imported
   alias Plausible.Stats.Query
   alias Plausible.Stats.SQL.QueryBuilder
@@ -290,12 +290,8 @@ defmodule Plausible.Stats.Imported do
       "imported_custom_events" ->
         Imported.Base.query_imported("imported_custom_events", site, query)
         |> where([i], i.visitors > 0)
-        |> select_merge([i], %{
-          dim0:
-            selected_as(
-              fragment("-indexOf(?, ?)", type(^events, {:array, :string}), i.name),
-              :dim0
-            )
+        |> select_merge_as([i], %{
+          dim0: fragment("-indexOf(?, ?)", type(^events, {:array, :string}), i.name)
         })
         |> select_imported_metrics(metrics)
         |> group_by([], selected_as(:dim0))
@@ -314,8 +310,8 @@ defmodule Plausible.Stats.Imported do
         )
         |> join(:array, index in fragment("indices"))
         |> group_by([_i, index], index)
-        |> select_merge([_i, index], %{
-          dim0: selected_as(type(fragment("?", index), :integer), :dim0)
+        |> select_merge_as([_i, index], %{
+          dim0: type(fragment("?", index), :integer)
         })
         |> select_imported_metrics(metrics)
     end)
@@ -563,17 +559,8 @@ defmodule Plausible.Stats.Imported do
   defp group_imported_by(q, dim, key) when dim in [:source, :referrer] do
     q
     |> group_by([i], field(i, ^dim))
-    |> select_merge([i], %{
-      ^key =>
-        selected_as(
-          fragment(
-            "if(empty(?), ?, ?)",
-            field(i, ^dim),
-            @no_ref,
-            field(i, ^dim)
-          ),
-          ^key
-        )
+    |> select_merge_as([i], %{
+      key => fragment("if(empty(?), ?, ?)", field(i, ^dim), @no_ref, field(i, ^dim))
     })
   end
 
@@ -582,90 +569,70 @@ defmodule Plausible.Stats.Imported do
     q
     |> group_by([i], field(i, ^dim))
     |> where([i], fragment("not empty(?)", field(i, ^dim)))
-    |> select_merge([i], %{^key => selected_as(field(i, ^dim), ^key)})
+    |> select_merge_as([i], %{key => field(i, ^dim)})
   end
 
   defp group_imported_by(q, :page, key) do
     q
     |> group_by([i], i.page)
-    |> select_merge([i], %{^key => selected_as(i.page, ^key), time_on_page: sum(i.time_on_page)})
+    |> select_merge_as([i], %{key => i.page, time_on_page: sum(i.time_on_page)})
   end
 
   defp group_imported_by(q, :country, key) do
     q
     |> group_by([i], i.country)
     |> where([i], i.country != "ZZ")
-    |> select_merge([i], %{^key => selected_as(i.country, ^key)})
+    |> select_merge_as([i], %{key => i.country})
   end
 
   defp group_imported_by(q, :region, key) do
     q
     |> group_by([i], i.region)
     |> where([i], i.region != "")
-    |> select_merge([i], %{^key => selected_as(i.region, ^key)})
+    |> select_merge_as([i], %{key => i.region})
   end
 
   defp group_imported_by(q, :city, key) do
     q
     |> group_by([i], i.city)
     |> where([i], i.city != 0 and not is_nil(i.city))
-    |> select_merge([i], %{^key => selected_as(i.city, ^key)})
+    |> select_merge_as([i], %{key => i.city})
   end
 
   defp group_imported_by(q, dim, key) when dim in [:device, :browser] do
     q
     |> group_by([i], field(i, ^dim))
-    |> select_merge([i], %{
-      ^key =>
-        selected_as(
-          fragment("if(empty(?), ?, ?)", field(i, ^dim), @not_set, field(i, ^dim)),
-          ^key
-        )
+    |> select_merge_as([i], %{
+      key => fragment("if(empty(?), ?, ?)", field(i, ^dim), @not_set, field(i, ^dim))
     })
   end
 
   defp group_imported_by(q, :browser_version, key) do
     q
     |> group_by([i], [i.browser_version])
-    |> select_merge([i], %{
-      ^key =>
-        selected_as(
-          fragment(
-            "if(empty(?), ?, ?)",
-            i.browser_version,
-            @not_set,
-            i.browser_version
-          ),
-          ^key
-        )
+    |> select_merge_as([i], %{
+      key => fragment("if(empty(?), ?, ?)", i.browser_version, @not_set, i.browser_version)
     })
   end
 
   defp group_imported_by(q, :os, key) do
     q
     |> group_by([i], i.operating_system)
-    |> select_merge([i], %{
-      ^key =>
-        selected_as(
-          fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system),
-          ^key
-        )
+    |> select_merge_as([i], %{
+      key => fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system)
     })
   end
 
   defp group_imported_by(q, :os_version, key) do
     q
     |> group_by([i], [i.operating_system_version])
-    |> select_merge([i], %{
-      ^key =>
-        selected_as(
-          fragment(
-            "if(empty(?), ?, ?)",
-            i.operating_system_version,
-            @not_set,
-            i.operating_system_version
-          ),
-          ^key
+    |> select_merge_as([i], %{
+      key =>
+        fragment(
+          "if(empty(?), ?, ?)",
+          i.operating_system_version,
+          @not_set,
+          i.operating_system_version
         )
     })
   end
@@ -673,28 +640,28 @@ defmodule Plausible.Stats.Imported do
   defp group_imported_by(q, dim, key) when dim in [:entry_page, :exit_page] do
     q
     |> group_by([i], field(i, ^dim))
-    |> select_merge([i], %{^key => selected_as(field(i, ^dim), ^key)})
+    |> select_merge_as([i], %{key => field(i, ^dim)})
   end
 
   defp group_imported_by(q, :name, key) do
     q
     |> group_by([i], i.name)
-    |> select_merge([i], %{^key => selected_as(i.name, ^key)})
+    |> select_merge_as([i], %{key => i.name})
   end
 
   defp group_imported_by(q, :url, key) do
     q
     |> group_by([i], i.link_url)
-    |> select_merge([i], %{
-      ^key => selected_as(fragment("if(not empty(?), ?, ?)", i.link_url, i.link_url, @none), ^key)
+    |> select_merge_as([i], %{
+      key => fragment("if(not empty(?), ?, ?)", i.link_url, i.link_url, @none)
     })
   end
 
   defp group_imported_by(q, :path, key) do
     q
     |> group_by([i], i.path)
-    |> select_merge([i], %{
-      ^key => selected_as(fragment("if(not empty(?), ?, ?)", i.path, i.path, @none), ^key)
+    |> select_merge_as([i], %{
+      key => fragment("if(not empty(?), ?, ?)", i.path, i.path, @none)
     })
   end
 
@@ -705,23 +672,14 @@ defmodule Plausible.Stats.Imported do
   end
 
   defp select_joined_dimension(q, "visit:city", key) do
-    select_merge(q, [s, i], %{
-      ^key => selected_as(fragment("greatest(?,?)", field(i, ^key), field(s, ^key)), ^key)
+    select_merge_as(q, [s, i], %{
+      key => fragment("greatest(?,?)", field(i, ^key), field(s, ^key))
     })
   end
 
   defp select_joined_dimension(q, _dimension, key) do
-    select_merge(q, [s, i], %{
-      ^key =>
-        selected_as(
-          fragment(
-            "if(empty(?), ?, ?)",
-            field(s, ^key),
-            field(i, ^key),
-            field(s, ^key)
-          ),
-          ^key
-        )
+    select_merge_as(q, [s, i], %{
+      key => fragment("if(empty(?), ?, ?)", field(s, ^key), field(i, ^key), field(s, ^key))
     })
   end
 
@@ -734,31 +692,31 @@ defmodule Plausible.Stats.Imported do
 
   defp select_joined_metrics(q, [:visits | rest]) do
     q
-    |> select_merge([s, i], %{visits: selected_as(s.visits + i.visits, :visits)})
+    |> select_merge_as([s, i], %{visits: s.visits + i.visits})
     |> select_joined_metrics(rest)
   end
 
   defp select_joined_metrics(q, [:visitors | rest]) do
     q
-    |> select_merge([s, i], %{visitors: selected_as(s.visitors + i.visitors, :visitors)})
+    |> select_merge_as([s, i], %{visitors: s.visitors + i.visitors})
     |> select_joined_metrics(rest)
   end
 
   defp select_joined_metrics(q, [:events | rest]) do
     q
-    |> select_merge([s, i], %{events: selected_as(s.events + i.events, :events)})
+    |> select_merge_as([s, i], %{events: s.events + i.events})
     |> select_joined_metrics(rest)
   end
 
   defp select_joined_metrics(q, [:pageviews | rest]) do
     q
-    |> select_merge([s, i], %{pageviews: selected_as(s.pageviews + i.pageviews, :pageviews)})
+    |> select_merge_as([s, i], %{pageviews: s.pageviews + i.pageviews})
     |> select_joined_metrics(rest)
   end
 
   defp select_joined_metrics(q, [:views_per_visit | rest]) do
     q
-    |> select_merge([s, i], %{
+    |> select_merge_as([s, i], %{
       views_per_visit:
         fragment(
           "if(? + ? > 0, round((? + ? * ?) / (? + ?), 2), 0)",
@@ -776,7 +734,7 @@ defmodule Plausible.Stats.Imported do
 
   defp select_joined_metrics(q, [:bounce_rate | rest]) do
     q
-    |> select_merge([s, i], %{
+    |> select_merge_as([s, i], %{
       bounce_rate:
         fragment(
           "if(? + ? > 0, round(100 * (? + (? * ? / 100)) / (? + ?)), 0)",
@@ -794,7 +752,7 @@ defmodule Plausible.Stats.Imported do
 
   defp select_joined_metrics(q, [:visit_duration | rest]) do
     q
-    |> select_merge([s, i], %{
+    |> select_merge_as([s, i], %{
       visit_duration:
         fragment(
           """
@@ -818,7 +776,7 @@ defmodule Plausible.Stats.Imported do
 
   defp select_joined_metrics(q, [:sample_percent | rest]) do
     q
-    |> select_merge([s, i], %{sample_percent: s.sample_percent})
+    |> select_merge_as([s, i], %{sample_percent: s.sample_percent})
     |> select_joined_metrics(rest)
   end
 
@@ -831,10 +789,11 @@ defmodule Plausible.Stats.Imported do
     from(a in subquery(q1),
       full_join: b in subquery(q2),
       on: a.dim0 == b.dim0,
-      select: %{
-        dim0: selected_as(fragment("if(? != 0, ?, ?)", a.dim0, a.dim0, b.dim0), :dim0)
-      }
+      select: %{}
     )
+    |> select_merge_as([a, b], %{
+      dim0: fragment("if(? != 0, ?, ?)", a.dim0, a.dim0, b.dim0)
+    })
     |> select_joined_metrics(metrics)
   end
 end

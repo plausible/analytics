@@ -6,8 +6,7 @@ defmodule Plausible.Stats.Imported.Base do
   import Ecto.Query
 
   alias Plausible.Imported
-  alias Plausible.Stats.Filters
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Filters, Query, SQL}
 
   @property_to_table_mappings %{
     "visit:source" => "imported_sources",
@@ -213,9 +212,9 @@ defmodule Plausible.Stats.Imported.Base do
 
   defp apply_filter(q, %Query{filters: filters}) do
     Enum.reduce(filters, q, fn [_, filter_key | _] = filter, q ->
-      db_field = Plausible.Stats.Filters.without_prefix(filter_key)
+      db_field = Filters.without_prefix(filter_key)
       mapped_db_field = Map.get(@db_field_mappings, db_field, db_field)
-      condition = Filters.WhereBuilder.build_condition(mapped_db_field, filter)
+      condition = SQL.WhereBuilder.build_condition(mapped_db_field, filter)
 
       where(q, ^condition)
     end)

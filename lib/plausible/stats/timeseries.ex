@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Timeseries do
   alias Plausible.Stats.{Query, Util, Imported}
   import Plausible.Stats.{Base}
   import Ecto.Query
-  use Plausible.Stats.Fragments
+  use Plausible.Stats.SQL.Fragments
 
   @typep metric ::
            :pageviews

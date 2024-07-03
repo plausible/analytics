@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.FilterSuggestions do
   use Plausible.Repo
   use Plausible.ClickhouseRepo
-  use Plausible.Stats.Fragments
+  use Plausible.Stats.SQL.Fragments
 
   import Plausible.Stats.Base
   import Ecto.Query
