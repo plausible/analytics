@@ -515,30 +515,9 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
-  defp select_group_fields(q, dim, key, _query)
-       when dim in [:utm_source, :utm_medium, :utm_campaign, :utm_term, :utm_content] do
-    q
-    |> select_merge_as([i], %{key => field(i, ^dim)})
-  end
-
   defp select_group_fields(q, :page, key, _query) do
     q
     |> select_merge_as([i], %{key => i.page, time_on_page: sum(i.time_on_page)})
-  end
-
-  defp select_group_fields(q, :country, key, _query) do
-    q
-    |> select_merge_as([i], %{key => i.country})
-  end
-
-  defp select_group_fields(q, :region, key, _query) do
-    q
-    |> select_merge_as([i], %{key => i.region})
-  end
-
-  defp select_group_fields(q, :city, key, _query) do
-    q
-    |> select_merge_as([i], %{key => i.city})
   end
 
   defp select_group_fields(q, dim, key, _query) when dim in [:device, :browser] do
@@ -575,17 +554,6 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
-  defp select_group_fields(q, dim, key, _query) when dim in [:entry_page, :exit_page] do
-    q
-    |> select_merge_as([i], %{key => field(i, ^dim)})
-  end
-
-  # :TODO: can merge with the above condition
-  defp select_group_fields(q, :name, key, _query) do
-    q
-    |> select_merge_as([i], %{key => i.name})
-  end
-
   defp select_group_fields(q, :url, key, _query) do
     q
     |> select_merge_as([i], %{
@@ -620,6 +588,11 @@ defmodule Plausible.Stats.Imported do
   defp select_group_fields(q, :day, key, _query) do
     q
     |> select_merge_as([i], %{key => i.date})
+  end
+
+  defp select_group_fields(q, dim, key, _query) do
+    q
+    |> select_merge_as([i], %{key => field(i, ^dim)})
   end
 
   @utm_dimensions [
