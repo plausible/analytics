@@ -113,7 +113,7 @@ class PagesModal extends React.Component {
     if (this.state.pages) {
       return (
         <React.Fragment>
-          <h1 className="text-xl font-bold dark:text-gray-100">Top Pages hi</h1>
+          <h1 className="text-xl font-bold dark:text-gray-100">Top Pages</h1>
 
           <div className="my-4 border-b border-gray-300"></div>
           <main className="modal__content">
