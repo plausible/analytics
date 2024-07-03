@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-E986630B.js"></script>
+    <script src="dist/sidebar_items-DD3B8147.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -144,7 +144,8 @@ Pages
 
   <section id="moduledoc">
 <p>This module is responsible for generating SQL/Ecto expressions
-for dimensions used in query select, group_by and order_by.</p>
+for dimensions and metrics used in query SELECT statement.</p><p>Each dimension and metric is tagged with with selected_as for easier
+usage down the line.</p>
   </section>
 
 
@@ -162,7 +163,7 @@ for dimensions used in query select, group_by and order_by.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#dimension/3" translate="no">dimension(arg1, query, select_alias)</a>
+        <a href="#dimension/3" translate="no">dimension(key, arg2, query)</a>
 
       </div>
 
@@ -171,6 +172,22 @@ for dimensions used in query select, group_by and order_by.</p>
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#event_goal_join/2" translate="no">event_goal_join(events, page_regexes)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#event_metric/1" translate="no">event_metric(unknown)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#session_metric/2" translate="no">session_metric(atom, query)</a>
 
       </div>
 
@@ -196,9 +213,9 @@ for dimensions used in query select, group_by and order_by.</p>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">dimension(arg1, query, select_alias)</h1>
+    <h1 class="signature" translate="no">dimension(key, arg2, query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/expression.ex#L26" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/expression.ex#L29" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -220,13 +237,57 @@ for dimensions used in query select, group_by and order_by.</p>
     </a>
     <h1 class="signature" translate="no">event_goal_join(events, page_regexes)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/expression.ex#L130" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/expression.ex#L252" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
 
 
       <span class="note">(macro)</span>
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="event_metric/1">
+
+  <div class="detail-header">
+    <a href="#event_metric/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">event_metric(unknown)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/expression.ex#L118" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="session_metric/2">
+
+  <div class="detail-header">
+    <a href="#session_metric/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">session_metric(atom, query)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/sql/expression.ex#L179" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
 
   </div>
 

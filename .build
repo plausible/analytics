@@ -182,9 +182,7 @@ Plausible.Stats.CustomProps.html
 Plausible.Stats.EmailReport.html
 Plausible.Stats.FilterSuggestions.html
 Plausible.Stats.Filters.Utils.html
-Plausible.Stats.Filters.WhereBuilder.html
 Plausible.Stats.Filters.html
-Plausible.Stats.Fragments.html
 Plausible.Stats.Funnel.html
 Plausible.Stats.Goal.Revenue.html
 Plausible.Stats.Imported.Base.html
@@ -195,6 +193,8 @@ Plausible.Stats.Props.html
 Plausible.Stats.Query.html
 Plausible.Stats.QueryOptimizer.html
 Plausible.Stats.SQL.Expression.html
+Plausible.Stats.SQL.Fragments.html
+Plausible.Stats.SQL.WhereBuilder.html
 Plausible.Stats.Sampling.html
 Plausible.Stats.TableDecider.html
 Plausible.Stats.Timeseries.html
@@ -418,8 +418,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-242689E0.js
-dist/sidebar_items-E986630B.js
+dist/search_data-B2BB1594.js
+dist/sidebar_items-DD3B8147.js
 index.html
 readme.html
 search.html
