@@ -26,15 +26,9 @@ defmodule Plausible.Stats.SQL.Expression do
     end
   end
 
-  def dimension(key, "time:hour", query) do
+  def dimension(key, "time:month", query) do
     wrap_expression([t], %{
-      key => fragment("toStartOfHour(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
-    })
-  end
-
-  def dimension(key, "time:day", query) do
-    wrap_expression([t], %{
-      key => fragment("toDate(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
+      key => fragment("toStartOfMonth(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 
@@ -48,9 +42,29 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
-  def dimension(key, "time:month", query) do
+  def dimension(key, "time:day", query) do
     wrap_expression([t], %{
-      key => fragment("toStartOfMonth(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
+      key => fragment("toDate(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
+    })
+  end
+
+  def dimension(key, "time:hour", query) do
+    wrap_expression([t], %{
+      key => fragment("toStartOfHour(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
+    })
+  end
+
+  # :NOTE: This is not exposed in Query APIv2
+  def dimension(key, "time:minute", %Query{period: "30m"}) do
+    wrap_expression([t], %{
+      key => fragment("dateDiff('minute', now(), ?)", t.timestamp)
+    })
+  end
+
+  # :NOTE: This is not exposed in Query APIv2
+  def dimension(key, "time:minute", query) do
+    wrap_expression([t], %{
+      key => fragment("toStartOfMinute(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 

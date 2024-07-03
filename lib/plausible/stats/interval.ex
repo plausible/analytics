@@ -7,6 +7,8 @@ defmodule Plausible.Stats.Interval do
   `week`, and `month`.
   """
 
+  alias Plausible.Stats.Query
+
   @type t() :: String.t()
   @type(opt() :: {:site, Plausible.Site.t()} | {:from, Date.t()}, {:to, Date.t()})
   @type opts :: list(opt())
@@ -109,6 +111,9 @@ defmodule Plausible.Stats.Interval do
   def format_datetime(%DateTime{} = datetime),
     do: Timex.format!(datetime, "{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
 
+  # Realtime graphs return numbers
+  def format_datetime(other), do: other
+
   @doc """
   Returns list of time bucket labels for the given query.
   """
@@ -177,6 +182,28 @@ defmodule Plausible.Stats.Interval do
       |> Timex.to_datetime()
       |> Timex.shift(hours: step)
       |> DateTime.truncate(:second)
+      |> format_datetime()
+    end)
+  end
+
+  # Only supported in dashboards not via API
+  defp time_labels_for_dimension("time:minute", %Query{period: "30m"}) do
+    Enum.into(-30..-1, [])
+  end
+
+  @full_day_in_minutes 24 * 60 - 1
+  defp time_labels_for_dimension("time:minute", query) do
+    n_buckets =
+      if query.date_range.first == query.date_range.last do
+        @full_day_in_minutes
+      else
+        Timex.diff(query.date_range.last, query.date_range.first, :minutes)
+      end
+
+    Enum.map(0..n_buckets, fn step ->
+      query.date_range.first
+      |> Timex.to_datetime()
+      |> Timex.shift(minutes: step)
       |> format_datetime()
     end)
   end

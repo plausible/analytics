@@ -7,7 +7,8 @@ defmodule Plausible.Stats.Timeseries do
     "month" => "time:month",
     "week" => "time:week",
     "date" => "time:day",
-    "hour" => "time:hour"
+    "hour" => "time:hour",
+    "minute" => "time:minute"
   }
 
   def timeseries(site, query, metrics) do
