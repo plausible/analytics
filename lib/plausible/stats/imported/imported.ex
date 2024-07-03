@@ -499,44 +499,56 @@ defmodule Plausible.Stats.Imported do
 
   defp group_imported_by(q, query) do
     Enum.reduce(query.dimensions, q, fn dimension, q ->
-      dim = Plausible.Stats.Filters.without_prefix(dimension)
-
       q
-      |> select_group_fields(dim, shortname(query, dimension), query)
+      |> select_group_fields(dimension, shortname(query, dimension), query)
       |> filter_group_values(dimension)
       |> group_by([], selected_as(^shortname(query, dimension)))
     end)
   end
 
-  defp select_group_fields(q, dim, key, _query) when dim in [:source, :referrer] do
+  defp select_group_fields(q, dimension, key, _query)
+       when dimension in ["visit:source", "visit:referrer"] do
     select_merge_as(q, [i], %{
-      key => fragment("if(empty(?), ?, ?)", field(i, ^dim), @no_ref, field(i, ^dim))
+      key =>
+        fragment(
+          "if(empty(?), ?, ?)",
+          field(i, ^dim(dimension)),
+          @no_ref,
+          field(i, ^dim(dimension))
+        )
     })
   end
 
-  defp select_group_fields(q, :page, key, _query) do
+  defp select_group_fields(q, "event:page", key, _query) do
     select_merge_as(q, [i], %{key => i.page, time_on_page: sum(i.time_on_page)})
   end
 
-  defp select_group_fields(q, dim, key, _query) when dim in [:device, :browser] do
+  defp select_group_fields(q, dimension, key, _query)
+       when dimension in ["visit:device", "visit:browser"] do
     select_merge_as(q, [i], %{
-      key => fragment("if(empty(?), ?, ?)", field(i, ^dim), @not_set, field(i, ^dim))
+      key =>
+        fragment(
+          "if(empty(?), ?, ?)",
+          field(i, ^dim(dimension)),
+          @not_set,
+          field(i, ^dim(dimension))
+        )
     })
   end
 
-  defp select_group_fields(q, :browser_version, key, _query) do
+  defp select_group_fields(q, "visit:browser_version", key, _query) do
     select_merge_as(q, [i], %{
       key => fragment("if(empty(?), ?, ?)", i.browser_version, @not_set, i.browser_version)
     })
   end
 
-  defp select_group_fields(q, :os, key, _query) do
+  defp select_group_fields(q, "visit:os", key, _query) do
     select_merge_as(q, [i], %{
       key => fragment("if(empty(?), ?, ?)", i.operating_system, @not_set, i.operating_system)
     })
   end
 
-  defp select_group_fields(q, :os_version, key, _query) do
+  defp select_group_fields(q, "visit:os_version", key, _query) do
     select_merge_as(q, [i], %{
       key =>
         fragment(
@@ -548,38 +560,35 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
-  defp select_group_fields(q, :url, key, _query) do
+  defp select_group_fields(q, "event:props:url", key, _query) do
     select_merge_as(q, [i], %{
       key => fragment("if(not empty(?), ?, ?)", i.link_url, i.link_url, @none)
     })
   end
 
-  defp select_group_fields(q, :path, key, _query) do
+  defp select_group_fields(q, "event:props:path", key, _query) do
     select_merge_as(q, [i], %{
       key => fragment("if(not empty(?), ?, ?)", i.path, i.path, @none)
     })
   end
 
-  defp select_group_fields(q, :month, key, _query) do
+  defp select_group_fields(q, "time:month", key, _query) do
     select_merge_as(q, [i], %{key => fragment("toStartOfMonth(?)", i.date)})
   end
 
-  defp select_group_fields(q, :hour, key, _query) do
+  defp select_group_fields(q, dimension, key, _query)
+       when dimension in ["time:hour", "time:day"] do
     select_merge_as(q, [i], %{key => i.date})
   end
 
-  defp select_group_fields(q, :week, key, query) do
+  defp select_group_fields(q, "time:week", key, query) do
     select_merge_as(q, [i], %{
       key => weekstart_not_before(i.date, ^query.date_range.first)
     })
   end
 
-  defp select_group_fields(q, :day, key, _query) do
-    select_merge_as(q, [i], %{key => i.date})
-  end
-
-  defp select_group_fields(q, dim, key, _query) do
-    select_merge_as(q, [i], %{key => field(i, ^dim)})
+  defp select_group_fields(q, dimension, key, _query) do
+    select_merge_as(q, [i], %{key => field(i, ^dim(dimension))})
   end
 
   @utm_dimensions [
@@ -738,4 +747,6 @@ defmodule Plausible.Stats.Imported do
     })
     |> select_joined_metrics(metrics)
   end
+
+  defp dim(dimension), do: Plausible.Stats.Filters.without_prefix(dimension)
 end
