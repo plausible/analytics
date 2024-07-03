@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Realtime and hourly graphs now show visits lasting their whole duration instead when specific events occur
 - Increase hourly request limit for API keys in CE from 600 to 1000000 (practically removing the limit) plausible/analytics#4200
 - Make TCP connections try IPv6 first with IPv4 fallback in CE plausible/analytics#4245
 - `is` and `is not` filters in dashboard no longer support wildcards. Use contains/does not contain filter instead.

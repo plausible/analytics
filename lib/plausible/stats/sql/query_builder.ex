@@ -41,7 +41,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
     q
     |> join_sessions_if_needed(site, events_query)
-    |> build_group_by(events_query)
+    |> build_group_by(:events, events_query)
     |> merge_imported(site, events_query, events_query.metrics)
     |> SQL.SpecialMetrics.add(site, events_query)
   end
@@ -82,7 +82,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
     q
     |> join_events_if_needed(site, sessions_query)
-    |> build_group_by(sessions_query)
+    |> build_group_by(:sessions, sessions_query)
     |> merge_imported(site, sessions_query, sessions_query.metrics)
     |> SQL.SpecialMetrics.add(site, sessions_query)
   end
@@ -111,11 +111,11 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     end
   end
 
-  defp build_group_by(q, query) do
-    Enum.reduce(query.dimensions, q, &dimension_group_by(&2, query, &1))
+  defp build_group_by(q, table, query) do
+    Enum.reduce(query.dimensions, q, &dimension_group_by(&2, table, query, &1))
   end
 
-  defp dimension_group_by(q, query, "event:goal" = dimension) do
+  defp dimension_group_by(q, _table, query, "event:goal" = dimension) do
     {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
 
     from(e in q,
@@ -128,11 +128,11 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     )
   end
 
-  defp dimension_group_by(q, query, dimension) do
+  defp dimension_group_by(q, table, query, dimension) do
     key = shortname(query, dimension)
 
     q
-    |> select_merge_as([], Expression.dimension(key, dimension, query))
+    |> select_merge_as([], Expression.dimension(key, dimension, table, query))
     |> group_by([], selected_as(^key))
   end
 

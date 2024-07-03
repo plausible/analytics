@@ -26,13 +26,26 @@ defmodule Plausible.Stats.SQL.Expression do
     end
   end
 
-  def dimension(key, "time:month", query) do
+  defmacrop regular_time_slots(query, period_in_seconds) do
+    quote do
+      fragment(
+        "arrayJoin(timeSlots(toTimeZone(?, ?), toUInt32(timeDiff(?, ?)), toUInt32(?)))",
+        s.start,
+        ^unquote(query).timezone,
+        s.start,
+        s.timestamp,
+        ^unquote(period_in_seconds)
+      )
+    end
+  end
+
+  def dimension(key, "time:month", _table, query) do
     wrap_expression([t], %{
       key => fragment("toStartOfMonth(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 
-  def dimension(key, "time:week", query) do
+  def dimension(key, "time:week", _table, query) do
     wrap_expression([t], %{
       key =>
         weekstart_not_before(
@@ -42,42 +55,70 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
-  def dimension(key, "time:day", query) do
+  def dimension(key, "time:day", _table, query) do
     wrap_expression([t], %{
       key => fragment("toDate(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 
-  def dimension(key, "time:hour", query) do
+  def dimension(key, "time:hour", :sessions, %Query{experimental_session_count?: true} = query) do
+    wrap_expression([s], %{
+      key => regular_time_slots(query, 3600)
+    })
+  end
+
+  def dimension(key, "time:hour", _table, query) do
     wrap_expression([t], %{
       key => fragment("toStartOfHour(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 
   # :NOTE: This is not exposed in Query APIv2
-  def dimension(key, "time:minute", %Query{period: "30m"}) do
+  def dimension(key, "time:minute", :sessions, %Query{
+        period: "30m",
+        experimental_session_count?: true
+      }) do
+    wrap_expression([s], %{
+      key =>
+        fragment(
+          "arrayJoin(range(dateDiff('minute', now(), ?), dateDiff('minute', now(), ?) + 1))",
+          s.start,
+          s.timestamp
+        )
+    })
+  end
+
+  # :NOTE: This is not exposed in Query APIv2
+  def dimension(key, "time:minute", _table, %Query{period: "30m"}) do
     wrap_expression([t], %{
       key => fragment("dateDiff('minute', now(), ?)", t.timestamp)
     })
   end
 
   # :NOTE: This is not exposed in Query APIv2
-  def dimension(key, "time:minute", query) do
+  def dimension(key, "time:minute", :sessions, %Query{experimental_session_count?: true} = query) do
+    wrap_expression([s], %{
+      key => regular_time_slots(query, 60)
+    })
+  end
+
+  # :NOTE: This is not exposed in Query APIv2
+  def dimension(key, "time:minute", _table, query) do
     wrap_expression([t], %{
       key => fragment("toStartOfMinute(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 
-  def dimension(key, "event:name", _query),
+  def dimension(key, "event:name", _table, _query),
     do: wrap_expression([t], %{key => t.name})
 
-  def dimension(key, "event:page", _query),
+  def dimension(key, "event:page", _table, _query),
     do: wrap_expression([t], %{key => t.pathname})
 
-  def dimension(key, "event:hostname", _query),
+  def dimension(key, "event:hostname", _table, _query),
     do: wrap_expression([t], %{key => t.hostname})
 
-  def dimension(key, "event:props:" <> property_name, _query) do
+  def dimension(key, "event:props:" <> property_name, _table, _query) do
     wrap_expression([t], %{
       key =>
         fragment(
@@ -88,55 +129,55 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
-  def dimension(key, "visit:entry_page", _query),
+  def dimension(key, "visit:entry_page", _table, _query),
     do: wrap_expression([t], %{key => t.entry_page})
 
-  def dimension(key, "visit:exit_page", _query),
+  def dimension(key, "visit:exit_page", _table, _query),
     do: wrap_expression([t], %{key => t.exit_page})
 
-  def dimension(key, "visit:utm_medium", _query),
+  def dimension(key, "visit:utm_medium", _table, _query),
     do: field_or_blank_value(key, t.utm_medium, @not_set)
 
-  def dimension(key, "visit:utm_source", _query),
+  def dimension(key, "visit:utm_source", _table, _query),
     do: field_or_blank_value(key, t.utm_source, @not_set)
 
-  def dimension(key, "visit:utm_campaign", _query),
+  def dimension(key, "visit:utm_campaign", _table, _query),
     do: field_or_blank_value(key, t.utm_campaign, @not_set)
 
-  def dimension(key, "visit:utm_content", _query),
+  def dimension(key, "visit:utm_content", _table, _query),
     do: field_or_blank_value(key, t.utm_content, @not_set)
 
-  def dimension(key, "visit:utm_term", _query),
+  def dimension(key, "visit:utm_term", _table, _query),
     do: field_or_blank_value(key, t.utm_term, @not_set)
 
-  def dimension(key, "visit:source", _query),
+  def dimension(key, "visit:source", _table, _query),
     do: field_or_blank_value(key, t.source, @no_ref)
 
-  def dimension(key, "visit:referrer", _query),
+  def dimension(key, "visit:referrer", _table, _query),
     do: field_or_blank_value(key, t.referrer, @no_ref)
 
-  def dimension(key, "visit:device", _query),
+  def dimension(key, "visit:device", _table, _query),
     do: field_or_blank_value(key, t.device, @not_set)
 
-  def dimension(key, "visit:os", _query),
+  def dimension(key, "visit:os", _table, _query),
     do: field_or_blank_value(key, t.os, @not_set)
 
-  def dimension(key, "visit:os_version", _query),
+  def dimension(key, "visit:os_version", _table, _query),
     do: field_or_blank_value(key, t.os_version, @not_set)
 
-  def dimension(key, "visit:browser", _query),
+  def dimension(key, "visit:browser", _table, _query),
     do: field_or_blank_value(key, t.browser, @not_set)
 
-  def dimension(key, "visit:browser_version", _query),
+  def dimension(key, "visit:browser_version", _table, _query),
     do: field_or_blank_value(key, t.browser_version, @not_set)
 
-  def dimension(key, "visit:country", _query),
+  def dimension(key, "visit:country", _table, _query),
     do: wrap_expression([t], %{key => t.country})
 
-  def dimension(key, "visit:region", _query),
+  def dimension(key, "visit:region", _table, _query),
     do: wrap_expression([t], %{key => t.region})
 
-  def dimension(key, "visit:city", _query),
+  def dimension(key, "visit:city", _table, _query),
     do: wrap_expression([t], %{key => t.city})
 
   def event_metric(:pageviews) do
