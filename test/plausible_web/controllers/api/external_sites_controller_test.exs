@@ -501,7 +501,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "meta" => %{
                    "before" => nil,
                    "after" => nil,
-                   "limit" => 10
+                   "limit" => 100
                  }
                }
       end
@@ -519,7 +519,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "meta" => %{
                    "before" => nil,
                    "after" => nil,
-                   "limit" => 10
+                   "limit" => 100
                  }
                }
       end
@@ -640,7 +640,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "meta" => %{
                    "before" => nil,
                    "after" => nil,
-                   "limit" => 10
+                   "limit" => 100
                  }
                }
       end
@@ -670,7 +670,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "meta" => %{
                    "before" => nil,
                    "after" => nil,
-                   "limit" => 10
+                   "limit" => 100
                  }
                }
       end

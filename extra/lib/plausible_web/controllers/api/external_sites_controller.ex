@@ -9,13 +9,15 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   alias Plausible.Goals
   alias PlausibleWeb.Api.Helpers, as: H
 
+  @pagination_opts [cursor_fields: [{:id, :desc}], limit: 100, maximum_limit: 1000]
+
   def index(conn, params) do
     user = conn.assigns.current_user
 
     page =
       user
       |> Sites.for_user_query()
-      |> paginate(params, cursor_fields: [{:id, :desc}])
+      |> paginate(params, @pagination_opts)
 
     json(conn, %{
       sites: page.entries,
@@ -31,7 +33,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       page =
         site
         |> Plausible.Goals.for_site_query()
-        |> paginate(params, cursor_fields: [{:id, :desc}])
+        |> paginate(params, @pagination_opts)
 
       json(conn, %{
         goals:
