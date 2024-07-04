@@ -35,6 +35,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @business_checkout_button "#business-checkout"
 
   @enterprise_plan_box "#enterprise-plan-box"
+  @enterprise_highlight_pill "#enterprise-highlight-pill"
 
   @slider_volumes ["10k", "100k", "200k", "500k", "1M", "2M", "5M", "10M", "10M+"]
 
@@ -224,8 +225,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "recommends Growth tier when no premium features were used", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      assert text_of_element(doc, @growth_plan_box) =~ "Recommended"
-      refute text_of_element(doc, @business_plan_box) =~ "Recommended"
+      assert text_of_element(doc, @growth_highlight_pill) == "Recommended"
+      refute element_exists?(doc, @business_highlight_pill)
     end
 
     test "recommends Business when Revenue Goals used during trial", %{conn: conn, site: site} do
@@ -233,8 +234,82 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       {:ok, _lv, doc} = get_liveview(conn)
 
-      assert text_of_element(doc, @business_plan_box) =~ "Recommended"
-      refute text_of_element(doc, @growth_plan_box) =~ "Recommended"
+      assert text_of_element(doc, @business_highlight_pill) == "Recommended"
+      refute element_exists?(doc, @growth_highlight_pill)
+    end
+
+    test "recommends Business when pending ownership site used a premium feature", %{
+      conn: conn,
+      user: user
+    } do
+      previous_owner = insert(:user)
+      site = insert(:site, members: [previous_owner])
+
+      insert(:goal, site: site, currency: :USD, event_name: "Purchase")
+
+      insert(:invitation, email: user.email, inviter: previous_owner, role: :owner, site: site)
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, @business_highlight_pill) == "Recommended"
+      refute element_exists?(doc, @growth_highlight_pill)
+    end
+
+    test "recommends Business when team member limit for Growth exceeded due to pending ownerships",
+         %{conn: conn, user: user} do
+      _owned_site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, role: :owner, user: user),
+            build(:site_membership, role: :admin, user: insert(:user)),
+            build(:site_membership, role: :admin, user: insert(:user))
+          ]
+        )
+
+      previous_owner = insert(:user)
+
+      pending_ownership_site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, role: :owner, user: previous_owner),
+            build(:site_membership, role: :viewer, user: insert(:user))
+          ]
+        )
+
+      insert(:invitation,
+        email: user.email,
+        inviter: previous_owner,
+        role: :owner,
+        site: pending_ownership_site
+      )
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, @business_highlight_pill) == "Recommended"
+      refute element_exists?(doc, @growth_highlight_pill)
+    end
+
+    test "recommends Business when Growth site limit exceeded due to a pending ownership", %{
+      conn: conn,
+      user: user
+    } do
+      insert_list(9, :site, members: [user])
+      assert 10 = Plausible.Billing.Quota.Usage.site_usage(user)
+
+      another_user = insert(:user)
+      pending_ownership_site = insert(:site, members: [another_user])
+
+      insert(:invitation,
+        email: user.email,
+        site: pending_ownership_site,
+        role: :owner,
+        inviter: another_user
+      )
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, @business_highlight_pill) == "Recommended"
+      refute element_exists?(doc, @growth_highlight_pill)
     end
 
     @tag :slow
@@ -420,10 +495,11 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert doc =~ "billable pageviews in the last billing cycle"
     end
 
-    test "warns about losing access to a feature used by a pending ownership site", %{
-      conn: conn,
-      user: user
-    } do
+    test "warns about losing access to a feature used by a pending ownership site and recommends business tier",
+         %{
+           conn: conn,
+           user: user
+         } do
       another_user = insert(:user)
       pending_site = insert(:site, members: [another_user])
 
@@ -442,6 +518,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
                "if (confirm(\"This plan does not support Custom Properties, which you are currently using. Please note that by subscribing to this plan you will lose access to this feature.\")) {window.location = "
+
+      assert text_of_element(doc, @business_highlight_pill) == "Recommended"
+      refute element_exists?(doc, @growth_highlight_pill)
     end
 
     test "gets default selected interval from current subscription plan", %{conn: conn} do
@@ -527,7 +606,12 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @slider_value) == "10k"
     end
 
-    test "makes it clear that the user is currently on a business tier", %{conn: conn} do
+    test "highlights Business box as the 'Current' tier if it's suitable for their usage", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, currency: :USD, event_name: "Purchase")
+
       {:ok, _lv, doc} = get_liveview(conn)
 
       class = class_of_element(doc, @business_plan_box)
@@ -535,6 +619,47 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert class =~ "ring-2"
       assert class =~ "ring-indigo-600"
       assert text_of_element(doc, @business_highlight_pill) == "Current"
+
+      refute element_exists?(doc, @growth_highlight_pill)
+    end
+
+    test "highlights Growth box as the 'Recommended' tier if it would accommodate their usage", %{
+      conn: conn
+    } do
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      class = class_of_element(doc, @growth_plan_box)
+
+      assert class =~ "ring-2"
+      assert class =~ "ring-indigo-600"
+      assert text_of_element(doc, @growth_highlight_pill) == "Recommended"
+
+      refute element_exists?(doc, @business_highlight_pill)
+    end
+
+    test "recommends Enterprise when site limit exceeds Business tier due to pending ownerships",
+         %{
+           conn: conn,
+           user: user
+         } do
+      insert_list(49, :site, members: [user])
+      assert 50 = Plausible.Billing.Quota.Usage.site_usage(user)
+
+      another_user = insert(:user)
+      pending_ownership_site = insert(:site, members: [another_user])
+
+      insert(:invitation,
+        email: user.email,
+        site: pending_ownership_site,
+        role: :owner,
+        inviter: another_user
+      )
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, @enterprise_highlight_pill) == "Recommended"
+      refute element_exists?(doc, @business_highlight_pill)
+      refute element_exists?(doc, @growth_highlight_pill)
     end
 
     test "checkout button text and click-disabling CSS classes are dynamic", %{conn: conn} do
@@ -970,7 +1095,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   describe "for a user with no sites but pending ownership transfer" do
     setup [:create_user, :log_in]
 
-    test "allows to subscribe and does not render a notice", %{conn: conn, user: user} do
+    test "allows to subscribe and does not render the 'upgrade ineligible' notice", %{
+      conn: conn,
+      user: user
+    } do
       old_owner = insert(:user)
       site = insert(:site, members: [old_owner])
       insert(:invitation, site_id: site.id, inviter: old_owner, email: user.email, role: :owner)

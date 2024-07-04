@@ -15,6 +15,8 @@ defmodule Plausible.Billing.QuotaTest do
   @v3_plan_id "749342"
   @v3_business_plan_id "857481"
   @v4_1m_plan_id "857101"
+  @v4_10m_growth_plan_id "857104"
+  @v4_10m_business_plan_id "857112"
 
   describe "site_limit/1" do
     @describetag :ee_only
@@ -928,6 +930,28 @@ defmodule Plausible.Billing.QuotaTest do
       assert penultimate_cycle == Date.range(~D[2020-11-01], ~D[2020-11-30])
       assert last_cycle == Date.range(~D[2020-12-01], ~D[2020-12-31])
       assert current_cycle == Date.range(~D[2021-01-01], ~D[2021-01-31])
+    end
+  end
+
+  describe "suggest_tier/2" do
+    setup do
+      %{user: insert(:user) |> Plausible.Users.with_subscription()}
+    end
+
+    test "returns nil if the monthly pageview limit exceeds regular plans",
+         %{user: user} do
+      highest_growth_plan = Plausible.Billing.Plans.find(@v4_10m_growth_plan_id)
+      highest_business_plan = Plausible.Billing.Plans.find(@v4_10m_business_plan_id)
+
+      usage =
+        Quota.Usage.usage(user)
+        |> Map.replace!(:monthly_pageviews, %{last_30_days: %{total: 12_000_000}})
+
+      suggested_tier =
+        usage
+        |> Quota.suggest_tier(highest_growth_plan, highest_business_plan)
+
+      assert suggested_tier == nil
     end
   end
 end
