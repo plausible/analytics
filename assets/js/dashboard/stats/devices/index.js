@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import * as storage from '../../util/storage'
-import { getFiltersByKeyPrefix, isFilteringOnFixedValue } from '../../util/filters'
+import { getFiltersByKeyPrefix, hasGoalFilter, isFilteringOnFixedValue } from '../../util/filters'
 import ListReport from '../reports/list'
+import * as metrics from '../reports/metrics'
 import * as api from '../../api'
 import * as url from '../../util/url'
-import { VISITORS_METRIC, PERCENTAGE_METRIC, maybeWithCR } from '../reports/metrics';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 
 // Icons copied from https://github.com/alrra/browser-logos
@@ -55,13 +55,21 @@ function Browsers({ query, site, afterFetchData }) {
     return browserIconFor(listItem.name)
   }
 
+  function chooseMetrics() {
+    return [
+      metrics.createVisitors({ meta: {plot: true}}),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+      !hasGoalFilter(query) && metrics.createPercentage()
+    ].filter(metric => !!metric)
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Browser"
-      metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
+      metrics={chooseMetrics()}
       query={query}
       renderIcon={renderIcon}
     />
@@ -92,13 +100,21 @@ function BrowserVersions({ query, site, afterFetchData }) {
     }
   }
 
+  function chooseMetrics() {
+    return [
+      metrics.createVisitors({ meta: {plot: true}}),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+      !hasGoalFilter(query) && metrics.createPercentage()
+    ].filter(metric => !!metric)
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Browser version"
-      metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
+      metrics={chooseMetrics()}
       renderIcon={renderIcon}
       query={query}
     />
@@ -118,13 +134,21 @@ function OperatingSystems({ query, site, afterFetchData }) {
     }
   }
 
+  function chooseMetrics() {
+    return [
+      metrics.createVisitors({ meta: {plot: true}}),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+      !hasGoalFilter(query) && metrics.createPercentage({meta: {hiddenonMobile: true}})
+    ].filter(metric => !!metric)
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Operating system"
-      metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
+      metrics={chooseMetrics()}
       query={query}
     />
   )
@@ -145,13 +169,21 @@ function OperatingSystemVersions({ query, site, afterFetchData }) {
     }
   }
 
+  function chooseMetrics() {
+    return [
+      metrics.createVisitors({ meta: {plot: true}}),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+      !hasGoalFilter(query) && metrics.createPercentage()
+    ].filter(metric => !!metric)
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Operating System Version"
-      metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
+      metrics={chooseMetrics()}
       query={query}
     />
   )
@@ -176,13 +208,21 @@ function ScreenSizes({ query, site, afterFetchData }) {
     }
   }
 
+  function chooseMetrics() {
+    return [
+      metrics.createVisitors({ meta: {plot: true}}),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+      !hasGoalFilter(query) && metrics.createPercentage()
+    ].filter(metric => !!metric)
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Screen size"
-      metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
+      metrics={chooseMetrics()}
       query={query}
       renderIcon={renderIcon}
     />

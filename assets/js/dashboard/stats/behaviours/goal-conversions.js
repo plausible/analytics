@@ -1,7 +1,7 @@
 import React from "react"
 import Conversions from './conversions'
 import ListReport from "../reports/list"
-import { CR_METRIC } from "../reports/metrics"
+import * as metrics from '../reports/metrics'
 import * as url from "../../util/url"
 import * as api from "../../api"
 import { EVENT_PROPS_PREFIX, getGoalFilter } from "../../util/filters"
@@ -53,17 +53,21 @@ function SpecialPropBreakdown(props) {
     }
   }
 
+  function chooseMetrics() {
+    return [
+      metrics.createVisitors({ renderLabel: (_query) => "Visitors", meta: {plot: true}}),
+      metrics.createEvents({renderLabel: (_query) => "Events", meta: {hiddenOnMobile: true}}),
+      metrics.createConversionRate()
+    ].filter(metric => !!metric)
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel={prop}
-      metrics={[
-        { name: 'visitors', label: 'Visitors', plot: true },
-        { name: 'events', label: 'Events', hiddenOnMobile: true },
-        CR_METRIC
-      ]}
+      metrics={chooseMetrics()}
       detailsLink={url.sitePath(`custom-prop-values/${prop}`)}
       externalLinkDest={externalLinkDest()}
       maybeHideDetails={true}

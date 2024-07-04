@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import * as api from '../../api'
 import * as url from '../../util/url'
-import { VISITORS_METRIC, maybeWithCR } from '../reports/metrics'
+import * as metrics from '../reports/metrics'
+import { hasGoalFilter } from "../../util/filters"
 import ListReport from '../reports/list'
 import ImportedQueryUnsupportedWarning from '../../stats/imported-query-unsupported-warning'
 
@@ -44,6 +45,13 @@ export default function Referrers({ source, site, query }) {
     )
   }
 
+  function chooseMetrics() {
+    return [
+      metrics.createVisitors({meta: {plot: true}}),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+    ].filter(metric => !!metric)
+  }
+
   return (
     <div className="flex flex-col flex-grow">
       <div className="flex gap-x-1">
@@ -55,7 +63,7 @@ export default function Referrers({ source, site, query }) {
         afterFetchData={afterFetchReferrers}
         getFilterFor={getFilterFor}
         keyLabel="Referrer"
-        metrics={maybeWithCR([VISITORS_METRIC], query)}
+        metrics={chooseMetrics()}
         detailsLink={url.sitePath(`referrers/${encodeURIComponent(source)}`)}
         query={query}
         externalLinkDest={externalLinkDest}

@@ -4,7 +4,8 @@ import * as storage from '../../util/storage'
 import * as url from '../../util/url'
 import * as api from '../../api'
 import ListReport from '../reports/list'
-import { VISITORS_METRIC, maybeWithCR } from '../reports/metrics';
+import * as metrics from '../reports/metrics';
+import { hasGoalFilter } from "../../util/filters"
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
@@ -41,13 +42,20 @@ function AllSources(props) {
     )
   }
 
+  function chooseMetrics() {
+    return [
+      metrics.createVisitors({meta: {plot: true}}),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+    ].filter(metric => !!metric)
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={props.afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Source"
-      metrics={maybeWithCR([VISITORS_METRIC], query)}
+      metrics={chooseMetrics()}
       detailsLink={url.sitePath('sources')}
       renderIcon={renderIcon}
       query={query}
@@ -71,13 +79,20 @@ function UTMSources(props) {
     }
   }
 
+  function chooseMetrics() {
+    return [
+      metrics.createVisitors({meta: {plot: true}}),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+    ].filter(metric => !!metric)
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={props.afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel={utmTag.label}
-      metrics={maybeWithCR([VISITORS_METRIC], query)}
+      metrics={chooseMetrics()}
       detailsLink={url.sitePath(utmTag.endpoint)}
       query={query}
       color="bg-blue-50"

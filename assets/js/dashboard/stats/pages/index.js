@@ -4,8 +4,9 @@ import * as storage from '../../util/storage'
 import * as url from '../../util/url'
 import * as api from '../../api'
 import ListReport from './../reports/list'
-import { VISITORS_METRIC, maybeWithCR } from './../reports/metrics';
+import * as metrics from './../reports/metrics'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
+import { hasGoalFilter } from '../../util/filters';
 
 function EntryPages({ query, site, afterFetchData }) {
   function fetchData() {
@@ -23,13 +24,20 @@ function EntryPages({ query, site, afterFetchData }) {
     }
   }
 
+  function chooseMetrics() {
+    return [
+      metrics.createVisitors({defaultLabel: 'Unique Entrances', meta: {plot: true}}),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+    ].filter(metric => !!metric)
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Entry page"
-      metrics={maybeWithCR([{ ...VISITORS_METRIC, label: 'Unique Entrances' }], query)}
+      metrics={chooseMetrics()}
       detailsLink={url.sitePath('entry-pages')}
       query={query}
       externalLinkDest={externalLinkDest}
@@ -54,13 +62,20 @@ function ExitPages({ query, site, afterFetchData }) {
     }
   }
 
+  function chooseMetrics() {
+    return [
+      metrics.createVisitors({defaultLabel: 'Unique Exits', meta: {plot: true}}),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+    ].filter(metric => !!metric)
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Exit page"
-      metrics={maybeWithCR([{ ...VISITORS_METRIC, label: "Unique Exits" }], query)}
+      metrics={chooseMetrics()}
       detailsLink={url.sitePath('exit-pages')}
       query={query}
       externalLinkDest={externalLinkDest}
@@ -85,13 +100,20 @@ function TopPages({ query, site, afterFetchData }) {
     }
   }
 
+  function chooseMetrics() {
+    return [
+      metrics.createVisitors({ meta: {plot: true}}),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+    ].filter(metric => !!metric)
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Page"
-      metrics={maybeWithCR([VISITORS_METRIC], query)}
+      metrics={chooseMetrics()}
       detailsLink={url.sitePath('pages')}
       query={query}
       externalLinkDest={externalLinkDest}
