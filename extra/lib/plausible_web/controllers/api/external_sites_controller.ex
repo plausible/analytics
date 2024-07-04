@@ -34,7 +34,13 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
         |> paginate(params, cursor_fields: [{:id, :desc}])
 
       json(conn, %{
-        goals: page.entries,
+        goals:
+          Enum.map(page.entries, fn goal ->
+            %{
+              id: goal.id,
+              name: to_string(goal)
+            }
+          end),
         meta: pagination_meta(page.metadata)
       })
     else

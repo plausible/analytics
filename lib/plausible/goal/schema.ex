@@ -103,6 +103,7 @@ defimpl Jason.Encoder, for: Plausible.Goal do
     |> Map.put(:goal_type, goal_type)
     |> Map.take([:id, :goal_type, :event_name, :page_path])
     |> Map.put(:domain, domain)
+    |> Map.put(:name, to_string(value))
     |> Jason.Encode.map(opts)
   end
 end

@@ -265,6 +265,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         res = json_response(conn, 200)
         assert res["goal_type"] == "event"
+        assert res["name"] == "Signup"
         assert res["event_name"] == "Signup"
         assert res["domain"] == site.domain
       end
@@ -280,6 +281,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         res = json_response(conn, 200)
         assert res["goal_type"] == "page"
         assert res["page_path"] == "/signup"
+        assert res["name"] == "Visit /signup"
         assert res["domain"] == site.domain
       end
 
@@ -299,6 +301,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         res = json_response(conn, 200)
         assert res["goal_type"] == "event"
         assert res["event_name"] == "Signup"
+        assert res["name"] == "Signup"
         assert res["domain"] == new_domain
       end
 
@@ -653,24 +656,15 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "goals" => [
                    %{
                      "id" => goal3.id,
-                     "domain" => site.domain,
-                     "event_name" => goal3.event_name,
-                     "page_path" => goal3.page_path,
-                     "goal_type" => "event"
+                     "name" => to_string(goal3)
                    },
                    %{
                      "id" => goal2.id,
-                     "domain" => site.domain,
-                     "event_name" => goal2.event_name,
-                     "page_path" => goal2.page_path,
-                     "goal_type" => "event"
+                     "name" => to_string(goal2)
                    },
                    %{
                      "id" => goal1.id,
-                     "domain" => site.domain,
-                     "event_name" => goal1.event_name,
-                     "page_path" => goal1.page_path,
-                     "goal_type" => "page"
+                     "name" => to_string(goal1)
                    }
                  ],
                  "meta" => %{
