@@ -585,7 +585,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert json_response(conn, 200) == %{
                  "domain" => site.domain,
                  "timezone" => site.timezone,
-                 "allowed_custom_props" => ["logged_in", "author"]
+                 "custom_properties" => ["logged_in", "author"]
                }
       end
 
@@ -600,7 +600,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert json_response(conn, 200) == %{
                  "domain" => new_domain,
                  "timezone" => site.timezone,
-                 "allowed_custom_props" => []
+                 "custom_properties" => []
                }
       end
 
@@ -615,7 +615,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert json_response(conn, 200) == %{
                  "domain" => site.domain,
                  "timezone" => site.timezone,
-                 "allowed_custom_props" => []
+                 "custom_properties" => []
                }
       end
 

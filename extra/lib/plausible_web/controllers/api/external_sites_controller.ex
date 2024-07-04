@@ -74,7 +74,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
         json(conn, %{
           domain: site.domain,
           timezone: site.timezone,
-          allowed_custom_props: site.allowed_event_props || []
+          custom_properties: site.allowed_event_props || []
         })
 
       {:error, :site_not_found} ->
