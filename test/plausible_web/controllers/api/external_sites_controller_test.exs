@@ -577,7 +577,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       test "get a site by its domain", %{conn: conn, site: site} do
         site =
           site
-          |> Ecto.Changeset.change(allowed_event_props: ["goals", "funnels"])
+          |> Ecto.Changeset.change(allowed_event_props: ["logged_in", "author"])
           |> Repo.update!()
 
         conn = get(conn, "/api/v1/sites/" <> site.domain)
@@ -585,7 +585,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert json_response(conn, 200) == %{
                  "domain" => site.domain,
                  "timezone" => site.timezone,
-                 "allowed_custom_props" => ["goals", "funnels"]
+                 "allowed_custom_props" => ["logged_in", "author"]
                }
       end
 
