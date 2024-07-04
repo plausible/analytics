@@ -147,7 +147,6 @@ export function serializeApiFilters(filters) {
     if (filterKey.startsWith(EVENT_PROPS_PREFIX) || EVENT_FILTER_KEYS.has(filterKey)) {
       apiFilterKey = `event:${filterKey}`
     }
-    clauses = clauses.map((value) => value.toString())
     return [operation, apiFilterKey, clauses]
   })
 
