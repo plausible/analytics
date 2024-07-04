@@ -2,12 +2,13 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   @moduledoc false
 
   use Plausible
+  use Plausible.Stats.SQL.Fragments
 
   import Ecto.Query
   import Plausible.Stats.Imported
   import Plausible.Stats.Util
 
-  alias Plausible.Stats.{Base, Query, QueryOptimizer, TableDecider, Filters}
+  alias Plausible.Stats.{Base, Filters, Query, QueryOptimizer, TableDecider, SQL}
   alias Plausible.Stats.SQL.Expression
 
   require Plausible.Stats.SQL.Expression
@@ -30,7 +31,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     q =
       from(
         e in "events_v2",
-        where: ^Filters.WhereBuilder.build(:events, site, events_query),
+        where: ^SQL.WhereBuilder.build(:events, site, events_query),
         select: ^Base.select_event_metrics(events_query.metrics)
       )
 
@@ -73,7 +74,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     q =
       from(
         e in "sessions_v2",
-        where: ^Filters.WhereBuilder.build(:sessions, site, sessions_query),
+        where: ^SQL.WhereBuilder.build(:sessions, site, sessions_query),
         select: ^Base.select_session_metrics(sessions_query.metrics, sessions_query)
       )
 
@@ -94,7 +95,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     if Query.has_event_filters?(query) do
       events_q =
         from(e in "events_v2",
-          where: ^Filters.WhereBuilder.build(:events, site, query),
+          where: ^SQL.WhereBuilder.build(:events, site, query),
           select: %{
             session_id: fragment("DISTINCT ?", e.session_id),
             _sample_factor: fragment("_sample_factor")
@@ -135,7 +136,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     key = shortname(query, dimension)
 
     q
-    |> select_merge(^%{key => Expression.dimension(dimension, query, key)})
+    |> select_merge_as([], Expression.dimension(key, dimension, query))
     |> group_by([], selected_as(^key))
   end
 
@@ -147,9 +148,9 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     order_by(
       q,
       [t],
-      ^{
-        order_direction,
-        dynamic([], selected_as(^shortname(query, metric_or_dimension)))
+      {
+        ^order_direction,
+        selected_as(^shortname(query, metric_or_dimension))
       }
     )
   end
@@ -157,19 +158,11 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   defmacrop select_join_fields(q, query, list, table_name) do
     quote do
       Enum.reduce(unquote(list), unquote(q), fn metric_or_dimension, q ->
-        select_merge(
-          q,
-          ^%{
-            shortname(unquote(query), metric_or_dimension) =>
-              dynamic(
-                [e, s],
-                selected_as(
-                  field(unquote(table_name), ^shortname(unquote(query), metric_or_dimension)),
-                  ^shortname(unquote(query), metric_or_dimension)
-                )
-              )
-          }
-        )
+        key = shortname(unquote(query), metric_or_dimension)
+
+        select_merge_as(q, [e, s], %{
+          key => field(unquote(table_name), ^key)
+        })
       end)
     end
   end
@@ -185,21 +178,17 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
         |> Query.set_dimensions([])
 
       q
-      |> select_merge(
-        ^%{
-          total_visitors: Base.total_visitors_subquery(site, total_query, query.include_imported)
-        }
+      |> select_merge_as(
+        [],
+        Base.total_visitors_subquery(site, total_query, query.include_imported)
       )
-      |> select_merge([e], %{
+      |> select_merge_as([e], %{
         conversion_rate:
-          selected_as(
-            fragment(
-              "if(? > 0, round(? / ? * 100, 1), 0)",
-              selected_as(:__total_visitors),
-              selected_as(:visitors),
-              selected_as(:__total_visitors)
-            ),
-            :conversion_rate
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), 0)",
+            selected_as(:total_visitors),
+            selected_as(:visitors),
+            selected_as(:total_visitors)
           )
       })
     else
@@ -228,21 +217,18 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
       from(e in subquery(q),
         left_join: c in subquery(build(group_totals_query, site)),
-        on: ^build_group_by_join(query),
-        select_merge: %{
-          total_visitors: c.visitors,
-          group_conversion_rate:
-            selected_as(
-              fragment(
-                "if(? > 0, round(? / ? * 100, 1), 0)",
-                c.visitors,
-                e.visitors,
-                c.visitors
-              ),
-              :group_conversion_rate
-            )
-        }
+        on: ^build_group_by_join(query)
       )
+      |> select_merge_as([e, c], %{
+        total_visitors: c.visitors,
+        group_conversion_rate:
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), 0)",
+            c.visitors,
+            e.visitors,
+            c.visitors
+          )
+      })
       |> select_join_fields(query, query.dimensions, e)
       |> select_join_fields(query, List.delete(query.metrics, :group_conversion_rate), e)
     else

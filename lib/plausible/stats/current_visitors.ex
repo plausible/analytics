@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.CurrentVisitors do
   use Plausible.ClickhouseRepo
-  use Plausible.Stats.Fragments
+  use Plausible.Stats.SQL.Fragments
 
   def current_visitors(site) do
     first_datetime =

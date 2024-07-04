@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
   use Plausible
-  use Plausible.Stats.Fragments
+  use Plausible.Stats.SQL.Fragments
 
   import Plausible.Stats.Base
   import Ecto.Query
