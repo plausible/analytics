@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 - Deprecate `ECTO_IPV6` and `ECTO_CH_IPV6` env vars in CE plausible/analytics#4245
+- Remove support for importing data from no longer available Universal Analytics
 
 ### Changed
 
