@@ -396,17 +396,13 @@ defmodule PlausibleWeb.Router do
     delete "/:website", SiteController, :delete_site
     delete "/:website/stats", SiteController, :reset_stats
 
-    get "/:website/import/google-analytics/property-or-view",
+    get "/:website/import/google-analytics/property",
         GoogleAnalyticsController,
-        :property_or_view_form
+        :property_form
 
-    post "/:website/import/google-analytics/property-or-view",
+    post "/:website/import/google-analytics/property",
          GoogleAnalyticsController,
-         :property_or_view
-
-    get "/:website/import/google-analytics/user-metric",
-        GoogleAnalyticsController,
-        :user_metric_notice
+         :property
 
     get "/:website/import/google-analytics/confirm", GoogleAnalyticsController, :confirm
     post "/:website/settings/google-import", GoogleAnalyticsController, :import
