@@ -5,6 +5,7 @@ import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { hasGoalFilter } from "../../util/filters";
 import { addFilter, parseQuery } from '../../query'
 import BreakdownModal from "./breakdown-modal";
+import * as metrics from '../reports/metrics'
 
 function EntryPagesModal(props) {
   const query = parseQuery(props.location.search, props.site)
@@ -27,27 +28,27 @@ function EntryPagesModal(props) {
     return addFilter(query, ['contains', reportInfo.dimension, [s]])
   }, [])
 
-  const getMetrics = useCallback((query) => {
+  function chooseMetrics() {
     if (hasGoalFilter(query)) {
       return [
-        {key: 'total_visitors', label: 'Total visitors', formatter: numberFormatter},
-        {key: 'visitors', label: 'Conversions', formatter: numberFormatter},
-        {key: 'conversion_rate', label: 'CR', formatter: numberFormatter}
+        metrics.createTotalVisitors(),
+        metrics.createVisitors({renderLabel: (_query) => 'Conversions'}),
+        metrics.createConversionRate()
       ]
     }
 
     if (query.period === 'realtime') {
       return [
-        {key: 'visitors', label: "Current visitors", formatter: numberFormatter}
+        metrics.createVisitors({renderLabel: (_query) => 'Current visitors'})
       ]
     }
     
     return [
-      {key: 'visitors', label: "Visitors", formatter: numberFormatter},
-      {key: 'visits', label: "Total Entrances", formatter: numberFormatter},
-      {key: 'visit_duration', label: "Visit Duration", formatter: durationFormatter}
+      metrics.createVisitors({renderLabel: (_query) => "Visitors" }),
+      metrics.createVisits({renderLabel: (_query) => "Total Entrances" }),
+      metrics.createVisitDuration()
     ]
-  }, [])
+  }
 
   return (
     <Modal site={props.site}>
@@ -55,7 +56,7 @@ function EntryPagesModal(props) {
         site={props.site}
         query={query}
         reportInfo={reportInfo}
-        getMetrics={getMetrics}
+        metrics={chooseMetrics()}
         getFilterInfo={getFilterInfo}
         addSearchFilter={addSearchFilter}
       />

@@ -42,23 +42,22 @@ const LIMIT = 100
 
 //   * `title` - title of the report to render on the top left.
 
-//   * `endpoint` - The last part of the endpoint (e.g. "/sources") to query. this
+//   * `endpoint` - the last part of the endpoint (e.g. "/sources") to query. this
 //     value will be appended to `/${props.site.domain}`
 
-//   * `getMetrics` - a function taking the query object and returning the metrics
-//     that are be expected from the API.
+//   * `metrics` - a list of `Metric` class objects which represent the columns
+//     rendered in the report
 
 //   * `getFilterInfo` - a function that takes a `listItem` and returns a map with
 //     the necessary information to be able to link to a dashboard where that item
 //     is filtered by. If a list item is not supposed to be a filter link, this
 //     function should return `null` for that item.
 
-//  * `addSearchFilter` - a function that takes a query and the search string as
-//    arguments, and returns a new query with an additional search filter.
+//   * `addSearchFilter` - a function that takes a query and the search string as
+//     arguments, and returns a new query with an additional search filter.
 export default function BreakdownModal(props) {
-  const {site, query, reportInfo, getMetrics} = props
+  const {site, query, reportInfo, metrics} = props
   const endpoint = `/api/stats/${encodeURIComponent(site.domain)}${reportInfo.endpoint}`
-  const metrics = getMetrics(query)
   
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -114,12 +113,8 @@ export default function BreakdownModal(props) {
         </td>
         {metrics.map((metric) => {
           return (
-            <td
-              key={metric.key}
-              className="p-2 w-32 font-medium"
-              align="right"
-            >
-              {metric.formatter(item[metric.key])}
+            <td key={metric.key} className="p-2 w-32 font-medium" align="right">
+              {metric.renderValue(item[metric.key])}
             </td>
           )
         })}
@@ -169,12 +164,8 @@ export default function BreakdownModal(props) {
 
                   {metrics.map((metric) => {
                     return (
-                      <th
-                        key={metric.label}
-                        className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
-                        align="right"
-                      >
-                        {metric.label}
+                      <th key={metric.label} className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">
+                        {metric.renderLabel(query)}
                       </th>
                     )
                   })}

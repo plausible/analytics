@@ -1,5 +1,5 @@
 import { hasGoalFilter } from "../../util/filters"
-import numberFormatter from "../../util/number-formatter"
+import numberFormatter, { durationFormatter } from "../../util/number-formatter"
 import React from "react"
 
 /*global BUILD_EXTRA*/
@@ -89,10 +89,10 @@ export const createVisitors = (props) => {
   return new Metric({...props, key: "visitors", renderValue, renderLabel})
 }
 
-export const createConversionRate = () => {
+export const createConversionRate = (props) => {
   const renderValue = (value) => <span>{`${value}%`}</span>
   const renderLabel = (_query) => "CR"
-  return new Metric({key: "conversion_rate", renderLabel, renderValue})
+  return new Metric({...props, key: "conversion_rate", renderLabel, renderValue})
 }
 
 export const createPercentage = (props) => {
@@ -116,6 +116,23 @@ export const createAverageRevenue = (props) => {
   const renderValue = (value) => <Money formatted={value} />
   const renderLabel = (_query) => "Average"
   return new Metric({...props, key: "average_revenue", renderValue, renderLabel})
+}
+
+export const createTotalVisitors = (props) => {
+  const renderValue = renderNumberWithTooltip
+  const renderLabel = (_query) => "Total visitors"
+  return new Metric({...props, key: "total_visitors", renderValue, renderLabel})
+}
+
+export const createVisits = (props) => {
+  const renderValue = renderNumberWithTooltip
+  return new Metric({...props, key: "visits", renderValue})
+}
+
+export const createVisitDuration = (props) => {
+  const renderValue = durationFormatter
+  const renderLabel = (_query) => "Visit Duration"
+  return new Metric({...props, key: "visit_duration", renderValue, renderLabel})
 }
 
 function renderNumberWithTooltip(value) {
