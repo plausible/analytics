@@ -32,10 +32,7 @@ defmodule Plausible.Google.API do
   end
 
   def list_properties_and_views(access_token) do
-    with {:ok, properties} <- Plausible.Google.GA4.API.list_properties(access_token),
-         {:ok, views} <- Plausible.Google.UA.API.list_views(access_token) do
-      {:ok, properties ++ views}
-    end
+    Plausible.Google.GA4.API.list_properties(access_token)
   end
 
   def get_property_or_view(access_token, property_or_view) do

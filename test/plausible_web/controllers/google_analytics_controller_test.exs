@@ -44,21 +44,12 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
   describe "GET /:website/import/google-analytics/property-or-view" do
     setup [:create_user, :log_in, :create_new_site]
 
-    test "lists Google Analytics views and properties", %{conn: conn, site: site} do
+    test "lists Google Analytics properties WITHOUT UA views", %{conn: conn, site: site} do
       expect(
         Plausible.HTTPClient.Mock,
         :get,
         fn _url, _opts ->
           body = "fixture/ga4_list_properties.json" |> File.read!() |> Jason.decode!()
-          {:ok, %Finch.Response{body: body, status: 200}}
-        end
-      )
-
-      expect(
-        Plausible.HTTPClient.Mock,
-        :get,
-        fn _url, _opts ->
-          body = "fixture/ga_list_views.json" |> File.read!() |> Jason.decode!()
           {:ok, %Finch.Response{body: body, status: 200}}
         end
       )
@@ -72,8 +63,8 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
         })
         |> html_response(200)
 
-      assert response =~ "57238190 - one.test"
-      assert response =~ "54460083 - two.test"
+      refute response =~ "57238190 - one.test"
+      refute response =~ "54460083 - two.test"
       assert response =~ "account.one - GA4 (properties/428685906)"
       assert response =~ "GA4 - Flood-It! (properties/153293282)"
       assert response =~ "GA4 - Google Merch Shop (properties/213025502)"
@@ -343,15 +334,6 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
         end
       )
 
-      expect(
-        Plausible.HTTPClient.Mock,
-        :get,
-        fn _url, _opts ->
-          body = "fixture/ga_list_views.json" |> File.read!() |> Jason.decode!()
-          {:ok, %Finch.Response{body: body, status: 200}}
-        end
-      )
-
       response =
         conn
         |> post("/#{site.domain}/import/google-analytics/property-or-view", %{
@@ -388,15 +370,6 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
         :get,
         fn _url, _opts ->
           body = "fixture/ga4_list_properties.json" |> File.read!() |> Jason.decode!()
-          {:ok, %Finch.Response{body: body, status: 200}}
-        end
-      )
-
-      expect(
-        Plausible.HTTPClient.Mock,
-        :get,
-        fn _url, _opts ->
-          body = "fixture/ga_list_views.json" |> File.read!() |> Jason.decode!()
           {:ok, %Finch.Response{body: body, status: 200}}
         end
       )
