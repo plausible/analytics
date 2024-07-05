@@ -12,10 +12,8 @@ const LIMIT = 100
 // i.e. a breakdown by a single (non-time) dimension, with a given set of metrics.
 
 // BreakdownModal is expected to be rendered inside a `<Modal>`, which has it's own
-// specific URL pathname (e.g. /plausible.io/sources). On the initial render of the
-// parent modal, the query should be parsed from the URL and passed into this
-// component. That query object is not expected to change during that modal's
-// lifecycle.
+// specific URL pathname (e.g. /plausible.io/sources). During the lifecycle of a
+// BreakdownModal, the `query` object is not expected to change.
 
 // ### Search As You Type
 

@@ -1,14 +1,14 @@
 import React, {useCallback} from "react";
 import { withRouter } from 'react-router-dom'
 import Modal from './modal'
-import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { hasGoalFilter } from "../../util/filters";
-import { addFilter, parseQuery } from '../../query'
+import { addFilter } from '../../query'
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from '../reports/metrics'
+import withQueryContext from "../../components/query-context-hoc";
 
 function EntryPagesModal(props) {
-  const query = parseQuery(props.location.search, props.site)
+  const { site, query } = props
 
   const reportInfo = {
     title: 'Entry Pages',
@@ -51,9 +51,9 @@ function EntryPagesModal(props) {
   }
 
   return (
-    <Modal site={props.site}>
+    <Modal site={site}>
       <BreakdownModal
-        site={props.site}
+        site={site}
         query={query}
         reportInfo={reportInfo}
         metrics={chooseMetrics()}
@@ -64,4 +64,4 @@ function EntryPagesModal(props) {
   )
 }
 
-export default withRouter(EntryPagesModal)
+export default withRouter(withQueryContext(EntryPagesModal))
