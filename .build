@@ -89,9 +89,6 @@ Plausible.Google.GA4.API.html
 Plausible.Google.GA4.HTTP.html
 Plausible.Google.GA4.ReportRequest.html
 Plausible.Google.HTTP.html
-Plausible.Google.UA.API.html
-Plausible.Google.UA.HTTP.html
-Plausible.Google.UA.ReportRequest.html
 Plausible.HTTPClient.Interface.html
 Plausible.HTTPClient.Non200Error.html
 Plausible.HTTPClient.html
@@ -418,8 +415,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-D9D7E227.js
-dist/sidebar_items-EBEE1957.js
+dist/search_data-090B0B13.js
+dist/sidebar_items-260F0A72.js
 index.html
 readme.html
 search.html

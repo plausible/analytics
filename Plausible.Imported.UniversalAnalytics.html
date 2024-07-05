@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-EBEE1957.js"></script>
+    <script src="dist/sidebar_items-260F0A72.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -143,7 +143,8 @@ Pages
 
 
   <section id="moduledoc">
-<p>Import implementation for Universal Analytics.</p>
+<p>Import implementation for Universal Analytics.</p><p>NOTE: As importing from UA is no longer supported, this module
+is only used to support rendering existing imports.</p>
   </section>
 
 
@@ -158,24 +159,6 @@ Pages
   <h2>
     <a href="#functions">Functions</a>
   </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#from_report/4" translate="no">from_report(data, site_id, import_id, table)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#import_data/2" translate="no">import_data(site_import, opts)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Imports stats from a Google Analytics UA view to a Plausible site.</p></div>
-
-    </div>
 
     <div class="summary-row">
       <div class="summary-signature">
@@ -198,51 +181,6 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="from_report/4">
-
-  <div class="detail-header">
-    <a href="#from_report/4" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">from_report(data, site_id, import_id, table)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/universal_analytics.ex#L67" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="import_data/2">
-
-  <div class="detail-header">
-    <a href="#import_data/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">import_data(site_import, opts)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/universal_analytics.ex#L47" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Imports stats from a Google Analytics UA view to a Plausible site.</p><p>This function fetches Google Analytics reports which are then passed in batches
-to Clickhouse by the <a href="Plausible.Imported.Buffer.html"><code class="inline">Plausible.Imported.Buffer</code></a> process.</p>
-  </section>
-</section>
 <section class="detail" id="new_import/3">
 
   <div class="detail-header">
@@ -252,7 +190,7 @@ to Clickhouse by the <a href="Plausible.Imported.Buffer.html"><code class="inlin
     </a>
     <h1 class="signature" translate="no">new_import(site, user, opts)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/universal_analytics.ex#L6" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/universal_analytics.ex#L9" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
