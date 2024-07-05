@@ -38,10 +38,13 @@ const LIMIT = 100
 //   * `query` - a read-only query object representing the query state of the
 //     dashboard (e.g. `filters`, `period`, `with_imported`, etc)
 
-//   * `title` - title of the report to render on the top left.
+//   * `reportInfo` - a map with the following required keys:
 
-//   * `endpoint` - the last part of the endpoint (e.g. "/sources") to query. this
-//     value will be appended to `/${props.site.domain}`
+//        * `title` - the title of the report to render on the top left
+
+//        * `endpoint` - the last part of the endpoint (e.g. "/sources") to query
+
+//        * `dimensionLabel` - a string to render as the dimension column header.
 
 //   * `metrics` - a list of `Metric` class objects which represent the columns
 //     rendered in the report
