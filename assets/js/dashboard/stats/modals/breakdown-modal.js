@@ -164,7 +164,7 @@ export default function BreakdownModal(props) {
 
                   {metrics.map((metric) => {
                     return (
-                      <th key={metric.label} className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">
+                      <th key={metric.key} className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">
                         {metric.renderLabel(query)}
                       </th>
                     )
