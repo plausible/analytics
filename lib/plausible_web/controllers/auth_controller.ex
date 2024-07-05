@@ -749,7 +749,7 @@ defmodule PlausibleWeb.AuthController do
       "import" ->
         redirect(conn,
           external:
-            Routes.google_analytics_path(conn, :property_or_view_form, site.domain,
+            Routes.google_analytics_path(conn, :property_form, site.domain,
               access_token: res["access_token"],
               refresh_token: res["refresh_token"],
               expires_at: NaiveDateTime.to_iso8601(expires_at)

@@ -6,27 +6,22 @@
   <%= hidden_input(f, :expires_at, value: @expires_at) %>
 
   <div class="mt-6 text-sm text-gray-500 dark:text-gray-200">
-    Stats from this
-    <%= if @property? do %>
-      property
-    <% else %>
-      view
-    <% end %>
-    and time period will be imported from your Google Analytics account to your Plausible dashboard
+    Stats from this property and time period will be imported from
+    your Google Analytics account to your Plausible dashboard
   </div>
 
   <div class="mt-6">
     <%= styled_label(
       f,
-      :property_or_view,
-      "Google Analytics #{if @property?, do: "property", else: "view"}"
+      :property,
+      "Google Analytics property"
     ) %>
     <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
-      <%= @selected_property_or_view_name %>
+      <%= @selected_property_name %>
     </span>
-    <%= hidden_input(f, :property_or_view,
+    <%= hidden_input(f, :property,
       readonly: "true",
-      value: @selected_property_or_view
+      value: @selected_property
     ) %>
   </div>
   <div class="flex justify-between mt-3">
@@ -51,8 +46,8 @@
     <p class="text-sm mt-4 sm:mt-0 dark:text-gray-100">
       <a
         href={
-          Routes.google_analytics_path(@conn, :property_or_view, @site.domain,
-            property_or_view: @selected_property_or_view,
+          Routes.google_analytics_path(@conn, :property, @site.domain,
+            property: @selected_property,
             access_token: @access_token,
             refresh_token: @refresh_token,
             expires_at: @expires_at
