@@ -28,7 +28,7 @@ function fetchMainGraph(site, query, metric, interval) {
 }
 
 export default function VisitorGraph(props) {
-  const {site, query, lastLoadTimestamp} = props
+  const {site, query, lastLoadTimestamp, revenueAvailable} = props
   const isRealtime = query.period === 'realtime'
   const isDarkTheme = document.querySelector('html').classList.contains('dark') || false
 
@@ -89,7 +89,7 @@ export default function VisitorGraph(props) {
       })
     
     let metric = getStoredMetric()
-    const availableMetrics = getGraphableMetrics(query, site)
+    const availableMetrics = getGraphableMetrics(query, revenueAvailable)
     
     if (!availableMetrics.includes(metric)) {
       metric = availableMetrics[0]
@@ -136,7 +136,15 @@ export default function VisitorGraph(props) {
       {(topStatsLoading || graphLoading) && renderLoader()}
       <FadeIn show={!(topStatsLoading || graphLoading)}>
         <div id="top-stats-container" className="flex flex-wrap" ref={topStatsBoundary} style={{ height: getTopStatsHeight() }}>
-          <TopStats site={site} query={query} data={topStatData} onMetricUpdate={onMetricUpdate} tooltipBoundary={topStatsBoundary.current} lastLoadTimestamp={lastLoadTimestamp} />
+          <TopStats
+            site={site}
+            query={query}
+            data={topStatData}
+            onMetricUpdate={onMetricUpdate}
+            tooltipBoundary={topStatsBoundary.current}
+            lastLoadTimestamp={lastLoadTimestamp}
+            revenueAvailable={revenueAvailable}
+          />
         </div>
         <div className="relative px-2">
           {graphRefreshing && renderLoader()}

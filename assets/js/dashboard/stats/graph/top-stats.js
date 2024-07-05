@@ -66,7 +66,7 @@ function topStatNumberLong(name, value) {
 }
 
 export default function TopStats(props) {
-  const {site, query, data, onMetricUpdate, tooltipBoundary, lastLoadTimestamp} = props
+  const {site, query, data, onMetricUpdate, tooltipBoundary, lastLoadTimestamp, revenueAvailable} = props
 
   function tooltip(stat) {
     let statName = stat.name.toLowerCase()
@@ -89,7 +89,7 @@ export default function TopStats(props) {
   }
 
   function canMetricBeGraphed(stat) {
-    const graphableMetrics = getGraphableMetrics(query, site)
+    const graphableMetrics = getGraphableMetrics(query, revenueAvailable)
     return stat.graph_metric && graphableMetrics.includes(stat.graph_metric)
   }
 

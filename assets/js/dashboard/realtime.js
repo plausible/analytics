@@ -13,7 +13,7 @@ import { withPinnedHeader } from './pinned-header-hoc';
 import { statsBoxClass } from './index';
 
 function Realtime(props) {
-  const {site, query, history, stuck, loggedIn, currentUserRole, lastLoadTimestamp} = props
+  const {site, query, history, stuck, loggedIn, currentUserRole, lastLoadTimestamp, revenueAvailable} = props
   const navClass = site.embedded ? 'relative' : 'sticky'
 
   return (
@@ -28,7 +28,7 @@ function Realtime(props) {
           <Datepicker site={site} query={query} />
         </div>
       </div>
-      <VisitorGraph site={site} query={query} lastLoadTimestamp={lastLoadTimestamp} />
+      <VisitorGraph site={site} query={query} lastLoadTimestamp={lastLoadTimestamp} revenueAvailable={revenueAvailable}/>
       <div className="w-full md:flex">
         <div className={ statsBoxClass }>
           <Sources site={site} query={query} />
