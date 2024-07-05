@@ -167,4 +167,38 @@
   {{#if (any outbound_links file_downloads tagged_events)}}
   {{> customEvents}}
   {{/if}}
+
+  {{#if live_view}}
+    window.addEventListener('phx:navigate', info => trigger('pageview', {u: info.detail.href}))
+
+    // https://hexdocs.pm/phoenix_live_view/bindings.html
+    const bindings = ['phx-click', 'phx-click-away', 'phx-change', 'phx-submit', 'phx-feedback-for', 'phx-feedback-group', 
+      'phx-disable-with', 'phx-trigger-action', 'phx-auto-recover', 'phx-blur', 'phx-focus', 'phx-window-blur', 'phx-window-focus', 
+      'phx-keydown', 'phx-keyup', 'phx-window-keydown', 'phx-window-keyup', 'phx-key', 'phx-viewport-top', 'phx-viewport-bottom', 
+      'phx-mounted', 'phx-update', 'phx-remove', 'phx-hook', 'phx-mounted', 'phx-disconnected', 'phx-connected', 'phx-debounce', 
+      'phx-throttle', 'phx-track-static'];
+
+    const events = ["phx:page-loading-start", 
+      "phx:page-loading-stop", 
+      "track-uploads", 
+      "phx:live-file:updated"
+    ].concat(bindings)
+    .concat(bindings.map(name => name.replace('phx-', 'phx:')))
+    .concat(bindings.map(name => name.replace('phx-', '')).filter(name => name != 'submit'))
+    ;
+    events.map((name) => {
+      window.addEventListener(name, info => trigger('phx-event', {props: {event: name, detail: new URLSearchParams(info.detail || {}).toString()}}));
+    });
+
+    // form submit event
+    window.addEventListener("submit", e => trigger("js-submit", {props: {dom_id: e.target.id, ...Object.fromEntries(new FormData(e.target).entries())}}));
+
+    //track socket activity
+    if (window.liveSocket)
+      window.liveSocket.socket.logger = (kind, msg, data) => {
+        if(kind === 'push') trigger('phx-event', {props: {msg, ...data}})
+      }
+    else
+      console && console.error("No liveSocket initialized")
+  {{/if}}
 })();
