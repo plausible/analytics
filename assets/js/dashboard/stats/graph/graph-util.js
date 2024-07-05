@@ -6,7 +6,7 @@ export function getGraphableMetrics(query, revenueAvailable) {
   const isGoalFilter = hasGoalFilter(query)
   const isPageFilter = getFiltersByKeyPrefix(query, "page").length > 0
 
-  if (isRealtime && goalFilter) {
+  if (isRealtime && isGoalFilter) {
     return ["visitors"]
   } else if (isRealtime) {
     return ["visitors", "pageviews"]
