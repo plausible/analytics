@@ -1,147 +1,85 @@
-import React from "react";
-import { Link, withRouter } from 'react-router-dom'
+import React, { useCallback } from "react";
+import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
-import * as api from '../../api'
-import numberFormatter, { durationFormatter } from '../../util/number-formatter'
-import { parseQuery } from '../../query'
-import { updatedQuery } from "../../util/url";
-import { hasGoalFilter, replaceFilterByPrefix } from "../../util/filters";
+import withQueryContext from "../../components/query-context-hoc";
+import { hasGoalFilter } from "../../util/filters";
+import BreakdownModal from "./breakdown-modal";
+import * as metrics from "../reports/metrics";
+import { addFilter } from "../../query";
 
-class ReferrerDrilldownModal extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      loading: true,
-      query: parseQuery(props.location.search, props.site)
+function ReferrerDrilldownModal(props) {
+  const { site, query, match } = props
+
+  const reportInfo = {
+    title: "Referrer Drilldown",
+    dimension: 'referrer',
+    endpoint: `/referrers/${match.params.referrer}`,
+    dimensionLabel: "Referrer"
+  }
+
+  const getFilterInfo = useCallback((listItem) => {
+    return {
+      prefix: reportInfo.dimension,
+      filter: ['is', reportInfo.dimension, [listItem.name]]
     }
-  }
+  }, [])
 
-  componentDidMount() {
-    const detailed = this.showExtra()
+  const addSearchFilter = useCallback((query, s) => {
+    return addFilter(query, ['contains', reportInfo.dimension, [s]])
+  }, [])
 
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/${this.props.match.params.referrer}`, this.state.query, { limit: 100, detailed })
-      .then((response) => this.setState({ loading: false, referrers: response.results }))
-  }
-
-  showExtra() {
-    return this.state.query.period !== 'realtime' && !hasGoalFilter(this.state.query)
-  }
-
-  showConversionRate() {
-    return hasGoalFilter(this.state.query)
-  }
-
-  label() {
-    if (this.state.query.period === 'realtime') {
-      return 'Current visitors'
-    }
-
-    if (this.showConversionRate()) {
-      return 'Conversions'
+  function chooseMetrics() {
+    if (hasGoalFilter(query)) {
+      return [
+        metrics.createTotalVisitors(),
+        metrics.createVisitors({renderLabel: (_query) => 'Conversions'}),
+        metrics.createConversionRate()
+      ]
     }
 
-    return 'Visitors'
-  }
-
-  formatBounceRate(ref) {
-    if (typeof (ref.bounce_rate) === 'number') {
-      return ref.bounce_rate + '%'
-    } else {
-      return '-'
+    if (query.period === 'realtime') {
+      return [
+        metrics.createVisitors({renderLabel: (_query) => 'Current visitors'})
+      ]
     }
+    
+    return [
+      metrics.createVisitors({renderLabel: (_query) => "Visitors" }),
+      metrics.createBounceRate(),
+      metrics.createVisitDuration()
+    ]
   }
 
-  formatDuration(referrer) {
-    if (typeof (referrer.visit_duration) === 'number') {
-      return durationFormatter(referrer.visit_duration)
-    } else {
-      return '-'
-    }
-  }
-
-  renderExternalLink(name) {
-    if (name !== 'Direct / None') {
-      return (
-        <a target="_blank" href={'//' + name} rel="noreferrer" className="hidden group-hover:block">
-          <svg className="inline h-4 w-4 ml-1 -mt-1 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
-        </a>
-      )
-    }
-  }
-
-  renderReferrerName(referrer) {
-    const filters = replaceFilterByPrefix(this.state.query, "referrer", ["is", "referrer", [referrer.name]])
+  const renderIcon = useCallback((listItem) => {
     return (
-      <span className="flex group items-center">
-        <img src={`/favicon/sources/${referrer.name}`} referrerPolicy="no-referrer" className="h-4 w-4 mr-2 inline" />
-        <Link
-          className="block truncate hover:underline dark:text-gray-200"
-          to={{ search: updatedQuery({ filters }), pathname: '/' + this.props.site.domain }}
-          title={referrer.name}
-        >
-          {referrer.name}
-        </Link>
-        {this.renderExternalLink(referrer.name)}
-      </span>
+      <img
+        src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
+        className="h-4 w-4 mr-2 align-middle inline"
+      />
     )
-  }
+  }, [])
 
-  renderReferrer(referrer) {
-    return (
-      <tr className="text-sm dark:text-gray-200" key={referrer.name}>
-        <td className="p-2">
-          {this.renderReferrerName(referrer)}
-        </td>
-        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.total_visitors)}</td>}
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(referrer.visitors)}</td>
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(referrer)}</td>}
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatDuration(referrer)}</td>}
-        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{referrer.conversion_rate}%</td>}
-      </tr>
-    )
-  }
-
-  renderBody() {
-    if (this.state.loading) {
-      return (
-        <div className="loading mt-32 mx-auto"><div></div></div>
-      )
-    } else if (this.state.referrers) {
-      return (
-        <React.Fragment>
-          <h1 className="text-xl font-bold dark:text-gray-100">Referrer drilldown</h1>
-
-          <div className="my-4 border-b border-gray-300 dark:border-gray-500"></div>
-          <main className="modal__content mt-0">
-            <table className="w-max overflow-x-auto md:w-full table-striped table-fixed mt-4">
-              <thead>
-                <tr>
-                  <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Referrer</th>
-                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Total visitors</th>}
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{this.label()}</th>
-                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th>}
-                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visit duration</th>}
-                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">CR</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {this.state.referrers.map(this.renderReferrer.bind(this))}
-              </tbody>
-            </table>
-          </main>
-        </React.Fragment>
-      )
+  const getExternalLinkURL = useCallback((listItem) => {
+    if (listItem.name !== "Direct / None") {
+      return '//' + listItem.name
     }
-  }
+  }, [])
 
-  render() {
-    return (
-      <Modal>
-        {this.renderBody()}
-      </Modal>
-    )
-  }
+  return (
+    <Modal site={site}>
+      <BreakdownModal
+        site={site}
+        query={query}
+        reportInfo={reportInfo}
+        metrics={chooseMetrics()}
+        getFilterInfo={getFilterInfo}
+        addSearchFilter={addSearchFilter}
+        renderIcon={renderIcon}
+        getExternalLinkURL={getExternalLinkURL}
+      />
+    </Modal>
+  )
 }
 
-export default withRouter(ReferrerDrilldownModal)
+export default withRouter(withQueryContext(ReferrerDrilldownModal))
