@@ -56,8 +56,12 @@ const LIMIT = 100
 
 //   * `addSearchFilter` - a function that takes a query and the search string as
 //     arguments, and returns a new query with an additional search filter.
+
+// ### Optional Props 
+
+//   * `renderIcon` - a function that renders an icon for the given list item.
 export default function BreakdownModal(props) {
-  const {site, query, reportInfo, metrics} = props
+  const {site, query, reportInfo, metrics, renderIcon} = props
   const endpoint = `/api/stats/${encodeURIComponent(site.domain)}${reportInfo.endpoint}`
   
   const [loading, setLoading] = useState(true)
@@ -67,7 +71,7 @@ export default function BreakdownModal(props) {
   const [moreResultsAvailable, setMoreResultsAvailable] = useState(false)
 
   const fetchData = useCallback(debounce(() => {
-    api.get(endpoint, withSearch(query), { limit: LIMIT, page: 1 })
+    api.get(endpoint, withSearch(query), { limit: LIMIT, page: 1, detailed: true })
       .then((response) => {
         setLoading(false)
         setPage(1)
@@ -100,10 +104,17 @@ export default function BreakdownModal(props) {
     setPage(page + 1)
   }
 
+  function maybeRenderIcon(item) {
+    if (typeof renderIcon === 'function') {
+      return renderIcon(item)
+    }
+  }
+
   function renderRow(item) {
     return (
       <tr className="text-sm dark:text-gray-200" key={item.name}>
         <td className="p-2 truncate">
+          { maybeRenderIcon(item) }
           <FilterLink
             pathname={`/${encodeURIComponent(site.domain)}`}
             query={query}

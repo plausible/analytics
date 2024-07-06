@@ -135,6 +135,12 @@ export const createVisitDuration = (props) => {
   return new Metric({...props, key: "visit_duration", renderValue, renderLabel})
 }
 
+export const createBounceRate = (props) => {
+  const renderValue = (value) => `${value}%`
+  const renderLabel = (_query) => "Bounce Rate"
+  return new Metric({...props, key: "bounce_rate", renderValue, renderLabel})
+}
+
 function renderNumberWithTooltip(value) {
   return <span tooltip={value}>{numberFormatter(value)}</span>
 }
