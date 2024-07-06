@@ -15,6 +15,8 @@ defmodule Plausible.IngestRepo.Migrations.MigrateSiteImports do
               "skipping site_imports migration since it has already been run at #{already_ran_at}"
             )
 
+            nil
+
           [] ->
             {:ok, _, _} =
               Ecto.Migrator.with_repo(Plausible.ClickhouseRepo, fn _repo ->
