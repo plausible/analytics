@@ -1,5 +1,5 @@
 import { hasGoalFilter } from "../../util/filters"
-import numberFormatter, { durationFormatter } from "../../util/number-formatter"
+import numberFormatter, { durationFormatter, percentageFormatter } from "../../util/number-formatter"
 import React from "react"
 
 /*global BUILD_EXTRA*/
@@ -90,13 +90,13 @@ export const createVisitors = (props) => {
 }
 
 export const createConversionRate = (props) => {
-  const renderValue = (value) => <span>{`${value}%`}</span>
+  const renderValue = percentageFormatter
   const renderLabel = (_query) => "CR"
   return new Metric({...props, key: "conversion_rate", renderLabel, renderValue})
 }
 
 export const createPercentage = (props) => {
-  const renderValue = (value) => <span>{ value }</span>
+  const renderValue = (value) => value
   const renderLabel = (_query) => "%"
   return new Metric({...props, key: "percentage", renderLabel, renderValue})
 }
@@ -151,6 +151,12 @@ export const createTimeOnPage = (props) => {
   const renderValue = durationFormatter
   const renderLabel = (_query) => "Time on Page"
   return new Metric({...props, key: "time_on_page", renderValue, renderLabel})
+}
+
+export const createExitRate = (props) => {
+  const renderValue = percentageFormatter
+  const renderLabel = (_query) => "Exit Rate"
+  return new Metric({...props, key: "exit_rate", renderValue, renderLabel})
 }
 
 function renderNumberWithTooltip(value) {
