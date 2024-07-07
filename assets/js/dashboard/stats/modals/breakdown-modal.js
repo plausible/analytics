@@ -116,7 +116,7 @@ export default function BreakdownModal(props) {
 
   function fetchNextPage() {
     if (page > 1) {
-      api.get(endpoint, withSearch(query), { limit: LIMIT, page })
+      api.get(endpoint, withSearch(query), { limit: LIMIT, page, detailed: true })
         .then((response) => {
           if (typeof afterFetchNextPage === 'function') {
             afterFetchNextPage(response)
