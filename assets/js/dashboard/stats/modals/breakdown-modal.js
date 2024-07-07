@@ -69,8 +69,26 @@ const LIMIT = 100
 
 //   * `addSearchFilter` - a function that takes a query object and a search string
 //     as arguments, and returns a new `query` with an additional search filter.
+
+//   * `afterFetchData` - a callback function taking an API response as an argument.
+//     If this function is passed via props, it will be called after a successful
+//     API response from the `fetchData` function.
+
+//   * `afterFetchNextPage` - a function with the same behaviour as `afterFetchData`,
+//     but will be called after a successful next page load in `fetchNextPage`.
 export default function BreakdownModal(props) {
-  const {site, query, reportInfo, metrics, renderIcon, getExternalLinkURL, searchEnabled} = props
+  const {
+    site,
+    query,
+    reportInfo,
+    metrics,
+    renderIcon,
+    getExternalLinkURL,
+    searchEnabled,
+    afterFetchData,
+    afterFetchNextPage
+  } = props
+  
   const endpoint = `/api/stats/${encodeURIComponent(site.domain)}${reportInfo.endpoint}`
   const isSearchEnabled = searchEnabled === false ? false : true
   
@@ -83,6 +101,9 @@ export default function BreakdownModal(props) {
   const fetchData = useCallback(debounce(() => {
     api.get(endpoint, withSearch(query), { limit: LIMIT, page: 1, detailed: true })
       .then((response) => {
+        if (typeof afterFetchData === 'function') {
+          afterFetchData(response)
+        }
         setLoading(false)
         setPage(1)
         setResults(response.results)
@@ -97,6 +118,9 @@ export default function BreakdownModal(props) {
     if (page > 1) {
       api.get(endpoint, withSearch(query), { limit: LIMIT, page })
         .then((response) => {
+          if (typeof afterFetchNextPage === 'function') {
+            afterFetchNextPage(response)
+          }
           setLoading(false)
           setResults(results.concat(response.results))
           setMoreResultsAvailable(response.results.length === LIMIT)
