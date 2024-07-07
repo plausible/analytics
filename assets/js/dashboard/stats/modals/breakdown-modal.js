@@ -54,9 +54,6 @@ const LIMIT = 100
 //     is filtered by. If a list item is not supposed to be a filter link, this
 //     function should return `null` for that item.
 
-//   * `addSearchFilter` - a function that takes a query and the search string as
-//     arguments, and returns a new query with an additional search filter.
-
 // ### Optional Props 
 
 //   * `renderIcon` - a function that renders an icon for the given list item.
@@ -66,9 +63,16 @@ const LIMIT = 100
 //     the function should return `null` for that item. Otherwise, if the returned
 //     value exists, a small pop-out icon will be rendered whenever the list item
 //     is hovered. When the icon is clicked, opens the external link in a new tab.
+
+//   * `searchEnabled` - a boolean that determines if the search feature is enabled.
+//     When true, the `addSearchFilter` function is expected. Is true by default.
+
+//   * `addSearchFilter` - a function that takes a query object and a search string
+//     as arguments, and returns a new `query` with an additional search filter.
 export default function BreakdownModal(props) {
-  const {site, query, reportInfo, metrics, renderIcon, getExternalLinkURL} = props
+  const {site, query, reportInfo, metrics, renderIcon, getExternalLinkURL, searchEnabled} = props
   const endpoint = `/api/stats/${encodeURIComponent(site.domain)}${reportInfo.endpoint}`
+  const isSearchEnabled = searchEnabled === false ? false : true
   
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -101,8 +105,11 @@ export default function BreakdownModal(props) {
   }
 
   function withSearch(query) {
-    if (search === '') { return query}
-    return props.addSearchFilter(query, search)
+    if (isSearchEnabled && search !== '') {
+      return props.addSearchFilter(query, search)
+    }
+
+    return query
   }
 
   function loadNextPage() {
@@ -175,12 +182,12 @@ export default function BreakdownModal(props) {
         <>
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold dark:text-gray-100">{ reportInfo.title }</h1>
-            <input
+            { isSearchEnabled && <input
               type="text"
               placeholder="Search"
               className="shadow-sm dark:bg-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 block sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
               onChange={(e) => { setSearch(e.target.value) }}
-            />
+            />}
           </div>
 
           <div className="my-4 border-b border-gray-300"></div>

@@ -120,7 +120,7 @@ export const createAverageRevenue = (props) => {
 
 export const createTotalVisitors = (props) => {
   const renderValue = renderNumberWithTooltip
-  const renderLabel = (_query) => "Total visitors"
+  const renderLabel = (_query) => "Total Visitors"
   return new Metric({...props, key: "total_visitors", renderValue, renderLabel})
 }
 
