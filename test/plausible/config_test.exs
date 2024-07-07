@@ -369,6 +369,60 @@ defmodule Plausible.ConfigTest do
     end
   end
 
+  describe "totp" do
+    test "pbkdf2 if not set" do
+      env = [
+        {"TOTP_VAULT_KEY", nil}
+      ]
+
+      config = runtime_config(env)
+
+      assert [vault_key: vault_key] = get_in(config, [:plausible, Plausible.Auth.TOTP])
+      assert byte_size(vault_key) == 32
+
+      # make sure it doesn't change between releases
+      assert vault_key ==
+               "\x95\x9C\x05\x9A\xCD\xE4\xEF\xDDH\xFB\xCA\xD5o\xD1z\xCCTǐ\xBC\"J\xF8:\xFAs\xCA\x0Fo\x10\x9B\x84"
+    end
+
+    test "can be Base64-encoded 32 bytes (with padding)" do
+      # $ openssl rand -base64 32
+      # dx2W6PNd/QIC6IyYVWMEaG2fI8/5WVylryM3mRaOpAo=
+      env = [
+        {"TOTP_VAULT_KEY", "dx2W6PNd/QIC6IyYVWMEaG2fI8/5WVylryM3mRaOpAo="}
+      ]
+
+      config = runtime_config(env)
+
+      assert [vault_key: vault_key] = get_in(config, [:plausible, Plausible.Auth.TOTP])
+      assert byte_size(vault_key) == 32
+      assert vault_key == Base.decode64!("dx2W6PNd/QIC6IyYVWMEaG2fI8/5WVylryM3mRaOpAo=")
+    end
+
+    test "fails on invalid key length" do
+      assert_raise ArgumentError, ~r/Got Base64 encoded 31 bytes/, fn ->
+        runtime_config(_env = [{"TOTP_VAULT_KEY", Base.encode64(:crypto.strong_rand_bytes(31))}])
+      end
+
+      assert_raise ArgumentError, ~r/Got Base64 encoded 33 bytes/, fn ->
+        runtime_config(_env = [{"TOTP_VAULT_KEY", Base.encode64(:crypto.strong_rand_bytes(33))}])
+      end
+    end
+
+    test "fails on invalid encoding" do
+      assert_raise ArgumentError,
+                   ~r/TOTP_VAULT_KEY must be Base64 encoded/,
+                   fn ->
+                     runtime_config(
+                       _env = [
+                         {"TOTP_VAULT_KEY",
+                          "openssl" <> Base.encode64(:crypto.strong_rand_bytes(32))}
+                       ]
+                     )
+                   end
+    end
+  end
+
   defp runtime_config(env) do
     put_system_env_undo(env)
     Config.Reader.read!("config/runtime.exs", env: :prod)

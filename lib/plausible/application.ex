@@ -115,7 +115,6 @@ defmodule Plausible.Application do
     :plausible
     |> Application.fetch_env!(Plausible.Auth.TOTP)
     |> Keyword.fetch!(:vault_key)
-    |> Base.decode64!()
   end
 
   defp finch_pool_config() do
