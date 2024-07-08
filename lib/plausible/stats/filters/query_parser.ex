@@ -92,9 +92,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_clauses_list([_operation, filter_key, list] = filter) when is_list(list) do
     all_strings? = Enum.all?(list, &is_binary/1)
-    all_numbers? = Enum.all?(list, &is_number/1)
+    all_integers? = Enum.all?(list, &is_integer/1)
 
-    case {filter_key, all_strings?, all_numbers?} do
+    case {filter_key, all_strings?, all_integers?} do
       {"event:goal", true, _} -> {:ok, [Filters.Utils.wrap_goal_value(list)]}
       {"visit:city", _, true} -> {:ok, [Enum.map(list, &Integer.to_string/1)]}
       {_, true, _} -> {:ok, [list]}
