@@ -6,6 +6,14 @@ defmodule Plausible.Stats.GoalSuggestions do
   import Plausible.Stats.Base
   import Ecto.Query
 
+  # As excluded goal names are interpolated as separate
+  # parameters in the query, there's a risk of running
+  # against max parameters limit. Given the failure mode
+  # in this case is suggesting an event that is already
+  # added as a goal, which will be validated when creating,
+  # it's safe to trim exclusions list.
+  @max_excluded 1000
+
   defmacrop visitors(e) do
     quote do
       selected_as(
@@ -23,7 +31,11 @@ defmodule Plausible.Stats.GoalSuggestions do
       |> Repo.preload(:goals)
       |> Plausible.Imported.load_import_data()
 
-    excluded = Keyword.get(opts, :exclude, [])
+    excluded =
+      opts
+      |> Keyword.get(:exclude, [])
+      |> Enum.take(@max_excluded)
+
     limit = Keyword.get(opts, :limit, 25)
 
     params = %{"with_imported" => "true", "period" => "6mo"}
