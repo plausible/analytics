@@ -131,8 +131,8 @@ defmodule Plausible.Exports do
 
   @spec local_export_file(pos_integer) :: Path.t()
   defp local_export_file(site_id) do
-    data_dir = Application.get_env(:plausible, :data_dir)
-    Path.join([data_dir || System.tmp_dir!(), "plausible-exports", Integer.to_string(site_id)])
+    data_dir = Application.fetch_env!(:plausible, :data_dir)
+    Path.join([data_dir, "plausible-exports", Integer.to_string(site_id)])
   end
 
   @doc "Gets S3 export for a site. Raises if object storage is unavailable."

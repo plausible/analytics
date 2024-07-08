@@ -279,6 +279,23 @@ defmodule Plausible.ConfigTest do
   end
 
   describe "storage" do
+    test "defaults" do
+      env = [
+        {"MAXMIND_LICENSE_KEY", "abc"},
+        {"PERSISTENT_CACHE_DIR", nil},
+        {"DATA_DIR", nil}
+      ]
+
+      config = runtime_config(env)
+
+      # exports/imports
+      assert get_in(config, [:plausible, :data_dir]) == "/var/lib/plausible"
+      # locus (mmdb cache)
+      assert get_in(config, [:plausible, Plausible.Geo, :cache_dir]) == "/var/lib/plausible"
+      # tzdata (timezones cache)
+      assert get_in(config, [:tzdata, :data_dir]) == "/var/lib/plausible/tzdata_data"
+    end
+
     test "with only DATA_DIR set" do
       env = [
         {"MAXMIND_LICENSE_KEY", "abc"},
@@ -306,7 +323,7 @@ defmodule Plausible.ConfigTest do
       config = runtime_config(env)
 
       # exports/imports
-      assert get_in(config, [:plausible, :data_dir]) == "/cache"
+      assert get_in(config, [:plausible, :data_dir]) == "/var/lib/plausible"
       # locus (mmdb cache)
       assert get_in(config, [:plausible, Plausible.Geo, :cache_dir]) == "/cache"
       # tzdata (timezones cache)
