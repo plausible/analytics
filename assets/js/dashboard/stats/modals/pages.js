@@ -65,7 +65,7 @@ class PagesModal extends React.Component {
         <td className="p-2">
           <Link
             to={{
-              pathname: `/${encodeURIComponent(this.props.site.domain)}`,
+              pathname: `/`,
               search: updatedQuery({ filters })
             }}
             className="hover:underline block truncate"
@@ -141,7 +141,7 @@ class PagesModal extends React.Component {
 
   render() {
     return (
-      <Modal site={this.props.site}>
+      <Modal>
         {this.renderBody()}
         {this.renderLoading()}
       </Modal>

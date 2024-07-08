@@ -40,7 +40,7 @@ defmodule Plausible.Stats.EmailReport do
   end
 
   defp put_top_5_pages(stats, site, query) do
-    query = Query.set_property(query, "event:page")
+    query = Query.set_dimensions(query, ["event:page"])
     pages = Stats.breakdown(site, query, [:visitors], {5, 1})
     Map.put(stats, :pages, pages)
   end
@@ -48,8 +48,8 @@ defmodule Plausible.Stats.EmailReport do
   defp put_top_5_sources(stats, site, query) do
     query =
       query
-      |> Query.put_filter([:is_not, "visit:source", "Direct / None"])
-      |> Query.set_property("visit:source")
+      |> Query.put_filter([:is_not, "visit:source", ["Direct / None"]])
+      |> Query.set_dimensions(["visit:source"])
 
     sources = Stats.breakdown(site, query, [:visitors], {5, 1})
 

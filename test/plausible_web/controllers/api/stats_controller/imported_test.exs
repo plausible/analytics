@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
 
   defp import_data(ga_data, site_id, import_id, table_name) do
     ga_data
-    |> Plausible.Imported.UniversalAnalytics.from_report(site_id, import_id, table_name)
+    |> Plausible.Imported.GoogleAnalytics4.from_report(site_id, import_id, table_name)
     |> then(&Plausible.Imported.Buffer.insert_all(table_name, &1))
   end
 
@@ -17,7 +17,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
       setup %{user: user, site: site} do
         import_params =
           %{
-            source: :universal_analytics,
+            source: :google_analytics_4,
             start_date: ~D[2005-01-01],
             end_date: Timex.today(),
             legacy: unquote(import_type) == :new_and_legacy
@@ -49,23 +49,23 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         import_data(
           [
             %{
-              dimensions: %{"ga:date" => "20210101"},
+              dimensions: %{"date" => "20210101"},
               metrics: %{
-                "ga:users" => "1",
-                "ga:pageviews" => "1",
-                "ga:bounces" => "0",
-                "ga:sessions" => "1",
-                "ga:sessionDuration" => "60"
+                "totalUsers" => "1",
+                "screenPageViews" => "1",
+                "bounces" => "0",
+                "sessions" => "1",
+                "userEngagementDuration" => "60"
               }
             },
             %{
-              dimensions: %{"ga:date" => "20210131"},
+              dimensions: %{"date" => "20210131"},
               metrics: %{
-                "ga:users" => "1",
-                "ga:pageviews" => "1",
-                "ga:bounces" => "0",
-                "ga:sessions" => "1",
-                "ga:sessionDuration" => "60"
+                "totalUsers" => "1",
+                "screenPageViews" => "1",
+                "bounces" => "0",
+                "sessions" => "1",
+                "userEngagementDuration" => "60"
               }
             }
           ],
@@ -98,23 +98,23 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         import_data(
           [
             %{
-              dimensions: %{"ga:date" => "20210101"},
+              dimensions: %{"date" => "20210101"},
               metrics: %{
-                "ga:users" => "1",
-                "ga:pageviews" => "1",
-                "ga:bounces" => "0",
-                "ga:sessions" => "1",
-                "ga:sessionDuration" => "60"
+                "totalUsers" => "1",
+                "screenPageViews" => "1",
+                "bounces" => "0",
+                "sessions" => "1",
+                "userEngagementDuration" => "60"
               }
             },
             %{
-              dimensions: %{"ga:date" => "20210131"},
+              dimensions: %{"date" => "20210131"},
               metrics: %{
-                "ga:users" => "1",
-                "ga:pageviews" => "1",
-                "ga:bounces" => "0",
-                "ga:sessions" => "1",
-                "ga:sessionDuration" => "60"
+                "totalUsers" => "1",
+                "screenPageViews" => "1",
+                "bounces" => "0",
+                "sessions" => "1",
+                "userEngagementDuration" => "60"
               }
             }
           ],
@@ -161,98 +161,104 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           [
             %{
               dimensions: %{
-                "ga:adContent" => "",
-                "ga:campaign" => "",
-                "ga:date" => "20210101",
-                "ga:keyword" => "",
-                "ga:medium" => "organic",
-                "ga:source" => "duckduckgo.com"
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "organic",
+                "sessionSource" => "duckduckgo.com"
               },
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "60",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "60",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:adContent" => "",
-                "ga:campaign" => "",
-                "ga:date" => "20210131",
-                "ga:keyword" => "",
-                "ga:medium" => "organic",
-                "ga:source" => "google.com"
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "",
+                "date" => "20210131",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "organic",
+                "sessionSource" => "google.com"
               },
               metrics: %{
-                "ga:bounces" => "1",
-                "ga:sessionDuration" => "60",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "1",
+                "userEngagementDuration" => "60",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:adContent" => "",
-                "ga:campaign" => "",
-                "ga:date" => "20210101",
-                "ga:keyword" => "",
-                "ga:medium" => "paid",
-                "ga:source" => "google.com"
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "paid",
+                "sessionSource" => "google.com"
               },
               metrics: %{
-                "ga:bounces" => "1",
-                "ga:sessionDuration" => "60",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "1",
+                "userEngagementDuration" => "60",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:adContent" => "",
-                "ga:campaign" => "",
-                "ga:date" => "20210101",
-                "ga:keyword" => "",
-                "ga:medium" => "social",
-                "ga:source" => "Twitter"
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "social",
+                "sessionSource" => "Twitter"
               },
               metrics: %{
-                "ga:bounces" => "1",
-                "ga:sessionDuration" => "60",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "1",
+                "userEngagementDuration" => "60",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:adContent" => "",
-                "ga:campaign" => "newsletter",
-                "ga:date" => "20210131",
-                "ga:keyword" => "",
-                "ga:medium" => "email",
-                "ga:source" => "A Nice Newsletter"
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "newsletter",
+                "date" => "20210131",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "email",
+                "sessionSource" => "A Nice Newsletter"
               },
               metrics: %{
-                "ga:bounces" => "1",
-                "ga:sessionDuration" => "60",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "1",
+                "userEngagementDuration" => "60",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:adContent" => "",
-                "ga:campaign" => "",
-                "ga:date" => "20210101",
-                "ga:keyword" => "",
-                "ga:medium" => "(none)",
-                "ga:source" => "(direct)"
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "(none)",
+                "sessionSource" => "(direct)"
               },
               metrics: %{
-                "ga:bounces" => "1",
-                "ga:sessionDuration" => "60",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "1",
+                "userEngagementDuration" => "60",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             }
           ],
@@ -299,34 +305,36 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           [
             %{
               dimensions: %{
-                "ga:adContent" => "",
-                "ga:campaign" => "",
-                "ga:date" => "20210101",
-                "ga:keyword" => "",
-                "ga:medium" => "social",
-                "ga:source" => "Twitter"
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "social",
+                "sessionSource" => "Twitter"
               },
               metrics: %{
-                "ga:bounces" => "1",
-                "ga:sessionDuration" => "60",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "1",
+                "userEngagementDuration" => "60",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:adContent" => "",
-                "ga:campaign" => "",
-                "ga:date" => "20210101",
-                "ga:keyword" => "",
-                "ga:medium" => "(none)",
-                "ga:source" => "(direct)"
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "(none)",
+                "sessionSource" => "(direct)"
               },
               metrics: %{
-                "ga:bounces" => "1",
-                "ga:sessionDuration" => "60",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "1",
+                "userEngagementDuration" => "60",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             }
           ],
@@ -365,50 +373,53 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           [
             %{
               dimensions: %{
-                "ga:adContent" => "",
-                "ga:campaign" => "profile",
-                "ga:date" => "20210101",
-                "ga:keyword" => "",
-                "ga:medium" => "social",
-                "ga:source" => "Twitter"
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "profile",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "social",
+                "sessionSource" => "Twitter"
               },
               metrics: %{
-                "ga:bounces" => "1",
-                "ga:sessionDuration" => "100",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "1",
+                "userEngagementDuration" => "100",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:adContent" => "",
-                "ga:campaign" => "august",
-                "ga:date" => "20210101",
-                "ga:keyword" => "",
-                "ga:medium" => "email",
-                "ga:source" => "Gmail"
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "august",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "email",
+                "sessionSource" => "Gmail"
               },
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "100",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "100",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:adContent" => "",
-                "ga:campaign" => "(not set)",
-                "ga:date" => "20210101",
-                "ga:keyword" => "",
-                "ga:medium" => "email",
-                "ga:source" => "Gmail"
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "(not set)",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "email",
+                "sessionSource" => "Gmail"
               },
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "100",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "100",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             }
           ],
@@ -454,50 +465,53 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           [
             %{
               dimensions: %{
-                "ga:adContent" => "",
-                "ga:campaign" => "",
-                "ga:date" => "20210101",
-                "ga:keyword" => "oat milk",
-                "ga:medium" => "paid",
-                "ga:source" => "Google"
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "oat milk",
+                "sessionMedium" => "paid",
+                "sessionSource" => "Google"
               },
               metrics: %{
-                "ga:bounces" => "1",
-                "ga:sessionDuration" => "100",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "1",
+                "userEngagementDuration" => "100",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:adContent" => "",
-                "ga:campaign" => "",
-                "ga:date" => "20210101",
-                "ga:keyword" => "Sweden",
-                "ga:medium" => "paid",
-                "ga:source" => "Google"
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "Sweden",
+                "sessionMedium" => "paid",
+                "sessionSource" => "Google"
               },
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "100",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "100",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:adContent" => "",
-                "ga:campaign" => "",
-                "ga:date" => "20210101",
-                "ga:keyword" => "(not set)",
-                "ga:medium" => "paid",
-                "ga:source" => "Google"
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "(not set)",
+                "sessionMedium" => "paid",
+                "sessionSource" => "Google"
               },
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "100",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "100",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             }
           ],
@@ -542,50 +556,53 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           [
             %{
               dimensions: %{
-                "ga:adContent" => "ad",
-                "ga:campaign" => "",
-                "ga:date" => "20210101",
-                "ga:keyword" => "",
-                "ga:medium" => "paid",
-                "ga:source" => "Google"
+                "sessionManualAdContent" => "ad",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "paid",
+                "sessionSource" => "Google"
               },
               metrics: %{
-                "ga:bounces" => "1",
-                "ga:sessionDuration" => "100",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "1",
+                "userEngagementDuration" => "100",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:adContent" => "blog",
-                "ga:campaign" => "",
-                "ga:date" => "20210101",
-                "ga:keyword" => "",
-                "ga:medium" => "paid",
-                "ga:source" => "Google"
+                "sessionManualAdContent" => "blog",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "paid",
+                "sessionSource" => "Google"
               },
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "100",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "100",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:adContent" => "(not set)",
-                "ga:campaign" => "",
-                "ga:date" => "20210101",
-                "ga:keyword" => "",
-                "ga:medium" => "paid",
-                "ga:source" => "Google"
+                "sessionManualAdContent" => "(not set)",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "paid",
+                "sessionSource" => "Google"
               },
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "100",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "100",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             }
           ],
@@ -602,15 +619,15 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
 
         assert json_response(conn, 200)["results"] == [
                  %{
-                   "name" => "blog",
-                   "visitors" => 2,
-                   "bounce_rate" => 50.0,
-                   "visit_duration" => 50.0
-                 },
-                 %{
                    "name" => "ad",
                    "visitors" => 2,
                    "bounce_rate" => 100.0,
+                   "visit_duration" => 50.0
+                 },
+                 %{
+                   "name" => "blog",
+                   "visitors" => 2,
+                   "bounce_rate" => 50.0,
                    "visit_duration" => 50.0
                  }
                ]
@@ -640,41 +657,44 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           [
             %{
               dimensions: %{
-                "ga:date" => "20210101",
-                "ga:hostname" => "host-a.com",
-                "ga:pagePath" => "/"
+                "date" => "20210101",
+                "hostName" => "host-a.com",
+                "pagePath" => "/"
               },
               metrics: %{
-                "ga:exits" => "0",
-                "ga:pageviews" => "1",
-                "ga:timeOnPage" => "700",
-                "ga:users" => "1"
+                "screenPageViews" => "1",
+                "userEngagementDuration" => "700",
+                "totalUsers" => "1",
+                "activeUsers" => "1",
+                "sessions" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:date" => "20210101",
-                "ga:hostname" => "host-b.com",
-                "ga:pagePath" => "/some-other-page"
+                "date" => "20210101",
+                "hostName" => "host-b.com",
+                "pagePath" => "/some-other-page"
               },
               metrics: %{
-                "ga:exits" => "1",
-                "ga:pageviews" => "2",
-                "ga:timeOnPage" => "60",
-                "ga:users" => "1"
+                "screenPageViews" => "2",
+                "userEngagementDuration" => "60",
+                "totalUsers" => "1",
+                "activeUsers" => "1",
+                "sessions" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:date" => "20210101",
-                "ga:hostname" => "host-b.com",
-                "ga:pagePath" => "/some-other-page?wat=wot"
+                "date" => "20210101",
+                "hostName" => "host-b.com",
+                "pagePath" => "/some-other-page?wat=wot"
               },
               metrics: %{
-                "ga:exits" => "0",
-                "ga:pageviews" => "1",
-                "ga:timeOnPage" => "60",
-                "ga:users" => "1"
+                "screenPageViews" => "1",
+                "userEngagementDuration" => "60",
+                "totalUsers" => "1",
+                "activeUsers" => "1",
+                "sessions" => "1"
               }
             }
           ],
@@ -686,12 +706,13 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         import_data(
           [
             %{
-              dimensions: %{"ga:date" => "20210101", "ga:landingPagePath" => "/"},
+              dimensions: %{"date" => "20210101", "landingPage" => "/"},
               metrics: %{
-                "ga:bounces" => "1",
-                "ga:entrances" => "3",
-                "ga:sessionDuration" => "10",
-                "ga:users" => "1"
+                "bounces" => "1",
+                "sessions" => "3",
+                "userEngagementDuration" => "10",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             }
           ],
@@ -708,8 +729,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
 
         assert json_response(conn, 200)["results"] == [
                  %{
-                   "bounce_rate" => nil,
-                   "time_on_page" => 60,
+                   "bounce_rate" => 0,
+                   "time_on_page" => 40,
                    "visitors" => 3,
                    "pageviews" => 4,
                    "name" => "/some-other-page"
@@ -721,82 +742,6 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                    "pageviews" => 2,
                    "name" => "/"
                  }
-               ]
-      end
-
-      test "Exit page event data imported from Google Analytics", %{
-        conn: conn,
-        site: site,
-        import_id: import_id
-      } do
-        populate_stats(site, [
-          build(:pageview,
-            pathname: "/page1",
-            timestamp: ~N[2021-01-01 00:00:00]
-          ),
-          build(:pageview,
-            pathname: "/page1",
-            timestamp: ~N[2021-01-01 00:00:00]
-          ),
-          build(:pageview,
-            pathname: "/page1",
-            user_id: @user_id,
-            timestamp: ~N[2021-01-01 00:00:00]
-          ),
-          build(:pageview,
-            pathname: "/page2",
-            user_id: @user_id,
-            timestamp: ~N[2021-01-01 00:15:00]
-          )
-        ])
-
-        import_data(
-          [
-            %{
-              dimensions: %{
-                "ga:date" => "20210101",
-                "ga:hostname" => "host-a.com",
-                "ga:pagePath" => "/page2"
-              },
-              metrics: %{
-                "ga:exits" => "0",
-                "ga:pageviews" => "4",
-                "ga:timeOnPage" => "10",
-                "ga:users" => "2"
-              }
-            }
-          ],
-          site.id,
-          import_id,
-          "imported_pages"
-        )
-
-        import_data(
-          [
-            %{
-              dimensions: %{"ga:date" => "20210101", "ga:exitPagePath" => "/page2"},
-              metrics: %{"ga:exits" => "3", "ga:users" => "2"}
-            }
-          ],
-          site.id,
-          import_id,
-          "imported_exit_pages"
-        )
-
-        conn =
-          get(
-            conn,
-            "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01&with_imported=true"
-          )
-
-        assert json_response(conn, 200)["results"] == [
-                 %{
-                   "name" => "/page2",
-                   "visitors" => 3,
-                   "visits" => 4,
-                   "exit_rate" => 80.0
-                 },
-                 %{"name" => "/page1", "visitors" => 2, "visits" => 2, "exit_rate" => 66}
                ]
       end
 
@@ -824,30 +769,32 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           [
             %{
               dimensions: %{
-                "ga:countryIsoCode" => "EE",
-                "ga:city" => "Tartu",
-                "ga:date" => "20210101",
-                "ga:regionIsoCode" => "Tartumaa"
+                "countryId" => "EE",
+                "city" => "Tartu",
+                "date" => "20210101",
+                "region" => "Tartumaa"
               },
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "10",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "10",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:countryIsoCode" => "GB",
-                "ga:city" => "Edinburgh",
-                "ga:date" => "20210101",
-                "ga:regionIsoCode" => "Midlothian"
+                "countryId" => "GB",
+                "city" => "Edinburgh",
+                "date" => "20210101",
+                "region" => "Midlothian"
               },
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "10",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "10",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             }
           ],
@@ -898,30 +845,32 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           [
             %{
               dimensions: %{
-                "ga:countryIsoCode" => "EE",
-                "ga:city" => "Tartu",
-                "ga:date" => "20210101",
-                "ga:regionIsoCode" => "Tartumaa"
+                "countryId" => "EE",
+                "city" => "Tartu",
+                "date" => "20210101",
+                "region" => "Tartumaa"
               },
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "10",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "10",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
               dimensions: %{
-                "ga:countryIsoCode" => "GB",
-                "ga:city" => "Edinburgh",
-                "ga:date" => "20210101",
-                "ga:regionIsoCode" => "Midlothian"
+                "countryId" => "GB",
+                "city" => "Edinburgh",
+                "date" => "20210101",
+                "region" => "Midlothian"
               },
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "10",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "10",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             }
           ],
@@ -971,21 +920,23 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         import_data(
           [
             %{
-              dimensions: %{"ga:date" => "20210101", "ga:deviceCategory" => "mobile"},
+              dimensions: %{"date" => "20210101", "deviceCategory" => "mobile"},
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "10",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "10",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
-              dimensions: %{"ga:date" => "20210101", "ga:deviceCategory" => "Laptop"},
+              dimensions: %{"date" => "20210101", "deviceCategory" => "Laptop"},
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "10",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "10",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             }
           ],
@@ -1022,23 +973,25 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           [
             %{
               dimensions: %{
-                "ga:browser" => "User-Agent: Mozilla",
-                "ga:date" => "20210101"
+                "browser" => "User-Agent: Mozilla",
+                "date" => "20210101"
               },
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "10",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "10",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
-              dimensions: %{"ga:browser" => "Android Browser", "ga:date" => "20210101"},
+              dimensions: %{"browser" => "Android Browser", "date" => "20210101"},
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "10",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "10",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             }
           ],
@@ -1078,21 +1031,31 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         import_data(
           [
             %{
-              dimensions: %{"ga:date" => "20210101", "ga:operatingSystem" => "Macintosh"},
+              dimensions: %{
+                "date" => "20210101",
+                "operatingSystem" => "Macintosh",
+                "operatingSystemVersion" => "10.15.1"
+              },
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "10",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "10",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             },
             %{
-              dimensions: %{"ga:date" => "20210101", "ga:operatingSystem" => "Linux"},
+              dimensions: %{
+                "date" => "20210101",
+                "operatingSystem" => "Linux",
+                "operatingSystemVersion" => "12.12"
+              },
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:sessionDuration" => "10",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "userEngagementDuration" => "10",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
               }
             }
           ],
@@ -1126,23 +1089,23 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         import_data(
           [
             %{
-              dimensions: %{"ga:date" => "20210101"},
+              dimensions: %{"date" => "20210101"},
               metrics: %{
-                "ga:bounces" => "0",
-                "ga:pageviews" => "1",
-                "ga:sessionDuration" => "1.391607E7",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "0",
+                "screenPageViews" => "1",
+                "userEngagementDuration" => "1.391607E7",
+                "sessions" => "1",
+                "totalUsers" => "1"
               }
             },
             %{
-              dimensions: %{"ga:date" => "20210131"},
+              dimensions: %{"date" => "20210131"},
               metrics: %{
-                "ga:bounces" => "1",
-                "ga:pageviews" => "1",
-                "ga:sessionDuration" => "60",
-                "ga:sessions" => "1",
-                "ga:users" => "1"
+                "bounces" => "1",
+                "screenPageViews" => "1",
+                "userEngagementDuration" => "60",
+                "sessions" => "1",
+                "totalUsers" => "1"
               }
             }
           ],
@@ -1168,23 +1131,23 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         import_data(
           [
             %{
-              dimensions: %{"ga:date" => "20210101"},
+              dimensions: %{"date" => "20210101"},
               metrics: %{
-                "ga:users" => "1",
-                "ga:pageviews" => "1",
-                "ga:bounces" => "0",
-                "ga:sessions" => "1",
-                "ga:sessionDuration" => "60"
+                "totalUsers" => "1",
+                "screenPageViews" => "1",
+                "bounces" => "0",
+                "sessions" => "1",
+                "userEngagementDuration" => "60"
               }
             },
             %{
-              dimensions: %{"ga:date" => "(other)"},
+              dimensions: %{"date" => "(other)"},
               metrics: %{
-                "ga:users" => "1",
-                "ga:pageviews" => "1",
-                "ga:bounces" => "0",
-                "ga:sessions" => "1",
-                "ga:sessionDuration" => "60"
+                "totalUsers" => "1",
+                "screenPageViews" => "1",
+                "bounces" => "0",
+                "sessions" => "1",
+                "userEngagementDuration" => "60"
               }
             }
           ],

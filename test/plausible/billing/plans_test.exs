@@ -284,39 +284,6 @@ defmodule Plausible.Billing.PlansTest do
     end
   end
 
-  describe "suggest_tier/1" do
-    test "suggests Business when user has used a premium feature" do
-      user = insert(:user)
-      insert(:api_key, user: user)
-
-      assert Plans.suggest_tier(user) == :business
-    end
-
-    test "suggests Growth when no premium features used" do
-      user = insert(:user)
-      site = insert(:site, members: [user])
-      insert(:goal, site: site, event_name: "goals_is_not_premium")
-
-      assert Plans.suggest_tier(user) == :growth
-    end
-
-    test "suggests Growth tier for a user who used the Stats API, but signed up before it was considered a premium feature" do
-      user = insert(:user, inserted_at: ~N[2023-10-25 10:00:00])
-      insert(:api_key, user: user)
-
-      assert Plans.suggest_tier(user) == :growth
-    end
-
-    @tag :ee_only
-    test "suggests Business tier for a user who used the Revenue Goals, even when they signed up before Business tier release" do
-      user = insert(:user, inserted_at: ~N[2023-10-25 10:00:00])
-      site = insert(:site, members: [user])
-      insert(:goal, site: site, currency: :USD, event_name: "Purchase")
-
-      assert Plans.suggest_tier(user) == :business
-    end
-  end
-
   defp assert_generation(plans_list, generation) do
     assert List.first(plans_list).generation == generation
   end

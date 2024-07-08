@@ -168,6 +168,7 @@ native_stats_range
       screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
       operating_system: Enum.random(["Windows", "Mac", "GNU/Linux"]),
       operating_system_version: to_string(Enum.random(0..15)),
+      utm_campaign: Enum.random(["", "Referral", "Advertisement", "Email"]),
       pathname:
         Enum.random([
           "/",

@@ -56,6 +56,43 @@ defmodule Plausible.Billing.Quota do
 
   def ensure_within_plan_limits(_, _, _), do: :ok
 
+  def eligible_for_upgrade?(usage), do: usage.sites > 0
+
+  def ensure_feature_access(usage, plan) do
+    case usage.features -- plan.features do
+      [] -> :ok
+      features -> {:error, {:unavailable_features, features}}
+    end
+  end
+
+  @doc """
+  Suggests a suitable tier (Growth or Business) for the given usage map.
+
+  If even the highest Business plan does not accommodate the usage, then
+  `:custom` is returned. This means that this kind of usage should get on
+  a custom plan.
+
+  `nil` is returned if the usage is not eligible for upgrade.
+  """
+  def suggest_tier(usage, highest_growth_plan, highest_business_plan) do
+    if eligible_for_upgrade?(usage) do
+      cond do
+        usage_fits_plan?(usage, highest_growth_plan) -> :growth
+        usage_fits_plan?(usage, highest_business_plan) -> :business
+        true -> :custom
+      end
+    end
+  end
+
+  defp usage_fits_plan?(usage, plan) do
+    with :ok <- ensure_within_plan_limits(usage, plan),
+         :ok <- ensure_feature_access(usage, plan) do
+      true
+    else
+      _ -> false
+    end
+  end
+
   defp exceeded_limits(usage, plan, opts) do
     for {limit, exceeded?} <- [
           {:team_member_limit, not within_limit?(usage.team_members, plan.team_member_limit)},

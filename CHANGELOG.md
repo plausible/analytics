@@ -5,12 +5,19 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Icons for browsers plausible/analytics#4239
+- Automatic custom property selection in the dashboard Properties report
+- Add `does_not_contain` filter support to dashboard
 
 ### Removed
+- Deprecate `ECTO_IPV6` and `ECTO_CH_IPV6` env vars in CE plausible/analytics#4245
+- Remove support for importing data from no longer available Universal Analytics
 
 ### Changed
 
 - Increase hourly request limit for API keys in CE from 600 to 1000000 (practically removing the limit) plausible/analytics#4200
+- Make TCP connections try IPv6 first with IPv4 fallback in CE plausible/analytics#4245
+- `is` and `is not` filters in dashboard no longer support wildcards. Use contains/does not contain filter instead.
+- `bounce_rate` metric now returns 0 instead of null for event:page breakdown when page has never been entry page.
 
 ### Fixed
 

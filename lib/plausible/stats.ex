@@ -1,12 +1,16 @@
 defmodule Plausible.Stats do
   use Plausible
+  alias Plausible.Stats.QueryResult
+  use Plausible.ClickhouseRepo
 
   alias Plausible.Stats.{
     Breakdown,
     Aggregate,
     Timeseries,
     CurrentVisitors,
-    FilterSuggestions
+    FilterSuggestions,
+    QueryOptimizer,
+    SQL
   }
 
   use Plausible.DebugReplayInfo
@@ -29,6 +33,15 @@ defmodule Plausible.Stats do
   def current_visitors(site) do
     include_sentry_replay_info()
     CurrentVisitors.current_visitors(site)
+  end
+
+  def query(site, query) do
+    optimized_query = QueryOptimizer.optimize(query)
+
+    optimized_query
+    |> SQL.QueryBuilder.build(site)
+    |> ClickhouseRepo.all()
+    |> QueryResult.from(optimized_query)
   end
 
   on_ee do

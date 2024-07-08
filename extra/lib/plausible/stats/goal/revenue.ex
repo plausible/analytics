@@ -12,20 +12,6 @@ defmodule Plausible.Stats.Goal.Revenue do
     @revenue_metrics
   end
 
-  def total_revenue_query() do
-    dynamic(
-      [e],
-      fragment("toDecimal64(sum(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
-    )
-  end
-
-  def average_revenue_query() do
-    dynamic(
-      [e],
-      fragment("toDecimal64(avg(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
-    )
-  end
-
   @spec get_revenue_tracking_currency(Plausible.Site.t(), Plausible.Stats.Query.t(), [atom()]) ::
           {atom() | nil, [atom()]}
   @doc """
@@ -40,8 +26,7 @@ defmodule Plausible.Stats.Goal.Revenue do
   def get_revenue_tracking_currency(site, query, metrics) do
     goal_filters =
       case Query.get_filter(query, "event:goal") do
-        [:is, "event:goal", {_, goal_name}] -> [goal_name]
-        [:member, "event:goal", list] -> Enum.map(list, fn {_, goal_name} -> goal_name end)
+        [:is, "event:goal", list] -> Enum.map(list, fn {_, goal_name} -> goal_name end)
         _ -> []
       end
 

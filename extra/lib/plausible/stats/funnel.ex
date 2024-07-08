@@ -10,7 +10,7 @@ defmodule Plausible.Stats.Funnel do
   alias Plausible.Funnels
 
   import Ecto.Query
-  import Plausible.Stats.Fragments
+  import Plausible.Stats.SQL.Fragments
 
   alias Plausible.ClickhouseRepo
   alias Plausible.Stats.Base

@@ -31,35 +31,20 @@ defmodule Plausible.Google.API do
     HTTP.fetch_access_token!(code)
   end
 
-  def list_properties_and_views(access_token) do
-    with {:ok, properties} <- Plausible.Google.GA4.API.list_properties(access_token),
-         {:ok, views} <- Plausible.Google.UA.API.list_views(access_token) do
-      {:ok, properties ++ views}
-    end
+  def list_properties(access_token) do
+    Plausible.Google.GA4.API.list_properties(access_token)
   end
 
-  def get_property_or_view(access_token, property_or_view) do
-    if property?(property_or_view) do
-      Plausible.Google.GA4.API.get_property(access_token, property_or_view)
-    else
-      Plausible.Google.UA.API.get_view(access_token, property_or_view)
-    end
+  def get_property(access_token, property) do
+    Plausible.Google.GA4.API.get_property(access_token, property)
   end
 
-  def get_analytics_start_date(access_token, property_or_view) do
-    if property?(property_or_view) do
-      Plausible.Google.GA4.API.get_analytics_start_date(access_token, property_or_view)
-    else
-      Plausible.Google.UA.API.get_analytics_start_date(access_token, property_or_view)
-    end
+  def get_analytics_start_date(access_token, property) do
+    Plausible.Google.GA4.API.get_analytics_start_date(access_token, property)
   end
 
-  def get_analytics_end_date(access_token, property_or_view) do
-    if property?(property_or_view) do
-      Plausible.Google.GA4.API.get_analytics_end_date(access_token, property_or_view)
-    else
-      Plausible.Google.UA.API.get_analytics_end_date(access_token, property_or_view)
-    end
+  def get_analytics_end_date(access_token, property) do
+    Plausible.Google.GA4.API.get_analytics_end_date(access_token, property)
   end
 
   def fetch_verified_properties(auth) do

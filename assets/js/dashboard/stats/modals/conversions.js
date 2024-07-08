@@ -69,7 +69,7 @@ function ConversionsModal(props) {
       <tr className="text-sm dark:text-gray-200" key={listItem.name}>
         <td className="p-2">
           <Link
-            to={{ pathname: url.siteBasePath(site), search: filterSearchLink(listItem) }}
+            to={{ pathname: '/', search: filterSearchLink(listItem) }}
             className="hover:underline block truncate">
             {listItem.name}
           </Link>
@@ -117,7 +117,7 @@ function ConversionsModal(props) {
   }
 
   return (
-    <Modal site={site}>
+    <Modal>
       {renderBody()}
       {loading && renderLoading()}
       {!loading && moreResultsAvailable && renderLoadMore()}

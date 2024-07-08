@@ -246,6 +246,26 @@ defmodule Plausible.Verification.ChecksTest do
       |> assert_error(@errors.multiple_snippets)
     end
 
+    @no_src_scripts """
+    <html>
+    <head>
+    <script defer data-domain="example.com"></script>
+    </head>
+    <body>
+    Hello
+    <script defer data-domain="example.com"></script>
+    </body>
+    </html>
+    """
+    test "no src attr doesn't count as snippet" do
+      stub_fetch_body(200, @no_src_scripts)
+      stub_installation(200, plausible_installed(false))
+
+      run_checks()
+      |> Checks.interpret_diagnostics()
+      |> assert_error(@errors.no_snippet)
+    end
+
     @many_snippets_ok """
     <html>
     <head>

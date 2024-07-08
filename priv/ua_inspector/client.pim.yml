@@ -74,7 +74,7 @@
   version: ''
 
 # Raindrop.io (https://raindrop.io/)
-- regex: 'Raindrop.io/(\d+[\.\d]+)'
+- regex: 'Raindrop\.io/(\d+[\.\d]+)'
   name: 'Raindrop.io'
   version: '$1'
 
@@ -118,8 +118,13 @@
   name: 'Yahoo Mail'
   version: ''
 
+# Yahoo! Mail (https://play.google.com/store/apps/details?id=jp.co.yahoo.android.ymail | https://apps.apple.com/jp/app/yahoo-%E3%83%A1%E3%83%BC%E3%83%AB/id669931877)
+- regex: 'jp.co.yahoo.ymail/([\d\.]+)'
+  name: 'Yahoo! Mail'
+  version: '$1'
+
 # eM Client (https://emclient.com/)
-- regex: 'eM Client/(\d+\.[\.\d]+)'
+- regex: 'eM ?Client/(\d+\.[\.\d]+)'
   name: 'eM Client'
   version: '$1'
 
@@ -130,4 +135,23 @@
 
 - regex: '^Mail/([\d\.]+)'
   name: 'Apple Mail'
+  version: '$1'
+
+# Foxmail (https://www.foxmail.com/)
+- regex: 'Foxmail/(\d+[\.\d]+)'
+  name: 'Foxmail'
+  version: '$1'
+
+# Mail Master (https://apps.apple.com/mw/app/mail-master-by-netease/id897003024)
+- regex: 'MailMaster(?:PC)?/(\d+[\.\d]+)'
+  name: 'Mail Master'
+  version: '$1'
+
+# BlueMail (https://bluemail.me/)
+- regex: 'BlueMail/(\d+[\.\d]+)'
+  name: 'BlueMail'
+  version: '$1'
+
+- regex: 'mailapp/(\d+\.[\.\d]+)'
+  name: 'mailapp'
   version: '$1'

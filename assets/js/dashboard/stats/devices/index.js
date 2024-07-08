@@ -73,7 +73,7 @@ function BrowserVersions({ query, site, afterFetchData }) {
     return api.get(url.apiPath(site, '/browser-versions'), query)
       .then(res => {
         return {...res, results: res.results.map((row => {
-          return {...row, name: `${row.browser} ${row.name}`}
+          return {...row, name: `${row.browser} ${row.name}`, version: row.name}
         }))}
       })
   }
@@ -88,7 +88,7 @@ function BrowserVersions({ query, site, afterFetchData }) {
     }
     return {
       prefix: 'browser_version',
-      filter: ["is", "browser_version", [listItem['name']]]
+      filter: ["is", "browser_version", [listItem.version]]
     }
   }
 

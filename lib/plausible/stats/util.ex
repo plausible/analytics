@@ -6,7 +6,6 @@ defmodule Plausible.Stats.Util do
   @manually_removable_metrics [
     :__internal_visits,
     :visitors,
-    :__total_visitors,
     :__breakdown_value,
     :total_visitors
   ]
@@ -41,12 +40,21 @@ defmodule Plausible.Stats.Util do
   for any of the other metrics to be calculated.
   """
   def maybe_add_visitors_metric(metrics) do
-    needed? = Enum.any?([:conversion_rate, :time_on_page], &(&1 in metrics))
+    needed? =
+      Enum.any?([:conversion_rate, :group_conversion_rate, :time_on_page], &(&1 in metrics))
 
     if needed? and :visitors not in metrics do
       metrics ++ [:visitors]
     else
       metrics
     end
+  end
+
+  def shortname(_query, metric) when is_atom(metric), do: metric
+  def shortname(_query, "time:" <> _), do: :time
+
+  def shortname(query, dimension) do
+    index = Enum.find_index(query.dimensions, &(&1 == dimension))
+    :"dim#{index}"
   end
 end

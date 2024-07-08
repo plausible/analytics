@@ -1,6 +1,14 @@
 - "Chrome":
   - "Google Chrome"
-- "Vewd Browser":
-  - "Vewd Core"
+- "Chrome Webview":
+  - "Android WebView"
 - "DuckDuckGo Privacy Browser":
   - "DuckDuckGo"
+- "Edge WebView":
+  - "Microsoft Edge WebView2"
+- "Microsoft Edge":
+  - "Edge"
+- "Norton Private Browser":
+  - "Norton Secure Browser"
+- "Vewd Browser":
+  - "Vewd Core"

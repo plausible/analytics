@@ -64,7 +64,7 @@ function SpecialPropBreakdown(props) {
         { name: 'events', label: 'Events', hiddenOnMobile: true },
         CR_METRIC
       ]}
-      detailsLink={url.sitePath(site, `/custom-prop-values/${prop}`)}
+      detailsLink={url.sitePath(`custom-prop-values/${prop}`)}
       externalLinkDest={externalLinkDest()}
       maybeHideDetails={true}
       query={query}

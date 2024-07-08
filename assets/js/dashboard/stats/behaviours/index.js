@@ -125,7 +125,7 @@ export default function Behaviours(props) {
         leaveFrom="opacity-100 scale-100"
         leaveTo="opacity-0 scale-95"
       >
-        <Menu.Items className="text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+        <Menu.Items className="text-left origin-top-right absolute right-0 mt-2 w-96 max-h-72 overflow-auto rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
           <div className="py-1">
             {funnelNames.map((funnelName) => {
               return (
@@ -182,7 +182,7 @@ export default function Behaviours(props) {
 
   function renderConversions() {
     if (site.hasGoals) {
-      return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} afterFetchData={afterFetchData}/>
+      return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} afterFetchData={afterFetchData} />
     }
     else if (adminAccess) {
       return (
@@ -213,9 +213,9 @@ export default function Behaviours(props) {
       let callToAction
 
       if (site.funnelsAvailable) {
-        callToAction = {action: 'Set up funnels', link: `/${encodeURIComponent(site.domain)}/settings/funnels`}
+        callToAction = { action: 'Set up funnels', link: `/${encodeURIComponent(site.domain)}/settings/funnels` }
       } else {
-        callToAction = {action: 'Upgrade', link: '/billing/choose-plan'}
+        callToAction = { action: 'Upgrade', link: '/billing/choose-plan' }
       }
 
       return (
@@ -234,14 +234,14 @@ export default function Behaviours(props) {
 
   function renderProps() {
     if (site.hasProps && site.propsAvailable) {
-      return <Properties site={site} query={query} afterFetchData={afterFetchData}/>
+      return <Properties site={site} query={query} afterFetchData={afterFetchData} />
     } else if (adminAccess) {
       let callToAction
 
       if (site.propsAvailable) {
-        callToAction = {action: 'Set up props', link: `/${encodeURIComponent(site.domain)}/settings/properties`}
+        callToAction = { action: 'Set up props', link: `/${encodeURIComponent(site.domain)}/settings/properties` }
       } else {
-        callToAction = {action: 'Upgrade', link: '/billing/choose-plan'}
+        callToAction = { action: 'Upgrade', link: '/billing/choose-plan' }
       }
 
       return (
@@ -337,11 +337,11 @@ export default function Behaviours(props) {
 
   function renderImportedQueryUnsupportedWarning() {
     if (mode === CONVERSIONS) {
-      return <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason}/>
+      return <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason} />
     } else if (mode === PROPS) {
-      return <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason} message="Imported data is unavailable in this view"/>
+      return <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason} message="Imported data is unavailable in this view" />
     } else {
-      return <ImportedQueryUnsupportedWarning altCondition={props.importedDataInView} message="Imported data is unavailable in this view"/>
+      return <ImportedQueryUnsupportedWarning altCondition={props.importedDataInView} message="Imported data is unavailable in this view" />
     }
   }
 
@@ -354,7 +354,7 @@ export default function Behaviours(props) {
               <h3 className="font-bold dark:text-gray-100">
                 {sectionTitle() + (isRealtime() ? ' (last 30min)' : '')}
               </h3>
-              { renderImportedQueryUnsupportedWarning()}
+              {renderImportedQueryUnsupportedWarning()}
             </div>
             {tabs()}
           </div>

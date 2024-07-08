@@ -17,7 +17,6 @@ export default function FilterModalGroup({
     () => Object.entries(filterState).filter(([_, filter]) => getFilterGroup(filter) == filterGroup).map(([id, filter]) => ({ id, filter })),
     [filterGroup, filterState]
   )
-
   const disabledOptions = useMemo(
     () => (filterGroup == 'props') ? rows.map(({ filter }) => ({ value: getPropertyKeyFromFilterKey(filter[1]) })) : null,
     [filterGroup, rows]
@@ -28,7 +27,7 @@ export default function FilterModalGroup({
 
   return (
     <>
-      <div className="mt-4">
+      <div className="mt-6">
         {showTitle && (<div className="text-sm font-medium text-gray-700 dark:text-gray-300">{formattedFilters[filterGroup]}</div>)}
         {rows.map(({ id, filter }) =>
           filterGroup === 'props' ? (
@@ -55,7 +54,7 @@ export default function FilterModalGroup({
         )}
       </div>
       {showAddRow && (
-        <div className="mt-6">
+        <div className="mt-2">
           <a className="underline text-indigo-500 text-sm cursor-pointer" onClick={() => onAddRow(filterGroup)}>
             + Add another
           </a>

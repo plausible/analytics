@@ -28,7 +28,7 @@ class Countries extends React.Component {
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
       // eslint-disable-next-line react/no-did-update-set-state
-      this.setState({loading: true, countries: null})
+      this.setState({ loading: true, countries: null })
       this.fetchCountries().then(this.drawMap)
     }
   }
@@ -49,19 +49,19 @@ class Countries extends React.Component {
   getDataset() {
     const dataset = {};
 
-    var onlyValues = this.state.countries.map(function(obj){ return obj.visitors });
+    var onlyValues = this.state.countries.map(function(obj) { return obj.visitors });
     var maxValue = Math.max.apply(null, onlyValues);
 
     // eslint-disable-next-line no-undef
     const paletteScale = d3.scale.linear()
-      .domain([0,maxValue])
+      .domain([0, maxValue])
       .range([
         this.state.darkTheme ? "#2e3954" : "#f3ebff",
         this.state.darkTheme ? "#6366f1" : "#a779e9"
       ])
 
-    this.state.countries.forEach(function(item){
-      dataset[item.alpha_3] = {numberOfThings: item.visitors, fillColor: paletteScale(item.visitors)};
+    this.state.countries.forEach(function(item) {
+      dataset[item.alpha_3] = { numberOfThings: item.visitors, fillColor: paletteScale(item.visitors) };
     });
 
     return dataset
@@ -69,18 +69,18 @@ class Countries extends React.Component {
 
   updateCountries() {
     this.fetchCountries().then(() => {
-      this.map.updateChoropleth(this.getDataset(), {reset: true})
+      this.map.updateChoropleth(this.getDataset(), { reset: true })
     })
   }
 
   fetchCountries() {
-    return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, this.props.query, {limit: 300})
+    return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, this.props.query, { limit: 300 })
       .then((response) => {
         if (this.props.afterFetchData) {
           this.props.afterFetchData(response)
         }
 
-        this.setState({loading: false, countries: response.results})
+        this.setState({ loading: false, countries: response.results })
       })
   }
 
@@ -154,9 +154,9 @@ class Countries extends React.Component {
     if (this.state.countries) {
       return (
         <>
-          <div className="mx-auto mt-4" style={{width: '100%', maxWidth: '475px', height: '335px'}} id="map-container"></div>
-          <MoreLink site={this.props.site} list={this.state.countries} endpoint="countries" />
-          { this.geolocationDbNotice() }
+          <div className="mx-auto mt-4" style={{ width: '100%', maxWidth: '475px', height: '335px' }} id="map-container"></div>
+          <MoreLink list={this.state.countries} endpoint="countries" />
+          {this.geolocationDbNotice()}
         </>
       )
     }
@@ -167,9 +167,9 @@ class Countries extends React.Component {
   render() {
     return (
       <LazyLoader onVisible={this.onVisible}>
-        { this.state.loading && <div className="mx-auto my-32 loading"><div></div></div> }
+        {this.state.loading && <div className="mx-auto my-32 loading"><div></div></div>}
         <FadeIn show={!this.state.loading}>
-          { this.renderBody() }
+          {this.renderBody()}
         </FadeIn>
       </LazyLoader>
     )

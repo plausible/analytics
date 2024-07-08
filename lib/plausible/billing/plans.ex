@@ -1,8 +1,7 @@
 defmodule Plausible.Billing.Plans do
   alias Plausible.Billing.Subscriptions
   use Plausible.Repo
-  alias Plausible.Billing.{Quota, Subscription, Plan, EnterprisePlan}
-  alias Plausible.Billing.Feature.{StatsAPI, Props}
+  alias Plausible.Billing.{Subscription, Plan, EnterprisePlan}
   alias Plausible.Auth.User
 
   for f <- [
@@ -233,21 +232,6 @@ defmodule Plausible.Billing.Plans do
         else: growth_plans_for(user)
 
     Enum.find(available_plans, &(usage_during_cycle < &1.monthly_pageview_limit))
-  end
-
-  def suggest_tier(user) do
-    growth_features =
-      if Timex.before?(user.inserted_at, @business_tier_launch) do
-        [StatsAPI, Props]
-      else
-        []
-      end
-
-    if Enum.any?(Quota.Usage.features_usage(user), &(&1 not in growth_features)) do
-      :business
-    else
-      :growth
-    end
   end
 
   def all() do
