@@ -2878,10 +2878,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         ]
       })
 
-    assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["/plausible.io"], "metrics" => [100]},
-             %{"dimensions" => ["/important-page"], "metrics" => [100]}
-           ]
+    results = json_response(conn, 200)["results"]
+
+    assert length(results) == 2
+    assert %{"dimensions" => ["/plausible.io"], "metrics" => [100]} in results
+    assert %{"dimensions" => ["/important-page"], "metrics" => [100]} in results
   end
 
   test "IN filter for event:name", %{conn: conn, site: site} do
