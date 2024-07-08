@@ -23,7 +23,7 @@
                 <PlausibleWeb.Components.Generic.styled_link
                   :if={ee?() and Plausible.Auth.is_super_admin?(@current_user)}
                   new_tab={true}
-                  href={PlausibleWeb.Endpoint.url() <> "/crm/auth/user/#{@current_user.id}"}
+                  href={PlausibleWeb.Endpoint.url() <> "/crm/auth/user/#{membership.user.id}"}
                 >
                   CRM
                 </PlausibleWeb.Components.Generic.styled_link>
