@@ -109,6 +109,8 @@ export default function BreakdownModal(props) {
   }, [search])
 
   useEffect(() => {
+    if (!isSearchEnabled) { return }
+
     const searchBox = searchBoxRef.current
 
     const handleKeyUp = (event) => {
