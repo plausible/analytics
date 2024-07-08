@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 
 import * as api from '../../api'
 import debounce from 'debounce-promise'
@@ -99,6 +99,31 @@ export default function BreakdownModal(props) {
   const [results, setResults] = useState([])
   const [page, setPage] = useState(1)
   const [moreResultsAvailable, setMoreResultsAvailable] = useState(false)
+  const searchBoxRef = useRef(null)
+
+  useMountedEffect(() => { fetchNextPage() }, [page])
+
+  useEffect(() => {
+    setLoading(true)
+    fetchData()
+  }, [search])
+
+  useEffect(() => {
+    const searchBox = searchBoxRef.current
+
+    const handleKeyUp = (event) => {
+      if (event.key === 'Escape') {
+        event.target.blur()
+        event.stopPropagation()
+      }
+    }
+
+    searchBox.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      searchBox.removeEventListener('keyup', handleKeyUp);
+    }
+  }, [])
 
   const fetchData = useCallback(debounce(() => {
     api.get(endpoint, withSearch(query), { limit: LIMIT, page: 1, detailed: true })
@@ -113,13 +138,6 @@ export default function BreakdownModal(props) {
         setMoreResultsAvailable(response.results.length === LIMIT)
       })
   }, 200), [search])
-  
-  useEffect(() => {
-    setLoading(true)
-    fetchData()
-  }, [search])
-
-  useMountedEffect(() => { fetchNextPage() }, [page])
 
   function fetchNextPage() {
     if (page > 1) {
@@ -220,6 +238,7 @@ export default function BreakdownModal(props) {
   function renderSearchInput() {
     return (
       <input
+        ref={searchBoxRef}
         type="text"
         placeholder="Search"
         className="shadow-sm dark:bg-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 block sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800 w-48"
