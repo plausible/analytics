@@ -90,15 +90,30 @@ defmodule Plausible.Stats.Filters.QueryParser do
        when operator in [:is, :is_not, :matches, :does_not_match, :contains, :does_not_contain],
        do: parse_clauses_list(filter)
 
-  defp parse_clauses_list([_operation, filter_key, list] = filter) when is_list(list) do
+  defp parse_clauses_list([operation, filter_key, list] = filter) when is_list(list) do
     all_strings? = Enum.all?(list, &is_binary/1)
     all_integers? = Enum.all?(list, &is_integer/1)
 
-    case {filter_key, all_strings?, all_integers?} do
-      {"event:goal", true, _} -> {:ok, [Filters.Utils.wrap_goal_value(list)]}
-      {"visit:city", _, true} -> {:ok, [list]}
-      {_, true, _} -> {:ok, [list]}
-      _ -> {:error, "Invalid filter '#{inspect(filter)}'"}
+    case {filter_key, all_strings?} do
+      {"event:goal", true} ->
+        {:ok, [Filters.Utils.wrap_goal_value(list)]}
+
+      {"visit:city", false} when all_integers? ->
+        {:ok, [list]}
+
+      {"visit:country", true} when operation in ["is", "is_not"] ->
+        if Enum.all?(list, &(String.length(&1) == 2)) do
+          {:ok, [list]}
+        else
+          {:error,
+           "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code"}
+        end
+
+      {_, true} ->
+        {:ok, [list]}
+
+      _ ->
+        {:error, "Invalid filter '#{inspect(filter)}'"}
     end
   end
 
