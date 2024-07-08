@@ -8,13 +8,14 @@ import { specialTitleWhenGoalFilter } from "../behaviours/goal-conversions";
 import { EVENT_PROPS_PREFIX, hasGoalFilter } from "../../util/filters"
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
+import { revenueAvailable } from "../../query";
 
 function PropsModal(props) {
-  const {site, query, location, revenueAvailable} = props
+  const {site, query, location} = props
   const propKey = location.pathname.split('/').filter(i => i).pop()
 
   /*global BUILD_EXTRA*/
-  const showRevenueMetrics = BUILD_EXTRA && revenueAvailable
+  const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
 
   const reportInfo = {
     title: specialTitleWhenGoalFilter(query, 'Custom Property Breakdown'),

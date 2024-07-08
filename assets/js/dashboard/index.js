@@ -13,7 +13,6 @@ function Dashboard(props) {
     loggedIn,
     currentUserRole,
     query,
-    revenueAvailable,
     importedDataInView,
     updateImportedDataInView,
     lastLoadTimestamp
@@ -27,7 +26,6 @@ function Dashboard(props) {
         currentUserRole={currentUserRole}
         query={query}
         lastLoadTimestamp={lastLoadTimestamp}
-        revenueAvailable={revenueAvailable}
       />
     )
   } else {
@@ -40,7 +38,6 @@ function Dashboard(props) {
         lastLoadTimestamp={lastLoadTimestamp}
         importedDataInView={importedDataInView}
         updateImportedDataInView={updateImportedDataInView}
-        revenueAvailable={revenueAvailable}
       />
     )
   }

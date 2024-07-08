@@ -28,7 +28,7 @@ function fetchMainGraph(site, query, metric, interval) {
 }
 
 export default function VisitorGraph(props) {
-  const {site, query, lastLoadTimestamp, revenueAvailable} = props
+  const {site, query, lastLoadTimestamp} = props
   const isRealtime = query.period === 'realtime'
   const isDarkTheme = document.querySelector('html').classList.contains('dark') || false
 
@@ -89,7 +89,7 @@ export default function VisitorGraph(props) {
       })
     
     let metric = getStoredMetric()
-    const availableMetrics = getGraphableMetrics(query, revenueAvailable)
+    const availableMetrics = getGraphableMetrics(query, site)
     
     if (!availableMetrics.includes(metric)) {
       metric = availableMetrics[0]
@@ -143,7 +143,6 @@ export default function VisitorGraph(props) {
             onMetricUpdate={onMetricUpdate}
             tooltipBoundary={topStatsBoundary.current}
             lastLoadTimestamp={lastLoadTimestamp}
-            revenueAvailable={revenueAvailable}
           />
         </div>
         <div className="relative px-2">

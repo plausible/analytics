@@ -1,7 +1,8 @@
 import numberFormatter, {durationFormatter} from '../../util/number-formatter'
 import { getFiltersByKeyPrefix, hasGoalFilter } from '../../util/filters'
+import { revenueAvailable } from '../../query'
 
-export function getGraphableMetrics(query, revenueAvailable) {
+export function getGraphableMetrics(query, site) {
   const isRealtime = query.period === 'realtime'
   const isGoalFilter = hasGoalFilter(query)
   const isPageFilter = getFiltersByKeyPrefix(query, "page").length > 0
@@ -10,7 +11,7 @@ export function getGraphableMetrics(query, revenueAvailable) {
     return ["visitors"]
   } else if (isRealtime) {
     return ["visitors", "pageviews"]
-  } else if (isGoalFilter && revenueAvailable) {
+  } else if (isGoalFilter && revenueAvailable(query, site)) {
     return ["visitors", "events", "average_revenue", "total_revenue", "conversion_rate"]
   } else if (isGoalFilter) {
     return ["visitors", "events", "conversion_rate"]
