@@ -239,7 +239,6 @@ export default function ListReport(props) {
 
   function renderBarFor(listItem) {
     const lightBackground = props.color || 'bg-green-50'
-    const noop = () => { }
     const metricToPlot = metrics.find(metric => metric.meta.plot).key
 
     return (
@@ -254,7 +253,7 @@ export default function ListReport(props) {
             <FilterLink
               query={props.query}
               filterInfo={props.getFilterFor(listItem)}
-              onClick={props.onClick || noop}
+              onClick={props.onClick}
               extraClass="max-w-max w-full flex items-center md:overflow-hidden"
             >
               {maybeRenderIconFor(listItem)}
