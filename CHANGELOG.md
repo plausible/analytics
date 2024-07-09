@@ -129,6 +129,7 @@ All notable changes to this project will be documented in this file.
 - Allow running the container with arbitrary UID plausible/analytics#2986
 - Fix `width=manual` in embedded dashboards plausible/analytics#3910
 - Fix URL escaping when pipes are used in UTM tags plausible/analytics#3930
+- Fixed [Last 7 days with hourly resolution doesn't include today](https://github.com/plausible/analytics/issues/3342)
 
 ## v2.0.0 - 2023-07-12
 
