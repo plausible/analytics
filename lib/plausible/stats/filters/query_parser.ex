@@ -96,7 +96,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
     case {filter_key, all_strings?, all_integers?} do
       {"event:goal", true, _} -> {:ok, [Filters.Utils.wrap_goal_value(list)]}
-      {"visit:city", _, true} -> {:ok, [Enum.map(list, &Integer.to_string/1)]}
+      {"visit:city", _, true} -> {:ok, [list]}
       {_, true, _} -> {:ok, [list]}
       _ -> {:error, "Invalid filter '#{inspect(filter)}'"}
     end

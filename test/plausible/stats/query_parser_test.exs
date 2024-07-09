@@ -255,8 +255,31 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       |> check_error(site, ~r/Invalid filter /)
     end
 
-    test "numbers and strings are valid for visit:city, parsed to strings", %{site: site} do
-      expected_result = %{
+    test "numbers and strings are valid for visit:city", %{site: site} do
+      %{
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "visit:city", [123, 456]]]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        date_range: @date_range,
+        filters: [
+          [:is, "visit:city", [123, 456]]
+        ],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false},
+        preloaded_goals: []
+      })
+
+      %{
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "visit:city", ["123", "456"]]]
+      }
+      |> check_success(site, %{
         metrics: [:visitors],
         date_range: @date_range,
         filters: [
@@ -267,21 +290,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         timezone: site.timezone,
         include: %{imports: false, time_labels: false},
         preloaded_goals: []
-      }
-
-      %{
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "filters" => [["is", "visit:city", [123, 456]]]
-      }
-      |> check_success(site, expected_result)
-
-      %{
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "filters" => [["is", "visit:city", ["123", "456"]]]
-      }
-      |> check_success(site, expected_result)
+      })
     end
   end
 
