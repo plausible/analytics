@@ -9,12 +9,32 @@ import * as metrics from "../reports/metrics";
 import { addFilter } from "../../query";
 
 const VIEWS = {
-  sources: {title: 'Top Sources', dimension: 'source', endpoint: '/sources', dimensionLabel: 'Source'},
-  utm_mediums: {title: 'Top UTM Mediums', dimension: 'utm_medium', endpoint: '/utm_mediums', dimensionLabel: 'UTM Medium'},
-  utm_sources: {title: 'Top UTM Sources', dimension: 'utm_source', endpoint: '/utm_sources', dimensionLabel: 'UTM Source'},
-  utm_campaigns: {title: 'Top UTM Campaigns', dimension: 'utm_campaign', endpoint: '/utm_campaigns', dimensionLabel: 'UTM Campaign'},
-  utm_contents: {title: 'Top UTM Contents', dimension: 'utm_content', endpoint: '/utm_contents', dimensionLabel: 'UTM Content'},
-  utm_terms: {title: 'Top UTM Terms', dimension: 'utm_term', endpoint: '/utm_terms', dimensionLabel: 'UTM Term'},
+  sources: {
+    info: {title: 'Top Sources', dimension: 'source', endpoint: '/sources', dimensionLabel: 'Source'},
+    renderIcon: (listItem) => {
+      return (
+        <img
+          src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
+          className="h-4 w-4 mr-2 align-middle inline"
+        />
+      )
+    }
+  },
+  utm_mediums: {
+    info: {title: 'Top UTM Mediums', dimension: 'utm_medium', endpoint: '/utm_mediums', dimensionLabel: 'UTM Medium'}
+  },
+  utm_sources: {
+    info: {title: 'Top UTM Sources', dimension: 'utm_source', endpoint: '/utm_sources', dimensionLabel: 'UTM Source'}
+  },
+  utm_campaigns: {
+    info: {title: 'Top UTM Campaigns', dimension: 'utm_campaign', endpoint: '/utm_campaigns', dimensionLabel: 'UTM Campaign'}
+  },
+  utm_contents: {
+    info: {title: 'Top UTM Contents', dimension: 'utm_content', endpoint: '/utm_contents', dimensionLabel: 'UTM Content'}
+  },
+  utm_terms: {
+    info: {title: 'Top UTM Terms', dimension: 'utm_term', endpoint: '/utm_terms', dimensionLabel: 'UTM Term'}
+  },
 }
 
 function SourcesModal(props) {
@@ -23,7 +43,7 @@ function SourcesModal(props) {
   const urlParts = location.pathname.split('/')
   const currentView = urlParts[urlParts.length - 1]
 
-  const reportInfo = VIEWS[currentView]
+  const reportInfo = VIEWS[currentView].info
 
   const getFilterInfo = useCallback((listItem) => {
     return {
@@ -58,19 +78,6 @@ function SourcesModal(props) {
     ]
   }
 
-  let renderIcon
-  
-  if (currentView === 'sources') {
-    renderIcon = useCallback((source) => {
-      return (
-        <img
-          src={`/favicon/sources/${encodeURIComponent(source.name)}`}
-          className="h-4 w-4 mr-2 align-middle inline"
-        />
-      )
-    })
-  }
-
   return (
     <Modal site={site}>
       <BreakdownModal
@@ -80,7 +87,7 @@ function SourcesModal(props) {
         metrics={chooseMetrics()}
         getFilterInfo={getFilterInfo}
         addSearchFilter={addSearchFilter}
-        renderIcon={renderIcon}
+        renderIcon={VIEWS[currentView].renderIcon}
       />
     </Modal>
   )

@@ -49,13 +49,11 @@ function LocationsModal(props) {
     ].filter(metric => !!metric)
   }
   
-  let renderIcon
-
-  if (currentView === 'countries') {
-    renderIcon = useCallback((listItem) => <span className="mr-1">{listItem.flag}</span>)
-  } else {
-    renderIcon = useCallback((listItem) => <span className="mr-1">{listItem.country_flag}</span>)
-  }
+  const renderIcon = useCallback((listItem) => {
+    return (
+      <span className="mr-1">{listItem.country_flag || listItem.flag}</span>
+    )
+  }, [])
 
   return (
     <Modal site={site}>
