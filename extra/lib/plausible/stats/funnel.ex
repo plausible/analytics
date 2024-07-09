@@ -110,7 +110,7 @@ defmodule Plausible.Stats.Funnel do
 
       %Plausible.Goal{page_path: pathname} when is_binary(pathname) ->
         if String.contains?(pathname, "*") do
-          regex = Plausible.Stats.Base.page_regex(pathname)
+          regex = Plausible.Stats.Filters.Utils.page_regex(pathname)
           dynamic([], fragment("match(pathname, ?)", ^regex))
         else
           dynamic([], fragment("pathname = ?", ^pathname))

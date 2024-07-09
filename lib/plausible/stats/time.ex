@@ -4,6 +4,57 @@ defmodule Plausible.Stats.Time do
   """
 
   alias Plausible.Stats.Query
+  alias Plausible.Timezones
+
+  def utc_boundaries(%Query{period: "realtime", now: now}, site) do
+    last_datetime =
+      now
+      |> Timex.shift(seconds: 5)
+      |> beginning_of_time(site.native_stats_start_at)
+      |> NaiveDateTime.truncate(:second)
+
+    first_datetime =
+      now |> Timex.shift(minutes: -5) |> NaiveDateTime.truncate(:second)
+
+    {first_datetime, last_datetime}
+  end
+
+  def utc_boundaries(%Query{period: "30m", now: now}, site) do
+    last_datetime =
+      now
+      |> Timex.shift(seconds: 5)
+      |> beginning_of_time(site.native_stats_start_at)
+      |> NaiveDateTime.truncate(:second)
+
+    first_datetime =
+      now |> Timex.shift(minutes: -30) |> NaiveDateTime.truncate(:second)
+
+    {first_datetime, last_datetime}
+  end
+
+  def utc_boundaries(%Query{date_range: date_range}, site) do
+    {:ok, first} = NaiveDateTime.new(date_range.first, ~T[00:00:00])
+
+    first_datetime =
+      first
+      |> Timezones.to_utc_datetime(site.timezone)
+      |> beginning_of_time(site.native_stats_start_at)
+
+    {:ok, last} = NaiveDateTime.new(date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
+
+    last_datetime = Timezones.to_utc_datetime(last, site.timezone)
+
+    {first_datetime, last_datetime}
+  end
+
+  defp beginning_of_time(candidate, native_stats_start_at) do
+    if Timex.after?(native_stats_start_at, candidate) do
+      native_stats_start_at
+    else
+      candidate
+    end
+  end
+
   def format_datetime(%Date{} = date), do: Date.to_string(date)
 
   def format_datetime(%DateTime{} = datetime),
