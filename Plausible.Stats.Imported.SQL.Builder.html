@@ -8,13 +8,13 @@
     <meta name="project" content="Plausible v0.0.1">
 
 
-    <title>Plausible.Stats.Props — Plausible v0.0.1</title>
+    <title>Plausible.Stats.Imported.SQL.Builder — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-88DEF55B.js"></script>
+    <script src="dist/sidebar_items-6B1A59FE.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -131,16 +131,21 @@ Pages
 
 <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/props.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported/sql/builder.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.Stats.Props</span> 
+  <span translate="no">Plausible.Stats.Imported.SQL.Builder</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
+
+  <section id="moduledoc">
+<p>This module is responsible for generating SQL/Ecto expressions
+for dimensions, filters and metrics used in import table queries</p>
+  </section>
 
 
   <section id="summary" class="details-list">
@@ -157,7 +162,39 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#valid_prop?/1" translate="no">valid_prop?(prop)</a>
+        <a href="#group_imported_by/2" translate="no">group_imported_by(q, query)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#naive_dimension_join/3" translate="no">naive_dimension_join(q1, q2, metrics)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#select_imported_metrics/2" translate="no">select_imported_metrics(q, list)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#select_joined_dimensions/2" translate="no">select_joined_dimensions(q, query)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#select_joined_metrics/2" translate="no">select_joined_metrics(q, list)</a>
 
       </div>
 
@@ -176,16 +213,104 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="valid_prop?/1">
+<section class="detail" id="group_imported_by/2">
 
   <div class="detail-header">
-    <a href="#valid_prop?/1" class="detail-link" title="Link to this function">
+    <a href="#group_imported_by/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">valid_prop?(prop)</h1>
+    <h1 class="signature" translate="no">group_imported_by(q, query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/props.ex#L23" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported/sql/builder.ex#L210" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="naive_dimension_join/3">
+
+  <div class="detail-header">
+    <a href="#naive_dimension_join/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">naive_dimension_join(q1, q2, metrics)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported/sql/builder.ex#L449" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="select_imported_metrics/2">
+
+  <div class="detail-header">
+    <a href="#select_imported_metrics/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">select_imported_metrics(q, list)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported/sql/builder.ex#L16" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="select_joined_dimensions/2">
+
+  <div class="detail-header">
+    <a href="#select_joined_dimensions/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">select_joined_dimensions(q, query)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported/sql/builder.ex#L323" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="select_joined_metrics/2">
+
+  <div class="detail-header">
+    <a href="#select_joined_metrics/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">select_joined_metrics(q, list)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/imported/sql/builder.ex#L347" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

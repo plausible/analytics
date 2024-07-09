@@ -183,10 +183,11 @@ Plausible.Stats.Filters.html
 Plausible.Stats.Funnel.html
 Plausible.Stats.Goal.Revenue.html
 Plausible.Stats.Imported.Base.html
+Plausible.Stats.Imported.SQL.Builder.html
 Plausible.Stats.Imported.html
 Plausible.Stats.Interval.html
+Plausible.Stats.Legacy.Dimensions.html
 Plausible.Stats.Metrics.html
-Plausible.Stats.Props.html
 Plausible.Stats.Query.html
 Plausible.Stats.QueryOptimizer.html
 Plausible.Stats.SQL.Expression.html
@@ -417,8 +418,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-421252CA.js
-dist/sidebar_items-88DEF55B.js
+dist/search_data-DD2D3B08.js
+dist/sidebar_items-6B1A59FE.js
 index.html
 readme.html
 search.html
