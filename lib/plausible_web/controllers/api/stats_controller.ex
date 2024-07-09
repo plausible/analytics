@@ -174,8 +174,10 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp build_full_intervals(%{interval: "week", date_range: range}, labels) do
     for label <- labels, into: %{} do
-      interval_start = Timex.beginning_of_week(label)
-      interval_end = Timex.end_of_week(label)
+      date = Date.from_iso8601!(label)
+
+      interval_start = Timex.beginning_of_week(date)
+      interval_end = Timex.end_of_week(date)
 
       within_interval? = Enum.member?(range, interval_start) && Enum.member?(range, interval_end)
 
@@ -185,8 +187,10 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp build_full_intervals(%{interval: "month", date_range: range}, labels) do
     for label <- labels, into: %{} do
-      interval_start = Timex.beginning_of_month(label)
-      interval_end = Timex.end_of_month(label)
+      date = Date.from_iso8601!(label)
+
+      interval_start = Timex.beginning_of_month(date)
+      interval_end = Timex.end_of_month(date)
 
       within_interval? = Enum.member?(range, interval_start) && Enum.member?(range, interval_end)
 

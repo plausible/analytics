@@ -29,10 +29,18 @@ defmodule Plausible.Stats.Imported.Base do
     "event:page" => "imported_pages",
     "event:name" => "imported_custom_events",
 
-    # NOTE: these properties can be only filtered by
+    # NOTE: these dimensions can be only filtered by
     "visit:screen" => "imported_devices",
-    "event:hostname" => "imported_pages"
+    "event:hostname" => "imported_pages",
+
+    # NOTE: These dimensions are only used in group by
+    "time:month" => "imported_visitors",
+    "time:week" => "imported_visitors",
+    "time:day" => "imported_visitors",
+    "time:hour" => "imported_visitors"
   }
+
+  @queriable_time_dimensions ["time:month", "time:week", "time:day", "time:hour"]
 
   @imported_custom_props Imported.imported_custom_props()
 
@@ -121,9 +129,10 @@ defmodule Plausible.Stats.Imported.Base do
     do_decide_custom_prop_table(query, dimension)
   end
 
+  @queriable_custom_prop_dimensions ["event:goal", "event:name"] ++ @queriable_time_dimensions
   defp do_decide_custom_prop_table(%{dimensions: dimensions} = query) do
     if dimensions == [] or
-         (length(dimensions) == 1 and hd(dimensions) in ["event:goal", "event:name"]) do
+         (length(dimensions) == 1 and hd(dimensions) in @queriable_custom_prop_dimensions) do
       custom_prop_filters =
         query.filters
         |> Enum.map(&Enum.at(&1, 1))
@@ -169,14 +178,6 @@ defmodule Plausible.Stats.Imported.Base do
     ["imported_pages", "imported_custom_events"]
   end
 
-  defp do_decide_tables(%Query{filters: [], dimensions: [dimension]}) do
-    if Map.has_key?(@property_to_table_mappings, dimension) do
-      [@property_to_table_mappings[dimension]]
-    else
-      []
-    end
-  end
-
   defp do_decide_tables(%Query{filters: filters, dimensions: ["event:goal"]}) do
     filter_props = Enum.map(filters, &Enum.at(&1, 1))
 
@@ -197,13 +198,15 @@ defmodule Plausible.Stats.Imported.Base do
       filters
       |> Enum.map(fn [_, filter_key | _] -> filter_key end)
       |> Enum.concat(dimensions)
-      |> Enum.map(fn
-        "visit:screen" -> "visit:device"
-        dimension -> dimension
+      |> Enum.reject(&(&1 in @queriable_time_dimensions))
+      |> Enum.flat_map(fn
+        "visit:screen" -> ["visit:device"]
+        dimension -> [dimension]
       end)
       |> Enum.map(&@property_to_table_mappings[&1])
 
     case Enum.uniq(table_candidates) do
+      [] -> ["imported_visitors"]
       [nil] -> []
       [candidate] -> [candidate]
       _ -> []

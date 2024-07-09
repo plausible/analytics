@@ -16,9 +16,6 @@ defmodule Plausible.Stats.Imported do
 
   @property_to_table_mappings Imported.Base.property_to_table_mappings()
 
-  @imported_dimensions Map.keys(@property_to_table_mappings) ++
-                         Plausible.Imported.imported_custom_props()
-
   @goals_with_url Plausible.Imported.goals_with_url()
 
   def goals_with_url(), do: @goals_with_url
@@ -225,47 +222,6 @@ defmodule Plausible.Stats.Imported do
     {table, db_field}
   end
 
-  def merge_imported_timeseries(native_q, _, %Plausible.Stats.Query{include_imported: false}, _),
-    do: native_q
-
-  def merge_imported_timeseries(
-        native_q,
-        site,
-        query,
-        metrics
-      ) do
-    imported_q =
-      site
-      |> Imported.Base.query_imported(query)
-      |> select_imported_metrics(metrics)
-      |> apply_interval(query, site)
-
-    from(s in Ecto.Query.subquery(native_q),
-      full_join: i in subquery(imported_q),
-      on: s.date == i.date,
-      select: %{date: fragment("greatest(?, ?)", s.date, i.date)}
-    )
-    |> select_joined_metrics(metrics)
-  end
-
-  defp apply_interval(imported_q, %Plausible.Stats.Query{interval: "month"}, _site) do
-    imported_q
-    |> group_by([i], fragment("toStartOfMonth(?)", i.date))
-    |> select_merge([i], %{date: fragment("toStartOfMonth(?)", i.date)})
-  end
-
-  defp apply_interval(imported_q, %Plausible.Stats.Query{interval: "week"} = query, _site) do
-    imported_q
-    |> group_by([i], weekstart_not_before(i.date, ^query.date_range.first))
-    |> select_merge([i], %{date: weekstart_not_before(i.date, ^query.date_range.first)})
-  end
-
-  defp apply_interval(imported_q, _query, _site) do
-    imported_q
-    |> group_by([i], i.date)
-    |> select_merge([i], %{date: i.date})
-  end
-
   def merge_imported(q, _, %Query{include_imported: false}, _), do: q
 
   def merge_imported(q, site, %Query{dimensions: []} = query, metrics) do
@@ -320,8 +276,8 @@ defmodule Plausible.Stats.Imported do
     end)
   end
 
-  def merge_imported(q, site, %Query{dimensions: dimensions} = query, metrics) do
-    if merge_imported_dimensions?(dimensions) do
+  def merge_imported(q, site, query, metrics) do
+    if schema_supports_query?(query) do
       imported_q =
         site
         |> Imported.Base.query_imported(query)
@@ -339,13 +295,6 @@ defmodule Plausible.Stats.Imported do
     else
       q
     end
-  end
-
-  def merge_imported(q, _, _, _), do: q
-
-  defp merge_imported_dimensions?(dimensions) do
-    dimensions in [["visit:browser", "visit:browser_version"], ["visit:os", "visit:os_version"]] or
-      (length(dimensions) == 1 and hd(dimensions) in @imported_dimensions)
   end
 
   def total_imported_visitors(site, query) do
@@ -552,11 +501,11 @@ defmodule Plausible.Stats.Imported do
     Enum.reduce(query.dimensions, q, fn dimension, q ->
       dim = Plausible.Stats.Filters.without_prefix(dimension)
 
-      group_imported_by(q, dim, shortname(query, dimension))
+      group_imported_by(q, dim, shortname(query, dimension), query)
     end)
   end
 
-  defp group_imported_by(q, dim, key) when dim in [:source, :referrer] do
+  defp group_imported_by(q, dim, key, _query) when dim in [:source, :referrer] do
     q
     |> group_by([i], field(i, ^dim))
     |> select_merge_as([i], %{
@@ -564,7 +513,7 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
-  defp group_imported_by(q, dim, key)
+  defp group_imported_by(q, dim, key, _query)
        when dim in [:utm_source, :utm_medium, :utm_campaign, :utm_term, :utm_content] do
     q
     |> group_by([i], field(i, ^dim))
@@ -572,34 +521,34 @@ defmodule Plausible.Stats.Imported do
     |> select_merge_as([i], %{key => field(i, ^dim)})
   end
 
-  defp group_imported_by(q, :page, key) do
+  defp group_imported_by(q, :page, key, _query) do
     q
     |> group_by([i], i.page)
     |> select_merge_as([i], %{key => i.page, time_on_page: sum(i.time_on_page)})
   end
 
-  defp group_imported_by(q, :country, key) do
+  defp group_imported_by(q, :country, key, _query) do
     q
     |> group_by([i], i.country)
     |> where([i], i.country != "ZZ")
     |> select_merge_as([i], %{key => i.country})
   end
 
-  defp group_imported_by(q, :region, key) do
+  defp group_imported_by(q, :region, key, _query) do
     q
     |> group_by([i], i.region)
     |> where([i], i.region != "")
     |> select_merge_as([i], %{key => i.region})
   end
 
-  defp group_imported_by(q, :city, key) do
+  defp group_imported_by(q, :city, key, _query) do
     q
     |> group_by([i], i.city)
     |> where([i], i.city != 0 and not is_nil(i.city))
     |> select_merge_as([i], %{key => i.city})
   end
 
-  defp group_imported_by(q, dim, key) when dim in [:device, :browser] do
+  defp group_imported_by(q, dim, key, _query) when dim in [:device, :browser] do
     q
     |> group_by([i], field(i, ^dim))
     |> select_merge_as([i], %{
@@ -607,7 +556,7 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
-  defp group_imported_by(q, :browser_version, key) do
+  defp group_imported_by(q, :browser_version, key, _query) do
     q
     |> group_by([i], [i.browser_version])
     |> select_merge_as([i], %{
@@ -615,7 +564,7 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
-  defp group_imported_by(q, :os, key) do
+  defp group_imported_by(q, :os, key, _query) do
     q
     |> group_by([i], i.operating_system)
     |> select_merge_as([i], %{
@@ -623,7 +572,7 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
-  defp group_imported_by(q, :os_version, key) do
+  defp group_imported_by(q, :os_version, key, _query) do
     q
     |> group_by([i], [i.operating_system_version])
     |> select_merge_as([i], %{
@@ -637,19 +586,19 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
-  defp group_imported_by(q, dim, key) when dim in [:entry_page, :exit_page] do
+  defp group_imported_by(q, dim, key, _query) when dim in [:entry_page, :exit_page] do
     q
     |> group_by([i], field(i, ^dim))
     |> select_merge_as([i], %{key => field(i, ^dim)})
   end
 
-  defp group_imported_by(q, :name, key) do
+  defp group_imported_by(q, :name, key, _query) do
     q
     |> group_by([i], i.name)
     |> select_merge_as([i], %{key => i.name})
   end
 
-  defp group_imported_by(q, :url, key) do
+  defp group_imported_by(q, :url, key, _query) do
     q
     |> group_by([i], i.link_url)
     |> select_merge_as([i], %{
@@ -657,12 +606,38 @@ defmodule Plausible.Stats.Imported do
     })
   end
 
-  defp group_imported_by(q, :path, key) do
+  defp group_imported_by(q, :path, key, _query) do
     q
     |> group_by([i], i.path)
     |> select_merge_as([i], %{
       key => fragment("if(not empty(?), ?, ?)", i.path, i.path, @none)
     })
+  end
+
+  defp group_imported_by(q, :month, key, _query) do
+    q
+    |> group_by([i], fragment("toStartOfMonth(?)", i.date))
+    |> select_merge_as([i], %{key => fragment("toStartOfMonth(?)", i.date)})
+  end
+
+  defp group_imported_by(q, :hour, key, _query) do
+    q
+    |> group_by([i], i.date)
+    |> select_merge_as([i], %{key => i.date})
+  end
+
+  defp group_imported_by(q, :week, key, query) do
+    q
+    |> group_by([i], weekstart_not_before(i.date, ^query.date_range.first))
+    |> select_merge_as([i], %{
+      key => weekstart_not_before(i.date, ^query.date_range.first)
+    })
+  end
+
+  defp group_imported_by(q, :day, key, _query) do
+    q
+    |> group_by([i], i.date)
+    |> select_merge_as([i], %{key => i.date})
   end
 
   defp select_joined_dimensions(q, query) do
@@ -674,6 +649,12 @@ defmodule Plausible.Stats.Imported do
   defp select_joined_dimension(q, "visit:city", key) do
     select_merge_as(q, [s, i], %{
       key => fragment("greatest(?,?)", field(i, ^key), field(s, ^key))
+    })
+  end
+
+  defp select_joined_dimension(q, "time:" <> _, key) do
+    select_merge_as(q, [s, i], %{
+      key => fragment("greatest(?, ?)", field(i, ^key), field(s, ^key))
     })
   end
 

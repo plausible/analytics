@@ -7,11 +7,9 @@ defmodule Plausible.Stats.Query do
             dimensions: [],
             filters: [],
             sample_threshold: 20_000_000,
-            imported_data_requested: false,
             include_imported: false,
             skip_imported_reason: nil,
             now: nil,
-            experimental_session_count?: false,
             experimental_reduced_joins?: false,
             latest_import_end_date: nil,
             metrics: [],
@@ -36,8 +34,7 @@ defmodule Plausible.Stats.Query do
 
     query =
       __MODULE__
-      |> struct!(now: now)
-      |> put_experimental_session_count(site, params)
+      |> struct!(now: now, timezone: site.timezone)
       |> put_experimental_reduced_joins(site, params)
       |> put_period(site, params)
       |> put_dimensions(params)
@@ -57,23 +54,10 @@ defmodule Plausible.Stats.Query do
       query =
         struct!(__MODULE__, Map.to_list(query_data))
         |> put_imported_opts(site, %{})
-        |> put_experimental_session_count(site, params)
         |> put_experimental_reduced_joins(site, params)
         |> struct!(v2: true)
 
       {:ok, query}
-    end
-  end
-
-  defp put_experimental_session_count(query, site, params) do
-    if Map.has_key?(params, "experimental_session_count") do
-      struct!(query,
-        experimental_session_count?: Map.get(params, "experimental_session_count") == "true"
-      )
-    else
-      struct!(query,
-        experimental_session_count?: FunWithFlags.enabled?(:experimental_session_count, for: site)
-      )
     end
   end
 
@@ -231,9 +215,13 @@ defmodule Plausible.Stats.Query do
   end
 
   def set(query, keywords) do
-    query
-    |> struct!(keywords)
-    |> refresh_imported_opts()
+    new_query = struct!(query, keywords)
+
+    if Keyword.has_key?(keywords, :include_imported) do
+      new_query
+    else
+      refresh_imported_opts(new_query)
+    end
   end
 
   @spec set_dimensions(t(), list(String.t())) :: t()
@@ -314,7 +302,7 @@ defmodule Plausible.Stats.Query do
   end
 
   defp put_imported_opts(query, site, params) do
-    requested? = params["with_imported"] == "true" || query.imported_data_requested
+    requested? = params["with_imported"] == "true" || query.include.imports
 
     latest_import_end_date =
       if site do
@@ -328,15 +316,15 @@ defmodule Plausible.Stats.Query do
     case ensure_include_imported(query, requested?) do
       :ok ->
         struct!(query,
-          imported_data_requested: true,
-          include_imported: true
+          include_imported: true,
+          include: Map.put(query.include, :imports, true)
         )
 
       {:error, reason} ->
         struct!(query,
-          imported_data_requested: requested?,
           include_imported: false,
-          skip_imported_reason: reason
+          skip_imported_reason: reason,
+          include: Map.put(query.include, :imports, requested?)
         )
     end
   end

@@ -83,8 +83,8 @@ defmodule Plausible.Stats.Filters do
 
   def parse(_), do: []
 
-  def without_prefix(property) do
-    property
+  def without_prefix(dimension) do
+    dimension
     |> String.split(":")
     |> List.last()
     |> String.to_existing_atom()
