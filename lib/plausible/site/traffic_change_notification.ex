@@ -21,7 +21,7 @@ defmodule Plausible.Site.TrafficChangeNotification do
     schema
     |> cast(attrs, [:site_id, :recipients, :threshold, :type])
     |> validate_required([:site_id, :recipients, :threshold, :type])
-    |> validate_number(:threshold, greater_than_or_equal_to: 0)
+    |> validate_number(:threshold, greater_than_or_equal_to: 1)
     |> unique_constraint([:site_id, :type])
   end
 
