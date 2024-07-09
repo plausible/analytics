@@ -532,7 +532,9 @@ base_cron = [
   # Every day at 1am
   {"0 1 * * *", Plausible.Workers.CleanInvitations},
   # Every 2 hours
-  {"0 */2 * * *", Plausible.Workers.ExpireDomainChangeTransitions}
+  {"0 */2 * * *", Plausible.Workers.ExpireDomainChangeTransitions},
+  # Daily at midnight
+  {"0 0 * * *", Plausible.Workers.LocationsSync}
 ]
 
 cloud_cron = [

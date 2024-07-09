@@ -1,6 +1,6 @@
 defmodule Plausible.DataMigration.LocationsSync do
   @moduledoc """
-  ClickHouse locations data migration for storing locations in clickhouse.
+  ClickHouse locations data migration for storing location names in clickhouse.
 
   Run regularly as plausible/locations data changes.
 
