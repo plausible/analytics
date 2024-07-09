@@ -103,7 +103,37 @@ function BrowserVersions({ query, site, afterFetchData }) {
       query={query}
     />
   )
+}
 
+// Icons copied from https://github.com/ngeenx/operating-system-logos
+const OS_ICONS = {
+  'iOS': 'ios.png',
+  'Mac': 'mac.png',
+  'Windows': 'windows.png',
+  'Windows Phone': 'windows.png',
+  'Android': 'android.png',
+  'GNU/Linux': 'gnu_linux.png',
+  'Ubuntu': 'ubuntu.png',
+  'Chrome OS': 'chrome_os.png',
+  'iPadOS': 'ipad_os.png',
+  'Fire OS': 'fire_os.png',
+  'HarmonyOS': 'harmony_os.png',
+  'Tizen': 'tizen.png',
+  'PlayStation': 'playstation.png',
+  'KaiOS': 'kai_os.png',
+  'Fedora': 'fedora.png',
+  'FreeBSD': 'freebsd.png',
+}
+
+function osIconFor(os) {
+  const filename = OS_ICONS[os] || 'fallback.svg'
+
+  return (
+    <img
+      src={`/images/icon/os/${filename}`}
+      className="w-4 h-4 mr-2"
+    />
+  )
 }
 
 function OperatingSystems({ query, site, afterFetchData }) {
@@ -118,11 +148,16 @@ function OperatingSystems({ query, site, afterFetchData }) {
     }
   }
 
+  function renderIcon(listItem) {
+    return osIconFor(listItem.name)
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
       afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
+      renderIcon={renderIcon}
       keyLabel="Operating system"
       metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
       query={query}
@@ -133,6 +168,15 @@ function OperatingSystems({ query, site, afterFetchData }) {
 function OperatingSystemVersions({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/operating-system-versions'), query)
+      .then(res => {
+        return {...res, results: res.results.map((row => {
+          return {...row, name: `${row.os} ${row.name}`, version: row.name}
+        }))}
+      })
+  }
+
+  function renderIcon(listItem) {
+    return osIconFor(listItem.os)
   }
 
   function getFilterFor(listItem) {
@@ -141,13 +185,14 @@ function OperatingSystemVersions({ query, site, afterFetchData }) {
     }
     return {
       prefix: 'os_version',
-      filter: ["is", "os_version", [listItem['name']]]
+      filter: ["is", "os_version", [listItem.version]]
     }
   }
 
   return (
     <ListReport
       fetchData={fetchData}
+      renderIcon={renderIcon}
       afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Operating System Version"
