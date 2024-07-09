@@ -25,9 +25,9 @@ import {
   isSameDate
 } from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
-import { shouldIgnoreKeypress } from "./keybinding.js"
 import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input.js"
 import classNames from "classnames"
+import { useKeybindsContext } from "./keybinding.js";
 
 function renderArrow(query, site, period, prevDate, nextDate) {
   const insertionDate = parseUTCDate(site.statsBegin);
@@ -158,104 +158,43 @@ function DisplayPeriod({ query, site }) {
 
 function DatePicker({ query, site, history }) {
   const [open, setOpen] = useState(false)
+  const closePicker = useCallback(() => setOpen(false), [])
   const [mode, setMode] = useState('menu')
+  const setCalendarMode = useCallback(() => setMode('calendar'), [])
   const dropDownNode = useRef(null)
   const calendar = useRef(null)
+  const {registerKeybind} = useKeybindsContext(); 
+  const openDatePickerCalendar = useCallback(() => {
+    
+    setOpen(true)
+    setMode('calendar')
+  }, [])
+  useEffect(() => {
+    
+    registerKeybind('c', openDatePickerCalendar)
+  }, [registerKeybind, openDatePickerCalendar])
+  
+  const onOutsideClickClosePicker = useCallback((e) => {
+    const isClickOutside = dropDownNode.current && dropDownNode.current.contains(e.target)
+    if (isClickOutside) return;
 
-  const handleKeydown = useCallback((e) => {
-    if (shouldIgnoreKeypress(e)) return true
+    closePicker()
+  }, [closePicker])
 
-    const newSearch = {
-      period: false,
-      from: false,
-      to: false,
-      date: false
-    };
-
-    const insertionDate = parseUTCDate(site.statsBegin);
-
-    if (e.key === "ArrowLeft") {
-      const prevDate = formatISO(shiftDays(query.date, -1));
-      const prevMonth = formatISO(shiftMonths(query.date, -1));
-      const prevYear = formatISO(shiftMonths(query.date, -12));
-
-      if (query.period === "day" && !isBefore(parseUTCDate(prevDate), insertionDate, query.period)) {
-        newSearch.period = "day";
-        newSearch.date = prevDate;
-      } else if (query.period === "month" && !isBefore(parseUTCDate(prevMonth), insertionDate, query.period)) {
-        newSearch.period = "month";
-        newSearch.date = prevMonth;
-      } else if (query.period === "year" && !isBefore(parseUTCDate(prevYear), insertionDate, query.period)) {
-        newSearch.period = "year";
-        newSearch.date = prevYear;
-      }
-    } else if (e.key === "ArrowRight") {
-      const now = nowForSite(site)
-      const nextDate = formatISO(shiftDays(query.date, 1));
-      const nextMonth = formatISO(shiftMonths(query.date, 1));
-      const nextYear = formatISO(shiftMonths(query.date, 12));
-
-      if (query.period === "day" && !isAfter(parseUTCDate(nextDate), now, query.period)) {
-        newSearch.period = "day";
-        newSearch.date = nextDate;
-      } else if (query.period === "month" && !isAfter(parseUTCDate(nextMonth), now, query.period)) {
-        newSearch.period = "month";
-        newSearch.date = nextMonth;
-      } else if (query.period === "year" && !isAfter(parseUTCDate(nextYear), now, query.period)) {
-        newSearch.period = "year";
-        newSearch.date = nextYear;
-      }
-    }
-
-    setOpen(false);
-
-    const keybindings = {
-      d: { date: false, period: 'day' },
-      e: { date: formatISO(shiftDays(nowForSite(site), -1)), period: 'day' },
-      r: { period: 'realtime' },
-      w: { date: false, period: '7d' },
-      m: { date: false, period: 'month' },
-      y: { date: false, period: 'year' },
-      t: { date: false, period: '30d' },
-      s: { date: false, period: '6mo' },
-      l: { date: false, period: '12mo' },
-      a: { date: false, period: 'all' },
-    }
-
-    const redirect = keybindings[e.key.toLowerCase()]
-    if (redirect) {
-      navigateToQuery(history, query, { ...newSearch, ...redirect })
-    } else if (e.key.toLowerCase() === 'x') {
-      toggleComparisons(history, query, site)
-    } else if (e.key.toLowerCase() === 'c') {
-      setOpen(true)
-      setMode('calendar')
-    } else if (newSearch.date) {
-      navigateToQuery(history, query, newSearch);
-    }
-  }, [query])
-
-  const handleClick = useCallback((e) => {
-    if (dropDownNode.current && dropDownNode.current.contains(e.target)) return;
-
-    setOpen(false)
-  })
+  useEffect(() => {
+    closePicker()
+  }, [query, closePicker])
 
   useEffect(() => {
     if (mode === 'calendar' && open) {
       openCalendar()
     }
-  }, [mode])
+  }, [mode, open])
 
   useEffect(() => {
-    document.addEventListener("keydown", handleKeydown);
-    return () => { document.removeEventListener("keydown", handleKeydown); }
-  }, [handleKeydown])
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClick, false);
-    return () => { document.removeEventListener("mousedown", handleClick, false); }
-  }, [])
+    document.addEventListener("mousedown", onOutsideClickClosePicker, false);
+    return () => { document.removeEventListener("mousedown", onOutsideClickClosePicker, false); }
+  }, [onOutsideClickClosePicker])
 
   function setCustomDate([from, to], _dateStr, _instance) {
     if (from && to) {
@@ -268,7 +207,7 @@ function DatePicker({ query, site, history }) {
       }
     }
 
-    setOpen(false)
+    closePicker()
   }
 
   function toggle() {
@@ -297,7 +236,7 @@ function DatePicker({ query, site, history }) {
     return (
       <QueryLink
         to={{ from: false, to: false, period, ...opts }}
-        onClick={() => setOpen(false)}
+        onClick={closePicker}
         query={query}
         className={`${boldClass} px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900
           dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}
@@ -340,8 +279,8 @@ function DatePicker({ query, site, history }) {
             <div className="py-1 date-option-group">
               {renderLink("all", "All time", { keybindHint: 'A' })}
               <span
-                onClick={() => setMode('calendar')}
-                onKeyPress={() => setMode('calendar')}
+                onClick={setCalendarMode}
+                onKeyPress={setCalendarMode}
                 className="px-4 py-2 text-sm leading-tight hover:bg-gray-100
                   dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100
                   cursor-pointer flex items-center justify-between"
@@ -360,7 +299,7 @@ function DatePicker({ query, site, history }) {
                 <span
                   onClick={() => {
                     toggleComparisons(history, query, site)
-                    setOpen(false)
+                    closePicker()
                   }}
                   className="px-4 py-2 text-sm leading-tight hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer flex items-center justify-between">
                   {isComparisonEnabled(query.comparison) ? 'Disable comparison' : 'Compare'}
