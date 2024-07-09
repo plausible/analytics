@@ -338,6 +338,14 @@ defmodule Plausible.Sites do
     )
   end
 
+  def owned_sites_locked?(user) do
+    user
+    |> owned_sites_query()
+    |> select([site], site.locked)
+    |> Repo.all()
+    |> Enum.any?(& &1)
+  end
+
   def owned_sites_count(user) do
     user
     |> owned_sites_query()

@@ -290,6 +290,10 @@ defmodule PlausibleWeb.Router do
 
     get "/auth/google/callback", AuthController, :google_auth_callback
 
+    on_ee do
+      get "/helpscout/callback", HelpScoutController, :callback
+    end
+
     get "/", PageController, :index
 
     get "/billing/change-plan/preview/:plan_id", BillingController, :change_plan_preview

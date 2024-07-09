@@ -93,6 +93,8 @@ defmodule Plausible.Application do
       Plausible.PromEx
     ]
 
+    children = start_help_scout_vault(children)
+
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
 
     setup_request_logging()
@@ -109,6 +111,22 @@ defmodule Plausible.Application do
   def config_change(changed, _new, removed) do
     PlausibleWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp start_help_scout_vault(children) do
+    help_scout_vault_key =
+      :plausible
+      |> Application.fetch_env!(Plausible.HelpScout)
+      |> Keyword.fetch!(:vault_key)
+
+    if ee?() && help_scout_vault_key do
+      children ++
+        [
+          {Plausible.HelpScout.Vault, key: Base.decode64!(help_scout_vault_key)}
+        ]
+    else
+      children
+    end
   end
 
   defp totp_vault_key() do
