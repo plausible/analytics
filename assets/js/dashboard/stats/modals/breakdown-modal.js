@@ -83,14 +83,13 @@ export default function BreakdownModal({
   metrics,
   renderIcon,
   getExternalLinkURL,
-  searchEnabled,
+  searchEnabled = true,
   afterFetchData,
   afterFetchNextPage,
   addSearchFilter,
   getFilterInfo
 }) {
   const endpoint = `/api/stats/${encodeURIComponent(site.domain)}${reportInfo.endpoint}`
-  const isSearchEnabled = searchEnabled === false ? false : true
   
   const [initialLoading, setInitialLoading] = useState(true)
   const [loading, setLoading] = useState(true)
@@ -110,7 +109,7 @@ export default function BreakdownModal({
   useEffect(() => { fetchData() }, [search])
 
   useEffect(() => {
-    if (!isSearchEnabled) { return }
+    if (!searchEnabled) { return }
 
     const searchBox = searchBoxRef.current
 
@@ -158,7 +157,7 @@ export default function BreakdownModal({
   }
 
   function withSearch(query) {
-    if (isSearchEnabled && search !== '') {
+    if (searchEnabled && search !== '') {
       return addSearchFilter(query, search)
     }
 
@@ -294,7 +293,7 @@ export default function BreakdownModal({
           <h1 className="text-xl font-bold dark:text-gray-100">{ reportInfo.title }</h1>
           { !initialLoading && loading && renderSmallLoadingSpinner() }
         </div>
-        { isSearchEnabled && renderSearchInput()}
+        { searchEnabled && renderSearchInput()}
       </div>
       <div className="my-4 border-b border-gray-300"></div>
       <div style={{minHeight: `${MIN_HEIGHT_PX}px`}}>
