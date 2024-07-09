@@ -31,8 +31,8 @@ function PropsModal(props) {
     }
   }, [])
 
-  const addSearchFilter = useCallback((query, s) => {
-    return addFilter(query, ['contains', `${EVENT_PROPS_PREFIX}${propKey}`, [s]])
+  const addSearchFilter = useCallback((query, searchString) => {
+    return addFilter(query, ['contains', `${EVENT_PROPS_PREFIX}${propKey}`, [searchString]])
   }, [])
 
   function chooseMetrics() {
@@ -43,7 +43,7 @@ function PropsModal(props) {
       !hasGoalFilter(query) && metrics.createPercentage(),
       showRevenueMetrics && metrics.createAverageRevenue(),
       showRevenueMetrics && metrics.createTotalRevenue(),
-    ].filter(m => !!m)
+    ].filter(metric => !!metric)
   }
 
   return (

@@ -24,8 +24,8 @@ function ExitPagesModal(props) {
     }
   }, [])
 
-  const addSearchFilter = useCallback((query, s) => {
-    return addFilter(query, ['contains', reportInfo.dimension, [s]])
+  const addSearchFilter = useCallback((query, searchString) => {
+    return addFilter(query, ['contains', reportInfo.dimension, [searchString]])
   }, [])
 
   function chooseMetrics() {

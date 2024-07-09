@@ -33,7 +33,7 @@ function ConversionsModal(props) {
       metrics.createConversionRate(),
       showRevenue && metrics.createAverageRevenue(),
       showRevenue && metrics.createTotalRevenue(),
-    ].filter(m => !!m)
+    ].filter(metric => !!metric)
   }
 
   // After a successful API response, we want to scan the rows of the

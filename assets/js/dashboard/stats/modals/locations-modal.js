@@ -46,7 +46,7 @@ function LocationsModal(props) {
     return [
       metrics.createVisitors({renderLabel: (_query) => "Visitors" }),
       currentView === 'countries' && metrics.createPercentage()
-    ].filter(m => !!m)
+    ].filter(metric => !!metric)
   }
   
   let renderIcon
