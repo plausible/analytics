@@ -57,7 +57,7 @@ export function navigateToQuery(history, queryFrom, newData) {
   // if we update any data that we store in localstorage, make sure going back in history will
   // revert them
   if (newData.period && newData.period !== queryFrom.period) {
-    history.replace({ search: updatedQuery({ period: queryFrom.period}) })
+    history.replace({ search: updatedQuery({ period: queryFrom.period }) })
   }
 
   // then push the new query to the history
@@ -160,7 +160,7 @@ export function revenueAvailable(query, site) {
 }
 
 function QueryLink(props) {
-  const {query, history, to, className, children} = props
+  const { query, history, to, className, children } = props
 
   function onClick(e) {
     e.preventDefault()
@@ -192,7 +192,7 @@ function QueryButton({ history, query, to, disabled, className, children, onClic
         event.preventDefault()
         navigateToQuery(history, query, to)
         if (onClick) onClick(event)
-        history.push({ pathname: window.location.pathname, search: updatedQuery(to) })
+        history.push({ search: updatedQuery(to) })
       }}
       type="button"
       disabled={disabled}
