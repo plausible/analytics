@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 
 import * as api from '../../api'
-import debounce from 'debounce-promise'
-import { useMountedEffect } from '../../custom-hooks'
+import { useDebouncedEffect, useMountedEffect } from '../../custom-hooks'
 import { trimURL } from '../../util/url'
 import { FilterLink } from "../reports/list";
 
@@ -95,6 +94,7 @@ export default function BreakdownModal(props) {
   
   const [initialLoading, setInitialLoading] = useState(true)
   const [loading, setLoading] = useState(true)
+  const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [results, setResults] = useState([])
   const [page, setPage] = useState(1)
@@ -103,10 +103,11 @@ export default function BreakdownModal(props) {
 
   useMountedEffect(() => { fetchNextPage() }, [page])
 
-  useEffect(() => {
-    setLoading(true)
-    fetchData()
-  }, [search])
+  useDebouncedEffect(() => {
+    setSearch(searchInput)
+  }, [searchInput], 300)
+  
+  useEffect(() => { fetchData() }, [search])
 
   useEffect(() => {
     if (!isSearchEnabled) { return }
@@ -127,7 +128,8 @@ export default function BreakdownModal(props) {
     }
   }, [])
 
-  const fetchData = useCallback(debounce(() => {
+  const fetchData = useCallback(() => {
+    setLoading(true)
     api.get(endpoint, withSearch(query), { limit: LIMIT, page: 1, detailed: true })
       .then((response) => {
         if (typeof afterFetchData === 'function') {
@@ -139,7 +141,7 @@ export default function BreakdownModal(props) {
         setResults(response.results)
         setMoreResultsAvailable(response.results.length === LIMIT)
       })
-  }, 200), [search])
+  }, [search])
 
   function fetchNextPage() {
     if (page > 1) {
@@ -237,6 +239,10 @@ export default function BreakdownModal(props) {
     )
   }
 
+  function handleInputChange(e) {
+    setSearchInput(e.target.value)
+  }
+
   function renderSearchInput() {
     return (
       <input
@@ -244,7 +250,7 @@ export default function BreakdownModal(props) {
         type="text"
         placeholder="Search"
         className="shadow-sm dark:bg-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 block sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800 w-48"
-        onChange={(e) => { setSearch(e.target.value) }}
+        onChange={handleInputChange}
       />
     )
   }
