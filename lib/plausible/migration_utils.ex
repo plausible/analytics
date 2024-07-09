@@ -13,4 +13,17 @@ defmodule Plausible.MigrationUtils do
       {:ok, _} -> true
     end
   end
+
+  # See https://clickhouse.com/docs/en/sql-reference/dictionaries#clickhouse for context
+  def dictionary_connection_params() do
+    Plausible.IngestRepo.config()
+    |> Enum.map(fn
+      {:database, database} -> "DB '#{database}'"
+      {:username, username} -> "USER '#{username}'"
+      {:password, password} -> "PASSWORD '#{password}'"
+      _ -> nil
+    end)
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" ")
+  end
 end
