@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
         {:error,
          "Property 'event:hostname' is currently not supported for breakdowns.  Please provide a valid property for the breakdown endpoint: https://plausible.io/docs/stats-api#properties"}
 
-      Plausible.Stats.LegacyDimensions.valid?(property) ->
+      Plausible.Stats.Legacy.Dimensions.valid?(property) ->
         :ok
 
       true ->
@@ -363,7 +363,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp validate_filter(_site, [_, property | _]) do
-    if Plausible.Stats.LegacyDimensions.valid?(property) do
+    if Plausible.Stats.Legacy.Dimensions.valid?(property) do
       :ok
     else
       {:error,

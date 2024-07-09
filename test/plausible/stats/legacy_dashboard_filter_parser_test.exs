@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.LegacyDashboardFilterParserTest do
+defmodule Plausible.Stats.Legacy.DashboardFilterParserTest do
   use ExUnit.Case, async: true
   alias Plausible.Stats.Filters.LegacyDashboardFilterParser
 

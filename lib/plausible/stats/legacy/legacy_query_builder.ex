@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.LegacyQueryBuilder do
+defmodule Plausible.Stats.Legacy.QueryBuilder do
   @moduledoc false
 
   use Plausible

@@ -24,7 +24,7 @@ defmodule Plausible.Stats.Query do
             }
 
   require OpenTelemetry.Tracer, as: Tracer
-  alias Plausible.Stats.{Filters, Imported, LegacyQueryBuilder}
+  alias Plausible.Stats.{Filters, Imported, Legacy}
 
   @type t :: %__MODULE__{}
 
@@ -45,7 +45,7 @@ defmodule Plausible.Stats.Query do
   """
   @spec from(Plausible.Site.t(), map()) :: t()
   def from(site, params) do
-    LegacyQueryBuilder.from(site, params)
+    Legacy.QueryBuilder.from(site, params)
   end
 
   def put_experimental_reduced_joins(query, site, params) do

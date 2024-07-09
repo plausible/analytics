@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.LegacyDimensions do
+defmodule Plausible.Stats.Legacy.Dimensions do
   @moduledoc """
   Deprecated module. See QueryParser for list of valid dimensions
   """
