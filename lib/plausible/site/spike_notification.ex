@@ -6,6 +6,7 @@ defmodule Plausible.Site.SpikeNotification do
     field :recipients, {:array, :string}
     field :threshold, :integer
     field :last_sent, :naive_datetime
+    field :type, Ecto.Enum, values: [:spike, :drop], default: :spike
     belongs_to :site, Plausible.Site
 
     timestamps()
@@ -15,7 +16,7 @@ defmodule Plausible.Site.SpikeNotification do
     schema
     |> cast(attrs, [:site_id, :recipients, :threshold])
     |> validate_required([:site_id, :recipients, :threshold])
-    |> unique_constraint(:site_id)
+    |> unique_constraint([:site_id, :type])
   end
 
   def add_recipient(schema, recipient) do
