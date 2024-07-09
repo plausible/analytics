@@ -6,27 +6,26 @@ import withQueryContext from "../../components/query-context-hoc";
 import { hasGoalFilter } from "../../util/filters";
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
-import { addFilter } from "../../query";
 
-function ReferrerDrilldownModal(props) {
-  const { site, query, match } = props
+const VIEWS = {
+  countries: {title: 'Top Countries', dimension: 'country', endpoint: '/countries', dimensionLabel: 'Country'},
+  regions: {title: 'Top Regions', dimension: 'region', endpoint: '/regions', dimensionLabel: 'Region'},
+  cities: {title: 'Top Cities', dimension: 'city', endpoint: '/cities', dimensionLabel: 'City'},
+}
 
-  const reportInfo = {
-    title: "Referrer Drilldown",
-    dimension: 'referrer',
-    endpoint: `/referrers/${match.params.referrer}`,
-    dimensionLabel: "Referrer"
-  }
+function LocationsModal(props) {
+  const { site, query, location } = props
+
+  const urlParts = location.pathname.split('/')
+  const currentView = urlParts[urlParts.length - 1]
+
+  const reportInfo = VIEWS[currentView]
 
   const getFilterInfo = useCallback((listItem) => {
     return {
       prefix: reportInfo.dimension,
-      filter: ['is', reportInfo.dimension, [listItem.name]]
+      filter: ["is", reportInfo.dimension, [listItem.code]]
     }
-  }, [])
-
-  const addSearchFilter = useCallback((query, searchString) => {
-    return addFilter(query, ['contains', reportInfo.dimension, [searchString]])
   }, [])
 
   function chooseMetrics() {
@@ -46,24 +45,14 @@ function ReferrerDrilldownModal(props) {
     
     return [
       metrics.createVisitors({renderLabel: (_query) => "Visitors" }),
-      metrics.createBounceRate(),
-      metrics.createVisitDuration()
-    ]
+      currentView === 'countries' && metrics.createPercentage()
+    ].filter(metric => !!metric)
   }
-
+  
   const renderIcon = useCallback((listItem) => {
     return (
-      <img
-        src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
-        className="h-4 w-4 mr-2 align-middle inline"
-      />
+      <span className="mr-1">{listItem.country_flag || listItem.flag}</span>
     )
-  }, [])
-
-  const getExternalLinkURL = useCallback((listItem) => {
-    if (listItem.name !== "Direct / None") {
-      return '//' + listItem.name
-    }
   }, [])
 
   return (
@@ -74,12 +63,11 @@ function ReferrerDrilldownModal(props) {
         reportInfo={reportInfo}
         metrics={chooseMetrics()}
         getFilterInfo={getFilterInfo}
-        addSearchFilter={addSearchFilter}
         renderIcon={renderIcon}
-        getExternalLinkURL={getExternalLinkURL}
+        searchEnabled={false}
       />
     </Modal>
   )
 }
 
-export default withRouter(withQueryContext(ReferrerDrilldownModal))
+export default withRouter(withQueryContext(LocationsModal))

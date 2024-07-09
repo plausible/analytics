@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom'
 import FlipMove from 'react-flip-move';
 
-import { displayMetricValue, metricLabelFor } from './metrics';
 import FadeIn from '../../fade-in'
 import MoreLink from '../more-link'
 import Bar from '../bar'
@@ -17,18 +16,20 @@ const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT = (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
 const COL_MIN_WIDTH = 70
 
-function FilterLink({ filterQuery, onClick, children }) {
-  const className = classNames('max-w-max w-full flex items-center md:overflow-hidden', {
-    'hover:underline': !!filterQuery
-  })
+export function FilterLink({ pathname, query, filterInfo, onClick, children, extraClass }) {
+  const className = classNames(`${extraClass}`, { 'hover:underline': !!filterInfo })
 
-  if (filterQuery) {
+  if (filterInfo) {
+    const {prefix, filter, labels} = filterInfo
+    const newFilters = replaceFilterByPrefix(query, prefix, filter)
+    const newLabels = cleanLabels(newFilters, query.labels, filter[1], labels)
+    const filterQuery = updatedQuery({ filters: newFilters, labels: newLabels })
+    
+    let linkTo = { search: filterQuery.toString() }
+    if (pathname) { linkTo.pathname = pathname }
+
     return (
-      <Link
-        to={{ search: filterQuery.toString() }}
-        onClick={onClick}
-        className={className}
-      >
+      <Link to={linkTo} onClick={onClick} className={className}>
         {children}
       </Link>
     )
@@ -62,12 +63,12 @@ function ExternalLink({ item, externalLinkDest }) {
 // to be rendered, and should return a list of objects under a `results` key. Think of
 // these objects as rows. The number of columns that are **actually rendered** is also
 // configurable through the `metrics` prop, which also defines the keys under which
-// column values are read. For example:
+// column values are read, and how they're rendered. For example:
 
-// | keyLabel           |            METRIC_1.label |            METRIC_2.label | ...
-// |--------------------|---------------------------|---------------------------|-----
-// | LISTITEM_1.name    | LISTITEM_1[METRIC_1.name] | LISTITEM_1[METRIC_2.name] | ...
-// | LISTITEM_2.name    | LISTITEM_2[METRIC_1.name] | LISTITEM_2[METRIC_2.name] | ...
+// | keyLabel           | METRIC_1.renderLabel(query) | METRIC_1.renderLabel(query) | ...
+// |--------------------|-----------------------------|-----------------------------| ---
+// | LISTITEM_1.name    | LISTITEM_1[METRIC_1.key]    | LISTITEM_1[METRIC_2.key]    | ...
+// | LISTITEM_2.name    | LISTITEM_2[METRIC_1.key]    | LISTITEM_2[METRIC_2.key]    | ...
 
 // Further configuration of the report is possible through optional props.
 
@@ -80,9 +81,10 @@ function ExternalLink({ item, externalLinkDest }) {
 //   * `fetchData` - a function that returns an `api.get` promise that will resolve to an
 //     object containing a `results` key.
 
-//   * `metrics` - a list of `metric` objects. Each `metric` object is required to have at
-//     least the `name` and the `label` keys. If the metric should have a different label
-//     in realtime or goal-filtered views, we'll use `realtimeLabel` and `GoalFilterLabel`.
+//   * `metrics` - a list `Metric` class objects, containing at least the `key,`
+//     `renderLabel`, and `renderValue` fields. Optionally, a Metric object can contain
+//     the keys `meta.plot` and `meta.hiddenOnMobile` to represent additional behaviour
+//     for this metric in the ListReport.
 
 //   * `getFilterFor` - a function that takes a list item and returns [prefix, filter, labels]
 //      that should be applied when the list item is clicked. All existing filters matching prefix
@@ -164,12 +166,12 @@ export default function ListReport(props) {
   // we want to display are actually there in the API response.
   function getAvailableMetrics() {
     return metrics.filter((metric) => {
-      return state.list.some((listItem) => listItem[metric.name] != null)
+      return state.list.some((listItem) => listItem[metric.key] != null)
     })
   }
 
   function hiddenOnMobileClass(metric) {
-    if (metric.hiddenOnMobile) {
+    if (metric.meta.hiddenOnMobile) {
       return 'hidden md:block'
     } else {
       return ''
@@ -199,11 +201,11 @@ export default function ListReport(props) {
     const metricLabels = getAvailableMetrics().map((metric) => {
       return (
         <div
-          key={metric.name}
-          className={`text-right ${hiddenOnMobileClass(metric)}`}
+          key={metric.key}
+          className={`${metric.key} text-right ${hiddenOnMobileClass(metric)}`}
           style={{ minWidth: colMinWidth }}
         >
-          {metricLabelFor(metric, props.query)}
+          { metric.renderLabel(props.query) }
         </div>
       )
     })
@@ -235,21 +237,10 @@ export default function ListReport(props) {
     )
   }
 
-  function getFilterQuery(listItem) {
-    const prefixAndFilter = props.getFilterFor(listItem)
-    if (!prefixAndFilter) { return null }
-
-    const {prefix, filter, labels} = prefixAndFilter
-    const newFilters = replaceFilterByPrefix(props.query, prefix, filter)
-    const newLabels = cleanLabels(newFilters, props.query.labels, filter[1], labels)
-
-    return updatedQuery({ filters: newFilters, labels: newLabels })
-  }
-
   function renderBarFor(listItem) {
     const lightBackground = props.color || 'bg-green-50'
     const noop = () => { }
-    const metricToPlot = metrics.find(m => m.plot).name
+    const metricToPlot = metrics.find(metric => metric.meta.plot).key
 
     return (
       <div className="flex-grow w-full overflow-hidden">
@@ -260,7 +251,12 @@ export default function ListReport(props) {
           plot={metricToPlot}
         >
           <div className="flex justify-start px-2 py-1.5 group text-sm dark:text-gray-300 relative z-9 break-all w-full">
-            <FilterLink filterQuery={getFilterQuery(listItem)} onClick={props.onClick || noop}>
+            <FilterLink
+              query={props.query}
+              filterInfo={props.getFilterFor(listItem)}
+              onClick={props.onClick || noop}
+              extraClass="max-w-max w-full flex items-center md:overflow-hidden"
+            >
               {maybeRenderIconFor(listItem)}
 
               <span className="w-full md:truncate">
@@ -284,12 +280,12 @@ export default function ListReport(props) {
     return getAvailableMetrics().map((metric) => {
       return (
         <div
-          key={`${listItem.name}__${metric.name}`}
+          key={`${listItem.name}__${metric.key}`}
           className={`text-right ${hiddenOnMobileClass(metric)}`}
           style={{ width: colMinWidth, minWidth: colMinWidth }}
         >
           <span className="font-medium text-sm dark:text-gray-200 text-right">
-            {displayMetricValue(listItem[metric.name], metric)}
+            { metric.renderValue(listItem[metric.key]) }
           </span>
         </div>
       )

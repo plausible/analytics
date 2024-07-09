@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react"
 import ListReport, { MIN_HEIGHT } from "../reports/list";
 import Combobox from '../../components/combobox'
+import * as metrics from '../reports/metrics'
 import * as api from '../../api'
 import * as url from '../../util/url'
-import { CR_METRIC, PERCENTAGE_METRIC } from "../reports/metrics";
 import * as storage from "../../util/storage";
 import { EVENT_PROPS_PREFIX, getGoalFilter, FILTER_OPERATIONS, hasGoalFilter } from "../../util/filters"
 import classNames from "classnames";
@@ -82,8 +82,19 @@ export default function Properties(props) {
       setPropKey(newPropKey)
     }
   }
-
+  
   /*global BUILD_EXTRA*/
+  function chooseMetrics() {
+    return [
+      metrics.createVisitors({ renderLabel: (_query) => "Visitors", meta: {plot: true}}),
+      metrics.createEvents({renderLabel: (_query) => "Events", meta: {hiddenOnMobile: true}}),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+      !hasGoalFilter(query) && metrics.createPercentage(),
+      BUILD_EXTRA && metrics.createTotalRevenue({meta: {hiddenOnMobile: true}}),
+      BUILD_EXTRA && metrics.createAverageRevenue({meta: {hiddenOnMobile: true}})
+    ].filter(metric => !!metric)
+  }
+  
   function renderBreakdown() {
     return (
       <ListReport
@@ -91,13 +102,7 @@ export default function Properties(props) {
         afterFetchData={props.afterFetchData}
         getFilterFor={getFilterFor}
         keyLabel={propKey}
-        metrics={[
-          { name: 'visitors', label: 'Visitors', plot: true },
-          { name: 'events', label: 'Events', hiddenOnMobile: true },
-          hasGoalFilter(query) ? CR_METRIC : PERCENTAGE_METRIC,
-          BUILD_EXTRA && { name: 'total_revenue', label: 'Revenue', hiddenOnMobile: true },
-          BUILD_EXTRA && { name: 'average_revenue', label: 'Average', hiddenOnMobile: true }
-        ]}
+        metrics={chooseMetrics()}
         detailsLink={url.sitePath(`custom-prop-values/${propKey}`)}
         maybeHideDetails={true}
         query={query}

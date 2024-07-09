@@ -6,7 +6,8 @@ import CountriesMap from './map'
 import * as api from '../../api'
 import { apiPath, sitePath } from '../../util/url'
 import ListReport from '../reports/list'
-import { VISITORS_METRIC, maybeWithCR } from '../reports/metrics';
+import * as metrics from '../reports/metrics';
+import { hasGoalFilter } from "../../util/filters"
 import { getFiltersByKeyPrefix } from '../../util/filters';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 
@@ -27,6 +28,13 @@ function Countries({ query, site, onClick, afterFetchData }) {
 		}
 	}
 
+	function chooseMetrics() {
+    return [
+      metrics.createVisitors({ meta: {plot: true}}),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+    ].filter(metric => !!metric)
+  }
+
 	return (
 		<ListReport
 			fetchData={fetchData}
@@ -34,7 +42,7 @@ function Countries({ query, site, onClick, afterFetchData }) {
 			getFilterFor={getFilterFor}
 			onClick={onClick}
 			keyLabel="Country"
-			metrics={maybeWithCR([VISITORS_METRIC], query)}
+			metrics={chooseMetrics()}
 			detailsLink={sitePath('countries')}
 			query={query}
 			renderIcon={renderIcon}
@@ -60,6 +68,13 @@ function Regions({ query, site, onClick, afterFetchData }) {
 		}
 	}
 
+	function chooseMetrics() {
+    return [
+      metrics.createVisitors({ meta: {plot: true}}),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+    ].filter(metric => !!metric)
+  }
+
 	return (
 		<ListReport
 			fetchData={fetchData}
@@ -67,7 +82,7 @@ function Regions({ query, site, onClick, afterFetchData }) {
 			getFilterFor={getFilterFor}
 			onClick={onClick}
 			keyLabel="Region"
-			metrics={maybeWithCR([VISITORS_METRIC], query)}
+			metrics={chooseMetrics()}
 			detailsLink={sitePath('regions')}
 			query={query}
 			renderIcon={renderIcon}
@@ -93,13 +108,20 @@ function Cities({ query, site, afterFetchData }) {
 		}
 	}
 
+	function chooseMetrics() {
+    return [
+      metrics.createVisitors({ meta: {plot: true}}),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+    ].filter(metric => !!metric)
+  }
+
 	return (
 		<ListReport
 			fetchData={fetchData}
 			afterFetchData={afterFetchData}
 			getFilterFor={getFilterFor}
 			keyLabel="City"
-			metrics={maybeWithCR([VISITORS_METRIC], query)}
+			metrics={chooseMetrics()}
 			detailsLink={sitePath('cities')}
 			query={query}
 			renderIcon={renderIcon}

@@ -5,6 +5,7 @@ import { PlausibleSearchParams, updatedQuery } from './util/url'
 import { nowForSite } from './util/date'
 import * as storage from './util/storage'
 import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled, getStoredMatchDayOfWeek } from './comparison-input'
+import { getFiltersByKeyPrefix } from './util/filters'
 
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -45,6 +46,10 @@ export function parseQuery(querystring, site) {
     filters: parseJsonUrl(q.get('filters'), []),
     labels: parseJsonUrl(q.get('labels'), {})
   }
+}
+
+export function addFilter(query, filter) {
+  return {...query, filters: [...query.filters, filter]}
 }
 
 export function navigateToQuery(history, queryFrom, newData) {
@@ -131,6 +136,26 @@ export function filtersBackwardsCompatibilityRedirect() {
 
     history.pushState({}, null, `${window.location.pathname}?${q.toString()}`)
   }
+}
+
+// Returns a boolean indicating whether the given query includes a
+// non-empty goal filterset containing a single, or multiple revenue
+// goals with the same currency. Used to decide whether to render
+// revenue metrics in a dashboard report or not.
+export function revenueAvailable(query, site) {
+  const revenueGoalsInFilter = site.revenueGoals.filter((rg) => {
+    const goalFilters = getFiltersByKeyPrefix(query, "goal")
+    
+    return goalFilters.some(([_op, _key, clauses]) => {
+      return clauses.includes(rg.event_name)
+    })
+  })
+
+  const singleCurrency = revenueGoalsInFilter.every((rg) => {
+    return rg.currency === revenueGoalsInFilter[0].currency
+  })
+
+  return revenueGoalsInFilter.length > 0 && singleCurrency
 }
 
 function QueryLink(props) {

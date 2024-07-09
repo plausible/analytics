@@ -28,7 +28,7 @@ function Realtime(props) {
           <Datepicker site={site} query={query} />
         </div>
       </div>
-      <VisitorGraph site={site} query={query} lastLoadTimestamp={lastLoadTimestamp} />
+      <VisitorGraph site={site} query={query} lastLoadTimestamp={lastLoadTimestamp}/>
       <div className="w-full md:flex">
         <div className={ statsBoxClass }>
           <Sources site={site} query={query} />

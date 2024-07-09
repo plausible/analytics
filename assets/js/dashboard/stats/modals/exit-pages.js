@@ -1,135 +1,67 @@
-import React from "react";
-import { Link } from 'react-router-dom'
+import React, {useCallback} from "react";
 import { withRouter } from 'react-router-dom'
-
 import Modal from './modal'
-import * as api from '../../api'
-import numberFormatter, { percentageFormatter } from '../../util/number-formatter'
-import { parseQuery } from '../../query'
-import { trimURL, updatedQuery } from '../../util/url'
-import { hasGoalFilter, replaceFilterByPrefix } from "../../util/filters";
-class ExitPagesModal extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      loading: true,
-      query: parseQuery(props.location.search, props.site),
-      pages: [],
-      page: 1,
-      moreResultsAvailable: false
+import { hasGoalFilter } from "../../util/filters";
+import { addFilter } from '../../query'
+import BreakdownModal from "./breakdown-modal";
+import * as metrics from '../reports/metrics'
+import withQueryContext from "../../components/query-context-hoc";
+
+function ExitPagesModal(props) {
+  const { site, query } = props
+
+  const reportInfo = {
+    title: 'Exit Pages',
+    dimension: 'exit_page',
+    endpoint: '/exit-pages',
+    dimensionLabel: 'Page url'
+  }
+
+  const getFilterInfo = useCallback((listItem) => {
+    return {
+      prefix: reportInfo.dimension,
+      filter: ["is", reportInfo.dimension, [listItem.name]]
     }
-  }
+  }, [])
 
-  componentDidMount() {
-    this.loadPages();
-  }
+  const addSearchFilter = useCallback((query, searchString) => {
+    return addFilter(query, ['contains', reportInfo.dimension, [searchString]])
+  }, [])
 
-  loadPages() {
-    const { query, page } = this.state;
-
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/exit-pages`, query, { limit: 100, page })
-      .then((response) => this.setState((state) => ({ loading: false, pages: state.pages.concat(response.results), moreResultsAvailable: response.results.length === 100 })))
-  }
-
-  loadMore() {
-    this.setState({ loading: true, page: this.state.page + 1 }, this.loadPages.bind(this))
-  }
-
-  showConversionRate() {
-    return hasGoalFilter(this.state.query)
-  }
-
-  showExtra() {
-    return this.state.query.period !== 'realtime' && !this.showConversionRate()
-  }
-
-  label() {
-    if (this.state.query.period === 'realtime') {
-      return 'Current visitors'
+  function chooseMetrics() {
+    if (hasGoalFilter(query)) {
+      return [
+        metrics.createTotalVisitors(),
+        metrics.createVisitors({renderLabel: (_query) => 'Conversions'}),
+        metrics.createConversionRate()
+      ]
     }
 
-    if (this.showConversionRate()) {
-      return 'Conversions'
+    if (query.period === 'realtime') {
+      return [
+        metrics.createVisitors({renderLabel: (_query) => 'Current visitors'})
+      ]
     }
-
-    return 'Visitors'
+    
+    return [
+      metrics.createVisitors({renderLabel: (_query) => "Visitors" }),
+      metrics.createVisits({renderLabel: (_query) => "Total Exits" }),
+      metrics.createExitRate()
+    ]
   }
 
-  renderPage(page) {
-    const filters = replaceFilterByPrefix(this.state.query, "exit_page", ["is", "exit_page", [page.name]])
-    return (
-      <tr className="text-sm dark:text-gray-200" key={page.name}>
-        <td className="p-2 truncate">
-          <Link
-            to={{
-              pathname: `/`,
-              search: updatedQuery({ filters })
-            }}
-            className="hover:underline"
-          >
-            {trimURL(page.name, 40)}
-          </Link>
-        </td>
-        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_visitors)}</td>}
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.visitors)}</td>
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.visits)}</td>}
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{percentageFormatter(page.exit_rate)}</td>}
-        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.conversion_rate)}%</td>}
-      </tr>
-    )
-  }
-
-  renderLoading() {
-    if (this.state.loading) {
-      return <div className="loading my-16 mx-auto"><div></div></div>
-    } else if (this.state.moreResultsAvailable) {
-      return (
-        <div className="w-full text-center my-4">
-          <button onClick={this.loadMore.bind(this)} type="button" className="button">
-            Load more
-          </button>
-        </div>
-      )
-    }
-  }
-
-  renderBody() {
-    if (this.state.pages) {
-      return (
-        <React.Fragment>
-          <h1 className="text-xl font-bold dark:text-gray-100">Exit Pages</h1>
-
-          <div className="my-4 border-b border-gray-300"></div>
-          <main className="modal__content">
-            <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
-              <thead>
-                <tr>
-                  <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Page url</th>
-                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Total Visitors </th>}
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{this.label()}</th>
-                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Total Exits</th>}
-                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Exit Rate</th>}
-                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">CR</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {this.state.pages.map(this.renderPage.bind(this))}
-              </tbody>
-            </table>
-          </main>
-        </React.Fragment>
-      )
-    }
-  }
-
-  render() {
-    return (
-      <Modal>
-        {this.renderBody()}
-        {this.renderLoading()}
-      </Modal>
-    )
-  }
+  return (
+    <Modal site={site}>
+      <BreakdownModal
+        site={site}
+        query={query}
+        reportInfo={reportInfo}
+        metrics={chooseMetrics()}
+        getFilterInfo={getFilterInfo}
+        addSearchFilter={addSearchFilter}
+      />
+    </Modal>
+  )
 }
 
-export default withRouter(ExitPagesModal)
+export default withRouter(withQueryContext(ExitPagesModal))

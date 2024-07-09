@@ -136,7 +136,14 @@ export default function VisitorGraph(props) {
       {(topStatsLoading || graphLoading) && renderLoader()}
       <FadeIn show={!(topStatsLoading || graphLoading)}>
         <div id="top-stats-container" className="flex flex-wrap" ref={topStatsBoundary} style={{ height: getTopStatsHeight() }}>
-          <TopStats site={site} query={query} data={topStatData} onMetricUpdate={onMetricUpdate} tooltipBoundary={topStatsBoundary.current} lastLoadTimestamp={lastLoadTimestamp} />
+          <TopStats
+            site={site}
+            query={query}
+            data={topStatData}
+            onMetricUpdate={onMetricUpdate}
+            tooltipBoundary={topStatsBoundary.current}
+            lastLoadTimestamp={lastLoadTimestamp}
+          />
         </div>
         <div className="relative px-2">
           {graphRefreshing && renderLoader()}
