@@ -3,7 +3,6 @@ defmodule Plausible.Stats.QueryResult do
 
   alias Plausible.Stats.Util
   alias Plausible.Stats.Filters
-  alias Plausible.Stats.Query
 
   @derive Jason.Encoder
   defstruct results: [],
@@ -34,16 +33,6 @@ defmodule Plausible.Stats.QueryResult do
     )
   end
 
-  defp meta(%Query{skip_imported_reason: :unsupported_query}) do
-    %{
-      warning:
-        "Imported stats are not included in the results because query parameters are not supported. " <>
-          "For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats"
-    }
-  end
-
-  defp meta(_), do: %{}
-
   defp dimension_label("event:goal", entry, query) do
     {events, paths} = Filters.Utils.split_goals(query.preloaded_goals)
 
@@ -56,6 +45,12 @@ defmodule Plausible.Stats.QueryResult do
     end
   end
 
+  defp dimension_label("time:" <> _ = time_dimension, entry, query) do
+    datetime = Map.get(entry, Util.shortname(query, time_dimension))
+
+    Plausible.Stats.Time.format_datetime(datetime)
+  end
+
   defp dimension_label(dimension, entry, query) do
     Map.get(entry, Util.shortname(query, dimension))
   end
@@ -65,4 +60,21 @@ defmodule Plausible.Stats.QueryResult do
   end
 
   defp serializable_filter(filter), do: filter
+
+  @imports_unsupported_query_warning "Imported stats are not included in the results because query parameters are not supported. " <>
+                                       "For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats"
+
+  defp meta(query) do
+    %{
+      warning:
+        case query.skip_imported_reason do
+          :unsupported_query -> @imports_unsupported_query_warning
+          _ -> nil
+        end,
+      time_labels:
+        if(query.include.time_labels, do: Plausible.Stats.Time.time_labels(query), else: nil)
+    }
+    |> Enum.reject(fn {_, value} -> is_nil(value) end)
+    |> Enum.into(%{})
+  end
 end

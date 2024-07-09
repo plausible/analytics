@@ -480,13 +480,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
-      expected_plot =
-        if FunWithFlags.enabled?(:experimental_session_count) do
-          ~w[1 1 1 1 1 2 2 2 2 2 2 1 1 1 1 1 0 0 0 0 0 0 0 0 0 1 1 1 0 0]
-        else
-          ~w[0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 1 0 0]
-        end
-
+      expected_plot = ~w[1 1 1 1 1 2 2 2 2 2 2 1 1 1 1 1 0 0 0 0 0 0 0 0 0 1 1 1 0 0]
       assert plot == Enum.map(expected_plot, &String.to_integer/1)
     end
 
@@ -565,11 +559,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
-      if FunWithFlags.enabled?(:experimental_session_count) do
-        assert plot == [1, 1, 0, 0, 0]
-      else
-        assert plot == [1, 1, 0, 0, 1]
-      end
+      assert plot == [1, 1, 0, 0, 0]
     end
   end
 

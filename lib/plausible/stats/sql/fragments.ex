@@ -98,19 +98,6 @@ defmodule Plausible.Stats.SQL.Fragments do
   end
 
   @doc """
-  Same as Plausible.Stats.SQL.Fragments.weekstart_not_before/2 but converts dates to
-  the specified timezone.
-  """
-  defmacro weekstart_not_before(date, not_before, timezone) do
-    quote do
-      weekstart_not_before(
-        to_timezone(unquote(date), unquote(timezone)),
-        to_timezone(unquote(not_before), unquote(timezone))
-      )
-    end
-  end
-
-  @doc """
   Returns whether a key (usually property) exists under `meta.key` array or similar.
 
   This macro is used for operating on custom properties.
@@ -189,6 +176,21 @@ defmodule Plausible.Stats.SQL.Fragments do
   defmacro select_merge_as(q, binding, map_literal) do
     quote do
       select_merge(unquote(q), [], ^wrap_alias(unquote(binding), unquote(map_literal)))
+    end
+  end
+
+  @doc """
+  Macro that helps join two Ecto queries by selecting fields from either one
+  """
+  defmacro select_join_fields(q, query, list, table_name) do
+    quote do
+      Enum.reduce(unquote(list), unquote(q), fn metric_or_dimension, q ->
+        key = shortname(unquote(query), metric_or_dimension)
+
+        select_merge_as(q, [e, s], %{
+          key => field(unquote(table_name), ^key)
+        })
+      end)
     end
   end
 

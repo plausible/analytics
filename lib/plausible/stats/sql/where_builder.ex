@@ -4,7 +4,8 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   """
 
   import Ecto.Query
-  import Plausible.Stats.Base, only: [page_regex: 1, utc_boundaries: 2]
+  import Plausible.Stats.Time, only: [utc_boundaries: 2]
+  import Plausible.Stats.Filters.Utils, only: [page_regex: 1]
 
   alias Plausible.Stats.Query
 
@@ -51,22 +52,13 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_site_time_range(:sessions, site, %Query{experimental_session_count?: true} = query) do
+  defp filter_site_time_range(:sessions, site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     # Counts each _active_ session in time range even if they started before
     dynamic(
       [s],
       s.site_id == ^site.id and s.timestamp >= ^first_datetime and s.start < ^last_datetime
-    )
-  end
-
-  defp filter_site_time_range(:sessions, site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site)
-
-    dynamic(
-      [s],
-      s.site_id == ^site.id and s.start >= ^first_datetime and s.start < ^last_datetime
     )
   end
 

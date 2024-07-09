@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import 'url-search-params-polyfill';
 
 import Router from './dashboard/router'
@@ -50,5 +50,6 @@ if (container) {
     </ErrorBoundary>
   )
 
-  ReactDOM.render(app, container);
+  const root = createRoot(container)
+  root.render(app)
 }

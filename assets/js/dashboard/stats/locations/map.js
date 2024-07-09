@@ -29,7 +29,7 @@ class Countries extends React.Component {
     if (this.props.query !== prevProps.query) {
       // eslint-disable-next-line react/no-did-update-set-state
       this.setState({ loading: true, countries: null })
-      this.fetchCountries().then(this.drawMap)
+      this.fetchCountries(this.drawMap)
     }
   }
 
@@ -39,7 +39,7 @@ class Countries extends React.Component {
   }
 
   onVisible() {
-    this.fetchCountries().then(this.drawMap.bind(this))
+    this.fetchCountries(this.drawMap)
     window.addEventListener('resize', this.resizeMap);
     if (this.props.query.period === 'realtime') {
       document.addEventListener('tick', this.updateCountries)
@@ -68,19 +68,17 @@ class Countries extends React.Component {
   }
 
   updateCountries() {
-    this.fetchCountries().then(() => {
-      this.map.updateChoropleth(this.getDataset(), { reset: true })
-    })
+    this.fetchCountries(() => { this.map.updateChoropleth(this.getDataset(), { reset: true }) })
   }
 
-  fetchCountries() {
+  fetchCountries(cb) {
     return api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/countries`, this.props.query, { limit: 300 })
       .then((response) => {
         if (this.props.afterFetchData) {
           this.props.afterFetchData(response)
         }
 
-        this.setState({ loading: false, countries: response.results })
+        this.setState({ loading: false, countries: response.results }, cb)
       })
   }
 

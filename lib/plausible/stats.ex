@@ -15,6 +15,17 @@ defmodule Plausible.Stats do
 
   use Plausible.DebugReplayInfo
 
+  def query(site, query) do
+    include_sentry_replay_info()
+
+    optimized_query = QueryOptimizer.optimize(query)
+
+    optimized_query
+    |> SQL.QueryBuilder.build(site)
+    |> ClickhouseRepo.all()
+    |> QueryResult.from(optimized_query)
+  end
+
   def breakdown(site, query, metrics, pagination) do
     include_sentry_replay_info()
     Breakdown.breakdown(site, query, metrics, pagination)
@@ -33,15 +44,6 @@ defmodule Plausible.Stats do
   def current_visitors(site) do
     include_sentry_replay_info()
     CurrentVisitors.current_visitors(site)
-  end
-
-  def query(site, query) do
-    optimized_query = QueryOptimizer.optimize(query)
-
-    optimized_query
-    |> SQL.QueryBuilder.build(site)
-    |> ClickhouseRepo.all()
-    |> QueryResult.from(optimized_query)
   end
 
   on_ee do

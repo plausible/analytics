@@ -76,8 +76,19 @@ defmodule Plausible.Stats.Filters.Utils do
     events = Enum.map(event_goals, fn {_, event} -> event end)
 
     page_regexes =
-      Enum.map(pageview_goals, fn {_, path} -> Plausible.Stats.Base.page_regex(path) end)
+      Enum.map(pageview_goals, fn {_, path} -> page_regex(path) end)
 
     {events, page_regexes}
+  end
+
+  def page_regex(expr) do
+    escaped =
+      expr
+      |> Regex.escape()
+      |> String.replace("\\|", "|")
+      |> String.replace("\\*\\*", ".*")
+      |> String.replace("\\*", ".*")
+
+    "^#{escaped}$"
   end
 end

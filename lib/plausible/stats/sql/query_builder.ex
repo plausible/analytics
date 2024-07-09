@@ -32,7 +32,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       from(
         e in "events_v2",
         where: ^SQL.WhereBuilder.build(:events, site, events_query),
-        select: ^Base.select_event_metrics(events_query.metrics)
+        select: ^select_event_metrics(events_query)
       )
 
     on_ee do
@@ -41,11 +41,9 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
     q
     |> join_sessions_if_needed(site, events_query)
-    |> build_group_by(events_query)
+    |> build_group_by(:events, events_query)
     |> merge_imported(site, events_query, events_query.metrics)
-    |> maybe_add_global_conversion_rate(site, events_query)
-    |> maybe_add_group_conversion_rate(site, events_query)
-    |> Base.add_percentage_metric(site, events_query, events_query.metrics)
+    |> SQL.SpecialMetrics.add(site, events_query)
   end
 
   defp join_sessions_if_needed(q, site, query) do
@@ -75,7 +73,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       from(
         e in "sessions_v2",
         where: ^SQL.WhereBuilder.build(:sessions, site, sessions_query),
-        select: ^Base.select_session_metrics(sessions_query.metrics, sessions_query)
+        select: ^select_session_metrics(sessions_query)
       )
 
     on_ee do
@@ -84,11 +82,9 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
 
     q
     |> join_events_if_needed(site, sessions_query)
-    |> build_group_by(sessions_query)
+    |> build_group_by(:sessions, sessions_query)
     |> merge_imported(site, sessions_query, sessions_query.metrics)
-    |> maybe_add_global_conversion_rate(site, sessions_query)
-    |> maybe_add_group_conversion_rate(site, sessions_query)
-    |> Base.add_percentage_metric(site, sessions_query, sessions_query.metrics)
+    |> SQL.SpecialMetrics.add(site, sessions_query)
   end
 
   def join_events_if_needed(q, site, query) do
@@ -115,11 +111,23 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     end
   end
 
-  defp build_group_by(q, query) do
-    Enum.reduce(query.dimensions, q, &dimension_group_by(&2, query, &1))
+  defp select_event_metrics(query) do
+    query.metrics
+    |> Enum.map(&SQL.Expression.event_metric/1)
+    |> Enum.reduce(%{}, &Map.merge/2)
   end
 
-  defp dimension_group_by(q, query, "event:goal" = dimension) do
+  defp select_session_metrics(query) do
+    query.metrics
+    |> Enum.map(&SQL.Expression.session_metric(&1, query))
+    |> Enum.reduce(%{}, &Map.merge/2)
+  end
+
+  defp build_group_by(q, table, query) do
+    Enum.reduce(query.dimensions, q, &dimension_group_by(&2, table, query, &1))
+  end
+
+  defp dimension_group_by(q, _table, query, "event:goal" = dimension) do
     {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
 
     from(e in q,
@@ -132,11 +140,11 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     )
   end
 
-  defp dimension_group_by(q, query, dimension) do
+  defp dimension_group_by(q, table, query, dimension) do
     key = shortname(query, dimension)
 
     q
-    |> select_merge_as([], Expression.dimension(key, dimension, query))
+    |> select_merge_as([], Expression.dimension(key, dimension, table, query))
     |> group_by([], selected_as(^key))
   end
 
@@ -153,87 +161,6 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
         selected_as(^shortname(query, metric_or_dimension))
       }
     )
-  end
-
-  defmacrop select_join_fields(q, query, list, table_name) do
-    quote do
-      Enum.reduce(unquote(list), unquote(q), fn metric_or_dimension, q ->
-        key = shortname(unquote(query), metric_or_dimension)
-
-        select_merge_as(q, [e, s], %{
-          key => field(unquote(table_name), ^key)
-        })
-      end)
-    end
-  end
-
-  # Adds conversion_rate metric to query, calculated as
-  # X / Y where Y is the same breakdown value without goal or props
-  # filters.
-  def maybe_add_global_conversion_rate(q, site, query) do
-    if :conversion_rate in query.metrics do
-      total_query =
-        query
-        |> Query.remove_filters(["event:goal", "event:props"])
-        |> Query.set_dimensions([])
-
-      q
-      |> select_merge_as(
-        [],
-        Base.total_visitors_subquery(site, total_query, query.include_imported)
-      )
-      |> select_merge_as([e], %{
-        conversion_rate:
-          fragment(
-            "if(? > 0, round(? / ? * 100, 1), 0)",
-            selected_as(:total_visitors),
-            selected_as(:visitors),
-            selected_as(:total_visitors)
-          )
-      })
-    else
-      q
-    end
-  end
-
-  # This function injects a group_conversion_rate metric into
-  # a dimensional query. It is calculated as X / Y, where:
-  #
-  #   * X is the number of conversions for a set of dimensions
-  #     result (conversion = number of visitors who
-  #     completed the filtered goal with the filtered
-  #     custom properties).
-  #
-  #  * Y is the number of all visitors for this set of dimensions
-  #    result without the `event:goal` and `event:props:*`
-  #    filters.
-  def maybe_add_group_conversion_rate(q, site, query) do
-    if :group_conversion_rate in query.metrics do
-      group_totals_query =
-        query
-        |> Query.remove_filters(["event:goal", "event:props"])
-        |> Query.set_metrics([:visitors])
-        |> Query.set_order_by([])
-
-      from(e in subquery(q),
-        left_join: c in subquery(build(group_totals_query, site)),
-        on: ^build_group_by_join(query)
-      )
-      |> select_merge_as([e, c], %{
-        total_visitors: c.visitors,
-        group_conversion_rate:
-          fragment(
-            "if(? > 0, round(? / ? * 100, 1), 0)",
-            c.visitors,
-            e.visitors,
-            c.visitors
-          )
-      })
-      |> select_join_fields(query, query.dimensions, e)
-      |> select_join_fields(query, List.delete(query.metrics, :group_conversion_rate), e)
-    else
-      q
-    end
   end
 
   defp join_query_results({nil, _}, {nil, _}), do: nil

@@ -174,8 +174,10 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp build_full_intervals(%{interval: "week", date_range: range}, labels) do
     for label <- labels, into: %{} do
-      interval_start = Timex.beginning_of_week(label)
-      interval_end = Timex.end_of_week(label)
+      date = Date.from_iso8601!(label)
+
+      interval_start = Timex.beginning_of_week(date)
+      interval_end = Timex.end_of_week(date)
 
       within_interval? = Enum.member?(range, interval_start) && Enum.member?(range, interval_end)
 
@@ -185,8 +187,10 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp build_full_intervals(%{interval: "month", date_range: range}, labels) do
     for label <- labels, into: %{} do
-      interval_start = Timex.beginning_of_month(label)
-      interval_end = Timex.end_of_month(label)
+      date = Date.from_iso8601!(label)
+
+      interval_start = Timex.beginning_of_month(date)
+      interval_end = Timex.end_of_month(date)
 
       within_interval? = Enum.member?(range, interval_start) && Enum.member?(range, interval_end)
 
@@ -773,7 +777,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     query =
       Query.from(site, params)
-      |> Query.put_filter(referrer_filter)
+      |> Query.add_filter(referrer_filter)
 
     pagination = parse_pagination(params)
 
@@ -903,9 +907,9 @@ defmodule PlausibleWeb.Api.StatsController do
       total_pageviews_query =
         query
         |> Query.remove_filters(["visit:exit_page"])
-        |> Query.put_filter([:is, "event:page", pages])
-        |> Query.put_filter([:is, "event:name", ["pageview"]])
-        |> Query.set_dimensions(["event:page"])
+        |> Query.add_filter([:is, "event:page", pages])
+        |> Query.add_filter([:is, "event:name", ["pageview"]])
+        |> Query.set(dimensions: ["event:page"])
 
       total_pageviews =
         Stats.breakdown(site, total_pageviews_query, [:pageviews], {limit, 1})

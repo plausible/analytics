@@ -85,7 +85,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&experimental_session_count=true"
+          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01"
         )
 
       res = json_response(conn, 200)
