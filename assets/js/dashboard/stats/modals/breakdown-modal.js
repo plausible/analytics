@@ -76,19 +76,19 @@ const MIN_HEIGHT_PX = 500
 
 //   * `afterFetchNextPage` - a function with the same behaviour as `afterFetchData`,
 //     but will be called after a successful next page load in `fetchNextPage`.
-export default function BreakdownModal(props) {
-  const {
-    site,
-    query,
-    reportInfo,
-    metrics,
-    renderIcon,
-    getExternalLinkURL,
-    searchEnabled,
-    afterFetchData,
-    afterFetchNextPage
-  } = props
-  
+export default function BreakdownModal({
+  site,
+  query,
+  reportInfo,
+  metrics,
+  renderIcon,
+  getExternalLinkURL,
+  searchEnabled,
+  afterFetchData,
+  afterFetchNextPage,
+  addSearchFilter,
+  getFilterInfo
+}) {
   const endpoint = `/api/stats/${encodeURIComponent(site.domain)}${reportInfo.endpoint}`
   const isSearchEnabled = searchEnabled === false ? false : true
   
@@ -159,7 +159,7 @@ export default function BreakdownModal(props) {
 
   function withSearch(query) {
     if (isSearchEnabled && search !== '') {
-      return props.addSearchFilter(query, search)
+      return addSearchFilter(query, search)
     }
 
     return query
@@ -198,7 +198,7 @@ export default function BreakdownModal(props) {
           <FilterLink
             pathname={`/${encodeURIComponent(site.domain)}`}
             query={query}
-            filterInfo={props.getFilterInfo(item)}
+            filterInfo={getFilterInfo(item)}
           >
             {trimURL(item.name, 40)}
           </FilterLink>
