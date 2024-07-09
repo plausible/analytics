@@ -94,7 +94,8 @@ defmodule Plausible.DataMigration.LocationsSync do
       Location.City.all()
       |> Enum.map(fn city -> %{type: "city", id: Integer.to_string(city.id), name: city.name} end)
 
-    @repo.insert_all(ClickhouseLocationData, Enum.concat([countries, subdivisions, cities]))
+    insert_data = Enum.concat([countries, subdivisions, cities])
+    @repo.insert_all(ClickhouseLocationData, insert_data)
 
     {:ok, _} =
       run_sql("update-location-data-dictionary",

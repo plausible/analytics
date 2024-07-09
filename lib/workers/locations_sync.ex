@@ -1,6 +1,8 @@
 defmodule Plausible.Workers.LocationsSync do
+  @moduledoc false
+
   use Plausible.Repo
-  use Oban.Worker, queue: :update_locations
+  use Oban.Worker, queue: :locations_sync
 
   @impl Oban.Worker
   def perform(_job) do
