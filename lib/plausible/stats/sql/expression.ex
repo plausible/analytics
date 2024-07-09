@@ -179,6 +179,15 @@ defmodule Plausible.Stats.SQL.Expression do
   def dimension(key, "visit:city", _table, _query),
     do: wrap_alias([t], %{key => t.city})
 
+  def dimension(key, "visit:country_name", _table, _query),
+    do: wrap_alias([t], %{key => t.country_name})
+
+  def dimension(key, "visit:region_name", _table, _query),
+    do: wrap_alias([t], %{key => t.region_name})
+
+  def dimension(key, "visit:city_name", _table, _query),
+    do: wrap_alias([t], %{key => t.city_name})
+
   def event_metric(:pageviews) do
     wrap_alias([e], %{
       pageviews:
