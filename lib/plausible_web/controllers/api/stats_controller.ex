@@ -172,34 +172,34 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp build_full_intervals(%{interval: "week", date_range: range}, labels) do
-    for label <- labels, into: %{} do
-      date = Date.from_iso8601!(label)
-
-      interval_start = Timex.beginning_of_week(date)
-      interval_end = Timex.end_of_week(date)
-
-      within_interval? = Enum.member?(range, interval_start) && Enum.member?(range, interval_end)
-
-      {label, within_interval?}
-    end
+  defp build_full_intervals(%{interval: "week", date_range: date_range}, labels) do
+    build_intervals(labels, date_range, &Timex.beginning_of_week/1, &Timex.end_of_week/1)
   end
 
-  defp build_full_intervals(%{interval: "month", date_range: range}, labels) do
-    for label <- labels, into: %{} do
-      date = Date.from_iso8601!(label)
-
-      interval_start = Timex.beginning_of_month(date)
-      interval_end = Timex.end_of_month(date)
-
-      within_interval? = Enum.member?(range, interval_start) && Enum.member?(range, interval_end)
-
-      {label, within_interval?}
-    end
+  defp build_full_intervals(%{interval: "month", date_range: date_range}, labels) do
+    build_intervals(labels, date_range, &Timex.beginning_of_month/1, &Timex.end_of_month/1)
   end
 
   defp build_full_intervals(_query, _labels) do
     nil
+  end
+
+  def build_intervals(labels, date_range, start_fn, end_fn) do
+    for label <- labels, into: %{} do
+      case Date.from_iso8601(label) do
+        {:ok, date} ->
+          interval_start = start_fn.(date)
+          interval_end = end_fn.(date)
+
+          within_interval? =
+            Enum.member?(date_range, interval_start) && Enum.member?(date_range, interval_end)
+
+          {label, within_interval?}
+
+        _ ->
+          {label, false}
+      end
+    end
   end
 
   def top_stats(conn, params) do
