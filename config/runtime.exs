@@ -566,7 +566,9 @@ base_queues = [
   analytics_exports: 1,
   notify_exported_analytics: 1,
   domain_change_transition: 1,
-  check_accept_traffic_until: 1
+  check_accept_traffic_until: 1,
+  clickhouse_clean_sites: 1,
+  locations_sync: 1
 ]
 
 cloud_queues = [
