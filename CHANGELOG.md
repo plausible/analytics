@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Fix access to Stats API feature in CE plausible/analytics#4244
+- Fix filter suggestions when same filter previously applied
 
 ## v2.1.1 - 2024-06-06
 

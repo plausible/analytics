@@ -160,9 +160,16 @@ export function fetchSuggestions(apiPath, query, input, additionalFilter) {
 
 function queryForSuggestions(query, additionalFilter) {
   let filters = query.filters
-  if (additionalFilter && additionalFilter[2].length > 0) {
-    filters = filters.concat([additionalFilter])
+
+  if (additionalFilter) {
+    const [_operation, filterKey, clauses] = additionalFilter
+
+    filters = filters.filter(([_op, key, _clauses]) => key != filterKey)
+    if (clauses.length > 0) {
+      filters = filters.concat([additionalFilter])
+    }
   }
+
   return { ...query, filters }
 }
 
