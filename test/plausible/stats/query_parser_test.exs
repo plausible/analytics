@@ -197,14 +197,14 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           "metrics" => ["visitors"],
           "date_range" => "all",
           "filters" => [
-            ["is", "visit:#{unquote(dimension)}", ["foo"]]
+            ["is", "visit:#{unquote(dimension)}", ["ab"]]
           ]
         }
         |> check_success(site, %{
           metrics: [:visitors],
           date_range: @date_range,
           filters: [
-            [:is, "visit:#{unquote(dimension)}", ["foo"]]
+            [:is, "visit:#{unquote(dimension)}", ["ab"]]
           ],
           dimensions: [],
           order_by: nil,
@@ -291,6 +291,18 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         include: %{imports: false, time_labels: false},
         preloaded_goals: []
       })
+    end
+
+    test "invalid visit:country filter", %{site: site} do
+      %{
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "visit:country", ["USA"]]]
+      }
+      |> check_error(
+        site,
+        ~r/Invalid visit:country filter, visit:country needs to be a valid 2-letter country code/
+      )
     end
   end
 

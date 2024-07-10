@@ -231,20 +231,31 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
   defp filter_field(db_field, [:matches, _key, glob_exprs]) do
     page_regexes = Enum.map(glob_exprs, &page_regex/1)
-    dynamic([x], fragment("multiMatchAny(?, ?)", field(x, ^db_field), ^page_regexes))
+
+    dynamic(
+      [x],
+      fragment("multiMatchAny(?, ?)", type(field(x, ^db_field), :string), ^page_regexes)
+    )
   end
 
   defp filter_field(db_field, [:does_not_match, _key, glob_exprs]) do
     page_regexes = Enum.map(glob_exprs, &page_regex/1)
-    dynamic([x], fragment("not(multiMatchAny(?, ?))", field(x, ^db_field), ^page_regexes))
+
+    dynamic(
+      [x],
+      fragment("not(multiMatchAny(?, ?))", type(field(x, ^db_field), :string), ^page_regexes)
+    )
   end
 
   defp filter_field(db_field, [:contains, _key, values]) do
-    dynamic([x], fragment("multiSearchAny(?, ?)", field(x, ^db_field), ^values))
+    dynamic([x], fragment("multiSearchAny(?, ?)", type(field(x, ^db_field), :string), ^values))
   end
 
   defp filter_field(db_field, [:does_not_contain, _key, values]) do
-    dynamic([x], fragment("not(multiSearchAny(?, ?))", field(x, ^db_field), ^values))
+    dynamic(
+      [x],
+      fragment("not(multiSearchAny(?, ?))", type(field(x, ^db_field), :string), ^values)
+    )
   end
 
   defp filter_field(db_field, [:is, _key, list]) do
