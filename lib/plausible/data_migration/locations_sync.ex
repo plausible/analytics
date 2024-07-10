@@ -2,7 +2,7 @@ defmodule Plausible.DataMigration.LocationsSync do
   @moduledoc """
   ClickHouse locations data migration for storing location names in ClickHouse.
 
-  Only run when `Location.version()` changes.
+  Only run when `Location.version()` changes: either as a migration or in cron.
 
   The migration:
   1. Truncates existing `location_data` table (if exists)
