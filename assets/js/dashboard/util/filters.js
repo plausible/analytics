@@ -160,16 +160,16 @@ export function fetchSuggestions(apiPath, query, input, additionalFilter) {
 
 function queryForSuggestions(query, additionalFilter) {
   let filters = query.filters
-
   if (additionalFilter) {
     const [_operation, filterKey, clauses] = additionalFilter
 
-    filters = filters.filter(([_op, key, _clauses]) => key != filterKey)
+    // For suggestions, we remove already-applied filter with same key from query and add new filter (if feasible)
     if (clauses.length > 0) {
-      filters = filters.concat([additionalFilter])
+      filters = replaceFilterByPrefix(query, filterKey, additionalFilter)
+    } else {
+      filters = omitFiltersByKeyPrefix(query, filterKey)
     }
   }
-
   return { ...query, filters }
 }
 
