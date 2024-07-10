@@ -272,7 +272,9 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       conn: conn,
       site: site
     } do
-      populate_stats(site, [
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
         build(:event,
           name: "Payment",
           revenue_reporting_amount: Decimal.new("200100300.123"),
@@ -294,7 +296,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       insert(:goal, %{site: site, event_name: "Payment", currency: :EUR})
 
-      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&with_imported=true")
 
       assert json_response(conn, 200)["results"] == [
                %{
