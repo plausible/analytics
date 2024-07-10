@@ -9,6 +9,9 @@ import Properties from './props'
 import { FeatureSetupNotice } from '../../components/notice'
 import { SPECIAL_GOALS } from './goal-conversions'
 import { hasGoalFilter } from '../../util/filters'
+import { useSiteContext } from '../../site-context'
+import { useQueryContext } from '../../query-context'
+import { useUserContext } from '../../user-context'
 
 /*global BUILD_EXTRA*/
 /*global require*/
@@ -35,9 +38,12 @@ export const sectionTitles = {
   [FUNNELS]: 'Funnels'
 }
 
-export default function Behaviours(props) {
-  const { site, query, currentUserRole } = props
-  const adminAccess = ['owner', 'admin', 'super_admin'].includes(currentUserRole)
+export default function Behaviours({ importedDataInView }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
+  const user = useUserContext();
+
+  const adminAccess = ['owner', 'admin', 'super_admin'].includes(user.role)
   const tabKey = `behavioursTab__${site.domain}`
   const funnelKey = `behavioursTabFunnel__${site.domain}`
   const [enabledModes, setEnabledModes] = useState(getEnabledModes())
@@ -309,7 +315,7 @@ export default function Behaviours(props) {
       // If the feature is not supported by the site owner's subscription,
       // it only makes sense to display the feature tab to the owner itself
       // as only they can upgrade to make the feature available.
-      const callToActionIsMissing = !isAvailable && currentUserRole !== 'owner'
+      const callToActionIsMissing = !isAvailable &&  user.role !== 'owner'
 
       if (!isOptedOut && !callToActionIsMissing) {
         enabledModes.push(feature)
@@ -341,7 +347,7 @@ export default function Behaviours(props) {
     } else if (mode === PROPS) {
       return <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason} message="Imported data is unavailable in this view" />
     } else {
-      return <ImportedQueryUnsupportedWarning altCondition={props.importedDataInView} message="Imported data is unavailable in this view" />
+      return <ImportedQueryUnsupportedWarning altCondition={importedDataInView} message="Imported data is unavailable in this view" />
     }
   }
 

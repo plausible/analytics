@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import * as storage from '../../util/storage'
 import { getFiltersByKeyPrefix, hasGoalFilter, isFilteringOnFixedValue } from '../../util/filters'
 import ListReport from '../reports/list'
@@ -6,6 +6,8 @@ import * as metrics from '../reports/metrics'
 import * as api from '../../api'
 import * as url from '../../util/url'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
+import { useQueryContext } from '../../query-context';
+import { useSiteContext } from '../../site-context';
 
 // Icons copied from https://github.com/alrra/browser-logos
 const BROWSER_ICONS = {
@@ -57,7 +59,7 @@ function Browsers({ query, site, afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ meta: {plot: true}}),
+      metrics.createVisitors({ meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
       !hasGoalFilter(query) && metrics.createPercentage()
     ].filter(metric => !!metric)
@@ -80,9 +82,11 @@ function BrowserVersions({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/browser-versions'), query)
       .then(res => {
-        return {...res, results: res.results.map((row => {
-          return {...row, name: `${row.browser} ${row.name}`, version: row.name}
-        }))}
+        return {
+          ...res, results: res.results.map((row => {
+            return { ...row, name: `${row.browser} ${row.name}`, version: row.name }
+          }))
+        }
       })
   }
 
@@ -102,7 +106,7 @@ function BrowserVersions({ query, site, afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ meta: {plot: true}}),
+      metrics.createVisitors({ meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
       !hasGoalFilter(query) && metrics.createPercentage()
     ].filter(metric => !!metric)
@@ -166,9 +170,9 @@ function OperatingSystems({ query, site, afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ meta: {plot: true}}),
+      metrics.createVisitors({ meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
-      !hasGoalFilter(query) && metrics.createPercentage({meta: {hiddenonMobile: true}})
+      !hasGoalFilter(query) && metrics.createPercentage({ meta: { hiddenonMobile: true } })
     ].filter(metric => !!metric)
   }
 
@@ -193,9 +197,11 @@ function OperatingSystemVersions({ query, site, afterFetchData }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/operating-system-versions'), query)
       .then(res => {
-        return {...res, results: res.results.map((row => {
-          return {...row, name: `${row.os} ${row.name}`, version: row.name}
-        }))}
+        return {
+          ...res, results: res.results.map((row => {
+            return { ...row, name: `${row.os} ${row.name}`, version: row.name }
+          }))
+        }
       })
   }
 
@@ -215,7 +221,7 @@ function OperatingSystemVersions({ query, site, afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ meta: {plot: true}}),
+      metrics.createVisitors({ meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
       !hasGoalFilter(query) && metrics.createPercentage()
     ].filter(metric => !!metric)
@@ -255,7 +261,7 @@ function ScreenSizes({ query, site, afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ meta: {plot: true}}),
+      metrics.createVisitors({ meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
       !hasGoalFilter(query) && metrics.createPercentage()
     ].filter(metric => !!metric)
@@ -296,8 +302,10 @@ function iconFor(screenSize) {
   }
 }
 
-export default function Devices(props) {
-  const {site, query} = props
+export default function Devices() {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
+
   const tabKey = `deviceTab__${site.domain}`
   const storedTab = storage.getItem(tabKey)
   const [mode, setMode] = useState(storedTab || 'browser')
@@ -362,7 +370,7 @@ export default function Devices(props) {
       <div className="flex justify-between w-full">
         <div className="flex gap-x-1">
           <h3 className="font-bold dark:text-gray-100">Devices</h3>
-          <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason}/>
+          <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason} />
         </div>
         <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
           {renderPill('Browser', 'browser')}

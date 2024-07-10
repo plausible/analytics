@@ -1,15 +1,11 @@
 import React, { useCallback, useState } from "react";
-import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
-import withQueryContext from "../../components/query-context-hoc";
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
 
-
 /*global BUILD_EXTRA*/
-function ConversionsModal(props) {
-  const { site, query } = props
+function ConversionsModal() {
   const [showRevenue, setShowRevenue] = useState(false)
 
   const reportInfo = {
@@ -28,8 +24,8 @@ function ConversionsModal(props) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({renderLabel: (_query) => "Uniques"}),
-      metrics.createEvents({renderLabel: (_query) => "Total"}),
+      metrics.createVisitors({ renderLabel: (_query) => "Uniques" }),
+      metrics.createEvents({ renderLabel: (_query) => "Total" }),
       metrics.createConversionRate(),
       showRevenue && metrics.createAverageRevenue(),
       showRevenue && metrics.createTotalRevenue(),
@@ -54,10 +50,8 @@ function ConversionsModal(props) {
   }
 
   return (
-    <Modal site={site}>
+    <Modal>
       <BreakdownModal
-        site={site}
-        query={query}
         reportInfo={reportInfo}
         metrics={chooseMetrics()}
         afterFetchData={BUILD_EXTRA ? afterFetchData : undefined}
@@ -69,4 +63,4 @@ function ConversionsModal(props) {
   )
 }
 
-export default withRouter(withQueryContext(ConversionsModal))
+export default ConversionsModal

@@ -64,10 +64,12 @@ function storeInterval(period, domain, interval) {
 }
 
 function subscribeKeybinding(element) {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const handleKeyPress = useCallback((event) => {
     if (isKeyPressed(event, "i")) element.current?.click()
   }, [])
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     document.addEventListener('keydown', handleKeyPress)
     return () => document.removeEventListener('keydown', handleKeyPress)
@@ -90,6 +92,7 @@ export const getCurrentInterval = function(site, query) {
 export function IntervalPicker({ query, site, onIntervalUpdate }) {
   if (query.period == 'realtime') return null
   
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const menuElement = React.useRef(null)
   const options = validIntervals(site, query)
   const currentInterval = getCurrentInterval(site, query)

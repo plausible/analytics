@@ -4,9 +4,12 @@ import * as api from '../api'
 import * as url from '../util/url'
 import { Tooltip } from '../util/tooltip';
 import { SecondsSinceLastLoad } from '../util/seconds-since-last-load';
+import { useQueryContext } from '../query-context';
+import { useSiteContext } from '../site-context';
 
-export default function CurrentVisitors(props) {
-  const { site, query, lastLoadTimestamp, tooltipBoundary } = props
+export default function CurrentVisitors({ tooltipBoundary }) {
+  const { query, lastLoadTimestamp } = useQueryContext();
+  const site = useSiteContext();
   const [currentVisitors, setCurrentVisitors] = useState(null)
 
   const updateCount = useCallback(() => {
