@@ -131,11 +131,9 @@ function Filters(props) {
     handleResize()
 
     window.addEventListener('resize', handleResize, false)
-    document.addEventListener('keyup', handleKeyup)
 
     return () => {
       window.removeEventListener('resize', handleResize, false)
-      document.removeEventListener("keyup", handleKeyup)
     }
   }, [])
 
@@ -147,14 +145,6 @@ function Filters(props) {
     if (wrapped === WRAPSTATE.waiting) { updateDisplayMode() }
   }, [wrapped])
 
-
-  function handleKeyup(e) {
-    if (e.ctrlKey || e.metaKey || e.altKey) return
-
-    if (e.key === 'Escape') {
-      clearAllFilters(history, query)
-    }
-  }
 
   function handleResize() {
     setViewport(window.innerWidth || 639)

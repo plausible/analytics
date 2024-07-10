@@ -129,9 +129,12 @@ const ComparisonInput = function({ site, query, history }) {
     }
   }
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const calendar = React.useRef(null)
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [uiMode, setUiMode] = React.useState("menu")
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   React.useEffect(() => {
     if (uiMode == "datepicker") {
       setTimeout(() => calendar.current.flatpickr.open(), 100)
