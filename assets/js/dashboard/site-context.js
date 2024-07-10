@@ -27,7 +27,7 @@ export function parseSiteFromDataset(dataset) {
 
 const siteContextDefaultValue = {
     domain: '',
-    offset: 0,
+    offset: '0',
     hasGoals: false,
     hasProps: false,
     funnelsAvailable: false,
@@ -38,8 +38,8 @@ const siteContextDefaultValue = {
     revenueGoals: [],
     funnels: [],
     statsBegin: '',
-    nativeStatsBegin: null,
-    embedded: null,
+    nativeStatsBegin: '',
+    embedded: '',
     background: '',
     isDbip: false,
     flags: {},

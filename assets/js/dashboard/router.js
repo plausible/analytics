@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Switch, Route, useLocation } from "react-router-dom";
 
 import Dashboard from './index'
@@ -29,10 +29,8 @@ function ScrollToTop() {
 
 export default function Router() {
   const site = useSiteContext()
-  const { shared, domain } = site;
-  const basename = useMemo(() => shared ? `/share/${encodeURIComponent(domain)}` : encodeURIComponent(domain), [domain, shared])
   return (
-    <BrowserRouter basename={basename}>
+    <BrowserRouter basename={site.shared ? `/share/${encodeURIComponent(site.domain)}` : encodeURIComponent(site.domain)}>
       <QueryContextProvider>
         <Route path="/">
           <ScrollToTop />
