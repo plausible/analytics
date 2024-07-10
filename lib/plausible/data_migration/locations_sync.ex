@@ -95,17 +95,21 @@ defmodule Plausible.DataMigration.LocationsSync do
 
     countries =
       Location.Country.all()
-      |> Enum.map(fn country -> %{type: "country", id: country.alpha_2, name: country.name} end)
+      |> Enum.map(fn %Location.Country{alpha_2: alpha_2, name: name} ->
+        %{type: "country", id: alpha_2, name: name}
+      end)
 
     subdivisions =
       Location.Subdivision.all()
-      |> Enum.map(fn subdivision ->
-        %{type: "subdivision", id: subdivision.code, name: subdivision.name}
+      |> Enum.map(fn %Location.Subdivision{code: code, name: name} ->
+        %{type: "subdivision", id: code, name: name}
       end)
 
     cities =
       Location.City.all()
-      |> Enum.map(fn city -> %{type: "city", id: Integer.to_string(city.id), name: city.name} end)
+      |> Enum.map(fn %Location.City{id: id, name: name} ->
+        %{type: "city", id: Integer.to_string(id), name: name}
+      end)
 
     insert_data = Enum.concat([countries, subdivisions, cities])
     @repo.insert_all(ClickhouseLocationData, insert_data)
