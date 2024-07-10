@@ -91,7 +91,6 @@ export default function BreakdownModal({
   
   const [initialLoading, setInitialLoading] = useState(true)
   const [loading, setLoading] = useState(true)
-  const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [results, setResults] = useState([])
   const [page, setPage] = useState(1)
@@ -101,10 +100,9 @@ export default function BreakdownModal({
   useMountedEffect(() => { fetchNextPage() }, [page])
 
   useDebouncedEffect(() => {
-    setSearch(searchInput)
-  }, [searchInput], 300)
-  
-  useEffect(() => { fetchData() }, [search])
+    setLoading(true)
+    fetchData()
+  }, [search], 300)
 
   useEffect(() => {
     if (!searchEnabled) { return }
@@ -126,7 +124,6 @@ export default function BreakdownModal({
   }, [])
 
   const fetchData = useCallback(() => {
-    setLoading(true)
     api.get(endpoint, withSearch(query), { limit: LIMIT, page: 1, detailed: true })
       .then((response) => {
         if (typeof afterFetchData === 'function') {
@@ -236,7 +233,7 @@ export default function BreakdownModal({
   }
 
   function handleInputChange(e) {
-    setSearchInput(e.target.value)
+    setSearch(e.target.value)
   }
 
   function renderSearchInput() {
