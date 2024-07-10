@@ -1,7 +1,7 @@
 import React, { Fragment, useState, useCallback, useEffect, useRef } from 'react'
 import { Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import debounce from 'debounce-promise'
+import { useDebouncedEffect } from '../custom-hooks.js'
 import classNames from 'classnames'
 
 function Option({isHighlighted, onClick, onMouseEnter, text, id}) {
@@ -39,7 +39,7 @@ export default function PlausibleCombobox(props) {
   const [options, setOptions] = useState([])
   const [isLoading, setLoading] = useState(false)
   const [isOpen, setOpen] = useState(false)
-  const [input, setInput] = useState('')
+  const [search, setSearch] = useState('')
   const [highlightedIndex, setHighlightedIndex] = useState(0)
   const searchRef = useRef(null)
   const containerRef = useRef(null)
@@ -48,9 +48,23 @@ export default function PlausibleCombobox(props) {
   const loading = isLoading || !!props.forceLoading
 
   const visibleOptions = [...options]
-  if (props.freeChoice && input.length > 0 && options.every(option => option.value !== input)) {
-    visibleOptions.push({value: input, label: input, freeChoice: true})
+  if (props.freeChoice && search.length > 0 && options.every(option => option.value !== search)) {
+    visibleOptions.push({value: search, label: search, freeChoice: true})
   }
+
+  useDebouncedEffect(() => {
+    fetchOptions()
+  }, [search], 200)
+
+  const fetchOptions = useCallback(() => {
+    setLoading(true)
+
+    props.fetchOptions(search).then((loadedOptions) => {
+      setLoading(false)
+      setHighlightedIndex(0)
+      setOptions(loadedOptions)
+    })
+  }, [search])
 
   function highLight(index) {
     let newIndex = index
@@ -99,32 +113,18 @@ export default function PlausibleCombobox(props) {
     return optionAlreadySelected || optionDisabled
   }
 
-  function fetchOptions(query) {
-    setLoading(true)
-
-    return props.fetchOptions(query).then((loadedOptions) => {
-      setLoading(false)
-      setHighlightedIndex(0)
-      setOptions(loadedOptions)
-    })
-  }
-
-  const debouncedFetchOptions = useCallback(debounce(fetchOptions, 200), [fetchOptions])
-
   function onInput(e) {
-    const newInput = e.target.value
-    setInput(newInput)
-    debouncedFetchOptions(newInput)
+    setSearch(e.target.value)
   }
 
   function toggleOpen() {
     if (!isOpen) {
       setOpen(true)
-      fetchOptions(input)
+      fetchOptions()
       searchRef.current.focus()
     } else {
       setOpen(false)
-      setInput('')
+      setSearch('')
     }
   }
 
@@ -137,7 +137,7 @@ export default function PlausibleCombobox(props) {
     }
 
     setOpen(false)
-    setInput('')
+    setSearch('')
   }
 
   function removeOption(option, e) {
@@ -151,7 +151,7 @@ export default function PlausibleCombobox(props) {
   const handleClick = useCallback((e) => {
     if (containerRef.current && containerRef.current.contains(e.target)) { return }
 
-    setInput('')
+    setSearch('')
     setOpen(false)
   })
 
@@ -183,7 +183,7 @@ export default function PlausibleCombobox(props) {
         <input
           className={searchBoxClass}
           ref={searchRef}
-          value={input}
+          value={search}
           style={{backgroundColor: "inherit"}}
           placeholder={placeholder}
           type="text"
@@ -194,7 +194,7 @@ export default function PlausibleCombobox(props) {
   }
 
   function renderSingleSelectedItem() {
-    if (input === '') {
+    if (search === '') {
       return (
         <span className="dark:text-gray-300 text-sm w-0">
           {props.values[0].label}
@@ -215,7 +215,7 @@ export default function PlausibleCombobox(props) {
             )
           })
         }
-        <input className={searchBoxClass} ref={searchRef} value={input} style={{backgroundColor: "inherit"}} placeholder={props.placeholder} type="text" onChange={onInput}></input>
+        <input className={searchBoxClass} ref={searchRef} value={search} style={{backgroundColor: "inherit"}} placeholder={props.placeholder} type="text" onChange={onInput}></input>
       </>
     )
   }
