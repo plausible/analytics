@@ -1,14 +1,13 @@
 import React, {useCallback} from "react";
-import { withRouter } from 'react-router-dom'
 import Modal from './modal'
-import { hasGoalFilter } from "../../util/filters";
+import { hasGoalFilter, isRealTimeDashboard } from "../../util/filters";
 import { addFilter } from '../../query'
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from '../reports/metrics'
-import withQueryContext from "../../components/query-context-hoc";
+import { useQueryContext } from "../../query-context";
 
-function PagesModal(props) {
-  const { site, query } = props
+function PagesModal() {
+  const { query } = useQueryContext();
 
   const reportInfo = {
     title: 'Top Pages',
@@ -37,7 +36,7 @@ function PagesModal(props) {
       ]
     }
 
-    if (query.period === 'realtime') {
+    if (isRealTimeDashboard(query)) {
       return [
         metrics.createVisitors({renderLabel: (_query) => 'Current visitors'})
       ]
@@ -52,10 +51,8 @@ function PagesModal(props) {
   }
 
   return (
-    <Modal site={site}>
+    <Modal>
       <BreakdownModal
-        site={site}
-        query={query}
         reportInfo={reportInfo}
         metrics={chooseMetrics()}
         getFilterInfo={getFilterInfo}
@@ -65,4 +62,4 @@ function PagesModal(props) {
   )
 }
 
-export default withRouter(withQueryContext(PagesModal))
+export default PagesModal

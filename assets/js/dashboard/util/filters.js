@@ -99,6 +99,10 @@ export function hasGoalFilter(query) {
   return getFiltersByKeyPrefix(query, "goal").length > 0
 }
 
+export function isRealTimeDashboard(query) {
+  return query?.period === 'realtime'
+}
+
 // Note: Currently only a single goal filter can be applied at a time.
 export function getGoalFilter(query) {
   return getFiltersByKeyPrefix(query, "goal")[0] || null
@@ -119,8 +123,8 @@ export function formatFilterGroup(filterGroup) {
 export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
   const filteredBy = Object.fromEntries(
     filters
-    .flatMap(([_operation, filterKey, clauses]) => ['country', 'region', 'city'].includes(filterKey) ? clauses : [])
-    .map((value) => [value, true])
+      .flatMap(([_operation, filterKey, clauses]) => ['country', 'region', 'city'].includes(filterKey) ? clauses : [])
+      .map((value) => [value, true])
   )
   let result = { ...labels }
   for (const value in labels) {

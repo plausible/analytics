@@ -28,6 +28,8 @@ import { navigateToQuery, QueryLink, QueryButton } from "./query";
 import { shouldIgnoreKeypress } from "./keybinding.js"
 import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input.js"
 import classNames from "classnames"
+import { useQueryContext } from "./query-context.js";
+import { useSiteContext } from "./site-context.js";
 
 function renderArrow(query, site, period, prevDate, nextDate) {
   const insertionDate = parseUTCDate(site.statsBegin);
@@ -156,7 +158,9 @@ function DisplayPeriod({ query, site }) {
   return 'Realtime'
 }
 
-function DatePicker({ query, site, history }) {
+function DatePicker({ history }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState('menu')
   const dropDownNode = useRef(null)

@@ -2,16 +2,18 @@ import React, { useCallback } from "react";
 import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
-import withQueryContext from "../../components/query-context-hoc";
 import { addFilter } from '../../query'
 import { specialTitleWhenGoalFilter } from "../behaviours/goal-conversions";
 import { EVENT_PROPS_PREFIX, hasGoalFilter } from "../../util/filters"
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
 import { revenueAvailable } from "../../query";
+import { useQueryContext } from "../../query-context";
+import { useSiteContext } from "../../site-context";
 
-function PropsModal(props) {
-  const {site, query, location} = props
+function PropsModal({ location }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
   const propKey = location.pathname.split('/').filter(i => i).pop()
 
   /*global BUILD_EXTRA*/
@@ -37,8 +39,8 @@ function PropsModal(props) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({renderLabel: (_query) => "Visitors"}),
-      metrics.createEvents({renderLabel: (_query) => "Events"}),
+      metrics.createVisitors({ renderLabel: (_query) => "Visitors" }),
+      metrics.createEvents({ renderLabel: (_query) => "Events" }),
       hasGoalFilter(query) && metrics.createConversionRate(),
       !hasGoalFilter(query) && metrics.createPercentage(),
       showRevenueMetrics && metrics.createAverageRevenue(),
@@ -47,10 +49,8 @@ function PropsModal(props) {
   }
 
   return (
-    <Modal site={site}>
+    <Modal>
       <BreakdownModal
-        site={site}
-        query={query}
         reportInfo={reportInfo}
         metrics={chooseMetrics()}
         getFilterInfo={getFilterInfo}
@@ -60,4 +60,4 @@ function PropsModal(props) {
   )
 }
 
-export default withRouter(withQueryContext(PropsModal))
+export default withRouter(PropsModal)
