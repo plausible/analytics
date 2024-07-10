@@ -32,17 +32,19 @@ defmodule Plausible.Stats.Time do
     {first_datetime, last_datetime}
   end
 
-  def utc_boundaries(%Query{date_range: date_range}, site) do
+  def utc_boundaries(%Query{date_range: date_range, timezone: timezone}, site) do
     {:ok, first} = NaiveDateTime.new(date_range.first, ~T[00:00:00])
+
+    tz = if(timezone, do: timezone, else: site.timezone)
 
     first_datetime =
       first
-      |> Timezones.to_utc_datetime(site.timezone)
+      |> Timezones.to_utc_datetime(tz)
       |> beginning_of_time(site.native_stats_start_at)
 
     {:ok, last} = NaiveDateTime.new(date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
 
-    last_datetime = Timezones.to_utc_datetime(last, site.timezone)
+    last_datetime = Timezones.to_utc_datetime(last, tz)
 
     {first_datetime, last_datetime}
   end

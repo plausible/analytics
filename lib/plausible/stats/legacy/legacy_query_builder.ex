@@ -8,10 +8,12 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   def from(site, params) do
     now = NaiveDateTime.utc_now(:second)
 
+    tz = time_zone(site, params)
+
     query =
       Query
-      |> struct!(now: now, timezone: site.timezone)
-      |> put_period(site, params)
+      |> struct!(now: now, timezone: tz)
+      |> put_period(site, tz, params)
       |> put_dimensions(params)
       |> put_interval(params)
       |> put_parsed_filters(params)
@@ -25,20 +27,20 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     query
   end
 
-  defp put_period(query, site, %{"period" => "realtime"}) do
-    date = today(site.timezone)
+  defp put_period(query, _site, tz, %{"period" => "realtime"}) do
+    date = today(tz)
 
     struct!(query, period: "realtime", date_range: Date.range(date, date))
   end
 
-  defp put_period(query, site, %{"period" => "day"} = params) do
-    date = parse_single_date(site.timezone, params)
+  defp put_period(query, _site, tz, %{"period" => "day"} = params) do
+    date = parse_single_date(tz, params)
 
     struct!(query, period: "day", date_range: Date.range(date, date))
   end
 
-  defp put_period(query, site, %{"period" => "7d"} = params) do
-    end_date = parse_single_date(site.timezone, params)
+  defp put_period(query, _site, tz, %{"period" => "7d"} = params) do
+    end_date = parse_single_date(tz, params)
     start_date = end_date |> Timex.shift(days: -6)
 
     struct!(
@@ -48,15 +50,15 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     )
   end
 
-  defp put_period(query, site, %{"period" => "30d"} = params) do
-    end_date = parse_single_date(site.timezone, params)
+  defp put_period(query, _site, tz, %{"period" => "30d"} = params) do
+    end_date = parse_single_date(tz, params)
     start_date = end_date |> Timex.shift(days: -30)
 
     struct!(query, period: "30d", date_range: Date.range(start_date, end_date))
   end
 
-  defp put_period(query, site, %{"period" => "month"} = params) do
-    date = parse_single_date(site.timezone, params)
+  defp put_period(query, _site, tz, %{"period" => "month"} = params) do
+    date = parse_single_date(tz, params)
 
     start_date = Timex.beginning_of_month(date)
     end_date = Timex.end_of_month(date)
@@ -67,9 +69,9 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     )
   end
 
-  defp put_period(query, site, %{"period" => "6mo"} = params) do
+  defp put_period(query, _site, tz, %{"period" => "6mo"} = params) do
     end_date =
-      parse_single_date(site.timezone, params)
+      parse_single_date(tz, params)
       |> Timex.end_of_month()
 
     start_date =
@@ -82,9 +84,9 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     )
   end
 
-  defp put_period(query, site, %{"period" => "12mo"} = params) do
+  defp put_period(query, _site, tz, %{"period" => "12mo"} = params) do
     end_date =
-      parse_single_date(site.timezone, params)
+      parse_single_date(tz, params)
       |> Timex.end_of_month()
 
     start_date =
@@ -97,9 +99,9 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     )
   end
 
-  defp put_period(query, site, %{"period" => "year"} = params) do
+  defp put_period(query, _site, tz, %{"period" => "year"} = params) do
     end_date =
-      parse_single_date(site.timezone, params)
+      parse_single_date(tz, params)
       |> Timex.end_of_year()
 
     start_date = Timex.beginning_of_year(end_date)
@@ -110,8 +112,8 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     )
   end
 
-  defp put_period(query, site, %{"period" => "all"}) do
-    now = today(site.timezone)
+  defp put_period(query, site, tz, %{"period" => "all"}) do
+    now = today(tz)
     start_date = Plausible.Sites.stats_start_date(site) || now
 
     struct!(query,
@@ -120,16 +122,16 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     )
   end
 
-  defp put_period(query, site, %{"period" => "custom", "from" => from, "to" => to} = params) do
+  defp put_period(query, site, tz, %{"period" => "custom", "from" => from, "to" => to} = params) do
     new_params =
       params
       |> Map.drop(["from", "to"])
       |> Map.put("date", Enum.join([from, to], ","))
 
-    put_period(query, site, new_params)
+    put_period(query, site, tz, new_params)
   end
 
-  defp put_period(query, _site, %{"period" => "custom", "date" => date}) do
+  defp put_period(query, _site, _tz, %{"period" => "custom", "date" => date}) do
     [from, to] = String.split(date, ",")
     from_date = Date.from_iso8601!(String.trim(from))
     to_date = Date.from_iso8601!(String.trim(to))
@@ -140,8 +142,8 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     )
   end
 
-  defp put_period(query, site, params) do
-    put_period(query, site, Map.merge(params, %{"period" => "30d"}))
+  defp put_period(query, site, tz, params) do
+    put_period(query, site, tz, Map.merge(params, %{"period" => "30d"}))
   end
 
   defp put_dimensions(query, params) do
@@ -164,6 +166,10 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   defp put_parsed_filters(query, params) do
     struct!(query, filters: Filters.parse(params["filters"]))
+  end
+
+  defp time_zone(site, params) do
+    Map.get(params, "timezone", site.timezone)
   end
 
   defp today(tz) do
