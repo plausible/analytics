@@ -53,7 +53,9 @@ export default function PlausibleCombobox(props) {
   }
 
   useDebouncedEffect(() => {
-    fetchOptions()
+    if (isOpen) {
+      fetchOptions()
+    }
   }, [search], 200)
 
   const fetchOptions = useCallback(() => {
