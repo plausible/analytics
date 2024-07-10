@@ -1,8 +1,21 @@
 defmodule Plausible.DataMigration.LocationsSync do
   @moduledoc """
-  ClickHouse locations data migration for storing location names in clickhouse.
+  ClickHouse locations data migration for storing location names in ClickHouse.
 
-  Run regularly as plausible/locations data changes.
+  Only run when `Location.version()` changes.
+
+  The migration:
+  1. Truncates existing `location_data` table (if exists)
+  2. Creates new table (if needed)
+  3. Inserts new data from Location module
+  4. (Re-)Creates dictionary to read location data from table
+  5. Creates ALIAS columns in `events_v2`, `sessions_v2` and `imported_locations` table to make reading location names easy
+  6. Updates table comment for `location_data` to indicate last version synced.
+
+  Note that the dictionary is large enough to cache the whole dataset in memory, making lookups fast.
+
+  This migration is intended to be idempotent and rerunnable - if run multiple times, it should always set things to the same
+  result as if run once.
 
   SQL files available at: priv/data_migrations/LocationsSync/sql
   """
