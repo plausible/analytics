@@ -206,6 +206,7 @@
   type: :spike
 ) %>
 
+<%= if FunWithFlags.enabled?(:traffic_drop_notifications, for: @site) do %>
 <%= render("traffic_change_form",
   conn: @conn,
   notification: @drop_notification,
@@ -216,3 +217,4 @@
   threshold_label: "12 hours visitor threshold",
   type: :drop
 ) %>
+<% end %>
