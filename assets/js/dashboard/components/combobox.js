@@ -1,8 +1,8 @@
 import React, { Fragment, useState, useCallback, useEffect, useRef } from 'react'
 import { Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import { useDebouncedEffect } from '../custom-hooks.js'
 import classNames from 'classnames'
+import { useMountedEffect, useDebounce } from '../custom-hooks'
 
 function Option({isHighlighted, onClick, onMouseEnter, text, id}) {
   const className = classNames('relative cursor-pointer select-none py-2 px-3', {
@@ -52,21 +52,25 @@ export default function PlausibleCombobox(props) {
     visibleOptions.push({value: search, label: search, freeChoice: true})
   }
 
-  useDebouncedEffect(() => {
-    if (isOpen) {
-      fetchOptions()
-    }
-  }, [search], 200)
+  useEffect(() => {
+    if (isOpen) { fetchOptions() }
+  }, [isOpen])
+
+  useMountedEffect(() => { debouncedFetchOptions() }, [search])
 
   const fetchOptions = useCallback(() => {
-    setLoading(true)
+    if (isOpen) {
+      setLoading(true)
+  
+      props.fetchOptions(search).then((loadedOptions) => {
+        setLoading(false)
+        setHighlightedIndex(0)
+        setOptions(loadedOptions)
+      })
+    }
+  }, [search, isOpen])
 
-    props.fetchOptions(search).then((loadedOptions) => {
-      setLoading(false)
-      setHighlightedIndex(0)
-      setOptions(loadedOptions)
-    })
-  }, [search])
+  const debouncedFetchOptions = useDebounce(fetchOptions, 300)
 
   function highLight(index) {
     let newIndex = index
@@ -116,17 +120,14 @@ export default function PlausibleCombobox(props) {
   }
 
   function onInput(e) {
+    if (!isOpen) { setOpen(true) }
     setSearch(e.target.value)
   }
 
-  function toggleOpen() {
+  function openDropDown() {
     if (!isOpen) {
       setOpen(true)
-      fetchOptions()
       searchRef.current.focus()
-    } else {
-      setOpen(false)
-      setSearch('')
     }
   }
 
@@ -266,7 +267,7 @@ export default function PlausibleCombobox(props) {
 
   return (
     <div onKeyDown={onKeyDown} ref={containerRef} className={containerClass}>
-      <div onClick={toggleOpen} className={boxClass }>
+      <div onClick={openDropDown} className={boxClass }>
         {props.singleOption && renderSingleOptionContent()}
         {!props.singleOption && renderMultiOptionContent()}
         <div className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-2">

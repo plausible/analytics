@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 // A custom hook that behaves like `useEffect`, but
 // the function does not run on the initial render.
@@ -14,20 +14,16 @@ export function useMountedEffect(fn, deps) {
   }, deps)
 }
 
-// A custom hook that debounces the function calls by a given delay.
-// The first function call is not delayed. Every subsequent call is
-// delayed by `delay_ms`, and if another function is called before
-// the delay timeout, the previous function call gets cancelled.
-export function useDebouncedEffect(fn, deps, delay_ms) {
-  const callback = useCallback(fn, deps)
-  const delay = useRef(0)
+const DEBOUNCE_DELAY = 300
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      delay.current = delay_ms
-      callback()
-    }, delay.current)
+export function useDebounce(fn, delay = DEBOUNCE_DELAY) {
+  const timerRef = useRef(null)
 
-    return () => clearTimeout(timeout)
-  }, [callback, delay_ms])
+  return useCallback((...args) => {
+    clearTimeout(timerRef.current)
+
+    timerRef.current = setTimeout(() => {
+      fn(...args)
+    }, delay)
+  }, [fn, delay])
 }
