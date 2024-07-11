@@ -207,14 +207,14 @@
 ) %>
 
 <%= if FunWithFlags.enabled?(:traffic_drop_notifications, for: @site) do %>
-<%= render("traffic_change_form",
-  conn: @conn,
-  notification: @drop_notification,
-  site: @site,
-  heading: "Traffic Drop Notifications",
-  subtitle: "Get notified when your site has unusually low number of visitors within 12 hours",
-  toggle_text: "Send notifications of traffic drops",
-  threshold_label: "12 hours visitor threshold",
-  type: :drop
-) %>
+  <%= render("traffic_change_form",
+    conn: @conn,
+    notification: @drop_notification,
+    site: @site,
+    heading: "Traffic Drop Notifications",
+    subtitle: "Get notified when your site has unusually low number of visitors within 12 hours",
+    toggle_text: "Send notifications of traffic drops",
+    threshold_label: "12 hours visitor threshold",
+    type: :drop
+  ) %>
 <% end %>
