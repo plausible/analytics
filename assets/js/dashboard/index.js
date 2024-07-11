@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 
 import Historical from './historical'
-import Realtime, { useIsRealtimeDashboard } from './realtime'
+import Realtime from './realtime'
+import { useIsRealtimeDashboard } from './util/filters'
 
 export const statsBoxClass = "stats-item relative w-full mt-6 p-4 flex flex-col bg-white dark:bg-gray-825 shadow-xl rounded"
 
