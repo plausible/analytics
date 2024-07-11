@@ -17,19 +17,19 @@ defmodule Plausible.Stats.SQL.Expression do
   @no_ref "Direct / None"
   @not_set "(not set)"
 
-  defmacrop field_or_blank_value(key, expr, empty_value) do
+  defmacrop field_or_blank_value(q, key, expr, empty_value) do
     quote do
-      wrap_alias([t], %{
+      select_merge_as(unquote(q), [t], %{
         unquote(key) =>
           fragment("if(empty(?), ?, ?)", unquote(expr), unquote(empty_value), unquote(expr))
       })
     end
   end
 
-  defmacrop regular_time_slots(query, period_in_seconds) do
+  defmacrop time_slots(query, period_in_seconds) do
     quote do
       fragment(
-        "arrayJoin(timeSlots(toTimeZone(?, ?), toUInt32(timeDiff(?, ?)), toUInt32(?)))",
+        "timeSlots(toTimeZone(?, ?), toUInt32(timeDiff(?, ?)), toUInt32(?))",
         s.start,
         ^unquote(query).timezone,
         s.start,
@@ -39,14 +39,14 @@ defmodule Plausible.Stats.SQL.Expression do
     end
   end
 
-  def dimension(key, "time:month", _table, query) do
-    wrap_alias([t], %{
+  def select_dimension(q, key, "time:month", _table, query) do
+    select_merge_as(q, [t], %{
       key => fragment("toStartOfMonth(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 
-  def dimension(key, "time:week", _table, query) do
-    wrap_alias([t], %{
+  def select_dimension(q, key, "time:week", _table, query) do
+    select_merge_as(q, [t], %{
       key =>
         weekstart_not_before(
           to_timezone(t.timestamp, ^query.timezone),
@@ -55,29 +55,35 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
-  def dimension(key, "time:day", _table, query) do
-    wrap_alias([t], %{
+  def select_dimension(q, key, "time:day", _table, query) do
+    select_merge_as(q, [t], %{
       key => fragment("toDate(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 
-  def dimension(key, "time:hour", :sessions, query) do
-    wrap_alias([s], %{
-      key => regular_time_slots(query, 3600)
+  def select_dimension(q, key, "time:hour", :sessions, query) do
+    # :TRICKY: ClickHouse timeSlots works off of unix epoch and is not
+    #   timezone-aware. This means that for e.g. Asia/Katmandu (GMT+5:45)
+    #   to work, we divide time into 15-minute buckets and later combine these
+    #   via toStartOfHour
+    q
+    |> join(:array, [s], time_slot in time_slots(query, 15 * 60), as: :time_slot)
+    |> select_merge_as([s, time_slot: time_slot], %{
+      key => fragment("toStartOfHour(?)", time_slot)
     })
   end
 
-  def dimension(key, "time:hour", _table, query) do
-    wrap_alias([t], %{
+  def select_dimension(q, key, "time:hour", _table, query) do
+    select_merge_as(q, [t], %{
       key => fragment("toStartOfHour(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 
   # :NOTE: This is not exposed in Query APIv2
-  def dimension(key, "time:minute", :sessions, %Query{
+  def select_dimension(q, key, "time:minute", :sessions, %Query{
         period: "30m"
       }) do
-    wrap_alias([s], %{
+    select_merge_as(q, [s], %{
       key =>
         fragment(
           "arrayJoin(range(dateDiff('minute', now(), ?), dateDiff('minute', now(), ?) + 1))",
@@ -88,37 +94,39 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   # :NOTE: This is not exposed in Query APIv2
-  def dimension(key, "time:minute", _table, %Query{period: "30m"}) do
-    wrap_alias([t], %{
+  def select_dimension(q, key, "time:minute", _table, %Query{period: "30m"}) do
+    select_merge_as(q, [t], %{
       key => fragment("dateDiff('minute', now(), ?)", t.timestamp)
     })
   end
 
   # :NOTE: This is not exposed in Query APIv2
-  def dimension(key, "time:minute", :sessions, query) do
-    wrap_alias([s], %{
-      key => regular_time_slots(query, 60)
+  def select_dimension(q, key, "time:minute", :sessions, query) do
+    q
+    |> join(:array, [s], time_slot in time_slots(query, 60), as: :time_slot)
+    |> select_merge_as([s, time_slot: time_slot], %{
+      key => fragment("?", time_slot)
     })
   end
 
   # :NOTE: This is not exposed in Query APIv2
-  def dimension(key, "time:minute", _table, query) do
-    wrap_alias([t], %{
+  def select_dimension(q, key, "time:minute", _table, query) do
+    select_merge_as(q, [t], %{
       key => fragment("toStartOfMinute(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
     })
   end
 
-  def dimension(key, "event:name", _table, _query),
-    do: wrap_alias([t], %{key => t.name})
+  def select_dimension(q, key, "event:name", _table, _query),
+    do: select_merge_as(q, [t], %{key => t.name})
 
-  def dimension(key, "event:page", _table, _query),
-    do: wrap_alias([t], %{key => t.pathname})
+  def select_dimension(q, key, "event:page", _table, _query),
+    do: select_merge_as(q, [t], %{key => t.pathname})
 
-  def dimension(key, "event:hostname", _table, _query),
-    do: wrap_alias([t], %{key => t.hostname})
+  def select_dimension(q, key, "event:hostname", _table, _query),
+    do: select_merge_as(q, [t], %{key => t.hostname})
 
-  def dimension(key, "event:props:" <> property_name, _table, _query) do
-    wrap_alias([t], %{
+  def select_dimension(q, key, "event:props:" <> property_name, _table, _query) do
+    select_merge_as(q, [t], %{
       key =>
         fragment(
           "if(not empty(?), ?, '(none)')",
@@ -128,56 +136,56 @@ defmodule Plausible.Stats.SQL.Expression do
     })
   end
 
-  def dimension(key, "visit:entry_page", _table, _query),
-    do: wrap_alias([t], %{key => t.entry_page})
+  def select_dimension(q, key, "visit:entry_page", _table, _query),
+    do: select_merge_as(q, [t], %{key => t.entry_page})
 
-  def dimension(key, "visit:exit_page", _table, _query),
-    do: wrap_alias([t], %{key => t.exit_page})
+  def select_dimension(q, key, "visit:exit_page", _table, _query),
+    do: select_merge_as(q, [t], %{key => t.exit_page})
 
-  def dimension(key, "visit:utm_medium", _table, _query),
-    do: field_or_blank_value(key, t.utm_medium, @not_set)
+  def select_dimension(q, key, "visit:utm_medium", _table, _query),
+    do: field_or_blank_value(q, key, t.utm_medium, @not_set)
 
-  def dimension(key, "visit:utm_source", _table, _query),
-    do: field_or_blank_value(key, t.utm_source, @not_set)
+  def select_dimension(q, key, "visit:utm_source", _table, _query),
+    do: field_or_blank_value(q, key, t.utm_source, @not_set)
 
-  def dimension(key, "visit:utm_campaign", _table, _query),
-    do: field_or_blank_value(key, t.utm_campaign, @not_set)
+  def select_dimension(q, key, "visit:utm_campaign", _table, _query),
+    do: field_or_blank_value(q, key, t.utm_campaign, @not_set)
 
-  def dimension(key, "visit:utm_content", _table, _query),
-    do: field_or_blank_value(key, t.utm_content, @not_set)
+  def select_dimension(q, key, "visit:utm_content", _table, _query),
+    do: field_or_blank_value(q, key, t.utm_content, @not_set)
 
-  def dimension(key, "visit:utm_term", _table, _query),
-    do: field_or_blank_value(key, t.utm_term, @not_set)
+  def select_dimension(q, key, "visit:utm_term", _table, _query),
+    do: field_or_blank_value(q, key, t.utm_term, @not_set)
 
-  def dimension(key, "visit:source", _table, _query),
-    do: field_or_blank_value(key, t.source, @no_ref)
+  def select_dimension(q, key, "visit:source", _table, _query),
+    do: field_or_blank_value(q, key, t.source, @no_ref)
 
-  def dimension(key, "visit:referrer", _table, _query),
-    do: field_or_blank_value(key, t.referrer, @no_ref)
+  def select_dimension(q, key, "visit:referrer", _table, _query),
+    do: field_or_blank_value(q, key, t.referrer, @no_ref)
 
-  def dimension(key, "visit:device", _table, _query),
-    do: field_or_blank_value(key, t.device, @not_set)
+  def select_dimension(q, key, "visit:device", _table, _query),
+    do: field_or_blank_value(q, key, t.device, @not_set)
 
-  def dimension(key, "visit:os", _table, _query),
-    do: field_or_blank_value(key, t.os, @not_set)
+  def select_dimension(q, key, "visit:os", _table, _query),
+    do: field_or_blank_value(q, key, t.os, @not_set)
 
-  def dimension(key, "visit:os_version", _table, _query),
-    do: field_or_blank_value(key, t.os_version, @not_set)
+  def select_dimension(q, key, "visit:os_version", _table, _query),
+    do: field_or_blank_value(q, key, t.os_version, @not_set)
 
-  def dimension(key, "visit:browser", _table, _query),
-    do: field_or_blank_value(key, t.browser, @not_set)
+  def select_dimension(q, key, "visit:browser", _table, _query),
+    do: field_or_blank_value(q, key, t.browser, @not_set)
 
-  def dimension(key, "visit:browser_version", _table, _query),
-    do: field_or_blank_value(key, t.browser_version, @not_set)
+  def select_dimension(q, key, "visit:browser_version", _table, _query),
+    do: field_or_blank_value(q, key, t.browser_version, @not_set)
 
-  def dimension(key, "visit:country", _table, _query),
-    do: wrap_alias([t], %{key => t.country})
+  def select_dimension(q, key, "visit:country", _table, _query),
+    do: select_merge_as(q, [t], %{key => t.country})
 
-  def dimension(key, "visit:region", _table, _query),
-    do: wrap_alias([t], %{key => t.region})
+  def select_dimension(q, key, "visit:region", _table, _query),
+    do: select_merge_as(q, [t], %{key => t.region})
 
-  def dimension(key, "visit:city", _table, _query),
-    do: wrap_alias([t], %{key => t.city})
+  def select_dimension(q, key, "visit:city", _table, _query),
+    do: select_merge_as(q, [t], %{key => t.city})
 
   def event_metric(:pageviews) do
     wrap_alias([e], %{
