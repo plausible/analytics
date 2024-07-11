@@ -53,7 +53,7 @@ defmodule Plausible.HelpScout do
         |> :crypto.mac(:sha, signature_key, data)
         |> Base.encode64()
 
-      if signature == calculated do
+      if Plug.Crypto.secure_compare(signature, calculated) do
         :ok
       else
         {:error, :bad_signature}
