@@ -16,6 +16,8 @@ import {
   getLabel,
   FILTER_OPERATIONS_DISPLAY_NAMES
 } from "./util/filters"
+import { useQueryContext } from './query-context';
+import { useSiteContext } from './site-context';
 
 const WRAPSTATE = { unwrapped: 0, waiting: 1, wrapped: 2 }
 
@@ -122,8 +124,10 @@ function DropdownContent({ history, site, query, wrapped }) {
   )
 }
 
-function Filters(props) {
-  const { history, query, site } = props
+function Filters({ history }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
+
   const [wrapped, setWrapped] = useState(WRAPSTATE.waiting)
   const [viewport, setViewport] = useState(1080)
 

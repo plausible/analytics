@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import Datepicker from './datepicker'
 import SiteSwitcher from './site-switcher'
@@ -11,9 +11,20 @@ import Devices from './stats/devices'
 import Behaviours from './stats/behaviours'
 import { withPinnedHeader } from './pinned-header-hoc';
 import { statsBoxClass } from './index';
+import { useSiteContext } from './site-context';
+import { useUserContext } from './user-context';
+import { useQueryContext } from './query-context';
+import { isRealTimeDashboard } from './util/filters';
 
-function Realtime(props) {
-  const {site, query, history, stuck, loggedIn, currentUserRole, lastLoadTimestamp} = props
+export const useIsRealtimeDashboard = () => {
+  const { query: { period } } = useQueryContext();
+  return useMemo(() => isRealTimeDashboard({ period }), [period]);
+}
+
+function Realtime({ stuck }) {
+  const site = useSiteContext();
+  const user = useUserContext();
+  const { query } = useQueryContext();
   const navClass = site.embedded ? 'relative' : 'sticky'
 
   return (
@@ -22,30 +33,30 @@ function Realtime(props) {
       <div className={`${navClass} top-0 sm:py-3 py-2 z-10 ${stuck && !site.embedded ? 'fullwidth-shadow bg-gray-50 dark:bg-gray-850' : ''}`}>
         <div className="items-center w-full flex">
           <div className="flex items-center w-full">
-            <SiteSwitcher site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} />
-            <Filters className="flex" site={site} query={query} history={history} />
+            <SiteSwitcher site={site} loggedIn={user.loggedIn} currentUserRole={user.role} />
+            <Filters className="flex" />
           </div>
-          <Datepicker site={site} query={query} />
+          <Datepicker />
         </div>
       </div>
-      <VisitorGraph site={site} query={query} lastLoadTimestamp={lastLoadTimestamp}/>
+      <VisitorGraph />
       <div className="w-full md:flex">
-        <div className={ statsBoxClass }>
-          <Sources site={site} query={query} />
+        <div className={statsBoxClass}>
+          <Sources />
         </div>
-        <div className={ statsBoxClass }>
-          <Pages site={site} query={query} />
+        <div className={statsBoxClass}>
+          <Pages />
         </div>
       </div>
       <div className="w-full md:flex">
-        <div className={ statsBoxClass }>
+        <div className={statsBoxClass}>
           <Locations site={site} query={query} />
         </div>
-        <div className={ statsBoxClass }>
-          <Devices site={site} query={query} />
+        <div className={statsBoxClass}>
+          <Devices />
         </div>
       </div>
-      <Behaviours site={site} query={query} currentUserRole={currentUserRole} />
+      <Behaviours />
     </div>
   )
 }

@@ -7,6 +7,8 @@ import ListReport from './../reports/list'
 import * as metrics from './../reports/metrics'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 import { hasGoalFilter } from '../../util/filters';
+import { useQueryContext } from '../../query-context';
+import { useSiteContext } from '../../site-context';
 
 function EntryPages({ query, site, afterFetchData }) {
   function fetchData() {
@@ -26,7 +28,7 @@ function EntryPages({ query, site, afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({defaultLabel: 'Unique Entrances', meta: {plot: true}}),
+      metrics.createVisitors({ defaultLabel: 'Unique Entrances', meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
@@ -64,7 +66,7 @@ function ExitPages({ query, site, afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({defaultLabel: 'Unique Exits', meta: {plot: true}}),
+      metrics.createVisitors({ defaultLabel: 'Unique Exits', meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
@@ -102,7 +104,7 @@ function TopPages({ query, site, afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ meta: {plot: true}}),
+      metrics.createVisitors({ meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
@@ -128,8 +130,10 @@ const labelFor = {
   'exit-pages': 'Exit Pages',
 }
 
-export default function Pages(props) {
-  const { site, query } = props
+export default function Pages() {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
+  
   const tabKey = `pageTab__${site.domain}`
   const storedTab = storage.getItem(tabKey)
   const [mode, setMode] = useState(storedTab || 'pages')

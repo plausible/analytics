@@ -1133,6 +1133,35 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
                %{"dimensions" => ["2021-01-01"], "metrics" => [1]}
              ]
     end
+
+    test "timeseries with quarter-hour timezone", %{conn: conn, user: user} do
+      # GMT+05:45
+      site = insert(:site, timezone: "Asia/Katmandu", members: [user])
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-02 05:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 05:15:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 05:30:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 05:45:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 06:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 06:15:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 06:30:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visits"],
+          "date_range" => ["2021-01-02", "2021-01-02"],
+          "dimensions" => ["time:hour"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-02 10:00:00"], "metrics" => [1]},
+               %{"dimensions" => ["2021-01-02 11:00:00"], "metrics" => [4]},
+               %{"dimensions" => ["2021-01-02 12:00:00"], "metrics" => [2]}
+             ]
+    end
   end
 
   test "breakdown by visit:source", %{conn: conn, site: site} do

@@ -1,14 +1,13 @@
-import React, {useCallback} from "react";
-import { withRouter } from 'react-router-dom'
+import React, { useCallback } from "react";
 import Modal from './modal'
-import { hasGoalFilter } from "../../util/filters";
+import { hasGoalFilter, isRealTimeDashboard } from "../../util/filters";
 import { addFilter } from '../../query'
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from '../reports/metrics'
-import withQueryContext from "../../components/query-context-hoc";
+import { useQueryContext } from "../../query-context";
 
-function EntryPagesModal(props) {
-  const { site, query } = props
+function EntryPagesModal() {
+  const { query } = useQueryContext();
 
   const reportInfo = {
     title: 'Entry Pages',
@@ -32,29 +31,27 @@ function EntryPagesModal(props) {
     if (hasGoalFilter(query)) {
       return [
         metrics.createTotalVisitors(),
-        metrics.createVisitors({renderLabel: (_query) => 'Conversions'}),
+        metrics.createVisitors({ renderLabel: (_query) => 'Conversions' }),
         metrics.createConversionRate()
       ]
     }
 
-    if (query.period === 'realtime') {
+    if (isRealTimeDashboard(query)) {
       return [
-        metrics.createVisitors({renderLabel: (_query) => 'Current visitors'})
+        metrics.createVisitors({ renderLabel: (_query) => 'Current visitors' })
       ]
     }
-    
+
     return [
-      metrics.createVisitors({renderLabel: (_query) => "Visitors" }),
-      metrics.createVisits({renderLabel: (_query) => "Total Entrances" }),
+      metrics.createVisitors({ renderLabel: (_query) => "Visitors" }),
+      metrics.createVisits({ renderLabel: (_query) => "Total Entrances" }),
       metrics.createVisitDuration()
     ]
   }
 
   return (
-    <Modal site={site}>
+    <Modal>
       <BreakdownModal
-        site={site}
-        query={query}
         reportInfo={reportInfo}
         metrics={chooseMetrics()}
         getFilterInfo={getFilterInfo}
@@ -64,4 +61,4 @@ function EntryPagesModal(props) {
   )
 }
 
-export default withRouter(withQueryContext(EntryPagesModal))
+export default EntryPagesModal
