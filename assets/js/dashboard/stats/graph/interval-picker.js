@@ -1,9 +1,11 @@
 import { Menu, Transition } from '@headlessui/react';
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import React, { Fragment, useCallback, useEffect } from 'react';
-import classNames from 'classnames'
-import * as storage from '../../util/storage'
-import { isKeyPressed } from '../../keybinding.js'
+import classNames from 'classnames';
+import * as storage from '../../util/storage';
+import { isKeyPressed } from '../../keybinding.js';
+import { useQueryContext } from '../../query-context.js';
+import { useSiteContext } from '../../site-context.js';
 
 const INTERVAL_LABELS = {
   'minute': 'Minutes',
@@ -89,7 +91,9 @@ export const getCurrentInterval = function(site, query) {
   }
 }
 
-export function IntervalPicker({ query, site, onIntervalUpdate }) {
+export function IntervalPicker({ onIntervalUpdate }) {
+  const {query} = useQueryContext();
+  const site = useSiteContext();
   if (query.period == 'realtime') return null
   
   // eslint-disable-next-line react-hooks/rules-of-hooks

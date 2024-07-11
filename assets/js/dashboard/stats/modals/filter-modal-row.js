@@ -6,14 +6,16 @@ import Combobox from '../../components/combobox'
 import { FILTER_OPERATIONS, fetchSuggestions, isFreeChoiceFilter } from "../../util/filters"
 import { apiPath } from '../../util/url'
 import { getLabel, formattedFilters } from '../../util/filters'
+import { useQueryContext } from "../../query-context"
+import { useSiteContext } from "../../site-context"
 
 export default function FilterModalRow({
-  site,
-  query,
   filter,
   labels,
   onUpdate
 }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
   const [operation, filterKey, clauses] = filter
 
   const selectedClauses = useMemo(

@@ -1,8 +1,8 @@
 import React, { Fragment, useState, useEffect, useCallback, useRef } from "react";
 import { withRouter } from "react-router-dom";
 import Flatpickr from "react-flatpickr";
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import { Transition } from '@headlessui/react'
+import { ChevronDownIcon } from '@heroicons/react/20/solid';
+import { Transition } from '@headlessui/react';
 import {
   shiftDays,
   shiftMonths,
@@ -25,9 +25,9 @@ import {
   isSameDate
 } from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
-import { shouldIgnoreKeypress } from "./keybinding.js"
-import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input.js"
-import classNames from "classnames"
+import { shouldIgnoreKeypress } from "./keybinding.js";
+import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input.js";
+import classNames from "classnames";
 import { useQueryContext } from "./query-context.js";
 import { useSiteContext } from "./site-context.js";
 
@@ -65,7 +65,6 @@ function renderArrow(query, site, period, prevDate, nextDate) {
     <div className={containerClass}>
       <QueryButton
         to={{ date: prevDate }}
-        query={query}
         className={leftClass}
         disabled={disabledLeft}
       >
@@ -84,7 +83,6 @@ function renderArrow(query, site, period, prevDate, nextDate) {
       </QueryButton>
       <QueryButton
         to={{ date: nextDate }}
-        query={query}
         className={rightClass}
         disabled={disabledRight}
       >
@@ -105,7 +103,9 @@ function renderArrow(query, site, period, prevDate, nextDate) {
   );
 }
 
-function DatePickerArrows({ site, query }) {
+function DatePickerArrows() {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
   if (query.period === "year") {
     const prevDate = formatISO(shiftMonths(query.date, -12));
     const nextDate = formatISO(shiftMonths(query.date, 12));
@@ -126,7 +126,9 @@ function DatePickerArrows({ site, query }) {
   return null
 }
 
-function DisplayPeriod({ query, site }) {
+function DisplayPeriod() {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
   if (query.period === "day") {
     if (isToday(site, query.date)) {
       return "Today";
@@ -302,7 +304,6 @@ function DatePicker({ history }) {
       <QueryLink
         to={{ from: false, to: false, period, ...opts }}
         onClick={() => setOpen(false)}
-        query={query}
         className={`${boldClass} px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900
           dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}
       >
@@ -414,7 +415,7 @@ function DatePicker({ history }) {
           aria-controls="datemenu"
         >
           <span className="truncate mr-1 md:mr-2">
-            <span className="font-medium"><DisplayPeriod query={query} site={site} /></span>
+            <span className="font-medium"><DisplayPeriod /></span>
           </span>
           <ChevronDownIcon className="hidden sm:inline-block h-4 w-4 md:h-5 md:w-5 text-gray-500" />
         </div>
@@ -437,7 +438,7 @@ function DatePicker({ history }) {
 
   return (
     <div className="flex ml-auto pl-2">
-      <DatePickerArrows site={site} query={query} />
+      <DatePickerArrows />
       {renderPicker()}
     </div>
   )

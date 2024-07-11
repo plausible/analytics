@@ -1,13 +1,13 @@
 import React from 'react';
 
-import * as storage from '../../util/storage'
-import CountriesMap from './map'
+import * as storage from '../../util/storage';
+import CountriesMap from './map';
 
-import * as api from '../../api'
-import { apiPath, sitePath } from '../../util/url'
-import ListReport from '../reports/list'
+import * as api from '../../api';
+import { apiPath, sitePath } from '../../util/url';
+import ListReport from '../reports/list';
 import * as metrics from '../reports/metrics';
-import { hasGoalFilter } from "../../util/filters"
+import { hasGoalFilter } from "../../util/filters";
 import { getFiltersByKeyPrefix } from '../../util/filters';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 
@@ -44,7 +44,6 @@ function Countries({ query, site, onClick, afterFetchData }) {
 			keyLabel="Country"
 			metrics={chooseMetrics()}
 			detailsLink={sitePath('countries')}
-			query={query}
 			renderIcon={renderIcon}
 			color="bg-orange-50"
 		/>
@@ -84,7 +83,6 @@ function Regions({ query, site, onClick, afterFetchData }) {
 			keyLabel="Region"
 			metrics={chooseMetrics()}
 			detailsLink={sitePath('regions')}
-			query={query}
 			renderIcon={renderIcon}
 			color="bg-orange-50"
 		/>
@@ -123,7 +121,6 @@ function Cities({ query, site, afterFetchData }) {
 			keyLabel="City"
 			metrics={chooseMetrics()}
 			detailsLink={sitePath('cities')}
-			query={query}
 			renderIcon={renderIcon}
 			color="bg-orange-50"
 		/>

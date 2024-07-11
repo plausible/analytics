@@ -7,9 +7,10 @@ import * as storage from './util/storage'
 import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled, getStoredMatchDayOfWeek } from './comparison-input'
 import { getFiltersByKeyPrefix } from './util/filters'
 
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
 import { parseLegacyFilter, parseLegacyPropsFilter } from './util/filters'
+import { useQueryContext } from './query-context'
 
 dayjs.extend(utc)
 
@@ -49,7 +50,7 @@ export function parseQuery(querystring, site) {
 }
 
 export function addFilter(query, filter) {
-  return {...query, filters: [...query.filters, filter]}
+  return { ...query, filters: [...query.filters, filter] }
 }
 
 export function navigateToQuery(history, queryFrom, newData) {
@@ -145,7 +146,7 @@ export function filtersBackwardsCompatibilityRedirect() {
 export function revenueAvailable(query, site) {
   const revenueGoalsInFilter = site.revenueGoals.filter((rg) => {
     const goalFilters = getFiltersByKeyPrefix(query, "goal")
-    
+
     return goalFilters.some(([_op, _key, clauses]) => {
       return clauses.includes(rg.event_name)
     })
@@ -159,7 +160,8 @@ export function revenueAvailable(query, site) {
 }
 
 function QueryLink(props) {
-  const { query, history, to, className, children } = props
+  const { query } = useQueryContext();
+  const { history, to, className, children } = props
 
   function onClick(e) {
     e.preventDefault()
@@ -183,7 +185,8 @@ function QueryLink(props) {
 const QueryLinkWithRouter = withRouter(QueryLink)
 export { QueryLinkWithRouter as QueryLink };
 
-function QueryButton({ history, query, to, disabled, className, children, onClick }) {
+function QueryButton({ history, to, disabled, className, children, onClick }) {
+  const { query } = useQueryContext();
   return (
     <button
       className={className}

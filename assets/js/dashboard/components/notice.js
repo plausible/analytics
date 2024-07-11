@@ -1,8 +1,10 @@
 import React from "react"
 import { sectionTitles } from "../stats/behaviours"
 import * as api from '../api'
+import { useSiteContext } from "../site-context"
 
-export function FeatureSetupNotice({ site, feature, title, info, callToAction, onHideAction }) {
+export function FeatureSetupNotice({ feature, title, info, callToAction, onHideAction }) {
+  const site = useSiteContext()
   const sectionTitle = sectionTitles[feature]
 
   const requestHideSection = () => {
