@@ -10,6 +10,8 @@ defmodule Plausible.HelpScout do
   alias Plausible.HelpScout.Vault
   alias Plausible.Repo
 
+  alias PlausibleWeb.Router.Helpers, as: Routes
+
   require Plausible.Billing.Subscription.Status
 
   @base_api_url "https://api.helpscout.net"
@@ -73,7 +75,8 @@ defmodule Plausible.HelpScout do
       {:ok,
        %{
          status_label: status_label(user),
-         status_link: PlausibleWeb.Endpoint.url() <> "/crm/auth/user/#{user.id}",
+         status_link:
+           Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id),
          plan_label: plan_label(user.subscription, plan),
          plan_link: plan_link(user.subscription)
        }}
