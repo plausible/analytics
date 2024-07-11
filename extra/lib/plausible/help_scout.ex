@@ -92,10 +92,10 @@ defmodule Plausible.HelpScout do
     trial? = Plausible.Users.on_trial?(user)
 
     cond do
-      not subscription_active? and not trial? and user.trial_expiry_date == nil ->
+      not subscription_active? and not trial? and is_nil(user.trial_expiry_date) ->
         "None"
 
-      user.subscription == nil and not trial? ->
+      is_nil(user.subscription) and not trial? ->
         "Expired trial"
 
       trial? ->
