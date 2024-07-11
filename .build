@@ -162,7 +162,7 @@ Plausible.Site.Memberships.html
 Plausible.Site.MonthlyReport.html
 Plausible.Site.Removal.html
 Plausible.Site.SharedLink.html
-Plausible.Site.SpikeNotification.html
+Plausible.Site.TrafficChangeNotification.html
 Plausible.Site.UserPreference.html
 Plausible.Site.WeeklyReport.html
 Plausible.Site.html
@@ -237,7 +237,7 @@ Plausible.Workers.SendCheckStatsEmails.html
 Plausible.Workers.SendEmailReport.html
 Plausible.Workers.SendSiteSetupEmails.html
 Plausible.Workers.SendTrialNotifications.html
-Plausible.Workers.SpikeNotifier.html
+Plausible.Workers.TrafficChangeNotifier.html
 Plausible.html
 PlausibleWeb.AdminController.html
 PlausibleWeb.Api.ExternalController.html
@@ -418,8 +418,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-A843BF6E.js
-dist/sidebar_items-192FADEB.js
+dist/search_data-610BA1B9.js
+dist/sidebar_items-BF00DDC1.js
 index.html
 readme.html
 search.html
