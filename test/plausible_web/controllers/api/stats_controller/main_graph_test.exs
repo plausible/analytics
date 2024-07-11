@@ -683,6 +683,36 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert [0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0] = prev
       assert [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0] = curr
     end
+
+    test "displays conversions per month with 12mo comparison plot", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:event, name: "Different", timestamp: ~N[2020-01-10 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2020-02-10 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2020-03-10 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2020-04-10 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-05-10 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-06-11 04:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-07-11 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-08-11 00:00:00])
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=12mo&date=2021-12-11&metric=events&filters=#{filters}&comparison=previous_period"
+        )
+
+      assert %{"plot" => curr, "comparison_plot" => prev} = json_response(conn, 200)
+      assert [0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0] = prev
+      assert [0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0] = curr
+    end
   end
 
   describe "GET /api/stats/main-graph - bounce_rate plot" do

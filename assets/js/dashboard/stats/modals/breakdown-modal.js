@@ -4,6 +4,8 @@ import * as api from '../../api'
 import { useDebouncedEffect, useMountedEffect } from '../../custom-hooks'
 import { trimURL } from '../../util/url'
 import { FilterLink } from "../reports/list";
+import { useQueryContext } from "../../query-context";
+import { useSiteContext } from "../../site-context";
 
 const LIMIT = 100
 const MIN_HEIGHT_PX = 500
@@ -32,11 +34,6 @@ const MIN_HEIGHT_PX = 500
 // of results.
 
 // ### Required Props
-
-//   * `site` - the current dashboard site
-
-//   * `query` - a read-only query object representing the query state of the
-//     dashboard (e.g. `filters`, `period`, `with_imported`, etc)
 
 //   * `reportInfo` - a map with the following required keys:
 
@@ -77,8 +74,6 @@ const MIN_HEIGHT_PX = 500
 //   * `afterFetchNextPage` - a function with the same behaviour as `afterFetchData`,
 //     but will be called after a successful next page load in `fetchNextPage`.
 export default function BreakdownModal({
-  site,
-  query,
   reportInfo,
   metrics,
   renderIcon,
@@ -89,6 +84,9 @@ export default function BreakdownModal({
   addSearchFilter,
   getFilterInfo
 }) {
+  const {query} = useQueryContext();
+  const site = useSiteContext();
+
   const endpoint = `/api/stats/${encodeURIComponent(site.domain)}${reportInfo.endpoint}`
   
   const [initialLoading, setInitialLoading] = useState(true)

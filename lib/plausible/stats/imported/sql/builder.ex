@@ -435,14 +435,16 @@ defmodule Plausible.Stats.Imported.SQL.Builder do
     |> select_joined_metrics(rest)
   end
 
-  def select_joined_metrics(q, [:sample_percent | rest]) do
+  # Ignored as it's calculated separately
+  def select_joined_metrics(q, [metric | rest])
+      when metric in [:conversion_rate, :group_conversion_rate, :percentage] do
     q
-    |> select_merge_as([s, i], %{sample_percent: s.sample_percent})
     |> select_joined_metrics(rest)
   end
 
-  def select_joined_metrics(q, [_ | rest]) do
+  def select_joined_metrics(q, [metric | rest]) do
     q
+    |> select_merge_as([s, i], %{metric => field(s, ^metric)})
     |> select_joined_metrics(rest)
   end
 
