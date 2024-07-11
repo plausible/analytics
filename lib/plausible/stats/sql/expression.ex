@@ -26,10 +26,10 @@ defmodule Plausible.Stats.SQL.Expression do
     end
   end
 
-  defmacrop regular_time_slots(query, period_in_seconds) do
+  defmacrop time_slots(query, period_in_seconds) do
     quote do
       fragment(
-        "arrayJoin(timeSlots(toTimeZone(?, ?), toUInt32(timeDiff(?, ?)), toUInt32(?)))",
+        "timeSlots(toTimeZone(?, ?), toUInt32(timeDiff(?, ?)), toUInt32(?))",
         s.start,
         ^unquote(query).timezone,
         s.start,
@@ -62,8 +62,14 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def select_dimension(q, key, "time:hour", :sessions, query) do
-    select_merge_as(q, [s], %{
-      key => regular_time_slots(query, 60 * 60)
+    # :TRICKY: ClickHouse timeSlots works off of unix epoch and is not
+    #   timezone-aware. This means that for e.g. Asia/Katmandu (GMT+5:45)
+    #   to work, we divide time into 15-minute buckets and later combine these
+    #   via toStartOfHour
+    q
+    |> join(:array, [s], time_slot in time_slots(query, 15 * 60), as: :time_slot)
+    |> select_merge_as([s, time_slot: time_slot], %{
+      key => fragment("toStartOfHour(?)", time_slot)
     })
   end
 
@@ -96,8 +102,10 @@ defmodule Plausible.Stats.SQL.Expression do
 
   # :NOTE: This is not exposed in Query APIv2
   def select_dimension(q, key, "time:minute", :sessions, query) do
-    select_merge_as(q, [s], %{
-      key => regular_time_slots(query, 60)
+    q
+    |> join(:array, [s], time_slot in time_slots(query, 60), as: :time_slot)
+    |> select_merge_as([s, time_slot: time_slot], %{
+      key => fragment("?", time_slot)
     })
   end
 
