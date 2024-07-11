@@ -177,7 +177,7 @@ defmodule Plausible.HelpScout do
     refresh? = Keyword.get(opts, :refresh?, true)
     token = get_token!()
 
-    url = @base_api_url <> "/v2/customers/" <> customer_id
+    url = Path.join([@base_api_url, "/v2/customers/", customer_id])
 
     extra_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
     opts = Keyword.merge([auth: {:bearer, token}], extra_opts)
@@ -226,7 +226,7 @@ defmodule Plausible.HelpScout do
   end
 
   defp refresh_token!() do
-    url = @base_api_url <> "/v2/oauth2/token"
+    url = Path.join(@base_api_url, "/v2/oauth2/token")
     credentials = config()
 
     params = [
