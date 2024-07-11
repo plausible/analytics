@@ -83,8 +83,11 @@ defmodule Plausible.HelpScout do
   defp plan_link(nil), do: "#"
 
   defp plan_link(%{paddle_subscription_id: paddle_id}) do
-    Billing.PaddleApi.vendors_domain() <>
-      "/subscriptions/customers/manage/" <> paddle_id
+    Path.join([
+      Billing.PaddleApi.vendors_domain(),
+      "/subscriptions/customers/manage/",
+      paddle_id
+    ])
   end
 
   defp status_label(user) do
