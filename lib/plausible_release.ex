@@ -85,7 +85,7 @@ defmodule Plausible.Release do
 
     plans =
       Plausible.Billing.Plans.all()
-      |> Plausible.Billing.Plans.with_prices("127.0.0.1")
+      |> Plausible.Billing.Plans.with_prices()
       |> Enum.map(fn plan ->
         plan = Map.from_struct(plan)
 

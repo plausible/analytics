@@ -128,7 +128,7 @@ defmodule Plausible.HelpScout do
   end
 
   defp plan_label(subscription, %Billing.Plan{} = plan) do
-    [plan] = Billing.Plans.with_prices([plan], "127.0.0.1")
+    [plan] = Billing.Plans.with_prices([plan])
     interval = Billing.Plans.subscription_interval(subscription)
     quota = PlausibleWeb.AuthView.subscription_quota(subscription, [])
 
