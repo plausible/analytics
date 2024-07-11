@@ -9,7 +9,6 @@ defmodule Plausible.Site.TrafficChangeNotification do
   schema "spike_notifications" do
     field :recipients, {:array, :string}
     field :threshold, :integer
-    field :type, Ecto.Enum, values: [:spike, :drop], default: :spike
     field :last_sent, :naive_datetime
     field :type, Ecto.Enum, values: [:spike, :drop], default: :spike
     belongs_to :site, Plausible.Site
