@@ -93,7 +93,9 @@ defmodule Plausible.Application do
       Plausible.PromEx
     ]
 
-    children = start_help_scout_vault(children)
+    on_ee do
+      children = children ++ help_scout_vault()
+    end
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
 
@@ -113,19 +115,15 @@ defmodule Plausible.Application do
     :ok
   end
 
-  defp start_help_scout_vault(children) do
-    help_scout_vault_key =
-      :plausible
-      |> Application.fetch_env!(Plausible.HelpScout)
-      |> Keyword.fetch!(:vault_key)
+  on_ee do
+    defp help_scout_vault() do
+      help_scout_vault_key =
+        :plausible
+        |> Application.fetch_env!(Plausible.HelpScout)
+        |> Keyword.fetch!(:vault_key)
+        |> Base.decode64!()
 
-    if ee?() && help_scout_vault_key do
-      children ++
-        [
-          {Plausible.HelpScout.Vault, key: Base.decode64!(help_scout_vault_key)}
-        ]
-    else
-      children
+      [{Plausible.HelpScout.Vault, key: help_scout_vault_key}]
     end
   end
 
