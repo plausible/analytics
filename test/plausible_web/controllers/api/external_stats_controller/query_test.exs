@@ -1152,7 +1152,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         post(conn, "/api/v2/query", %{
           "site_id" => site.domain,
           "metrics" => ["visits"],
-          "date_range" => ["2020-12-02", "2021-01-02"],
+          "date_range" => ["2021-01-02", "2021-01-02"],
           "dimensions" => ["time:hour"]
         })
 
