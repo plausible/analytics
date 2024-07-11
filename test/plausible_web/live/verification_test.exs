@@ -140,6 +140,26 @@ defmodule PlausibleWeb.Live.VerificationTest do
       assert element_exists?(html, @go_to_dashboard_button)
     end
 
+    test "query launch_verification=true launches the modal", %{conn: conn, site: site} do
+      stub_fetch_body(200, source(site.domain))
+      stub_installation()
+
+      {lv, _html} = get_lv_modal(conn, site, "?launch_verification=true")
+
+      assert html =
+               eventually(fn ->
+                 html = render(lv)
+
+                 {
+                   html =~ "Success!",
+                   html
+                 }
+               end)
+
+      refute html =~ "Awaiting your first pageview"
+      assert element_exists?(html, @go_to_dashboard_button)
+    end
+
     test "failed verification can be retried", %{conn: conn, site: site} do
       stub_fetch_body(200, "")
       stub_installation(200, plausible_installed(false))
@@ -176,9 +196,9 @@ defmodule PlausibleWeb.Live.VerificationTest do
     {lv, html}
   end
 
-  defp get_lv_modal(conn, site) do
+  defp get_lv_modal(conn, site, query_string \\ "") do
     conn = conn |> no_slowdown() |> assign(:live_module, PlausibleWeb.Live.Verification)
-    {:ok, lv, html} = live(no_slowdown(conn), "/#{site.domain}/settings/general")
+    {:ok, lv, html} = live(no_slowdown(conn), "/#{site.domain}/settings/general#{query_string}")
     {lv, html}
   end
 
