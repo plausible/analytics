@@ -141,6 +141,19 @@ defmodule PlausibleWeb.Email do
     })
   end
 
+  def drop_notification(email, site, current_visitors, dashboard_link, settings_link) do
+    base_email()
+    |> to(email)
+    |> tag("drop-notification")
+    |> subject("Traffic Drop on #{site.domain}")
+    |> render("drop_notification.html", %{
+      site: site,
+      current_visitors: current_visitors,
+      dashboard_link: dashboard_link,
+      settings_link: settings_link
+    })
+  end
+
   def over_limit_email(user, usage, suggested_plan) do
     priority_email()
     |> to(user)

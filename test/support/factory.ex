@@ -18,8 +18,16 @@ defmodule Plausible.Factory do
   end
 
   def spike_notification_factory do
-    %Plausible.Site.SpikeNotification{
-      threshold: 10
+    %Plausible.Site.TrafficChangeNotification{
+      threshold: 10,
+      type: :spike
+    }
+  end
+
+  def drop_notification_factory do
+    %Plausible.Site.TrafficChangeNotification{
+      threshold: 1,
+      type: :drop
     }
   end
 
