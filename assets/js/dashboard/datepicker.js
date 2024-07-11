@@ -31,7 +31,7 @@ import classNames from "classnames"
 
 function KeyBindHint({children}) {
   return (
-    <kbd className="rounded border border-gray-200 px-1 font-sans text-xs text-gray-400">{children}</kbd>
+    <kbd className="rounded border border-gray-200 px-2 font-mono font-normal text-xs text-gray-400">{children}</kbd>
   )
 }
 
