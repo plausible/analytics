@@ -238,13 +238,8 @@ defmodule Plausible.HelpScout do
     extra_opts = Application.get_env(:plausible, __MODULE__)[:req_opts] || []
     opts = Keyword.merge([form: params], extra_opts)
 
-    token =
-      url
-      |> Req.post!(opts)
-      |> Map.fetch!(:body)
-      |> Map.fetch!("access_token")
-
-    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+    %{status: 200, body: %{"access_token" => token}} = Req.post!(url, opts)
+    now = NaiveDateTime.utc_now(:second)
 
     Repo.insert_all("help_scout_credentials", [
       [access_token: Vault.encrypt!(token), inserted_at: now, updated_at: now]
