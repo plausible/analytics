@@ -4,14 +4,8 @@ defmodule Plausible.Verification do
   """
   use Plausible
 
-  @feature_flag :verification
-
-  def enabled?(user) do
-    enabled_via_config? =
-      :plausible |> Application.fetch_env!(__MODULE__) |> Keyword.fetch!(:enabled?)
-
-    enabled_for_user? = not is_nil(user) and FunWithFlags.enabled?(@feature_flag, for: user)
-    enabled_via_config? or enabled_for_user?
+  def enabled?() do
+    :plausible |> Application.fetch_env!(__MODULE__) |> Keyword.fetch!(:enabled?)
   end
 
   on_ee do
