@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   import Plausible.Pagination
 
   alias Plausible.Sites
+  alias Plausible.Goal
   alias Plausible.Goals
   alias PlausibleWeb.Api.Helpers, as: H
 
@@ -40,7 +41,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
           Enum.map(page.entries, fn goal ->
             %{
               id: goal.id,
-              name: to_string(goal)
+              name: Goal.name(goal)
             }
           end),
         meta: pagination_meta(page.metadata)

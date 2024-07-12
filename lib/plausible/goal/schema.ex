@@ -47,6 +47,24 @@ defmodule Plausible.Goal do
     |> maybe_drop_currency()
   end
 
+  @spec display_name(t()) :: String.t()
+  def display_name(%{currency: nil} = goal) do
+    name(goal)
+  end
+
+  def display_name(%{currency: currency} = goal) do
+    name(goal) <> " (#{currency})"
+  end
+
+  @spec name(t()) :: String.t()
+  def name(%{page_path: page_path}) when is_binary(page_path) do
+    "Visit " <> page_path
+  end
+
+  def name(%{event_name: name}) when is_binary(name) do
+    name
+  end
+
   defp update_leading_slash(changeset) do
     case get_field(changeset, :page_path) do
       "/" <> _ ->
@@ -101,24 +119,16 @@ defimpl Jason.Encoder, for: Plausible.Goal do
 
     value
     |> Map.put(:goal_type, goal_type)
-    |> Map.take([:id, :goal_type, :event_name, :page_path])
+    |> Map.take([:id, :goal_type, :event_name, :page_path, :currency])
     |> Map.put(:domain, domain)
-    |> Map.put(:name, to_string(value))
+    |> Map.put(:name, Plausible.Goal.name(value))
     |> Jason.Encode.map(opts)
   end
 end
 
 defimpl String.Chars, for: Plausible.Goal do
-  def to_string(%{page_path: page_path}) when is_binary(page_path) do
-    "Visit " <> page_path
-  end
-
-  def to_string(%{event_name: name, currency: nil}) when is_binary(name) do
-    name
-  end
-
-  def to_string(%{event_name: name, currency: currency}) when is_binary(name) do
-    name <> " (#{currency})"
+  def to_string(goal) do
+    Plausible.Goal.display_name(goal)
   end
 end
 

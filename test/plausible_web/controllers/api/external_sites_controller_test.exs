@@ -656,15 +656,15 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "goals" => [
                    %{
                      "id" => goal3.id,
-                     "name" => to_string(goal3)
+                     "name" => Plausible.Goal.name(goal3)
                    },
                    %{
                      "id" => goal2.id,
-                     "name" => to_string(goal2)
+                     "name" => Plausible.Goal.name(goal2)
                    },
                    %{
                      "id" => goal1.id,
-                     "name" => to_string(goal1)
+                     "name" => Plausible.Goal.name(goal1)
                    }
                  ],
                  "meta" => %{
