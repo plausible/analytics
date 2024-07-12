@@ -1,8 +1,8 @@
 import React, { Fragment, useState, useCallback, useEffect, useRef } from 'react'
 import { Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import debounce from 'debounce-promise'
 import classNames from 'classnames'
+import { useMountedEffect, useDebounce } from '../custom-hooks'
 
 function Option({isHighlighted, onClick, onMouseEnter, text, id}) {
   const className = classNames('relative cursor-pointer select-none py-2 px-3', {
@@ -52,6 +52,26 @@ export default function PlausibleCombobox(props) {
     visibleOptions.push({value: search, label: search, freeChoice: true})
   }
 
+  useEffect(() => {
+    if (isOpen) { fetchOptions() }
+  }, [isOpen])
+
+  useMountedEffect(() => { debouncedFetchOptions() }, [search])
+
+  const fetchOptions = useCallback(() => {
+    if (isOpen) {
+      setLoading(true)
+  
+      props.fetchOptions(search).then((loadedOptions) => {
+        setLoading(false)
+        setHighlightedIndex(0)
+        setOptions(loadedOptions)
+      })
+    }
+  }, [search, isOpen])
+
+  const debouncedFetchOptions = useDebounce(fetchOptions, 300)
+
   function highLight(index) {
     let newIndex = index
 
@@ -99,28 +119,14 @@ export default function PlausibleCombobox(props) {
     return optionAlreadySelected || optionDisabled
   }
 
-  function fetchOptions(query) {
-    setLoading(true)
-    setOpen(true)
-
-    return props.fetchOptions(query).then((loadedOptions) => {
-      setLoading(false)
-      setHighlightedIndex(0)
-      setOptions(loadedOptions)
-    })
-  }
-
-  const debouncedFetchOptions = useCallback(debounce(fetchOptions, 200), [fetchOptions])
-
   function onInput(e) {
-    const newInput = e.target.value
-    setSearch(newInput)
-    debouncedFetchOptions(newInput)
+    if (!isOpen) { setOpen(true) }
+    setSearch(e.target.value)
   }
 
   function toggleOpen() {
     if (!isOpen) {
-      fetchOptions(input)
+      setOpen(true)
       searchRef.current.focus()
     } else {
       setSearch('')
