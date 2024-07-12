@@ -188,12 +188,11 @@ export default function Behaviours({ importedDataInView }) {
 
   function renderConversions() {
     if (site.hasGoals) {
-      return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} afterFetchData={afterFetchData} />
+      return <GoalConversions onGoalFilterClick={onGoalFilterClick} afterFetchData={afterFetchData} />
     }
     else if (adminAccess) {
       return (
         <FeatureSetupNotice
-          site={site}
           feature={CONVERSIONS}
           title={'Measure how often visitors complete specific actions'}
           info={'Goals allow you to track registrations, button clicks, form completions, external link clicks, file downloads, 404 error pages and more.'}
@@ -213,7 +212,7 @@ export default function Behaviours({ importedDataInView }) {
       return featureUnavailable()
     }
     else if (Funnel && selectedFunnel && site.funnelsAvailable) {
-      return <Funnel site={site} query={query} funnelName={selectedFunnel} />
+      return <Funnel funnelName={selectedFunnel} />
     }
     else if (Funnel && adminAccess) {
       let callToAction
@@ -226,7 +225,6 @@ export default function Behaviours({ importedDataInView }) {
 
       return (
         <FeatureSetupNotice
-          site={site}
           feature={FUNNELS}
           title={'Follow the visitor journey from entry to conversion'}
           info={'Funnels allow you to analyze the user flow through your website, uncover possible issues, optimize your site and increase the conversion rate.'}
@@ -240,7 +238,7 @@ export default function Behaviours({ importedDataInView }) {
 
   function renderProps() {
     if (site.hasProps && site.propsAvailable) {
-      return <Properties site={site} query={query} afterFetchData={afterFetchData} />
+      return <Properties afterFetchData={afterFetchData} />
     } else if (adminAccess) {
       let callToAction
 
@@ -252,7 +250,6 @@ export default function Behaviours({ importedDataInView }) {
 
       return (
         <FeatureSetupNotice
-          site={site}
           feature={PROPS}
           title={'Send custom data to create your own metrics'}
           info={'You can attach custom properties when sending a pageview or event. This allows you to create custom metrics and analyze stats we don\'t track automatically.'}
@@ -343,9 +340,9 @@ export default function Behaviours({ importedDataInView }) {
 
   function renderImportedQueryUnsupportedWarning() {
     if (mode === CONVERSIONS) {
-      return <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason} />
+      return <ImportedQueryUnsupportedWarning loading={loading} skipImportedReason={skipImportedReason} />
     } else if (mode === PROPS) {
-      return <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason} message="Imported data is unavailable in this view" />
+      return <ImportedQueryUnsupportedWarning loading={loading} skipImportedReason={skipImportedReason} message="Imported data is unavailable in this view" />
     } else {
       return <ImportedQueryUnsupportedWarning altCondition={importedDataInView} message="Imported data is unavailable in this view" />
     }

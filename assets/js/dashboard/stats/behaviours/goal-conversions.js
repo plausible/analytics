@@ -5,6 +5,8 @@ import * as metrics from '../reports/metrics'
 import * as url from "../../util/url"
 import * as api from "../../api"
 import { EVENT_PROPS_PREFIX, getGoalFilter } from "../../util/filters"
+import { useSiteContext } from "../../site-context"
+import { useQueryContext } from "../../query-context"
 
 export const SPECIAL_GOALS = {
   '404': { title: '404 Pages', prop: 'path' },
@@ -31,8 +33,9 @@ export function specialTitleWhenGoalFilter(query, defaultTitle) {
   return getSpecialGoal(query)?.title || defaultTitle
 }
 
-function SpecialPropBreakdown(props) {
-  const { site, query, prop, afterFetchData } = props
+function SpecialPropBreakdown({ prop, afterFetchData }) {
+  const site = useSiteContext();
+  const { query } = useQueryContext();
 
   function fetchData() {
     return api.get(url.apiPath(site, `/custom-prop-values/${prop}`), query)
@@ -55,8 +58,8 @@ function SpecialPropBreakdown(props) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ renderLabel: (_query) => "Visitors", meta: {plot: true}}),
-      metrics.createEvents({renderLabel: (_query) => "Events", meta: {hiddenOnMobile: true}}),
+      metrics.createVisitors({ renderLabel: (_query) => "Visitors", meta: { plot: true } }),
+      metrics.createEvents({ renderLabel: (_query) => "Events", meta: { hiddenOnMobile: true } }),
       metrics.createConversionRate()
     ].filter(metric => !!metric)
   }
@@ -71,20 +74,19 @@ function SpecialPropBreakdown(props) {
       detailsLink={url.sitePath(`custom-prop-values/${prop}`)}
       externalLinkDest={externalLinkDest()}
       maybeHideDetails={true}
-      query={query}
       color="bg-red-50"
       colMinWidth={90}
     />
   )
 }
 
-export default function GoalConversions(props) {
-  const { site, query, afterFetchData } = props
+export default function GoalConversions({ afterFetchData, onGoalFilterClick }) {
+  const { query } = useQueryContext()
 
   const specialGoal = getSpecialGoal(query)
   if (specialGoal) {
-    return <SpecialPropBreakdown site={site} query={props.query} prop={specialGoal.prop} afterFetchData={afterFetchData} />
+    return <SpecialPropBreakdown prop={specialGoal.prop} afterFetchData={afterFetchData} />
   } else {
-    return <Conversions site={site} query={props.query} onGoalFilterClick={props.onGoalFilterClick} afterFetchData={afterFetchData} />
+    return <Conversions onGoalFilterClick={onGoalFilterClick} afterFetchData={afterFetchData} />
   }
 }

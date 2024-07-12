@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 
-import * as api from '../../api'
-import { useDebouncedEffect, useMountedEffect } from '../../custom-hooks'
-import { trimURL } from '../../util/url'
+import * as api from '../../api';
+import { useDebouncedEffect, useMountedEffect } from '../../custom-hooks';
+import { trimURL } from '../../util/url';
 import { FilterLink } from "../reports/list";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
@@ -194,7 +194,6 @@ export default function BreakdownModal({
           { maybeRenderIcon(item) }
           <FilterLink
             pathname={`/${encodeURIComponent(site.domain)}`}
-            query={query}
             filterInfo={getFilterInfo(item)}
           >
             {trimURL(item.name, 40)}

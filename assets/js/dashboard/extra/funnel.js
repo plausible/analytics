@@ -1,18 +1,22 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react';
 import FlipMove from 'react-flip-move';
-import Chart from 'chart.js/auto'
-import FunnelTooltip from './funnel-tooltip.js'
-import ChartDataLabels from 'chartjs-plugin-datalabels'
-import numberFormatter from '../util/number-formatter'
-import Bar from '../stats/bar'
+import Chart from 'chart.js/auto';
+import FunnelTooltip from './funnel-tooltip.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+import numberFormatter from '../util/number-formatter';
+import Bar from '../stats/bar';
 
-import RocketIcon from '../stats/modals/rocket-icon'
+import RocketIcon from '../stats/modals/rocket-icon';
 
-import * as api from '../api'
-import LazyLoader from '../components/lazy-loader'
+import * as api from '../api';
+import LazyLoader from '../components/lazy-loader';
+import { useQueryContext } from '../query-context.js';
+import { useSiteContext } from '../site-context.js';
 
 
-export default function Funnel(props) {
+export default function Funnel({ funnelName, tabs }) {
+  const site = useSiteContext();
+  const { query } = useQueryContext();
   const [loading, setLoading] = useState(true)
   const [visible, setVisible] = useState(false)
   const [error, setError] = useState(undefined)
@@ -42,7 +46,7 @@ export default function Funnel(props) {
         }
       }
     }
-  }, [props.query, props.funnelName, visible, isSmallScreen])
+  }, [query, funnelName, visible, isSmallScreen])
 
   useEffect(() => {
     if (canvasRef.current && funnel && visible && !isSmallScreen) {
@@ -115,7 +119,7 @@ export default function Funnel(props) {
   }
 
   const getFunnel = () => {
-    return props.site.funnels.find((funnel) => funnel.name === props.funnelName)
+    return site.funnels.find((funnel) => funnel.name === funnelName)
   }
 
   const fetchFunnel = async () => {
@@ -123,7 +127,7 @@ export default function Funnel(props) {
     if (typeof funnelMeta === 'undefined') {
       throw new Error('Could not fetch the funnel. Perhaps it was deleted?')
     } else {
-      return api.get(`/api/stats/${encodeURIComponent(props.site.domain)}/funnels/${funnelMeta.id}`, props.query)
+      return api.get(`/api/stats/${encodeURIComponent(site.domain)}/funnels/${funnelMeta.id}`, query)
     }
   }
 
@@ -256,8 +260,8 @@ export default function Funnel(props) {
   const header = () => {
     return (
       <div className="flex justify-between w-full">
-        <h4 className="mt-2 text-sm dark:text-gray-100">{props.funnelName}</h4>
-        {props.tabs}
+        <h4 className="mt-2 text-sm dark:text-gray-100">{funnelName}</h4>
+        {tabs}
       </div>
     )
   }
