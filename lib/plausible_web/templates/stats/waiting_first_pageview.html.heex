@@ -22,7 +22,7 @@
     </div>
   <% end %>
   <div
-    :if={not Plausible.Verification.enabled?(assigns[:current_user])}
+    :if={not Plausible.Verification.enabled?()}
     class="bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-16 relative text-center"
   >
     <h2 class="text-xl font-bold dark:text-gray-100">Waiting for first pageview</h2>
@@ -61,7 +61,7 @@
     </div>
   </div>
 
-  <%= if Plausible.Verification.enabled?(assigns[:current_user]),
+  <%= if Plausible.Verification.enabled?(),
     do:
       live_render(@conn, PlausibleWeb.Live.Verification,
         session: %{
