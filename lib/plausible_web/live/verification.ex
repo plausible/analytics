@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Live.Verification do
     socket =
       if connected?(socket) and !!session["modal?"] and !!session["open_modal?"] do
         launch_delayed(socket)
-        Phoenix.LiveView.push_event(socket, "open-modal", %{id: "verification-modal"})
+        Modal.open(socket, "verification-modal")
       else
         socket
       end
