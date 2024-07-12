@@ -92,6 +92,8 @@ Plausible.Google.HTTP.html
 Plausible.HTTPClient.Interface.html
 Plausible.HTTPClient.Non200Error.html
 Plausible.HTTPClient.html
+Plausible.HelpScout.Vault.html
+Plausible.HelpScout.html
 Plausible.Helpers.JSON.html
 Plausible.ImportDeletionRepo.html
 Plausible.Imported.Buffer.html
@@ -279,6 +281,8 @@ PlausibleWeb.FirstLaunchPlug.html
 PlausibleWeb.FormHelpers.html
 PlausibleWeb.GoogleAnalyticsController.html
 PlausibleWeb.GoogleAnalyticsView.html
+PlausibleWeb.HelpScoutController.html
+PlausibleWeb.HelpScoutView.html
 PlausibleWeb.InvitationController.html
 PlausibleWeb.LastSeenPlug.html
 PlausibleWeb.LayoutView.JWT.html
@@ -418,8 +422,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-8D88C877.js
-dist/sidebar_items-EC05E9BF.js
+dist/search_data-10F6A44E.js
+dist/sidebar_items-F4A0F125.js
 index.html
 readme.html
 search.html
