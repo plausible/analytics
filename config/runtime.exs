@@ -207,6 +207,10 @@ paddle_vendor_id = get_var_from_path_or_env(config_dir, "PADDLE_VENDOR_ID")
 google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
 google_secret = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_SECRET")
 postmark_api_key = get_var_from_path_or_env(config_dir, "POSTMARK_API_KEY")
+help_scout_app_id = get_var_from_path_or_env(config_dir, "HELP_SCOUT_APP_ID")
+help_scout_app_secret = get_var_from_path_or_env(config_dir, "HELP_SCOUT_APP_SECRET")
+help_scout_signature_key = get_var_from_path_or_env(config_dir, "HELP_SCOUT_SIGNATURE_KEY")
+help_scout_vault_key = get_var_from_path_or_env(config_dir, "HELP_SCOUT_VAULT_KEY")
 
 {otel_sampler_ratio, ""} =
   config_dir
@@ -372,6 +376,12 @@ config :plausible, :google,
   api_url: "https://www.googleapis.com",
   reporting_api_url: "https://analyticsreporting.googleapis.com"
 
+config :plausible, Plausible.HelpScout,
+  app_id: help_scout_app_id,
+  app_secret: help_scout_app_secret,
+  signature_key: help_scout_signature_key,
+  vault_key: help_scout_vault_key
+
 config :plausible, :imported,
   max_buffer_size: get_int_from_path_or_env(config_dir, "IMPORTED_MAX_BUFFER_SIZE", 10_000)
 
@@ -528,7 +538,7 @@ base_cron = [
   # Daily at midday
   {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
   # Every 15 minutes
-  {"*/15 * * * *", Plausible.Workers.SpikeNotifier},
+  {"*/15 * * * *", Plausible.Workers.TrafficChangeNotifier},
   # Every day at 1am
   {"0 1 * * *", Plausible.Workers.CleanInvitations},
   # Every 2 hours

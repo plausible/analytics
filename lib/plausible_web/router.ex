@@ -290,6 +290,10 @@ defmodule PlausibleWeb.Router do
 
     get "/auth/google/callback", AuthController, :google_auth_callback
 
+    on_ee do
+      get "/helpscout/callback", HelpScoutController, :callback
+    end
+
     get "/", PageController, :index
 
     get "/billing/change-plan/preview/:plan_id", BillingController, :change_plan_preview
@@ -331,17 +335,25 @@ defmodule PlausibleWeb.Router do
            SiteController,
            :remove_monthly_report_recipient
 
-    post "/sites/:website/spike-notification/enable", SiteController, :enable_spike_notification
-    post "/sites/:website/spike-notification/disable", SiteController, :disable_spike_notification
-    put "/sites/:website/spike-notification", SiteController, :update_spike_notification
-
-    post "/sites/:website/spike-notification/recipients",
+    post "/sites/:website/traffic-change-notification/:type/enable",
          SiteController,
-         :add_spike_notification_recipient
+         :enable_traffic_change_notification
 
-    delete "/sites/:website/spike-notification/recipients/:recipient",
+    post "/sites/:website/traffic-change-notification/:type/disable",
+         SiteController,
+         :disable_traffic_change_notification
+
+    put "/sites/:website/traffic-change-notification/:type",
+        SiteController,
+        :update_traffic_change_notification
+
+    post "/sites/:website/traffic-change-notification/:type/recipients",
+         SiteController,
+         :add_traffic_change_notification_recipient
+
+    delete "/sites/:website/traffic-change-notification/:type/recipients/:recipient",
            SiteController,
-           :remove_spike_notification_recipient
+           :remove_traffic_change_notification_recipient
 
     get "/sites/:website/shared-links/new", SiteController, :new_shared_link
     post "/sites/:website/shared-links", SiteController, :create_shared_link

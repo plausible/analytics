@@ -65,7 +65,7 @@
 <%= form_for @conn, "/", [class: "shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6"], fn f -> %>
   <header class="relative">
     <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-      JavaScript Snippet
+      <a id="snippet">JavaScript Snippet</a>
     </h2>
     <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
       Include this Snippet in the <code>&lt;head&gt;</code> of your Website.
@@ -109,9 +109,10 @@
       </a>
     </div>
 
-    <div :if={Plausible.Verification.enabled?(@current_user)}>
+    <div :if={Plausible.Verification.enabled?()}>
       <%= live_render(@conn, PlausibleWeb.Live.Verification,
         session: %{
+          "open_modal?" => !!@conn.params["launch_verification"],
           "site_id" => @site.id,
           "domain" => @site.domain,
           "modal?" => true,

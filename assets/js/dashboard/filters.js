@@ -1,10 +1,10 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { Link, withRouter } from 'react-router-dom'
-import { AdjustmentsVerticalIcon, MagnifyingGlassIcon, XMarkIcon, PencilSquareIcon } from '@heroicons/react/20/solid'
-import classNames from 'classnames'
-import { Menu, Transition } from '@headlessui/react'
+import { Link, withRouter } from 'react-router-dom';
+import { AdjustmentsVerticalIcon, MagnifyingGlassIcon, XMarkIcon, PencilSquareIcon } from '@heroicons/react/20/solid';
+import classNames from 'classnames';
+import { Menu, Transition } from '@headlessui/react';
 
-import { navigateToQuery } from './query'
+import { navigateToQuery } from './query';
 import {
   FILTER_GROUP_TO_MODAL_TYPE,
   cleanLabels,
@@ -15,7 +15,7 @@ import {
   getPropertyKeyFromFilterKey,
   getLabel,
   FILTER_OPERATIONS_DISPLAY_NAMES
-} from "./util/filters"
+} from "./util/filters";
 import { useQueryContext } from './query-context';
 import { useSiteContext } from './site-context';
 
@@ -99,7 +99,9 @@ function filterDropdownOption(site, option) {
   )
 }
 
-function DropdownContent({ history, site, query, wrapped }) {
+function DropdownContent({ history, wrapped }) {
+  const site = useSiteContext();
+  const { query } = useQueryContext();
   const [addingFilter, setAddingFilter] = useState(false);
 
   if (wrapped === WRAPSTATE.unwrapped || addingFilter) {
@@ -126,7 +128,6 @@ function DropdownContent({ history, site, query, wrapped }) {
 
 function Filters({ history }) {
   const { query } = useQueryContext();
-  const site = useSiteContext();
 
   const [wrapped, setWrapped] = useState(WRAPSTATE.waiting)
   const [viewport, setViewport] = useState(1080)
@@ -267,7 +268,7 @@ function Filters({ history }) {
                   className="rounded-md shadow-lg  bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5
                   font-medium text-gray-800 dark:text-gray-200"
                 >
-                  <DropdownContent history={history} query={query} site={site} wrapped={wrapped} />
+                  <DropdownContent history={history} wrapped={wrapped} />
                 </div>
               </Menu.Items>
             </Transition>

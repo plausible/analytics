@@ -106,6 +106,11 @@ defmodule PlausibleWeb.Live.Components.Modal do
     end
   end
 
+  @spec open(Phoenix.LiveView.Socket.t(), String.t()) :: Phoenix.LiveView.Socket.t()
+  def open(socket, id) do
+    Phoenix.LiveView.push_event(socket, "open-modal", %{id: id})
+  end
+
   @spec close(Phoenix.LiveView.Socket.t(), String.t()) :: Phoenix.LiveView.Socket.t()
   def close(socket, id) do
     Phoenix.LiveView.push_event(socket, "close-modal", %{id: id})

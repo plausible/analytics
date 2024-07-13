@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CACHE_VERSION: v7
+  CACHE_VERSION: v8
   PERSISTENT_CACHE_DIR: cached
 
 jobs:

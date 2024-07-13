@@ -6,9 +6,7 @@ import FilterModalPropsRow from "./filter-modal-props-row"
 export default function FilterModalGroup({
   filterGroup,
   filterState,
-  site,
   labels,
-  query,
   onUpdateRowValue,
   onAddRow,
   onDeleteRow
@@ -34,8 +32,6 @@ export default function FilterModalGroup({
             <FilterModalPropsRow
               key={id}
               filter={filter}
-              site={site}
-              query={query}
               showDelete={rows.length > 1}
               disabledOptions={disabledOptions}
               onUpdate={(newFilter) => onUpdateRowValue(id, newFilter)}
@@ -45,8 +41,6 @@ export default function FilterModalGroup({
             <FilterModalRow
               key={id}
               filter={filter}
-              site={site}
-              query={query}
               labels={labels}
               onUpdate={(newFilter, labelUpdate) => onUpdateRowValue(id, newFilter, labelUpdate)}
             />

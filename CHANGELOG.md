@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Icons for browsers plausible/analytics#4239
 - Automatic custom property selection in the dashboard Properties report
 - Add `does_not_contain` filter support to dashboard
+- Traffic drop notifications plausible/analytics#4300
 
 ### Removed
 - Deprecate `ECTO_IPV6` and `ECTO_CH_IPV6` env vars in CE plausible/analytics#4245

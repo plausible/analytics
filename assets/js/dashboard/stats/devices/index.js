@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import * as storage from '../../util/storage'
-import { getFiltersByKeyPrefix, hasGoalFilter, isFilteringOnFixedValue } from '../../util/filters'
-import ListReport from '../reports/list'
-import * as metrics from '../reports/metrics'
-import * as api from '../../api'
-import * as url from '../../util/url'
+import * as storage from '../../util/storage';
+import { getFiltersByKeyPrefix, hasGoalFilter, isFilteringOnFixedValue } from '../../util/filters';
+import ListReport from '../reports/list';
+import * as metrics from '../reports/metrics';
+import * as api from '../../api';
+import * as url from '../../util/url';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
@@ -41,7 +41,9 @@ function browserIconFor(browser) {
   )
 }
 
-function Browsers({ query, site, afterFetchData }) {
+function Browsers({ afterFetchData }) {
+  const site = useSiteContext();
+  const { query } = useQueryContext();
   function fetchData() {
     return api.get(url.apiPath(site, '/browsers'), query)
   }
@@ -72,13 +74,14 @@ function Browsers({ query, site, afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Browser"
       metrics={chooseMetrics()}
-      query={query}
       renderIcon={renderIcon}
     />
   )
 }
 
-function BrowserVersions({ query, site, afterFetchData }) {
+function BrowserVersions({ afterFetchData }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
   function fetchData() {
     return api.get(url.apiPath(site, '/browser-versions'), query)
       .then(res => {
@@ -120,7 +123,6 @@ function BrowserVersions({ query, site, afterFetchData }) {
       keyLabel="Browser version"
       metrics={chooseMetrics()}
       renderIcon={renderIcon}
-      query={query}
     />
   )
 }
@@ -156,7 +158,9 @@ function osIconFor(os) {
   )
 }
 
-function OperatingSystems({ query, site, afterFetchData }) {
+function OperatingSystems({ afterFetchData }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
   function fetchData() {
     return api.get(url.apiPath(site, '/operating-systems'), query)
   }
@@ -188,12 +192,14 @@ function OperatingSystems({ query, site, afterFetchData }) {
       renderIcon={renderIcon}
       keyLabel="Operating system"
       metrics={chooseMetrics()}
-      query={query}
     />
   )
 }
 
-function OperatingSystemVersions({ query, site, afterFetchData }) {
+function OperatingSystemVersions({ afterFetchData }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
+
   function fetchData() {
     return api.get(url.apiPath(site, '/operating-system-versions'), query)
       .then(res => {
@@ -235,13 +241,15 @@ function OperatingSystemVersions({ query, site, afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Operating System Version"
       metrics={chooseMetrics()}
-      query={query}
     />
   )
 
 }
 
-function ScreenSizes({ query, site, afterFetchData }) {
+function ScreenSizes({ afterFetchData }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
+
   function fetchData() {
     return api.get(url.apiPath(site, '/screen-sizes'), query)
   }
@@ -274,7 +282,6 @@ function ScreenSizes({ query, site, afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Screen size"
       metrics={chooseMetrics()}
-      query={query}
       renderIcon={renderIcon}
     />
   )
@@ -328,17 +335,17 @@ export default function Devices() {
     switch (mode) {
       case 'browser':
         if (isFilteringOnFixedValue(query, 'browser')) {
-          return <BrowserVersions site={site} query={query} afterFetchData={afterFetchData} />
+          return <BrowserVersions afterFetchData={afterFetchData} />
         }
-        return <Browsers site={site} query={query} afterFetchData={afterFetchData} />
+        return <Browsers afterFetchData={afterFetchData} />
       case 'os':
         if (isFilteringOnFixedValue(query, 'os')) {
-          return <OperatingSystemVersions site={site} query={query} afterFetchData={afterFetchData} />
+          return <OperatingSystemVersions afterFetchData={afterFetchData} />
         }
-        return <OperatingSystems site={site} query={query} afterFetchData={afterFetchData} />
+        return <OperatingSystems afterFetchData={afterFetchData} />
       case 'size':
       default:
-        return <ScreenSizes site={site} query={query} afterFetchData={afterFetchData} />
+        return <ScreenSizes afterFetchData={afterFetchData} />
     }
   }
 
@@ -370,7 +377,7 @@ export default function Devices() {
       <div className="flex justify-between w-full">
         <div className="flex gap-x-1">
           <h3 className="font-bold dark:text-gray-100">Devices</h3>
-          <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason} />
+          <ImportedQueryUnsupportedWarning loading={loading} skipImportedReason={skipImportedReason} />
         </div>
         <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
           {renderPill('Browser', 'browser')}

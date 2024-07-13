@@ -107,6 +107,10 @@ defmodule Plausible.Stats.Clickhouse do
     Plausible.Stats.current_visitors(site)
   end
 
+  def current_visitors_12h(site) do
+    Plausible.Stats.current_visitors(site, hours: -12)
+  end
+
   def has_pageviews?(site) do
     ClickhouseRepo.exists?(
       from(e in "events_v2",
