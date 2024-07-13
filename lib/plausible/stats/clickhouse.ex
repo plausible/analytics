@@ -108,7 +108,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def current_visitors_12h(site) do
-    Plausible.Stats.current_visitors(site, hours: -12)
+    Plausible.Stats.current_visitors(site, Duration.new(hour: -12))
   end
 
   def has_pageviews?(site) do
