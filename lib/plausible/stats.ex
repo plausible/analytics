@@ -41,7 +41,7 @@ defmodule Plausible.Stats do
     Timeseries.timeseries(site, query, metrics)
   end
 
-  def current_visitors(site, duration \\ Duration.new(minute: -5)) do
+  def current_visitors(site, duration \\ Duration.new!(minute: -5)) do
     include_sentry_replay_info()
     CurrentVisitors.current_visitors(site, duration)
   end
