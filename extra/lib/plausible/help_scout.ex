@@ -78,7 +78,12 @@ defmodule Plausible.HelpScout do
          status_link:
            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id),
          plan_label: plan_label(user.subscription, plan),
-         plan_link: plan_link(user.subscription)
+         plan_link: plan_link(user.subscription),
+         sites_count: Plausible.Sites.owned_sites_count(user),
+         sites_link:
+           Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
+             search: user.email
+           )
        }}
     end
   end
