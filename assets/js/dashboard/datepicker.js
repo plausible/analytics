@@ -31,6 +31,12 @@ import classNames from "classnames";
 import { useQueryContext } from "./query-context.js";
 import { useSiteContext } from "./site-context.js";
 
+function KeyBindHint({children}) {
+  return (
+    <kbd className="rounded border border-gray-200 px-2 font-mono font-normal text-xs text-gray-400">{children}</kbd>
+  )
+}
+
 function renderArrow(query, site, period, prevDate, nextDate) {
   const insertionDate = parseUTCDate(site.statsBegin);
   const disabledLeft = isBefore(
@@ -309,7 +315,7 @@ function DatePicker({ history }) {
       >
         {text}
 
-        {opts.keybindHint ? (<span className='font-normal'>{opts.keybindHint}</span>) : null}
+        {opts.keybindHint ? (<KeyBindHint>{opts.keybindHint}</KeyBindHint>) : null}
       </QueryLink>
     );
   }
@@ -357,7 +363,7 @@ function DatePicker({ history }) {
                 aria-controls="calendar"
               >
                 Custom Range
-                <span className='font-normal'>C</span>
+                <KeyBindHint>C</KeyBindHint>
               </span>
             </div>
             {!COMPARISON_DISABLED_PERIODS.includes(query.period) &&
@@ -369,7 +375,7 @@ function DatePicker({ history }) {
                   }}
                   className="px-4 py-2 text-sm leading-tight hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer flex items-center justify-between">
                   {isComparisonEnabled(query.comparison) ? 'Disable comparison' : 'Compare'}
-                  <span className='font-normal'>X</span>
+                  <KeyBindHint>X</KeyBindHint>
                 </span>
               </div>}
           </div>
