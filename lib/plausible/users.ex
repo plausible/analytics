@@ -42,16 +42,16 @@ defmodule Plausible.Users do
 
       cond do
         Plausible.Users.on_trial?(user) ->
-          Timex.shift(user.trial_expiry_date,
-            days: Auth.User.trial_accept_traffic_until_offset_days()
+          Date.shift(user.trial_expiry_date,
+            day: Auth.User.trial_accept_traffic_until_offset_days()
           )
 
         user.subscription && user.subscription.paddle_plan_id == "free_10k" ->
           @accept_traffic_until_free
 
         user.subscription && user.subscription.next_bill_date ->
-          Timex.shift(user.subscription.next_bill_date,
-            days: Auth.User.subscription_accept_traffic_until_offset_days()
+          Date.shift(user.subscription.next_bill_date,
+            day: Auth.User.subscription_accept_traffic_until_offset_days()
           )
 
         true ->
