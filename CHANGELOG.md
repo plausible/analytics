@@ -13,8 +13,10 @@ All notable changes to this project will be documented in this file.
 ### Removed
 - Deprecate `ECTO_IPV6` and `ECTO_CH_IPV6` env vars in CE plausible/analytics#4245
 - Remove support for importing data from no longer available Universal Analytics
+- Soft-deprecate `DATABASE_SOCKET_DIR` plausible/analytics#4202
 
 ### Changed
+- Support Unix sockets in `DATABASE_URL` plausible/analytics#4202
 
 - Realtime and hourly graphs now show visits lasting their whole duration instead when specific events occur
 - Increase hourly request limit for API keys in CE from 600 to 1000000 (practically removing the limit) plausible/analytics#4200
