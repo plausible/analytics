@@ -21,11 +21,13 @@ All notable changes to this project will be documented in this file.
 - Make TCP connections try IPv6 first with IPv4 fallback in CE plausible/analytics#4245
 - `is` and `is not` filters in dashboard no longer support wildcards. Use contains/does not contain filter instead.
 - `bounce_rate` metric now returns 0 instead of null for event:page breakdown when page has never been entry page.
+- Make `TOTP_VAULT_KEY` optional plausible/analytics#4317
 
 ### Fixed
 
 - Fix access to Stats API feature in CE plausible/analytics#4244
 - Fix filter suggestions when same filter previously applied
+- Fix MX lookup when using relays with Bamboo.Mua plausible/analytics#4350
 
 ## v2.1.1 - 2024-06-06
 
