@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-F4A0F125.js"></script>
+    <script src="dist/sidebar_items-5320170A.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -157,7 +157,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#current_visitors/2" translate="no">current_visitors(site, shift \\ [minutes: -5])</a>
+        <a href="#current_visitors/2" translate="no">current_visitors(site, duration \\ Duration.new!(minute: -5))</a>
 
       </div>
 
@@ -185,9 +185,9 @@ Pages
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">current_visitors(site, shift \\ [minutes: -5])</h1>
+    <h1 class="signature" translate="no">current_visitors(site, duration \\ Duration.new!(minute: -5))</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/current_visitors.ex#L5" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/current_visitors.ex#L6" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -196,6 +196,12 @@ Pages
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> current_visitors(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/Duration.html#t:duration/0">Duration.duration</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
+
+      </div>
 
 
   </section>
