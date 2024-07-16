@@ -276,6 +276,7 @@ defmodule PlausibleWeb.Api.StatsController do
         current_date =
           Timex.now(site.timezone)
           |> Timex.to_date()
+          |> Date.to_string()
 
         Enum.find_index(dates, &(&1 == current_date))
 
@@ -284,6 +285,7 @@ defmodule PlausibleWeb.Api.StatsController do
           Timex.now(site.timezone)
           |> Timex.to_date()
           |> date_or_weekstart(query)
+          |> Date.to_string()
 
         Enum.find_index(dates, &(&1 == current_date))
 
@@ -292,6 +294,7 @@ defmodule PlausibleWeb.Api.StatsController do
           Timex.now(site.timezone)
           |> Timex.to_date()
           |> Timex.beginning_of_month()
+          |> Date.to_string()
 
         Enum.find_index(dates, &(&1 == current_date))
 
