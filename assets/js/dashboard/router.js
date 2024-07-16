@@ -15,6 +15,13 @@ import FilterModal from './stats/modals/filter-modal'
 import QueryContextProvider from './query-context';
 import { useSiteContext } from './site-context';
 
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
+
+const queryClient = new QueryClient()
+
 function ScrollToTop() {
   const location = useLocation();
 
@@ -30,45 +37,47 @@ function ScrollToTop() {
 export default function Router() {
   const site = useSiteContext()
   return (
-    <BrowserRouter basename={site.shared ? `/share/${encodeURIComponent(site.domain)}` : encodeURIComponent(site.domain)}>
-      <QueryContextProvider>
-        <Route path="/">
-          <ScrollToTop />
-          <Dashboard />
-          <Switch>
-            <Route exact path={["/sources", "/utm_mediums", "/utm_sources", "/utm_campaigns", "/utm_contents", "/utm_terms"]}>
-              <SourcesModal />
-            </Route>
-            <Route exact path="/referrers/Google">
-              <GoogleKeywordsModal site={site} />
-            </Route>
-            <Route exact path="/referrers/:referrer">
-              <ReferrersDrilldownModal />
-            </Route>
-            <Route path="/pages">
-              <PagesModal />
-            </Route>
-            <Route path="/entry-pages">
-              <EntryPagesModal />
-            </Route>
-            <Route path="/exit-pages">
-              <ExitPagesModal />
-            </Route>
-            <Route exact path={["/countries", "/regions", "/cities"]}>
-              <LocationsModal />
-            </Route>
-            <Route path="/custom-prop-values/:prop_key">
-              <PropsModal />
-            </Route>
-            <Route path="/conversions">
-              <ConversionsModal />
-            </Route>
-            <Route path={["/filter/:field"]}>
-              <FilterModal site={site} />
-            </Route>
-          </Switch>
-        </Route>
-      </QueryContextProvider>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter basename={site.shared ? `/share/${encodeURIComponent(site.domain)}` : encodeURIComponent(site.domain)}>
+        <QueryContextProvider>
+          <Route path="/">
+            <ScrollToTop />
+            <Dashboard />
+            <Switch>
+              <Route exact path={["/sources", "/utm_mediums", "/utm_sources", "/utm_campaigns", "/utm_contents", "/utm_terms"]}>
+                <SourcesModal />
+              </Route>
+              <Route exact path="/referrers/Google">
+                <GoogleKeywordsModal site={site} />
+              </Route>
+              <Route exact path="/referrers/:referrer">
+                <ReferrersDrilldownModal />
+              </Route>
+              <Route path="/pages">
+                <PagesModal />
+              </Route>
+              <Route path="/entry-pages">
+                <EntryPagesModal />
+              </Route>
+              <Route path="/exit-pages">
+                <ExitPagesModal />
+              </Route>
+              <Route exact path={["/countries", "/regions", "/cities"]}>
+                <LocationsModal />
+              </Route>
+              <Route path="/custom-prop-values/:prop_key">
+                <PropsModal />
+              </Route>
+              <Route path="/conversions">
+                <ConversionsModal />
+              </Route>
+              <Route path={["/filter/:field"]}>
+                <FilterModal site={site} />
+              </Route>
+            </Switch>
+          </Route>
+        </QueryContextProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }

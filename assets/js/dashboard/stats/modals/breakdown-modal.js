@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 import * as api from '../../api'
-import { useMountedEffect, useDebounce } from '../../custom-hooks'
 import { trimURL } from '../../util/url'
 import { FilterLink } from "../reports/list";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
+import { useDebounce } from "../../custom-hooks";
 
-const LIMIT = 100
+const LIMIT = 10
 const MIN_HEIGHT_PX = 500
 
 // The main function component for rendering the "Details" reports on the dashboard,
@@ -84,24 +85,56 @@ export default function BreakdownModal({
   addSearchFilter,
   getFilterInfo
 }) {
-  const {query} = useQueryContext();
+  const searchBoxRef = useRef(null)
+  const { query } = useQueryContext();
   const site = useSiteContext();
 
   const endpoint = `/api/stats/${encodeURIComponent(site.domain)}${reportInfo.endpoint}`
-  
-  const [initialLoading, setInitialLoading] = useState(true)
-  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [results, setResults] = useState([])
-  const [page, setPage] = useState(1)
-  const [moreResultsAvailable, setMoreResultsAvailable] = useState(false)
-  const searchBoxRef = useRef(null)
 
-  useEffect(() => { fetchData() }, [])
+  const queryFn = async ({ pageParam, queryKey }) => {
+    const {search, query} = queryKey[1]
 
-  useMountedEffect(() => { debouncedFetchData() }, [search])
+    let queryWithSearchFilter
 
-  useMountedEffect(() => { fetchNextPage() }, [page])
+    if (searchEnabled && search !== '') {
+      queryWithSearchFilter = addSearchFilter(query, search)
+    } else {
+      queryWithSearchFilter = query
+    }
+
+    const response = await api.get(endpoint, queryWithSearchFilter, { limit: LIMIT, page: pageParam, detailed: true });
+    
+    if (pageParam === 1 && typeof afterFetchData === 'function') {
+      afterFetchData(response)
+    }
+
+    if (pageParam > 1 && typeof afterFetchNextPage === 'function') {
+      afterFetchNextPage(response)
+    }
+
+    return response.results
+  }
+
+  const q = useInfiniteQuery({
+    queryKey: [reportInfo.endpoint, {search, query}],
+    getNextPageParam: (lastPageResults, _, lastPageIndex) => lastPageResults.length === LIMIT ? lastPageIndex + 1 : null,
+    initialPageParam: 1,
+    queryFn,
+  })
+
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    queryClient.setQueryData(q.queryKey, (data) => {
+      if (data) {
+        return {
+          pages: data.pages.slice(0, 1),
+          pageParams: data.pageParams.slice(0, 1),
+        }  
+      }
+    })
+  }, [queryClient, q.queryKey])
 
   useEffect(() => {
     if (!searchEnabled) { return }
@@ -120,54 +153,7 @@ export default function BreakdownModal({
     return () => {
       searchBox.removeEventListener('keyup', handleKeyUp);
     }
-  }, [])
-
-  const fetchData = useCallback(() => {
-    setLoading(true)
-
-    api.get(endpoint, withSearch(query), { limit: LIMIT, page: 1, detailed: true })
-      .then((response) => {
-        if (typeof afterFetchData === 'function') {
-          afterFetchData(response)
-        }
-        setInitialLoading(false)
-        setLoading(false)
-        setPage(1)
-        setResults(response.results)
-        setMoreResultsAvailable(response.results.length === LIMIT)
-      })
-  }, [search])
-
-  const debouncedFetchData = useDebounce(fetchData)
-
-  function fetchNextPage() {
-    setLoading(true)
-
-    if (page > 1) {
-      api.get(endpoint, withSearch(query), { limit: LIMIT, page, detailed: true })
-        .then((response) => {
-          if (typeof afterFetchNextPage === 'function') {
-            afterFetchNextPage(response)
-          }
-          setLoading(false)
-          setResults(results.concat(response.results))
-          setMoreResultsAvailable(response.results.length === LIMIT)
-        })
-    }
-  }
-
-  function withSearch(query) {
-    if (searchEnabled && search !== '') {
-      return addSearchFilter(query, search)
-    }
-
-    return query
-  }
-
-  function loadNextPage() {
-    setLoading(true)
-    setPage(page + 1)
-  }
+  }, [searchEnabled])
 
   function maybeRenderIcon(item) {
     if (typeof renderIcon === 'function') {
@@ -178,8 +164,8 @@ export default function BreakdownModal({
   function maybeRenderExternalLink(item) {
     if (typeof getExternalLinkURL === 'function') {
       const linkUrl = getExternalLinkURL(item)
-      
-      if (!linkUrl) { return null}
+
+      if (!linkUrl) { return null }
 
       return (
         <a target="_blank" href={linkUrl} rel="noreferrer" className="hidden group-hover:block">
@@ -193,14 +179,14 @@ export default function BreakdownModal({
     return (
       <tr className="text-sm dark:text-gray-200" key={item.name}>
         <td className="p-2 truncate flex items-center group">
-          { maybeRenderIcon(item) }
+          {maybeRenderIcon(item)}
           <FilterLink
             pathname={`/${encodeURIComponent(site.domain)}`}
             filterInfo={getFilterInfo(item)}
           >
             {trimURL(item.name, 40)}
           </FilterLink>
-          { maybeRenderExternalLink(item) }
+          {maybeRenderExternalLink(item)}
         </td>
         {metrics.map((metric) => {
           return (
@@ -215,7 +201,7 @@ export default function BreakdownModal({
 
   function renderInitialLoadingSpinner() {
     return (
-      <div className="w-full h-full flex flex-col justify-center" style={{minHeight: `${MIN_HEIGHT_PX}px`}}>
+      <div className="w-full h-full flex flex-col justify-center" style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
         <div className="mx-auto loading"><div></div></div>
       </div>
     )
@@ -230,7 +216,7 @@ export default function BreakdownModal({
   function renderLoadMoreButton() {
     return (
       <div className="w-full text-center my-4">
-        <button onClick={loadNextPage} type="button" className="button">
+        <button onClick={q.fetchNextPage} type="button" className="button">
           Load more
         </button>
       </div>
@@ -241,6 +227,8 @@ export default function BreakdownModal({
     setSearch(e.target.value)
   }
 
+  const debouncedHandleInputChange = useDebounce(handleInputChange)
+
   function renderSearchInput() {
     return (
       <input
@@ -248,13 +236,13 @@ export default function BreakdownModal({
         type="text"
         placeholder="Search"
         className="shadow-sm dark:bg-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 block sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800 w-48"
-        onChange={handleInputChange}
+        onChange={debouncedHandleInputChange}
       />
     )
   }
 
   function renderModalBody() {
-    if (results) {
+    if (q.data.pages.length) {
       return (
         <main className="modal__content">
           <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
@@ -277,7 +265,7 @@ export default function BreakdownModal({
               </tr>
             </thead>
             <tbody>
-              { results.map(renderRow) }
+              {q.data.pages.map((p) => p.map(renderRow))}
             </tbody>
           </table>
         </main>
@@ -289,16 +277,16 @@ export default function BreakdownModal({
     <div className="w-full h-full">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-x-2">
-          <h1 className="text-xl font-bold dark:text-gray-100">{ reportInfo.title }</h1>
-          { !initialLoading && loading && renderSmallLoadingSpinner() }
+          <h1 className="text-xl font-bold dark:text-gray-100">{reportInfo.title}</h1>
+          {!q.isPending && q.isFetching && renderSmallLoadingSpinner()}
         </div>
-        { searchEnabled && renderSearchInput()}
+        {searchEnabled && renderSearchInput()}
       </div>
       <div className="my-4 border-b border-gray-300"></div>
-      <div style={{minHeight: `${MIN_HEIGHT_PX}px`}}>
-        { initialLoading && renderInitialLoadingSpinner() }
-        { !initialLoading && renderModalBody() }
-        { !loading && moreResultsAvailable && renderLoadMoreButton() }
+      <div style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
+        {q.isPending && renderInitialLoadingSpinner()}
+        {!q.isPending && renderModalBody()}
+        {!q.isFetching && q.hasNextPage && renderLoadMoreButton()}
       </div>
     </div>
   )
