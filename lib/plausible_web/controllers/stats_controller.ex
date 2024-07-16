@@ -154,6 +154,7 @@ defmodule PlausibleWeb.StatsController do
         Map.keys(csvs)
         |> Enum.zip(csv_values)
         |> Enum.reject(fn {_k, v} -> is_nil(v) end)
+        |> Enum.map(fn {k, v} -> {k, IO.iodata_to_binary(v)} end)
 
       {:ok, {_, zip_content}} = :zip.create(filename, csvs, [:memory])
 
@@ -178,8 +179,7 @@ defmodule PlausibleWeb.StatsController do
     Plausible.Stats.timeseries(site, query, metrics)
     |> Enum.map(map_bucket_to_row)
     |> prepend_column_headers.()
-    |> CSV.encode()
-    |> Enum.join()
+    |> NimbleCSV.RFC4180.dump_to_iodata()
   end
 
   defp csv_graph_metrics(query) do
