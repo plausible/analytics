@@ -126,15 +126,18 @@ export default function BreakdownModal({
   const queryClient = useQueryClient()
 
   useEffect(() => {
-    queryClient.setQueryData(q.queryKey, (data) => {
-      if (data) {
-        return {
-          pages: data.pages.slice(0, 1),
-          pageParams: data.pageParams.slice(0, 1),
-        }  
-      }
-    })
-  }, [queryClient, q.queryKey])
+    const key = [reportInfo.endpoint]
+    return () => {
+      queryClient.setQueriesData(key, (data) => {
+        if (data?.pages?.length) {
+          return {
+            pages: data.pages.slice(0, 1),
+            pageParams: data.pageParams.slice(0, 1),
+          }  
+        }
+      })  
+    }
+  }, [queryClient, reportInfo.endpoint])
 
   useEffect(() => {
     if (!searchEnabled) { return }
