@@ -20,6 +20,12 @@ const DEBOUNCE_DELAY = 300
 export function useDebounce(fn, delay = DEBOUNCE_DELAY) {
   const timerRef = useRef(null)
 
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) { clearTimeout(timerRef.current) }
+    }
+  }, [])
+
   return useCallback((...args) => {
     clearTimeout(timerRef.current)
 
