@@ -41,7 +41,10 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
           Enum.map(page.entries, fn goal ->
             %{
               id: goal.id,
-              name: Goal.name(goal)
+              name: Goal.name(goal),
+              goal_type: Goal.type(goal),
+              event_name: goal.event_name,
+              page_path: goal.page_path
             }
           end),
         meta: pagination_meta(page.metadata)

@@ -656,15 +656,24 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "goals" => [
                    %{
                      "id" => goal3.id,
-                     "name" => Plausible.Goal.name(goal3)
+                     "name" => Plausible.Goal.name(goal3),
+                     "goal_type" => "event",
+                     "event_name" => "Purchase",
+                     "page_path" => nil
                    },
                    %{
                      "id" => goal2.id,
-                     "name" => Plausible.Goal.name(goal2)
+                     "name" => Plausible.Goal.name(goal2),
+                     "goal_type" => "event",
+                     "event_name" => "Signup",
+                     "page_path" => nil
                    },
                    %{
                      "id" => goal1.id,
-                     "name" => Plausible.Goal.name(goal1)
+                     "name" => Plausible.Goal.name(goal1),
+                     "goal_type" => "page",
+                     "event_name" => nil,
+                     "page_path" => "/login"
                    }
                  ],
                  "meta" => %{
