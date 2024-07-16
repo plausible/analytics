@@ -111,7 +111,7 @@ defmodule Plausible.Billing.Quota.Usage do
   end
 
   @spec usage_cycle(User.t(), :last_30_days | cycle(), list() | nil, Date.t()) :: usage_cycle()
-  def usage_cycle(user, cycle, owned_site_ids \\ nil, today \\ Timex.today())
+  def usage_cycle(user, cycle, owned_site_ids \\ nil, today \\ Date.utc_today())
 
   def usage_cycle(user, cycle, nil, today) do
     usage_cycle(user, cycle, Plausible.Sites.owned_site_ids(user), today)
