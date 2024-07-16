@@ -198,7 +198,8 @@ defmodule Plausible.Imported do
 
   @spec get_cutoff_date(Site.t()) :: Date.t()
   def get_cutoff_date(site) do
-    Plausible.Sites.native_stats_start_date(site) || DateTime.to_date(DateTime.now!(site.timezone))
+    Plausible.Sites.native_stats_start_date(site) ||
+      DateTime.to_date(DateTime.now!(site.timezone))
   end
 
   defp find_free_ranges(start_date, end_date, occupied_ranges) do
