@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 // A custom hook that behaves like `useEffect`, but
 // the function does not run on the initial render.
@@ -11,17 +11,26 @@ export function useMountedEffect(fn, deps) {
     } else {
       mounted.current = true
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 }
 
-// A custom hook that debounces the function calls by
-// a given delay. Cancels all function calls that have
-// a following call within `delay_ms`.
-export function useDebouncedEffect(fn, deps, delay_ms) {
-  const callback = useCallback(fn, deps)
+const DEBOUNCE_DELAY = 300
+
+export function useDebounce(fn, delay = DEBOUNCE_DELAY) {
+  const timerRef = useRef(null)
 
   useEffect(() => {
-    const timeout = setTimeout(callback, delay_ms)
-    return () => clearTimeout(timeout)
-  }, [callback, delay_ms])
+    return () => {
+      if (timerRef.current) { clearTimeout(timerRef.current) }
+    }
+  }, [])
+
+  return useCallback((...args) => {
+    clearTimeout(timerRef.current)
+
+    timerRef.current = setTimeout(() => {
+      fn(...args)
+    }, delay)
+  }, [fn, delay])
 }
