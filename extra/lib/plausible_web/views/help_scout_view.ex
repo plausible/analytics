@@ -54,6 +54,12 @@ defmodule PlausibleWeb.HelpScoutView do
               <a href={@plan_link} target="_blank"><%= @plan_label %></a>
             </p>
           </div>
+
+          <div class="sites">
+            <p class="label">
+              Owner of <b><a href={@sites_link} target="_blank"><%= @sites_count %> sites</a></b>
+            </p>
+          </div>
         <% end %>
       </body>
     </html>

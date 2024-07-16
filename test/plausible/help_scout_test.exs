@@ -59,12 +59,17 @@ defmodule Plausible.HelpScoutTest do
 
         crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/auth/user/#{user_id}"
 
+        owned_sites_url =
+          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?search=#{URI.encode_www_form(email)}"
+
         assert {:ok,
                 %{
                   status_link: ^crm_url,
                   status_label: "Trial",
                   plan_link: "#",
-                  plan_label: "None"
+                  plan_label: "None",
+                  sites_count: 0,
+                  sites_link: ^owned_sites_url
                 }} = HelpScout.get_customer_details("500")
       end
 
@@ -270,7 +275,8 @@ defmodule Plausible.HelpScoutTest do
                   status_link: _,
                   status_label: "Dashboard locked",
                   plan_link: _,
-                  plan_label: "10k Plan (€10 monthly)"
+                  plan_label: "10k Plan (€10 monthly)",
+                  sites_count: 1
                 }} = HelpScout.get_customer_details("500")
       end
 
