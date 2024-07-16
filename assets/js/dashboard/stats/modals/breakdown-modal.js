@@ -245,7 +245,7 @@ export default function BreakdownModal({
   }
 
   function renderModalBody() {
-    if (q.data.pages.length) {
+    if (q.data?.pages?.length) {
       return (
         <main className="modal__content">
           <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
