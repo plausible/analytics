@@ -3,7 +3,7 @@ defmodule Plausible.Google.API.Mock do
   Mock of API to Google services.
   """
 
-  def fetch_stats(_auth, _query, _limit) do
+  def fetch_stats(_auth, _query, _limit, _search) do
     {:ok,
      [
        %{"name" => "simple web analytics", "count" => 6},

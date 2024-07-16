@@ -751,8 +751,10 @@ defmodule PlausibleWeb.Api.StatsController do
 
     user_id = get_session(conn, :current_user_id)
     is_admin = user_id && Plausible.Sites.has_admin_access?(user_id, site)
+    limit = params["limit"] || 9
+    search = params["search"] || ""
 
-    case google_api().fetch_stats(site, query, params["limit"] || 9) do
+    case google_api().fetch_stats(site, query, limit, search) do
       {:error, :google_propery_not_configured} ->
         json(conn, %{not_configured: true, is_admin: is_admin})
 

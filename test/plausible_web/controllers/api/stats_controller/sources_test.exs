@@ -1626,7 +1626,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day")
-      {:ok, terms} = Plausible.Google.API.Mock.fetch_stats(nil, nil, nil)
+      {:ok, terms} = Plausible.Google.API.Mock.fetch_stats(nil, nil, nil, nil)
 
       assert json_response(conn, 200) == %{"search_terms" => terms}
     end
