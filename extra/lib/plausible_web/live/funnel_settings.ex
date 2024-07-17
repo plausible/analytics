@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
             "funnel_id" => @funnel_id
           }
         ) %>
-      <% else %>
+      <% end %>
         <div :if={@goal_count >= Funnel.min_steps()}>
           <.live_component
             module={PlausibleWeb.Live.FunnelSettings.List}
@@ -74,7 +74,6 @@ defmodule PlausibleWeb.Live.FunnelSettings do
             ) %> to proceed.
           </PlausibleWeb.Components.Generic.notice>
         </div>
-      <% end %>
     </div>
     """
   end
