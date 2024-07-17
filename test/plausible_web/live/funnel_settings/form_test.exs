@@ -97,11 +97,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.FormTest do
 
       assert text_of_element(doc, "ul#dropdown-step-1 li") =~ "Hello World"
     end
-
-    # test "editing existing funnel updates it", , %{conn: conn, site: site} do
-    #   {:ok, [_, _, g3]} = setup_goals(site, ["Hello World", "Plausible", "Another World"])
-    # end
-    #
   end
 
   defp get_liveview(conn, site) do
