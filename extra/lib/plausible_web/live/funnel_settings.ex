@@ -32,7 +32,8 @@ defmodule PlausibleWeb.Live.FunnelSettings do
        displayed_funnels: socket.assigns.all_funnels,
        add_funnel?: false,
        filter_text: "",
-       current_user_id: user_id
+       current_user_id: user_id,
+       funnel_id: nil
      )}
   end
 
@@ -42,6 +43,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     ~H"""
     <div id="funnel-settings-main">
       <.flash_messages flash={@flash} />
+
       <%= if @add_funnel? do %>
         <%= live_render(
           @socket,
@@ -49,7 +51,8 @@ defmodule PlausibleWeb.Live.FunnelSettings do
           id: "funnels-form",
           session: %{
             "current_user_id" => @current_user_id,
-            "domain" => @domain
+            "domain" => @domain,
+            "funnel_id" => @funnel_id
           }
         ) %>
       <% else %>
@@ -95,6 +98,10 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     {:noreply, assign(socket, add_funnel?: true)}
   end
 
+  def handle_event("edit-funnel", %{"funnel-id" => id}, socket) do
+    {:noreply, assign(socket, add_funnel?: true, funnel_id: String.to_integer(id))}
+  end
+
   def handle_event("delete-funnel", %{"funnel-id" => id}, socket) do
     site =
       Sites.get_for_user!(socket.assigns.current_user_id, socket.assigns.domain, [:owner, :admin])
@@ -110,18 +117,21 @@ defmodule PlausibleWeb.Live.FunnelSettings do
      )}
   end
 
-  def handle_info({:funnel_saved, funnel}, socket) do
+  def handle_info({:funnel_saved, _funnel}, socket) do
     socket = put_live_flash(socket, :success, "Funnel saved successfully")
+
+    funnels = Funnels.list(socket.assigns.site)
 
     {:noreply,
      assign(socket,
        add_funnel?: false,
-       all_funnels: [funnel | socket.assigns.all_funnels],
-       displayed_funnels: [funnel | socket.assigns.displayed_funnels]
+       all_funnels: funnels,
+       funnel_id: nil,
+       displayed_funnels: funnels
      )}
   end
 
   def handle_info(:cancel_add_funnel, socket) do
-    {:noreply, assign(socket, add_funnel?: false)}
+    {:noreply, assign(socket, add_funnel?: false, funnel_id: nil)}
   end
 end

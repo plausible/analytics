@@ -54,30 +54,35 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
                   <%= funnel.steps_count %>-step funnel
                 </span>
               </span>
-              <button
-                id={"delete-funnel-#{funnel.id}"}
-                phx-click="delete-funnel"
-                phx-value-funnel-id={funnel.id}
-                class="text-sm text-red-600"
-                data-confirm={"Are you sure you want to remove funnel '#{funnel.name}'? This will just affect the UI, all of your analytics data will stay intact."}
-              >
-                <svg
-                  class="feather feather-sm"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+              <div class="flex items-center gap-x-4">
+                <a href="#" phx-click="edit-funnel" phx-value-funnel-id={funnel.id}>
+                  <Heroicons.pencil_square class="feather feather-sm text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300" />
+                </a>
+                <button
+                  id={"delete-funnel-#{funnel.id}"}
+                  phx-click="delete-funnel"
+                  phx-value-funnel-id={funnel.id}
+                  class="text-sm text-red-600"
+                  data-confirm={"Are you sure you want to remove funnel '#{funnel.name}'? This will just affect the UI, all of your analytics data will stay intact."}
                 >
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                  </path>
-                  <line x1="10" y1="11" x2="10" y2="17"></line>
-                  <line x1="14" y1="11" x2="14" y2="17"></line>
-                </svg>
-              </button>
+                  <svg
+                    class="feather feather-sm"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                    </path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                </button>
+              </div>
             </div>
           <% end %>
         </div>
