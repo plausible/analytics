@@ -280,7 +280,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   end
 
   def handle_event("cancel-add-funnel", _value, socket) do
-    send(socket.parent_pid, :cancel_add_funnel)
+    send(socket.parent_pid, :cancel_setup_funnel)
     {:noreply, socket}
   end
 

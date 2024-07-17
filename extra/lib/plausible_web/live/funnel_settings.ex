@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
      assign(socket,
        domain: domain,
        displayed_funnels: socket.assigns.all_funnels,
-       add_funnel?: false,
+       setup_funnel?: false,
        filter_text: "",
        current_user_id: user_id,
        funnel_id: nil
@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     <div id="funnel-settings-main">
       <.flash_messages flash={@flash} />
 
-      <%= if @add_funnel? do %>
+      <%= if @setup_funnel? do %>
         <%= live_render(
           @socket,
           PlausibleWeb.Live.FunnelSettings.Form,
@@ -95,11 +95,11 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   end
 
   def handle_event("add-funnel", _value, socket) do
-    {:noreply, assign(socket, add_funnel?: true)}
+    {:noreply, assign(socket, setup_funnel?: true)}
   end
 
   def handle_event("edit-funnel", %{"funnel-id" => id}, socket) do
-    {:noreply, assign(socket, add_funnel?: true, funnel_id: String.to_integer(id))}
+    {:noreply, assign(socket, setup_funnel?: true, funnel_id: String.to_integer(id))}
   end
 
   def handle_event("delete-funnel", %{"funnel-id" => id}, socket) do
@@ -124,14 +124,14 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
     {:noreply,
      assign(socket,
-       add_funnel?: false,
+       setup_funnel?: false,
        all_funnels: funnels,
        funnel_id: nil,
        displayed_funnels: funnels
      )}
   end
 
-  def handle_info(:cancel_add_funnel, socket) do
-    {:noreply, assign(socket, add_funnel?: false, funnel_id: nil)}
+  def handle_info(:cancel_setup_funnel, socket) do
+    {:noreply, assign(socket, setup_funnel?: false, funnel_id: nil)}
   end
 end
