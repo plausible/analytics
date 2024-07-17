@@ -215,11 +215,13 @@ export default function BreakdownModal({
   }
 
   function renderLoadMoreButton() {
+    if (isPending) return null
+    if (!isFetching && !hasNextPage) return null
+
     return (
-      <div className="w-full text-center my-4">
-        <button onClick={fetchNextPage} type="button" className="button">
-          Load more
-        </button>
+      <div className="flex flex-col w-full my-4 items-center justify-center h-10">
+        {!isFetching && <button onClick={fetchNextPage} type="button" className="button">Load more</button>}
+        {isFetching && renderSmallLoadingSpinner()}
       </div>
     )
   }
@@ -287,7 +289,7 @@ export default function BreakdownModal({
       <div style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
         {isPending && renderInitialLoadingSpinner()}
         {!isPending && renderModalBody()}
-        {!isFetching && hasNextPage && renderLoadMoreButton()}
+        {renderLoadMoreButton()}
       </div>
     </div>
   )
