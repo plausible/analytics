@@ -8,7 +8,7 @@ import { useSiteContext } from "../../site-context";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
 import { useDebounce } from "../../custom-hooks";
 
-const LIMIT = 10
+const LIMIT = 100
 const MIN_HEIGHT_PX = 500
 
 // The main function component for rendering the "Details" reports on the dashboard,
