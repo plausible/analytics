@@ -97,6 +97,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                  "Error parsing `interval` parameter: invalid interval `alskd`. Valid intervals are `date`, `month`"
              }
     end
+
+    test "validates that time zone parameter is a valid time zone", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "timezone" => "not a valid time zone"
+        })
+
+        assert json_response(conn, 400) == %{
+          "error" => "Error parsing `timezone` parameter: invalid time zone `not a valid time zone`"
+        }
+    end
   end
 
   @user_id 123
@@ -113,6 +128,223 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
         "period" => "day",
         "date" => "2021-01-01",
         "metrics" => "visitors,pageviews,visits,visit_duration,bounce_rate"
+      })
+
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{
+                 "date" => "2021-01-01 00:00:00",
+                 "visitors" => 1,
+                 "visits" => 1,
+                 "pageviews" => 2,
+                 "visit_duration" => 600,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 01:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 02:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 03:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 04:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 05:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 06:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 07:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 08:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 09:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 10:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 11:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 12:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 13:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 14:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 15:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 16:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 17:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 18:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 19:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 20:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 21:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 22:00:00",
+                 "visitors" => 0,
+                 "visits" => 0,
+                 "pageviews" => 0,
+                 "visit_duration" => nil,
+                 "bounce_rate" => 0
+               },
+               %{
+                 "date" => "2021-01-01 23:00:00",
+                 "visitors" => 1,
+                 "visits" => 1,
+                 "pageviews" => 1,
+                 "visit_duration" => 0,
+                 "bounce_rate" => 100
+               }
+             ]
+           }
+  end
+
+  @user_id 123
+  test "shows hourly data for a certain date in a different time zone", %{conn: conn, site: site} do
+    populate_stats(site, [
+      # 05:00 UTC corresponds to 00:00 America/New_York
+      build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 05:00:00]),
+      build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 05:10:00]),
+      # Note that this is the following day UTC, but is 23:59 the same day in America/New_York
+      build(:pageview, timestamp: ~N[2021-01-02 04:59:00])
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/timeseries", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "metrics" => "visitors,pageviews,visits,visit_duration,bounce_rate",
+        "timezone" => "America/New_York"
       })
 
     assert json_response(conn, 200) == %{

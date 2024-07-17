@@ -240,6 +240,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                  "Session metric `bounce_rate` cannot be queried when using a filter on `event:props:url`."
              }
     end
+
+    test "validates that time zone parameter is a valid time zone", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "event:page",
+          "timezone" => "not a valid time zone"
+        })
+
+        assert json_response(conn, 400) == %{
+          "error" => "Error parsing `timezone` parameter: invalid time zone `not a valid time zone`"
+        }
+    end
   end
 
   test "breakdown by visit:source", %{conn: conn, site: site} do
@@ -518,6 +534,43 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     assert json_response(conn, 200) == %{
              "results" => [
                %{"utm_source" => "Google", "visitors" => 2}
+             ]
+           }
+  end
+
+  test "breakdown by visit:utm_campaign in a different time zone", %{conn: conn, site: site} do
+    populate_stats(site, [
+      # This page view takes place on the previous day in America/New_York and therefore should be excluded
+      build(:pageview,
+        utm_campaign: "ads",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:pageview,
+        utm_campaign: "ads",
+        timestamp: ~N[2021-01-01 05:00:00]
+      ),
+      build(:pageview,
+        utm_campaign: "ads",
+        timestamp: ~N[2021-01-01 05:25:00]
+      ),
+      build(:pageview,
+        utm_campaign: "",
+        timestamp: ~N[2021-01-01 05:00:00]
+      )
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "property" => "visit:utm_campaign",
+        "timezone" => "America/New_York"
+      })
+
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"utm_campaign" => "ads", "visitors" => 2}
              ]
            }
   end

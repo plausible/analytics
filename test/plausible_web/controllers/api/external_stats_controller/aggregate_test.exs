@@ -265,6 +265,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                "error" => "Metric `time_on_page` cannot be queried when filtering by `event:name`"
              }
     end
+
+    test "validates that time zone parameter is a valid time zone", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors",
+          "timezone" => "not a valid time zone"
+        })
+
+        assert json_response(conn, 400) == %{
+          "error" => "Error parsing `timezone` parameter: invalid time zone `not a valid time zone`"
+        }
+    end
   end
 
   test "aggregates a single metric", %{conn: conn, site: site} do
@@ -337,6 +353,28 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              "views_per_visit" => %{"value" => 1.5},
              "bounce_rate" => %{"value" => 50},
              "visit_duration" => %{"value" => 750}
+           }
+  end
+
+  test "aggregates a single metric in the given time zone", %{conn: conn, site: site} do
+    populate_stats(site, [
+      # This page view takes place on the previous day in America/New_York, so it should not be included in the total
+      build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 05:25:00]),
+      build(:pageview, timestamp: ~N[2021-01-01 06:00:00])
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/aggregate", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "metrics" => "pageviews",
+        "timezone" => "America/New_York"
+      })
+
+    assert json_response(conn, 200)["results"] == %{
+             "pageviews" => %{"value" => 2}
            }
   end
 
