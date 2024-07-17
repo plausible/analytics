@@ -6,7 +6,7 @@ module.exports = {
     "./js/**/*.js",
     "../lib/*_web.ex",
     "../lib/*_web/**/*.*ex",
-    "../extra/**/*.ex",
+    "../extra/**/*.*ex",
   ],
   safelist: [
     // PlausibleWeb.StatsView.stats_container_class/1 uses this class

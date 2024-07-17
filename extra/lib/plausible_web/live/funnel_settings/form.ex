@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     >
     </div>
     <div class="fixed inset-0 flex items-center justify-center mt-16 z-50 overlofw-y-auto overflow-x-hidden">
-      <div class="w-2/3 h-full">
+      <div class="md:w-1/2 max-w-md h-full">
         <div id="funnel-form">
           <.form
             :let={f}
