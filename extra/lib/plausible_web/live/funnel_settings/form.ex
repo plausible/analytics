@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               <div :for={step_idx <- @step_ids} class="flex mb-3 mt-3">
                 <div class="w-2/5 flex-1">
                   <.live_component
-                    selected={find_preselected(@funnel, step_idx)}
+                    selected={find_preselected(@funnel, @funnel_modified?, step_idx)}
                     submit_name={"funnel[steps][#{step_idx}][goal_id]"}
                     module={PlausibleWeb.Live.Components.ComboBox}
                     suggest_fun={&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest/2}
@@ -208,6 +208,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   def handle_event("add-step", _value, socket) do
     step_ids = socket.assigns.step_ids
 
+    socket = assign(socket, funnel_modified?: true)
+
     if length(step_ids) < Funnel.max_steps() do
       first_free_idx = find_sequence_break(step_ids)
       new_ids = step_ids ++ [first_free_idx]
@@ -221,9 +223,10 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     idx = String.to_integer(idx)
     step_ids = List.delete(socket.assigns.step_ids, idx)
     selections_made = drop_selection(socket.assigns.selections_made, idx)
+
     send(self(), :evaluate_funnel)
 
-    {:noreply, assign(socket, step_ids: step_ids, selections_made: selections_made)}
+    {:noreply, assign(socket, step_ids: step_ids, selections_made: selections_made, funnel_modified?: true)}
   end
 
   def handle_event("validate", %{"funnel" => params}, socket) do
@@ -394,13 +397,13 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     result
   end
 
-  defp find_preselected(%Funnel{} = funnel, idx) do
+  defp find_preselected(%Funnel{} = funnel, false, idx) do
     if step = Enum.at(funnel.steps, idx - 1) do
       {step.goal.id, to_string(step.goal)}
     end
   end
 
-  defp find_preselected(_, _), do: nil
+  defp find_preselected(_, _, _), do: nil
 
   defp prepare_socket(socket, site, funnel_id) when is_integer(funnel_id) do
     funnel = Funnels.get(site.id, funnel_id)
@@ -423,6 +426,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         socket,
         form: form,
         funnel: funnel,
+        funnel_modified?: false,
         selections_made: selections_made,
         step_ids: Enum.to_list(1..Enum.count(funnel.steps))
       )
@@ -437,6 +441,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       socket,
       form: form,
       funnel: nil,
+      funnel_modified?: false,
       selections_made: Map.new(),
       step_ids: Enum.to_list(1..Funnel.min_steps())
     )
