@@ -114,7 +114,7 @@ export default function BreakdownModal({
     return response.results
   }
 
-  const {data, hasNextPage, fetchNextPage, isFetching, isPending } = useInfiniteQuery({
+  const {data, hasNextPage, fetchNextPage, isFetchingNextPage, isFetching, isPending } = useInfiniteQuery({
     queryKey: [reportInfo.endpoint, {search, query}],
     getNextPageParam: (lastPageResults, _, lastPageIndex) => lastPageResults.length === LIMIT ? lastPageIndex + 1 : null,
     initialPageParam: 1,
@@ -221,7 +221,7 @@ export default function BreakdownModal({
     return (
       <div className="flex flex-col w-full my-4 items-center justify-center h-10">
         {!isFetching && <button onClick={fetchNextPage} type="button" className="button">Load more</button>}
-        {isFetching && renderSmallLoadingSpinner()}
+        {isFetchingNextPage && renderSmallLoadingSpinner()}
       </div>
     )
   }
