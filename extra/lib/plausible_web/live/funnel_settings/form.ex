@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     >
     </div>
     <div class="fixed inset-0 flex items-center justify-center mt-16 z-50 overlofw-y-auto overflow-x-hidden">
-      <div class="md:w-1/2 max-w-md h-full">
+      <div class="md:w-2/3 max-w-lg h-full">
         <div id="funnel-form">
           <.form
             :let={f}
@@ -195,11 +195,11 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
           class="border-dotted border-b border-gray-400 "
           tooltip="Sample calculation for last month"
         >
-          Entering Visitors: <strong><%= @result.entering_visitors %></strong>
+          <span class="hidden md:inline">Entering Visitors: </span><strong><%= PlausibleWeb.StatsView.large_number_format(@result.entering_visitors) %></strong>
         </span>
       </span>
       <span :if={step && @at > 0}>
-        Dropoff: <strong><%= Map.get(step, :dropoff_percentage) %>%</strong>
+        <span class="hidden md:inline">Dropoff: </span><strong><%= Map.get(step, :dropoff_percentage) %>%</strong>
       </span>
     </span>
     """
@@ -226,7 +226,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
     send(self(), :evaluate_funnel)
 
-    {:noreply, assign(socket, step_ids: step_ids, selections_made: selections_made, funnel_modified?: true)}
+    {:noreply,
+     assign(socket, step_ids: step_ids, selections_made: selections_made, funnel_modified?: true)}
   end
 
   def handle_event("validate", %{"funnel" => params}, socket) do
