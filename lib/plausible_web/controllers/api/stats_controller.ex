@@ -755,7 +755,7 @@ defmodule PlausibleWeb.Api.StatsController do
     search = params["search"] || ""
 
     case google_api().fetch_stats(site, query, limit, search) do
-      {:error, :google_propery_not_configured} ->
+      {:error, :google_property_not_configured} ->
         json(conn, %{not_configured: true, is_admin: is_admin})
 
       {:error, :unsupported_filters} ->
