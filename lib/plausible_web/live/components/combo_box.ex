@@ -43,7 +43,8 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
   def update(assigns, socket) do
     socket =
-      assign(socket, assigns)
+      socket
+      |> assign(assigns)
       |> select_default()
 
     socket =
@@ -64,7 +65,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:submit_name, :string, required: true)
   attr(:display_value, :string, default: "")
   attr(:submit_value, :string, default: "")
-  attr(:select, :any, default: nil)
+  attr(:selected, :any)
   attr(:suggest_fun, :any, required: true)
   attr(:suggestions_limit, :integer)
   attr(:class, :string, default: "")
