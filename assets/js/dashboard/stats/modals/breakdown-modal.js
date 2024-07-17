@@ -95,12 +95,10 @@ export default function BreakdownModal({
   const queryFn = async ({ pageParam, queryKey }) => {
     const {search, query} = queryKey[1]
 
-    let queryWithSearchFilter
+    let queryWithSearchFilter = {...query}
 
     if (searchEnabled && search !== '') {
       queryWithSearchFilter = addSearchFilter(query, search)
-    } else {
-      queryWithSearchFilter = query
     }
 
     const response = await api.get(endpoint, queryWithSearchFilter, { limit: LIMIT, page: pageParam, detailed: true });
@@ -116,7 +114,7 @@ export default function BreakdownModal({
     return response.results
   }
 
-  const q = useInfiniteQuery({
+  const {data, hasNextPage, fetchNextPage, isFetching, isPending } = useInfiniteQuery({
     queryKey: [reportInfo.endpoint, {search, query}],
     getNextPageParam: (lastPageResults, _, lastPageIndex) => lastPageResults.length === LIMIT ? lastPageIndex + 1 : null,
     initialPageParam: 1,
@@ -219,7 +217,7 @@ export default function BreakdownModal({
   function renderLoadMoreButton() {
     return (
       <div className="w-full text-center my-4">
-        <button onClick={q.fetchNextPage} type="button" className="button">
+        <button onClick={fetchNextPage} type="button" className="button">
           Load more
         </button>
       </div>
@@ -245,7 +243,7 @@ export default function BreakdownModal({
   }
 
   function renderModalBody() {
-    if (q.data?.pages?.length) {
+    if (data?.pages?.length) {
       return (
         <main className="modal__content">
           <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
@@ -268,7 +266,7 @@ export default function BreakdownModal({
               </tr>
             </thead>
             <tbody>
-              {q.data.pages.map((p) => p.map(renderRow))}
+              {data.pages.map((p) => p.map(renderRow))}
             </tbody>
           </table>
         </main>
@@ -281,15 +279,15 @@ export default function BreakdownModal({
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-x-2">
           <h1 className="text-xl font-bold dark:text-gray-100">{reportInfo.title}</h1>
-          {!q.isPending && q.isFetching && renderSmallLoadingSpinner()}
+          {!isPending && isFetching && renderSmallLoadingSpinner()}
         </div>
         {searchEnabled && renderSearchInput()}
       </div>
       <div className="my-4 border-b border-gray-300"></div>
       <div style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
-        {q.isPending && renderInitialLoadingSpinner()}
-        {!q.isPending && renderModalBody()}
-        {!q.isFetching && q.hasNextPage && renderLoadMoreButton()}
+        {isPending && renderInitialLoadingSpinner()}
+        {!isPending && renderModalBody()}
+        {!isFetching && hasNextPage && renderLoadMoreButton()}
       </div>
     </div>
   )
