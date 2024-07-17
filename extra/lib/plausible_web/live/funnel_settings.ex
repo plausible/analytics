@@ -30,9 +30,10 @@ defmodule PlausibleWeb.Live.FunnelSettings do
      assign(socket,
        domain: domain,
        displayed_funnels: socket.assigns.all_funnels,
-       add_funnel?: false,
+       setup_funnel?: false,
        filter_text: "",
-       current_user_id: user_id
+       current_user_id: user_id,
+       funnel_id: nil
      )}
   end
 
@@ -42,36 +43,37 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     ~H"""
     <div id="funnel-settings-main">
       <.flash_messages flash={@flash} />
-      <%= if @add_funnel? do %>
+
+      <%= if @setup_funnel? do %>
         <%= live_render(
           @socket,
           PlausibleWeb.Live.FunnelSettings.Form,
           id: "funnels-form",
           session: %{
             "current_user_id" => @current_user_id,
-            "domain" => @domain
+            "domain" => @domain,
+            "funnel_id" => @funnel_id
           }
         ) %>
-      <% else %>
-        <div :if={@goal_count >= Funnel.min_steps()}>
-          <.live_component
-            module={PlausibleWeb.Live.FunnelSettings.List}
-            id="funnels-list"
-            funnels={@displayed_funnels}
-            filter_text={@filter_text}
-          />
-        </div>
-
-        <div :if={@goal_count < Funnel.min_steps()}>
-          <PlausibleWeb.Components.Generic.notice class="mt-4" title="Not enough goals">
-            You need to define at least two goals to create a funnel. Go ahead and <%= link(
-              "add goals",
-              to: PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain),
-              class: "text-indigo-500 w-full text-center"
-            ) %> to proceed.
-          </PlausibleWeb.Components.Generic.notice>
-        </div>
       <% end %>
+      <div :if={@goal_count >= Funnel.min_steps()}>
+        <.live_component
+          module={PlausibleWeb.Live.FunnelSettings.List}
+          id="funnels-list"
+          funnels={@displayed_funnels}
+          filter_text={@filter_text}
+        />
+      </div>
+
+      <div :if={@goal_count < Funnel.min_steps()}>
+        <PlausibleWeb.Components.Generic.notice class="mt-4" title="Not enough goals">
+          You need to define at least two goals to create a funnel. Go ahead and <%= link(
+            "add goals",
+            to: PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain),
+            class: "text-indigo-500 w-full text-center"
+          ) %> to proceed.
+        </PlausibleWeb.Components.Generic.notice>
+      </div>
     </div>
     """
   end
@@ -92,7 +94,11 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   end
 
   def handle_event("add-funnel", _value, socket) do
-    {:noreply, assign(socket, add_funnel?: true)}
+    {:noreply, assign(socket, setup_funnel?: true)}
+  end
+
+  def handle_event("edit-funnel", %{"funnel-id" => id}, socket) do
+    {:noreply, assign(socket, setup_funnel?: true, funnel_id: String.to_integer(id))}
   end
 
   def handle_event("delete-funnel", %{"funnel-id" => id}, socket) do
@@ -110,18 +116,21 @@ defmodule PlausibleWeb.Live.FunnelSettings do
      )}
   end
 
-  def handle_info({:funnel_saved, funnel}, socket) do
+  def handle_info({:funnel_saved, _funnel}, socket) do
     socket = put_live_flash(socket, :success, "Funnel saved successfully")
+
+    funnels = Funnels.list(socket.assigns.site)
 
     {:noreply,
      assign(socket,
-       add_funnel?: false,
-       all_funnels: [funnel | socket.assigns.all_funnels],
-       displayed_funnels: [funnel | socket.assigns.displayed_funnels]
+       setup_funnel?: false,
+       all_funnels: funnels,
+       funnel_id: nil,
+       displayed_funnels: funnels
      )}
   end
 
-  def handle_info(:cancel_add_funnel, socket) do
-    {:noreply, assign(socket, add_funnel?: false)}
+  def handle_info(:cancel_setup_funnel, socket) do
+    {:noreply, assign(socket, setup_funnel?: false, funnel_id: nil)}
   end
 end

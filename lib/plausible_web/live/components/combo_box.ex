@@ -42,7 +42,10 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   @default_suggestions_limit 15
 
   def update(assigns, socket) do
-    socket = assign(socket, assigns)
+    socket =
+      socket
+      |> assign(assigns)
+      |> select_default()
 
     socket =
       if connected?(socket) do
@@ -62,6 +65,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:submit_name, :string, required: true)
   attr(:display_value, :string, default: "")
   attr(:submit_value, :string, default: "")
+  attr(:selected, :any)
   attr(:suggest_fun, :any, required: true)
   attr(:suggestions_limit, :integer)
   attr(:class, :string, default: "")
@@ -351,6 +355,16 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       )
     else
       socket
+    end
+  end
+
+  defp select_default(socket) do
+    case {socket.assigns[:selected], socket.assigns[:submit_value]} do
+      {{submit_value, display_value}, nil} ->
+        assign(socket, submit_value: submit_value, display_value: display_value)
+
+      _ ->
+        socket
     end
   end
 

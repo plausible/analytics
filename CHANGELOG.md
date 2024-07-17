@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- UI to edit funnels
 - Add a search functionality in all Details views, except for Goal Conversions, Countries, Regions, Cities and Google Search terms
 - Icons for browsers plausible/analytics#4239
 - Automatic custom property selection in the dashboard Properties report
