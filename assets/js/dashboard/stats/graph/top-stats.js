@@ -1,13 +1,15 @@
 import React from "react";
-import { Tooltip } from '../../util/tooltip'
-import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
+import { Tooltip } from '../../util/tooltip';
+import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load';
 import classNames from "classnames";
-import numberFormatter, { durationFormatter } from '../../util/number-formatter'
-import * as storage from '../../util/storage'
-import { formatDateRange } from '../../util/date.js'
+import numberFormatter, { durationFormatter } from '../../util/number-formatter';
+import * as storage from '../../util/storage';
+import { formatDateRange } from '../../util/date.js';
 import { getGraphableMetrics } from "./graph-util.js";
+import { useQueryContext } from "../../query-context.js";
+import { useSiteContext } from "../../site-context.js";
 
-function Maybe({condition, children}) {
+function Maybe({ condition, children }) {
   if (condition) {
     return children
   } else {
@@ -19,14 +21,14 @@ function renderPercentageComparison(name, comparison, forceDarkBg = false) {
   const formattedComparison = numberFormatter(Math.abs(comparison))
 
   const defaultClassName = classNames({
-     "pl-2 text-xs dark:text-gray-100": !forceDarkBg,
-     "pl-2 text-xs text-gray-100": forceDarkBg
-   })
+    "pl-2 text-xs dark:text-gray-100": !forceDarkBg,
+    "pl-2 text-xs text-gray-100": forceDarkBg
+  })
 
-   const noChangeClassName = classNames({
-     "pl-2 text-xs text-gray-700 dark:text-gray-300": !forceDarkBg,
-     "pl-2 text-xs text-gray-300": forceDarkBg
-   })
+  const noChangeClassName = classNames({
+    "pl-2 text-xs text-gray-700 dark:text-gray-300": !forceDarkBg,
+    "pl-2 text-xs text-gray-300": forceDarkBg
+  })
 
   if (comparison > 0) {
     const color = name === 'Bounce rate' ? 'text-red-400' : 'text-green-500'
@@ -65,8 +67,9 @@ function topStatNumberLong(name, value) {
   }
 }
 
-export default function TopStats(props) {
-  const {site, query, data, onMetricUpdate, tooltipBoundary, lastLoadTimestamp} = props
+export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
+  const { query, lastLoadTimestamp } = useQueryContext();
+  const site = useSiteContext();
 
   function tooltip(stat) {
     let statName = stat.name.toLowerCase()
@@ -83,7 +86,7 @@ export default function TopStats(props) {
           {topStatNumberLong(stat.name, stat.value)} {statName}
         </div>}
 
-        {stat.name === 'Current visitors' && <p className="font-normal text-xs">Last updated <SecondsSinceLastLoad lastLoadTimestamp={lastLoadTimestamp}/>s ago</p>}
+        {stat.name === 'Current visitors' && <p className="font-normal text-xs">Last updated <SecondsSinceLastLoad lastLoadTimestamp={lastLoadTimestamp} />s ago</p>}
       </div>
     )
   }
@@ -120,7 +123,7 @@ export default function TopStats(props) {
       'group-hover:text-indigo-700 dark:group-hover:text-indigo-500 border-transparent': !isSelected
     })
 
-    return(
+    return (
       <div className={statDisplayNameClass}>
         {statDisplayName}
         {statExtraName && <span className="hidden sm:inline-block ml-1">{statExtraName}</span>}
@@ -143,18 +146,18 @@ export default function TopStats(props) {
             <span className="flex items-center justify-between whitespace-nowrap">
               <p className="font-bold text-xl dark:text-gray-100" id={stat.graph_metric}>{topStatNumberShort(stat.name, stat.value)}</p>
               <Maybe condition={!query.comparison}>
-                { renderPercentageComparison(stat.name, stat.change) }
+                {renderPercentageComparison(stat.name, stat.change)}
               </Maybe>
             </span>
-              <Maybe condition={query.comparison}>
-                <p className="text-xs dark:text-gray-100">{ formatDateRange(site, data.from, data.to) }</p>
-              </Maybe>
+            <Maybe condition={query.comparison}>
+              <p className="text-xs dark:text-gray-100">{formatDateRange(site, data.from, data.to)}</p>
+            </Maybe>
           </div>
 
           <Maybe condition={query.comparison}>
             <div>
-              <p className="font-bold text-xl text-gray-500 dark:text-gray-400">{ topStatNumberShort(stat.name, stat.comparison_value) }</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{ formatDateRange(site, data.comparing_from, data.comparing_to) }</p>
+              <p className="font-bold text-xl text-gray-500 dark:text-gray-400">{topStatNumberShort(stat.name, stat.comparison_value)}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{formatDateRange(site, data.comparing_from, data.comparing_to)}</p>
             </div>
           </Maybe>
         </div>

@@ -1,5 +1,4 @@
-import React, { useMemo } from 'react';
-
+import React  from 'react';
 import Datepicker from './datepicker'
 import SiteSwitcher from './site-switcher'
 import Filters from './filters'
@@ -14,12 +13,6 @@ import { statsBoxClass } from './index';
 import { useSiteContext } from './site-context';
 import { useUserContext } from './user-context';
 import { useQueryContext } from './query-context';
-import { isRealTimeDashboard } from './util/filters';
-
-export const useIsRealtimeDashboard = () => {
-  const { query: { period } } = useQueryContext();
-  return useMemo(() => isRealTimeDashboard({ period }), [period]);
-}
 
 function Realtime({ stuck }) {
   const site = useSiteContext();

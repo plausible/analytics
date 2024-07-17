@@ -86,7 +86,9 @@ function ComparisonModeOption({ label, value, isCurrentlySelected, updateMode, s
   )
 }
 
-function MatchDayOfWeekInput({ history, query, site }) {
+function MatchDayOfWeekInput({ history }) {
+  const site = useSiteContext()
+  const { query } = useQueryContext()
   const click = (matchDayOfWeek) => {
     storage.setItem(`comparison_match_day_of_week__${site.domain}`, matchDayOfWeek.toString())
     navigateToQuery(history, query, { match_day_of_week: matchDayOfWeek.toString() })
@@ -184,7 +186,7 @@ const ComparisonInput = function ({ history }) {
                 {Object.keys(COMPARISON_MODES).map((key) => ComparisonModeOption({ label: COMPARISON_MODES[key], value: key, isCurrentlySelected: key == query.comparison, updateMode, setUiMode }))}
                 {query.comparison !== "custom" && <span>
                   <hr className="my-1" />
-                  <MatchDayOfWeekInput query={query} history={history} site={site} />
+                  <MatchDayOfWeekInput history={history} />
                 </span>}
               </Menu.Items>
             </Transition>

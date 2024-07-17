@@ -151,7 +151,7 @@ defmodule Plausible.Billing.Plans do
   response, fills in the `monthly_cost` and `yearly_cost` fields for each
   given plan and returns the new list of plans with completed information.
   """
-  def with_prices([_ | _] = plans, customer_ip) do
+  def with_prices([_ | _] = plans, customer_ip \\ "127.0.0.1") do
     product_ids = Enum.flat_map(plans, &[&1.monthly_product_id, &1.yearly_product_id])
 
     case Plausible.Billing.paddle_api().fetch_prices(product_ids, customer_ip) do

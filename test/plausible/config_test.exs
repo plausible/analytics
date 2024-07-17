@@ -159,9 +159,25 @@ defmodule Plausible.ConfigTest do
 
       assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
                {:adapter, Bamboo.Mua},
-               {:auth, [username: "neo", password: "one"]},
                {:relay, "localhost"},
-               {:port, 2525}
+               {:port, 2525},
+               {:auth, [username: "neo", password: "one"]}
+             ]
+    end
+
+    test "Bamboo.Mua (no auth relay config)" do
+      env = [
+        {"MAILER_ADAPTER", "Bamboo.Mua"},
+        {"SMTP_HOST_ADDR", "localhost"},
+        {"SMTP_HOST_PORT", "2525"},
+        {"SMTP_USER_NAME", nil},
+        {"SMTP_USER_PWD", nil}
+      ]
+
+      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+               adapter: Bamboo.Mua,
+               relay: "localhost",
+               port: 2525
              ]
     end
 
@@ -331,6 +347,74 @@ defmodule Plausible.ConfigTest do
     end
   end
 
+  describe "postgres" do
+    test "default" do
+      env = [{"DATABASE_URL", nil}]
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               url: "postgres://postgres:postgres@plausible_db:5432/plausible_db",
+               socket_options: [],
+               ssl_opts: [
+                 cacertfile: CAStore.file_path(),
+                 verify: :verify_peer,
+                 customize_hostname_check: [
+                   match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+                 ]
+               ]
+             ]
+    end
+
+    test "socket_dir in hostname" do
+      env = [{"DATABASE_URL", "postgresql://postgres:postgres@%2Frun%2Fpostgresql/plausible_db"}]
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               socket_dir: "/run/postgresql",
+               database: "plausible_db",
+               username: "postgres",
+               password: "postgres"
+             ]
+    end
+
+    test "socket_dir in query" do
+      env = [{"DATABASE_URL", "postgresql:///plausible_db?host=/run/postgresql"}]
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               socket_dir: "/run/postgresql",
+               database: "plausible_db"
+             ]
+    end
+
+    test "socket_dir missing" do
+      env = [{"DATABASE_URL", "postgresql:///plausible_db"}]
+      assert_raise ArgumentError, ~r/doesn't include host info/, fn -> runtime_config(env) end
+    end
+
+    test "custom URL" do
+      env = [
+        {"DATABASE_URL",
+         "postgresql://your_username:your_password@cluster-do-user-1234567-0.db.ondigitalocean.com:25060/defaultdb"}
+      ]
+
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               url:
+                 "postgresql://your_username:your_password@cluster-do-user-1234567-0.db.ondigitalocean.com:25060/defaultdb",
+               socket_options: [],
+               ssl_opts: [
+                 cacertfile: CAStore.file_path(),
+                 verify: :verify_peer,
+                 customize_hostname_check: [
+                   match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+                 ]
+               ]
+             ]
+    end
+  end
+
   describe "extra config" do
     test "no-op when no extra path is set" do
       put_system_env_undo({"EXTRA_CONFIG_PATH", nil})
@@ -366,6 +450,60 @@ defmodule Plausible.ConfigTest do
                    [after_connect: {Postgrex, :query!, ["SET search_path TO global_prefix", []]}]}
                 ]}
              ]
+    end
+  end
+
+  describe "totp" do
+    test "pbkdf2 if not set" do
+      env = [
+        {"TOTP_VAULT_KEY", nil}
+      ]
+
+      config = runtime_config(env)
+
+      assert [vault_key: vault_key] = get_in(config, [:plausible, Plausible.Auth.TOTP])
+      assert byte_size(vault_key) == 32
+
+      # make sure it doesn't change between releases
+      assert vault_key ==
+               "\x95\x9C\x05\x9A\xCD\xE4\xEF\xDDH\xFB\xCA\xD5o\xD1z\xCCTǐ\xBC\"J\xF8:\xFAs\xCA\x0Fo\x10\x9B\x84"
+    end
+
+    test "can be Base64-encoded 32 bytes (with padding)" do
+      # $ openssl rand -base64 32
+      # dx2W6PNd/QIC6IyYVWMEaG2fI8/5WVylryM3mRaOpAo=
+      env = [
+        {"TOTP_VAULT_KEY", "dx2W6PNd/QIC6IyYVWMEaG2fI8/5WVylryM3mRaOpAo="}
+      ]
+
+      config = runtime_config(env)
+
+      assert [vault_key: vault_key] = get_in(config, [:plausible, Plausible.Auth.TOTP])
+      assert byte_size(vault_key) == 32
+      assert vault_key == Base.decode64!("dx2W6PNd/QIC6IyYVWMEaG2fI8/5WVylryM3mRaOpAo=")
+    end
+
+    test "fails on invalid key length" do
+      assert_raise ArgumentError, ~r/Got Base64 encoded 31 bytes/, fn ->
+        runtime_config(_env = [{"TOTP_VAULT_KEY", Base.encode64(:crypto.strong_rand_bytes(31))}])
+      end
+
+      assert_raise ArgumentError, ~r/Got Base64 encoded 33 bytes/, fn ->
+        runtime_config(_env = [{"TOTP_VAULT_KEY", Base.encode64(:crypto.strong_rand_bytes(33))}])
+      end
+    end
+
+    test "fails on invalid encoding" do
+      assert_raise ArgumentError,
+                   ~r/TOTP_VAULT_KEY must be Base64 encoded/,
+                   fn ->
+                     runtime_config(
+                       _env = [
+                         {"TOTP_VAULT_KEY",
+                          "openssl" <> Base.encode64(:crypto.strong_rand_bytes(32))}
+                       ]
+                     )
+                   end
     end
   end
 

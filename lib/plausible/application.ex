@@ -93,6 +93,10 @@ defmodule Plausible.Application do
       Plausible.PromEx
     ]
 
+    on_ee do
+      children = children ++ help_scout_vault()
+    end
+
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]
 
     setup_request_logging()
@@ -111,43 +115,65 @@ defmodule Plausible.Application do
     :ok
   end
 
+  on_ee do
+    defp help_scout_vault() do
+      help_scout_vault_key =
+        :plausible
+        |> Application.fetch_env!(Plausible.HelpScout)
+        |> Keyword.fetch!(:vault_key)
+        |> Base.decode64!()
+
+      [{Plausible.HelpScout.Vault, key: help_scout_vault_key}]
+    end
+  end
+
   defp totp_vault_key() do
     :plausible
     |> Application.fetch_env!(Plausible.Auth.TOTP)
     |> Keyword.fetch!(:vault_key)
-    |> Base.decode64!()
   end
 
   defp finch_pool_config() do
-    base_config = %{
-      "https://icons.duckduckgo.com" => [
-        conn_opts: [transport_opts: [timeout: 15_000]]
-      ]
-    }
+    default = Application.get_env(:plausible, Plausible.Finch)
+
+    base_config =
+      if default do
+        %{default: default}
+      else
+        %{}
+      end
+
+    default_opts = default || []
 
     base_config
-    |> maybe_add_sentry_pool()
-    |> maybe_add_paddle_pool()
-    |> maybe_add_google_pools()
+    |> Map.put(
+      "https://icons.duckduckgo.com",
+      Config.Reader.merge(default_opts, conn_opts: [transport_opts: [timeout: 15_000]])
+    )
+    |> maybe_add_sentry_pool(default_opts)
+    |> maybe_add_paddle_pool(default_opts)
+    |> maybe_add_google_pools(default_opts)
   end
 
-  defp maybe_add_sentry_pool(pool_config) do
+  defp maybe_add_sentry_pool(pool_config, default) do
     case Sentry.Config.dsn() do
       {"http" <> _rest = url, _, _} ->
-        Map.put(pool_config, url, size: 50)
+        Map.put(pool_config, url, Config.Reader.merge(default, size: 50))
 
       nil ->
         pool_config
     end
   end
 
-  defp maybe_add_paddle_pool(pool_config) do
+  defp maybe_add_paddle_pool(pool_config, default) do
     paddle_conf = Application.get_env(:plausible, :paddle)
 
     cond do
       paddle_conf[:vendor_id] && paddle_conf[:vendor_auth_code] ->
-        Map.put(pool_config, Plausible.Billing.PaddleApi.vendors_domain(),
-          conn_opts: [transport_opts: [timeout: 15_000]]
+        Map.put(
+          pool_config,
+          Plausible.Billing.PaddleApi.vendors_domain(),
+          Config.Reader.merge(default, conn_opts: [transport_opts: [timeout: 15_000]])
         )
 
       true ->
@@ -155,15 +181,19 @@ defmodule Plausible.Application do
     end
   end
 
-  defp maybe_add_google_pools(pool_config) do
+  defp maybe_add_google_pools(pool_config, default) do
     google_conf = Application.get_env(:plausible, :google)
 
     cond do
       google_conf[:client_id] && google_conf[:client_secret] ->
         pool_config
-        |> Map.put(google_conf[:api_url], conn_opts: [transport_opts: [timeout: 15_000]])
-        |> Map.put(google_conf[:reporting_api_url],
-          conn_opts: [transport_opts: [timeout: 15_000]]
+        |> Map.put(
+          google_conf[:api_url],
+          Config.Reader.merge(default, conn_opts: [transport_opts: [timeout: 15_000]])
+        )
+        |> Map.put(
+          google_conf[:reporting_api_url],
+          Config.Reader.merge(default, conn_opts: [transport_opts: [timeout: 15_000]])
         )
 
       true ->

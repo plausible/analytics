@@ -1426,4 +1426,43 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
              ]
     end
   end
+
+  describe "present_index" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    test "exists for a date range that includes the current day", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&metric=pageviews"
+        )
+
+      assert %{"present_index" => present_index} = json_response(conn, 200)
+
+      assert present_index >= 0
+    end
+
+    test "is null for a date range that does not include the current day", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=pageviews"
+        )
+
+      assert %{"present_index" => present_index} = json_response(conn, 200)
+
+      refute present_index
+    end
+  end
 end

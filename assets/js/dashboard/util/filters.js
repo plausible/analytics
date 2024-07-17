@@ -1,4 +1,6 @@
+import { useMemo } from "react"
 import * as api from '../api'
+import { useQueryContext } from '../query-context'
 
 export const FILTER_MODAL_TO_FILTER_GROUP = {
   'page': ['page', 'entry_page', 'exit_page'],
@@ -99,9 +101,20 @@ export function hasGoalFilter(query) {
   return getFiltersByKeyPrefix(query, "goal").length > 0
 }
 
+export function useHasGoalFilter() {
+  const { query: { filters } } = useQueryContext();
+  return useMemo(() => getFiltersByKeyPrefix({ filters }, "goal").length > 0, [filters]);
+}
+
 export function isRealTimeDashboard(query) {
   return query?.period === 'realtime'
 }
+
+export function useIsRealtimeDashboard() {
+  const { query: { period } } = useQueryContext();
+  return useMemo(() => isRealTimeDashboard({ period }), [period]);
+}
+
 
 // Note: Currently only a single goal filter can be applied at a time.
 export function getGoalFilter(query) {

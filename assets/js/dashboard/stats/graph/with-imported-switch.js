@@ -3,18 +3,20 @@ import { Link } from 'react-router-dom'
 import * as url from '../../util/url'
 import { BarsArrowUpIcon } from '@heroicons/react/20/solid'
 import classNames from "classnames"
+import { useQueryContext } from "../../query-context"
 
-function LinkOrDiv({isLink, target, children}) {
+function LinkOrDiv({ isLink, target, children }) {
   if (isLink) {
-    return <Link to={target}>{ children }</Link>
+    return <Link to={target}>{children}</Link>
   } else {
-    return <div>{ children }</div>
+    return <div>{children}</div>
   }
 }
 
-export default function WithImportedSwitch({query, info}) {
+export default function WithImportedSwitch({ info }) {
+  const { query } = useQueryContext();
   if (info && info.visible) {
-    const {togglable, tooltip_msg} = info
+    const { togglable, tooltip_msg } = info
     const enabled = togglable && query.with_imported
     const target = url.setQuery('with_imported', (!enabled).toString())
 
@@ -22,11 +24,11 @@ export default function WithImportedSwitch({query, info}) {
       "dark:text-gray-300 text-gray-700": enabled,
       "dark:text-gray-500 text-gray-400": !enabled,
     })
-    
+
     return (
       <div tooltip={tooltip_msg} className="w-4 h-4 mx-2">
         <LinkOrDiv isLink={togglable} target={target}>
-          <BarsArrowUpIcon className={iconClass}/>
+          <BarsArrowUpIcon className={iconClass} />
         </LinkOrDiv>
       </div>
     )
