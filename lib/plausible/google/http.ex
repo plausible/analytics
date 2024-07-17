@@ -65,7 +65,7 @@ defmodule Plausible.Google.HTTP do
         {:error, error}
 
       {:error, reason} ->
-        Logger.error("Google Analytics: failed to list stats: #{inspect(reason)}")
+        Logger.error("Google Search Console: failed to list stats: #{inspect(reason)}")
         {:error, "failed_to_list_stats"}
     end
   end

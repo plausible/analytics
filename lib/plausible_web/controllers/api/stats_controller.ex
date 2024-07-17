@@ -764,7 +764,9 @@ defmodule PlausibleWeb.Api.StatsController do
       {:ok, terms} ->
         json(conn, %{search_terms: terms})
 
-      {:error, _} ->
+      {:error, error} ->
+        Logger.error("Plausible.Google.API.fetch_stats failed with error: `#{inspect(error)}`")
+
         conn
         |> put_status(502)
         |> json(%{
