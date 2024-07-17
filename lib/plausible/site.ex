@@ -40,7 +40,6 @@ defmodule Plausible.Site do
     has_one :google_auth, GoogleAuth
     has_one :weekly_report, Plausible.Site.WeeklyReport
     has_one :monthly_report, Plausible.Site.MonthlyReport
-    has_one :spike_notification, Plausible.Site.SpikeNotification
     has_one :ownership, Plausible.Site.Membership, where: [role: :owner]
     has_one :owner, through: [:ownership, :user]
 

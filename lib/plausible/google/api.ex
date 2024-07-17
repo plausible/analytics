@@ -129,7 +129,7 @@ defmodule Plausible.Google.API do
   end
 
   defp needs_to_refresh_token?(%NaiveDateTime{} = expires_at) do
-    thirty_seconds_ago = Timex.shift(Timex.now(), seconds: 30)
+    thirty_seconds_ago = DateTime.shift(Timex.now(), second: 30)
     Timex.before?(expires_at, thirty_seconds_ago)
   end
 

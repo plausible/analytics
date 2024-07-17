@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import * as api from '../../api'
-import * as storage from '../../util/storage'
-import { getGraphableMetrics } from './graph-util'
+import * as api from '../../api';
+import * as storage from '../../util/storage';
+import { getGraphableMetrics } from './graph-util';
 import TopStats from './top-stats';
-import { IntervalPicker, getCurrentInterval } from './interval-picker'
-import StatsExport from './stats-export'
+import { IntervalPicker, getCurrentInterval } from './interval-picker';
+import StatsExport from './stats-export';
 import WithImportedSwitch from './with-imported-switch';
 import SamplingNotice from './sampling-notice';
 import FadeIn from '../../fade-in';
-import * as url from '../../util/url'
-import { isComparisonEnabled } from '../../comparison-input'
-import LineGraphWithRouter from './line-graph'
+import * as url from '../../util/url';
+import { isComparisonEnabled } from '../../comparison-input';
+import LineGraphWithRouter from './line-graph';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
 
@@ -30,7 +30,7 @@ function fetchMainGraph(site, query, metric, interval) {
 }
 
 export default function VisitorGraph({ updateImportedDataInView }) {
-  const { query, lastLoadTimestamp } = useQueryContext();
+  const { query } = useQueryContext();
   const site = useSiteContext();
 
   const isRealtime = query.period === 'realtime'
@@ -141,21 +141,18 @@ export default function VisitorGraph({ updateImportedDataInView }) {
       <FadeIn show={!(topStatsLoading || graphLoading)}>
         <div id="top-stats-container" className="flex flex-wrap" ref={topStatsBoundary} style={{ height: getTopStatsHeight() }}>
           <TopStats
-            site={site}
-            query={query}
             data={topStatData}
             onMetricUpdate={onMetricUpdate}
             tooltipBoundary={topStatsBoundary.current}
-            lastLoadTimestamp={lastLoadTimestamp}
           />
         </div>
         <div className="relative px-2">
           {graphRefreshing && renderLoader()}
           <div className="absolute right-4 -top-8 py-1 flex items-center">
-            {!isRealtime && <StatsExport site={site} query={query} />}
+            {!isRealtime && <StatsExport />}
             <SamplingNotice samplePercent={topStatData} />
-            <WithImportedSwitch query={query} info={topStatData && topStatData.with_imported_switch} />
-            <IntervalPicker site={site} query={query} onIntervalUpdate={onIntervalUpdate} />
+            <WithImportedSwitch info={topStatData && topStatData.with_imported_switch} />
+            <IntervalPicker onIntervalUpdate={onIntervalUpdate} />
           </div>
           <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} query={query} />
         </div>

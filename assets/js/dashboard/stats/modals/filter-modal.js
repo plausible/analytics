@@ -1,13 +1,13 @@
 import React from "react";
-import { withRouter } from 'react-router-dom'
+import { withRouter } from 'react-router-dom';
 
-import Modal from './modal'
-import { EVENT_PROPS_PREFIX, FILTER_GROUP_TO_MODAL_TYPE, formatFilterGroup, FILTER_OPERATIONS, getFilterGroup, FILTER_MODAL_TO_FILTER_GROUP } from '../../util/filters'
-import { parseQuery } from '../../query'
-import { updatedQuery } from '../../util/url'
-import { shouldIgnoreKeypress } from '../../keybinding'
-import { cleanLabels } from "../../util/filters"
-import FilterModalGroup from "./filter-modal-group"
+import Modal from './modal';
+import { EVENT_PROPS_PREFIX, FILTER_GROUP_TO_MODAL_TYPE, formatFilterGroup, FILTER_OPERATIONS, getFilterGroup, FILTER_MODAL_TO_FILTER_GROUP } from '../../util/filters';
+import { parseQuery } from '../../query';
+import { updatedQuery } from '../../util/url';
+import { shouldIgnoreKeypress } from '../../keybinding';
+import { cleanLabels } from "../../util/filters";
+import FilterModalGroup from "./filter-modal-group";
 
 function partitionFilters(modalType, filters) {
   const otherFilters = []
@@ -145,8 +145,6 @@ class FilterModal extends React.Component {
                 filterGroup={filterGroup}
                 filterState={this.state.filterState}
                 labels={this.state.labelState}
-                site={this.props.site}
-                query={this.state.query}
                 onUpdateRowValue={this.onUpdateRowValue.bind(this)}
                 onAddRow={this.onAddRow.bind(this)}
                 onDeleteRow={this.onDeleteRow.bind(this)}

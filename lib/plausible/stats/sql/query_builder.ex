@@ -8,7 +8,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   import Plausible.Stats.Imported
   import Plausible.Stats.Util
 
-  alias Plausible.Stats.{Base, Filters, Query, QueryOptimizer, TableDecider, SQL}
+  alias Plausible.Stats.{Filters, Query, QueryOptimizer, TableDecider, SQL}
   alias Plausible.Stats.SQL.Expression
 
   require Plausible.Stats.SQL.Expression
@@ -50,9 +50,10 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     if TableDecider.events_join_sessions?(query) do
       sessions_q =
         from(
-          s in Base.query_sessions(site, query),
-          select: %{session_id: s.session_id},
+          s in "sessions_v2",
+          where: ^SQL.WhereBuilder.build(:sessions, site, query),
           where: s.sign == 1,
+          select: %{session_id: s.session_id},
           group_by: s.session_id
         )
 
@@ -144,7 +145,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     key = shortname(query, dimension)
 
     q
-    |> select_merge_as([], Expression.dimension(key, dimension, table, query))
+    |> Expression.select_dimension(key, dimension, table, query)
     |> group_by([], selected_as(^key))
   end
 

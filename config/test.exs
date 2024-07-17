@@ -41,3 +41,8 @@ config :plausible, Plausible.Verification.Checks.Installation,
   req_opts: [
     plug: {Req.Test, Plausible.Verification.Checks.Installation}
   ]
+
+config :plausible, Plausible.HelpScout,
+  req_opts: [
+    plug: {Req.Test, Plausible.HelpScout}
+  ]

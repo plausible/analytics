@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 
 import * as api from '../../api'
-import { useDebouncedEffect, useMountedEffect } from '../../custom-hooks'
+import { useMountedEffect, useDebounce } from '../../custom-hooks'
 import { trimURL } from '../../util/url'
 import { FilterLink } from "../reports/list";
 import { useQueryContext } from "../../query-context";
@@ -91,20 +91,17 @@ export default function BreakdownModal({
   
   const [initialLoading, setInitialLoading] = useState(true)
   const [loading, setLoading] = useState(true)
-  const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
   const [results, setResults] = useState([])
   const [page, setPage] = useState(1)
   const [moreResultsAvailable, setMoreResultsAvailable] = useState(false)
   const searchBoxRef = useRef(null)
 
-  useMountedEffect(() => { fetchNextPage() }, [page])
+  useEffect(() => { fetchData() }, [])
 
-  useDebouncedEffect(() => {
-    setSearch(searchInput)
-  }, [searchInput], 300)
-  
-  useEffect(() => { fetchData() }, [search])
+  useMountedEffect(() => { debouncedFetchData() }, [search])
+
+  useMountedEffect(() => { fetchNextPage() }, [page])
 
   useEffect(() => {
     if (!searchEnabled) { return }
@@ -127,6 +124,7 @@ export default function BreakdownModal({
 
   const fetchData = useCallback(() => {
     setLoading(true)
+
     api.get(endpoint, withSearch(query), { limit: LIMIT, page: 1, detailed: true })
       .then((response) => {
         if (typeof afterFetchData === 'function') {
@@ -140,7 +138,11 @@ export default function BreakdownModal({
       })
   }, [search])
 
+  const debouncedFetchData = useDebounce(fetchData)
+
   function fetchNextPage() {
+    setLoading(true)
+
     if (page > 1) {
       api.get(endpoint, withSearch(query), { limit: LIMIT, page, detailed: true })
         .then((response) => {
@@ -194,7 +196,6 @@ export default function BreakdownModal({
           { maybeRenderIcon(item) }
           <FilterLink
             pathname={`/${encodeURIComponent(site.domain)}`}
-            query={query}
             filterInfo={getFilterInfo(item)}
           >
             {trimURL(item.name, 40)}
@@ -237,7 +238,7 @@ export default function BreakdownModal({
   }
 
   function handleInputChange(e) {
-    setSearchInput(e.target.value)
+    setSearch(e.target.value)
   }
 
   function renderSearchInput() {

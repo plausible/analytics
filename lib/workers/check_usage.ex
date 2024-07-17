@@ -34,7 +34,7 @@ defmodule Plausible.Workers.CheckUsage do
 
   @impl Oban.Worker
   def perform(_job, usage_mod \\ Quota.Usage, today \\ Timex.today()) do
-    yesterday = today |> Timex.shift(days: -1)
+    yesterday = today |> Date.shift(day: -1)
 
     active_subscribers =
       Repo.all(

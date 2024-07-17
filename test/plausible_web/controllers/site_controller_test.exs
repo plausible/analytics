@@ -609,6 +609,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       site = insert(:site, members: [user])
       insert(:google_auth, user: user, site: site)
       insert(:spike_notification, site: site)
+      insert(:drop_notification, site: site)
 
       delete(conn, "/#{site.domain}")
 
@@ -1227,106 +1228,146 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "POST /sites/:website/spike-notification/enable" do
-    setup [:create_user, :log_in, :create_site]
+  for type <- [:spike, :drop] do
+    describe "POST /sites/:website/traffic-change-notification/#{type}/enable" do
+      setup [:create_user, :log_in, :create_site]
 
-    test "creates a spike notification record with the user email", %{
-      conn: conn,
-      site: site,
-      user: user
-    } do
-      post(conn, "/sites/#{site.domain}/spike-notification/enable")
+      test "creates a #{type} notification record with the user email", %{
+        conn: conn,
+        site: site,
+        user: user
+      } do
+        post(conn, "/sites/#{site.domain}/traffic-change-notification/#{unquote(type)}/enable")
 
-      notification = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
-      assert notification.recipients == [user.email]
+        notification =
+          Repo.get_by(Plausible.Site.TrafficChangeNotification,
+            site_id: site.id,
+            type: unquote(type)
+          )
+
+        assert notification.recipients == [user.email]
+      end
+
+      test "does not allow duplicate #{type} notification to be created", %{
+        conn: conn,
+        site: site
+      } do
+        post(conn, "/sites/#{site.domain}/traffic-change-notification/#{unquote(type)}/enable")
+        post(conn, "/sites/#{site.domain}/traffic-change-notification/#{unquote(type)}/enable")
+
+        assert Repo.aggregate(
+                 from(s in Plausible.Site.TrafficChangeNotification,
+                   where: s.site_id == ^site.id and s.type == ^unquote(type)
+                 ),
+                 :count
+               ) == 1
+      end
     end
 
-    test "does not allow duplicate spike notification to be created", %{
-      conn: conn,
-      site: site
-    } do
-      post(conn, "/sites/#{site.domain}/spike-notification/enable")
-      post(conn, "/sites/#{site.domain}/spike-notification/enable")
+    describe "POST /sites/:website/traffic-change-notification/#{type}/disable" do
+      setup [:create_user, :log_in, :create_site]
 
-      assert Repo.aggregate(
-               from(s in Plausible.Site.SpikeNotification, where: s.site_id == ^site.id),
-               :count
-             ) == 1
-    end
-  end
+      test "deletes the #{type} notification record", %{conn: conn, site: site} do
+        insert(:"#{unquote(type)}_notification", site: site)
 
-  describe "POST /sites/:website/spike-notification/disable" do
-    setup [:create_user, :log_in, :create_site]
+        post(conn, "/sites/#{site.domain}/traffic-change-notification/#{unquote(type)}/disable")
 
-    test "deletes the spike notification record", %{conn: conn, site: site} do
-      insert(:spike_notification, site: site)
-
-      post(conn, "/sites/#{site.domain}/spike-notification/disable")
-
-      refute Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
-    end
-  end
-
-  describe "PUT /sites/:website/spike-notification" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "updates spike notification threshold", %{conn: conn, site: site} do
-      insert(:spike_notification, site: site, threshold: 10)
-
-      put(conn, "/sites/#{site.domain}/spike-notification", %{
-        "spike_notification" => %{"threshold" => "15"}
-      })
-
-      notification = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
-      assert notification.threshold == 15
-    end
-  end
-
-  describe "POST /sites/:website/spike-notification/recipients" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "adds a recipient to the spike notification", %{conn: conn, site: site} do
-      insert(:spike_notification, site: site)
-
-      post(conn, "/sites/#{site.domain}/spike-notification/recipients",
-        recipient: "user@email.com"
-      )
-
-      report = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
-      assert report.recipients == ["user@email.com"]
-    end
-  end
-
-  describe "DELETE /sites/:website/spike-notification/recipients/:recipient" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "removes a recipient from the spike notification", %{conn: conn, site: site} do
-      insert(:spike_notification, site: site, recipients: ["recipient@email.com"])
-
-      delete(conn, "/sites/#{site.domain}/spike-notification/recipients/recipient@email.com")
-
-      report = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
-      assert report.recipients == []
+        refute Repo.get_by(Plausible.Site.TrafficChangeNotification, site_id: site.id)
+      end
     end
 
-    test "fails to remove a recipient from the spike notification in a foreign website", %{
-      conn: conn
-    } do
-      site = insert(:site)
-      insert(:spike_notification, site: site, recipients: ["recipient@email.com"])
+    describe "PUT /sites/:website/traffic-change-notification/#{type}" do
+      setup [:create_user, :log_in, :create_site]
 
-      conn =
-        delete(conn, "/sites/#{site.domain}/spike-notification/recipients/recipient@email.com")
+      test "updates #{type} notification threshold", %{conn: conn, site: site} do
+        insert(:"#{unquote(type)}_notification", site: site, threshold: 10)
 
-      assert conn.status == 404
+        put(conn, "/sites/#{site.domain}/traffic-change-notification/#{unquote(type)}", %{
+          "traffic_change_notification" => %{"threshold" => "15"}
+        })
 
-      conn =
-        delete(conn, "/sites/#{site.domain}/spike-notification/recipients/recipient%40email.com")
+        notification =
+          Repo.get_by(Plausible.Site.TrafficChangeNotification,
+            site_id: site.id,
+            type: unquote(type)
+          )
 
-      assert conn.status == 404
+        assert notification.threshold == 15
+      end
+    end
 
-      report = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
-      assert [_] = report.recipients
+    describe "POST /sites/:website/traffic-change-notification/#{type}/recipients" do
+      setup [:create_user, :log_in, :create_site]
+
+      test "adds a recipient to the #{type} notification", %{conn: conn, site: site} do
+        insert(:"#{unquote(type)}_notification", site: site)
+
+        post(
+          conn,
+          "/sites/#{site.domain}/traffic-change-notification/#{unquote(type)}/recipients",
+          recipient: "user@email.com"
+        )
+
+        report =
+          Repo.get_by(Plausible.Site.TrafficChangeNotification,
+            site_id: site.id,
+            type: unquote(type)
+          )
+
+        assert report.recipients == ["user@email.com"]
+      end
+    end
+
+    describe "DELETE /sites/:website/traffic-change-notification/#{type}/recipients/:recipient" do
+      setup [:create_user, :log_in, :create_site]
+
+      test "removes a recipient from the #{type} notification", %{conn: conn, site: site} do
+        insert(:"#{unquote(type)}_notification", site: site, recipients: ["recipient@email.com"])
+
+        delete(
+          conn,
+          "/sites/#{site.domain}/traffic-change-notification/#{unquote(type)}/recipients/recipient@email.com"
+        )
+
+        report =
+          Repo.get_by(Plausible.Site.TrafficChangeNotification,
+            site_id: site.id,
+            type: unquote(type)
+          )
+
+        assert report.recipients == []
+      end
+
+      test "fails to remove a recipient from the #{type} notification in a foreign website", %{
+        conn: conn
+      } do
+        site = insert(:site)
+        insert(:"#{unquote(type)}_notification", site: site, recipients: ["recipient@email.com"])
+
+        conn =
+          delete(
+            conn,
+            "/sites/#{site.domain}/traffic-change-notification/#{unquote(type)}/recipients/recipient@email.com"
+          )
+
+        assert conn.status == 404
+
+        conn =
+          delete(
+            conn,
+            "/sites/#{site.domain}/traffic-change-notification/recipients/#{unquote(type)}/recipient%40email.com"
+          )
+
+        assert conn.status == 404
+
+        report =
+          Repo.get_by(Plausible.Site.TrafficChangeNotification,
+            site_id: site.id,
+            type: unquote(type)
+          )
+
+        assert [_] = report.recipients
+      end
     end
   end
 

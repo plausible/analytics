@@ -33,7 +33,7 @@ defmodule Plausible.Auth.GracePeriod do
   """
   def start_changeset(%User{} = user) do
     grace_period = %__MODULE__{
-      end_date: Timex.shift(Timex.today(), days: 7),
+      end_date: Date.shift(Timex.today(), day: 7),
       is_over: false,
       manual_lock: false
     }

@@ -144,7 +144,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
     first =
       last
-      |> Timex.shift(months: -5)
+      |> Date.shift(month: -5)
       |> Date.beginning_of_month()
 
     {:ok, Date.range(first, last)}
@@ -155,7 +155,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
     first =
       last
-      |> Timex.shift(months: -11)
+      |> Date.shift(month: -11)
       |> Date.beginning_of_month()
 
     {:ok, Date.range(first, last)}
