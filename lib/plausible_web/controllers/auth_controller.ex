@@ -59,7 +59,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def register(conn, %{"user" => %{"email" => email, "password" => password}}) do
-    with {:domain_allowed?, true} <- {:domain_allowed?, domain_allowed?(email)},
+    with {:domain_allowed, true} <- {:domain_allowed, domain_allowed?(email)},
          {:ok, user} <- login_user(conn, email, password) do
       conn = set_user_session(conn, user)
 
@@ -70,11 +70,14 @@ defmodule PlausibleWeb.AuthController do
         redirect(conn, to: Routes.auth_path(conn, :activate_form))
       end
     else
-      {:domain_allowed?, false} ->
+      {:domain_allowed, false} ->
         render(conn, "login_form.html",
           error: "Registration not supported for your email domain.",
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
+
+      conn ->
+        conn
     end
   end
 
