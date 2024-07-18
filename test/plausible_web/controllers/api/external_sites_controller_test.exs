@@ -508,6 +508,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
       test "returns sites when present", %{conn: conn, user: user} do
         [site1, site2] = insert_list(2, :site, members: [user])
+        _unrelated_site = insert(:site)
 
         conn = get(conn, "/api/v1/sites")
 
@@ -522,6 +523,21 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                    "limit" => 100
                  }
                }
+      end
+
+      test "returns sites where user is only a viewer", %{conn: conn, user: user} do
+        %{domain: owned_site_domain} = insert(:site, members: [user])
+        other_site = %{domain: other_site_domain} = insert(:site)
+        insert(:site_membership, site: other_site, user: user, role: :viewer)
+
+        conn = get(conn, "/api/v1/sites")
+
+        assert %{
+                 "sites" => [
+                   %{"domain" => ^other_site_domain},
+                   %{"domain" => ^owned_site_domain}
+                 ]
+               } = json_response(conn, 200)
       end
 
       test "handles pagination correctly", %{conn: conn, user: user} do
@@ -627,6 +643,14 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         assert json_response(conn, 404) == %{"error" => "Site could not be found"}
       end
+
+      test "is 404 when user is not a member of the site", %{conn: conn} do
+        site = insert(:site)
+
+        conn = get(conn, "/api/v1/sites/" <> site.domain)
+
+        assert json_response(conn, 404) == %{"error" => "Site could not be found"}
+      end
     end
 
     describe "GET /api/v1/goals" do
@@ -682,6 +706,21 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                    "limit" => 100
                  }
                }
+      end
+
+      test "returns goals for site where user is viewer", %{conn: conn, user: user, site: site} do
+        Repo.update_all(
+          from(sm in Plausible.Site.Membership,
+            where: sm.site_id == ^site.id and sm.user_id == ^user.id
+          ),
+          set: [role: :viewer]
+        )
+
+        %{id: goal_id} = insert(:goal, %{site: site, event_name: "Signup"})
+
+        conn = get(conn, "/api/v1/sites/goals?site_id=" <> site.domain)
+
+        assert %{"goals" => [%{"id" => ^goal_id}]} = json_response(conn, 200)
       end
 
       test "handles pagination correctly", %{conn: conn, site: site} do
@@ -742,6 +781,16 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
       test "returns error when `site_id` parameter is invalid", %{conn: conn} do
         conn = get(conn, "/api/v1/sites/goals?site_id=does.not.exist")
+
+        assert json_response(conn, 404) == %{
+                 "error" => "Site could not be found"
+               }
+      end
+
+      test "returns error when user is not a member of the site", %{conn: conn} do
+        site = insert(:site)
+
+        conn = get(conn, "/api/v1/sites/goals?site_id=" <> site.domain)
 
         assert json_response(conn, 404) == %{
                  "error" => "Site could not be found"

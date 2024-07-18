@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     user = conn.assigns.current_user
 
     with {:ok, site_id} <- expect_param_key(params, "site_id"),
-         {:ok, site} <- get_site(user, site_id, [:owner, :admin]) do
+         {:ok, site} <- get_site(user, site_id, [:owner, :admin, :viewer]) do
       page =
         site
         |> Plausible.Goals.for_site_query()
@@ -81,7 +81,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   def get_site(conn, %{"site_id" => site_id}) do
-    case get_site(conn.assigns.current_user, site_id, [:owner, :admin]) do
+    case get_site(conn.assigns.current_user, site_id, [:owner, :admin, :viewer]) do
       {:ok, site} ->
         json(conn, %{
           domain: site.domain,
