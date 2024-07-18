@@ -59,8 +59,8 @@ export function get(url, query = {}, ...extraQuery) {
   return fetch(url, { signal: abortController.signal, headers: headers })
     .then(response => {
       if (!response.ok) {
-        return response.json().then((msg) => {
-          throw new ApiError(msg.error, msg)
+        return response.json().then((payload) => {
+          throw new ApiError(payload.error, payload)
         })
       }
       return response.json()
