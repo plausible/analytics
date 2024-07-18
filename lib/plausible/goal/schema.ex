@@ -47,13 +47,17 @@ defmodule Plausible.Goal do
     |> maybe_drop_currency()
   end
 
-  @spec name(t()) :: String.t()
-  def name(%{page_path: page_path}) when is_binary(page_path) do
+  @spec display_name(t()) :: String.t()
+  def display_name(%{page_path: page_path}) when is_binary(page_path) do
     "Visit " <> page_path
   end
 
-  def name(%{event_name: name}) when is_binary(name) do
+  def display_name(%{event_name: name, currency: nil}) when is_binary(name) do
     name
+  end
+
+  def display_name(%{event_name: name, currency: currency}) do
+    name <> " (#{currency})"
   end
 
   @spec type(t()) :: :event | :page
@@ -110,18 +114,14 @@ defimpl Jason.Encoder, for: Plausible.Goal do
     |> Map.put(:goal_type, Plausible.Goal.type(value))
     |> Map.take([:id, :goal_type, :event_name, :page_path])
     |> Map.put(:domain, domain)
-    |> Map.put(:name, Plausible.Goal.name(value))
+    |> Map.put(:display_name, Plausible.Goal.display_name(value))
     |> Jason.Encode.map(opts)
   end
 end
 
 defimpl String.Chars, for: Plausible.Goal do
-  def to_string(%{currency: nil} = goal) do
-    Plausible.Goal.name(goal)
-  end
-
-  def to_string(%{currency: currency} = goal) do
-    Plausible.Goal.name(goal) <> " (#{currency})"
+  def to_string(goal) do
+    Plausible.Goal.display_name(goal)
   end
 end
 

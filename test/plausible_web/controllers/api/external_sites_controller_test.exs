@@ -265,7 +265,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
         res = json_response(conn, 200)
         assert res["goal_type"] == "event"
-        assert res["name"] == "Signup"
+        assert res["display_name"] == "Signup"
         assert res["event_name"] == "Signup"
         assert res["domain"] == site.domain
       end
@@ -281,7 +281,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         res = json_response(conn, 200)
         assert res["goal_type"] == "page"
         assert res["page_path"] == "/signup"
-        assert res["name"] == "Visit /signup"
+        assert res["display_name"] == "Visit /signup"
         assert res["domain"] == site.domain
       end
 
@@ -301,7 +301,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         res = json_response(conn, 200)
         assert res["goal_type"] == "event"
         assert res["event_name"] == "Signup"
-        assert res["name"] == "Signup"
+        assert res["display_name"] == "Signup"
         assert res["domain"] == new_domain
       end
 
@@ -656,21 +656,21 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "goals" => [
                    %{
                      "id" => goal3.id,
-                     "name" => Plausible.Goal.name(goal3),
+                     "display_name" => "Purchase (USD)",
                      "goal_type" => "event",
                      "event_name" => "Purchase",
                      "page_path" => nil
                    },
                    %{
                      "id" => goal2.id,
-                     "name" => Plausible.Goal.name(goal2),
+                     "display_name" => "Signup",
                      "goal_type" => "event",
                      "event_name" => "Signup",
                      "page_path" => nil
                    },
                    %{
                      "id" => goal1.id,
-                     "name" => Plausible.Goal.name(goal1),
+                     "display_name" => "Visit /login",
                      "goal_type" => "page",
                      "event_name" => nil,
                      "page_path" => "/login"
