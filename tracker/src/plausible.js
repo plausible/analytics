@@ -167,4 +167,27 @@
   {{#if (any outbound_links file_downloads tagged_events)}}
   {{> customEvents}}
   {{/if}}
+
+  {{#if live_view}}
+    {{#unless manual}}
+      window.addEventListener('phx:navigate', info => trigger('pageview', {u: info.detail.href}));
+    {{/unless}}
+
+    ['phx-click', 'phx-change', 'phx-submit', 'phx-viewport-top', 'phx-viewport-bottom', 'phx-mounted', 'phx-connected', 'phx-disconnected'].map((name) => {
+      window.addEventListener(name, info => trigger('phx-event', {props: {event: name, detail: new URLSearchParams(info.detail || {}).toString()}}));
+    });
+
+    // form submit event
+    window.addEventListener("submit", e => trigger("js-submit", {props: {dom_id: e.target.id, ...Object.fromEntries(new FormData(e.target).entries())}}));
+
+    //track socket activity
+    if (window.liveSocket)
+      window.liveSocket.socket.logger = (kind, msg, data) => {
+        if ((kind === 'push') && !msg.includes("phoenix heartbeat")){
+          trigger('phx-push', {props: {msg, ...data}});
+        } 
+      }
+    else
+      console && console.error("No liveSocket initialized")
+  {{/if}}
 })();

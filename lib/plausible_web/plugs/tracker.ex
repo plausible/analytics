@@ -12,7 +12,8 @@ defmodule PlausibleWeb.Tracker do
     "file-downloads",
     "pageview-props",
     "tagged-events",
-    "revenue"
+    "revenue",
+    "live-view"
   ]
 
   # Generates Power Set of all variants
