@@ -293,6 +293,8 @@ secure_cookie =
 
 license_key = get_var_from_path_or_env(config_dir, "LICENSE_KEY", "")
 
+allowed_domains = get_var_from_path_or_env(config_dir, "ALLOWED_DOMAINS", "")
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
@@ -301,7 +303,8 @@ config :plausible,
   custom_script_name: custom_script_name,
   log_failed_login_attempts: log_failed_login_attempts,
   license_key: license_key,
-  data_dir: data_dir
+  data_dir: data_dir,
+  allowed_domains: allowed_domains
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,

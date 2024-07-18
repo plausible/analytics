@@ -92,6 +92,48 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert get_session(conn, :current_user_id)
     end
+
+    test "domain not allowed", %{conn: conn} do
+      Repo.insert!(
+        User.new(%{
+          name: "Jane Doe",
+          email: "user@not.allowed",
+          password: "very-secret-and-very-long-123",
+          password_confirmation: "very-secret-and-very-long-123"
+        })
+      )
+
+      conn =
+        post(conn, "/register",
+          user: %{
+            email: "user@not.allowed",
+            password: "very-secret-and-very-long-123"
+          }
+        )
+
+      refute get_session(conn, :current_user_id)
+    end
+
+    test "email without @", %{conn: conn} do
+      Repo.insert!(
+        User.new(%{
+          name: "Jane Doe",
+          email: "usernot.allowed",
+          password: "very-secret-and-very-long-123",
+          password_confirmation: "very-secret-and-very-long-123"
+        })
+      )
+
+      conn =
+        post(conn, "/register",
+          user: %{
+            email: "usernot.allowed",
+            password: "very-secret-and-very-long-123"
+          }
+        )
+
+      refute get_session(conn, :current_user_id)
+    end
   end
 
   describe "GET /register/invitations/:invitation_id" do
