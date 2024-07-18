@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Plausible Playwright LiveView tests</title>
+  <script>window.liveSocket = {socket: {}}</script>
+  <script>window.liveSocket = {socket: {}}</script>
+  <script defer src="/tracker/js/plausible.live-view.local.manual.js"></script>
+</head>
+<body>
+  LiveView-related tests
+  <form id="main-form" onsubmit="event.preventDefault();">
+    <input type="text" name="user[name]" value="name" />
+    <input type="email" name="user[email]" value="user@email.com" />
+    <input type="submit" id="main-form-btn" />
+  </form>
+</body>
+</html>

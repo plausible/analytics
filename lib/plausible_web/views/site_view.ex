@@ -10,11 +10,12 @@ defmodule PlausibleWeb.SiteView do
     Plausible.Sites.shared_link_url(site, link)
   end
 
-  def render_snippet(site) do
-    tracker = "#{plausible_url()}/js/script.js"
+  def render_snippet(site, addons \\ []) do
+    filename = Enum.join(["script"] ++ addons ++ ["js"], ".")
+    src = "#{plausible_url()}/js/#{filename}"
 
     """
-    <script defer data-domain="#{site.domain}" src="#{tracker}"></script>
+    <script defer data-domain="#{site.domain}" src="#{src}"></script>
     """
   end
 
