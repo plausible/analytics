@@ -37,7 +37,8 @@ const MIN_HEIGHT_PX = 500
 
 //        * `title` - the title of the report to render on the top left
 
-//        * `endpoint` - the last part of the endpoint (e.g. "/sources") to query
+//        * `endpoint` - the full pathname of the API endpoint to query. E.g.
+//          `api/stats/plausible.io/sources`
 
 //        * `dimensionLabel` - a string to render as the dimension column header.
 
@@ -86,7 +87,6 @@ export default function BreakdownModal({
   const { query } = useQueryContext();
   const site = useSiteContext();
 
-  const endpoint = `/api/stats/${encodeURIComponent(site.domain)}${reportInfo.endpoint}`
   const [search, setSearch] = useState('')
 
   const {
@@ -97,7 +97,7 @@ export default function BreakdownModal({
     isFetching,
     isPending
   } = useAPIClient({
-    key: [endpoint, {query, search}],
+    key: [reportInfo.endpoint, {query, search}],
     getRequestParams: (key) => {
       const [_endpoint, {query, search}] = key
       

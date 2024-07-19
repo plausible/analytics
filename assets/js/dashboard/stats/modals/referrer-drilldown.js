@@ -5,16 +5,19 @@ import Modal from './modal'
 import { hasGoalFilter, isRealTimeDashboard } from "../../util/filters";
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
+import * as url from "../../util/url";
 import { addFilter } from "../../query";
 import { useQueryContext } from "../../query-context";
+import { useSiteContext } from "../../site-context";
 
 function ReferrerDrilldownModal({ match }) {
   const { query } = useQueryContext();
+  const site = useSiteContext();
 
   const reportInfo = {
     title: "Referrer Drilldown",
     dimension: 'referrer',
-    endpoint: `/referrers/${match.params.referrer}`,
+    endpoint: url.apiPath(site, `/referrers/${match.params.referrer}`),
     dimensionLabel: "Referrer"
   }
 

@@ -3,15 +3,18 @@ import React, { useCallback, useState } from "react";
 import Modal from './modal'
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
+import * as url from '../../util/url';
+import { useSiteContext } from "../../site-context";
 
 /*global BUILD_EXTRA*/
 function ConversionsModal() {
   const [showRevenue, setShowRevenue] = useState(false)
+  const site = useSiteContext();
 
   const reportInfo = {
     title: 'Goal Conversions',
     dimension: 'goal',
-    endpoint: '/conversions',
+    endpoint: url.apiPath(site, '/conversions'),
     dimensionLabel: "Goal"
   }
 

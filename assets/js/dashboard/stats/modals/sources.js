@@ -5,8 +5,10 @@ import Modal from './modal'
 import { hasGoalFilter, isRealTimeDashboard } from "../../util/filters";
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
+import * as url from "../../util/url";
 import { addFilter } from "../../query";
 import { useQueryContext } from "../../query-context";
+import { useSiteContext } from "../../site-context";
 
 const VIEWS = {
   sources: {
@@ -39,11 +41,13 @@ const VIEWS = {
 
 function SourcesModal({ location }) {
   const { query } = useQueryContext();
+  const site = useSiteContext();
 
   const urlParts = location.pathname.split('/')
   const currentView = urlParts[urlParts.length - 1]
 
-  const reportInfo = VIEWS[currentView].info
+  let reportInfo = VIEWS[currentView].info
+  reportInfo.endpoint = url.apiPath(site, reportInfo.endpoint)
 
   const getFilterInfo = useCallback((listItem) => {
     return {

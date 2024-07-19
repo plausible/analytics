@@ -4,15 +4,18 @@ import { hasGoalFilter } from "../../util/filters";
 import { addFilter } from '../../query'
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from '../reports/metrics'
+import * as url from '../../util/url';
 import { useQueryContext } from "../../query-context";
+import { useSiteContext } from "../../site-context";
 
 function ExitPagesModal() {
   const { query } = useQueryContext();
+  const site = useSiteContext();
 
   const reportInfo = {
     title: 'Exit Pages',
     dimension: 'exit_page',
-    endpoint: '/exit-pages',
+    endpoint: url.apiPath(site, '/exit-pages'),
     dimensionLabel: 'Page url'
   }
 
