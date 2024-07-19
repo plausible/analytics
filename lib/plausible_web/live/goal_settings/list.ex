@@ -14,7 +14,8 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
 
   def render(assigns) do
     revenue_goals_enabled? = Plausible.Billing.Feature.RevenueGoals.enabled?(assigns.site)
-    assigns = assign(assigns, :revenue_goals_enabled?, revenue_goals_enabled?)
+    goals = Enum.map(assigns.goals, &{goal_label(&1), &1})
+    assigns = assign(assigns, goals: goals, revenue_goals_enabled?: revenue_goals_enabled?)
 
     ~H"""
     <div>
@@ -55,7 +56,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
       </div>
       <%= if Enum.count(@goals) > 0 do %>
         <div class="mt-12">
-          <%= for goal <- @goals do %>
+          <%= for {goal_label, goal} <- @goals do %>
             <div class="border-b border-gray-300 dark:border-gray-500 py-3 flex justify-between">
               <span class="text-sm font-medium text-gray-900 dark:text-gray-100 w-3/4">
                 <div class="flex">
@@ -63,10 +64,10 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                     <%= if not @revenue_goals_enabled? && goal.currency do %>
                       <div class="text-gray-600 flex items-center">
                         <Heroicons.lock_closed class="w-4 h-4 mr-1 inline" />
-                        <span><%= goal %></span>
+                        <span><%= goal_label %></span>
                       </div>
                     <% else %>
-                      <%= goal %>
+                      <%= goal_label %>
                     <% end %>
                     <span class="text-sm text-gray-400 block mt-1 font-normal">
                       <span :if={goal.page_path}>Pageview</span>
@@ -114,6 +115,14 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
       <% end %>
     </div>
     """
+  end
+
+  defp goal_label(%{currency: currency} = goal) when not is_nil(currency) do
+    to_string(goal) <> " (#{currency})"
+  end
+
+  defp goal_label(goal) do
+    to_string(goal)
   end
 
   defp delete_confirmation_text(goal) do
