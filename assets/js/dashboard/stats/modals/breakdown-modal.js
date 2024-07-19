@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 
-import * as api from '../../api'
 import { trimURL } from '../../util/url'
 import { FilterLink } from "../reports/list";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
 import { useDebounce } from "../../custom-hooks";
-
-const LIMIT = 100
+import { useAPIClient } from "../../hooks/api-client";
 const MIN_HEIGHT_PX = 500
 
 // The main function component for rendering the "Details" reports on the dashboard,
@@ -92,50 +89,30 @@ export default function BreakdownModal({
   const endpoint = `/api/stats/${encodeURIComponent(site.domain)}${reportInfo.endpoint}`
   const [search, setSearch] = useState('')
 
-  const queryFn = async ({ pageParam, queryKey }) => {
-    const {search, query} = queryKey[1]
+  const {
+    data,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isFetching,
+    isPending
+  } = useAPIClient({
+    key: [endpoint, {query, search}],
+    getRequestParams: (key) => {
+      const [_endpoint, {query, search}] = key
+      
+      let queryWithSearchFilter = {...query}
 
-    let queryWithSearchFilter = {...query}
+      if (searchEnabled && search !== '') {
+        queryWithSearchFilter = addSearchFilter(query, search)
+      }
 
-    if (searchEnabled && search !== '') {
-      queryWithSearchFilter = addSearchFilter(query, search)
-    }
-
-    const response = await api.get(endpoint, queryWithSearchFilter, { limit: LIMIT, page: pageParam, detailed: true });
-    
-    if (pageParam === 1 && typeof afterFetchData === 'function') {
-      afterFetchData(response)
-    }
-
-    if (pageParam > 1 && typeof afterFetchNextPage === 'function') {
-      afterFetchNextPage(response)
-    }
-
-    return response.results
-  }
-
-  const {data, hasNextPage, fetchNextPage, isFetchingNextPage, isFetching, isPending } = useInfiniteQuery({
-    queryKey: [reportInfo.endpoint, {search, query}],
-    getNextPageParam: (lastPageResults, _, lastPageIndex) => lastPageResults.length === LIMIT ? lastPageIndex + 1 : null,
-    initialPageParam: 1,
-    queryFn,
+      return [queryWithSearchFilter, {detailed: true}]
+    },
+    afterFetchData,
+    afterFetchNextPage
   })
 
-  const queryClient = useQueryClient()
-
-  useEffect(() => {
-    const key = [reportInfo.endpoint]
-    return () => {
-      queryClient.setQueriesData(key, (data) => {
-        if (data?.pages?.length) {
-          return {
-            pages: data.pages.slice(0, 1),
-            pageParams: data.pageParams.slice(0, 1),
-          }  
-        }
-      })  
-    }
-  }, [queryClient, reportInfo.endpoint])
 
   useEffect(() => {
     if (!searchEnabled) { return }
