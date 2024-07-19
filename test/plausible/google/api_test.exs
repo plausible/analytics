@@ -82,7 +82,8 @@ defmodule Plausible.Google.APITest do
                    Google.API.fetch_stats(site, query, 5, "")
         end)
 
-      assert log =~ "Google Analytics: failed to list stats: %Finch.Error{reason: :some_reason}"
+      assert log =~
+               "Google Search Console: failed to list stats: %Finch.Error{reason: :some_reason}"
     end
   end
 

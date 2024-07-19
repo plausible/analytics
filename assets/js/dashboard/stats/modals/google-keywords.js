@@ -6,13 +6,15 @@ import * as api from '../../api'
 import numberFormatter, { percentageFormatter } from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import RocketIcon from './rocket-icon'
+import { ConfigureSearchTermsCTA } from "../sources/search-terms";
 
 class GoogleKeywordsModal extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
       loading: true,
-      query: parseQuery(props.location.search, props.site)
+      query: parseQuery(props.location.search, props.site),
+      errorPayload: null
     }
   }
 
@@ -20,10 +22,11 @@ class GoogleKeywordsModal extends React.Component {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.state.query, { limit: 100 })
       .then((res) => this.setState({
         loading: false,
-        searchTerms: res.search_terms,
-        notConfigured: res.not_configured,
-        isOwner: res.is_owner
-      }))
+        searchTerms: res.results,
+        errorPayload: null
+      })).catch((error) => {
+        this.setState({ loading: false, searchTerms: [], errorPayload: error.payload })
+      })
   }
 
   renderTerm(term) {
@@ -40,26 +43,26 @@ class GoogleKeywordsModal extends React.Component {
     )
   }
 
+  renderCTA() {
+    return (
+      <>
+        <div className="text-lg">Configure the integration to view search terms</div>
+        <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/integrations`} className="button mt-4">Connect with Google</a>
+      </>
+    )
+  }
+
   renderKeywords() {
-    if (this.state.notConfigured) {
-      if (this.state.isOwner) {
-        return (
-          <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
-            <RocketIcon />
-            <div className="text-lg">The site is not connected to Google Search Keywords</div>
-            <div className="text-lg">Configure the integration to view search terms</div>
-            <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/integrations`} className="button mt-4">Connect with Google</a>
-          </div>
-        )
-      } else {
-        return (
-          <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
-            <RocketIcon />
-            <div className="text-lg">The site is not connected to Google Search Kewyords</div>
-            <div className="text-lg">Cannot show search terms</div>
-          </div>
-        )
-      }
+    if (this.state.errorPayload) {
+      const {reason, is_admin, error} = this.state.errorPayload
+
+      return (
+        <div className="text-center text-gray-700 dark:text-gray-300 text-lg mt-20">
+          <RocketIcon />
+          <div>{error}</div>
+          {reason === 'not_configured' && is_admin && <ConfigureSearchTermsCTA site={this.props.site}/> }
+        </div>
+      )
     } else if (this.state.searchTerms.length > 0) {
       return (
         <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">

@@ -7,10 +7,19 @@ import RocketIcon from '../modals/rocket-icon'
 import * as api from '../../api'
 import LazyLoader from '../../components/lazy-loader'
 
+export function ConfigureSearchTermsCTA({site}) {
+  return (
+    <>
+      <div>Configure the integration to view search terms</div>
+      <a href={`/${encodeURIComponent(site.domain)}/settings/integrations`} className="button mt-4">Connect with Google</a>
+    </>
+  )
+}
+
 export default class SearchTerms extends React.Component {
   constructor(props) {
     super(props)
-    this.state = { loading: true }
+    this.state = { loading: true, errorPayload: null }
     this.onVisible = this.onVisible.bind(this)
     this.fetchSearchTerms = this.fetchSearchTerms.bind(this)
   }
@@ -37,14 +46,11 @@ export default class SearchTerms extends React.Component {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.props.query)
       .then((res) => this.setState({
         loading: false,
-        searchTerms: res.search_terms || [],
-        notConfigured: res.not_configured,
-        isAdmin: res.is_admin,
-        unsupportedFilters: res.unsupported_filters
+        searchTerms: res.results,
+        errorPayload: null
       })).catch((error) => {
-        this.setState({ loading: false, searchTerms: [], notConfigured: true, error: true, isAdmin: error.payload.is_admin })
-      }
-      )
+        this.setState({ loading: false, searchTerms: [], errorPayload: error.payload })
+      })
   }
 
   renderSearchTerm(term) {
@@ -68,22 +74,14 @@ export default class SearchTerms extends React.Component {
   }
 
   renderList() {
-    if (this.state.unsupportedFilters) {
+    if (this.state.errorPayload) {
+      const {reason, is_admin, error} = this.state.errorPayload
+
       return (
         <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
           <RocketIcon />
-          <div>Unable to fetch keyword data from Search Console because it does not support the current set of filters</div>
-        </div>
-      )
-    } else if (this.state.notConfigured) {
-      return (
-        <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
-          <RocketIcon />
-          <div>
-            This site is not connected to Search Console so we cannot show the search terms
-            {this.state.isAdmin && this.state.error && <><br /><br /><p>Please click below to connect your Search Console account.</p></>}
-          </div>
-          {this.state.isAdmin && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/integrations`} className="button mt-4">Connect with Google</a>}
+          <div>{error}</div>
+          {reason === 'not_configured' && is_admin && <ConfigureSearchTermsCTA site={this.props.site}/> }
         </div>
       )
     } else if (this.state.searchTerms.length > 0) {
