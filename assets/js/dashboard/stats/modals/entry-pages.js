@@ -21,11 +21,11 @@ function EntryPagesModal() {
       prefix: reportInfo.dimension,
       filter: ["is", reportInfo.dimension, [listItem.name]]
     }
-  }, [])
+  }, [reportInfo.dimension])
 
   const addSearchFilter = useCallback((query, searchString) => {
     return addFilter(query, ['contains', reportInfo.dimension, [searchString]])
-  }, [])
+  }, [reportInfo.dimension])
 
   function chooseMetrics() {
     if (hasGoalFilter(query)) {

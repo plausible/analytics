@@ -26,7 +26,7 @@ function LocationsModal({ location }) {
       prefix: reportInfo.dimension,
       filter: ["is", reportInfo.dimension, [listItem.code]]
     }
-  }, [])
+  }, [reportInfo.dimension])
 
   function chooseMetrics() {
     if (hasGoalFilter(query)) {

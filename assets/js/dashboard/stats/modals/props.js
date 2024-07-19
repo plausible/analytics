@@ -31,11 +31,11 @@ function PropsModal({ location }) {
       prefix: `${EVENT_PROPS_PREFIX}${propKey}`,
       filter: ["is", `${EVENT_PROPS_PREFIX}${propKey}`, [listItem.name]]
     }
-  }, [])
+  }, [propKey])
 
   const addSearchFilter = useCallback((query, searchString) => {
     return addFilter(query, ['contains', `${EVENT_PROPS_PREFIX}${propKey}`, [searchString]])
-  }, [])
+  }, [propKey])
 
   function chooseMetrics() {
     return [
