@@ -680,7 +680,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                  "goals" => [
                    %{
                      "id" => goal3.id,
-                     "display_name" => "Purchase (USD)",
+                     "display_name" => "Purchase",
                      "goal_type" => "event",
                      "event_name" => "Purchase",
                      "page_path" => nil

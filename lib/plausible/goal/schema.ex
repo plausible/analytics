@@ -48,16 +48,12 @@ defmodule Plausible.Goal do
   end
 
   @spec display_name(t()) :: String.t()
-  def display_name(%{page_path: page_path}) when is_binary(page_path) do
-    "Visit " <> page_path
+  def display_name(%{page_path: path}) when is_binary(path) do
+    "Visit " <> path
   end
 
-  def display_name(%{event_name: name, currency: nil}) when is_binary(name) do
+  def display_name(%{event_name: name}) when is_binary(name) do
     name
-  end
-
-  def display_name(%{event_name: name, currency: currency}) do
-    name <> " (#{currency})"
   end
 
   @spec type(t()) :: :event | :page
