@@ -1,121 +1,192 @@
-import React from "react";
-import { Link, withRouter } from 'react-router-dom'
+import React, { useState, useEffect, useRef } from "react";
 
 import Modal from './modal'
-import * as api from '../../api'
-import numberFormatter, { percentageFormatter } from '../../util/number-formatter'
-import { parseQuery } from '../../query'
 import RocketIcon from './rocket-icon'
-import { ConfigureSearchTermsCTA } from "../sources/search-terms";
+import { useQueryContext } from "../../query-context";
+import { useSiteContext } from "../../site-context";
+import { useAPIClient } from "../../hooks/api-client";
+import { useDebounce } from "../../custom-hooks";
+import { createVisitors, Metric, renderNumberWithTooltip } from "../reports/metrics";
+import numberFormatter, { percentageFormatter } from "../../util/number-formatter";
+import classNames from "classnames";
+import { MIN_HEIGHT_PX } from "./breakdown-modal";
 
-class GoogleKeywordsModal extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      loading: true,
-      query: parseQuery(props.location.search, props.site),
-      errorPayload: null
+function GoogleKeywordsModal() {
+  const searchBoxRef = useRef(null)
+  const { query } = useQueryContext()
+  const site = useSiteContext()
+  const endpoint = `/api/stats/${encodeURIComponent(site.domain)}/referrers/Google`
+
+  const [search, setSearch] = useState('')  
+
+  const metrics = [
+    createVisitors({renderLabel: (_query) => 'Visitors'}),
+    new Metric({key: 'impressions', renderLabel: (_query) => 'Impressions', renderValue: renderNumberWithTooltip}),
+    new Metric({key: 'ctr', renderLabel: (_query) => 'CTR', renderValue: percentageFormatter}),
+    new Metric({key: 'position', renderLabel: (_query) => 'Position', renderValue: numberFormatter})
+  ]
+
+  const {
+    data,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isFetching,
+    isPending,
+    error,
+    status
+  } = useAPIClient({
+    key: [endpoint, {query, search}],
+    getRequestParams: (key) => {
+      const [_endpoint, {query, search}] = key
+      const params = { detailed: true }
+
+      return [query, search === '' ? params : {...params, search}]
+    }
+  })
+
+  useEffect(() => {
+    const searchBox = searchBoxRef.current
+
+    const handleKeyUp = (event) => {
+      if (event.key === 'Escape') {
+        event.target.blur()
+        event.stopPropagation()
+      }
+    }
+
+    searchBox.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      searchBox.removeEventListener('keyup', handleKeyUp);
+    }
+  }, [])
+
+  function renderRow(item) {
+    return (
+      <tr className="text-sm dark:text-gray-200" key={item.name}>
+        <td className="p-2">{item.name}</td>
+        {metrics.map((metric) => {
+          return (
+            <td key={metric.key} className="p-2 w-32 font-medium" align="right">
+              {metric.renderValue(item[metric.key])}
+            </td>
+          )
+        })}
+      </tr>
+    )
+  }
+
+  function renderInitialLoadingSpinner() {
+    return (
+      <div className="w-full h-full flex flex-col justify-center" style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
+        <div className="mx-auto loading"><div></div></div>
+      </div>
+    )
+  }
+
+  function renderSmallLoadingSpinner() {
+    return (
+      <div className="loading sm"><div></div></div>
+    )
+  }
+
+  function renderLoadMoreButton() {
+    if (isPending) return null
+    if (!isFetching && !hasNextPage) return null
+
+    return (
+      <div className="flex flex-col w-full my-4 items-center justify-center h-10">
+        {!isFetching && <button onClick={fetchNextPage} type="button" className="button">Load more</button>}
+        {isFetchingNextPage && renderSmallLoadingSpinner()}
+      </div>
+    )
+  }
+
+  function handleInputChange(e) {
+    setSearch(e.target.value)
+  }
+
+  const debouncedHandleInputChange = useDebounce(handleInputChange)
+
+  function renderSearchInput() {
+    const searchBoxClass = classNames('shadow-sm dark:bg-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 block sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800 w-48', {
+      'pointer-events-none' : status === 'error'
+    })
+    return (
+      <input
+        ref={searchBoxRef}
+        type="text"
+        placeholder={"Search"}
+        className={searchBoxClass}
+        onChange={debouncedHandleInputChange}
+      />
+    )
+  }
+
+  function renderModalBody() {
+    if (data?.pages?.length) {
+      return (
+        <main className="modal__content">
+          <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
+            <thead>
+              <tr>
+                <th
+                  className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                  align="left"
+                >
+                  Search term
+                </th>
+                {metrics.map((metric) => {
+                  return (
+                    <th key={metric.key} className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">
+                      {metric.renderLabel(query)}
+                    </th>
+                  )
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {data.pages.map((p) => p.map(renderRow))}
+            </tbody>
+          </table>
+        </main>
+      )
     }
   }
 
-  componentDidMount() {
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.state.query, { limit: 100 })
-      .then((res) => this.setState({
-        loading: false,
-        searchTerms: res.results,
-        errorPayload: null
-      })).catch((error) => {
-        this.setState({ loading: false, searchTerms: [], errorPayload: error.payload })
-      })
-  }
-
-  renderTerm(term) {
+  function renderError() {
     return (
-      <React.Fragment key={term.name}>
-        <tr className="text-sm dark:text-gray-200" key={term.name}>
-          <td className="p-2">{term.name}</td>
-          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(term.visitors)}</td>
-          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(term.impressions)}</td>
-          <td className="p-2 w-32 font-medium" align="right">{percentageFormatter(term.ctr)}</td>
-          <td className="p-2 w-32 font-medium" align="right">{numberFormatter(term.position)}</td>
-        </tr>
-      </React.Fragment>
+      <div
+        className="grid grid-rows-2 text-gray-700 dark:text-gray-300"
+        style={{ height: `${MIN_HEIGHT_PX}px` }}
+      >
+        <div className="text-center self-end"><RocketIcon /></div>
+        <div className="text-lg text-center">{error.message}</div>
+      </div>
     )
   }
 
-  renderCTA() {
-    return (
-      <>
-        <div className="text-lg">Configure the integration to view search terms</div>
-        <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/integrations`} className="button mt-4">Connect with Google</a>
-      </>
-    )
-  }
-
-  renderKeywords() {
-    if (this.state.errorPayload) {
-      const {reason, is_admin, error} = this.state.errorPayload
-
-      return (
-        <div className="text-center text-gray-700 dark:text-gray-300 text-lg mt-20">
-          <RocketIcon />
-          <div>{error}</div>
-          {reason === 'not_configured' && is_admin && <ConfigureSearchTermsCTA site={this.props.site}/> }
+  return (
+    <Modal >
+      <div className="w-full h-full">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-x-2">
+            <h1 className="text-xl font-bold dark:text-gray-100">Google Search Terms</h1>
+            {!isPending && isFetching && renderSmallLoadingSpinner()}
+          </div>
+          {renderSearchInput()}
         </div>
-      )
-    } else if (this.state.searchTerms.length > 0) {
-      return (
-        <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
-          <thead>
-            <tr>
-              <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Search Term</th>
-              <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visitors</th>
-              <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Impressions</th>
-              <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">CTR</th>
-              <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Position</th>
-            </tr>
-          </thead>
-          <tbody>
-            {this.state.searchTerms.map(this.renderTerm.bind(this))}
-          </tbody>
-        </table>
-      )
-    } else {
-      return (
-        <div className="text-center text-gray-700 dark:text-gray-300 mt-6">
-          <RocketIcon />
-          <div className="text-lg">Could not find any search terms for this period</div>
+        <div className="my-4 border-b border-gray-300"></div>
+        <div style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
+          {status === 'error' && renderError()}
+          {isPending && renderInitialLoadingSpinner()}
+          {!isPending && renderModalBody()}
+          {renderLoadMoreButton()}
         </div>
-      )
-    }
-  }
-
-  renderBody() {
-    if (this.state.loading) {
-      return (
-        <div className="loading mt-32 mx-auto"><div></div></div>
-      )
-    } else {
-      return (
-        <React.Fragment>
-          <Link to={`/${encodeURIComponent(this.props.site.domain)}/referrers${window.location.search}`} className="font-bold text-gray-700 dark:text-gray-200 hover:underline">← All referrers</Link>
-
-          <div className="my-4 border-b border-gray-300 dark:border-gray-500"></div>
-          <main className="modal__content">
-            {this.renderKeywords()}
-          </main>
-        </React.Fragment>
-      )
-    }
-  }
-
-  render() {
-    return (
-      <Modal show={!this.state.loading}>
-        {this.renderBody()}
-      </Modal>
-    )
-  }
+      </div>
+    </Modal>
+  )
 }
 
-export default withRouter(GoogleKeywordsModal)
+export default GoogleKeywordsModal
