@@ -34,6 +34,7 @@ defmodule Plausible.Google.APITest do
             dimensions: ["query"],
             endDate: "2022-01-05",
             rowLimit: 5,
+            startRow: 0,
             startDate: "2022-01-01"
           } ->
             {:error, %{reason: %Finch.Response{status: Enum.random([401, 403])}}}
@@ -42,7 +43,7 @@ defmodule Plausible.Google.APITest do
 
       query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
 
-      assert {:error, "google_auth_error"} = Google.API.fetch_stats(site, query, 5, "")
+      assert {:error, "google_auth_error"} = Google.API.fetch_stats(site, query, {5, 0}, "")
     end
 
     test "returns whatever error code google returns on API client error", %{site: site} do
@@ -59,7 +60,7 @@ defmodule Plausible.Google.APITest do
 
       query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
 
-      assert {:error, "some_error"} = Google.API.fetch_stats(site, query, 5, "")
+      assert {:error, "some_error"} = Google.API.fetch_stats(site, query, {5, 0}, "")
     end
 
     test "returns generic HTTP error and logs it", %{site: site} do
@@ -79,7 +80,7 @@ defmodule Plausible.Google.APITest do
       log =
         capture_log(fn ->
           assert {:error, "failed_to_list_stats"} =
-                   Google.API.fetch_stats(site, query, 5, "")
+                   Google.API.fetch_stats(site, query, {5, 0}, "")
         end)
 
       assert log =~
@@ -88,7 +89,7 @@ defmodule Plausible.Google.APITest do
   end
 
   test "returns error when token refresh fails", %{user: user, site: site} do
-    mock_http_with("google_analytics_auth#invalid_grant.json")
+    mock_http_with("google_auth#invalid_grant.json")
 
     insert(:google_auth,
       user: user,
@@ -123,7 +124,7 @@ defmodule Plausible.Google.APITest do
     end
 
     test "returns name and visitor count", %{site: site} do
-      mock_http_with("google_analytics_stats.json")
+      mock_http_with("google_search_console.json")
 
       query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
 
@@ -131,7 +132,7 @@ defmodule Plausible.Google.APITest do
               [
                 %{name: "keyword1", visitors: 25, ctr: 36.8, impressions: 50, position: 2.2},
                 %{name: "keyword3", visitors: 15}
-              ]} = Google.API.fetch_stats(site, query, 5, "")
+              ]} = Google.API.fetch_stats(site, query, {5, 0}, "")
     end
 
     test "transforms page filters to search console format", %{site: site} do
@@ -148,6 +149,7 @@ defmodule Plausible.Google.APITest do
             dimensions: ["query"],
             endDate: "2022-01-05",
             rowLimit: 5,
+            startRow: 0,
             startDate: "2022-01-01"
           } ->
             {:ok, %Finch.Response{status: 200, body: %{"rows" => []}}}
@@ -162,7 +164,7 @@ defmodule Plausible.Google.APITest do
           "filters" => "event:page==/page"
         })
 
-      assert {:ok, []} = Google.API.fetch_stats(site, query, 5, "")
+      assert {:ok, []} = Google.API.fetch_stats(site, query, {5, 0}, "")
     end
 
     test "returns :invalid filters when using filters that cannot be used in Search Console", %{
