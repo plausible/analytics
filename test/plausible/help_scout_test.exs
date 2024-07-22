@@ -52,7 +52,7 @@ defmodule Plausible.HelpScoutTest do
       end
     end
 
-    describe "get_customer_details/1" do
+    describe "get_details_for_customer/2" do
       test "returns details for user on trial" do
         %{id: user_id, email: email} = insert(:user)
         stub_help_scout_requests(email)
@@ -70,7 +70,7 @@ defmodule Plausible.HelpScoutTest do
                   plan_label: "None",
                   sites_count: 0,
                   sites_link: ^owned_sites_url
-                }} = HelpScout.get_customer_details("500")
+                }} = HelpScout.get_details_for_customer("500")
       end
 
       test "returns for user without trial or subscription" do
@@ -83,7 +83,7 @@ defmodule Plausible.HelpScoutTest do
                   status_label: "None",
                   plan_link: "#",
                   plan_label: "None"
-                }} = HelpScout.get_customer_details("500")
+                }} = HelpScout.get_details_for_customer("500")
       end
 
       test "returns for user with trial expired" do
@@ -96,7 +96,7 @@ defmodule Plausible.HelpScoutTest do
                   status_label: "Expired trial",
                   plan_link: "#",
                   plan_label: "None"
-                }} = HelpScout.get_customer_details("500")
+                }} = HelpScout.get_details_for_customer("500")
       end
 
       test "returns for user with paid subscription on standard plan" do
@@ -116,7 +116,7 @@ defmodule Plausible.HelpScoutTest do
                   status_label: "Paid",
                   plan_link: ^plan_link,
                   plan_label: "10k Plan (€10 monthly)"
-                }} = HelpScout.get_customer_details("500")
+                }} = HelpScout.get_details_for_customer("500")
       end
 
       test "returns for user with paid subscription on standard yearly plan" do
@@ -136,7 +136,7 @@ defmodule Plausible.HelpScoutTest do
                   status_label: "Paid",
                   plan_link: ^plan_link,
                   plan_label: "10k Plan (€100 yearly)"
-                }} = HelpScout.get_customer_details("500")
+                }} = HelpScout.get_details_for_customer("500")
       end
 
       test "returns for user with paid subscription on free 10k plan" do
@@ -152,7 +152,7 @@ defmodule Plausible.HelpScoutTest do
                   status_label: "Paid",
                   plan_link: _,
                   plan_label: "Free 10k"
-                }} = HelpScout.get_customer_details("500")
+                }} = HelpScout.get_details_for_customer("500")
       end
 
       test "returns for user with paid subscription on enterprise plan" do
@@ -174,7 +174,7 @@ defmodule Plausible.HelpScoutTest do
                   status_label: "Paid",
                   plan_link: _,
                   plan_label: "1M Enterprise Plan (€10 monthly)"
-                }} = HelpScout.get_customer_details("500")
+                }} = HelpScout.get_details_for_customer("500")
       end
 
       test "returns for user with paid subscription on yearly enterprise plan" do
@@ -197,7 +197,7 @@ defmodule Plausible.HelpScoutTest do
                   status_label: "Paid",
                   plan_link: _,
                   plan_label: "1M Enterprise Plan (€10 yearly)"
-                }} = HelpScout.get_customer_details("500")
+                }} = HelpScout.get_details_for_customer("500")
       end
 
       test "returns for user with subscription pending cancellation" do
@@ -217,7 +217,7 @@ defmodule Plausible.HelpScoutTest do
                   status_label: "Pending cancellation",
                   plan_link: _,
                   plan_label: "10k Plan (€10 monthly)"
-                }} = HelpScout.get_customer_details("500")
+                }} = HelpScout.get_details_for_customer("500")
       end
 
       test "returns for user with canceled subscription" do
@@ -238,7 +238,7 @@ defmodule Plausible.HelpScoutTest do
                   status_label: "Canceled",
                   plan_link: _,
                   plan_label: "10k Plan (€10 monthly)"
-                }} = HelpScout.get_customer_details("500")
+                }} = HelpScout.get_details_for_customer("500")
       end
 
       test "returns for user with paused subscription" do
@@ -258,7 +258,7 @@ defmodule Plausible.HelpScoutTest do
                   status_label: "Paused",
                   plan_link: _,
                   plan_label: "10k Plan (€10 monthly)"
-                }} = HelpScout.get_customer_details("500")
+                }} = HelpScout.get_details_for_customer("500")
       end
 
       test "returns for user with locked site" do
@@ -277,7 +277,7 @@ defmodule Plausible.HelpScoutTest do
                   plan_link: _,
                   plan_label: "10k Plan (€10 monthly)",
                   sites_count: 1
-                }} = HelpScout.get_customer_details("500")
+                }} = HelpScout.get_details_for_customer("500")
       end
 
       test "returns error when no matching user found in database" do
@@ -285,7 +285,7 @@ defmodule Plausible.HelpScoutTest do
 
         stub_help_scout_requests("another@example.com")
 
-        assert {:error, :not_found} = HelpScout.get_customer_details("500")
+        assert {:error, :not_found} = HelpScout.get_details_for_customer("500")
       end
 
       test "returns error when no customer found in Help Scout" do
@@ -303,7 +303,7 @@ defmodule Plausible.HelpScoutTest do
             |> Req.Test.text("Not found")
         end)
 
-        assert {:error, :not_found} = HelpScout.get_customer_details("500")
+        assert {:error, :not_found} = HelpScout.get_details_for_customer("500")
       end
 
       test "returns error when found customer has no emails" do
@@ -324,7 +324,7 @@ defmodule Plausible.HelpScoutTest do
             })
         end)
 
-        assert {:error, :no_emails} = HelpScout.get_customer_details("500")
+        assert {:error, :no_emails} = HelpScout.get_details_for_customer("500")
       end
 
       test "uses existing access token when available" do
@@ -354,7 +354,7 @@ defmodule Plausible.HelpScoutTest do
           })
         end)
 
-        assert {:ok, _} = HelpScout.get_customer_details("500")
+        assert {:ok, _} = HelpScout.get_details_for_customer("500")
       end
 
       test "refreshes token on expiry" do
@@ -400,7 +400,92 @@ defmodule Plausible.HelpScoutTest do
             end
         end)
 
-        assert {:ok, _} = HelpScout.get_customer_details("500")
+        assert {:ok, _} = HelpScout.get_details_for_customer("500")
+      end
+    end
+
+    describe "get_details_for_emails/2" do
+      test "returns details for user and persists mapping" do
+        %{id: user_id, email: email} = insert(:user)
+
+        crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/auth/user/#{user_id}"
+
+        owned_sites_url =
+          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?search=#{URI.encode_www_form(email)}"
+
+        assert {:ok,
+                %{
+                  status_link: ^crm_url,
+                  status_label: "Trial",
+                  plan_link: "#",
+                  plan_label: "None",
+                  sites_count: 0,
+                  sites_link: ^owned_sites_url
+                }} = HelpScout.get_details_for_emails([email], "123")
+
+        assert {:ok, ^email} = HelpScout.lookup_mapping("123")
+      end
+
+      test "updates mapping if one already exists" do
+        user = insert(:user)
+        %{email: new_email} = insert(:user)
+        HelpScout.set_mapping("123", user.email)
+
+        assert {:ok, _} = HelpScout.get_details_for_emails([new_email], "123")
+        assert {:ok, ^new_email} = HelpScout.lookup_mapping("123")
+      end
+
+      test "picks the match with largest number of owned sites" do
+        user1 = insert(:user)
+        insert(:site, members: [user1])
+        insert(:site_membership, site: build(:site), user: user1, role: :viewer)
+        insert(:site_membership, site: build(:site), user: user1, role: :admin)
+        user2 = insert(:user)
+        insert_list(2, :site, members: [user2])
+
+        crm_url = "#{PlausibleWeb.Endpoint.url()}/crm/auth/user/#{user2.id}"
+
+        owned_sites_url =
+          "#{PlausibleWeb.Endpoint.url()}/crm/sites/site?search=#{URI.encode_www_form(user2.email)}"
+
+        assert {:ok,
+                %{
+                  status_link: ^crm_url,
+                  status_label: "Trial",
+                  plan_link: "#",
+                  plan_label: "None",
+                  sites_count: 2,
+                  sites_link: ^owned_sites_url
+                }} = HelpScout.get_details_for_emails([user1.email, user2.email], "123")
+
+        user2_email = user2.email
+        assert {:ok, ^user2_email} = HelpScout.lookup_mapping("123")
+      end
+
+      test "does not persist the mapping when there's no match" do
+        assert {:error, :not_found} =
+                 HelpScout.get_details_for_emails(["does.not.exist@example.com"], "123")
+
+        assert {:error, :mapping_not_found} = HelpScout.lookup_mapping("123")
+      end
+    end
+
+    describe "search_users/2" do
+      test "lists matching users by email or site domain ordered by site counts" do
+        user1 = insert(:user, email: "user1@match.example.com")
+
+        user2 = insert(:user, email: "user2@match.example.com")
+        insert(:site, members: [user2])
+
+        user3 = insert(:user, email: "user3@umatched.example.com")
+        insert(:site, members: [user3])
+        insert(:site, domain: "big.match.example.com/hit", members: [user3])
+
+        assert HelpScout.search_users("match.example.co", "123") == [
+                 %{email: user3.email, sites_count: 2},
+                 %{email: user2.email, sites_count: 1},
+                 %{email: user1.email, sites_count: 0}
+               ]
       end
     end
 
