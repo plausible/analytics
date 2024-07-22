@@ -674,7 +674,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       for {dimension, stats_value, imports_value} <- [
             {"visit:country", "DE", "EE"},
             {"visit:region", "DE-BE", "EE-37"},
-            {"visit:city", 2_950_159, 588_409}
+            {"visit:city", 2_950_159, 588_409},
+            {"visit:country_name", "Germany", "Estonia"},
+            {"visit:region_name", "Berlin", "Harjumaa"},
+            {"visit:city_name", "Berlin", "Tallinn"}
           ] do
         conn =
           post(conn, "/api/v2/query", %{
@@ -690,6 +693,54 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
                  %{"dimensions" => [stats_value], "metrics" => [2]}
                ]
       end
+    end
+
+    test "imported country and city names", %{
+      site: site,
+      conn: conn
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          country_code: "GB",
+          # London
+          city_geoname_id: 2_643_743
+        ),
+        build(:pageview,
+          country_code: "CA",
+          # Different London
+          city_geoname_id: 6_058_560
+        ),
+        build(:imported_locations, country: "GB", city: 2_643_743, visitors: 33)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["visit:city_name"],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["London"], "metrics" => [35]}
+             ]
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["visit:city_name", "visit:country_name"],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["London", "United Kingdom"], "metrics" => [34]},
+               %{"dimensions" => ["London", "Canada"], "metrics" => [1]}
+             ]
     end
   end
 end

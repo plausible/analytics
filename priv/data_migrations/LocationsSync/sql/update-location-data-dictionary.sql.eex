@@ -1,0 +1,11 @@
+CREATE OR REPLACE DICTIONARY location_data_dict
+<%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+(
+    `type` String,
+    `id` String,
+    `name` String
+)
+PRIMARY KEY type, id
+SOURCE(CLICKHOUSE(TABLE location_data <%= @dictionary_connection_params %>))
+LIFETIME(0)
+LAYOUT(complex_key_cache(size_in_cells 500000))

@@ -6,7 +6,7 @@ defmodule Mix.Tasks.CleanClickhouse do
   def run(_) do
     %{rows: rows} = IngestRepo.query!("show tables")
     tables = Enum.map(rows, fn [table] -> table end)
-    to_truncate = tables -- ["schema_migrations"]
+    to_truncate = tables -- ["schema_migrations", "location_data", "location_data_dict"]
 
     Enum.each(to_truncate, fn table ->
       IngestRepo.query!("truncate #{table}")

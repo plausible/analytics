@@ -1,0 +1,3 @@
+ALTER TABLE location_data
+<%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+MODIFY COMMENT '<%= @version %>'

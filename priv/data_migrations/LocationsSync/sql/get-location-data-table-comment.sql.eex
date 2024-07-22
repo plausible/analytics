@@ -1,0 +1,1 @@
+select comment from system.tables where database = currentDatabase() and table = 'location_data'
