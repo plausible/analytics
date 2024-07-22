@@ -47,7 +47,7 @@ function SourcesModal({ location }) {
   const currentView = urlParts[urlParts.length - 1]
 
   let reportInfo = VIEWS[currentView].info
-  reportInfo.endpoint = url.apiPath(site, reportInfo.endpoint)
+  reportInfo = {...reportInfo, endpoint: url.apiPath(site, reportInfo.endpoint)}
 
   const getFilterInfo = useCallback((listItem) => {
     return {
