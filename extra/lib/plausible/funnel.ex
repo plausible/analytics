@@ -46,7 +46,8 @@ defmodule Plausible.Funnel do
     has_many :steps, Step,
       preload_order: [
         asc: :step_order
-      ]
+      ],
+      on_replace: :delete
 
     has_many :goals, through: [:steps, :goal]
     timestamps()
@@ -56,21 +57,19 @@ defmodule Plausible.Funnel do
     funnel
     |> cast(attrs, [:name])
     |> validate_required([:name])
-    |> cast_assoc(:steps, with: &Step.changeset/2, required: true)
+    |> put_steps(attrs[:steps] || attrs["steps"])
     |> validate_length(:steps, min: @min_steps, max: @max_steps)
-    |> put_step_orders()
     |> unique_constraint(:name,
       name: :funnels_name_site_id_index
     )
   end
 
-  def put_step_orders(changeset) do
-    if steps = Ecto.Changeset.get_change(changeset, :steps) do
-      steps
-      |> Enum.with_index(fn step, step_order ->
-        Ecto.Changeset.put_change(step, :step_order, step_order + 1)
-      end)
-      |> then(&Ecto.Changeset.put_change(changeset, :steps, &1))
-    end
+  def put_steps(changeset, steps) do
+    steps
+    |> Enum.map(&Step.changeset(%Step{}, &1))
+    |> Enum.with_index(fn step, step_order ->
+      Ecto.Changeset.put_change(step, :step_order, step_order + 1)
+    end)
+    |> then(&Ecto.Changeset.put_assoc(changeset, :steps, &1))
   end
 end

@@ -496,7 +496,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
 
       assert resp.goal.id == goal.id
       assert resp.goal_type == "Goal.Revenue"
-      assert resp.goal.display_name == "Purchase (EUR)"
+      assert resp.goal.display_name == "Purchase"
     end
 
     test "retrieves pageview goal by ID", %{conn: conn, site: site, token: token} do
@@ -582,7 +582,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert checkout.goal.id == g3.id
       assert checkout.goal_type == "Goal.Pageview"
 
-      assert purchase.goal.display_name == "Purchase (EUR)"
+      assert purchase.goal.display_name == "Purchase"
       assert purchase.goal.currency == "EUR"
       assert purchase.goal.event_name == "Purchase"
       assert purchase.goal.id == g2.id

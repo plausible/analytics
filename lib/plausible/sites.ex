@@ -159,6 +159,15 @@ defmodule Plausible.Sites do
     %{result | entries: entries}
   end
 
+  @spec for_user_query(Auth.User.t()) :: Ecto.Query.t()
+  def for_user_query(user) do
+    from(s in Site,
+      inner_join: sm in assoc(s, :memberships),
+      on: sm.user_id == ^user.id,
+      order_by: [desc: s.id]
+    )
+  end
+
   defp maybe_filter_by_domain(query, domain)
        when byte_size(domain) >= 1 and byte_size(domain) <= 64 do
     where(query, [s], ilike(s.domain, ^"%#{domain}%"))

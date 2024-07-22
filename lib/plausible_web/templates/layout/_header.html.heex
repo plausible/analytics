@@ -32,7 +32,7 @@
                   Plausible.Auth.is_super_admin?(@conn.assigns[:current_user])
               }>
                 <.styled_link
-                  class="text-sm"
+                  class="text-sm mr-6"
                   href={PlausibleWeb.Endpoint.url() <> "/crm/sites/site/#{@conn.assigns[:site].id}"}
                   new_tab={true}
                 >

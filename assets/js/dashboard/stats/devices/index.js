@@ -12,6 +12,7 @@ import { useSiteContext } from '../../site-context';
 // Icons copied from https://github.com/alrra/browser-logos
 const BROWSER_ICONS = {
   'Chrome': 'chrome.svg',
+  'curl': 'curl.svg',
   'Safari': 'safari.png',
   'Firefox': 'firefox.svg',
   'Microsoft Edge': 'edge.svg',

@@ -35,10 +35,33 @@ defmodule Plausible.Funnels do
     {:error, :invalid_funnel_size}
   end
 
+  @spec update(Funnel.t(), String.t(), [map()]) ::
+          {:ok, Funnel.t()}
+          | {:error, Ecto.Changeset.t() | :invalid_funnel_size | :upgrade_required}
+  def update(funnel, name, steps) do
+    site = Plausible.Repo.preload(funnel, site: :owner).site
+
+    case Plausible.Billing.Feature.Funnels.check_availability(site.owner) do
+      {:error, _} = error ->
+        error
+
+      :ok ->
+        funnel
+        |> Funnel.changeset(%{name: name, steps: steps})
+        |> Repo.update()
+    end
+  end
+
   @spec create_changeset(Plausible.Site.t(), String.t(), [map()]) ::
           Ecto.Changeset.t()
   def create_changeset(site, name, steps) do
     Funnel.changeset(%Funnel{site_id: site.id}, %{name: name, steps: steps})
+  end
+
+  @spec edit_changeset(Plausible.Funnel.t(), String.t(), [map()]) ::
+          Ecto.Changeset.t()
+  def edit_changeset(funnel, name, steps) do
+    Funnel.changeset(funnel, %{name: name, steps: steps})
   end
 
   @spec ephemeral_definition(Plausible.Site.t(), String.t(), [map()]) :: Funnel.t()
