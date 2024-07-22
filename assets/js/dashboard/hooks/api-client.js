@@ -4,27 +4,30 @@ import * as api from "../api"
 
 const LIMIT = 100
 
-// A wrapper for the React Query library. Constructs the necessary options
-// (including pagination config) to pass into the `useInfiniteQuery` hook.
-
-// ### Required props
- 
-// * `key` - The key under which the global "query" instance will live. Should
-//   be passed as a list of two elements - `[endpoint, { query }]`. The object
-//   can also contain additional values (such as `search`) to be used by:
-//     
-//   1) React Query, to determine the uniqueness of the query instance
-//   2) the `getRequestParams` function to build the request params
-
-// * `getRequestParams` - a function that takes the `key` prop as an argument,
-//   and returns `[query, params]` which will be used by `queryFn` that actually
-//   calls the API.
-
-// ### Optional props
-
-// * `afterFetchData` - a function to call after data has been fetched.
-
-// * `afterFetchNextPage` - a function to call after the next page has been fetched.
+/**
+ * A wrapper for the React Query library. Constructs the necessary options
+ * (including pagination config) to pass into the `useInfiniteQuery` hook.
+ *
+ * ### Required props
+ *
+ * @param {Array} key - The key under which the global "query" instance will live.
+ *   Should be passed as a list of two elements - `[endpoint, { query }]`. The object
+ *   can also contain additional values (such as `search`) to be used by:
+ *   1) React Query, to determine the uniqueness of the query instance
+ *   2) the `getRequestParams` function to build the request params.
+ *
+ * @param {Function} getRequestParams - A function that takes the `key` prop as an
+ *   argument, and returns `[query, params]` which will be used by `queryFn` that
+ *   actually calls the API.
+ *
+ * ### Optional props
+ *
+ * @param {Function} [afterFetchData] - A function to call after data has been fetched.
+ *   Receives the API response as an argument.
+ *
+ * @param {Function} [afterFetchNextPage] - A function to call after the next page has
+ *   been fetched. Receives the API response as an argument.
+ */
 
 export function useAPIClient(props) {
   const {key, getRequestParams, afterFetchData, afterFetchNextPage} = props
