@@ -3,15 +3,18 @@ import React, { useCallback, useState } from "react";
 import Modal from './modal'
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
+import * as url from '../../util/url';
+import { useSiteContext } from "../../site-context";
 
 /*global BUILD_EXTRA*/
 function ConversionsModal() {
   const [showRevenue, setShowRevenue] = useState(false)
+  const site = useSiteContext();
 
   const reportInfo = {
     title: 'Goal Conversions',
     dimension: 'goal',
-    endpoint: '/conversions',
+    endpoint: url.apiPath(site, '/conversions'),
     dimensionLabel: "Goal"
   }
 
@@ -20,7 +23,7 @@ function ConversionsModal() {
       prefix: reportInfo.dimension,
       filter: ["is", reportInfo.dimension, [listItem.name]]
     }
-  }, [])
+  }, [reportInfo.dimension])
 
   function chooseMetrics() {
     return [
@@ -37,7 +40,7 @@ function ConversionsModal() {
   // whether revenue metrics are passed into BreakdownModal in `metrics`.
   const afterFetchData = useCallback((res) => {
     setShowRevenue(revenueInResponse(res))
-  }, [showRevenue])
+  }, [])
 
   // After fetching the next page, we never want to set `showRevenue` to
   // `false` as revenue metrics might exist in previously loaded data.

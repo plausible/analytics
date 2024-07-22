@@ -4,15 +4,18 @@ import { hasGoalFilter, isRealTimeDashboard } from "../../util/filters";
 import { addFilter } from '../../query'
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from '../reports/metrics'
+import * as url from '../../util/url';
 import { useQueryContext } from "../../query-context";
+import { useSiteContext } from "../../site-context";
 
 function PagesModal() {
   const { query } = useQueryContext();
+  const site = useSiteContext();
 
   const reportInfo = {
     title: 'Top Pages',
     dimension: 'page',
-    endpoint: '/pages',
+    endpoint: url.apiPath(site, '/pages'),
     dimensionLabel: 'Page url'
   }
 
@@ -21,11 +24,11 @@ function PagesModal() {
       prefix: reportInfo.dimension,
       filter: ["is", reportInfo.dimension, [listItem.name]]
     }
-  }, [])
+  }, [reportInfo.dimension])
 
   const addSearchFilter = useCallback((query, searchString) => {
     return addFilter(query, ['contains', reportInfo.dimension, [searchString]])
-  }, [])
+  }, [reportInfo.dimension])
 
   function chooseMetrics() {
     if (hasGoalFilter(query)) {

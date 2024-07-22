@@ -5,7 +5,9 @@ import Modal from './modal'
 import { hasGoalFilter } from "../../util/filters";
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
+import * as url from '../../util/url';
 import { useQueryContext } from "../../query-context";
+import { useSiteContext } from "../../site-context";
 
 const VIEWS = {
   countries: { title: 'Top Countries', dimension: 'country', endpoint: '/countries', dimensionLabel: 'Country' },
@@ -15,18 +17,20 @@ const VIEWS = {
 
 function LocationsModal({ location }) {
   const { query } = useQueryContext();
+  const site = useSiteContext();
 
   const urlParts = location.pathname.split('/')
   const currentView = urlParts[urlParts.length - 1]
 
-  const reportInfo = VIEWS[currentView]
+  let reportInfo = VIEWS[currentView]
+  reportInfo.endpoint = url.apiPath(site, reportInfo.endpoint)
 
   const getFilterInfo = useCallback((listItem) => {
     return {
       prefix: reportInfo.dimension,
       filter: ["is", reportInfo.dimension, [listItem.code]]
     }
-  }, [])
+  }, [reportInfo.dimension])
 
   function chooseMetrics() {
     if (hasGoalFilter(query)) {

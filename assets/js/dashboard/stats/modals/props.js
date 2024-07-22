@@ -7,6 +7,7 @@ import { specialTitleWhenGoalFilter } from "../behaviours/goal-conversions";
 import { EVENT_PROPS_PREFIX, hasGoalFilter } from "../../util/filters"
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
+import * as url from "../../util/url";
 import { revenueAvailable } from "../../query";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
@@ -22,7 +23,7 @@ function PropsModal({ location }) {
   const reportInfo = {
     title: specialTitleWhenGoalFilter(query, 'Custom Property Breakdown'),
     dimension: propKey,
-    endpoint: `/custom-prop-values/${propKey}`,
+    endpoint: url.apiPath(site, `/custom-prop-values/${propKey}`),
     dimensionLabel: propKey
   }
 
@@ -31,11 +32,11 @@ function PropsModal({ location }) {
       prefix: `${EVENT_PROPS_PREFIX}${propKey}`,
       filter: ["is", `${EVENT_PROPS_PREFIX}${propKey}`, [listItem.name]]
     }
-  }, [])
+  }, [propKey])
 
   const addSearchFilter = useCallback((query, searchString) => {
     return addFilter(query, ['contains', `${EVENT_PROPS_PREFIX}${propKey}`, [searchString]])
-  }, [])
+  }, [propKey])
 
   function chooseMetrics() {
     return [
