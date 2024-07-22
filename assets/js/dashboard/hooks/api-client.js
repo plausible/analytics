@@ -71,7 +71,8 @@ export function useAPIClient(props) {
   const getNextPageParam = (lastPageResults, _, lastPageIndex) => {
     return lastPageResults.length === LIMIT ? lastPageIndex + 1 : null
   }
-  const initialPageParam = 1
+  const defaultInitialPageParam = 1
+  const initialPageParam = props.initialPageParam === undefined ? defaultInitialPageParam : props.initialPageParam
 
   return useInfiniteQuery({
     queryKey: key,

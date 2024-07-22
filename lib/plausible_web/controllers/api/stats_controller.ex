@@ -751,7 +751,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
     user_id = get_session(conn, :current_user_id)
     is_admin = user_id && Plausible.Sites.has_admin_access?(user_id, site)
-    limit = params["limit"] || 9
+
+    pagination = {
+      to_int(params["limit"], 9),
+      to_int(params["page"], 0)
+    }
+
     search = params["search"] || ""
 
     not_configured_error_payload =
@@ -767,7 +772,7 @@ defmodule PlausibleWeb.Api.StatsController do
       reason: :unsupported_filters
     }
 
-    case google_api().fetch_stats(site, query, limit, search) do
+    case google_api().fetch_stats(site, query, pagination, search) do
       {:error, :google_property_not_configured} ->
         conn
         |> put_status(422)

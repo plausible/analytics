@@ -42,7 +42,8 @@ function GoogleKeywordsModal() {
       const params = { detailed: true }
 
       return [query, search === '' ? params : {...params, search}]
-    }
+    },
+    initialPageParam: 0
   })
 
   useEffect(() => {
