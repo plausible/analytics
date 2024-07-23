@@ -140,9 +140,11 @@ const ComparisonInput = function ({ navigate }) {
   const [uiMode, setUiMode] = useState("menu")
 
   useEffect(() => {
+    let timeout = null;
     if (uiMode == "datepicker") {
-      setTimeout(() => calendar.current.flatpickr.open(), 100)
+      timeout = setTimeout(() => calendar.current?.flatpickr.open(), 100)
     }
+    return () => timeout && clearTimeout(timeout)
   }, [uiMode])
   
   if (COMPARISON_DISABLED_PERIODS.includes(query.period)) return null
