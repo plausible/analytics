@@ -18,6 +18,11 @@ defmodule PlausibleWeb.HelpScoutController do
       |> set_cookie(conversation_id)
       |> render("callback.html", Map.merge(assigns, details))
     else
+      {:error, {:user_not_found, [email | _]}} ->
+        conn
+        |> set_cookie(conversation_id)
+        |> render("callback.html", Map.merge(assigns, %{error: ":user_not_found", email: email}))
+
       {:error, error} ->
         conn
         |> maybe_set_cookie(error, conversation_id)

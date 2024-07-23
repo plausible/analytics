@@ -220,7 +220,7 @@ defmodule Plausible.HelpScout do
     if user do
       {:ok, user}
     else
-      {:error, :not_found}
+      {:error, {:user_not_found, emails}}
     end
   end
 

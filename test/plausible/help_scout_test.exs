@@ -285,7 +285,8 @@ defmodule Plausible.HelpScoutTest do
 
         stub_help_scout_requests("another@example.com")
 
-        assert {:error, :not_found} = HelpScout.get_details_for_customer("500")
+        assert {:error, {:user_not_found, ["another@example.com"]}} =
+                 HelpScout.get_details_for_customer("500")
       end
 
       test "returns error when no customer found in Help Scout" do
@@ -463,7 +464,7 @@ defmodule Plausible.HelpScoutTest do
       end
 
       test "does not persist the mapping when there's no match" do
-        assert {:error, :not_found} =
+        assert {:error, {:user_not_found, ["does.not.exist@example.com"]}} =
                  HelpScout.get_details_for_emails(["does.not.exist@example.com"], "123")
 
         assert {:error, :mapping_not_found} = HelpScout.lookup_mapping("123")
