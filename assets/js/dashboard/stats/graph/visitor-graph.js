@@ -154,7 +154,7 @@ export default function VisitorGraph({ updateImportedDataInView }) {
             <WithImportedSwitch info={topStatData && topStatData.with_imported_switch} />
             <IntervalPicker onIntervalUpdate={onIntervalUpdate} />
           </div>
-          <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} query={query} />
+          <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} />
         </div>
       </FadeIn>
     </div>

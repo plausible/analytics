@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react'
-import { withRouter } from 'react-router-dom'
+import { useNavigate } from '@tanstack/react-router'
 import { navigateToQuery } from './query'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
@@ -43,18 +43,18 @@ export const isComparisonEnabled = function (mode) {
   return mode && mode !== "off"
 }
 
-export const toggleComparisons = function (history, query, site) {
+export const toggleComparisons = function (navigate, query, site) {
   if (COMPARISON_DISABLED_PERIODS.includes(query.period)) return
 
   if (isComparisonEnabled(query.comparison)) {
     storeComparisonMode(site.domain, "off")
-    navigateToQuery(history, query, { comparison: "off" })
+    navigateToQuery(navigate, query, { comparison: "off" })
   } else {
     const storedMode = getStoredComparisonMode(site.domain)
     const newMode = isComparisonEnabled(storedMode) ? storedMode : DEFAULT_COMPARISON_MODE
 
     storeComparisonMode(site.domain, newMode)
-    navigateToQuery(history, query, { comparison: newMode })
+    navigateToQuery(navigate, query, { comparison: newMode })
   }
 }
 
@@ -86,12 +86,13 @@ function ComparisonModeOption({ label, value, isCurrentlySelected, updateMode, s
   )
 }
 
-function MatchDayOfWeekInput({ history }) {
+function MatchDayOfWeekInput() {
+  const navigate = useNavigate();
   const site = useSiteContext()
   const { query } = useQueryContext()
   const click = (matchDayOfWeek) => {
     storage.setItem(`comparison_match_day_of_week__${site.domain}`, matchDayOfWeek.toString())
-    navigateToQuery(history, query, { match_day_of_week: matchDayOfWeek.toString() })
+    navigateToQuery(navigate, query, { match_day_of_week: matchDayOfWeek.toString() })
   }
 
   const buttonClass = (hover, selected) =>
@@ -116,7 +117,7 @@ function MatchDayOfWeekInput({ history }) {
   </>
 }
 
-const ComparisonInput = function ({ history }) {
+const ComparisonInput = function ({ navigate }) {
   const { query } = useQueryContext();
   const site = useSiteContext();
   if (COMPARISON_DISABLED_PERIODS.includes(query.period)) return null
@@ -124,7 +125,7 @@ const ComparisonInput = function ({ history }) {
 
   const updateMode = (mode, from = null, to = null) => {
     storeComparisonMode(site.domain, mode)
-    navigateToQuery(history, query, { comparison: mode, compare_from: from, compare_to: to })
+    navigateToQuery(navigate, query, { comparison: mode, compare_from: from, compare_to: to })
   }
 
   const buildLabel = (site, query) => {
@@ -186,7 +187,7 @@ const ComparisonInput = function ({ history }) {
                 {Object.keys(COMPARISON_MODES).map((key) => ComparisonModeOption({ label: COMPARISON_MODES[key], value: key, isCurrentlySelected: key == query.comparison, updateMode, setUiMode }))}
                 {query.comparison !== "custom" && <span>
                   <hr className="my-1" />
-                  <MatchDayOfWeekInput history={history} />
+                  <MatchDayOfWeekInput />
                 </span>}
               </Menu.Items>
             </Transition>
@@ -202,4 +203,4 @@ const ComparisonInput = function ({ history }) {
   )
 }
 
-export default withRouter(ComparisonInput)
+export default function ComparisonInputWrapped(props) {const navigate = useNavigate(); return <ComparisonInput {...props} navigate={navigate}/>}

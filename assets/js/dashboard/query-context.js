@@ -1,6 +1,6 @@
 import React, { createContext, useMemo, useEffect, useContext, useState, useCallback } from "react";
 import { parseQuery } from "./query";
-import { withRouter } from "react-router-dom";
+import { useLocation } from "@tanstack/react-router";
 import { useMountedEffect } from "./custom-hooks";
 import * as api from './api'
 import { useSiteContext } from "./site-context";
@@ -11,7 +11,8 @@ const QueryContext = createContext(queryContextDefaultValue)
 
 export const useQueryContext = () => { return useContext(QueryContext) }
 
-function QueryContextProvider({ location, children }) {
+export default function QueryContextProvider({ children }) {
+    const location = useLocation();
     const site = useSiteContext();
     const { search } = location;
     const query = useMemo(() => {
@@ -36,5 +37,3 @@ function QueryContextProvider({ location, children }) {
 
     return <QueryContext.Provider value={{ query, lastLoadTimestamp }}>{children}</QueryContext.Provider>
 };
-
-export default withRouter(QueryContextProvider);

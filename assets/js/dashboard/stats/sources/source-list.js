@@ -12,6 +12,7 @@ import classNames from 'classnames';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
+import { sourcesRoute, utmCampaignsRoute, utmContentsRoute, utmMediumsRoute, utmSourcesRoute, utmTermsRoute } from '../../router';
 
 const UTM_TAGS = {
   utm_medium: { label: 'UTM Medium', shortLabel: 'UTM Medium', endpoint: '/utm_mediums' },
@@ -24,7 +25,6 @@ const UTM_TAGS = {
 function AllSources({ afterFetchData }) {
   const { query } = useQueryContext();
   const site = useSiteContext();
-
   function fetchData() {
     return api.get(url.apiPath(site, '/sources'), query, { limit: 9 })
   }
@@ -51,7 +51,7 @@ function AllSources({ afterFetchData }) {
       hasGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
-
+  
   return (
     <ListReport
       fetchData={fetchData}
@@ -59,7 +59,7 @@ function AllSources({ afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Source"
       metrics={chooseMetrics()}
-      detailsLink={url.sitePath('sources')}
+      detailsLinkProps={{to: sourcesRoute.to, search: (search) => search}}
       renderIcon={renderIcon}
       color="bg-blue-50"
     />
@@ -71,6 +71,14 @@ function UTMSources({ tab, afterFetchData }) {
   const site = useSiteContext();
   const utmTag = UTM_TAGS[tab]
 
+  const route = {
+    utm_medium: utmMediumsRoute,
+    utm_source: utmSourcesRoute,
+    utm_campaign: utmCampaignsRoute,
+    utm_content: utmContentsRoute,
+    utm_term: utmTermsRoute,
+    }[tab]
+    
   function fetchData() {
     return api.get(url.apiPath(site, utmTag.endpoint), query, { limit: 9 })
   }
@@ -89,6 +97,7 @@ function UTMSources({ tab, afterFetchData }) {
     ].filter(metric => !!metric)
   }
 
+
   return (
     <ListReport
       fetchData={fetchData}
@@ -96,7 +105,7 @@ function UTMSources({ tab, afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel={utmTag.label}
       metrics={chooseMetrics()}
-      detailsLink={url.sitePath(utmTag.endpoint)}
+			detailsLinkProps={{to: route?.to, search: (search) => search}}
       color="bg-blue-50"
     />
   )

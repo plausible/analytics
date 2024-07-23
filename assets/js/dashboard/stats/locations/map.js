@@ -1,6 +1,5 @@
 import React from 'react';
 import Datamap from 'datamaps'
-import { withRouter } from 'react-router-dom'
 import * as d3 from "d3"
 
 import numberFormatter from '../../util/number-formatter'
@@ -10,6 +9,7 @@ import MoreLink from '../more-link'
 import * as api from '../../api'
 import { navigateToQuery } from '../../query'
 import { cleanLabels, replaceFilterByPrefix } from '../../util/filters';
+import { countriesRoute } from '../../router';
 
 class Countries extends React.Component {
   constructor(props) {
@@ -153,7 +153,7 @@ class Countries extends React.Component {
       return (
         <>
           <div className="mx-auto mt-4" style={{ width: '100%', maxWidth: '475px', height: '335px' }} id="map-container"></div>
-          <MoreLink list={this.state.countries} endpoint="countries" />
+          <MoreLink list={this.state.countries} linkProps={{to: countriesRoute.to, search: (search) => search}} />
           {this.geolocationDbNotice()}
         </>
       )
@@ -174,4 +174,4 @@ class Countries extends React.Component {
   }
 }
 
-export default withRouter(Countries)
+export default function CountriesWithRouter(props) {return (<Countries {...props} />)}

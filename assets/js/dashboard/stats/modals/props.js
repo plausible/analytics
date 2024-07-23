@@ -1,5 +1,4 @@
 import React, { useCallback } from "react";
-import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import { addFilter } from '../../query'
@@ -11,11 +10,12 @@ import * as url from "../../util/url";
 import { revenueAvailable } from "../../query";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
+import { customPropsRoute } from "../../router";
 
-function PropsModal({ location }) {
+function PropsModal() {
   const { query } = useQueryContext();
   const site = useSiteContext();
-  const propKey = location.pathname.split('/').filter(i => i).pop()
+  const { propKey } = customPropsRoute.useParams()
 
   /*global BUILD_EXTRA*/
   const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
@@ -61,4 +61,4 @@ function PropsModal({ location }) {
   )
 }
 
-export default withRouter(PropsModal)
+export default PropsModal

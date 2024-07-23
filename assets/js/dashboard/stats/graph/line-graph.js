@@ -1,5 +1,5 @@
 import React from 'react';
-import { withRouter } from 'react-router-dom'
+import { useNavigate } from '@tanstack/react-router';
 import Chart from 'chart.js/auto';
 import { navigateToQuery } from '../../query'
 import GraphTooltip from './graph-tooltip'
@@ -8,6 +8,7 @@ import dateFormatter from './date-formatter';
 import FadeIn from '../../fade-in';
 import classNames from 'classnames';
 import { hasGoalFilter } from '../../util/filters';
+import { useQueryContext } from '../../query-context';
 
 const calculateMaximumY = function(dataset) {
   const yAxisValues = dataset
@@ -225,9 +226,9 @@ class LineGraph extends React.Component {
     const date = this.props.graphData.labels[element.index] || this.props.graphData.comparison_labels[element.index]
 
     if (this.props.graphData.interval === 'month') {
-      navigateToQuery(this.props.history, this.props.query, { period: 'month', date })
+      navigateToQuery(this.props.navigate, this.props.query, { period: 'month', date })
     } else if (this.props.graphData.interval === 'date') {
-      navigateToQuery(this.props.history, this.props.query, { period: 'day', date })
+      navigateToQuery(this.props.navigate, this.props.query, { period: 'day', date })
     }
   }
 
@@ -245,4 +246,8 @@ class LineGraph extends React.Component {
   }
 }
 
-export default withRouter(LineGraph)
+export default function LineGraphWrapped(props) {
+  const { query } = useQueryContext()
+  const navigate = useNavigate()
+  return <LineGraph {...props} navigate={navigate} query={query} />
+}
