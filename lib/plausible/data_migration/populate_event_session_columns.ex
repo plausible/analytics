@@ -94,7 +94,7 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
     {:ok, %{rows: [[merges]]}} = run_sql("get-merges-progress")
     {:ok, %{rows: disks}} = run_sql("get-disks")
 
-    IO.puts("\n\n#{Timex.now() |> Timex.format!("{ISO:Extended}")}")
+    IO.puts("\n\n#{Timex.now() |> DateTime.to_iso8601()}")
 
     # List partitions that need to run
     IO.puts(

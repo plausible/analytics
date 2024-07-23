@@ -290,6 +290,6 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
   defp format_added_at(dt, tz) do
     dt
     |> Plausible.Timezones.to_datetime_in_timezone(tz)
-    |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
+    |> Calendar.strftime("%Y-%m-%d %H:%M:%S")
   end
 end

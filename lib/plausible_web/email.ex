@@ -192,7 +192,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def yearly_renewal_notification(user) do
-    date = Timex.format!(user.subscription.next_bill_date, "{Mfull} {D}, {YYYY}")
+    date = Calendar.strftime(user.subscription.next_bill_date, "%B %-d, %Y")
 
     priority_email()
     |> to(user)
@@ -207,12 +207,12 @@ defmodule PlausibleWeb.Email do
   end
 
   def yearly_expiration_notification(user) do
-    next_bill_date = Timex.format!(user.subscription.next_bill_date, "{Mfull} {D}, {YYYY}")
+    next_bill_date = Calendar.strftime(user.subscription.next_bill_date, "%B %-d, %Y")
 
     accept_traffic_until =
       user
       |> Plausible.Users.accept_traffic_until()
-      |> Timex.format!("{Mfull} {D}, {YYYY}")
+      |> Calendar.strftime("%B %-d, %Y")
 
     priority_email()
     |> to(user)
