@@ -39,6 +39,7 @@ export const getStoredMatchDayOfWeek = function (domain, fallbackValue) {
 }
 
 const getComparisonModeStorageKey = (domain) => storage.getDomainScopedStorageKey('comparison_mode', domain)
+
 export const getStoredComparisonMode = function (domain, fallbackValue) {
   const storedValue = storage.getItem(getComparisonModeStorageKey(domain))
   if (Object.keys(COMPARISON_MODES).includes(storedValue)) {
@@ -131,10 +132,10 @@ function MatchDayOfWeekInput() {
   </>
 }
 
-const ComparisonInput = function ({ navigate }) {
+function ComparisonInput() {
   const { query } = useQueryContext();
   const site = useSiteContext();
-
+  const navigate = useNavigate();
   const calendar = useRef(null)
 
   const [uiMode, setUiMode] = useState("menu")
@@ -218,4 +219,4 @@ const ComparisonInput = function ({ navigate }) {
   )
 }
 
-export default function ComparisonInputWrapped(props) {const navigate = useNavigate(); return <ComparisonInput {...props} navigate={navigate}/>}
+export default ComparisonInput
