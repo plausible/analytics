@@ -6,7 +6,8 @@ import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
 import { useDebounce } from "../../custom-hooks";
 import { useAPIClient } from "../../hooks/api-client";
-const MIN_HEIGHT_PX = 500
+
+export const MIN_HEIGHT_PX = 500
 
 // The main function component for rendering the "Details" reports on the dashboard,
 // i.e. a breakdown by a single (non-time) dimension, with a given set of metrics.

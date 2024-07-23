@@ -7,7 +7,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
       [:is, "visit:entry_page", ["/page"]]
     ]
 
-    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters)
+    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
 
     assert transformed == [
              %{
@@ -27,7 +27,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
       [:matches, "visit:entry_page", ["*page*"]]
     ]
 
-    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters)
+    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
 
     assert transformed == [
              %{
@@ -47,7 +47,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
       [:is, "visit:entry_page", ["/pageA", "/pageB"]]
     ]
 
-    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters)
+    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
 
     assert transformed == [
              %{
@@ -67,7 +67,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
       [:matches, "visit:entry_page", ["/pageA*", "/pageB*"]]
     ]
 
-    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters)
+    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
 
     assert transformed == [
              %{
@@ -87,7 +87,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
       [:matches, "event:page", ["/pageA*", "/pageB*"]]
     ]
 
-    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters)
+    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
 
     assert transformed == [
              %{
@@ -107,7 +107,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
       [:is, "visit:screen", ["Desktop"]]
     ]
 
-    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters)
+    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
 
     assert transformed == [
              %{
@@ -123,7 +123,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
       [:is, "visit:screen", ["Mobile", "Tablet"]]
     ]
 
-    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters)
+    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
 
     assert transformed == [
              %{
@@ -139,7 +139,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
       [:is, "visit:country", ["EE"]]
     ]
 
-    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters)
+    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
 
     assert transformed == [
              %{filters: [%{dimension: "country", operator: "includingRegex", expression: "EST"}]}
@@ -151,7 +151,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
       [:is, "visit:country", ["EE", "PL"]]
     ]
 
-    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters)
+    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
 
     assert transformed == [
              %{
@@ -169,7 +169,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
       [:is, "visit:screen", ["Desktop"]]
     ]
 
-    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters)
+    {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
 
     assert transformed == [
              %{
@@ -194,6 +194,6 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
       [:is, "visit:utm_medium", "facebook"]
     ]
 
-    assert :unsupported_filters = Filters.transform("sc-domain:plausible.io", filters)
+    assert :unsupported_filters = Filters.transform("sc-domain:plausible.io", filters, "")
   end
 end

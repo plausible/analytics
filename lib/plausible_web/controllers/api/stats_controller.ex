@@ -752,23 +752,46 @@ defmodule PlausibleWeb.Api.StatsController do
     user_id = get_session(conn, :current_user_id)
     is_admin = user_id && Plausible.Sites.has_admin_access?(user_id, site)
 
-    case google_api().fetch_stats(site, query, params["limit"] || 9) do
-      {:error, :google_propery_not_configured} ->
-        json(conn, %{not_configured: true, is_admin: is_admin})
+    pagination = {
+      to_int(params["limit"], 9),
+      to_int(params["page"], 0)
+    }
+
+    search = params["search"] || ""
+
+    not_configured_error_payload =
+      %{
+        error: "The site is not connected to Google Search Keywords",
+        reason: :not_configured,
+        is_admin: is_admin
+      }
+
+    unsupported_filters_error_payload = %{
+      error:
+        "Unable to fetch keyword data from Search Console because it does not support the current set of filters",
+      reason: :unsupported_filters
+    }
+
+    case google_api().fetch_stats(site, query, pagination, search) do
+      {:error, :google_property_not_configured} ->
+        conn
+        |> put_status(422)
+        |> json(not_configured_error_payload)
 
       {:error, :unsupported_filters} ->
-        json(conn, %{unsupported_filters: true})
+        conn
+        |> put_status(422)
+        |> json(unsupported_filters_error_payload)
 
       {:ok, terms} ->
-        json(conn, %{search_terms: terms})
+        json(conn, %{results: terms})
 
-      {:error, _} ->
+      {:error, error} ->
+        Logger.error("Plausible.Google.API.fetch_stats failed with error: `#{inspect(error)}`")
+
         conn
         |> put_status(502)
-        |> json(%{
-          not_configured: true,
-          is_admin: is_admin
-        })
+        |> json(not_configured_error_payload)
     end
   end
 

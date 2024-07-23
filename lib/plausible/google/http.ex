@@ -39,12 +39,15 @@ defmodule Plausible.Google.HTTP do
     response.body
   end
 
-  def list_stats(access_token, property, date_range, limit, search_console_filters) do
+  def list_stats(access_token, property, date_range, pagination, search_console_filters) do
+    {limit, page} = pagination
+
     params = %{
       startDate: Date.to_iso8601(date_range.first),
       endDate: Date.to_iso8601(date_range.last),
       dimensions: ["query"],
       rowLimit: limit,
+      startRow: page * limit,
       dimensionFilterGroups: search_console_filters
     }
 
@@ -65,7 +68,7 @@ defmodule Plausible.Google.HTTP do
         {:error, error}
 
       {:error, reason} ->
-        Logger.error("Google Analytics: failed to list stats: #{inspect(reason)}")
+        Logger.error("Google Search Console: failed to list stats: #{inspect(reason)}")
         {:error, "failed_to_list_stats"}
     end
   end

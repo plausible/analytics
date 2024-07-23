@@ -59,18 +59,18 @@ defmodule Plausible.Google.API do
     end
   end
 
-  def fetch_stats(site, query, limit) do
+  def fetch_stats(site, query, pagination, search) do
     with {:ok, site} <- ensure_search_console_property(site),
          {:ok, access_token} <- maybe_refresh_token(site.google_auth),
-         {:ok, search_console_filters} <-
-           SearchConsole.Filters.transform(site.google_auth.property, query.filters),
+         {:ok, gsc_filters} <-
+           SearchConsole.Filters.transform(site.google_auth.property, query.filters, search),
          {:ok, stats} <-
            HTTP.list_stats(
              access_token,
              site.google_auth.property,
              query.date_range,
-             limit,
-             search_console_filters
+             pagination,
+             gsc_filters
            ) do
       stats
       |> Map.get("rows", [])
