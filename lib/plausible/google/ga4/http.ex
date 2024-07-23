@@ -215,7 +215,7 @@ defmodule Plausible.Google.GA4.HTTP do
         %{
           property: "#{property}",
           dateRanges: [
-            %{startDate: @earliest_valid_date, endDate: Date.to_iso8601(Timex.today())}
+            %{startDate: @earliest_valid_date, endDate: Date.to_iso8601(Date.utc_today())}
           ],
           dimensions: [%{name: "date"}],
           metrics: [%{name: "screenPageViews"}],
