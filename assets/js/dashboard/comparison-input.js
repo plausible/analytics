@@ -1,6 +1,6 @@
-import React, { Fragment } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import React, { Fragment, useState, useRef, useEffect } from 'react'
 import { navigateToQuery } from './query'
+import { useNavigate } from '@tanstack/react-router'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
@@ -21,22 +21,36 @@ const DEFAULT_COMPARISON_MODE = 'previous_period'
 
 export const COMPARISON_DISABLED_PERIODS = ['realtime', 'all']
 
-export const getStoredMatchDayOfWeek = function (domain) {
-  return storage.getItem(`comparison_match_day_of_week__${domain}`) || 'true'
+const getMatchDayOfWeekStorageKey = (domain) => storage.getDomainScopedStorageKey('comparison_match_day_of_week', domain)
+
+const storeMatchDayOfWeek = function (domain, matchDayOfWeek) {
+  storage.setItem(getMatchDayOfWeekStorageKey(domain), matchDayOfWeek.toString());
 }
 
-export const getStoredComparisonMode = function (domain) {
-  const mode = storage.getItem(`comparison_mode__${domain}`)
-  if (Object.keys(COMPARISON_MODES).includes(mode)) {
-    return mode
-  } else {
-    return null
+export const getStoredMatchDayOfWeek = function (domain, fallbackValue) {
+  const storedValue = storage.getItem(getMatchDayOfWeekStorageKey(domain));
+  if (storedValue === 'true') {
+    return true;
+  } 
+  if (storedValue === 'false') {
+    return false;
   }
+  return fallbackValue;
+}
+
+const getComparisonModeStorageKey = (domain) => storage.getDomainScopedStorageKey('comparison_mode', domain)
+export const getStoredComparisonMode = function (domain, fallbackValue) {
+  const storedValue = storage.getItem(getComparisonModeStorageKey(domain))
+  if (Object.keys(COMPARISON_MODES).includes(storedValue)) {
+    return storedValue
+  } 
+  
+  return fallbackValue
 }
 
 const storeComparisonMode = function (domain, mode) {
   if (mode == "custom") return
-  storage.setItem(`comparison_mode__${domain}`, mode)
+  storage.setItem(getComparisonModeStorageKey(domain), mode)
 }
 
 export const isComparisonEnabled = function (mode) {
@@ -50,7 +64,7 @@ export const toggleComparisons = function (navigate, query, site) {
     storeComparisonMode(site.domain, "off")
     navigateToQuery(navigate, query, { comparison: "off" })
   } else {
-    const storedMode = getStoredComparisonMode(site.domain)
+    const storedMode = getStoredComparisonMode(site.domain, null)
     const newMode = isComparisonEnabled(storedMode) ? storedMode : DEFAULT_COMPARISON_MODE
 
     storeComparisonMode(site.domain, newMode)
@@ -91,8 +105,8 @@ function MatchDayOfWeekInput() {
   const site = useSiteContext()
   const { query } = useQueryContext()
   const click = (matchDayOfWeek) => {
-    storage.setItem(`comparison_match_day_of_week__${site.domain}`, matchDayOfWeek.toString())
-    navigateToQuery(navigate, query, { match_day_of_week: matchDayOfWeek.toString() })
+    storeMatchDayOfWeek(site.domain, matchDayOfWeek)
+    navigateToQuery(navigate, query, { match_day_of_week: matchDayOfWeek })
   }
 
   const buttonClass = (hover, selected) =>
@@ -120,6 +134,17 @@ function MatchDayOfWeekInput() {
 const ComparisonInput = function ({ navigate }) {
   const { query } = useQueryContext();
   const site = useSiteContext();
+
+  const calendar = useRef(null)
+
+  const [uiMode, setUiMode] = useState("menu")
+
+  useEffect(() => {
+    if (uiMode == "datepicker") {
+      setTimeout(() => calendar.current.flatpickr.open(), 100)
+    }
+  }, [uiMode])
+  
   if (COMPARISON_DISABLED_PERIODS.includes(query.period)) return null
   if (!isComparisonEnabled(query.comparison)) return null
 
@@ -135,18 +160,6 @@ const ComparisonInput = function ({ navigate }) {
       return COMPARISON_MODES[query.comparison]
     }
   }
-
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const calendar = React.useRef(null)
-
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const [uiMode, setUiMode] = React.useState("menu")
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  React.useEffect(() => {
-    if (uiMode == "datepicker") {
-      setTimeout(() => calendar.current.flatpickr.open(), 100)
-    }
-  }, [uiMode])
 
   const flatpickrOptions = {
     mode: 'range',

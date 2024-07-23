@@ -179,10 +179,10 @@ function DatePicker() {
     if (shouldIgnoreKeypress(e)) return true
 
     const newSearch = {
-      period: false,
-      from: false,
-      to: false,
-      date: false
+      period: null,
+      from: null,
+      to: null,
+      date: null
     };
 
     const insertionDate = parseUTCDate(site.statsBegin);
@@ -223,16 +223,16 @@ function DatePicker() {
     setOpen(false);
 
     const keybindings = {
-      d: { date: false, period: 'day' },
+      d: { date: null, period: 'day' },
       e: { date: formatISO(shiftDays(nowForSite(site), -1)), period: 'day' },
       r: { period: 'realtime' },
-      w: { date: false, period: '7d' },
-      m: { date: false, period: 'month' },
-      y: { date: false, period: 'year' },
-      t: { date: false, period: '30d' },
-      s: { date: false, period: '6mo' },
-      l: { date: false, period: '12mo' },
-      a: { date: false, period: 'all' },
+      w: { date: null, period: '7d' },
+      m: { date: null, period: 'month' },
+      y: { date: null, period: 'year' },
+      t: { date: null, period: '30d' },
+      s: { date: null, period: '6mo' },
+      l: { date: null, period: '12mo' },
+      a: { date: null, period: 'all' },
     }
 
     const redirect = keybindings[e.key.toLowerCase()]
@@ -275,9 +275,9 @@ function DatePicker() {
       [from, to] = [parseNaiveDate(from), parseNaiveDate(to)]
 
       if (from.isSame(to)) {
-        navigateToQuery(navigate, query, { period: 'day', date: formatISO(from), from: false, to: false })
+        navigateToQuery(navigate, query, { period: 'day', date: formatISO(from), from: null, to: null })
       } else {
-        navigateToQuery(navigate, query, { period: 'custom', date: false, from: formatISO(from), to: formatISO(to) })
+        navigateToQuery(navigate, query, { period: 'custom', date: null, from: formatISO(from), to: formatISO(to) })
       }
     }
 
@@ -305,11 +305,11 @@ function DatePicker() {
       boldClass = query.period === period ? "font-bold" : "";
     }
 
-    opts.date = opts.date ? formatISO(opts.date) : false;
+    opts.date = opts.date ? formatISO(opts.date) : null;
 
     return (
       <QueryLink
-        search={{ from: false, to: false, period, ...opts }}
+        search={{ from: null, to: null, period, ...opts }}
         onClick={() => setOpen(false)}
         className={`${boldClass} px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900
           dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}

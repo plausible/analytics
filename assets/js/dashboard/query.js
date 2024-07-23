@@ -28,10 +28,10 @@ export function parseQuery(searchRecord, site) {
     period = '30d'
   }
 
-  let comparison = getValue('comparison') || getStoredComparisonMode(site.domain)
+  let comparison = getValue('comparison') ?? getStoredComparisonMode(site.domain, null)
   if (COMPARISON_DISABLED_PERIODS.includes(period) || !isComparisonEnabled(comparison)) comparison = null
 
-  let matchDayOfWeek = getValue('match_day_of_week') || getStoredMatchDayOfWeek(site.domain)
+  let matchDayOfWeek = getValue('match_day_of_week') ?? getStoredMatchDayOfWeek(site.domain, true)
 
   return {
     period,
@@ -41,8 +41,8 @@ export function parseQuery(searchRecord, site) {
     date: getValue('date') ? dayjs.utc(getValue('date')) : nowForSite(site),
     from: getValue('from') ? dayjs.utc(getValue('from')) : undefined,
     to: getValue('to') ? dayjs.utc(getValue('to')) : undefined,
-    match_day_of_week: matchDayOfWeek == 'true',
-    with_imported: getValue('with_imported') ? getValue('with_imported') === 'true' : true,
+    match_day_of_week: matchDayOfWeek === true,
+    with_imported: getValue('with_imported') ?? true,
     filters: getValue('filters') || [],
     labels: getValue('labels') || {}
   }
@@ -168,7 +168,7 @@ export function QueryLink({ to, search, className, children, onClick }) {
   return (
     <Link
       to={to}
-      search={search}
+      search={(currentSearch) => ({...currentSearch, ...search})}
       className={className}
       onClick={handleClick}
     >

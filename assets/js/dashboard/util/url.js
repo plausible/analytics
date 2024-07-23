@@ -120,10 +120,9 @@ export function stringifySearch(searchRecord) {
 }
 
 export function stringifySearchEntry([key, value]) {
-  const isEmptyObjectOrArray = typeof value === 'object' && Object.entries(value).length === 0;
+  const isEmptyObjectOrArray = typeof value === 'object' && value !== null && Object.entries(value).length === 0;
   if (  value === undefined ||
     value === null ||
-    value === false ||
     isEmptyObjectOrArray
   ) {
     return [key, undefined]

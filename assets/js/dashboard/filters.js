@@ -37,7 +37,7 @@ function clearAllFilters(navigate, query) {
   navigateToQuery(
     navigate,
     query,
-    { filters: false, labels: false }
+    { filters: null, labels: null }
   );
 }
 

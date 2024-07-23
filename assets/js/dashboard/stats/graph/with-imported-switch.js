@@ -14,22 +14,20 @@ function LinkOrDiv({ isLink, to, search, children }) {
 
 export default function WithImportedSwitch({ info }) {
   const { query } = useQueryContext();
-
-  if (!info?.visible) {
-    return null;
-  }
+  const {with_imported_switch, _imports_exist, _includes_imported} = info;
+  const switchedOn = query.with_imported;
   
-  const { togglable, tooltip_msg } = info
-  const enabled = togglable && query.with_imported
+  // const { togglable, tooltip_msg } = info
+  // const enabled = togglable && query.with_imported
   
   const iconClass = classNames("mt-0.5", {
-    "dark:text-gray-300 text-gray-700": enabled,
-    "dark:text-gray-500 text-gray-400": !enabled,
+    "dark:text-gray-300 text-gray-700": with_imported_switch.togglable,
+    "dark:text-gray-500 text-gray-400": !with_imported_switch.togglable,
   })
 
     return (
-      <div tooltip={tooltip_msg} className="w-4 h-4 mx-2">
-        <LinkOrDiv isLink={togglable} search={(search) => ({...search, with_imported: !enabled})}>
+      <div tooltip={with_imported_switch.tooltip_msg} className="w-4 h-4 mx-2">
+        <LinkOrDiv isLink={with_imported_switch.togglable} search={(search) => ({...search, with_imported: !switchedOn})}>
           <BarsArrowUpIcon className={iconClass} />
         </LinkOrDiv>
       </div>

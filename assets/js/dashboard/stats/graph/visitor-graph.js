@@ -151,7 +151,7 @@ export default function VisitorGraph({ updateImportedDataInView }) {
           <div className="absolute right-4 -top-8 py-1 flex items-center">
             {!isRealtime && <StatsExport />}
             <SamplingNotice samplePercent={topStatData} />
-            <WithImportedSwitch info={topStatData && topStatData.with_imported_switch} />
+            {!!topStatData?.with_imported_switch && <WithImportedSwitch info={topStatData} />}
             <IntervalPicker onIntervalUpdate={onIntervalUpdate} />
           </div>
           <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} />
