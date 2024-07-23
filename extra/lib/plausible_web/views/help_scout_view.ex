@@ -144,14 +144,39 @@ defmodule PlausibleWeb.HelpScoutView do
         </head>
 
         <body>
-          <%= render_slot(@inner_block) %>
+          <div id="content">
+            <%= render_slot(@inner_block) %>
+          </div>
 
           <script type="text/javascript">
+            function setAppHeight(height) {
+              window.parent.postMessage(
+                {
+                  value: height + 30,
+                  type: 'SET_APP_HEIGHT',
+                  appId: window.name && window.name.replace(/app-side-panel-|app-/, ''),
+                  iframeId: window.name
+                },
+                'https://secure.helpscout.net/'
+              )
+            }
+
+            const appContainer = document.getElementById("content")
+
             async function loadContent(uri) {
               const response = await fetch(uri)
               const html = await response.text()
-              document.querySelector("body").innerHTML = html
+              appContainer.innerHTML = html
+              setAppHeight(appContainer.clientHeight)
             }
+
+            setAppHeight(appContainer.clientHeight)
+
+            const resizeObserver = new ResizeObserver(() => {
+              setAppHeight(appContainer.clientHeight)
+            })
+
+            resizeObserver.observe(appContainer)
           </script>
         </body>
       </html>
