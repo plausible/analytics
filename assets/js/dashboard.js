@@ -23,7 +23,12 @@ if (container) {
     api.setSharedLinkAuth(sharedLinkAuth)
   }
 
-  filtersBackwardsCompatibilityRedirect()
+  try {
+    filtersBackwardsCompatibilityRedirect(window.location)
+  } catch (e) {
+    console.error('Error redirecting in a backwards compatible way', e)
+  }
+  
   const router = createAppRouter(site);
   const app = (
     <ErrorBoundary>

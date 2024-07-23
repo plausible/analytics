@@ -66,32 +66,6 @@ export function trimURL(url, maxLength) {
   }
 }
 
-export class PlausibleSearchParams extends URLSearchParams {
-  set(key, value) {
-    if (typeof value === 'object') {
-      value = JsonURL.stringify(value)
-      if (value.length > 2) {
-        super.set(key, value)
-      } else {
-        // Empty arrays/objects are handled by defaults
-        super.delete(key)
-      }
-    } else if (value === false) {
-      super.delete(key)
-    } else {
-      super.set(key, value)
-    }
-  }
-
-  toString() {
-    const entries = Array.from(super.entries())
-    if (entries.length === 0) {
-      return ''
-    }
-    return entries.map(encodeSearchParamEntries).join("&")
-  }
-}
-
 /** 
  * @param {String} input - value to encode for URI
  * @returns {String} value encoded for URI
@@ -114,7 +88,7 @@ export function isSearchEntryDefined([_key, value]) {
 export function stringifySearch(searchRecord) {
     const definedSearchEntries = Object.entries(searchRecord || {}).map(stringifySearchEntry).filter(isSearchEntryDefined)
 
-    const encodedSearchEntries =  definedSearchEntries.map(encodeSearchParamEntries)
+    const encodedSearchEntries = definedSearchEntries.map(encodeSearchParamEntries)
     
     return encodedSearchEntries.length ? `?${encodedSearchEntries.join('&')}` : ''
 }

@@ -1,6 +1,6 @@
 import React, {useCallback} from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { PlausibleSearchParams } from './util/url'
+import { parseSearch, stringifySearch } from './util/url'
 import { nowForSite } from './util/date'
 import * as storage from './util/storage'
 import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled, getStoredMatchDayOfWeek } from './comparison-input'
@@ -90,46 +90,44 @@ const LEGACY_URL_PARAMETERS = {
 
 // Called once when dashboard is loaded load. Checks whether old filter style is used and if so,
 // updates the filters and updates location
-export function filtersBackwardsCompatibilityRedirect() {
-  const q = new PlausibleSearchParams(window.location.search)
-  const entries = Array.from(q.entries())
-
+export function filtersBackwardsCompatibilityRedirect(windowLocation) {
+  const searchRecord = parseSearch(windowLocation.search)
+  const getValue = (k) => searchRecord[k];
+  
   // New filters are used - no need to do anything
-  if (q.get("filters")) {
+  if (getValue("filters")) {
     return
   }
-
+  
+  const changedSearchRecordEntries = [];
   let filters = []
   let labels = {}
 
-  for (const [key, value] of entries) {
+  for (const [key, value] of Object.entries(searchRecord)) {
     if (LEGACY_URL_PARAMETERS.hasOwnProperty(key)) {
       const filter = parseLegacyFilter(key, value)
       filters.push(filter)
-      q.delete(key)
 
       const labelsKey = LEGACY_URL_PARAMETERS[key]
-      if (labelsKey && q.get(labelsKey)) {
+      if (labelsKey && getValue(labelsKey)) {
         const clauses = filter[2]
-        const labelsValues = q.get(labelsKey).split('|').filter(label => !!label)
+        const labelsValues = getValue(labelsKey).split('|').filter(label => !!label)
         const newLabels = Object.fromEntries(clauses.map((clause, index) => [clause, labelsValues[index]]))
 
         labels = Object.assign(labels, newLabels)
-        q.delete(labelsKey)
       }
+    } else {
+      changedSearchRecordEntries.push([key, value])
     }
   }
 
-  if (q.get('props')) {
-    filters.push(...parseLegacyPropsFilter(q.get('props')))
-    q.delete('props')
+  if (getValue('props')) {
+    filters.push(...parseLegacyPropsFilter(getValue('props')))
   }
 
   if (filters.length > 0) {
-    q.set('filters', filters)
-    q.set('labels', labels)
-
-    history.pushState({}, null, `${window.location.pathname}?${q.toString()}`)
+    changedSearchRecordEntries.push([['filters', filters], ['labels', labels]])
+    history.pushState({}, null, `${windowLocation.pathname}${stringifySearch(Object.fromEntries(changedSearchRecordEntries))}`)
   }
 }
 
