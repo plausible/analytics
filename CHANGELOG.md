@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Automatic custom property selection in the dashboard Properties report
 - Add `does_not_contain` filter support to dashboard
 - Traffic drop notifications plausible/analytics#4300
+- Add `timezone` parameter to Stats API endpoints (timeseries, breakdown, and aggregate)
 
 ### Removed
 - Deprecate `ECTO_IPV6` and `ECTO_CH_IPV6` env vars in CE plausible/analytics#4245

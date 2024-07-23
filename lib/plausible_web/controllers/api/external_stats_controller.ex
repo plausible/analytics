@@ -16,6 +16,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
+         :ok <- validate_timezone(params),
          query <- Query.from(site, params),
          :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, query),
@@ -54,6 +55,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
+         :ok <- validate_timezone(params),
          :ok <- validate_property(params),
          query <- Query.from(site, params),
          :ok <- validate_filters(site, query.filters),
@@ -261,6 +263,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
+         :ok <- validate_timezone(params),
          :ok <- validate_interval(params),
          query <- Query.from(site, params),
          :ok <- validate_filters(site, query.filters),
@@ -329,6 +332,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp validate_interval(_), do: :ok
+
+  defp validate_timezone(%{"timezone" => timezone}) do
+    if Timex.is_valid_timezone?(timezone) do
+      :ok
+    else
+      {:error,
+       "Error parsing `timezone` parameter: invalid time zone `#{timezone}`"}
+    end
+  end
+
+  defp validate_timezone(_), do: :ok
 
   defp validate_filters(site, filters) do
     Enum.reduce_while(filters, :ok, fn filter, _ ->
