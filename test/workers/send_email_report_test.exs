@@ -32,6 +32,13 @@ defmodule Plausible.Workers.SendEmailReportTest do
                perform_job(SendEmailReport, %{"site_id" => 28_378_237, "interval" => "weekly"})
     end
 
+    test "does not crash when weekly report has been deleted since scheduling job" do
+      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+
+      assert :discard =
+               perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
+    end
+
     test "calculates timezone correctly" do
       site =
         insert(:site,
@@ -228,6 +235,13 @@ defmodule Plausible.Workers.SendEmailReportTest do
         subject: "#{last_month} report for #{site.domain}",
         to: [nil: "user2@email.com"]
       )
+    end
+
+    test "does not crash when monthly report has been deleted since scheduling job" do
+      site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
+
+      assert :discard =
+               perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "monthly"})
     end
   end
 end

@@ -7,7 +7,7 @@ defmodule Plausible.Workers.SendEmailReport do
   def perform(%Oban.Job{args: %{"interval" => "weekly", "site_id" => site_id}}) do
     site = Repo.get(Plausible.Site, site_id) |> Repo.preload(:weekly_report)
 
-    if site do
+    if site && site.weekly_report do
       %{site: site}
       |> Map.put(:type, :weekly)
       |> Map.put(:name, "Weekly")
@@ -23,7 +23,7 @@ defmodule Plausible.Workers.SendEmailReport do
   def perform(%Oban.Job{args: %{"interval" => "monthly", "site_id" => site_id}}) do
     site = Repo.get(Plausible.Site, site_id) |> Repo.preload(:monthly_report)
 
-    if site do
+    if site && site.monthly_report do
       %{site: site}
       |> Map.put(:type, :monthly)
       |> put_last_month_query()
