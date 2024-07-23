@@ -149,6 +149,11 @@ defmodule PlausibleWeb.HelpScoutView do
           </div>
 
           <script type="text/javascript">
+            /*
+             * HelpScout call adjusting iframe height.
+             *
+             * Extracted from their JavaScript SDK and adapted.
+             */
             function setAppHeight(height) {
               window.parent.postMessage(
                 {
@@ -163,6 +168,37 @@ defmodule PlausibleWeb.HelpScoutView do
 
             const appContainer = document.getElementById("content")
 
+            const isSafari = !!(
+              navigator.vendor &&
+              navigator.vendor.indexOf('Apple') > -1 &&
+              navigator.userAgent &&
+              navigator.userAgent.indexOf('CriOS') == -1 &&
+              navigator.userAgent.indexOf('FxiOS') == -1
+            )
+
+            /*
+             * Using cookies within iframe requires requesting storage access
+             * in Safari. Unfortuantely, the storage access check sometimes
+             * falsely returns true in FireFox and requesting storage access
+             * in FF seems to break the cookies. That's why there's an extra
+             * check for Safari.
+             */
+            window.addEventListener('load', async () => {
+              const hasStorageAccess = await document.hasStorageAccess()
+              if (isSafari && !hasStorageAccess) {
+                const paragraph = document.createElement('p')
+                paragraph.style = "text-align: center; margin-bottom: 0.4em;"
+                const button = document.createElement('button')
+                button.innerHTML = 'Grant cookie access'
+                button.onclick = async (e) => {
+                  await document.requestStorageAccess()
+                  paragraph.remove()
+                }
+                paragraph.append(button)
+                appContainer.prepend(paragraph)
+              }
+            })
+
             async function loadContent(uri) {
               const response = await fetch(uri)
               const html = await response.text()
@@ -172,6 +208,10 @@ defmodule PlausibleWeb.HelpScoutView do
 
             setAppHeight(appContainer.clientHeight)
 
+            /*
+             * Tracking any resize of integration content
+             * and adjusting iframe height accordingly.
+             */
             const resizeObserver = new ResizeObserver(() => {
               setAppHeight(appContainer.clientHeight)
             })
