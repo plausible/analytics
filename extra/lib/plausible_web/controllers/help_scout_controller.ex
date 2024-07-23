@@ -25,6 +25,10 @@ defmodule PlausibleWeb.HelpScoutController do
     end
   end
 
+  def callback(conn, _) do
+    render(conn, "bad_request.html")
+  end
+
   def show(
         conn,
         %{"email" => email, "conversation_id" => conversation_id, "customer_id" => customer_id} =

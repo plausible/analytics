@@ -60,6 +60,16 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
 
         assert html_response(conn, 200) =~ "bad_signature"
       end
+
+      test "handles invalid parameters gracefully", %{conn: conn} do
+        conn =
+          get(
+            conn,
+            "/helpscout/callback?customer-id=500&X-HelpScout-Signature=whatever"
+          )
+
+        assert html_response(conn, 200) =~ "Missing expected parameters"
+      end
     end
 
     describe "search/2" do

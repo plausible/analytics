@@ -84,6 +84,14 @@ defmodule PlausibleWeb.HelpScoutView do
     """
   end
 
+  def render("bad_request.html", assigns) do
+    ~H"""
+    <.layout>
+      <p>Missing expected parameters</p>
+    </.layout>
+    """
+  end
+
   attr :xhr?, :boolean, default: false
   slot :inner_block, required: true
 
