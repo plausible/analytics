@@ -28,7 +28,8 @@ function LocationsModal({ location }) {
   const getFilterInfo = useCallback((listItem) => {
     return {
       prefix: reportInfo.dimension,
-      filter: ["is", reportInfo.dimension, [listItem.code]]
+      filter: ["is", reportInfo.dimension, [listItem.code]],
+      labels: { [listItem.code]: listItem.name }
     }
   }, [reportInfo.dimension])
 
