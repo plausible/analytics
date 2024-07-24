@@ -42,7 +42,9 @@ function DashboardRoute() {
 }
 
 export const rootRoute = createRootRoute({
-  component: DashboardRoute
+  component: DashboardRoute,
+  // renders null in the <Outlet /> for unhandleable routes like /${site.domain}/does/not/exist
+  notFoundComponent: () => null 
 })
 
 export const sourcesRoute = createRoute({
@@ -166,6 +168,7 @@ const routeTree = rootRoute.addChildren([
   customPropsRoute,
   filterRoute
 ])
+
 
 export function createAppRouter(site) {
   const basepath = site.shared
