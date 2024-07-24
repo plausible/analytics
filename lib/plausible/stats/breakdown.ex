@@ -12,7 +12,6 @@ defmodule Plausible.Stats.Breakdown do
   import Plausible.Stats.Base
   import Ecto.Query
   alias Plausible.Stats.{Query, QueryOptimizer, QueryResult, SQL}
-  alias Plausible.Stats.Filters.QueryParser
 
   def breakdown(site, %Query{dimensions: [dimension]} = query, metrics, pagination, _opts \\ []) do
     transformed_metrics = transform_metrics(metrics, dimension)
@@ -24,7 +23,6 @@ defmodule Plausible.Stats.Breakdown do
         order_by: infer_order_by(transformed_metrics, dimension),
         dimensions: transform_dimensions(dimension),
         filters: query.filters ++ dimension_filters(dimension),
-        preloaded_goals: QueryParser.preload_goals_if_needed(site, query.filters, [dimension]),
         v2: true,
         # Allow pageview and event metrics to be queried off of sessions table
         legacy_breakdown: true
