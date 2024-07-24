@@ -7,6 +7,7 @@ import * as api from "../../api"
 import { EVENT_PROPS_PREFIX, getGoalFilter } from "../../util/filters"
 import { useSiteContext } from "../../site-context"
 import { useQueryContext } from "../../query-context"
+import { customPropsRoute } from "../../router"
 
 export const SPECIAL_GOALS = {
   '404': { title: '404 Pages', prop: 'path' },
@@ -71,7 +72,7 @@ function SpecialPropBreakdown({ prop, afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel={prop}
       metrics={chooseMetrics()}
-      detailsLink={url.sitePath(`custom-prop-values/${prop}`)}
+      detailsLinkProps={{to: customPropsRoute.to, params: {propKey: prop}, search: (search) => search}}
       externalLinkDest={externalLinkDest()}
       maybeHideDetails={true}
       color="bg-red-50"

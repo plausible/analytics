@@ -1,13 +1,13 @@
-import React from "react";
-import { withRouter } from 'react-router-dom';
+import React from 'react'
+import { useNavigate } from '@tanstack/react-router';
 
 import Modal from './modal';
 import { EVENT_PROPS_PREFIX, FILTER_GROUP_TO_MODAL_TYPE, formatFilterGroup, FILTER_OPERATIONS, getFilterGroup, FILTER_MODAL_TO_FILTER_GROUP } from '../../util/filters';
-import { parseQuery } from '../../query';
-import { updatedQuery } from '../../util/url';
+import { useQueryContext } from '../../query-context';
 import { shouldIgnoreKeypress } from '../../keybinding';
 import { cleanLabels } from "../../util/filters";
 import FilterModalGroup from "./filter-modal-group";
+import { filterRoute, rootRoute } from '../../router';
 
 function partitionFilters(modalType, filters) {
   const otherFilters = []
@@ -44,21 +44,21 @@ class FilterModal extends React.Component {
   constructor(props) {
     super(props)
 
-    const modalType = props.match.params.field || 'page'
+    const modalType = this.props.modalType
 
-    const query = parseQuery(props.location.search, props.site)
+    const query = this.props.query
     const { filterState, otherFilters, hasRelevantFilters } = partitionFilters(modalType, query.filters)
 
     this.handleKeydown = this.handleKeydown.bind(this)
-    this.state = { query, modalType, filterState, labelState: query.labels, otherFilters, hasRelevantFilters }
+    this.state = { query, filterState, labelState: query.labels, otherFilters, hasRelevantFilters }
   }
 
   componentDidMount() {
-    document.addEventListener("keydown", this.handleKeydown)
+    document.addEventListener('keydown', this.handleKeydown)
   }
 
   componentWillUnmount() {
-    document.removeEventListener("keydown", this.handleKeydown);
+    document.removeEventListener('keydown', this.handleKeydown)
   }
 
   handleKeydown(e) {
@@ -82,12 +82,13 @@ class FilterModal extends React.Component {
   }
 
   selectFiltersAndCloseModal(filters) {
-    this.props.history.replace({
-      pathname: '/',
-      search: updatedQuery({
+    this.props.navigate({
+      to: rootRoute.to,
+      search: {
         filters: filters,
         labels: cleanLabels(filters, this.state.labelState)
-      })
+      },
+      replace: true
     })
   }
 
@@ -110,7 +111,7 @@ class FilterModal extends React.Component {
   }
 
   onAddRow(filterGroup) {
-    this.setState(prevState => {
+    this.setState((prevState) => {
       const filter = emptyFilter(filterGroup)
       const id = `${filterGroup}${Object.keys(this.state.filterState).length}`
 
@@ -134,12 +135,14 @@ class FilterModal extends React.Component {
   render() {
     return (
       <Modal maxWidth="460px">
-        <h1 className="text-xl font-bold dark:text-gray-100">Filter by {formatFilterGroup(this.state.modalType)}</h1>
+        <h1 className="text-xl font-bold dark:text-gray-100">
+          Filter by {formatFilterGroup(this.props.modalType)}
+        </h1>
 
         <div className="mt-4 border-b border-gray-300"></div>
         <main className="modal__content">
           <form className="flex flex-col" onSubmit={this.handleSubmit.bind(this)}>
-            {FILTER_MODAL_TO_FILTER_GROUP[this.state.modalType].map((filterGroup) => (
+            {FILTER_MODAL_TO_FILTER_GROUP[this.props.modalType].map((filterGroup) => (
               <FilterModalGroup
                 key={filterGroup}
                 filterGroup={filterGroup}
@@ -169,7 +172,7 @@ class FilterModal extends React.Component {
                   }}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                  Remove filter{FILTER_MODAL_TO_FILTER_GROUP[this.state.modalType].length > 1 ? 's' : ''}
+                  Remove filter{FILTER_MODAL_TO_FILTER_GROUP[this.props.modalType].length > 1 ? 's' : ''}
                 </button>
               )}
             </div>
@@ -180,4 +183,16 @@ class FilterModal extends React.Component {
   }
 }
 
-export default withRouter(FilterModal)
+export default function FilterModalWithRouter(props) {
+  const navigate = useNavigate()
+  const { field } = filterRoute.useParams()
+  const { query } = useQueryContext()
+  return (
+    <FilterModal
+      {...props}
+      modalType={field || 'page'}
+      query={query}
+      navigate={navigate}
+    />
+  )
+}
