@@ -309,20 +309,8 @@ defmodule PlausibleWeb.Live.RegisterForm do
     case Repo.insert(user) do
       {:ok, _user} ->
         on_ee do
-          metrics_params =
-            if socket.assigns.invitation do
-              %{
-                event_name: "Signup via invitation",
-                params: %{
-                  url:
-                    Path.join(PlausibleWeb.Endpoint.url(), "/register/invitation/:invitation_id")
-                }
-              }
-            else
-              %{event_name: "Signup", params: %{}}
-            end
-
-          {:noreply, push_event(socket, "send-metrics", metrics_params)}
+          event_name = "Signup#{if socket.assigns.invitation, do: " via invitation"}"
+          {:noreply, push_event(socket, "send-metrics", %{event_name: event_name})}
         else
           {:noreply, assign(socket, trigger_submit: true)}
         end
