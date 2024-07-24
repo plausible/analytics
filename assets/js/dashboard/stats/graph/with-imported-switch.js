@@ -4,32 +4,20 @@ import classNames from "classnames"
 import { useQueryContext } from "../../query-context"
 import { Link } from "@tanstack/react-router"
 
-function LinkOrDiv({ isLink, to, search, children }) {
-  if (isLink) {
-    return <Link to={to} search={search}>{children}</Link>
-  } else {
-    return <div>{children}</div>
-  }
-}
-
-export default function WithImportedSwitch({ info }) {
+export default function WithImportedSwitch({ tooltipMessage, disabled }) {
   const { query } = useQueryContext();
-  const {with_imported_switch, _imports_exist, _includes_imported} = info;
-  const switchedOn = query.with_imported;
-  
-  // const { togglable, tooltip_msg } = info
-  // const enabled = togglable && query.with_imported
-  
+  const importsSwitchedOn = query.with_imported;
+    
   const iconClass = classNames("mt-0.5", {
-    "dark:text-gray-300 text-gray-700": with_imported_switch.togglable,
-    "dark:text-gray-500 text-gray-400": !with_imported_switch.togglable,
+    "dark:text-gray-300 text-gray-700": importsSwitchedOn,
+    "dark:text-gray-500 text-gray-400": !importsSwitchedOn,
   })
 
-    return (
-      <div tooltip={with_imported_switch.tooltip_msg} className="w-4 h-4 mx-2">
-        <LinkOrDiv isLink={with_imported_switch.togglable} search={(search) => ({...search, with_imported: !switchedOn})}>
-          <BarsArrowUpIcon className={iconClass} />
-        </LinkOrDiv>
-      </div>
-    )
+  return (
+    <div tooltip={tooltipMessage} className="w-4 h-4 mx-2">
+      <Link disabled={disabled} search={(search) => ({...search, with_imported: !importsSwitchedOn})}>
+        <BarsArrowUpIcon className={iconClass} />
+      </Link>
+    </div>
+  )
 }
