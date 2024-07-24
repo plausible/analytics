@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.Live.GoalSettings.Form do
+  # XXX: disable edit for revenue goals when revenue feature unavailable
   @moduledoc """
   Live view for the goal creation form
   """
@@ -18,10 +19,20 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     has_access_to_revenue_goals? =
       Plausible.Billing.Feature.RevenueGoals.check_availability(owner) == :ok
 
+    goal_id = if assigns.goal_id, do: String.to_integer(assigns.goal_id)
+    goal = goal_id && Plausible.Goals.get(site, goal_id)
+
     form =
-      %Plausible.Goal{}
+      (goal || %Plausible.Goal{})
       |> Plausible.Goal.changeset()
       |> to_form()
+
+    selected_tab =
+      if goal && goal.page_path do
+        "pageviews"
+      else
+        "custom_events"
+      end
 
     socket =
       socket
@@ -33,13 +44,15 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         event_name_options: Enum.map(assigns.event_name_options, &{&1, &1}),
         current_user: assigns.current_user,
         domain: assigns.domain,
-        selected_tab: "custom_events",
+        selected_tab: selected_tab,
         tab_sequence_id: 0,
         site: site,
         has_access_to_revenue_goals?: has_access_to_revenue_goals?,
         existing_goals: assigns.existing_goals,
         on_save_goal: assigns.on_save_goal,
-        on_autoconfigure: assigns.on_autoconfigure
+        on_autoconfigure: assigns.on_autoconfigure,
+        goal_id: goal_id,
+        goal: goal_id && goal
       )
 
     {:ok, socket}
@@ -60,9 +73,11 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           x-show="tabSelectionInProgress"
         />
 
-        <h2 class="text-xl font-black dark:text-gray-100">Add Goal for <%= @domain %></h2>
+        <h2 class="text-xl font-black dark:text-gray-100">
+          <%= if @goal, do: "Edit", else: "Add" %> Goal for <%= @domain %> <%= @goal_id %>
+        </h2>
 
-        <.tabs selected_tab={@selected_tab} myself={@myself} />
+        <.tabs goal={@goal} selected_tab={@selected_tab} myself={@myself} />
 
         <.custom_event_fields
           :if={@selected_tab == "custom_events"}
@@ -71,6 +86,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           suffix={suffix(@context_unique_id, @tab_sequence_id)}
           current_user={@current_user}
           site={@site}
+          goal={@goal}
           existing_goals={@existing_goals}
           goal_options={@event_name_options}
           has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
@@ -80,6 +96,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           :if={@selected_tab == "pageviews"}
           x-show="!tabSelectionInProgress"
           f={f}
+          goal={@goal}
           suffix={suffix(@context_unique_id, @tab_sequence_id)}
           site={@site}
           x-init="tabSelectionInProgress = false"
@@ -87,12 +104,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
         <div class="py-4" x-show="!tabSelectionInProgress">
           <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-            Add Goal →
+            <%= if @goal, do: "Update", else: "Add" %> Goal →
           </PlausibleWeb.Components.Generic.button>
         </div>
 
         <button
-          :if={@selected_tab == "custom_events" && @event_name_options_count > 0}
+          :if={@selected_tab == "custom_events" && @event_name_options_count > 0 && is_nil(@goal)}
           x-show="!tabSelectionInProgress"
           class="mt-2 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
           phx-click="autoconfigure"
@@ -113,7 +130,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   attr(:f, Phoenix.HTML.Form)
   attr(:site, Plausible.Site)
   attr(:suffix, :string)
-
+  attr(:goal, Plausible.Goal)
   attr(:rest, :global)
 
   def pageview_fields(assigns) do
@@ -131,6 +148,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         ]}
         module={ComboBox}
         suggest_fun={fn input, _options -> suggest_page_paths(input, @site) end}
+        selected={if @goal && @goal.page_path, do: @goal.page_path}
         creatable
       />
 
@@ -149,6 +167,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   attr(:suffix, :string)
   attr(:existing_goals, :list)
   attr(:goal_options, :list)
+  attr(:goal, Plausible.Goal)
   attr(:has_access_to_revenue_goals?, :boolean)
 
   attr(:rest, :global)
@@ -181,6 +200,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
             module={ComboBox}
             suggest_fun={fn input, _options -> suggest_event_names(input, @site, @existing_goals) end}
             options={@goal_options}
+            selected={if @goal && @goal.event_name, do: @goal.event_name}
             creatable
           />
         </div>
@@ -205,7 +225,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           <button
             class={[
               "flex items-center w-max mb-3",
-              if @has_access_to_revenue_goals? do
+              if @has_access_to_revenue_goals? and is_nil(@goal) do
                 "cursor-pointer"
               else
                 "cursor-not-allowed"
@@ -216,13 +236,15 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
             type="button"
             x-on:click="active = !active; currency = ''"
             x-bind:aria-checked="active"
-            disabled={not @has_access_to_revenue_goals?}
+            disabled={(not @has_access_to_revenue_goals? or not is_nil(@goal)) && "disabled"}
           >
             <span
+              id={"currency-switcher-1-#{:erlang.phash2(@f)}"}
               class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
               x-bind:class="active ? 'bg-indigo-600' : 'dark:bg-gray-700 bg-gray-200'"
             >
               <span
+                id={"currency-switcher-2-#{:erlang.phash2(@f)}"}
                 aria-hidden="true"
                 class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
                 x-bind:class="active ? 'dark:bg-gray-800 translate-x-5' : 'dark:bg-gray-800 translate-x-0'"
@@ -236,17 +258,18 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
                   else: "text-gray-500 dark:text-gray-300"
                 )
               ]}
-              id="enable-revenue-tracking"
+              id={"enable-revenue-tracking-#{:erlang.phash2(@f)}"}
             >
               Enable Revenue Tracking
             </span>
           </button>
 
-          <div x-show="active">
+          <div x-show="active" id={"revenue-input-#{:erlang.phash2(@f)}"}>
             <.live_component
               id={"currency_input_#{@suffix}"}
               submit_name={@f[:currency].name}
               module={ComboBox}
+              selected={if revenue?(@goal), do: currency_option(@goal)}
               suggest_fun={
                 on_ee do
                   fn
@@ -274,11 +297,13 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def tabs(assigns) do
     ~H"""
-    <div class="mt-6 font-medium dark:text-gray-100">Goal Trigger</div>
-    <div class="my-3 w-full flex rounded border border-gray-300 dark:border-gray-500">
-      <.custom_events_tab selected?={@selected_tab == "custom_events"} myself={@myself} />
-      <.pageviews_tab selected?={@selected_tab == "pageviews"} myself={@myself} />
-    </div>
+    <%= if is_nil(@goal) do %>
+      <div class="mt-6 font-medium dark:text-gray-100">Goal Trigger</div>
+      <div class="my-3 w-full flex rounded border border-gray-300 dark:border-gray-500">
+        <.custom_events_tab selected?={@selected_tab == "custom_events"} myself={@myself} />
+        <.pageviews_tab selected?={@selected_tab == "pageviews"} myself={@myself} />
+      </div>
+    <% end %>
     """
   end
 
@@ -330,13 +355,29 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     {:noreply, socket}
   end
 
-  def handle_event("save-goal", %{"goal" => goal}, socket) do
-    case Plausible.Goals.create(socket.assigns.site, goal) do
+  def handle_event("save-goal", %{"goal" => goal_params}, %{assigns: %{goal: nil}} = socket) do
+    case Plausible.Goals.create(socket.assigns.site, goal_params) do
       {:ok, goal} ->
         socket =
           goal
           |> Map.put(:funnels, [])
           |> socket.assigns.on_save_goal.(socket)
+
+        {:noreply, socket}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign(socket, form: to_form(changeset))}
+    end
+  end
+
+  def handle_event(
+        "save-goal",
+        %{"goal" => goal_params},
+        %{assigns: %{goal: %Plausible.Goal{} = goal}} = socket
+      ) do
+    case Plausible.Goals.update(goal, goal_params) do
+      {:ok, goal} ->
+        socket = socket.assigns.on_save_goal.(goal, socket)
 
         {:noreply, socket}
 
@@ -370,5 +411,18 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   defp suffix(context_unique_id, tab_sequence_id) do
     "#{context_unique_id}-tabseq#{tab_sequence_id}"
+  end
+
+  on_ee do
+    defp revenue?(goal) do
+      goal && Plausible.Goal.Revenue.revenue?(goal)
+    end
+
+    defp currency_option(goal) do
+      Plausible.Goal.Revenue.currency_option(goal.currency)
+    end
+  else
+    defp revenue?(_), do: false
+    defp currency_option(_), do: nil
   end
 end

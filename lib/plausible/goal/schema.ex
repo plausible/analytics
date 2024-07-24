@@ -35,8 +35,6 @@ defmodule Plausible.Goal do
     |> cast_assoc(:site)
     |> update_leading_slash()
     |> validate_event_name_and_page_path()
-    |> update_change(:event_name, &String.trim/1)
-    |> update_change(:page_path, &String.trim/1)
     |> unique_constraint(:event_name, name: :goals_event_name_unique)
     |> unique_constraint(:page_path, name: :goals_page_path_unique)
     |> validate_length(:event_name, max: @max_event_name_length)
@@ -76,6 +74,8 @@ defmodule Plausible.Goal do
   defp validate_event_name_and_page_path(changeset) do
     if validate_page_path(changeset) || validate_event_name(changeset) do
       changeset
+      |> update_change(:event_name, &String.trim/1)
+      |> update_change(:page_path, &String.trim/1)
     else
       changeset
       |> add_error(:event_name, "this field is required and cannot be blank")

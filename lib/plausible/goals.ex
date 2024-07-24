@@ -8,6 +8,14 @@ defmodule Plausible.Goals do
   alias Plausible.Goal
   alias Ecto.Multi
 
+  @spec get(Plausible.Site.t(), pos_integer()) :: nil | Plausible.Goal.t()
+  def get(site, id) when is_integer(id) do
+    site
+    |> get_query()
+    |> where([g], g.id == ^id)
+    |> Repo.one()
+  end
+
   @spec create(Plausible.Site.t(), map(), Keyword.t()) ::
           {:ok, Goal.t()} | {:error, Ecto.Changeset.t()} | {:error, :upgrade_required}
   @doc """
@@ -39,6 +47,17 @@ defmodule Plausible.Goals do
           Repo.rollback(cause)
       end
     end)
+  end
+
+  @spec update(Plausible.Goal.t(), map()) ::
+          {:ok, Goal.t()} | {:error, Ecto.Changeset.t()} | {:error, :upgrade_required}
+  def update(goal, params) do
+    changeset = Goal.changeset(goal, params)
+
+    with :ok <- maybe_check_feature_access(Repo.preload(goal, :site).site, changeset),
+         {:ok, goal} <- Repo.update(changeset) do
+      {:ok, Repo.preload(goal, :funnels)}
+    end
   end
 
   def find_or_create(site, %{
@@ -261,5 +280,12 @@ defmodule Plausible.Goals do
 
   defp maybe_trim(other) do
     other
+  end
+
+  defp get_query(site) do
+    from g in Plausible.Goal,
+      where: g.site_id == ^site.id,
+      order_by: [desc: g.id],
+      group_by: g.id
   end
 end

@@ -5,7 +5,6 @@ defmodule Plausible.Plugins.API.Goals do
   """
   use Plausible
 
-  import Ecto.Query
   import Plausible.Pagination
 
   alias Plausible.Repo
@@ -36,10 +35,7 @@ defmodule Plausible.Plugins.API.Goals do
 
   @spec get(Plausible.Site.t(), pos_integer()) :: nil | Plausible.Goal.t()
   def get(site, id) when is_integer(id) do
-    site
-    |> get_query()
-    |> where([g], g.id == ^id)
-    |> Repo.one()
+    Plausible.Goals.get(site, id)
   end
 
   @spec delete(Plausible.Site.t(), [pos_integer()] | pos_integer()) :: :ok
@@ -53,13 +49,6 @@ defmodule Plausible.Plugins.API.Goals do
     end)
 
     :ok
-  end
-
-  defp get_query(site) do
-    from g in Plausible.Goal,
-      where: g.site_id == ^site.id,
-      order_by: [desc: g.id],
-      group_by: g.id
   end
 
   defp convert_to_create_params(%CreateRequest.CustomEvent{goal: %{event_name: event_name}}) do

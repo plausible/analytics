@@ -118,6 +118,109 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
     end
   end
 
+  describe "Editing goals" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "tabless view is rendered with goal type change disabled", %{conn: conn, site: site} do
+      {:ok, [pageview, custom_event, revenue_goal]} = setup_goals(site)
+      lv = get_liveview(conn, site)
+
+      # pageviews
+      lv |> element(~s/button#edit-goal-#{pageview.id}/) |> render_click()
+      html = render(lv)
+
+      assert element_exists?(html, "#pageviews-form")
+      refute element_exists?(html, "#custom-events-form")
+
+      refute element_exists?(
+               html,
+               ~s/button[role=switch][aria-labelledby=enable-revenue-tracking]/
+             )
+
+      # custom events
+      lv |> element(~s/button#edit-goal-#{custom_event.id}/) |> render_click()
+      html = render(lv)
+
+      refute element_exists?(html, "#pageviews-form")
+      assert element_exists?(html, "#custom-events-form")
+
+      assert element_exists?(
+               html,
+               ~s/button[role=switch][aria-labelledby=enable-revenue-tracking][disabled="disabled"]/
+             )
+
+      # revenue goals
+      lv |> element(~s/button#edit-goal-#{revenue_goal.id}/) |> render_click()
+      html = render(lv)
+
+      refute element_exists?(html, "#pageviews-form")
+      assert element_exists?(html, "#custom-events-form")
+
+      assert element_exists?(
+               html,
+               ~s/button[role=switch][aria-labelledby=enable-revenue-tracking][disabled="disabled"]/
+             )
+    end
+
+    test "updates a custom event", %{conn: conn, site: site} do
+      {:ok, [_, g, _]} = setup_goals(site)
+      lv = get_liveview(conn, site)
+
+      lv |> element(~s/button#edit-goal-#{g.id}/) |> render_click()
+
+      html = render(lv)
+      assert element_exists?(html, "#event_name_input_modalseq0-tabseq0[value=Signup]")
+
+      lv
+      |> element("#goals-form-modalseq0 form")
+      |> render_submit(%{goal: %{event_name: "Updated"}})
+
+      updated = Plausible.Goals.get(site, g.id)
+      assert updated.event_name == "Updated"
+      assert updated.id == g.id
+    end
+
+    @tag :ee_only
+    test "updates a revenue goal", %{conn: conn, site: site} do
+      {:ok, [_, _, g]} = setup_goals(site)
+      lv = get_liveview(conn, site)
+
+      lv |> element(~s/button#edit-goal-#{g.id}/) |> render_click()
+
+      html = render(lv)
+      assert element_exists?(html, "#event_name_input_modalseq0-tabseq0[value=Purchase]")
+      assert element_exists?(html, ~s/#currency_input_modalseq0-tabseq0[value="EUR - Euro"]/)
+
+      lv
+      |> element("#goals-form-modalseq0 form")
+      |> render_submit(%{goal: %{event_name: "Updated", currency: "USD"}})
+
+      updated = Plausible.Goals.get(site, g.id)
+      assert updated.event_name == "Updated"
+      assert updated.currency == :USD
+      assert updated.currency != g.currency
+      assert updated.id == g.id
+    end
+
+    test "updates a pageview", %{conn: conn, site: site} do
+      {:ok, [g, _, _]} = setup_goals(site)
+      lv = get_liveview(conn, site)
+
+      lv |> element(~s/button#edit-goal-#{g.id}/) |> render_click()
+
+      html = render(lv)
+      assert element_exists?(html, ~s|#page_path_input_modalseq0-tabseq0[value="/go/to/blog/**"|)
+
+      lv
+      |> element("#goals-form-modalseq0 form")
+      |> render_submit(%{goal: %{page_path: "/updated"}})
+
+      updated = Plausible.Goals.get(site, g.id)
+      assert updated.page_path == "/updated"
+      assert updated.id == g.id
+    end
+  end
+
   describe "Combos integration" do
     setup [:create_user, :log_in, :create_site]
 

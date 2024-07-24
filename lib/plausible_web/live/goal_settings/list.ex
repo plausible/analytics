@@ -5,8 +5,6 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   use Phoenix.LiveComponent, global_prefixes: ~w(x-)
   use Phoenix.HTML
 
-  alias PlausibleWeb.Live.Components.Modal
-
   attr(:goals, :list, required: true)
   attr(:domain, :string, required: true)
   attr(:filter_text, :string)
@@ -45,11 +43,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           </div>
         </form>
         <div class="mt-4 flex sm:ml-4 sm:mt-0">
-          <PlausibleWeb.Components.Generic.button
-            id="add-goal-button"
-            x-data
-            x-on:click={Modal.JS.open("goals-form-modal")}
-          >
+          <PlausibleWeb.Components.Generic.button id="add-goal-button" phx-click="add-goal">
             + Add Goal
           </PlausibleWeb.Components.Generic.button>
         </div>
@@ -83,16 +77,22 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                   </span>
                 </div>
               </span>
-              <button
-                id={"delete-goal-#{goal.id}"}
-                phx-click="delete-goal"
-                phx-value-goal-id={goal.id}
-                phx-value-goal-name={goal.event_name}
-                class="text-sm text-red-600"
-                data-confirm={delete_confirmation_text(goal)}
-              >
-                <Heroicons.trash class="feather feather-sm" />
-              </button>
+
+              <div class="flex">
+                <button phx-click="edit-goal" phx-value-goal-id={goal.id} id={"edit-goal-#{goal.id}"}>
+                  <Heroicons.pencil_square class="mr-4 feather feather-sm text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300" />
+                </button>
+                <button
+                  id={"delete-goal-#{goal.id}"}
+                  phx-click="delete-goal"
+                  phx-value-goal-id={goal.id}
+                  phx-value-goal-name={goal.event_name}
+                  class="text-sm text-red-600"
+                  data-confirm={delete_confirmation_text(goal)}
+                >
+                  <Heroicons.trash class="feather feather-sm" />
+                </button>
+              </div>
             </div>
           <% end %>
         </div>

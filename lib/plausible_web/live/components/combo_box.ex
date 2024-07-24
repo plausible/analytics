@@ -363,6 +363,12 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       {{submit_value, display_value}, nil} ->
         assign(socket, submit_value: submit_value, display_value: display_value)
 
+      {submit_and_display_value, nil} when is_binary(submit_and_display_value) ->
+        assign(socket,
+          submit_value: submit_and_display_value,
+          display_value: submit_and_display_value
+        )
+
       _ ->
         socket
     end
