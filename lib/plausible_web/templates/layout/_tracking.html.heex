@@ -16,14 +16,19 @@
         const pageUrl = window.location.href
       <% end %>
 
-      plausible('pageview', {
-        u: pageUrl,
-        props: {
-          logged_in: <%= is_map(@conn.assigns[:current_user]) %>,
-          theme: '<%= if @conn.assigns[:current_user], do: @conn.assigns[:current_user].theme, else: "system" %>',
-          browser_language: navigator.language || navigator.userLanguage
-        }
-      })
+      const props = {
+        logged_in: <%= is_map(@conn.assigns[:current_user]) %>,
+        theme: '<%= if @conn.assigns[:current_user], do: @conn.assigns[:current_user].theme, else: "system" %>',
+        browser_language: navigator.language || navigator.userLanguage
+      }
+
+      const defaultEventOptions = {u: pageUrl, props: props}
+
+      window.trackCustomEvent = function(event_name, options) {
+        plausible(event_name, {...defaultEventOptions, ...options})
+      }
+
+      plausible('pageview', defaultEventOptions)
     </script>
   <% end %>
 <% end %>

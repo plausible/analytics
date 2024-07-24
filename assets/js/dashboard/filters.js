@@ -243,8 +243,7 @@ function Filters() {
   }
 
   function trackFilterMenu() {
-    // has to use window.location because Router location does not include protocol or hostname
-    window.plausible && window.plausible('Filter Menu: Open', { u: `${window.location.protocol}//${window.location.hostname}/:dashboard` })
+    window.trackCustomEvent('Filter Menu: Open')
   }
 
   function renderDropDown() {
