@@ -103,11 +103,18 @@ defmodule Plausible.Stats.Imported.Base do
       end)
       |> Enum.flat_map(fn
         [op, "event:goal", clauses] ->
-          clauses
-          |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+          goals =
+            Enum.map(clauses, fn clause ->
+              Enum.find(query.preloaded_goals, fn goal ->
+                Plausible.Goal.display_name(goal) == clause
+              end)
+            end)
+
+          goals
+          |> Enum.group_by(&Plausible.Goal.type(&1))
           |> Enum.map(fn
-            {:event, names} -> [op, "event:name", names]
-            {:page, pages} -> [op, "event:page", pages]
+            {:event, goals} -> [op, "event:name", Enum.map(goals, & &1.event_name)]
+            {:page, goals} -> [op, "event:page", Enum.map(goals, & &1.page_path)]
           end)
 
         filter ->

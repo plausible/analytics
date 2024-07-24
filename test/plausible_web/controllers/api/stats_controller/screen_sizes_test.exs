@@ -243,6 +243,8 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
     end
 
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Signup")
+
       populate_stats(site, [
         build(:pageview, user_id: 1, screen_size: "Desktop"),
         build(:pageview, user_id: 2, screen_size: "Desktop"),

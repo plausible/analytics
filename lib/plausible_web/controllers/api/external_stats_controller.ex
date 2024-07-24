@@ -342,14 +342,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   defp validate_filter(site, [_type, "event:goal", goal_filter]) do
     configured_goals =
       Plausible.Goals.for_site(site)
-      |> Enum.map(fn
-        %{page_path: path} when is_binary(path) -> "Visit " <> path
-        %{event_name: event_name} -> event_name
-      end)
+      |> Enum.map(&Plausible.Goal.display_name/1)
 
-    goals_in_filter =
-      List.wrap(goal_filter)
-      |> Plausible.Stats.Filters.Utils.unwrap_goal_value()
+    goals_in_filter = List.wrap(goal_filter)
 
     if found = Enum.find(goals_in_filter, &(&1 not in configured_goals)) do
       msg =

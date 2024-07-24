@@ -32,7 +32,6 @@ defmodule Plausible.Stats.Filters.LegacyDashboardFilterParser do
     is_list = list_expression?(val)
     is_wildcard = String.contains?(key, ["page", "goal", "hostname"]) && wildcard_expression?(val)
     val = if is_list, do: parse_member_list(val), else: remove_escape_chars(val)
-    val = if key == "event:goal", do: wrap_goal_value(val), else: val
 
     cond do
       is_negated && is_wildcard && is_list ->

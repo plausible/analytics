@@ -66,34 +66,32 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     dynamic([e], e.name in ^list)
   end
 
-  defp add_filter(:events, _query, [operation, "event:goal", clauses])
+  defp add_filter(:events, query, [operation, "event:goal", clauses])
        when operation in [:is, :matches] do
-    {events, pages, wildcard?} = split_goals(clauses)
+    Enum.reduce(clauses, false, fn clause, statement ->
+      goal =
+        Enum.find(query.preloaded_goals, fn goal ->
+          Plausible.Goal.display_name(goal) == clause
+        end)
 
-    if wildcard? do
-      event_clause =
-        if Enum.any?(events) do
-          dynamic([x], fragment("multiMatchAny(?, ?)", x.name, ^events))
-        else
-          dynamic([x], false)
-        end
+      cond do
+        goal == nil ->
+          dynamic([e], false or ^statement)
 
-      page_clause =
-        if Enum.any?(pages) do
+        goal.event_name ->
+          dynamic([e], e.name == ^goal.event_name or ^statement)
+
+        goal.page_path && String.contains?(goal.page_path, "*") ->
           dynamic(
-            [x],
-            fragment("multiMatchAny(?, ?)", x.pathname, ^pages) and x.name == "pageview"
+            [e],
+            (e.name == "pageview" and
+               fragment("match(?, ?)", e.pathname, ^page_regex(goal.page_path))) or ^statement
           )
-        else
-          dynamic([x], false)
-        end
 
-      where_clause = dynamic([], ^event_clause or ^page_clause)
-
-      dynamic([e], ^where_clause)
-    else
-      dynamic([e], (e.pathname in ^pages and e.name == "pageview") or e.name in ^events)
-    end
+        goal.page_path ->
+          dynamic([e], (e.name == "pageview" and e.pathname == ^goal.page_path) or ^statement)
+      end
+    end)
   end
 
   defp add_filter(:events, _query, [_, "event:page" | _rest] = filter) do
@@ -280,15 +278,4 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   defp db_field_val(:utm_term, @no_ref), do: ""
   defp db_field_val(_, @not_set), do: ""
   defp db_field_val(_, val), do: val
-
-  defp split_goals(clauses) do
-    wildcard? = Enum.any?(clauses, fn {_, value} -> String.contains?(value, "*") end)
-    map_fn = if(wildcard?, do: &page_regex/1, else: &Function.identity/1)
-
-    clauses
-    |> Enum.reduce({[], [], wildcard?}, fn
-      {:event, value}, {event, page, wildcard?} -> {event ++ [map_fn.(value)], page, wildcard?}
-      {:page, value}, {event, page, wildcard?} -> {event, page ++ [map_fn.(value)], wildcard?}
-    end)
-  end
 end

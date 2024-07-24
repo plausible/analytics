@@ -12,10 +12,10 @@ defmodule Plausible.Stats.Legacy.DashboardFilterParserTest do
       |> assert_parsed([[:is, "event:page", ["/"]]])
 
       %{"goal" => "Signup"}
-      |> assert_parsed([[:is, "event:goal", [{:event, "Signup"}]]])
+      |> assert_parsed([[:is, "event:goal", ["Signup"]]])
 
       %{"goal" => "Visit /blog"}
-      |> assert_parsed([[:is, "event:goal", [{:page, "/blog"}]]])
+      |> assert_parsed([[:is, "event:goal", ["Visit /blog"]]])
 
       %{"source" => "Google"}
       |> assert_parsed([[:is, "visit:source", ["Google"]]])
@@ -76,7 +76,7 @@ defmodule Plausible.Stats.Legacy.DashboardFilterParserTest do
   describe "escaping pipe character" do
     test "in simple is filter" do
       %{"goal" => ~S(Foo \| Bar)}
-      |> assert_parsed([[:is, "event:goal", [{:event, "Foo | Bar"}]]])
+      |> assert_parsed([[:is, "event:goal", ["Foo | Bar"]]])
     end
 
     test "in member filter" do
@@ -108,10 +108,10 @@ defmodule Plausible.Stats.Legacy.DashboardFilterParserTest do
 
     test "mixed goals" do
       %{"goal" => "Signup|Visit /thank-you"}
-      |> assert_parsed([[:is, "event:goal", [{:event, "Signup"}, {:page, "/thank-you"}]]])
+      |> assert_parsed([[:is, "event:goal", ["Signup", "Visit /thank-you"]]])
 
       %{"goal" => "Visit /thank-you|Signup"}
-      |> assert_parsed([[:is, "event:goal", [{:page, "/thank-you"}, {:event, "Signup"}]]])
+      |> assert_parsed([[:is, "event:goal", ["Visit /thank-you", "Signup"]]])
     end
   end
 
@@ -151,7 +151,7 @@ defmodule Plausible.Stats.Legacy.DashboardFilterParserTest do
       |> assert_parsed([[:matches, "event:page", ["/blog/post-*"]]])
 
       %{"goal" => "Visit /blog/post-*"}
-      |> assert_parsed([[:matches, "event:goal", [{:page, "/blog/post-*"}]]])
+      |> assert_parsed([[:matches, "event:goal", ["Visit /blog/post-*"]]])
     end
 
     test "other filters default to `is` even when wildcard is present" do
@@ -179,12 +179,12 @@ defmodule Plausible.Stats.Legacy.DashboardFilterParserTest do
     test "mixed goals" do
       %{"goal" => "!Signup|Visit /thank-you"}
       |> assert_parsed([
-        [:is_not, "event:goal", [{:event, "Signup"}, {:page, "/thank-you"}]]
+        [:is_not, "event:goal", ["Signup", "Visit /thank-you"]]
       ])
 
       %{"goal" => "!Visit /thank-you|Signup"}
       |> assert_parsed([
-        [:is_not, "event:goal", [{:page, "/thank-you"}, {:event, "Signup"}]]
+        [:is_not, "event:goal", ["Visit /thank-you", "Signup"]]
       ])
     end
   end

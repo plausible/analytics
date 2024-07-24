@@ -15,6 +15,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> put_dimensions(params)
       |> put_interval(params)
       |> put_parsed_filters(params)
+      |> put_preloaded_goals(site)
       |> Query.put_experimental_reduced_joins(site, params)
       |> Query.put_imported_opts(site, params)
 
@@ -23,6 +24,17 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     end
 
     query
+  end
+
+  defp put_preloaded_goals(query, site) do
+    goals =
+      Plausible.Stats.Filters.QueryParser.preload_goals_if_needed(
+        site,
+        query.filters,
+        query.dimensions
+      )
+
+    struct!(query, preloaded_goals: goals)
   end
 
   defp put_period(query, site, %{"period" => "realtime"}) do

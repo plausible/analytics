@@ -68,7 +68,6 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
       else
         remove_escape_chars(value)
       end
-      |> wrap_goal_value()
 
     cond do
       is_list? && is_wildcard? -> [:matches, key, value]

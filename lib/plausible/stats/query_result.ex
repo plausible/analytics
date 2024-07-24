@@ -25,7 +25,7 @@ defmodule Plausible.Stats.QueryResult do
       query: %{
         metrics: query.metrics,
         date_range: [query.date_range.first, query.date_range.last],
-        filters: query.filters |> Enum.map(&serializable_filter/1),
+        filters: query.filters,
         dimensions: query.dimensions,
         order_by: query.order_by |> Enum.map(&Tuple.to_list/1)
       },
@@ -40,8 +40,8 @@ defmodule Plausible.Stats.QueryResult do
 
     # Closely coupled logic with Plausible.Stats.SQL.Expression.event_goal_join/2
     cond do
-      goal_index < 0 -> Enum.at(events, -goal_index - 1) |> Filters.Utils.unwrap_goal_value()
-      goal_index > 0 -> Enum.at(paths, goal_index - 1) |> Filters.Utils.unwrap_goal_value()
+      goal_index < 0 -> Enum.at(events, -goal_index - 1) |> Plausible.Goal.display_name()
+      goal_index > 0 -> Enum.at(paths, goal_index - 1) |> Plausible.Goal.display_name()
     end
   end
 
@@ -54,12 +54,6 @@ defmodule Plausible.Stats.QueryResult do
   defp dimension_label(dimension, entry, query) do
     Map.get(entry, Util.shortname(query, dimension))
   end
-
-  defp serializable_filter([operation, "event:goal", clauses]) do
-    [operation, "event:goal", Enum.map(clauses, &Filters.Utils.unwrap_goal_value/1)]
-  end
-
-  defp serializable_filter(filter), do: filter
 
   @imports_unsupported_query_warning "Imported stats are not included in the results because query parameters are not supported. " <>
                                        "For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats"
