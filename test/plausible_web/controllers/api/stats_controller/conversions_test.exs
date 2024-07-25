@@ -543,42 +543,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
-    test "can filter by goal contains", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:event, name: "Onboarding: View Signup Form"),
-        build(:event, name: "Onboarding: View Signup Form"),
-        build(:event, name: "Onboarding: Submit Signup Form"),
-        build(:event, name: "Irrelevant Goal")
-      ])
-
-      insert(:goal, site: site, event_name: "Onboarding: View Signup Form")
-      insert(:goal, site: site, event_name: "Onboarding: Submit Signup Form")
-      insert(:goal, site: site, event_name: "Irrelevant Goal")
-
-      filters = Jason.encode!(%{goal: "~Onboarding"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
-        )
-
-      assert json_response(conn, 200)["results"] == [
-               %{
-                 "name" => "Onboarding: View Signup Form",
-                 "visitors" => 2,
-                 "events" => 2,
-                 "conversion_rate" => 50
-               },
-               %{
-                 "name" => "Onboarding: Submit Signup Form",
-                 "visitors" => 1,
-                 "events" => 1,
-                 "conversion_rate" => 25
-               }
-             ]
-    end
-
     test "can combine wildcard and no wildcard in matches_member", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/blog/post-1"),

@@ -114,11 +114,6 @@ defmodule Plausible.Stats.Query do
       case operation do
         :is ->
           Plausible.Goal.display_name(goal) == goal_name
-
-        :contains ->
-          goal
-          |> Plausible.Goal.display_name()
-          |> String.contains?(goal_name)
       end
     end)
   end

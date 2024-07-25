@@ -67,7 +67,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   end
 
   defp add_filter(:events, query, [operation, "event:goal", clauses])
-       when operation in [:is, :contains] do
+       when operation in [:is] do
     Enum.reduce(clauses, false, fn clause, statement ->
       goals = Query.preloaded_goals_for(query, operation, clause)
 
