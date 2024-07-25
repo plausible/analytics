@@ -109,6 +109,20 @@ defmodule Plausible.Stats.Query do
     end)
   end
 
+  def preloaded_goals_for(query, operation, goal_name) when operation in [:is, :contains] do
+    Enum.filter(query.preloaded_goals, fn goal ->
+      case operation do
+        :is ->
+          Plausible.Goal.display_name(goal) == goal_name
+
+        :contains ->
+          goal
+          |> Plausible.Goal.display_name()
+          |> String.contains?(goal_name)
+      end
+    end)
+  end
+
   def put_imported_opts(query, site, params) do
     requested? = params["with_imported"] == "true" || query.include.imports
 

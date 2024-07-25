@@ -317,28 +317,14 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   def preload_goals_if_needed(site, filters, dimensions) do
-    goal_filters =
-      Enum.filter(filters, fn [_, filter_key | _rest] -> filter_key == "event:goal" end)
+    goal_filters? =
+      Enum.any?(filters, fn [_, filter_key | _rest] -> filter_key == "event:goal" end)
 
-    if Enum.any?(goal_filters) or Enum.member?(dimensions, "event:goal") do
+    if goal_filters? or Enum.member?(dimensions, "event:goal") do
       Plausible.Goals.for_site(site)
-      |> filter_preloaded_goals(goal_filters)
     else
       []
     end
-  end
-
-  defp filter_preloaded_goals(goals, filters) do
-    Enum.filter(goals, fn goal ->
-      goal_name = Plausible.Goal.display_name(goal)
-
-      Enum.all?(filters, fn filter ->
-        case filter do
-          [:is, "event:goal", names] -> Enum.any?(names, fn name -> goal_name == name end)
-          [:matches, "event:goal", names] -> Enum.any?(names, fn name -> goal_name == name end)
-        end
-      end)
-    end)
   end
 
   defp validate_goal_filters(query) do

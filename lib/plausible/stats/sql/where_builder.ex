@@ -66,31 +66,31 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     dynamic([e], e.name in ^list)
   end
 
+  # TODO: Remove `matches` operator for goals
   defp add_filter(:events, query, [operation, "event:goal", clauses])
-       when operation in [:is, :matches] do
+       when operation in [:is, :matches, :contains] do
     Enum.reduce(clauses, false, fn clause, statement ->
-      goal =
-        Enum.find(query.preloaded_goals, fn goal ->
-          Plausible.Goal.display_name(goal) == clause
-        end)
+      goals = Query.preloaded_goals_for(query, operation, clause)
 
-      cond do
-        goal == nil ->
-          dynamic([e], false or ^statement)
+      Enum.reduce(goals, statement, fn goal, statement ->
+        cond do
+          goal == nil ->
+            dynamic([e], false or ^statement)
 
-        goal.event_name ->
-          dynamic([e], e.name == ^goal.event_name or ^statement)
+          goal.event_name ->
+            dynamic([e], e.name == ^goal.event_name or ^statement)
 
-        goal.page_path && String.contains?(goal.page_path, "*") ->
-          dynamic(
-            [e],
-            (e.name == "pageview" and
-               fragment("match(?, ?)", e.pathname, ^page_regex(goal.page_path))) or ^statement
-          )
+          goal.page_path && String.contains?(goal.page_path, "*") ->
+            dynamic(
+              [e],
+              (e.name == "pageview" and
+                 fragment("match(?, ?)", e.pathname, ^page_regex(goal.page_path))) or ^statement
+            )
 
-        goal.page_path ->
-          dynamic([e], (e.name == "pageview" and e.pathname == ^goal.page_path) or ^statement)
-      end
+          goal.page_path ->
+            dynamic([e], (e.name == "pageview" and e.pathname == ^goal.page_path) or ^statement)
+        end
+      end)
     end)
   end
 
