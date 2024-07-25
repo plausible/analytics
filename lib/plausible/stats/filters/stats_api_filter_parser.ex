@@ -60,7 +60,6 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
 
   defp parse_goal_filter(key, value) do
     is_list? = list_expression?(value)
-    is_wildcard? = wildcard_expression?(value)
 
     value =
       if is_list? do
@@ -70,9 +69,7 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
       end
 
     cond do
-      is_list? && is_wildcard? -> [:matches, key, value]
       is_list? -> [:is, key, value]
-      is_wildcard? -> [:matches, key, [value]]
       true -> [:is, key, [value]]
     end
   end

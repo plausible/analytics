@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
       post(conn, "/api/v2/query", %{
         "site_id" => site.domain,
         "date_range" => "all",
-        "filters" => [["matches", "event:goal", ["Visit /blog**"]]],
+        "filters" => [["is", "event:goal", ["Visit /blog**"]]],
         "metrics" => ["visitors", "events", "conversion_rate"],
         "dimensions" => ["event:props:author"]
       })
@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
         "metrics" => ["conversion_rate"],
         "date_range" => "all",
         "dimensions" => ["event:props:author"],
-        "filters" => [["matches", "event:goal", ["Visit /blog**"]]]
+        "filters" => [["is", "event:goal", ["Visit /blog**"]]]
       })
 
     %{"results" => results} = json_response(conn, 200)

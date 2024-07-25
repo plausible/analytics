@@ -66,9 +66,8 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     dynamic([e], e.name in ^list)
   end
 
-  # TODO: Remove `matches` operator for goals
   defp add_filter(:events, query, [operation, "event:goal", clauses])
-       when operation in [:is, :matches, :contains] do
+       when operation in [:is, :contains] do
     Enum.reduce(clauses, false, fn clause, statement ->
       goals = Query.preloaded_goals_for(query, operation, clause)
 

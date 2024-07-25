@@ -30,13 +30,14 @@ defmodule Plausible.Stats.Filters.LegacyDashboardFilterParser do
     {is_negated, val} = parse_negated_prefix(val)
     {is_contains, val} = parse_contains_prefix(val)
     is_list = list_expression?(val)
-    is_wildcard = String.contains?(key, ["page", "goal", "hostname"]) && wildcard_expression?(val)
+    is_wildcard = String.contains?(key, ["page", "hostname"]) && wildcard_expression?(val)
     val = if is_list, do: parse_member_list(val), else: remove_escape_chars(val)
 
     cond do
       is_negated && is_wildcard && is_list ->
         [:does_not_match, key, val]
 
+      # TODO
       is_negated && is_contains && is_list ->
         [:does_not_match, key, Enum.map(val, &"**#{&1}**")]
 
@@ -54,6 +55,9 @@ defmodule Plausible.Stats.Filters.LegacyDashboardFilterParser do
 
       is_negated ->
         [:is_not, key, [val]]
+
+      is_contains && is_list ->
+        [:contains, key, val]
 
       is_list ->
         [:is, key, val]
