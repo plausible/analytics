@@ -718,7 +718,6 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       conn: conn,
       site: site
     } do
-      # TODO: Do we really need this in test setup
       insert(:goal, site: site, event_name: "Signup")
       filters = Jason.encode!(%{goal: "Signup", page: "/register"})
       q = "?period=day&date=2021-03-15&with_imported=true&filters=#{filters}"
