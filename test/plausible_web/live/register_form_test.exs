@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       html = lv |> element("form") |> render_submit()
 
       on_ee do
-        assert_push_event(lv, "send-metrics", %{event_name: "Signup", params: %{}})
+        assert_push_event(lv, "send-metrics", %{event_name: "Signup"})
       end
 
       assert [
@@ -162,7 +162,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       html = lv |> element("form") |> render_submit()
 
       on_ee do
-        assert_push_event(lv, "send-metrics", %{event_name: "Signup via invitation", params: %{}})
+        assert_push_event(lv, "send-metrics", %{event_name: "Signup via invitation"})
       end
 
       assert [
