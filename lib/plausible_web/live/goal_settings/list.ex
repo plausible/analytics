@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
               </span>
 
               <div class="flex">
-                <button phx-click="edit-goal" phx-value-goal-id={goal.id} id={"edit-goal-#{goal.id}"}>
+                <button :if={!goal.currency || (goal.currency && @revenue_goals_enabled?)} phx-click="edit-goal" phx-value-goal-id={goal.id} id={"edit-goal-#{goal.id}"}>
                   <Heroicons.pencil_square class="mr-4 feather feather-sm text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300" />
                 </button>
                 <button

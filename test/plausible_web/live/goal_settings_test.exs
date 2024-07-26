@@ -41,6 +41,11 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       assert g3.currency
       assert resp =~ to_string(g3)
       assert resp =~ "Unlock Revenue Goals by upgrading to a business plan"
+
+      refute element_exists?(
+               resp,
+               ~s/button[phx-click="edit-goal"][phx-value-goal-id=#{g3.id}]#edit-goal-#{g3.id}/
+             )
     end
 
     test "lists goals with actions", %{conn: conn, site: site} do

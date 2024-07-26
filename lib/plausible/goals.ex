@@ -52,11 +52,15 @@ defmodule Plausible.Goals do
   @spec update(Plausible.Goal.t(), map()) ::
           {:ok, Goal.t()} | {:error, Ecto.Changeset.t()} | {:error, :upgrade_required}
   def update(goal, params) do
-    changeset = Goal.changeset(goal, params)
-
-    with :ok <- maybe_check_feature_access(Repo.preload(goal, :site).site, changeset),
+    with changeset <- Goal.changeset(goal, params),
+         site <- Repo.preload(goal, :site).site,
+         :ok <- maybe_check_feature_access(site, changeset),
          {:ok, goal} <- Repo.update(changeset) do
-      {:ok, Repo.preload(goal, :funnels)}
+      on_ee do
+        {:ok, Repo.preload(goal, :funnels)}
+      else
+        {:ok, goal}
+      end
     end
   end
 
