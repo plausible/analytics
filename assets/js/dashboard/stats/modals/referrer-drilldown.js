@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react'
+import React, { useCallback } from "react";
+import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import { hasGoalFilter, isRealTimeDashboard } from "../../util/filters";
@@ -8,17 +9,15 @@ import * as url from "../../util/url";
 import { addFilter } from "../../query";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
-import { referrersDrilldownRoute } from '../../router';
 
-function ReferrerDrilldownModal() {
-  const { referrer } = referrersDrilldownRoute.useParams();
+function ReferrerDrilldownModal({ match }) {
   const { query } = useQueryContext();
   const site = useSiteContext();
 
   const reportInfo = {
     title: "Referrer Drilldown",
     dimension: 'referrer',
-    endpoint: url.apiPath(site, `/referrers/${referrer}`),
+    endpoint: url.apiPath(site, `/referrers/${match.params.referrer}`),
     dimensionLabel: "Referrer"
   }
 
@@ -84,4 +83,4 @@ function ReferrerDrilldownModal() {
   )
 }
 
-export default ReferrerDrilldownModal
+export default withRouter(ReferrerDrilldownModal)

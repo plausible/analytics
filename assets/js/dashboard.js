@@ -2,8 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import 'url-search-params-polyfill';
 
-import { RouterProvider } from '@tanstack/react-router';
-import { createAppRouter } from './dashboard/router'
+import Router from './dashboard/router'
 import ErrorBoundary from './dashboard/error-boundary'
 import * as api from './dashboard/api'
 import * as timer from './dashboard/util/realtime-update-timer'
@@ -23,18 +22,13 @@ if (container) {
     api.setSharedLinkAuth(sharedLinkAuth)
   }
 
-  try {
-    filtersBackwardsCompatibilityRedirect(window.location)
-  } catch (e) {
-    console.error('Error redirecting in a backwards compatible way', e)
-  }
-  
-  const router = createAppRouter(site);
+  filtersBackwardsCompatibilityRedirect()
+
   const app = (
     <ErrorBoundary>
       <SiteContextProvider site={site}>
         <UserContextProvider role={container.dataset.currentUserRole} loggedIn={container.dataset.loggedIn === 'true'}>
-          <RouterProvider router={router} />
+          <Router />
         </UserContextProvider>
       </SiteContextProvider>
     </ErrorBoundary>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from '@tanstack/react-router';
+import { Link } from 'react-router-dom';
 import FlipMove from 'react-flip-move';
 
 import FadeIn from '../../fade-in';
@@ -7,7 +7,7 @@ import MoreLink from '../more-link';
 import Bar from '../bar';
 import LazyLoader from '../../components/lazy-loader';
 import classNames from 'classnames';
-import { trimURL } from '../../util/url';
+import { trimURL, updatedQuery } from '../../util/url';
 import { cleanLabels, replaceFilterByPrefix, isRealTimeDashboard, hasGoalFilter } from '../../util/filters';
 import { useQueryContext } from '../../query-context';
 
@@ -18,7 +18,7 @@ const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT = (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
 const COL_MIN_WIDTH = 70
 
-export function FilterLink({ to, filterInfo, onClick, children, extraClass }) {
+export function FilterLink({ pathname, filterInfo, onClick, children, extraClass }) {
   const { query } = useQueryContext();
   const className = classNames(`${extraClass}`, { 'hover:underline': !!filterInfo })
 
@@ -26,9 +26,13 @@ export function FilterLink({ to, filterInfo, onClick, children, extraClass }) {
     const { prefix, filter, labels } = filterInfo
     const newFilters = replaceFilterByPrefix(query, prefix, filter)
     const newLabels = cleanLabels(newFilters, query.labels, filter[1], labels)
+    const filterQuery = updatedQuery({ filters: newFilters, labels: newLabels })
+
+    let linkTo = { search: filterQuery.toString() }
+    if (pathname) { linkTo.pathname = pathname }
 
     return (
-      <Link to={to} onClick={onClick} className={className} search={(search) => {return {...search, filters: newFilters, labels: newLabels}}} >
+      <Link to={linkTo} onClick={onClick} className={className}>
         {children}
       </Link>
     )
@@ -77,7 +81,9 @@ function ExternalLink({ item, externalLinkDest }) {
  * OPTIONAL PROPS
  * 
  * @param {Function} [onClick] - Function with additional action to be taken when a list entry is clicked.
- * @param {Object} [detailsLinkProps] - Navigation props to be passed to "More" link, if any.
+ * @param {string} [detailsLink] - The pathname to the detailed view of this report. E.g.:
+ *     `/dummy.site/pages`. If this is given as input to the ListReport, the Details button
+ *     will always be rendered.
  * @param {boolean} [maybeHideDetails] - Set this to `true` if the details button should be hidden on
  *     the condition that there are less than MAX_ITEMS entries in the list (i.e. nothing
  *     more to show).
@@ -99,7 +105,7 @@ function ExternalLink({ item, externalLinkDest }) {
  * | LISTITEM_1.name    | LISTITEM_1[METRIC_1.key]    | LISTITEM_1[METRIC_2.key]    | ...
  * | LISTITEM_2.name    | LISTITEM_2[METRIC_1.key]    | LISTITEM_2[METRIC_2.key]    | ...
  */
-export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WIDTH, afterFetchData, detailsLinkProps, maybeHideDetails, onClick, color, getFilterFor, renderIcon, externalLinkDest, fetchData }) {
+export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WIDTH, afterFetchData, detailsLink, maybeHideDetails, onClick, color, getFilterFor, renderIcon, externalLinkDest, fetchData }) {
   const { query } = useQueryContext();
   const [state, setState] = useState({ loading: true, list: null })
   const [visible, setVisible] = useState(false)
@@ -290,8 +296,8 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
     const moreResultsAvailable = state.list.length >= MAX_ITEMS
     const hideDetails = maybeHideDetails && !moreResultsAvailable
 
-    const showDetails = !!detailsLinkProps && !state.loading && !hideDetails
-    return showDetails && <MoreLink className={'mt-2'} linkProps={detailsLinkProps} list={state.list} />
+    const showDetails = detailsLink && !state.loading && !hideDetails
+    return showDetails && <MoreLink className={'mt-2'} url={detailsLink} list={state.list} />
   }
 
   return (

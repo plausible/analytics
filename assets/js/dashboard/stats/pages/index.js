@@ -9,7 +9,6 @@ import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warni
 import { hasGoalFilter } from '../../util/filters';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
-import { entryPagesRoute, exitPagesRoute, topPagesRoute } from '../../router';
 
 function EntryPages({ afterFetchData }) {
   const { query } = useQueryContext();
@@ -43,7 +42,7 @@ function EntryPages({ afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Entry page"
       metrics={chooseMetrics()}
-			detailsLinkProps={{to: entryPagesRoute.to, search: (search) => search}}
+      detailsLink={url.sitePath('entry-pages')}
       externalLinkDest={externalLinkDest}
       color="bg-orange-50"
     />
@@ -82,7 +81,7 @@ function ExitPages({ afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Exit page"
       metrics={chooseMetrics()}
-			detailsLinkProps={{to: exitPagesRoute.to, search: (search) => search}}
+      detailsLink={url.sitePath('exit-pages')}
       externalLinkDest={externalLinkDest}
       color="bg-orange-50"
     />
@@ -121,7 +120,7 @@ function TopPages({ afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Page"
       metrics={chooseMetrics()}
-			detailsLinkProps={{to: topPagesRoute.to, search: (search) => search}}
+      detailsLink={url.sitePath('pages')}
       externalLinkDest={externalLinkDest}
       color="bg-orange-50"
     />

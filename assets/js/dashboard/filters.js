@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link, withRouter } from 'react-router-dom';
 import { AdjustmentsVerticalIcon, MagnifyingGlassIcon, XMarkIcon, PencilSquareIcon } from '@heroicons/react/20/solid';
 import classNames from 'classnames';
 import { Menu, Transition } from '@headlessui/react';
@@ -18,26 +18,25 @@ import {
 } from "./util/filters";
 import { useQueryContext } from './query-context';
 import { useSiteContext } from './site-context';
-import { filterRoute } from './router';
 
 const WRAPSTATE = { unwrapped: 0, waiting: 1, wrapped: 2 }
 
-function removeFilter(filterIndex, navigate, query) {
+function removeFilter(filterIndex, history, query) {
   const newFilters = query.filters.filter((_filter, index) => filterIndex != index)
   const newLabels = cleanLabels(newFilters, query.labels)
 
   navigateToQuery(
-    navigate,
+    history,
     query,
     { filters: newFilters, labels: newLabels }
   )
 }
 
-function clearAllFilters(navigate, query) {
+function clearAllFilters(history, query) {
   navigateToQuery(
-    navigate,
+    history,
     query,
-    { filters: null, labels: null }
+    { filters: false, labels: false }
   );
 }
 
@@ -54,19 +53,16 @@ function filterText(query, [operation, filterKey, clauses]) {
   throw new Error(`Unknown filter: ${filterKey}`)
 }
 
-function renderDropdownFilter(filterIndex, filter, navigate, query) {
+function renderDropdownFilter(filterIndex, filter, site, history, query) {
   const [_operation, filterKey, _clauses] = filter
 
   const type = filterKey.startsWith(EVENT_PROPS_PREFIX) ? 'props' : filterKey
-
   return (
     <Menu.Item key={filterIndex}>
       <div className="px-3 md:px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={filterIndex}>
         <Link
           title={`Edit filter: ${formattedFilters[type]}`}
-          to={'filter/$field'}
-          params={{field: FILTER_GROUP_TO_MODAL_TYPE[type]}}
-          search={(search) => search}
+          to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`, search: window.location.search }}
           className="group flex w-full justify-between items-center"
           style={{ width: 'calc(100% - 1.5rem)' }}
         >
@@ -76,7 +72,7 @@ function renderDropdownFilter(filterIndex, filter, navigate, query) {
         <b
           title={`Remove filter: ${formattedFilters[type]}`}
           className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"
-          onClick={() => removeFilter(filterIndex, navigate, query)}
+          onClick={() => removeFilter(filterIndex, history, query)}
         >
           <XMarkIcon className="w-4 h-4" />
         </b>
@@ -85,14 +81,12 @@ function renderDropdownFilter(filterIndex, filter, navigate, query) {
   )
 }
 
-function filterDropdownOption(option) {
+function filterDropdownOption(site, option) {
   return (
     <Menu.Item key={option}>
       {({ active }) => (
         <Link
-          to={filterRoute.to}
-          params={{field: option}}
-          search={(search) => search}
+          to={{ pathname: `/filter/${option}`, search: window.location.search }}
           className={classNames(
             active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100' : 'text-gray-800 dark:text-gray-300',
             'block px-4 py-2 text-sm font-medium'
@@ -105,8 +99,7 @@ function filterDropdownOption(option) {
   )
 }
 
-function DropdownContent({ wrapped }) {
-  const navigate = useNavigate();
+function DropdownContent({ history, wrapped }) {
   const site = useSiteContext();
   const { query } = useQueryContext();
   const [addingFilter, setAddingFilter] = useState(false);
@@ -115,7 +108,7 @@ function DropdownContent({ wrapped }) {
     let filterModals = { ...FILTER_MODAL_TO_FILTER_GROUP }
     if (!site.propsAvailable) delete filterModals.props
 
-    return Object.keys(filterModals).map((option) => filterDropdownOption(option))
+    return Object.keys(filterModals).map((option) => filterDropdownOption(site, option))
   }
 
   return (
@@ -123,9 +116,9 @@ function DropdownContent({ wrapped }) {
       <div className="border-b border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => setAddingFilter(true)}>
         + Add filter
       </div>
-      {query.filters.map((filter, index) => renderDropdownFilter(index, filter, navigate, query))}
+      {query.filters.map((filter, index) => renderDropdownFilter(index, filter, site, history, query))}
       <Menu.Item key="clear">
-        <div className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => clearAllFilters(navigate, query)}>
+        <div className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => clearAllFilters(history, query)}>
           Clear All Filters
         </div>
       </Menu.Item>
@@ -133,8 +126,7 @@ function DropdownContent({ wrapped }) {
   )
 }
 
-function Filters() {
-  const navigate = useNavigate();
+function Filters({ history }) {
   const { query } = useQueryContext();
 
   const [wrapped, setWrapped] = useState(WRAPSTATE.waiting)
@@ -165,7 +157,7 @@ function Filters() {
     if (e.ctrlKey || e.metaKey || e.altKey) return
 
     if (e.key === 'Escape') {
-      clearAllFilters(navigate, query)
+      clearAllFilters(history, query)
     }
   }
 
@@ -205,16 +197,17 @@ function Filters() {
         <Link
           title={`Edit filter: ${formattedFilters[type]}`}
           className="flex w-full h-full items-center py-2 pl-3"
-          to={filterRoute.to}
-          params={{field: FILTER_GROUP_TO_MODAL_TYPE[type]}}
-          search={(search)=> search}
+          to={{
+            pathname: `/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`,
+            search: window.location.search
+          }}
         >
           <span className="inline-block max-w-2xs md:max-w-xs truncate">{text}</span>
         </Link>
         <span
           title={`Remove filter: ${formattedFilters[type]}`}
           className="flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center"
-          onClick={() => removeFilter(filterIndex, navigate, query)}
+          onClick={() => removeFilter(filterIndex, history, query)}
         >
           <XMarkIcon className="w-4 h-4" />
         </span>
@@ -243,7 +236,6 @@ function Filters() {
   }
 
   function trackFilterMenu() {
-    // has to use window.location because Router location does not include protocol or hostname
     window.plausible && window.plausible('Filter Menu: Open', { u: `${window.location.protocol}//${window.location.hostname}/:dashboard` })
   }
 
@@ -276,7 +268,7 @@ function Filters() {
                   className="rounded-md shadow-lg  bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5
                   font-medium text-gray-800 dark:text-gray-200"
                 >
-                  <DropdownContent wrapped={wrapped} />
+                  <DropdownContent history={history} wrapped={wrapped} />
                 </div>
               </Menu.Items>
             </Transition>
@@ -309,4 +301,4 @@ function Filters() {
   )
 }
 
-export default Filters;
+export default withRouter(Filters);

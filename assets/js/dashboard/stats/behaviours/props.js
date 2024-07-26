@@ -9,7 +9,6 @@ import { EVENT_PROPS_PREFIX, getGoalFilter, FILTER_OPERATIONS, hasGoalFilter } f
 import classNames from "classnames";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
-import { customPropsRoute } from "../../router";
 
 
 export default function Properties({ afterFetchData }) {
@@ -108,7 +107,7 @@ export default function Properties({ afterFetchData }) {
         getFilterFor={getFilterFor}
         keyLabel={propKey}
         metrics={chooseMetrics()}
-        detailsLinkProps={{to: customPropsRoute.to, params: {propKey}, search: (search) => search}}
+        detailsLink={url.sitePath(`custom-prop-values/${propKey}`)}
         maybeHideDetails={true}
         color="bg-red-50"
         colMinWidth={90}
