@@ -10,6 +10,7 @@ import Pages from './stats/pages'
 import Locations from './stats/locations';
 import Devices from './stats/devices'
 import Behaviours from './stats/behaviours'
+import LiveView from './stats/live_view'
 import ComparisonInput from './comparison-input'
 import { withPinnedHeader } from './pinned-header-hoc';
 import { statsBoxClass } from './index';
@@ -52,6 +53,9 @@ function Historical(props) {
       </div>
 
       <Behaviours site={props.site} query={props.query} currentUserRole={props.currentUserRole} importedDataInView={props.importedDataInView}/>
+
+      <LiveView site={props.site} query={props.query}/>
+
     </div>
   )
 }
