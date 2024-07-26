@@ -33,5 +33,3 @@ export function getItem(key) {
     return memStore[key]
   }
 }
-
-export const getDomainScopedStorageKey = (key, domain) => `${key}__${domain}`

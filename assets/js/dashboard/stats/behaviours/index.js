@@ -44,8 +44,8 @@ export default function Behaviours({ importedDataInView }) {
   const user = useUserContext();
 
   const adminAccess = ['owner', 'admin', 'super_admin'].includes(user.role)
-  const tabKey = storage.getDomainScopedStorageKey('behavioursTab', site.domain)
-  const funnelKey = storage.getDomainScopedStorageKey('behavioursTabFunnel', site.domain)
+  const tabKey = `behavioursTab__${site.domain}`
+  const funnelKey = `behavioursTabFunnel__${site.domain}`
   const [enabledModes, setEnabledModes] = useState(getEnabledModes())
   const [mode, setMode] = useState(defaultMode())
   const [loading, setLoading] = useState(true)
