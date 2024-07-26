@@ -236,7 +236,7 @@ function Filters({ history }) {
   }
 
   function trackFilterMenu() {
-    window.plausible && window.plausible('Filter Menu: Open', { u: `${window.location.protocol}//${window.location.hostname}/:dashboard` })
+    window.trackCustomEvent('Filter Menu: Open')
   }
 
   function renderDropDown() {
