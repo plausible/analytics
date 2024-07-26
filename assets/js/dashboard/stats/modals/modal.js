@@ -1,8 +1,7 @@
 import React from "react";
 import { createPortal } from "react-dom";
-import { useLocation, useNavigate } from "@tanstack/react-router";
+import { withRouter } from 'react-router-dom';
 import { shouldIgnoreKeypress } from '../../keybinding'
-import { rootRoute } from "../../router";
 
 // This corresponds to the 'md' breakpoint on TailwindCSS.
 const MD_WIDTH = 768;
@@ -58,10 +57,7 @@ class Modal extends React.Component {
   }
 
   close() {
-    this.props.navigate({
-      to: rootRoute.to,
-      search: (search) => search,
-    })
+    this.props.history.push(`/${this.props.location.search}`)
   }
 
   /**
@@ -95,6 +91,7 @@ class Modal extends React.Component {
           >
             {this.props.children}
           </div>
+
         </div>
       </div>,
       document.getElementById("modal_root"),
@@ -102,8 +99,5 @@ class Modal extends React.Component {
   }
 }
 
-export default function ModalWithRouting(props) {
-  const navigate = useNavigate()
-  const location = useLocation()
-  return <Modal {...props} navigate={navigate} location={location} />
-}
+
+export default withRouter(Modal)

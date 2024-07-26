@@ -6,7 +6,6 @@ import * as metrics from '../reports/metrics';
 import ListReport from '../reports/list';
 import { useSiteContext } from '../../site-context';
 import { useQueryContext } from '../../query-context';
-import { conversionsRoute } from '../../router';
 
 export default function Conversions({ afterFetchData, onGoalFilterClick }) {
   const site = useSiteContext();
@@ -42,7 +41,7 @@ export default function Conversions({ afterFetchData, onGoalFilterClick }) {
       keyLabel="Goal"
       onClick={onGoalFilterClick}
       metrics={chooseMetrics()}
-      detailsLinkProps={{to: conversionsRoute.to, search:(search) => search}}
+      detailsLink={url.sitePath('conversions')}
       maybeHideDetails={true}
       color="bg-red-50"
       colMinWidth={90}

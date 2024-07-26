@@ -269,10 +269,15 @@ defmodule Plausible.PropsTest do
         name: "404",
         "meta.key": ["path", "with_error"],
         "meta.value": ["/i-dont-exist", "true"]
+      ),
+      build(:event,
+        name: "WP Search Queries",
+        "meta.key": ["search_query", "result_count"],
+        "meta.value": ["something", "12"]
       )
     ])
 
-    assert ["first_time_customer", "logged_in", "with_error"] ==
+    assert ["first_time_customer", "logged_in", "result_count", "with_error"] ==
              site |> Plausible.Props.suggest_keys_to_allow() |> Enum.sort()
   end
 

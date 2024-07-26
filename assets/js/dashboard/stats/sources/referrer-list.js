@@ -7,7 +7,6 @@ import ListReport from '../reports/list';
 import ImportedQueryUnsupportedWarning from '../../stats/imported-query-unsupported-warning';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
-import { referrersDrilldownRoute } from '../../router';
 
 export default function Referrers({ source }) {
   const { query } = useQueryContext();
@@ -69,7 +68,7 @@ export default function Referrers({ source }) {
         getFilterFor={getFilterFor}
         keyLabel="Referrer"
         metrics={chooseMetrics()}
-        detailsLinkProps={{to: referrersDrilldownRoute.to, params: {referrer: source}, search: (search) => search}}
+        detailsLink={url.sitePath(`referrers/${encodeURIComponent(source)}`)}
         externalLinkDest={externalLinkDest}
         renderIcon={renderIcon}
         color="bg-blue-50"
