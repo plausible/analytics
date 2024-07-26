@@ -58,7 +58,20 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     # Counts each _active_ session in time range even if they started before
     dynamic(
       [s],
-      s.site_id == ^site.id and s.timestamp >= ^first_datetime and s.start < ^last_datetime
+      # Currently, the sessions table in ClickHouse only has `start` column
+      # in its primary key. This means that filtering by `timestamp` is not
+      # considered when estimating number of returned rows from index
+      # for sample factor calculation. The redundant lower bound `start` condition
+      # ensures the lower bound time filter is still present as primary key
+      # condition and the sample factor estimation has minimal skew.
+      #
+      # Without it, the sample factor would be greatly overestimated for large sites,
+      # as query would be estimated to return _all_ rows matching other conditions
+      # before `start == last_datetime`.
+      s.site_id == ^site.id and
+        s.start >= ^NaiveDateTime.add(first_datetime, -7, :day) and
+        s.timestamp >= ^first_datetime and
+        s.start < ^last_datetime
     )
   end
 
