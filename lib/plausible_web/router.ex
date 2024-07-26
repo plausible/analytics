@@ -294,6 +294,8 @@ defmodule PlausibleWeb.Router do
 
     on_ee do
       get "/helpscout/callback", HelpScoutController, :callback
+      get "/helpscout/show", HelpScoutController, :show
+      get "/helpscout/search", HelpScoutController, :search
     end
 
     get "/", PageController, :index

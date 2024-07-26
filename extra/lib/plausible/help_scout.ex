@@ -17,6 +17,12 @@ defmodule Plausible.HelpScout do
   @base_api_url "https://api.helpscout.net"
   @signature_field "X-HelpScout-Signature"
 
+  @signature_errors [:missing_signature, :bad_signature]
+
+  @type signature_error() :: unquote(Enum.reduce(@signature_errors, &{:|, [], [&1, &2]}))
+
+  def signature_errors(), do: @signature_errors
+
   @doc """
   Validates signature against secret key configured for the
   HelpScout application.
@@ -30,7 +36,7 @@ defmodule Plausible.HelpScout do
   params to JSON using wrapper struct, informing Jason to put the values
   in the serialized object in this particular order matching query string.
   """
-  @spec validate_signature(Plug.Conn.t()) :: :ok | {:error, :missing_signature | :bad_signature}
+  @spec validate_signature(Plug.Conn.t()) :: :ok | {:error, signature_error()}
   def validate_signature(conn) do
     params = conn.params
 
@@ -65,15 +71,23 @@ defmodule Plausible.HelpScout do
     end
   end
 
-  @spec get_customer_details(String.t()) :: {:ok, map()} | {:error, any()}
-  def get_customer_details(customer_id) do
-    with {:ok, emails} <- get_customer_emails(customer_id),
-         {:ok, user} <- get_user(emails) do
+  @spec get_details_for_customer(String.t()) :: {:ok, map()} | {:error, any()}
+  def get_details_for_customer(customer_id) do
+    with {:ok, emails} <- get_customer_emails(customer_id) do
+      get_details_for_emails(emails, customer_id)
+    end
+  end
+
+  @spec get_details_for_emails([String.t()], String.t()) :: {:ok, map()} | {:error, any()}
+  def get_details_for_emails(emails, customer_id) do
+    with {:ok, user} <- get_user(emails) do
+      set_mapping(customer_id, user.email)
       user = Plausible.Users.with_subscription(user.id)
       plan = Billing.Plans.get_subscription_plan(user.subscription)
 
       {:ok,
        %{
+         email: user.email,
          status_label: status_label(user),
          status_link:
            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id),
@@ -86,6 +100,30 @@ defmodule Plausible.HelpScout do
            )
        }}
     end
+  end
+
+  @spec search_users(String.t(), String.t()) :: [map()]
+  def search_users(term, customer_id) do
+    clear_mapping(customer_id)
+
+    search_term = "%#{term}%"
+
+    domain_query =
+      from(s in Plausible.Site,
+        inner_join: sm in assoc(s, :memberships),
+        where: sm.user_id == parent_as(:user).id and sm.role == :owner,
+        where: ilike(s.domain, ^search_term) or ilike(s.domain_changed_from, ^search_term),
+        select: 1
+      )
+
+    users_query()
+    |> where(
+      [user: u],
+      like(u.email, ^search_term) or exists(domain_query)
+    )
+    |> limit(5)
+    |> select([user: u, site_membership: sm], %{email: u.email, sites_count: count(sm.id)})
+    |> Repo.all()
   end
 
   defp plan_link(nil), do: "#"
@@ -174,17 +212,42 @@ defmodule Plausible.HelpScout do
 
   defp get_user(emails) do
     user =
-      from(u in Plausible.Auth.User, where: u.email in ^emails, limit: 1)
+      users_query()
+      |> where([user: u], u.email in ^emails)
+      |> limit(1)
       |> Repo.one()
 
     if user do
       {:ok, user}
     else
-      {:error, :not_found}
+      {:error, {:user_not_found, emails}}
     end
   end
 
-  defp get_customer_emails(customer_id, opts \\ []) do
+  defp users_query() do
+    from(u in Plausible.Auth.User,
+      as: :user,
+      left_join: sm in assoc(u, :site_memberships),
+      on: sm.role == :owner,
+      as: :site_membership,
+      left_join: s in assoc(sm, :site),
+      as: :site,
+      group_by: u.id,
+      order_by: [desc: count(sm.id)]
+    )
+  end
+
+  defp get_customer_emails(customer_id) do
+    case lookup_mapping(customer_id) do
+      {:ok, email} ->
+        {:ok, [email]}
+
+      {:error, :mapping_not_found} ->
+        fetch_customer_emails(customer_id)
+    end
+  end
+
+  defp fetch_customer_emails(customer_id, opts \\ []) do
     refresh? = Keyword.get(opts, :refresh?, true)
     token = get_token!()
 
@@ -206,7 +269,7 @@ defmodule Plausible.HelpScout do
       {:ok, %{status: 401}} ->
         if refresh? do
           refresh_token!()
-          get_customer_emails(customer_id, refresh?: false)
+          fetch_customer_emails(customer_id, refresh?: false)
         else
           {:error, :auth_failed}
         end
@@ -218,6 +281,41 @@ defmodule Plausible.HelpScout do
 
         {:error, :unknown}
     end
+  end
+
+  # Exposed for testing
+  @doc false
+  def lookup_mapping(customer_id) do
+    email =
+      "SELECT email FROM help_scout_mappings WHERE customer_id = $1"
+      |> Repo.query!([customer_id])
+      |> Map.get(:rows)
+      |> List.first()
+
+    case email do
+      [email] ->
+        {:ok, email}
+
+      _ ->
+        {:error, :mapping_not_found}
+    end
+  end
+
+  # Exposed for testing
+  @doc false
+  def set_mapping(customer_id, email) do
+    now = NaiveDateTime.utc_now(:second)
+
+    Repo.insert_all(
+      "help_scout_mappings",
+      [[customer_id: customer_id, email: email, inserted_at: now, updated_at: now]],
+      conflict_target: :customer_id,
+      on_conflict: [set: [email: email, updated_at: now]]
+    )
+  end
+
+  defp clear_mapping(customer_id) do
+    Repo.query!("DELETE FROM help_scout_mappings WHERE customer_id = $1", [customer_id])
   end
 
   defp get_token!() do
