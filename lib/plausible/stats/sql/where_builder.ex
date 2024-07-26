@@ -66,31 +66,8 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     dynamic([e], e.name in ^list)
   end
 
-  defp add_filter(:events, query, [operation, "event:goal", clauses])
-       when operation in [:is] do
-    Enum.reduce(clauses, false, fn clause, statement ->
-      goals = Query.preloaded_goals_for(query, operation, clause)
-
-      Enum.reduce(goals, statement, fn goal, statement ->
-        cond do
-          goal == nil ->
-            dynamic([e], false or ^statement)
-
-          goal.event_name ->
-            dynamic([e], e.name == ^goal.event_name or ^statement)
-
-          goal.page_path && String.contains?(goal.page_path, "*") ->
-            dynamic(
-              [e],
-              (e.name == "pageview" and
-                 fragment("match(?, ?)", e.pathname, ^page_regex(goal.page_path))) or ^statement
-            )
-
-          goal.page_path ->
-            dynamic([e], (e.name == "pageview" and e.pathname == ^goal.page_path) or ^statement)
-        end
-      end)
-    end)
+  defp add_filter(:events, query, [_, "event:goal", _] = filter) do
+    Plausible.Goals.Filters.add_filter(query, filter)
   end
 
   defp add_filter(:events, _query, [_, "event:page" | _rest] = filter) do
