@@ -233,38 +233,12 @@ defmodule Plausible.Stats.Imported.Base do
     end
   end
 
-  import Plausible.Stats.Filters.Utils, only: [page_regex: 1]
-
   defp apply_filter(q, %Query{filters: filters} = query) do
-    Enum.reduce(filters, q, fn [operation, filter_key, clauses] = filter, q ->
+    Enum.reduce(filters, q, fn [_, filter_key, _] = filter, q ->
       db_field = Filters.without_prefix(filter_key)
 
       if db_field == :goal do
-        condition =
-          Enum.reduce(clauses, false, fn clause, statement ->
-            goals = Query.preloaded_goals_for(query, operation, clause)
-
-            Enum.reduce(goals, statement, fn goal, statement ->
-              cond do
-                goal == nil ->
-                  dynamic([e], false or ^statement)
-
-                goal.event_name ->
-                  dynamic([e], e.name == ^goal.event_name or ^statement)
-
-                goal.page_path && String.contains?(goal.page_path, "*") ->
-                  dynamic(
-                    [e],
-                    (e.name == "pageview" and
-                       fragment("match(?, ?)", e.page, ^page_regex(goal.page_path))) or ^statement
-                  )
-
-                goal.page_path ->
-                  dynamic([e], e.page == ^goal.page_path or ^statement)
-              end
-            end)
-          end)
-
+        condition = Plausible.Goals.Filters.add_filter(query, filter, true)
         where(q, ^condition)
       else
         mapped_db_field = Map.get(@db_field_mappings, db_field, db_field)
