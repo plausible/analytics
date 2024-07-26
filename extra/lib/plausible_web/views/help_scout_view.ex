@@ -178,7 +178,7 @@ defmodule PlausibleWeb.HelpScoutView do
 
             /*
              * Using cookies within iframe requires requesting storage access
-             * in Safari. Unfortuantely, the storage access check sometimes
+             * in Safari. Unfortunately, the storage access check sometimes
              * falsely returns true in FireFox and requesting storage access
              * in FF seems to break the cookies. That's why there's an extra
              * check for Safari.
