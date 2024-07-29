@@ -238,7 +238,7 @@ defmodule Plausible.Stats.Imported.Base do
       db_field = Filters.without_prefix(filter_key)
 
       if db_field == :goal do
-        condition = Plausible.Goals.Filters.add_filter(query, filter, true)
+        condition = Plausible.Goals.Filters.add_filter(query, filter, imported?: true)
         where(q, ^condition)
       else
         mapped_db_field = Map.get(@db_field_mappings, db_field, db_field)
