@@ -223,9 +223,10 @@ defmodule Plausible.Stats.Imported.Base do
   defp get_filter_goals(%Query{filters: filters} = query) do
     filters
     |> Enum.filter(fn [_, key, _] -> key == "event:goal" end)
-    |> Enum.flat_map(fn [op, _, clauses] ->
+    |> Enum.flat_map(fn [operation, _, clauses] ->
       Enum.flat_map(clauses, fn clause ->
-        Plausible.Stats.Query.preloaded_goals_for(query, op, clause)
+        query.preloaded_goals
+        |> Plausible.Goals.Filters.filter_preloaded(operation, clause)
       end)
     end)
   end
