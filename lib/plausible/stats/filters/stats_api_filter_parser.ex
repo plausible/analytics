@@ -68,9 +68,6 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
         remove_escape_chars(value)
       end
 
-    cond do
-      is_list? -> [:is, key, value]
-      true -> [:is, key, [value]]
-    end
+    [:is, key, List.wrap(value)]
   end
 end

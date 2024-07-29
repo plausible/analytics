@@ -170,12 +170,7 @@ defmodule Plausible.Stats.Imported.Base do
   defp do_decide_tables(%Query{filters: filters, dimensions: ["event:goal"]} = query) do
     filter_props = Enum.map(filters, &Enum.at(&1, 1))
 
-    filter_goals =
-      Enum.flat_map(filters, fn [op, _, clauses] ->
-        Enum.flat_map(clauses, fn clause ->
-          Plausible.Stats.Query.preloaded_goals_for(query, op, clause)
-        end)
-      end)
+    filter_goals = get_filter_goals(query)
 
     any_event_goals? = Enum.any?(filter_goals, fn goal -> Plausible.Goal.type(goal) == :event end)
 
@@ -201,25 +196,17 @@ defmodule Plausible.Stats.Imported.Base do
       filters
       |> Enum.map(fn [_, filter_key | _] -> filter_key end)
       |> Enum.concat(dimensions)
-      |> Enum.reject(&(&1 in @queriable_time_dimensions))
-      |> Enum.reject(&(&1 == "event:goal"))
+      |> Enum.reject(&(&1 in @queriable_time_dimensions or &1 == "event:goal"))
       |> Enum.flat_map(fn
         "visit:screen" -> ["visit:device"]
         dimension -> [dimension]
       end)
       |> Enum.map(&@property_to_table_mappings[&1])
 
-    filter_goals =
-      filters
-      |> Enum.filter(fn [_, key, _] -> key == "event:goal" end)
-      |> Enum.flat_map(fn [op, _, clauses] ->
-        Enum.flat_map(clauses, fn clause ->
-          Plausible.Stats.Query.preloaded_goals_for(query, op, clause)
-        end)
-      end)
-
     filter_goal_table_candidates =
-      Enum.map(filter_goals, &Plausible.Goal.type/1)
+      query
+      |> get_filter_goals()
+      |> Enum.map(&Plausible.Goal.type/1)
       |> Enum.map(fn
         :event -> "imported_custom_events"
         :page -> "imported_pages"
@@ -231,6 +218,16 @@ defmodule Plausible.Stats.Imported.Base do
       [candidate] -> [candidate]
       _ -> []
     end
+  end
+
+  defp get_filter_goals(%Query{filters: filters} = query) do
+    filters
+    |> Enum.filter(fn [_, key, _] -> key == "event:goal" end)
+    |> Enum.flat_map(fn [op, _, clauses] ->
+      Enum.flat_map(clauses, fn clause ->
+        Plausible.Stats.Query.preloaded_goals_for(query, op, clause)
+      end)
+    end)
   end
 
   defp apply_filter(q, %Query{filters: filters} = query) do
