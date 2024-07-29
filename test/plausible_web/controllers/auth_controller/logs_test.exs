@@ -29,6 +29,7 @@ defmodule PlausibleWeb.AuthController.LogsTest do
       assert logs =~ "[warning] [login] wrong password for #{user.email}"
     end
 
+    @tag :auth_rate_limit
     test "logs on too many login attempts", %{conn: conn} do
       user = insert(:user, password: "password")
 

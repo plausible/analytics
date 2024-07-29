@@ -417,6 +417,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "Enter your email and password"
     end
 
+    @tag :auth_rate_limit
     test "limits login attempts to 5 per minute" do
       user = insert(:user, password: "password")
 
@@ -1826,6 +1827,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert conn.resp_cookies["session_2fa"].max_age == 0
     end
 
+    @tag :auth_rate_limit
     test "limits verification attempts to 5 per minute", %{conn: conn} do
       user = insert(:user, email: "ratio#{Ecto.UUID.generate()}@example.com")
 
@@ -1997,6 +1999,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert conn.resp_cookies["session_2fa"].max_age == 0
     end
 
+    @tag :auth_rate_limit
     test "limits verification attempts to 5 per minute", %{conn: conn} do
       user = insert(:user, email: "ratio#{Ecto.UUID.generate()}@example.com")
 
