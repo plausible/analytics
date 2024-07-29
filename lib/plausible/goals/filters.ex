@@ -3,7 +3,6 @@ defmodule Plausible.Goals.Filters do
 
   import Ecto.Query
   import Plausible.Stats.Filters.Utils, only: [page_regex: 1]
-  alias Plausible.Stats.Sql
 
   @doc """
   Translates an event:goal filter into SQL. Similarly to other `add_filter` clauses in
@@ -23,12 +22,14 @@ defmodule Plausible.Goals.Filters do
   """
   def add_filter(query, [operation, "event:goal", clauses], imported? \\ false)
       when operation in [:is] do
-    Enum.map(clauses, fn clause ->
-      query.preloaded_goals
-      |> filter_preloaded(operation, clause)
-      |> build_condition(imported?)
+    Enum.reduce(clauses, false, fn clause, dynamic_statement ->
+      condition =
+        query.preloaded_goals
+        |> filter_preloaded(operation, clause)
+        |> build_condition(imported?)
+
+      dynamic([e], ^condition or ^dynamic_statement)
     end)
-    |> Sql.Util.or_join()
   end
 
   defp filter_preloaded(preloaded_goals, operation, clause) when operation in [:is, :contains] do
@@ -41,18 +42,18 @@ defmodule Plausible.Goals.Filters do
   end
 
   defp build_condition(filtered_goals, imported?) do
-    filtered_goals
-    |> Enum.map(fn
-      nil ->
-        false
+    Enum.reduce(filtered_goals, false, fn goal, dynamic_statement ->
+      case goal do
+        nil ->
+          dynamic([e], ^dynamic_statement)
 
-      %Plausible.Goal{event_name: event_name} when is_binary(event_name) ->
-        dynamic([e], e.name == ^event_name)
+        %Plausible.Goal{event_name: event_name} when is_binary(event_name) ->
+          dynamic([e], e.name == ^event_name or ^dynamic_statement)
 
-      %Plausible.Goal{page_path: page_path} when is_binary(page_path) ->
-        dynamic([e], ^page_filter_condition(page_path, imported?))
+        %Plausible.Goal{page_path: page_path} when is_binary(page_path) ->
+          dynamic([e], ^page_filter_condition(page_path, imported?) or ^dynamic_statement)
+      end
     end)
-    |> Sql.Util.or_join()
   end
 
   defp page_filter_condition(page_path, imported?) do
