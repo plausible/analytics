@@ -62,7 +62,7 @@ function renderDropdownFilter(filterIndex, filter, site, history, query) {
       <div className="px-3 md:px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={filterIndex}>
         <Link
           title={`Edit filter: ${formattedFilters[type]}`}
-          to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`, search: window.location.search }}
+          to={{ pathname: `/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`, search: window.location.search }}
           className="group flex w-full justify-between items-center"
           style={{ width: 'calc(100% - 1.5rem)' }}
         >
@@ -236,7 +236,7 @@ function Filters({ history }) {
   }
 
   function trackFilterMenu() {
-    window.plausible && window.plausible('Filter Menu: Open', { u: `${window.location.protocol}//${window.location.hostname}/:dashboard` })
+    window.trackCustomEvent('Filter Menu: Open')
   }
 
   function renderDropDown() {
