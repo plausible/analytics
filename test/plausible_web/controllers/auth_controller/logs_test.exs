@@ -48,7 +48,7 @@ defmodule PlausibleWeb.AuthController.LogsTest do
           |> post("/login", email: user.email, password: "wrong")
         end)
 
-      assert logs =~ "[warning] [login] too many logging attempts for #{user.email}"
+      assert logs =~ "[warning] [login] too many login attempts for #{user.email}"
     end
   end
 end

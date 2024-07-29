@@ -259,7 +259,7 @@ defmodule PlausibleWeb.AuthController do
         )
 
       {:rate_limit, _} ->
-        maybe_log_failed_login_attempts("too many logging attempts for #{email}")
+        maybe_log_failed_login_attempts("too many login attempts for #{email}")
 
         render_error(
           conn,
@@ -514,7 +514,7 @@ defmodule PlausibleWeb.AuthController do
           {:ok, user}
         else
           {:rate_limit, _} ->
-            maybe_log_failed_login_attempts("too many logging attempts for #{user.email}")
+            maybe_log_failed_login_attempts("too many login attempts for #{user.email}")
 
             conn
             |> TwoFactor.Session.clear_2fa_user()
