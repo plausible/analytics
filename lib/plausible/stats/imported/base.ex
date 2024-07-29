@@ -242,6 +242,7 @@ defmodule Plausible.Stats.Imported.Base do
             goals = Query.preloaded_goals_for(query, operation, clause)
 
             Enum.reduce(goals, statement, fn goal, statement ->
+              # credo:disable-for-next-line Credo.Check.Refactor.Nesting
               cond do
                 goal == nil ->
                   dynamic([e], false or ^statement)
