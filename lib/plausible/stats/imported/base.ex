@@ -196,8 +196,7 @@ defmodule Plausible.Stats.Imported.Base do
       filters
       |> Enum.map(fn [_, filter_key | _] -> filter_key end)
       |> Enum.concat(dimensions)
-      |> Enum.reject(&(&1 in @queriable_time_dimensions))
-      |> Enum.reject(&(&1 == "event:goal"))
+      |> Enum.reject(&(&1 in @queriable_time_dimensions or &1 == "event:goal"))
       |> Enum.flat_map(fn
         "visit:screen" -> ["visit:device"]
         dimension -> [dimension]
