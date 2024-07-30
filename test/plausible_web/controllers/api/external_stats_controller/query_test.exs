@@ -2278,6 +2278,40 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
            ]
   end
 
+  test "goal contains filter for goal breakdown", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:event, name: "Onboarding conversion: Step 1"),
+      build(:event, name: "Onboarding conversion: Step 1"),
+      build(:event, name: "Onboarding conversion: Step 2"),
+      build(:event, name: "Unrelated"),
+      build(:pageview, pathname: "/conversion")
+    ])
+
+    insert(:goal, site: site, event_name: "Onboarding conversion: Step 1")
+    insert(:goal, site: site, event_name: "Onboarding conversion: Step 2")
+    insert(:goal, site: site, event_name: "Unrelated")
+    insert(:goal, site: site, page_path: "/conversion")
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["event:goal"],
+        "filters" => [
+          ["contains", "event:goal", ["conversion"]]
+        ]
+      })
+
+    %{"results" => results} = json_response(conn, 200)
+
+    assert results == [
+             %{"dimensions" => ["Onboarding conversion: Step 1"], "metrics" => [2]},
+             %{"dimensions" => ["Onboarding conversion: Step 2"], "metrics" => [1]},
+             %{"dimensions" => ["Visit /conversion"], "metrics" => [1]}
+           ]
+  end
+
   test "mixed multi-goal filter for breakdown by visit:country", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview, country_code: "EE", pathname: "/en/register"),
