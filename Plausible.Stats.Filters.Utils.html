@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-87BB266D.js"></script>
+    <script src="dist/sidebar_items-F61A5776.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -210,33 +210,9 @@ and <code class="inline">StatsAPIFilterParser</code>.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#unwrap_goal_value/1" translate="no">unwrap_goal_value(goals)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Does the opposite to <code class="inline">wrap_goal_value</code>, turning the <code class="inline">{:page, path}</code>
-and <code class="inline">{:event, name}</code> tuples into strings. Similarly, when given a
-list, maps all the list elements into strings with the same logic.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#wildcard_expression?/1" translate="no">wildcard_expression?(expression)</a>
 
       </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#wrap_goal_value/1" translate="no">wrap_goal_value(goals)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Wraps the given goal filter into a tuple where the first element
-represents the goal type (i.e. <code class="inline">page</code> or <code class="inline">event</code>), and the second
-element is either the page path or the event name.</p></div>
 
     </div>
 
@@ -284,7 +260,7 @@ element is either the page path or the event name.</p></div>
     </a>
     <h1 class="signature" translate="no">page_regex(expr)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/utils.ex#L84" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/utils.ex#L41" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -350,7 +326,7 @@ element is either the page path or the event name.</p></div>
     </a>
     <h1 class="signature" translate="no">split_goals(goals)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/utils.ex#L70" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/utils.ex#L27" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -372,7 +348,7 @@ element is either the page path or the event name.</p></div>
     </a>
     <h1 class="signature" translate="no">split_goals_query_expressions(goals)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/utils.ex#L74" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/utils.ex#L31" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -383,39 +359,6 @@ element is either the page path or the event name.</p></div>
   <section class="docstring">
 
 
-  </section>
-</section>
-<section class="detail" id="unwrap_goal_value/1">
-
-  <div class="detail-header">
-    <a href="#unwrap_goal_value/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">unwrap_goal_value(goals)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/utils.ex#L66" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Does the opposite to <code class="inline">wrap_goal_value</code>, turning the <code class="inline">{:page, path}</code>
-and <code class="inline">{:event, name}</code> tuples into strings. Similarly, when given a
-list, maps all the list elements into strings with the same logic.</p><h2 id="unwrap_goal_value/1-examples" class="section-heading">
-  <a href="#unwrap_goal_value/1-examples" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Examples</span>
-</h2>
-<p>  iex&gt; Plausible.Stats.Filters.Utils.unwrap_goal_value({:page, &quot;/register&quot;})
-  &quot;Visit /register&quot;</p><p>  iex&gt; Plausible.Stats.Filters.Utils.unwrap_goal_value({:event, &quot;Signup&quot;})
-  &quot;Signup&quot;</p><p>  iex&gt; Plausible.Stats.Filters.Utils.unwrap_goal_value([{:event, &quot;Signup&quot;}, {:page, &quot;/register&quot;}])
-  [&quot;Signup&quot;, &quot;Visit /register&quot;]</p>
   </section>
 </section>
 <section class="detail" id="wildcard_expression?/1">
@@ -438,38 +381,6 @@ list, maps all the list elements into strings with the same logic.</p><h2 id="un
   <section class="docstring">
 
 
-  </section>
-</section>
-<section class="detail" id="wrap_goal_value/1">
-
-  <div class="detail-header">
-    <a href="#wrap_goal_value/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">wrap_goal_value(goals)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/utils.ex#L46" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Wraps the given goal filter into a tuple where the first element
-represents the goal type (i.e. <code class="inline">page</code> or <code class="inline">event</code>), and the second
-element is either the page path or the event name.</p><p>Given a list of goal filter values, wraps all values based on the
-same logic.</p><h2 id="wrap_goal_value/1-examples" class="section-heading">
-  <a href="#wrap_goal_value/1-examples" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Examples</span>
-</h2>
-<p>  iex&gt; Plausible.Stats.Filters.Utils.wrap_goal_value(&quot;Visit /register&quot;)</p><p>  iex&gt; Plausible.Stats.Filters.Utils.wrap_goal_value(&quot;Signup&quot;)</p><p>  iex&gt; Plausible.Stats.Filters.Utils.wrap_goal_value([&quot;Signup&quot;, &quot;Visit /register&quot;])
-  [{:event, &quot;Signup&quot;}, {:page, &quot;/register&quot;}]</p>
   </section>
 </section>
 
