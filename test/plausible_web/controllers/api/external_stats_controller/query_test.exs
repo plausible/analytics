@@ -640,7 +640,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "metrics" => ["visitors", "pageviews"],
           "filters" => [
-            ["matches", "event:goal", ["Visit /blog**"]]
+            ["is", "event:goal", ["Visit /blog**"]]
           ]
         })
 
@@ -688,7 +688,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "metrics" => ["visitors", "events", "pageviews"],
           "filters" => [
-            ["matches", "event:goal", ["Signup", "Visit /**register"]]
+            ["is", "event:goal", ["Signup", "Visit /**register"]]
           ]
         })
 
@@ -2266,7 +2266,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "date_range" => "all",
         "dimensions" => ["event:page"],
         "filters" => [
-          ["matches", "event:goal", ["Visit /**register"]]
+          ["is", "event:goal", ["Visit /**register"]]
         ]
       })
 
@@ -2296,7 +2296,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "date_range" => "all",
         "dimensions" => ["visit:country"],
         "filters" => [
-          ["matches", "event:goal", ["Signup", "Visit /**register"]]
+          ["is", "event:goal", ["Signup", "Visit /**register"]]
         ]
       })
 

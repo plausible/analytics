@@ -86,6 +86,8 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
         build(:event, user_id: 3, name: "Signup")
       ])
 
+      insert(:goal, site: site, event_name: "Signup")
+
       filters = Jason.encode!(%{"goal" => "Signup"})
 
       conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}")

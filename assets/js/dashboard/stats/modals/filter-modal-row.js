@@ -38,9 +38,11 @@ export default function FilterModalRow({
       return Promise.resolve([])
     }
 
-    return fetchSuggestions(apiPath(site, `/suggestions/${filterKey}`), query, input, [
-      FILTER_OPERATIONS.isNot, filterKey, clauses
-    ])
+    let additionalFilter = null
+
+    if (filterKey !== 'goal') { additionalFilter = [FILTER_OPERATIONS.isNot, filterKey, clauses] }
+
+    return fetchSuggestions(apiPath(site, `/suggestions/${filterKey}`), query, input, additionalFilter)
   }
 
   return (

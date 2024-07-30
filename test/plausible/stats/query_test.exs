@@ -194,7 +194,7 @@ defmodule Plausible.Stats.QueryTest do
       filters = Jason.encode!(%{"goal" => "Signup"})
       q = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      assert q.filters == [[:is, "event:goal", [{:event, "Signup"}]]]
+      assert q.filters == [[:is, "event:goal", ["Signup"]]]
     end
 
     test "parses source filter", %{site: site} do
@@ -256,6 +256,8 @@ defmodule Plausible.Stats.QueryTest do
       site = Plausible.Imported.load_import_data(site)
 
       Enum.each(["Outbound Link: Click", "File Download"], fn goal_name ->
+        insert(:goal, site: site, event_name: goal_name)
+
         assert %{include_imported: true} =
                  Query.from(site, %{
                    "period" => "day",
@@ -282,6 +284,7 @@ defmodule Plausible.Stats.QueryTest do
     test "is false when breaking down by url but with a mismatched special goal filter",
          %{site: site} do
       insert(:site_import, site: site)
+      insert(:goal, site: site, event_name: "404")
       site = Plausible.Imported.load_import_data(site)
 
       assert %{include_imported: false} =
@@ -296,6 +299,7 @@ defmodule Plausible.Stats.QueryTest do
     test "is false when breaking down by url but with a special goal filter and an arbitrary filter",
          %{site: site} do
       insert(:site_import, site: site)
+      insert(:goal, site: site, event_name: "Outbound Link: Click")
       site = Plausible.Imported.load_import_data(site)
 
       assert %{include_imported: false} =
@@ -312,6 +316,7 @@ defmodule Plausible.Stats.QueryTest do
       test "is true when filtering by custom prop and special goal when breakdown prop is #{property}",
            %{site: site} do
         insert(:site_import, site: site)
+        insert(:goal, site: site, event_name: "Outbound Link: Click")
         site = Plausible.Imported.load_import_data(site)
 
         assert %{include_imported: true} =
@@ -332,6 +337,7 @@ defmodule Plausible.Stats.QueryTest do
       site: site
     } do
       insert(:site_import, site: site)
+      insert(:goal, site: site, event_name: "Outbound Link: Click")
       site = Plausible.Imported.load_import_data(site)
 
       assert %{include_imported: true} =
@@ -351,6 +357,7 @@ defmodule Plausible.Stats.QueryTest do
       site: site
     } do
       insert(:site_import, site: site)
+      insert(:goal, site: site, event_name: "Outbound Link: Click")
       site = Plausible.Imported.load_import_data(site)
 
       assert %{include_imported: false} =
@@ -369,6 +376,7 @@ defmodule Plausible.Stats.QueryTest do
     test "is false with a custom prop + mismatched special goal filter",
          %{site: site} do
       insert(:site_import, site: site)
+      insert(:goal, site: site, event_name: "404")
       site = Plausible.Imported.load_import_data(site)
 
       assert %{include_imported: false} =
@@ -384,6 +392,7 @@ defmodule Plausible.Stats.QueryTest do
     test "is false with a custom prop + required goal + arbitrary filter",
          %{site: site} do
       insert(:site_import, site: site)
+      insert(:goal, site: site, event_name: "Outbound Link: Click")
       site = Plausible.Imported.load_import_data(site)
 
       assert %{include_imported: false} =
@@ -402,6 +411,7 @@ defmodule Plausible.Stats.QueryTest do
 
     test "is false with a custom prop filter and non-matching property", %{site: site} do
       insert(:site_import, site: site)
+      insert(:goal, site: site, event_name: "Outbound Link: Click")
       site = Plausible.Imported.load_import_data(site)
 
       assert %{include_imported: false} =

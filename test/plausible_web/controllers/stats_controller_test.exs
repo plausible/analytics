@@ -762,6 +762,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"])
       ])
 
+      insert(:goal, site: site, event_name: "Newsletter Signup")
       filters = Jason.encode!(%{goal: "Newsletter Signup"})
       conn = get(conn, "/" <> site.domain <> "/export?period=day&filters=#{filters}")
 
