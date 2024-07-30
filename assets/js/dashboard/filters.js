@@ -40,7 +40,20 @@ function clearAllFilters(history, query) {
   );
 }
 
-function filterText(query, [operation, filterKey, clauses]) {
+function plainFilterText(query, [operation, filterKey, clauses]) {
+  const formattedFilter = formattedFilters[filterKey]
+
+  if (formattedFilter) {
+    return `${formattedFilter} ${FILTER_OPERATIONS_DISPLAY_NAMES[operation]} ${clauses.map((value) => getLabel(query.labels, filterKey, value)).reduce((prev, curr) => `${prev} or ${curr}`)}`
+  } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
+    const propKey = getPropertyKeyFromFilterKey(filterKey)
+    return `Property ${propKey} ${FILTER_OPERATIONS_DISPLAY_NAMES[operation]} ${clauses.reduce((prev, curr) => `${prev} or ${curr}`)}`
+  }
+
+  throw new Error(`Unknown filter: ${filterKey}`)
+}
+
+function styledFilterText(query, [operation, filterKey, clauses]) {
   const formattedFilter = formattedFilters[filterKey]
 
   if (formattedFilter) {
@@ -61,16 +74,16 @@ function renderDropdownFilter(filterIndex, filter, site, history, query) {
     <Menu.Item key={filterIndex}>
       <div className="px-3 md:px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={filterIndex}>
         <Link
-          title={`Edit filter: ${formattedFilters[type]}`}
+          title={`Edit filter: ${plainFilterText(query, filter)}`}
           to={{ pathname: `/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`, search: window.location.search }}
           className="group flex w-full justify-between items-center"
           style={{ width: 'calc(100% - 1.5rem)' }}
         >
-          <span className="inline-block w-full truncate">{filterText(query, filter)}</span>
+          <span className="inline-block w-full truncate">{styledFilterText(query, filter)}</span>
           <PencilSquareIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
         </Link>
         <b
-          title={`Remove filter: ${formattedFilters[type]}`}
+          title={`Remove filter: ${plainFilterText(query, filter)}`}
           className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"
           onClick={() => removeFilter(filterIndex, history, query)}
         >
@@ -189,23 +202,23 @@ function Filters({ history }) {
   }
 
   function renderListFilter(filterIndex, filter) {
-    const text = filterText(query, filter)
     const [_operation, filterKey, _clauses] = filter
     const type = filterKey.startsWith(EVENT_PROPS_PREFIX) ? 'props' : filterKey
     return (
       <span key={filterIndex} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
         <Link
-          title={`Edit filter: ${formattedFilters[type]}`}
+          title={`Edit filter: ${plainFilterText(query, filter)}`}
           className="flex w-full h-full items-center py-2 pl-3"
           to={{
             pathname: `/filter/${FILTER_GROUP_TO_MODAL_TYPE[type]}`,
             search: window.location.search
           }}
         >
-          <span className="inline-block max-w-2xs md:max-w-xs truncate">{text}</span>
+
+          <span className="inline-block max-w-2xs md:max-w-xs truncate">{styledFilterText(query, filter)}</span>
         </Link>
         <span
-          title={`Remove filter: ${formattedFilters[type]}`}
+          title={`Remove filter: ${plainFilterText(query, filter)}`}
           className="flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center"
           onClick={() => removeFilter(filterIndex, history, query)}
         >
