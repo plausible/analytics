@@ -330,7 +330,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp validate_goal_filters(query) do
     goal_filter_clauses =
       Enum.flat_map(query.filters, fn
-        [_operation, "event:goal", clauses] -> clauses
+        [:is, "event:goal", clauses] -> clauses
         _ -> []
       end)
 

@@ -21,7 +21,7 @@ defmodule Plausible.Goals.Filters do
     `pathname`, and also skips the `e.name == "pageview"` check.
   """
   def add_filter(query, [operation, "event:goal", clauses], opts \\ [])
-      when operation in [:is] do
+      when operation in [:is, :contains] do
     imported? = Keyword.get(opts, :imported?, false)
 
     Enum.reduce(clauses, false, fn clause, dynamic_statement ->
@@ -39,6 +39,9 @@ defmodule Plausible.Goals.Filters do
       case operation do
         :is ->
           Plausible.Goal.display_name(goal) == clause
+
+        :contains ->
+          String.contains?(Plausible.Goal.display_name(goal), clause)
       end
     end)
   end
