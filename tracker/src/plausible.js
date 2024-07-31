@@ -169,9 +169,7 @@
   {{/if}}
 
   {{#if live_view}}
-    {{#unless manual}}
-      window.addEventListener('phx:navigate', info => trigger('pageview', {u: info.detail.href}));
-    {{/unless}}
+    window.addEventListener('phx:navigate', info => trigger('pageview', {u: info.detail.href}));
 
     ['phx:page-loading-start', 'phx:page-loading-stop'].map((name) => {
       window.addEventListener(name, info => trigger('phx-event', {props: {event: name, detail: new URLSearchParams(info.detail || {}).toString()}}));
