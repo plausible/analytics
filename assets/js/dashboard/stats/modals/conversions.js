@@ -5,6 +5,7 @@ import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
 import * as url from '../../util/url';
 import { useSiteContext } from "../../site-context";
+import { addFilter } from "../../query";
 
 /*global BUILD_EXTRA*/
 function ConversionsModal() {
@@ -23,6 +24,10 @@ function ConversionsModal() {
       prefix: reportInfo.dimension,
       filter: ["is", reportInfo.dimension, [listItem.name]]
     }
+  }, [reportInfo.dimension])
+
+  const addSearchFilter = useCallback((query, searchString) => {
+    return addFilter(query, ['contains', reportInfo.dimension, [searchString]])
   }, [reportInfo.dimension])
 
   function chooseMetrics() {
@@ -60,7 +65,7 @@ function ConversionsModal() {
         afterFetchData={BUILD_EXTRA ? afterFetchData : undefined}
         afterFetchNextPage={BUILD_EXTRA ? afterFetchNextPage : undefined}
         getFilterInfo={getFilterInfo}
-        searchEnabled={false}
+        addSearchFilter={addSearchFilter}
       />
     </Modal>
   )
