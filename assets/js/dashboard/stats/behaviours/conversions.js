@@ -43,7 +43,6 @@ export default function Conversions({ afterFetchData, onGoalFilterClick }) {
       onClick={onGoalFilterClick}
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: conversionsRoute.path, search: (search) => search }}
-      maybeHideDetails={true}
       color="bg-red-50"
       colMinWidth={90}
     />
