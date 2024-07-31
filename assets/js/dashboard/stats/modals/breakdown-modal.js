@@ -168,7 +168,7 @@ export default function BreakdownModal({
         </td>
         {metrics.map((metric) => {
           return (
-            <td key={metric.key} className="p-2 w-32 font-medium" align="right">
+            <td key={metric.key} className="p-2 w-24 font-medium" align="right">
               {metric.renderValue(item[metric.key])}
             </td>
           )
@@ -237,7 +237,7 @@ export default function BreakdownModal({
 
                 {metrics.map((metric) => {
                   return (
-                    <th key={metric.key} className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">
+                    <th key={metric.key} className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">
                       {metric.renderLabel(query)}
                     </th>
                   )
