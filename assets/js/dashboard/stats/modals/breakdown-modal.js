@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 
-import { trimURL } from '../../util/url'
 import { FilterLink } from "../reports/list";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
@@ -51,7 +50,7 @@ export const MIN_HEIGHT_PX = 500
 //     is filtered by. If a list item is not supposed to be a filter link, this
 //     function should return `null` for that item.
 
-// ### Optional Props 
+// ### Optional Props
 
 //   * `renderIcon` - a function that renders an icon for the given list item.
 
@@ -101,7 +100,7 @@ export default function BreakdownModal({
     key: [reportInfo.endpoint, {query, search}],
     getRequestParams: (key) => {
       const [_endpoint, {query, search}] = key
-      
+
       let queryWithSearchFilter = {...query}
 
       if (searchEnabled && search !== '') {
@@ -157,13 +156,13 @@ export default function BreakdownModal({
   function renderRow(item) {
     return (
       <tr className="text-sm dark:text-gray-200" key={item.name}>
-        <td className="p-2 truncate flex items-center group">
+        <td className="w-48 md:w-64 break-all p-2 flex items-center">
           {maybeRenderIcon(item)}
           <FilterLink
             pathname={`/${encodeURIComponent(site.domain)}`}
             filterInfo={getFilterInfo(item)}
           >
-            {trimURL(item.name, 40)}
+            {item.name}
           </FilterLink>
           {maybeRenderExternalLink(item)}
         </td>
@@ -230,7 +229,7 @@ export default function BreakdownModal({
             <thead>
               <tr>
                 <th
-                  className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                  className="p-2 w-48 md:w-64 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
                   align="left"
                 >
                   {reportInfo.dimensionLabel}

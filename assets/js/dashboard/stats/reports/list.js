@@ -8,6 +8,7 @@ import Bar from '../bar';
 import LazyLoader from '../../components/lazy-loader';
 import classNames from 'classnames';
 import { trimURL, updatedQuery } from '../../util/url';
+import { plainFilterText } from '../../util/filters';
 import { cleanLabels, replaceFilterByPrefix, isRealTimeDashboard, hasGoalFilter } from '../../util/filters';
 import { useQueryContext } from '../../query-context';
 
@@ -32,7 +33,12 @@ export function FilterLink({ pathname, filterInfo, onClick, children, extraClass
     if (pathname) { linkTo.pathname = pathname }
 
     return (
-      <Link to={linkTo} onClick={onClick} className={className}>
+      <Link
+        title={`Add filter: ${plainFilterText(query, filter)}`}
+        to={linkTo}
+        onClick={onClick}
+        className={className}
+      >
         {children}
       </Link>
     )
@@ -60,14 +66,14 @@ function ExternalLink({ item, externalLinkDest }) {
 }
 
 /**
- * 
+ *
  * REQUIRED PROPS
  *
  * @param {Function} fetchData - A function that defines the data
  *    to be rendered, and should return a list of objects under a `results` key. Think of
  *    these objects as rows. The number of columns that are **actually rendered** is also
  *    configurable through the `metrics` prop, which also defines the keys under which
- *    column values are read, and how they're rendered. 
+ *    column values are read, and how they're rendered.
  * @param {*} keyLabel - What each entry in the list represents (for UI only).
  * @param {Array.<Metric>} metrics - A list of `Metric` class objects, containing at least the `key,`
  *    `renderLabel`, and `renderValue` fields. Optionally, a Metric object can contain
@@ -77,9 +83,9 @@ function ExternalLink({ item, externalLinkDest }) {
  *    that should be applied when the list item is clicked. All existing filters matching prefix
  *    are removed. If a list item is not supposed to be clickable, this function should
  *    return `null` for that list item.
- * 
+ *
  * OPTIONAL PROPS
- * 
+ *
  * @param {Function} [onClick] - Function with additional action to be taken when a list entry is clicked.
  * @param {string} [detailsLink] - The pathname to the detailed view of this report. E.g.:
  *     `/dummy.site/pages`. If this is given as input to the ListReport, the Details button
@@ -98,7 +104,7 @@ function ExternalLink({ item, externalLinkDest }) {
  *     hooking into the request lifecycle and doing actions with returned metadata. For
  *     example, the parent component might want to control what happens when imported data
  *     is included or not.
- *  
+ *
  * @returns {HTMLElement} Table of metrics, in the following format:
  * | keyLabel           | METRIC_1.renderLabel(query) | METRIC_2.renderLabel(query) | ...
  * |--------------------|-----------------------------|-----------------------------| ---

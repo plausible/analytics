@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import React, { useMemo } from "react"
 import * as api from '../api'
 import { useQueryContext } from '../query-context'
 
@@ -113,6 +113,32 @@ export function isRealTimeDashboard(query) {
 export function useIsRealtimeDashboard() {
   const { query: { period } } = useQueryContext();
   return useMemo(() => isRealTimeDashboard({ period }), [period]);
+}
+
+export function plainFilterText(query, [operation, filterKey, clauses]) {
+  const formattedFilter = formattedFilters[filterKey]
+
+  if (formattedFilter) {
+    return `${formattedFilter} ${FILTER_OPERATIONS_DISPLAY_NAMES[operation]} ${clauses.map((value) => getLabel(query.labels, filterKey, value)).reduce((prev, curr) => `${prev} or ${curr}`)}`
+  } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
+    const propKey = getPropertyKeyFromFilterKey(filterKey)
+    return `Property ${propKey} ${FILTER_OPERATIONS_DISPLAY_NAMES[operation]} ${clauses.reduce((prev, curr) => `${prev} or ${curr}`)}`
+  }
+
+  throw new Error(`Unknown filter: ${filterKey}`)
+}
+
+export function styledFilterText(query, [operation, filterKey, clauses]) {
+  const formattedFilter = formattedFilters[filterKey]
+
+  if (formattedFilter) {
+    return <>{formattedFilter} {FILTER_OPERATIONS_DISPLAY_NAMES[operation]} {clauses.map((value) => <b key={value}>{getLabel(query.labels, filterKey, value)}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+  } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
+    const propKey = getPropertyKeyFromFilterKey(filterKey)
+    return <>Property <b>{propKey}</b> {FILTER_OPERATIONS_DISPLAY_NAMES[operation]} {clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+  }
+
+  throw new Error(`Unknown filter: ${filterKey}`)
 }
 
 
