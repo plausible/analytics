@@ -94,7 +94,8 @@ export function stringifySearch(searchRecord) {
 
 export function stringifySearchEntry([key, value]) {
   const isEmptyObjectOrArray = typeof value === 'object' && value !== null && Object.entries(value).length === 0;
-  if (  value === undefined ||
+  if (
+    value === undefined ||
     value === null ||
     isEmptyObjectOrArray
   ) {
@@ -105,13 +106,24 @@ export function stringifySearchEntry([key, value]) {
 }
 
 export function parseSearchFragment(searchStringFragment) {
-  const fragmentWithEncodedEquals = searchStringFragment.replaceAll('=','%3D');
-  return JsonURL.parse(fragmentWithEncodedEquals)
+  if (searchStringFragment === '') {
+    return null
+  }
+  const fragmentWithReEncodedSymbols = 
+    searchStringFragment
+      .replaceAll('=',encodeURIComponent('='))
+      .replaceAll('#',encodeURIComponent('#'))
+  try {
+    return JsonURL.parse(fragmentWithReEncodedSymbols)
+  } catch (e) {
+    console.error(`Failed to parse URL fragment ${fragmentWithReEncodedSymbols}`)
+    return null
+  }
 }
 
 export function parseSearch(searchString) {
   const urlSearchParams = new URLSearchParams(searchString);
   const searchRecord = {};
-  urlSearchParams.forEach((v,k) => searchRecord[k] = parseSearchFragment(v))
+  urlSearchParams.forEach((v, k) => searchRecord[k] = parseSearchFragment(v))
   return searchRecord;
 } 
