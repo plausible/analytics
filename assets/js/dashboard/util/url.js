@@ -4,21 +4,6 @@ export function apiPath(site, path = '') {
   return `/api/stats/${encodeURIComponent(site.domain)}${path}/`
 }
 
-export function sitePath(path = '') {
-  return (path.startsWith('/') ? path : '/' + path) + window.location.search
-}
-
-export function setQuery(key, value) {
-  return `${window.location.pathname}?${updatedQuery({ [key]: value })}`
-}
-
-export function updatedQuery(values) {
-  const queryString = new PlausibleSearchParams(window.location.search)
-  Object.entries(values).forEach(([key, value]) => queryString.set(key, value))
-
-  return queryString.toString()
-}
-
 export function externalLinkForPage(domain, page) {
   const domainURL = new URL(`https://${domain}`)
   return `https://${domainURL.host}${page}`
@@ -80,37 +65,53 @@ export function trimURL(url, maxLength) {
   }
 }
 
-export class PlausibleSearchParams extends URLSearchParams {
-  set(key, value) {
-    if (typeof value === 'object') {
-      value = JsonURL.stringify(value)
-      if (value.length > 2) {
-        super.set(key, value)
-      } else {
-        // Empty arrays/objects are handled by defaults
-        super.delete(key)
-      }
-    } else if (value === false) {
-      super.delete(key)
-    } else {
-      super.set(key, value)
-    }
-  }
-
-  escape(value) {
-    // Less strict encoding - allow components which browsers don't require encoded and make jsonurl
-    // more readable
-    return encodeURIComponent(value)
-      .replaceAll("%2C", ",")
-      .replaceAll("%3A", ":")
-      .replaceAll("%2F", "/")
-  }
-
-  toString() {
-    const entries = Array.from(super.entries())
-    if (entries.length === 0) {
-      return ''
-    }
-    return entries.map(([key, value]) => `${this.escape(key)}=${this.escape(value)}`).join("&")
-  }
+/** 
+ * @param {String} input - value to encode for URI
+ * @returns {String} value encoded for URI
+ */
+export function encodeURIComponentPermissive(input) {
+  return encodeURIComponent(input)
+  .replaceAll("%2C", ",")
+  .replaceAll("%3A", ":")
+  .replaceAll("%2F", "/")
 }
+
+export function encodeSearchParamEntries([k, v]) {
+  return `${encodeURIComponentPermissive(k)}=${encodeURIComponentPermissive(v)}`
+}
+
+export function isSearchEntryDefined([_key, value]) {
+  return value !== undefined
+}
+
+export function stringifySearch(searchRecord) {
+    const definedSearchEntries = Object.entries(searchRecord || {}).map(stringifySearchEntry).filter(isSearchEntryDefined)
+
+    const encodedSearchEntries = definedSearchEntries.map(encodeSearchParamEntries)
+    
+    return encodedSearchEntries.length ? `?${encodedSearchEntries.join('&')}` : ''
+}
+
+export function stringifySearchEntry([key, value]) {
+  const isEmptyObjectOrArray = typeof value === 'object' && value !== null && Object.entries(value).length === 0;
+  if (  value === undefined ||
+    value === null ||
+    isEmptyObjectOrArray
+  ) {
+    return [key, undefined]
+  }
+  
+  return [key, JsonURL.stringify(value)]
+}
+
+export function parseSearchFragment(searchStringFragment) {
+  const fragmentWithEncodedEquals = searchStringFragment.replaceAll('=','%3D');
+  return JsonURL.parse(fragmentWithEncodedEquals)
+}
+
+export function parseSearch(searchString) {
+  const urlSearchParams = new URLSearchParams(searchString);
+  const searchRecord = {};
+  urlSearchParams.forEach((v,k) => searchRecord[k] = parseSearchFragment(v))
+  return searchRecord;
+} 

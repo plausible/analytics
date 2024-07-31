@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom'
+import { AppNavigationLink } from '../navigation/use-app-navigate';
 
 function detailsIcon() {
   return (
@@ -20,19 +20,19 @@ function detailsIcon() {
   )
 }
 
-export default function MoreLink({ url, list, endpoint, className, onClick }) {
+export default function MoreLink({ linkProps, list, className, onClick }) {
   if (list.length > 0) {
     return (
       <div className={`w-full text-center ${className ? className : ''}`}>
-        <Link
-          to={url || `/${endpoint}${window.location.search}`}
+        <AppNavigationLink
+          {...linkProps}
           // eslint-disable-next-line max-len
           className="leading-snug font-bold text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition tracking-wide"
           onClick={onClick}
         >
           {detailsIcon()}
           DETAILS
-        </Link>
+        </AppNavigationLink>
       </div>
     )
   }

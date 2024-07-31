@@ -103,6 +103,7 @@ export default class SiteSwitcher extends React.Component {
       siteNum <= sites.length &&
       sites[siteNum - 1] !== site.domain
     ) {
+      // has to change window.location because Router is rendered with /${site.domain} as the basepath
       window.location = `/${encodeURIComponent(sites[siteNum - 1])}`
     }
   }
