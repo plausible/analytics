@@ -5,8 +5,8 @@ import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warni
 import Properties from '../behaviours/props';
 
 const labelFor = {
-  'phx-event': 'LiveView Events',
-  'phx-push': 'Custom Server Events',
+  'phx-event': 'LiveView Sessions',
+  'phx-push': 'Server Events',
   'js-submit': 'Form Submits'
 }
 
