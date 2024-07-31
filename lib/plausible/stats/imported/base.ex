@@ -61,16 +61,12 @@ defmodule Plausible.Stats.Imported.Base do
   def property_to_table_mappings(), do: @property_to_table_mappings
 
   def query_imported(site, query) do
-    [table] =
-      query
-      |> transform_filters()
-      |> decide_tables()
+    [table] = decide_tables(query)
 
     query_imported(table, site, query)
   end
 
   def query_imported(table, site, query) do
-    query = transform_filters(query)
     import_ids = site.complete_import_ids
     %{first: date_from, last: date_to} = query.date_range
 
@@ -85,24 +81,11 @@ defmodule Plausible.Stats.Imported.Base do
   end
 
   def decide_tables(query) do
-    query = transform_filters(query)
-
     if custom_prop_query?(query) do
       do_decide_custom_prop_table(query)
     else
       do_decide_tables(query)
     end
-  end
-
-  defp transform_filters(query) do
-    new_filters =
-      query.filters
-      |> Enum.reject(fn
-        [:is, "event:name", ["pageview"]] -> true
-        _ -> false
-      end)
-
-    struct!(query, filters: new_filters)
   end
 
   defp custom_prop_query?(query) do

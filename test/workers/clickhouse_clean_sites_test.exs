@@ -6,6 +6,7 @@ defmodule Plausible.Workers.ClickhouseCleanSitesTest do
 
   alias Plausible.Workers.ClickhouseCleanSites
 
+  @tag :slow
   test "deletes data from events and sessions tables" do
     site = insert(:site)
     deleted_site = insert(:site)
