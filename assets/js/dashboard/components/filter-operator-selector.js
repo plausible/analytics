@@ -64,7 +64,7 @@ export default function FilterOperatorSelector(props) {
                   {renderTypeItem(FILTER_OPERATIONS.is, true)}
                   {renderTypeItem(FILTER_OPERATIONS.isNot, supportsIsNot(filterName))}
                   {renderTypeItem(FILTER_OPERATIONS.contains, isFreeChoiceFilter(filterName))}
-                  {renderTypeItem(FILTER_OPERATIONS.does_not_contain, isFreeChoiceFilter(filterName))}
+                  {renderTypeItem(FILTER_OPERATIONS.does_not_contain, isFreeChoiceFilter(filterName) && supportsIsNot(filterName))}
                 </div>
               </Menu.Items>
             </Transition>
