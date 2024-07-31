@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Support contains filter for goals
 - UI to edit funnels
 - Add a search functionality in all Details views, except for Countries, Regions, and Cities
 - Icons for browsers plausible/analytics#4239
