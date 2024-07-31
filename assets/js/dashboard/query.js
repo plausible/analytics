@@ -1,7 +1,6 @@
-import React from 'react'
-import { Link, withRouter } from 'react-router-dom'
-import JsonURL from '@jsonurl/jsonurl'
-import { PlausibleSearchParams, updatedQuery } from './util/url'
+import React, {useCallback} from 'react'
+import { parseSearch, stringifySearch } from './util/url'
+import { AppNavigationLink, useAppNavigate } from './navigation/use-app-navigate'
 import { nowForSite } from './util/date'
 import * as storage from './util/storage'
 import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled, getStoredMatchDayOfWeek } from './comparison-input'
@@ -16,36 +15,36 @@ dayjs.extend(utc)
 
 const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'year', 'all', 'custom']
 
-export function parseQuery(querystring, site) {
-  const q = new PlausibleSearchParams(querystring)
-  let period = q.get('period')
+export function parseQuery(searchRecord, site) {
+  const getValue = (k) => searchRecord[k];
+  let period = getValue('period')
   const periodKey = `period__${site.domain}`
 
   if (PERIODS.includes(period)) {
-    if (period !== 'custom' && period !== 'realtime') storage.setItem(periodKey, period)
+    if (period !== 'custom' && period !== 'realtime') {storage.setItem(periodKey, period)}
   } else if (storage.getItem(periodKey)) {
     period = storage.getItem(periodKey)
   } else {
     period = '30d'
   }
 
-  let comparison = q.get('comparison') || getStoredComparisonMode(site.domain)
+  let comparison = getValue('comparison') ?? getStoredComparisonMode(site.domain, null)
   if (COMPARISON_DISABLED_PERIODS.includes(period) || !isComparisonEnabled(comparison)) comparison = null
 
-  let matchDayOfWeek = q.get('match_day_of_week') || getStoredMatchDayOfWeek(site.domain)
+  let matchDayOfWeek = getValue('match_day_of_week') ?? getStoredMatchDayOfWeek(site.domain, true)
 
   return {
     period,
     comparison,
-    compare_from: q.get('compare_from') ? dayjs.utc(q.get('compare_from')) : undefined,
-    compare_to: q.get('compare_to') ? dayjs.utc(q.get('compare_to')) : undefined,
-    date: q.get('date') ? dayjs.utc(q.get('date')) : nowForSite(site),
-    from: q.get('from') ? dayjs.utc(q.get('from')) : undefined,
-    to: q.get('to') ? dayjs.utc(q.get('to')) : undefined,
-    match_day_of_week: matchDayOfWeek == 'true',
-    with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
-    filters: parseJsonUrl(q.get('filters'), []),
-    labels: parseJsonUrl(q.get('labels'), {})
+    compare_from: getValue('compare_from') ? dayjs.utc(getValue('compare_from')) : undefined,
+    compare_to: getValue('compare_to') ? dayjs.utc(getValue('compare_to')) : undefined,
+    date: getValue('date') ? dayjs.utc(getValue('date')) : nowForSite(site),
+    from: getValue('from') ? dayjs.utc(getValue('from')) : undefined,
+    to: getValue('to') ? dayjs.utc(getValue('to')) : undefined,
+    match_day_of_week: matchDayOfWeek === true,
+    with_imported: getValue('with_imported') ?? true,
+    filters: getValue('filters') || [],
+    labels: getValue('labels') || {}
   }
 }
 
@@ -53,22 +52,17 @@ export function addFilter(query, filter) {
   return { ...query, filters: [...query.filters, filter] }
 }
 
-export function navigateToQuery(history, queryFrom, newData) {
+
+
+export function navigateToQuery(navigate, {period}, newPartialSearchRecord) {
   // if we update any data that we store in localstorage, make sure going back in history will
   // revert them
-  if (newData.period && newData.period !== queryFrom.period) {
-    history.replace({ search: updatedQuery({ period: queryFrom.period }) })
+  if (newPartialSearchRecord.period && newPartialSearchRecord.period !== period) {
+    navigate({ search: (search) => ({ ...search, period: period }), replace: true })
   }
 
   // then push the new query to the history
-  history.push({ search: updatedQuery(newData) })
-}
-
-function parseJsonUrl(value, defaultValue) {
-  if (!value) {
-    return defaultValue
-  }
-  return JsonURL.parse(value.replaceAll("=", "%3D"))
+  navigate({ search: (search) => ({ ...search, ...newPartialSearchRecord }) })
 }
 
 const LEGACY_URL_PARAMETERS = {
@@ -96,46 +90,44 @@ const LEGACY_URL_PARAMETERS = {
 
 // Called once when dashboard is loaded load. Checks whether old filter style is used and if so,
 // updates the filters and updates location
-export function filtersBackwardsCompatibilityRedirect() {
-  const q = new PlausibleSearchParams(window.location.search)
-  const entries = Array.from(q.entries())
-
+export function filtersBackwardsCompatibilityRedirect(windowLocation, windowHistory) {
+  const searchRecord = parseSearch(windowLocation.search)
+  const getValue = (k) => searchRecord[k];
+  
   // New filters are used - no need to do anything
-  if (q.get("filters")) {
+  if (getValue("filters")) {
     return
   }
-
+  
+  const changedSearchRecordEntries = [];
   let filters = []
   let labels = {}
 
-  for (const [key, value] of entries) {
+  for (const [key, value] of Object.entries(searchRecord)) {
     if (LEGACY_URL_PARAMETERS.hasOwnProperty(key)) {
       const filter = parseLegacyFilter(key, value)
       filters.push(filter)
-      q.delete(key)
 
       const labelsKey = LEGACY_URL_PARAMETERS[key]
-      if (labelsKey && q.get(labelsKey)) {
+      if (labelsKey && getValue(labelsKey)) {
         const clauses = filter[2]
-        const labelsValues = q.get(labelsKey).split('|').filter(label => !!label)
+        const labelsValues = getValue(labelsKey).split('|').filter(label => !!label)
         const newLabels = Object.fromEntries(clauses.map((clause, index) => [clause, labelsValues[index]]))
 
         labels = Object.assign(labels, newLabels)
-        q.delete(labelsKey)
       }
+    } else {
+      changedSearchRecordEntries.push([key, value])
     }
   }
 
-  if (q.get('props')) {
-    filters.push(...parseLegacyPropsFilter(q.get('props')))
-    q.delete('props')
+  if (getValue('props')) {
+    filters.push(...parseLegacyPropsFilter(getValue('props')))
   }
 
   if (filters.length > 0) {
-    q.set('filters', filters)
-    q.set('labels', labels)
-
-    history.pushState({}, null, `${window.location.pathname}?${q.toString()}`)
+    changedSearchRecordEntries.push([['filters', filters], ['labels', labels]])
+    windowHistory.pushState({}, null, `${windowLocation.pathname}${stringifySearch(Object.fromEntries(changedSearchRecordEntries))}`)
   }
 }
 
@@ -159,43 +151,46 @@ export function revenueAvailable(query, site) {
   return revenueGoalsInFilter.length > 0 && singleCurrency
 }
 
-function QueryLink(props) {
+export function QueryLink({ to, search, className, children, onClick }) {
+  const navigate = useAppNavigate();
   const { query } = useQueryContext();
-  const { history, to, className, children } = props
 
-  function onClick(e) {
+  const handleClick = useCallback((e) => {
     e.preventDefault()
-    navigateToQuery(history, query, to)
-    if (props.onClick) {
-      props.onClick(e)
+    navigateToQuery(navigate, query, search)
+    if (onClick) {
+      onClick(e)
     }
-  }
+  }, [navigate, onClick, query, search])
 
   return (
-    <Link
-      to={{ pathname: window.location.pathname, search: updatedQuery(to) }}
+    <AppNavigationLink
+      to={to}
+      search={(currentSearch) => ({...currentSearch, ...search})}
       className={className}
-      onClick={onClick}
+      onClick={handleClick}
     >
       {children}
-    </Link>
+    </AppNavigationLink>
   )
 }
 
-const QueryLinkWithRouter = withRouter(QueryLink)
-export { QueryLinkWithRouter as QueryLink };
-
-function QueryButton({ history, to, disabled, className, children, onClick }) {
+export function QueryButton({ search, disabled, className, children, onClick }) {
+  const navigate = useAppNavigate();
   const { query } = useQueryContext();
+
+  const handleClick = useCallback((e) => {
+    e.preventDefault()
+    navigateToQuery(navigate, query, search)
+    if (onClick) {
+      onClick(e)
+    }
+  }, [navigate, onClick, query, search])
+
   return (
     <button
       className={className}
-      onClick={(event) => {
-        event.preventDefault()
-        navigateToQuery(history, query, to)
-        if (onClick) onClick(event)
-        history.push({ search: updatedQuery(to) })
-      }}
+      onClick={handleClick}
       type="button"
       disabled={disabled}
     >
@@ -204,5 +199,3 @@ function QueryButton({ history, to, disabled, className, children, onClick }) {
   )
 }
 
-const QueryButtonWithRouter = withRouter(QueryButton)
-export { QueryButtonWithRouter as QueryButton };

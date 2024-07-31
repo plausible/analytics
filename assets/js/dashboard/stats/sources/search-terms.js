@@ -6,6 +6,7 @@ import numberFormatter from '../../util/number-formatter'
 import RocketIcon from '../modals/rocket-icon'
 import * as api from '../../api'
 import LazyLoader from '../../components/lazy-loader'
+import { referrersGoogleRoute } from '../../router';
 
 export function ConfigureSearchTermsCTA({site}) {
   return (
@@ -112,7 +113,7 @@ export default class SearchTerms extends React.Component {
         <React.Fragment>
           <h3 className="font-bold dark:text-gray-100">Search Terms</h3>
           {this.renderList()}
-          <MoreLink list={this.state.searchTerms} endpoint="referrers/Google" className="w-full pb-4 absolute bottom-0 left-0" />
+          <MoreLink list={this.state.searchTerms} linkProps={{ path: referrersGoogleRoute.path, search: (search) => search }} className="w-full pb-4 absolute bottom-0 left-0" />
         </React.Fragment>
       )
     }

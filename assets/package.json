@@ -35,7 +35,7 @@
     "react-flip-move": "^3.0.4",
     "react-intersection-observer": "^9.5.2",
     "react-popper": "^2.3.0",
-    "react-router-dom": "^5.2.0",
+    "react-router-dom": "^6.25.1",
     "react-transition-group": "^4.4.2",
     "url-search-params-polyfill": "^8.1.1"
   },
