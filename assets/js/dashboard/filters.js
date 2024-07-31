@@ -10,11 +10,9 @@ import {
   cleanLabels,
   FILTER_MODAL_TO_FILTER_GROUP,
   formatFilterGroup,
-  formattedFilters,
   EVENT_PROPS_PREFIX,
-  getPropertyKeyFromFilterKey,
-  getLabel,
-  FILTER_OPERATIONS_DISPLAY_NAMES
+  plainFilterText,
+  styledFilterText
 } from "./util/filters";
 import { useQueryContext } from './query-context';
 import { useSiteContext } from './site-context';
@@ -38,32 +36,6 @@ function clearAllFilters(history, query) {
     query,
     { filters: false, labels: false }
   );
-}
-
-function plainFilterText(query, [operation, filterKey, clauses]) {
-  const formattedFilter = formattedFilters[filterKey]
-
-  if (formattedFilter) {
-    return `${formattedFilter} ${FILTER_OPERATIONS_DISPLAY_NAMES[operation]} ${clauses.map((value) => getLabel(query.labels, filterKey, value)).reduce((prev, curr) => `${prev} or ${curr}`)}`
-  } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
-    const propKey = getPropertyKeyFromFilterKey(filterKey)
-    return `Property ${propKey} ${FILTER_OPERATIONS_DISPLAY_NAMES[operation]} ${clauses.reduce((prev, curr) => `${prev} or ${curr}`)}`
-  }
-
-  throw new Error(`Unknown filter: ${filterKey}`)
-}
-
-function styledFilterText(query, [operation, filterKey, clauses]) {
-  const formattedFilter = formattedFilters[filterKey]
-
-  if (formattedFilter) {
-    return <>{formattedFilter} {FILTER_OPERATIONS_DISPLAY_NAMES[operation]} {clauses.map((value) => <b key={value}>{getLabel(query.labels, filterKey, value)}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
-  } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
-    const propKey = getPropertyKeyFromFilterKey(filterKey)
-    return <>Property <b>{propKey}</b> {FILTER_OPERATIONS_DISPLAY_NAMES[operation]} {clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
-  }
-
-  throw new Error(`Unknown filter: ${filterKey}`)
 }
 
 function renderDropdownFilter(filterIndex, filter, site, history, query) {
