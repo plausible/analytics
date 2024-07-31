@@ -156,7 +156,7 @@ export default function BreakdownModal({
   function renderRow(item) {
     return (
       <tr className="text-sm dark:text-gray-200" key={item.name}>
-        <td className="w-48 md:w-64 break-all p-2 flex items-center">
+        <td className="w-48 md:w-80 break-all p-2 flex items-center">
           {maybeRenderIcon(item)}
           <FilterLink
             pathname={`/${encodeURIComponent(site.domain)}`}
@@ -229,7 +229,7 @@ export default function BreakdownModal({
             <thead>
               <tr>
                 <th
-                  className="p-2 w-48 md:w-64 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                  className="p-2 w-48 md:w-80 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
                   align="left"
                 >
                   {reportInfo.dimensionLabel}
