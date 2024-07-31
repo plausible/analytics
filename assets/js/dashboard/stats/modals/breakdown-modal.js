@@ -156,7 +156,7 @@ export default function BreakdownModal({
   function renderRow(item) {
     return (
       <tr className="text-sm dark:text-gray-200" key={item.name}>
-        <td className="w-48 md:w-64 break-all p-2 flex items-center">
+        <td className="w-48 md:w-80 break-all p-2 flex items-center">
           {maybeRenderIcon(item)}
           <FilterLink
             pathname={`/${encodeURIComponent(site.domain)}`}
@@ -168,7 +168,7 @@ export default function BreakdownModal({
         </td>
         {metrics.map((metric) => {
           return (
-            <td key={metric.key} className="p-2 w-32 font-medium" align="right">
+            <td key={metric.key} className="p-2 w-24 font-medium" align="right">
               {metric.renderValue(item[metric.key])}
             </td>
           )
@@ -229,7 +229,7 @@ export default function BreakdownModal({
             <thead>
               <tr>
                 <th
-                  className="p-2 w-48 md:w-64 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                  className="p-2 w-48 md:w-80 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
                   align="left"
                 >
                   {reportInfo.dimensionLabel}
@@ -237,7 +237,7 @@ export default function BreakdownModal({
 
                 {metrics.map((metric) => {
                   return (
-                    <th key={metric.key} className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">
+                    <th key={metric.key} className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">
                       {metric.renderLabel(query)}
                     </th>
                   )

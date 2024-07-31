@@ -42,7 +42,6 @@ export default function Conversions({ afterFetchData, onGoalFilterClick }) {
       onClick={onGoalFilterClick}
       metrics={chooseMetrics()}
       detailsLink={url.sitePath('conversions')}
-      maybeHideDetails={true}
       color="bg-red-50"
       colMinWidth={90}
     />
