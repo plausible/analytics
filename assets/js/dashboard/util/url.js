@@ -111,6 +111,7 @@ export function parseSearchFragment(searchStringFragment) {
 
 export function parseSearch(searchString) {
   const urlSearchParams = new URLSearchParams(searchString);
-  const searchRecord = Object.fromEntries(urlSearchParams.entries().map(([k, v]) => ([k, parseSearchFragment(v)])))
+  const searchRecord = {};
+  urlSearchParams.forEach((v,k) => searchRecord[k] = parseSearchFragment(v))
   return searchRecord;
 } 
