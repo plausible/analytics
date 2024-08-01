@@ -1,4 +1,6 @@
 defmodule Plausible.Ingestion.Acquisition do
+  @moduledoc false
+
   def init() do
     :ets.new(__MODULE__, [
       :named_table,
