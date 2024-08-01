@@ -12,6 +12,7 @@ defmodule PlausibleWeb.Api.StatsController do
   require Logger
 
   @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
+  @not_set "(not set)"
 
   plug(:date_validation_plug)
 
@@ -1124,27 +1125,35 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
     metrics = breakdown_metrics(query, [:percentage])
 
-    versions =
+    results =
       Stats.breakdown(site, query, metrics, pagination)
-      |> transform_keys(%{browser_version: :name})
+      |> transform_keys(%{browser_version: :version})
 
     if params["csv"] do
       if Query.get_filter(query, "event:goal") do
-        versions
-        |> transform_keys(%{
-          name: :version,
-          browser: :name,
-          visitors: :conversions
-        })
+        results
+        |> transform_keys(%{browser: :name, visitors: :conversions})
         |> to_csv([:name, :version, :conversions, :conversion_rate])
       else
-        versions
-        |> transform_keys(%{name: :version, browser: :name})
+        results
+        |> transform_keys(%{browser: :name})
         |> to_csv([:name, :version, :visitors])
       end
     else
+      results =
+        results
+        |> Enum.map(fn result ->
+          name =
+            case {result.browser, result.version} do
+              {@not_set, @not_set} -> @not_set
+              {browser, version} -> "#{browser} #{version}"
+            end
+
+          Map.put(result, :name, name)
+        end)
+
       json(conn, %{
-        results: versions,
+        results: results,
         skip_imported_reason: query.skip_imported_reason
       })
     end

@@ -85,13 +85,6 @@ function BrowserVersions({ afterFetchData }) {
   const site = useSiteContext();
   function fetchData() {
     return api.get(url.apiPath(site, '/browser-versions'), query)
-      .then(res => {
-        return {
-          ...res, results: res.results.map((row => {
-            return { ...row, name: `${row.browser} ${row.name}`, version: row.name }
-          }))
-        }
-      })
   }
 
   function renderIcon(listItem) {

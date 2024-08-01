@@ -225,17 +225,19 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         |> Map.get("results")
 
       assert %{
+               "name" => "Chrome 110",
                "browser" => "Chrome",
                "conversion_rate" => 66.7,
-               "name" => "110",
+               "version" => "110",
                "total_visitors" => 3,
                "visitors" => 2
              } == List.first(json_response)
 
       assert %{
+               "name" => "Firefox 121",
                "browser" => "Firefox",
                "conversion_rate" => 100.0,
-               "name" => "121",
+               "version" => "121",
                "total_visitors" => 1,
                "visitors" => 1
              } == List.last(json_response)
@@ -258,8 +260,20 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         )
 
       assert json_response(conn, 200)["results"] == [
-               %{"name" => "78.0", "visitors" => 2, "percentage" => 66.7, "browser" => "Chrome"},
-               %{"name" => "77.0", "visitors" => 1, "percentage" => 33.3, "browser" => "Chrome"}
+               %{
+                 "name" => "Chrome 78.0",
+                 "version" => "78.0",
+                 "visitors" => 2,
+                 "percentage" => 66.7,
+                 "browser" => "Chrome"
+               },
+               %{
+                 "name" => "Chrome 77.0",
+                 "version" => "77.0",
+                 "visitors" => 1,
+                 "percentage" => 33.3,
+                 "browser" => "Chrome"
+               }
              ]
     end
 
@@ -281,7 +295,8 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                  "name" => "(not set)",
                  "visitors" => 1,
                  "percentage" => 100,
-                 "browser" => "(not set)"
+                 "browser" => "(not set)",
+                 "version" => "(not set)"
                }
              ]
     end
@@ -323,13 +338,32 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       assert json_response(conn, 200)["results"] == [
                %{
                  "browser" => "(not set)",
+                 "version" => "(not set)",
                  "name" => "(not set)",
                  "visitors" => 10,
                  "percentage" => 50.0
                },
-               %{"browser" => "Chrome", "name" => "121", "visitors" => 6, "percentage" => 30.0},
-               %{"browser" => "Firefox", "name" => "121", "visitors" => 3, "percentage" => 15.0},
-               %{"browser" => "Chrome", "name" => "110", "visitors" => 1, "percentage" => 5.0}
+               %{
+                 "browser" => "Chrome",
+                 "version" => "121",
+                 "name" => "Chrome 121",
+                 "visitors" => 6,
+                 "percentage" => 30.0
+               },
+               %{
+                 "browser" => "Firefox",
+                 "version" => "121",
+                 "name" => "Firefox 121",
+                 "visitors" => 3,
+                 "percentage" => 15.0
+               },
+               %{
+                 "browser" => "Chrome",
+                 "version" => "110",
+                 "name" => "Chrome 110",
+                 "visitors" => 1,
+                 "percentage" => 5.0
+               }
              ]
     end
   end
