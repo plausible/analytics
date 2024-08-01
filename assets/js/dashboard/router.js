@@ -10,6 +10,7 @@ import PagesModal from './stats/modals/pages'
 import EntryPagesModal from './stats/modals/entry-pages'
 import ExitPagesModal from './stats/modals/exit-pages'
 import LocationsModal from './stats/modals/locations-modal'
+import DevicesModal from './stats/modals/devices-modal'
 import PropsModal from './stats/modals/props'
 import ConversionsModal from './stats/modals/conversions'
 import FilterModal from './stats/modals/filter-modal'
@@ -106,6 +107,31 @@ export const citiesRoute = {
   element: <LocationsModal currentView="cities" />
 }
 
+export const browsersRoute = {
+  path: 'browsers',
+  element: <DevicesModal currentView="browsers" />
+}
+
+export const browserVersionsRoute = {
+  path: 'browser-versions',
+  element: <DevicesModal currentView="browser_versions" />
+}
+
+export const operatingSystemsRoute = {
+  path: 'operating-systems',
+  element: <DevicesModal currentView="operating_systems" />
+}
+
+export const operatingSystemVersionsRoute = {
+  path: 'operating-system-versions',
+  element: <DevicesModal currentView="operating_system_versions" />
+}
+
+export const screenSizesRoute = {
+  path: 'screen-sizes',
+  element: <DevicesModal currentView="screen_sizes" />
+}
+
 export const conversionsRoute = {
   path: 'conversions',
   element: <ConversionsModal />
@@ -150,6 +176,11 @@ export function createAppRouter(site) {
           countriesRoute,
           regionsRoute,
           citiesRoute,
+          browsersRoute,
+          browserVersionsRoute,
+          operatingSystemsRoute,
+          operatingSystemVersionsRoute,
+          screenSizesRoute,
           conversionsRoute,
           customPropsRoute,
           filterRoute,
