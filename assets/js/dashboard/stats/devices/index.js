@@ -196,13 +196,6 @@ function OperatingSystemVersions({ afterFetchData }) {
 
   function fetchData() {
     return api.get(url.apiPath(site, '/operating-system-versions'), query)
-      .then(res => {
-        return {
-          ...res, results: res.results.map((row => {
-            return { ...row, name: `${row.os} ${row.name}`, version: row.name }
-          }))
-        }
-      })
   }
 
   function renderIcon(listItem) {

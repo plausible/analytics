@@ -1193,23 +1193,35 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
     metrics = breakdown_metrics(query, [:percentage])
 
-    versions =
+    results =
       Stats.breakdown(site, query, metrics, pagination)
-      |> transform_keys(%{os_version: :name})
+      |> transform_keys(%{os_version: :version})
 
     if params["csv"] do
       if Query.get_filter(query, "event:goal") do
-        versions
-        |> transform_keys(%{name: :version, os: :name, visitors: :conversions})
+        results
+        |> transform_keys(%{os: :name, visitors: :conversions})
         |> to_csv([:name, :version, :conversions, :conversion_rate])
       else
-        versions
-        |> transform_keys(%{name: :version, os: :name})
+        results
+        |> transform_keys(%{os: :name})
         |> to_csv([:name, :version, :visitors])
       end
     else
+      results =
+        results
+        |> Enum.map(fn result ->
+          name =
+            case {result.os, result.version} do
+              {@not_set, @not_set} -> @not_set
+              {os, version} -> "#{os} #{version}"
+            end
+
+          Map.put(result, :name, name)
+        end)
+
       json(conn, %{
-        results: versions,
+        results: results,
         skip_imported_reason: query.skip_imported_reason
       })
     end
