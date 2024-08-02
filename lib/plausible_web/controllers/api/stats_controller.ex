@@ -1140,17 +1140,7 @@ defmodule PlausibleWeb.Api.StatsController do
         |> to_csv([:name, :version, :visitors])
       end
     else
-      results =
-        results
-        |> Enum.map(fn result ->
-          name =
-            case {result.browser, result.version} do
-              {@not_set, @not_set} -> @not_set
-              {browser, version} -> "#{browser} #{version}"
-            end
-
-          Map.put(result, :name, name)
-        end)
+      results = Enum.map(results, &put_combined_name_with_version(&1, :browser))
 
       json(conn, %{
         results: results,
@@ -1208,17 +1198,7 @@ defmodule PlausibleWeb.Api.StatsController do
         |> to_csv([:name, :version, :visitors])
       end
     else
-      results =
-        results
-        |> Enum.map(fn result ->
-          name =
-            case {result.os, result.version} do
-              {@not_set, @not_set} -> @not_set
-              {os, version} -> "#{os} #{version}"
-            end
-
-          Map.put(result, :name, name)
-        end)
+      results = Enum.map(results, &put_combined_name_with_version(&1, :os))
 
       json(conn, %{
         results: results,
@@ -1559,5 +1539,15 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       [:visitors] ++ extra_metrics
     end
+  end
+
+  def put_combined_name_with_version(row, name_key) do
+    name =
+      case {row[name_key], row.version} do
+        {@not_set, @not_set} -> @not_set
+        {browser_or_os, version} -> "#{browser_or_os} #{version}"
+      end
+
+    Map.put(row, :name, name)
   end
 end
