@@ -10,7 +10,11 @@ import PagesModal from './stats/modals/pages'
 import EntryPagesModal from './stats/modals/entry-pages'
 import ExitPagesModal from './stats/modals/exit-pages'
 import LocationsModal from './stats/modals/locations-modal'
-import DevicesModal from './stats/modals/devices-modal'
+import BrowsersModal from './stats/modals/devices/browsers-modal'
+import BrowserVersionsModal from './stats/modals/devices/browser-versions-modal'
+import OperatingSystemsModal from './stats/modals/devices/operating-systems-modal'
+import OperatingSystemVersionsModal from './stats/modals/devices/operating-system-versions-modal'
+import ScreenSizesModal from './stats/modals/devices/screen-sizes'
 import PropsModal from './stats/modals/props'
 import ConversionsModal from './stats/modals/conversions'
 import FilterModal from './stats/modals/filter-modal'
@@ -109,27 +113,27 @@ export const citiesRoute = {
 
 export const browsersRoute = {
   path: 'browsers',
-  element: <DevicesModal currentView="browsers" />
+  element: <BrowsersModal />
 }
 
 export const browserVersionsRoute = {
   path: 'browser-versions',
-  element: <DevicesModal currentView="browser_versions" />
+  element: <BrowserVersionsModal />
 }
 
 export const operatingSystemsRoute = {
   path: 'operating-systems',
-  element: <DevicesModal currentView="operating_systems" />
+  element: <OperatingSystemsModal />
 }
 
 export const operatingSystemVersionsRoute = {
   path: 'operating-system-versions',
-  element: <DevicesModal currentView="operating_system_versions" />
+  element: <OperatingSystemVersionsModal />
 }
 
 export const screenSizesRoute = {
   path: 'screen-sizes',
-  element: <DevicesModal currentView="screen_sizes" />
+  element: <ScreenSizesModal />
 }
 
 export const conversionsRoute = {
