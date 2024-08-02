@@ -263,10 +263,11 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
              ]
     end
 
-    test "returns only version under the name key when 'detailed' is true in params", %{
-      conn: conn,
-      site: site
-    } do
+    test "returns only version under the name key (+ additional metrics) when 'detailed' is true in params",
+         %{
+           conn: conn,
+           site: site
+         } do
       populate_stats(site, [
         build(:pageview, operating_system: "Mac", operating_system_version: "14")
       ])
@@ -284,6 +285,8 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
                  "name" => "14",
                  "os" => "Mac",
                  "visitors" => 1,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0,
                  "percentage" => 100.0
                }
              ]

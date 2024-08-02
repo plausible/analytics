@@ -1096,7 +1096,11 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:browser")
     query = Query.from(site, params)
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
+
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
 
     browsers =
       Stats.breakdown(site, query, metrics, pagination)
@@ -1123,7 +1127,11 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:browser_version")
     query = Query.from(site, params)
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
+
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
 
     results =
       Stats.breakdown(site, query, metrics, pagination)
@@ -1159,7 +1167,11 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:os")
     query = Query.from(site, params)
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
+
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
 
     systems =
       Stats.breakdown(site, query, metrics, pagination)
@@ -1186,7 +1198,11 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:os_version")
     query = Query.from(site, params)
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
+
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
 
     results =
       Stats.breakdown(site, query, metrics, pagination)
@@ -1222,7 +1238,11 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:device")
     query = Query.from(site, params)
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
+
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
 
     sizes =
       Stats.breakdown(site, query, metrics, pagination)

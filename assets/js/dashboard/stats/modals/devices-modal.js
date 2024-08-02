@@ -68,7 +68,9 @@ function DevicesModal({ currentView }) {
 
     return [
       metrics.createVisitors({ renderLabel: (_query) => "Visitors" }),
-      metrics.createPercentage()
+      metrics.createPercentage(),
+      metrics.createBounceRate(),
+      metrics.createVisitDuration()
     ]
   }
 

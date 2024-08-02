@@ -277,10 +277,11 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
              ]
     end
 
-    test "returns only version under the name key when 'detailed' is true in params", %{
-      conn: conn,
-      site: site
-    } do
+    test "returns only version under the name key (+ additional metrics) when 'detailed' is true in params",
+         %{
+           conn: conn,
+           site: site
+         } do
       populate_stats(site, [build(:pageview, browser: "Chrome", browser_version: "78.0")])
 
       filters = Jason.encode!(%{browser: "Chrome"})
@@ -293,6 +294,8 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                  "name" => "78.0",
                  "browser" => "Chrome",
                  "visitors" => 1,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0,
                  "percentage" => 100.0
                }
              ]
