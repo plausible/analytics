@@ -8,6 +8,13 @@ import * as url from '../../util/url';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
+import {
+  browsersRoute,
+  browserVersionsRoute,
+  operatingSystemsRoute,
+  operatingSystemVersionsRoute,
+  screenSizesRoute
+} from '../../router';
 
 // Icons copied from https://github.com/alrra/browser-logos
 const BROWSER_ICONS = {
@@ -31,7 +38,7 @@ const BROWSER_ICONS = {
   'vivo Browser': 'vivo.png'
 }
 
-function browserIconFor(browser) {
+export function browserIconFor(browser) {
   const filename = BROWSER_ICONS[browser] || 'fallback.svg'
 
   return (
@@ -76,6 +83,7 @@ function Browsers({ afterFetchData }) {
       keyLabel="Browser"
       metrics={chooseMetrics()}
       renderIcon={renderIcon}
+      detailsLinkProps={{ path: browsersRoute.path, search: (search) => search }}
     />
   )
 }
@@ -85,13 +93,6 @@ function BrowserVersions({ afterFetchData }) {
   const site = useSiteContext();
   function fetchData() {
     return api.get(url.apiPath(site, '/browser-versions'), query)
-      .then(res => {
-        return {
-          ...res, results: res.results.map((row => {
-            return { ...row, name: `${row.browser} ${row.name}`, version: row.name }
-          }))
-        }
-      })
   }
 
   function renderIcon(listItem) {
@@ -124,6 +125,7 @@ function BrowserVersions({ afterFetchData }) {
       keyLabel="Browser version"
       metrics={chooseMetrics()}
       renderIcon={renderIcon}
+      detailsLinkProps={{ path: browserVersionsRoute.path, search: (search) => search }}
     />
   )
 }
@@ -148,7 +150,7 @@ const OS_ICONS = {
   'FreeBSD': 'freebsd.png',
 }
 
-function osIconFor(os) {
+export function osIconFor(os) {
   const filename = OS_ICONS[os] || 'fallback.svg'
 
   return (
@@ -193,6 +195,7 @@ function OperatingSystems({ afterFetchData }) {
       renderIcon={renderIcon}
       keyLabel="Operating system"
       metrics={chooseMetrics()}
+      detailsLinkProps={{ path: operatingSystemsRoute.path, search: (search) => search }}
     />
   )
 }
@@ -203,13 +206,6 @@ function OperatingSystemVersions({ afterFetchData }) {
 
   function fetchData() {
     return api.get(url.apiPath(site, '/operating-system-versions'), query)
-      .then(res => {
-        return {
-          ...res, results: res.results.map((row => {
-            return { ...row, name: `${row.os} ${row.name}`, version: row.name }
-          }))
-        }
-      })
   }
 
   function renderIcon(listItem) {
@@ -242,6 +238,7 @@ function OperatingSystemVersions({ afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Operating System Version"
       metrics={chooseMetrics()}
+      detailsLinkProps={{ path: operatingSystemVersionsRoute.path, search: (search) => search }}
     />
   )
 
@@ -255,10 +252,8 @@ function ScreenSizes({ afterFetchData }) {
     return api.get(url.apiPath(site, '/screen-sizes'), query)
   }
 
-  function renderIcon(screenSize) {
-    return (
-      <span className="mr-1.5">{iconFor(screenSize.name)}</span>
-    )
+  function renderIcon(listItem) {
+    return screenSizeIconFor(listItem.name)
   }
 
   function getFilterFor(listItem) {
@@ -284,30 +279,25 @@ function ScreenSizes({ afterFetchData }) {
       keyLabel="Screen size"
       metrics={chooseMetrics()}
       renderIcon={renderIcon}
+      detailsLinkProps={{ path: screenSizesRoute.path, search: (search) => search }}
     />
   )
 }
 
-function iconFor(screenSize) {
+export function screenSizeIconFor(screenSize) {
+  let svg = null
+
   if (screenSize === 'Mobile') {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="5" y="2" width="14" height="20" rx="2" ry="2" /><line x1="12" y1="18" x2="12" y2="18" /></svg>
-    )
+    svg = <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="5" y="2" width="14" height="20" rx="2" ry="2" /><line x1="12" y1="18" x2="12" y2="18" /></svg>
   } else if (screenSize === 'Tablet') {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="4" y="2" width="16" height="20" rx="2" ry="2" transform="rotate(180 12 12)" /><line x1="12" y1="18" x2="12" y2="18" /></svg>
-    )
+    svg = <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="4" y="2" width="16" height="20" rx="2" ry="2" transform="rotate(180 12 12)" /><line x1="12" y1="18" x2="12" y2="18" /></svg>
   } else if (screenSize === 'Laptop') {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="2" y1="20" x2="22" y2="20" /></svg>
-    )
+    svg = <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="2" y1="20" x2="22" y2="20" /></svg>
   } else if (screenSize === 'Desktop') {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
-    )
-  } else if (screenSize === '(not set)') {
-    return null
+    svg = <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
   }
+
+  return <span className="mr-1.5">{svg}</span>
 }
 
 export default function Devices() {

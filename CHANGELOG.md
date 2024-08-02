@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Support contains filter for goals
 - UI to edit funnels
+- Add Details views for browsers, browser versions, os-s, os versions, and screen sizes reports
 - Add a search functionality in all Details views, except for Countries, Regions, and Cities
 - Icons for browsers plausible/analytics#4239
 - Automatic custom property selection in the dashboard Properties report

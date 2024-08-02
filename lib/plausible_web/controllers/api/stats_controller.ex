@@ -12,6 +12,7 @@ defmodule PlausibleWeb.Api.StatsController do
   require Logger
 
   @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
+  @not_set "(not set)"
 
   plug(:date_validation_plug)
 
@@ -1095,7 +1096,11 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:browser")
     query = Query.from(site, params)
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
+
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
 
     browsers =
       Stats.breakdown(site, query, metrics, pagination)
@@ -1122,29 +1127,36 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:browser_version")
     query = Query.from(site, params)
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
 
-    versions =
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
+
+    results =
       Stats.breakdown(site, query, metrics, pagination)
-      |> transform_keys(%{browser_version: :name})
+      |> transform_keys(%{browser_version: :version})
 
     if params["csv"] do
       if Query.get_filter(query, "event:goal") do
-        versions
-        |> transform_keys(%{
-          name: :version,
-          browser: :name,
-          visitors: :conversions
-        })
+        results
+        |> transform_keys(%{browser: :name, visitors: :conversions})
         |> to_csv([:name, :version, :conversions, :conversion_rate])
       else
-        versions
-        |> transform_keys(%{name: :version, browser: :name})
+        results
+        |> transform_keys(%{browser: :name})
         |> to_csv([:name, :version, :visitors])
       end
     else
+      results =
+        if params["detailed"] do
+          transform_keys(results, %{version: :name})
+        else
+          Enum.map(results, &put_combined_name_with_version(&1, :browser))
+        end
+
       json(conn, %{
-        results: versions,
+        results: results,
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1155,7 +1167,11 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:os")
     query = Query.from(site, params)
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
+
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
 
     systems =
       Stats.breakdown(site, query, metrics, pagination)
@@ -1182,25 +1198,36 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:os_version")
     query = Query.from(site, params)
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
 
-    versions =
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
+
+    results =
       Stats.breakdown(site, query, metrics, pagination)
-      |> transform_keys(%{os_version: :name})
+      |> transform_keys(%{os_version: :version})
 
     if params["csv"] do
       if Query.get_filter(query, "event:goal") do
-        versions
-        |> transform_keys(%{name: :version, os: :name, visitors: :conversions})
+        results
+        |> transform_keys(%{os: :name, visitors: :conversions})
         |> to_csv([:name, :version, :conversions, :conversion_rate])
       else
-        versions
-        |> transform_keys(%{name: :version, os: :name})
+        results
+        |> transform_keys(%{os: :name})
         |> to_csv([:name, :version, :visitors])
       end
     else
+      results =
+        if params["detailed"] do
+          transform_keys(results, %{version: :name})
+        else
+          Enum.map(results, &put_combined_name_with_version(&1, :os))
+        end
+
       json(conn, %{
-        results: versions,
+        results: results,
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1211,7 +1238,11 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:device")
     query = Query.from(site, params)
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
+
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
 
     sizes =
       Stats.breakdown(site, query, metrics, pagination)
@@ -1538,5 +1569,15 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       [:visitors] ++ extra_metrics
     end
+  end
+
+  def put_combined_name_with_version(row, name_key) do
+    name =
+      case {row[name_key], row.version} do
+        {@not_set, @not_set} -> @not_set
+        {browser_or_os, version} -> "#{browser_or_os} #{version}"
+      end
+
+    Map.put(row, :name, name)
   end
 end
