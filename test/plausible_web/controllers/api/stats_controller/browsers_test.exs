@@ -277,6 +277,27 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
              ]
     end
 
+    test "returns only version under the name key when 'detailed' is true in params", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [build(:pageview, browser: "Chrome", browser_version: "78.0")])
+
+      filters = Jason.encode!(%{browser: "Chrome"})
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/browser-versions?filters=#{filters}&detailed=true")
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "78.0",
+                 "browser" => "Chrome",
+                 "visitors" => 1,
+                 "percentage" => 100.0
+               }
+             ]
+    end
+
     test "returns results for (not set)", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, browser: "", browser_version: "")

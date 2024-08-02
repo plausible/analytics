@@ -263,6 +263,32 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
              ]
     end
 
+    test "returns only version under the name key when 'detailed' is true in params", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, operating_system: "Mac", operating_system_version: "14")
+      ])
+
+      filters = Jason.encode!(%{os: "Mac"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/operating-system-versions?filters=#{filters}&detailed=true"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "14",
+                 "os" => "Mac",
+                 "visitors" => 1,
+                 "percentage" => 100.0
+               }
+             ]
+    end
+
     test "with imported data", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
