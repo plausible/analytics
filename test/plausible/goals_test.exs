@@ -9,7 +9,12 @@ defmodule Plausible.GoalsTest do
     assert goal.page_path == "/foo bar"
     assert goal.display_name == "Visit /foo bar"
 
-    {:ok, goal} = Goals.create(site, %{"event_name" => "  some event name   ", "display_name" => " DisplayName   "})
+    {:ok, goal} =
+      Goals.create(site, %{
+        "event_name" => "  some event name   ",
+        "display_name" => " DisplayName   "
+      })
+
     assert goal.event_name == "some event name"
     assert goal.display_name == "DisplayName"
   end
