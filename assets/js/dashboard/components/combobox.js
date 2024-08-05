@@ -11,6 +11,7 @@ function Option({isHighlighted, onClick, onMouseEnter, text, id}) {
   })
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <li
       className={className}
       id={id}
