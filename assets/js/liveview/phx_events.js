@@ -11,3 +11,8 @@ window.addEventListener(`phx:js-exec`, ({ detail }) => {
     window.liveSocket.execJS(el, el.getAttribute(detail.attr))
   })
 })
+
+window.addEventListener(`phx:notify-selection-change`, (event) => {
+  let el = document.getElementById(event.detail.id)
+  el.dispatchEvent(new CustomEvent("selection-change", { detail: event.detail }))
+})
