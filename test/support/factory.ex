@@ -107,8 +107,32 @@ defmodule Plausible.Factory do
     }
   end
 
-  def goal_factory do
-    %Plausible.Goal{}
+  def goal_factory(attrs) do
+    display_name_provided? = Map.has_key?(attrs, :display_name)
+
+    attrs =
+      case {attrs, display_name_provided?} do
+        {%{page_path: path}, false} when is_binary(path) ->
+          Map.put(attrs, :display_name, "Visit " <> path)
+
+        {%{page_path: path}, false} when is_function(path, 0) ->
+          attrs
+          |> Map.put(:display_name, "Visit " <> path.())
+          |> Map.put(:page_path, path.())
+
+        {%{event_name: event_name}, false} when is_binary(event_name) ->
+          Map.put(attrs, :display_name, event_name)
+
+        {%{event_name: event_name}, false} when is_function(event_name, 0) ->
+          attrs
+          |> Map.put(:display_name, event_name.())
+          |> Map.put(:event_name, event_name.())
+
+        _ ->
+          attrs
+      end
+
+    merge_attributes(%Plausible.Goal{}, attrs)
   end
 
   def subscription_factory do
