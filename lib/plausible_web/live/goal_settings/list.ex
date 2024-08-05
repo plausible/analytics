@@ -51,35 +51,38 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
         <div class="mt-12">
           <%= for goal <- @goals do %>
             <div class="border-b border-gray-300 dark:border-gray-500 py-3 flex justify-between items-center h-16">
-              <span class="text-sm font-medium text-gray-900 dark:text-gray-100 w-2/3 cursor-help">
+              <span class="text-sm font-medium text-gray-900 dark:text-gray-100 w-2/3 cursor-help pr-4">
                 <div class="flex" title={goal.page_path || goal.event_name}>
-                  <span class="truncate">
-                    <span class="text-xs text-gray-400 block mb-1 font-normal">
+                  <div class="truncate block">
+                    <div class="text-xs text-gray-400 block mb-1 font-normal">
                       <.goal_description goal={goal} revenue_goals_enabled?={@revenue_goals_enabled?} />
-                    </span>
+                    </div>
                     <%= if not @revenue_goals_enabled? && goal.currency do %>
                       <div class="text-gray-600 flex items-center">
                         <Heroicons.lock_closed class="w-4 h-4 mr-1 inline" />
-                        <span><%= goal %></span>
+                        <div class="truncate"><%= goal %></div>
                       </div>
                     <% else %>
-                      <span><%= goal %></span>
+                      <div class="truncate"><%= goal %></div>
                     <% end %>
-                  </span>
+                  </div>
                 </div>
               </span>
 
-              <div class="flex items-center">
-                <div class="text-xs w-28 mr-6 text-gray-400">
-                  <div :if={goal.page_path} class="text-gray-600">Pageview</div>
-                  <div :if={goal.event_name && !goal.currency} class="text-gray-600">
-                    Custom Event
+              <div class="flex items-center w-1/3">
+                <div class="text-xs w-full mr-6 text-gray-400">
+                  <div class="hidden md:block">
+                    <div :if={goal.page_path} class="text-gray-600">Pageview</div>
+                    <div :if={goal.event_name && !goal.currency} class="text-gray-600">
+                      Custom Event
+                    </div>
+                    <div :if={goal.currency} class="text-gray-600">
+                      Revenue Goal (<%= goal.currency %>)
+                    </div>
+                    <div :if={not Enum.empty?(goal.funnels)}>Belongs to funnel(s)</div>
                   </div>
-                  <div :if={goal.currency} class="text-gray-600">
-                    Revenue Goal (<%= goal.currency %>)
-                  </div>
-                  <div :if={not Enum.empty?(goal.funnels)}>Belongs to funnel(s)</div>
                 </div>
+
                 <button
                   :if={!goal.currency || (goal.currency && @revenue_goals_enabled?)}
                   phx-click="edit-goal"
