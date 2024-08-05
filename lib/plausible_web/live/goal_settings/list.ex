@@ -5,8 +5,6 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   use Phoenix.LiveComponent, global_prefixes: ~w(x-)
   use Phoenix.HTML
 
-  alias PlausibleWeb.Live.Components.Modal
-
   attr(:goals, :list, required: true)
   attr(:domain, :string, required: true)
   attr(:filter_text, :string)
@@ -14,8 +12,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
 
   def render(assigns) do
     revenue_goals_enabled? = Plausible.Billing.Feature.RevenueGoals.enabled?(assigns.site)
-    goals = Enum.map(assigns.goals, &{goal_label(&1), &1})
-    assigns = assign(assigns, goals: goals, revenue_goals_enabled?: revenue_goals_enabled?)
+    assigns = assign(assigns, revenue_goals_enabled?: revenue_goals_enabled?)
 
     ~H"""
     <div>
@@ -45,54 +42,72 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           </div>
         </form>
         <div class="mt-4 flex sm:ml-4 sm:mt-0">
-          <PlausibleWeb.Components.Generic.button
-            id="add-goal-button"
-            x-data
-            x-on:click={Modal.JS.open("goals-form-modal")}
-          >
+          <PlausibleWeb.Components.Generic.button id="add-goal-button" phx-click="add-goal">
             + Add Goal
           </PlausibleWeb.Components.Generic.button>
         </div>
       </div>
       <%= if Enum.count(@goals) > 0 do %>
         <div class="mt-12">
-          <%= for {goal_label, goal} <- @goals do %>
-            <div class="border-b border-gray-300 dark:border-gray-500 py-3 flex justify-between">
-              <span class="text-sm font-medium text-gray-900 dark:text-gray-100 w-3/4">
-                <div class="flex">
+          <%= for goal <- @goals do %>
+            <div class="border-b border-gray-300 dark:border-gray-500 py-3 flex justify-between items-center h-16">
+              <span class="text-sm font-medium text-gray-900 dark:text-gray-100 w-2/3 cursor-help">
+                <div class="flex" title={goal.page_path || goal.event_name}>
                   <span class="truncate">
+                    <span class="text-xs text-gray-400 block mb-1 font-normal">
+                      <.goal_description goal={goal} revenue_goals_enabled?={@revenue_goals_enabled?} />
+                    </span>
                     <%= if not @revenue_goals_enabled? && goal.currency do %>
                       <div class="text-gray-600 flex items-center">
                         <Heroicons.lock_closed class="w-4 h-4 mr-1 inline" />
-                        <span><%= goal_label %></span>
+                        <span><%= goal %></span>
                       </div>
                     <% else %>
-                      <%= goal_label %>
+                      <span><%= goal %></span>
                     <% end %>
-                    <span class="text-sm text-gray-400 block mt-1 font-normal">
-                      <span :if={goal.page_path}>Pageview</span>
-                      <span :if={goal.event_name && !goal.currency}>Custom Event</span>
-                      <span :if={goal.currency && @revenue_goals_enabled?}>
-                        Revenue Goal
-                      </span>
-                      <span :if={goal.currency && not @revenue_goals_enabled?} class="text-red-600">
-                        Unlock Revenue Goals by upgrading to a business plan
-                      </span>
-                      <span :if={not Enum.empty?(goal.funnels)}> - belongs to funnel(s)</span>
-                    </span>
                   </span>
                 </div>
               </span>
-              <button
-                id={"delete-goal-#{goal.id}"}
-                phx-click="delete-goal"
-                phx-value-goal-id={goal.id}
-                phx-value-goal-name={goal.event_name}
-                class="text-sm text-red-600"
-                data-confirm={delete_confirmation_text(goal)}
-              >
-                <Heroicons.trash class="feather feather-sm" />
-              </button>
+
+              <div class="flex items-center">
+                <div class="text-xs w-28 mr-6 text-gray-400">
+                  <div :if={goal.page_path} class="text-gray-600">Pageview</div>
+                  <div :if={goal.event_name && !goal.currency} class="text-gray-600">
+                    Custom Event
+                  </div>
+                  <div :if={goal.currency} class="text-gray-600">
+                    Revenue Goal (<%= goal.currency %>)
+                  </div>
+                  <div :if={not Enum.empty?(goal.funnels)}>Belongs to funnel(s)</div>
+                </div>
+                <button
+                  :if={!goal.currency || (goal.currency && @revenue_goals_enabled?)}
+                  phx-click="edit-goal"
+                  phx-value-goal-id={goal.id}
+                  id={"edit-goal-#{goal.id}"}
+                >
+                  <Heroicons.pencil_square class="mr-4 feather feather-sm text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300" />
+                </button>
+
+                <button
+                  :if={goal.currency && !@revenue_goals_enabled?}
+                  id={"edit-goal-#{goal.id}-disabled"}
+                  disabled
+                  class="cursor-not-allowed"
+                >
+                  <Heroicons.pencil_square class="mr-4 feather feather-sm text-gray-400 dark:text-gray-600" />
+                </button>
+                <button
+                  id={"delete-goal-#{goal.id}"}
+                  phx-click="delete-goal"
+                  phx-value-goal-id={goal.id}
+                  phx-value-goal-name={goal.event_name}
+                  class="text-sm text-red-600"
+                  data-confirm={delete_confirmation_text(goal)}
+                >
+                  <Heroicons.trash class="feather feather-sm" />
+                </button>
+              </div>
             </div>
           <% end %>
         </div>
@@ -117,12 +132,33 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
     """
   end
 
-  defp goal_label(%{currency: currency} = goal) when not is_nil(currency) do
-    to_string(goal) <> " (#{currency})"
+  def pageview_description(goal) do
+    path = goal.page_path
+
+    case goal.display_name do
+      "Visit " <> ^path -> ""
+      _ -> "#{path}"
+    end
   end
 
-  defp goal_label(goal) do
-    to_string(goal)
+  def custom_event_description(goal) do
+    if goal.display_name == goal.event_name, do: "", else: goal.event_name
+  end
+
+  def goal_description(assigns) do
+    ~H"""
+    <span :if={@goal.page_path} class="block w-full truncate">
+      <%= pageview_description(@goal) %>
+    </span>
+
+    <span :if={@goal.event_name}>
+      <%= custom_event_description(@goal) %>
+    </span>
+
+    <span :if={@goal.currency && not @revenue_goals_enabled?} class="text-red-600">
+      Unlock Revenue Goals by upgrading to a business plan
+    </span>
+    """
   end
 
   defp delete_confirmation_text(goal) do

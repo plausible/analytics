@@ -41,9 +41,14 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       assert g3.currency
       assert resp =~ to_string(g3)
       assert resp =~ "Unlock Revenue Goals by upgrading to a business plan"
+
+      refute element_exists?(
+               resp,
+               ~s/button[phx-click="edit-goal"][phx-value-goal-id=#{g3.id}]#edit-goal-#{g3.id}/
+             )
     end
 
-    test "lists goals with delete actions", %{conn: conn, site: site} do
+    test "lists goals with actions", %{conn: conn, site: site} do
       {:ok, goals} = setup_goals(site)
       conn = get(conn, "/#{site.domain}/settings/goals")
       resp = html_response(conn, 200)
@@ -52,6 +57,11 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
         assert element_exists?(
                  resp,
                  ~s/button[phx-click="delete-goal"][phx-value-goal-id=#{g.id}]#delete-goal-#{g.id}/
+               )
+
+        assert element_exists?(
+                 resp,
+                 ~s/button[phx-click="edit-goal"][phx-value-goal-id=#{g.id}]#edit-goal-#{g.id}/
                )
       end
     end
@@ -75,10 +85,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
     test "add goal button is rendered", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/goals")
       resp = html_response(conn, 200)
-      assert element_exists?(resp, ~s/button#add-goal-button[x-data]/)
-      attr = text_of_attr(resp, ~s/button#add-goal-button/, "x-on:click")
-      assert attr =~ "open-modal"
-      assert attr =~ "goals-form-modal"
+      assert element_exists?(resp, ~s/button#add-goal-button[phx-click="add-goal"]/)
     end
 
     test "search goals input is rendered", %{conn: conn, site: site} do
