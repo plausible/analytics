@@ -3,7 +3,7 @@ defmodule PlausibleWeb.ErrorHelpers do
 
   def error_tag(%{errors: errors}, field) do
     Enum.map(Keyword.get_values(errors, field), fn error ->
-      content_tag(:div, translate_error(error), class: "mt-2 text-sm text-red-600")
+      content_tag(:div, translate_error(error), class: "mt-2 text-sm text-red-500")
     end)
   end
 
@@ -11,7 +11,7 @@ defmodule PlausibleWeb.ErrorHelpers do
     error = assigns[field]
 
     if error do
-      content_tag(:div, error, class: "mt-2 text-sm text-red-600")
+      content_tag(:div, error, class: "mt-2 text-sm text-red-500")
     end
   end
 
