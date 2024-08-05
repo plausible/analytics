@@ -7,9 +7,11 @@ defmodule Plausible.GoalsTest do
     site = insert(:site)
     {:ok, goal} = Goals.create(site, %{"page_path" => "/foo bar "})
     assert goal.page_path == "/foo bar"
+    assert goal.display_name == "Visit /foo bar"
 
-    {:ok, goal} = Goals.create(site, %{"event_name" => "  some event name   "})
+    {:ok, goal} = Goals.create(site, %{"event_name" => "  some event name   ", "display_name" => " DisplayName   "})
     assert goal.event_name == "some event name"
+    assert goal.display_name == "DisplayName"
   end
 
   test "create/2 creates pageview goal and adds a leading slash if missing" do
@@ -90,6 +92,15 @@ defmodule Plausible.GoalsTest do
              Goals.create(site, %{"event_name" => "Purchase", "currency" => "Euro"})
 
     assert [currency: {"is invalid", _}] = changeset.errors
+  end
+
+  test "update/2 updates a goal" do
+    site = insert(:site)
+    {:ok, goal1} = Goals.create(site, %{"page_path" => "/foo bar "})
+    {:ok, goal2} = Goals.update(goal1, %{"page_path" => "/", "display_name" => "Homepage"})
+    assert goal1.id == goal2.id
+    assert goal2.page_path == "/"
+    assert goal2.display_name == "Homepage"
   end
 
   @tag :ee_only
