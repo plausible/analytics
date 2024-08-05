@@ -1,9 +1,8 @@
 import React, { Fragment } from "react";
 
-import { FILTER_OPERATIONS, FILTER_OPERATIONS_DISPLAY_NAMES } from "../util/filters";
+import { FILTER_OPERATIONS, FILTER_OPERATIONS_DISPLAY_NAMES, isFreeChoiceFilter, supportsIsNot } from "../util/filters";
 import { Menu, Transition } from "@headlessui/react";
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import { isFreeChoiceFilter, supportsIsNot } from "../util/filters";
 import classNames from "classnames";
 
 export default function FilterOperatorSelector(props) {

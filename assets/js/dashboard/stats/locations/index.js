@@ -7,8 +7,7 @@ import * as api from '../../api';
 import { apiPath } from '../../util/url';
 import ListReport from '../reports/list';
 import * as metrics from '../reports/metrics';
-import { hasGoalFilter } from "../../util/filters";
-import { getFiltersByKeyPrefix } from '../../util/filters';
+import { hasGoalFilter, getFiltersByKeyPrefix } from '../../util/filters';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 import { citiesRoute, countriesRoute, regionsRoute } from '../../router';
 

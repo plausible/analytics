@@ -4,11 +4,10 @@ import { AppNavigationLink, useAppNavigate } from './navigation/use-app-navigate
 import { nowForSite } from './util/date'
 import * as storage from './util/storage'
 import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled, getStoredMatchDayOfWeek } from './comparison-input'
-import { getFiltersByKeyPrefix } from './util/filters'
+import { getFiltersByKeyPrefix, parseLegacyFilter, parseLegacyPropsFilter } from './util/filters'
 
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
-import { parseLegacyFilter, parseLegacyPropsFilter } from './util/filters'
 import { useQueryContext } from './query-context'
 
 dayjs.extend(utc)

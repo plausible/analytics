@@ -58,6 +58,7 @@ export default function FilterModalPropsRow({
           className="mr-2"
           fetchOptions={fetchPropKeyOptions}
           singleOption
+          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           values={propKey ? [{ value: propKey, label: propKey }] : []}
           onSelect={onPropKeySelect}
@@ -85,6 +86,7 @@ export default function FilterModalPropsRow({
       </div>
       {showDelete && (
         <div className="col-span-1 flex flex-col justify-center">
+          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
           <a className="ml-2 text-red-600 h-5 w-5 cursor-pointer" onClick={onDelete}>
             <TrashIcon />
           </a>
