@@ -14,6 +14,7 @@ const VIEWS = {
     renderIcon: (listItem) => {
       return (
         <img
+          alt=""
           src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
           className="h-4 w-4 mr-2 align-middle inline"
         />

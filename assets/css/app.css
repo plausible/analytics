@@ -1,13 +1,18 @@
-@import "tailwindcss/base";
-@import "flatpickr/dist/flatpickr.min.css";
-@import "./modal.css";
-@import "./loader.css";
-@import "./tooltip.css";
-@import "./flatpickr.css";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+/* @format */
 
-[x-cloak] { display: none; }
+@import 'tailwindcss/base';
+@import 'flatpickr/dist/flatpickr.min.css';
+@import './modal.css';
+@import './loader.css';
+@import './tooltip.css';
+@import './flatpickr.css';
+@import './chartjs.css';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+[x-cloak] {
+  display: none;
+}
 
 @media print {
   canvas {
@@ -45,9 +50,9 @@ html {
 }
 
 body {
-	-webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  width:100vw;  /* Prevents content from jumping when scrollbar is added/removed due to vertical overflow */
+  width: 100vw; /* Prevents content from jumping when scrollbar is added/removed due to vertical overflow */
   overflow-x: hidden;
 }
 
@@ -71,13 +76,12 @@ blockquote {
   }
 }
 
-
 .light-text {
-  color: #F0F4F8;
+  color: #f0f4f8;
 }
 
 .transition {
-  transition: all .1s ease-in;
+  transition: all 0.1s ease-in;
 }
 
 .pulsating-circle {
@@ -111,42 +115,45 @@ blockquote {
   height: 100%;
   background-color: white;
   border-radius: 15px;
-  animation: pulse-dot 3s cubic-bezier(0.455, 0.03, 0.515, 0.955) -.4s infinite;
+  animation: pulse-dot 3s cubic-bezier(0.455, 0.03, 0.515, 0.955) -0.4s infinite;
   @apply bg-green-500;
 }
 
-
 @keyframes pulse-ring {
   0% {
-    transform: scale(.33);
+    transform: scale(0.33);
   }
 
   50% {
     transform: scale(1);
   }
 
-  40%, 100% {
+  40%,
+  100% {
     opacity: 0;
   }
 }
 
 @keyframes pulse-dot {
   0% {
-    transform: scale(.8);
+    transform: scale(0.8);
   }
 
   25% {
     transform: scale(1);
   }
 
-  50%, 100% {
-    transform: scale(.8);
+  50%,
+  100% {
+    transform: scale(0.8);
   }
 }
 
-.just-text h1, .just-text h2, .just-text h3 {
+.just-text h1,
+.just-text h2,
+.just-text h3 {
   margin-top: 1em;
-  margin-bottom: .5em;
+  margin-bottom: 0.5em;
 }
 
 .just-text p {
@@ -155,25 +162,26 @@ blockquote {
 }
 
 .dropdown-content::before {
-    top: -16px;
-    right: 8px;
-    left: auto;
-    border: 8px solid transparent;
-    border-bottom-color: rgba(27,31,35,0.15);
+  top: -16px;
+  right: 8px;
+  left: auto;
+  border: 8px solid transparent;
+  border-bottom-color: rgba(27 31 35 15%);
 }
 
-.dropdown-content::before, .dropdown-content::after {
-    position: absolute;
-    display: inline-block;
-    content: "";
-  }
+.dropdown-content::before,
+.dropdown-content::after {
+  position: absolute;
+  display: inline-block;
+  content: '';
+}
 
 .dropdown-content::after {
-    top: -14px;
-    right: 9px;
-    left: auto;
-    border: 7px solid transparent;
-    border-bottom-color: #fff;
+  top: -14px;
+  right: 9px;
+  left: auto;
+  border: 7px solid transparent;
+  border-bottom-color: #fff;
 }
 
 .feather {
@@ -195,11 +203,11 @@ blockquote {
 }
 
 .dark .table-striped tbody tr:nth-child(odd) {
-  background-color: rgb(37, 47, 63);
+  background-color: rgb(37 47 63);
 }
 
 .dark .table-striped tbody tr:nth-child(even) {
-  background-color: rgb(26, 32, 44);
+  background-color: rgb(26 32 44);
 }
 
 .stats-item {
@@ -249,21 +257,21 @@ blockquote {
 
 /* Only because the map handler doesn't expose an easier way to change the shadow color */
 .dark .hoverinfo {
-  box-shadow: 1px 1px 5px rgb(26, 32, 44);
+  box-shadow: 1px 1px 5px rgb(26 32 44);
 }
 
 .fullwidth-shadow::before {
   @apply absolute top-0 w-screen h-full bg-gray-50 dark:bg-gray-850;
 
-  box-shadow: 0 4px 2px -2px rgba(0, 0, 0, 0.06);
-  content: "";
+  box-shadow: 0 4px 2px -2px rgba(0 0 0 6%);
+  content: '';
   z-index: -1;
   left: calc(-1 * calc(50vw - 50%));
   background-color: inherit;
 }
 
 .dark .fullwidth-shadow::before {
-  box-shadow: 0 4px 2px -2px rgba(200, 200, 200, 0.1);
+  box-shadow: 0 4px 2px -2px rgba(200 200 200 10%);
 }
 
 iframe[hidden] {
@@ -274,16 +282,8 @@ iframe[hidden] {
   @apply cursor-default bg-gray-100 dark:bg-gray-300 pointer-events-none;
 }
 
-@media (max-width: 768px) {
-  .flatpickr-wrapper {
-    position: absolute !important;
-    right: 0 !important;
-    left: 0 !important;
-  }
-}
-
 #chartjs-tooltip {
-  background-color: rgba(25, 30, 56);
+  background-color: rgba(25 30 56);
   position: absolute;
   font-size: 14px;
   font-style: normal;
@@ -296,24 +296,24 @@ iframe[hidden] {
 .active-prop-heading {
   /* Properties related to text-decoration are all here in one place. TailwindCSS does support underline but that's about it. */
   text-decoration-line: underline;
-  text-decoration-color: #4338CA; /* tailwind's indigo-700 */
+  text-decoration-color: #4338ca; /* tailwind's indigo-700 */
   text-decoration-thickness: 2px;
 }
 
 @media (prefers-color-scheme: dark) {
   .active-prop-heading {
-    text-decoration-color: #6366F1; /* tailwind's indigo-500 */
+    text-decoration-color: #6366f1; /* tailwind's indigo-500 */
   }
-
 }
 
 /* This class is used for styling embedded dashboards. Do not remove. */
 /* stylelint-disable */
+/* prettier-ignore */
 .date-option-group { }
-
+/* stylelint-enable */
 
 .popper-tooltip {
-  background-color: rgba(25, 30, 56);
+  background-color: rgba(25 30 56);
 }
 
 .tooltip-arrow,

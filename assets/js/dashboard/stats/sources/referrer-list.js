@@ -43,6 +43,7 @@ export default function Referrers({ source }) {
   function renderIcon(listItem) {
     return (
       <img
+        alt=""
         src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
         referrerPolicy="no-referrer"
         className="inline w-4 h-4 mr-2 -mt-px align-middle"

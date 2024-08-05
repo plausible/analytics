@@ -1,0 +1,11 @@
+/* @format */
+#chartjs-tooltip {
+  background-color: rgb(25 30 56);
+  position: absolute;
+  font-size: 14px;
+  font-style: normal;
+  padding: 10px 12px;
+  pointer-events: none;
+  border-radius: 5px;
+  z-index: 100;
+}
