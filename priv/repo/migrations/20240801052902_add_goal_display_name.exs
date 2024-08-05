@@ -10,9 +10,9 @@ defmodule Plausible.Repo.Migrations.AddGoalDisplayName do
 
     fill_display_names()
 
-    alter table(:goals) do
-      modify :display_name, :text, null: false
-    end
+    # alter table(:goals) do
+    #   modify :display_name, :text, null: false
+    # end
   end
 
   def fill_display_names do
