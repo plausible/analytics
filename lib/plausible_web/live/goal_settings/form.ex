@@ -269,7 +269,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
             type="button"
             x-on:click="active = !active; currency = ''"
             x-bind:aria-checked="active"
-            disabled={(not @has_access_to_revenue_goals? or not is_nil(@goal)) && "disabled"}
+            disabled={not @has_access_to_revenue_goals? or not is_nil(@goal)}
           >
             <span
               id={"currency-switcher-1-#{:erlang.phash2(@f)}"}
