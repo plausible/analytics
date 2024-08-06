@@ -41,7 +41,6 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
           Enum.map(page.entries, fn goal ->
             %{
               id: goal.id,
-              # XXX breaking change, cleared with Daan
               display_name: goal.display_name,
               goal_type: Goal.type(goal),
               event_name: goal.event_name,

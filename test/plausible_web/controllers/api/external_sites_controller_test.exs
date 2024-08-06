@@ -305,6 +305,38 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         assert res["domain"] == new_domain
       end
 
+      test "can add a goal as event with display name", %{conn: conn, site: site} do
+        conn =
+          put(conn, "/api/v1/sites/goals", %{
+            site_id: site.domain,
+            goal_type: "event",
+            event_name: "Signup",
+            display_name: "Customer Acquired"
+          })
+
+        res = json_response(conn, 200)
+        assert res["goal_type"] == "event"
+        assert res["event_name"] == "Signup"
+        assert res["display_name"] == "Customer Acquired"
+        assert res["domain"] == site.domain
+      end
+
+      test "can add a goal as page with display name", %{conn: conn, site: site} do
+        conn =
+          put(conn, "/api/v1/sites/goals", %{
+            site_id: site.domain,
+            goal_type: "page",
+            page_path: "/foo",
+            display_name: "Visit the foo page"
+          })
+
+        res = json_response(conn, 200)
+        assert res["goal_type"] == "page"
+        assert res["display_name"] == "Visit the foo page"
+        assert res["page_path"] == "/foo"
+        assert res["domain"] == site.domain
+      end
+
       test "is idempotent find or create op", %{conn: conn, site: site} do
         conn =
           put(conn, "/api/v1/sites/goals", %{

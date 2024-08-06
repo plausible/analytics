@@ -68,9 +68,8 @@ defmodule Plausible.Goals do
         "goal_type" => "event",
         "event_name" => event_name,
         "currency" => currency
-      })
+      } = params)
       when is_binary(event_name) and is_binary(currency) do
-    params = %{"event_name" => event_name, "currency" => currency}
 
     with {:ok, goal} <- create(site, params, upsert?: true) do
       if to_string(goal.currency) == currency do
@@ -90,15 +89,15 @@ defmodule Plausible.Goals do
     end
   end
 
-  def find_or_create(site, %{"goal_type" => "event", "event_name" => event_name})
+  def find_or_create(site, %{"goal_type" => "event", "event_name" => event_name} = params)
       when is_binary(event_name) do
-    create(site, %{"event_name" => event_name}, upsert?: true)
+    create(site, params, upsert?: true)
   end
 
   def find_or_create(_, %{"goal_type" => "event"}), do: {:missing, "event_name"}
 
-  def find_or_create(site, %{"goal_type" => "page", "page_path" => page_path}) do
-    create(site, %{"page_path" => page_path}, upsert?: true)
+  def find_or_create(site, %{"goal_type" => "page", "page_path" => _} = params) do
+    create(site, params, upsert?: true)
   end
 
   def find_or_create(_, %{"goal_type" => "page"}), do: {:missing, "page_path"}
