@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
 
       refute element_exists?(
                resp,
-               ~s/button[phx-click="edit-goal"][phx-value-goal-id=#{g3.id}]#edit-goal-#{g3.id}/
+               ~s/button[phx-click="edit-goal"][phx-value-goal-id=#{g3.id}][disabled]#edit-goal-#{g3.id}/
              )
     end
 
