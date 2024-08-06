@@ -107,7 +107,6 @@ export function filtersBackwardsCompatibilityRedirect(windowLocation, windowHist
     if (LEGACY_URL_PARAMETERS.hasOwnProperty(key)) {
       const filter = parseLegacyFilter(key, value)
       filters.push(filter)
-
       const labelsKey = LEGACY_URL_PARAMETERS[key]
       if (labelsKey && getValue(labelsKey)) {
         const clauses = filter[2]
@@ -126,7 +125,7 @@ export function filtersBackwardsCompatibilityRedirect(windowLocation, windowHist
   }
 
   if (filters.length > 0) {
-    changedSearchRecordEntries.push([['filters', filters], ['labels', labels]])
+    changedSearchRecordEntries.push(['filters', filters], ['labels', labels])
     windowHistory.pushState({}, null, `${windowLocation.pathname}${stringifySearch(Object.fromEntries(changedSearchRecordEntries))}`)
   }
 }
