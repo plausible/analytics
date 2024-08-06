@@ -88,17 +88,18 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                   phx-click="edit-goal"
                   phx-value-goal-id={goal.id}
                   id={"edit-goal-#{goal.id}"}
+                  class="mr-4"
                 >
-                  <Heroicons.pencil_square class="mr-4 feather feather-sm text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300" />
+                  <Heroicons.pencil_square class="feather feather-sm text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300" />
                 </button>
 
                 <button
                   :if={goal.currency && !@revenue_goals_enabled?}
                   id={"edit-goal-#{goal.id}-disabled"}
                   disabled
-                  class="cursor-not-allowed"
+                  class="mr-4 cursor-not-allowed"
                 >
-                  <Heroicons.pencil_square class="mr-4 feather feather-sm text-gray-400 dark:text-gray-600" />
+                  <Heroicons.pencil_square class="feather feather-sm text-gray-400 dark:text-gray-600" />
                 </button>
                 <button
                   id={"delete-goal-#{goal.id}"}
