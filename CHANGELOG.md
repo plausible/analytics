@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- UI to edit goals along with display names
 - Support contains filter for goals
 - UI to edit funnels
 - Add Details views for browsers, browser versions, os-s, os versions, and screen sizes reports
