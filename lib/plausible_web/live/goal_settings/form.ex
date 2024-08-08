@@ -277,85 +277,100 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           />
         </div>
 
-        <div
+        <.revenue_goal_settings
           :if={ee?()}
-          class="mt-6 space-y-3"
-          x-data={
-            Jason.encode!(%{
-              active: !!@f[:currency].value and @f[:currency].value != "",
-              currency: @f[:currency].value
-            })
-          }
+          f={@f}
+          site={@site}
+          current_user={@current_user}
+          has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
+          goal={@goal}
+          suffix={@suffix}
+        />
+      </div>
+    </div>
+    """
+  end
+
+  def revenue_goal_settings(assigns) do
+    assigns = assign(assigns, :selected_currency, currency_option(assigns.goal))
+
+    ~H"""
+    <div
+      class="mt-6 space-y-3"
+      x-data={
+        Jason.encode!(%{
+          active: !!@f[:currency].value and @f[:currency].value != "",
+          currency: @f[:currency].value
+        })
+      }
+    >
+      <PlausibleWeb.Components.Billing.Notice.premium_feature
+        billable_user={@site.owner}
+        current_user={@current_user}
+        feature_mod={Plausible.Billing.Feature.RevenueGoals}
+        size={:xs}
+        class="rounded-b-md"
+      />
+      <button
+        class={[
+          "flex items-center w-max mb-3",
+          if @has_access_to_revenue_goals? and is_nil(@goal) do
+            "cursor-pointer"
+          else
+            "cursor-not-allowed"
+          end
+        ]}
+        aria-labelledby="enable-revenue-tracking"
+        role="switch"
+        type="button"
+        x-on:click="active = !active; currency = ''"
+        x-bind:aria-checked="active"
+        disabled={not @has_access_to_revenue_goals? or not is_nil(@goal)}
+      >
+        <span
+          id={"currency-switcher-1-#{:erlang.phash2(@f)}"}
+          class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+          x-bind:class="active ? 'bg-indigo-600' : 'dark:bg-gray-700 bg-gray-200'"
         >
-          <PlausibleWeb.Components.Billing.Notice.premium_feature
-            billable_user={@site.owner}
-            current_user={@current_user}
-            feature_mod={Plausible.Billing.Feature.RevenueGoals}
-            size={:xs}
-            class="rounded-b-md"
+          <span
+            id={"currency-switcher-2-#{:erlang.phash2(@f)}"}
+            aria-hidden="true"
+            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+            x-bind:class="active ? 'dark:bg-gray-800 translate-x-5' : 'dark:bg-gray-800 translate-x-0'"
           />
-          <button
-            class={[
-              "flex items-center w-max mb-3",
-              if @has_access_to_revenue_goals? and is_nil(@goal) do
-                "cursor-pointer"
-              else
-                "cursor-not-allowed"
+        </span>
+        <span
+          class={[
+            "ml-3 font-medium",
+            if(@has_access_to_revenue_goals?,
+              do: "text-gray-900  dark:text-gray-100",
+              else: "text-gray-500 dark:text-gray-300"
+            )
+          ]}
+          id={"enable-revenue-tracking-#{:erlang.phash2(@f)}"}
+        >
+          Enable Revenue Tracking
+        </span>
+      </button>
+
+      <div x-show="active" id={"revenue-input-#{:erlang.phash2(@f)}"}>
+        <.live_component
+          id={"currency_input_#{@suffix}"}
+          submit_name={@f[:currency].name}
+          module={ComboBox}
+          selected={@selected_currency}
+          suggest_fun={
+            on_ee do
+              fn
+                "", [] ->
+                  Plausible.Goal.Revenue.currency_options()
+
+                input, options ->
+                  ComboBox.StaticSearch.suggest(input, options, weight_threshold: 0.8)
               end
-            ]}
-            aria-labelledby="enable-revenue-tracking"
-            role="switch"
-            type="button"
-            x-on:click="active = !active; currency = ''"
-            x-bind:aria-checked="active"
-            disabled={not @has_access_to_revenue_goals? or not is_nil(@goal)}
-          >
-            <span
-              id={"currency-switcher-1-#{:erlang.phash2(@f)}"}
-              class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
-              x-bind:class="active ? 'bg-indigo-600' : 'dark:bg-gray-700 bg-gray-200'"
-            >
-              <span
-                id={"currency-switcher-2-#{:erlang.phash2(@f)}"}
-                aria-hidden="true"
-                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                x-bind:class="active ? 'dark:bg-gray-800 translate-x-5' : 'dark:bg-gray-800 translate-x-0'"
-              />
-            </span>
-            <span
-              class={[
-                "ml-3 font-medium",
-                if(assigns.has_access_to_revenue_goals?,
-                  do: "text-gray-900  dark:text-gray-100",
-                  else: "text-gray-500 dark:text-gray-300"
-                )
-              ]}
-              id={"enable-revenue-tracking-#{:erlang.phash2(@f)}"}
-            >
-              Enable Revenue Tracking
-            </span>
-          </button>
-
-          <div x-show="active" id={"revenue-input-#{:erlang.phash2(@f)}"}>
-            <.live_component
-              id={"currency_input_#{@suffix}"}
-              submit_name={@f[:currency].name}
-              module={ComboBox}
-              selected={if revenue?(@goal), do: currency_option(@goal)}
-              suggest_fun={
-                on_ee do
-                  fn
-                    "", [] ->
-                      Plausible.Goal.Revenue.currency_options()
-
-                    input, options ->
-                      ComboBox.StaticSearch.suggest(input, options, weight_threshold: 0.8)
-                  end
-                end
-              }
-            />
-          </div>
-        </div>
+            end
+          }
+        />
       </div>
     </div>
     """
@@ -478,15 +493,13 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   on_ee do
-    defp revenue?(goal) do
-      goal && Plausible.Goal.Revenue.revenue?(goal)
-    end
+    defp currency_option(nil), do: nil
 
     defp currency_option(goal) do
-      Plausible.Goal.Revenue.currency_option(goal.currency)
+      Plausible.Goal.Revenue.revenue?(goal) &&
+        Plausible.Goal.Revenue.currency_option(goal.currency)
     end
   else
-    defp revenue?(_), do: false
     defp currency_option(_), do: nil
   end
 end
