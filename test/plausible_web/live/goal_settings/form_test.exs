@@ -199,7 +199,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       lv |> element(~s/button#edit-goal-#{g.id}/) |> render_click()
 
       html = render(lv)
-      assert element_exists?(html, "#event_name_input_modalseq0-tabseq0[value=Signup]")
+      assert element_exists?(html, "#event_name_input_modalseq0[value=Signup]")
 
       lv
       |> element("#goals-form-modalseq0 form")
@@ -219,8 +219,8 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       lv |> element(~s/button#edit-goal-#{g.id}/) |> render_click()
 
       html = render(lv)
-      assert element_exists?(html, "#event_name_input_modalseq0-tabseq0[value=Purchase]")
-      assert element_exists?(html, ~s/#currency_input_modalseq0-tabseq0[value="EUR - Euro"]/)
+      assert element_exists?(html, "#event_name_input_modalseq0[value=Purchase]")
+      assert element_exists?(html, ~s/#currency_input_modalseq0[value="EUR - Euro"]/)
 
       lv
       |> element("#goals-form-modalseq0 form")
@@ -241,7 +241,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       lv |> element(~s/button#edit-goal-#{g.id}/) |> render_click()
 
       html = render(lv)
-      assert element_exists?(html, ~s|#page_path_input_modalseq0-tabseq0[value="/go/to/blog/**"|)
+      assert element_exists?(html, ~s|#page_path_input_modalseq0[value="/go/to/blog/**"|)
 
       lv
       |> element("#goals-form-modalseq0 form")
