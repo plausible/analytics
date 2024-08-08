@@ -51,7 +51,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         on_save_goal: assigns.on_save_goal,
         on_autoconfigure: assigns.on_autoconfigure,
         goal_id: goal_id,
-        goal: goal_id && goal
+        goal: goal
       )
 
     {:ok, socket}
