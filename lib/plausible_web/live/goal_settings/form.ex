@@ -53,79 +53,122 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     {:ok, socket}
   end
 
+  # Regular functions instead of component calls are used here
+  # explicitly to avoid breaking change tracking. Done following
+  # advice from https://hexdocs.pm/phoenix_live_view/assigns-eex.html#the-assigns-variable.
   def render(assigns) do
     ~H"""
     <div id={@id}>
-      <.form
-        :let={f}
-        x-data="{ tabSelectionInProgress: false }"
-        for={@form}
-        phx-submit="save-goal"
+      <%= if @goal, do: edit_form(assigns) %>
+      <%= if is_nil(@goal), do: create_form(assigns) %>
+    </div>
+    """
+  end
+
+  def edit_form(assigns) do
+    ~H"""
+    <.form :let={f} for={@form} phx-submit="save-goal" phx-target={@myself}>
+      <h2 class="text-xl font-black dark:text-gray-100">
+        Edit Goal for <%= @domain %>
+      </h2>
+
+      <.custom_event_fields
+        :if={@selected_tab == "custom_events"}
+        f={f}
+        suffix={@context_unique_id}
+        current_user={@current_user}
+        site={@site}
+        goal={@goal}
+        existing_goals={@existing_goals}
+        goal_options={@event_name_options}
+        has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
+      />
+      <.pageview_fields
+        :if={@selected_tab == "pageviews"}
+        f={f}
+        goal={@goal}
+        suffix={@context_unique_id}
+        site={@site}
+      />
+
+      <div class="py-4">
+        <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
+          Update Goal →
+        </PlausibleWeb.Components.Generic.button>
+      </div>
+    </.form>
+    """
+  end
+
+  def create_form(assigns) do
+    ~H"""
+    <.form
+      :let={f}
+      x-data="{ tabSelectionInProgress: false }"
+      for={@form}
+      phx-submit="save-goal"
+      phx-target={@myself}
+    >
+      <PlausibleWeb.Components.Generic.spinner
+        class="spinner block absolute right-9 top-8"
+        x-show="tabSelectionInProgress"
+      />
+
+      <h2 class="text-xl font-black dark:text-gray-100">
+        Add Goal for <%= @domain %>
+      </h2>
+
+      <.tabs selected_tab={@selected_tab} myself={@myself} />
+
+      <.custom_event_fields
+        :if={@selected_tab == "custom_events"}
+        x-show="!tabSelectionInProgress"
+        f={f}
+        suffix={suffix(@context_unique_id, @tab_sequence_id)}
+        current_user={@current_user}
+        site={@site}
+        existing_goals={@existing_goals}
+        goal_options={@event_name_options}
+        has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
+        x-init="tabSelectionInProgress = false"
+      />
+      <.pageview_fields
+        :if={@selected_tab == "pageviews"}
+        x-show="!tabSelectionInProgress"
+        f={f}
+        suffix={suffix(@context_unique_id, @tab_sequence_id)}
+        site={@site}
+        x-init="tabSelectionInProgress = false"
+      />
+
+      <div class="py-4" x-show="!tabSelectionInProgress">
+        <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
+          Add Goal →
+        </PlausibleWeb.Components.Generic.button>
+      </div>
+
+      <button
+        :if={@selected_tab == "custom_events" && @event_name_options_count > 0}
+        x-show="!tabSelectionInProgress"
+        class="mt-2 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
+        phx-click="autoconfigure"
         phx-target={@myself}
       >
-        <PlausibleWeb.Components.Generic.spinner
-          class="spinner block absolute right-9 top-8"
-          x-show="tabSelectionInProgress"
-        />
-
-        <h2 class="text-xl font-black dark:text-gray-100">
-          <%= if @goal, do: "Edit", else: "Add" %> Goal for <%= @domain %>
-        </h2>
-
-        <.tabs :if={is_nil(@goal)} selected_tab={@selected_tab} myself={@myself} />
-
-        <.custom_event_fields
-          :if={@selected_tab == "custom_events"}
-          x-show="!tabSelectionInProgress"
-          f={f}
-          suffix={suffix(@context_unique_id, @tab_sequence_id)}
-          current_user={@current_user}
-          site={@site}
-          goal={@goal}
-          existing_goals={@existing_goals}
-          goal_options={@event_name_options}
-          has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
-          x-init="tabSelectionInProgress = false"
-        />
-        <.pageview_fields
-          :if={@selected_tab == "pageviews"}
-          x-show="!tabSelectionInProgress"
-          f={f}
-          goal={@goal}
-          suffix={suffix(@context_unique_id, @tab_sequence_id)}
-          site={@site}
-          x-init="tabSelectionInProgress = false"
-        />
-
-        <div class="py-4" x-show="!tabSelectionInProgress">
-          <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-            <%= if @goal, do: "Update", else: "Add" %> Goal →
-          </PlausibleWeb.Components.Generic.button>
-        </div>
-
-        <button
-          :if={@selected_tab == "custom_events" && @event_name_options_count > 0 && is_nil(@goal)}
-          x-show="!tabSelectionInProgress"
-          class="mt-2 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
-          phx-click="autoconfigure"
-          phx-target={@myself}
-        >
-          <span :if={@event_name_options_count > 1}>
-            Already sending custom events? We've found <%= @event_name_options_count %> custom events from the last 6 months that are not yet configured as goals. Click here to add them.
-          </span>
-          <span :if={@event_name_options_count == 1}>
-            Already sending custom events? We've found 1 custom event from the last 6 months that is not yet configured as a goal. Click here to add it.
-          </span>
-        </button>
-      </.form>
-    </div>
+        <span :if={@event_name_options_count > 1}>
+          Already sending custom events? We've found <%= @event_name_options_count %> custom events from the last 6 months that are not yet configured as goals. Click here to add them.
+        </span>
+        <span :if={@event_name_options_count == 1}>
+          Already sending custom events? We've found 1 custom event from the last 6 months that is not yet configured as a goal. Click here to add it.
+        </span>
+      </button>
+    </.form>
     """
   end
 
   attr(:f, Phoenix.HTML.Form)
   attr(:site, Plausible.Site)
   attr(:suffix, :string)
-  attr(:goal, Plausible.Goal)
+  attr(:goal, Plausible.Goal, default: nil)
   attr(:rest, :global)
 
   def pageview_fields(assigns) do
@@ -176,7 +219,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   attr(:suffix, :string)
   attr(:existing_goals, :list)
   attr(:goal_options, :list)
-  attr(:goal, Plausible.Goal)
+  attr(:goal, Plausible.Goal, default: nil)
   attr(:has_access_to_revenue_goals?, :boolean)
 
   attr(:rest, :global)
