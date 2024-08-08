@@ -119,6 +119,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
   @impl true
   def update(assigns, socket) do
     preload? = Map.get(assigns, :preload?, true)
+
     socket =
       assign(socket,
         id: assigns.id,
