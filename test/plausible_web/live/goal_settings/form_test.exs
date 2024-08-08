@@ -27,68 +27,65 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
     setup [:create_user, :log_in, :create_site]
 
     @tag :ee_only
-    test "renders form fields (with currency)", %{conn: conn, site: site} do
+    test "renders form fields per tab, with currency", %{conn: conn, site: site} do
       lv = get_liveview(conn, site)
       html = render(lv)
 
-      event_name_display = find(html, "form input#event_name_input_modalseq0-tabseq0")
-      assert name_of(event_name_display) == "display-event_name_input_modalseq0-tabseq0"
+      refute element_exists?(html, "#pageviews-form")
 
-      event_name = find(html, "form input#submit-event_name_input_modalseq0-tabseq0")
-      assert name_of(event_name) == "goal[event_name]"
+      input_names = html |> find("#custom-events-form input") |> Enum.map(&name_of/1)
 
-      currency_display = find(html, "form input#currency_input_modalseq0-tabseq0")
-      assert name_of(currency_display) == "display-currency_input_modalseq0-tabseq0"
-
-      currency_submit = find(html, "form input#submit-currency_input_modalseq0-tabseq0")
-      assert name_of(currency_submit) == "goal[currency]"
-
-      display_name = find(html, "form input#custom_event_display_name_input")
-      assert name_of(display_name) == "goal[display_name]"
+      assert input_names ==
+               [
+                 "display-event_name_input_modalseq0-tabseq0",
+                 "goal[event_name]",
+                 "goal[display_name]",
+                 "display-currency_input_modalseq0-tabseq0",
+                 "goal[currency]"
+               ]
 
       lv |> element(~s/a#pageview-tab/) |> render_click()
+      html = lv |> render()
 
-      html = render(lv)
+      refute element_exists?(html, "#custom-events-form")
 
-      page_path_display = find(html, "form input#page_path_input_modalseq0-tabseq1")
-      assert name_of(page_path_display) == "display-page_path_input_modalseq0-tabseq1"
+      input_names = html |> find("#pageviews-form input") |> Enum.map(&name_of/1)
 
-      page_path_submit = find(html, "form input#submit-page_path_input_modalseq0-tabseq1")
-      assert name_of(page_path_submit) == "goal[page_path]"
-
-      display_name = find(html, "form input#display_name_input")
-      assert name_of(display_name) == "goal[display_name]"
+      assert input_names == [
+               "display-page_path_input_modalseq0-tabseq1",
+               "goal[page_path]",
+               "goal[display_name]"
+             ]
     end
 
     @tag :ce_build_only
-    test "renders form fields (no currency)", %{conn: conn, site: site} do
+    test "renders form fields per tab (no currency)", %{conn: conn, site: site} do
       lv = get_liveview(conn, site)
       html = render(lv)
 
-      event_name_display = find(html, "form input#event_name_input_modalseq0-tabseq0")
-      assert name_of(event_name_display) == "display-event_name_input_modalseq0-tabseq0"
+      refute element_exists?(html, "#pageviews-form")
 
-      event_name = find(html, "form input#submit-event_name_input_modalseq0-tabseq0")
-      assert name_of(event_name) == "goal[event_name]"
+      input_names = html |> find("#custom-events-form input") |> Enum.map(&name_of/1)
 
-      refute element_exists?(html, "form input#currency_input_modalseq0-tabseq0")
-      refute element_exists?(html, "form input#submit-currency_input_modalseq0-tabseq0")
-
-      display_name = find(html, "form input#custom_event_display_name_input")
-      assert name_of(display_name) == "goal[display_name]"
+      assert input_names ==
+               [
+                 "display-event_name_input_modalseq0-tabseq0",
+                 "goal[event_name]",
+                 "goal[display_name]"
+               ]
 
       lv |> element(~s/a#pageview-tab/) |> render_click()
+      html = lv |> render()
 
-      html = render(lv)
+      refute element_exists?(html, "#custom-events-form")
 
-      page_path_display = find(html, "form input#page_path_input_modalseq0-tabseq1")
-      assert name_of(page_path_display) == "display-page_path_input_modalseq0-tabseq1"
+      input_names = html |> find("#pageviews-form input") |> Enum.map(&name_of/1)
 
-      page_path_submit = find(html, "form input#submit-page_path_input_modalseq0-tabseq1")
-      assert name_of(page_path_submit) == "goal[page_path]"
-
-      display_name = find(html, "form input#display_name_input")
-      assert name_of(display_name) == "goal[display_name]"
+      assert input_names == [
+               "display-page_path_input_modalseq0-tabseq1",
+               "goal[page_path]",
+               "goal[display_name]"
+             ]
     end
 
     test "renders error on empty submission", %{conn: conn, site: site} do
