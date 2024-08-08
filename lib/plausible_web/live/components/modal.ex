@@ -118,6 +118,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
 
   @impl true
   def update(assigns, socket) do
+    preload? = Map.get(assigns, :preload?, true)
     socket =
       assign(socket,
         id: assigns.id,
@@ -127,8 +128,8 @@ defmodule PlausibleWeb.Live.Components.Modal do
         # established. Otherwise, there will be problems
         # with live components relying on ID for setup
         # on mount (using AlpineJS, for instance).
-        load_content?: assigns.preload?,
-        preload?: assigns.preload?,
+        load_content?: preload?,
+        preload?: preload?,
         modal_sequence_id: 0
       )
 
