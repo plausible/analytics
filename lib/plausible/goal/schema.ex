@@ -135,7 +135,7 @@ end
 
 defimpl String.Chars, for: Plausible.Goal do
   def to_string(goal) do
-    "#{goal.display_name}"
+    goal.display_name
   end
 end
 
