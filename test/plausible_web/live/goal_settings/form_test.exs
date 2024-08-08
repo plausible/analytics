@@ -205,6 +205,8 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       |> element("#goals-form-modalseq0 form")
       |> render_submit(%{goal: %{event_name: "Updated", display_name: "UPDATED"}})
 
+      _html = render(lv)
+
       updated = Plausible.Goals.get(site, g.id)
       assert updated.event_name == "Updated"
       assert updated.display_name == "UPDATED"
@@ -226,6 +228,8 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       |> element("#goals-form-modalseq0 form")
       |> render_submit(%{goal: %{event_name: "Updated", currency: "USD"}})
 
+      _html = render(lv)
+
       updated = Plausible.Goals.get(site, g.id)
       assert updated.event_name == "Updated"
       assert updated.display_name == "Purchase"
@@ -246,6 +250,8 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       lv
       |> element("#goals-form-modalseq0 form")
       |> render_submit(%{goal: %{page_path: "/updated", display_name: "Visit /updated"}})
+
+      _html = render(lv)
 
       updated = Plausible.Goals.get(site, g.id)
       assert updated.page_path == "/updated"
