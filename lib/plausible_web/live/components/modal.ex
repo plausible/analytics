@@ -179,7 +179,6 @@ defmodule PlausibleWeb.Live.Components.Modal do
         modalOpen: false,
         modalPreopen: false,
         preopenModal() {
-          console.log('test');
           document.body.style['overflow-y'] = 'hidden';
 
           this.modalPreopen = true;
