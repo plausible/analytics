@@ -11,23 +11,20 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   alias Plausible.Repo
 
   def update(assigns, socket) do
-    site = Repo.preload(assigns.site, [:owner])
+    site = Repo.preload(assigns.site, :owner)
     owner = Plausible.Users.with_subscription(site.owner)
     site = %{site | owner: owner}
 
     has_access_to_revenue_goals? =
       Plausible.Billing.Feature.RevenueGoals.check_availability(owner) == :ok
 
-    goal_id = if assigns.goal_id, do: String.to_integer(assigns.goal_id)
-    goal = goal_id && Plausible.Goals.get(site, goal_id)
-
     form =
-      (goal || %Plausible.Goal{})
+      (assigns.goal || %Plausible.Goal{})
       |> Plausible.Goal.changeset()
       |> to_form()
 
     selected_tab =
-      if goal && goal.page_path do
+      if assigns.goal && assigns.goal.page_path do
         "pageviews"
       else
         "custom_events"
@@ -50,8 +47,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         existing_goals: assigns.existing_goals,
         on_save_goal: assigns.on_save_goal,
         on_autoconfigure: assigns.on_autoconfigure,
-        goal_id: goal_id,
-        goal: goal
+        goal: assigns.goal
       )
 
     {:ok, socket}
