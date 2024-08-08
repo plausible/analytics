@@ -72,7 +72,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           <%= if @goal, do: "Edit", else: "Add" %> Goal for <%= @domain %>
         </h2>
 
-        <.tabs goal={@goal} selected_tab={@selected_tab} myself={@myself} />
+        <.tabs :if={is_nil(@goal)} selected_tab={@selected_tab} myself={@myself} />
 
         <.custom_event_fields
           :if={@selected_tab == "custom_events"}
@@ -320,13 +320,11 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def tabs(assigns) do
     ~H"""
-    <%= if is_nil(@goal) do %>
-      <div class="mt-6 font-medium dark:text-gray-100">Goal Trigger</div>
-      <div class="my-3 w-full flex rounded border border-gray-300 dark:border-gray-500">
-        <.custom_events_tab selected?={@selected_tab == "custom_events"} myself={@myself} />
-        <.pageviews_tab selected?={@selected_tab == "pageviews"} myself={@myself} />
-      </div>
-    <% end %>
+    <div class="mt-6 font-medium dark:text-gray-100">Goal Trigger</div>
+    <div class="my-3 w-full flex rounded border border-gray-300 dark:border-gray-500">
+      <.custom_events_tab selected?={@selected_tab == "custom_events"} myself={@myself} />
+      <.pageviews_tab selected?={@selected_tab == "pageviews"} myself={@myself} />
+    </div>
     """
   end
 
