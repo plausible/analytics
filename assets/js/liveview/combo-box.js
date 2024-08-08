@@ -6,12 +6,17 @@ export default (id) => ({
   id: id,
   focus: null,
   selectionInProgress: false,
+  firstFocusRegistered: false,
   setFocus(f) {
     this.focus = f;
   },
   initFocus() {
     if (this.focus === null) {
       this.setFocus(this.leastFocusableIndex())
+      if (!this.firstFocusRegistered) {
+        document.getElementById(this.id).select();
+        this.firstFocusRegistered = true;
+      }
     }
   },
   trackSubmitValueChange() {
