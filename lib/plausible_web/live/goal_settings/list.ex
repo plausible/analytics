@@ -5,6 +5,8 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   use Phoenix.LiveComponent, global_prefixes: ~w(x-)
   use Phoenix.HTML
 
+  alias PlausibleWeb.Live.Components.Modal
+
   attr(:goals, :list, required: true)
   attr(:domain, :string, required: true)
   attr(:filter_text, :string)
@@ -42,7 +44,12 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           </div>
         </form>
         <div class="mt-4 flex sm:ml-4 sm:mt-0">
-          <PlausibleWeb.Components.Generic.button id="add-goal-button" phx-click="add-goal">
+          <PlausibleWeb.Components.Generic.button
+            id="add-goal-button"
+            phx-click="add-goal"
+            x-data
+            x-on:click={Modal.JS.preopen("goals-form-modal")}
+          >
             + Add Goal
           </PlausibleWeb.Components.Generic.button>
         </div>
@@ -85,6 +92,8 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
 
                 <button
                   :if={!goal.currency || (goal.currency && @revenue_goals_enabled?)}
+                  x-data
+                  x-on:click={Modal.JS.preopen("goals-form-modal")}
                   phx-click="edit-goal"
                   phx-value-goal-id={goal.id}
                   id={"edit-goal-#{goal.id}"}
