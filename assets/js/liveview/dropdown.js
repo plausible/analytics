@@ -15,6 +15,6 @@ export default () => ({
     if (! this.open) return
 
     this.open = false
-    focusAfter && focusAfter.focus()
+    focusAfter?.focus()
   },
 })

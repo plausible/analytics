@@ -11,7 +11,7 @@ function testLocalStorageAvailability(){
     localStorage.setItem(testItem, testItem);
     localStorage.removeItem(testItem);
     return true;
-  } catch(e) {
+  } catch (_e) {
     return false;
   }
 }
