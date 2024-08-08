@@ -127,7 +127,8 @@ defmodule PlausibleWeb.Live.Components.Modal do
         # established. Otherwise, there will be problems
         # with live components relying on ID for setup
         # on mount (using AlpineJS, for instance).
-        load_content?: true,
+        load_content?: assigns.preload?,
+        preload?: assigns.preload?,
         modal_sequence_id: 0
       )
 
@@ -136,6 +137,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
 
   attr :id, :any, required: true
   attr :class, :string, default: ""
+  attr :preload?, :boolean, default: true
   slot :inner_block, required: true
 
   def render(assigns) do
@@ -179,6 +181,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
           }, 200);
         }
       }"
+      x-init={"firstLoadDone = #{not @preload?}"}
       x-on:open-modal.window={"if ($event.detail === '#{@id}') openModal()"}
       x-on:close-modal.window={"if ($event.detail === '#{@id}') closeModal()"}
       data-onopen={LiveView.JS.push("open", target: @myself)}
