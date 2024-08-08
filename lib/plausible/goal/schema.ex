@@ -49,6 +49,11 @@ defmodule Plausible.Goal do
     |> maybe_drop_currency()
   end
 
+  @spec display_name(t()) :: String.t()
+  def display_name(goal) do
+    goal.display_name
+  end
+
   @spec type(t()) :: :event | :page
   def type(%{event_name: event_name}) when is_binary(event_name), do: :event
   def type(%{page_path: page_path}) when is_binary(page_path), do: :page
