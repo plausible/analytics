@@ -341,8 +341,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp validate_filter(site, [_type, "event:goal", goal_filter]) do
     configured_goals =
-      Plausible.Goals.for_site(site)
-      |> Enum.map(&Plausible.Goal.display_name/1)
+      site
+      |> Plausible.Goals.for_site()
+      |> Enum.map(& &1.display_name)
 
     goals_in_filter = List.wrap(goal_filter)
 
