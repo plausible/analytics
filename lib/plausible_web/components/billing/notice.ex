@@ -264,7 +264,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     else
       ~H"""
       <p>
-        You have access to your stats until <span class="font-semibold inline"><%= Timex.format!(@user.subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></span>.
+        You have access to your stats until <span class="font-semibold inline"><%= Calendar.strftime(@user.subscription.next_bill_date, "%b %-d, %Y") %></span>.
         <.link
           class="underline inline-block"
           href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}

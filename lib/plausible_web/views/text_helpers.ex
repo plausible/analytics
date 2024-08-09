@@ -42,6 +42,6 @@ defmodule PlausibleWeb.TextHelpers do
   end
 
   def format_date(date) do
-    Timex.format!(date, "{Mshort} {D}, {YYYY}")
+    Calendar.strftime(date, "%b %-d, %Y")
   end
 end

@@ -61,7 +61,7 @@ defmodule Plausible.Workers.SendEmailReport do
       Timex.now(site.timezone)
       |> DateTime.shift(month: -1)
       |> Timex.beginning_of_month()
-      |> Timex.format!("{ISOdate}")
+      |> Date.to_iso8601()
 
     query = Query.from(site, %{"period" => "month", "date" => last_month})
 
@@ -77,7 +77,7 @@ defmodule Plausible.Workers.SendEmailReport do
   end
 
   defp put_monthly_report_name(%{query: query} = assigns) do
-    Map.put(assigns, :name, Timex.format!(query.date_range.first, "{Mfull}"))
+    Map.put(assigns, :name, Calendar.strftime(query.date_range.first, "%B"))
   end
 
   defp put_stats(%{site: site, query: query} = assigns) do

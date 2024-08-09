@@ -158,7 +158,7 @@ defmodule Plausible.SiteAdmin do
   end
 
   defp format_date(date) do
-    Timex.format!(date, "{Mshort} {D}, {YYYY}")
+    Calendar.strftime(date, "%b %-d, %Y")
   end
 
   defp get_owner(site) do
