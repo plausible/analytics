@@ -2,7 +2,7 @@ defmodule PlausibleWeb.AuthController do
   use PlausibleWeb, :controller
   use Plausible.Repo
 
-  alias Plausible.{Auth, RateLimit}
+  alias Plausible.Auth
   alias Plausible.Billing.Quota
   alias PlausibleWeb.TwoFactor
 
@@ -235,9 +235,9 @@ defmodule PlausibleWeb.AuthController do
   end
 
   defp login_user(conn, email, password) do
-    with :ok <- check_ip_rate_limit(conn),
+    with :ok <- Auth.rate_limit(:login_ip, conn),
          {:ok, user} <- find_user(email),
-         :ok <- check_user_rate_limit(user),
+         :ok <- Auth.rate_limit(:login_user, user),
          :ok <- check_password(user, password) do
       {:ok, user}
     else
@@ -258,7 +258,7 @@ defmodule PlausibleWeb.AuthController do
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
-      {:rate_limit, _} ->
+      {:error, {:rate_limit, _}} ->
         maybe_log_failed_login_attempts("too many login attempts for #{email}")
 
         render_error(
@@ -295,27 +295,6 @@ defmodule PlausibleWeb.AuthController do
   defp maybe_log_failed_login_attempts(message) do
     if Application.get_env(:plausible, :log_failed_login_attempts) do
       Logger.warning("[login] #{message}")
-    end
-  end
-
-  @login_interval 60_000
-  @login_limit 5
-  @email_change_limit 2
-  @email_change_interval :timer.hours(1)
-
-  defp check_ip_rate_limit(conn) do
-    ip_address = PlausibleWeb.RemoteIP.get(conn)
-
-    case RateLimit.check_rate("login:ip:#{ip_address}", @login_interval, @login_limit) do
-      {:allow, _} -> :ok
-      {:deny, _} -> {:rate_limit, :ip_address}
-    end
-  end
-
-  defp check_user_rate_limit(user) do
-    case RateLimit.check_rate("login:user:#{user.id}", @login_interval, @login_limit) do
-      {:allow, _} -> :ok
-      {:deny, _} -> {:rate_limit, :user}
     end
   end
 
@@ -509,11 +488,11 @@ defmodule PlausibleWeb.AuthController do
   defp get_2fa_user_limited(conn) do
     case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
-        with :ok <- check_ip_rate_limit(conn),
-             :ok <- check_user_rate_limit(user) do
+        with :ok <- Auth.rate_limit(:login_ip, conn),
+             :ok <- Auth.rate_limit(:login_user, user) do
           {:ok, user}
         else
-          {:rate_limit, _} ->
+          {:error, {:rate_limit, _}} ->
             maybe_log_failed_login_attempts("too many login attempts for #{user.email}")
 
             conn
@@ -553,33 +532,25 @@ defmodule PlausibleWeb.AuthController do
   def update_email(conn, %{"user" => user_params}) do
     user = conn.assigns.current_user
 
-    case RateLimit.check_rate(
-           "email-change:user:#{user.id}",
-           @email_change_interval,
-           @email_change_limit
-         ) do
-      {:allow, _} ->
-        changes = Auth.User.email_changeset(user, user_params)
+    with :ok <- Auth.rate_limit(:email_change_user, user),
+         changes = Auth.User.email_changeset(user, user_params),
+         {:ok, user} <- Repo.update(changes) do
+      if user.email_verified do
+        handle_email_updated(conn)
+      else
+        Auth.EmailVerification.issue_code(user)
+        redirect(conn, to: Routes.auth_path(conn, :activate_form))
+      end
+    else
+      {:error, %Ecto.Changeset{} = changeset} ->
+        settings_changeset = Auth.User.settings_changeset(user)
 
-        case Repo.update(changes) do
-          {:ok, user} ->
-            if user.email_verified do
-              handle_email_updated(conn)
-            else
-              Auth.EmailVerification.issue_code(user)
-              redirect(conn, to: Routes.auth_path(conn, :activate_form))
-            end
+        render_settings(conn,
+          settings_changeset: settings_changeset,
+          email_changeset: changeset
+        )
 
-          {:error, changeset} ->
-            settings_changeset = Auth.User.settings_changeset(user)
-
-            render_settings(conn,
-              settings_changeset: settings_changeset,
-              email_changeset: changeset
-            )
-        end
-
-      {:deny, _} ->
+      {:error, {:rate_limit, _}} ->
         settings_changeset = Auth.User.settings_changeset(user)
 
         {:error, changeset} =
