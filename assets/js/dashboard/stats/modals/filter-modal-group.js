@@ -49,6 +49,7 @@ export default function FilterModalGroup({
       </div>
       {showAddRow && (
         <div className="mt-2">
+          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
           <a className="underline text-indigo-500 text-sm cursor-pointer" onClick={() => onAddRow(filterGroup)}>
             + Add another
           </a>

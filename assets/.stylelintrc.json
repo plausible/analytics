@@ -1,22 +1,13 @@
 {
-  "extends": [
-    "stylelint-config-standard",
-    "stylelint-config-prettier"
-  ],
+  "extends": ["stylelint-config-standard"],
+  "ignoreFiles": ["./node_modules/**/*.*"],
   "rules": {
-    "at-rule-no-unknown": [
-      true,
-      {
-        "ignoreAtRules": [
-          "tailwind",
-          "apply",
-          "variants",
-          "responsive",
-          "screen"
-        ]
-      }
+    "import-notation": "string",
+    "at-rule-no-unknown": [true, { "ignoreAtRules": ["apply", "screen"] }],
+    "at-rule-empty-line-before": [
+      "always",
+      { "except": ["blockless-after-same-name-blockless"], "ignoreAtRules": ["apply"] }
     ],
-    "declaration-block-trailing-semicolon": null,
     "no-descending-specificity": null
   }
 }

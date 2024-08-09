@@ -43,6 +43,7 @@ export function browserIconFor(browser) {
 
   return (
     <img
+      alt=""
       src={`/images/icon/browser/${filename}`}
       className="w-4 h-4 mr-2"
     />
@@ -155,6 +156,7 @@ export function osIconFor(os) {
 
   return (
     <img
+      alt=""
       src={`/images/icon/os/${filename}`}
       className="w-4 h-4 mr-2"
     />

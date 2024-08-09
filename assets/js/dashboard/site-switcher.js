@@ -8,6 +8,7 @@ import { Cog8ToothIcon, ChevronDownIcon } from '@heroicons/react/20/solid'
 function Favicon({ domain, className }) {
   return (
     <img
+      alt=""
       src={`/favicon/sources/${encodeURIComponent(domain)}`}
       onError={(e) => {
         e.target.onerror = null

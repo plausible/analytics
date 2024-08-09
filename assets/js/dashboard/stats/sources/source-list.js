@@ -39,6 +39,7 @@ function AllSources({ afterFetchData }) {
   function renderIcon(listItem) {
     return (
       <img
+        alt=""
         src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
         className="w-4 h-4 mr-2"
       />

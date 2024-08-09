@@ -2,13 +2,12 @@ import React, { useCallback } from "react";
 import { useParams } from "react-router-dom";
 
 import Modal from './modal'
-import { addFilter } from '../../query'
+import { addFilter, revenueAvailable } from '../../query'
 import { specialTitleWhenGoalFilter } from "../behaviours/goal-conversions";
 import { EVENT_PROPS_PREFIX, hasGoalFilter } from "../../util/filters"
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
 import * as url from "../../util/url";
-import { revenueAvailable } from "../../query";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
 
