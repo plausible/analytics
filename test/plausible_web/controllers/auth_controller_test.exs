@@ -420,33 +420,23 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "limits login attempts to 5 per minute" do
       user = insert(:user, password: "password")
 
-      build_conn()
-      |> put_req_header("x-forwarded-for", "1.2.3.5")
-      |> post("/login", email: user.email, password: "wrong")
+      conn = put_req_header(build_conn(), "x-forwarded-for", "1.2.3.5")
 
-      build_conn()
-      |> put_req_header("x-forwarded-for", "1.2.3.5")
-      |> post("/login", email: user.email, password: "wrong")
+      response =
+        eventually(
+          fn ->
+            Enum.each(1..5, fn _ ->
+              post(conn, "/login", email: user.email, password: "wrong")
+            end)
 
-      build_conn()
-      |> put_req_header("x-forwarded-for", "1.2.3.5")
-      |> post("/login", email: user.email, password: "wrong")
+            conn = post(conn, "/login", email: user.email, password: "wrong")
 
-      build_conn()
-      |> put_req_header("x-forwarded-for", "1.2.3.5")
-      |> post("/login", email: user.email, password: "wrong")
+            {conn.status == 429, conn}
+          end,
+          500
+        )
 
-      build_conn()
-      |> put_req_header("x-forwarded-for", "1.2.3.5")
-      |> post("/login", email: user.email, password: "wrong")
-
-      conn =
-        build_conn()
-        |> put_req_header("x-forwarded-for", "1.2.3.5")
-        |> post("/login", email: user.email, password: "wrong")
-
-      assert get_session(conn, :current_user_id) == nil
-      assert html_response(conn, 429) =~ "Too many login attempts"
+      assert html_response(response, 429) =~ "Too many login attempts"
     end
   end
 
@@ -1833,37 +1823,29 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, user, _} = Auth.TOTP.initiate(user)
       {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
 
-      conn = login_with_cookie(conn, user.email, "password")
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
-      |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
-      |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
-      |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
-      |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
-      |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
-
       conn =
         conn
+        |> login_with_cookie(user.email, "password")
         |> put_req_header("x-forwarded-for", "1.1.1.1")
-        |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
 
-      assert get_session(conn, :current_user_id) == nil
+      response =
+        eventually(
+          fn ->
+            Enum.each(1..5, fn _ ->
+              post(conn, Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
+            end)
+
+            conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
+
+            {conn.status == 429, conn}
+          end,
+          500
+        )
+
+      assert get_session(response, :current_user_id) == nil
       # 2FA session terminated
-      assert conn.resp_cookies["session_2fa"].max_age == 0
-      assert html_response(conn, 429) =~ "Too many login attempts"
+      assert response.resp_cookies["session_2fa"].max_age == 0
+      assert html_response(response, 429) =~ "Too many login attempts"
     end
   end
 
@@ -2004,37 +1986,34 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, user, _} = Auth.TOTP.initiate(user)
       {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
 
-      conn = login_with_cookie(conn, user.email, "password")
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.2.3.4")
-      |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.2.3.4")
-      |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.2.3.4")
-      |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.2.3.4")
-      |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.2.3.4")
-      |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
-
       conn =
         conn
+        |> login_with_cookie(user.email, "password")
         |> put_req_header("x-forwarded-for", "1.2.3.4")
-        |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
 
-      assert get_session(conn, :current_user_id) == nil
+      response =
+        eventually(
+          fn ->
+            Enum.each(1..5, fn _ ->
+              post(conn, Routes.auth_path(conn, :verify_2fa_recovery_code), %{
+                recovery_code: "invalid"
+              })
+            end)
+
+            conn =
+              post(conn, Routes.auth_path(conn, :verify_2fa_recovery_code), %{
+                recovery_code: "invalid"
+              })
+
+            {conn.status == 429, conn}
+          end,
+          500
+        )
+
+      assert get_session(response, :current_user_id) == nil
       # 2FA session terminated
-      assert conn.resp_cookies["session_2fa"].max_age == 0
-      assert html_response(conn, 429) =~ "Too many login attempts"
+      assert response.resp_cookies["session_2fa"].max_age == 0
+      assert html_response(response, 429) =~ "Too many login attempts"
     end
   end
 

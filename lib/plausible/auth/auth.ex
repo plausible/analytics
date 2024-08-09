@@ -1,7 +1,49 @@
 defmodule Plausible.Auth do
+  @moduledoc """
+  Functions for user authentication context.
+  """
+
   use Plausible
   use Plausible.Repo
   alias Plausible.Auth
+  alias Plausible.RateLimit
+
+  @rate_limits %{
+    login_ip: %{
+      prefix: "login:ip",
+      limit: 5,
+      interval: :timer.seconds(60)
+    },
+    login_user: %{
+      prefix: "login:user",
+      limit: 5,
+      interval: :timer.seconds(60)
+    },
+    email_change_user: %{
+      prefix: "email-change:user",
+      limit: 2,
+      interval: :timer.hours(1)
+    }
+  }
+
+  @rate_limit_types Map.keys(@rate_limits)
+
+  @type rate_limit_type() :: unquote(Enum.reduce(@rate_limit_types, &{:|, [], [&1, &2]}))
+
+  @spec rate_limits() :: map()
+  def rate_limits(), do: @rate_limits
+
+  @spec rate_limit(rate_limit_type(), Auth.User.t() | Plug.Conn.t()) ::
+          :ok | {:error, {:rate_limit, rate_limit_type()}}
+  def rate_limit(limit_type, key) when limit_type in @rate_limit_types do
+    %{prefix: prefix, limit: limit, interval: interval} = @rate_limits[limit_type]
+    full_key = "#{prefix}:#{rate_limit_key(key)}"
+
+    case RateLimit.check_rate(full_key, interval, limit) do
+      {:allow, _} -> :ok
+      {:deny, _} -> {:error, {:rate_limit, limit_type}}
+    end
+  end
 
   def create_user(name, email, pwd) do
     Auth.User.new(%{name: name, email: email, password: pwd, password_confirmation: pwd})
@@ -113,4 +155,7 @@ defmodule Plausible.Auth do
       {:error, :invalid_api_key}
     end
   end
+
+  defp rate_limit_key(%Auth.User{id: id}), do: id
+  defp rate_limit_key(%Plug.Conn{} = conn), do: PlausibleWeb.RemoteIP.get(conn)
 end
