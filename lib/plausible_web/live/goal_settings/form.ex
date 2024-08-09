@@ -188,7 +188,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         suggest_fun={fn input, _options -> suggest_page_paths(input, @site) end}
         selected={if @goal && @goal.page_path, do: @goal.page_path}
         creatable
-        x-on-selection-change="document.getElementById('display_name_input').setAttribute('value', 'Visit ' + $event.detail.value.displayValue)"
+        x-on-selection-change="document.getElementById('pageview_display_name_input').setAttribute('value', 'Visit ' + $event.detail.value.displayValue)"
       />
 
       <.error :for={msg <- Enum.map(@f[:page_path].errors, &translate_error/1)}>
@@ -196,12 +196,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       </.error>
 
       <div class="mt-2">
-        <.label for={"display_name_input_#{@suffix}"}>
+        <.label for="pageview_display_name_input">
           Display Name
         </.label>
 
         <.input
-          id="display_name_input"
+          id="pageview_display_name_input"
           field={@f[:display_name]}
           type="text"
           x-data="{ firstFocus: true }"
@@ -263,7 +263,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         </div>
 
         <div class="mt-2">
-          <.label for={"custom_event_display_name_input_#{@suffix}"}>
+          <.label for="custom_event_display_name_input">
             Display Name
           </.label>
 
