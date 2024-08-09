@@ -4,10 +4,9 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning'
-import GoalConversions, { specialTitleWhenGoalFilter } from './goal-conversions'
+import GoalConversions, { specialTitleWhenGoalFilter, SPECIAL_GOALS } from './goal-conversions'
 import Properties from './props'
 import { FeatureSetupNotice } from '../../components/notice'
-import { SPECIAL_GOALS } from './goal-conversions'
 import { hasGoalFilter } from '../../util/filters'
 import { useSiteContext } from '../../site-context'
 import { useQueryContext } from '../../query-context'
@@ -17,6 +16,7 @@ import { useUserContext } from '../../user-context'
 /*global require*/
 function maybeRequire() {
   if (BUILD_EXTRA) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('../../extra/funnel')
   } else {
     return { default: null }

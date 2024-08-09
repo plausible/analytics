@@ -291,7 +291,7 @@ function DatePicker() {
   }
 
   function openCalendar() {
-    calendar.current && calendar.current.flatpickr.open();
+    calendar.current?.flatpickr.open();
   }
 
   function renderLink(period, text, opts = {}) {

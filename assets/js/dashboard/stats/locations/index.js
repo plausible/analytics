@@ -7,8 +7,7 @@ import * as api from '../../api';
 import { apiPath } from '../../util/url';
 import ListReport from '../reports/list';
 import * as metrics from '../reports/metrics';
-import { hasGoalFilter } from "../../util/filters";
-import { getFiltersByKeyPrefix } from '../../util/filters';
+import { hasGoalFilter, getFiltersByKeyPrefix } from '../../util/filters';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 import { citiesRoute, countriesRoute, regionsRoute } from '../../router';
 
@@ -201,7 +200,7 @@ export default class Locations extends React.Component {
 				return <Countries onClick={this.onCountryFilter('countries')} site={this.props.site} query={this.props.query} afterFetchData={this.afterFetchData} />
 			case "map":
 			default:
-				return <CountriesMap onClick={this.onCountryFilter('map')} site={this.props.site} query={this.props.query} afterFetchData={this.afterFetchData} />
+				return <CountriesMap onCountrySelect={this.onCountryFilter('map')} afterFetchData={this.afterFetchData} />
 		}
 	}
 

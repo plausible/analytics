@@ -1,7 +1,8 @@
+/* @format */
 .loading {
   width: 50px;
   height: 50px;
-  animation: loaderFadein .2s ease-in;
+  animation: loader-fade-in 0.2s ease-in;
 }
 
 .loading.sm {
@@ -17,7 +18,6 @@
   border-radius: 50%;
   border-top-color: #606f7b;
   animation: spin 1s ease-in-out infinite;
-  -webkit-animation: spin 1s ease-in-out infinite;
 }
 
 .dark .loading div {
@@ -30,16 +30,22 @@
   height: 25px;
 }
 
-
 @keyframes spin {
-  to { -webkit-transform: rotate(360deg); }
-}
-@-webkit-keyframes spin {
-  to { -webkit-transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-@keyframes loaderFadein {
-    0%   { opacity: 0; }
-    50%  { opacity: 0; }
-    100% { opacity: 1; }
+@keyframes loader-fade-in {
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
