@@ -34,14 +34,14 @@ defmodule Plausible.Auth do
   def rate_limits(), do: @rate_limits
 
   @spec rate_limit(rate_limit_type(), Auth.User.t() | Plug.Conn.t()) ::
-          :ok | {:error, {:rate_limit, String.t()}}
+          :ok | {:error, {:rate_limit, rate_limit_type()}}
   def rate_limit(limit_type, key) when limit_type in @rate_limit_types do
     %{prefix: prefix, limit: limit, interval: interval} = @rate_limits[limit_type]
     full_key = "#{prefix}:#{rate_limit_key(key)}"
 
     case RateLimit.check_rate(full_key, interval, limit) do
       {:allow, _} -> :ok
-      {:deny, _} -> {:error, {:rate_limit, prefix}}
+      {:deny, _} -> {:error, {:rate_limit, limit_type}}
     end
   end
 
