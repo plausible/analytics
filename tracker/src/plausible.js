@@ -162,6 +162,10 @@
     } else {
       page()
     }
+
+    document.addEventListener('pageshow', (ev) => {
+      if (ev.persisted) page();
+    })
   {{/unless}}
 
   {{#if (any outbound_links file_downloads tagged_events)}}
