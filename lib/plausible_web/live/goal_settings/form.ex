@@ -292,18 +292,16 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   def revenue_goal_settings(assigns) do
-    assigns = assign(assigns, :selected_currency, currency_option(assigns.goal))
+    js_data =
+      Jason.encode!(%{
+        active: !!assigns.f[:currency].value and assigns.f[:currency].value != "",
+        currency: assigns.f[:currency].value
+      })
+
+    assigns = assign(assigns, selected_currency: currency_option(assigns.goal), js_data: js_data)
 
     ~H"""
-    <div
-      class="mt-6 space-y-3"
-      x-data={
-        Jason.encode!(%{
-          active: !!@f[:currency].value and @f[:currency].value != "",
-          currency: @f[:currency].value
-        })
-      }
-    >
+    <div class="mt-6 space-y-3" x-data={@js_data}>
       <PlausibleWeb.Components.Billing.Notice.premium_feature
         billable_user={@site.owner}
         current_user={@current_user}
@@ -312,6 +310,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         class="rounded-b-md"
       />
       <button
+        id={"currency-toggle-#{@suffix}"}
         class={[
           "flex items-center w-max mb-3",
           if @has_access_to_revenue_goals? and is_nil(@goal) do
@@ -328,10 +327,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         disabled={not @has_access_to_revenue_goals? or not is_nil(@goal)}
       >
         <span
+          id={"currency-container1-#{@suffix}"}
           class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
           x-bind:class="active ? 'bg-indigo-600' : 'dark:bg-gray-700 bg-gray-200'"
         >
           <span
+            id={"currency-container2-#{@suffix}"}
             aria-hidden="true"
             class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
             x-bind:class="active ? 'dark:bg-gray-800 translate-x-5' : 'dark:bg-gray-800 translate-x-0'"
@@ -351,7 +352,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         </span>
       </button>
 
-      <div x-show="active" id="revenue-input">
+      <div x-show="active" id={"revenue-input-#{@suffix}"}>
         <.live_component
           id={"currency_input_#{@suffix}"}
           submit_name={@f[:currency].name}
