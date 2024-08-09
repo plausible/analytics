@@ -47,9 +47,9 @@ defmodule PlausibleWeb.ConnCase do
     # rate limit counter.
     if tags[:auth_rate_limit] do
       now = System.system_time(:millisecond)
-      interval = 60_000
+      interval = Plausible.Auth.rate_limits().login_ip.interval
 
-      if rem(now, interval) != rem(now + 500, interval) do
+      if div(now, interval) != div(now + 500, interval) do
         Process.sleep(500)
       end
     end
