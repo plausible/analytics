@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-3C878EF3.js"></script>
+    <script src="dist/sidebar_items-A65F7FC0.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -153,18 +153,18 @@ on connections with high latency.</p><h2 id="module-usage" class="section-headin
   <span class="text">Usage</span>
 </h2>
 <p>An example use case for a modal is embedding a form inside
-existing live view which allows adding new entries of some kind:</p><pre><code class="makeup elixir" translate="no"><span class="o">&lt;</span><span class="o">.</span><span class="n">live_component</span><span class="w"> </span><span class="n">module</span><span class="o">=</span><span class="p" data-group-id="2156081113-1">{</span><span class="nc">Modal</span><span class="p" data-group-id="2156081113-1">}</span><span class="w"> </span><span class="n">id</span><span class="o">=</span><span class="s">&quot;some-form-modal&quot;</span><span class="w"> </span><span class="ss">:let</span><span class="o">=</span><span class="p" data-group-id="2156081113-2">{</span><span class="n">modal_unique_id</span><span class="p" data-group-id="2156081113-2">}</span><span class="o">&gt;</span><span class="w">
+existing live view which allows adding new entries of some kind:</p><pre><code class="makeup elixir" translate="no"><span class="o">&lt;</span><span class="o">.</span><span class="n">live_component</span><span class="w"> </span><span class="n">module</span><span class="o">=</span><span class="p" data-group-id="3917674078-1">{</span><span class="nc">Modal</span><span class="p" data-group-id="3917674078-1">}</span><span class="w"> </span><span class="n">id</span><span class="o">=</span><span class="s">&quot;some-form-modal&quot;</span><span class="w"> </span><span class="ss">:let</span><span class="o">=</span><span class="p" data-group-id="3917674078-2">{</span><span class="n">modal_unique_id</span><span class="p" data-group-id="3917674078-2">}</span><span class="o">&gt;</span><span class="w">
   </span><span class="o">&lt;</span><span class="o">.</span><span class="n">live_component</span><span class="w">
-    </span><span class="n">module</span><span class="o">=</span><span class="p" data-group-id="2156081113-3">{</span><span class="nc">SomeForm</span><span class="p" data-group-id="2156081113-3">}</span><span class="w">
-    </span><span class="n">id</span><span class="o">=</span><span class="p" data-group-id="2156081113-4">{</span><span class="s">&quot;some-form-</span><span class="si" data-group-id="2156081113-5">#{</span><span class="n">modal_unique_id</span><span class="si" data-group-id="2156081113-5">}</span><span class="s">&quot;</span><span class="p" data-group-id="2156081113-4">}</span><span class="w">
-    </span><span class="n">on_save_form</span><span class="o">=</span><span class="p" data-group-id="2156081113-6">{</span><span class="w">
-      </span><span class="k" data-group-id="2156081113-7">fn</span><span class="w"> </span><span class="n">entry</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
-        </span><span class="n">send</span><span class="p" data-group-id="2156081113-8">(</span><span class="n">self</span><span class="p" data-group-id="2156081113-9">(</span><span class="p" data-group-id="2156081113-9">)</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2156081113-10">{</span><span class="ss">:entry_added</span><span class="p">,</span><span class="w"> </span><span class="n">entry</span><span class="p" data-group-id="2156081113-10">}</span><span class="p" data-group-id="2156081113-8">)</span><span class="w">
-        </span><span class="nc">Modal</span><span class="o">.</span><span class="n">close</span><span class="p" data-group-id="2156081113-11">(</span><span class="n">socket</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;some-form-modal&quot;</span><span class="p" data-group-id="2156081113-11">)</span><span class="w">
-      </span><span class="k" data-group-id="2156081113-7">end</span><span class="w">
-    </span><span class="p" data-group-id="2156081113-6">}</span><span class="w">
+    </span><span class="n">module</span><span class="o">=</span><span class="p" data-group-id="3917674078-3">{</span><span class="nc">SomeForm</span><span class="p" data-group-id="3917674078-3">}</span><span class="w">
+    </span><span class="n">id</span><span class="o">=</span><span class="p" data-group-id="3917674078-4">{</span><span class="s">&quot;some-form-</span><span class="si" data-group-id="3917674078-5">#{</span><span class="n">modal_unique_id</span><span class="si" data-group-id="3917674078-5">}</span><span class="s">&quot;</span><span class="p" data-group-id="3917674078-4">}</span><span class="w">
+    </span><span class="n">on_save_form</span><span class="o">=</span><span class="p" data-group-id="3917674078-6">{</span><span class="w">
+      </span><span class="k" data-group-id="3917674078-7">fn</span><span class="w"> </span><span class="n">entry</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+        </span><span class="n">send</span><span class="p" data-group-id="3917674078-8">(</span><span class="n">self</span><span class="p" data-group-id="3917674078-9">(</span><span class="p" data-group-id="3917674078-9">)</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3917674078-10">{</span><span class="ss">:entry_added</span><span class="p">,</span><span class="w"> </span><span class="n">entry</span><span class="p" data-group-id="3917674078-10">}</span><span class="p" data-group-id="3917674078-8">)</span><span class="w">
+        </span><span class="nc">Modal</span><span class="o">.</span><span class="n">close</span><span class="p" data-group-id="3917674078-11">(</span><span class="n">socket</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;some-form-modal&quot;</span><span class="p" data-group-id="3917674078-11">)</span><span class="w">
+      </span><span class="k" data-group-id="3917674078-7">end</span><span class="w">
+    </span><span class="p" data-group-id="3917674078-6">}</span><span class="w">
   </span><span class="o">/</span><span class="o">&gt;</span><span class="w">
-</span><span class="o">&lt;</span><span class="o">/</span><span class="o">.</span><span class="n">live_component</span><span class="o">&gt;</span></code></pre><p>Then somewhere in the same live view the modal is rendered in:</p><pre><code class="makeup elixir" translate="no"><span class="o">&lt;</span><span class="o">.</span><span class="n">button</span><span class="w"> </span><span class="n">x</span><span class="o">-</span><span class="n">data</span><span class="w"> </span><span class="n">x</span><span class="o">-</span><span class="n">on</span><span class="ss">:click</span><span class="o">=</span><span class="p" data-group-id="1499081676-1">{</span><span class="nc">Modal.JS</span><span class="o">.</span><span class="n">open</span><span class="p" data-group-id="1499081676-2">(</span><span class="s">&quot;goals-form-modal&quot;</span><span class="p" data-group-id="1499081676-2">)</span><span class="p" data-group-id="1499081676-1">}</span><span class="o">&gt;</span><span class="w">
+</span><span class="o">&lt;</span><span class="o">/</span><span class="o">.</span><span class="n">live_component</span><span class="o">&gt;</span></code></pre><p>Then somewhere in the same live view the modal is rendered in:</p><pre><code class="makeup elixir" translate="no"><span class="o">&lt;</span><span class="o">.</span><span class="n">button</span><span class="w"> </span><span class="n">x</span><span class="o">-</span><span class="n">data</span><span class="w"> </span><span class="n">x</span><span class="o">-</span><span class="n">on</span><span class="ss">:click</span><span class="o">=</span><span class="p" data-group-id="2738184103-1">{</span><span class="nc">Modal.JS</span><span class="o">.</span><span class="n">open</span><span class="p" data-group-id="2738184103-2">(</span><span class="s">&quot;goals-form-modal&quot;</span><span class="p" data-group-id="2738184103-2">)</span><span class="p" data-group-id="2738184103-1">}</span><span class="o">&gt;</span><span class="w">
   </span><span class="o">+</span><span class="w"> </span><span class="nc">Add</span><span class="w"> </span><span class="nc">Entry</span><span class="w">
 </span><span class="o">&lt;</span><span class="o">/</span><span class="o">.</span><span class="n">button</span><span class="o">&gt;</span></code></pre><h2 id="module-explanation" class="section-heading">
   <a href="#module-explanation" class="hover-link">
@@ -185,33 +185,40 @@ to live components nested inside live components embedded directly
 in the modal's inner block - then the unique ID should be also
 passed down as an attribute and appended accordingly. Appending can
 be skipped if embedded component handles state reset explicitly
-(via, for instance, <code class="inline">phx-click-away</code> callback).</p><p><code class="inline">Modal</code> exposes two functions for managing window state:</p><ul><li><p><code class="inline">Modal.JS.open/1</code> - to open the modal from the frontend. It's
+(via, for instance, <code class="inline">phx-click-away</code> callback).</p><p><code class="inline">Modal</code> exposes a number of functions for managing window state:</p><ul><li><p><code class="inline">Modal.JS.preopen/1</code> - to preopen the modal on the frontend.
+Useful when the actual opening is done server-side with
+<code class="inline">Modal.open/2</code> - helps avoid lack of feedback to the end user
+when server-side state change before opening the modal is
+still in progress.</p></li><li><p><code class="inline">Modal.JS.open/1</code> - to open the modal from the frontend. It's
 important to make sure the element triggering that call is
 wrapped in an Alpine UI component - or is an Alpine component
 itself - adding <code class="inline">x-data</code> attribute without any value is enough
-to ensure that.</p></li><li><p><code class="inline">Modal.close/2</code> - to close the modal from the backend; usually
+to ensure that.</p></li><li><p><code class="inline">Modal.open/2</code> - to open the modal from the backend; usually
+called from <code class="inline">handle_event/2</code> of component wrapping the modal
+and providing the state. Should be used together with
+<code class="inline">Modal.JS.preopen/1</code> for optimal user experience.</p></li><li><p><code class="inline">Modal.close/2</code> - to close the modal from the backend; usually
 done inside wrapped component's <code class="inline">handle_event/2</code>. The example
 quoted above shows one way to implement this, under that assumption
-that the component exposes a callback, like this:</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">SomeForm</span><span class="w"> </span><span class="k" data-group-id="5041273092-1">do</span><span class="w">
+that the component exposes a callback, like this:</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">SomeForm</span><span class="w"> </span><span class="k" data-group-id="5724238665-1">do</span><span class="w">
   </span><span class="kn">use</span><span class="w"> </span><span class="nc">Phoenix.LiveComponent</span><span class="w">
 
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">update</span><span class="p" data-group-id="5041273092-2">(</span><span class="n">assigns</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="5041273092-2">)</span><span class="w"> </span><span class="k" data-group-id="5041273092-3">do</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">update</span><span class="p" data-group-id="5724238665-2">(</span><span class="n">assigns</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="5724238665-2">)</span><span class="w"> </span><span class="k" data-group-id="5724238665-3">do</span><span class="w">
     </span><span class="c1"># ...</span><span class="w">
 
-    </span><span class="p" data-group-id="5041273092-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">assign</span><span class="p" data-group-id="5041273092-5">(</span><span class="n">socket</span><span class="p">,</span><span class="w"> </span><span class="ss">:on_save_form</span><span class="p">,</span><span class="w"> </span><span class="n">assigns</span><span class="o">.</span><span class="n">on_save_form</span><span class="p" data-group-id="5041273092-5">)</span><span class="p" data-group-id="5041273092-4">}</span><span class="w">
-  </span><span class="k" data-group-id="5041273092-3">end</span><span class="w">
+    </span><span class="p" data-group-id="5724238665-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">assign</span><span class="p" data-group-id="5724238665-5">(</span><span class="n">socket</span><span class="p">,</span><span class="w"> </span><span class="ss">:on_save_form</span><span class="p">,</span><span class="w"> </span><span class="n">assigns</span><span class="o">.</span><span class="n">on_save_form</span><span class="p" data-group-id="5724238665-5">)</span><span class="p" data-group-id="5724238665-4">}</span><span class="w">
+  </span><span class="k" data-group-id="5724238665-3">end</span><span class="w">
 
   </span><span class="c1">#...</span><span class="w">
 
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_event</span><span class="p" data-group-id="5041273092-6">(</span><span class="s">&quot;save-form&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5041273092-7">%{</span><span class="s">&quot;form&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">form</span><span class="p" data-group-id="5041273092-7">}</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="5041273092-6">)</span><span class="w"> </span><span class="k" data-group-id="5041273092-8">do</span><span class="w">
-    </span><span class="k">case</span><span class="w"> </span><span class="n">save_entry</span><span class="p" data-group-id="5041273092-9">(</span><span class="n">form</span><span class="p" data-group-id="5041273092-9">)</span><span class="w"> </span><span class="k" data-group-id="5041273092-10">do</span><span class="w">
-      </span><span class="p" data-group-id="5041273092-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">entry</span><span class="p" data-group-id="5041273092-11">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
-        </span><span class="p" data-group-id="5041273092-12">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="o">.</span><span class="n">assigns</span><span class="o">.</span><span class="n">on_save_form</span><span class="p" data-group-id="5041273092-13">(</span><span class="n">entry</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="5041273092-13">)</span><span class="p" data-group-id="5041273092-12">}</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_event</span><span class="p" data-group-id="5724238665-6">(</span><span class="s">&quot;save-form&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5724238665-7">%{</span><span class="s">&quot;form&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">form</span><span class="p" data-group-id="5724238665-7">}</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="5724238665-6">)</span><span class="w"> </span><span class="k" data-group-id="5724238665-8">do</span><span class="w">
+    </span><span class="k">case</span><span class="w"> </span><span class="n">save_entry</span><span class="p" data-group-id="5724238665-9">(</span><span class="n">form</span><span class="p" data-group-id="5724238665-9">)</span><span class="w"> </span><span class="k" data-group-id="5724238665-10">do</span><span class="w">
+      </span><span class="p" data-group-id="5724238665-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">entry</span><span class="p" data-group-id="5724238665-11">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+        </span><span class="p" data-group-id="5724238665-12">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="o">.</span><span class="n">assigns</span><span class="o">.</span><span class="n">on_save_form</span><span class="p" data-group-id="5724238665-13">(</span><span class="n">entry</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="5724238665-13">)</span><span class="p" data-group-id="5724238665-12">}</span><span class="w">
 
       </span><span class="c1"># error case handling ...</span><span class="w">
-    </span><span class="k" data-group-id="5041273092-10">end</span><span class="w">
-  </span><span class="k" data-group-id="5041273092-8">end</span><span class="w">
-</span><span class="k" data-group-id="5041273092-1">end</span></code></pre><p>Using callback approach has an added benefit of making the
+    </span><span class="k" data-group-id="5724238665-10">end</span><span class="w">
+  </span><span class="k" data-group-id="5724238665-8">end</span><span class="w">
+</span><span class="k" data-group-id="5724238665-1">end</span></code></pre><p>Using callback approach has an added benefit of making the
 component more flexible.</p></li></ul>
   </section>
 
@@ -250,7 +257,7 @@ component more flexible.</p></li></ul>
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">id</code> (<code class="inline">:any</code>) (required)</li><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li></ul><h2>Slots</h2><ul><li><code class="inline">inner_block</code> (required)</li></ul></div>
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">id</code> (<code class="inline">:any</code>) (required)</li><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">preload?</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">true</code>.</li></ul><h2>Slots</h2><ul><li><code class="inline">inner_block</code> (required)</li></ul></div>
 
     </div>
 
@@ -276,7 +283,7 @@ component more flexible.</p></li></ul>
     </a>
     <h1 class="signature" translate="no">close(socket, id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L115" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L129" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -304,7 +311,7 @@ component more flexible.</p></li></ul>
     </a>
     <h1 class="signature" translate="no">open(socket, id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L110" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L124" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -332,7 +339,7 @@ component more flexible.</p></li></ul>
     </a>
     <h1 class="signature" translate="no">render(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L141" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L159" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -348,7 +355,7 @@ component more flexible.</p></li></ul>
   </a>
   <span class="text">Attributes</span>
 </h2>
-<ul><li><code class="inline">id</code> (<code class="inline">:any</code>) (required)</li><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li></ul><h2 id="render/1-slots" class="section-heading">
+<ul><li><code class="inline">id</code> (<code class="inline">:any</code>) (required)</li><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">preload?</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">true</code>.</li></ul><h2 id="render/1-slots" class="section-heading">
   <a href="#render/1-slots" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
