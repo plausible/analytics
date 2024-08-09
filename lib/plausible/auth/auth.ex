@@ -9,17 +9,17 @@ defmodule Plausible.Auth do
   alias Plausible.RateLimit
 
   @rate_limits %{
-    :login_ip => %{
+    login_ip: %{
       prefix: "login:ip",
       limit: 5,
       interval: :timer.seconds(60)
     },
-    :login_user => %{
+    login_user: %{
       prefix: "login:user",
       limit: 5,
       interval: :timer.seconds(60)
     },
-    :email_change_user => %{
+    email_change_user: %{
       prefix: "email-change:user",
       limit: 2,
       interval: :timer.hours(1)
