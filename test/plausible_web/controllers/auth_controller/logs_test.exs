@@ -29,24 +29,31 @@ defmodule PlausibleWeb.AuthController.LogsTest do
       assert logs =~ "[warning] [login] wrong password for #{user.email}"
     end
 
-    @tag :auth_rate_limit
-    test "logs on too many login attempts", %{conn: conn} do
+    test "logs on too many login attempts" do
       user = insert(:user, password: "password")
 
-      capture_log(fn ->
-        for _ <- 1..5 do
-          build_conn()
-          |> put_req_header("x-forwarded-for", "1.1.1.1")
-          |> post("/login", email: user.email, password: "wrong")
-        end
-      end)
+      conn =
+        build_conn()
+        |> put_req_header("x-forwarded-for", "1.1.1.1")
 
       logs =
-        capture_log(fn ->
-          conn
-          |> put_req_header("x-forwarded-for", "1.1.1.1")
-          |> post("/login", email: user.email, password: "wrong")
-        end)
+        eventually(
+          fn ->
+            capture_log(fn ->
+              Enum.each(1..5, fn _ ->
+                post(conn, "/login", email: user.email, password: "wrong")
+              end)
+            end)
+
+            {conn, logs} =
+              with_log(fn ->
+                post(conn, "/login", email: user.email, password: "wrong")
+              end)
+
+            {conn.status == 429, logs}
+          end,
+          500
+        )
 
       assert logs =~ "[warning] [login] too many login attempts for #{user.email}"
     end

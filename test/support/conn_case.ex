@@ -37,23 +37,6 @@ defmodule PlausibleWeb.ConnCase do
       Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, {:shared, self()})
     end
 
-    # Tag intended for reducing risk of flaky
-    # test result when specifically testing for
-    # auth rate limiting. The way `Plausible.RateLimit`
-    # does time-based bucketing makes logic simpler
-    # at the cost of tests running into flakiness
-    # if the fixed time bucket changes right in the
-    # middle of test run, effectively resetting the
-    # rate limit counter.
-    if tags[:auth_rate_limit] do
-      now = System.system_time(:millisecond)
-      interval = Plausible.Auth.rate_limits().login_ip.interval
-
-      if div(now, interval) != div(now + 500, interval) do
-        Process.sleep(500)
-      end
-    end
-
     # randomize client ip to avoid accidentally hitting
     # rate limiting during tests
     conn =
