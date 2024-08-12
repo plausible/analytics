@@ -255,11 +255,6 @@ blockquote {
   cursor: pointer;
 }
 
-/* Only because the map handler doesn't expose an easier way to change the shadow color */
-.dark .hoverinfo {
-  box-shadow: 1px 1px 5px rgb(26 32 44);
-}
-
 .fullwidth-shadow::before {
   @apply absolute top-0 w-screen h-full bg-gray-50 dark:bg-gray-850;
 

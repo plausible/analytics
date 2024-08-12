@@ -16,6 +16,7 @@ import { useUserContext } from '../../user-context'
 /*global require*/
 function maybeRequire() {
   if (BUILD_EXTRA) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('../../extra/funnel')
   } else {
     return { default: null }
