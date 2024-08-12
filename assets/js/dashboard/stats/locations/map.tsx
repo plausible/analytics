@@ -26,6 +26,7 @@ import { countriesRoute } from '../../router'
 // @ts-expect-error untyped
 import { MIN_HEIGHT } from '../reports/list'
 import { MapTooltip } from './map-tooltip'
+import { GeolocationNotice } from './geolocation-notice'
 
 const width = 475
 const height = 335
@@ -157,7 +158,7 @@ const WorldMap = ({
     : undefined
 
   return (
-    <div className="flex flex-col" style={{ minHeight: MIN_HEIGHT }}>
+    <div className="flex flex-col relative" style={{ minHeight: MIN_HEIGHT }}>
       <div className="mt-4" />
       <div
         className="relative mx-auto w-full"
@@ -196,6 +197,7 @@ const WorldMap = ({
           search: (search) => search
         }}
       />
+      {site.isDbip && <GeolocationNotice />}
     </div>
   )
 }
