@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.CRMAuthPlug do
+defmodule PlausibleWeb.SuperAdminOnlyPlug do
   import Plug.Conn
   use Plausible.Repo
 
