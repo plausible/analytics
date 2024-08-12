@@ -429,6 +429,8 @@ defmodule PlausibleWeb.Router do
     get "/:website/download/export", SiteController, :download_export
     get "/:website/settings/import", SiteController, :csv_import
 
+    get "/debug/clickhouse", DebugController, :clickhouse
+
     get "/:domain/export", StatsController, :csv_export
     get "/:domain/*path", StatsController, :stats
   end
