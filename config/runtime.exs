@@ -218,11 +218,6 @@ help_scout_vault_key = get_var_from_path_or_env(config_dir, "HELP_SCOUT_VAULT_KE
   |> get_var_from_path_or_env("OTEL_SAMPLER_RATIO", "0.5")
   |> Float.parse()
 
-cron_enabled =
-  config_dir
-  |> get_var_from_path_or_env("CRON_ENABLED", "false")
-  |> String.to_existing_atom()
-
 geolite2_country_db =
   get_var_from_path_or_env(
     config_dir,
