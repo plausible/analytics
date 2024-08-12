@@ -3,8 +3,8 @@
   "version": "1.4.0",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "format": "prettier --write {css,js}/**",
-    "check-format": "prettier --check {css,js}/**",
+    "format": "prettier --write",
+    "check-format": "prettier --check **/*.{js,css,ts,tsx} --require-pragma",
     "eslint": "eslint js/**",
     "stylelint": "stylelint css/**",
     "lint": "npm run eslint && npm run stylelint",
