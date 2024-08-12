@@ -104,7 +104,7 @@ defmodule PlausibleWeb.Api.StatsController do
     with {:ok, dates} <- parse_date_params(params),
          :ok <- validate_interval(params),
          :ok <- validate_interval_granularity(site, params, dates),
-         query = Query.from(site, params),
+         query = Query.from(site, params, debug_metadata(conn)),
          {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
       timeseries_query =
         if query.period == "realtime" do
@@ -206,7 +206,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def top_stats(conn, params) do
     site = conn.assigns[:site]
 
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
 
     comparison_opts = parse_comparison_opts(params)
 
@@ -501,7 +501,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def sources(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:source")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
 
     extra_metrics =
@@ -534,7 +534,7 @@ defmodule PlausibleWeb.Api.StatsController do
       site = Plausible.Repo.preload(conn.assigns.site, :owner)
 
       with :ok <- Plausible.Billing.Feature.Funnels.check_availability(site.owner),
-           query <- Query.from(site, params),
+           query <- Query.from(site, params, debug_metadata(conn)),
            :ok <- validate_funnel_query(query),
            {funnel_id, ""} <- Integer.parse(funnel_id),
            {:ok, funnel} <- Stats.funnel(site, query, funnel_id) do
@@ -586,7 +586,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def utm_mediums(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:utm_medium")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
     metrics = breakdown_metrics(query, [:bounce_rate, :visit_duration])
 
@@ -613,7 +613,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def utm_campaigns(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:utm_campaign")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
     metrics = breakdown_metrics(query, [:bounce_rate, :visit_duration])
 
@@ -640,7 +640,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def utm_contents(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:utm_content")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
     metrics = breakdown_metrics(query, [:bounce_rate, :visit_duration])
 
@@ -667,7 +667,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def utm_terms(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:utm_term")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
     metrics = breakdown_metrics(query, [:bounce_rate, :visit_duration])
 
@@ -694,7 +694,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def utm_sources(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:utm_source")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
     metrics = breakdown_metrics(query, [:bounce_rate, :visit_duration])
 
@@ -721,7 +721,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def referrers(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:referrer")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
     metrics = breakdown_metrics(query, [:bounce_rate, :visit_duration])
 
@@ -748,7 +748,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def referrer_drilldown(conn, %{"referrer" => "Google"} = params) do
     site = conn.assigns[:site]
 
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
 
     user_id = get_session(conn, :current_user_id)
     is_admin = user_id && Plausible.Sites.has_admin_access?(user_id, site)
@@ -803,7 +803,7 @@ defmodule PlausibleWeb.Api.StatsController do
     referrer_filter = LegacyDashboardFilterParser.filter_value("visit:source", referrer)
 
     query =
-      Query.from(site, params)
+      Query.from(site, params, debug_metadata(conn))
       |> Query.add_filter(referrer_filter)
 
     pagination = parse_pagination(params)
@@ -826,7 +826,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def pages(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "event:page")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
 
     extra_metrics =
       if params["detailed"],
@@ -859,7 +859,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def entry_pages(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:entry_page")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
     metrics = breakdown_metrics(query, [:visits, :visit_duration])
 
@@ -893,7 +893,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def exit_pages(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:exit_page")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
     {limit, page} = parse_pagination(params)
     metrics = breakdown_metrics(query, [:visits])
 
@@ -958,7 +958,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def countries(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:country")
-    query = site |> Query.from(params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
     metrics = breakdown_metrics(query, [:percentage])
 
@@ -1013,7 +1013,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def regions(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:region")
-    query = site |> Query.from(params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
     metrics = breakdown_metrics(query)
 
@@ -1051,7 +1051,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def cities(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:city")
-    query = site |> Query.from(params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
     metrics = breakdown_metrics(query)
 
@@ -1094,7 +1094,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def browsers(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:browser")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
 
     extra_metrics =
@@ -1125,7 +1125,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def browser_versions(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:browser_version")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
 
     extra_metrics =
@@ -1165,7 +1165,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def operating_systems(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:os")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
 
     extra_metrics =
@@ -1196,7 +1196,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def operating_system_versions(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:os_version")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
 
     extra_metrics =
@@ -1236,7 +1236,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def screen_sizes(conn, params) do
     site = conn.assigns[:site]
     params = Map.put(params, "property", "visit:device")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
     pagination = parse_pagination(params)
 
     extra_metrics =
@@ -1268,7 +1268,7 @@ defmodule PlausibleWeb.Api.StatsController do
     pagination = parse_pagination(params)
     site = Plausible.Repo.preload(conn.assigns.site, :goals)
     params = Map.put(params, "property", "event:goal")
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
 
     query =
       if query.period == "realtime" do
@@ -1309,7 +1309,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     case Plausible.Props.ensure_prop_key_accessible(prop_key, site.owner) do
       :ok ->
-        json(conn, breakdown_custom_prop_values(site, params))
+        json(conn, breakdown_custom_prop_values(conn, site, params))
 
       {:error, :upgrade_required} ->
         H.payment_required(
@@ -1321,7 +1321,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def all_custom_prop_values(conn, params) do
     site = conn.assigns.site
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
 
     prop_names = Plausible.Stats.CustomProps.fetch_prop_names(site, query)
 
@@ -1336,7 +1336,7 @@ defmodule PlausibleWeb.Api.StatsController do
       values =
         prop_names
         |> Enum.map(fn prop_key ->
-          breakdown_custom_prop_values(site, Map.put(params, "prop_key", prop_key))
+          breakdown_custom_prop_values(conn, site, Map.put(params, "prop_key", prop_key))
           |> Map.get(:results)
           |> Enum.map(&Map.put(&1, :property, prop_key))
           |> transform_keys(%{:name => :value})
@@ -1352,13 +1352,13 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp breakdown_custom_prop_values(site, %{"prop_key" => prop_key} = params) do
+  defp breakdown_custom_prop_values(conn, site, %{"prop_key" => prop_key} = params) do
     pagination = parse_pagination(params)
     prefixed_prop = "event:props:" <> prop_key
 
     params = Map.put(params, "property", prefixed_prop)
 
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
 
     metrics =
       if Query.get_filter(query, "event:goal") do
@@ -1388,7 +1388,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def filter_suggestions(conn, params) do
     site = conn.assigns[:site]
 
-    query = Query.from(site, params)
+    query = Query.from(site, params, debug_metadata(conn))
 
     json(
       conn,

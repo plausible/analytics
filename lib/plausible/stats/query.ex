@@ -21,20 +21,21 @@ defmodule Plausible.Stats.Query do
             include: %{
               imports: false,
               time_labels: false
-            }
+            },
+            debug_metadata: %{}
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{Filters, Imported, Legacy}
 
   @type t :: %__MODULE__{}
 
-  def build(site, params) do
+  def build(site, params, debug_metadata) do
     with {:ok, query_data} <- Filters.QueryParser.parse(site, params) do
       query =
         struct!(__MODULE__, Map.to_list(query_data))
         |> put_imported_opts(site, %{})
         |> put_experimental_reduced_joins(site, params)
-        |> struct!(v2: true, now: NaiveDateTime.utc_now(:second))
+        |> struct!(v2: true, now: NaiveDateTime.utc_now(:second), debug_metadata: debug_metadata)
 
       {:ok, query}
     end
@@ -43,9 +44,8 @@ defmodule Plausible.Stats.Query do
   @doc """
   Builds query from old-style params. New code should prefer Query.build
   """
-  @spec from(Plausible.Site.t(), map()) :: t()
-  def from(site, params) do
-    Legacy.QueryBuilder.from(site, params)
+  def from(site, params, debug_metadata \\ %{}) do
+    Legacy.QueryBuilder.from(site, params, debug_metadata)
   end
 
   def put_experimental_reduced_joins(query, site, params) do
