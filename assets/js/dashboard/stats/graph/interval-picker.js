@@ -1,9 +1,11 @@
 import { Menu, Transition } from '@headlessui/react';
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import React, { Fragment, useCallback, useEffect } from 'react';
-import classNames from 'classnames'
-import * as storage from '../../util/storage'
-import { isKeyPressed } from '../../keybinding.js'
+import classNames from 'classnames';
+import * as storage from '../../util/storage';
+import { isKeyPressed } from '../../keybinding.js';
+import { useQueryContext } from '../../query-context.js';
+import { useSiteContext } from '../../site-context.js';
 
 const INTERVAL_LABELS = {
   'minute': 'Minutes',
@@ -64,10 +66,12 @@ function storeInterval(period, domain, interval) {
 }
 
 function subscribeKeybinding(element) {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const handleKeyPress = useCallback((event) => {
     if (isKeyPressed(event, "i")) element.current?.click()
   }, [])
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     document.addEventListener('keydown', handleKeyPress)
     return () => document.removeEventListener('keydown', handleKeyPress)
@@ -87,9 +91,12 @@ export const getCurrentInterval = function(site, query) {
   }
 }
 
-export function IntervalPicker({ query, site, onIntervalUpdate }) {
+export function IntervalPicker({ onIntervalUpdate }) {
+  const {query} = useQueryContext();
+  const site = useSiteContext();
   if (query.period == 'realtime') return null
   
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const menuElement = React.useRef(null)
   const options = validIntervals(site, query)
   const currentInterval = getCurrentInterval(site, query)

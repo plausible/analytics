@@ -1,18 +1,20 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom'
+import { AppNavigationLink } from '../navigation/use-app-navigate';
 import * as api from '../api'
-import * as url from '../util/url'
 import { Tooltip } from '../util/tooltip';
 import { SecondsSinceLastLoad } from '../util/seconds-since-last-load';
+import { useQueryContext } from '../query-context';
+import { useSiteContext } from '../site-context';
 
-export default function CurrentVisitors(props) {
-  const { site, query, lastLoadTimestamp, tooltipBoundary } = props
+export default function CurrentVisitors({ tooltipBoundary }) {
+  const { query, lastLoadTimestamp } = useQueryContext();
+  const site = useSiteContext();
   const [currentVisitors, setCurrentVisitors] = useState(null)
 
   const updateCount = useCallback(() => {
     api.get(`/api/stats/${encodeURIComponent(site.domain)}/current-visitors`)
       .then((res) => setCurrentVisitors(res))
-  }, [])
+  }, [site.domain])
 
   useEffect(() => {
     document.addEventListener('tick', updateCount)
@@ -20,11 +22,11 @@ export default function CurrentVisitors(props) {
     return () => {
       document.removeEventListener('tick', updateCount)
     }
-  }, [])
+  }, [updateCount])
 
   useEffect(() => {
     updateCount()
-  }, [query])
+  }, [query, updateCount])
 
   function tooltipInfo() {
     return (
@@ -38,12 +40,12 @@ export default function CurrentVisitors(props) {
   if (currentVisitors !== null && query.filters.length === 0) {
     return (
       <Tooltip info={tooltipInfo()} boundary={tooltipBoundary}>
-        <Link to={url.setQuery('period', 'realtime')} className="block ml-1 md:ml-2 mr-auto text-xs md:text-sm font-bold text-gray-500 dark:text-gray-300">
+        <AppNavigationLink search={(prev) => ({ ...prev, period: 'realtime' })} className="block ml-1 md:ml-2 mr-auto text-xs md:text-sm font-bold text-gray-500 dark:text-gray-300">
           <svg className="inline w-2 mr-1 md:mr-2 text-green-500 fill-current" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
             <circle cx="8" cy="8" r="8" />
           </svg>
           {currentVisitors} <span className="hidden sm:inline-block">current visitor{currentVisitors === 1 ? '' : 's'}</span>
-        </Link>
+        </AppNavigationLink>
       </Tooltip>
     )
   } else {

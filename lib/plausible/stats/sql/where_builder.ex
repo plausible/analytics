@@ -58,7 +58,20 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     # Counts each _active_ session in time range even if they started before
     dynamic(
       [s],
-      s.site_id == ^site.id and s.timestamp >= ^first_datetime and s.start < ^last_datetime
+      # Currently, the sessions table in ClickHouse only has `start` column
+      # in its primary key. This means that filtering by `timestamp` is not
+      # considered when estimating number of returned rows from index
+      # for sample factor calculation. The redundant lower bound `start` condition
+      # ensures the lower bound time filter is still present as primary key
+      # condition and the sample factor estimation has minimal skew.
+      #
+      # Without it, the sample factor would be greatly overestimated for large sites,
+      # as query would be estimated to return _all_ rows matching other conditions
+      # before `start == last_datetime`.
+      s.site_id == ^site.id and
+        s.start >= ^NaiveDateTime.add(first_datetime, -7, :day) and
+        s.timestamp >= ^first_datetime and
+        s.start < ^last_datetime
     )
   end
 
@@ -66,34 +79,8 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     dynamic([e], e.name in ^list)
   end
 
-  defp add_filter(:events, _query, [operation, "event:goal", clauses])
-       when operation in [:is, :matches] do
-    {events, pages, wildcard?} = split_goals(clauses)
-
-    if wildcard? do
-      event_clause =
-        if Enum.any?(events) do
-          dynamic([x], fragment("multiMatchAny(?, ?)", x.name, ^events))
-        else
-          dynamic([x], false)
-        end
-
-      page_clause =
-        if Enum.any?(pages) do
-          dynamic(
-            [x],
-            fragment("multiMatchAny(?, ?)", x.pathname, ^pages) and x.name == "pageview"
-          )
-        else
-          dynamic([x], false)
-        end
-
-      where_clause = dynamic([], ^event_clause or ^page_clause)
-
-      dynamic([e], ^where_clause)
-    else
-      dynamic([e], (e.pathname in ^pages and e.name == "pageview") or e.name in ^events)
-    end
+  defp add_filter(:events, query, [_, "event:goal", _] = filter) do
+    Plausible.Goals.Filters.add_filter(query, filter)
   end
 
   defp add_filter(:events, _query, [_, "event:page" | _rest] = filter) do
@@ -231,20 +218,31 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
   defp filter_field(db_field, [:matches, _key, glob_exprs]) do
     page_regexes = Enum.map(glob_exprs, &page_regex/1)
-    dynamic([x], fragment("multiMatchAny(?, ?)", field(x, ^db_field), ^page_regexes))
+
+    dynamic(
+      [x],
+      fragment("multiMatchAny(?, ?)", type(field(x, ^db_field), :string), ^page_regexes)
+    )
   end
 
   defp filter_field(db_field, [:does_not_match, _key, glob_exprs]) do
     page_regexes = Enum.map(glob_exprs, &page_regex/1)
-    dynamic([x], fragment("not(multiMatchAny(?, ?))", field(x, ^db_field), ^page_regexes))
+
+    dynamic(
+      [x],
+      fragment("not(multiMatchAny(?, ?))", type(field(x, ^db_field), :string), ^page_regexes)
+    )
   end
 
   defp filter_field(db_field, [:contains, _key, values]) do
-    dynamic([x], fragment("multiSearchAny(?, ?)", field(x, ^db_field), ^values))
+    dynamic([x], fragment("multiSearchAny(?, ?)", type(field(x, ^db_field), :string), ^values))
   end
 
   defp filter_field(db_field, [:does_not_contain, _key, values]) do
-    dynamic([x], fragment("not(multiSearchAny(?, ?))", field(x, ^db_field), ^values))
+    dynamic(
+      [x],
+      fragment("not(multiSearchAny(?, ?))", type(field(x, ^db_field), :string), ^values)
+    )
   end
 
   defp filter_field(db_field, [:is, _key, list]) do
@@ -269,15 +267,4 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   defp db_field_val(:utm_term, @no_ref), do: ""
   defp db_field_val(_, @not_set), do: ""
   defp db_field_val(_, val), do: val
-
-  defp split_goals(clauses) do
-    wildcard? = Enum.any?(clauses, fn {_, value} -> String.contains?(value, "*") end)
-    map_fn = if(wildcard?, do: &page_regex/1, else: &Function.identity/1)
-
-    clauses
-    |> Enum.reduce({[], [], wildcard?}, fn
-      {:event, value}, {event, page, wildcard?} -> {event ++ [map_fn.(value)], page, wildcard?}
-      {:page, value}, {event, page, wildcard?} -> {event, page ++ [map_fn.(value)], wildcard?}
-    end)
-  end
 end

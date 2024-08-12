@@ -1,17 +1,21 @@
 {
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
   "env": {
     "browser": true,
     "es6": true
   },
-  "extends": ["eslint:recommended",
+  "extends": [
+    "eslint:recommended",
+    "plugin:jsx-a11y/recommended",
+    "plugin:import/recommended",
     "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
     "prettier"
   ],
-  "parser": "babel-eslint",
-  "plugins": ["prettier"],
   "rules": {
-    "max-len": [0, {"code": 120}],
-    "prettier/prettier": [2],
     "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
     "react/destructuring-assignment": [0],
     "react/prop-types": [0],

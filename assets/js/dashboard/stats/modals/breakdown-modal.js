@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
-import * as api from '../../api'
-import { useDebouncedEffect, useMountedEffect } from '../../custom-hooks'
-import { trimURL } from '../../util/url'
 import { FilterLink } from "../reports/list";
+import { useQueryContext } from "../../query-context";
+import { useDebounce } from "../../custom-hooks";
+import { useAPIClient } from "../../hooks/api-client";
+import { rootRoute } from "../../router";
 
-const LIMIT = 100
-const MIN_HEIGHT_PX = 500
+export const MIN_HEIGHT_PX = 500
 
 // The main function component for rendering the "Details" reports on the dashboard,
 // i.e. a breakdown by a single (non-time) dimension, with a given set of metrics.
@@ -33,16 +33,12 @@ const MIN_HEIGHT_PX = 500
 
 // ### Required Props
 
-//   * `site` - the current dashboard site
-
-//   * `query` - a read-only query object representing the query state of the
-//     dashboard (e.g. `filters`, `period`, `with_imported`, etc)
-
 //   * `reportInfo` - a map with the following required keys:
 
 //        * `title` - the title of the report to render on the top left
 
-//        * `endpoint` - the last part of the endpoint (e.g. "/sources") to query
+//        * `endpoint` - the full pathname of the API endpoint to query. E.g.
+//          `api/stats/plausible.io/sources`
 
 //        * `dimensionLabel` - a string to render as the dimension column header.
 
@@ -54,7 +50,7 @@ const MIN_HEIGHT_PX = 500
 //     is filtered by. If a list item is not supposed to be a filter link, this
 //     function should return `null` for that item.
 
-// ### Optional Props 
+// ### Optional Props
 
 //   * `renderIcon` - a function that renders an icon for the given list item.
 
@@ -77,8 +73,6 @@ const MIN_HEIGHT_PX = 500
 //   * `afterFetchNextPage` - a function with the same behaviour as `afterFetchData`,
 //     but will be called after a successful next page load in `fetchNextPage`.
 export default function BreakdownModal({
-  site,
-  query,
   reportInfo,
   metrics,
   renderIcon,
@@ -89,24 +83,35 @@ export default function BreakdownModal({
   addSearchFilter,
   getFilterInfo
 }) {
-  const endpoint = `/api/stats/${encodeURIComponent(site.domain)}${reportInfo.endpoint}`
-  
-  const [initialLoading, setInitialLoading] = useState(true)
-  const [loading, setLoading] = useState(true)
-  const [searchInput, setSearchInput] = useState('')
-  const [search, setSearch] = useState('')
-  const [results, setResults] = useState([])
-  const [page, setPage] = useState(1)
-  const [moreResultsAvailable, setMoreResultsAvailable] = useState(false)
   const searchBoxRef = useRef(null)
+  const { query } = useQueryContext();
 
-  useMountedEffect(() => { fetchNextPage() }, [page])
+  const [search, setSearch] = useState('')
 
-  useDebouncedEffect(() => {
-    setSearch(searchInput)
-  }, [searchInput], 300)
-  
-  useEffect(() => { fetchData() }, [search])
+  const {
+    data,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isFetching,
+    isPending
+  } = useAPIClient({
+    key: [reportInfo.endpoint, {query, search}],
+    getRequestParams: (key) => {
+      const [_endpoint, {query, search}] = key
+
+      let queryWithSearchFilter = {...query}
+
+      if (searchEnabled && search !== '') {
+        queryWithSearchFilter = addSearchFilter(query, search)
+      }
+
+      return [queryWithSearchFilter, {detailed: true}]
+    },
+    afterFetchData,
+    afterFetchNextPage
+  })
+
 
   useEffect(() => {
     if (!searchEnabled) { return }
@@ -125,49 +130,7 @@ export default function BreakdownModal({
     return () => {
       searchBox.removeEventListener('keyup', handleKeyUp);
     }
-  }, [])
-
-  const fetchData = useCallback(() => {
-    setLoading(true)
-    api.get(endpoint, withSearch(query), { limit: LIMIT, page: 1, detailed: true })
-      .then((response) => {
-        if (typeof afterFetchData === 'function') {
-          afterFetchData(response)
-        }
-        setInitialLoading(false)
-        setLoading(false)
-        setPage(1)
-        setResults(response.results)
-        setMoreResultsAvailable(response.results.length === LIMIT)
-      })
-  }, [search])
-
-  function fetchNextPage() {
-    if (page > 1) {
-      api.get(endpoint, withSearch(query), { limit: LIMIT, page, detailed: true })
-        .then((response) => {
-          if (typeof afterFetchNextPage === 'function') {
-            afterFetchNextPage(response)
-          }
-          setLoading(false)
-          setResults(results.concat(response.results))
-          setMoreResultsAvailable(response.results.length === LIMIT)
-        })
-    }
-  }
-
-  function withSearch(query) {
-    if (searchEnabled && search !== '') {
-      return addSearchFilter(query, search)
-    }
-
-    return query
-  }
-
-  function loadNextPage() {
-    setLoading(true)
-    setPage(page + 1)
-  }
+  }, [searchEnabled])
 
   function maybeRenderIcon(item) {
     if (typeof renderIcon === 'function') {
@@ -178,8 +141,8 @@ export default function BreakdownModal({
   function maybeRenderExternalLink(item) {
     if (typeof getExternalLinkURL === 'function') {
       const linkUrl = getExternalLinkURL(item)
-      
-      if (!linkUrl) { return null}
+
+      if (!linkUrl) { return null }
 
       return (
         <a target="_blank" href={linkUrl} rel="noreferrer" className="hidden group-hover:block">
@@ -192,20 +155,19 @@ export default function BreakdownModal({
   function renderRow(item) {
     return (
       <tr className="text-sm dark:text-gray-200" key={item.name}>
-        <td className="p-2 truncate flex items-center group">
-          { maybeRenderIcon(item) }
+        <td className="w-48 md:w-80 break-all p-2 flex items-center">
+          {maybeRenderIcon(item)}
           <FilterLink
-            pathname={`/${encodeURIComponent(site.domain)}`}
-            query={query}
+            path={rootRoute.path}
             filterInfo={getFilterInfo(item)}
           >
-            {trimURL(item.name, 40)}
+            {item.name}
           </FilterLink>
-          { maybeRenderExternalLink(item) }
+          {maybeRenderExternalLink(item)}
         </td>
         {metrics.map((metric) => {
           return (
-            <td key={metric.key} className="p-2 w-32 font-medium" align="right">
+            <td key={metric.key} className="p-2 w-24 font-medium" align="right">
               {metric.renderValue(item[metric.key])}
             </td>
           )
@@ -216,7 +178,7 @@ export default function BreakdownModal({
 
   function renderInitialLoadingSpinner() {
     return (
-      <div className="w-full h-full flex flex-col justify-center" style={{minHeight: `${MIN_HEIGHT_PX}px`}}>
+      <div className="w-full h-full flex flex-col justify-center" style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
         <div className="mx-auto loading"><div></div></div>
       </div>
     )
@@ -229,18 +191,22 @@ export default function BreakdownModal({
   }
 
   function renderLoadMoreButton() {
+    if (isPending) return null
+    if (!isFetching && !hasNextPage) return null
+
     return (
-      <div className="w-full text-center my-4">
-        <button onClick={loadNextPage} type="button" className="button">
-          Load more
-        </button>
+      <div className="flex flex-col w-full my-4 items-center justify-center h-10">
+        {!isFetching && <button onClick={fetchNextPage} type="button" className="button">Load more</button>}
+        {isFetchingNextPage && renderSmallLoadingSpinner()}
       </div>
     )
   }
 
   function handleInputChange(e) {
-    setSearchInput(e.target.value)
+    setSearch(e.target.value)
   }
+
+  const debouncedHandleInputChange = useDebounce(handleInputChange)
 
   function renderSearchInput() {
     return (
@@ -249,20 +215,20 @@ export default function BreakdownModal({
         type="text"
         placeholder="Search"
         className="shadow-sm dark:bg-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 block sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800 w-48"
-        onChange={handleInputChange}
+        onChange={debouncedHandleInputChange}
       />
     )
   }
 
   function renderModalBody() {
-    if (results) {
+    if (data?.pages?.length) {
       return (
         <main className="modal__content">
           <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
             <thead>
               <tr>
                 <th
-                  className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                  className="p-2 w-48 md:w-80 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
                   align="left"
                 >
                   {reportInfo.dimensionLabel}
@@ -270,7 +236,7 @@ export default function BreakdownModal({
 
                 {metrics.map((metric) => {
                   return (
-                    <th key={metric.key} className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">
+                    <th key={metric.key} className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">
                       {metric.renderLabel(query)}
                     </th>
                   )
@@ -278,7 +244,7 @@ export default function BreakdownModal({
               </tr>
             </thead>
             <tbody>
-              { results.map(renderRow) }
+              {data.pages.map((p) => p.map(renderRow))}
             </tbody>
           </table>
         </main>
@@ -290,16 +256,16 @@ export default function BreakdownModal({
     <div className="w-full h-full">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-x-2">
-          <h1 className="text-xl font-bold dark:text-gray-100">{ reportInfo.title }</h1>
-          { !initialLoading && loading && renderSmallLoadingSpinner() }
+          <h1 className="text-xl font-bold dark:text-gray-100">{reportInfo.title}</h1>
+          {!isPending && isFetching && renderSmallLoadingSpinner()}
         </div>
-        { searchEnabled && renderSearchInput()}
+        {searchEnabled && renderSearchInput()}
       </div>
       <div className="my-4 border-b border-gray-300"></div>
-      <div style={{minHeight: `${MIN_HEIGHT_PX}px`}}>
-        { initialLoading && renderInitialLoadingSpinner() }
-        { !initialLoading && renderModalBody() }
-        { !loading && moreResultsAvailable && renderLoadMoreButton() }
+      <div style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
+        {isPending && renderInitialLoadingSpinner()}
+        {!isPending && renderModalBody()}
+        {renderLoadMoreButton()}
       </div>
     </div>
   )

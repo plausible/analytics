@@ -1,16 +1,21 @@
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react";
 import ListReport, { MIN_HEIGHT } from "../reports/list";
-import Combobox from '../../components/combobox'
-import * as metrics from '../reports/metrics'
-import * as api from '../../api'
-import * as url from '../../util/url'
+import Combobox from '../../components/combobox';
+import * as metrics from '../reports/metrics';
+import * as api from '../../api';
+import * as url from '../../util/url';
 import * as storage from "../../util/storage";
-import { EVENT_PROPS_PREFIX, getGoalFilter, FILTER_OPERATIONS, hasGoalFilter } from "../../util/filters"
+import { EVENT_PROPS_PREFIX, getGoalFilter, FILTER_OPERATIONS, hasGoalFilter } from "../../util/filters";
 import classNames from "classnames";
+import { useQueryContext } from "../../query-context";
+import { useSiteContext } from "../../site-context";
+import { customPropsRoute } from "../../router";
 
 
-export default function Properties(props) {
-  const { site, query } = props
+export default function Properties({ afterFetchData }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
+
   const propKeyStorageName = `prop_key__${site.domain}`
   const propKeyStorageNameForGoal = () => {
     const [_operation, _filterKey, [goal]] = getGoalFilter(query)
@@ -82,30 +87,29 @@ export default function Properties(props) {
       setPropKey(newPropKey)
     }
   }
-  
+
   /*global BUILD_EXTRA*/
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ renderLabel: (_query) => "Visitors", meta: {plot: true}}),
-      metrics.createEvents({renderLabel: (_query) => "Events", meta: {hiddenOnMobile: true}}),
+      metrics.createVisitors({ renderLabel: (_query) => "Visitors", meta: { plot: true } }),
+      metrics.createEvents({ renderLabel: (_query) => "Events", meta: { hiddenOnMobile: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
       !hasGoalFilter(query) && metrics.createPercentage(),
-      BUILD_EXTRA && metrics.createTotalRevenue({meta: {hiddenOnMobile: true}}),
-      BUILD_EXTRA && metrics.createAverageRevenue({meta: {hiddenOnMobile: true}})
+      BUILD_EXTRA && metrics.createTotalRevenue({ meta: { hiddenOnMobile: true } }),
+      BUILD_EXTRA && metrics.createAverageRevenue({ meta: { hiddenOnMobile: true } })
     ].filter(metric => !!metric)
   }
-  
+
   function renderBreakdown() {
     return (
       <ListReport
         fetchData={fetchProps}
-        afterFetchData={props.afterFetchData}
+        afterFetchData={afterFetchData}
         getFilterFor={getFilterFor}
         keyLabel={propKey}
         metrics={chooseMetrics()}
-        detailsLink={url.sitePath(`custom-prop-values/${propKey}`)}
+        detailsLinkProps={{ path: customPropsRoute.path, params: { propKey }, search: (search) => search }}
         maybeHideDetails={true}
-        query={query}
         color="bg-red-50"
         colMinWidth={90}
       />

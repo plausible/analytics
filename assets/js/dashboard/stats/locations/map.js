@@ -1,6 +1,5 @@
 import React from 'react';
 import Datamap from 'datamaps'
-import { withRouter } from 'react-router-dom'
 import * as d3 from "d3"
 
 import numberFormatter from '../../util/number-formatter'
@@ -10,6 +9,9 @@ import MoreLink from '../more-link'
 import * as api from '../../api'
 import { navigateToQuery } from '../../query'
 import { cleanLabels, replaceFilterByPrefix } from '../../util/filters';
+import { countriesRoute } from '../../router';
+import { useAppNavigate } from '../../navigation/use-app-navigate';
+import { useQueryContext } from '../../query-context';
 
 class Countries extends React.Component {
   constructor(props) {
@@ -124,7 +126,7 @@ class Countries extends React.Component {
             this.props.onClick()
 
             navigateToQuery(
-              this.props.history,
+              this.props.navigate,
               this.props.query,
               {
                 filters,
@@ -153,7 +155,7 @@ class Countries extends React.Component {
       return (
         <>
           <div className="mx-auto mt-4" style={{ width: '100%', maxWidth: '475px', height: '335px' }} id="map-container"></div>
-          <MoreLink list={this.state.countries} endpoint="countries" />
+          <MoreLink list={this.state.countries} linkProps={{ path: countriesRoute.path, search: (search) => search }} />
           {this.geolocationDbNotice()}
         </>
       )
@@ -174,4 +176,5 @@ class Countries extends React.Component {
   }
 }
 
-export default withRouter(Countries)
+export default function CountriesWithRouter(props) {const {query} = useQueryContext(); const navigate = useAppNavigate();
+return (<Countries {...props} query={query} navigate={navigate}/>)}

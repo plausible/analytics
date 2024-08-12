@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   alias Plausible.Repo
 
   def update(assigns, socket) do
-    site = Repo.preload(assigns.site, [:owner])
+    site = Repo.preload(assigns.site, :owner)
     owner = Plausible.Users.with_subscription(site.owner)
     site = %{site | owner: owner}
 
@@ -19,9 +19,16 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       Plausible.Billing.Feature.RevenueGoals.check_availability(owner) == :ok
 
     form =
-      %Plausible.Goal{}
+      (assigns.goal || %Plausible.Goal{})
       |> Plausible.Goal.changeset()
       |> to_form()
+
+    selected_tab =
+      if assigns.goal && assigns.goal.page_path do
+        "pageviews"
+      else
+        "custom_events"
+      end
 
     socket =
       socket
@@ -33,87 +40,135 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         event_name_options: Enum.map(assigns.event_name_options, &{&1, &1}),
         current_user: assigns.current_user,
         domain: assigns.domain,
-        selected_tab: "custom_events",
+        selected_tab: selected_tab,
         tab_sequence_id: 0,
         site: site,
         has_access_to_revenue_goals?: has_access_to_revenue_goals?,
         existing_goals: assigns.existing_goals,
         on_save_goal: assigns.on_save_goal,
-        on_autoconfigure: assigns.on_autoconfigure
+        on_autoconfigure: assigns.on_autoconfigure,
+        goal: assigns.goal
       )
 
     {:ok, socket}
   end
 
+  # Regular functions instead of component calls are used here
+  # explicitly to avoid breaking change tracking. Done following
+  # advice from https://hexdocs.pm/phoenix_live_view/assigns-eex.html#the-assigns-variable.
   def render(assigns) do
     ~H"""
     <div id={@id}>
-      <.form
-        :let={f}
-        x-data="{ tabSelectionInProgress: false }"
-        for={@form}
-        phx-submit="save-goal"
+      <%= if @goal, do: edit_form(assigns) %>
+      <%= if is_nil(@goal), do: create_form(assigns) %>
+    </div>
+    """
+  end
+
+  def edit_form(assigns) do
+    ~H"""
+    <.form :let={f} for={@form} phx-submit="save-goal" phx-target={@myself}>
+      <h2 class="text-xl font-black dark:text-gray-100">
+        Edit Goal for <%= @domain %>
+      </h2>
+
+      <.custom_event_fields
+        :if={@selected_tab == "custom_events"}
+        f={f}
+        suffix={@context_unique_id}
+        current_user={@current_user}
+        site={@site}
+        goal={@goal}
+        existing_goals={@existing_goals}
+        goal_options={@event_name_options}
+        has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
+      />
+      <.pageview_fields
+        :if={@selected_tab == "pageviews"}
+        f={f}
+        goal={@goal}
+        suffix={@context_unique_id}
+        site={@site}
+      />
+
+      <div class="py-4">
+        <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
+          Update Goal →
+        </PlausibleWeb.Components.Generic.button>
+      </div>
+    </.form>
+    """
+  end
+
+  def create_form(assigns) do
+    ~H"""
+    <.form
+      :let={f}
+      x-data="{ tabSelectionInProgress: false }"
+      for={@form}
+      phx-submit="save-goal"
+      phx-target={@myself}
+    >
+      <PlausibleWeb.Components.Generic.spinner
+        class="spinner block absolute right-9 top-8"
+        x-show="tabSelectionInProgress"
+      />
+
+      <h2 class="text-xl font-black dark:text-gray-100">
+        Add Goal for <%= @domain %>
+      </h2>
+
+      <.tabs selected_tab={@selected_tab} myself={@myself} />
+
+      <.custom_event_fields
+        :if={@selected_tab == "custom_events"}
+        x-show="!tabSelectionInProgress"
+        f={f}
+        suffix={suffix(@context_unique_id, @tab_sequence_id)}
+        current_user={@current_user}
+        site={@site}
+        existing_goals={@existing_goals}
+        goal_options={@event_name_options}
+        has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
+        x-init="tabSelectionInProgress = false"
+      />
+      <.pageview_fields
+        :if={@selected_tab == "pageviews"}
+        x-show="!tabSelectionInProgress"
+        f={f}
+        suffix={suffix(@context_unique_id, @tab_sequence_id)}
+        site={@site}
+        x-init="tabSelectionInProgress = false"
+      />
+
+      <div class="py-4" x-show="!tabSelectionInProgress">
+        <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
+          Add Goal →
+        </PlausibleWeb.Components.Generic.button>
+      </div>
+
+      <button
+        :if={@selected_tab == "custom_events" && @event_name_options_count > 0}
+        x-show="!tabSelectionInProgress"
+        class="mt-2 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
+        phx-click="autoconfigure"
         phx-target={@myself}
       >
-        <PlausibleWeb.Components.Generic.spinner
-          class="spinner block absolute right-9 top-8"
-          x-show="tabSelectionInProgress"
-        />
-
-        <h2 class="text-xl font-black dark:text-gray-100">Add Goal for <%= @domain %></h2>
-
-        <.tabs selected_tab={@selected_tab} myself={@myself} />
-
-        <.custom_event_fields
-          :if={@selected_tab == "custom_events"}
-          x-show="!tabSelectionInProgress"
-          f={f}
-          suffix={suffix(@context_unique_id, @tab_sequence_id)}
-          current_user={@current_user}
-          site={@site}
-          existing_goals={@existing_goals}
-          goal_options={@event_name_options}
-          has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
-          x-init="tabSelectionInProgress = false"
-        />
-        <.pageview_fields
-          :if={@selected_tab == "pageviews"}
-          x-show="!tabSelectionInProgress"
-          f={f}
-          suffix={suffix(@context_unique_id, @tab_sequence_id)}
-          site={@site}
-          x-init="tabSelectionInProgress = false"
-        />
-
-        <div class="py-4" x-show="!tabSelectionInProgress">
-          <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-            Add Goal →
-          </PlausibleWeb.Components.Generic.button>
-        </div>
-
-        <button
-          :if={@selected_tab == "custom_events" && @event_name_options_count > 0}
-          x-show="!tabSelectionInProgress"
-          class="mt-2 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
-          phx-click="autoconfigure"
-          phx-target={@myself}
-        >
-          <span :if={@event_name_options_count > 1}>
-            Already sending custom events? We've found <%= @event_name_options_count %> custom events from the last 6 months that are not yet configured as goals. Click here to add them.
-          </span>
-          <span :if={@event_name_options_count == 1}>
-            Already sending custom events? We've found 1 custom event from the last 6 months that is not yet configured as a goal. Click here to add it.
-          </span>
-        </button>
-      </.form>
-    </div>
+        <span :if={@event_name_options_count > 1}>
+          Already sending custom events? We've found <%= @event_name_options_count %> custom events from the last 6 months that are not yet configured as goals. Click here to add them.
+        </span>
+        <span :if={@event_name_options_count == 1}>
+          Already sending custom events? We've found 1 custom event from the last 6 months that is not yet configured as a goal. Click here to add it.
+        </span>
+      </button>
+    </.form>
     """
   end
 
   attr(:f, Phoenix.HTML.Form)
   attr(:site, Plausible.Site)
   attr(:suffix, :string)
-
+  attr(:goal, Plausible.Goal, default: nil)
   attr(:rest, :global)
 
   def pageview_fields(assigns) do
@@ -131,14 +186,29 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         ]}
         module={ComboBox}
         suggest_fun={fn input, _options -> suggest_page_paths(input, @site) end}
+        selected={if @goal && @goal.page_path, do: @goal.page_path}
         creatable
+        x-on-selection-change="document.getElementById('pageview_display_name_input').setAttribute('value', 'Visit ' + $event.detail.value.displayValue)"
       />
 
-      <.error :for={{msg, opts} <- @f[:page_path].errors}>
-        <%= Enum.reduce(opts, msg, fn {key, value}, acc ->
-          String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
-        end) %>
+      <.error :for={msg <- Enum.map(@f[:page_path].errors, &translate_error/1)}>
+        <%= msg %>
       </.error>
+
+      <div class="mt-2">
+        <.label for="pageview_display_name_input">
+          Display Name
+        </.label>
+
+        <.input
+          id="pageview_display_name_input"
+          field={@f[:display_name]}
+          type="text"
+          x-data="{ firstFocus: true }"
+          x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
+          class="mt-2 dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
+        />
+      </div>
     </div>
     """
   end
@@ -149,6 +219,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   attr(:suffix, :string)
   attr(:existing_goals, :list)
   attr(:goal_options, :list)
+  attr(:goal, Plausible.Goal, default: nil)
   attr(:has_access_to_revenue_goals?, :boolean)
 
   attr(:rest, :global)
@@ -181,92 +252,124 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
             module={ComboBox}
             suggest_fun={fn input, _options -> suggest_event_names(input, @site, @existing_goals) end}
             options={@goal_options}
+            selected={if @goal && @goal.event_name, do: @goal.event_name}
             creatable
+            x-on-selection-change="document.getElementById('custom_event_display_name_input').setAttribute('value', $event.detail.value.displayValue)"
+          />
+
+          <.error :for={msg <- Enum.map(@f[:event_name].errors, &translate_error/1)}>
+            <%= msg %>
+          </.error>
+        </div>
+
+        <div class="mt-2">
+          <.label for="custom_event_display_name_input">
+            Display Name
+          </.label>
+
+          <.input
+            id="custom_event_display_name_input"
+            field={@f[:display_name]}
+            type="text"
+            x-data="{ firstFocus: true }"
+            x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
+            class="mt-2 dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
           />
         </div>
 
-        <div
+        <.revenue_goal_settings
           :if={ee?()}
-          class="mt-6 space-y-3"
-          x-data={
-            Jason.encode!(%{
-              active: !!@f[:currency].value and @f[:currency].value != "",
-              currency: @f[:currency].value
-            })
-          }
+          f={@f}
+          site={@site}
+          current_user={@current_user}
+          has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
+          goal={@goal}
+          suffix={@suffix}
+        />
+      </div>
+    </div>
+    """
+  end
+
+  def revenue_goal_settings(assigns) do
+    js_data =
+      Jason.encode!(%{
+        active: !!assigns.f[:currency].value and assigns.f[:currency].value != "",
+        currency: assigns.f[:currency].value
+      })
+
+    assigns = assign(assigns, selected_currency: currency_option(assigns.goal), js_data: js_data)
+
+    ~H"""
+    <div class="mt-6 space-y-3" x-data={@js_data}>
+      <PlausibleWeb.Components.Billing.Notice.premium_feature
+        billable_user={@site.owner}
+        current_user={@current_user}
+        feature_mod={Plausible.Billing.Feature.RevenueGoals}
+        size={:xs}
+        class="rounded-b-md"
+      />
+      <button
+        id={"currency-toggle-#{@suffix}"}
+        class={[
+          "flex items-center w-max mb-3",
+          if @has_access_to_revenue_goals? and is_nil(@goal) do
+            "cursor-pointer"
+          else
+            "cursor-not-allowed"
+          end
+        ]}
+        aria-labelledby="enable-revenue-tracking"
+        role="switch"
+        type="button"
+        x-on:click="active = !active; currency = ''"
+        x-bind:aria-checked="active"
+        disabled={not @has_access_to_revenue_goals? or not is_nil(@goal)}
+      >
+        <span
+          id={"currency-container1-#{@suffix}"}
+          class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+          x-bind:class="active ? 'bg-indigo-600' : 'dark:bg-gray-700 bg-gray-200'"
         >
-          <PlausibleWeb.Components.Billing.Notice.premium_feature
-            billable_user={@site.owner}
-            current_user={@current_user}
-            feature_mod={Plausible.Billing.Feature.RevenueGoals}
-            size={:xs}
-            class="rounded-b-md"
+          <span
+            id={"currency-container2-#{@suffix}"}
+            aria-hidden="true"
+            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+            x-bind:class="active ? 'dark:bg-gray-800 translate-x-5' : 'dark:bg-gray-800 translate-x-0'"
           />
-          <button
-            class={[
-              "flex items-center w-max mb-3",
-              if @has_access_to_revenue_goals? do
-                "cursor-pointer"
-              else
-                "cursor-not-allowed"
+        </span>
+        <span
+          class={[
+            "ml-3 font-medium",
+            if(@has_access_to_revenue_goals?,
+              do: "text-gray-900  dark:text-gray-100",
+              else: "text-gray-500 dark:text-gray-300"
+            )
+          ]}
+          id="enable-revenue-tracking"
+        >
+          Enable Revenue Tracking
+        </span>
+      </button>
+
+      <div x-show="active" id={"revenue-input-#{@suffix}"}>
+        <.live_component
+          id={"currency_input_#{@suffix}"}
+          submit_name={@f[:currency].name}
+          module={ComboBox}
+          selected={@selected_currency}
+          suggest_fun={
+            on_ee do
+              fn
+                "", [] ->
+                  Plausible.Goal.Revenue.currency_options()
+
+                input, options ->
+                  ComboBox.StaticSearch.suggest(input, options, weight_threshold: 0.8)
               end
-            ]}
-            aria-labelledby="enable-revenue-tracking"
-            role="switch"
-            type="button"
-            x-on:click="active = !active; currency = ''"
-            x-bind:aria-checked="active"
-            disabled={not @has_access_to_revenue_goals?}
-          >
-            <span
-              class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
-              x-bind:class="active ? 'bg-indigo-600' : 'dark:bg-gray-700 bg-gray-200'"
-            >
-              <span
-                aria-hidden="true"
-                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                x-bind:class="active ? 'dark:bg-gray-800 translate-x-5' : 'dark:bg-gray-800 translate-x-0'"
-              />
-            </span>
-            <span
-              class={[
-                "ml-3 font-medium",
-                if(assigns.has_access_to_revenue_goals?,
-                  do: "text-gray-900  dark:text-gray-100",
-                  else: "text-gray-500 dark:text-gray-300"
-                )
-              ]}
-              id="enable-revenue-tracking"
-            >
-              Enable Revenue Tracking
-            </span>
-          </button>
-
-          <div x-show="active">
-            <.live_component
-              id={"currency_input_#{@suffix}"}
-              submit_name={@f[:currency].name}
-              module={ComboBox}
-              suggest_fun={
-                on_ee do
-                  fn
-                    "", [] ->
-                      Plausible.Goal.Revenue.currency_options()
-
-                    input, options ->
-                      ComboBox.StaticSearch.suggest(input, options, weight_threshold: 0.8)
-                  end
-                end
-              }
-            />
-          </div>
-        </div>
-
-        <.error :for={{msg, opts} <- @f[:event_name].errors}>
-          <%= Enum.reduce(opts, msg, fn {key, value}, acc ->
-            String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
-          end) %>
-        </.error>
+            end
+          }
+        />
       </div>
     </div>
     """
@@ -330,13 +433,29 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     {:noreply, socket}
   end
 
-  def handle_event("save-goal", %{"goal" => goal}, socket) do
-    case Plausible.Goals.create(socket.assigns.site, goal) do
+  def handle_event("save-goal", %{"goal" => goal_params}, %{assigns: %{goal: nil}} = socket) do
+    case Plausible.Goals.create(socket.assigns.site, goal_params) do
       {:ok, goal} ->
         socket =
           goal
           |> Map.put(:funnels, [])
           |> socket.assigns.on_save_goal.(socket)
+
+        {:noreply, socket}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign(socket, form: to_form(changeset))}
+    end
+  end
+
+  def handle_event(
+        "save-goal",
+        %{"goal" => goal_params},
+        %{assigns: %{goal: %Plausible.Goal{} = goal}} = socket
+      ) do
+    case Plausible.Goals.update(goal, goal_params) do
+      {:ok, goal} ->
+        socket = socket.assigns.on_save_goal.(goal, socket)
 
         {:noreply, socket}
 
@@ -370,5 +489,16 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   defp suffix(context_unique_id, tab_sequence_id) do
     "#{context_unique_id}-tabseq#{tab_sequence_id}"
+  end
+
+  on_ee do
+    defp currency_option(nil), do: nil
+
+    defp currency_option(goal) do
+      Plausible.Goal.Revenue.revenue?(goal) &&
+        Plausible.Goal.Revenue.currency_option(goal.currency)
+    end
+  else
+    defp currency_option(_), do: nil
   end
 end

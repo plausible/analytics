@@ -7,7 +7,7 @@ defmodule Plausible.Workers.SendEmailReport do
   def perform(%Oban.Job{args: %{"interval" => "weekly", "site_id" => site_id}}) do
     site = Repo.get(Plausible.Site, site_id) |> Repo.preload(:weekly_report)
 
-    if site do
+    if site && site.weekly_report do
       %{site: site}
       |> Map.put(:type, :weekly)
       |> Map.put(:name, "Weekly")
@@ -23,7 +23,7 @@ defmodule Plausible.Workers.SendEmailReport do
   def perform(%Oban.Job{args: %{"interval" => "monthly", "site_id" => site_id}}) do
     site = Repo.get(Plausible.Site, site_id) |> Repo.preload(:monthly_report)
 
-    if site do
+    if site && site.monthly_report do
       %{site: site}
       |> Map.put(:type, :monthly)
       |> put_last_month_query()
@@ -59,7 +59,7 @@ defmodule Plausible.Workers.SendEmailReport do
   defp put_last_month_query(%{site: site} = assigns) do
     last_month =
       Timex.now(site.timezone)
-      |> Timex.shift(months: -1)
+      |> DateTime.shift(month: -1)
       |> Timex.beginning_of_month()
       |> Timex.format!("{ISOdate}")
 
@@ -70,7 +70,7 @@ defmodule Plausible.Workers.SendEmailReport do
 
   defp put_last_week_query(%{site: site} = assigns) do
     today = Timex.now(site.timezone) |> DateTime.to_date()
-    date = Timex.shift(today, weeks: -1) |> Timex.end_of_week() |> Date.to_iso8601()
+    date = Date.shift(today, week: -1) |> Timex.end_of_week() |> Date.to_iso8601()
     query = Query.from(site, %{"period" => "7d", "date" => date})
 
     Map.put(assigns, :query, query)

@@ -9,13 +9,12 @@ if (csrfToken && websocketUrl) {
   let Hooks = {}
   Hooks.Metrics = {
     mounted() {
-      this.handleEvent("send-metrics", ({ event_name, params }) => {
+      this.handleEvent("send-metrics", ({event_name}) => {
         const afterMetrics = () => {
-          this.pushEvent("send-metrics-after", {event_name, params})
+          this.pushEvent("send-metrics-after", {event_name})
         }
         setTimeout(afterMetrics, 5000)
-        params.callback = afterMetrics
-        window.plausible(event_name, params)
+        window.trackCustomEvent(event_name, {callback: afterMetrics})
       })
     }
   }

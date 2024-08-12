@@ -1,15 +1,18 @@
 import React, { Fragment, useEffect, useState } from 'react';
 
-import * as storage from '../../util/storage'
-import * as url from '../../util/url'
-import * as api from '../../api'
-import ListReport from '../reports/list'
+import * as storage from '../../util/storage';
+import * as url from '../../util/url';
+import * as api from '../../api';
+import ListReport from '../reports/list';
 import * as metrics from '../reports/metrics';
-import { hasGoalFilter } from "../../util/filters"
-import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import classNames from 'classnames'
+import { hasGoalFilter } from "../../util/filters";
+import { Menu, Transition } from '@headlessui/react';
+import { ChevronDownIcon } from '@heroicons/react/20/solid';
+import classNames from 'classnames';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
+import { useQueryContext } from '../../query-context';
+import { useSiteContext } from '../../site-context';
+import { sourcesRoute, utmCampaignsRoute, utmContentsRoute, utmMediumsRoute, utmSourcesRoute, utmTermsRoute } from '../../router';
 
 const UTM_TAGS = {
   utm_medium: { label: 'UTM Medium', shortLabel: 'UTM Medium', endpoint: '/utm_mediums' },
@@ -19,9 +22,9 @@ const UTM_TAGS = {
   utm_term: { label: 'UTM Term', shortLabel: 'UTM Term', endpoint: '/utm_terms' },
 }
 
-function AllSources(props) {
-  const { site, query } = props
-
+function AllSources({ afterFetchData }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
   function fetchData() {
     return api.get(url.apiPath(site, '/sources'), query, { limit: 9 })
   }
@@ -36,6 +39,7 @@ function AllSources(props) {
   function renderIcon(listItem) {
     return (
       <img
+        alt=""
         src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
         className="w-4 h-4 mr-2"
       />
@@ -44,7 +48,7 @@ function AllSources(props) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({meta: {plot: true}}),
+      metrics.createVisitors({ meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
@@ -52,36 +56,44 @@ function AllSources(props) {
   return (
     <ListReport
       fetchData={fetchData}
-      afterFetchData={props.afterFetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Source"
       metrics={chooseMetrics()}
-      detailsLink={url.sitePath('sources')}
+      detailsLinkProps={{ path: sourcesRoute.path, search: (search) => search }}
       renderIcon={renderIcon}
-      query={query}
       color="bg-blue-50"
     />
   )
 }
 
-function UTMSources(props) {
-  const { site, query } = props
-  const utmTag = UTM_TAGS[props.tab]
+function UTMSources({ tab, afterFetchData }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
+  const utmTag = UTM_TAGS[tab]
 
+  const route = {
+    utm_medium: utmMediumsRoute,
+    utm_source: utmSourcesRoute,
+    utm_campaign: utmCampaignsRoute,
+    utm_content: utmContentsRoute,
+    utm_term: utmTermsRoute,
+    }[tab]
+    
   function fetchData() {
     return api.get(url.apiPath(site, utmTag.endpoint), query, { limit: 9 })
   }
 
   function getFilterFor(listItem) {
     return {
-      prefix: props.tab,
-      filter: ["is", props.tab, [listItem['name']]]
+      prefix: tab,
+      filter: ["is", tab, [listItem['name']]]
     }
   }
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({meta: {plot: true}}),
+      metrics.createVisitors({ meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
@@ -89,20 +101,20 @@ function UTMSources(props) {
   return (
     <ListReport
       fetchData={fetchData}
-      afterFetchData={props.afterFetchData}
+      afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel={utmTag.label}
       metrics={chooseMetrics()}
-      detailsLink={url.sitePath(utmTag.endpoint)}
-      query={query}
+      detailsLinkProps={{ path: route?.path, search: (search) => search }}
       color="bg-blue-50"
     />
   )
 }
 
-export default function SourceList(props) {
-  const { site, query } = props
-  const tabKey = 'sourceTab__' + props.site.domain
+export default function SourceList() {
+  const site = useSiteContext();
+  const { query } = useQueryContext();
+  const tabKey = 'sourceTab__' + site.domain
   const storedTab = storage.getItem(tabKey)
   const [currentTab, setCurrentTab] = useState(storedTab || 'all')
   const [loading, setLoading] = useState(true)
@@ -174,9 +186,9 @@ export default function SourceList(props) {
 
   function renderContent() {
     if (currentTab === 'all') {
-      return <AllSources site={site} query={query} afterFetchData={afterFetchData} />
+      return <AllSources afterFetchData={afterFetchData} />
     } else {
-      return <UTMSources tab={currentTab} site={site} query={query} afterFetchData={afterFetchData} />
+      return <UTMSources tab={currentTab} afterFetchData={afterFetchData} />
     }
   }
 
@@ -193,7 +205,7 @@ export default function SourceList(props) {
           <h3 className="font-bold dark:text-gray-100">
             Top Sources
           </h3>
-          <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason} />
+          <ImportedQueryUnsupportedWarning loading={loading} skipImportedReason={skipImportedReason} />
         </div>
         {renderTabs()}
       </div>

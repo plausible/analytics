@@ -20,6 +20,30 @@ defmodule Plausible.Ingestion.EventTest do
     assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
   end
 
+  @regressive_user_agents [
+    ~s|Mozilla/5.0 (Macintosh; Intel Mac OS X 13_2_1) AppleWebKit/537.3666 (KHTML, like Gecko) Chrome/110.0.0.0.0 Safari/537.3666|,
+    ~s|Mozilla/5.0 (Linux; arm_64; Android 10; Mi Note 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.5765.05 Mobile Safari/537.36|
+  ]
+
+  for {user_agent, idx} <- Enum.with_index(@regressive_user_agents) do
+    test "processes user agents known to cause problems parsing in the past (case #{idx})" do
+      site = insert(:site)
+
+      payload = %{
+        name: "pageview",
+        url: "http://#{site.domain}"
+      }
+
+      conn =
+        build_conn(:post, "/api/events", payload)
+        |> Plug.Conn.put_req_header("user-agent", unquote(user_agent))
+
+      assert {:ok, request} = Request.build(conn)
+
+      assert {:ok, %{buffered: [_], dropped: []}} = Event.build_and_buffer(request)
+    end
+  end
+
   test "drops verification agent" do
     site = insert(:site)
 

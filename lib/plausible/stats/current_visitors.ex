@@ -2,10 +2,11 @@ defmodule Plausible.Stats.CurrentVisitors do
   use Plausible.ClickhouseRepo
   use Plausible.Stats.SQL.Fragments
 
-  def current_visitors(site) do
+  @spec current_visitors(Plausible.Site.t(), Duration.duration()) :: non_neg_integer
+  def current_visitors(site, duration \\ Duration.new!(minute: -5)) do
     first_datetime =
       NaiveDateTime.utc_now()
-      |> Timex.shift(minutes: -5)
+      |> NaiveDateTime.shift(duration)
       |> NaiveDateTime.truncate(:second)
 
     ClickhouseRepo.one(

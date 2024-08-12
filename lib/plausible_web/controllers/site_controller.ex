@@ -211,7 +211,10 @@ defmodule PlausibleWeb.SiteController do
       site: site,
       weekly_report: Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id),
       monthly_report: Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id),
-      spike_notification: Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id),
+      spike_notification:
+        Repo.get_by(Plausible.Site.TrafficChangeNotification, site_id: site.id, type: :spike),
+      drop_notification:
+        Repo.get_by(Plausible.Site.TrafficChangeNotification, site_id: site.id, type: :drop),
       dogfood_page_path: "/:dashboard/settings/email-reports",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
@@ -472,44 +475,58 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(external: Routes.site_path(conn, :settings_email_reports, site.domain))
   end
 
-  def enable_spike_notification(conn, _params) do
+  def enable_traffic_change_notification(conn, %{"type" => type}) do
     site = conn.assigns[:site]
 
     res =
-      Plausible.Site.SpikeNotification.changeset(%Plausible.Site.SpikeNotification{}, %{
-        site_id: site.id,
-        threshold: 10,
-        recipients: [conn.assigns[:current_user].email]
-      })
+      Plausible.Site.TrafficChangeNotification.changeset(
+        %Plausible.Site.TrafficChangeNotification{},
+        %{
+          site_id: site.id,
+          type: type,
+          threshold: if(type == "spike", do: 10, else: 1),
+          recipients: [conn.assigns[:current_user].email]
+        }
+      )
       |> Repo.insert()
 
     case res do
       {:ok, _} ->
         conn
-        |> put_flash(:success, "You will a notification with traffic spikes going forward")
+        |> put_flash(:success, "Traffic #{type} notifications enabled")
         |> redirect(external: Routes.site_path(conn, :settings_email_reports, site.domain))
 
       {:error, _} ->
         conn
-        |> put_flash(:error, "Unable to create a spike notification")
+        |> put_flash(:error, "Unable to create a #{type} notification")
         |> redirect(external: Routes.site_path(conn, :settings_email_reports, site.domain))
     end
   end
 
-  def disable_spike_notification(conn, _params) do
+  def disable_traffic_change_notification(conn, %{"type" => type}) do
     site = conn.assigns[:site]
-    Repo.delete_all(from(mr in Plausible.Site.SpikeNotification, where: mr.site_id == ^site.id))
+
+    Repo.delete_all(
+      from(mr in Plausible.Site.TrafficChangeNotification,
+        where: mr.site_id == ^site.id and mr.type == ^type
+      )
+    )
 
     conn
-    |> put_flash(:success, "Spike notification disabled")
+    |> put_flash(:success, "Traffic #{type} notifications disabled")
     |> redirect(external: Routes.site_path(conn, :settings_email_reports, site.domain))
   end
 
-  def update_spike_notification(conn, %{"spike_notification" => params}) do
+  def update_traffic_change_notification(conn, %{
+        "traffic_change_notification" => params,
+        "type" => type
+      }) do
     site = conn.assigns[:site]
-    notification = Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
 
-    Plausible.Site.SpikeNotification.changeset(notification, params)
+    notification =
+      Repo.get_by(Plausible.Site.TrafficChangeNotification, site_id: site.id, type: type)
+
+    Plausible.Site.TrafficChangeNotification.changeset(notification, params)
     |> Repo.update!()
 
     conn
@@ -517,11 +534,11 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(external: Routes.site_path(conn, :settings_email_reports, site.domain))
   end
 
-  def add_spike_notification_recipient(conn, %{"recipient" => recipient}) do
+  def add_traffic_change_notification_recipient(conn, %{"recipient" => recipient, "type" => type}) do
     site = conn.assigns[:site]
 
-    Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
-    |> Plausible.Site.SpikeNotification.add_recipient(recipient)
+    Repo.get_by(Plausible.Site.TrafficChangeNotification, site_id: site.id, type: type)
+    |> Plausible.Site.TrafficChangeNotification.add_recipient(recipient)
     |> Repo.update!()
 
     conn
@@ -529,11 +546,14 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(external: Routes.site_path(conn, :settings_email_reports, site.domain))
   end
 
-  def remove_spike_notification_recipient(conn, %{"recipient" => recipient}) do
+  def remove_traffic_change_notification_recipient(conn, %{
+        "recipient" => recipient,
+        "type" => type
+      }) do
     site = conn.assigns[:site]
 
-    Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id)
-    |> Plausible.Site.SpikeNotification.remove_recipient(recipient)
+    Repo.get_by(Plausible.Site.TrafficChangeNotification, site_id: site.id, type: type)
+    |> Plausible.Site.TrafficChangeNotification.remove_recipient(recipient)
     |> Repo.update!()
 
     conn

@@ -98,8 +98,8 @@ defmodule Plausible.Billing.PaddleApi do
       vendor_auth_code: config[:vendor_auth_code],
       subscription_id: subscription.paddle_subscription_id,
       is_paid: 1,
-      from: Timex.shift(Timex.today(), years: -5) |> Timex.format!("{YYYY}-{0M}-{0D}"),
-      to: Timex.shift(Timex.today(), days: 1) |> Timex.format!("{YYYY}-{0M}-{0D}")
+      from: Date.shift(Date.utc_today(), year: -5) |> Timex.format!("{YYYY}-{0M}-{0D}"),
+      to: Date.shift(Date.utc_today(), day: 1) |> Timex.format!("{YYYY}-{0M}-{0D}")
     }
 
     with {:ok, %{body: body}} <- HTTPClient.post(invoices_url(), @headers, params),

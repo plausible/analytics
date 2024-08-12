@@ -1,8 +1,8 @@
 import React, { Fragment, useState, useEffect, useCallback, useRef } from "react";
-import { withRouter } from "react-router-dom";
+import { useAppNavigate } from "./navigation/use-app-navigate";
 import Flatpickr from "react-flatpickr";
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import { Transition } from '@headlessui/react'
+import { ChevronDownIcon } from '@heroicons/react/20/solid';
+import { Transition } from '@headlessui/react';
 import {
   shiftDays,
   shiftMonths,
@@ -25,9 +25,17 @@ import {
   isSameDate
 } from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
-import { shouldIgnoreKeypress } from "./keybinding.js"
-import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input.js"
-import classNames from "classnames"
+import { shouldIgnoreKeypress } from "./keybinding.js";
+import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input.js";
+import classNames from "classnames";
+import { useQueryContext } from "./query-context.js";
+import { useSiteContext } from "./site-context.js";
+
+function KeyBindHint({children}) {
+  return (
+    <kbd className="rounded border border-gray-200 px-2 font-mono font-normal text-xs text-gray-400">{children}</kbd>
+  )
+}
 
 function renderArrow(query, site, period, prevDate, nextDate) {
   const insertionDate = parseUTCDate(site.statsBegin);
@@ -62,8 +70,7 @@ function renderArrow(query, site, period, prevDate, nextDate) {
   return (
     <div className={containerClass}>
       <QueryButton
-        to={{ date: prevDate }}
-        query={query}
+        search={{ date: prevDate }}
         className={leftClass}
         disabled={disabledLeft}
       >
@@ -81,8 +88,7 @@ function renderArrow(query, site, period, prevDate, nextDate) {
         </svg>
       </QueryButton>
       <QueryButton
-        to={{ date: nextDate }}
-        query={query}
+        search={{ date: nextDate }}
         className={rightClass}
         disabled={disabledRight}
       >
@@ -103,7 +109,9 @@ function renderArrow(query, site, period, prevDate, nextDate) {
   );
 }
 
-function DatePickerArrows({ site, query }) {
+function DatePickerArrows() {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
   if (query.period === "year") {
     const prevDate = formatISO(shiftMonths(query.date, -12));
     const nextDate = formatISO(shiftMonths(query.date, 12));
@@ -124,7 +132,9 @@ function DatePickerArrows({ site, query }) {
   return null
 }
 
-function DisplayPeriod({ query, site }) {
+function DisplayPeriod() {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
   if (query.period === "day") {
     if (isToday(site, query.date)) {
       return "Today";
@@ -156,20 +166,23 @@ function DisplayPeriod({ query, site }) {
   return 'Realtime'
 }
 
-function DatePicker({ query, site, history }) {
+function DatePicker() {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState('menu')
   const dropDownNode = useRef(null)
   const calendar = useRef(null)
+  const navigate = useAppNavigate();
 
   const handleKeydown = useCallback((e) => {
     if (shouldIgnoreKeypress(e)) return true
 
     const newSearch = {
-      period: false,
-      from: false,
-      to: false,
-      date: false
+      period: null,
+      from: null,
+      to: null,
+      date: null
     };
 
     const insertionDate = parseUTCDate(site.statsBegin);
@@ -210,28 +223,28 @@ function DatePicker({ query, site, history }) {
     setOpen(false);
 
     const keybindings = {
-      d: { date: false, period: 'day' },
+      d: { date: null, period: 'day' },
       e: { date: formatISO(shiftDays(nowForSite(site), -1)), period: 'day' },
       r: { period: 'realtime' },
-      w: { date: false, period: '7d' },
-      m: { date: false, period: 'month' },
-      y: { date: false, period: 'year' },
-      t: { date: false, period: '30d' },
-      s: { date: false, period: '6mo' },
-      l: { date: false, period: '12mo' },
-      a: { date: false, period: 'all' },
+      w: { date: null, period: '7d' },
+      m: { date: null, period: 'month' },
+      y: { date: null, period: 'year' },
+      t: { date: null, period: '30d' },
+      s: { date: null, period: '6mo' },
+      l: { date: null, period: '12mo' },
+      a: { date: null, period: 'all' },
     }
 
     const redirect = keybindings[e.key.toLowerCase()]
     if (redirect) {
-      navigateToQuery(history, query, { ...newSearch, ...redirect })
+      navigateToQuery(navigate, query, { ...newSearch, ...redirect, keybindHint: e.key.toUpperCase() })
     } else if (e.key.toLowerCase() === 'x') {
-      toggleComparisons(history, query, site)
+      toggleComparisons(navigate, query, site)
     } else if (e.key.toLowerCase() === 'c') {
       setOpen(true)
       setMode('calendar')
     } else if (newSearch.date) {
-      navigateToQuery(history, query, newSearch);
+      navigateToQuery(navigate, query, newSearch);
     }
   }, [query])
 
@@ -262,9 +275,9 @@ function DatePicker({ query, site, history }) {
       [from, to] = [parseNaiveDate(from), parseNaiveDate(to)]
 
       if (from.isSame(to)) {
-        navigateToQuery(history, query, { period: 'day', date: formatISO(from), from: false, to: false })
+        navigateToQuery(navigate, query, { period: 'day', date: formatISO(from), from: null, to: null })
       } else {
-        navigateToQuery(history, query, { period: 'custom', date: false, from: formatISO(from), to: formatISO(to) })
+        navigateToQuery(navigate, query, { period: 'custom', date: null, from: formatISO(from), to: formatISO(to) })
       }
     }
 
@@ -292,19 +305,18 @@ function DatePicker({ query, site, history }) {
       boldClass = query.period === period ? "font-bold" : "";
     }
 
-    opts.date = opts.date ? formatISO(opts.date) : false;
+    opts.date = opts.date ? formatISO(opts.date) : null;
 
     return (
       <QueryLink
-        to={{ from: false, to: false, period, ...opts }}
+        search={{ from: null, to: null, period, ...opts }}
         onClick={() => setOpen(false)}
-        query={query}
         className={`${boldClass} px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900
           dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}
       >
         {text}
 
-        {opts.keybindHint ? (<span className='font-normal'>{opts.keybindHint}</span>) : null}
+        {opts.keybindHint ? (<KeyBindHint>{opts.keybindHint}</KeyBindHint>) : null}
       </QueryLink>
     );
   }
@@ -352,19 +364,19 @@ function DatePicker({ query, site, history }) {
                 aria-controls="calendar"
               >
                 Custom Range
-                <span className='font-normal'>C</span>
+                <KeyBindHint>C</KeyBindHint>
               </span>
             </div>
             {!COMPARISON_DISABLED_PERIODS.includes(query.period) &&
               <div className="py-1 date-option-group border-t border-gray-200 dark:border-gray-500">
                 <span
                   onClick={() => {
-                    toggleComparisons(history, query, site)
+                    toggleComparisons(navigate, query, site)
                     setOpen(false)
                   }}
                   className="px-4 py-2 text-sm leading-tight hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer flex items-center justify-between">
                   {isComparisonEnabled(query.comparison) ? 'Disable comparison' : 'Compare'}
-                  <span className='font-normal'>X</span>
+                  <KeyBindHint>X</KeyBindHint>
                 </span>
               </div>}
           </div>
@@ -410,7 +422,7 @@ function DatePicker({ query, site, history }) {
           aria-controls="datemenu"
         >
           <span className="truncate mr-1 md:mr-2">
-            <span className="font-medium"><DisplayPeriod query={query} site={site} /></span>
+            <span className="font-medium"><DisplayPeriod /></span>
           </span>
           <ChevronDownIcon className="hidden sm:inline-block h-4 w-4 md:h-5 md:w-5 text-gray-500" />
         </div>
@@ -433,10 +445,10 @@ function DatePicker({ query, site, history }) {
 
   return (
     <div className="flex ml-auto pl-2">
-      <DatePickerArrows site={site} query={query} />
+      <DatePickerArrows />
       {renderPicker()}
     </div>
   )
 }
 
-export default withRouter(DatePicker);
+export default DatePicker

@@ -107,6 +107,10 @@ defmodule Plausible.Stats.Clickhouse do
     Plausible.Stats.current_visitors(site)
   end
 
+  def current_visitors_12h(site) do
+    Plausible.Stats.current_visitors(site, Duration.new!(hour: -12))
+  end
+
   def has_pageviews?(site) do
     ClickhouseRepo.exists?(
       from(e in "events_v2",
@@ -235,7 +239,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     first_datetime =
       last_datetime
-      |> Timex.shift(minutes: -30)
+      |> NaiveDateTime.shift(minute: -30)
       |> beginning_of_time(site.native_stats_start_at)
       |> NaiveDateTime.truncate(:second)
 
@@ -247,7 +251,7 @@ defmodule Plausible.Stats.Clickhouse do
 
     first_datetime =
       last_datetime
-      |> Timex.shift(minutes: -5)
+      |> NaiveDateTime.shift(minute: -5)
       |> beginning_of_time(site.native_stats_start_at)
       |> NaiveDateTime.truncate(:second)
 
@@ -262,7 +266,7 @@ defmodule Plausible.Stats.Clickhouse do
       |> Timezones.to_utc_datetime(site.timezone)
       |> beginning_of_time(site.native_stats_start_at)
 
-    {:ok, last} = NaiveDateTime.new(date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
+    {:ok, last} = NaiveDateTime.new(date_range.last |> Date.shift(day: 1), ~T[00:00:00])
 
     last_datetime =
       Timezones.to_utc_datetime(last, site.timezone)

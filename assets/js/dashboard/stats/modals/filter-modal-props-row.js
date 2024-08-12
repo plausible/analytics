@@ -6,16 +6,18 @@ import Combobox from '../../components/combobox'
 
 import { apiPath } from '../../util/url'
 import { EVENT_PROPS_PREFIX, FILTER_OPERATIONS, fetchSuggestions, getPropertyKeyFromFilterKey } from '../../util/filters'
+import { useQueryContext } from "../../query-context"
+import { useSiteContext } from "../../site-context"
 
 export default function FilterModalPropsRow({
-  site,
-  query,
   filter,
   showDelete,
   disabledOptions,
   onUpdate,
   onDelete,
 }) {
+  const { query } = useQueryContext()
+  const site = useSiteContext()
   const [operation, filterKey, clauses] = filter
 
   const propKey = useMemo(
@@ -33,7 +35,7 @@ export default function FilterModalPropsRow({
   }
 
   function fetchPropValueOptions(input) {
-    if ([FILTER_OPERATIONS.contains, FILTER_OPERATIONS.does_not_contain].includes(operation)) {return Promise.resolve([])}
+    if ([FILTER_OPERATIONS.contains, FILTER_OPERATIONS.does_not_contain].includes(operation)) { return Promise.resolve([]) }
     return fetchSuggestions(apiPath(site, `/suggestions/prop_value`), query, input, [
       FILTER_OPERATIONS.isNot, filterKey, ['(none)']
     ])
@@ -56,6 +58,7 @@ export default function FilterModalPropsRow({
           className="mr-2"
           fetchOptions={fetchPropKeyOptions}
           singleOption
+          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           values={propKey ? [{ value: propKey, label: propKey }] : []}
           onSelect={onPropKeySelect}
@@ -83,6 +86,7 @@ export default function FilterModalPropsRow({
       </div>
       {showDelete && (
         <div className="col-span-1 flex flex-col justify-center">
+          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
           <a className="ml-2 text-red-600 h-5 w-5 cursor-pointer" onClick={onDelete}>
             <TrashIcon />
           </a>

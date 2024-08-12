@@ -415,7 +415,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         build(:pageview, timestamp: today)
       ])
 
-      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, event_name: "Signup", display_name: "Signup Display Name"})
 
       conn =
         get(conn, "/api/v1/stats/aggregate", %{
@@ -423,7 +423,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "period" => "day",
           "date" => "2023-05-05",
           "metrics" => "conversion_rate",
-          "filters" => "event:goal==Signup",
+          "filters" => "event:goal==Signup Display Name",
           "compare" => "previous_period"
         })
 
@@ -712,7 +712,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
 
     test "returns stats with page + pageview goal filter",
          %{conn: conn, site: site, site_import: site_import} do
-      insert(:goal, site: site, page_path: "/blog/**")
+      insert(:goal, site: site, page_path: "/blog/**", display_name: "Blog Visit")
 
       populate_stats(site, site_import.id, [
         build(:imported_pages, page: "/blog/1", visitors: 1, pageviews: 1),
@@ -725,7 +725,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "site_id" => site.domain,
           "period" => "day",
           "metrics" => "visitors,events,conversion_rate",
-          "filters" => "event:page==/blog/2;event:goal==Visit /blog/**",
+          "filters" => "event:page==/blog/2;event:goal==Blog Visit",
           "with_imported" => "true"
         })
 

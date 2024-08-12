@@ -22,6 +22,10 @@ defmodule PlausibleWeb.UnsubscribeController do
     )
   end
 
+  def weekly_report(conn, _) do
+    render_error(conn, 400)
+  end
+
   def monthly_report(conn, %{"website" => website, "email" => email}) do
     site = Repo.get_by(Plausible.Site, domain: website)
     monthly_report = site && Repo.get_by(MonthlyReport, site_id: site.id)
@@ -39,5 +43,9 @@ defmodule PlausibleWeb.UnsubscribeController do
       site: website,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
+  end
+
+  def monthly_report(conn, _) do
+    render_error(conn, 400)
   end
 end

@@ -1,21 +1,21 @@
 import React, { useCallback, useState } from "react";
-import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
-import withQueryContext from "../../components/query-context-hoc";
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
-
+import * as url from '../../util/url';
+import { useSiteContext } from "../../site-context";
+import { addFilter } from "../../query";
 
 /*global BUILD_EXTRA*/
-function ConversionsModal(props) {
-  const { site, query } = props
+function ConversionsModal() {
   const [showRevenue, setShowRevenue] = useState(false)
+  const site = useSiteContext();
 
   const reportInfo = {
     title: 'Goal Conversions',
     dimension: 'goal',
-    endpoint: '/conversions',
+    endpoint: url.apiPath(site, '/conversions'),
     dimensionLabel: "Goal"
   }
 
@@ -24,12 +24,16 @@ function ConversionsModal(props) {
       prefix: reportInfo.dimension,
       filter: ["is", reportInfo.dimension, [listItem.name]]
     }
-  }, [])
+  }, [reportInfo.dimension])
+
+  const addSearchFilter = useCallback((query, searchString) => {
+    return addFilter(query, ['contains', reportInfo.dimension, [searchString]])
+  }, [reportInfo.dimension])
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({renderLabel: (_query) => "Uniques"}),
-      metrics.createEvents({renderLabel: (_query) => "Total"}),
+      metrics.createVisitors({ renderLabel: (_query) => "Uniques" }),
+      metrics.createEvents({ renderLabel: (_query) => "Total" }),
       metrics.createConversionRate(),
       showRevenue && metrics.createAverageRevenue(),
       showRevenue && metrics.createTotalRevenue(),
@@ -41,7 +45,7 @@ function ConversionsModal(props) {
   // whether revenue metrics are passed into BreakdownModal in `metrics`.
   const afterFetchData = useCallback((res) => {
     setShowRevenue(revenueInResponse(res))
-  }, [showRevenue])
+  }, [])
 
   // After fetching the next page, we never want to set `showRevenue` to
   // `false` as revenue metrics might exist in previously loaded data.
@@ -54,19 +58,17 @@ function ConversionsModal(props) {
   }
 
   return (
-    <Modal site={site}>
+    <Modal>
       <BreakdownModal
-        site={site}
-        query={query}
         reportInfo={reportInfo}
         metrics={chooseMetrics()}
         afterFetchData={BUILD_EXTRA ? afterFetchData : undefined}
         afterFetchNextPage={BUILD_EXTRA ? afterFetchNextPage : undefined}
         getFilterInfo={getFilterInfo}
-        searchEnabled={false}
+        addSearchFilter={addSearchFilter}
       />
     </Modal>
   )
 }
 
-export default withRouter(withQueryContext(ConversionsModal))
+export default ConversionsModal

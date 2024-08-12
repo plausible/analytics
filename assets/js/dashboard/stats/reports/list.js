@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom'
+import { AppNavigationLink } from '../../navigation/use-app-navigate';
 import FlipMove from 'react-flip-move';
 
-import FadeIn from '../../fade-in'
-import MoreLink from '../more-link'
-import Bar from '../bar'
-import LazyLoader from '../../components/lazy-loader'
-import classNames from 'classnames'
-import { trimURL, updatedQuery } from '../../util/url'
-import { cleanLabels, hasGoalFilter, replaceFilterByPrefix } from '../../util/filters'
+import FadeIn from '../../fade-in';
+import MoreLink from '../more-link';
+import Bar from '../bar';
+import LazyLoader from '../../components/lazy-loader';
+import classNames from 'classnames';
+import { trimURL } from '../../util/url';
+import { cleanLabels, replaceFilterByPrefix, isRealTimeDashboard, hasGoalFilter, plainFilterText } from '../../util/filters';
+import { useQueryContext } from '../../query-context';
+
 const MAX_ITEMS = 9
 export const MIN_HEIGHT = 380
 const ROW_HEIGHT = 32
@@ -16,22 +18,25 @@ const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT = (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
 const COL_MIN_WIDTH = 70
 
-export function FilterLink({ pathname, query, filterInfo, onClick, children, extraClass }) {
+export function FilterLink({ path, filterInfo, onClick, children, extraClass }) {
+  const { query } = useQueryContext();
   const className = classNames(`${extraClass}`, { 'hover:underline': !!filterInfo })
 
   if (filterInfo) {
-    const {prefix, filter, labels} = filterInfo
+    const { prefix, filter, labels } = filterInfo
     const newFilters = replaceFilterByPrefix(query, prefix, filter)
     const newLabels = cleanLabels(newFilters, query.labels, filter[1], labels)
-    const filterQuery = updatedQuery({ filters: newFilters, labels: newLabels })
-    
-    let linkTo = { search: filterQuery.toString() }
-    if (pathname) { linkTo.pathname = pathname }
 
     return (
-      <Link to={linkTo} onClick={onClick} className={className}>
+      <AppNavigationLink 
+        title={`Add filter: ${plainFilterText(query, filter)}`}
+        className={className}
+        path={path}
+        onClick={onClick}
+        search={(search) => ({...search, filters: newFilters, labels: newLabels})}
+      >
         {children}
-      </Link>
+      </AppNavigationLink>
     )
   } else {
     return <span className={className}>{children}</span>
@@ -56,90 +61,71 @@ function ExternalLink({ item, externalLinkDest }) {
   return null
 }
 
-// The main function component for rendering list reports and making them react to what
-// is happening on the dashboard.
-
-// A `fetchData` function must be passed through props. This function defines the data
-// to be rendered, and should return a list of objects under a `results` key. Think of
-// these objects as rows. The number of columns that are **actually rendered** is also
-// configurable through the `metrics` prop, which also defines the keys under which
-// column values are read, and how they're rendered. For example:
-
-// | keyLabel           | METRIC_1.renderLabel(query) | METRIC_1.renderLabel(query) | ...
-// |--------------------|-----------------------------|-----------------------------| ---
-// | LISTITEM_1.name    | LISTITEM_1[METRIC_1.key]    | LISTITEM_1[METRIC_2.key]    | ...
-// | LISTITEM_2.name    | LISTITEM_2[METRIC_1.key]    | LISTITEM_2[METRIC_2.key]    | ...
-
-// Further configuration of the report is possible through optional props.
-
-// REQUIRED PROPS:
-
-//   * `keyLabel` - What each entry in the list represents (for UI only).
-
-//   * `query` - The query object representing the current state of the dashboard.
-
-//   * `fetchData` - a function that returns an `api.get` promise that will resolve to an
-//     object containing a `results` key.
-
-//   * `metrics` - a list `Metric` class objects, containing at least the `key,`
-//     `renderLabel`, and `renderValue` fields. Optionally, a Metric object can contain
-//     the keys `meta.plot` and `meta.hiddenOnMobile` to represent additional behaviour
-//     for this metric in the ListReport.
-
-//   * `getFilterFor` - a function that takes a list item and returns [prefix, filter, labels]
-//      that should be applied when the list item is clicked. All existing filters matching prefix
-//      are removed. If a list item is not supposed to be clickable, this function should
-//      return `null` for that list item.
-
-// OPTIONAL PROPS:
-
-//   * `onClick` - function with additional action to be taken when a list entry is clicked.
-
-//   * `detailsLink` - the pathname to the detailed view of this report. E.g.:
-//     `/dummy.site/pages`. If this is given as input to the ListReport, the Details button
-//     will always be rendered.
-
-//   * `maybeHideDetails` - set this to `true` if the details button should be hidden on
-//     the condition that there are less than MAX_ITEMS entries in the list. (i.e . nothing
-//     more to show)
-
-//   * `externalLinkDest` - a function that takes a list item and returns an external url
-//     to navigate to. If this prop is given, an additional icon is rendered upon hovering
-//     the entry.
-
-//   * `renderIcon` - a function that takes a list item and returns the
-//     HTML of an icon (such as a flag, favicon, or a screen size icon) for a listItem.
-
-//   * `color` - color of the comparison bars in light-mode
-
-//   * `afterFetchData` - a function to be called directly after `fetchData`. Receives the,
-//     raw API response as an argument. The return value is ignored by ListReport. Allows
-//     hooking into the request lifecycle and doing actions with returned metadata. For
-//     example, the parent component might want to control what happens when imported data
-//     is included or not.
-
-export default function ListReport(props) {
+/**
+ *
+ * REQUIRED PROPS
+ *
+ * @param {Function} fetchData - A function that defines the data
+ *    to be rendered, and should return a list of objects under a `results` key. Think of
+ *    these objects as rows. The number of columns that are **actually rendered** is also
+ *    configurable through the `metrics` prop, which also defines the keys under which
+ *    column values are read, and how they're rendered.
+ * @param {*} keyLabel - What each entry in the list represents (for UI only).
+ * @param {Array.<Metric>} metrics - A list of `Metric` class objects, containing at least the `key,`
+ *    `renderLabel`, and `renderValue` fields. Optionally, a Metric object can contain
+ *    the keys `meta.plot` and `meta.hiddenOnMobile` to represent additional behavior
+ *    for this metric in the ListReport.
+ * @param {Function} getFilterFor - A function that takes a list item and returns [prefix, filter, labels]
+ *    that should be applied when the list item is clicked. All existing filters matching prefix
+ *    are removed. If a list item is not supposed to be clickable, this function should
+ *    return `null` for that list item.
+ *
+ * OPTIONAL PROPS
+ *
+ * @param {Function} [onClick] - Function with additional action to be taken when a list entry is clicked.
+ * @param {Object} [detailsLinkProps] - Navigation props to be passed to "More" link, if any.
+ * @param {boolean} [maybeHideDetails] - Set this to `true` if the details button should be hidden on
+ *     the condition that there are less than MAX_ITEMS entries in the list (i.e. nothing
+ *     more to show).
+ * @param {Function} [externalLinkDest] - A function that takes a list item and returns an external URL
+ *     to navigate to. If this prop is given, an additional icon is rendered upon hovering
+ *     the entry.
+ * @param {Function} [renderIcon] - A function that takes a list item and returns the
+ *     HTML of an icon (such as a flag, favicon, or a screen size icon) for a list item.
+ * @param {string} [color] - Color of the comparison bars in light-mode.
+ * @param {Function} [afterFetchData] - A function to be called directly after `fetchData`. Receives the
+ *     raw API response as an argument. The return value is ignored by ListReport. Allows
+ *     hooking into the request lifecycle and doing actions with returned metadata. For
+ *     example, the parent component might want to control what happens when imported data
+ *     is included or not.
+ *
+ * @returns {HTMLElement} Table of metrics, in the following format:
+ * | keyLabel           | METRIC_1.renderLabel(query) | METRIC_2.renderLabel(query) | ...
+ * |--------------------|-----------------------------|-----------------------------| ---
+ * | LISTITEM_1.name    | LISTITEM_1[METRIC_1.key]    | LISTITEM_1[METRIC_2.key]    | ...
+ * | LISTITEM_2.name    | LISTITEM_2[METRIC_1.key]    | LISTITEM_2[METRIC_2.key]    | ...
+ */
+export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WIDTH, afterFetchData, detailsLinkProps, maybeHideDetails, onClick, color, getFilterFor, renderIcon, externalLinkDest, fetchData }) {
+  const { query } = useQueryContext();
   const [state, setState] = useState({ loading: true, list: null })
   const [visible, setVisible] = useState(false)
-  const metrics = props.metrics
-  const colMinWidth = props.colMinWidth || COL_MIN_WIDTH
 
-  const isRealtime = props.query.period === 'realtime'
-  const goalFilterApplied = hasGoalFilter(props.query)
+  const isRealtime = isRealTimeDashboard(query);
+  const goalFilterApplied = hasGoalFilter(query);
 
-  const fetchData = useCallback(() => {
+  const getData = useCallback(() => {
     if (!isRealtime) {
       setState({ loading: true, list: null })
     }
-    props.fetchData()
+    fetchData()
       .then((response) => {
-        if (props.afterFetchData) {
-          props.afterFetchData(response)
+        if (afterFetchData) {
+          afterFetchData(response)
         }
 
         setState({ loading: false, list: response.results })
       })
-  }, [props.keyLabel, props.query])
+  }, [keyLabel, query])
 
   const onVisible = () => { setVisible(true) }
 
@@ -154,12 +140,12 @@ export default function ListReport(props) {
 
   useEffect(() => {
     if (visible) {
-      if (isRealtime) { document.addEventListener('tick', fetchData) }
-      fetchData()
+      if (isRealtime) { document.addEventListener('tick', getData) }
+      getData()
     }
 
-    return () => { document.removeEventListener('tick', fetchData) }
-  }, [props.keyLabel, props.query, visible]);
+    return () => { document.removeEventListener('tick', getData) }
+  }, [keyLabel, query, visible]);
 
   // returns a filtered `metrics` list. Since currently, the backend can return different
   // metrics based on filters and existing data, this function validates that the metrics
@@ -205,14 +191,14 @@ export default function ListReport(props) {
           className={`${metric.key} text-right ${hiddenOnMobileClass(metric)}`}
           style={{ minWidth: colMinWidth }}
         >
-          { metric.renderLabel(props.query) }
+          {metric.renderLabel(query)}
         </div>
       )
     })
 
     return (
       <div className="pt-3 w-full text-xs font-bold tracking-wide text-gray-500 flex items-center dark:text-gray-400">
-        <span className="flex-grow truncate">{props.keyLabel}</span>
+        <span className="flex-grow truncate">{keyLabel}</span>
         {metricLabels}
       </div>
     )
@@ -238,7 +224,7 @@ export default function ListReport(props) {
   }
 
   function renderBarFor(listItem) {
-    const lightBackground = props.color || 'bg-green-50'
+    const lightBackground = color || 'bg-green-50'
     const metricToPlot = metrics.find(metric => metric.meta.plot).key
 
     return (
@@ -251,9 +237,8 @@ export default function ListReport(props) {
         >
           <div className="flex justify-start px-2 py-1.5 group text-sm dark:text-gray-300 relative z-9 break-all w-full">
             <FilterLink
-              query={props.query}
-              filterInfo={props.getFilterFor(listItem)}
-              onClick={props.onClick}
+              filterInfo={getFilterFor(listItem)}
+              onClick={onClick}
               extraClass="max-w-max w-full flex items-center md:overflow-hidden"
             >
               {maybeRenderIconFor(listItem)}
@@ -262,7 +247,7 @@ export default function ListReport(props) {
                 {trimURL(listItem.name, colMinWidth)}
               </span>
             </FilterLink>
-            <ExternalLink item={listItem} externalLinkDest={props.externalLinkDest} />
+            <ExternalLink item={listItem} externalLinkDest={externalLinkDest} />
           </div>
         </Bar>
       </div>
@@ -270,8 +255,8 @@ export default function ListReport(props) {
   }
 
   function maybeRenderIconFor(listItem) {
-    if (props.renderIcon) {
-      return props.renderIcon(listItem)
+    if (renderIcon) {
+      return renderIcon(listItem)
     }
   }
 
@@ -284,7 +269,7 @@ export default function ListReport(props) {
           style={{ width: colMinWidth, minWidth: colMinWidth }}
         >
           <span className="font-medium text-sm dark:text-gray-200 text-right">
-            { metric.renderValue(listItem[metric.key]) }
+            {metric.renderValue(listItem[metric.key])}
           </span>
         </div>
       )
@@ -309,10 +294,10 @@ export default function ListReport(props) {
 
   function maybeRenderDetailsLink() {
     const moreResultsAvailable = state.list.length >= MAX_ITEMS
-    const hideDetails = props.maybeHideDetails && !moreResultsAvailable
+    const hideDetails = maybeHideDetails && !moreResultsAvailable
 
-    const showDetails = props.detailsLink && !state.loading && !hideDetails
-    return showDetails && <MoreLink className={'mt-2'} url={props.detailsLink} list={state.list} />
+    const showDetails = !!detailsLinkProps && !state.loading && !hideDetails
+    return showDetails && <MoreLink className={'mt-2'} linkProps={detailsLinkProps} list={state.list} />
   }
 
   return (

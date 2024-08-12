@@ -164,7 +164,7 @@ defmodule Plausible.Auth.User do
   end
 
   def end_trial(user) do
-    change(user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
+    change(user, trial_expiry_date: Date.utc_today() |> Date.shift(day: -1))
   end
 
   def password_strength(changeset) do
@@ -253,9 +253,9 @@ defmodule Plausible.Auth.User do
 
   defp trial_expiry() do
     on_ee do
-      Timex.today() |> Timex.shift(days: 30)
+      Date.utc_today() |> Date.shift(day: 30)
     else
-      Timex.today() |> Timex.shift(years: 100)
+      Date.utc_today() |> Date.shift(year: 100)
     end
   end
 

@@ -1,36 +1,23 @@
 import React from "react"
-import { Link } from 'react-router-dom'
-import * as url from '../../util/url'
 import { BarsArrowUpIcon } from '@heroicons/react/20/solid'
 import classNames from "classnames"
+import { useQueryContext } from "../../query-context"
+import { AppNavigationLink } from "../../navigation/use-app-navigate"
 
-function LinkOrDiv({isLink, target, children}) {
-  if (isLink) {
-    return <Link to={target}>{ children }</Link>
-  } else {
-    return <div>{ children }</div>
-  }
-}
-
-export default function WithImportedSwitch({query, info}) {
-  if (info && info.visible) {
-    const {togglable, tooltip_msg} = info
-    const enabled = togglable && query.with_imported
-    const target = url.setQuery('with_imported', (!enabled).toString())
-
-    const iconClass = classNames("mt-0.5", {
-      "dark:text-gray-300 text-gray-700": enabled,
-      "dark:text-gray-500 text-gray-400": !enabled,
-    })
+export default function WithImportedSwitch({ tooltipMessage, disabled }) {
+  const { query } = useQueryContext();
+  const importsSwitchedOn = query.with_imported;
     
-    return (
-      <div tooltip={tooltip_msg} className="w-4 h-4 mx-2">
-        <LinkOrDiv isLink={togglable} target={target}>
-          <BarsArrowUpIcon className={iconClass}/>
-        </LinkOrDiv>
-      </div>
-    )
-  } else {
-    return null
-  }
+  const iconClass = classNames("mt-0.5", {
+    "dark:text-gray-300 text-gray-700": importsSwitchedOn,
+    "dark:text-gray-500 text-gray-400": !importsSwitchedOn,
+  })
+
+  return (
+    <div tooltip={tooltipMessage} className="w-4 h-4 mx-2">
+      <AppNavigationLink search={disabled ? (search) => search : (search) => ({...search, with_imported: !importsSwitchedOn}) }>
+        <BarsArrowUpIcon className={iconClass} />
+      </AppNavigationLink>
+    </div>
+  )
 }

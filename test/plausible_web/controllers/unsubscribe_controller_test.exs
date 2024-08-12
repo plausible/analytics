@@ -24,6 +24,13 @@ defmodule PlausibleWeb.UnsubscribeControllerTest do
 
       assert html_response(conn, 200) =~ "Unsubscribe successful"
     end
+
+    test "renders failure if email parameter not provided", %{conn: conn} do
+      conn =
+        get(conn, "/sites/nonexistent.com/weekly-report/unsubscribe")
+
+      assert html_response(conn, 400) =~ "Bad Request"
+    end
   end
 
   describe "GET /sites/:website/monthly-report/unsubscribe" do
@@ -45,6 +52,13 @@ defmodule PlausibleWeb.UnsubscribeControllerTest do
         get(conn, "/sites/nonexistent.com/monthly-report/unsubscribe?email=recipient@email.com")
 
       assert html_response(conn, 200) =~ "Unsubscribe successful"
+    end
+
+    test "renders failure if email parameter not provided", %{conn: conn} do
+      conn =
+        get(conn, "/sites/nonexistent.com/monthly-report/unsubscribe")
+
+      assert html_response(conn, 400) =~ "Bad Request"
     end
   end
 end

@@ -19,6 +19,38 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
              ]
     end
 
+    test "returns bounce_rate and visit_duration when detailed=true", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 12:00:00], screen_size: "Desktop"),
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 12:10:00], screen_size: "Desktop"),
+        build(:pageview, timestamp: ~N[2021-01-01 12:00:00], screen_size: "Desktop"),
+        build(:pageview, timestamp: ~N[2021-01-01 12:00:00], screen_size: "Laptop")
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/screen-sizes?period=day&date=2021-01-01&detailed=true"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Desktop",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 300,
+                 "percentage" => 66.7
+               },
+               %{
+                 "name" => "Laptop",
+                 "visitors" => 1,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0,
+                 "percentage" => 33.3
+               }
+             ]
+    end
+
     test "returns screen sizes for user making multiple sessions", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -243,6 +275,8 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
     end
 
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Signup")
+
       populate_stats(site, [
         build(:pageview, user_id: 1, screen_size: "Desktop"),
         build(:pageview, user_id: 2, screen_size: "Desktop"),

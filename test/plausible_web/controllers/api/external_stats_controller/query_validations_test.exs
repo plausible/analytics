@@ -230,5 +230,30 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
                "error" => "Metrics cannot be queried multiple times"
              }
     end
+
+    test "handles filtering by visit:country with invalid country code", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, country_code: "EE"),
+        build(:pageview, country_code: "EE"),
+        build(:pageview, country_code: "IT"),
+        build(:pageview, country_code: "DE")
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["pageviews"],
+          "filters" => [["is", "visit:country", ["USA"]]]
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code"
+             }
+    end
   end
 end

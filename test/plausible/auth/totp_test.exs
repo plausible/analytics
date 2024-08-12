@@ -115,8 +115,10 @@ defmodule Plausible.Auth.TOTPTest do
       {:ok, user, %{recovery_codes: [recovery_code | recovery_codes]}} = TOTP.enable(user, code)
       :ok = TOTP.use_recovery_code(user, recovery_code)
 
+      new_code = NimbleTOTP.verification_code(user.totp_secret)
+
       assert {:ok, updated_user, %{recovery_codes: new_recovery_codes}} =
-               TOTP.enable(user, code, allow_reuse?: true)
+               TOTP.enable(user, new_code, allow_reuse?: true)
 
       assert updated_user.id == user.id
       assert updated_user.totp_enabled
@@ -326,7 +328,7 @@ defmodule Plausible.Auth.TOTPTest do
       # making sure that generated OTP codes are different
       assert code != new_code
 
-      assert {:ok, user} = TOTP.validate_code(user, code, allow_reuse?: true)
+      assert {:ok, user} = TOTP.validate_code(user, new_code, allow_reuse?: true)
 
       assert_in_delta Timex.to_unix(user.totp_last_used_at), System.os_time(:second), 2
     end

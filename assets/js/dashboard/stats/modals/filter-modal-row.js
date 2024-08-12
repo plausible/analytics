@@ -3,17 +3,18 @@ import React, { useMemo } from "react"
 import FilterOperatorSelector from "../../components/filter-operator-selector"
 import Combobox from '../../components/combobox'
 
-import { FILTER_OPERATIONS, fetchSuggestions, isFreeChoiceFilter } from "../../util/filters"
+import { FILTER_OPERATIONS, fetchSuggestions, isFreeChoiceFilter, getLabel, formattedFilters } from "../../util/filters"
 import { apiPath } from '../../util/url'
-import { getLabel, formattedFilters } from '../../util/filters'
+import { useQueryContext } from "../../query-context"
+import { useSiteContext } from "../../site-context"
 
 export default function FilterModalRow({
-  site,
-  query,
   filter,
   labels,
   onUpdate
 }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
   const [operation, filterKey, clauses] = filter
 
   const selectedClauses = useMemo(
@@ -36,9 +37,11 @@ export default function FilterModalRow({
       return Promise.resolve([])
     }
 
-    return fetchSuggestions(apiPath(site, `/suggestions/${filterKey}`), query, input, [
-      FILTER_OPERATIONS.isNot, filterKey, clauses
-    ])
+    let additionalFilter = null
+
+    if (filterKey !== 'goal') { additionalFilter = [FILTER_OPERATIONS.isNot, filterKey, clauses] }
+
+    return fetchSuggestions(apiPath(site, `/suggestions/${filterKey}`), query, input, additionalFilter)
   }
 
   return (

@@ -13,8 +13,8 @@ defmodule Mix.Tasks.DownloadCountryDatabase do
   def run(_) do
     Application.ensure_all_started(:httpoison)
     Application.ensure_all_started(:timex)
-    this_month = Timex.today()
-    last_month = Timex.shift(this_month, months: -1)
+    this_month = Date.utc_today()
+    last_month = Date.shift(this_month, month: -1)
     this_month = this_month |> Date.to_iso8601() |> binary_part(0, 7)
     last_month = last_month |> Date.to_iso8601() |> binary_part(0, 7)
     this_month_url = "https://download.db-ip.com/free/dbip-country-lite-#{this_month}.mmdb.gz"

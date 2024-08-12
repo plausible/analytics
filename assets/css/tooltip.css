@@ -1,43 +1,45 @@
-[tooltip]{
-  position:relative;
-  display:inline-block;
+/* @format */
+[tooltip] {
+  position: relative;
+  display: inline-block;
 }
 
 [tooltip]::before {
-  transition: .3s;
-  content: "";
+  transition: 0.3s;
+  content: '';
   position: absolute;
-  top:-6px;
-  left:50%;
+  top: -6px;
+  left: 50%;
   transform: translateX(-50%);
-  border-width: 4px 6px 0 6px;
+  border-width: 4px 6px 0;
   border-style: solid;
-  border-color: rgba(25, 30, 56) transparent transparent transparent;
+  border-color: rgba(25 30 56) transparent transparent;
   z-index: 99;
-  opacity:0;
+  opacity: 0;
 }
 
 [tooltip]::after {
-  transition: .3s;
+  transition: 0.3s;
   white-space: nowrap;
   content: attr(tooltip);
   position: absolute;
-  left:50%;
-  top:-6px;
-  transform: translateX(-50%)   translateY(-100%);
-  background: rgba(25, 30, 56);
+  left: 50%;
+  top: -6px;
+  transform: translateX(-50%) translateY(-100%);
+  background: rgba(25 30 56);
   text-align: center;
   color: #fff;
-  font-size: .875rem;
+  font-size: 0.875rem;
   min-width: 80px;
   max-width: 420px;
   border-radius: 3px;
   pointer-events: none;
   padding: 4px 8px;
-  z-index:99;
-  opacity:0;
+  z-index: 99;
+  opacity: 0;
 }
 
-[tooltip]:hover::after,[tooltip]:hover::before {
-   opacity:1
+[tooltip]:hover::after,
+[tooltip]:hover::before {
+  opacity: 1;
 }

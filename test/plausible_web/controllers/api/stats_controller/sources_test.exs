@@ -1252,6 +1252,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         build(:imported_sources, source: "Twitter")
       ])
 
+      insert(:goal, site: site, event_name: "Signup")
       filters = Jason.encode!(%{goal: "Signup"})
 
       conn =
@@ -1325,6 +1326,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
+      insert(:goal, site: site, event_name: "Signup")
       filters = Jason.encode!(%{goal: "Signup", hostname: "app.example.com"})
 
       conn =
@@ -1375,6 +1377,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
+      insert(:goal, site: site, event_name: "Download")
       filters = Jason.encode!(%{goal: "Download", props: %{"logged_in" => "true"}})
 
       conn =
@@ -1426,6 +1429,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
+      insert(:goal, site: site, event_name: "Download")
       filters = Jason.encode!(%{goal: "Download", props: %{"logged_in" => "!true"}})
 
       conn =
@@ -1468,6 +1472,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
+      insert(:goal, site: site, page_path: "/register")
       filters = Jason.encode!(%{goal: "Visit /register"})
 
       conn =
@@ -1626,9 +1631,9 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day")
-      {:ok, terms} = Plausible.Google.API.Mock.fetch_stats(nil, nil, nil)
+      {:ok, terms} = Plausible.Google.API.Mock.fetch_stats(nil, nil, nil, nil)
 
-      assert json_response(conn, 200) == %{"search_terms" => terms}
+      assert json_response(conn, 200) == %{"results" => terms}
     end
 
     test "works when filter expression is provided for source", %{
@@ -1683,6 +1688,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
+      insert(:goal, site: site, event_name: "Signup")
       filters = Jason.encode!(%{goal: "Signup"})
 
       conn =
@@ -1720,6 +1726,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           pathname: "/register"
         )
       ])
+
+      insert(:goal, site: site, page_path: "/register")
 
       filters = Jason.encode!(%{goal: "Visit /register"})
 

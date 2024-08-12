@@ -1,18 +1,20 @@
 import React, { useCallback } from "react";
-import { withRouter } from 'react-router-dom'
+import { useParams } from "react-router-dom";
 
 import Modal from './modal'
-import withQueryContext from "../../components/query-context-hoc";
-import { addFilter } from '../../query'
+import { addFilter, revenueAvailable } from '../../query'
 import { specialTitleWhenGoalFilter } from "../behaviours/goal-conversions";
 import { EVENT_PROPS_PREFIX, hasGoalFilter } from "../../util/filters"
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
-import { revenueAvailable } from "../../query";
+import * as url from "../../util/url";
+import { useQueryContext } from "../../query-context";
+import { useSiteContext } from "../../site-context";
 
-function PropsModal(props) {
-  const {site, query, location} = props
-  const propKey = location.pathname.split('/').filter(i => i).pop()
+function PropsModal() {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
+  const { propKey } = useParams();
 
   /*global BUILD_EXTRA*/
   const showRevenueMetrics = BUILD_EXTRA && revenueAvailable(query, site)
@@ -20,7 +22,7 @@ function PropsModal(props) {
   const reportInfo = {
     title: specialTitleWhenGoalFilter(query, 'Custom Property Breakdown'),
     dimension: propKey,
-    endpoint: `/custom-prop-values/${propKey}`,
+    endpoint: url.apiPath(site, `/custom-prop-values/${propKey}`),
     dimensionLabel: propKey
   }
 
@@ -29,16 +31,16 @@ function PropsModal(props) {
       prefix: `${EVENT_PROPS_PREFIX}${propKey}`,
       filter: ["is", `${EVENT_PROPS_PREFIX}${propKey}`, [listItem.name]]
     }
-  }, [])
+  }, [propKey])
 
   const addSearchFilter = useCallback((query, searchString) => {
     return addFilter(query, ['contains', `${EVENT_PROPS_PREFIX}${propKey}`, [searchString]])
-  }, [])
+  }, [propKey])
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({renderLabel: (_query) => "Visitors"}),
-      metrics.createEvents({renderLabel: (_query) => "Events"}),
+      metrics.createVisitors({ renderLabel: (_query) => "Visitors" }),
+      metrics.createEvents({ renderLabel: (_query) => "Events" }),
       hasGoalFilter(query) && metrics.createConversionRate(),
       !hasGoalFilter(query) && metrics.createPercentage(),
       showRevenueMetrics && metrics.createAverageRevenue(),
@@ -47,10 +49,8 @@ function PropsModal(props) {
   }
 
   return (
-    <Modal site={site}>
+    <Modal>
       <BreakdownModal
-        site={site}
-        query={query}
         reportInfo={reportInfo}
         metrics={chooseMetrics()}
         getFilterInfo={getFilterInfo}
@@ -60,4 +60,4 @@ function PropsModal(props) {
   )
 }
 
-export default withRouter(withQueryContext(PropsModal))
+export default PropsModal

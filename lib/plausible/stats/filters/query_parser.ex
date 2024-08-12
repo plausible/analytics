@@ -90,13 +90,27 @@ defmodule Plausible.Stats.Filters.QueryParser do
        when operator in [:is, :is_not, :matches, :does_not_match, :contains, :does_not_contain],
        do: parse_clauses_list(filter)
 
-  defp parse_clauses_list([_operation, filter_key, list] = filter) when is_list(list) do
+  defp parse_clauses_list([operation, filter_key, list] = filter) when is_list(list) do
     all_strings? = Enum.all?(list, &is_binary/1)
+    all_integers? = Enum.all?(list, &is_integer/1)
 
-    cond do
-      filter_key == "event:goal" && all_strings? -> {:ok, [Filters.Utils.wrap_goal_value(list)]}
-      filter_key != "event:goal" && all_strings? -> {:ok, [list]}
-      true -> {:error, "Invalid filter '#{inspect(filter)}'"}
+    case {filter_key, all_strings?} do
+      {"visit:city", false} when all_integers? ->
+        {:ok, [list]}
+
+      {"visit:country", true} when operation in ["is", "is_not"] ->
+        if Enum.all?(list, &(String.length(&1) == 2)) do
+          {:ok, [list]}
+        else
+          {:error,
+           "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code"}
+        end
+
+      {_, true} ->
+        {:ok, [list]}
+
+      _ ->
+        {:error, "Invalid filter '#{inspect(filter)}'"}
     end
   end
 
@@ -127,7 +141,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
     first =
       last
-      |> Timex.shift(months: -5)
+      |> Date.shift(month: -5)
       |> Date.beginning_of_month()
 
     {:ok, Date.range(first, last)}
@@ -138,7 +152,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
     first =
       last
-      |> Timex.shift(months: -11)
+      |> Date.shift(month: -11)
       |> Date.beginning_of_month()
 
     {:ok, Date.range(first, last)}
@@ -308,10 +322,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
     if goal_filters? or Enum.member?(dimensions, "event:goal") do
       Plausible.Goals.for_site(site)
-      |> Enum.map(fn
-        %{page_path: path} when is_binary(path) -> {:page, path}
-        %{event_name: event_name} -> {:event, event_name}
-      end)
     else
       []
     end
@@ -320,7 +330,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp validate_goal_filters(query) do
     goal_filter_clauses =
       Enum.flat_map(query.filters, fn
-        [_operation, "event:goal", clauses] -> clauses
+        [:is, "event:goal", clauses] -> clauses
         _ -> []
       end)
 
@@ -332,11 +342,14 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp validate_goal_filter(clause, configured_goals) do
-    if Enum.member?(configured_goals, clause) do
+    configured_goal_names =
+      Enum.map(configured_goals, fn goal -> Plausible.Goal.display_name(goal) end)
+
+    if Enum.member?(configured_goal_names, clause) do
       :ok
     else
       {:error,
-       "The goal `#{Filters.Utils.unwrap_goal_value(clause)}` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"}
+       "The goal `#{clause}` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"}
     end
   end
 

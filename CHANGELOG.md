@@ -4,26 +4,37 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
-- Add a search functionality in all Details views, except for Goal Conversions, Countries, Regions, Cities and Google Search terms
+- UI to edit goals along with display names
+- Support contains filter for goals
+- UI to edit funnels
+- Add Details views for browsers, browser versions, os-s, os versions, and screen sizes reports
+- Add a search functionality in all Details views, except for Countries, Regions, and Cities
 - Icons for browsers plausible/analytics#4239
 - Automatic custom property selection in the dashboard Properties report
 - Add `does_not_contain` filter support to dashboard
+- Traffic drop notifications plausible/analytics#4300
+- Add search and pagination functionality into Google Keywords > Details modal
 
 ### Removed
 - Deprecate `ECTO_IPV6` and `ECTO_CH_IPV6` env vars in CE plausible/analytics#4245
 - Remove support for importing data from no longer available Universal Analytics
+- Soft-deprecate `DATABASE_SOCKET_DIR` plausible/analytics#4202
 
 ### Changed
+- Support Unix sockets in `DATABASE_URL` plausible/analytics#4202
 
 - Realtime and hourly graphs now show visits lasting their whole duration instead when specific events occur
 - Increase hourly request limit for API keys in CE from 600 to 1000000 (practically removing the limit) plausible/analytics#4200
 - Make TCP connections try IPv6 first with IPv4 fallback in CE plausible/analytics#4245
 - `is` and `is not` filters in dashboard no longer support wildcards. Use contains/does not contain filter instead.
 - `bounce_rate` metric now returns 0 instead of null for event:page breakdown when page has never been entry page.
+- Make `TOTP_VAULT_KEY` optional plausible/analytics#4317
 
 ### Fixed
 
 - Fix access to Stats API feature in CE plausible/analytics#4244
+- Fix filter suggestions when same filter previously applied
+- Fix MX lookup when using relays with Bamboo.Mua plausible/analytics#4350
 
 ## v2.1.1 - 2024-06-06
 

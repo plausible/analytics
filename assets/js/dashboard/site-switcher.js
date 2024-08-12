@@ -8,6 +8,7 @@ import { Cog8ToothIcon, ChevronDownIcon } from '@heroicons/react/20/solid'
 function Favicon({ domain, className }) {
   return (
     <img
+      alt=""
       src={`/favicon/sources/${encodeURIComponent(domain)}`}
       onError={(e) => {
         e.target.onerror = null
@@ -103,6 +104,7 @@ export default class SiteSwitcher extends React.Component {
       siteNum <= sites.length &&
       sites[siteNum - 1] !== site.domain
     ) {
+      // has to change window.location because Router is rendered with /${site.domain} as the basepath
       window.location = `/${encodeURIComponent(sites[siteNum - 1])}`
     }
   }

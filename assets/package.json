@@ -5,8 +5,9 @@
   "scripts": {
     "format": "prettier --write {css,js}/**",
     "check-format": "prettier --check {css,js}/**",
-    "lint": "eslint js/**",
-    "bundlemon": "bundlemon"
+    "eslint": "eslint js/**",
+    "stylelint": "stylelint css/**",
+    "lint": "npm run eslint && npm run stylelint"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.10",
@@ -17,6 +18,7 @@
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.6",
     "@tailwindcss/typography": "^0.4.1",
+    "@tanstack/react-query": "^5.51.1",
     "abortcontroller-polyfill": "^1.7.3",
     "alpinejs": "^3.13.1",
     "chart.js": "^3.3.2",
@@ -24,7 +26,6 @@
     "classnames": "^2.3.1",
     "datamaps": "^0.5.9",
     "dayjs": "^1.11.7",
-    "debounce-promise": "^3.1.2",
     "iframe-resizer": "^4.3.2",
     "phoenix": "^1.7.2",
     "phoenix_html": "^3.3.1",
@@ -35,22 +36,20 @@
     "react-flip-move": "^3.0.4",
     "react-intersection-observer": "^9.5.2",
     "react-popper": "^2.3.0",
-    "react-router-dom": "^5.2.0",
+    "react-router-dom": "^6.25.1",
     "react-transition-group": "^4.4.2",
-    "url-search-params-polyfill": "^8.1.1"
+    "url-search-params-polyfill": "^8.2.5"
   },
   "devDependencies": {
-    "babel-eslint": "^10.1.0",
-    "eslint": "^7.2.0",
-    "eslint-config-prettier": "^7.0.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jsx-a11y": "^6.4.1",
-    "eslint-plugin-prettier": "^3.3.0",
-    "eslint-plugin-react": "^7.21.5",
-    "eslint-plugin-react-hooks": "^4.2.0",
-    "stylelint": "^14.1.0",
-    "stylelint-config-prettier": "^9.0.3",
-    "stylelint-config-standard": "^24.0.0"
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-jsx-a11y": "^6.9.0",
+    "eslint-plugin-react": "^7.35.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "prettier": "^3.3.3",
+    "stylelint": "^16.8.1",
+    "stylelint-config-standard": "^36.0.1"
   },
   "name": "assets"
 }

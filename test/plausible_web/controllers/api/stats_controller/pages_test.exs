@@ -1224,6 +1224,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:event, user_id: 3, name: "Signup")
       ])
 
+      insert(:goal, site: site, event_name: "Signup")
       filters = Jason.encode!(%{"goal" => "Signup"})
 
       conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
@@ -1633,6 +1634,8 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         end
       )
 
+      insert(:goal, site: site, event_name: "Signup")
+
       request = fn conn, opts ->
         page = Keyword.fetch!(opts, :page)
         limit = Keyword.fetch!(opts, :limit)
@@ -1695,6 +1698,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
+      insert(:goal, site: site, event_name: "Signup")
       filters = Jason.encode!(%{"goal" => "Signup"})
 
       conn =
@@ -1999,6 +2003,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
+      insert(:goal, site: site, event_name: "Signup")
       filters = Jason.encode!(%{"goal" => "Signup"})
 
       conn =

@@ -8,6 +8,17 @@ defmodule Plausible.Goals do
   alias Plausible.Goal
   alias Ecto.Multi
 
+  @spec get(Plausible.Site.t(), pos_integer()) :: nil | Plausible.Goal.t()
+  def get(site, id) when is_integer(id) do
+    q =
+      from g in Plausible.Goal,
+        where: g.site_id == ^site.id,
+        order_by: [desc: g.id],
+        where: g.id == ^id
+
+    Repo.one(q)
+  end
+
   @spec create(Plausible.Site.t(), map(), Keyword.t()) ::
           {:ok, Goal.t()} | {:error, Ecto.Changeset.t()} | {:error, :upgrade_required}
   @doc """
@@ -41,14 +52,31 @@ defmodule Plausible.Goals do
     end)
   end
 
-  def find_or_create(site, %{
-        "goal_type" => "event",
-        "event_name" => event_name,
-        "currency" => currency
-      })
-      when is_binary(event_name) and is_binary(currency) do
-    params = %{"event_name" => event_name, "currency" => currency}
+  @spec update(Plausible.Goal.t(), map()) ::
+          {:ok, Goal.t()} | {:error, Ecto.Changeset.t()} | {:error, :upgrade_required}
+  def update(goal, params) do
+    changeset = Goal.changeset(goal, params)
+    site = Repo.preload(goal, :site).site
 
+    with :ok <- maybe_check_feature_access(site, changeset),
+         {:ok, goal} <- Repo.update(changeset) do
+      on_ee do
+        {:ok, Repo.preload(goal, :funnels)}
+      else
+        {:ok, goal}
+      end
+    end
+  end
+
+  def find_or_create(
+        site,
+        %{
+          "goal_type" => "event",
+          "event_name" => event_name,
+          "currency" => currency
+        } = params
+      )
+      when is_binary(event_name) and is_binary(currency) do
     with {:ok, goal} <- create(site, params, upsert?: true) do
       if to_string(goal.currency) == currency do
         {:ok, goal}
@@ -67,15 +95,15 @@ defmodule Plausible.Goals do
     end
   end
 
-  def find_or_create(site, %{"goal_type" => "event", "event_name" => event_name})
+  def find_or_create(site, %{"goal_type" => "event", "event_name" => event_name} = params)
       when is_binary(event_name) do
-    create(site, %{"event_name" => event_name}, upsert?: true)
+    create(site, params, upsert?: true)
   end
 
   def find_or_create(_, %{"goal_type" => "event"}), do: {:missing, "event_name"}
 
-  def find_or_create(site, %{"goal_type" => "page", "page_path" => page_path}) do
-    create(site, %{"page_path" => page_path}, upsert?: true)
+  def find_or_create(site, %{"goal_type" => "page", "page_path" => _} = params) do
+    create(site, params, upsert?: true)
   end
 
   def find_or_create(_, %{"goal_type" => "page"}), do: {:missing, "page_path"}

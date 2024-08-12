@@ -1,4 +1,6 @@
+import React, { useMemo } from "react"
 import * as api from '../api'
+import { useQueryContext } from '../query-context'
 
 export const FILTER_MODAL_TO_FILTER_GROUP = {
   'page': ['page', 'entry_page', 'exit_page'],
@@ -18,7 +20,7 @@ export const FILTER_GROUP_TO_MODAL_TYPE = Object.fromEntries(
     .flatMap(([modalName, filterGroups]) => filterGroups.map((filterGroup) => [filterGroup, modalName]))
 )
 
-export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_MODAL_TO_FILTER_GROUP['location']))
+export const NO_CONTAINS_OPERATOR = new Set(['screen'].concat(FILTER_MODAL_TO_FILTER_GROUP['location']))
 
 export const EVENT_PROPS_PREFIX = "props:"
 
@@ -99,6 +101,47 @@ export function hasGoalFilter(query) {
   return getFiltersByKeyPrefix(query, "goal").length > 0
 }
 
+export function useHasGoalFilter() {
+  const { query: { filters } } = useQueryContext();
+  return useMemo(() => getFiltersByKeyPrefix({ filters }, "goal").length > 0, [filters]);
+}
+
+export function isRealTimeDashboard(query) {
+  return query?.period === 'realtime'
+}
+
+export function useIsRealtimeDashboard() {
+  const { query: { period } } = useQueryContext();
+  return useMemo(() => isRealTimeDashboard({ period }), [period]);
+}
+
+export function plainFilterText(query, [operation, filterKey, clauses]) {
+  const formattedFilter = formattedFilters[filterKey]
+
+  if (formattedFilter) {
+    return `${formattedFilter} ${FILTER_OPERATIONS_DISPLAY_NAMES[operation]} ${clauses.map((value) => getLabel(query.labels, filterKey, value)).reduce((prev, curr) => `${prev} or ${curr}`)}`
+  } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
+    const propKey = getPropertyKeyFromFilterKey(filterKey)
+    return `Property ${propKey} ${FILTER_OPERATIONS_DISPLAY_NAMES[operation]} ${clauses.reduce((prev, curr) => `${prev} or ${curr}`)}`
+  }
+
+  throw new Error(`Unknown filter: ${filterKey}`)
+}
+
+export function styledFilterText(query, [operation, filterKey, clauses]) {
+  const formattedFilter = formattedFilters[filterKey]
+
+  if (formattedFilter) {
+    return <>{formattedFilter} {FILTER_OPERATIONS_DISPLAY_NAMES[operation]} {clauses.map((value) => <b key={value}>{getLabel(query.labels, filterKey, value)}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+  } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
+    const propKey = getPropertyKeyFromFilterKey(filterKey)
+    return <>Property <b>{propKey}</b> {FILTER_OPERATIONS_DISPLAY_NAMES[operation]} {clauses.map((label) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+  }
+
+  throw new Error(`Unknown filter: ${filterKey}`)
+}
+
+
 // Note: Currently only a single goal filter can be applied at a time.
 export function getGoalFilter(query) {
   return getFiltersByKeyPrefix(query, "goal")[0] || null
@@ -119,8 +162,8 @@ export function formatFilterGroup(filterGroup) {
 export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
   const filteredBy = Object.fromEntries(
     filters
-    .flatMap(([_operation, filterKey, clauses]) => ['country', 'region', 'city'].includes(filterKey) ? clauses : [])
-    .map((value) => [value, true])
+      .flatMap(([_operation, filterKey, clauses]) => ['country', 'region', 'city'].includes(filterKey) ? clauses : [])
+      .map((value) => [value, true])
   )
   let result = { ...labels }
   for (const value in labels) {
@@ -147,7 +190,6 @@ export function serializeApiFilters(filters) {
     if (filterKey.startsWith(EVENT_PROPS_PREFIX) || EVENT_FILTER_KEYS.has(filterKey)) {
       apiFilterKey = `event:${filterKey}`
     }
-    clauses = clauses.map((value) => value.toString())
     return [operation, apiFilterKey, clauses]
   })
 
@@ -161,8 +203,15 @@ export function fetchSuggestions(apiPath, query, input, additionalFilter) {
 
 function queryForSuggestions(query, additionalFilter) {
   let filters = query.filters
-  if (additionalFilter && additionalFilter[2].length > 0) {
-    filters = filters.concat([additionalFilter])
+  if (additionalFilter) {
+    const [_operation, filterKey, clauses] = additionalFilter
+
+    // For suggestions, we remove already-applied filter with same key from query and add new filter (if feasible)
+    if (clauses.length > 0) {
+      filters = replaceFilterByPrefix(query, filterKey, additionalFilter)
+    } else {
+      filters = omitFiltersByKeyPrefix(query, filterKey)
+    }
   }
   return { ...query, filters }
 }

@@ -1,20 +1,24 @@
-import React, { useCallback } from "react";
-import { withRouter } from 'react-router-dom'
+import React, { useCallback } from 'react'
+import { useParams } from 'react-router-dom';
 
 import Modal from './modal'
-import withQueryContext from "../../components/query-context-hoc";
-import { hasGoalFilter } from "../../util/filters";
+import { hasGoalFilter, isRealTimeDashboard } from "../../util/filters";
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
+import * as url from "../../util/url";
 import { addFilter } from "../../query";
+import { useQueryContext } from "../../query-context";
+import { useSiteContext } from "../../site-context";
 
-function ReferrerDrilldownModal(props) {
-  const { site, query, match } = props
+function ReferrerDrilldownModal() {
+  const { referrer } = useParams();
+  const { query } = useQueryContext();
+  const site = useSiteContext();
 
   const reportInfo = {
     title: "Referrer Drilldown",
     dimension: 'referrer',
-    endpoint: `/referrers/${match.params.referrer}`,
+    endpoint: url.apiPath(site, `/referrers/${referrer}`),
     dimensionLabel: "Referrer"
   }
 
@@ -23,29 +27,29 @@ function ReferrerDrilldownModal(props) {
       prefix: reportInfo.dimension,
       filter: ['is', reportInfo.dimension, [listItem.name]]
     }
-  }, [])
+  }, [reportInfo.dimension])
 
   const addSearchFilter = useCallback((query, searchString) => {
     return addFilter(query, ['contains', reportInfo.dimension, [searchString]])
-  }, [])
+  }, [reportInfo.dimension])
 
   function chooseMetrics() {
     if (hasGoalFilter(query)) {
       return [
         metrics.createTotalVisitors(),
-        metrics.createVisitors({renderLabel: (_query) => 'Conversions'}),
+        metrics.createVisitors({ renderLabel: (_query) => 'Conversions' }),
         metrics.createConversionRate()
       ]
     }
 
-    if (query.period === 'realtime') {
+    if (isRealTimeDashboard(query)) {
       return [
-        metrics.createVisitors({renderLabel: (_query) => 'Current visitors'})
+        metrics.createVisitors({ renderLabel: (_query) => 'Current visitors' })
       ]
     }
-    
+
     return [
-      metrics.createVisitors({renderLabel: (_query) => "Visitors" }),
+      metrics.createVisitors({ renderLabel: (_query) => "Visitors" }),
       metrics.createBounceRate(),
       metrics.createVisitDuration()
     ]
@@ -54,6 +58,7 @@ function ReferrerDrilldownModal(props) {
   const renderIcon = useCallback((listItem) => {
     return (
       <img
+        alt=""
         src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
         className="h-4 w-4 mr-2 align-middle inline"
       />
@@ -67,10 +72,8 @@ function ReferrerDrilldownModal(props) {
   }, [])
 
   return (
-    <Modal site={site}>
+    <Modal>
       <BreakdownModal
-        site={site}
-        query={query}
         reportInfo={reportInfo}
         metrics={chooseMetrics()}
         getFilterInfo={getFilterInfo}
@@ -82,4 +85,4 @@ function ReferrerDrilldownModal(props) {
   )
 }
 
-export default withRouter(withQueryContext(ReferrerDrilldownModal))
+export default ReferrerDrilldownModal

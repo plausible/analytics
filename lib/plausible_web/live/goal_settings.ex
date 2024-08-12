@@ -43,7 +43,8 @@ defmodule PlausibleWeb.Live.GoalSettings do
        site_id: site_id,
        domain: domain,
        displayed_goals: socket.assigns.all_goals,
-       filter_text: ""
+       filter_text: "",
+       form_goal: nil
      )}
   end
 
@@ -53,6 +54,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
     ~H"""
     <div id="goal-settings-main">
       <.flash_messages flash={@flash} />
+
       <.live_component :let={modal_unique_id} module={Modal} id="goals-form-modal">
         <.live_component
           module={PlausibleWeb.Live.GoalSettings.Form}
@@ -63,6 +65,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
           site={@site}
           current_user={@current_user}
           existing_goals={@all_goals}
+          goal={@form_goal}
           on_save_goal={
             fn goal, socket ->
               send(self(), {:goal_added, goal})
@@ -103,6 +106,19 @@ defmodule PlausibleWeb.Live.GoalSettings do
     {:noreply, assign(socket, displayed_goals: new_list, filter_text: filter_text)}
   end
 
+  def handle_event("edit-goal", %{"goal-id" => goal_id}, socket) do
+    goal_id = String.to_integer(goal_id)
+    form_goal = Plausible.Goals.get(socket.assigns.site, goal_id)
+
+    socket = socket |> assign(form_goal: form_goal) |> Modal.open("goals-form-modal")
+    {:noreply, socket}
+  end
+
+  def handle_event("add-goal", _, socket) do
+    socket = socket |> assign(form_goal: nil) |> Modal.open("goals-form-modal")
+    {:noreply, socket}
+  end
+
   def handle_event("delete-goal", %{"goal-id" => goal_id} = params, socket) do
     goal_id = String.to_integer(goal_id)
 
@@ -132,14 +148,17 @@ defmodule PlausibleWeb.Live.GoalSettings do
   end
 
   def handle_info({:goal_added, goal}, socket) do
+    all_goals = Goals.for_site(socket.assigns.site, preload_funnels?: true)
+
     socket =
       socket
       |> assign(
         filter_text: "",
-        all_goals: [goal | socket.assigns.all_goals],
+        all_goals: all_goals,
         event_name_options:
           Enum.reject(socket.assigns.event_name_options, &(&1 == goal.event_name)),
-        displayed_goals: [goal | socket.assigns.all_goals]
+        displayed_goals: all_goals,
+        form_goal: nil
       )
       |> put_live_flash(:success, "Goal saved successfully")
 

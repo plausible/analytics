@@ -37,12 +37,12 @@ defmodule Plausible.Stats.FiltersTest do
 
     test "custom event goal" do
       "event:goal==Signup"
-      |> assert_parsed([[:is, "event:goal", [{:event, "Signup"}]]])
+      |> assert_parsed([[:is, "event:goal", ["Signup"]]])
     end
 
     test "pageview goal" do
       "event:goal==Visit /blog"
-      |> assert_parsed([[:is, "event:goal", [{:page, "/blog"}]]])
+      |> assert_parsed([[:is, "event:goal", ["Visit /blog"]]])
     end
 
     test "is" do

@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import * as api from '../../api'
-import * as url from '../../util/url'
-import * as metrics from '../reports/metrics'
-import { hasGoalFilter } from "../../util/filters"
-import ListReport from '../reports/list'
-import ImportedQueryUnsupportedWarning from '../../stats/imported-query-unsupported-warning'
+import * as api from '../../api';
+import * as url from '../../util/url';
+import * as metrics from '../reports/metrics';
+import { hasGoalFilter } from "../../util/filters";
+import ListReport from '../reports/list';
+import ImportedQueryUnsupportedWarning from '../../stats/imported-query-unsupported-warning';
+import { useQueryContext } from '../../query-context';
+import { useSiteContext } from '../../site-context';
+import { referrersDrilldownRoute } from '../../router';
 
-export default function Referrers({ source, site, query }) {
+export default function Referrers({ source }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext()
   const [skipImportedReason, setSkipImportedReason] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -38,6 +43,7 @@ export default function Referrers({ source, site, query }) {
   function renderIcon(listItem) {
     return (
       <img
+        alt=""
         src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
         referrerPolicy="no-referrer"
         className="inline w-4 h-4 mr-2 -mt-px align-middle"
@@ -47,7 +53,7 @@ export default function Referrers({ source, site, query }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({meta: {plot: true}}),
+      metrics.createVisitors({ meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
@@ -56,7 +62,7 @@ export default function Referrers({ source, site, query }) {
     <div className="flex flex-col flex-grow">
       <div className="flex gap-x-1">
         <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
-        <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason} />
+        <ImportedQueryUnsupportedWarning loading={loading} skipImportedReason={skipImportedReason} />
       </div>
       <ListReport
         fetchData={fetchReferrers}
@@ -64,8 +70,7 @@ export default function Referrers({ source, site, query }) {
         getFilterFor={getFilterFor}
         keyLabel="Referrer"
         metrics={chooseMetrics()}
-        detailsLink={url.sitePath(`referrers/${encodeURIComponent(source)}`)}
-        query={query}
+        detailsLinkProps={{ path: referrersDrilldownRoute.path, params: {referrer: source}, search: (search) => search }}
         externalLinkDest={externalLinkDest}
         renderIcon={renderIcon}
         color="bg-blue-50"

@@ -1,15 +1,15 @@
 import React from 'react';
 
-import * as storage from '../../util/storage'
-import CountriesMap from './map'
+import * as storage from '../../util/storage';
+import CountriesMap from './map';
 
-import * as api from '../../api'
-import { apiPath, sitePath } from '../../util/url'
-import ListReport from '../reports/list'
+import * as api from '../../api';
+import { apiPath } from '../../util/url';
+import ListReport from '../reports/list';
 import * as metrics from '../reports/metrics';
-import { hasGoalFilter } from "../../util/filters"
-import { getFiltersByKeyPrefix } from '../../util/filters';
+import { hasGoalFilter, getFiltersByKeyPrefix } from '../../util/filters';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
+import { citiesRoute, countriesRoute, regionsRoute } from '../../router';
 
 function Countries({ query, site, onClick, afterFetchData }) {
 	function fetchData() {
@@ -43,8 +43,7 @@ function Countries({ query, site, onClick, afterFetchData }) {
 			onClick={onClick}
 			keyLabel="Country"
 			metrics={chooseMetrics()}
-			detailsLink={sitePath('countries')}
-			query={query}
+			detailsLinkProps={{ path: countriesRoute.path, search: (search) => search }}
 			renderIcon={renderIcon}
 			color="bg-orange-50"
 		/>
@@ -83,8 +82,7 @@ function Regions({ query, site, onClick, afterFetchData }) {
 			onClick={onClick}
 			keyLabel="Region"
 			metrics={chooseMetrics()}
-			detailsLink={sitePath('regions')}
-			query={query}
+			detailsLinkProps={{ path: regionsRoute.path, search: (search) => search }}
 			renderIcon={renderIcon}
 			color="bg-orange-50"
 		/>
@@ -122,8 +120,7 @@ function Cities({ query, site, afterFetchData }) {
 			getFilterFor={getFilterFor}
 			keyLabel="City"
 			metrics={chooseMetrics()}
-			detailsLink={sitePath('cities')}
-			query={query}
+			detailsLinkProps={{ path: citiesRoute.path, search: (search) => search }}
 			renderIcon={renderIcon}
 			color="bg-orange-50"
 		/>
@@ -238,7 +235,7 @@ export default class Locations extends React.Component {
 						<h3 className="font-bold dark:text-gray-100">
 							{labelFor[this.state.mode] || 'Locations'}
 						</h3>
-						<ImportedQueryUnsupportedWarning loading={this.state.loading} query={this.props.query} skipImportedReason={this.state.skipImportedReason} />
+						<ImportedQueryUnsupportedWarning loading={this.state.loading} skipImportedReason={this.state.skipImportedReason} />
 					</div>
 					<div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
 						{this.renderPill('Map', 'map')}

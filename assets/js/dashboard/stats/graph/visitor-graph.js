@@ -1,20 +1,22 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import * as api from '../../api'
-import * as storage from '../../util/storage'
-import { getGraphableMetrics } from './graph-util'
+import * as api from '../../api';
+import * as storage from '../../util/storage';
+import { getGraphableMetrics } from './graph-util';
 import TopStats from './top-stats';
-import { IntervalPicker, getCurrentInterval } from './interval-picker'
-import StatsExport from './stats-export'
+import { IntervalPicker, getCurrentInterval } from './interval-picker';
+import StatsExport from './stats-export';
 import WithImportedSwitch from './with-imported-switch';
 import SamplingNotice from './sampling-notice';
 import FadeIn from '../../fade-in';
-import * as url from '../../util/url'
-import { isComparisonEnabled } from '../../comparison-input'
-import LineGraphWithRouter from './line-graph'
+import * as url from '../../util/url';
+import { isComparisonEnabled } from '../../comparison-input';
+import LineGraphWithRouter from './line-graph';
+import { useQueryContext } from '../../query-context';
+import { useSiteContext } from '../../site-context';
 
 function fetchTopStats(site, query) {
   const q = { ...query }
-  
+
   if (!isComparisonEnabled(q.comparison)) {
     q.comparison = 'previous_period'
   }
@@ -23,12 +25,14 @@ function fetchTopStats(site, query) {
 }
 
 function fetchMainGraph(site, query, metric, interval) {
-  const params = {metric, interval}
+  const params = { metric, interval }
   return api.get(url.apiPath(site, '/main-graph'), query, params)
 }
 
-export default function VisitorGraph(props) {
-  const {site, query, lastLoadTimestamp} = props
+export default function VisitorGraph({ updateImportedDataInView }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
+
   const isRealtime = query.period === 'realtime'
   const isDarkTheme = document.querySelector('html').classList.contains('dark') || false
 
@@ -81,16 +85,16 @@ export default function VisitorGraph(props) {
   function fetchTopStatsAndGraphData() {
     fetchTopStats(site, query)
       .then((res) => {
-        if (props.updateImportedDataInView) {
-          props.updateImportedDataInView(res.includes_imported)
+        if (updateImportedDataInView) {
+          updateImportedDataInView(res.includes_imported)
         }
         setTopStatData(res)
         setTopStatsLoading(false)
       })
-    
+
     let metric = getStoredMetric()
     const availableMetrics = getGraphableMetrics(query, site)
-    
+
     if (!availableMetrics.includes(metric)) {
       metric = availableMetrics[0]
       storage.setItem(`metric__${site.domain}`, metric)
@@ -137,23 +141,25 @@ export default function VisitorGraph(props) {
       <FadeIn show={!(topStatsLoading || graphLoading)}>
         <div id="top-stats-container" className="flex flex-wrap" ref={topStatsBoundary} style={{ height: getTopStatsHeight() }}>
           <TopStats
-            site={site}
-            query={query}
             data={topStatData}
             onMetricUpdate={onMetricUpdate}
             tooltipBoundary={topStatsBoundary.current}
-            lastLoadTimestamp={lastLoadTimestamp}
           />
         </div>
         <div className="relative px-2">
           {graphRefreshing && renderLoader()}
           <div className="absolute right-4 -top-8 py-1 flex items-center">
-            {!isRealtime && <StatsExport site={site} query={query} />}
-            <SamplingNotice samplePercent={topStatData}/>
-            <WithImportedSwitch query={query} info={topStatData && topStatData.with_imported_switch} />
-            <IntervalPicker site={site} query={query} onIntervalUpdate={onIntervalUpdate} />
+            {!isRealtime && <StatsExport />}
+            <SamplingNotice samplePercent={topStatData} />
+            {!!topStatData?.with_imported_switch && topStatData?.with_imported_switch.visible &&
+              <WithImportedSwitch
+                tooltipMessage={topStatData.with_imported_switch.tooltip_msg}
+                disabled={!topStatData.with_imported_switch.togglable}
+              />
+            }
+            <IntervalPicker onIntervalUpdate={onIntervalUpdate} />
           </div>
-          <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} query={query} />
+          <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} />
         </div>
       </FadeIn>
     </div>

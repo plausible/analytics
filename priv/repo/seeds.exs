@@ -10,6 +10,10 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
+words =
+  for i <- 0..(:erlang.system_info(:atom_count) - 1),
+      do: :erlang.binary_to_term(<<131, 75, i::24>>)
+
 user = Plausible.Factory.insert(:user, email: "user@plausible.test", password: "plausible")
 
 native_stats_range =
@@ -32,8 +36,13 @@ imported_stats_range =
 
 long_random_paths =
   for _ <- 1..100 do
-    l = Enum.random(40..300)
-    "/long/#{l}/path/#{String.duplicate("0x", l)}/end"
+    path =
+      words
+      |> Enum.shuffle()
+      |> Enum.take(Enum.random(1..20))
+      |> Enum.join("/")
+
+    "/#{path}.html"
   end
 
 long_random_urls =
@@ -74,8 +83,17 @@ seeded_token = Plausible.Plugins.API.Token.generate("seed-token")
 
 {:ok, goal1} = Plausible.Goals.create(site, %{"page_path" => "/"})
 {:ok, goal2} = Plausible.Goals.create(site, %{"page_path" => "/register"})
-{:ok, goal3} = Plausible.Goals.create(site, %{"page_path" => "/login"})
-{:ok, goal4} = Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "USD"})
+
+{:ok, goal3} =
+  Plausible.Goals.create(site, %{"page_path" => "/login", "display_name" => "User logs in"})
+
+{:ok, goal4} =
+  Plausible.Goals.create(site, %{
+    "event_name" => "Purchase",
+    "currency" => "USD",
+    "display_name" => "North America Purchases"
+  })
+
 {:ok, _goal5} = Plausible.Goals.create(site, %{"page_path" => Enum.random(long_random_paths)})
 {:ok, outbound} = Plausible.Goals.create(site, %{"event_name" => "Outbound Link: Click"})
 
@@ -163,7 +181,7 @@ native_stats_range
       hostname: Enum.random(["en.dummy.site", "es.dummy.site", "dummy.site"]),
       timestamp: put_random_time.(date, index),
       referrer_source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
-      browser: Enum.random(["Microsoft Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
+      browser: Enum.random(["Microsoft Edge", "Chrome", "curl", "Safari", "Firefox", "Vivaldi"]),
       browser_version: to_string(Enum.random(0..50)),
       screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
       operating_system: Enum.random(["Windows", "Mac", "GNU/Linux"]),

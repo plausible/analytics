@@ -159,6 +159,6 @@ export const createExitRate = (props) => {
   return new Metric({...props, key: "exit_rate", renderValue, renderLabel})
 }
 
-function renderNumberWithTooltip(value) {
+export function renderNumberWithTooltip(value) {
   return <span tooltip={value}>{numberFormatter(value)}</span>
 }

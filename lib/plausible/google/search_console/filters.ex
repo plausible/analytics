@@ -2,17 +2,18 @@ defmodule Plausible.Google.SearchConsole.Filters do
   @moduledoc false
   import Plausible.Stats.Filters.Utils, only: [page_regex: 1]
 
-  def transform(property, plausible_filters) do
-    search_console_filters =
-      Enum.reduce_while(plausible_filters, [], fn plausible_filter, search_console_filters ->
+  def transform(property, plausible_filters, search) do
+    gsc_filters =
+      Enum.reduce_while(plausible_filters, [], fn plausible_filter, gsc_filters ->
         case transform_filter(property, plausible_filter) do
           :unsupported -> {:halt, :unsupported_filters}
-          :ignore -> {:cont, search_console_filters}
-          search_console_filter -> {:cont, [search_console_filter | search_console_filters]}
+          :ignore -> {:cont, gsc_filters}
+          gsc_filter -> {:cont, [gsc_filter | gsc_filters]}
         end
       end)
+      |> maybe_add_search_filter(search)
 
-    case search_console_filters do
+    case gsc_filters do
       :unsupported_filters -> :unsupported_filters
       [] -> {:ok, []}
       filters when is_list(filters) -> {:ok, [%{filters: filters}]}
@@ -64,4 +65,10 @@ defmodule Plausible.Google.SearchConsole.Filters do
     country = Location.Country.get_country(alpha_2)
     country.alpha_3
   end
+
+  defp maybe_add_search_filter(gsc_filters, search) when byte_size(search) > 0 do
+    [%{operator: "includingRegex", expression: search, dimension: "query"} | gsc_filters]
+  end
+
+  defp maybe_add_search_filter(gsc_filters, _search), do: gsc_filters
 end

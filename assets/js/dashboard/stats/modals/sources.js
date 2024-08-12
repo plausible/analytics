@@ -1,19 +1,20 @@
 import React, { useCallback } from "react";
-import { withRouter } from 'react-router-dom'
-
 import Modal from './modal'
-import withQueryContext from "../../components/query-context-hoc";
-import { hasGoalFilter } from "../../util/filters";
+import { hasGoalFilter, isRealTimeDashboard } from "../../util/filters";
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
+import * as url from "../../util/url";
 import { addFilter } from "../../query";
+import { useQueryContext } from "../../query-context";
+import { useSiteContext } from "../../site-context";
 
 const VIEWS = {
   sources: {
-    info: {title: 'Top Sources', dimension: 'source', endpoint: '/sources', dimensionLabel: 'Source'},
+    info: { title: 'Top Sources', dimension: 'source', endpoint: '/sources', dimensionLabel: 'Source' },
     renderIcon: (listItem) => {
       return (
         <img
+          alt=""
           src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
           className="h-4 w-4 mr-2 align-middle inline"
         />
@@ -21,68 +22,65 @@ const VIEWS = {
     }
   },
   utm_mediums: {
-    info: {title: 'Top UTM Mediums', dimension: 'utm_medium', endpoint: '/utm_mediums', dimensionLabel: 'UTM Medium'}
+    info: { title: 'Top UTM Mediums', dimension: 'utm_medium', endpoint: '/utm_mediums', dimensionLabel: 'UTM Medium' }
   },
   utm_sources: {
-    info: {title: 'Top UTM Sources', dimension: 'utm_source', endpoint: '/utm_sources', dimensionLabel: 'UTM Source'}
+    info: { title: 'Top UTM Sources', dimension: 'utm_source', endpoint: '/utm_sources', dimensionLabel: 'UTM Source' }
   },
   utm_campaigns: {
-    info: {title: 'Top UTM Campaigns', dimension: 'utm_campaign', endpoint: '/utm_campaigns', dimensionLabel: 'UTM Campaign'}
+    info: { title: 'Top UTM Campaigns', dimension: 'utm_campaign', endpoint: '/utm_campaigns', dimensionLabel: 'UTM Campaign' }
   },
   utm_contents: {
-    info: {title: 'Top UTM Contents', dimension: 'utm_content', endpoint: '/utm_contents', dimensionLabel: 'UTM Content'}
+    info: { title: 'Top UTM Contents', dimension: 'utm_content', endpoint: '/utm_contents', dimensionLabel: 'UTM Content' }
   },
   utm_terms: {
-    info: {title: 'Top UTM Terms', dimension: 'utm_term', endpoint: '/utm_terms', dimensionLabel: 'UTM Term'}
+    info: { title: 'Top UTM Terms', dimension: 'utm_term', endpoint: '/utm_terms', dimensionLabel: 'UTM Term' }
   },
 }
 
-function SourcesModal(props) {
-  const { site, query, location } = props
+function SourcesModal({ currentView }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
 
-  const urlParts = location.pathname.split('/')
-  const currentView = urlParts[urlParts.length - 1]
-
-  const reportInfo = VIEWS[currentView].info
+  let reportInfo = VIEWS[currentView].info
+  reportInfo = {...reportInfo, endpoint: url.apiPath(site, reportInfo.endpoint)}
 
   const getFilterInfo = useCallback((listItem) => {
     return {
       prefix: reportInfo.dimension,
       filter: ["is", reportInfo.dimension, [listItem.name]]
     }
-  }, [])
+  }, [reportInfo.dimension])
 
   const addSearchFilter = useCallback((query, searchString) => {
     return addFilter(query, ['contains', reportInfo.dimension, [searchString]])
-  }, [])
+  }, [reportInfo.dimension])
 
   function chooseMetrics() {
     if (hasGoalFilter(query)) {
       return [
         metrics.createTotalVisitors(),
-        metrics.createVisitors({renderLabel: (_query) => 'Conversions'}),
+        metrics.createVisitors({ renderLabel: (_query) => 'Conversions' }),
         metrics.createConversionRate()
       ]
     }
 
-    if (query.period === 'realtime') {
+    if (isRealTimeDashboard(query)) {
       return [
-        metrics.createVisitors({renderLabel: (_query) => 'Current visitors'})
+        metrics.createVisitors({ renderLabel: (_query) => 'Current visitors' })
       ]
     }
-    
+
     return [
-      metrics.createVisitors({renderLabel: (_query) => "Visitors" }),
+      metrics.createVisitors({ renderLabel: (_query) => "Visitors" }),
       metrics.createBounceRate(),
       metrics.createVisitDuration()
     ]
   }
 
   return (
-    <Modal site={site}>
+    <Modal>
       <BreakdownModal
-        site={site}
-        query={query}
         reportInfo={reportInfo}
         metrics={chooseMetrics()}
         getFilterInfo={getFilterInfo}
@@ -93,4 +91,4 @@ function SourcesModal(props) {
   )
 }
 
-export default withRouter(withQueryContext(SourcesModal))
+export default SourcesModal

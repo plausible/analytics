@@ -640,7 +640,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "metrics" => ["visitors", "pageviews"],
           "filters" => [
-            ["matches", "event:goal", ["Visit /blog**"]]
+            ["is", "event:goal", ["Visit /blog**"]]
           ]
         })
 
@@ -688,7 +688,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "metrics" => ["visitors", "events", "pageviews"],
           "filters" => [
-            ["matches", "event:goal", ["Signup", "Visit /**register"]]
+            ["is", "event:goal", ["Signup", "Visit /**register"]]
           ]
         })
 
@@ -814,7 +814,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
     end
 
-    test "handles filtering by visit country", %{
+    test "handles filtering by visit:country", %{
       conn: conn,
       site: site
     } do
@@ -833,6 +833,50 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         })
 
       assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
+    end
+
+    test "handles filtering by visit:country with contains", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, country_code: "EE"),
+        build(:pageview, country_code: "EE"),
+        build(:pageview, country_code: "IT"),
+        build(:pageview, country_code: "DE")
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["pageviews"],
+          "filters" => [["contains", "visit:country", ["E"]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
+    end
+
+    test "handles filtering by visit:city", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, city_geoname_id: 588_409),
+        build(:pageview, city_geoname_id: 689_123),
+        build(:pageview, city_geoname_id: 0),
+        build(:pageview, city_geoname_id: 10)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["pageviews"],
+          "filters" => [["is", "visit:city", [588_409, 689_123]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
     end
   end
 
@@ -1087,6 +1131,35 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
                %{"dimensions" => ["2021-01-03"], "metrics" => [2]},
                %{"dimensions" => ["2021-01-04"], "metrics" => [2]},
                %{"dimensions" => ["2021-01-01"], "metrics" => [1]}
+             ]
+    end
+
+    test "timeseries with quarter-hour timezone", %{conn: conn, user: user} do
+      # GMT+05:45
+      site = insert(:site, timezone: "Asia/Katmandu", members: [user])
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-02 05:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 05:15:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 05:30:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 05:45:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 06:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 06:15:00]),
+        build(:pageview, timestamp: ~N[2021-01-02 06:30:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visits"],
+          "date_range" => ["2021-01-02", "2021-01-02"],
+          "dimensions" => ["time:hour"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-02 10:00:00"], "metrics" => [1]},
+               %{"dimensions" => ["2021-01-02 11:00:00"], "metrics" => [4]},
+               %{"dimensions" => ["2021-01-02 12:00:00"], "metrics" => [2]}
              ]
     end
   end
@@ -2193,7 +2266,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "date_range" => "all",
         "dimensions" => ["event:page"],
         "filters" => [
-          ["matches", "event:goal", ["Visit /**register"]]
+          ["is", "event:goal", ["Visit /**register"]]
         ]
       })
 
@@ -2202,6 +2275,40 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     assert results == [
              %{"dimensions" => ["/en/register"], "metrics" => [2, 3]},
              %{"dimensions" => ["/123/it/register"], "metrics" => [1, 1]}
+           ]
+  end
+
+  test "goal contains filter for goal breakdown", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:event, name: "Onboarding conversion: Step 1"),
+      build(:event, name: "Onboarding conversion: Step 1"),
+      build(:event, name: "Onboarding conversion: Step 2"),
+      build(:event, name: "Unrelated"),
+      build(:pageview, pathname: "/conversion")
+    ])
+
+    insert(:goal, site: site, event_name: "Onboarding conversion: Step 1")
+    insert(:goal, site: site, event_name: "Onboarding conversion: Step 2")
+    insert(:goal, site: site, event_name: "Unrelated")
+    insert(:goal, site: site, page_path: "/conversion")
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["event:goal"],
+        "filters" => [
+          ["contains", "event:goal", ["conversion"]]
+        ]
+      })
+
+    %{"results" => results} = json_response(conn, 200)
+
+    assert results == [
+             %{"dimensions" => ["Onboarding conversion: Step 1"], "metrics" => [2]},
+             %{"dimensions" => ["Onboarding conversion: Step 2"], "metrics" => [1]},
+             %{"dimensions" => ["Visit /conversion"], "metrics" => [1]}
            ]
   end
 
@@ -2223,7 +2330,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "date_range" => "all",
         "dimensions" => ["visit:country"],
         "filters" => [
-          ["matches", "event:goal", ["Signup", "Visit /**register"]]
+          ["is", "event:goal", ["Signup", "Visit /**register"]]
         ]
       })
 

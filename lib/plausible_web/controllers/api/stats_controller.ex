@@ -12,6 +12,7 @@ defmodule PlausibleWeb.Api.StatsController do
   require Logger
 
   @revenue_metrics on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
+  @not_set "(not set)"
 
   plug(:date_validation_plug)
 
@@ -172,34 +173,34 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp build_full_intervals(%{interval: "week", date_range: range}, labels) do
-    for label <- labels, into: %{} do
-      date = Date.from_iso8601!(label)
-
-      interval_start = Timex.beginning_of_week(date)
-      interval_end = Timex.end_of_week(date)
-
-      within_interval? = Enum.member?(range, interval_start) && Enum.member?(range, interval_end)
-
-      {label, within_interval?}
-    end
+  defp build_full_intervals(%{interval: "week", date_range: date_range}, labels) do
+    build_intervals(labels, date_range, &Timex.beginning_of_week/1, &Timex.end_of_week/1)
   end
 
-  defp build_full_intervals(%{interval: "month", date_range: range}, labels) do
-    for label <- labels, into: %{} do
-      date = Date.from_iso8601!(label)
-
-      interval_start = Timex.beginning_of_month(date)
-      interval_end = Timex.end_of_month(date)
-
-      within_interval? = Enum.member?(range, interval_start) && Enum.member?(range, interval_end)
-
-      {label, within_interval?}
-    end
+  defp build_full_intervals(%{interval: "month", date_range: date_range}, labels) do
+    build_intervals(labels, date_range, &Timex.beginning_of_month/1, &Timex.end_of_month/1)
   end
 
   defp build_full_intervals(_query, _labels) do
     nil
+  end
+
+  def build_intervals(labels, date_range, start_fn, end_fn) do
+    for label <- labels, into: %{} do
+      case Date.from_iso8601(label) do
+        {:ok, date} ->
+          interval_start = start_fn.(date)
+          interval_end = end_fn.(date)
+
+          within_interval? =
+            Enum.member?(date_range, interval_start) && Enum.member?(date_range, interval_end)
+
+          {label, within_interval?}
+
+        _ ->
+          {label, false}
+      end
+    end
   end
 
   def top_stats(conn, params) do
@@ -276,6 +277,7 @@ defmodule PlausibleWeb.Api.StatsController do
         current_date =
           Timex.now(site.timezone)
           |> Timex.to_date()
+          |> Date.to_string()
 
         Enum.find_index(dates, &(&1 == current_date))
 
@@ -284,6 +286,7 @@ defmodule PlausibleWeb.Api.StatsController do
           Timex.now(site.timezone)
           |> Timex.to_date()
           |> date_or_weekstart(query)
+          |> Date.to_string()
 
         Enum.find_index(dates, &(&1 == current_date))
 
@@ -292,6 +295,7 @@ defmodule PlausibleWeb.Api.StatsController do
           Timex.now(site.timezone)
           |> Timex.to_date()
           |> Timex.beginning_of_month()
+          |> Date.to_string()
 
         Enum.find_index(dates, &(&1 == current_date))
 
@@ -749,23 +753,46 @@ defmodule PlausibleWeb.Api.StatsController do
     user_id = get_session(conn, :current_user_id)
     is_admin = user_id && Plausible.Sites.has_admin_access?(user_id, site)
 
-    case google_api().fetch_stats(site, query, params["limit"] || 9) do
-      {:error, :google_propery_not_configured} ->
-        json(conn, %{not_configured: true, is_admin: is_admin})
+    pagination = {
+      to_int(params["limit"], 9),
+      to_int(params["page"], 0)
+    }
+
+    search = params["search"] || ""
+
+    not_configured_error_payload =
+      %{
+        error: "The site is not connected to Google Search Keywords",
+        reason: :not_configured,
+        is_admin: is_admin
+      }
+
+    unsupported_filters_error_payload = %{
+      error:
+        "Unable to fetch keyword data from Search Console because it does not support the current set of filters",
+      reason: :unsupported_filters
+    }
+
+    case google_api().fetch_stats(site, query, pagination, search) do
+      {:error, :google_property_not_configured} ->
+        conn
+        |> put_status(422)
+        |> json(not_configured_error_payload)
 
       {:error, :unsupported_filters} ->
-        json(conn, %{unsupported_filters: true})
+        conn
+        |> put_status(422)
+        |> json(unsupported_filters_error_payload)
 
       {:ok, terms} ->
-        json(conn, %{search_terms: terms})
+        json(conn, %{results: terms})
 
-      {:error, _} ->
+      {:error, error} ->
+        Logger.error("Plausible.Google.API.fetch_stats failed with error: `#{inspect(error)}`")
+
         conn
         |> put_status(502)
-        |> json(%{
-          not_configured: true,
-          is_admin: is_admin
-        })
+        |> json(not_configured_error_payload)
     end
   end
 
@@ -908,7 +935,6 @@ defmodule PlausibleWeb.Api.StatsController do
         query
         |> Query.remove_filters(["visit:exit_page"])
         |> Query.add_filter([:is, "event:page", pages])
-        |> Query.add_filter([:is, "event:name", ["pageview"]])
         |> Query.set(dimensions: ["event:page"])
 
       total_pageviews =
@@ -1070,7 +1096,11 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:browser")
     query = Query.from(site, params)
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
+
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
 
     browsers =
       Stats.breakdown(site, query, metrics, pagination)
@@ -1097,29 +1127,36 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:browser_version")
     query = Query.from(site, params)
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
 
-    versions =
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
+
+    results =
       Stats.breakdown(site, query, metrics, pagination)
-      |> transform_keys(%{browser_version: :name})
+      |> transform_keys(%{browser_version: :version})
 
     if params["csv"] do
       if Query.get_filter(query, "event:goal") do
-        versions
-        |> transform_keys(%{
-          name: :version,
-          browser: :name,
-          visitors: :conversions
-        })
+        results
+        |> transform_keys(%{browser: :name, visitors: :conversions})
         |> to_csv([:name, :version, :conversions, :conversion_rate])
       else
-        versions
-        |> transform_keys(%{name: :version, browser: :name})
+        results
+        |> transform_keys(%{browser: :name})
         |> to_csv([:name, :version, :visitors])
       end
     else
+      results =
+        if params["detailed"] do
+          transform_keys(results, %{version: :name})
+        else
+          Enum.map(results, &put_combined_name_with_version(&1, :browser))
+        end
+
       json(conn, %{
-        results: versions,
+        results: results,
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1130,7 +1167,11 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:os")
     query = Query.from(site, params)
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
+
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
 
     systems =
       Stats.breakdown(site, query, metrics, pagination)
@@ -1157,25 +1198,36 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:os_version")
     query = Query.from(site, params)
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
 
-    versions =
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
+
+    results =
       Stats.breakdown(site, query, metrics, pagination)
-      |> transform_keys(%{os_version: :name})
+      |> transform_keys(%{os_version: :version})
 
     if params["csv"] do
       if Query.get_filter(query, "event:goal") do
-        versions
-        |> transform_keys(%{name: :version, os: :name, visitors: :conversions})
+        results
+        |> transform_keys(%{os: :name, visitors: :conversions})
         |> to_csv([:name, :version, :conversions, :conversion_rate])
       else
-        versions
-        |> transform_keys(%{name: :version, os: :name})
+        results
+        |> transform_keys(%{os: :name})
         |> to_csv([:name, :version, :visitors])
       end
     else
+      results =
+        if params["detailed"] do
+          transform_keys(results, %{version: :name})
+        else
+          Enum.map(results, &put_combined_name_with_version(&1, :os))
+        end
+
       json(conn, %{
-        results: versions,
+        results: results,
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1186,7 +1238,11 @@ defmodule PlausibleWeb.Api.StatsController do
     params = Map.put(params, "property", "visit:device")
     query = Query.from(site, params)
     pagination = parse_pagination(params)
-    metrics = breakdown_metrics(query, [:percentage])
+
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics ++ [:percentage])
 
     sizes =
       Stats.breakdown(site, query, metrics, pagination)
@@ -1372,8 +1428,7 @@ defmodule PlausibleWeb.Api.StatsController do
     list
     |> Enum.map(fn row -> Enum.map(columns, &row[&1]) end)
     |> (fn res -> [column_names | res] end).()
-    |> CSV.encode()
-    |> Enum.join()
+    |> NimbleCSV.RFC4180.dump_to_iodata()
   end
 
   defp get_country(code) do
@@ -1514,5 +1569,15 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       [:visitors] ++ extra_metrics
     end
+  end
+
+  def put_combined_name_with_version(row, name_key) do
+    name =
+      case {row[name_key], row.version} do
+        {@not_set, @not_set} -> @not_set
+        {browser_or_os, version} -> "#{browser_or_os} #{version}"
+      end
+
+    Map.put(row, :name, name)
   end
 end

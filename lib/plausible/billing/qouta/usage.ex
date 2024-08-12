@@ -111,14 +111,14 @@ defmodule Plausible.Billing.Quota.Usage do
   end
 
   @spec usage_cycle(User.t(), :last_30_days | cycle(), list() | nil, Date.t()) :: usage_cycle()
-  def usage_cycle(user, cycle, owned_site_ids \\ nil, today \\ Timex.today())
+  def usage_cycle(user, cycle, owned_site_ids \\ nil, today \\ Date.utc_today())
 
   def usage_cycle(user, cycle, nil, today) do
     usage_cycle(user, cycle, Plausible.Sites.owned_site_ids(user), today)
   end
 
   def usage_cycle(_user, :last_30_days, owned_site_ids, today) do
-    date_range = Date.range(Timex.shift(today, days: -30), today)
+    date_range = Date.range(Date.shift(today, day: -30), today)
 
     {pageviews, custom_events} =
       Plausible.Stats.Clickhouse.usage_breakdown(owned_site_ids, date_range)
@@ -136,26 +136,26 @@ defmodule Plausible.Billing.Quota.Usage do
     last_bill_date = user.subscription.last_bill_date
 
     normalized_last_bill_date =
-      Timex.shift(last_bill_date, months: Timex.diff(today, last_bill_date, :months))
+      Date.shift(last_bill_date, month: Timex.diff(today, last_bill_date, :months))
 
     date_range =
       case cycle do
         :current_cycle ->
           Date.range(
             normalized_last_bill_date,
-            Timex.shift(normalized_last_bill_date, months: 1, days: -1)
+            Date.shift(normalized_last_bill_date, month: 1, day: -1)
           )
 
         :last_cycle ->
           Date.range(
-            Timex.shift(normalized_last_bill_date, months: -1),
-            Timex.shift(normalized_last_bill_date, days: -1)
+            Date.shift(normalized_last_bill_date, month: -1),
+            Date.shift(normalized_last_bill_date, day: -1)
           )
 
         :penultimate_cycle ->
           Date.range(
-            Timex.shift(normalized_last_bill_date, months: -2),
-            Timex.shift(normalized_last_bill_date, days: -1, months: -1)
+            Date.shift(normalized_last_bill_date, month: -2),
+            Date.shift(normalized_last_bill_date, day: -1, month: -1)
           )
       end
 

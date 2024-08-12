@@ -1,15 +1,25 @@
-import React, {useEffect, useState} from 'react';
-import * as storage from '../../util/storage'
-import { getFiltersByKeyPrefix, hasGoalFilter, isFilteringOnFixedValue } from '../../util/filters'
-import ListReport from '../reports/list'
-import * as metrics from '../reports/metrics'
-import * as api from '../../api'
-import * as url from '../../util/url'
+import React, { useEffect, useState } from 'react';
+import * as storage from '../../util/storage';
+import { getFiltersByKeyPrefix, hasGoalFilter, isFilteringOnFixedValue } from '../../util/filters';
+import ListReport from '../reports/list';
+import * as metrics from '../reports/metrics';
+import * as api from '../../api';
+import * as url from '../../util/url';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
+import { useQueryContext } from '../../query-context';
+import { useSiteContext } from '../../site-context';
+import {
+  browsersRoute,
+  browserVersionsRoute,
+  operatingSystemsRoute,
+  operatingSystemVersionsRoute,
+  screenSizesRoute
+} from '../../router';
 
 // Icons copied from https://github.com/alrra/browser-logos
 const BROWSER_ICONS = {
   'Chrome': 'chrome.svg',
+  'curl': 'curl.svg',
   'Safari': 'safari.png',
   'Firefox': 'firefox.svg',
   'Microsoft Edge': 'edge.svg',
@@ -28,18 +38,21 @@ const BROWSER_ICONS = {
   'vivo Browser': 'vivo.png'
 }
 
-function browserIconFor(browser) {
+export function browserIconFor(browser) {
   const filename = BROWSER_ICONS[browser] || 'fallback.svg'
 
   return (
     <img
+      alt=""
       src={`/images/icon/browser/${filename}`}
       className="w-4 h-4 mr-2"
     />
   )
 }
 
-function Browsers({ query, site, afterFetchData }) {
+function Browsers({ afterFetchData }) {
+  const site = useSiteContext();
+  const { query } = useQueryContext();
   function fetchData() {
     return api.get(url.apiPath(site, '/browsers'), query)
   }
@@ -57,7 +70,7 @@ function Browsers({ query, site, afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ meta: {plot: true}}),
+      metrics.createVisitors({ meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
       !hasGoalFilter(query) && metrics.createPercentage()
     ].filter(metric => !!metric)
@@ -70,20 +83,17 @@ function Browsers({ query, site, afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Browser"
       metrics={chooseMetrics()}
-      query={query}
       renderIcon={renderIcon}
+      detailsLinkProps={{ path: browsersRoute.path, search: (search) => search }}
     />
   )
 }
 
-function BrowserVersions({ query, site, afterFetchData }) {
+function BrowserVersions({ afterFetchData }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
   function fetchData() {
     return api.get(url.apiPath(site, '/browser-versions'), query)
-      .then(res => {
-        return {...res, results: res.results.map((row => {
-          return {...row, name: `${row.browser} ${row.name}`, version: row.name}
-        }))}
-      })
   }
 
   function renderIcon(listItem) {
@@ -102,7 +112,7 @@ function BrowserVersions({ query, site, afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ meta: {plot: true}}),
+      metrics.createVisitors({ meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
       !hasGoalFilter(query) && metrics.createPercentage()
     ].filter(metric => !!metric)
@@ -116,7 +126,7 @@ function BrowserVersions({ query, site, afterFetchData }) {
       keyLabel="Browser version"
       metrics={chooseMetrics()}
       renderIcon={renderIcon}
-      query={query}
+      detailsLinkProps={{ path: browserVersionsRoute.path, search: (search) => search }}
     />
   )
 }
@@ -141,18 +151,21 @@ const OS_ICONS = {
   'FreeBSD': 'freebsd.png',
 }
 
-function osIconFor(os) {
+export function osIconFor(os) {
   const filename = OS_ICONS[os] || 'fallback.svg'
 
   return (
     <img
+      alt=""
       src={`/images/icon/os/${filename}`}
       className="w-4 h-4 mr-2"
     />
   )
 }
 
-function OperatingSystems({ query, site, afterFetchData }) {
+function OperatingSystems({ afterFetchData }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
   function fetchData() {
     return api.get(url.apiPath(site, '/operating-systems'), query)
   }
@@ -166,9 +179,9 @@ function OperatingSystems({ query, site, afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ meta: {plot: true}}),
+      metrics.createVisitors({ meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
-      !hasGoalFilter(query) && metrics.createPercentage({meta: {hiddenonMobile: true}})
+      !hasGoalFilter(query) && metrics.createPercentage({ meta: { hiddenonMobile: true } })
     ].filter(metric => !!metric)
   }
 
@@ -184,19 +197,17 @@ function OperatingSystems({ query, site, afterFetchData }) {
       renderIcon={renderIcon}
       keyLabel="Operating system"
       metrics={chooseMetrics()}
-      query={query}
+      detailsLinkProps={{ path: operatingSystemsRoute.path, search: (search) => search }}
     />
   )
 }
 
-function OperatingSystemVersions({ query, site, afterFetchData }) {
+function OperatingSystemVersions({ afterFetchData }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
+
   function fetchData() {
     return api.get(url.apiPath(site, '/operating-system-versions'), query)
-      .then(res => {
-        return {...res, results: res.results.map((row => {
-          return {...row, name: `${row.os} ${row.name}`, version: row.name}
-        }))}
-      })
   }
 
   function renderIcon(listItem) {
@@ -215,7 +226,7 @@ function OperatingSystemVersions({ query, site, afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ meta: {plot: true}}),
+      metrics.createVisitors({ meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
       !hasGoalFilter(query) && metrics.createPercentage()
     ].filter(metric => !!metric)
@@ -229,21 +240,22 @@ function OperatingSystemVersions({ query, site, afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Operating System Version"
       metrics={chooseMetrics()}
-      query={query}
+      detailsLinkProps={{ path: operatingSystemVersionsRoute.path, search: (search) => search }}
     />
   )
 
 }
 
-function ScreenSizes({ query, site, afterFetchData }) {
+function ScreenSizes({ afterFetchData }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
+
   function fetchData() {
     return api.get(url.apiPath(site, '/screen-sizes'), query)
   }
 
-  function renderIcon(screenSize) {
-    return (
-      <span className="mr-1.5">{iconFor(screenSize.name)}</span>
-    )
+  function renderIcon(listItem) {
+    return screenSizeIconFor(listItem.name)
   }
 
   function getFilterFor(listItem) {
@@ -255,7 +267,7 @@ function ScreenSizes({ query, site, afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ meta: {plot: true}}),
+      metrics.createVisitors({ meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
       !hasGoalFilter(query) && metrics.createPercentage()
     ].filter(metric => !!metric)
@@ -268,36 +280,32 @@ function ScreenSizes({ query, site, afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Screen size"
       metrics={chooseMetrics()}
-      query={query}
       renderIcon={renderIcon}
+      detailsLinkProps={{ path: screenSizesRoute.path, search: (search) => search }}
     />
   )
 }
 
-function iconFor(screenSize) {
+export function screenSizeIconFor(screenSize) {
+  let svg = null
+
   if (screenSize === 'Mobile') {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="5" y="2" width="14" height="20" rx="2" ry="2" /><line x1="12" y1="18" x2="12" y2="18" /></svg>
-    )
+    svg = <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="5" y="2" width="14" height="20" rx="2" ry="2" /><line x1="12" y1="18" x2="12" y2="18" /></svg>
   } else if (screenSize === 'Tablet') {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="4" y="2" width="16" height="20" rx="2" ry="2" transform="rotate(180 12 12)" /><line x1="12" y1="18" x2="12" y2="18" /></svg>
-    )
+    svg = <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="4" y="2" width="16" height="20" rx="2" ry="2" transform="rotate(180 12 12)" /><line x1="12" y1="18" x2="12" y2="18" /></svg>
   } else if (screenSize === 'Laptop') {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="2" y1="20" x2="22" y2="20" /></svg>
-    )
+    svg = <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="2" y1="20" x2="22" y2="20" /></svg>
   } else if (screenSize === 'Desktop') {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
-    )
-  } else if (screenSize === '(not set)') {
-    return null
+    svg = <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="-mt-px feather"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
   }
+
+  return <span className="mr-1.5">{svg}</span>
 }
 
-export default function Devices(props) {
-  const {site, query} = props
+export default function Devices() {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
+
   const tabKey = `deviceTab__${site.domain}`
   const storedTab = storage.getItem(tabKey)
   const [mode, setMode] = useState(storedTab || 'browser')
@@ -320,17 +328,17 @@ export default function Devices(props) {
     switch (mode) {
       case 'browser':
         if (isFilteringOnFixedValue(query, 'browser')) {
-          return <BrowserVersions site={site} query={query} afterFetchData={afterFetchData} />
+          return <BrowserVersions afterFetchData={afterFetchData} />
         }
-        return <Browsers site={site} query={query} afterFetchData={afterFetchData} />
+        return <Browsers afterFetchData={afterFetchData} />
       case 'os':
         if (isFilteringOnFixedValue(query, 'os')) {
-          return <OperatingSystemVersions site={site} query={query} afterFetchData={afterFetchData} />
+          return <OperatingSystemVersions afterFetchData={afterFetchData} />
         }
-        return <OperatingSystems site={site} query={query} afterFetchData={afterFetchData} />
+        return <OperatingSystems afterFetchData={afterFetchData} />
       case 'size':
       default:
-        return <ScreenSizes site={site} query={query} afterFetchData={afterFetchData} />
+        return <ScreenSizes afterFetchData={afterFetchData} />
     }
   }
 
@@ -362,7 +370,7 @@ export default function Devices(props) {
       <div className="flex justify-between w-full">
         <div className="flex gap-x-1">
           <h3 className="font-bold dark:text-gray-100">Devices</h3>
-          <ImportedQueryUnsupportedWarning loading={loading} query={query} skipImportedReason={skipImportedReason}/>
+          <ImportedQueryUnsupportedWarning loading={loading} skipImportedReason={skipImportedReason} />
         </div>
         <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
           {renderPill('Browser', 'browser')}

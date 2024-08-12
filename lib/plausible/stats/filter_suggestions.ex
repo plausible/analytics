@@ -155,7 +155,7 @@ defmodule Plausible.Stats.FilterSuggestions do
   def filter_suggestions(site, _query, "goal", filter_search) do
     site
     |> Plausible.Goals.for_site()
-    |> Enum.map(fn x -> if x.event_name, do: x.event_name, else: "Visit #{x.page_path}" end)
+    |> Enum.map(& &1.display_name)
     |> Enum.filter(fn goal ->
       String.contains?(
         String.downcase(goal),

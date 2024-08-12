@@ -25,7 +25,7 @@ defmodule Plausible.Users do
 
   @spec trial_days_left(Auth.User.t()) :: integer()
   def trial_days_left(user) do
-    Timex.diff(user.trial_expiry_date, Timex.today(), :days)
+    Timex.diff(user.trial_expiry_date, Date.utc_today(), :days)
   end
 
   @spec update_accept_traffic_until(Auth.User.t()) :: Auth.User.t()
@@ -42,16 +42,16 @@ defmodule Plausible.Users do
 
       cond do
         Plausible.Users.on_trial?(user) ->
-          Timex.shift(user.trial_expiry_date,
-            days: Auth.User.trial_accept_traffic_until_offset_days()
+          Date.shift(user.trial_expiry_date,
+            day: Auth.User.trial_accept_traffic_until_offset_days()
           )
 
         user.subscription && user.subscription.paddle_plan_id == "free_10k" ->
           @accept_traffic_until_free
 
         user.subscription && user.subscription.next_bill_date ->
-          Timex.shift(user.subscription.next_bill_date,
-            days: Auth.User.subscription_accept_traffic_until_offset_days()
+          Date.shift(user.subscription.next_bill_date,
+            day: Auth.User.subscription_accept_traffic_until_offset_days()
           )
 
         true ->

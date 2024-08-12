@@ -24,6 +24,30 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
       end
     end
 
+    test "renders preselected default value (tuple)" do
+      options = new_options(10)
+      assert doc = render_sample_component(options, selected: List.last(options))
+
+      assert element_exists?(doc, "input[type=hidden][name=test-submit-name][value=10]")
+
+      assert element_exists?(
+               doc,
+               ~s|input[type=text][name=display-test-component][value="TestOption 10"]|
+             )
+    end
+
+    test "renders preselected default value (string)" do
+      options = [{"a", "a"}, {"b", "b"}, {"c", "c"}]
+      assert doc = render_sample_component(options, selected: "b")
+
+      assert element_exists?(doc, "input[type=hidden][name=test-submit-name][value=b]")
+
+      assert element_exists?(
+               doc,
+               ~s|input[type=text][name=display-test-component][value="b"]|
+             )
+    end
+
     test "renders up to 15 suggestions by default" do
       assert doc = render_sample_component(new_options(20))
 
