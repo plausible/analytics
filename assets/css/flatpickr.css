@@ -96,7 +96,7 @@
 }
 
 .dark .flatpickr-day.today {
-  background-color: rgba(167 243 208 50%);
+  background-color: rgb(167 243 208 / 50%);
   border-color: #34d399;
 }
 

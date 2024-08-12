@@ -28,7 +28,7 @@
 .modal__overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0 0 0 60%);
+  background: rgb(0 0 0 / 60%);
   z-index: 99;
   overflow: auto;
 }
