@@ -269,7 +269,7 @@ defmodule PlausibleWeb.Api.StatsController do
       "hour" ->
         current_date =
           Timex.now(site.timezone)
-          |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:00:00")
+          |> Calendar.strftime("%Y-%m-%d %H:00:00")
 
         Enum.find_index(dates, &(&1 == current_date))
 
@@ -302,7 +302,7 @@ defmodule PlausibleWeb.Api.StatsController do
       "minute" ->
         current_date =
           Timex.now(site.timezone)
-          |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}:00")
+          |> Calendar.strftime("%Y-%m-%d %H:%M:00")
 
         Enum.find_index(dates, &(&1 == current_date))
     end
