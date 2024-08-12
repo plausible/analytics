@@ -3,7 +3,7 @@
     <%= for log <- @queries do %>
       <details class="group py-1">
         <summary class="flex cursor-pointer flex-row items-center justify-between py-1 font-semibold text-gray-600 marker:[font-size:0px]">
-          <%= log["request_method"] %> <%= log["phoenix_controller"] |> String.split(".") |> List.last %>.<%= log["phoenix_action"] %> (<%= log[:query_duration_ms] %>ms)
+          <%= log["request_method"] %> <%= log["phoenix_controller"] |> String.split(".") |> List.last %>.<%= log["phoenix_action"] %> (<%= log["query_duration_ms"] %>ms)
           <svg class="h-6 w-6 rotate-0 transform text-gray-400 group-open:rotate-180" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
           </svg>
@@ -15,7 +15,7 @@
                 <td class="table-cell p-2"><%= key %></td>
                 <td class="table-cell p-2">
                   <%= case key do %>
-                    <% :query -> %>
+                    <% "query" -> %>
                       <pre class="whitespace-pre-wrap"><%= value %></pre>
                     <% "params" -> %>
                       <pre><%= Jason.encode!(value, pretty: true) %></pre>
