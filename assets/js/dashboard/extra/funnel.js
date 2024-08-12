@@ -46,12 +46,14 @@ export default function Funnel({ funnelName, tabs }) {
         }
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, funnelName, visible, isSmallScreen])
 
   useEffect(() => {
     if (canvasRef.current && funnel && visible && !isSmallScreen) {
       initialiseChart()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [funnel, visible])
 
   useEffect(() => {

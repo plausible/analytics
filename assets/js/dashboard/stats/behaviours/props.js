@@ -54,6 +54,7 @@ export default function Properties({ afterFetchData }) {
 
       setPropKeyLoading(false)
     })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query])
 
   function getPropKeyFromStorage() {
@@ -73,6 +74,7 @@ export default function Properties({ afterFetchData }) {
     return (input) => {
       return api.get(url.apiPath(site, "/suggestions/prop_key"), query, { q: input.trim() })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query])
 
   function onPropKeySelect() {

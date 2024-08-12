@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { Fragment, useState, useEffect, useCallback, useRef } from "react";
 import { useAppNavigate } from "./navigation/use-app-navigate";
 import Flatpickr from "react-flatpickr";

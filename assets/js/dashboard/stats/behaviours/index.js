@@ -66,6 +66,7 @@ export default function Behaviours({ importedDataInView }) {
       setShowingPropsForGoalFilter(true)
       setMode(PROPS)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -74,10 +75,12 @@ export default function Behaviours({ importedDataInView }) {
       setShowingPropsForGoalFilter(false)
       setMode(CONVERSIONS)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasGoalFilter(query)])
 
   useEffect(() => {
     setMode(defaultMode())
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabledModes])
 
   useEffect(() => setLoading(true), [query, mode])

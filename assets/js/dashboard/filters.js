@@ -137,6 +137,7 @@ function Filters() {
       window.removeEventListener('resize', handleResize, false)
       document.removeEventListener("keyup", handleKeyup)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -145,6 +146,7 @@ function Filters() {
 
   useEffect(() => {
     if (wrapped === WRAPSTATE.waiting) { updateDisplayMode() }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wrapped])
 
 

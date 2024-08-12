@@ -125,6 +125,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
 
         setState({ loading: false, list: response.results })
       })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyLabel, query])
 
   const onVisible = () => { setVisible(true) }
@@ -136,6 +137,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
       // only read the new metrics once the new list is loaded.
       setState({ loading: true, list: null })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goalFilterApplied]);
 
   useEffect(() => {
@@ -145,6 +147,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
     }
 
     return () => { document.removeEventListener('tick', getData) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyLabel, query, visible]);
 
   // returns a filtered `metrics` list. Since currently, the backend can return different
