@@ -2973,7 +2973,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
     assert json_response(conn, 200)["results"] == [
              %{"dimensions" => ["Estonia", "Harjumaa", "Tallinn"], "metrics" => [1]},
-             %{"dimensions" => ["United Kingdom", "London, City of", "London"], "metrics" => [1]}
+             %{"dimensions" => ["United Kingdom", "London", "London"], "metrics" => [1]}
            ]
   end
 end
