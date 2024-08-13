@@ -11,11 +11,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
     time_labels: false
   }
 
-  def parse(site, params, now \\ nil) when is_map(params) do
+  def parse(site, params) when is_map(params) do
     with {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
-         {:ok, date_range} <-
-           parse_date_range(site, Map.get(params, "date_range"), now || today(site)),
+         {:ok, date_range} <- parse_date_range(site, Map.take(params, ["date_range", "date"])),
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          {:ok, include} <- parse_include(Map.get(params, "include", %{})),
@@ -115,6 +114,23 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{inspect(filter)}'"}
+
+  defp parse_date_range(site, %{"date_range" => date_range, "date" => date})
+       when is_binary(date) do
+    case Date.from_iso8601(date) do
+      {:ok, date} -> parse_date_range(site, date_range, date)
+      _ -> {:error, "Invalid date '#{date}'"}
+    end
+  end
+
+  defp parse_date_range(site, %{"date_range" => date_range, "date" => date})
+       when is_struct(date) do
+    parse_date_range(site, date_range, date)
+  end
+
+  defp parse_date_range(site, %{"date_range" => date_range}) do
+    parse_date_range(site, date_range, today(site))
+  end
 
   defp parse_date_range(_site, "day", date) do
     {:ok, Date.range(date, date)}

@@ -10,11 +10,11 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   @date_range Date.range(@today, @today)
 
   def check_success(params, site, expected_result) do
-    assert {:ok, ^expected_result} = parse(site, params, @today)
+    assert {:ok, ^expected_result} = parse(site, Map.put(params, "date", @today))
   end
 
   def check_error(params, site, expected_error_message) do
-    {:error, message} = parse(site, params, @today)
+    {:error, message} = parse(site, Map.put(params, "date", @today))
     assert message =~ expected_error_message
   end
 
@@ -358,7 +358,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         ]
       }
 
-      assert {:ok, res} = parse(site, params, @today)
+      assert {:ok, res} = parse(site, Map.put(params, "date", @today))
       expected_timezone = site.timezone
 
       assert %{
