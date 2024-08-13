@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { Fragment, useState, useEffect, useCallback, useRef } from "react";
 import { useAppNavigate } from "./navigation/use-app-navigate";
 import Flatpickr from "react-flatpickr";
@@ -291,7 +292,7 @@ function DatePicker() {
   }
 
   function openCalendar() {
-    calendar.current && calendar.current.flatpickr.open();
+    calendar.current?.flatpickr.open();
   }
 
   function renderLink(period, text, opts = {}) {

@@ -30,7 +30,7 @@ export const withPinnedHeader = (WrappedComponent, selector) => {
     }
 
     componentWillUnmount() {
-      this.observer && this.observer.unobserve(this.el);
+      this.observer?.unobserve(this.el);
     }
 
     render() {

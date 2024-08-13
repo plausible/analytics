@@ -155,6 +155,7 @@ defmodule Plausible.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      "assets.typecheck": ["cmd npm --prefix assets run typecheck"],
       "assets.build": [
         "tailwind default",
         "esbuild default"

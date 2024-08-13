@@ -10,6 +10,7 @@ import * as timer from './dashboard/util/realtime-update-timer'
 import { filtersBackwardsCompatibilityRedirect } from './dashboard/query';
 import SiteContextProvider, { parseSiteFromDataset } from './dashboard/site-context';
 import UserContextProvider from './dashboard/user-context'
+import ThemeContextProvider from './dashboard/theme-context'
 
 timer.start()
 
@@ -32,11 +33,13 @@ if (container) {
   const router = createAppRouter(site);
   const app = (
     <ErrorBoundary>
-      <SiteContextProvider site={site}>
-        <UserContextProvider role={container.dataset.currentUserRole} loggedIn={container.dataset.loggedIn === 'true'}>
-          <RouterProvider router={router} />
-        </UserContextProvider>
-      </SiteContextProvider>
+      <ThemeContextProvider>
+        <SiteContextProvider site={site}>
+          <UserContextProvider role={container.dataset.currentUserRole} loggedIn={container.dataset.loggedIn === 'true'}>
+            <RouterProvider router={router} />
+          </UserContextProvider>
+        </SiteContextProvider>
+      </ThemeContextProvider>
     </ErrorBoundary>
   )
 

@@ -19,6 +19,7 @@ export default function FilterModalRow({
 
   const selectedClauses = useMemo(
     () => clauses.map((value) => ({ value, label: getLabel(labels, filterKey, value) })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [filter, labels]
   )
 

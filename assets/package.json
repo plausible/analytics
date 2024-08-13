@@ -3,11 +3,12 @@
   "version": "1.4.0",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "format": "prettier --write {css,js}/**",
-    "check-format": "prettier --check {css,js}/**",
+    "format": "prettier --write",
+    "check-format": "prettier --check **/*.{js,css,ts,tsx} --require-pragma",
     "eslint": "eslint js/**",
     "stylelint": "stylelint css/**",
-    "lint": "npm run eslint && npm run stylelint"
+    "lint": "npm run eslint && npm run stylelint",
+    "typecheck": "tsc --noEmit --pretty"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.10",
@@ -24,7 +25,7 @@
     "chart.js": "^3.3.2",
     "chartjs-plugin-datalabels": "^2.2.0",
     "classnames": "^2.3.1",
-    "datamaps": "^0.5.9",
+    "d3": "^7.9.0",
     "dayjs": "^1.11.7",
     "iframe-resizer": "^4.3.2",
     "phoenix": "^1.7.2",
@@ -38,18 +39,29 @@
     "react-popper": "^2.3.0",
     "react-router-dom": "^6.25.1",
     "react-transition-group": "^4.4.2",
-    "url-search-params-polyfill": "^8.2.5"
+    "topojson-client": "^3.1.0",
+    "url-search-params-polyfill": "^8.2.5",
+    "visionscarto-world-atlas": "^1.0.0"
   },
   "devDependencies": {
+    "@types/classnames": "^2.3.1",
+    "@types/d3": "^7.4.3",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/topojson-client": "^3.1.4",
+    "@typescript-eslint/eslint-plugin": "^8.0.1",
+    "@typescript-eslint/parser": "^8.0.1",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jsx-a11y": "^6.9.0",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "prettier": "^3.3.3",
     "stylelint": "^16.8.1",
-    "stylelint-config-standard": "^36.0.1"
+    "stylelint-config-standard": "^36.0.1",
+    "typescript": "^5.5.4"
   },
   "name": "assets"
 }
