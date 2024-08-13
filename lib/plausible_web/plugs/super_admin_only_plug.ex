@@ -1,4 +1,6 @@
 defmodule PlausibleWeb.SuperAdminOnlyPlug do
+  @moduledoc false
+
   import Plug.Conn
   use Plausible.Repo
 

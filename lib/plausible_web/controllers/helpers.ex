@@ -28,7 +28,10 @@ defmodule PlausibleWeb.ControllerHelpers do
       phoenix_action: conn.private.phoenix_action |> to_string(),
       site_id: conn.assigns.site.id,
       site_domain: conn.assigns.site.domain,
-      user_id: get_session(conn, :current_user_id)
+      user_id: get_user_id(conn, conn.assigns)
     }
   end
+
+  defp get_user_id(_conn, %{current_user: user}), do: user.id
+  defp get_user_id(conn, _assigns), do: get_session(conn, :current_user_id)
 end
