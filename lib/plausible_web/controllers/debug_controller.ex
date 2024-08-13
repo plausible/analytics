@@ -3,8 +3,6 @@ defmodule PlausibleWeb.DebugController do
   use Plausible.IngestRepo
   use Plausible
 
-  import Ecto.Query
-
   plug(PlausibleWeb.RequireAccountPlug)
   plug(PlausibleWeb.SuperAdminOnlyPlug)
 
@@ -68,7 +66,6 @@ defmodule PlausibleWeb.DebugController do
         |> Map.merge(Jason.decode!(data["log_comment"]))
         |> Map.delete("log_comment")
       end)
-      |> IO.inspect()
 
     conn
     |> render("clickhouse.html",
