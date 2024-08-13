@@ -57,6 +57,7 @@ Plausible.Cldr.Rbnf.Ordinal.html
 Plausible.Cldr.Rbnf.Spellout.html
 Plausible.Cldr.html
 Plausible.ClickhouseEventV2.html
+Plausible.ClickhouseLocationData.html
 Plausible.ClickhouseRepo.html
 Plausible.ClickhouseSessionV2.BoolUInt8.html
 Plausible.ClickhouseSessionV2.html
@@ -64,6 +65,7 @@ Plausible.ConfigHelpers.html
 Plausible.CrmExtensions.html
 Plausible.DataCase.html
 Plausible.DataMigration.CleanUpDemoSiteReferrerSource.html
+Plausible.DataMigration.LocationsSync.html
 Plausible.DataMigration.NumericIDs.html
 Plausible.DataMigration.PopulateEventSessionColumns.html
 Plausible.DataMigration.Repo.html
@@ -422,8 +424,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-0EE6B703.js
-dist/sidebar_items-BC2E45E7.js
+dist/search_data-0E476E66.js
+dist/sidebar_items-103B8C4F.js
 index.html
 readme.html
 search.html
