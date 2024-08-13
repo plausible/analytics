@@ -7,6 +7,7 @@ import * as metrics from "../reports/metrics";
 import * as url from "../../util/url";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
+import { addFilter } from "../../query";
 
 const VIEWS = {
   countries: { title: 'Top Countries', dimension: 'country', endpoint: '/countries', dimensionLabel: 'Country' },
@@ -27,6 +28,10 @@ function LocationsModal({ currentView }) {
       filter: ["is", reportInfo.dimension, [listItem.code]],
       labels: { [listItem.code]: listItem.name }
     }
+  }, [reportInfo.dimension])
+
+  const addSearchFilter = useCallback((query, searchString) => {
+    return addFilter(query, ['contains', `${reportInfo.dimension}_name`, [searchString]])
   }, [reportInfo.dimension])
 
   function chooseMetrics() {
@@ -63,7 +68,7 @@ function LocationsModal({ currentView }) {
         metrics={chooseMetrics()}
         getFilterInfo={getFilterInfo}
         renderIcon={renderIcon}
-        searchEnabled={false}
+        addSearchFilter={addSearchFilter}
       />
     </Modal>
   )
