@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS location_data <%= if @cluster? do %>ON CLUSTER '{clus
     `name` String
 )
 <%= if @cluster? do %>
-ENGINE = ReplicateMergeTree('/clickhouse/{cluster}/tables/{shard}/plausible_prod/location_data', '{replica}')
+ENGINE = ReplicatedMergeTree('/clickhouse/{cluster}/tables/{shard}/plausible_prod/location_data', '{replica}')
 <% else %>
 ENGINE = MergeTree()
 <% end %>
