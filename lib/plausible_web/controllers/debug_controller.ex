@@ -9,7 +9,7 @@ defmodule PlausibleWeb.DebugController do
   plug(PlausibleWeb.SuperAdminOnlyPlug)
 
   def clickhouse(conn, params) do
-    cluster? = Plausible.MigrationUtils.clustered_table?("events_v2")
+    cluster? = Plausible.IngestRepo.clustered_table?("events_v2")
     on_cluster = if(cluster?, do: "ON CLUSTER '{cluster}'", else: "")
 
     # Ensure last logs are flushed

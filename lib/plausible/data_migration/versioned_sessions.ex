@@ -21,7 +21,7 @@ defmodule Plausible.DataMigration.VersionedSessions do
 
     unique_suffix = Timex.now() |> Calendar.strftime(@suffix_format)
 
-    cluster? = Plausible.MigrationUtils.clustered_table?("sessions_v2")
+    cluster? = Plausible.IngestRepo.clustered_table?("sessions_v2")
 
     {:ok, %{rows: partitions}} = run_sql("list-partitions")
     partitions = Enum.map(partitions, fn [part] -> part end)
