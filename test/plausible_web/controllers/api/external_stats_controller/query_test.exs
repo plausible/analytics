@@ -2920,4 +2920,60 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              %{"dimensions" => ["2021-01-03 00:00:00", "Twitter"], "metrics" => [1]}
            ]
   end
+
+  test "filtering by visit:country_name, visit:region_name, visit:city_name", %{
+    conn: conn,
+    site: site
+  } do
+    populate_stats(site, [
+      # GB, London
+      build(:pageview,
+        country_code: "GB",
+        subdivision1_code: "GB-LND",
+        city_geoname_id: 2_643_743
+      ),
+      # CA, London
+      build(:pageview,
+        country_code: "CA",
+        subdivision1_code: "CA-ON",
+        city_geoname_id: 6_058_560
+      ),
+      # EE, Tallinn
+      build(:pageview,
+        country_code: "EE",
+        subdivision1_code: "EE-37",
+        city_geoname_id: 588_409
+      ),
+      # EE, Tartu
+      build(:pageview,
+        country_code: "EE",
+        subdivision1_code: "EE-79",
+        city_geoname_id: 588_335
+      ),
+      # EE, Jõgeva
+      build(:pageview,
+        country_code: "EE",
+        subdivision1_code: "EE-50",
+        city_geoname_id: 591_902
+      )
+    ])
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "date_range" => "all",
+        "metrics" => ["pageviews"],
+        "filters" => [
+          ["is", "visit:country_name", ["Estonia", "United Kingdom"]],
+          ["is_not", "visit:region_name", ["Tartumaa"]],
+          ["contains", "visit:city_name", ["n"]]
+        ],
+        "dimensions" => ["visit:country_name", "visit:region_name", "visit:city_name"]
+      })
+
+    assert json_response(conn, 200)["results"] == [
+             %{"dimensions" => ["Estonia", "Harjumaa", "Tallinn"], "metrics" => [1]},
+             %{"dimensions" => ["United Kingdom", "London", "London"], "metrics" => [1]}
+           ]
+  end
 end
