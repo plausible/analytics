@@ -39,7 +39,7 @@ defmodule Plausible.Stats.Timeseries do
     q = SQL.QueryBuilder.build(query_with_metrics, site)
 
     q
-    |> ClickhouseRepo.all()
+    |> ClickhouseRepo.all(query: query)
     |> QueryResult.from(query_with_metrics)
     |> build_timeseries_result(query_with_metrics, currency)
     |> transform_keys(%{group_conversion_rate: :conversion_rate})

@@ -22,7 +22,7 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
   }
 
   def run(opts \\ []) do
-    cluster? = Plausible.MigrationUtils.clustered_table?("sessions_v2")
+    cluster? = Plausible.IngestRepo.clustered_table?("sessions_v2")
 
     {:ok, _} =
       run_sql("create-sessions-dictionary",
@@ -54,7 +54,7 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
   end
 
   def kill(opts \\ []) do
-    cluster? = Plausible.MigrationUtils.clustered_table?("events_v2")
+    cluster? = Plausible.IngestRepo.clustered_table?("events_v2")
 
     report_progress(opts)
 
