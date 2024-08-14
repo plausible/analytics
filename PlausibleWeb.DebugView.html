@@ -8,13 +8,13 @@
     <meta name="project" content="Plausible v0.0.1">
 
 
-    <title>PlausibleWeb.CRMAuthPlug — Plausible v0.0.1</title>
+    <title>PlausibleWeb.DebugView — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-103B8C4F.js"></script>
+    <script src="dist/sidebar_items-E62145E7.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -131,12 +131,12 @@ Pages
 
 <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/crm_auth_plug.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/debug_view.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">PlausibleWeb.CRMAuthPlug</span> 
+  <span translate="no">PlausibleWeb.DebugView</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
@@ -157,7 +157,17 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#call/2" translate="no">call(conn, opts)</a>
+        <a href="#__resource__/0" translate="no">__resource__()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The resource name, as an atom, for this view</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#clickhouse.html/1" translate="no">clickhouse.html(assigns)</a>
 
       </div>
 
@@ -165,9 +175,31 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#init/1" translate="no">init(options)</a>
+        <a href="#controller_name/1" translate="no">controller_name(phoenix_controller_name)</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#render/2" translate="no">render(template, assigns \\ %{})</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Renders the given template locally.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#template_not_found/2" translate="no">template_not_found(template, assigns)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback invoked when no template is found.
+By default it raises but can be customized
+to render a particular template.</p></div>
 
     </div>
 
@@ -184,16 +216,38 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="call/2">
+<section class="detail" id="__resource__/0">
 
   <div class="detail-header">
-    <a href="#call/2" class="detail-link" title="Link to this function">
+    <a href="#__resource__/0" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">call(conn, opts)</h1>
+    <h1 class="signature" translate="no">__resource__()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/crm_auth_plug.ex#L9" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/debug_view.ex#L2" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>The resource name, as an atom, for this view</p>
+  </section>
+</section>
+<section class="detail" id="clickhouse.html/1">
+
+  <div class="detail-header">
+    <a href="#clickhouse.html/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">clickhouse.html(assigns)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/debug_view.ex#L1" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -206,16 +260,16 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="init/1">
+<section class="detail" id="controller_name/1">
 
   <div class="detail-header">
-    <a href="#init/1" class="detail-link" title="Link to this function">
+    <a href="#controller_name/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">init(options)</h1>
+    <h1 class="signature" translate="no">controller_name(phoenix_controller_name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/crm_auth_plug.ex#L5" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/debug_view.ex#L4" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -226,6 +280,60 @@ Pages
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="render/2">
+
+    <span id="render/1"></span>
+
+  <div class="detail-header">
+    <a href="#render/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">render(template, assigns \\ %{})</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/debug_view.ex#L2" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Renders the given template locally.</p>
+  </section>
+</section>
+<section class="detail" id="template_not_found/2">
+
+  <div class="detail-header">
+    <a href="#template_not_found/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">template_not_found(template, assigns)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/views/debug_view.ex#L2" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> template_not_found(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">no_return</a>()</pre>
+
+      </div>
+
+<p>Callback invoked when no template is found.
+By default it raises but can be customized
+to render a particular template.</p>
   </section>
 </section>
 

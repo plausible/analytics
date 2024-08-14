@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-103B8C4F.js"></script>
+    <script src="dist/sidebar_items-E62145E7.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -179,7 +179,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#build/2" translate="no">build(site, params)</a>
+        <a href="#build/3" translate="no">build(site, params, debug_metadata)</a>
 
       </div>
 
@@ -195,7 +195,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#from/2" translate="no">from(site, params)</a>
+        <a href="#from/3" translate="no">from(site, params, debug_metadata \\ %{})</a>
 
       </div>
 
@@ -289,7 +289,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">t()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L29" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L30" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -303,6 +303,7 @@ Pages
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Plausible.Stats.Query{
   date_range: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  debug_metadata: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   dimensions: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   experimental_reduced_joins?: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   filters: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -361,16 +362,16 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="build/2">
+<section class="detail" id="build/3">
 
   <div class="detail-header">
-    <a href="#build/2" class="detail-link" title="Link to this function">
+    <a href="#build/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">build(site, params)</h1>
+    <h1 class="signature" translate="no">build(site, params, debug_metadata)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L31" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L32" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -414,14 +415,16 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="from/2">
+<section class="detail" id="from/3">
+
+    <span id="from/2"></span>
 
   <div class="detail-header">
-    <a href="#from/2" class="detail-link" title="Link to this function">
+    <a href="#from/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">from(site, params)</h1>
+    <h1 class="signature" translate="no">from(site, params, debug_metadata \\ %{})</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L47" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -432,12 +435,6 @@ Pages
   </div>
 
   <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> from(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: <a href="#t:t/0">t</a>()</pre>
-
-      </div>
 
 <p>Builds query from old-style params. New code should prefer Query.build</p>
   </section>
@@ -620,6 +617,7 @@ Pages
           <pre translate="no"><span class="attribute">@spec</span> trace(
   %Plausible.Stats.Query{
     date_range: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    debug_metadata: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     dimensions: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     experimental_reduced_joins?: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
     filters: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -641,6 +639,7 @@ Pages
   [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()]
 ) :: %Plausible.Stats.Query{
   date_range: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  debug_metadata: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   dimensions: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   experimental_reduced_joins?: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   filters: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
