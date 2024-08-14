@@ -106,7 +106,7 @@ class LineGraph extends React.Component {
 
                 if (graphData.interval === 'hour' && query.period !== 'day') {
                   const date = dateFormatter({
-                    interval: "date",
+                    interval: "day",
                     longForm: false,
                     period: query.period,
                     shouldShowYear: hasMultipleYears,
@@ -227,7 +227,7 @@ class LineGraph extends React.Component {
 
     if (this.props.graphData.interval === 'month') {
       navigateToQuery(this.props.navigate, this.props.query, { period: 'month', date })
-    } else if (this.props.graphData.interval === 'date') {
+    } else if (this.props.graphData.interval === 'day') {
       navigateToQuery(this.props.navigate, this.props.query, { period: 'day', date })
     }
   }

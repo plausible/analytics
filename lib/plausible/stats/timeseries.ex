@@ -12,7 +12,7 @@ defmodule Plausible.Stats.Timeseries do
   @time_dimension %{
     "month" => "time:month",
     "week" => "time:week",
-    "date" => "time:day",
+    "day" => "time:day",
     "hour" => "time:hour",
     "minute" => "time:minute"
   }

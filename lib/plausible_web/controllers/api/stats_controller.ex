@@ -272,7 +272,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
         Enum.find_index(dates, &(&1 == current_date))
 
-      "date" ->
+      "day" ->
         current_date =
           Timex.now(site.timezone)
           |> Timex.to_date()
