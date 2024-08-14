@@ -3,6 +3,7 @@
     "jsx": "react",
     "target": "es2017",
     "module": "commonjs",
+    "allowJs": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

@@ -156,11 +156,15 @@ export const filterRoute = {
   element: <FilterModal />
 }
 
-export function createAppRouter(site) {
+export function getRouterBasepath(site) {
   const basepath = site.shared
     ? `/share/${encodeURIComponent(site.domain)}`
     : `/${encodeURIComponent(site.domain)}`
+  return basepath
+}
 
+export function createAppRouter(site) {
+  const basepath = getRouterBasepath(site)
   const router = createBrowserRouter(
     [
       {

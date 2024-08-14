@@ -4,10 +4,10 @@ import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load';
 import classNames from "classnames";
 import numberFormatter, { durationFormatter } from '../../util/number-formatter';
 import * as storage from '../../util/storage';
-import { formatDateRange } from '../../util/date.js';
-import { getGraphableMetrics } from "./graph-util.js";
-import { useQueryContext } from "../../query-context.js";
-import { useSiteContext } from "../../site-context.js";
+import { formatDateRange } from '../../util/date';
+import { getGraphableMetrics } from "./graph-util";
+import { useQueryContext } from "../../query-context";
+import { useSiteContext } from "../../site-context";
 
 function Maybe({ condition, children }) {
   if (condition) {
