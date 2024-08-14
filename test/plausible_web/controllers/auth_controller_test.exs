@@ -69,7 +69,7 @@ defmodule PlausibleWeb.AuthControllerTest do
           }
         )
 
-      assert redirected_to(conn, 302) == "/activate"
+      assert redirected_to(conn, 302) == "/activate?flow=register"
     end
 
     test "logs the user in", %{conn: conn} do
@@ -167,7 +167,7 @@ defmodule PlausibleWeb.AuthControllerTest do
           }
         )
 
-      assert redirected_to(conn, 302) == "/activate"
+      assert redirected_to(conn, 302) == "/activate?flow=invitation"
     end
 
     test "logs the user in", %{conn: conn, invitation: invitation} do
@@ -290,7 +290,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       user = Repo.get_by(Plausible.Auth.User, id: user.id)
 
       assert user.email_verified
-      assert redirected_to(conn) == "/sites/new"
+      assert redirected_to(conn) == "/sites/new?flow="
     end
 
     test "redirects to /sites if user has invitation", %{conn: conn, user: user} do
@@ -303,7 +303,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = post(conn, "/activate", %{code: verification.code})
 
-      assert redirected_to(conn) == "/sites"
+      assert redirected_to(conn) == "/sites?flow="
     end
 
     test "removes used up verification code", %{conn: conn, user: user} do

@@ -1,6 +1,11 @@
+<PlausibleWeb.Components.FlowProgress.render
+  flow={@conn.params["flow"]}
+  current_step="Activate account"
+/>
+
 <div class="w-full max-w-3xl mt-4 mx-auto flex">
   <%= if @has_email_code? do %>
-    <%= form_for @conn, "/activate", [class: "w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8"], fn f -> %>
+    <%= form_for @conn, @form_submit_url, [class: "w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8"], fn f -> %>
       <h2 class="text-xl font-black dark:text-gray-100">
         <%= if @has_any_memberships? do %>
           Verify your email address
@@ -100,12 +105,6 @@
         method: :post,
         class: "button mt-12"
       ) %>
-    </div>
-  <% end %>
-
-  <%= if !@has_any_invitations? and !@has_any_memberships? do %>
-    <div class="pt-12 pl-8 hidden md:block">
-      <%= render(PlausibleWeb.AuthView, "_onboarding_steps.html", current_step: 1) %>
     </div>
   <% end %>
 </div>

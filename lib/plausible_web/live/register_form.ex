@@ -62,7 +62,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto mt-6 text-center dark:text-gray-300">
+    <div class="mx-auto text-center dark:text-gray-300">
       <h1 class="text-3xl font-black">
         <%= if ce?() or @live_action == :register_from_invitation_form do %>
           Register your <%= Plausible.product_name() %> account
@@ -70,10 +70,23 @@ defmodule PlausibleWeb.Live.RegisterForm do
           Register your 30-day free trial
         <% end %>
       </h1>
-      <div class="text-xl font-medium">Set up privacy-friendly analytics with just a few clicks</div>
+      <div class="text-xl font-medium mt-2">
+        Set up privacy-friendly analytics with just a few clicks
+      </div>
     </div>
 
-    <div class="w-full max-w-3xl mt-4 mx-auto flex flex-shrink-0">
+    <PlausibleWeb.Components.FlowProgress.render
+      :if={@live_action == :register_form}
+      flow="register"
+      current_step="Register"
+    />
+    <PlausibleWeb.Components.FlowProgress.render
+      :if={@live_action == :register_from_invitation_form}
+      flow="invitation"
+      current_step="Register"
+    />
+
+    <div class="w-full max-w-3xl mx-auto flex flex-shrink-0">
       <.form
         :let={f}
         for={@form}
@@ -176,9 +189,6 @@ defmodule PlausibleWeb.Live.RegisterForm do
           ) %> instead.
         </p>
       </.form>
-      <div :if={@live_action == :register_form} class="pt-12 pl-8 hidden md:block">
-        <%= PlausibleWeb.AuthView.render("_onboarding_steps.html", current_step: 0) %>
-      </div>
     </div>
     """
   end

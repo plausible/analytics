@@ -11,6 +11,12 @@
 
   setInterval(updateStatus, 5000)
 </script>
+
+<PlausibleWeb.Components.FlowProgress.render
+  flow={@conn.params["flow"]}
+  current_step="Verify snippet"
+/>
+
 <div class="w-full max-w-md mx-auto mt-8">
   <%= if @site.locked do %>
     <div
@@ -31,7 +37,7 @@
       <div class="block pulsating-circle top-1/2 left-1/2"></div>
       <p class="text-gray-600 dark:text-gray-400 text-xs absolute left-0 bottom-0 mb-6 w-full text-center leading-normal">
         Need to see the snippet again?
-        <.styled_link href={"/#{URI.encode_www_form(@site.domain)}/snippet"}>
+        <.styled_link href={"/#{URI.encode_www_form(@site.domain)}/snippet?flow=#{@conn.params[~s|flow|]}"}>
           Click here
         </.styled_link>
 
@@ -67,7 +73,8 @@
         session: %{
           "site_id" => @site.id,
           "domain" => @site.domain,
-          "slowdown" => @conn.private[:verification_slowdown]
+          "slowdown" => @conn.private[:verification_slowdown],
+          "flow" => @conn.params["flow"]
         }
       ) %>
 </div>
