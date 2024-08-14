@@ -21,17 +21,18 @@ defmodule PlausibleWeb.Components.FlowProgress do
       "Add site info",
       "Install snippet",
       "Verify snippet"
-    ],
-    nil => []
+    ]
   }
+
+  @values @flows |> Enum.flat_map(fn {_, steps} -> steps end) |> Enum.uniq()
 
   def flows, do: @flows
 
-  attr :flow, :any, required: true
-  attr :current_step, :string, required: true
+  attr :flow, :string, required: true
+  attr :current_step, :string, required: true, values: @values
 
   def render(assigns) do
-    steps = Map.fetch!(flows(), assigns.flow)
+    steps = Map.get(flows(), assigns.flow, [])
     current_step_idx = Enum.find_index(steps, &(&1 == assigns.current_step))
 
     assigns =
@@ -41,8 +42,8 @@ defmodule PlausibleWeb.Components.FlowProgress do
       )
 
     ~H"""
-    <div class="mt-6 hidden md:block">
-      <div :if={@steps} class="flex items-center justify-between max-w-3xl mx-auto my-8">
+    <div :if={not Enum.empty?(@steps)} class="mt-6 hidden md:block" id="flow-progress">
+      <div class="flex items-center justify-between max-w-3xl mx-auto my-8">
         <%= for {step, idx} <- Enum.with_index(@steps) do %>
           <div class="flex items-center text-xs">
             <div
