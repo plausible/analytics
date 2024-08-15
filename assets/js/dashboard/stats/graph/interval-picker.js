@@ -3,9 +3,9 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import React, { Fragment, useCallback, useEffect } from 'react';
 import classNames from 'classnames';
 import * as storage from '../../util/storage';
-import { isKeyPressed } from '../../keybinding.js';
-import { useQueryContext } from '../../query-context.js';
-import { useSiteContext } from '../../site-context.js';
+import { isKeyPressed } from '../../keybinding';
+import { useQueryContext } from '../../query-context';
+import { useSiteContext } from '../../site-context';
 
 const INTERVAL_LABELS = {
   'minute': 'Minutes',

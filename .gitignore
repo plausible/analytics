@@ -35,6 +35,9 @@ npm-debug.log
 /assets/node_modules/
 /tracker/node_modules/
 
+# test coverage directory
+/assets/coverage
+
 # Since we are building assets from assets/,
 # we ignore priv/static. You may want to comment
 # this depending on your deployment strategy.

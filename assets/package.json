@@ -3,6 +3,7 @@
   "version": "1.4.0",
   "license": "AGPL-3.0-or-later",
   "scripts": {
+    "test": "jest",
     "format": "prettier --write",
     "check-format": "prettier --check **/*.{js,css,ts,tsx} --require-pragma",
     "eslint": "eslint js/**",
@@ -44,8 +45,13 @@
     "visionscarto-world-atlas": "^1.0.0"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.2",
     "@types/classnames": "^2.3.1",
     "@types/d3": "^7.4.3",
+    "@types/jest": "^29.5.12",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/topojson-client": "^3.1.4",
@@ -55,12 +61,16 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-jest": "^28.8.0",
     "eslint-plugin-jsx-a11y": "^6.9.0",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-react-hooks": "^4.6.2",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "prettier": "^3.3.3",
     "stylelint": "^16.8.1",
     "stylelint-config-standard": "^36.0.1",
+    "ts-jest": "^29.2.4",
     "typescript": "^5.5.4"
   },
   "name": "assets"

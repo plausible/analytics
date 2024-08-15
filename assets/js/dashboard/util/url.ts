@@ -2,7 +2,10 @@
 import JsonURL from '@jsonurl/jsonurl'
 import { PlausibleSite } from '../site-context'
 
-export function apiPath(site: PlausibleSite, path = ''): string {
+export function apiPath(
+  site: Pick<PlausibleSite, 'domain'>,
+  path = ''
+): string {
   return `/api/stats/${encodeURIComponent(site.domain)}${path}/`
 }
 
@@ -79,7 +82,7 @@ export function encodeURIComponentPermissive(input: string): string {
   )
 }
 
-export function encodeSearchParamEntries([k, v]: [string, string]): string {
+export function encodeSearchParamEntry([k, v]: [string, string]): string {
   return `${encodeURIComponentPermissive(k)}=${encodeURIComponentPermissive(v)}`
 }
 
@@ -92,15 +95,11 @@ export function isSearchEntryDefined(
 export function stringifySearch(
   searchRecord: Record<string, unknown>
 ): '' | string {
-  const definedSearchEntries = Object.entries(
-    searchRecord || ({} as Record<string, unknown>)
-  )
+  const definedSearchEntries = Object.entries(searchRecord || {})
     .map(stringifySearchEntry)
     .filter(isSearchEntryDefined)
 
-  const encodedSearchEntries = definedSearchEntries.map(
-    encodeSearchParamEntries
-  )
+  const encodedSearchEntries = definedSearchEntries.map(encodeSearchParamEntry)
 
   return encodedSearchEntries.length ? `?${encodedSearchEntries.join('&')}` : ''
 }
@@ -126,6 +125,8 @@ export function parseSearchFragment(
   if (searchStringFragment === '') {
     return null
   }
+  // tricky: the search string fragment is already decoded due to URLSearchParams intermediate (see tests),
+  // and these symbols are unparseable
   const fragmentWithReEncodedSymbols = searchStringFragment
     /* @ts-expect-error API supposedly not present in compilation target */
     .replaceAll('=', encodeURIComponent('='))

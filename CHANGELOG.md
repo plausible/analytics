@@ -16,6 +16,8 @@ All notable changes to this project will be documented in this file.
 - Add search and pagination functionality into Google Keywords > Details modal
 - ClickHouse system.query_log table log_comment column now contains information about source of queries. Useful for debugging
 - New /debug/clickhouse route for super admins which shows information on clickhouse queries executed by user
+- Typescript support for `/assets`
+- Testing framework for `/assets`
 
 ### Removed
 - Deprecate `ECTO_IPV6` and `ECTO_CH_IPV6` env vars in CE plausible/analytics#4245

@@ -27,4 +27,5 @@ jobs:
     - run: npm install --prefix ./tracker
     - run: npm run lint --prefix ./assets
     - run: npm run check-format --prefix ./assets
+    - run: npm run test --prefix ./assets
     - run: npm run deploy --prefix ./tracker
