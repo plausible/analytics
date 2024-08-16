@@ -219,11 +219,12 @@ defmodule PlausibleWeb.AuthController do
           not is_nil(params["register_action"]) and not user.email_verified ->
             Auth.EmailVerification.issue_code(user)
 
-            flow = if params["register_action"] == "register_form" do
-              "register"
-            else
-              "invitation"
-            end
+            flow =
+              if params["register_action"] == "register_form" do
+                "register"
+              else
+                "invitation"
+              end
 
             put_session(conn, :login_dest, Routes.auth_path(conn, :activate_form, flow: flow))
 
