@@ -2,28 +2,20 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import classNames from 'classnames'
-// @ts-expect-error untyped
 import * as api from '../../api'
-// @ts-expect-error untyped
 import { navigateToQuery } from '../../query'
-// @ts-expect-error untyped
 import { replaceFilterByPrefix, cleanLabels } from '../../util/filters'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
-// @ts-expect-error untyped
 import numberFormatter from '../../util/number-formatter'
 import * as topojson from 'topojson-client'
 import { useQuery } from '@tanstack/react-query'
 import { useSiteContext } from '../../site-context'
-// @ts-expect-error untyped
 import { useQueryContext } from '../../query-context'
 import worldJson from 'visionscarto-world-atlas/world/110m.json'
 import { UIMode, useTheme } from '../../theme-context'
 import { apiPath } from '../../util/url'
-// @ts-expect-error untyped
 import MoreLink from '../more-link'
-// @ts-expect-error untyped
 import { countriesRoute } from '../../router'
-// @ts-expect-error untyped
 import { MIN_HEIGHT } from '../reports/list'
 import { MapTooltip } from './map-tooltip'
 import { GeolocationNotice } from './geolocation-notice'
@@ -49,7 +41,8 @@ const WorldMap = ({
   const navigate = useAppNavigate()
   const { mode } = useTheme()
   const site = useSiteContext()
-  const { query } = useQueryContext()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { query } = useQueryContext() as { query: any }
   const svgRef = useRef<SVGSVGElement | null>(null)
   const [tooltip, setTooltip] = useState<{
     x: number
@@ -193,9 +186,10 @@ const WorldMap = ({
         list={data?.results ?? []}
         linkProps={{
           path: countriesRoute.path,
-          // @ts-expect-error MoreLink not typed yet
-          search: (search) => search
+          search: (search: Record<string, unknown>) => search
         }}
+        className={undefined}
+        onClick={undefined}
       />
       {site.isDbip && <GeolocationNotice />}
     </div>

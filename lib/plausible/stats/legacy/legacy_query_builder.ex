@@ -5,12 +5,12 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   alias Plausible.Stats.{Filters, Interval, Query}
 
-  def from(site, params) do
+  def from(site, params, debug_metadata) do
     now = NaiveDateTime.utc_now(:second)
 
     query =
       Query
-      |> struct!(now: now, timezone: site.timezone)
+      |> struct!(now: now, timezone: site.timezone, debug_metadata: debug_metadata)
       |> put_period(site, params)
       |> put_dimensions(params)
       |> put_interval(params)

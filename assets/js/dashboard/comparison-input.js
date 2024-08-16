@@ -1,14 +1,14 @@
 import React, { Fragment, useState, useRef, useEffect } from 'react'
-import { useAppNavigate } from './navigation/use-app-navigate.js'
+import { useAppNavigate } from './navigation/use-app-navigate'
 import { navigateToQuery } from './query'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from './util/storage'
 import Flatpickr from 'react-flatpickr'
-import { parseNaiveDate, formatISO, formatDateRange } from './util/date.js'
-import { useQueryContext } from './query-context.js'
-import { useSiteContext } from './site-context.js'
+import { parseNaiveDate, formatISO, formatDateRange } from './util/date'
+import { useQueryContext } from './query-context'
+import { useSiteContext } from './site-context'
 
 const COMPARISON_MODES = {
   'off': 'Disable comparison',

@@ -30,4 +30,17 @@ defmodule Plausible.ClickhouseRepo do
     |> Enum.to_list()
     |> Keyword.values()
   end
+
+  @impl true
+  def prepare_query(_operation, query, opts) do
+    {plausible_query, opts} = Keyword.pop(opts, :query)
+    log_comment = if(plausible_query, do: Jason.encode!(plausible_query.debug_metadata), else: "")
+
+    opts =
+      Keyword.update(opts, :settings, [log_comment: log_comment], fn settings ->
+        [{:log_comment, log_comment} | settings]
+      end)
+
+    {query, opts}
+  end
 end

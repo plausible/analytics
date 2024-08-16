@@ -26,11 +26,11 @@ import {
   isSameDate
 } from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
-import { shouldIgnoreKeypress } from "./keybinding.js";
-import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input.js";
+import { shouldIgnoreKeypress } from "./keybinding";
+import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input";
 import classNames from "classnames";
-import { useQueryContext } from "./query-context.js";
-import { useSiteContext } from "./site-context.js";
+import { useQueryContext } from "./query-context";
+import { useSiteContext } from "./site-context";
 
 function KeyBindHint({children}) {
   return (
@@ -178,7 +178,7 @@ function DatePicker() {
 
   const handleKeydown = useCallback((e) => {
     if (shouldIgnoreKeypress(e)) return true
-
+    
     const newSearch = {
       period: null,
       from: null,
@@ -326,6 +326,7 @@ function DatePicker() {
     if (mode === "menu") {
       return (
         <div
+          data-testid="datemenu"
           id="datemenu"
           className="absolute w-full left-0 right-0 md:w-56 md:absolute md:top-auto md:left-auto md:right-0 mt-2 origin-top-right z-10"
         >
