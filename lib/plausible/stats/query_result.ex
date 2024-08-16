@@ -1,13 +1,18 @@
 defmodule Plausible.Stats.QueryResult do
-  @moduledoc false
+  @moduledoc """
+  This struct contains the (JSON-encodable) response for a query and
+  is responsible for building it from database query results.
+
+  For the convenience of API docs and consumers, the JSON result
+  produced by Jason.encode(query_result) is ordered.
+  """
 
   alias Plausible.Stats.Util
   alias Plausible.Stats.Filters
 
-  @derive Jason.Encoder
   defstruct results: [],
-            query: nil,
-            meta: %{}
+            meta: %{},
+            query: nil
 
   def from(results, query) do
     results_list =
@@ -22,14 +27,15 @@ defmodule Plausible.Stats.QueryResult do
     struct!(
       __MODULE__,
       results: results_list,
-      query: %{
-        metrics: query.metrics,
-        date_range: [query.date_range.first, query.date_range.last],
-        filters: query.filters,
-        dimensions: query.dimensions,
-        order_by: query.order_by |> Enum.map(&Tuple.to_list/1)
-      },
-      meta: meta(query)
+      meta: meta(query),
+      query:
+        Jason.OrderedObject.new(
+          metrics: query.metrics,
+          date_range: [query.date_range.first, query.date_range.last],
+          filters: query.filters,
+          dimensions: query.dimensions,
+          order_by: query.order_by |> Enum.map(&Tuple.to_list/1)
+        )
     )
   end
 
@@ -70,5 +76,12 @@ defmodule Plausible.Stats.QueryResult do
     }
     |> Enum.reject(fn {_, value} -> is_nil(value) end)
     |> Enum.into(%{})
+  end
+end
+
+defimpl Jason.Encoder, for: Plausible.Stats.QueryResult do
+  def encode(%Plausible.Stats.QueryResult{results: results, meta: meta, query: query}, opts) do
+    Jason.OrderedObject.new(results: results, meta: meta, query: query)
+    |> Jason.Encoder.encode(opts)
   end
 end
