@@ -324,7 +324,7 @@ defmodule PlausibleWeb.AuthControllerTest do
   describe "GET /login_form" do
     test "shows the login form", %{conn: conn} do
       conn = get(conn, "/login")
-      assert html_response(conn, 200) =~ "Enter your email and password"
+      assert html_response(conn, 200) =~ "Enter your account credentials"
     end
   end
 
@@ -409,7 +409,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = post(conn, "/login", email: "user@example.com", password: "password")
 
       assert get_session(conn, :current_user_id) == nil
-      assert html_response(conn, 200) =~ "Enter your email and password"
+      assert html_response(conn, 200) =~ "Enter your account credentials"
     end
 
     test "bad password - renders login form again", %{conn: conn} do
@@ -417,7 +417,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = post(conn, "/login", email: user.email, password: "wrong")
 
       assert get_session(conn, :current_user_id) == nil
-      assert html_response(conn, 200) =~ "Enter your email and password"
+      assert html_response(conn, 200) =~ "Enter your account credentials"
     end
 
     test "limits login attempts to 5 per minute" do

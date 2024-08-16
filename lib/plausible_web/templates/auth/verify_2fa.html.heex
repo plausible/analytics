@@ -1,4 +1,4 @@
-<div class="w-full max-w-3xl mt-4 mx-auto flex">
+<PlausibleWeb.Components.Generic.focus_box>
   <%= form_for @conn.params, Routes.auth_path(@conn, :verify_2fa), [
       class: "w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8",
       onsubmit: "document.getElementById('verify-button').disabled = true"
@@ -40,4 +40,4 @@
       </div>
     </div>
   <% end %>
-</div>
+</PlausibleWeb.Components.Generic.focus_box>

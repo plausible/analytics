@@ -17,7 +17,6 @@
   current_step="Verify snippet"
 />
 
-<div class="w-full max-w-md mx-auto mt-8">
   <%= if @site.locked do %>
     <div
       class="w-full px-4 py-4 text-sm font-bold text-center text-yellow-800 bg-yellow-100 rounded transition"
@@ -77,4 +76,3 @@
           "flow" => @conn.params["flow"]
         }
       ) %>
-</div>

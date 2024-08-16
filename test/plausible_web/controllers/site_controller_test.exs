@@ -22,7 +22,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "shows the site form", %{conn: conn} do
       conn = get(conn, "/sites/new")
 
-      assert html_response(conn, 200) =~ "Your website details"
+      assert html_response(conn, 200) =~ "Add website info"
     end
 
     test "shows onboarding steps regardless of sites provisioned", %{conn: conn1, user: user} do
