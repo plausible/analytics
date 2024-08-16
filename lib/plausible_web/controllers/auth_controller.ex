@@ -63,10 +63,10 @@ defmodule PlausibleWeb.AuthController do
       conn = set_user_session(conn, user)
 
       if user.email_verified do
-        redirect(conn, to: Routes.site_path(conn, :new))
+        redirect(conn, to: Routes.site_path(conn, :new, flow: "register"))
       else
         Auth.EmailVerification.issue_code(user)
-        redirect(conn, to: Routes.auth_path(conn, :activate_form))
+        redirect(conn, to: Routes.auth_path(conn, :activate_form, flow: "register"))
       end
     end
   end
@@ -79,19 +79,20 @@ defmodule PlausibleWeb.AuthController do
         redirect(conn, to: Routes.site_path(conn, :index))
       else
         Auth.EmailVerification.issue_code(user)
-        redirect(conn, to: Routes.auth_path(conn, :activate_form))
+        redirect(conn, to: Routes.auth_path(conn, :activate_form, flow: "invitation"))
       end
     end
   end
 
-  def activate_form(conn, _params) do
+  def activate_form(conn, params) do
     user = conn.assigns.current_user
+    flow = params["flow"] || "register"
 
     render(conn, "activate.html",
       has_email_code?: Plausible.Users.has_email_code?(user),
-      has_any_invitations?: Plausible.Site.Memberships.pending?(user.email),
       has_any_memberships?: Plausible.Site.Memberships.any?(user),
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
+      layout: {PlausibleWeb.LayoutView, "focus.html"},
+      form_submit_url: "/activate?flow=#{flow}"
     )
   end
 
@@ -101,6 +102,8 @@ defmodule PlausibleWeb.AuthController do
     has_any_invitations? = Plausible.Site.Memberships.pending?(user.email)
     has_any_memberships? = Plausible.Site.Memberships.any?(user)
 
+    flow = conn.params["flow"]
+
     case Auth.EmailVerification.verify_code(user, code) do
       :ok ->
         cond do
@@ -108,28 +111,28 @@ defmodule PlausibleWeb.AuthController do
             handle_email_updated(conn)
 
           has_any_invitations? ->
-            redirect(conn, to: Routes.site_path(conn, :index))
+            redirect(conn, to: Routes.site_path(conn, :index, flow: flow))
 
           true ->
-            redirect(conn, to: Routes.site_path(conn, :new))
+            redirect(conn, to: Routes.site_path(conn, :new, flow: flow))
         end
 
       {:error, :incorrect} ->
         render(conn, "activate.html",
           error: "Incorrect activation code",
           has_email_code?: true,
-          has_any_invitations?: has_any_invitations?,
           has_any_memberships?: has_any_memberships?,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          form_submit_url: "/activate?flow=#{flow}"
         )
 
       {:error, :expired} ->
         render(conn, "activate.html",
           error: "Code is expired, please request another one",
           has_email_code?: false,
-          has_any_invitations?: has_any_invitations?,
           has_any_memberships?: has_any_memberships?,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          form_submit_url: "/activate?flow=#{flow}"
         )
     end
   end

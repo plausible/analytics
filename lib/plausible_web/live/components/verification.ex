@@ -17,13 +17,14 @@ defmodule PlausibleWeb.Live.Components.Verification do
   attr :success?, :boolean, default: false
   attr :interpretation, Plausible.Verification.Diagnostics.Result, default: nil
   attr :attempts, :integer, default: 0
+  attr :flow, :string, default: ""
 
   def render(assigns) do
     ~H"""
     <div
       class={[
         "dark:text-gray-100 text-center bg-white dark:bg-gray-800 flex flex-col",
-        if(not @modal?, do: "shadow-md rounded px-8 pt-6 pb-4 mb-4 mt-16 h-96", else: "h-72")
+        if(not @modal?, do: "shadow-md rounded px-8 pt-6 pb-4 mb-4 mt-4 h-96", else: "h-72")
       ]}
       id="progress-indicator"
     >
@@ -108,7 +109,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
         <% end %>
         <%= if not @success? and not @modal? do %>
           Need to see the snippet again?
-          <.styled_link href={"/#{URI.encode_www_form(@domain)}/snippet"}>
+          <.styled_link href={"/#{URI.encode_www_form(@domain)}/snippet?flow=#{@flow}"}>
             Click here
           </.styled_link>
           <br /> Run verification later and go to Site Settings?

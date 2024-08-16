@@ -1,5 +1,7 @@
+<PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Add site info" />
+
 <div class="w-full max-w-3xl mt-4 mx-auto flex">
-  <%= form_for @changeset, "/sites", [class: "max-w-lg w-full mx-auto bg-white dark:bg-gray-800 shadow-lg rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
+  <%= form_for @changeset, @form_submit_url, [class: "max-w-lg w-full mx-auto bg-white dark:bg-gray-800 shadow-lg rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
     <h2 class="text-xl font-black dark:text-gray-100 mb-4">Your website details</h2>
 
     <PlausibleWeb.Components.Billing.Notice.limit_exceeded
@@ -95,11 +97,5 @@
       class: "button mt-4 w-full disabled:cursor-not-allowed",
       disabled: @site_limit_exceeded?
     ) %>
-  <% end %>
-
-  <%= if @first_site? do %>
-    <div class="pt-12 pl-8 hidden md:block">
-      <%= render(PlausibleWeb.AuthView, "_onboarding_steps.html", current_step: 2) %>
-    </div>
   <% end %>
 </div>
