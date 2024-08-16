@@ -79,11 +79,20 @@ defmodule PlausibleWeb.StatsController do
         )
 
       !stats_start_date && can_see_stats? ->
-        render(conn, "waiting_first_pageview.html",
+        render_opts = [
           site: site,
           dogfood_page_path: dogfood_page_path,
           connect_live_socket: true
-        )
+        ]
+
+        render_opts =
+          if conn.params["flow"] do
+            Keyword.put(render_opts, :layout, {PlausibleWeb.LayoutView, "focus.html"})
+          else
+            render_opts
+          end
+
+        render(conn, "waiting_first_pageview.html", render_opts)
 
       Sites.locked?(site) ->
         site = Plausible.Repo.preload(site, :owner)

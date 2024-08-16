@@ -26,6 +26,7 @@ defmodule PlausibleWeb.Live.Verification do
         report_to: session["report_to"] || self(),
         delay: session["slowdown"] || 500,
         slowdown: session["slowdown"] || 500,
+        flow: session["flow"] || "",
         checks_pid: nil,
         attempts: 0
       )
@@ -75,6 +76,7 @@ defmodule PlausibleWeb.Live.Verification do
       domain={@domain}
       id="verification-standalone"
       attempts={@attempts}
+      flow={@flow}
     />
     """
   end

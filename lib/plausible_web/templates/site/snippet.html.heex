@@ -3,8 +3,13 @@
   site={@site}
 />
 
+<PlausibleWeb.Components.FlowProgress.render
+  flow={@conn.params["flow"]}
+  current_step="Install snippet"
+/>
+
 <div class="w-full max-w-3xl mt-4 mx-auto flex">
-  <%= form_for @conn, "/", [class: "max-w-lg w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
+  <%= form_for @conn, @form_submit_url, [class: "max-w-lg w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
     <h2 class="text-xl font-bold dark:text-gray-100">Add JavaScript snippet</h2>
     <div class="mt-4">
       <p :if={Plausible.Verification.enabled?()} class="dark:text-gray-100">
@@ -72,13 +77,7 @@
       end %>
     <%= link(button_label,
       class: "button mt-4 w-full",
-      to: "/#{URI.encode_www_form(@site.domain)}"
+      to: @form_submit_url
     ) %>
-  <% end %>
-
-  <%= if @is_first_site do %>
-    <div class="pt-12 pl-8 hidden md:block">
-      <%= render(PlausibleWeb.AuthView, "_onboarding_steps.html", current_step: 3) %>
-    </div>
   <% end %>
 </div>
