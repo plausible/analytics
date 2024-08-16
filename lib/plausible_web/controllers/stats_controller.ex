@@ -112,7 +112,7 @@ defmodule PlausibleWeb.StatsController do
   def csv_export(conn, params) do
     if is_nil(params["interval"]) or Plausible.Stats.Interval.valid?(params["interval"]) do
       site = Plausible.Repo.preload(conn.assigns.site, :owner)
-      query = Query.from(site, params)
+      query = Query.from(site, params, debug_metadata(conn))
 
       filename =
         ~c"Plausible export #{params["domain"]} #{Date.to_iso8601(query.date_range.first)}  to #{Date.to_iso8601(query.date_range.last)} .zip"

@@ -1,5 +1,5 @@
-import { METRIC_FORMATTER, METRIC_LABELS } from './graph-util.js'
-import dateFormatter from './date-formatter.js'
+import { METRIC_FORMATTER, METRIC_LABELS } from './graph-util'
+import dateFormatter from './date-formatter'
 
 const renderBucketLabel = function(query, graphData, label, comparison = false) {
   let isPeriodFull = graphData.full_intervals?.[label]

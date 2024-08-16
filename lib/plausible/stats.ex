@@ -22,7 +22,7 @@ defmodule Plausible.Stats do
 
     optimized_query
     |> SQL.QueryBuilder.build(site)
-    |> ClickhouseRepo.all()
+    |> ClickhouseRepo.all(query: query)
     |> QueryResult.from(optimized_query)
   end
 
