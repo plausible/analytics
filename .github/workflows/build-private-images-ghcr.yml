@@ -76,4 +76,4 @@ jobs:
           url: ${{ secrets.BUILD_NOTIFICATION_URL }}
           method: 'POST'
           customHeaders: '{"Content-Type": "application/json"}'
-          data: '{"content": "<h1>:rocket: New changes are deployed to production!</h1><br/><h3>:worker: Author: ${{ github.actor }}</h3><br/><p>:writing_hand: Commit message: ${{ github.event.head_commit.message }}</p><br/>"}'
+          data: '{"content": "<h1>🚀 New changes are deployed to production!</h1><br/><h3>👷 Author: ${{ github.actor }}</h3><br/><p>📝 Commit message: ${{ github.event.head_commit.message }}</p><br/>"}'
