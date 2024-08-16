@@ -5,6 +5,7 @@ defmodule PlausibleWeb.AuthController do
   alias Plausible.Auth
   alias Plausible.Billing.Quota
   alias PlausibleWeb.TwoFactor
+  alias PlausibleWeb.UserAuth
 
   require Logger
 
@@ -193,10 +194,9 @@ defmodule PlausibleWeb.AuthController do
 
   def password_reset(conn, _params) do
     conn
+    |> UserAuth.log_out_user()
     |> put_flash(:login_title, "Password updated successfully")
     |> put_flash(:login_instructions, "Please log in with your new credentials")
-    |> put_session(:current_user_id, nil)
-    |> delete_resp_cookie("logged_in")
     |> redirect(to: Routes.auth_path(conn, :login_form))
   end
 
@@ -214,7 +214,7 @@ defmodule PlausibleWeb.AuthController do
          :ok <- Auth.rate_limit(:login_user, user),
          :ok <- Auth.check_password(user, password),
          :ok <- check_2fa_verified(conn, user) do
-      conn =
+      redirect_path =
         cond do
           not is_nil(params["register_action"]) and not user.email_verified ->
             Auth.EmailVerification.issue_code(user)
@@ -226,19 +226,19 @@ defmodule PlausibleWeb.AuthController do
                 "invitation"
               end
 
-            put_session(conn, :login_dest, Routes.auth_path(conn, :activate_form, flow: flow))
+            Routes.auth_path(conn, :activate_form, flow: flow)
 
           params["register_action"] == "register_from_invitation_form" ->
-            put_session(conn, :login_dest, Routes.site_path(conn, :index))
+            Routes.site_path(conn, :index)
 
           params["register_action"] == "register_form" ->
-            put_session(conn, :login_dest, Routes.site_path(conn, :new))
+            Routes.site_path(conn, :new)
 
           true ->
-            conn
+            nil
         end
 
-      set_user_session_and_redirect(conn, user)
+      UserAuth.log_in_user(conn, user, redirect_path)
     else
       {:error, :wrong_password} ->
         maybe_log_failed_login_attempts("wrong password for #{email}")
@@ -388,7 +388,7 @@ defmodule PlausibleWeb.AuthController do
         {:ok, user} ->
           conn
           |> TwoFactor.Session.maybe_set_remember_2fa(user, params["remember_2fa"])
-          |> set_user_session_and_redirect(user)
+          |> UserAuth.log_in_user(user)
 
         {:error, :invalid_code} ->
           maybe_log_failed_login_attempts(
@@ -403,7 +403,7 @@ defmodule PlausibleWeb.AuthController do
           )
 
         {:error, :not_enabled} ->
-          set_user_session_and_redirect(conn, user)
+          UserAuth.log_in_user(conn, user)
       end
     end
   end
@@ -428,7 +428,7 @@ defmodule PlausibleWeb.AuthController do
     with {:ok, user} <- get_2fa_user_limited(conn) do
       case Auth.TOTP.use_recovery_code(user, recovery_code) do
         :ok ->
-          set_user_session_and_redirect(conn, user)
+          UserAuth.log_in_user(conn, user)
 
         {:error, :invalid_code} ->
           maybe_log_failed_login_attempts("wrong 2FA recovery code provided for #{user.email}")
@@ -440,7 +440,7 @@ defmodule PlausibleWeb.AuthController do
           )
 
         {:error, :not_enabled} ->
-          set_user_session_and_redirect(conn, user)
+          UserAuth.log_in_user(conn, user)
       end
     end
   end
@@ -622,8 +622,7 @@ defmodule PlausibleWeb.AuthController do
     redirect_to = Map.get(params, "redirect", "/")
 
     conn
-    |> configure_session(drop: true)
-    |> delete_resp_cookie("logged_in")
+    |> UserAuth.log_out_user()
     |> redirect(to: redirect_to)
   end
 
@@ -710,25 +709,6 @@ defmodule PlausibleWeb.AuthController do
 
   defp redirect_to_login(conn) do
     redirect(conn, to: Routes.auth_path(conn, :login_form))
-  end
-
-  defp set_user_session_and_redirect(conn, user) do
-    login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
-
-    conn
-    |> set_user_session(user)
-    |> put_session(:login_dest, nil)
-    |> redirect(external: login_dest)
-  end
-
-  defp set_user_session(conn, user) do
-    conn
-    |> TwoFactor.Session.clear_2fa_user()
-    |> put_session(:current_user_id, user.id)
-    |> put_resp_cookie("logged_in", "true",
-      http_only: false,
-      max_age: 60 * 60 * 24 * 365 * 5000
-    )
   end
 
   defp maybe_log_failed_login_attempts(message) do

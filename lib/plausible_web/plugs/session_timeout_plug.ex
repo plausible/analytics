@@ -11,9 +11,7 @@ defmodule PlausibleWeb.SessionTimeoutPlug do
 
     cond do
       user_id && timeout_at && now() > timeout_at ->
-        conn
-        |> configure_session(drop: true)
-        |> delete_resp_cookie("logged_in")
+        PlausibleWeb.UserAuth.log_out_user(conn)
 
       user_id ->
         put_session(
