@@ -28,7 +28,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
-  describe "POST /register" do
+  describe "POST /login (register_action = register_form)" do
     test "registering sends an activation link", %{conn: conn} do
       Repo.insert!(
         User.new(%{
@@ -39,10 +39,11 @@ defmodule PlausibleWeb.AuthControllerTest do
         })
       )
 
-      post(conn, "/register",
+      post(conn, "/login",
         user: %{
           email: "user@example.com",
-          password: "very-secret-and-very-long-123"
+          password: "very-secret-and-very-long-123",
+          register_action: "register_form"
         }
       )
 
@@ -62,10 +63,11 @@ defmodule PlausibleWeb.AuthControllerTest do
       )
 
       conn =
-        post(conn, "/register",
+        post(conn, "/login",
           user: %{
             email: "user@example.com",
-            password: "very-secret-and-very-long-123"
+            password: "very-secret-and-very-long-123",
+            register_action: "register_form"
           }
         )
 
@@ -83,10 +85,11 @@ defmodule PlausibleWeb.AuthControllerTest do
       )
 
       conn =
-        post(conn, "/register",
+        post(conn, "/login",
           user: %{
             email: "user@example.com",
-            password: "very-secret-and-very-long-123"
+            password: "very-secret-and-very-long-123",
+            register_action: "register_form"
           }
         )
 
@@ -113,7 +116,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
-  describe "POST /register/invitation/:invitation_id" do
+  describe "POST /login (register_action = register_from_invitation_form)" do
     setup do
       inviter = insert(:user)
       site = insert(:site, members: [inviter])
@@ -138,13 +141,14 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, %{site: site, invitation: invitation}}
     end
 
-    test "registering sends an activation link", %{conn: conn, invitation: invitation} do
-      post(conn, "/register/invitation/#{invitation.invitation_id}",
+    test "registering sends an activation link", %{conn: conn} do
+      post(conn, "/login",
         user: %{
           name: "Jane Doe",
           email: "user@example.com",
           password: "very-secret-and-very-long-123",
-          password_confirmation: "very-secret-and-very-long-123"
+          password_confirmation: "very-secret-and-very-long-123",
+          register_action: "register_from_invitation_form"
         }
       )
 
@@ -153,31 +157,30 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert subject =~ "is your Plausible email verification code"
     end
 
-    test "user is redirected to activate page after registration", %{
-      conn: conn,
-      invitation: invitation
-    } do
+    test "user is redirected to activate page after registration", %{conn: conn} do
       conn =
-        post(conn, "/register/invitation/#{invitation.invitation_id}",
+        post(conn, "/login",
           user: %{
             name: "Jane Doe",
             email: "user@example.com",
             password: "very-secret-and-very-long-123",
-            password_confirmation: "very-secret-and-very-long-123"
+            password_confirmation: "very-secret-and-very-long-123",
+            register_action: "register_from_invitation_form"
           }
         )
 
       assert redirected_to(conn, 302) == "/activate?flow=invitation"
     end
 
-    test "logs the user in", %{conn: conn, invitation: invitation} do
+    test "logs the user in", %{conn: conn} do
       conn =
-        post(conn, "/register/invitation/#{invitation.invitation_id}",
+        post(conn, "/login",
           user: %{
             name: "Jane Doe",
             email: "user@example.com",
             password: "very-secret-and-very-long-123",
-            password_confirmation: "very-secret-and-very-long-123"
+            password_confirmation: "very-secret-and-very-long-123",
+            register_action: "register_from_invitation_form"
           }
         )
 

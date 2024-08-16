@@ -34,6 +34,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
          form: to_form(changeset),
          captcha_error: nil,
          password_strength: Auth.User.password_strength(changeset),
+         disable_submit: false,
          trigger_submit: false
        )}
     end
@@ -53,7 +54,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
         Your invitation has expired or been revoked. Please request fresh one or you can <%= link(
           "sign up",
           class: "text-indigo-600 hover:text-indigo-900",
-          to: Routes.auth_path(@socket, :register)
+          to: Routes.auth_path(@socket, :register_form)
         ) %> for a 30-day unlimited free trial without an invitation.
       </p>
     </div>
@@ -91,13 +92,14 @@ defmodule PlausibleWeb.Live.RegisterForm do
         :let={f}
         for={@form}
         id="register-form"
+        action={Routes.auth_path(@socket, :login)}
         phx-hook="Metrics"
         phx-change="validate"
         phx-submit="register"
         phx-trigger-action={@trigger_submit}
         class="w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8"
       >
-        <input name="_csrf_token" type="hidden" value={Plug.CSRFProtection.get_csrf_token()} />
+        <input name="user[register_action]" type="hidden" value={@live_action} />
 
         <h2 class="text-xl font-black dark:text-gray-100">Enter your details</h2>
 
@@ -178,7 +180,12 @@ defmodule PlausibleWeb.Live.RegisterForm do
           else
             "Start my free trial →"
           end %>
-        <PlausibleWeb.Components.Generic.button id="register" type="submit" class="mt-4 w-full">
+        <PlausibleWeb.Components.Generic.button
+          id="register"
+          disabled={@disable_submit}
+          type="submit"
+          class="mt-4 w-full"
+        >
           <%= submit_text %>
         </PlausibleWeb.Components.Generic.button>
 
@@ -318,6 +325,8 @@ defmodule PlausibleWeb.Live.RegisterForm do
   defp add_user(socket, user) do
     case Repo.insert(user) do
       {:ok, _user} ->
+        socket = assign(socket, disable_submit: true)
+
         on_ee do
           event_name = "Signup#{if socket.assigns.invitation, do: " via invitation"}"
           {:noreply, push_event(socket, "send-metrics", %{event_name: event_name})}

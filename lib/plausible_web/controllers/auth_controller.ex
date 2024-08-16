@@ -54,34 +54,9 @@ defmodule PlausibleWeb.AuthController do
          ]
   )
 
+  # Plug purging 2FA user session cookie outsite 2FA flow
   defp clear_2fa_user(conn, _opts) do
     TwoFactor.Session.clear_2fa_user(conn)
-  end
-
-  def register(conn, %{"user" => %{"email" => email, "password" => password}}) do
-    with {:ok, user} <- login_user(conn, email, password) do
-      conn = set_user_session(conn, user)
-
-      if user.email_verified do
-        redirect(conn, to: Routes.site_path(conn, :new, flow: "register"))
-      else
-        Auth.EmailVerification.issue_code(user)
-        redirect(conn, to: Routes.auth_path(conn, :activate_form, flow: "register"))
-      end
-    end
-  end
-
-  def register_from_invitation(conn, %{"user" => %{"email" => email, "password" => password}}) do
-    with {:ok, user} <- login_user(conn, email, password) do
-      conn = set_user_session(conn, user)
-
-      if user.email_verified do
-        redirect(conn, to: Routes.site_path(conn, :index))
-      else
-        Auth.EmailVerification.issue_code(user)
-        redirect(conn, to: Routes.auth_path(conn, :activate_form, flow: "invitation"))
-      end
-    end
   end
 
   def activate_form(conn, params) do
@@ -225,26 +200,47 @@ defmodule PlausibleWeb.AuthController do
     |> redirect(to: Routes.auth_path(conn, :login_form))
   end
 
-  def login(conn, %{"email" => email, "password" => password}) do
-    with {:ok, user} <- login_user(conn, email, password) do
-      if Auth.TOTP.enabled?(user) and not TwoFactor.Session.remember_2fa?(conn, user) do
-        conn
-        |> TwoFactor.Session.set_2fa_user(user)
-        |> redirect(to: Routes.auth_path(conn, :verify_2fa))
-      else
-        set_user_session_and_redirect(conn, user)
-      end
-    end
+  def login_form(conn, _params) do
+    render(conn, "login_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
-  defp login_user(conn, email, password) do
+  def login(conn, %{"user" => params}) do
+    login(conn, params)
+  end
+
+  def login(conn, %{"email" => email, "password" => password} = params) do
     with :ok <- Auth.rate_limit(:login_ip, conn),
-         {:ok, user} <- find_user(email),
+         {:ok, user} <- Auth.get_user_by(email: email),
          :ok <- Auth.rate_limit(:login_user, user),
-         :ok <- check_password(user, password) do
-      {:ok, user}
+         :ok <- Auth.check_password(user, password),
+         :ok <- check_2fa_verified(conn, user) do
+      conn =
+        cond do
+          not is_nil(params["register_action"]) and not user.email_verified ->
+            Auth.EmailVerification.issue_code(user)
+
+            flow =
+              if params["register_action"] == "register_form" do
+                "register"
+              else
+                "invitation"
+              end
+
+            put_session(conn, :login_dest, Routes.auth_path(conn, :activate_form, flow: flow))
+
+          params["register_action"] == "register_from_invitation_form" ->
+            put_session(conn, :login_dest, Routes.site_path(conn, :index))
+
+          params["register_action"] == "register_form" ->
+            put_session(conn, :login_dest, Routes.site_path(conn, :new))
+
+          true ->
+            conn
+        end
+
+      set_user_session_and_redirect(conn, user)
     else
-      :wrong_password ->
+      {:error, :wrong_password} ->
         maybe_log_failed_login_attempts("wrong password for #{email}")
 
         render(conn, "login_form.html",
@@ -252,7 +248,7 @@ defmodule PlausibleWeb.AuthController do
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
-      :user_not_found ->
+      {:error, :user_not_found} ->
         maybe_log_failed_login_attempts("user not found for #{email}")
         Plausible.Auth.Password.dummy_calculation()
 
@@ -269,59 +265,20 @@ defmodule PlausibleWeb.AuthController do
           429,
           "Too many login attempts. Wait a minute before trying again."
         )
+
+      {:error, {:unverified_2fa, user}} ->
+        conn
+        |> TwoFactor.Session.set_2fa_user(user)
+        |> redirect(to: Routes.auth_path(conn, :verify_2fa))
     end
   end
 
-  defp redirect_to_login(conn) do
-    redirect(conn, to: Routes.auth_path(conn, :login_form))
-  end
-
-  defp set_user_session_and_redirect(conn, user) do
-    login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
-
-    conn
-    |> set_user_session(user)
-    |> put_session(:login_dest, nil)
-    |> redirect(external: login_dest)
-  end
-
-  defp set_user_session(conn, user) do
-    conn
-    |> TwoFactor.Session.clear_2fa_user()
-    |> put_session(:current_user_id, user.id)
-    |> put_resp_cookie("logged_in", "true",
-      http_only: false,
-      max_age: 60 * 60 * 24 * 365 * 5000
-    )
-  end
-
-  defp maybe_log_failed_login_attempts(message) do
-    if Application.get_env(:plausible, :log_failed_login_attempts) do
-      Logger.warning("[login] #{message}")
-    end
-  end
-
-  defp find_user(email) do
-    user =
-      Repo.one(
-        from(u in Plausible.Auth.User,
-          where: u.email == ^email
-        )
-      )
-
-    if user, do: {:ok, user}, else: :user_not_found
-  end
-
-  defp check_password(user, password) do
-    if Plausible.Auth.Password.match?(password, user.password_hash || "") do
-      :ok
+  defp check_2fa_verified(conn, user) do
+    if Auth.TOTP.enabled?(user) and not TwoFactor.Session.remember_2fa?(conn, user) do
+      {:error, {:unverified_2fa, user}}
     else
-      :wrong_password
+      :ok
     end
-  end
-
-  def login_form(conn, _params) do
-    render(conn, "login_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def user_settings(conn, _params) do
@@ -748,6 +705,35 @@ defmodule PlausibleWeb.AuthController do
         site = Repo.get(Plausible.Site, site_id)
 
         redirect(conn, external: "/#{URI.encode_www_form(site.domain)}/settings/integrations")
+    end
+  end
+
+  defp redirect_to_login(conn) do
+    redirect(conn, to: Routes.auth_path(conn, :login_form))
+  end
+
+  defp set_user_session_and_redirect(conn, user) do
+    login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
+
+    conn
+    |> set_user_session(user)
+    |> put_session(:login_dest, nil)
+    |> redirect(external: login_dest)
+  end
+
+  defp set_user_session(conn, user) do
+    conn
+    |> TwoFactor.Session.clear_2fa_user()
+    |> put_session(:current_user_id, user.id)
+    |> put_resp_cookie("logged_in", "true",
+      http_only: false,
+      max_age: 60 * 60 * 24 * 365 * 5000
+    )
+  end
+
+  defp maybe_log_failed_login_attempts(message) do
+    if Application.get_env(:plausible, :log_failed_login_attempts) do
+      Logger.warning("[login] #{message}")
     end
   end
 end

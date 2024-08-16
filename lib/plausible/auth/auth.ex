@@ -50,8 +50,26 @@ defmodule Plausible.Auth do
     |> Repo.insert()
   end
 
+  @spec find_user_by(Keyword.t()) :: Auth.User.t() | nil
   def find_user_by(opts) do
     Repo.get_by(Auth.User, opts)
+  end
+
+  @spec get_user_by(Keyword.t()) :: {:ok, Auth.User.t()} | {:error, :user_not_found}
+  def get_user_by(opts) do
+    case Repo.get_by(Auth.User, opts) do
+      %Auth.User{} = user -> {:ok, user}
+      nil -> {:error, :user_not_found}
+    end
+  end
+
+  @spec check_password(Auth.User.t(), String.t()) :: :ok | {:error, :wrong_password}
+  def check_password(user, password) do
+    if Plausible.Auth.Password.match?(password, user.password_hash || "") do
+      :ok
+    else
+      {:error, :wrong_password}
+    end
   end
 
   def has_active_sites?(user, roles \\ [:owner, :admin, :viewer]) do

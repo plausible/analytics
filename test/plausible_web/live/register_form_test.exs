@@ -69,6 +69,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       assert [
                csrf_input,
+               action_input,
                name_input,
                email_input,
                password_input,
@@ -76,6 +77,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
              ] = find(html, "input")
 
       assert String.length(text_of_attr(csrf_input, "value")) > 0
+      assert text_of_attr(action_input, "value") == "register_form"
       assert text_of_attr(name_input, "value") == "Mary Sue"
       assert text_of_attr(email_input, "value") == "mary.sue@plausible.test"
       assert text_of_attr(password_input, "value") == "very-long-and-very-secret-123"
@@ -167,6 +169,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       assert [
                csrf_input,
+               action_input,
                email_input,
                name_input,
                password_input,
@@ -174,6 +177,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
              ] = find(html, "input")
 
       assert String.length(text_of_attr(csrf_input, "value")) > 0
+      assert text_of_attr(action_input, "value") == "register_from_invitation_form"
       assert text_of_attr(name_input, "value") == "Mary Sue"
       assert text_of_attr(email_input, "value") == "user@email.co"
       assert text_of_attr(password_input, "value") == "very-long-and-very-secret-123"
@@ -235,6 +239,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       assert [
                _csrf_input,
+               _action_input,
                email_input | _
              ] = find(html, "input")
 
@@ -243,6 +248,14 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       assert Repo.get_by(User, email: "user@email.co")
       refute Repo.get_by(User, email: "mary.sue@plausible.test")
+    end
+
+    test "renders expired invitation notice on on-existent invitation ID", %{conn: conn} do
+      lv = get_liveview(conn, "/register/invitation/doesnotexist")
+
+      html = render(lv)
+
+      assert html =~ "Your invitation has expired or been revoked"
     end
 
     test "renders error on failed captcha", %{conn: conn, invitation: invitation} do
