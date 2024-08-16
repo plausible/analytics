@@ -379,7 +379,7 @@ defmodule PlausibleWeb.Components.Generic do
   def focus_box(assigns) do
     ~H"""
     <div class={[
-      "bg-white w-full max-w-lg mx-auto dark:bg-gray-800",
+      "bg-white w-full max-w-lg mx-auto dark:bg-gray-800 text-black dark:text-gray-100",
       @outer_markup && "shadow-md  rounded mb-4 mt-8"
     ]}>
       <div class={[@outer_markup && "p-8"]}>
@@ -399,7 +399,10 @@ defmodule PlausibleWeb.Components.Generic do
           <%= render_slot(@inner_block) %>
         </div>
       </div>
-      <div :if={@footer != []} class="flex flex-col dark:text-gray-200 border-t border-gray-300 ">
+      <div
+        :if={@footer != []}
+        class="flex flex-col dark:text-gray-200 border-t border-gray-300 dark:border-gray-700"
+      >
         <div class={[@outer_markup && "p-8"]}>
           <%= render_slot(@footer) %>
         </div>
