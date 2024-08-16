@@ -68,3 +68,12 @@ jobs:
           method: 'POST'
           customHeaders: '{"Content-Type": "application/json"}'
           data: '{"content": "<a href=\"https://github.com/plausible/analytics/actions/workflows/build-private-images.yml\">Build failed</a>"}'
+      
+      - name: Notify team on success
+        if: ${{ success() && github.ref == 'refs/heads/master' }}
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: ${{ secrets.BUILD_NOTIFICATION_URL }}
+          method: 'POST'
+          customHeaders: '{"Content-Type": "application/json"}'
+          data: '{"content": "<h1>:rocket: New changes are deployed to production!</h1><br/><h3>:worker: Author: ${{ github.actor }}</h3><br/><p>:writing_hand: Commit message: ${{ github.event.head_commit.message }}</p><br/>"}'
