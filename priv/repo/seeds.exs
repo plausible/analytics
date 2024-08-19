@@ -170,22 +170,34 @@ geolocations = [
   []
 ]
 
+sources = ["", "Facebook", "Twitter", "DuckDuckGo", "Google"]
+
+utm_medium = %{
+  "" => ["email", ""],
+  "Facebook" => ["social"],
+  "Twitter" => ["social"]
+}
+
 native_stats_range
 |> Enum.with_index()
 |> Enum.flat_map(fn {date, index} ->
   Enum.map(0..Enum.random(1..500), fn _ ->
     geolocation = Enum.random(geolocations)
 
+    referrer_source = Enum.random(sources)
+
     [
       site_id: site.id,
       hostname: Enum.random(["en.dummy.site", "es.dummy.site", "dummy.site"]),
       timestamp: put_random_time.(date, index),
-      referrer_source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
+      referrer_source: referrer_source,
       browser: Enum.random(["Microsoft Edge", "Chrome", "curl", "Safari", "Firefox", "Vivaldi"]),
       browser_version: to_string(Enum.random(0..50)),
       screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
       operating_system: Enum.random(["Windows", "Mac", "GNU/Linux"]),
       operating_system_version: to_string(Enum.random(0..15)),
+      utm_medium: Enum.random(Map.get(utm_medium, referrer_source, [""])),
+      utm_source: String.downcase(referrer_source),
       utm_campaign: Enum.random(["", "Referral", "Advertisement", "Email"]),
       pathname:
         Enum.random([
