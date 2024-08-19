@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     <div class="w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8">
       <h2 class="text-xl font-black dark:text-gray-100">Invitation expired</h2>
 
-      <p class="mt-4 text-sm">
+      <p class="mt-4">
         Your invitation has expired or been revoked. Please request fresh one or you can <%= link(
           "sign up",
           class: "text-indigo-600 hover:text-indigo-900",
@@ -87,7 +87,11 @@ defmodule PlausibleWeb.Live.RegisterForm do
       current_step="Register"
     />
 
-    <div class="w-full max-w-3xl mx-auto flex flex-shrink-0">
+    <PlausibleWeb.Components.Generic.focus_box>
+      <:title>
+        Enter your details
+      </:title>
+
       <.form
         :let={f}
         for={@form}
@@ -97,11 +101,8 @@ defmodule PlausibleWeb.Live.RegisterForm do
         phx-change="validate"
         phx-submit="register"
         phx-trigger-action={@trigger_submit}
-        class="w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8"
       >
         <input name="user[register_action]" type="hidden" value={@live_action} />
-
-        <h2 class="text-xl font-black dark:text-gray-100">Enter your details</h2>
 
         <%= if @invitation do %>
           <.email_input field={f[:email]} for_invitation={true} />
@@ -113,10 +114,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
         <div class="my-4">
           <div class="flex justify-between">
-            <label
-              for={f[:password].name}
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
+            <label for={f[:password].name} class="block font-medium text-gray-700 dark:text-gray-300">
               Password
             </label>
             <.password_length_hint minimum={12} field={f[:password]} />
@@ -126,7 +124,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
               field={f[:password]}
               strength={@password_strength}
               phx-debounce={200}
-              class="dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
+              class="dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
             />
           </div>
         </div>
@@ -134,9 +132,9 @@ defmodule PlausibleWeb.Live.RegisterForm do
         <div class="my-4">
           <label
             for={f[:password_confirmation].name}
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            class="block font-medium text-gray-700 dark:text-gray-300"
           >
-            Password confirmation
+            Confirm password
           </label>
           <div class="mt-1">
             <.input
@@ -144,7 +142,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
               autocomplete="new-password"
               field={f[:password_confirmation]}
               phx-debounce={200}
-              class="dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
+              class="dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
             />
           </div>
         </div>
@@ -176,9 +174,9 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
         <% submit_text =
           if ce?() or @invitation do
-            "Create my account →"
+            "Create my account"
           else
-            "Start my free trial →"
+            "Start my free trial"
           end %>
         <PlausibleWeb.Components.Generic.button
           id="register"
@@ -189,21 +187,21 @@ defmodule PlausibleWeb.Live.RegisterForm do
           <%= submit_text %>
         </PlausibleWeb.Components.Generic.button>
 
-        <p class="text-center text-gray-600 dark:text-gray-500  text-xs mt-4">
+        <p class="text-center text-gray-600 dark:text-gray-500  mt-4">
           Already have an account? <%= link("Log in",
             to: "/login",
             class: "underline text-gray-800 dark:text-gray-50"
-          ) %> instead.
+          ) %>
         </p>
       </.form>
-    </div>
+    </PlausibleWeb.Components.Generic.focus_box>
     """
   end
 
   defp name_input(assigns) do
     ~H"""
     <div class="my-4">
-      <label for={@field.name} class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label for={@field.name} class="block font-medium text-gray-700 dark:text-gray-300">
         Full name
       </label>
       <div class="mt-1">
@@ -211,7 +209,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
           field={@field}
           placeholder="Jane Doe"
           phx-debounce={200}
-          class="dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
+          class="dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
         />
       </div>
     </div>
@@ -226,7 +224,6 @@ defmodule PlausibleWeb.Live.RegisterForm do
       focus:border-indigo-500
       block
       w-full
-      sm:text-sm
       border-gray-300
       dark:border-gray-500
       rounded-md
@@ -248,7 +245,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     ~H"""
     <div class="my-4">
       <div class="flex justify-between">
-        <label for={@field.name} class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label for={@field.name} class="block font-medium text-gray-700 dark:text-gray-300">
           Email
         </label>
         <p class="text-xs text-gray-500 mt-1">No spam, guaranteed.</p>

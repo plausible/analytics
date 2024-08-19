@@ -8,23 +8,44 @@
   current_step="Install snippet"
 />
 
-<div class="w-full max-w-3xl mt-4 mx-auto flex">
-  <%= form_for @conn, @form_submit_url, [class: "max-w-lg w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
-    <h2 class="text-xl font-bold dark:text-gray-100">Add JavaScript snippet</h2>
-    <div class="mt-4">
-      <p :if={Plausible.Verification.enabled?()} class="dark:text-gray-100">
-        Include this snippet in the <code>&lt;head&gt;</code>
-        section of your website.<br />To verify your integration, click the button below to confirm that everything is working correctly.
-      </p>
-      <p :if={not Plausible.Verification.enabled?()} class="dark:text-gray-100">
-        Paste this snippet in the <code>&lt;head&gt;</code> of your website.
-      </p>
+<PlausibleWeb.Components.Generic.focus_box>
+  <:title>
+    Add JavaScript snippet
+  </:title>
+  <:subtitle>
+    <p :if={Plausible.Verification.enabled?()} class="dark:text-gray-100">
+      Include this snippet in the <code>&lt;head&gt;</code>
+      section of your website.<br />To verify your integration, click the button below to confirm that everything is working correctly.
+    </p>
+    <p :if={not Plausible.Verification.enabled?()} class="dark:text-gray-100">
+      Paste this snippet in the <code>&lt;head&gt;</code> of your website.
+    </p>
+  </:subtitle>
 
+  <:footer>
+    <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
+      <li>
+        On WordPress? We have
+        <.styled_link new_tab href="https://plausible.io/wordpress-analytics-plugin">
+          a plugin
+        </.styled_link>
+      </li>
+      <li>
+        See more
+        <.styled_link new_tab href="https://plausible.io/docs/integration-guides">
+          integration guides
+        </.styled_link>
+      </li>
+    </ol>
+  </:footer>
+
+  <%= form_for @conn, @form_submit_url, [], fn f -> %>
+    <div>
       <div class="relative">
         <%= textarea(f, :domain,
           id: "snippet_code",
           class:
-            "transition overflow-hidden bg-gray-100 dark:bg-gray-900 appearance-none border border-transparent rounded w-full p-2 pr-6 text-gray-700 dark:text-gray-300 leading-normal appearance-none focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-400 dark:focus:border-gray-500 text-xs mt-4 resize-none",
+            "transition overflow-hidden bg-gray-100 dark:bg-gray-900 appearance-none border border-transparent rounded w-full p-2 pr-6 text-gray-700 dark:text-gray-300 leading-normal appearance-none focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-400 dark:focus:border-gray-500 font-mono mt-4 resize-none text-xs",
           value: render_snippet(@site),
           rows: 3,
           readonly: "readonly"
@@ -32,7 +53,7 @@
         <a
           onclick="var textarea = document.getElementById('snippet_code'); textarea.focus(); textarea.select(); document.execCommand('copy');"
           href="javascript:void(0)"
-          class="no-underline text-indigo-500 text-sm hover:underline"
+          class="no-underline text-indigo-500 hover:underline"
         >
           <svg
             class="absolute text-indigo-500"
@@ -54,30 +75,17 @@
       </div>
     </div>
 
-    <div class="mt-2 dark:text-gray-100">
-      <p class="text-sm">
-        On WordPress? We have
-        <.styled_link new_tab href="https://plausible.io/wordpress-analytics-plugin">
-          a plugin
-        </.styled_link>
-      </p>
-
-      <p class="text-sm">
-        See more
-        <.styled_link new_tab href="https://plausible.io/docs/integration-guides">
-          integration guides
-        </.styled_link>
-      </p>
-    </div>
     <% button_label =
       if Plausible.Verification.enabled?() do
-        "Verify your integration to start collecting data →"
+        "Verify your integration to start collecting data"
       else
-        "Start collecting data →"
+        "Start collecting data"
       end %>
     <%= link(button_label,
       class: "button mt-4 w-full",
       to: @form_submit_url
     ) %>
   <% end %>
-</div>
+</PlausibleWeb.Components.Generic.focus_box>
+
+<div class="w-full max-w-3xl mt-4 mx-auto flex"></div>

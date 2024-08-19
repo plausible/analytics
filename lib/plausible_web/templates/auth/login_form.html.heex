@@ -1,0 +1,58 @@
+<PlausibleWeb.Components.Generic.focus_box>
+  <:title>
+    <%= Phoenix.Flash.get(@flash, :login_title) || "Enter your account credentials" %>
+  </:title>
+  <:subtitle>
+    <%= if Phoenix.Flash.get(@flash, :login_instructions) do %>
+      <p class="text-gray-500 mt-1 mb-2">
+        <%= Phoenix.Flash.get(@flash, :login_instructions) %>
+      </p>
+    <% end %>
+  </:subtitle>
+  <%= form_for @conn, "/login", [], fn f -> %>
+    <div class="my-4 mt-8">
+      <%= label(f, :email, class: "block text-gray-700 dark:text-gray-300 mb-2") %>
+      <%= email_input(f, :email,
+        autocomplete: "username",
+        class:
+          "bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal appearance-none focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500",
+        placeholder: "user@example.com"
+      ) %>
+    </div>
+    <div class="my-4">
+      <%= label(f, :password, class: "block text-gray-700 dark:text-gray-300 mb-2") %>
+      <%= password_input(f, :password,
+        id: "current-password",
+        autocomplete: "current-password",
+        class:
+          "transition bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal appearance-none focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500"
+      ) %>
+    </div>
+
+    <%= if @conn.assigns[:error] do %>
+      <div class="text-red-500 mt-4"><%= @conn.assigns[:error] %></div>
+    <% end %>
+
+    <%= submit("Log in", class: "button mt-4 w-full") %>
+  <% end %>
+
+  <:footer>
+    <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
+      <%= if Keyword.fetch!(Application.get_env(:plausible, :selfhost),:disable_registration) == false do %>
+        <li>
+          Don't have an account? <%= link("Register",
+            to: "/register",
+            class: "text-gray-800 dark:text-gray-50 underline"
+          ) %> instead.
+        </li>
+      <% end %>
+      <li>
+        Forgot password?
+        <a href="/password/request-reset" class="underline text-gray-800 dark:text-gray-50">
+          Click here
+        </a>
+        to reset it.
+      </li>
+    </ol>
+  </:footer>
+</PlausibleWeb.Components.Generic.focus_box>
