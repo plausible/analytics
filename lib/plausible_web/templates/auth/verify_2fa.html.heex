@@ -1,6 +1,5 @@
 <PlausibleWeb.Components.Generic.focus_box>
   <%= form_for @conn.params, Routes.auth_path(@conn, :verify_2fa), [
-      class: "w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8",
       onsubmit: "document.getElementById('verify-button').disabled = true"
     ], fn f -> %>
     <h2 class="text-xl font-black dark:text-gray-100">
