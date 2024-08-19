@@ -5,28 +5,35 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
   use PlausibleWeb, :live_view
   import PlausibleWeb.Live.Components.Form
   alias PlausibleWeb.Live.Components.ComboBox
+  alias PlausibleWeb.UserAuth
 
   def mount(
         _params,
         %{
           "site_id" => _site_id,
-          "current_user_id" => user_id,
           "domain" => domain,
           "rendered_by" => pid
-        },
+        } = session,
         socket
       ) do
-    site = Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
-
-    form = new_form(site)
+    socket =
+      socket
+      |> assign_new(:user_session, fn ->
+        {:ok, user_session} = UserAuth.get_user_session(session)
+        user_session
+      end)
+      |> assign_new(:site, fn %{user_session: user_session} ->
+        Plausible.Sites.get_for_user!(user_session.user_id, domain, [:owner, :admin, :super_admin])
+      end)
+      |> assign_new(:form, fn %{site: site} ->
+        new_form(site)
+      end)
 
     {:ok,
      assign(socket,
-       form: form,
        domain: domain,
        rendered_by: pid,
-       prop_key_options_count: 0,
-       site: site
+       prop_key_options_count: 0
      )}
   end
 

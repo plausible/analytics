@@ -7,16 +7,21 @@ defmodule PlausibleWeb.Live.GoalSettings do
 
   alias Plausible.{Sites, Goals}
   alias PlausibleWeb.Live.Components.Modal
+  alias PlausibleWeb.UserAuth
 
   def mount(
         _params,
-        %{"site_id" => site_id, "domain" => domain, "current_user_id" => user_id},
+        %{"site_id" => site_id, "domain" => domain} = session,
         socket
       ) do
     socket =
       socket
-      |> assign_new(:site, fn ->
-        user_id
+      |> assign_new(:user_session, fn ->
+        {:ok, session} = UserAuth.get_user_session(session)
+        session
+      end)
+      |> assign_new(:site, fn %{user_session: user_session} ->
+        user_session.user_id
         |> Sites.get_for_user!(domain, [:owner, :admin, :super_admin])
         |> Plausible.Imported.load_import_data()
       end)
@@ -34,8 +39,8 @@ defmodule PlausibleWeb.Live.GoalSettings do
           limit: :unlimited
         )
       end)
-      |> assign_new(:current_user, fn ->
-        Plausible.Repo.get(Plausible.Auth.User, user_id)
+      |> assign_new(:current_user, fn %{user_session: user_session} ->
+        Plausible.Repo.get(Plausible.Auth.User, user_session.user_id)
       end)
 
     {:ok,

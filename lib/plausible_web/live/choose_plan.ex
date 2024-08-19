@@ -11,15 +11,17 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   alias Plausible.Site
   alias Plausible.Users
   alias Plausible.Billing.{Plans, Quota}
+  alias PlausibleWeb.UserAuth
 
   @contact_link "https://plausible.io/contact"
   @billing_faq_link "https://plausible.io/docs/billing"
 
-  def mount(_params, %{"current_user_id" => user_id, "remote_ip" => remote_ip}, socket) do
+  def mount(_params, %{"remote_ip" => remote_ip} = session, socket) do
     socket =
       socket
       |> assign_new(:user, fn ->
-        Users.with_subscription(user_id)
+        {:ok, user} = UserAuth.get_user(session)
+        Users.with_subscription(user)
       end)
       |> assign_new(:pending_ownership_site_ids, fn %{user: user} ->
         user.email

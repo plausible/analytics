@@ -7,16 +7,21 @@ defmodule PlausibleWeb.Live.PropsSettings do
   use Phoenix.HTML
 
   alias PlausibleWeb.Live.Components.ComboBox
+  alias PlausibleWeb.UserAuth
 
   def mount(
         _params,
-        %{"site_id" => site_id, "domain" => domain, "current_user_id" => user_id},
+        %{"site_id" => site_id, "domain" => domain} = session,
         socket
       ) do
     socket =
       socket
-      |> assign_new(:site, fn ->
-        Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+      |> assign_new(:user_session, fn ->
+        {:ok, user_session} = UserAuth.get_user_session(session)
+        user_session
+      end)
+      |> assign_new(:site, fn %{user_session: user_session} ->
+        Plausible.Sites.get_for_user!(user_session.user_id, domain, [:owner, :admin, :super_admin])
       end)
       |> assign_new(:all_props, fn %{site: site} ->
         site.allowed_event_props || []

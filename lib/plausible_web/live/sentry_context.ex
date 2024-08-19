@@ -49,12 +49,14 @@ defmodule PlausibleWeb.Live.SentryContext do
 
       Sentry.Context.set_request_context(request_context)
 
-      user_id = session["current_user_id"]
+      case PlausibleWeb.UserAuth.get_user_session(session) do
+        {:ok, user_session} ->
+          Sentry.Context.set_user_context(%{
+            id: user_session.user_id
+          })
 
-      if user_id do
-        Sentry.Context.set_user_context(%{
-          id: user_id
-        })
+        _ ->
+          :pass
       end
     end
 

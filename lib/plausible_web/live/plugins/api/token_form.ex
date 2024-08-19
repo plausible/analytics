@@ -8,21 +8,28 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
   alias Plausible.Repo
   alias Plausible.Sites
   alias Plausible.Plugins.API.{Token, Tokens}
+  alias PlausibleWeb.UserAuth
 
   def mount(
         _params,
         %{
           "token_description" => token_description,
-          "current_user_id" => user_id,
           "domain" => domain,
           "rendered_by" => pid
-        },
+        } = session,
         socket
       ) do
     socket =
       socket
-      |> assign_new(:site, fn ->
-        Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+      |> assign_new(:user_session, fn ->
+        {:ok, session} = UserAuth.get_user_session(session)
+        session
+      end)
+      |> assign_new(:site, fn %{user_session: user_session} ->
+        Sites.get_for_user!(user_session.user_id, domain, [:owner, :admin, :super_admin])
+      end)
+      |> assign_new(:current_user, fn %{user_session: user_session} ->
+        Repo.get(Plausible.Auth.User, user_session.user_id)
       end)
 
     token = Token.generate()
@@ -32,7 +39,6 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
      assign(socket,
        token_description: token_description,
        token: token,
-       current_user: Repo.get(Plausible.Auth.User, user_id),
        form: form,
        domain: domain,
        rendered_by: pid,

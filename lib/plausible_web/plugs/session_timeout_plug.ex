@@ -1,13 +1,20 @@
 defmodule PlausibleWeb.SessionTimeoutPlug do
   import Plug.Conn
 
+  alias PlausibleWeb.UserAuth
+
   def init(opts \\ []) do
     opts
   end
 
   def call(conn, opts) do
     timeout_at = get_session(conn, :session_timeout_at)
-    user_id = get_session(conn, :current_user_id)
+
+    user_id =
+      case UserAuth.get_user_session(conn) do
+        {:ok, session} -> session.user_id
+        _ -> nil
+      end
 
     cond do
       user_id && timeout_at && now() > timeout_at ->

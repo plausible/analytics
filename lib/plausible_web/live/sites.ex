@@ -10,12 +10,12 @@ defmodule PlausibleWeb.Live.Sites do
   import PlausibleWeb.Live.Components.Pagination
 
   alias Plausible.Auth
-  alias Plausible.Repo
   alias Plausible.Site
   alias Plausible.Sites
   alias Plausible.Site.Memberships.Invitations
+  alias PlausibleWeb.UserAuth
 
-  def mount(params, %{"current_user_id" => user_id}, socket) do
+  def mount(params, session, socket) do
     uri =
       ("/sites?" <> URI.encode_query(Map.take(params, ["filter_text"])))
       |> URI.new!()
@@ -24,7 +24,10 @@ defmodule PlausibleWeb.Live.Sites do
       socket
       |> assign(:uri, uri)
       |> assign(:filter_text, params["filter_text"] || "")
-      |> assign(:user, Repo.get!(Auth.User, user_id))
+      |> assign_new(:user, fn ->
+        {:ok, user} = UserAuth.get_user(session)
+        user
+      end)
 
     {:ok, socket}
   end
