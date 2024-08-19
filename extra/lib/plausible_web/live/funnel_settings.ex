@@ -50,7 +50,6 @@ defmodule PlausibleWeb.Live.FunnelSettings do
           PlausibleWeb.Live.FunnelSettings.Form,
           id: "funnels-form",
           session: %{
-            "current_user_id" => @current_user_id,
             "domain" => @domain,
             "funnel_id" => @funnel_id
           }

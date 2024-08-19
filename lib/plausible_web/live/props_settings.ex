@@ -29,7 +29,6 @@ defmodule PlausibleWeb.Live.PropsSettings do
      assign(socket,
        site_id: site_id,
        domain: domain,
-       current_user_id: user_id,
        add_prop?: false,
        filter_text: ""
      )}
@@ -45,7 +44,6 @@ defmodule PlausibleWeb.Live.PropsSettings do
           PlausibleWeb.Live.PropsSettings.Form,
           id: "props-form",
           session: %{
-            "current_user_id" => @current_user_id,
             "domain" => @domain,
             "site_id" => @site_id,
             "rendered_by" => self()

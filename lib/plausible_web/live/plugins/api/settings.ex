@@ -27,8 +27,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
      assign(socket,
        domain: domain,
        add_token?: not is_nil(session["new_token"]),
-       token_description: session["new_token"] || "",
-       current_user_id: user_id
+       token_description: session["new_token"] || ""
      )}
   end
 
@@ -42,7 +41,6 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
         PlausibleWeb.Live.Plugins.API.TokenForm,
         id: "token-form",
         session: %{
-          "current_user_id" => @current_user_id,
           "domain" => @domain,
           "token_description" => @token_description,
           "rendered_by" => self()
