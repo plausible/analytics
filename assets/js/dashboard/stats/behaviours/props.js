@@ -9,6 +9,7 @@ import { EVENT_PROPS_PREFIX, getGoalFilter, FILTER_OPERATIONS, hasGoalFilter } f
 import classNames from "classnames";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
+import { customPropsRoute } from "../../router";
 
 
 export default function Properties({ afterFetchData }) {
@@ -53,6 +54,7 @@ export default function Properties({ afterFetchData }) {
 
       setPropKeyLoading(false)
     })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query])
 
   function getPropKeyFromStorage() {
@@ -72,6 +74,7 @@ export default function Properties({ afterFetchData }) {
     return (input) => {
       return api.get(url.apiPath(site, "/suggestions/prop_key"), query, { q: input.trim() })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query])
 
   function onPropKeySelect() {
@@ -107,7 +110,7 @@ export default function Properties({ afterFetchData }) {
         getFilterFor={getFilterFor}
         keyLabel={propKey}
         metrics={chooseMetrics()}
-        detailsLink={url.sitePath(`custom-prop-values/${propKey}`)}
+        detailsLinkProps={{ path: customPropsRoute.path, params: { propKey }, search: (search) => search }}
         maybeHideDetails={true}
         color="bg-red-50"
         colMinWidth={90}

@@ -2,13 +2,15 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import 'url-search-params-polyfill';
 
-import Router from './dashboard/router'
+import { RouterProvider } from 'react-router-dom';
+import { createAppRouter } from './dashboard/router'
 import ErrorBoundary from './dashboard/error-boundary'
 import * as api from './dashboard/api'
 import * as timer from './dashboard/util/realtime-update-timer'
 import { filtersBackwardsCompatibilityRedirect } from './dashboard/query';
 import SiteContextProvider, { parseSiteFromDataset } from './dashboard/site-context';
 import UserContextProvider from './dashboard/user-context'
+import ThemeContextProvider from './dashboard/theme-context'
 
 timer.start()
 
@@ -22,15 +24,22 @@ if (container) {
     api.setSharedLinkAuth(sharedLinkAuth)
   }
 
-  filtersBackwardsCompatibilityRedirect()
-
+  try {
+    filtersBackwardsCompatibilityRedirect(window.location, window.history)
+  } catch (e) {
+    console.error('Error redirecting in a backwards compatible way', e)
+  }
+  
+  const router = createAppRouter(site);
   const app = (
     <ErrorBoundary>
-      <SiteContextProvider site={site}>
-        <UserContextProvider role={container.dataset.currentUserRole} loggedIn={container.dataset.loggedIn === 'true'}>
-          <Router />
-        </UserContextProvider>
-      </SiteContextProvider>
+      <ThemeContextProvider>
+        <SiteContextProvider site={site}>
+          <UserContextProvider role={container.dataset.currentUserRole} loggedIn={container.dataset.loggedIn === 'true'}>
+            <RouterProvider router={router} />
+          </UserContextProvider>
+        </SiteContextProvider>
+      </ThemeContextProvider>
     </ErrorBoundary>
   )
 

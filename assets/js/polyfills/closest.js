@@ -3,6 +3,7 @@ if (window.Element && !Element.prototype.closest) {
     function(s) {
         var matches = (this.document || this.ownerDocument).querySelectorAll(s),
             i,
+            // eslint-disable-next-line @typescript-eslint/no-this-alias
             el = this;
         do {
             i = matches.length;

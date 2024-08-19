@@ -32,8 +32,7 @@ defmodule PlausibleWeb.AuthView do
   def format_invoices(invoice_list) do
     Enum.map(invoice_list, fn invoice ->
       %{
-        date:
-          invoice["payout_date"] |> Date.from_iso8601!() |> Timex.format!("{Mshort} {D}, {YYYY}"),
+        date: invoice["payout_date"] |> Date.from_iso8601!() |> Calendar.strftime("%b %-d, %Y"),
         amount: (invoice["amount"] / 1) |> :erlang.float_to_binary(decimals: 2),
         currency: invoice["currency"] |> PlausibleWeb.BillingView.present_currency(),
         url: invoice["receipt_url"]

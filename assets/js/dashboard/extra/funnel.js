@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import FlipMove from 'react-flip-move';
 import Chart from 'chart.js/auto';
-import FunnelTooltip from './funnel-tooltip.js';
+import FunnelTooltip from './funnel-tooltip';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import numberFormatter from '../util/number-formatter';
 import Bar from '../stats/bar';
@@ -10,8 +10,8 @@ import RocketIcon from '../stats/modals/rocket-icon';
 
 import * as api from '../api';
 import LazyLoader from '../components/lazy-loader';
-import { useQueryContext } from '../query-context.js';
-import { useSiteContext } from '../site-context.js';
+import { useQueryContext } from '../query-context';
+import { useSiteContext } from '../site-context';
 
 
 export default function Funnel({ funnelName, tabs }) {
@@ -46,12 +46,14 @@ export default function Funnel({ funnelName, tabs }) {
         }
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, funnelName, visible, isSmallScreen])
 
   useEffect(() => {
     if (canvasRef.current && funnel && visible && !isSmallScreen) {
       initialiseChart()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [funnel, visible])
 
   useEffect(() => {

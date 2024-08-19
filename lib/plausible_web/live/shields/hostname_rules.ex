@@ -93,8 +93,8 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
 
             <p class="text-sm mt-2 text-gray-500 dark:text-gray-200">
               You can use a wildcard (<code>*</code>) to match multiple hostnames. For example,
-              <code>*.<%= @site.domain %></code>
-              will match all subdomains.<br /><br />
+              <code>*<%= @site.domain %></code>
+              will only record traffic on your main domain and all of its subdomains.<br /><br />
 
               <%= if @hostname_rules_count >= 1 do %>
                 Once added, we will start accepting traffic from this hostname within a few minutes.
@@ -263,7 +263,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
   defp format_added_at(dt, tz) do
     dt
     |> Plausible.Timezones.to_datetime_in_timezone(tz)
-    |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
+    |> Calendar.strftime("%Y-%m-%d %H:%M:%S")
   end
 
   def suggest_hostnames(input, _options, site) do

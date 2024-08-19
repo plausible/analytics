@@ -34,6 +34,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
          form: to_form(changeset),
          captcha_error: nil,
          password_strength: Auth.User.password_strength(changeset),
+         disable_submit: false,
          trigger_submit: false
        )}
     end
@@ -49,11 +50,11 @@ defmodule PlausibleWeb.Live.RegisterForm do
     <div class="w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8">
       <h2 class="text-xl font-black dark:text-gray-100">Invitation expired</h2>
 
-      <p class="mt-4 text-sm">
+      <p class="mt-4">
         Your invitation has expired or been revoked. Please request fresh one or you can <%= link(
           "sign up",
           class: "text-indigo-600 hover:text-indigo-900",
-          to: Routes.auth_path(@socket, :register)
+          to: Routes.auth_path(@socket, :register_form)
         ) %> for a 30-day unlimited free trial without an invitation.
       </p>
     </div>
@@ -62,7 +63,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto mt-6 text-center dark:text-gray-300">
+    <div class="mx-auto text-center dark:text-gray-300">
       <h1 class="text-3xl font-black">
         <%= if ce?() or @live_action == :register_from_invitation_form do %>
           Register your <%= Plausible.product_name() %> account
@@ -70,23 +71,38 @@ defmodule PlausibleWeb.Live.RegisterForm do
           Register your 30-day free trial
         <% end %>
       </h1>
-      <div class="text-xl font-medium">Set up privacy-friendly analytics with just a few clicks</div>
+      <div class="text-xl font-medium mt-2">
+        Set up privacy-friendly analytics with just a few clicks
+      </div>
     </div>
 
-    <div class="w-full max-w-3xl mt-4 mx-auto flex flex-shrink-0">
+    <PlausibleWeb.Components.FlowProgress.render
+      :if={@live_action == :register_form}
+      flow="register"
+      current_step="Register"
+    />
+    <PlausibleWeb.Components.FlowProgress.render
+      :if={@live_action == :register_from_invitation_form}
+      flow="invitation"
+      current_step="Register"
+    />
+
+    <PlausibleWeb.Components.Generic.focus_box>
+      <:title>
+        Enter your details
+      </:title>
+
       <.form
         :let={f}
         for={@form}
         id="register-form"
+        action={Routes.auth_path(@socket, :login)}
         phx-hook="Metrics"
         phx-change="validate"
         phx-submit="register"
         phx-trigger-action={@trigger_submit}
-        class="w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8"
       >
-        <input name="_csrf_token" type="hidden" value={Plug.CSRFProtection.get_csrf_token()} />
-
-        <h2 class="text-xl font-black dark:text-gray-100">Enter your details</h2>
+        <input name="user[register_action]" type="hidden" value={@live_action} />
 
         <%= if @invitation do %>
           <.email_input field={f[:email]} for_invitation={true} />
@@ -98,10 +114,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
         <div class="my-4">
           <div class="flex justify-between">
-            <label
-              for={f[:password].name}
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
+            <label for={f[:password].name} class="block font-medium text-gray-700 dark:text-gray-300">
               Password
             </label>
             <.password_length_hint minimum={12} field={f[:password]} />
@@ -111,7 +124,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
               field={f[:password]}
               strength={@password_strength}
               phx-debounce={200}
-              class="dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
+              class="dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
             />
           </div>
         </div>
@@ -119,9 +132,9 @@ defmodule PlausibleWeb.Live.RegisterForm do
         <div class="my-4">
           <label
             for={f[:password_confirmation].name}
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            class="block font-medium text-gray-700 dark:text-gray-300"
           >
-            Password confirmation
+            Confirm password
           </label>
           <div class="mt-1">
             <.input
@@ -129,7 +142,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
               autocomplete="new-password"
               field={f[:password_confirmation]}
               phx-debounce={200}
-              class="dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
+              class="dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
             />
           </div>
         </div>
@@ -161,32 +174,34 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
         <% submit_text =
           if ce?() or @invitation do
-            "Create my account →"
+            "Create my account"
           else
-            "Start my free trial →"
+            "Start my free trial"
           end %>
-        <PlausibleWeb.Components.Generic.button id="register" type="submit" class="mt-4 w-full">
+        <PlausibleWeb.Components.Generic.button
+          id="register"
+          disabled={@disable_submit}
+          type="submit"
+          class="mt-4 w-full"
+        >
           <%= submit_text %>
         </PlausibleWeb.Components.Generic.button>
 
-        <p class="text-center text-gray-600 dark:text-gray-500  text-xs mt-4">
+        <p class="text-center text-gray-600 dark:text-gray-500  mt-4">
           Already have an account? <%= link("Log in",
             to: "/login",
             class: "underline text-gray-800 dark:text-gray-50"
-          ) %> instead.
+          ) %>
         </p>
       </.form>
-      <div :if={@live_action == :register_form} class="pt-12 pl-8 hidden md:block">
-        <%= PlausibleWeb.AuthView.render("_onboarding_steps.html", current_step: 0) %>
-      </div>
-    </div>
+    </PlausibleWeb.Components.Generic.focus_box>
     """
   end
 
   defp name_input(assigns) do
     ~H"""
     <div class="my-4">
-      <label for={@field.name} class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label for={@field.name} class="block font-medium text-gray-700 dark:text-gray-300">
         Full name
       </label>
       <div class="mt-1">
@@ -194,7 +209,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
           field={@field}
           placeholder="Jane Doe"
           phx-debounce={200}
-          class="dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
+          class="dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
         />
       </div>
     </div>
@@ -209,7 +224,6 @@ defmodule PlausibleWeb.Live.RegisterForm do
       focus:border-indigo-500
       block
       w-full
-      sm:text-sm
       border-gray-300
       dark:border-gray-500
       rounded-md
@@ -231,7 +245,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     ~H"""
     <div class="my-4">
       <div class="flex justify-between">
-        <label for={@field.name} class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label for={@field.name} class="block font-medium text-gray-700 dark:text-gray-300">
           Email
         </label>
         <p class="text-xs text-gray-500 mt-1">No spam, guaranteed.</p>
@@ -308,6 +322,8 @@ defmodule PlausibleWeb.Live.RegisterForm do
   defp add_user(socket, user) do
     case Repo.insert(user) do
       {:ok, _user} ->
+        socket = assign(socket, disable_submit: true)
+
         on_ee do
           event_name = "Signup#{if socket.assigns.invitation, do: " via invitation"}"
           {:noreply, push_event(socket, "send-metrics", %{event_name: event_name})}

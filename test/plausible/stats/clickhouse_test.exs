@@ -98,6 +98,93 @@ defmodule Plausible.Stats.ClickhouseTest do
              } = Clickhouse.last_24h_visitors_hourly_intervals([site], fixed_now)[site.domain]
     end
 
+    test "ignores visits before native stats start time (after reset)" do
+      fixed_now = ~N[2023-10-26 10:00:15]
+      site1 = insert(:site, native_stats_start_at: ~N[2023-10-25 14:15:00])
+      site2 = insert(:site, native_stats_start_at: ~N[2023-10-23 12:00:00])
+
+      user_id1 = 111
+      user_id2 = 222
+
+      populate_stats(site1, [
+        build(:pageview, timestamp: ~N[2023-10-25 13:59:00]),
+        build(:pageview, timestamp: ~N[2023-10-25 13:58:00]),
+        build(:pageview, user_id: user_id1, timestamp: ~N[2023-10-25 15:00:00]),
+        build(:pageview, user_id: user_id1, timestamp: ~N[2023-10-25 15:01:00])
+      ])
+
+      populate_stats(site2, [
+        build(:pageview, timestamp: ~N[2023-10-25 13:59:00]),
+        build(:pageview, timestamp: ~N[2023-10-25 13:58:00]),
+        build(:pageview, user_id: user_id2, timestamp: ~N[2023-10-25 15:00:00]),
+        build(:pageview, user_id: user_id2, timestamp: ~N[2023-10-25 15:01:00])
+      ])
+
+      assert %{
+               change: 100,
+               visitors: 1,
+               intervals: [
+                 %{interval: ~N[2023-10-25 11:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 12:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 13:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 14:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 15:00:00], visitors: 1},
+                 %{interval: ~N[2023-10-25 16:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 17:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 18:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 19:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 20:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 21:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 22:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 23:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 00:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 01:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 02:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 03:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 04:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 05:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 06:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 07:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 08:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 09:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 10:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 11:00:00], visitors: 0}
+               ]
+             } = Clickhouse.last_24h_visitors_hourly_intervals([site1], fixed_now)[site1.domain]
+
+      assert %{
+               change: 100,
+               visitors: 3,
+               intervals: [
+                 %{interval: ~N[2023-10-25 11:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 12:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 13:00:00], visitors: 2},
+                 %{interval: ~N[2023-10-25 14:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 15:00:00], visitors: 1},
+                 %{interval: ~N[2023-10-25 16:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 17:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 18:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 19:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 20:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 21:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 22:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-25 23:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 00:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 01:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 02:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 03:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 04:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 05:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 06:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 07:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 08:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 09:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 10:00:00], visitors: 0},
+                 %{interval: ~N[2023-10-26 11:00:00], visitors: 0}
+               ]
+             } = Clickhouse.last_24h_visitors_hourly_intervals([site2], fixed_now)[site2.domain]
+    end
+
     test "returns clickhouse data merged with placeholder for multiple sites" do
       fixed_now = ~N[2023-10-26 10:00:15]
       site1 = insert(:site)

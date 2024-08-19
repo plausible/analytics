@@ -22,13 +22,17 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
   }
 
   def run(opts \\ []) do
-    cluster? = Plausible.MigrationUtils.clustered_table?("sessions_v2")
+    cluster? = Plausible.IngestRepo.clustered_table?("sessions_v2")
 
     {:ok, _} =
       run_sql("create-sessions-dictionary",
         cluster?: cluster?,
         dictionary_connection_params:
-          Keyword.get(opts, :dictionary_connection_string, dictionary_connection_params()),
+          Keyword.get(
+            opts,
+            :dictionary_connection_string,
+            Plausible.MigrationUtils.dictionary_connection_params()
+          ),
         dictionary_config: dictionary_config(opts)
       )
 
@@ -50,7 +54,7 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
   end
 
   def kill(opts \\ []) do
-    cluster? = Plausible.MigrationUtils.clustered_table?("events_v2")
+    cluster? = Plausible.IngestRepo.clustered_table?("events_v2")
 
     report_progress(opts)
 
@@ -94,7 +98,7 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
     {:ok, %{rows: [[merges]]}} = run_sql("get-merges-progress")
     {:ok, %{rows: disks}} = run_sql("get-disks")
 
-    IO.puts("\n\n#{Timex.now() |> Timex.format!("{ISO:Extended}")}")
+    IO.puts("\n\n#{Timex.now() |> DateTime.to_iso8601()}")
 
     # List partitions that need to run
     IO.puts(
@@ -134,19 +138,6 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
   defp dictionary_config(opts) do
     @default_dictionary_config
     |> Map.merge(Keyword.get(opts, :dictionary_config, %{}))
-  end
-
-  # See https://clickhouse.com/docs/en/sql-reference/dictionaries#clickhouse for context
-  defp dictionary_connection_params() do
-    Plausible.IngestRepo.config()
-    |> Enum.map(fn
-      {:database, database} -> "DB '#{database}'"
-      {:username, username} -> "USER '#{username}'"
-      {:password, password} -> "PASSWORD '#{password}'"
-      _ -> nil
-    end)
-    |> Enum.reject(&is_nil/1)
-    |> Enum.join(" ")
   end
 
   defp get_partitions(opts) do

@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
-         query <- Query.from(site, params),
+         query <- Query.from(site, params, debug_metadata(conn)),
          :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, query),
          :ok <- ensure_custom_props_access(site, query) do
@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          :ok <- validate_property(params),
-         query <- Query.from(site, params),
+         query <- Query.from(site, params, debug_metadata(conn)),
          :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, query),
          {:ok, limit} <- validate_or_default_limit(params),
@@ -262,7 +262,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          :ok <- validate_interval(params),
-         query <- Query.from(site, params),
+         query <- Query.from(site, params, debug_metadata(conn)),
          :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, query),
          :ok <- ensure_custom_props_access(site, query) do
@@ -341,15 +341,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp validate_filter(site, [_type, "event:goal", goal_filter]) do
     configured_goals =
-      Plausible.Goals.for_site(site)
-      |> Enum.map(fn
-        %{page_path: path} when is_binary(path) -> "Visit " <> path
-        %{event_name: event_name} -> event_name
-      end)
+      site
+      |> Plausible.Goals.for_site()
+      |> Enum.map(& &1.display_name)
 
-    goals_in_filter =
-      List.wrap(goal_filter)
-      |> Plausible.Stats.Filters.Utils.unwrap_goal_value()
+    goals_in_filter = List.wrap(goal_filter)
 
     if found = Enum.find(goals_in_filter, &(&1 not in configured_goals)) do
       msg =

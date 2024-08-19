@@ -3,9 +3,9 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import React, { Fragment, useCallback, useEffect } from 'react';
 import classNames from 'classnames';
 import * as storage from '../../util/storage';
-import { isKeyPressed } from '../../keybinding.js';
-import { useQueryContext } from '../../query-context.js';
-import { useSiteContext } from '../../site-context.js';
+import { isKeyPressed } from '../../keybinding';
+import { useQueryContext } from '../../query-context';
+import { useSiteContext } from '../../site-context';
 
 const INTERVAL_LABELS = {
   'minute': 'Minutes',
@@ -69,6 +69,7 @@ function subscribeKeybinding(element) {
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const handleKeyPress = useCallback((event) => {
     if (isKeyPressed(event, "i")) element.current?.click()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // eslint-disable-next-line react-hooks/rules-of-hooks

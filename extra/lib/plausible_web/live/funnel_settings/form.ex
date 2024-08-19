@@ -23,7 +23,10 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       |> Goals.for_site()
       |> Enum.map(fn goal ->
         {goal.id,
-         struct!(Plausible.Goal, Map.take(goal, [:id, :event_name, :page_path, :currency]))}
+         struct!(
+           Plausible.Goal,
+           Map.take(goal, [:id, :display_name, :event_name, :page_path, :currency])
+         )}
       end)
 
     socket =

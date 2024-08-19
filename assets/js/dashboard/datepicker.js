@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { Fragment, useState, useEffect, useCallback, useRef } from "react";
-import { withRouter } from "react-router-dom";
+import { useAppNavigate } from "./navigation/use-app-navigate";
 import Flatpickr from "react-flatpickr";
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { Transition } from '@headlessui/react';
@@ -25,11 +26,11 @@ import {
   isSameDate
 } from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
-import { shouldIgnoreKeypress } from "./keybinding.js";
-import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input.js";
+import { shouldIgnoreKeypress } from "./keybinding";
+import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input";
 import classNames from "classnames";
-import { useQueryContext } from "./query-context.js";
-import { useSiteContext } from "./site-context.js";
+import { useQueryContext } from "./query-context";
+import { useSiteContext } from "./site-context";
 
 function KeyBindHint({children}) {
   return (
@@ -70,7 +71,7 @@ function renderArrow(query, site, period, prevDate, nextDate) {
   return (
     <div className={containerClass}>
       <QueryButton
-        to={{ date: prevDate }}
+        search={{ date: prevDate }}
         className={leftClass}
         disabled={disabledLeft}
       >
@@ -88,7 +89,7 @@ function renderArrow(query, site, period, prevDate, nextDate) {
         </svg>
       </QueryButton>
       <QueryButton
-        to={{ date: nextDate }}
+        search={{ date: nextDate }}
         className={rightClass}
         disabled={disabledRight}
       >
@@ -166,22 +167,23 @@ function DisplayPeriod() {
   return 'Realtime'
 }
 
-function DatePicker({ history }) {
+function DatePicker() {
   const { query } = useQueryContext();
   const site = useSiteContext();
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState('menu')
   const dropDownNode = useRef(null)
   const calendar = useRef(null)
+  const navigate = useAppNavigate();
 
   const handleKeydown = useCallback((e) => {
     if (shouldIgnoreKeypress(e)) return true
-
+    
     const newSearch = {
-      period: false,
-      from: false,
-      to: false,
-      date: false
+      period: null,
+      from: null,
+      to: null,
+      date: null
     };
 
     const insertionDate = parseUTCDate(site.statsBegin);
@@ -222,28 +224,28 @@ function DatePicker({ history }) {
     setOpen(false);
 
     const keybindings = {
-      d: { date: false, period: 'day' },
+      d: { date: null, period: 'day' },
       e: { date: formatISO(shiftDays(nowForSite(site), -1)), period: 'day' },
       r: { period: 'realtime' },
-      w: { date: false, period: '7d' },
-      m: { date: false, period: 'month' },
-      y: { date: false, period: 'year' },
-      t: { date: false, period: '30d' },
-      s: { date: false, period: '6mo' },
-      l: { date: false, period: '12mo' },
-      a: { date: false, period: 'all' },
+      w: { date: null, period: '7d' },
+      m: { date: null, period: 'month' },
+      y: { date: null, period: 'year' },
+      t: { date: null, period: '30d' },
+      s: { date: null, period: '6mo' },
+      l: { date: null, period: '12mo' },
+      a: { date: null, period: 'all' },
     }
 
     const redirect = keybindings[e.key.toLowerCase()]
     if (redirect) {
-      navigateToQuery(history, query, { ...newSearch, ...redirect })
+      navigateToQuery(navigate, query, { ...newSearch, ...redirect, keybindHint: e.key.toUpperCase() })
     } else if (e.key.toLowerCase() === 'x') {
-      toggleComparisons(history, query, site)
+      toggleComparisons(navigate, query, site)
     } else if (e.key.toLowerCase() === 'c') {
       setOpen(true)
       setMode('calendar')
     } else if (newSearch.date) {
-      navigateToQuery(history, query, newSearch);
+      navigateToQuery(navigate, query, newSearch);
     }
   }, [query])
 
@@ -274,9 +276,9 @@ function DatePicker({ history }) {
       [from, to] = [parseNaiveDate(from), parseNaiveDate(to)]
 
       if (from.isSame(to)) {
-        navigateToQuery(history, query, { period: 'day', date: formatISO(from), from: false, to: false })
+        navigateToQuery(navigate, query, { period: 'day', date: formatISO(from), from: null, to: null })
       } else {
-        navigateToQuery(history, query, { period: 'custom', date: false, from: formatISO(from), to: formatISO(to) })
+        navigateToQuery(navigate, query, { period: 'custom', date: null, from: formatISO(from), to: formatISO(to) })
       }
     }
 
@@ -290,7 +292,7 @@ function DatePicker({ history }) {
   }
 
   function openCalendar() {
-    calendar.current && calendar.current.flatpickr.open();
+    calendar.current?.flatpickr.open();
   }
 
   function renderLink(period, text, opts = {}) {
@@ -304,11 +306,11 @@ function DatePicker({ history }) {
       boldClass = query.period === period ? "font-bold" : "";
     }
 
-    opts.date = opts.date ? formatISO(opts.date) : false;
+    opts.date = opts.date ? formatISO(opts.date) : null;
 
     return (
       <QueryLink
-        to={{ from: false, to: false, period, ...opts }}
+        search={{ from: null, to: null, period, ...opts }}
         onClick={() => setOpen(false)}
         className={`${boldClass} px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900
           dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}
@@ -324,6 +326,7 @@ function DatePicker({ history }) {
     if (mode === "menu") {
       return (
         <div
+          data-testid="datemenu"
           id="datemenu"
           className="absolute w-full left-0 right-0 md:w-56 md:absolute md:top-auto md:left-auto md:right-0 mt-2 origin-top-right z-10"
         >
@@ -370,7 +373,7 @@ function DatePicker({ history }) {
               <div className="py-1 date-option-group border-t border-gray-200 dark:border-gray-500">
                 <span
                   onClick={() => {
-                    toggleComparisons(history, query, site)
+                    toggleComparisons(navigate, query, site)
                     setOpen(false)
                   }}
                   className="px-4 py-2 text-sm leading-tight hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer flex items-center justify-between">
@@ -450,4 +453,4 @@ function DatePicker({ history }) {
   )
 }
 
-export default withRouter(DatePicker);
+export default DatePicker

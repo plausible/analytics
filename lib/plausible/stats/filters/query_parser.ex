@@ -95,9 +95,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
     all_integers? = Enum.all?(list, &is_integer/1)
 
     case {filter_key, all_strings?} do
-      {"event:goal", true} ->
-        {:ok, [Filters.Utils.wrap_goal_value(list)]}
-
       {"visit:city", false} when all_integers? ->
         {:ok, [list]}
 
@@ -325,10 +322,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
     if goal_filters? or Enum.member?(dimensions, "event:goal") do
       Plausible.Goals.for_site(site)
-      |> Enum.map(fn
-        %{page_path: path} when is_binary(path) -> {:page, path}
-        %{event_name: event_name} -> {:event, event_name}
-      end)
     else
       []
     end
@@ -337,7 +330,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp validate_goal_filters(query) do
     goal_filter_clauses =
       Enum.flat_map(query.filters, fn
-        [_operation, "event:goal", clauses] -> clauses
+        [:is, "event:goal", clauses] -> clauses
         _ -> []
       end)
 
@@ -349,11 +342,14 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp validate_goal_filter(clause, configured_goals) do
-    if Enum.member?(configured_goals, clause) do
+    configured_goal_names =
+      Enum.map(configured_goals, fn goal -> Plausible.Goal.display_name(goal) end)
+
+    if Enum.member?(configured_goal_names, clause) do
       :ok
     else
       {:error,
-       "The goal `#{Filters.Utils.unwrap_goal_value(clause)}` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"}
+       "The goal `#{clause}` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"}
     end
   end
 

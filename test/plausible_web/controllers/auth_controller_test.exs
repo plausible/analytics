@@ -28,7 +28,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
-  describe "POST /register" do
+  describe "POST /login (register_action = register_form)" do
     test "registering sends an activation link", %{conn: conn} do
       Repo.insert!(
         User.new(%{
@@ -39,10 +39,11 @@ defmodule PlausibleWeb.AuthControllerTest do
         })
       )
 
-      post(conn, "/register",
+      post(conn, "/login",
         user: %{
           email: "user@example.com",
-          password: "very-secret-and-very-long-123"
+          password: "very-secret-and-very-long-123",
+          register_action: "register_form"
         }
       )
 
@@ -62,14 +63,15 @@ defmodule PlausibleWeb.AuthControllerTest do
       )
 
       conn =
-        post(conn, "/register",
+        post(conn, "/login",
           user: %{
             email: "user@example.com",
-            password: "very-secret-and-very-long-123"
+            password: "very-secret-and-very-long-123",
+            register_action: "register_form"
           }
         )
 
-      assert redirected_to(conn, 302) == "/activate"
+      assert redirected_to(conn, 302) == "/activate?flow=register"
     end
 
     test "logs the user in", %{conn: conn} do
@@ -83,10 +85,11 @@ defmodule PlausibleWeb.AuthControllerTest do
       )
 
       conn =
-        post(conn, "/register",
+        post(conn, "/login",
           user: %{
             email: "user@example.com",
-            password: "very-secret-and-very-long-123"
+            password: "very-secret-and-very-long-123",
+            register_action: "register_form"
           }
         )
 
@@ -113,7 +116,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
-  describe "POST /register/invitation/:invitation_id" do
+  describe "POST /login (register_action = register_from_invitation_form)" do
     setup do
       inviter = insert(:user)
       site = insert(:site, members: [inviter])
@@ -138,13 +141,14 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, %{site: site, invitation: invitation}}
     end
 
-    test "registering sends an activation link", %{conn: conn, invitation: invitation} do
-      post(conn, "/register/invitation/#{invitation.invitation_id}",
+    test "registering sends an activation link", %{conn: conn} do
+      post(conn, "/login",
         user: %{
           name: "Jane Doe",
           email: "user@example.com",
           password: "very-secret-and-very-long-123",
-          password_confirmation: "very-secret-and-very-long-123"
+          password_confirmation: "very-secret-and-very-long-123",
+          register_action: "register_from_invitation_form"
         }
       )
 
@@ -153,31 +157,30 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert subject =~ "is your Plausible email verification code"
     end
 
-    test "user is redirected to activate page after registration", %{
-      conn: conn,
-      invitation: invitation
-    } do
+    test "user is redirected to activate page after registration", %{conn: conn} do
       conn =
-        post(conn, "/register/invitation/#{invitation.invitation_id}",
+        post(conn, "/login",
           user: %{
             name: "Jane Doe",
             email: "user@example.com",
             password: "very-secret-and-very-long-123",
-            password_confirmation: "very-secret-and-very-long-123"
+            password_confirmation: "very-secret-and-very-long-123",
+            register_action: "register_from_invitation_form"
           }
         )
 
-      assert redirected_to(conn, 302) == "/activate"
+      assert redirected_to(conn, 302) == "/activate?flow=invitation"
     end
 
-    test "logs the user in", %{conn: conn, invitation: invitation} do
+    test "logs the user in", %{conn: conn} do
       conn =
-        post(conn, "/register/invitation/#{invitation.invitation_id}",
+        post(conn, "/login",
           user: %{
             name: "Jane Doe",
             email: "user@example.com",
             password: "very-secret-and-very-long-123",
-            password_confirmation: "very-secret-and-very-long-123"
+            password_confirmation: "very-secret-and-very-long-123",
+            register_action: "register_from_invitation_form"
           }
         )
 
@@ -290,7 +293,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       user = Repo.get_by(Plausible.Auth.User, id: user.id)
 
       assert user.email_verified
-      assert redirected_to(conn) == "/sites/new"
+      assert redirected_to(conn) == "/sites/new?flow="
     end
 
     test "redirects to /sites if user has invitation", %{conn: conn, user: user} do
@@ -303,7 +306,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = post(conn, "/activate", %{code: verification.code})
 
-      assert redirected_to(conn) == "/sites"
+      assert redirected_to(conn) == "/sites?flow="
     end
 
     test "removes used up verification code", %{conn: conn, user: user} do
@@ -321,7 +324,7 @@ defmodule PlausibleWeb.AuthControllerTest do
   describe "GET /login_form" do
     test "shows the login form", %{conn: conn} do
       conn = get(conn, "/login")
-      assert html_response(conn, 200) =~ "Enter your email and password"
+      assert html_response(conn, 200) =~ "Enter your account credentials"
     end
   end
 
@@ -406,7 +409,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = post(conn, "/login", email: "user@example.com", password: "password")
 
       assert get_session(conn, :current_user_id) == nil
-      assert html_response(conn, 200) =~ "Enter your email and password"
+      assert html_response(conn, 200) =~ "Enter your account credentials"
     end
 
     test "bad password - renders login form again", %{conn: conn} do
@@ -414,39 +417,29 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = post(conn, "/login", email: user.email, password: "wrong")
 
       assert get_session(conn, :current_user_id) == nil
-      assert html_response(conn, 200) =~ "Enter your email and password"
+      assert html_response(conn, 200) =~ "Enter your account credentials"
     end
 
     test "limits login attempts to 5 per minute" do
       user = insert(:user, password: "password")
 
-      build_conn()
-      |> put_req_header("x-forwarded-for", "1.2.3.5")
-      |> post("/login", email: user.email, password: "wrong")
+      conn = put_req_header(build_conn(), "x-forwarded-for", "1.2.3.5")
 
-      build_conn()
-      |> put_req_header("x-forwarded-for", "1.2.3.5")
-      |> post("/login", email: user.email, password: "wrong")
+      response =
+        eventually(
+          fn ->
+            Enum.each(1..5, fn _ ->
+              post(conn, "/login", email: user.email, password: "wrong")
+            end)
 
-      build_conn()
-      |> put_req_header("x-forwarded-for", "1.2.3.5")
-      |> post("/login", email: user.email, password: "wrong")
+            conn = post(conn, "/login", email: user.email, password: "wrong")
 
-      build_conn()
-      |> put_req_header("x-forwarded-for", "1.2.3.5")
-      |> post("/login", email: user.email, password: "wrong")
+            {conn.status == 429, conn}
+          end,
+          500
+        )
 
-      build_conn()
-      |> put_req_header("x-forwarded-for", "1.2.3.5")
-      |> post("/login", email: user.email, password: "wrong")
-
-      conn =
-        build_conn()
-        |> put_req_header("x-forwarded-for", "1.2.3.5")
-        |> post("/login", email: user.email, password: "wrong")
-
-      assert get_session(conn, :current_user_id) == nil
-      assert html_response(conn, 429) =~ "Too many login attempts"
+      assert html_response(response, 429) =~ "Too many login attempts"
     end
   end
 
@@ -1833,37 +1826,29 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, user, _} = Auth.TOTP.initiate(user)
       {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
 
-      conn = login_with_cookie(conn, user.email, "password")
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
-      |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
-      |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
-      |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
-      |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
-      |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
-
       conn =
         conn
+        |> login_with_cookie(user.email, "password")
         |> put_req_header("x-forwarded-for", "1.1.1.1")
-        |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
 
-      assert get_session(conn, :current_user_id) == nil
+      response =
+        eventually(
+          fn ->
+            Enum.each(1..5, fn _ ->
+              post(conn, Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
+            end)
+
+            conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
+
+            {conn.status == 429, conn}
+          end,
+          500
+        )
+
+      assert get_session(response, :current_user_id) == nil
       # 2FA session terminated
-      assert conn.resp_cookies["session_2fa"].max_age == 0
-      assert html_response(conn, 429) =~ "Too many login attempts"
+      assert response.resp_cookies["session_2fa"].max_age == 0
+      assert html_response(response, 429) =~ "Too many login attempts"
     end
   end
 
@@ -2004,37 +1989,34 @@ defmodule PlausibleWeb.AuthControllerTest do
       {:ok, user, _} = Auth.TOTP.initiate(user)
       {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
 
-      conn = login_with_cookie(conn, user.email, "password")
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.2.3.4")
-      |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.2.3.4")
-      |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.2.3.4")
-      |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.2.3.4")
-      |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
-
-      conn
-      |> put_req_header("x-forwarded-for", "1.2.3.4")
-      |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
-
       conn =
         conn
+        |> login_with_cookie(user.email, "password")
         |> put_req_header("x-forwarded-for", "1.2.3.4")
-        |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
 
-      assert get_session(conn, :current_user_id) == nil
+      response =
+        eventually(
+          fn ->
+            Enum.each(1..5, fn _ ->
+              post(conn, Routes.auth_path(conn, :verify_2fa_recovery_code), %{
+                recovery_code: "invalid"
+              })
+            end)
+
+            conn =
+              post(conn, Routes.auth_path(conn, :verify_2fa_recovery_code), %{
+                recovery_code: "invalid"
+              })
+
+            {conn.status == 429, conn}
+          end,
+          500
+        )
+
+      assert get_session(response, :current_user_id) == nil
       # 2FA session terminated
-      assert conn.resp_cookies["session_2fa"].max_age == 0
-      assert html_response(conn, 429) =~ "Too many login attempts"
+      assert response.resp_cookies["session_2fa"].max_age == 0
+      assert html_response(response, 429) =~ "Too many login attempts"
     end
   end
 

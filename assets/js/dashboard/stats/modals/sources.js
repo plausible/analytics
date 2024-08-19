@@ -1,6 +1,4 @@
 import React, { useCallback } from "react";
-import { withRouter } from 'react-router-dom'
-
 import Modal from './modal'
 import { hasGoalFilter, isRealTimeDashboard } from "../../util/filters";
 import BreakdownModal from "./breakdown-modal";
@@ -16,6 +14,7 @@ const VIEWS = {
     renderIcon: (listItem) => {
       return (
         <img
+          alt=""
           src={`/favicon/sources/${encodeURIComponent(listItem.name)}`}
           className="h-4 w-4 mr-2 align-middle inline"
         />
@@ -39,12 +38,9 @@ const VIEWS = {
   },
 }
 
-function SourcesModal({ location }) {
+function SourcesModal({ currentView }) {
   const { query } = useQueryContext();
   const site = useSiteContext();
-
-  const urlParts = location.pathname.split('/')
-  const currentView = urlParts[urlParts.length - 1]
 
   let reportInfo = VIEWS[currentView].info
   reportInfo = {...reportInfo, endpoint: url.apiPath(site, reportInfo.endpoint)}
@@ -95,4 +91,4 @@ function SourcesModal({ location }) {
   )
 }
 
-export default withRouter(SourcesModal)
+export default SourcesModal

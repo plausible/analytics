@@ -718,6 +718,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       conn: conn,
       site: site
     } do
+      insert(:goal, site: site, event_name: "Signup")
       filters = Jason.encode!(%{goal: "Signup", page: "/register"})
       q = "?period=day&date=2021-03-15&with_imported=true&filters=#{filters}"
 
@@ -840,6 +841,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:event, name: "Signup", user_id: @user_id, timestamp: relative_time(minutes: -20))
       ])
 
+      insert(:goal, site: site, event_name: "Signup")
       filters = Jason.encode!(%{goal: "Signup"})
 
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime&filters=#{filters}")
@@ -1267,6 +1269,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:event, name: "Signup")
       ])
 
+      insert(:goal, site: site, event_name: "Signup")
       filters = Jason.encode!(%{goal: "Signup"})
 
       conn =
@@ -1290,6 +1293,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:event, name: "Signup")
       ])
 
+      insert(:goal, site: site, event_name: "Signup")
       filters = Jason.encode!(%{goal: "Signup"})
 
       conn =
@@ -1316,6 +1320,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:event, name: "Signup")
       ])
 
+      insert(:goal, site: site, event_name: "Signup")
       filters = Jason.encode!(%{goal: "Signup"})
 
       conn =
@@ -1639,6 +1644,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         build(:event, name: "Signup", timestamp: ~N[2023-01-02T00:00:00])
       ])
 
+      insert(:goal, site: site, event_name: "Signup")
       filters = Jason.encode!(%{goal: "Signup"})
 
       conn =

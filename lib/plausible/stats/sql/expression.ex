@@ -187,6 +187,15 @@ defmodule Plausible.Stats.SQL.Expression do
   def select_dimension(q, key, "visit:city", _table, _query),
     do: select_merge_as(q, [t], %{key => t.city})
 
+  def select_dimension(q, key, "visit:country_name", _table, _query),
+    do: select_merge_as(q, [t], %{key => t.country_name})
+
+  def select_dimension(q, key, "visit:region_name", _table, _query),
+    do: select_merge_as(q, [t], %{key => t.region_name})
+
+  def select_dimension(q, key, "visit:city_name", _table, _query),
+    do: select_merge_as(q, [t], %{key => t.city_name})
+
   def event_metric(:pageviews) do
     wrap_alias([e], %{
       pageviews:

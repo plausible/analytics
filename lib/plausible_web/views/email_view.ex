@@ -13,7 +13,7 @@ defmodule PlausibleWeb.EmailView do
   def greet_recipient(_), do: "Hey,"
 
   def date_format(date) do
-    Timex.format!(date, "{D} {Mshort} {YYYY}")
+    Calendar.strftime(date, "%-d %b %Y")
   end
 
   def sentry_link(trace_id, dsn \\ Sentry.Config.dsn()) do

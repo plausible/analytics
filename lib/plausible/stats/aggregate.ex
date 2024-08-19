@@ -33,7 +33,7 @@ defmodule Plausible.Stats.Aggregate do
       end
 
     Plausible.ClickhouseRepo.parallel_tasks([
-      run_query_task(q),
+      run_query_task(q, query),
       time_on_page_task
     ])
     |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)
@@ -44,8 +44,8 @@ defmodule Plausible.Stats.Aggregate do
     |> Enum.into(%{})
   end
 
-  defp run_query_task(nil), do: fn -> %{} end
-  defp run_query_task(q), do: fn -> ClickhouseRepo.one(q) end
+  defp run_query_task(nil, _query), do: fn -> %{} end
+  defp run_query_task(q, query), do: fn -> ClickhouseRepo.one(q, query: query) end
 
   defp aggregate_time_on_page(site, query) do
     windowed_pages_q =
@@ -87,7 +87,7 @@ defmodule Plausible.Stats.Aggregate do
       from e in Ecto.Query.subquery(avg_time_per_page_transition_q),
         select: fragment("avg(ifNotFinite(?,NULL))", e.avg)
 
-    %{time_on_page: ClickhouseRepo.one(time_on_page_q)}
+    %{time_on_page: ClickhouseRepo.one(time_on_page_q, query: query)}
   end
 
   @metrics_to_round [:bounce_rate, :time_on_page, :visit_duration, :sample_percent]

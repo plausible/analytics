@@ -104,6 +104,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
             name={"display-#{@id}"}
             placeholder={@placeholder}
             x-on:focus="open"
+            x-on:selection-change={assigns[:"x-on-selection-change"]}
             phx-change="search"
             x-on:keydown="open"
             phx-target={@myself}
@@ -268,8 +269,14 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     """
   end
 
-  def select_option(js \\ %JS{}, _id, submit_value, display_value) do
+  def select_option(js \\ %JS{}, id, submit_value, display_value) do
     js
+    |> JS.dispatch("phx:notify-selection-change",
+      detail: %{
+        id: id,
+        value: %{"submitValue" => submit_value, "displayValue" => display_value}
+      }
+    )
     |> JS.push("select-option",
       value: %{"submit-value" => submit_value, "display-value" => display_value}
     )
@@ -362,6 +369,12 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     case {socket.assigns[:selected], socket.assigns[:submit_value]} do
       {{submit_value, display_value}, nil} ->
         assign(socket, submit_value: submit_value, display_value: display_value)
+
+      {submit_and_display_value, nil} when is_binary(submit_and_display_value) ->
+        assign(socket,
+          submit_value: submit_and_display_value,
+          display_value: submit_and_display_value
+        )
 
       _ ->
         socket

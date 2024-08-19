@@ -79,11 +79,20 @@ defmodule PlausibleWeb.StatsController do
         )
 
       !stats_start_date && can_see_stats? ->
-        render(conn, "waiting_first_pageview.html",
+        render_opts = [
           site: site,
           dogfood_page_path: dogfood_page_path,
           connect_live_socket: true
-        )
+        ]
+
+        render_opts =
+          if conn.params["flow"] do
+            Keyword.put(render_opts, :layout, {PlausibleWeb.LayoutView, "focus.html"})
+          else
+            render_opts
+          end
+
+        render(conn, "waiting_first_pageview.html", render_opts)
 
       Sites.locked?(site) ->
         site = Plausible.Repo.preload(site, :owner)
@@ -112,10 +121,10 @@ defmodule PlausibleWeb.StatsController do
   def csv_export(conn, params) do
     if is_nil(params["interval"]) or Plausible.Stats.Interval.valid?(params["interval"]) do
       site = Plausible.Repo.preload(conn.assigns.site, :owner)
-      query = Query.from(site, params)
+      query = Query.from(site, params, debug_metadata(conn))
 
       filename =
-        ~c"Plausible export #{params["domain"]} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.zip"
+        ~c"Plausible export #{params["domain"]} #{Date.to_iso8601(query.date_range.first)}  to #{Date.to_iso8601(query.date_range.last)} .zip"
 
       params = Map.merge(params, %{"limit" => "300", "csv" => "True", "detailed" => "True"})
       limited_params = Map.merge(params, %{"limit" => "100"})

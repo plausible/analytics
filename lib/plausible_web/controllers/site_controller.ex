@@ -13,21 +13,24 @@ defmodule PlausibleWeb.SiteController do
     [:owner, :admin, :super_admin] when action not in [:new, :create_site]
   )
 
-  def new(conn, _params) do
+  def new(conn, params) do
+    flow = params["flow"] || "register"
     current_user = conn.assigns[:current_user]
 
     render(conn, "new.html",
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
-      first_site?: Quota.Usage.site_usage(current_user) == 0,
       site_limit: Quota.Limits.site_limit(current_user),
       site_limit_exceeded?: Quota.ensure_can_add_new_site(current_user) != :ok,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
+      layout: {PlausibleWeb.LayoutView, "focus.html"},
+      form_submit_url: "/sites?flow=#{flow}",
+      flow: flow
     )
   end
 
   def create_site(conn, %{"site" => site_params}) do
     user = conn.assigns[:current_user]
     first_site? = Quota.Usage.site_usage(user) == 0
+    flow = conn.params["flow"]
 
     case Sites.create(user, site_params) do
       {:ok, %{site: site}} ->
@@ -37,7 +40,11 @@ defmodule PlausibleWeb.SiteController do
         end
 
         redirect(conn,
-          external: Routes.site_path(conn, :add_snippet, site.domain, site_created: true)
+          external:
+            Routes.site_path(conn, :add_snippet, site.domain,
+              site_created: true,
+              flow: flow
+            )
         )
 
       {:error, {:over_limit, limit}} ->
@@ -46,7 +53,9 @@ defmodule PlausibleWeb.SiteController do
           first_site?: first_site?,
           site_limit: limit,
           site_limit_exceeded?: true,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          flow: flow,
+          form_submit_url: "/sites?flow=#{flow}"
         )
 
       {:error, _, changeset, _} ->
@@ -55,12 +64,15 @@ defmodule PlausibleWeb.SiteController do
           first_site?: first_site?,
           site_limit: Quota.Limits.site_limit(user),
           site_limit_exceeded?: false,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          flow: flow,
+          form_submit_url: "/sites?flow=#{flow}"
         )
     end
   end
 
-  def add_snippet(conn, _params) do
+  def add_snippet(conn, params) do
+    flow = params["flow"] || "register"
     user = conn.assigns[:current_user]
     site = conn.assigns[:site]
 
@@ -78,7 +90,8 @@ defmodule PlausibleWeb.SiteController do
       site: site,
       skip_plausible_tracking: true,
       is_first_site: is_first_site,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
+      layout: {PlausibleWeb.LayoutView, "focus.html"},
+      form_submit_url: "/#{URI.encode_www_form(site.domain)}?flow=#{flow}"
     )
   end
 

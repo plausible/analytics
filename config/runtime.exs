@@ -218,11 +218,6 @@ help_scout_vault_key = get_var_from_path_or_env(config_dir, "HELP_SCOUT_VAULT_KE
   |> get_var_from_path_or_env("OTEL_SAMPLER_RATIO", "0.5")
   |> Float.parse()
 
-cron_enabled =
-  config_dir
-  |> get_var_from_path_or_env("CRON_ENABLED", "false")
-  |> String.to_existing_atom()
-
 geolite2_country_db =
   get_var_from_path_or_env(
     config_dir,
@@ -594,7 +589,9 @@ base_cron = [
   # Every day at 1am
   {"0 1 * * *", Plausible.Workers.CleanInvitations},
   # Every 2 hours
-  {"0 */2 * * *", Plausible.Workers.ExpireDomainChangeTransitions}
+  {"0 */2 * * *", Plausible.Workers.ExpireDomainChangeTransitions},
+  # Daily at midnight
+  {"0 0 * * *", Plausible.Workers.LocationsSync}
 ]
 
 cloud_cron = [
@@ -626,7 +623,9 @@ base_queues = [
   analytics_exports: 1,
   notify_exported_analytics: 1,
   domain_change_transition: 1,
-  check_accept_traffic_until: 1
+  check_accept_traffic_until: 1,
+  clickhouse_clean_sites: 1,
+  locations_sync: 1
 ]
 
 cloud_queues = [

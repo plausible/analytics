@@ -10,7 +10,7 @@ defmodule Plausible.DataMigration.VersionedSessions do
   """
   use Plausible.DataMigration, dir: "VersionedSessions", repo: Plausible.IngestRepo
 
-  @suffix_format "{YYYY}{0M}{0D}{h24}{m}{s}"
+  @suffix_format "%Y%m%d%H%M%S"
   @versioned_table_engines [
     "ReplicatedVersionedCollapsingMergeTree",
     "VersionedCollapsingMergeTree"
@@ -19,9 +19,9 @@ defmodule Plausible.DataMigration.VersionedSessions do
   def run(opts \\ []) do
     run_exchange? = Keyword.get(opts, :run_exchange?, true)
 
-    unique_suffix = Timex.now() |> Timex.format!(@suffix_format)
+    unique_suffix = Timex.now() |> Calendar.strftime(@suffix_format)
 
-    cluster? = Plausible.MigrationUtils.clustered_table?("sessions_v2")
+    cluster? = Plausible.IngestRepo.clustered_table?("sessions_v2")
 
     {:ok, %{rows: partitions}} = run_sql("list-partitions")
     partitions = Enum.map(partitions, fn [part] -> part end)

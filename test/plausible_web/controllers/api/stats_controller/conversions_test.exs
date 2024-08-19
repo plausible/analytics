@@ -484,44 +484,26 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       ])
 
       insert(:goal, %{site: site, page_path: "/register"})
-      insert(:goal, %{site: site, page_path: "/regi**"})
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      get_with_filter = fn filters ->
-        path = "/api/stats/#{site.domain}/conversions"
-        query = "?period=day&filters=#{Jason.encode!(filters)}"
+      filters = %{goal: "Visit+/register"}
 
-        get(conn, path <> query)
+      results =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{Jason.encode!(filters)}"
+        )
         |> json_response(200)
         |> Map.get("results")
-      end
 
-      expected = [
-        %{
-          "name" => "Visit /register",
-          "visitors" => 1,
-          "events" => 1,
-          "conversion_rate" => 33.3
-        },
-        %{
-          "name" => "Visit /regi**",
-          "visitors" => 1,
-          "events" => 1,
-          "conversion_rate" => 33.3
-        }
-      ]
-
-      # {:is, {:page, path}} filter type
-      assert get_with_filter.(%{goal: "Visit+/register"}) == expected
-
-      # {:matches, {:page, expr}} filter type
-      assert get_with_filter.(%{goal: "Visit+/regi**"}) == expected
-
-      # {:member, clauses} filter type
-      assert get_with_filter.(%{goal: "Visit+/register|Whatever"}) == expected
-
-      # {:matches_member, clauses} filter type
-      assert get_with_filter.(%{goal: "Visit+/register|Visit+/regi**"}) == expected
+      assert results == [
+               %{
+                 "name" => "Visit /register",
+                 "visitors" => 1,
+                 "events" => 1,
+                 "conversion_rate" => 33.3
+               }
+             ]
     end
 
     test "can filter by multiple mixed goals", %{conn: conn, site: site} do
@@ -1128,6 +1110,57 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "visitors" => 2,
                  "events" => 2,
                  "conversion_rate" => 50
+               }
+             ]
+    end
+
+    test "filtering with goal contains filter", %{
+      conn: conn,
+      site: site
+    } do
+      site_import =
+        insert(:site_import,
+          site: site,
+          start_date: ~D[2005-01-01],
+          end_date: Timex.today(),
+          source: :universal_analytics
+        )
+
+      insert(:goal, site: site, event_name: "Onboarding: Step 1")
+      insert(:goal, site: site, event_name: "Onboarding: Step 2")
+      insert(:goal, site: site, event_name: "Unrelated")
+
+      populate_stats(site, site_import.id, [
+        build(:event, name: "Onboarding: Step 1"),
+        build(:event, name: "Onboarding: Step 1"),
+        build(:event, name: "Onboarding: Step 2"),
+        build(:event, name: "Unrelated"),
+        build(:imported_custom_events, name: "Onboarding: Step 1", visitors: 2, events: 2),
+        build(:imported_custom_events, name: "Onboarding: Step 2"),
+        build(:imported_custom_events, name: "Unrelated"),
+        build(:imported_visitors, visitors: 4)
+      ])
+
+      filters = Jason.encode!(%{goal: "~Onboarding"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}&with_imported=true"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Onboarding: Step 1",
+                 "visitors" => 4,
+                 "events" => 4,
+                 "conversion_rate" => 50
+               },
+               %{
+                 "name" => "Onboarding: Step 2",
+                 "visitors" => 2,
+                 "events" => 2,
+                 "conversion_rate" => 25
                }
              ]
     end

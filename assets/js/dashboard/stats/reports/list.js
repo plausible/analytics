@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { AppNavigationLink } from '../../navigation/use-app-navigate';
 import FlipMove from 'react-flip-move';
 
 import FadeIn from '../../fade-in';
@@ -7,8 +7,8 @@ import MoreLink from '../more-link';
 import Bar from '../bar';
 import LazyLoader from '../../components/lazy-loader';
 import classNames from 'classnames';
-import { trimURL, updatedQuery } from '../../util/url';
-import { cleanLabels, replaceFilterByPrefix, isRealTimeDashboard, hasGoalFilter } from '../../util/filters';
+import { trimURL } from '../../util/url';
+import { cleanLabels, replaceFilterByPrefix, isRealTimeDashboard, hasGoalFilter, plainFilterText } from '../../util/filters';
 import { useQueryContext } from '../../query-context';
 
 const MAX_ITEMS = 9
@@ -18,7 +18,7 @@ const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT = (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
 const COL_MIN_WIDTH = 70
 
-export function FilterLink({ pathname, filterInfo, onClick, children, extraClass }) {
+export function FilterLink({ path, filterInfo, onClick, children, extraClass }) {
   const { query } = useQueryContext();
   const className = classNames(`${extraClass}`, { 'hover:underline': !!filterInfo })
 
@@ -26,15 +26,17 @@ export function FilterLink({ pathname, filterInfo, onClick, children, extraClass
     const { prefix, filter, labels } = filterInfo
     const newFilters = replaceFilterByPrefix(query, prefix, filter)
     const newLabels = cleanLabels(newFilters, query.labels, filter[1], labels)
-    const filterQuery = updatedQuery({ filters: newFilters, labels: newLabels })
-
-    let linkTo = { search: filterQuery.toString() }
-    if (pathname) { linkTo.pathname = pathname }
 
     return (
-      <Link to={linkTo} onClick={onClick} className={className}>
+      <AppNavigationLink 
+        title={`Add filter: ${plainFilterText(query, filter)}`}
+        className={className}
+        path={path}
+        onClick={onClick}
+        search={(search) => ({...search, filters: newFilters, labels: newLabels})}
+      >
         {children}
-      </Link>
+      </AppNavigationLink>
     )
   } else {
     return <span className={className}>{children}</span>
@@ -60,14 +62,14 @@ function ExternalLink({ item, externalLinkDest }) {
 }
 
 /**
- * 
+ *
  * REQUIRED PROPS
  *
  * @param {Function} fetchData - A function that defines the data
  *    to be rendered, and should return a list of objects under a `results` key. Think of
  *    these objects as rows. The number of columns that are **actually rendered** is also
  *    configurable through the `metrics` prop, which also defines the keys under which
- *    column values are read, and how they're rendered. 
+ *    column values are read, and how they're rendered.
  * @param {*} keyLabel - What each entry in the list represents (for UI only).
  * @param {Array.<Metric>} metrics - A list of `Metric` class objects, containing at least the `key,`
  *    `renderLabel`, and `renderValue` fields. Optionally, a Metric object can contain
@@ -77,13 +79,11 @@ function ExternalLink({ item, externalLinkDest }) {
  *    that should be applied when the list item is clicked. All existing filters matching prefix
  *    are removed. If a list item is not supposed to be clickable, this function should
  *    return `null` for that list item.
- * 
+ *
  * OPTIONAL PROPS
- * 
+ *
  * @param {Function} [onClick] - Function with additional action to be taken when a list entry is clicked.
- * @param {string} [detailsLink] - The pathname to the detailed view of this report. E.g.:
- *     `/dummy.site/pages`. If this is given as input to the ListReport, the Details button
- *     will always be rendered.
+ * @param {Object} [detailsLinkProps] - Navigation props to be passed to "More" link, if any.
  * @param {boolean} [maybeHideDetails] - Set this to `true` if the details button should be hidden on
  *     the condition that there are less than MAX_ITEMS entries in the list (i.e. nothing
  *     more to show).
@@ -98,14 +98,14 @@ function ExternalLink({ item, externalLinkDest }) {
  *     hooking into the request lifecycle and doing actions with returned metadata. For
  *     example, the parent component might want to control what happens when imported data
  *     is included or not.
- *  
+ *
  * @returns {HTMLElement} Table of metrics, in the following format:
  * | keyLabel           | METRIC_1.renderLabel(query) | METRIC_2.renderLabel(query) | ...
  * |--------------------|-----------------------------|-----------------------------| ---
  * | LISTITEM_1.name    | LISTITEM_1[METRIC_1.key]    | LISTITEM_1[METRIC_2.key]    | ...
  * | LISTITEM_2.name    | LISTITEM_2[METRIC_1.key]    | LISTITEM_2[METRIC_2.key]    | ...
  */
-export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WIDTH, afterFetchData, detailsLink, maybeHideDetails, onClick, color, getFilterFor, renderIcon, externalLinkDest, fetchData }) {
+export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WIDTH, afterFetchData, detailsLinkProps, maybeHideDetails, onClick, color, getFilterFor, renderIcon, externalLinkDest, fetchData }) {
   const { query } = useQueryContext();
   const [state, setState] = useState({ loading: true, list: null })
   const [visible, setVisible] = useState(false)
@@ -125,6 +125,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
 
         setState({ loading: false, list: response.results })
       })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyLabel, query])
 
   const onVisible = () => { setVisible(true) }
@@ -136,6 +137,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
       // only read the new metrics once the new list is loaded.
       setState({ loading: true, list: null })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goalFilterApplied]);
 
   useEffect(() => {
@@ -145,6 +147,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
     }
 
     return () => { document.removeEventListener('tick', getData) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyLabel, query, visible]);
 
   // returns a filtered `metrics` list. Since currently, the backend can return different
@@ -296,8 +299,8 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
     const moreResultsAvailable = state.list.length >= MAX_ITEMS
     const hideDetails = maybeHideDetails && !moreResultsAvailable
 
-    const showDetails = detailsLink && !state.loading && !hideDetails
-    return showDetails && <MoreLink className={'mt-2'} url={detailsLink} list={state.list} />
+    const showDetails = !!detailsLinkProps && !state.loading && !hideDetails
+    return showDetails && <MoreLink className={'mt-2'} linkProps={detailsLinkProps} list={state.list} />
   }
 
   return (

@@ -6,6 +6,7 @@ import React from "react"
 /*global require*/
 function maybeRequire() {
   if (BUILD_EXTRA) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('../../extra/money')
   } else {
     return { default: null }

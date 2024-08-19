@@ -318,6 +318,10 @@ defmodule Plausible.Stats.Imported.SQL.Builder do
   defp filter_group_values(q, "visit:region"), do: where(q, [i], i.region != "")
   defp filter_group_values(q, "visit:city"), do: where(q, [i], i.city != 0 and not is_nil(i.city))
 
+  defp filter_group_values(q, "visit:country_name"), do: where(q, [i], i.country_name != "ZZ")
+  defp filter_group_values(q, "visit:region_name"), do: where(q, [i], i.region_name != "")
+  defp filter_group_values(q, "visit:city_name"), do: where(q, [i], i.city_name != "")
+
   defp filter_group_values(q, _dimension), do: q
 
   def select_joined_dimensions(q, query) do

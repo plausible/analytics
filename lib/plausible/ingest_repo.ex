@@ -14,4 +14,11 @@ defmodule Plausible.IngestRepo do
       import Ecto.Query, only: [from: 1, from: 2]
     end
   end
+
+  def clustered_table?(table) do
+    case query("SELECT 1 FROM system.replicas WHERE table = '#{table}'") do
+      {:ok, %{rows: []}} -> false
+      {:ok, _} -> true
+    end
+  end
 end

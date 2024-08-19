@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter, Switch, Route, useLocation } from "react-router-dom";
+/* @format */
+import React from 'react'
+import { createBrowserRouter, Outlet } from 'react-router-dom'
 
 import Dashboard from './index'
 import SourcesModal from './stats/modals/sources'
@@ -8,17 +9,17 @@ import GoogleKeywordsModal from './stats/modals/google-keywords'
 import PagesModal from './stats/modals/pages'
 import EntryPagesModal from './stats/modals/entry-pages'
 import ExitPagesModal from './stats/modals/exit-pages'
-import LocationsModal from './stats/modals/locations-modal';
+import LocationsModal from './stats/modals/locations-modal'
+import BrowsersModal from './stats/modals/devices/browsers-modal'
+import BrowserVersionsModal from './stats/modals/devices/browser-versions-modal'
+import OperatingSystemsModal from './stats/modals/devices/operating-systems-modal'
+import OperatingSystemVersionsModal from './stats/modals/devices/operating-system-versions-modal'
+import ScreenSizesModal from './stats/modals/devices/screen-sizes'
 import PropsModal from './stats/modals/props'
 import ConversionsModal from './stats/modals/conversions'
 import FilterModal from './stats/modals/filter-modal'
-import QueryContextProvider from './query-context';
-import { useSiteContext } from './site-context';
-
-import {
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query'
+import QueryContextProvider from './query-context'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,62 +29,180 @@ const queryClient = new QueryClient({
   }
 })
 
-function ScrollToTop() {
-  const location = useLocation();
-
-  useEffect(() => {
-    if (location.state && location.state.scrollTop) {
-      window.scrollTo(0, 0);
-    }
-  }, [location]);
-
-  return null;
-}
-
-export default function Router() {
-  const site = useSiteContext()
+function DashboardElement() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename={site.shared ? `/share/${encodeURIComponent(site.domain)}` : encodeURIComponent(site.domain)}>
-        <QueryContextProvider>
-          <Route path="/">
-            <ScrollToTop />
-            <Dashboard />
-            <Switch>
-              <Route exact path={["/sources", "/utm_mediums", "/utm_sources", "/utm_campaigns", "/utm_contents", "/utm_terms"]}>
-                <SourcesModal />
-              </Route>
-              <Route exact path="/referrers/Google">
-                <GoogleKeywordsModal site={site} />
-              </Route>
-              <Route exact path="/referrers/:referrer">
-                <ReferrersDrilldownModal />
-              </Route>
-              <Route path="/pages">
-                <PagesModal />
-              </Route>
-              <Route path="/entry-pages">
-                <EntryPagesModal />
-              </Route>
-              <Route path="/exit-pages">
-                <ExitPagesModal />
-              </Route>
-              <Route exact path={["/countries", "/regions", "/cities"]}>
-                <LocationsModal />
-              </Route>
-              <Route path="/custom-prop-values/:prop_key">
-                <PropsModal />
-              </Route>
-              <Route path="/conversions">
-                <ConversionsModal />
-              </Route>
-              <Route path={["/filter/:field"]}>
-                <FilterModal site={site} />
-              </Route>
-            </Switch>
-          </Route>
-        </QueryContextProvider>
-      </BrowserRouter>
+      <QueryContextProvider>
+        <Dashboard />
+        {/** render any children of the root route below */}
+        <Outlet />
+      </QueryContextProvider>
     </QueryClientProvider>
-  );
+  )
+}
+
+export const rootRoute = {
+  path: '/',
+  element: <DashboardElement />
+}
+
+export const sourcesRoute = {
+  path: 'sources',
+  element: <SourcesModal currentView="sources" />
+}
+
+export const utmMediumsRoute = {
+  path: 'utm_mediums',
+  element: <SourcesModal currentView="utm_mediums" />
+}
+
+export const utmSourcesRoute = {
+  path: 'utm_sources',
+  element: <SourcesModal currentView="utm_sources" />
+}
+
+export const utmCampaignsRoute = {
+  path: 'utm_campaigns',
+  element: <SourcesModal currentView="utm_campaigns" />
+}
+
+export const utmContentsRoute = {
+  path: 'utm_contents',
+  element: <SourcesModal currentView="utm_contents" />
+}
+
+export const utmTermsRoute = {
+  path: 'utm_terms',
+  element: <SourcesModal currentView="utm_terms" />
+}
+
+export const referrersGoogleRoute = {
+  path: 'referrers/Google',
+  element: <GoogleKeywordsModal />
+}
+
+export const topPagesRoute = {
+  path: 'pages',
+  element: <PagesModal />
+}
+
+export const entryPagesRoute = {
+  path: 'entry-pages',
+  element: <EntryPagesModal />
+}
+
+export const exitPagesRoute = {
+  path: 'exit-pages',
+  element: <ExitPagesModal />
+}
+
+export const countriesRoute = {
+  path: 'countries',
+  element: <LocationsModal currentView="countries" />
+}
+
+export const regionsRoute = {
+  path: 'regions',
+  element: <LocationsModal currentView="regions" />
+}
+
+export const citiesRoute = {
+  path: 'cities',
+  element: <LocationsModal currentView="cities" />
+}
+
+export const browsersRoute = {
+  path: 'browsers',
+  element: <BrowsersModal />
+}
+
+export const browserVersionsRoute = {
+  path: 'browser-versions',
+  element: <BrowserVersionsModal />
+}
+
+export const operatingSystemsRoute = {
+  path: 'operating-systems',
+  element: <OperatingSystemsModal />
+}
+
+export const operatingSystemVersionsRoute = {
+  path: 'operating-system-versions',
+  element: <OperatingSystemVersionsModal />
+}
+
+export const screenSizesRoute = {
+  path: 'screen-sizes',
+  element: <ScreenSizesModal />
+}
+
+export const conversionsRoute = {
+  path: 'conversions',
+  element: <ConversionsModal />
+}
+
+export const referrersDrilldownRoute = {
+  path: 'referrers/:referrer',
+  element: <ReferrersDrilldownModal />
+}
+
+export const customPropsRoute = {
+  path: 'custom-prop-values/:propKey',
+  element: <PropsModal />
+}
+
+export const filterRoute = {
+  path: 'filter/:field',
+  element: <FilterModal />
+}
+
+export function getRouterBasepath(site) {
+  const basepath = site.shared
+    ? `/share/${encodeURIComponent(site.domain)}`
+    : `/${encodeURIComponent(site.domain)}`
+  return basepath
+}
+
+export function createAppRouter(site) {
+  const basepath = getRouterBasepath(site)
+  const router = createBrowserRouter(
+    [
+      {
+        ...rootRoute,
+        children: [
+          sourcesRoute,
+          utmMediumsRoute,
+          utmSourcesRoute,
+          utmCampaignsRoute,
+          utmContentsRoute,
+          utmTermsRoute,
+          referrersGoogleRoute,
+          referrersDrilldownRoute,
+          topPagesRoute,
+          entryPagesRoute,
+          exitPagesRoute,
+          countriesRoute,
+          regionsRoute,
+          citiesRoute,
+          browsersRoute,
+          browserVersionsRoute,
+          operatingSystemsRoute,
+          operatingSystemVersionsRoute,
+          screenSizesRoute,
+          conversionsRoute,
+          customPropsRoute,
+          filterRoute,
+          { path: '*', element: null }
+        ]
+      }
+    ],
+    {
+      basename: basepath,
+      future: {
+        v7_prependBasename: true
+      }
+    }
+  )
+
+  return router
 }

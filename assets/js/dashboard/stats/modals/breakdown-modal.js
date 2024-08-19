@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 
-import { trimURL } from '../../util/url'
 import { FilterLink } from "../reports/list";
 import { useQueryContext } from "../../query-context";
-import { useSiteContext } from "../../site-context";
 import { useDebounce } from "../../custom-hooks";
 import { useAPIClient } from "../../hooks/api-client";
+import { rootRoute } from "../../router";
 
 export const MIN_HEIGHT_PX = 500
 
@@ -51,7 +50,7 @@ export const MIN_HEIGHT_PX = 500
 //     is filtered by. If a list item is not supposed to be a filter link, this
 //     function should return `null` for that item.
 
-// ### Optional Props 
+// ### Optional Props
 
 //   * `renderIcon` - a function that renders an icon for the given list item.
 
@@ -86,7 +85,6 @@ export default function BreakdownModal({
 }) {
   const searchBoxRef = useRef(null)
   const { query } = useQueryContext();
-  const site = useSiteContext();
 
   const [search, setSearch] = useState('')
 
@@ -101,7 +99,7 @@ export default function BreakdownModal({
     key: [reportInfo.endpoint, {query, search}],
     getRequestParams: (key) => {
       const [_endpoint, {query, search}] = key
-      
+
       let queryWithSearchFilter = {...query}
 
       if (searchEnabled && search !== '') {
@@ -157,19 +155,19 @@ export default function BreakdownModal({
   function renderRow(item) {
     return (
       <tr className="text-sm dark:text-gray-200" key={item.name}>
-        <td className="p-2 truncate flex items-center group">
+        <td className="w-48 md:w-80 break-all p-2 flex items-center">
           {maybeRenderIcon(item)}
           <FilterLink
-            pathname={`/${encodeURIComponent(site.domain)}`}
+            path={rootRoute.path}
             filterInfo={getFilterInfo(item)}
           >
-            {trimURL(item.name, 40)}
+            {item.name}
           </FilterLink>
           {maybeRenderExternalLink(item)}
         </td>
         {metrics.map((metric) => {
           return (
-            <td key={metric.key} className="p-2 w-32 font-medium" align="right">
+            <td key={metric.key} className="p-2 w-24 font-medium" align="right">
               {metric.renderValue(item[metric.key])}
             </td>
           )
@@ -230,7 +228,7 @@ export default function BreakdownModal({
             <thead>
               <tr>
                 <th
-                  className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                  className="p-2 w-48 md:w-80 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
                   align="left"
                 >
                   {reportInfo.dimensionLabel}
@@ -238,7 +236,7 @@ export default function BreakdownModal({
 
                 {metrics.map((metric) => {
                   return (
-                    <th key={metric.key} className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">
+                    <th key={metric.key} className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">
                       {metric.renderLabel(query)}
                     </th>
                   )
