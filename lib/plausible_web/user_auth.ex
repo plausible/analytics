@@ -59,6 +59,21 @@ defmodule PlausibleWeb.UserAuth do
     end
   end
 
+  @doc """
+  Sets the `logged_in` cookie share with the static site for determining
+  whether client is authenticated.
+
+  As it's a separate cookie, there's a chance it might fall out of sync
+  with session cookie state due to manual deletion or premature expiration.
+  """
+  @spec set_logged_in_cookie(Plug.Conn.t()) :: Plug.Conn.t()
+  def set_logged_in_cookie(conn) do
+    Plug.Conn.put_resp_cookie(conn, "logged_in", "true",
+      http_only: false,
+      max_age: 60 * 60 * 24 * 365 * 5000
+    )
+  end
+
   defp get_session_by_token({:legacy, user_id}) do
     {:ok, %Auth.UserSession{user_id: user_id}}
   end
@@ -82,13 +97,6 @@ defmodule PlausibleWeb.UserAuth do
     conn
     |> Plug.Conn.configure_session(renew: true)
     |> Plug.Conn.clear_session()
-  end
-
-  defp set_logged_in_cookie(conn) do
-    Plug.Conn.put_resp_cookie(conn, "logged_in", "true",
-      http_only: false,
-      max_age: 60 * 60 * 24 * 365 * 5000
-    )
   end
 
   defp clear_logged_in_cookie(conn) do
