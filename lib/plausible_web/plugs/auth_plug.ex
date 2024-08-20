@@ -1,4 +1,11 @@
 defmodule PlausibleWeb.AuthPlug do
+  @moduledoc """
+  Plug for populating conn assigns with user data
+  on the basis of authenticated session token.
+
+  Must be kept in sync with `PlausibleWeb.Live.AuthContext`.
+  """
+
   import Plug.Conn
   use Plausible.Repo
 

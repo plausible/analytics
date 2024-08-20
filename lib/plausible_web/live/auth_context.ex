@@ -2,6 +2,8 @@ defmodule PlausibleWeb.Live.AuthContext do
   @moduledoc """
   This module supplies LiveViews with currently logged in user data _if_ session
   data contains a valid token.
+
+  Must be kept in sync with `PlausibleWeb.AuthPlug`.
   """
 
   import Phoenix.Component

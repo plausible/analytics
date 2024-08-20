@@ -1,6 +1,18 @@
 defmodule PlausibleWeb.UserAuth do
   @moduledoc """
   Functions for user session management.
+
+  In it's current shape, both current (legacy) and soon to be implemented (new)
+  user sessions are supported side by side.
+
+  Once the token-based sessions are implemented, `create_user_session/1` will
+  start returning new token instead of the legacy one. At the same time,
+  `put_token_in_session/2` will always set the new token. The legacy token will
+  still be accepted from the session cookie. Once 14 days pass (the current time
+  window for which session cookie is valid without any activity), the legacy
+  cookies won't be accepted anymore (token retrieval will most likely be
+  instrumented to confirm the usage falls in the mentioned time window as
+  expected) and the logic will be cleaned of branching for legacy session.
   """
 
   alias Plausible.Auth
@@ -128,6 +140,9 @@ defmodule PlausibleWeb.UserAuth do
   end
 
   defp create_user_session(user) do
+    # NOTE: a temporary fix for for dialyzer
+    # complaining about unreachable code
+    # path.
     if :erlang.phash2(1, 1) == 0 do
       {{:legacy, user.id}, %{}}
     else
