@@ -14,7 +14,7 @@ defmodule Plausible.Stats.QueryResult do
             meta: %{},
             query: nil
 
-  def from(results, query) do
+  def from(results, site, query) do
     results_list =
       results
       |> Enum.map(fn entry ->
@@ -30,11 +30,13 @@ defmodule Plausible.Stats.QueryResult do
       meta: meta(query),
       query:
         Jason.OrderedObject.new(
+          site_id: site.domain,
           metrics: query.metrics,
           date_range: [query.date_range.first, query.date_range.last],
           filters: query.filters,
           dimensions: query.dimensions,
-          order_by: query.order_by |> Enum.map(&Tuple.to_list/1)
+          order_by: query.order_by |> Enum.map(&Tuple.to_list/1),
+          include: query.include |> Map.filter(fn {_key, val} -> val end)
         )
     )
   end
