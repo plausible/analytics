@@ -209,7 +209,14 @@ native_stats_range
           "/docs/1",
           "/docs/2" | long_random_paths
         ]),
-      user_id: Enum.random(1..1200)
+      user_id: Enum.random(1..1200),
+      "meta.key": ["url", "logged_in", "is_customer", "amount"],
+      "meta.value": [
+        Enum.random(long_random_urls),
+        Enum.random(["true", "false"]),
+        Enum.random(["true", "false"]),
+        to_string(Enum.random(1..9000))
+      ]
     ]
     |> Keyword.merge(geolocation)
     |> then(&Plausible.Factory.build(:pageview, &1))
@@ -223,6 +230,8 @@ native_stats_range
   Enum.map(0..Enum.random(1..50), fn _ ->
     geolocation = Enum.random(geolocations)
 
+    referrer_source = Enum.random(sources)
+
     [
       name: goal4.event_name,
       site_id: site.id,
@@ -234,6 +243,8 @@ native_stats_range
       screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
       operating_system: Enum.random(["Windows", "Mac", "GNU/Linux"]),
       operating_system_version: to_string(Enum.random(0..15)),
+      utm_medium: Enum.random(Map.get(utm_medium, referrer_source, [""])),
+      utm_source: String.downcase(referrer_source),
       pathname:
         Enum.random([
           "/",
@@ -246,7 +257,14 @@ native_stats_range
         ]),
       user_id: Enum.random(1..1200),
       revenue_reporting_amount: Decimal.new(Enum.random(100..10000)),
-      revenue_reporting_currency: "USD"
+      revenue_reporting_currency: "USD",
+      "meta.key": ["url", "logged_in", "is_customer", "amount"],
+      "meta.value": [
+        Enum.random(long_random_urls),
+        Enum.random(["true", "false"]),
+        Enum.random(["true", "false"]),
+        to_string(Enum.random(1..9000))
+      ]
     ]
     |> Keyword.merge(geolocation)
     |> then(&Plausible.Factory.build(:event, &1))
@@ -260,17 +278,21 @@ native_stats_range
   Enum.map(0..Enum.random(1..50), fn _ ->
     geolocation = Enum.random(geolocations)
 
+    referrer_source = Enum.random(sources)
+
     [
       name: outbound.event_name,
       site_id: site.id,
       hostname: site.domain,
       timestamp: put_random_time.(date, index),
-      referrer_source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
+      referrer_source: referrer_source,
       browser: Enum.random(["Microsoft Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
       browser_version: to_string(Enum.random(0..50)),
       screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
       operating_system: Enum.random(["Windows", "Mac", "GNU/Linux"]),
       operating_system_version: to_string(Enum.random(0..15)),
+      utm_medium: Enum.random(Map.get(utm_medium, referrer_source, [""])),
+      utm_source: String.downcase(referrer_source),
       user_id: Enum.random(1..1200),
       "meta.key": ["url", "logged_in", "is_customer", "amount"],
       "meta.value": [
