@@ -13,9 +13,8 @@ defmodule PlausibleWeb.Live.Sites do
   alias Plausible.Site
   alias Plausible.Sites
   alias Plausible.Site.Memberships.Invitations
-  alias PlausibleWeb.UserAuth
 
-  def mount(params, session, socket) do
+  def mount(params, _session, socket) do
     uri =
       ("/sites?" <> URI.encode_query(Map.take(params, ["filter_text"])))
       |> URI.new!()
@@ -24,10 +23,6 @@ defmodule PlausibleWeb.Live.Sites do
       socket
       |> assign(:uri, uri)
       |> assign(:filter_text, params["filter_text"] || "")
-      |> assign_new(:user, fn ->
-        {:ok, user} = UserAuth.get_user(session)
-        user
-      end)
 
     {:ok, socket}
   end
@@ -37,17 +32,17 @@ defmodule PlausibleWeb.Live.Sites do
       socket
       |> assign(:params, params)
       |> load_sites()
-      |> assign_new(:has_sites?, fn %{user: user} ->
-        Site.Memberships.any_or_pending?(user)
+      |> assign_new(:has_sites?, fn %{current_user: current_user} ->
+        Site.Memberships.any_or_pending?(current_user)
       end)
-      |> assign_new(:needs_to_upgrade, fn %{user: user, sites: sites} ->
+      |> assign_new(:needs_to_upgrade, fn %{current_user: current_user, sites: sites} ->
         user_owns_sites =
           Enum.any?(sites.entries, fn site ->
             List.first(site.memberships ++ site.invitations).role == :owner
           end) ||
-            Auth.user_owns_sites?(user)
+            Auth.user_owns_sites?(current_user)
 
-        user_owns_sites && Plausible.Billing.check_needs_to_upgrade(user)
+        user_owns_sites && Plausible.Billing.check_needs_to_upgrade(current_user)
       end)
 
     {:noreply, socket}
@@ -115,10 +110,7 @@ defmodule PlausibleWeb.Live.Sites do
         >
           Total of <span class="font-medium"><%= @sites.total_entries %></span> sites
         </.pagination>
-        <.invitation_modal
-          :if={Enum.any?(@sites.entries, &(&1.entry_type == "invitation"))}
-          user={@user}
-        />
+        <.invitation_modal :if={Enum.any?(@sites.entries, &(&1.entry_type == "invitation"))} />
       </div>
     </div>
     """
@@ -348,8 +340,6 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr :user, Plausible.Auth.User, required: true
-
   def invitation_modal(assigns) do
     ~H"""
     <div
@@ -569,7 +559,7 @@ defmodule PlausibleWeb.Live.Sites do
 
     if site do
       socket =
-        case Sites.toggle_pin(socket.assigns.user, site) do
+        case Sites.toggle_pin(socket.assigns.current_user, site) do
           {:ok, preference} ->
             flash_message =
               if preference.pinned_at do
@@ -602,7 +592,7 @@ defmodule PlausibleWeb.Live.Sites do
       {:noreply, socket}
     else
       Sentry.capture_message("Attempting to toggle pin for invalid domain.",
-        extra: %{domain: domain, user: socket.assigns.user.id}
+        extra: %{domain: domain, user: socket.assigns.current_user.id}
       )
 
       {:noreply, socket}
@@ -637,7 +627,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   defp load_sites(%{assigns: assigns} = socket) do
     sites =
-      Sites.list_with_invitations(assigns.user, assigns.params,
+      Sites.list_with_invitations(assigns.current_user, assigns.params,
         filter_by_domain: assigns.filter_text
       )
 
@@ -651,7 +641,7 @@ defmodule PlausibleWeb.Live.Sites do
         end)
       end
 
-    invitations = extract_invitations(sites.entries, assigns.user)
+    invitations = extract_invitations(sites.entries, assigns.current_user)
 
     assign(
       socket,

@@ -9,45 +9,39 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   alias PlausibleWeb.Components.Billing.{PlanBox, PlanBenefits, Notice, PageviewSlider}
   alias Plausible.Site
-  alias Plausible.Users
   alias Plausible.Billing.{Plans, Quota}
-  alias PlausibleWeb.UserAuth
 
   @contact_link "https://plausible.io/contact"
   @billing_faq_link "https://plausible.io/docs/billing"
 
-  def mount(_params, %{"remote_ip" => remote_ip} = session, socket) do
+  def mount(_params, %{"remote_ip" => remote_ip}, socket) do
     socket =
       socket
-      |> assign_new(:user, fn ->
-        {:ok, user} = UserAuth.get_user(session)
-        Users.with_subscription(user)
-      end)
-      |> assign_new(:pending_ownership_site_ids, fn %{user: user} ->
-        user.email
+      |> assign_new(:pending_ownership_site_ids, fn %{current_user: current_user} ->
+        current_user.email
         |> Site.Memberships.all_pending_ownerships()
         |> Enum.map(& &1.site_id)
       end)
       |> assign_new(:usage, fn %{
-                                 user: user,
+                                 current_user: current_user,
                                  pending_ownership_site_ids: pending_ownership_site_ids
                                } ->
-        Quota.Usage.usage(user,
+        Quota.Usage.usage(current_user,
           with_features: true,
           pending_ownership_site_ids: pending_ownership_site_ids
         )
       end)
-      |> assign_new(:owned_plan, fn %{user: %{subscription: subscription}} ->
+      |> assign_new(:owned_plan, fn %{current_user: %{subscription: subscription}} ->
         Plans.get_regular_plan(subscription, only_non_expired: true)
       end)
       |> assign_new(:owned_tier, fn %{owned_plan: owned_plan} ->
         if owned_plan, do: Map.get(owned_plan, :kind), else: nil
       end)
-      |> assign_new(:current_interval, fn %{user: user} ->
-        current_user_subscription_interval(user.subscription)
+      |> assign_new(:current_interval, fn %{current_user: current_user} ->
+        current_user_subscription_interval(current_user.subscription)
       end)
-      |> assign_new(:available_plans, fn %{user: user} ->
-        Plans.available_plans_for(user, with_prices: true, customer_ip: remote_ip)
+      |> assign_new(:available_plans, fn %{current_user: current_user} ->
+        Plans.available_plans_for(current_user, with_prices: true, customer_ip: remote_ip)
       end)
       |> assign_new(:recommended_tier, fn %{usage: usage, available_plans: available_plans} ->
         highest_growth_plan = List.last(available_plans.growth)
@@ -108,8 +102,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           class="pb-6"
           pending_ownership_count={length(@pending_ownership_site_ids)}
         />
-        <Notice.subscription_past_due class="pb-6" subscription={@user.subscription} />
-        <Notice.subscription_paused class="pb-6" subscription={@user.subscription} />
+        <Notice.subscription_past_due class="pb-6" subscription={@current_user.subscription} />
+        <Notice.subscription_paused class="pb-6" subscription={@current_user.subscription} />
         <Notice.upgrade_ineligible :if={not Quota.eligible_for_upgrade?(@usage)} />
         <div class="mx-auto max-w-4xl text-center">
           <p class="text-4xl font-bold tracking-tight lg:text-5xl">

@@ -1,4 +1,9 @@
 defmodule PlausibleWeb.SessionTimeoutPlug do
+  @moduledoc """
+  NOTE: This plug will be replaced with a different
+  session expiration mechanism once server-side persisted
+  sessions are rolled out.
+  """
   import Plug.Conn
 
   alias PlausibleWeb.UserAuth

@@ -552,25 +552,25 @@ defmodule PlausibleWeb.AuthController do
   end
 
   defp render_settings(conn, opts) do
+    current_user = conn.assigns.current_user
     settings_changeset = Keyword.fetch!(opts, :settings_changeset)
     email_changeset = Keyword.fetch!(opts, :email_changeset)
-
-    user = Plausible.Users.with_subscription(conn.assigns[:current_user])
+    api_keys = Repo.preload(current_user, :api_keys).api_keys
 
     render(conn, "user_settings.html",
-      user: user |> Repo.preload(:api_keys),
+      api_keys: api_keys,
       settings_changeset: settings_changeset,
       email_changeset: email_changeset,
-      subscription: user.subscription,
-      invoices: Plausible.Billing.paddle_api().get_invoices(user.subscription),
-      theme: user.theme || "system",
-      team_member_limit: Quota.Limits.team_member_limit(user),
-      team_member_usage: Quota.Usage.team_member_usage(user),
-      site_limit: Quota.Limits.site_limit(user),
-      site_usage: Quota.Usage.site_usage(user),
-      pageview_limit: Quota.Limits.monthly_pageview_limit(user),
-      pageview_usage: Quota.Usage.monthly_pageview_usage(user),
-      totp_enabled?: Auth.TOTP.enabled?(user)
+      subscription: current_user.subscription,
+      invoices: Plausible.Billing.paddle_api().get_invoices(current_user.subscription),
+      theme: current_user.theme || "system",
+      team_member_limit: Quota.Limits.team_member_limit(current_user),
+      team_member_usage: Quota.Usage.team_member_usage(current_user),
+      site_limit: Quota.Limits.site_limit(current_user),
+      site_usage: Quota.Usage.site_usage(current_user),
+      pageview_limit: Quota.Limits.monthly_pageview_limit(current_user),
+      pageview_usage: Quota.Usage.monthly_pageview_usage(current_user),
+      totp_enabled?: Auth.TOTP.enabled?(current_user)
     )
   end
 

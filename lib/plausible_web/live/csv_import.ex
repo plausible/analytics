@@ -9,7 +9,6 @@ defmodule PlausibleWeb.Live.CSVImport do
   require Plausible.Imported.SiteImport
   alias Plausible.Imported.CSVImporter
   alias Plausible.Imported
-  alias PlausibleWeb.UserAuth
 
   # :not_mounted_at_router ensures we have already done auth checks in the controller
   # if this liveview becomes available from the router, please make sure
@@ -63,10 +62,6 @@ defmodule PlausibleWeb.Live.CSVImport do
 
     socket =
       socket
-      |> assign_new(:user_session, fn ->
-        {:ok, user_session} = UserAuth.get_user_session(session)
-        user_session
-      end)
       |> assign(
         site_id: site_id,
         storage: storage,
@@ -218,17 +213,16 @@ defmodule PlausibleWeb.Live.CSVImport do
     %{
       storage: storage,
       site: site,
-      user_session: user_session,
+      current_user: current_user,
       clamped_date_range: clamped_date_range,
       upload_consumer: upload_consumer
     } =
       socket.assigns
 
-    user = Plausible.Repo.get!(Plausible.Auth.User, user_session.user_id)
     uploads = consume_uploaded_entries(socket, :import, upload_consumer)
 
     {:ok, _job} =
-      CSVImporter.new_import(site, user,
+      CSVImporter.new_import(site, current_user,
         start_date: clamped_date_range.first,
         end_date: clamped_date_range.last,
         uploads: uploads,

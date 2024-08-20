@@ -10,11 +10,10 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   import PlausibleWeb.Live.Components.Form
   alias Plausible.{Sites, Goals, Funnels}
-  alias PlausibleWeb.UserAuth
 
   def mount(_params, %{"domain" => domain} = session, socket) do
-    {:ok, user_session} = UserAuth.get_user_session(session)
-    site = Sites.get_for_user!(user_session.user_id, domain, [:owner, :admin, :super_admin])
+    site =
+      Sites.get_for_user!(socket.assigns.current_user, domain, [:owner, :admin, :super_admin])
 
     # We'll have the options trimmed to only the data we care about, to keep
     # it minimal at the socket assigns, yet, we want to retain specific %Goal{}

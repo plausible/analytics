@@ -9,15 +9,11 @@ defmodule PlausibleWeb.SuperAdminOnlyPlug do
   end
 
   def call(conn, _opts) do
-    case PlausibleWeb.UserAuth.get_user(conn) do
-      {:ok, user} ->
-        if Plausible.Auth.is_super_admin?(user.id) do
-          assign(conn, :current_user, user)
-        else
-          conn |> send_resp(403, "Not allowed") |> halt
-        end
-
-      {:error, _} ->
+    with {:ok, user} <- PlausibleWeb.UserAuth.get_user(conn),
+         true <- Plausible.Auth.is_super_admin?(user) do
+      assign(conn, :current_user, user)
+    else
+      _ ->
         conn |> send_resp(403, "Not allowed") |> halt
     end
   end
