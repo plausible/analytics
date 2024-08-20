@@ -35,11 +35,19 @@ defmodule PlausibleWeb.UserAuth do
     |> clear_logged_in_cookie()
   end
 
-  @spec get_user(Plug.Conn.t() | map()) ::
+  @spec get_user(Plug.Conn.t() | Auth.UserSession.t() | map()) ::
           {:ok, Auth.User.t()} | {:error, :no_valid_token | :session_not_found | :user_not_found}
+  def get_user(%Auth.UserSession{} = user_session) do
+    if user = Plausible.Users.with_subscription(user_session.user_id) do
+      {:ok, user}
+    else
+      {:error, :user_not_found}
+    end
+  end
+
   def get_user(conn_or_session) do
-    with {:ok, session} <- get_user_session(conn_or_session) do
-      Auth.get_user_by(id: session.user_id)
+    with {:ok, user_session} <- get_user_session(conn_or_session) do
+      get_user(user_session)
     end
   end
 
