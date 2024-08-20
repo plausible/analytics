@@ -52,7 +52,7 @@ defmodule PlausibleWeb.UserAuth do
   end
 
   defp get_session_by_token({:legacy, user_id}) do
-    {:ok, %{user_id: user_id}}
+    {:ok, %Auth.UserSession{user_id: user_id}}
   end
 
   defp get_session_by_token({:new, _token}) do
