@@ -25,6 +25,7 @@ jobs:
         node-version: ${{steps.versions.outputs.nodejs}}
     - run: npm install --prefix ./assets
     - run: npm install --prefix ./tracker
+    - run: npm run typecheck --prefix ./assets
     - run: npm run lint --prefix ./assets
     - run: npm run check-format --prefix ./assets
     - run: npm run test --prefix ./assets

@@ -67,7 +67,11 @@ defmodule Plausible.Stats.SQL.Expression do
     #   to work, we divide time into 15-minute buckets and later combine these
     #   via toStartOfHour
     q
-    |> join(:array, [s], time_slot in time_slots(query, 15 * 60), as: :time_slot)
+    |> join(:inner, [s], time_slot in time_slots(query, 15 * 60),
+      as: :time_slot,
+      hints: "ARRAY",
+      on: true
+    )
     |> select_merge_as([s, time_slot: time_slot], %{
       key => fragment("toStartOfHour(?)", time_slot)
     })
@@ -103,7 +107,11 @@ defmodule Plausible.Stats.SQL.Expression do
   # :NOTE: This is not exposed in Query APIv2
   def select_dimension(q, key, "time:minute", :sessions, query) do
     q
-    |> join(:array, [s], time_slot in time_slots(query, 60), as: :time_slot)
+    |> join(:inner, [s], time_slot in time_slots(query, 60),
+      as: :time_slot,
+      hints: "ARRAY",
+      on: true
+    )
     |> select_merge_as([s, time_slot: time_slot], %{
       key => fragment("?", time_slot)
     })
