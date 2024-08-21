@@ -7,7 +7,6 @@ import { AdjustmentsVerticalIcon, MagnifyingGlassIcon, XMarkIcon, PencilSquareIc
 import classNames from 'classnames';
 import { Menu, Transition } from '@headlessui/react';
 
-import { navigateToQuery } from './query';
 import {
   FILTER_GROUP_TO_MODAL_TYPE,
   cleanLabels,
@@ -24,19 +23,23 @@ function removeFilter(filterIndex, navigate, query) {
   const newFilters = query.filters.filter((_filter, index) => filterIndex != index)
   const newLabels = cleanLabels(newFilters, query.labels)
 
-  navigateToQuery(
-    navigate,
-    query,
-    { filters: newFilters, labels: newLabels }
-  )
+  navigate({
+    search: ({ search }) => ({
+      ...search,
+      filters: newFilters,
+      labels: newLabels
+    })
+  })
 }
 
-function clearAllFilters(navigate, query) {
-  navigateToQuery(
-    navigate,
-    query,
-    { filters: null, labels: null }
-  );
+function clearAllFilters(navigate) {
+  navigate({
+    search: ({ search }) => ({
+      ...search,
+      filters: null,
+      labels: null
+    })
+  })
 }
 
 function AppliedFilterPillVertical({filterIndex, filter}) {
@@ -112,7 +115,7 @@ function DropdownContent({ wrapped }) {
       </div>
       {query.filters.map((filter, index) => <AppliedFilterPillVertical key={index} filterIndex={index} filter={filter}/>)}
       <Menu.Item key="clear">
-        <div className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => clearAllFilters(navigate, query)}>
+        <div className="border-t border-gray-200 dark:border-gray-500 px-4 sm:py-2 py-3 text-sm leading-tight hover:text-indigo-700 dark:hover:text-indigo-500 hover:cursor-pointer" onClick={() => clearAllFilters(navigate)}>
           Clear All Filters
         </div>
       </Menu.Item>
@@ -131,11 +134,9 @@ function Filters() {
     handleResize()
 
     window.addEventListener('resize', handleResize, false)
-    document.addEventListener('keyup', handleKeyup)
 
     return () => {
       window.removeEventListener('resize', handleResize, false)
-      document.removeEventListener("keyup", handleKeyup)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -148,15 +149,6 @@ function Filters() {
     if (wrapped === WRAPSTATE.waiting) { updateDisplayMode() }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wrapped])
-
-
-  function handleKeyup(e) {
-    if (e.ctrlKey || e.metaKey || e.altKey) return
-
-    if (e.key === 'Escape') {
-      clearAllFilters(navigate, query)
-    }
-  }
 
   function handleResize() {
     setViewport(window.innerWidth || 639)

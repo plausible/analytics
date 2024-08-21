@@ -33,15 +33,11 @@ test('if no period is stored, loads with default value of "Last 30 days", all ex
       ['Month to Date', 'M'],
       ['Last Month', ''],
       ['Year to Date', 'Y'],
-      ['Last 12 months', 'L'],
-      ['All time', 'A']
+      ['Last 12 Months', 'L'],
+      ['All time', 'A'],
+      ['Custom Range', 'C'],
+      ['Compare', 'X']
     ].map((a) => a.join(''))
-  )
-  expect(screen.getByText('Custom Range').textContent).toEqual(
-    ['Custom Range', 'C'].join('')
-  )
-  expect(screen.getByText('Compare').textContent).toEqual(
-    ['Compare', 'X'].join('')
   )
 })
 
@@ -59,7 +55,7 @@ test('user can select a new period and its value is stored', async () => {
   expect(localStorage.getItem(periodStorageKey)).toBe('all')
 })
 
-test('stored period "all" is respected, and Compare option is not present for it in menu', async () => {
+test('period "all" is respected, and Compare option is not present for it in menu', async () => {
   localStorage.setItem(periodStorageKey, 'all')
 
   render(<DatePicker />, {

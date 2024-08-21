@@ -25,6 +25,7 @@ import PropsModal from './stats/modals/props'
 import ConversionsModal from './stats/modals/conversions'
 import FilterModal from './stats/modals/filter-modal'
 import QueryContextProvider from './query-context'
+import { DashboardKeybinds } from './dashboard-keybinds'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -189,6 +190,7 @@ export function createAppRouter(site: PlausibleSite) {
         ...rootRoute,
         errorElement: <RouteErrorElement />,
         children: [
+          { index: true, element: <DashboardKeybinds /> },
           sourcesRoute,
           utmMediumsRoute,
           utmSourcesRoute,
