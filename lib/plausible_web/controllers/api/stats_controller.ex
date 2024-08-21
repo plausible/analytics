@@ -108,7 +108,7 @@ defmodule PlausibleWeb.Api.StatsController do
          {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
       timeseries_query =
         if query.period == "realtime" do
-          %Query{query | period: "30m"}
+          %Query{query | date_range: "30m"}
         else
           query
         end
@@ -226,8 +226,8 @@ defmodule PlausibleWeb.Api.StatsController do
       imports_exist: site.complete_import_ids != [],
       comparing_from: comparison_query && comparison_query.date_range.first,
       comparing_to: comparison_query && comparison_query.date_range.last,
-      from: query.date_range.first,
-      to: query.date_range.last
+      from: comparison_query && query.date_range.first,
+      to: comparison_query && query.date_range.last
     })
   end
 
@@ -336,7 +336,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_goal_realtime_top_stats(site, query, _comparison_query) do
-    query_30m = %Query{query | period: "30m"}
+    query_30m = %Query{query | date_range: "30m"}
 
     %{
       visitors: %{value: unique_conversions},
@@ -364,7 +364,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_realtime_top_stats(site, query, _comparison_query) do
-    query_30m = %Query{query | period: "30m"}
+    query_30m = %Query{query | date_range: "30m"}
 
     %{
       visitors: %{value: visitors},
@@ -1271,7 +1271,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     query =
       if query.period == "realtime" do
-        %Query{query | period: "30m"}
+        %Query{query | date_range: "30m"}
       else
         query
       end

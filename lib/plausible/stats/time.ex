@@ -6,15 +6,8 @@ defmodule Plausible.Stats.Time do
   alias Plausible.Stats.Query
   alias Plausible.Timezones
 
-  @realtime_periods ["realtime", "30m"]
-
-  def utc_boundaries(%Query{period: period, now: now}, site)
-      when period in @realtime_periods do
-    realtime_utc_boundaries(site, now, period)
-  end
-
   def utc_boundaries(%Query{date_range: date_range, now: now}, site)
-      when date_range in @realtime_periods do
+      when date_range in ["realtime", "30m"] do
     realtime_utc_boundaries(site, now, date_range)
   end
 
@@ -143,7 +136,7 @@ defmodule Plausible.Stats.Time do
   end
 
   # Only supported in dashboards not via API
-  defp time_labels_for_dimension("time:minute", %Query{period: "30m"}) do
+  defp time_labels_for_dimension("time:minute", %Query{date_range: "30m"}) do
     Enum.into(-30..-1, [])
   end
 
