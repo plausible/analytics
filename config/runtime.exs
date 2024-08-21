@@ -383,13 +383,7 @@ else
   config :plausible, Plausible.Repo,
     url: db_url,
     socket_options: db_maybe_ipv6,
-    ssl_opts: [
-      cacertfile: db_cacertfile,
-      verify: :verify_peer,
-      customize_hostname_check: [
-        match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-      ]
-    ]
+    ssl: [cacertfile: db_cacertfile]
 end
 
 sentry_app_version = runtime_metadata[:version] || app_version
