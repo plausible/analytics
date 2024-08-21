@@ -7,13 +7,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   setup [:create_user, :create_new_site]
 
   @today ~D[2021-05-05]
-  @date_range_day Date.range(@today, @today)
-  @date_range_7d Date.range(~D[2021-04-29], @today)
-  @date_range_30d Date.range(~D[2021-04-05], @today)
-  @date_range_month Date.range(~D[2021-05-01], ~D[2021-05-31])
-  @date_range_6mo Date.range(~D[2020-12-01], ~D[2021-05-31])
-  @date_range_12mo Date.range(~D[2020-06-01], ~D[2021-05-31])
-  @date_range_year Date.range(~D[2021-01-01], ~D[2021-12-31])
+  @date_range Date.range(@today, @today)
 
   def check_success(params, site, expected_result) do
     assert {:ok, ^expected_result} = parse(site, Map.put(params, "date", @today))
@@ -24,13 +18,11 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     assert message =~ expected_error_message
   end
 
-  def check_date_range_and_period(params, site, expected_date_range, expected_period) do
-    params
-    |> Map.put("metrics", ["visitors", "events"])
+  def check_date_range(date_range, site, expected_date_range) do
+    %{"metrics" => ["visitors", "events"], "date_range" => date_range}
     |> check_success(site, %{
       metrics: [:visitors, :events],
       date_range: expected_date_range,
-      period: expected_period,
       filters: [],
       dimensions: [],
       order_by: nil,
@@ -50,8 +42,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       %{"metrics" => ["visitors", "events"], "date_range" => "all"}
       |> check_success(site, %{
         metrics: [:visitors, :events],
-        date_range: @date_range_day,
-        period: "all",
+        date_range: @date_range,
         filters: [],
         dimensions: [],
         order_by: nil,
@@ -89,8 +80,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           :bounce_rate,
           :visit_duration
         ],
-        date_range: @date_range_day,
-        period: "all",
+        date_range: @date_range,
         filters: [],
         dimensions: [],
         order_by: nil,
@@ -118,8 +108,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
         |> check_success(site, %{
           metrics: [:visitors],
-          date_range: @date_range_day,
-          period: "all",
+          date_range: @date_range,
           filters: [
             [unquote(operation), "event:name", ["foo"]]
           ],
@@ -164,8 +153,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range_day,
-        period: "all",
+        date_range: @date_range,
         filters: [
           [:is, "event:props:foobar", ["value"]]
         ],
@@ -189,8 +177,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           }
           |> check_success(site, %{
             metrics: [:visitors],
-            date_range: @date_range_day,
-            period: "all",
+            date_range: @date_range,
             filters: [
               [:is, "event:#{unquote(dimension)}", ["foo"]]
             ],
@@ -215,8 +202,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
         |> check_success(site, %{
           metrics: [:visitors],
-          date_range: @date_range_day,
-          period: "all",
+          date_range: @date_range,
           filters: [
             [:is, "visit:#{unquote(dimension)}", ["ab"]]
           ],
@@ -277,8 +263,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range_day,
-        period: "all",
+        date_range: @date_range,
         filters: [
           [:is, "visit:city", [123, 456]]
         ],
@@ -296,8 +281,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range_day,
-        period: "all",
+        date_range: @date_range,
         filters: [
           [:is, "visit:city", ["123", "456"]]
         ],
@@ -332,8 +316,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range_day,
-        period: "all",
+        date_range: @date_range,
         filters: [],
         dimensions: ["time"],
         order_by: nil,
@@ -380,8 +363,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
       assert %{
                metrics: [:visitors],
-               date_range: @date_range_day,
-               period: "all",
+               date_range: @date_range,
                filters: [
                  [:is, "event:goal", ["Signup", "Visit /thank-you"]]
                ],
@@ -420,84 +402,33 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   end
 
   describe "date range validation" do
-    test "parsing shortcut options for date_range", %{site: site} do
-      %{"date_range" => "day", "period" => nil}
-      |> check_date_range_and_period(site, @date_range_day, "day")
-
-      %{"date_range" => "7d", "period" => nil}
-      |> check_date_range_and_period(site, @date_range_7d, "7d")
-
-      %{"date_range" => "30d", "period" => nil}
-      |> check_date_range_and_period(site, @date_range_30d, "30d")
-
-      %{"date_range" => "month", "period" => nil}
-      |> check_date_range_and_period(site, @date_range_month, "month")
-
-      %{"date_range" => "6mo", "period" => nil}
-      |> check_date_range_and_period(site, @date_range_6mo, "6mo")
-
-      %{"date_range" => "12mo", "period" => nil}
-      |> check_date_range_and_period(site, @date_range_12mo, "12mo")
-
-      %{"date_range" => "year", "period" => nil}
-      |> check_date_range_and_period(site, @date_range_year, "year")
-    end
-
-    test "parsing period into date_range", %{site: site} do
-      %{"date_range" => nil, "period" => "day"}
-      |> check_date_range_and_period(site, @date_range_day, "day")
-
-      %{"date_range" => nil, "period" => "7d"}
-      |> check_date_range_and_period(site, @date_range_7d, "7d")
-
-      %{"date_range" => nil, "period" => "30d"}
-      |> check_date_range_and_period(site, @date_range_30d, "30d")
-
-      %{"date_range" => nil, "period" => "month"}
-      |> check_date_range_and_period(site, @date_range_month, "month")
-
-      %{"date_range" => nil, "period" => "6mo"}
-      |> check_date_range_and_period(site, @date_range_6mo, "6mo")
-
-      %{"date_range" => nil, "period" => "12mo"}
-      |> check_date_range_and_period(site, @date_range_12mo, "12mo")
-
-      %{"date_range" => nil, "period" => "year"}
-      |> check_date_range_and_period(site, @date_range_year, "year")
-    end
-
-    test "parses realtime and 30m periods into a 'day' date_range", %{site: site} do
-      Enum.each(["realtime", "30m"], fn period ->
-        %{"date_range" => nil, "period" => period}
-        |> check_date_range_and_period(site, @date_range_day, period)
-      end)
+    test "parsing shortcut options", %{site: site} do
+      check_date_range("day", site, Date.range(~D[2021-05-05], ~D[2021-05-05]))
+      check_date_range("7d", site, Date.range(~D[2021-04-29], ~D[2021-05-05]))
+      check_date_range("30d", site, Date.range(~D[2021-04-05], ~D[2021-05-05]))
+      check_date_range("month", site, Date.range(~D[2021-05-01], ~D[2021-05-31]))
+      check_date_range("6mo", site, Date.range(~D[2020-12-01], ~D[2021-05-31]))
+      check_date_range("12mo", site, Date.range(~D[2020-06-01], ~D[2021-05-31]))
+      check_date_range("year", site, Date.range(~D[2021-01-01], ~D[2021-12-31]))
     end
 
     test "parsing `all` with previous data", %{site: site} do
       site = Map.put(site, :stats_start_date, ~D[2020-01-01])
-
-      %{"date_range" => "all", "period" => nil}
-      |> check_date_range_and_period(site, Date.range(~D[2020-01-01], ~D[2021-05-05]), "all")
-
-      %{"date_range" => nil, "period" => "all"}
-      |> check_date_range_and_period(site, Date.range(~D[2020-01-01], ~D[2021-05-05]), "all")
+      check_date_range("all", site, Date.range(~D[2020-01-01], ~D[2021-05-05]))
     end
 
     test "parsing `all` with no previous data", %{site: site} do
       site = Map.put(site, :stats_start_date, nil)
 
-      %{"date_range" => "all", "period" => nil}
-      |> check_date_range_and_period(site, @date_range_day, "all")
-
-      %{"date_range" => nil, "period" => "all"}
-      |> check_date_range_and_period(site, @date_range_day, "all")
+      check_date_range("all", site, Date.range(~D[2021-05-05], ~D[2021-05-05]))
     end
 
     test "parsing custom date range", %{site: site} do
-      Enum.each([nil, "custom"], fn period ->
-        %{"date_range" => ["2021-05-05", "2021-05-05"], "period" => period}
-        |> check_date_range_and_period(site, Date.range(~D[2021-05-05], ~D[2021-05-05]), period)
-      end)
+      check_date_range(
+        ["2021-05-05", "2021-05-05"],
+        site,
+        Date.range(~D[2021-05-05], ~D[2021-05-05])
+      )
     end
 
     test "parsing invalid custom date range", %{site: site} do
@@ -519,8 +450,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
         |> check_success(site, %{
           metrics: [:visitors],
-          date_range: @date_range_day,
-          period: "all",
+          date_range: @date_range,
           filters: [],
           dimensions: ["event:#{unquote(dimension)}"],
           order_by: nil,
@@ -540,8 +470,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
         |> check_success(site, %{
           metrics: [:visitors],
-          date_range: @date_range_day,
-          period: "all",
+          date_range: @date_range,
           filters: [],
           dimensions: ["visit:#{unquote(dimension)}"],
           order_by: nil,
@@ -560,8 +489,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range_day,
-        period: "all",
+        date_range: @date_range,
         filters: [],
         dimensions: ["event:props:foobar"],
         order_by: nil,
@@ -617,8 +545,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors, :events],
-        date_range: @date_range_day,
-        period: "all",
+        date_range: @date_range,
         filters: [],
         dimensions: [],
         order_by: [{:events, :desc}, {:visitors, :asc}],
@@ -637,8 +564,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range_day,
-        period: "all",
+        date_range: @date_range,
         filters: [],
         dimensions: ["event:name"],
         order_by: [{"event:name", :desc}],
@@ -734,8 +660,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     #   }
     #   |> check_success(site, %{
     #     metrics: [:conversion_rate],
-    #     date_range: @date_range_day,
-    #     period: "all",
+    #     date_range: @date_range,
     #     filters: [[:is, "event:goal", [event: "Signup"]]],
     #     dimensions: [],
     #     order_by: nil,
@@ -755,8 +680,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     #   }
     #   |> check_success(site, %{
     #     metrics: [:conversion_rate],
-    #     date_range: @date_range_day,
-    #     period: "all",
+    #     date_range: @date_range,
     #     filters: [],
     #     dimensions: ["event:goal"],
     #     order_by: nil,
@@ -778,8 +702,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     #   }
     #   |> check_success(site, %{
     #     metrics: [:views_per_visit],
-    #     date_range: @date_range_day,
-    #     period: "all",
+    #     date_range: @date_range,
     #     filters: [[:is, "event:goal", [event: "Signup"]]],
     #     dimensions: [],
     #     order_by: nil,
@@ -823,8 +746,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:bounce_rate],
-        date_range: @date_range_day,
-        period: "all",
+        date_range: @date_range,
         filters: [],
         dimensions: ["visit:device"],
         order_by: nil,
@@ -854,8 +776,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:bounce_rate],
-        date_range: @date_range_day,
-        period: "all",
+        date_range: @date_range,
         filters: [],
         dimensions: ["event:page"],
         order_by: nil,
@@ -873,8 +794,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:bounce_rate],
-        date_range: @date_range_day,
-        period: "all",
+        date_range: @date_range,
         filters: [[:is, "event:props:foo", ["(none)"]]],
         dimensions: [],
         order_by: nil,
