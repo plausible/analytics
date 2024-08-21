@@ -6,34 +6,16 @@ defmodule Plausible.Stats.Time do
   alias Plausible.Stats.Query
   alias Plausible.Timezones
 
-  def utc_boundaries(%Query{period: "realtime", now: now}, site) do
-    last_datetime =
-      now
-      |> NaiveDateTime.shift(second: 5)
-      |> NaiveDateTime.truncate(:second)
+  @realtime_periods ["realtime", "30m"]
 
-    first_datetime =
-      now
-      |> NaiveDateTime.shift(minute: -5)
-      |> NaiveDateTime.truncate(:second)
-      |> beginning_of_time(site.native_stats_start_at)
-
-    {first_datetime, last_datetime}
+  def utc_boundaries(%Query{period: period, now: now}, site)
+      when period in @realtime_periods do
+    realtime_utc_boundaries(site, now, period)
   end
 
-  def utc_boundaries(%Query{period: "30m", now: now}, site) do
-    last_datetime =
-      now
-      |> NaiveDateTime.shift(second: 5)
-      |> NaiveDateTime.truncate(:second)
-
-    first_datetime =
-      now
-      |> NaiveDateTime.shift(minute: -30)
-      |> NaiveDateTime.truncate(:second)
-      |> beginning_of_time(site.native_stats_start_at)
-
-    {first_datetime, last_datetime}
+  def utc_boundaries(%Query{date_range: date_range, now: now}, site)
+      when date_range in @realtime_periods do
+    realtime_utc_boundaries(site, now, date_range)
   end
 
   def utc_boundaries(%Query{date_range: date_range}, site) do
@@ -47,6 +29,27 @@ defmodule Plausible.Stats.Time do
     {:ok, last} = NaiveDateTime.new(date_range.last |> Date.shift(day: 1), ~T[00:00:00])
 
     last_datetime = Timezones.to_utc_datetime(last, site.timezone)
+
+    {first_datetime, last_datetime}
+  end
+
+  defp realtime_utc_boundaries(site, now, period) do
+    duration_minutes =
+      case period do
+        "realtime" -> 5
+        "30m" -> 30
+      end
+
+    last_datetime =
+      now
+      |> NaiveDateTime.shift(second: 5)
+      |> NaiveDateTime.truncate(:second)
+
+    first_datetime =
+      now
+      |> NaiveDateTime.shift(minute: -duration_minutes)
+      |> NaiveDateTime.truncate(:second)
+      |> beginning_of_time(site.native_stats_start_at)
 
     {first_datetime, last_datetime}
   end

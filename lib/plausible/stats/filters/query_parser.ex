@@ -115,6 +115,11 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{inspect(filter)}'"}
 
+  defp parse_date_range(_site, %{"date_range" => date_range})
+       when date_range in ["realtime", "30m"] do
+    {:ok, date_range}
+  end
+
   defp parse_date_range(site, %{"date_range" => date_range, "date" => date})
        when is_binary(date) do
     case Date.from_iso8601(date) do
