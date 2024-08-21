@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import classNames from 'classnames'
 import * as api from '../../api'
-import { navigateToQuery } from '../../query'
 import { replaceFilterByPrefix, cleanLabels } from '../../util/filters'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
 import numberFormatter from '../../util/number-formatter'
@@ -109,7 +108,7 @@ const WorldMap = ({
           [country.code]: country.name
         })
         onCountrySelect()
-        navigateToQuery(navigate, query, { filters, labels })
+        navigate({ search: (search) => ({ ...search, filters, labels }) })
       }
     },
     [navigate, query, dataByCountryCode, onCountrySelect]

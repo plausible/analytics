@@ -11,7 +11,7 @@ import {
 } from 'react-router-dom'
 import { parseSearch, stringifySearch } from '../util/url'
 
-type AppNavigationTarget = {
+export type AppNavigationTarget = {
   /**
    * path to target, for example `"/posts"` or `"/posts/:id"`
    */

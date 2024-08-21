@@ -2,7 +2,6 @@ import React from 'react';
 import { useAppNavigate } from '../../navigation/use-app-navigate';
 import { useQueryContext } from '../../query-context';
 import Chart from 'chart.js/auto';
-import { navigateToQuery } from '../../query'
 import GraphTooltip from './graph-tooltip'
 import { buildDataSet, METRIC_LABELS, METRIC_FORMATTER } from './graph-util'
 import dateFormatter from './date-formatter';
@@ -226,9 +225,13 @@ class LineGraph extends React.Component {
     const date = this.props.graphData.labels[element.index] || this.props.graphData.comparison_labels[element.index]
 
     if (this.props.graphData.interval === 'month') {
-      navigateToQuery(this.props.navigate, this.props.query, { period: 'month', date })
+      this.props.navigate({
+        search: ({ search }) => ({ ...search, period: 'month', date })
+      })
     } else if (this.props.graphData.interval === 'day') {
-      navigateToQuery(this.props.navigate, this.props.query, { period: 'day', date })
+      this.props.navigate({
+        search: ({ search }) => ({ ...search, period: 'day', date })
+      })
     }
   }
 

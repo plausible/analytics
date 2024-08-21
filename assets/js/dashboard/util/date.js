@@ -72,7 +72,7 @@ export function nowForSite(site) {
 }
 
 export function yesterday(site) {
-  return nowForSite(site).subtract(1, 'day')
+  return shiftDays(nowForSite(site), -1)
 }
 
 export function lastMonth(site) {
