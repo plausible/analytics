@@ -1,10 +1,10 @@
-/* @format */
+/** @format */
 import React, { createContext, ReactNode, useContext } from 'react'
 
-export function parseSiteFromDataset(dataset: Record<string, string>) {
-  const site = {
-    domain: dataset.domain,
-    offset: dataset.offset,
+export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
+  return {
+    domain: dataset.domain!,
+    offset: dataset.offset!,
     hasGoals: dataset.hasGoals === 'true',
     hasProps: dataset.hasProps === 'true',
     funnelsAvailable: dataset.funnelsAvailable === 'true',
@@ -12,18 +12,17 @@ export function parseSiteFromDataset(dataset: Record<string, string>) {
     conversionsOptedOut: dataset.conversionsOptedOut === 'true',
     funnelsOptedOut: dataset.funnelsOptedOut === 'true',
     propsOptedOut: dataset.propsOptedOut === 'true',
-    revenueGoals: JSON.parse(dataset.revenueGoals),
-    funnels: JSON.parse(dataset.funnels),
-    statsBegin: dataset.statsBegin,
-    nativeStatsBegin: dataset.nativeStatsBegin,
-    embedded: dataset.embedded,
-    background: dataset.background,
+    revenueGoals: JSON.parse(dataset.revenueGoals!),
+    funnels: JSON.parse(dataset.funnels!),
+    statsBegin: dataset.statsBegin!,
+    nativeStatsBegin: dataset.nativeStatsBegin!,
+    embedded: dataset.embedded!,
+    background: dataset.background!,
     isDbip: dataset.isDbip === 'true',
-    flags: JSON.parse(dataset.flags),
-    validIntervalsByPeriod: JSON.parse(dataset.validIntervalsByPeriod),
+    flags: JSON.parse(dataset.flags!),
+    validIntervalsByPeriod: JSON.parse(dataset.validIntervalsByPeriod!),
     shared: !!dataset.sharedLinkAuth
   }
-  return site
 }
 
 const siteContextDefaultValue = {
