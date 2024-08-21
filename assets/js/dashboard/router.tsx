@@ -1,7 +1,13 @@
-/* @format */
+/** @format */
 import React from 'react'
-import { createBrowserRouter, Outlet } from 'react-router-dom'
+import { createBrowserRouter, Outlet, useRouteError } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
+import { PlausibleSite, useSiteContext } from './site-context'
+import {
+  GoBackToDashboard,
+  SomethingWentWrongMessage
+} from './error/something-went-wrong'
 import Dashboard from './index'
 import SourcesModal from './stats/modals/sources'
 import ReferrersDrilldownModal from './stats/modals/referrer-drilldown'
@@ -19,7 +25,6 @@ import PropsModal from './stats/modals/props'
 import ConversionsModal from './stats/modals/conversions'
 import FilterModal from './stats/modals/filter-modal'
 import QueryContextProvider from './query-context'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -156,19 +161,33 @@ export const filterRoute = {
   element: <FilterModal />
 }
 
-export function getRouterBasepath(site) {
+export function getRouterBasepath(
+  site: Pick<PlausibleSite, 'shared' | 'domain'>
+): string {
   const basepath = site.shared
     ? `/share/${encodeURIComponent(site.domain)}`
     : `/${encodeURIComponent(site.domain)}`
   return basepath
 }
 
-export function createAppRouter(site) {
+function RouteErrorElement() {
+  const site = useSiteContext()
+  const error = useRouteError()
+  return (
+    <SomethingWentWrongMessage
+      error={error}
+      callToAction={<GoBackToDashboard site={site} />}
+    />
+  )
+}
+
+export function createAppRouter(site: PlausibleSite) {
   const basepath = getRouterBasepath(site)
   const router = createBrowserRouter(
     [
       {
         ...rootRoute,
+        errorElement: <RouteErrorElement />,
         children: [
           sourcesRoute,
           utmMediumsRoute,
@@ -199,6 +218,7 @@ export function createAppRouter(site) {
     {
       basename: basepath,
       future: {
+        // @ts-expect-error valid according to docs (https://reactrouter.com/en/main/routers/create-browser-router#optsfuture)
         v7_prependBasename: true
       }
     }
