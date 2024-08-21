@@ -14,7 +14,9 @@ defmodule Plausible.Stats.CustomProps do
 
       _ ->
         from(e in base_event_query(site, query),
-          array_join: meta in fragment("meta"),
+          join: meta in fragment("meta"),
+          hints: "ARRAY",
+          on: true,
           select: meta.key,
           distinct: true
         )
