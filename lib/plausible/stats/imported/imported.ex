@@ -260,7 +260,7 @@ defmodule Plausible.Stats.Imported do
             type(^page_regexes, {:array, :string})
           )
         )
-        |> join(:array, index in fragment("indices"))
+        |> join(:inner, [_i], index in fragment("indices"), hints: "ARRAY", on: true)
         |> group_by([_i, index], index)
         |> select_merge_as([_i, index], %{
           dim0: type(fragment("?", index), :integer)
