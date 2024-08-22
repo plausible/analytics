@@ -47,8 +47,9 @@ defmodule Plausible.Stats.QueryTest do
   test "parses realtime format", %{site: site} do
     q = Query.from(site, %{"period" => "realtime"})
 
+    assert q.date_range.first == Timex.today()
+    assert q.date_range.last == Timex.today()
     assert q.period == "realtime"
-    assert q.date_range == "realtime"
   end
 
   test "parses month format", %{site: site} do

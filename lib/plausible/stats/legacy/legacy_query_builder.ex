@@ -37,8 +37,10 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     struct!(query, preloaded_goals: goals)
   end
 
-  defp put_period(query, _site, %{"period" => "realtime"}) do
-    struct!(query, period: "realtime", date_range: "realtime")
+  defp put_period(query, site, %{"period" => "realtime"}) do
+    date = today(site.timezone)
+
+    struct!(query, period: "realtime", date_range: Date.range(date, date))
   end
 
   defp put_period(query, site, %{"period" => "day"} = params) do

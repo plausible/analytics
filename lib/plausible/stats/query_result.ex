@@ -24,21 +24,13 @@ defmodule Plausible.Stats.QueryResult do
       results: results_list,
       query: %{
         metrics: query.metrics,
-        date_range: result_date_range(query.date_range),
+        date_range: [query.date_range.first, query.date_range.last],
         filters: query.filters,
         dimensions: query.dimensions,
         order_by: query.order_by |> Enum.map(&Tuple.to_list/1)
       },
       meta: meta(query)
     )
-  end
-
-  defp result_date_range(date_range) when date_range in ["realtime", "30m"] do
-    date_range
-  end
-
-  defp result_date_range(date_range) do
-    [date_range.first, date_range.last]
   end
 
   defp dimension_label("event:goal", entry, query) do
