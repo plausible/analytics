@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.UserAuthTest do
   use PlausibleWeb.ConnCase, async: true
 
+  alias Plausible.Repo
   alias PlausibleWeb.UserAuth
 
   alias PlausibleWeb.Router.Helpers, as: Routes
@@ -14,10 +15,13 @@ defmodule PlausibleWeb.UserAuthTest do
         |> init_session()
         |> UserAuth.log_in_user(user)
 
+      assert %{sessions: [session]} = user |> Repo.reload!() |> Repo.preload(:sessions)
+      assert session.user_id == user.id
+
       assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
       assert conn.private[:plug_session_info] == :renew
       assert conn.resp_cookies["logged_in"].max_age > 0
-      assert get_session(conn, :current_user_id) == user.id
+      assert get_session(conn, :user_token) == session.token
       assert get_session(conn, :login_dest) == nil
     end
 
@@ -94,12 +98,10 @@ defmodule PlausibleWeb.UserAuthTest do
       assert {:error, :no_valid_token} = UserAuth.get_user(%{})
     end
 
-    test "returns error on missing user", %{conn: conn, user: user} do
+    test "returns error on missing user (legacy only)", %{user: user} do
       Plausible.Repo.delete!(user)
 
-      assert {:error, :user_not_found} = UserAuth.get_user(conn)
       assert {:error, :user_not_found} = UserAuth.get_user(%{"current_user_id" => user.id})
-
       assert {:error, :user_not_found} =
                UserAuth.get_user(%Plausible.Auth.UserSession{user_id: user.id})
     end

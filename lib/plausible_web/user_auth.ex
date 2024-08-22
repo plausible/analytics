@@ -15,7 +15,10 @@ defmodule PlausibleWeb.UserAuth do
   expected) and the logic will be cleaned of branching for legacy session.
   """
 
+  import Ecto.Query, only: [from: 2]
+
   alias Plausible.Auth
+  alias Plausible.Repo
   alias PlausibleWeb.TwoFactor
 
   alias PlausibleWeb.Router.Helpers, as: Routes
@@ -53,6 +56,8 @@ defmodule PlausibleWeb.UserAuth do
     if user = Plausible.Users.with_subscription(user_session.user_id) do
       {:ok, user}
     else
+      # NOTE: Only possible in a fringe corner case where user is deleted
+      # between retrieving the session and retrieving the user themselves.
       {:error, :user_not_found}
     end
   end
@@ -90,12 +95,15 @@ defmodule PlausibleWeb.UserAuth do
     {:ok, %Auth.UserSession{user_id: user_id}}
   end
 
-  defp get_session_by_token({:new, _token}) do
-    {:error, :session_not_found}
+  defp get_session_by_token({:new, token}) do
+    case Repo.get_by(Auth.UserSession, token: token) do
+      %Auth.UserSession{} = user_session -> {:ok, user_session}
+      nil -> {:error, :session_not_found}
+    end
   end
 
   defp set_user_session(conn, user) do
-    {token, _} = create_user_session(user)
+    {token, _} = create_user_session(conn, user)
 
     conn
     |> renew_session()
@@ -121,10 +129,6 @@ defmodule PlausibleWeb.UserAuth do
     |> Plug.Conn.put_session(:live_socket_id, "users_sessions:#{Base.url_encode64(token)}")
   end
 
-  defp put_token_in_session(conn, {:legacy, user_id}) do
-    Plug.Conn.put_session(conn, :current_user_id, user_id)
-  end
-
   defp get_user_token(%Plug.Conn{} = conn) do
     conn
     |> Plug.Conn.get_session()
@@ -139,18 +143,79 @@ defmodule PlausibleWeb.UserAuth do
     end
   end
 
-  defp create_user_session(user) do
-    # NOTE: a temporary fix for for dialyzer
-    # complaining about unreachable code
-    # path.
-    if :erlang.phash2(1, 1) == 0 do
-      {{:legacy, user.id}, %{}}
-    else
-      {{:new, "disabled-for-now"}, %{}}
+  defp create_user_session(conn, user) do
+    device_name = get_device_name(conn)
+
+    user_session =
+      user
+      |> Auth.UserSession.new_session(device_name)
+      |> Repo.insert!()
+
+    {{:new, user_session.token}, user_session}
+  end
+
+  defp remove_user_session({:legacy, _}), do: :ok
+
+  defp remove_user_session({:new, token}) do
+    Repo.delete_all(from us in Auth.UserSession, where: us.token == ^token)
+    :ok
+  end
+
+  @unknown_label "Unknown"
+
+  defp get_device_name(%Plug.Conn{} = conn) do
+    conn
+    |> Plug.Conn.get_req_header("user-agent")
+    |> List.first()
+    |> get_device_name()
+  end
+
+  defp get_device_name(user_agent) when is_binary(user_agent) do
+    case UAInspector.parse(user_agent) do
+      %UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}} ->
+        "Headless Chrome"
+
+      %UAInspector.Result.Bot{name: name} when is_binary(name) ->
+        name
+
+      %UAInspector.Result{} = ua ->
+        browser = browser_name(ua)
+
+        if os = os_name(ua) do
+          browser <> " (#{os})"
+        else
+          browser
+        end
+
+      _ ->
+        @unknown_label
     end
   end
 
-  defp remove_user_session(_token) do
-    :ok
+  defp get_device_name(_), do: @unknown_label
+
+  defp browser_name(ua) do
+    case ua.client do
+      :unknown -> @unknown_label
+      %UAInspector.Result.Client{name: "Mobile Safari"} -> "Safari"
+      %UAInspector.Result.Client{name: "Chrome Mobile"} -> "Chrome"
+      %UAInspector.Result.Client{name: "Chrome Mobile iOS"} -> "Chrome"
+      %UAInspector.Result.Client{name: "Firefox Mobile"} -> "Firefox"
+      %UAInspector.Result.Client{name: "Firefox Mobile iOS"} -> "Firefox"
+      %UAInspector.Result.Client{name: "Opera Mobile"} -> "Opera"
+      %UAInspector.Result.Client{name: "Opera Mini"} -> "Opera"
+      %UAInspector.Result.Client{name: "Opera Mini iOS"} -> "Opera"
+      %UAInspector.Result.Client{name: "Yandex Browser Lite"} -> "Yandex Browser"
+      %UAInspector.Result.Client{name: "Chrome Webview"} -> "Mobile App"
+      %UAInspector.Result.Client{type: "mobile app"} -> "Mobile App"
+      client -> client.name || @unknown_label
+    end
+  end
+
+  defp os_name(ua) do
+    case ua.os do
+      :unknown -> nil
+      os -> os.name
+    end
   end
 end
