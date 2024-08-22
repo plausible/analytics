@@ -76,6 +76,26 @@ defmodule PlausibleWeb.UserAuth do
     end
   end
 
+  @spec touch_user_session(Auth.UserSession.t()) :: Auth.UserSession.t()
+  def touch_user_session(%{token: nil} = user_session) do
+    # NOTE: Legacy token sessions can't be touched.
+    user_session
+  end
+
+  def touch_user_session(user_session) do
+    %{token: token, timeout_at: timeout_at, last_used_at: last_used_at} =
+      user_session
+      |> Auth.UserSession.touch_session()
+      |> Ecto.Changeset.apply_changes()
+
+    Repo.update_all(
+      from(us in Auth.UserSession, where: us.token == ^token),
+      set: [timeout_at: timeout_at, last_used_at: last_used_at]
+    )
+
+    Repo.reload!(user_session)
+  end
+
   @doc """
   Sets the `logged_in` cookie share with the static site for determining
   whether client is authenticated.

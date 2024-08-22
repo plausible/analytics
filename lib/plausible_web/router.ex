@@ -13,6 +13,7 @@ defmodule PlausibleWeb.Router do
     on_ee(do: nil, else: plug(PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"))
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
     plug PlausibleWeb.AuthPlug
+    plug PlausibleWeb.Plugs.UserSessionTouch
     plug PlausibleWeb.LastSeenPlug
   end
 
