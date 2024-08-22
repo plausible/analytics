@@ -284,7 +284,7 @@ defmodule PlausibleWeb.Api.StatsController do
         current_date =
           Timex.now(site.timezone)
           |> Timex.to_date()
-          |> date_or_weekstart(query)
+          |> Plausible.Stats.Time.date_or_weekstart(query)
           |> Date.to_string()
 
         Enum.find_index(dates, &(&1 == current_date))
@@ -304,16 +304,6 @@ defmodule PlausibleWeb.Api.StatsController do
           |> Calendar.strftime("%Y-%m-%d %H:%M:00")
 
         Enum.find_index(dates, &(&1 == current_date))
-    end
-  end
-
-  defp date_or_weekstart(date, query) do
-    weekstart = Timex.beginning_of_week(date)
-
-    if Enum.member?(query.date_range, weekstart) do
-      weekstart
-    else
-      date
     end
   end
 

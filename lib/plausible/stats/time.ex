@@ -26,6 +26,17 @@ defmodule Plausible.Stats.Time do
     {first_datetime, last_datetime}
   end
 
+  def date_or_weekstart(date, query) do
+    weekstart = Timex.beginning_of_week(date)
+    date_range = Date.range(query.date_range.first, query.date_range.last)
+
+    if Enum.member?(date_range, weekstart) do
+      weekstart
+    else
+      date
+    end
+  end
+
   defp realtime_utc_boundaries(site, now, period) do
     duration_minutes =
       case period do
@@ -107,7 +118,7 @@ defmodule Plausible.Stats.Time do
   end
 
   defp time_labels_for_dimension("time:day", query) do
-    query.date_range
+    Date.range(query.date_range.first, query.date_range.last)
     |> Enum.into([])
     |> Enum.map(&format_datetime/1)
   end
@@ -155,15 +166,5 @@ defmodule Plausible.Stats.Time do
       |> DateTime.shift(minute: step)
       |> format_datetime()
     end)
-  end
-
-  defp date_or_weekstart(date, query) do
-    weekstart = Timex.beginning_of_week(date)
-
-    if Enum.member?(query.date_range, weekstart) do
-      weekstart
-    else
-      date
-    end
   end
 end
