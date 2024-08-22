@@ -1,20 +1,21 @@
 defmodule Plausible.Stats.Filters.QueryParserTest do
   use Plausible.DataCase
 
-  alias Plausible.Stats.Filters
+  alias Plausible.Stats.{Filters, DateTimeRange}
   import Plausible.Stats.Filters.QueryParser
 
   setup [:create_user, :create_new_site]
 
-  @today ~D[2021-05-05]
-  @date_range Date.range(@today, @today)
+  @now ~U[2021-05-05 12:12:00Z]
+  @today @now |> DateTime.to_date()
+  @date_range DateTimeRange.new(@today, @today)
 
   def check_success(params, site, expected_result) do
-    assert {:ok, ^expected_result} = parse(site, Map.put(params, "date", @today))
+    assert {:ok, ^expected_result} = parse(site, Map.put(params, "date", @now))
   end
 
   def check_error(params, site, expected_error_message) do
-    {:error, message} = parse(site, Map.put(params, "date", @today))
+    {:error, message} = parse(site, Map.put(params, "date", @now))
     assert message =~ expected_error_message
   end
 
@@ -358,7 +359,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         ]
       }
 
-      assert {:ok, res} = parse(site, Map.put(params, "date", @today))
+      assert {:ok, res} = parse(site, Map.put(params, "date", @now))
       expected_timezone = site.timezone
 
       assert %{
@@ -403,33 +404,43 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
   describe "date range validation" do
     test "parsing shortcut options", %{site: site} do
-      check_date_range("realtime", site, "realtime")
-      check_date_range("30m", site, "30m")
-      check_date_range("day", site, Date.range(~D[2021-05-05], ~D[2021-05-05]))
-      check_date_range("7d", site, Date.range(~D[2021-04-29], ~D[2021-05-05]))
-      check_date_range("30d", site, Date.range(~D[2021-04-05], ~D[2021-05-05]))
-      check_date_range("month", site, Date.range(~D[2021-05-01], ~D[2021-05-31]))
-      check_date_range("6mo", site, Date.range(~D[2020-12-01], ~D[2021-05-31]))
-      check_date_range("12mo", site, Date.range(~D[2020-06-01], ~D[2021-05-31]))
-      check_date_range("year", site, Date.range(~D[2021-01-01], ~D[2021-12-31]))
+      check_date_range(
+        "realtime",
+        site,
+        DateTimeRange.new(~N[2021-05-05 12:07:05], ~N[2021-05-05 12:12:05])
+      )
+
+      check_date_range(
+        "30m",
+        site,
+        DateTimeRange.new(~N[2021-05-05 11:42:05], ~N[2021-05-05 12:12:05])
+      )
+
+      check_date_range("day", site, DateTimeRange.new(~D[2021-05-05], ~D[2021-05-05]))
+      check_date_range("7d", site, DateTimeRange.new(~D[2021-04-29], ~D[2021-05-05]))
+      check_date_range("30d", site, DateTimeRange.new(~D[2021-04-05], ~D[2021-05-05]))
+      check_date_range("month", site, DateTimeRange.new(~D[2021-05-01], ~D[2021-05-31]))
+      check_date_range("6mo", site, DateTimeRange.new(~D[2020-12-01], ~D[2021-05-31]))
+      check_date_range("12mo", site, DateTimeRange.new(~D[2020-06-01], ~D[2021-05-31]))
+      check_date_range("year", site, DateTimeRange.new(~D[2021-01-01], ~D[2021-12-31]))
     end
 
     test "parsing `all` with previous data", %{site: site} do
       site = Map.put(site, :stats_start_date, ~D[2020-01-01])
-      check_date_range("all", site, Date.range(~D[2020-01-01], ~D[2021-05-05]))
+      check_date_range("all", site, DateTimeRange.new(~D[2020-01-01], ~D[2021-05-05]))
     end
 
     test "parsing `all` with no previous data", %{site: site} do
       site = Map.put(site, :stats_start_date, nil)
 
-      check_date_range("all", site, Date.range(~D[2021-05-05], ~D[2021-05-05]))
+      check_date_range("all", site, DateTimeRange.new(~D[2021-05-05], ~D[2021-05-05]))
     end
 
     test "parsing custom date range", %{site: site} do
       check_date_range(
         ["2021-05-05", "2021-05-05"],
         site,
-        Date.range(~D[2021-05-05], ~D[2021-05-05])
+        DateTimeRange.new(~D[2021-05-05], ~D[2021-05-05])
       )
     end
 
