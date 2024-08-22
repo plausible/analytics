@@ -16,7 +16,7 @@ const renderBucketLabel = function(query, graphData, label, comparison = false) 
   }
 
   if (graphData.interval === 'hour' || graphData.interval == 'minute') {
-    const date = dateFormatter({ interval: "date", longForm: true, period: query.period })(label)
+    const date = dateFormatter({ interval: "day", longForm: true, period: query.period })(label)
     return `${date}, ${formattedLabel}`
   }
 
@@ -113,7 +113,7 @@ export default function GraphTooltip(graphData, metric, query) {
           </div>
 
           ${graphData.interval === "month" ? `<span class="font-semibold italic">Click to view month</span>` : ""}
-          ${graphData.interval === "date" ? `<span class="font-semibold italic">Click to view day</span>` : ""}
+          ${graphData.interval === "day" ? `<span class="font-semibold italic">Click to view day</span>` : ""}
         </aside>
       `
     }
