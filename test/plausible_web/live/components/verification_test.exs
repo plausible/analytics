@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
     assert text_of_element(html, @progress) ==
              "We're visiting your site to ensure that everything is working"
 
-    assert element_exists?(html, ~s|a[href="/example.com/snippet"]|)
+    assert element_exists?(html, ~s|a[href="/example.com/snippet?flow="]|)
     assert element_exists?(html, ~s|a[href="/example.com/settings/general"]|)
     assert element_exists?(html, @pulsating_circle)
     refute class_of_element(html, @pulsating_circle) =~ "hidden"

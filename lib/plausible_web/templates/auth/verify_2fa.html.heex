@@ -1,14 +1,33 @@
-<div class="w-full max-w-3xl mt-4 mx-auto flex">
+<PlausibleWeb.Components.Generic.focus_box>
+  <:title>
+    Enter Your 2FA Code
+  </:title>
+
+  <:subtitle>
+    Enter the code from your authenticator application before it expires or wait for a new one.
+  </:subtitle>
+
+  <:footer>
+    <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
+      <li>
+        Can't access your authenticator application?
+        <.styled_link href={Routes.auth_path(@conn, :verify_2fa_recovery_code_form)}>
+          Use recovery code
+        </.styled_link>
+      </li>
+      <li :if={ee?()}>
+        Lost your recovery codes?
+        <.styled_link href="https://plausible.io/contact">
+          Contact us
+        </.styled_link>
+      </li>
+    </ol>
+  </:footer>
+
   <%= form_for @conn.params, Routes.auth_path(@conn, :verify_2fa), [
-      class: "w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8",
       onsubmit: "document.getElementById('verify-button').disabled = true"
     ], fn f -> %>
-    <h2 class="text-xl font-black dark:text-gray-100">
-      Enter Your 2FA Code
-    </h2>
-
-    <div class="text-sm mt-2 text-gray-500 dark:text-gray-200 leading-tight">
-      Enter the code from your authenticator application before it expires or wait for a new one.
+    <div class="mt-2 text-gray-500 dark:text-gray-200 leading-tight">
       <PlausibleWeb.Components.TwoFactor.verify_2fa_input form={f} field={:code} class="mt-6" />
 
       <div class="mt-4 flex flex-inline items-center sm:justify-start justify-center">
@@ -20,24 +39,6 @@
           Trust this device for <%= @remember_2fa_days %> days
         </label>
       </div>
-
-      <div class="mt-6 flex flex-row justify-between items-center">
-        <p class="text-sm">
-          Can't access your authenticator application?
-          <a
-            href={Routes.auth_path(@conn, :verify_2fa_recovery_code_form)}
-            class="underline text-indigo-600"
-          >
-            Use recovery code
-          </a>
-          <%= if ee?() do %>
-            <br /> Lost your recovery codes?
-            <a href="https://plausible.io/contact" class="underline text-indigo-600">
-              Contact us
-            </a>
-          <% end %>
-        </p>
-      </div>
     </div>
   <% end %>
-</div>
+</PlausibleWeb.Components.Generic.focus_box>

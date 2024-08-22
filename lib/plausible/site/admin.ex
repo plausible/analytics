@@ -106,28 +106,24 @@ defmodule Plausible.SiteAdmin do
   end
 
   defp transfer_ownership(conn, sites, %{"email" => email}) do
-    new_owner = Plausible.Auth.find_user_by(email: email)
-    inviter = conn.assigns[:current_user]
+    inviter = conn.assigns.current_user
 
-    if new_owner do
-      result =
-        Plausible.Site.Memberships.bulk_create_invitation(
-          sites,
-          inviter,
-          new_owner.email,
-          :owner,
-          check_permissions: false
-        )
-
-      case result do
-        {:ok, _} ->
-          :ok
-
-        {:error, :transfer_to_self} ->
-          {:error, "User is already an owner of one of the sites"}
-      end
+    with {:ok, new_owner} <- Plausible.Auth.get_user_by(email: email),
+         {:ok, _} <-
+           Plausible.Site.Memberships.bulk_create_invitation(
+             sites,
+             inviter,
+             new_owner.email,
+             :owner,
+             check_permissions: false
+           ) do
+      :ok
     else
-      {:error, "User could not be found"}
+      {:error, :user_not_found} ->
+        {:error, "User could not be found"}
+
+      {:error, :transfer_to_self} ->
+        {:error, "User is already an owner of one of the sites"}
     end
   end
 
@@ -136,24 +132,21 @@ defmodule Plausible.SiteAdmin do
   end
 
   defp transfer_ownership_direct(_conn, sites, %{"email" => email}) do
-    new_owner = Plausible.Auth.find_user_by(email: email)
-
-    if new_owner do
-      case Plausible.Site.Memberships.bulk_transfer_ownership_direct(sites, new_owner) do
-        {:ok, _} ->
-          :ok
-
-        {:error, :transfer_to_self} ->
-          {:error, "User is already an owner of one of the sites"}
-
-        {:error, :no_plan} ->
-          {:error, "The new owner does not have a subscription"}
-
-        {:error, {:over_plan_limits, limits}} ->
-          {:error, "Plan limits exceeded for one of the sites: #{Enum.join(limits, ", ")}"}
-      end
+    with {:ok, new_owner} <- Plausible.Auth.get_user_by(email: email),
+         {:ok, _} <- Plausible.Site.Memberships.bulk_transfer_ownership_direct(sites, new_owner) do
+      :ok
     else
-      {:error, "User could not be found"}
+      {:error, :user_not_found} ->
+        {:error, "User could not be found"}
+
+      {:error, :transfer_to_self} ->
+        {:error, "User is already an owner of one of the sites"}
+
+      {:error, :no_plan} ->
+        {:error, "The new owner does not have a subscription"}
+
+      {:error, {:over_plan_limits, limits}} ->
+        {:error, "Plan limits exceeded for one of the sites: #{Enum.join(limits, ", ")}"}
     end
   end
 
