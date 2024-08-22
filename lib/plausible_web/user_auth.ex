@@ -96,9 +96,19 @@ defmodule PlausibleWeb.UserAuth do
   end
 
   defp get_session_by_token({:new, token}) do
-    case Repo.get_by(Auth.UserSession, token: token) do
-      %Auth.UserSession{} = user_session -> {:ok, user_session}
-      nil -> {:error, :session_not_found}
+    now = NaiveDateTime.utc_now(:second)
+
+    token_query =
+      from(us in Auth.UserSession,
+        where: us.token == ^token and us.timeout_at > ^now
+      )
+
+    case Repo.one(token_query) do
+      %Auth.UserSession{} = user_session ->
+        {:ok, user_session}
+
+      nil ->
+        {:error, :session_not_found}
     end
   end
 
