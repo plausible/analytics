@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.QueryTest do
+defmodule Plausible.Stats.QueryResultTest do
   use Plausible.DataCase, async: true
   alias Plausible.Stats.{Query, QueryResult, QueryOptimizer}
 
