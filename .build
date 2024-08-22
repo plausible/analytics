@@ -194,6 +194,7 @@ Plausible.Stats.Legacy.Dimensions.html
 Plausible.Stats.Metrics.html
 Plausible.Stats.Query.html
 Plausible.Stats.QueryOptimizer.html
+Plausible.Stats.QueryResult.html
 Plausible.Stats.SQL.Expression.html
 Plausible.Stats.SQL.Fragments.html
 Plausible.Stats.SQL.SpecialMetrics.html
@@ -426,8 +427,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-5E1AE337.js
-dist/sidebar_items-C4D314F5.js
+dist/search_data-7461B686.js
+dist/sidebar_items-9F94FFBE.js
 index.html
 readme.html
 search.html
