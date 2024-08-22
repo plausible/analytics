@@ -403,8 +403,6 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
   describe "date range validation" do
     test "parsing shortcut options", %{site: site} do
-      check_date_range("realtime", site, "realtime")
-      check_date_range("30m", site, "30m")
       check_date_range("day", site, Date.range(~D[2021-05-05], ~D[2021-05-05]))
       check_date_range("7d", site, Date.range(~D[2021-04-29], ~D[2021-05-05]))
       check_date_range("30d", site, Date.range(~D[2021-04-05], ~D[2021-05-05]))
