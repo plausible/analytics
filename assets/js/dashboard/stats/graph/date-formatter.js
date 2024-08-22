@@ -26,7 +26,7 @@ const weekIntervalFormatter = {
   }
 }
 
-const dateIntervalFormatter = {
+const dayIntervalFormatter = {
   long(isoDate, _options) {
     return parseUTCDate(isoDate).format('ddd, D MMM')
   },
@@ -74,7 +74,7 @@ const minuteIntervalFormatter = {
 const factory = {
   month: monthIntervalFormatter,
   week: weekIntervalFormatter,
-  date: dateIntervalFormatter,
+  day: dayIntervalFormatter,
   hour: hourIntervalFormatter,
   minute: minuteIntervalFormatter
 }

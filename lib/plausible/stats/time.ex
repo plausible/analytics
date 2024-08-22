@@ -10,11 +10,13 @@ defmodule Plausible.Stats.Time do
     last_datetime =
       now
       |> NaiveDateTime.shift(second: 5)
-      |> beginning_of_time(site.native_stats_start_at)
       |> NaiveDateTime.truncate(:second)
 
     first_datetime =
-      now |> NaiveDateTime.shift(minute: -5) |> NaiveDateTime.truncate(:second)
+      now
+      |> NaiveDateTime.shift(minute: -5)
+      |> NaiveDateTime.truncate(:second)
+      |> beginning_of_time(site.native_stats_start_at)
 
     {first_datetime, last_datetime}
   end
@@ -23,11 +25,13 @@ defmodule Plausible.Stats.Time do
     last_datetime =
       now
       |> NaiveDateTime.shift(second: 5)
-      |> beginning_of_time(site.native_stats_start_at)
       |> NaiveDateTime.truncate(:second)
 
     first_datetime =
-      now |> NaiveDateTime.shift(minute: -30) |> NaiveDateTime.truncate(:second)
+      now
+      |> NaiveDateTime.shift(minute: -30)
+      |> NaiveDateTime.truncate(:second)
+      |> beginning_of_time(site.native_stats_start_at)
 
     {first_datetime, last_datetime}
   end

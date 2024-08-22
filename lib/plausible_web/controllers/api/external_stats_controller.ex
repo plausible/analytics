@@ -259,6 +259,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
     params = Map.put(params, "property", nil)
 
+    params =
+      if Map.get(params, "interval") == "date" do
+        %{params | "interval" => "day"}
+      else
+        params
+      end
+
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          :ok <- validate_interval(params),
@@ -316,7 +323,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp validate_period(_), do: :ok
 
-  @valid_intervals ["date", "month"]
+  @valid_intervals ["day", "month"]
   @valid_intervals_str Enum.map(@valid_intervals, &("`" <> &1 <> "`")) |> Enum.join(", ")
 
   defp validate_interval(%{"interval" => interval}) do

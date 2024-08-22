@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Interval do
   Collection of functions to work with intervals.
 
   The interval of a query defines the granularity of the data. You can think of
-  it as a `GROUP BY` clause. Possible values are `minute`, `hour`, `date`,
+  it as a `GROUP BY` clause. Possible values are `minute`, `hour`, `day`,
   `week`, and `month`.
   """
 
@@ -12,7 +12,7 @@ defmodule Plausible.Stats.Interval do
   @type opts :: list(opt())
   @typep period() :: String.t()
 
-  @intervals ~w(minute hour date week month)
+  @intervals ~w(minute hour day week month)
   @spec list() :: [t()]
   def list, do: @intervals
 
@@ -29,7 +29,7 @@ defmodule Plausible.Stats.Interval do
     case period do
       "realtime" -> "minute"
       "day" -> "hour"
-      period when period in ["custom", "7d", "30d", "month"] -> "date"
+      period when period in ["custom", "7d", "30d", "month"] -> "day"
       period when period in ["6mo", "12mo", "year"] -> "month"
     end
   end
@@ -44,7 +44,7 @@ defmodule Plausible.Stats.Interval do
         "month"
 
       Timex.diff(last, first, :days) > 0 ->
-        "date"
+        "day"
 
       true ->
         "hour"
@@ -54,14 +54,14 @@ defmodule Plausible.Stats.Interval do
   @valid_by_period %{
     "realtime" => ["minute"],
     "day" => ["minute", "hour"],
-    "7d" => ["hour", "date"],
-    "month" => ["date", "week"],
-    "30d" => ["date", "week"],
-    "6mo" => ["date", "week", "month"],
-    "12mo" => ["date", "week", "month"],
-    "year" => ["date", "week", "month"],
-    "custom" => ["date", "week", "month"],
-    "all" => ["date", "week", "month"]
+    "7d" => ["hour", "day"],
+    "month" => ["day", "week"],
+    "30d" => ["day", "week"],
+    "6mo" => ["day", "week", "month"],
+    "12mo" => ["day", "week", "month"],
+    "year" => ["day", "week", "month"],
+    "custom" => ["day", "week", "month"],
+    "all" => ["day", "week", "month"]
   }
 
   @spec valid_by_period(opts()) :: map()

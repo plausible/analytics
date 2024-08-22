@@ -137,7 +137,6 @@ defmodule PlausibleWeb.Api.StatsController do
         comparison_plot: comparison_result && plot_timeseries(comparison_result, metric),
         comparison_labels: comparison_result && label_timeseries(comparison_result, nil),
         present_index: present_index,
-        interval: query.interval,
         includes_imported: includes_imported?(query, comparison_query),
         imports_exist: site.complete_import_ids != [],
         full_intervals: full_intervals
@@ -273,7 +272,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
         Enum.find_index(dates, &(&1 == current_date))
 
-      "date" ->
+      "day" ->
         current_date =
           Timex.now(site.timezone)
           |> Timex.to_date()

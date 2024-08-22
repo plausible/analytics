@@ -160,7 +160,10 @@ export default function VisitorGraph({ updateImportedDataInView }) {
             }
             <IntervalPicker onIntervalUpdate={onIntervalUpdate} />
           </div>
-          <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} />
+          <LineGraphWithRouter
+            graphData={{...graphData, interval: getCurrentInterval(site, query)}}
+            darkTheme={isDarkTheme}
+          />
         </div>
       </FadeIn>
     </div>

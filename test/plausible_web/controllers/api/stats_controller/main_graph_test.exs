@@ -531,7 +531,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-07&metric=visitors&interval=date"
+          "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-07&metric=visitors&interval=day"
         )
 
       assert %{"plot" => plot} = json_response(conn, 200)
@@ -861,7 +861,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph?period=6mo&date=2021-06-01&metric=visitors&interval=date"
+          "/api/stats/#{site.domain}/main-graph?period=6mo&date=2021-06-01&metric=visitors&interval=day"
         )
 
       assert %{"plot" => plot} = json_response(conn, 200)
@@ -923,7 +923,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert %{
                "error" =>
-                 "Invalid value for interval. Accepted values are: minute, hour, date, week, month"
+                 "Invalid value for interval. Accepted values are: minute, hour, day, week, month"
              } == json_response(conn, 400)
     end
 

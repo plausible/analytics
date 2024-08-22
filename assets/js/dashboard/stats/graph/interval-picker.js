@@ -10,7 +10,7 @@ import { useSiteContext } from '../../site-context';
 const INTERVAL_LABELS = {
   'minute': 'Minutes',
   'hour': 'Hours',
-  'date': 'Days',
+  'day': 'Days',
   'week': 'Weeks',
   'month': 'Months'
 }
@@ -18,11 +18,11 @@ const INTERVAL_LABELS = {
 function validIntervals(site, query) {
   if (query.period === 'custom') {
     if (query.to.diff(query.from, 'days') < 7) {
-      return ['date']
+      return ['day']
     } else if (query.to.diff(query.from, 'months') < 1) {
-      return ['date', 'week']
+      return ['day', 'week']
     } else if (query.to.diff(query.from, 'months') < 12) {
-      return ['date', 'week', 'month']
+      return ['day', 'week', 'month']
     } else {
       return ['week', 'month']
     }
@@ -34,7 +34,7 @@ function validIntervals(site, query) {
 function getDefaultInterval(query, validIntervals) {
   const defaultByPeriod = {
     'day': 'hour',
-    '7d': 'date',
+    '7d': 'day',
     '6mo': 'month',
     '12mo': 'month',
     'year': 'month'
@@ -49,7 +49,7 @@ function getDefaultInterval(query, validIntervals) {
 
 function defaultForCustomPeriod(from, to) {
   if (to.diff(from, 'days') < 30) {
-    return 'date'
+    return 'day'
   } else if (to.diff(from, 'months') < 6) {
     return 'week'
   } else {
@@ -58,7 +58,13 @@ function defaultForCustomPeriod(from, to) {
 }
 
 function getStoredInterval(period, domain) {
-  return storage.getItem(`interval__${period}__${domain}`)
+  const stored = storage.getItem(`interval__${period}__${domain}`)
+
+  if (stored === 'date') {
+    return 'day'
+  } else {
+    return stored
+  }
 }
 
 function storeInterval(period, domain, interval) {
