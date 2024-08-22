@@ -953,11 +953,11 @@ defmodule PlausibleWeb.SiteControllerTest do
   end
 
   describe "PUT /:website/settings/features/visibility/:setting" do
-    def build_conn_with_some_url(context) do
-      {:ok, Map.put(context, :conn, build_conn(:get, "/some_parent_path"))}
+    def query_conn_with_some_url(context) do
+      {:ok, Map.put(context, :conn, get(context.conn, "/some_parent_path"))}
     end
 
-    setup [:build_conn_with_some_url, :create_user, :log_in]
+    setup [:create_user, :log_in, :query_conn_with_some_url]
 
     for {title, setting} <- %{
           "Goals" => :conversions_enabled,

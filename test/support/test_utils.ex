@@ -100,7 +100,11 @@ defmodule Plausible.TestUtils do
 
   def log_in(%{user: user, conn: conn}) do
     conn =
-      init_session(conn)
+      conn
+      |> PlausibleWeb.UserAuth.set_logged_in_cookie()
+      |> Phoenix.ConnTest.recycle()
+      |> Map.put(:secret_key_base, secret_key_base())
+      |> init_session()
       |> Plug.Conn.put_session(:current_user_id, user.id)
 
     {:ok, conn: conn}
@@ -287,5 +291,11 @@ defmodule Plausible.TestUtils do
     def maybe_fake_minio(_context) do
       :ok
     end
+  end
+
+  defp secret_key_base() do
+    :plausible
+    |> Application.fetch_env!(PlausibleWeb.Endpoint)
+    |> Keyword.fetch!(:secret_key_base)
   end
 end
