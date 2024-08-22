@@ -8,7 +8,8 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
   def call(conn, allowed_roles) do
     site =
       Repo.get_by(Plausible.Site,
-        domain: conn.path_params["domain"] || conn.path_params["website"]
+        domain:
+          conn.path_params["domain"] || conn.path_params["website"] || conn.params["site_id"]
       )
 
     shared_link_auth = conn.params["auth"]
