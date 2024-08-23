@@ -42,6 +42,12 @@ defmodule Plausible.Stats.Filters.QueryParser do
          :ok <- validate_metrics(query),
          :ok <- validate_include(query) do
       {:ok, query}
+    else
+      {:error, json_schema_errors} when is_list(json_schema_errors) ->
+        {:error, Plausible.Stats.SchemaErrorFormatter.format(json_schema_errors, params)}
+
+      error ->
+        error
     end
   end
 
