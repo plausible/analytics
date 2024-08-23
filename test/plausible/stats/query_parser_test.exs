@@ -10,16 +10,16 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   @date_range Date.range(@today, @today)
 
   def check_success(params, site, expected_result) do
-    assert {:ok, ^expected_result} = parse(site, Map.put(params, "date", @today))
+    assert {:ok, ^expected_result} = parse(site, params, @today)
   end
 
   def check_error(params, site, expected_error_message) do
-    {:error, message} = parse(site, Map.put(params, "date", @today))
+    {:error, message} = parse(site, params, @today)
     assert message =~ expected_error_message
   end
 
   def check_date_range(date_range, site, expected_date_range) do
-    %{"metrics" => ["visitors", "events"], "date_range" => date_range}
+    %{"site_id" => site.domain, "metrics" => ["visitors", "events"], "date_range" => date_range}
     |> check_success(site, %{
       metrics: [:visitors, :events],
       date_range: expected_date_range,
@@ -39,7 +39,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
   describe "metrics validation" do
     test "valid metrics passed", %{site: site} do
-      %{"metrics" => ["visitors", "events"], "date_range" => "all"}
+      %{"site_id" => site.domain, "metrics" => ["visitors", "events"], "date_range" => "all"}
       |> check_success(site, %{
         metrics: [:visitors, :events],
         date_range: @date_range,
@@ -53,12 +53,13 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
 
     test "invalid metric passed", %{site: site} do
-      %{"metrics" => ["visitors", "event:name"], "date_range" => "all"}
+      %{"site_id" => site.domain, "metrics" => ["visitors", "event:name"], "date_range" => "all"}
       |> check_error(site, "Unknown metric '\"event:name\"'")
     end
 
     test "fuller list of metrics", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => [
           "time_on_page",
           "visitors",
@@ -91,7 +92,11 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
 
     test "same metric queried multiple times", %{site: site} do
-      %{"metrics" => ["events", "visitors", "visitors"], "date_range" => "all"}
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["events", "visitors", "visitors"],
+        "date_range" => "all"
+      }
       |> check_error(site, ~r/Metrics cannot be queried multiple times/)
     end
   end
@@ -134,6 +139,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "filtering by invalid operation", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [
@@ -145,6 +151,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "filtering by custom properties", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [
@@ -169,6 +176,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       if dimension != "goal" do
         test "filtering by event:#{dimension} filter", %{site: site} do
           %{
+            "site_id" => site.domain,
             "metrics" => ["visitors"],
             "date_range" => "all",
             "filters" => [
@@ -194,6 +202,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     for dimension <- Filters.visit_props() do
       test "filtering by visit:#{dimension} filter", %{site: site} do
         %{
+          "site_id" => site.domain,
           "metrics" => ["visitors"],
           "date_range" => "all",
           "filters" => [
@@ -217,6 +226,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "invalid event filter", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [
@@ -228,6 +238,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "invalid visit filter", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [
@@ -239,6 +250,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "invalid filter", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => "foobar"
@@ -248,6 +260,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "numeric filter is invalid", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [["is", "visit:os_version", [123]]]
@@ -257,6 +270,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "numbers and strings are valid for visit:city", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [["is", "visit:city", [123, 456]]]
@@ -275,6 +289,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       })
 
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [["is", "visit:city", ["123", "456"]]]
@@ -295,6 +310,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "invalid visit:country filter", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [["is", "visit:country", ["USA"]]]
@@ -309,6 +325,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   describe "include validation" do
     test "setting include values", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "dimensions" => ["time"],
@@ -328,6 +345,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "setting invalid imports value", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "include" => "foobar"
@@ -337,6 +355,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "setting include.time_labels without time dimension", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "include" => %{"time_labels" => true}
@@ -351,6 +370,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       insert(:goal, %{site: site, page_path: "/thank-you"})
 
       params = %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [
@@ -358,7 +378,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         ]
       }
 
-      assert {:ok, res} = parse(site, Map.put(params, "date", @today))
+      assert {:ok, res} = parse(site, params, @today)
       expected_timezone = site.timezone
 
       assert %{
@@ -380,6 +400,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "invalid event filter", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [
@@ -391,6 +412,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "invalid page filter", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [
@@ -444,6 +466,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     for dimension <- Filters.event_props() do
       test "event:#{dimension} dimension", %{site: site} do
         %{
+          "site_id" => site.domain,
           "metrics" => ["visitors"],
           "date_range" => "all",
           "dimensions" => ["event:#{unquote(dimension)}"]
@@ -464,6 +487,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     for dimension <- Filters.visit_props() do
       test "visit:#{dimension} dimension", %{site: site} do
         %{
+          "site_id" => site.domain,
           "metrics" => ["visitors"],
           "date_range" => "all",
           "dimensions" => ["visit:#{unquote(dimension)}"]
@@ -483,6 +507,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "custom properties dimension", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "dimensions" => ["event:props:foobar"]
@@ -501,6 +526,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "invalid custom property dimension", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "dimensions" => ["event:props:"]
@@ -510,6 +536,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "invalid dimension name passed", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "dimensions" => ["visitors"]
@@ -519,6 +546,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "invalid dimension", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "dimensions" => "foobar"
@@ -528,6 +556,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "dimensions are not unique", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "dimensions" => ["event:name", "event:name"]
@@ -539,6 +568,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   describe "order_by validation" do
     test "ordering by metric", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors", "events"],
         "date_range" => "all",
         "order_by" => [["events", "desc"], ["visitors", "asc"]]
@@ -557,6 +587,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "ordering by dimension", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "dimensions" => ["event:name"],
@@ -576,6 +607,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "ordering by invalid value", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "order_by" => [["visssss", "desc"]]
@@ -585,6 +617,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "ordering by not queried metric", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "order_by" => [["events", "desc"]]
@@ -594,6 +627,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "ordering by not queried dimension", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "order_by" => [["event:name", "desc"]]
@@ -610,6 +644,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
 
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [["is", "event:props:foobar", ["foo"]]]
@@ -627,6 +662,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
 
       %{
+        "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
         "dimensions" => ["event:props:foobar"]
@@ -641,6 +677,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   describe "conversion_rate metric" do
     test "fails validation on its own", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["conversion_rate"],
         "date_range" => "all"
       }
@@ -714,6 +751,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "fails validation if event:page filter specified", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["views_per_visit"],
         "date_range" => "all",
         "filters" => [["is", "event:page", ["/"]]]
@@ -726,6 +764,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "fails validation with dimensions", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["views_per_visit"],
         "date_range" => "all",
         "dimensions" => ["event:name"]
@@ -740,6 +779,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   describe "session metrics" do
     test "single session metric succeeds", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["bounce_rate"],
         "date_range" => "all",
         "dimensions" => ["visit:device"]
@@ -758,6 +798,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "fails if using session metric with event dimension", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["bounce_rate"],
         "date_range" => "all",
         "dimensions" => ["event:props:foo"]
@@ -770,6 +811,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "does not fail if using session metric with event:page dimension", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["bounce_rate"],
         "date_range" => "all",
         "dimensions" => ["event:page"]
@@ -788,6 +830,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "does not fail if using session metric with event filter", %{site: site} do
       %{
+        "site_id" => site.domain,
         "metrics" => ["bounce_rate"],
         "date_range" => "all",
         "filters" => [["is", "event:props:foo", ["(none)"]]]

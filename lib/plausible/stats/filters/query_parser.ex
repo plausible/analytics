@@ -11,10 +11,17 @@ defmodule Plausible.Stats.Filters.QueryParser do
     time_labels: false
   }
 
-  def parse(site, params) when is_map(params) do
-    with {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
+  @query_schema Application.app_dir(:plausible, "priv/json-schemas/query-api-schema.json")
+                |> File.read!()
+                |> Jason.decode!()
+                |> ExJsonSchema.Schema.resolve()
+
+  def parse(site, params, now \\ nil) when is_map(params) do
+    with :ok <- ExJsonSchema.Validator.validate(@query_schema, params),
+         {:ok, date} <- parse_date(site, Map.get(params, "date"), now),
+         {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
-         {:ok, date_range} <- parse_date_range(site, Map.take(params, ["date_range", "date"])),
+         {:ok, date_range} <- parse_date_range(site, Map.get(params, "date_range"), date),
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          {:ok, include} <- parse_include(Map.get(params, "include", %{})),
@@ -115,22 +122,16 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{inspect(filter)}'"}
 
-  defp parse_date_range(site, %{"date_range" => date_range, "date" => date})
-       when is_binary(date) do
-    case Date.from_iso8601(date) do
-      {:ok, date} -> parse_date_range(site, date_range, date)
-      _ -> {:error, "Invalid date '#{date}'"}
+  defp parse_date(site, nil, nil), do: {:ok, today(site)}
+
+  defp parse_date(_site, date_string, nil) when is_binary(date_string) do
+    case Date.from_iso8601(date_string) do
+      {:ok, date} -> {:ok, date}
+      _ -> {:error, "Invalid date '#{date_string}'"}
     end
   end
 
-  defp parse_date_range(site, %{"date_range" => date_range, "date" => date})
-       when is_struct(date) do
-    parse_date_range(site, date_range, date)
-  end
-
-  defp parse_date_range(site, %{"date_range" => date_range}) do
-    parse_date_range(site, date_range, today(site))
-  end
+  defp parse_date(_site, _date_string, param_date), do: {:ok, param_date}
 
   defp parse_date_range(_site, "day", date) do
     {:ok, Date.range(date, date)}
