@@ -12,8 +12,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
     time_labels: false
   }
 
-  def parse(site, params, now \\ nil) when is_map(params) do
-    with :ok <- JSONSchema.validate(:internal, params),
+  def parse(site, schema_type, params, now \\ nil) when is_map(params) do
+    with :ok <- JSONSchema.validate(schema_type, params),
          {:ok, date} <- parse_date(site, Map.get(params, "date"), now),
          {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),

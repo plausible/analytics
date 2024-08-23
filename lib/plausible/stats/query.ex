@@ -29,8 +29,8 @@ defmodule Plausible.Stats.Query do
 
   @type t :: %__MODULE__{}
 
-  def build(site, params, debug_metadata) do
-    with {:ok, query_data} <- Filters.QueryParser.parse(site, params) do
+  def build(site, schema_type, params, debug_metadata) do
+    with {:ok, query_data} <- Filters.QueryParser.parse(site, schema_type, params) do
       query =
         struct!(__MODULE__, Map.to_list(query_data))
         |> put_imported_opts(site, %{})

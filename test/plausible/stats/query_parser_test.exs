@@ -9,12 +9,18 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   @today ~D[2021-05-05]
   @date_range Date.range(@today, @today)
 
-  def check_success(params, site, expected_result) do
-    assert {:ok, ^expected_result} = parse(site, params, @today)
+  def check_success(params, site, expected_result),
+    do: check_success(params, site, :public, expected_result)
+
+  def check_success(params, site, schema_type, expected_result) do
+    assert {:ok, ^expected_result} = parse(site, schema_type, params, @today)
   end
 
-  def check_error(params, site, expected_error_message) do
-    {:error, message} = parse(site, params, @today)
+  def check_error(params, site, expected_error_message),
+    do: check_error(params, site, :public, expected_error_message)
+
+  def check_error(params, site, schema_type, expected_error_message) do
+    {:error, message} = parse(site, schema_type, params, @today)
     assert message == expected_error_message
   end
 
@@ -71,7 +77,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         ],
         "date_range" => "all"
       }
-      |> check_success(site, %{
+      |> check_success(site, :internal, %{
         metrics: [
           :time_on_page,
           :visitors,
@@ -89,6 +95,15 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         include: %{imports: false, time_labels: false},
         preloaded_goals: []
       })
+    end
+
+    test "time_on_page is not a valid metric in public API", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["time_on_page"],
+        "date_range" => "all"
+      }
+      |> check_error(site, :public, "#/metrics/0: Invalid metric \"time_on_page\"")
     end
 
     test "same metric queried multiple times", %{site: site} do
@@ -121,7 +136,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             [Atom.to_string(unquote(operation)), "event:name", ["foo"]]
           ]
         }
-        |> check_success(site, %{
+        |> check_success(site, :internal, %{
           metrics: [:visitors],
           date_range: @date_range,
           filters: [
@@ -146,7 +161,26 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
         |> check_error(
           site,
+          :internal,
           "#/filters/0: Invalid filter [\"#{unquote(operation)}\", \"event:name\", \"foo\"]"
+        )
+      end
+    end
+
+    for operation <- [:matches, :does_not_match] do
+      test "#{operation} is not a valid filter operation in public API", %{site: site} do
+        %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [
+            [Atom.to_string(unquote(operation)), "event:name", ["foo"]]
+          ]
+        }
+        |> check_error(
+          site,
+          :public,
+          "#/filters/0: Invalid filter [\"#{unquote(operation)}\", \"event:name\", [\"foo\"]]"
         )
       end
     end
@@ -392,7 +426,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         ]
       }
 
-      assert {:ok, res} = parse(site, params, @today)
+      assert {:ok, res} = parse(site, :public, params, @today)
       expected_timezone = site.timezone
 
       assert %{

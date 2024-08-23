@@ -21,6 +21,7 @@ defmodule Plausible.Stats.QueryResultTest do
     {:ok, query} =
       Query.build(
         site,
+        :public,
         %{
           "site_id" => site.domain,
           "metrics" => ["pageviews"],
