@@ -270,7 +270,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "date_range" => "all",
         "filters" => [["is", "visit:os_version", [123]]]
       }
-      |> check_error(site, "#/filters/0: Invalid filter [\"is\", \"visit:os_version\", [123]]")
+      |> check_error(site, "Invalid filter '[\"is\", \"visit:os_version\", [123]]'")
     end
 
     test "numbers and strings are valid for visit:city", %{site: site} do
@@ -623,7 +623,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "date_range" => "all",
         "order_by" => [["visssss", "desc"]]
       }
-      |> check_error(site, ~r/Invalid order_by entry/)
+      |> check_error(site, "#/order_by/0/0: Invalid value in order_by \"visssss\"")
     end
 
     test "ordering by not queried metric", %{site: site} do

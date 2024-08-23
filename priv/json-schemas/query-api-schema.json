@@ -227,7 +227,7 @@
     "clauses": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": ["string", "integer"]
       }
     },
     "filter_entry": {

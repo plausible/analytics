@@ -58,6 +58,10 @@ defmodule Plausible.Stats.JSONSchema do
   defp reword("#/filters/" <> _, @no_matches, value), do: "Invalid filter #{i(value)}"
   defp reword("#/date_range", @no_matches, value), do: "Invalid date range #{i(value)}"
 
+  defp reword("#/order_by/" <> _, @no_matches, value) do
+    "Invalid value in order_by #{i(value)}"
+  end
+
   defp reword(_path, error, _value), do: error
 
   defp i(value), do: inspect(value, charlists: :as_lists)
