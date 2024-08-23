@@ -111,6 +111,22 @@ defmodule PlausibleWeb.UserAuth do
     )
   end
 
+  @spec convert_legacy_session(Plug.Conn.t()) :: Plug.Conn.t()
+  def convert_legacy_session(conn) do
+    current_user = conn.assigns[:current_user]
+
+    if current_user && Plug.Conn.get_session(conn, :current_user_id) do
+      {token, user_session} = create_user_session(conn, current_user)
+
+      conn
+      |> put_token_in_session(token)
+      |> Plug.Conn.delete_session(:current_user_id)
+      |> Plug.Conn.assign(:current_user_session, user_session)
+    else
+      conn
+    end
+  end
+
   defp get_session_by_token({:legacy, user_id}) do
     {:ok, %Auth.UserSession{user_id: user_id}}
   end

@@ -12,6 +12,9 @@ defmodule PlausibleWeb.Plugs.UserSessionTouch do
   end
 
   def call(conn, _opts) do
+    # NOTE: Needed only during transitional 14-day period
+    conn = UserAuth.convert_legacy_session(conn)
+
     if user_session = conn.assigns[:current_user_session] do
       assign(
         conn,
