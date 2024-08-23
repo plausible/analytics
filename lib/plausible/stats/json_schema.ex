@@ -45,12 +45,11 @@ defmodule Plausible.Stats.JSONSchema do
 
   defp format_errors(errors, params) do
     errors
-    |> Enum.map(fn {error, path} ->
+    |> Enum.map_join("\n", fn {error, path} ->
       value = JSONPointer.get!(params, path)
 
       "#{path}: #{reword(path, error, value)}"
     end)
-    |> Enum.join("\n")
   end
 
   @no_matches "Expected exactly one of the schemata to match, but none of them did."
