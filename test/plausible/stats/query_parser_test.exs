@@ -97,7 +97,16 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "metrics" => ["events", "visitors", "visitors"],
         "date_range" => "all"
       }
-      |> check_error(site, "Metrics cannot be queried multiple times")
+      |> check_error(site, "#/metrics: Expected items to be unique but they were not.")
+    end
+
+    test "no metrics passed", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => [],
+        "date_range" => "all"
+      }
+      |> check_error(site, "#/metrics: Expected a minimum of 1 items but got 0.")
     end
   end
 
@@ -572,7 +581,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "date_range" => "all",
         "dimensions" => ["event:name", "event:name"]
       }
-      |> check_error(site, "Some dimensions are listed multiple times")
+      |> check_error(site, "#/dimensions: Expected items to be unique but they were not.")
     end
   end
 

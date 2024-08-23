@@ -11,6 +11,8 @@
       "items": {
         "$ref": "#/definitions/metric"
       },
+      "minItems": 1,
+      "uniqueItems": true,
       "description": "List of metrics to query"
     },
     "date_range": {
@@ -22,7 +24,8 @@
       "items": {
         "$ref": "#/definitions/dimensions"
       },
-      "description": "What to group the results by. Same as `property` in Plausible API v1"
+      "description": "What to group the results by. Same as `property` in Plausible API v1",
+      "uniqueItems": true
     },
     "filters": {
       "type": "array",

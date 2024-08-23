@@ -41,17 +41,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp parse_metrics([]), do: {:error, "No valid metrics passed"}
-
   defp parse_metrics(metrics) when is_list(metrics) do
-    if length(metrics) == length(Enum.uniq(metrics)) do
-      parse_list(metrics, &parse_metric/1)
-    else
-      {:error, "Metrics cannot be queried multiple times"}
-    end
+    parse_list(metrics, &parse_metric/1)
   end
-
-  defp parse_metrics(_invalid_metrics), do: {:error, "Invalid metrics passed"}
 
   defp parse_metric(metric_str) do
     case Metrics.from_string(metric_str) do
@@ -199,17 +191,11 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp today(site), do: DateTime.now!(site.timezone) |> DateTime.to_date()
 
   defp parse_dimensions(dimensions) when is_list(dimensions) do
-    if length(dimensions) == length(Enum.uniq(dimensions)) do
-      parse_list(
-        dimensions,
-        &parse_dimension_entry(&1, "Invalid dimensions '#{i(dimensions)}'")
-      )
-    else
-      {:error, "Some dimensions are listed multiple times"}
-    end
+    parse_list(
+      dimensions,
+      &parse_dimension_entry(&1, "Invalid dimensions '#{i(dimensions)}'")
+    )
   end
-
-  defp parse_dimensions(dimensions), do: {:error, "Invalid dimensions '#{i(dimensions)}'"}
 
   defp parse_order_by(order_by) when is_list(order_by) do
     parse_list(order_by, &parse_order_by_entry/1)
@@ -268,16 +254,11 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp parse_include(entry), do: {:error, "Invalid include passed '#{i(entry)}'"}
-
   defp parse_include_value({"imports", value}) when is_boolean(value),
     do: {:ok, {:imports, value}}
 
   defp parse_include_value({"time_labels", value}) when is_boolean(value),
     do: {:ok, {:time_labels, value}}
-
-  defp parse_include_value({key, value}),
-    do: {:error, "Invalid include entry '#{i(%{key => value})}'"}
 
   defp parse_filter_key_string(filter_key, error_message \\ "") do
     case filter_key do
