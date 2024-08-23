@@ -749,8 +749,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
     query = Query.from(site, params, debug_metadata(conn))
 
-    user_id = get_session(conn, :current_user_id)
-    is_admin = user_id && Plausible.Sites.has_admin_access?(user_id, site)
+    is_admin =
+      if current_user = conn.assigns[:current_user] do
+        Plausible.Sites.has_admin_access?(current_user.id, site)
+      else
+        false
+      end
 
     pagination = {
       to_int(params["limit"], 9),

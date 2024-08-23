@@ -9,6 +9,8 @@ defmodule PlausibleWeb do
         use PlausibleWeb.Live.SentryContext
       end
 
+      use PlausibleWeb.Live.AuthContext
+
       alias PlausibleWeb.Router.Helpers, as: Routes
       alias Phoenix.LiveView.JS
     end

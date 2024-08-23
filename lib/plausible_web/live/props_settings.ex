@@ -8,15 +8,11 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
   alias PlausibleWeb.Live.Components.ComboBox
 
-  def mount(
-        _params,
-        %{"site_id" => site_id, "domain" => domain, "current_user_id" => user_id},
-        socket
-      ) do
+  def mount(_params, %{"site_id" => site_id, "domain" => domain}, socket) do
     socket =
       socket
-      |> assign_new(:site, fn ->
-        Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+      |> assign_new(:site, fn %{current_user: current_user} ->
+        Plausible.Sites.get_for_user!(current_user, domain, [:owner, :admin, :super_admin])
       end)
       |> assign_new(:all_props, fn %{site: site} ->
         site.allowed_event_props || []
@@ -29,7 +25,6 @@ defmodule PlausibleWeb.Live.PropsSettings do
      assign(socket,
        site_id: site_id,
        domain: domain,
-       current_user_id: user_id,
        add_prop?: false,
        filter_text: ""
      )}
@@ -45,7 +40,6 @@ defmodule PlausibleWeb.Live.PropsSettings do
           PlausibleWeb.Live.PropsSettings.Form,
           id: "props-form",
           session: %{
-            "current_user_id" => @current_user_id,
             "domain" => @domain,
             "site_id" => @site_id,
             "rendered_by" => self()

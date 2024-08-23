@@ -27,13 +27,13 @@
       <div class="my-4 border-b border-gray-400"></div>
 
       <PlausibleWeb.Components.Billing.Notice.subscription_cancelled
-        user={@user}
+        user={@current_user}
         dismissable={false}
       />
 
       <div class="flex flex-col items-center justify-between mt-8 sm:flex-row sm:items-start">
         <PlausibleWeb.Components.Billing.monthly_quota_box
-          user={@user}
+          user={@current_user}
           subscription={@subscription}
         />
         <div
@@ -105,7 +105,7 @@
           </div>
         <% true -> %>
           <div class="mt-8">
-            <PlausibleWeb.Components.Billing.upgrade_link user={@user} />
+            <PlausibleWeb.Components.Billing.upgrade_link />
           </div>
       <% end %>
     </div>
@@ -334,7 +334,7 @@
     <div class="flex flex-col mt-6">
       <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-          <%= if Enum.any?(@user.api_keys) do %>
+          <%= if Enum.any?(@api_keys) do %>
             <div class="overflow-hidden border-b border-gray-200 shadow dark:border-gray-900 sm:rounded-lg">
               <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-900">
                 <thead class="bg-gray-50 dark:bg-gray-900">
@@ -357,7 +357,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <%= for api_key <- @user.api_keys do %>
+                  <%= for api_key <- @api_keys do %>
                     <tr class="bg-white dark:bg-gray-800">
                       <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">
                         <%= api_key.name %>

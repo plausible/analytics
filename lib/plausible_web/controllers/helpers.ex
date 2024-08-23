@@ -33,5 +33,11 @@ defmodule PlausibleWeb.ControllerHelpers do
   end
 
   defp get_user_id(_conn, %{current_user: user}), do: user.id
-  defp get_user_id(conn, _assigns), do: get_session(conn, :current_user_id)
+
+  defp get_user_id(conn, _assigns) do
+    case PlausibleWeb.UserAuth.get_user_session(conn) do
+      {:ok, user_session} -> user_session.user_id
+      _ -> nil
+    end
+  end
 end

@@ -30,6 +30,6 @@ defmodule PlausibleWeb.SessionTimeoutPlugTest do
       |> init_test_session(%{current_user_id: 1, session_timeout_at: 1})
       |> SessionTimeoutPlug.call(@opts)
 
-    assert conn.private[:plug_session_info] == :drop
+    assert conn.private[:plug_session_info] == :renew
   end
 end

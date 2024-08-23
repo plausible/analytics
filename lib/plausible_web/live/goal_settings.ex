@@ -10,13 +10,13 @@ defmodule PlausibleWeb.Live.GoalSettings do
 
   def mount(
         _params,
-        %{"site_id" => site_id, "domain" => domain, "current_user_id" => user_id},
+        %{"site_id" => site_id, "domain" => domain},
         socket
       ) do
     socket =
       socket
-      |> assign_new(:site, fn ->
-        user_id
+      |> assign_new(:site, fn %{current_user: current_user} ->
+        current_user
         |> Sites.get_for_user!(domain, [:owner, :admin, :super_admin])
         |> Plausible.Imported.load_import_data()
       end)
@@ -33,9 +33,6 @@ defmodule PlausibleWeb.Live.GoalSettings do
           exclude: exclude,
           limit: :unlimited
         )
-      end)
-      |> assign_new(:current_user, fn ->
-        Plausible.Repo.get(Plausible.Auth.User, user_id)
       end)
 
     {:ok,
