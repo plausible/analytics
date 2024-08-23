@@ -5,19 +5,15 @@ defmodule Plausible.Stats.Filters.QueryParser do
   alias Plausible.Stats.Filters
   alias Plausible.Stats.Query
   alias Plausible.Stats.Metrics
+  alias Plausible.Stats.JSONSchema
 
   @default_include %{
     imports: false,
     time_labels: false
   }
 
-  @query_schema Application.app_dir(:plausible, "priv/json-schemas/query-api-schema.json")
-                |> File.read!()
-                |> Jason.decode!()
-                |> ExJsonSchema.Schema.resolve()
-
   def parse(site, params, now \\ nil) when is_map(params) do
-    with :ok <- ExJsonSchema.Validator.validate(@query_schema, params),
+    with :ok <- JSONSchema.validate(:internal, params),
          {:ok, date} <- parse_date(site, Map.get(params, "date"), now),
          {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
@@ -42,12 +38,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
          :ok <- validate_metrics(query),
          :ok <- validate_include(query) do
       {:ok, query}
-    else
-      {:error, json_schema_errors} when is_list(json_schema_errors) ->
-        {:error, Plausible.Stats.SchemaErrorFormatter.format(json_schema_errors, params)}
-
-      error ->
-        error
     end
   end
 

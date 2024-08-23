@@ -102,7 +102,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   end
 
   describe "filters validation" do
-    for operation <- [:is, :is_not, :matches, :does_not_match] do
+    for operation <- [:is, :is_not, :matches, :does_not_match, :contains, :does_not_contain] do
       test "#{operation} filter", %{site: site} do
         %{
           "site_id" => site.domain,
