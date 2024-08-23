@@ -6,6 +6,8 @@ defmodule Plausible.Stats.JSONSchema do
   available on the public API.
   """
 
+  @external_resource "priv/json-schemas/query-api-schema.json"
+
   @public_query_schema Application.app_dir(:plausible, "priv/json-schemas/query-api-schema.json")
                        |> File.read!()
                        |> Jason.decode!()
