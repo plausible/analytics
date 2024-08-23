@@ -20,4 +20,8 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
         |> json(%{error: message})
     end
   end
+
+  def schema(conn, _params) do
+    json(conn, Plausible.Stats.JSONSchema.raw_public_schema())
+  end
 end

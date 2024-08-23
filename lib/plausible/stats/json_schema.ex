@@ -8,17 +8,13 @@ defmodule Plausible.Stats.JSONSchema do
 
   @external_resource "priv/json-schemas/query-api-schema.json"
 
-  @public_query_schema Application.app_dir(:plausible, "priv/json-schemas/query-api-schema.json")
-                       |> File.read!()
-                       |> Jason.decode!()
-                       |> ExJsonSchema.Schema.resolve()
+  @raw_public_schema Application.app_dir(:plausible, "priv/json-schemas/query-api-schema.json")
+                     |> File.read!()
+                     |> Jason.decode!()
 
-  @internal_query_schema Application.app_dir(
-                           :plausible,
-                           "priv/json-schemas/query-api-schema.json"
-                         )
-                         |> File.read!()
-                         |> Jason.decode!()
+  @public_query_schema ExJsonSchema.Schema.resolve(@raw_public_schema)
+
+  @internal_query_schema @raw_public_schema
                          # Add overrides for things allowed in the internal API
                          |> JSONPointer.add!(
                            "#/definitions/filter_entry/oneOf/0/items/0/enum/0",
@@ -39,6 +35,8 @@ defmodule Plausible.Stats.JSONSchema do
       {:error, errors} -> {:error, format_errors(errors, params)}
     end
   end
+
+  def raw_public_schema(), do: @raw_public_schema
 
   defp schema(:public), do: @public_query_schema
   defp schema(:internal), do: @internal_query_schema
