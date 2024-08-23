@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9F94FFBE.js"></script>
+    <script src="dist/sidebar_items-7C6BA389.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -231,13 +231,11 @@ Pages
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>) (required)</li></ul></div>
-
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#mount/3" translate="no">mount(params, map, socket)</a>
+        <a href="#mount/3" translate="no">mount(params, session, socket)</a>
 
       </div>
 
@@ -325,7 +323,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">ellipsis_menu(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L242" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L237" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -347,7 +345,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">favicon(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L555" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L548" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -369,7 +367,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">handle_event(binary, arg2, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L564" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L557" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -413,7 +411,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">handle_params(params, uri, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L32" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L30" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -435,7 +433,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">icon_pin(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L288" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L283" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -463,7 +461,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">invitation(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L166" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L161" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -491,7 +489,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">invitation_modal(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L350" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L343" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -501,13 +499,7 @@ Pages
 
   <section class="docstring">
 
-<h2 id="invitation_modal/1-attributes" class="section-heading">
-  <a href="#invitation_modal/1-attributes" class="hover-link">
-    <i class="ri-link-m" aria-hidden="true"></i>
-  </a>
-  <span class="text">Attributes</span>
-</h2>
-<ul><li><code class="inline">user</code> (<a href="Plausible.Auth.User.html"><code class="inline">Plausible.Auth.User</code></a>) (required)</li></ul>
+
   </section>
 </section>
 <section class="detail" id="mount/3">
@@ -517,9 +509,9 @@ Pages
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">mount(params, map, socket)</h1>
+    <h1 class="signature" translate="no">mount(params, session, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L18" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L17" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -541,7 +533,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">percentage_change(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L337" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L332" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -569,7 +561,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">render(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L53" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L51" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -591,7 +583,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">search_form(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L513" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L506" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -619,7 +611,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">site(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L200" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L195" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -647,7 +639,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">site_stats(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L305" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L300" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -675,7 +667,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">upgrade_nag_screen(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L124" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sites.ex#L119" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
