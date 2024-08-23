@@ -115,7 +115,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
           "dimensions" => ["badproperty"]
         })
 
-      assert json_response(conn, 400)["error"] =~ "Invalid dimensions"
+      assert json_response(conn, 400)["error"] ==
+               "#/dimensions/0: Invalid dimension \"badproperty\""
     end
 
     test "empty custom property is invalid", %{conn: conn, site: site} do
@@ -127,7 +128,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
           "dimensions" => ["event:props:"]
         })
 
-      assert json_response(conn, 400)["error"] =~ "Invalid dimensions"
+      assert json_response(conn, 400)["error"] ==
+               "#/dimensions/0: Invalid dimension \"event:props:\""
     end
 
     test "validates that correct date range is used", %{conn: conn, site: site} do
@@ -139,7 +141,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
           "dimensions" => ["event:name"]
         })
 
-      assert json_response(conn, 400)["error"] =~ "Invalid date_range"
+      assert json_response(conn, 400)["error"] ==
+               "#/date_range: Invalid date range \"bad_period\""
     end
 
     test "fails when an invalid metric is provided", %{conn: conn, site: site} do
@@ -151,7 +154,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
           "dimensions" => ["event:name"]
         })
 
-      assert json_response(conn, 400)["error"] =~ "Unknown metric '\"baa\"'"
+      assert json_response(conn, 400)["error"] == "#/metrics/1: Invalid metric \"baa\""
     end
 
     test "session metrics cannot be used with event:name dimension", %{conn: conn, site: site} do
@@ -227,7 +230,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
         })
 
       assert json_response(conn, 400) == %{
-               "error" => "Metrics cannot be queried multiple times"
+               "error" => "#/metrics: Expected items to be unique but they were not."
              }
     end
 
