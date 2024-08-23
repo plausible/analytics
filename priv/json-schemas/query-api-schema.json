@@ -242,7 +242,6 @@
               "type": "string",
               "enum": [
                 "is_not",
-                "contains",
                 "does_not_contain"
               ],
               "description": "filter operation"
@@ -270,7 +269,8 @@
             {
               "type": "string",
               "enum": [
-                "is"
+                "is",
+                "contains"
               ],
               "description": "filter operation"
             },
