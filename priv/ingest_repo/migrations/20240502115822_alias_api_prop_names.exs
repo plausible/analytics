@@ -1,5 +1,5 @@
 defmodule Plausible.IngestRepo.Migrations.AliasApiPropNames do
-  """
+  @moduledoc """
   Migration adds a ALIAS columns needed to keep DB schema and api
   property naming in sync to reduce overhead in code.
   """
