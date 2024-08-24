@@ -25,6 +25,39 @@ defmodule Plausible.Release do
     IO.puts("Migrations successful!")
   end
 
+  # Unlike `migrate/0` above this function lists *all* pending migrations
+  # across all repos, sorts them into a single liss and only then runs them.
+  # This approach helps resolve dependencies between migrations across repos.
+  def interweave_sort_migrate do
+    prepare()
+
+    # interweave
+    all_pending =
+      Enum.flat_map(repos(), fn repo ->
+        Ecto.Migrator.migrations(repo)
+        |> Enum.filter(fn {status, _version, _name} -> status == :down end)
+        |> Enum.map(fn {_status, version, name} -> {repo, _migration = {version, name}} end)
+      end)
+
+    # sort
+    all_sorted =
+      Enum.sort_by(all_pending, fn {_repo, migration} -> migration end, :asc)
+
+    # migrate
+    Enum.each(all_sorted, fn {repo, {version, name}} ->
+      [{module, _binary}] =
+        Code.compile_file(
+          "#{version}_#{name}.exs",
+          _relative_to = Ecto.Migrator.migrations_path(repo)
+        )
+
+      {:ok, _, _} =
+        Ecto.Migrator.with_repo(repo, fn repo ->
+          Ecto.Migrator.run(repo, [{version, module}], :up, all: true)
+        end)
+    end)
+  end
+
   def pending_migrations do
     prepare()
     IO.puts("Pending migrations")
