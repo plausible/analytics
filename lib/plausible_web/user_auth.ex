@@ -79,10 +79,10 @@ defmodule PlausibleWeb.UserAuth do
     user_session
   end
 
-  def touch_user_session(user_session) do
+  def touch_user_session(user_session, now \\ NaiveDateTime.utc_now(:second)) do
     %{token: token, timeout_at: timeout_at, last_used_at: last_used_at} =
       user_session
-      |> Auth.UserSession.touch_session()
+      |> Auth.UserSession.touch_session(now)
       |> Ecto.Changeset.apply_changes()
 
     Repo.update_all(
@@ -169,7 +169,7 @@ defmodule PlausibleWeb.UserAuth do
   defp put_token_in_session(conn, {:new, token}) do
     conn
     |> Plug.Conn.put_session(:user_token, token)
-    |> Plug.Conn.put_session(:live_socket_id, "users_sessions:#{Base.url_encode64(token)}")
+    |> Plug.Conn.put_session(:live_socket_id, "user_sessions:#{Base.url_encode64(token)}")
   end
 
   defp get_user_token(%Plug.Conn{} = conn) do
