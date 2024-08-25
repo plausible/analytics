@@ -1141,6 +1141,99 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
   describe "with imported data" do
     setup [:create_user, :log_in, :create_new_site]
 
+    test "gracefully ignores unsupported WP Search Queries goal for imported data", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, event_name: unquote("WP Search Queries"), site: site)
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: unquote("WP Search Queries"),
+          "meta.key": ["search_query", "result_count"],
+          "meta.value": ["some phrase", "12"]
+        ),
+        build(:imported_custom_events,
+          name: "view_search_results",
+          visitors: 100,
+          events: 200
+        ),
+        build(:imported_visitors, visitors: 9)
+      ])
+
+      filters = Jason.encode!(%{goal: unquote("WP Search Queries")})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/search_query?period=day&with_imported=true&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "visitors" => 1,
+                 "name" => "some phrase",
+                 "events" => 1,
+                 "conversion_rate" => 100.0
+               }
+             ]
+    end
+
+    test "returns path breakdown for 404 goal", %{conn: conn, site: site} do
+      insert(:goal, event_name: "404", site: site)
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "404",
+          "meta.key": ["path"],
+          "meta.value": ["/some/path/first.bin"]
+        ),
+        build(:imported_custom_events,
+          name: "404",
+          visitors: 2,
+          events: 5,
+          path: "/some/path/first.bin"
+        ),
+        build(:imported_custom_events,
+          name: "404",
+          visitors: 5,
+          events: 10,
+          path: "/some/path/second.bin"
+        ),
+        build(:imported_custom_events,
+          name: "view_search_results",
+          visitors: 100,
+          events: 200
+        ),
+        build(:imported_visitors, visitors: 9)
+      ])
+
+      filters = Jason.encode!(%{goal: "404"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/path?period=day&with_imported=true&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "visitors" => 5,
+                 "name" => "/some/path/second.bin",
+                 "events" => 10,
+                 "conversion_rate" => 50.0
+               },
+               %{
+                 "visitors" => 3,
+                 "name" => "/some/path/first.bin",
+                 "events" => 6,
+                 "conversion_rate" => 30.0
+               }
+             ]
+    end
+
     for goal_name <- ["Outbound Link: Click", "File Download", "Cloaked Link: Click"] do
       test "returns url breakdown for #{goal_name} goal", %{conn: conn, site: site} do
         insert(:goal, event_name: unquote(goal_name), site: site)

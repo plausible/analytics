@@ -51,8 +51,10 @@ defmodule Plausible.Imported do
 
   @spec imported_custom_props() :: [String.t()]
   def imported_custom_props do
-    Plausible.Props.internal_keys()
-    |> Enum.map(&("event:props:" <> &1))
+    # NOTE: Keep up to date with `Plausible.Props.internal_keys/1`,
+    # but _ignore_ unsupported keys. Currently, `search_query` is
+    # not supported in imported queries.
+    Enum.map(~w(url path), &("event:props:" <> &1))
   end
 
   @spec goals_with_url() :: [String.t()]
