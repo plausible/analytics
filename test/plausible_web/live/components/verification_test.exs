@@ -18,8 +18,6 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
     assert text_of_element(html, @progress) ==
              "We're visiting your site to ensure that everything is working"
 
-    assert element_exists?(html, ~s|a[href="/example.com/snippet?flow="]|)
-    assert element_exists?(html, ~s|a[href="/example.com/settings/general"]|)
     assert element_exists?(html, @pulsating_circle)
     refute class_of_element(html, @pulsating_circle) =~ "hidden"
     refute element_exists?(html, @recommendations)
@@ -55,11 +53,10 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
            ]
   end
 
-  test "hides pulsating circle when finished in a modal, shows check circle" do
+  test "hides pulsating circle when finished, shows check circle" do
     html =
       render_component(@component,
         domain: "example.com",
-        modal?: true,
         success?: true,
         finished?: true
       )
@@ -83,5 +80,23 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
     html = render_component(@component, domain: "example.com", attempts: 3, finished?: true)
     assert html =~ "Need further help with your integration?"
     assert element_exists?(html, ~s|a[href="https://plausible.io/contact"]|)
+  end
+
+  test "offers escape paths: settings and installation instructions on failure" do
+    html =
+      render_component(@component,
+        domain: "example.com",
+        success?: false,
+        finished?: true,
+        installation_type: "WordPress",
+        flow: "review"
+      )
+
+    assert element_exists?(html, ~s|a[href="/example.com/settings/general"]|)
+
+    assert element_exists?(
+             html,
+             ~s|a[href="/example.com/installation?flow=review&installation_type=WordPress"]|
+           )
   end
 end

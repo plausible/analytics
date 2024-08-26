@@ -8,75 +8,61 @@ defmodule PlausibleWeb.Live.Verification do
   use Phoenix.HTML
 
   alias Plausible.Verification.{Checks, State}
-  alias PlausibleWeb.Live.Components.Modal
 
   @component PlausibleWeb.Live.Components.Verification
   @slowdown_for_frequent_checking :timer.seconds(5)
 
+  def mount(:not_mounted_at_router, %{"domain" => domain} = session, socket) do
+    mount(%{"website" => domain}, session, socket)
+  end
+
   def mount(
-        :not_mounted_at_router,
-        %{"domain" => domain} = session,
+        %{"website" => domain} = params,
+        session,
         socket
       ) do
+    site =
+      Plausible.Sites.get_for_user!(session["current_user_id"], domain, [
+        :owner,
+        :admin,
+        :super_admin,
+        :viewer
+      ])
+
     socket =
       assign(socket,
+        site: site,
         domain: domain,
-        modal?: !!session["modal?"],
+        has_pageviews?: has_pageviews?(site),
         component: @component,
+        installation_type: params["installation_type"] || session["installation_type"],
         report_to: session["report_to"] || self(),
         delay: session["slowdown"] || 500,
         slowdown: session["slowdown"] || 500,
-        flow: session["flow"] || "",
+        flow: params["flow"] || session["flow"] || "",
         checks_pid: nil,
         attempts: 0
       )
 
-    if connected?(socket) and !session["modal?"] do
+    if connected?(socket) do
       launch_delayed(socket)
     end
-
-    socket =
-      if connected?(socket) and !!session["modal?"] and !!session["open_modal?"] do
-        launch_delayed(socket)
-        Modal.open(socket, "verification-modal")
-      else
-        socket
-      end
 
     {:ok, socket}
   end
 
   def render(assigns) do
     ~H"""
-    <div :if={@modal?} phx-click-away="reset">
-      <.live_component module={Modal} id="verification-modal">
-        <.live_component
-          module={@component}
-          domain={@domain}
-          id="verification-within-modal"
-          modal?={@modal?}
-          attempts={@attempts}
-        />
-      </.live_component>
-
-      <PlausibleWeb.Components.Generic.button
-        id="launch-verification-button"
-        x-data
-        x-on:click={Modal.JS.open("verification-modal")}
-        phx-click="launch-verification"
-        class="mt-6"
-      >
-        Verify your integration
-      </PlausibleWeb.Components.Generic.button>
-    </div>
+    <PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Verify installation" />
 
     <.live_component
-      :if={!@modal?}
       module={@component}
+      installation_type={@installation_type}
       domain={@domain}
       id="verification-standalone"
       attempts={@attempts}
       flow={@flow}
+      awaiting_first_pageview?={not @has_pageviews?}
     />
     """
   end
@@ -127,6 +113,10 @@ defmodule PlausibleWeb.Live.Verification do
   def handle_info({:verification_end, %State{} = state}, socket) do
     interpretation = Checks.interpret_diagnostics(state)
 
+    if not socket.assigns.has_pageviews? do
+      Process.send_after(self(), :check_pageviews, socket.assigns.delay * 2)
+    end
+
     update_component(socket,
       finished?: true,
       success?: interpretation.ok?,
@@ -134,6 +124,20 @@ defmodule PlausibleWeb.Live.Verification do
     )
 
     {:noreply, assign(socket, checks_pid: nil)}
+  end
+
+  def handle_info(:check_pageviews, socket) do
+    socket =
+      if has_pageviews?(socket.assigns.site) do
+        redirect(socket,
+          external: Routes.stats_url(PlausibleWeb.Endpoint, :stats, socket.assigns.domain, [])
+        )
+      else
+        Process.send_after(self(), :check_pageviews, socket.assigns.delay * 2)
+        socket
+      end
+
+    {:noreply, socket}
   end
 
   defp reset_component(socket) do
@@ -147,20 +151,18 @@ defmodule PlausibleWeb.Live.Verification do
     socket
   end
 
-  defp update_component(socket, updates) do
+  defp update_component(_socket, updates) do
     send_update(
       @component,
-      Keyword.merge(updates,
-        id:
-          if(socket.assigns.modal?,
-            do: "verification-within-modal",
-            else: "verification-standalone"
-          )
-      )
+      Keyword.merge(updates, id: "verification-standalone")
     )
   end
 
   defp launch_delayed(socket) do
     Process.send_after(self(), {:start, socket.assigns.report_to}, socket.assigns.delay)
+  end
+
+  defp has_pageviews?(site) do
+    Plausible.Stats.Clickhouse.has_pageviews?(site)
   end
 end
