@@ -25,6 +25,9 @@ defmodule Plausible.Auth.UserSession do
     timestamps(updated_at: false)
   end
 
+  @spec timeout_duration() :: Duration.t()
+  def timeout_duration(), do: @timeout
+
   @spec new_session(Auth.User.t(), String.t(), NaiveDateTime.t()) :: Ecto.Changeset.t()
   def new_session(user, device, now \\ NaiveDateTime.utc_now(:second)) do
     %__MODULE__{}

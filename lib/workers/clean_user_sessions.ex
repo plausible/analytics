@@ -8,6 +8,9 @@ defmodule Plausible.Workers.CleanUserSessions do
 
   @grace_period Duration.new!(day: -7)
 
+  @spec grace_period_duration() :: Duration.t()
+  def grace_period_duration(), do: @grace_period
+
   @impl Oban.Worker
   def perform(_job) do
     grace_cutoff =
