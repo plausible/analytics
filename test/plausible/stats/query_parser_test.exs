@@ -313,7 +313,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "date_range" => "all",
         "filters" => [["is", "visit:os_version", [123]]]
       }
-      |> check_error(site, "Invalid filter '[\"is\", \"visit:os_version\", [123]]'")
+      |> check_error(site, "Invalid filter '[\"is\", \"visit:os_version\", [123]]'.")
     end
 
     test "numbers and strings are valid for visit:city", %{site: site} do
@@ -365,7 +365,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code"
+        "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code."
       )
     end
   end
@@ -408,7 +408,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "date_range" => "all",
         "include" => %{"time_labels" => true}
       }
-      |> check_error(site, "Invalid include.time_labels: requires a time dimension")
+      |> check_error(site, "Invalid include.time_labels: requires a time dimension.")
     end
   end
 
@@ -678,7 +678,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid order_by entry '{:events, :desc}'. Entry is not a queried metric or dimension"
+        "Invalid order_by entry '{:events, :desc}'. Entry is not a queried metric or dimension."
       )
     end
 
@@ -691,7 +691,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid order_by entry '{\"event:name\", :desc}'. Entry is not a queried metric or dimension"
+        "Invalid order_by entry '{\"event:name\", :desc}'. Entry is not a queried metric or dimension."
       )
     end
   end
@@ -711,7 +711,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "The owner of this site does not have access to the custom properties feature"
+        "The owner of this site does not have access to the custom properties feature."
       )
     end
 
@@ -729,7 +729,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "The owner of this site does not have access to the custom properties feature"
+        "The owner of this site does not have access to the custom properties feature."
       )
     end
   end
@@ -743,7 +743,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Metric `conversion_rate` can only be queried with event:goal filters or dimensions"
+        "Metric `conversion_rate` can only be queried with event:goal filters or dimensions."
       )
     end
 
@@ -818,7 +818,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Metric `views_per_visit` cannot be queried with a filter on `event:page`"
+        "Metric `views_per_visit` cannot be queried with a filter on `event:page`."
       )
     end
 
@@ -831,7 +831,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Metric `views_per_visit` cannot be queried with `dimensions`"
+        "Metric `views_per_visit` cannot be queried with `dimensions`."
       )
     end
   end
@@ -865,7 +865,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Session metric(s) `bounce_rate` cannot be queried along with event dimensions"
+        "Session metric(s) `bounce_rate` cannot be queried along with event dimensions."
       )
     end
 
