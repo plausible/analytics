@@ -5,16 +5,19 @@ defmodule Plausible.Stats.Filters.QueryParser do
   alias Plausible.Stats.Filters
   alias Plausible.Stats.Query
   alias Plausible.Stats.Metrics
+  alias Plausible.Stats.JSONSchema
 
   @default_include %{
     imports: false,
     time_labels: false
   }
 
-  def parse(site, params) when is_map(params) do
-    with {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
+  def parse(site, schema_type, params, now \\ nil) when is_map(params) do
+    with :ok <- JSONSchema.validate(schema_type, params),
+         {:ok, date} <- parse_date(site, Map.get(params, "date"), now),
+         {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
-         {:ok, date_range} <- parse_date_range(site, Map.take(params, ["date_range", "date"])),
+         {:ok, date_range} <- parse_date_range(site, Map.get(params, "date_range"), date),
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          {:ok, include} <- parse_include(Map.get(params, "include", %{})),
@@ -38,22 +41,14 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp parse_metrics([]), do: {:error, "No valid metrics passed"}
-
   defp parse_metrics(metrics) when is_list(metrics) do
-    if length(metrics) == length(Enum.uniq(metrics)) do
-      parse_list(metrics, &parse_metric/1)
-    else
-      {:error, "Metrics cannot be queried multiple times"}
-    end
+    parse_list(metrics, &parse_metric/1)
   end
-
-  defp parse_metrics(_invalid_metrics), do: {:error, "Invalid metrics passed"}
 
   defp parse_metric(metric_str) do
     case Metrics.from_string(metric_str) do
       {:ok, metric} -> {:ok, metric}
-      _ -> {:error, "Unknown metric '#{inspect(metric_str)}'"}
+      _ -> {:error, "Unknown metric '#{i(metric_str)}'."}
     end
   end
 
@@ -61,7 +56,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     parse_list(filters, &parse_filter/1)
   end
 
-  def parse_filters(_invalid_metrics), do: {:error, "Invalid filters passed"}
+  def parse_filters(_invalid_metrics), do: {:error, "Invalid filters passed."}
 
   defp parse_filter(filter) do
     with {:ok, operator} <- parse_operator(filter),
@@ -77,13 +72,13 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_operator(["does_not_match" | _rest]), do: {:ok, :does_not_match}
   defp parse_operator(["contains" | _rest]), do: {:ok, :contains}
   defp parse_operator(["does_not_contain" | _rest]), do: {:ok, :does_not_contain}
-  defp parse_operator(filter), do: {:error, "Unknown operator for filter '#{inspect(filter)}'"}
+  defp parse_operator(filter), do: {:error, "Unknown operator for filter '#{i(filter)}'."}
 
   defp parse_filter_key([_operator, filter_key | _rest] = filter) do
-    parse_filter_key_string(filter_key, "Invalid filter '#{inspect(filter)}")
+    parse_filter_key_string(filter_key, "Invalid filter '#{i(filter)}")
   end
 
-  defp parse_filter_key(filter), do: {:error, "Invalid filter '#{inspect(filter)}'"}
+  defp parse_filter_key(filter), do: {:error, "Invalid filter '#{i(filter)}'."}
 
   defp parse_filter_rest(operator, filter)
        when operator in [:is, :is_not, :matches, :does_not_match, :contains, :does_not_contain],
@@ -102,35 +97,29 @@ defmodule Plausible.Stats.Filters.QueryParser do
           {:ok, [list]}
         else
           {:error,
-           "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code"}
+           "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code."}
         end
 
       {_, true} ->
         {:ok, [list]}
 
       _ ->
-        {:error, "Invalid filter '#{inspect(filter)}'"}
+        {:error, "Invalid filter '#{i(filter)}'."}
     end
   end
 
-  defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{inspect(filter)}'"}
+  defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{i(filter)}'"}
 
-  defp parse_date_range(site, %{"date_range" => date_range, "date" => date})
-       when is_binary(date) do
-    case Date.from_iso8601(date) do
-      {:ok, date} -> parse_date_range(site, date_range, date)
-      _ -> {:error, "Invalid date '#{date}'"}
+  defp parse_date(site, nil, nil), do: {:ok, today(site)}
+
+  defp parse_date(_site, date_string, nil) when is_binary(date_string) do
+    case Date.from_iso8601(date_string) do
+      {:ok, date} -> {:ok, date}
+      _ -> {:error, "Invalid date '#{date_string}'."}
     end
   end
 
-  defp parse_date_range(site, %{"date_range" => date_range, "date" => date})
-       when is_struct(date) do
-    parse_date_range(site, date_range, date)
-  end
-
-  defp parse_date_range(site, %{"date_range" => date_range}) do
-    parse_date_range(site, date_range, today(site))
-  end
+  defp parse_date(_site, _date_string, param_date), do: {:ok, param_date}
 
   defp parse_date_range(_site, "day", date) do
     {:ok, Date.range(date, date)}
@@ -192,34 +181,28 @@ defmodule Plausible.Stats.Filters.QueryParser do
          {:ok, to_date} <- Date.from_iso8601(to_date_string) do
       {:ok, Date.range(from_date, to_date)}
     else
-      _ -> {:error, "Invalid date_range '#{inspect([from_date_string, to_date_string])}'"}
+      _ -> {:error, "Invalid date_range '#{i([from_date_string, to_date_string])}'."}
     end
   end
 
   defp parse_date_range(_site, unknown, _),
-    do: {:error, "Invalid date_range '#{inspect(unknown)}'"}
+    do: {:error, "Invalid date_range '#{i(unknown)}'."}
 
   defp today(site), do: DateTime.now!(site.timezone) |> DateTime.to_date()
 
   defp parse_dimensions(dimensions) when is_list(dimensions) do
-    if length(dimensions) == length(Enum.uniq(dimensions)) do
-      parse_list(
-        dimensions,
-        &parse_dimension_entry(&1, "Invalid dimensions '#{inspect(dimensions)}'")
-      )
-    else
-      {:error, "Some dimensions are listed multiple times"}
-    end
+    parse_list(
+      dimensions,
+      &parse_dimension_entry(&1, "Invalid dimensions '#{i(dimensions)}'")
+    )
   end
-
-  defp parse_dimensions(dimensions), do: {:error, "Invalid dimensions '#{inspect(dimensions)}'"}
 
   defp parse_order_by(order_by) when is_list(order_by) do
     parse_list(order_by, &parse_order_by_entry/1)
   end
 
   defp parse_order_by(nil), do: {:ok, nil}
-  defp parse_order_by(order_by), do: {:error, "Invalid order_by '#{inspect(order_by)}'"}
+  defp parse_order_by(order_by), do: {:error, "Invalid order_by '#{i(order_by)}'."}
 
   defp parse_order_by_entry(entry) do
     with {:ok, value} <- parse_metric_or_dimension(entry),
@@ -248,7 +231,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
       {{:ok, time}, _, _} -> {:ok, time}
       {_, {:ok, metric}, _} -> {:ok, metric}
       {_, _, {:ok, dimension}} -> {:ok, dimension}
-      _ -> {:error, "Invalid order_by entry '#{inspect(entry)}'"}
+      _ -> {:error, "Invalid order_by entry '#{i(entry)}'."}
     end
   end
 
@@ -261,7 +244,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_order_direction([_, "asc"]), do: {:ok, :asc}
   defp parse_order_direction([_, "desc"]), do: {:ok, :desc}
-  defp parse_order_direction(entry), do: {:error, "Invalid order_by entry '#{inspect(entry)}'"}
+  defp parse_order_direction(entry), do: {:error, "Invalid order_by entry '#{i(entry)}'."}
 
   defp parse_include(include) when is_map(include) do
     with {:ok, parsed_include_list} <- parse_list(include, &parse_include_value/1) do
@@ -271,16 +254,11 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp parse_include(entry), do: {:error, "Invalid include passed '#{inspect(entry)}'"}
-
   defp parse_include_value({"imports", value}) when is_boolean(value),
     do: {:ok, {:imports, value}}
 
   defp parse_include_value({"time_labels", value}) when is_boolean(value),
     do: {:ok, {:time_labels, value}}
-
-  defp parse_include_value({key, value}),
-    do: {:error, "Invalid include entry '#{inspect(%{key => value})}'"}
 
   defp parse_filter_key_string(filter_key, error_message \\ "") do
     case filter_key do
@@ -325,7 +303,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
         _ ->
           {:error,
-           "Invalid order_by entry '#{inspect(invalid_entry)}'. Entry is not a queried metric or dimension"}
+           "Invalid order_by entry '#{i(invalid_entry)}'. Entry is not a queried metric or dimension."}
       end
     else
       :ok
@@ -390,7 +368,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     if valid? do
       :ok
     else
-      {:error, "The owner of this site does not have access to the custom properties feature"}
+      {:error, "The owner of this site does not have access to the custom properties feature."}
     end
   end
 
@@ -405,17 +383,17 @@ defmodule Plausible.Stats.Filters.QueryParser do
          not is_nil(Query.get_filter(query, "event:goal")) do
       :ok
     else
-      {:error, "Metric `#{metric}` can only be queried with event:goal filters or dimensions"}
+      {:error, "Metric `#{metric}` can only be queried with event:goal filters or dimensions."}
     end
   end
 
   defp validate_metric(:views_per_visit = metric, query) do
     cond do
       not is_nil(Query.get_filter(query, "event:page")) ->
-        {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`"}
+        {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`."}
 
       length(query.dimensions) > 0 ->
-        {:error, "Metric `#{metric}` cannot be queried with `dimensions`"}
+        {:error, "Metric `#{metric}` cannot be queried with `dimensions`."}
 
       true ->
         :ok
@@ -433,7 +411,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
       :ok
     else
       {:error,
-       "Session metric(s) `#{sessions_metrics |> Enum.join(", ")}` cannot be queried along with event dimensions"}
+       "Session metric(s) `#{sessions_metrics |> Enum.join(", ")}` cannot be queried along with event dimensions."}
     end
   end
 
@@ -449,11 +427,13 @@ defmodule Plausible.Stats.Filters.QueryParser do
     time_dimension? = Enum.any?(query.dimensions, &String.starts_with?(&1, "time"))
 
     if query.include.time_labels and not time_dimension? do
-      {:error, "Invalid include.time_labels: requires a time dimension"}
+      {:error, "Invalid include.time_labels: requires a time dimension."}
     else
       :ok
     end
   end
+
+  defp i(value), do: inspect(value, charlists: :as_lists)
 
   defp parse_list(list, parser_function) do
     Enum.reduce_while(list, {:ok, []}, fn value, {:ok, results} ->

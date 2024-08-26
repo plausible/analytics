@@ -182,9 +182,13 @@ defmodule PlausibleWeb.Router do
   end
 
   scope "/api/docs", PlausibleWeb.Api do
-    pipe_through :internal_stats_api
+    get "/query/schema.json", ExternalQueryApiController, :schema
 
-    post "/query", ExternalQueryApiController, :query
+    scope assigns: %{} do
+      pipe_through :internal_stats_api
+
+      post "/query", ExternalQueryApiController, :query
+    end
   end
 
   on_ee do

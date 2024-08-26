@@ -157,7 +157,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "wildcard referrer filter with special regex characters", %{conn: conn, site: site} do
+    test "contains referrer filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, referrer: "https://a.com"),
         build(:pageview, referrer: "https://a.com"),
@@ -170,7 +170,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "metrics" => ["visitors"],
           "filters" => [
-            ["matches", "visit:referrer", ["**a.com**"]]
+            ["contains", "visit:referrer", ["a.com"]]
           ]
         })
 
@@ -476,7 +476,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
           "filters" => [
-            ["matches", "event:hostname", ["*.example.com", "example.com"]]
+            ["contains", "event:hostname", ["one.example.com", "example.com"]]
           ]
         })
 
@@ -732,7 +732,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "wildcard page filter", %{conn: conn, site: site} do
+    test "contains page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/en/page1"),
         build(:pageview, pathname: "/en/page2"),
@@ -745,14 +745,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "metrics" => ["visitors"],
           "filters" => [
-            ["matches", "event:page", ["/en/**"]]
+            ["contains", "event:page", ["/en/"]]
           ]
         })
 
       assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
     end
 
-    test "negated wildcard page filter", %{conn: conn, site: site} do
+    test "negated contains page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/en/page1"),
         build(:pageview, pathname: "/en/page2"),
@@ -765,14 +765,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "metrics" => ["visitors"],
           "filters" => [
-            ["does_not_match", "event:page", ["/en/**"]]
+            ["does_not_contain", "event:page", ["/en/"]]
           ]
         })
 
       assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
     end
 
-    test "wildcard and member filter combined", %{conn: conn, site: site} do
+    test "contains and member filter combined", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/en/page1"),
         build(:pageview, pathname: "/en/page2"),
@@ -786,14 +786,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "metrics" => ["visitors"],
           "filters" => [
-            ["matches", "event:page", ["/en/**", "/pl/**"]]
+            ["contains", "event:page", ["/en/", "/pl/"]]
           ]
         })
 
       assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
     end
 
-    test "can escape pipe character in member + wildcard filter", %{conn: conn, site: site} do
+    test "can escape pipe character in member + contains filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/blog/post|1"),
         build(:pageview, pathname: "/otherpost|1"),
@@ -807,7 +807,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "metrics" => ["visitors"],
           "filters" => [
-            ["matches", "event:page", ["**post\\|1", "/something-else"]]
+            ["contains", "event:page", ["post|1", "/something-else"]]
           ]
         })
 
@@ -1451,8 +1451,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "site_id" => site.domain,
         "date_range" => "all",
         "metrics" => ["pageviews"],
-        "dimensions" => ["event:hostname"],
-        "with_imported" => "true"
+        "dimensions" => ["event:hostname"]
       })
 
     %{"results" => results} = json_response(conn, 200)
@@ -1667,7 +1666,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "dimensions" => ["event:name"],
           "filters" => [
-            ["matches", "event:page", ["/pageA"]]
+            ["contains", "event:page", ["/pageA"]]
           ]
         })
 
@@ -1740,7 +1739,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "dimensions" => ["event:page"],
           "filters" => [
-            ["matches", "event:page", ["/en/**"]]
+            ["contains", "event:page", ["/en/"]]
           ]
         })
 
@@ -1752,14 +1751,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
-    test "can filter event:hostname with a wildcard", %{
+    test "can filter event:hostname with a contains", %{
       conn: conn,
       site: site
     } do
       populate_stats(site, [
-        build(:pageview, hostname: "alice.example.com", pathname: "/a"),
-        build(:pageview, hostname: "anna.example.com", pathname: "/a"),
-        build(:pageview, hostname: "adam.example.com", pathname: "/a"),
+        build(:pageview, hostname: "alice-m.example.com", pathname: "/a"),
+        build(:pageview, hostname: "anna-m.example.com", pathname: "/a"),
+        build(:pageview, hostname: "adam-m.example.com", pathname: "/a"),
         build(:pageview, hostname: "bob.example.com", pathname: "/b")
       ])
 
@@ -1770,7 +1769,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "dimensions" => ["event:page"],
           "filters" => [
-            ["matches", "event:hostname", ["a*.example.com"]]
+            ["contains", "event:hostname", ["-m.example.com"]]
           ]
         })
 
