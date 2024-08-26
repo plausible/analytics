@@ -243,7 +243,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) ==
-               "/#{URI.encode_www_form("éxample.com")}/snippet?site_created=true&flow="
+               "/#{URI.encode_www_form("éxample.com")}/installation?site_created=true&flow="
 
       assert site = Repo.get_by(Plausible.Site, domain: "éxample.com")
       assert site.timezone == "Europe/London"
@@ -341,7 +341,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/example.com/snippet?site_created=true&flow="
+      assert redirected_to(conn) == "/example.com/installation?site_created=true&flow="
       assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
@@ -361,7 +361,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/example.com/snippet?site_created=true&flow="
+      assert redirected_to(conn) == "/example.com/installation?site_created=true&flow="
       assert Plausible.Billing.Quota.Usage.site_usage(user) == 3
     end
 
@@ -375,7 +375,7 @@ defmodule PlausibleWeb.SiteControllerTest do
             }
           })
 
-        assert redirected_to(conn) == "/example.com/snippet?site_created=true&flow="
+        assert redirected_to(conn) == "/example.com/installation?site_created=true&flow="
         assert Repo.get_by(Plausible.Site, domain: "example.com")
       end
     end
@@ -457,17 +457,20 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) ==
-               "/example.com/snippet?site_created=true&flow="
+               "/example.com/installation?site_created=true&flow="
     end
   end
 
-  describe "GET /:website/snippet" do
+  describe "GET /:website/installation" do
     setup [:create_user, :log_in, :create_site]
 
-    test "shows snippet", %{conn: conn, site: site} do
-      conn = get(conn, "/#{site.domain}/snippet")
+    test "static render - spinner determining installation type", %{
+      conn: conn,
+      site: site
+    } do
+      conn = get(conn, "/#{site.domain}/installation")
 
-      assert html_response(conn, 200) =~ "Add JavaScript snippet"
+      assert html_response(conn, 200) =~ "Determining installation type"
     end
   end
 
@@ -482,7 +485,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert resp =~ "Site Timezone"
       assert resp =~ "Site Domain"
-      assert resp =~ "JavaScript Snippet"
+      assert resp =~ "Your Plausible Installation"
     end
   end
 
@@ -1596,8 +1599,8 @@ defmodule PlausibleWeb.SiteControllerTest do
       resp = html_response(conn, 200)
       assert resp =~ Routes.site_path(conn, :change_domain_submit, site.domain)
 
-      assert resp =~
-               "Once you change your domain, you must update the JavaScript snippet on your site within 72 hours"
+      assert text(resp) =~
+               "Once you change your domain, you must update Plausible Installation on your site within 72 hours"
     end
 
     test "domain change form submission when no change is made", %{conn: conn, site: site} do
@@ -1645,7 +1648,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert is_nil(site.domain_changed_from)
     end
 
-    test "domain change successful form submission redirects to snippet change info", %{
+    test "domain change successful form submission redirects to installation", %{
       conn: conn,
       site: site
     } do
@@ -1658,30 +1661,11 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) ==
-               Routes.site_path(conn, :add_snippet_after_domain_change, new_domain)
+               Routes.site_path(conn, :installation, new_domain, flow: "domain_change")
 
       site = Repo.reload!(site)
       assert site.domain == new_domain
       assert site.domain_changed_from == original_domain
-    end
-
-    test "snippet info after domain change", %{
-      conn: conn,
-      site: site
-    } do
-      put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
-        "site" => %{"domain" => "foo.example.com"}
-      })
-
-      resp =
-        conn
-        |> get(Routes.site_path(conn, :add_snippet_after_domain_change, "foo.example.com"))
-        |> html_response(200)
-        |> Floki.parse_document!()
-        |> Floki.text()
-
-      assert resp =~
-               "Your domain has been changed. You must update the JavaScript snippet on your site within 72 hours"
     end
   end
 
