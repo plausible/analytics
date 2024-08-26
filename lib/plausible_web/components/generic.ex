@@ -320,6 +320,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr :wrapper_class, :any, default: ""
   attr :class, :any, default: ""
+  attr :icon?, :boolean, default: true
   slot :inner_block, required: true
   slot :tooltip_content, required: true
 
@@ -334,7 +335,7 @@ defmodule PlausibleWeb.Components.Generic do
         class={["cursor-pointer flex align-items-center", @class]}
       >
         <%= render_slot(@inner_block) %>
-        <Heroicons.information_circle class="w-5 h-5 ml-2" />
+        <Heroicons.information_circle :if={@icon?} class="w-5 h-5 ml-2" />
       </p>
       <span
         x-show="hovered || sticky"
@@ -374,15 +375,10 @@ defmodule PlausibleWeb.Components.Generic do
   slot :inner_block, required: true
   slot :footer
 
-  attr :outer_markup, :boolean, default: true
-
   def focus_box(assigns) do
     ~H"""
-    <div class={[
-      "bg-white w-full max-w-lg mx-auto dark:bg-gray-800 text-black dark:text-gray-100",
-      @outer_markup && "shadow-md  rounded mb-4 mt-8"
-    ]}>
-      <div class={[@outer_markup && "p-8"]}>
+    <div class="focus-box bg-white w-full max-w-lg mx-auto dark:bg-gray-800 text-black dark:text-gray-100 shadow-md  rounded mb-4 mt-8">
+      <div class="p-8">
         <h2 :if={@title != []} class="text-xl font-black dark:text-gray-100">
           <%= render_slot(@title) %>
         </h2>
@@ -403,7 +399,7 @@ defmodule PlausibleWeb.Components.Generic do
         :if={@footer != []}
         class="flex flex-col dark:text-gray-200 border-t border-gray-300 dark:border-gray-700"
       >
-        <div class={[@outer_markup && "p-8"]}>
+        <div class="p-8">
           <%= render_slot(@footer) %>
         </div>
       </div>
