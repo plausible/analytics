@@ -295,19 +295,19 @@ defmodule PlausibleWeb.Live.Installation do
         config={@script_config}
         variant="tagged-events"
         label="Custom events"
-        tooltip="Tag site elements like buttons, links and forms to track user activity. Additional action required"
+        tooltip="Tag site elements like buttons, links and forms to track user activity. Additional action required."
       />
       <.script_extension_control
         config={@script_config}
         variant="pageview-props"
         label="Custom properties"
-        tooltip="Attach custom properties (also known as custom dimensions) to pageviews or custom events to create custom metrics. Additional action required"
+        tooltip="Attach custom properties (also known as custom dimensions) to pageviews or custom events to create custom metrics. Additional action required."
       />
       <.script_extension_control
         config={@script_config}
         variant="revenue"
         label="Ecommerce revenue"
-        tooltip="Assign monetary values to purchases and track revenue attribution. Additional action required"
+        tooltip="Assign monetary values to purchases and track revenue attribution. Additional action required."
       />
     </form>
     """
