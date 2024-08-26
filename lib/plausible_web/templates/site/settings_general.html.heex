@@ -62,63 +62,26 @@
   </div>
 <% end %>
 
-<%= form_for @conn, "/", [class: "shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6"], fn f -> %>
-  <header class="relative">
-    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-      <a id="snippet">JavaScript Snippet</a>
-    </h2>
-    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-      Include this Snippet in the <code>&lt;head&gt;</code> of your Website.
-    </p>
+<div class="shadow sm:rounded-md sm:overflow-hidden">
+  <div class="bg-white dark:bg-gray-800 py-6 px-4 space-y-6 sm:p-6">
+    <header class="relative">
+      <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
+        <a id="snippet">Your Plausible Installation</a>
+      </h2>
+      <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
+        Reconfigure or just verify your installation
+      </p>
 
-    <PlausibleWeb.Components.Generic.docs_info slug="plausible-script" />
-  </header>
+      <PlausibleWeb.Components.Generic.docs_info slug="plausible-script" />
+    </header>
 
-  <div class="my-4">
-    <div class="relative">
-      <code>
-        <%= textarea(f, :domain,
-          id: "snippet_code",
-          class:
-            "transition overflow-hidden bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 pr-6 text-gray-700 dark:text-gray-300 leading-normal focus:outline-none focus:bg-white focus:border-gray-300 dark:focus:border-gray-500 text-xs mt-2 resize-none",
-          value: render_snippet(@site),
-          rows: 2
-        ) %>
-      </code>
-      <a
-        onclick="var textarea = document.getElementById('snippet_code'); textarea.focus(); textarea.select(); document.execCommand('copy');"
-        href="javascript:void(0)"
-        class="no-underline text-indigo-500 text-sm hover:underline"
+    <div class="my-4">
+      <PlausibleWeb.Components.Generic.button_link
+        class="mt-4"
+        href={Routes.site_path(@conn, :installation, @site.domain, flow: "review")}
       >
-        <svg
-          class="absolute text-indigo-500"
-          style="top: 24px; right: 12px;"
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-        </svg>
-      </a>
-    </div>
-
-    <div :if={Plausible.Verification.enabled?()}>
-      <%= live_render(@conn, PlausibleWeb.Live.Verification,
-        session: %{
-          "open_modal?" => !!@conn.params["launch_verification"],
-          "site_id" => @site.id,
-          "domain" => @site.domain,
-          "modal?" => true,
-          "slowdown" => @conn.private[:verification_slowdown]
-        }
-      ) %>
+        Review your Installation
+      </PlausibleWeb.Components.Generic.button_link>
     </div>
   </div>
-<% end %>
+</div>

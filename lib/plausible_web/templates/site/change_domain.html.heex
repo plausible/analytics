@@ -1,44 +1,46 @@
-<div class="w-full max-w-3xl mt-4 mx-auto flex">
-  <%= form_for @changeset, Routes.site_path(@conn, :change_domain_submit, @site.domain), [class: "max-w-lg w-full mx-auto bg-white dark:bg-gray-800 shadow-lg rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
-    <h2 class="text-xl font-black dark:text-gray-100">Change your website domain</h2>
+<PlausibleWeb.Components.FlowProgress.render
+  flow="domain_change"
+  current_step="Set up new domain"
+/>
+<PlausibleWeb.Components.Generic.focus_box>
+  <:title>Change your website domain</:title>
+
+  <:subtitle>
+    Once you change your domain, <b>you must update Plausible Installation on your site within 72 hours to guarantee continuous tracking</b>.
+    <br /><br />If you're using the API, please also make sure to update your API credentials. Visit our
+    <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
+      documentation
+    </.styled_link>
+    for details.
+  </:subtitle>
+
+  <:footer>
+    Changed your mind? Go back to
+    <.styled_link href={Routes.site_path(@conn, :settings_general, @site.domain)}>
+      Site Settings
+    </.styled_link>
+  </:footer>
+
+  <%= form_for @changeset, Routes.site_path(@conn, :change_domain_submit, @site.domain, flow: "domain_change"), [], fn f -> %>
+    <h2 class="text-xl font-black dark:text-gray-100"></h2>
 
     <div class="my-6">
-      <%= label(f, :domain, class: "block text-sm font-medium text-gray-700 dark:text-gray-300") %>
-      <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">
-        Just the naked domain or subdomain without 'www'
+      <%= label(f, :domain, class: "block font-medium dark:text-gray-300") %>
+      <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+        Just the naked domain or subdomain without 'www', 'https' etc.
       </p>
       <div class="mt-2 flex rounded-md shadow-sm">
-        <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-500 bg-gray-50 dark:bg-gray-850 text-gray-500 dark:text-gray-400 sm:text-sm">
-          https://
-        </span>
         <%= text_input(f, :domain,
           class:
-            "focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 flex-1 block w-full px-3 py-2 rounded-none rounded-r-md sm:text-sm border-gray-300 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300",
+            "focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 flex-1 block w-full px-3 py-2 rounded-none rounded-r-md border-gray-300 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300",
           placeholder: "example.com"
         ) %>
       </div>
       <%= error_tag(f, :domain) %>
     </div>
 
-    <p class="text-sm sm:text-sm text-gray-700 dark:text-gray-300">
-      <span class="font-bold dark:text-gray-100">Once you change your domain, you must update the JavaScript snippet on your site within 72 hours to guarantee continuous tracking</span>. If you're using the API, please also make sure to update your API credentials.
-    </p>
-    <p class="text-sm text-gray-700 dark:text-gray-300 mt-4">
-      Visit our
-      <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
-        documentation
-      </.styled_link>
-      for details.
-    </p>
-
     <PlausibleWeb.Components.Generic.button type="submit" class="mt-4 w-full">
-      Change Domain and add new Snippet →
+      Change Domain and add new Snippet
     </PlausibleWeb.Components.Generic.button>
-
-    <div class="text-center mt-4">
-      <.styled_link href={Routes.site_path(@conn, :settings_general, @site.domain)}>
-        Back to Site Settings
-      </.styled_link>
-    </div>
   <% end %>
-</div>
+</PlausibleWeb.Components.Generic.focus_box>

@@ -141,7 +141,7 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  def drop_notification(email, site, current_visitors, dashboard_link, settings_link) do
+  def drop_notification(email, site, current_visitors, dashboard_link, installation_link) do
     base_email()
     |> to(email)
     |> tag("drop-notification")
@@ -150,7 +150,7 @@ defmodule PlausibleWeb.Email do
       site: site,
       current_visitors: current_visitors,
       dashboard_link: dashboard_link,
-      settings_link: settings_link
+      installation_link: installation_link
     })
   end
 
