@@ -20,10 +20,12 @@ if :minio in Keyword.fetch!(ExUnit.configuration(), :include) do
   Plausible.TestUtils.ensure_minio()
 end
 
+default_exclude = [:slow, :minio, :migrations]
+
 if Mix.env() == :ce_test do
   IO.puts("Test mode: Community Edition")
-  ExUnit.configure(exclude: [:slow, :minio, :ee_only])
+  ExUnit.configure(exclude: [:ee_only | default_exclude])
 else
   IO.puts("Test mode: Enterprise Edition")
-  ExUnit.configure(exclude: [:slow, :minio, :ce_build_only])
+  ExUnit.configure(exclude: [:ce_build_only | default_exclude])
 end
