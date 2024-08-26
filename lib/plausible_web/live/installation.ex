@@ -165,8 +165,9 @@ defmodule PlausibleWeb.Live.Installation do
           Paste this snippet into the <code>&lt;head&gt;</code>
           section of your site. See our
           <.styled_link href="https://plausible.io/docs/integration-guides" new_tab={true}>
-            installation guides. Once done, click the button below to verify your installation.
+            installation guides.
           </.styled_link>
+          Once done, click the button below to verify your installation.
         </:subtitle>
 
         <div :if={@installation_type in ["manual", "GTM"]}>
