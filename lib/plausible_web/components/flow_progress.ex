@@ -6,12 +6,21 @@ defmodule PlausibleWeb.Components.FlowProgress do
   use Phoenix.Component
 
   @flows %{
+    "review" => [
+      "Install Plausible",
+      "Verify installation"
+    ],
+    "domain_change" => [
+      "Set up new domain",
+      "Install Plausible",
+      "Verify installation"
+    ],
     "register" => [
       "Register",
       "Activate account",
       "Add site info",
-      "Install snippet",
-      "Verify snippet"
+      "Install Plausible",
+      "Verify installation"
     ],
     "invitation" => [
       "Register",
@@ -19,8 +28,8 @@ defmodule PlausibleWeb.Components.FlowProgress do
     ],
     "provisioning" => [
       "Add site info",
-      "Install snippet",
-      "Verify snippet"
+      "Install Plausible",
+      "Verify installation"
     ]
   }
 
