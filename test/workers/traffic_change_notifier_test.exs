@@ -139,7 +139,9 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
 
       TrafficChangeNotifier.perform(nil, clickhouse_stub)
 
-      assert_email_delivered_with(html_body: ~r|http://localhost:8000/example.com/settings|)
+      assert_email_delivered_with(
+        html_body: ~r|http://localhost:8000/example.com/installation\?flow=review|
+      )
     end
   end
 

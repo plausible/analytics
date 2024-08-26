@@ -99,13 +99,11 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
   defp send_drop_notification(recipient, site, current_visitors) do
     site = Repo.preload(site, :members)
 
-    {dashboard_link, verification_link} =
+    {dashboard_link, installation_link} =
       if Enum.any?(site.members, &(&1.email == recipient)) do
         {
           Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, []),
-          Routes.site_url(PlausibleWeb.Endpoint, :settings_general, site.domain,
-            launch_verification: true
-          ) <> "#snippet"
+          Routes.site_url(PlausibleWeb.Endpoint, :installation, site.domain, flow: "review")
         }
       else
         {nil, nil}
@@ -117,7 +115,7 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
         site,
         current_visitors,
         dashboard_link,
-        verification_link
+        installation_link
       )
 
     Plausible.Mailer.send(template)
