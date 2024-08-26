@@ -1,8 +1,0 @@
-<%= live_render(@conn, PlausibleWeb.Live.Verification.InstallSnippet,
-  session: %{
-    "site_id" => @site.id,
-    "domain" => @site.domain,
-    "flow" => @conn.params["flow"],
-    "form_submit_url" => @form_submit_url
-  }
-) %>
