@@ -236,6 +236,40 @@ defmodule Plausible.Goals do
     )
   end
 
+  @spec create_outbound_links(Plausible.Site.t()) :: :ok
+  def create_outbound_links(%Plausible.Site{} = site) do
+    create(site, %{"event_name" => "Outbound Link: Click"}, upsert?: true)
+    :ok
+  end
+
+  @spec create_file_downloads(Plausible.Site.t()) :: :ok
+  def create_file_downloads(%Plausible.Site{} = site) do
+    create(site, %{"event_name" => "File Download"}, upsert?: true)
+    :ok
+  end
+
+  @spec delete_outbound_links(Plausible.Site.t()) :: :ok
+  def delete_outbound_links(%Plausible.Site{} = site) do
+    q =
+      from g in Goal,
+        where: g.site_id == ^site.id,
+        where: g.event_name == "Outbound Link: Click"
+
+    Repo.delete_all(q)
+    :ok
+  end
+
+  @spec delete_file_downloads(Plausible.Site.t()) :: :ok
+  def delete_file_downloads(%Plausible.Site{} = site) do
+    q =
+      from g in Goal,
+        where: g.site_id == ^site.id,
+        where: g.event_name == "File Download"
+
+    Repo.delete_all(q)
+    :ok
+  end
+
   defp insert_goal(site, params, upsert?) do
     params = Map.delete(params, "site_id")
 
