@@ -59,14 +59,14 @@ defmodule PlausibleWeb.Live.Components.Verification do
             </span>
           </h3>
           <p :if={@finished? and @success?} id="progress" class="mt-2">
-            Your integration is working and visitors are being counted accurately
+            Your installation is working and visitors are being counted accurately
           </p>
           <p
             :if={@finished? and @success? and @awaiting_first_pageview?}
             id="progress"
             class="mt-2 animate-pulse"
           >
-            Your integration is working. Awaiting your first pageview.
+            Awaiting your first pageview
           </p>
           <p :if={not @finished?} class="mt-2 animate-pulse" id="progress"><%= @message %></p>
 
@@ -99,7 +99,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
           <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
             <%= if ee?() and @finished? and not @success? and @attempts >= 3 do %>
               <li>
-                <b>Need further help with your integration?</b>
+                <b>Need further help with your installation?</b>
                 <.styled_link href="https://plausible.io/contact">
                   Contact us
                 </.styled_link>
@@ -117,7 +117,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
               </.styled_link>
             </li>
             <li>
-              Run verification later and go to Site Settings?
+              Run verification later and go to site settings?
               <.styled_link href={"/#{URI.encode_www_form(@domain)}/settings/general"}>
                 Click here
               </.styled_link>
