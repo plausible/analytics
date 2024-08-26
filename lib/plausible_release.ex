@@ -33,8 +33,6 @@ defmodule Plausible.Release do
   #
   # This approach helps resolve dependencies between migrations across repos.
   def interweave_sort_migrate do
-    prepare()
-
     # interweave
     all_pending =
       Enum.flat_map(repos(), fn repo ->
@@ -56,6 +54,7 @@ defmodule Plausible.Release do
     end)
   end
 
+  @doc false
   defp migration_streaks([{repo, version} | streaks]) do
     migration_streaks(streaks, repo, version)
   end
