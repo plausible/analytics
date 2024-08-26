@@ -271,19 +271,13 @@ defmodule PlausibleWeb.Live.Installation do
         readonly
       ><%= render_snippet(@installation_type, @domain, @script_config) %></textarea>
 
-      <h3 class="text-normal mt-4 font-semibold">Enable enhanced measurements:</h3>
+      <h3 class="text-normal mt-4 font-semibold">Enable optional measurements:</h3>
 
       <.script_extension_control
         config={@script_config}
         variant="outbound-links"
         label="Outbound links"
         tooltip="Automatically track clicks on external links"
-      />
-      <.script_extension_control
-        config={@script_config}
-        variant="tagged-events"
-        label="Custom events"
-        tooltip="Tag site elements like buttons, links and forms to track user activity. Additional action required"
       />
       <.script_extension_control
         config={@script_config}
@@ -299,15 +293,21 @@ defmodule PlausibleWeb.Live.Installation do
       />
       <.script_extension_control
         config={@script_config}
-        variant="revenue"
-        label="Ecommerce revenue"
-        tooltip="Assign monetary values to purchases and track revenue attribution. Additional action required"
+        variant="tagged-events"
+        label="Custom events"
+        tooltip="Tag site elements like buttons, links and forms to track user activity. Additional action required"
       />
       <.script_extension_control
         config={@script_config}
         variant="pageview-props"
         label="Custom properties"
-        tooltip="Attach custom dimensions to a pageview and create custom metrics. Additional action required"
+        tooltip="Attach custom properties (also known as custom dimensions) to pageviews or custom events to create custom metrics. Additional action required"
+      />
+      <.script_extension_control
+        config={@script_config}
+        variant="revenue"
+        label="Ecommerce revenue"
+        tooltip="Assign monetary values to purchases and track revenue attribution. Additional action required"
       />
     </form>
     """
