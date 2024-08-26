@@ -227,7 +227,6 @@ defmodule PlausibleWeb.Router do
     post "/paddle/webhook", Api.PaddleController, :webhook
     get "/paddle/currency", Api.PaddleController, :currency
 
-    get "/:domain/status", Api.InternalController, :domain_status
     put "/:domain/disable-feature", Api.InternalController, :disable_feature
 
     get "/sites", Api.InternalController, :sites
