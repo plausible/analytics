@@ -67,7 +67,6 @@ defmodule PlausibleWeb.AuthController do
     render(conn, "activate.html",
       has_email_code?: Plausible.Users.has_email_code?(user),
       has_any_memberships?: Plausible.Site.Memberships.any?(user),
-      layout: {PlausibleWeb.LayoutView, "focus.html"},
       form_submit_url: "/activate?flow=#{flow}"
     )
   end
@@ -98,7 +97,6 @@ defmodule PlausibleWeb.AuthController do
           error: "Incorrect activation code",
           has_email_code?: true,
           has_any_memberships?: has_any_memberships?,
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
           form_submit_url: "/activate?flow=#{flow}"
         )
 
@@ -107,7 +105,6 @@ defmodule PlausibleWeb.AuthController do
           error: "Code is expired, please request another one",
           has_email_code?: false,
           has_any_memberships?: has_any_memberships?,
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
           form_submit_url: "/activate?flow=#{flow}"
         )
     end
@@ -123,16 +120,11 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def password_reset_request_form(conn, _) do
-    render(conn, "password_reset_request_form.html",
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
+    render(conn, "password_reset_request_form.html")
   end
 
   def password_reset_request(conn, %{"email" => ""}) do
-    render(conn, "password_reset_request_form.html",
-      error: "Please enter an email address",
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
+    render(conn, "password_reset_request_form.html", error: "Please enter an email address")
   end
 
   def password_reset_request(conn, %{"email" => email} = params) do
@@ -149,20 +141,13 @@ defmodule PlausibleWeb.AuthController do
           "Password reset e-mail sent. In dev environment GET /sent-emails for details."
         )
 
-        render(conn, "password_reset_request_success.html",
-          email: email,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
+        render(conn, "password_reset_request_success.html", email: email)
       else
-        render(conn, "password_reset_request_success.html",
-          email: email,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
+        render(conn, "password_reset_request_success.html", email: email)
       end
     else
       render(conn, "password_reset_request_form.html",
-        error: "Please complete the captcha to reset your password",
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
+        error: "Please complete the captcha to reset your password"
       )
     end
   end
@@ -172,8 +157,7 @@ defmodule PlausibleWeb.AuthController do
       {:ok, %{email: email}} ->
         render(conn, "password_reset_form.html",
           connect_live_socket: true,
-          email: email,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          email: email
         )
 
       {:error, :expired} ->
@@ -201,7 +185,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def login_form(conn, _params) do
-    render(conn, "login_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+    render(conn, "login_form.html")
   end
 
   def login(conn, %{"user" => params}) do
@@ -243,19 +227,13 @@ defmodule PlausibleWeb.AuthController do
       {:error, :wrong_password} ->
         maybe_log_failed_login_attempts("wrong password for #{email}")
 
-        render(conn, "login_form.html",
-          error: "Wrong email or password. Please try again.",
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
+        render(conn, "login_form.html", error: "Wrong email or password. Please try again.")
 
       {:error, :user_not_found} ->
         maybe_log_failed_login_attempts("user not found for #{email}")
         Plausible.Auth.Password.dummy_calculation()
 
-        render(conn, "login_form.html",
-          error: "Wrong email or password. Please try again.",
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
+        render(conn, "login_form.html", error: "Wrong email or password. Please try again.")
 
       {:error, {:rate_limit, _}} ->
         maybe_log_failed_login_attempts("too many login attempts for #{email}")
@@ -370,8 +348,7 @@ defmodule PlausibleWeb.AuthController do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
           render(conn, "verify_2fa.html",
-            remember_2fa_days: TwoFactor.Session.remember_2fa_days(),
-            layout: {PlausibleWeb.LayoutView, "focus.html"}
+            remember_2fa_days: TwoFactor.Session.remember_2fa_days()
           )
         else
           redirect_to_login(conn)
@@ -398,8 +375,7 @@ defmodule PlausibleWeb.AuthController do
           conn
           |> put_flash(:error, "The provided code is invalid. Please try again")
           |> render("verify_2fa.html",
-            remember_2fa_days: TwoFactor.Session.remember_2fa_days(),
-            layout: {PlausibleWeb.LayoutView, "focus.html"}
+            remember_2fa_days: TwoFactor.Session.remember_2fa_days()
           )
 
         {:error, :not_enabled} ->
@@ -412,9 +388,7 @@ defmodule PlausibleWeb.AuthController do
     case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
-          render(conn, "verify_2fa_recovery_code.html",
-            layout: {PlausibleWeb.LayoutView, "focus.html"}
-          )
+          render(conn, "verify_2fa_recovery_code.html")
         else
           redirect_to_login(conn)
         end
@@ -435,9 +409,7 @@ defmodule PlausibleWeb.AuthController do
 
           conn
           |> put_flash(:error, "The provided recovery code is invalid. Please try another one")
-          |> render("verify_2fa_recovery_code.html",
-            layout: {PlausibleWeb.LayoutView, "focus.html"}
-          )
+          |> render("verify_2fa_recovery_code.html")
 
         {:error, :not_enabled} ->
           UserAuth.log_in_user(conn, user)
@@ -577,10 +549,7 @@ defmodule PlausibleWeb.AuthController do
   def new_api_key(conn, _params) do
     changeset = Auth.ApiKey.changeset(%Auth.ApiKey{})
 
-    render(conn, "new_api_key.html",
-      changeset: changeset,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
+    render(conn, "new_api_key.html", changeset: changeset)
   end
 
   def create_api_key(conn, %{"api_key" => %{"name" => name, "key" => key}}) do
@@ -591,10 +560,7 @@ defmodule PlausibleWeb.AuthController do
         |> redirect(to: "/settings#api-keys")
 
       {:error, changeset} ->
-        render(conn, "new_api_key.html",
-          changeset: changeset,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
+        render(conn, "new_api_key.html", changeset: changeset)
     end
   end
 

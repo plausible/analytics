@@ -21,7 +21,6 @@ defmodule PlausibleWeb.BillingController do
     else
       render(conn, "choose_plan.html",
         skip_plausible_tracking: true,
-        layout: {PlausibleWeb.LayoutView, "focus.html"},
         connect_live_socket: true
       )
     end
@@ -48,10 +47,7 @@ defmodule PlausibleWeb.BillingController do
         redirect(conn, to: Routes.auth_path(conn, :user_settings))
 
       subscribed_to_latest? ->
-        render(conn, "change_enterprise_plan_contact_us.html",
-          skip_plausible_tracking: true,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
+        render(conn, "change_enterprise_plan_contact_us.html", skip_plausible_tracking: true)
 
       true ->
         render(conn, "upgrade_to_enterprise_plan.html",
@@ -59,14 +55,13 @@ defmodule PlausibleWeb.BillingController do
           price: price,
           subscription_resumable: subscription_resumable?,
           contact_link: "https://plausible.io/contact",
-          skip_plausible_tracking: true,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          skip_plausible_tracking: true
         )
     end
   end
 
   def upgrade_success(conn, _params) do
-    render(conn, "upgrade_success.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+    render(conn, "upgrade_success.html")
   end
 
   def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do
@@ -78,8 +73,7 @@ defmodule PlausibleWeb.BillingController do
           back_link: Routes.billing_path(conn, :choose_plan),
           skip_plausible_tracking: true,
           subscription: subscription,
-          preview_info: preview_info,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          preview_info: preview_info
         )
 
       _ ->

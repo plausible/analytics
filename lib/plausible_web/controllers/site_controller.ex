@@ -21,7 +21,6 @@ defmodule PlausibleWeb.SiteController do
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
       site_limit: Quota.Limits.site_limit(current_user),
       site_limit_exceeded?: Quota.ensure_can_add_new_site(current_user) != :ok,
-      layout: {PlausibleWeb.LayoutView, "focus.html"},
       form_submit_url: "/sites?flow=#{flow}",
       flow: flow
     )
@@ -41,7 +40,7 @@ defmodule PlausibleWeb.SiteController do
 
         redirect(conn,
           external:
-            Routes.site_path(conn, :add_snippet, site.domain,
+            Routes.site_path(conn, :installation, site.domain,
               site_created: true,
               flow: flow
             )
@@ -53,7 +52,6 @@ defmodule PlausibleWeb.SiteController do
           first_site?: first_site?,
           site_limit: limit,
           site_limit_exceeded?: true,
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
           flow: flow,
           form_submit_url: "/sites?flow=#{flow}"
         )
@@ -64,35 +62,10 @@ defmodule PlausibleWeb.SiteController do
           first_site?: first_site?,
           site_limit: Quota.Limits.site_limit(user),
           site_limit_exceeded?: false,
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
           flow: flow,
           form_submit_url: "/sites?flow=#{flow}"
         )
     end
-  end
-
-  def add_snippet(conn, params) do
-    flow = params["flow"] || "register"
-    user = conn.assigns[:current_user]
-    site = conn.assigns[:site]
-
-    is_first_site =
-      !Repo.exists?(
-        from(sm in Plausible.Site.Membership,
-          where:
-            sm.user_id == ^user.id and
-              sm.site_id != ^site.id
-        )
-      )
-
-    conn
-    |> render("snippet.html",
-      site: site,
-      skip_plausible_tracking: true,
-      is_first_site: is_first_site,
-      layout: {PlausibleWeb.LayoutView, "focus.html"},
-      form_submit_url: "/#{URI.encode_www_form(site.domain)}?flow=#{flow}"
-    )
   end
 
   def update_feature_visibility(conn, %{
@@ -585,8 +558,7 @@ defmodule PlausibleWeb.SiteController do
     |> assign(:skip_plausible_tracking, true)
     |> render("new_shared_link.html",
       site: site,
-      changeset: changeset,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
+      changeset: changeset
     )
   end
 
@@ -602,8 +574,7 @@ defmodule PlausibleWeb.SiteController do
         |> assign(:skip_plausible_tracking, true)
         |> render("new_shared_link.html",
           site: site,
-          changeset: changeset,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          changeset: changeset
         )
     end
   end
@@ -617,8 +588,7 @@ defmodule PlausibleWeb.SiteController do
     |> assign(:skip_plausible_tracking, true)
     |> render("edit_shared_link.html",
       site: site,
-      changeset: changeset,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
+      changeset: changeset
     )
   end
 
@@ -636,8 +606,7 @@ defmodule PlausibleWeb.SiteController do
         |> assign(:skip_plausible_tracking, true)
         |> render("edit_shared_link.html",
           site: site,
-          changeset: changeset,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          changeset: changeset
         )
     end
   end
@@ -750,7 +719,6 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("csv_import.html",
-      layout: {PlausibleWeb.LayoutView, "focus.html"},
       connect_live_socket: true
     )
   end
@@ -760,8 +728,7 @@ defmodule PlausibleWeb.SiteController do
 
     render(conn, "change_domain.html",
       skip_plausible_tracking: true,
-      changeset: changeset,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
+      changeset: changeset
     )
   end
 
@@ -771,27 +738,16 @@ defmodule PlausibleWeb.SiteController do
         conn
         |> put_flash(:success, "Website domain changed successfully")
         |> redirect(
-          external: Routes.site_path(conn, :add_snippet_after_domain_change, updated_site.domain)
+          external:
+            Routes.site_path(conn, :installation, updated_site.domain, flow: "domain_change")
         )
 
       {:error, changeset} ->
         render(conn, "change_domain.html",
           skip_plausible_tracking: true,
-          changeset: changeset,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          changeset: changeset
         )
     end
-  end
-
-  def add_snippet_after_domain_change(conn, _params) do
-    site = conn.assigns[:site]
-
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("snippet_after_domain_change.html",
-      site: site,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
   end
 
   defp tolerate_unique_contraint_violation(result, name) do
