@@ -25,8 +25,12 @@ defmodule Plausible.Release do
     IO.puts("Migrations successful!")
   end
 
-  # Unlike `migrate/0` above this function lists *all* pending migrations
-  # across all repos, sorts them into a single liss and only then runs them.
+  # Unlike `migrate/0` above this function:
+  # - lists all pending migrations across repos,
+  # - sorts them into a single list,
+  # - groups consequent migration into "streaks" by repo,
+  # - migrates each repo in "streak" consequently
+  #
   # This approach helps resolve dependencies between migrations across repos.
   def interweave_sort_migrate do
     prepare()
@@ -36,27 +40,37 @@ defmodule Plausible.Release do
       Enum.flat_map(repos(), fn repo ->
         Ecto.Migrator.migrations(repo)
         |> Enum.filter(fn {status, _version, _name} -> status == :down end)
-        |> Enum.map(fn {_status, version, name} -> {repo, _migration = {version, name}} end)
+        |> Enum.map(fn {_status, version, _name} -> {repo, version} end)
       end)
 
     # sort
     all_sorted =
-      Enum.sort_by(all_pending, fn {_repo, migration} -> migration end, :asc)
+      Enum.sort_by(all_pending, fn {_repo, version} -> version end, :asc)
+
+    # group into streaks
+    streaks = migration_streaks(all_sorted)
 
     # migrate
-    Enum.each(all_sorted, fn {repo, {version, name}} ->
-      [{module, _binary}] =
-        Code.compile_file(
-          "#{version}_#{name}.exs",
-          _relative_to = Ecto.Migrator.migrations_path(repo)
-        )
-
-      {:ok, _, _} =
-        Ecto.Migrator.with_repo(repo, fn repo ->
-          Ecto.Migrator.run(repo, [{version, module}], :up, all: true)
-        end)
+    Enum.each(streaks, fn {repo, version} ->
+      {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, to: version))
     end)
   end
+
+  defp migration_streaks([{repo, version} | streaks]) do
+    migration_streaks(streaks, repo, version)
+  end
+
+  defp migration_streaks([] = empty), do: empty
+
+  defp migration_streaks([{repo, version} | rest], repo, _prev_version) do
+    migration_streaks(rest, repo, version)
+  end
+
+  defp migration_streaks([{repo, version} | rest], prev_repo, prev_version) do
+    [{prev_repo, prev_version} | migration_streaks(rest, repo, version)]
+  end
+
+  defp migration_streaks([], repo, version), do: [{repo, version}]
 
   def pending_migrations do
     prepare()
