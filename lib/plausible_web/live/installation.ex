@@ -152,20 +152,20 @@ defmodule PlausibleWeb.Live.Installation do
           <ol class="list-decimal space-y-1 ml-8 mt-4">
             <li>
               <.styled_link href="https://plausible.io/docs/google-tag-manager" new_tab={true}>
-                Read our Google Tag Manager Guide
+                Read our Tag Manager guide
               </.styled_link>
             </li>
             <li>
-              Use the snippet below in GTM's Custom HTML section. Once done, click the button below to verify your installation
+              Paste this snippet into GTM's Custom HTML section. Once done, click the button below to verify your installation.
             </li>
           </ol>
         </:subtitle>
 
         <:subtitle :if={@installation_type == "manual"}>
-          Paste this snippet in the <code>&lt;head&gt;</code>
-          of your website. You can also view
+          Paste this snippet into the <code>&lt;head&gt;</code>
+          section of your site. See our
           <.styled_link href="https://plausible.io/docs/integration-guides" new_tab={true}>
-            community integration guides
+            installation guides. Once done, click the button below to verify your installation.
           </.styled_link>.
         </:subtitle>
 
@@ -270,19 +270,19 @@ defmodule PlausibleWeb.Live.Installation do
         readonly
       ><%= render_snippet(@installation_type, @domain, @script_config) %></textarea>
 
-      <h3 class="text-normal mt-4 font-semibold">Extension options:</h3>
+      <h3 class="text-normal mt-4 font-semibold">Enable enhanced measurements:</h3>
 
       <.script_extension_control
         config={@script_config}
         variant="outbound-links"
         label="Outbound links"
-        tooltip="Automatically track clicks on outbound links from your website"
+        tooltip="Automatically track clicks on external links"
       />
       <.script_extension_control
         config={@script_config}
         variant="tagged-events"
-        label="Tagged events"
-        tooltip="Allows you to track standard custom events such as link clicks, form submits, and any other HTML element clicks"
+        label="Custom events"
+        tooltip="Tag site elements like buttons, links and forms to track user activity. Additional action required"
       />
       <.script_extension_control
         config={@script_config}
@@ -293,20 +293,20 @@ defmodule PlausibleWeb.Live.Installation do
       <.script_extension_control
         config={@script_config}
         variant="hash"
-        label="Hash routing"
-        tooltip="Automatically follow frontend navigation when using hash-based routing"
+        label="Hashed page paths"
+        tooltip="Automatically track page paths that use a # in the URL"
       />
       <.script_extension_control
         config={@script_config}
         variant="revenue"
-        label="Revenue tracking"
-        tooltip="Allows you to assign dynamic monetary values to goals and custom events to track revenue attribution"
+        label="Ecommerce revenue"
+        tooltip="Assign monetary values to purchases and track revenue attribution. Additional action required"
       />
       <.script_extension_control
         config={@script_config}
         variant="pageview-props"
-        label="Custom props"
-        tooltip="Allow you to attach custom properties (also known as custom dimensions in Google Analytics) when sending a pageview in order to create custom metrics"
+        label="Custom properties"
+        tooltip="Attach custom dimensions to a pageview and create custom metrics. Additional action required"
       />
     </form>
     """
