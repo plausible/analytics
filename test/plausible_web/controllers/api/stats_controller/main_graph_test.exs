@@ -13,8 +13,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=realtime&metric=pageviews")
 
-      assert %{"plot" => plot} = json_response(conn, 200)
+      assert %{"plot" => plot, "labels" => labels} = json_response(conn, 200)
 
+      assert labels == Enum.to_list(-30..-1)
       assert Enum.count(plot) == 30
       assert Enum.any?(plot, fn pageviews -> pageviews > 0 end)
     end
