@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use PlausibleWeb.Plugs.ErrorHandler
 
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, Comparisons}
+  alias Plausible.Stats.{Query, Comparisons, Time, NaiveDateTimeRange}
   alias Plausible.Stats.Filters.LegacyDashboardFilterParser
   alias PlausibleWeb.Api.Helpers, as: H
 
@@ -104,16 +104,10 @@ defmodule PlausibleWeb.Api.StatsController do
     with {:ok, dates} <- parse_date_params(params),
          :ok <- validate_interval(params),
          :ok <- validate_interval_granularity(site, params, dates),
+         params <- realtime_period_to_30m(params),
          query = Query.from(site, params, debug_metadata(conn)),
          {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
-      timeseries_query =
-        if query.period == "realtime" do
-          %Query{query | period: "30m"}
-        else
-          query
-        end
-
-      timeseries_result = Stats.timeseries(site, timeseries_query, [metric])
+      timeseries_result = Stats.timeseries(site, query, [metric])
 
       comparison_opts = parse_comparison_opts(params)
 
@@ -173,10 +167,12 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp build_full_intervals(%{interval: "week", date_range: date_range}, labels) do
+    date_range = NaiveDateTimeRange.to_date_range(date_range)
     build_intervals(labels, date_range, &Timex.beginning_of_week/1, &Timex.end_of_week/1)
   end
 
   defp build_full_intervals(%{interval: "month", date_range: date_range}, labels) do
+    date_range = NaiveDateTimeRange.to_date_range(date_range)
     build_intervals(labels, date_range, &Timex.beginning_of_month/1, &Timex.end_of_month/1)
   end
 
@@ -205,6 +201,8 @@ defmodule PlausibleWeb.Api.StatsController do
   def top_stats(conn, params) do
     site = conn.assigns[:site]
 
+    params = realtime_period_to_30m(params)
+
     query = Query.from(site, params, debug_metadata(conn))
 
     comparison_opts = parse_comparison_opts(params)
@@ -217,6 +215,18 @@ defmodule PlausibleWeb.Api.StatsController do
 
     {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_query)
 
+    %{first: first_date, last: last_date} = NaiveDateTimeRange.to_date_range(query.date_range)
+
+    {comparing_from, comparing_to} =
+      if comparison_query do
+        %{first: first_date, last: last_date} =
+          NaiveDateTimeRange.to_date_range(comparison_query.date_range)
+
+        {Date.to_string(first_date), Date.to_string(last_date)}
+      else
+        {nil, nil}
+      end
+
     json(conn, %{
       top_stats: top_stats,
       interval: query.interval,
@@ -224,14 +234,14 @@ defmodule PlausibleWeb.Api.StatsController do
       with_imported_switch: with_imported_switch_info(query, comparison_query),
       includes_imported: includes_imported?(query, comparison_query),
       imports_exist: site.complete_import_ids != [],
-      comparing_from: comparison_query && comparison_query.date_range.first,
-      comparing_to: comparison_query && comparison_query.date_range.last,
-      from: query.date_range.first,
-      to: query.date_range.last
+      comparing_from: comparing_from,
+      comparing_to: comparing_to,
+      from: Date.to_string(first_date),
+      to: Date.to_string(last_date)
     })
   end
 
-  defp with_imported_switch_info(%Query{period: "realtime"}, _) do
+  defp with_imported_switch_info(%Query{period: "30m"}, _) do
     %{visible: false, togglable: false, tooltip_msg: nil}
   end
 
@@ -284,7 +294,7 @@ defmodule PlausibleWeb.Api.StatsController do
         current_date =
           Timex.now(site.timezone)
           |> Timex.to_date()
-          |> date_or_weekstart(query)
+          |> Time.date_or_weekstart(query)
           |> Date.to_string()
 
         Enum.find_index(dates, &(&1 == current_date))
@@ -307,24 +317,14 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp date_or_weekstart(date, query) do
-    weekstart = Timex.beginning_of_week(date)
-
-    if Enum.member?(query.date_range, weekstart) do
-      weekstart
-    else
-      date
-    end
-  end
-
   defp fetch_top_stats(site, query, comparison_query) do
     goal_filter = Query.get_filter(query, "event:goal")
 
     cond do
-      query.period == "realtime" && goal_filter ->
+      query.period == "30m" && goal_filter ->
         fetch_goal_realtime_top_stats(site, query, comparison_query)
 
-      query.period == "realtime" ->
+      query.period == "30m" ->
         fetch_realtime_top_stats(site, query, comparison_query)
 
       goal_filter ->
@@ -336,12 +336,10 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_goal_realtime_top_stats(site, query, _comparison_query) do
-    query_30m = %Query{query | period: "30m"}
-
     %{
       visitors: %{value: unique_conversions},
       events: %{value: total_conversions}
-    } = Stats.aggregate(site, query_30m, [:visitors, :events])
+    } = Stats.aggregate(site, query, [:visitors, :events])
 
     stats = [
       %{
@@ -364,12 +362,10 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_realtime_top_stats(site, query, _comparison_query) do
-    query_30m = %Query{query | period: "30m"}
-
     %{
       visitors: %{value: visitors},
       pageviews: %{value: pageviews}
-    } = Stats.aggregate(site, query_30m, [:visitors, :pageviews])
+    } = Stats.aggregate(site, query, [:visitors, :pageviews])
 
     stats = [
       %{
@@ -1270,15 +1266,13 @@ defmodule PlausibleWeb.Api.StatsController do
   def conversions(conn, params) do
     pagination = parse_pagination(params)
     site = Plausible.Repo.preload(conn.assigns.site, :goals)
-    params = Map.put(params, "property", "event:goal")
-    query = Query.from(site, params, debug_metadata(conn))
 
-    query =
-      if query.period == "realtime" do
-        %Query{query | period: "30m"}
-      else
-        query
-      end
+    params =
+      params
+      |> realtime_period_to_30m()
+      |> Map.put("property", "event:goal")
+
+    query = Query.from(site, params, debug_metadata(conn))
 
     metrics = [:visitors, :events, :conversion_rate] ++ @revenue_metrics
 
@@ -1583,4 +1577,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
     Map.put(row, :name, name)
   end
+
+  defp realtime_period_to_30m(%{"period" => _} = params) do
+    Map.update!(params, "period", fn period ->
+      if period == "realtime", do: "30m", else: period
+    end)
+  end
+
+  defp realtime_period_to_30m(params), do: params
 end

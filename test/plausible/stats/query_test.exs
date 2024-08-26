@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.QueryTest do
   use Plausible.DataCase, async: true
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, NaiveDateTimeRange}
 
   setup do
     user = insert(:user)
@@ -31,136 +31,191 @@ defmodule Plausible.Stats.QueryTest do
   test "parses day format", %{site: site} do
     q = Query.from(site, %{"period" => "day", "date" => "2019-01-01"})
 
-    assert q.date_range.first == ~D[2019-01-01]
-    assert q.date_range.last == ~D[2019-01-01]
+    assert q.date_range.first == ~N[2019-01-01 00:00:00]
+    assert q.date_range.last == ~N[2019-01-02 00:00:00]
     assert q.interval == "hour"
   end
 
   test "day format defaults to today", %{site: site} do
     q = Query.from(site, %{"period" => "day"})
 
-    assert q.date_range.first == Timex.today()
-    assert q.date_range.last == Timex.today()
+    expected_first_datetime = Date.utc_today() |> NaiveDateTime.new!(~T[00:00:00])
+    expected_last_datetime = expected_first_datetime |> NaiveDateTime.shift(day: 1)
+
+    assert q.date_range.first == expected_first_datetime
+    assert q.date_range.last == expected_last_datetime
     assert q.interval == "hour"
   end
 
   test "parses realtime format", %{site: site} do
     q = Query.from(site, %{"period" => "realtime"})
 
-    assert q.date_range.first == Timex.today()
-    assert q.date_range.last == Timex.today()
+    expected_first_datetime = q.now |> NaiveDateTime.shift(minute: -5)
+    expected_last_datetime = q.now |> NaiveDateTime.shift(second: 5)
+
+    assert q.date_range.first == expected_first_datetime
+    assert q.date_range.last == expected_last_datetime
     assert q.period == "realtime"
   end
 
   test "parses month format", %{site: site} do
     q = Query.from(site, %{"period" => "month", "date" => "2019-01-01"})
 
-    assert q.date_range.first == ~D[2019-01-01]
-    assert q.date_range.last == ~D[2019-01-31]
+    assert q.date_range.first == ~N[2019-01-01 00:00:00]
+    assert q.date_range.last == ~N[2019-02-01 00:00:00]
     assert q.interval == "day"
   end
 
   test "parses 6 month format", %{site: site} do
     q = Query.from(site, %{"period" => "6mo"})
 
-    assert q.date_range.first ==
-             Timex.shift(Timex.today(), months: -5) |> Timex.beginning_of_month()
+    expected_first_datetime =
+      q.now
+      |> NaiveDateTime.to_date()
+      |> Date.shift(month: -5)
+      |> Date.beginning_of_month()
+      |> NaiveDateTime.new!(~T[00:00:00])
 
-    assert q.date_range.last == Timex.today() |> Timex.end_of_month()
+    expected_last_datetime =
+      q.now
+      |> NaiveDateTime.to_date()
+      |> Date.end_of_month()
+      |> Date.shift(day: 1)
+      |> NaiveDateTime.new!(~T[00:00:00])
+
+    assert q.date_range.first == expected_first_datetime
+    assert q.date_range.last == expected_last_datetime
     assert q.interval == "month"
   end
 
   test "parses 12 month format", %{site: site} do
     q = Query.from(site, %{"period" => "12mo"})
 
-    assert q.date_range.first ==
-             Timex.shift(Timex.today(), months: -11) |> Timex.beginning_of_month()
+    expected_first_datetime =
+      q.now
+      |> NaiveDateTime.to_date()
+      |> Date.shift(month: -11)
+      |> Date.beginning_of_month()
+      |> NaiveDateTime.new!(~T[00:00:00])
 
-    assert q.date_range.last == Timex.today() |> Timex.end_of_month()
+    expected_last_datetime =
+      q.now
+      |> NaiveDateTime.to_date()
+      |> Date.end_of_month()
+      |> Date.shift(day: 1)
+      |> NaiveDateTime.new!(~T[00:00:00])
+
+    assert q.date_range.first == expected_first_datetime
+    assert q.date_range.last == expected_last_datetime
     assert q.interval == "month"
   end
 
   test "parses year to date format", %{site: site} do
     q = Query.from(site, %{"period" => "year"})
 
-    assert q.date_range.first ==
-             Timex.now(site.timezone) |> Timex.to_date() |> Timex.beginning_of_year()
+    %Date{year: current_year} = NaiveDateTime.to_date(q.now)
 
-    assert q.date_range.last ==
-             Timex.now(site.timezone) |> Timex.to_date() |> Timex.end_of_year()
+    expected_first_datetime =
+      Date.new!(current_year, 1, 1)
+      |> NaiveDateTime.new!(~T[00:00:00])
 
+    expected_last_datetime =
+      NaiveDateTime.shift(expected_first_datetime, year: 1)
+
+    assert q.date_range.first == expected_first_datetime
+    assert q.date_range.last == expected_last_datetime
     assert q.interval == "month"
   end
 
   test "parses all time", %{site: site} do
     q = Query.from(site, %{"period" => "all"})
 
-    assert q.date_range.first == NaiveDateTime.to_date(site.inserted_at)
-    assert q.date_range.last == Timex.today()
+    expected_last_datetime =
+      q.now
+      |> NaiveDateTime.to_date()
+      |> Date.shift(day: 1)
+      |> NaiveDateTime.new!(~T[00:00:00])
+
+    assert q.date_range.first == site.inserted_at
+    assert q.date_range.last == expected_last_datetime
     assert q.period == "all"
     assert q.interval == "month"
   end
 
-  test "parses all time in correct timezone", %{site: site} do
-    site = Map.put(site, :timezone, "America/Cancun")
-    q = Query.from(site, %{"period" => "all"})
+  test "parses all time in site timezone", %{site: site} do
+    for timezone <- ["Etc/GMT+12", "Etc/GMT-12"] do
+      site = Map.put(site, :timezone, timezone)
+      query = Query.from(site, %{"period" => "all"})
 
-    assert q.date_range.first == ~D[2020-01-01]
-    assert q.date_range.last == Timex.today("America/Cancun")
+      expected_first_datetime = ~N[2020-01-01 00:00:00]
+
+      expected_last_datetime =
+        Timex.today(timezone)
+        |> Date.shift(day: 1)
+        |> NaiveDateTime.new!(~T[00:00:00])
+
+      assert query.date_range.first == expected_first_datetime
+      assert query.date_range.last == expected_last_datetime
+    end
   end
 
   test "all time shows today if site has no start date", %{site: site} do
     site = Map.put(site, :stats_start_date, nil)
     q = Query.from(site, %{"period" => "all"})
 
-    assert q.date_range.first == Timex.today()
-    assert q.date_range.last == Timex.today()
+    today = Date.utc_today()
+
+    assert q.date_range == NaiveDateTimeRange.new!(today, today)
     assert q.period == "all"
     assert q.interval == "hour"
   end
 
   test "all time shows hourly if site is completely new", %{site: site} do
-    site = Map.put(site, :stats_start_date, Timex.now() |> Timex.to_date())
+    site = Map.put(site, :stats_start_date, Date.utc_today())
     q = Query.from(site, %{"period" => "all"})
 
-    assert q.date_range.first == Timex.today()
-    assert q.date_range.last == Timex.today()
+    today = Date.utc_today()
+
+    assert q.date_range == NaiveDateTimeRange.new!(today, today)
     assert q.period == "all"
     assert q.interval == "hour"
   end
 
   test "all time shows daily if site is more than a day old", %{site: site} do
-    site =
-      Map.put(site, :stats_start_date, Timex.now() |> Timex.shift(days: -1) |> Timex.to_date())
+    today = Date.utc_today()
+    yesterday = today |> Date.shift(day: -1)
+
+    site = Map.put(site, :stats_start_date, yesterday)
 
     q = Query.from(site, %{"period" => "all"})
 
-    assert q.date_range.first == Timex.today() |> Timex.shift(days: -1)
-    assert q.date_range.last == Timex.today()
+    assert q.date_range == NaiveDateTimeRange.new!(yesterday, today)
     assert q.period == "all"
     assert q.interval == "day"
   end
 
   test "all time shows monthly if site is more than a month old", %{site: site} do
-    site =
-      Map.put(site, :stats_start_date, Timex.now() |> Timex.shift(months: -1) |> Timex.to_date())
+    today = Date.utc_today()
+    last_month = today |> Date.shift(month: -1)
+
+    site = Map.put(site, :stats_start_date, last_month)
 
     q = Query.from(site, %{"period" => "all"})
 
-    assert q.date_range.first == Timex.today() |> Timex.shift(months: -1)
-    assert q.date_range.last == Timex.today()
+    assert q.date_range == NaiveDateTimeRange.new!(last_month, today)
     assert q.period == "all"
     assert q.interval == "month"
   end
 
   test "all time uses passed interval different from the default interval", %{site: site} do
-    site =
-      Map.put(site, :stats_start_date, Timex.now() |> Timex.shift(months: -1) |> Timex.to_date())
+    today = Date.utc_today()
+    last_month = today |> Date.shift(month: -1)
+
+    site = Map.put(site, :stats_start_date, last_month)
 
     q = Query.from(site, %{"period" => "all", "interval" => "week"})
 
-    assert q.date_range.first == Timex.today() |> Timex.shift(months: -1)
-    assert q.date_range.last == Timex.today()
+    assert q.date_range == NaiveDateTimeRange.new!(last_month, today)
     assert q.period == "all"
     assert q.interval == "week"
   end
@@ -172,8 +227,8 @@ defmodule Plausible.Stats.QueryTest do
   test "parses custom format", %{site: site} do
     q = Query.from(site, %{"period" => "custom", "from" => "2019-01-01", "to" => "2019-01-15"})
 
-    assert q.date_range.first == ~D[2019-01-01]
-    assert q.date_range.last == ~D[2019-01-15]
+    assert q.date_range.first == ~N[2019-01-01 00:00:00]
+    assert q.date_range.last == ~N[2019-01-16 00:00:00]
     assert q.interval == "day"
   end
 

@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   use Plausible
 
-  alias Plausible.Stats.{Filters, Interval, Query}
+  alias Plausible.Stats.{Filters, Interval, Query, NaiveDateTimeRange}
 
   def from(site, params, debug_metadata) do
     now = NaiveDateTime.utc_now(:second)
@@ -38,15 +38,27 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   end
 
   defp put_period(query, site, %{"period" => "realtime"}) do
-    date = today(site.timezone)
+    now = DateTime.now!(site.timezone)
 
-    struct!(query, period: "realtime", date_range: Date.range(date, date))
+    first = NaiveDateTime.shift(now, minute: -5)
+    last = NaiveDateTime.shift(now, second: 5)
+
+    struct!(query, period: "realtime", date_range: NaiveDateTimeRange.new!(first, last))
+  end
+
+  defp put_period(query, site, %{"period" => "30m"}) do
+    now = DateTime.now!(site.timezone)
+
+    first = NaiveDateTime.shift(now, minute: -30)
+    last = NaiveDateTime.shift(now, second: 5)
+
+    struct!(query, period: "30m", date_range: NaiveDateTimeRange.new!(first, last))
   end
 
   defp put_period(query, site, %{"period" => "day"} = params) do
     date = parse_single_date(site.timezone, params)
 
-    struct!(query, period: "day", date_range: Date.range(date, date))
+    struct!(query, period: "day", date_range: NaiveDateTimeRange.new!(date, date))
   end
 
   defp put_period(query, site, %{"period" => "7d"} = params) do
@@ -56,7 +68,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     struct!(
       query,
       period: "7d",
-      date_range: Date.range(start_date, end_date)
+      date_range: NaiveDateTimeRange.new!(start_date, end_date)
     )
   end
 
@@ -64,7 +76,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     end_date = parse_single_date(site.timezone, params)
     start_date = end_date |> Date.shift(day: -30)
 
-    struct!(query, period: "30d", date_range: Date.range(start_date, end_date))
+    struct!(query, period: "30d", date_range: NaiveDateTimeRange.new!(start_date, end_date))
   end
 
   defp put_period(query, site, %{"period" => "month"} = params) do
@@ -75,7 +87,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
     struct!(query,
       period: "month",
-      date_range: Date.range(start_date, end_date)
+      date_range: NaiveDateTimeRange.new!(start_date, end_date)
     )
   end
 
@@ -90,7 +102,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
     struct!(query,
       period: "6mo",
-      date_range: Date.range(start_date, end_date)
+      date_range: NaiveDateTimeRange.new!(start_date, end_date)
     )
   end
 
@@ -105,7 +117,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
     struct!(query,
       period: "12mo",
-      date_range: Date.range(start_date, end_date)
+      date_range: NaiveDateTimeRange.new!(start_date, end_date)
     )
   end
 
@@ -118,7 +130,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
     struct!(query,
       period: "year",
-      date_range: Date.range(start_date, end_date)
+      date_range: NaiveDateTimeRange.new!(start_date, end_date)
     )
   end
 
@@ -128,7 +140,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
     struct!(query,
       period: "all",
-      date_range: Date.range(start_date, now)
+      date_range: NaiveDateTimeRange.new!(start_date, now)
     )
   end
 
@@ -148,7 +160,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
     struct!(query,
       period: "custom",
-      date_range: Date.range(from_date, to_date)
+      date_range: NaiveDateTimeRange.new!(from_date, to_date)
     )
   end
 

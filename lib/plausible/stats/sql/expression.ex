@@ -84,27 +84,6 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   # :NOTE: This is not exposed in Query APIv2
-  def select_dimension(q, key, "time:minute", :sessions, %Query{
-        period: "30m"
-      }) do
-    select_merge_as(q, [s], %{
-      key =>
-        fragment(
-          "arrayJoin(range(dateDiff('minute', now(), ?), dateDiff('minute', now(), ?) + 1))",
-          s.start,
-          s.timestamp
-        )
-    })
-  end
-
-  # :NOTE: This is not exposed in Query APIv2
-  def select_dimension(q, key, "time:minute", _table, %Query{period: "30m"}) do
-    select_merge_as(q, [t], %{
-      key => fragment("dateDiff('minute', now(), ?)", t.timestamp)
-    })
-  end
-
-  # :NOTE: This is not exposed in Query APIv2
   def select_dimension(q, key, "time:minute", :sessions, query) do
     q
     |> join(:inner, [s], time_slot in time_slots(query, 60),

@@ -2896,6 +2896,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         referrer_source: "Google",
         timestamp: ~N[2021-01-02 00:00:00]
       ),
+      build(:pageview,
+        referrer_source: "Google",
+        timestamp: ~N[2021-01-02 00:00:00]
+      ),
+      build(:pageview, timestamp: ~N[2021-01-03 00:00:00]),
       build(:pageview, timestamp: ~N[2021-01-03 00:00:00]),
       build(:pageview,
         referrer_source: "Twitter",
@@ -2912,11 +2917,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       })
 
     assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["2021-01-01 00:00:00", "Google"], "metrics" => [1]},
-             %{"dimensions" => ["2021-01-02 00:00:00", "Google"], "metrics" => [1]},
-             %{"dimensions" => ["2021-01-02 00:00:00", "Direct / None"], "metrics" => [1]},
-             %{"dimensions" => ["2021-01-03 00:00:00", "Direct / None"], "metrics" => [1]},
-             %{"dimensions" => ["2021-01-03 00:00:00", "Twitter"], "metrics" => [1]}
+             %{"dimensions" => ["2021-01-01", "Google"], "metrics" => [1]},
+             %{"dimensions" => ["2021-01-02", "Google"], "metrics" => [2]},
+             %{"dimensions" => ["2021-01-02", "Direct / None"], "metrics" => [1]},
+             %{"dimensions" => ["2021-01-03", "Direct / None"], "metrics" => [2]},
+             %{"dimensions" => ["2021-01-03", "Twitter"], "metrics" => [1]}
            ]
   end
 

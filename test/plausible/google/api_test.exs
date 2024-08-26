@@ -3,6 +3,7 @@ defmodule Plausible.Google.APITest do
   use Plausible.Test.Support.HTTPMocker
 
   alias Plausible.Google
+  alias Plausible.Stats.Query
 
   import ExUnit.CaptureLog
   import Mox
@@ -41,7 +42,8 @@ defmodule Plausible.Google.APITest do
         end
       )
 
-      query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+      query =
+        Query.from(site, %{"period" => "custom", "from" => "2022-01-01", "to" => "2022-01-05"})
 
       assert {:error, "google_auth_error"} = Google.API.fetch_stats(site, query, {5, 0}, "")
     end
@@ -58,7 +60,8 @@ defmodule Plausible.Google.APITest do
         end
       )
 
-      query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+      query =
+        Query.from(site, %{"period" => "custom", "from" => "2022-01-01", "to" => "2022-01-05"})
 
       assert {:error, "some_error"} = Google.API.fetch_stats(site, query, {5, 0}, "")
     end
@@ -75,7 +78,8 @@ defmodule Plausible.Google.APITest do
         end
       )
 
-      query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+      query =
+        Query.from(site, %{"period" => "custom", "from" => "2022-01-01", "to" => "2022-01-05"})
 
       log =
         capture_log(fn ->
@@ -100,7 +104,8 @@ defmodule Plausible.Google.APITest do
       expires: NaiveDateTime.add(NaiveDateTime.utc_now(), -3600)
     )
 
-    query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+    query =
+      Query.from(site, %{"period" => "custom", "from" => "2022-01-01", "to" => "2022-01-05"})
 
     assert {:error, "invalid_grant"} = Google.API.fetch_stats(site, query, 5, "")
   end
@@ -126,7 +131,8 @@ defmodule Plausible.Google.APITest do
     test "returns name and visitor count", %{site: site} do
       mock_http_with("google_search_console.json")
 
-      query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+      query =
+        Query.from(site, %{"period" => "custom", "from" => "2022-01-01", "to" => "2022-01-05"})
 
       assert {:ok,
               [
