@@ -45,33 +45,31 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     last: ~N[2021-06-01 00:00:00]
   }
 
-  def check_success(params, site, expected_result),
-    do: check_success(params, site, :public, expected_result)
-
-  def check_success(params, site, schema_type, expected_result) do
+  def check_success(params, site, expected_result, schema_type \\ :public) do
     assert {:ok, ^expected_result} = parse(site, schema_type, params, @now)
   end
 
-  def check_error(params, site, expected_error_message),
-    do: check_error(params, site, :public, expected_error_message)
-
-  def check_error(params, site, schema_type, expected_error_message) do
+  def check_error(params, site, expected_error_message, schema_type \\ :public) do
     {:error, message} = parse(site, schema_type, params, @now)
     assert message == expected_error_message
   end
 
   def check_date_range(date_range, site, expected_date_range, schema_type \\ :public) do
     %{"site_id" => site.domain, "metrics" => ["visitors", "events"], "date_range" => date_range}
-    |> check_success(site, schema_type, %{
-      metrics: [:visitors, :events],
-      date_range: expected_date_range,
-      filters: [],
-      dimensions: [],
-      order_by: nil,
-      timezone: site.timezone,
-      include: %{imports: false, time_labels: false},
-      preloaded_goals: []
-    })
+    |> check_success(
+      site,
+      %{
+        metrics: [:visitors, :events],
+        date_range: expected_date_range,
+        filters: [],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false},
+        preloaded_goals: []
+      },
+      schema_type
+    )
   end
 
   test "parsing empty map fails", %{site: site} do
@@ -113,24 +111,28 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         ],
         "date_range" => "all"
       }
-      |> check_success(site, :internal, %{
-        metrics: [
-          :time_on_page,
-          :visitors,
-          :pageviews,
-          :visits,
-          :events,
-          :bounce_rate,
-          :visit_duration
-        ],
-        date_range: @date_range_day,
-        filters: [],
-        dimensions: [],
-        order_by: nil,
-        timezone: site.timezone,
-        include: %{imports: false, time_labels: false},
-        preloaded_goals: []
-      })
+      |> check_success(
+        site,
+        %{
+          metrics: [
+            :time_on_page,
+            :visitors,
+            :pageviews,
+            :visits,
+            :events,
+            :bounce_rate,
+            :visit_duration
+          ],
+          date_range: @date_range_day,
+          filters: [],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false},
+          preloaded_goals: []
+        },
+        :internal
+      )
     end
 
     test "time_on_page is not a valid metric in public API", %{site: site} do
@@ -139,7 +141,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "metrics" => ["time_on_page"],
         "date_range" => "all"
       }
-      |> check_error(site, :public, "#/metrics/0: Invalid metric \"time_on_page\"")
+      |> check_error(site, "#/metrics/0: Invalid metric \"time_on_page\"")
     end
 
     test "same metric queried multiple times", %{site: site} do
@@ -172,18 +174,22 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             [Atom.to_string(unquote(operation)), "event:name", ["foo"]]
           ]
         }
-        |> check_success(site, :internal, %{
-          metrics: [:visitors],
-          date_range: @date_range_day,
-          filters: [
-            [unquote(operation), "event:name", ["foo"]]
-          ],
-          dimensions: [],
-          order_by: nil,
-          timezone: site.timezone,
-          include: %{imports: false, time_labels: false},
-          preloaded_goals: []
-        })
+        |> check_success(
+          site,
+          %{
+            metrics: [:visitors],
+            date_range: @date_range_day,
+            filters: [
+              [unquote(operation), "event:name", ["foo"]]
+            ],
+            dimensions: [],
+            order_by: nil,
+            timezone: site.timezone,
+            include: %{imports: false, time_labels: false},
+            preloaded_goals: []
+          },
+          :internal
+        )
       end
 
       test "#{operation} filter with invalid clause", %{site: site} do
@@ -197,8 +203,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
         |> check_error(
           site,
-          :internal,
-          "#/filters/0: Invalid filter [\"#{unquote(operation)}\", \"event:name\", \"foo\"]"
+          "#/filters/0: Invalid filter [\"#{unquote(operation)}\", \"event:name\", \"foo\"]",
+          :internal
         )
       end
     end
@@ -215,7 +221,6 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
         |> check_error(
           site,
-          :public,
           "#/filters/0: Invalid filter [\"#{unquote(operation)}\", \"event:name\", [\"foo\"]]"
         )
       end
