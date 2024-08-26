@@ -1,11 +1,15 @@
 defmodule PlausibleWeb.UserAuthTest do
   use PlausibleWeb.ConnCase, async: true
 
+  import ExUnit.CaptureLog
+
   alias Plausible.Auth
   alias Plausible.Repo
   alias PlausibleWeb.UserAuth
 
   alias PlausibleWeb.Router.Helpers, as: Routes
+
+  @moduletag capture_log: true
 
   describe "log_in_user/2,3" do
     setup [:create_user]
@@ -155,8 +159,10 @@ defmodule PlausibleWeb.UserAuthTest do
       assert {:ok, ^user_session} =
                UserAuth.get_user_session(%{"user_token" => user_session.token})
 
-      assert {:ok, %Auth.UserSession{user_id: ^user_id, token: nil}} =
-               UserAuth.get_user_session(%{"current_user_id" => user.id})
+      capture_log(fn ->
+        assert {:ok, %Auth.UserSession{user_id: ^user_id, token: nil}} =
+                 UserAuth.get_user_session(%{"current_user_id" => user.id})
+      end) =~ "Legacy user session detected"
     end
 
     test "returns error on invalid or missing session data" do

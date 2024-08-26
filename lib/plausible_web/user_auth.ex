@@ -8,8 +8,8 @@ defmodule PlausibleWeb.UserAuth do
   The legacy token is still accepted from the session cookie. Once 14 days
   pass (the current time window for which session cookie is valid without
   any activity), the legacy cookies won't be accepted anymore (legacy token
-  retrieval is tracked with instrumentation) and the logic will be cleaned
-  of branching for legacy session.
+  retrieval is tracked with logging) and the logic will be cleaned of branching
+  for legacy session.
   """
 
   import Ecto.Query, only: [from: 2]
@@ -19,6 +19,8 @@ defmodule PlausibleWeb.UserAuth do
   alias PlausibleWeb.TwoFactor
 
   alias PlausibleWeb.Router.Helpers, as: Routes
+
+  require Logger
 
   @spec log_in_user(Plug.Conn.t(), Auth.User.t(), String.t() | nil) :: Plug.Conn.t()
   def log_in_user(conn, user, redirect_path \\ nil) do
@@ -180,9 +182,15 @@ defmodule PlausibleWeb.UserAuth do
 
   defp get_user_token(session) do
     case Enum.map(["user_token", "current_user_id"], &Map.get(session, &1)) do
-      [token, nil] when is_binary(token) -> {:ok, {:new, token}}
-      [nil, current_user_id] when is_integer(current_user_id) -> {:ok, {:legacy, current_user_id}}
-      [nil, nil] -> {:error, :no_valid_token}
+      [token, nil] when is_binary(token) ->
+        {:ok, {:new, token}}
+
+      [nil, current_user_id] when is_integer(current_user_id) ->
+        Logger.warning("Legacy user session detected (user: #{current_user_id})")
+        {:ok, {:legacy, current_user_id}}
+
+      [nil, nil] ->
+        {:error, :no_valid_token}
     end
   end
 
