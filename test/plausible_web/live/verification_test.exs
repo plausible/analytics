@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
       html = render(lv)
       assert html =~ "Success!"
-      assert html =~ "Your integration is working"
+      assert html =~ "Awaiting your first pageview"
     end
 
     test "won't await first pageview if site has pageviews", %{conn: conn, site: site} do

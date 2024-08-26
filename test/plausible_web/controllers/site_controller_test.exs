@@ -485,7 +485,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert resp =~ "Site Timezone"
       assert resp =~ "Site Domain"
-      assert resp =~ "Your Plausible Installation"
+      assert resp =~ "Site Installation"
     end
   end
 
