@@ -72,6 +72,35 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     )
   end
 
+  # Checks parsing the date range relative to the `date` parameter (which is only
+  # available in the internal API schema) instead of using `@now`.
+  def check_date_range_with_date(date_range, site, expected_date_range) do
+    date =
+      @now
+      |> NaiveDateTime.to_date()
+      |> Date.to_string()
+
+    params = %{
+      "site_id" => site.domain,
+      "metrics" => ["visitors", "events"],
+      "date_range" => date_range,
+      "date" => date
+    }
+
+    expected_result = %{
+      metrics: [:visitors, :events],
+      date_range: expected_date_range,
+      filters: [],
+      dimensions: [],
+      order_by: nil,
+      timezone: site.timezone,
+      include: %{imports: false, time_labels: false},
+      preloaded_goals: []
+    }
+
+    assert {:ok, ^expected_result} = parse(site, :internal, params)
+  end
+
   test "parsing empty map fails", %{site: site} do
     %{}
     |> check_error(site, "#: Required properties site_id, metrics, date_range were not present.")
@@ -564,6 +593,27 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
       %{"site_id" => site.domain, "date_range" => ["21415-00", "eee"], "metrics" => ["visitors"]}
       |> check_error(site, "#/date_range: Invalid date range [\"21415-00\", \"eee\"]")
+    end
+
+    test "parses date_range relative to date param", %{site: site} do
+      check_date_range_with_date("day", site, @date_range_day)
+      check_date_range_with_date("7d", site, @date_range_7d)
+      check_date_range_with_date("30d", site, @date_range_30d)
+      check_date_range_with_date("month", site, @date_range_month)
+      check_date_range_with_date("6mo", site, @date_range_6mo)
+      check_date_range_with_date("12mo", site, @date_range_12mo)
+      check_date_range_with_date("year", site, @date_range_year)
+    end
+
+    test "date parameter is not available in the public API schema", %{site: site} do
+      params = %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors", "events"],
+        "date_range" => "month",
+        "date" => "2021-05-05"
+      }
+
+      check_error(params, site, "#/date: Schema does not allow additional properties.")
     end
   end
 
