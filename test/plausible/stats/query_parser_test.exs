@@ -558,7 +558,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       check_date_range("year", site, @date_range_year)
     end
 
-    test "parsing private internal API shortcut options for date_range", %{site: site} do
+    test "30m and realtime are available in internal API", %{site: site} do
       check_date_range("30m", site, @date_range_30m, :internal)
       check_date_range("realtime", site, @date_range_realtime, :internal)
     end
