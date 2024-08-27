@@ -25,6 +25,11 @@ defmodule Plausible.Release do
     IO.puts("Migrations successful!")
   end
 
+  # Unlike `migrate/0` above this function:
+  # - lists all pending migrations across repos,
+  # - sorts them into a single list,
+  # - groups consequent migration into "streaks" by repo,
+  # - and migrates the repos through each streak
   def interweave_migrate(repos \\ repos()) do
     prepare()
 
@@ -38,7 +43,6 @@ defmodule Plausible.Release do
   end
 
   @doc false
-
   def migration_streaks(repos) do
     all_pending =
       Enum.flat_map(repos, fn repo ->
@@ -53,12 +57,8 @@ defmodule Plausible.Release do
         pending
       end)
 
-    group_migration_streaks(all_pending)
-  end
-
-  @doc false
-  def group_migration_streaks(all_pending) do
-    all_sorted = Enum.sort_by(all_pending, fn {_repo, version} -> version end, :asc)
+    all_sorted =
+      Enum.sort_by(all_pending, fn {_repo, version} -> version end, :asc)
 
     streaks_reversed =
       Enum.reduce(all_sorted, [], fn {repo, _version} = latest_migration, streaks_acc ->
