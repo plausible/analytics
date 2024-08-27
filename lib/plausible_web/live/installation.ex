@@ -244,7 +244,6 @@ defmodule PlausibleWeb.Live.Installation do
   end
 
   defp script_extension_control(assigns) do
-  def script_extension_control(assigns) do
     ~H"""
     <div class="mt-2 p-1">
       <div class="flex items-center">
