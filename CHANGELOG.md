@@ -47,6 +47,7 @@ All notable changes to this project will be documented in this file.
 - Don't include imports when showing time series hourly interval. Previously imported data was shown each midnight
 - Fix property filter suggestions 500 error when property hasn't been selected
 - Bamboo.Mua: add Date and Message-ID headers if missing plausible/analytics#4474
+- Fix migration order across `plausible_db` and `plausible_events_db` databases plausible/analytics#4466
 
 ## v2.1.1 - 2024-06-06
 
