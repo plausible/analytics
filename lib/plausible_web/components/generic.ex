@@ -321,6 +321,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr :wrapper_class, :any, default: ""
   attr :class, :any, default: ""
   attr :icon?, :boolean, default: true
+  attr :position, :string, default: "bottom-10 margin-x-auto left-10 right-10"
   slot :inner_block, required: true
   slot :tooltip_content, required: true
 
@@ -339,7 +340,10 @@ defmodule PlausibleWeb.Components.Generic do
       </p>
       <span
         x-show="hovered || sticky"
-        class="bg-gray-900 pointer-events-none absolute bottom-10 margin-x-auto left-10 right-10 transition-opacity p-4 rounded text-sm text-white"
+        class={[
+          "bg-gray-900 pointer-events-none absolute transition-opacity p-4 rounded text-sm text-white",
+          @position
+        ]}
       >
         <%= render_slot(List.first(@tooltip_content)) %>
       </span>

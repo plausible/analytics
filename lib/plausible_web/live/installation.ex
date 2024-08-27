@@ -248,14 +248,17 @@ defmodule PlausibleWeb.Live.Installation do
           checked={@config[@variant]}
           class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600 mr-2"
         />
-        <.tooltip wrapper_class="w-full z-50" class="z-50" icon?={false}>
-          <label for={"check-#{@variant}"} class="border-b border-dotted border-gray-400">
-            <%= @label %>
-          </label>
-          <:tooltip_content>
-            <%= @tooltip %>
-          </:tooltip_content>
-        </.tooltip>
+        <label for={"check-#{@variant}"}>
+          <%= @label %>
+        </label>
+        <div class="ml-2">
+          <.tooltip icon?={false} position="z-50 w-64 margin-x-auto">
+            <:tooltip_content>
+              <%= @tooltip %>
+            </:tooltip_content>
+            <Heroicons.information_circle class="text-gray-700 dark:text-gray-500 w-5 h-5" />
+          </.tooltip>
+        </div>
       </div>
     </div>
     """
