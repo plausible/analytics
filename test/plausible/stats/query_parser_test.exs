@@ -605,7 +605,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       check_date_range_with_date("year", site, @date_range_year)
     end
 
-    test "date parameter is not available in the public API schema", %{site: site} do
+    test "date parameter is not available in the public API", %{site: site} do
       params = %{
         "site_id" => site.domain,
         "metrics" => ["visitors", "events"],
