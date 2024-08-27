@@ -563,7 +563,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       check_date_range("realtime", site, @date_range_realtime, :internal)
     end
 
-    test "private internal API shortcut date_ranges are unavailable in the public schema", %{
+    test "30m and realtime date_ranges are unavailable in public API", %{
       site: site
     } do
       for date_range <- ["realtime", "30m"] do
