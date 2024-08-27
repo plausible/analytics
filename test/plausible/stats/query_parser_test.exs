@@ -368,6 +368,79 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code."
       )
     end
+
+    test "valid nested `not`, `and` and `or`", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [
+          [
+            "or",
+            [
+              [
+                "and",
+                [
+                  ["is", "visit:city_name", ["Tallinn"]],
+                  ["is", "visit:country_name", ["Estonia"]]
+                ]
+              ],
+              ["not", ["is", "visit:country_name", ["Estonia"]]]
+            ]
+          ]
+        ]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        date_range: @date_range,
+        filters: [
+          [
+            :or,
+            [
+              [
+                :and,
+                [
+                  [:is, "visit:city_name", ["Tallinn"]],
+                  [:is, "visit:country_name", ["Estonia"]]
+                ]
+              ],
+              [:not, [:is, "visit:country_name", ["Estonia"]]]
+            ]
+          ]
+        ],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false},
+        preloaded_goals: []
+      })
+    end
+
+    test "invalid `not` clause", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["not", []]]
+      }
+      |> check_error(
+        site,
+        "#/filters/0: Invalid filter [\"not\", []]"
+      )
+    end
+
+    test "invalid `or` clause", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["or", []]]
+      }
+      |> check_error(
+        site,
+        "#/filters/0: Invalid filter [\"or\", []]"
+      )
+    end
   end
 
   describe "include validation" do

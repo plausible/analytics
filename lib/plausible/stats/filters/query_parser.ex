@@ -60,9 +60,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_filter(filter) do
     with {:ok, operator} <- parse_operator(filter),
-         {:ok, filter_key} <- parse_filter_key(filter),
+         {:ok, second} <- parse_filter_second(operator, filter),
          {:ok, rest} <- parse_filter_rest(operator, filter) do
-      {:ok, [operator, filter_key | rest]}
+      {:ok, [operator, second | rest]}
     end
   end
 
@@ -72,7 +72,17 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_operator(["does_not_match" | _rest]), do: {:ok, :does_not_match}
   defp parse_operator(["contains" | _rest]), do: {:ok, :contains}
   defp parse_operator(["does_not_contain" | _rest]), do: {:ok, :does_not_contain}
+  defp parse_operator(["not" | _rest]), do: {:ok, :not}
+  defp parse_operator(["and" | _rest]), do: {:ok, :and}
+  defp parse_operator(["or" | _rest]), do: {:ok, :or}
   defp parse_operator(filter), do: {:error, "Unknown operator for filter '#{i(filter)}'."}
+
+  def parse_filter_second(:not, [_, filter | _rest]), do: parse_filter(filter)
+
+  def parse_filter_second(operator, [_, filters | _rest]) when operator in [:and, :or],
+    do: parse_filters(filters)
+
+  def parse_filter_second(_operator, filter), do: parse_filter_key(filter)
 
   defp parse_filter_key([_operator, filter_key | _rest] = filter) do
     parse_filter_key_string(filter_key, "Invalid filter '#{i(filter)}")
@@ -83,6 +93,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_filter_rest(operator, filter)
        when operator in [:is, :is_not, :matches, :does_not_match, :contains, :does_not_contain],
        do: parse_clauses_list(filter)
+
+  defp parse_filter_rest(operator, _filter)
+       when operator in [:not, :and, :or],
+       do: {:ok, []}
 
   defp parse_clauses_list([operation, filter_key, list] = filter) when is_list(list) do
     all_strings? = Enum.all?(list, &is_binary/1)

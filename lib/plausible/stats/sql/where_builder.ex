@@ -75,6 +75,22 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
+  defp add_filter(table, query, [:not, filter]) do
+    dynamic([e], not (^add_filter(table, query, filter)))
+  end
+
+  defp add_filter(table, query, [:and, filters]) do
+    filters
+    |> Enum.map(&add_filter(table, query, &1))
+    |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
+  end
+
+  defp add_filter(table, query, [:or, filters]) do
+    filters
+    |> Enum.map(&add_filter(table, query, &1))
+    |> Enum.reduce(fn condition, acc -> dynamic([], ^acc or ^condition) end)
+  end
+
   defp add_filter(:events, _query, [:is, "event:name", list]) do
     dynamic([e], e.name in ^list)
   end
