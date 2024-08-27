@@ -606,14 +606,13 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
 
     test "date parameter is not available in the public API", %{site: site} do
-      params = %{
+      %{
         "site_id" => site.domain,
         "metrics" => ["visitors", "events"],
         "date_range" => "month",
         "date" => "2021-05-05"
       }
-
-      check_error(params, site, "#/date: Schema does not allow additional properties.")
+      |> check_error(site, "#/date: Schema does not allow additional properties.")
     end
   end
 
