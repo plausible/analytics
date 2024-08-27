@@ -835,7 +835,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       resp = html_response(conn, 200)
       assert resp =~ "An extra step is needed"
       assert resp =~ "Google Search Console integration"
-      assert resp =~ "self-hosting-configuration"
+      assert resp =~ "google-integration"
     end
   end
 
