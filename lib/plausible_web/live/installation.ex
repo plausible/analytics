@@ -267,15 +267,27 @@ defmodule PlausibleWeb.Live.Installation do
   defp snippet_form(assigns) do
     ~H"""
     <form id="snippet-form" phx-change="update-script-config">
-      <textarea
-        id="snippet"
-        class="w-full border-1 border-gray-300 rounded-md p-4 text-gray-700"
-        rows="5"
-        readonly
-      ><%= render_snippet(@installation_type, @domain, @script_config) %></textarea>
+      <div class="relative">
+        <textarea
+          id="snippet"
+          class="w-full border-1 border-gray-300 rounded-md p-4 text-gray-700 0 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300"
+          rows="5"
+          readonly
+        ><%= render_snippet(@installation_type, @domain, @script_config) %></textarea>
+
+        <a
+          onclick="var input = document.getElementById('snippet'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"
+          href="javascript:void(0)"
+          class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline top-2 right-4"
+        >
+          <Heroicons.document_duplicate class="pr-1 text-indigo-600 dark:text-indigo-500 w-5 h-5" />
+          <span>
+            COPY
+          </span>
+        </a>
+      </div>
 
       <h3 class="text-normal mt-4 font-semibold">Enable optional measurements:</h3>
-
       <.script_extension_control
         config={@script_config}
         variant="outbound-links"
