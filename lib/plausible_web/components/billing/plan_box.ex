@@ -174,7 +174,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     paddle_product_id = get_paddle_product_id(assigns.plan_to_render, assigns.selected_interval)
     change_plan_link_text = change_plan_link_text(assigns)
 
-    subscription = assigns.user.subscription
+    subscription = assigns.current_user.subscription
 
     billing_details_expired =
       Subscription.Status.in?(subscription, [
@@ -224,10 +224,10 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       |> assign(:confirm_message, losing_features_message(feature_usage_check))
 
     ~H"""
-    <%= if @owned_plan && Plausible.Billing.Subscriptions.resumable?(@user.subscription) do %>
+    <%= if @owned_plan && Plausible.Billing.Subscriptions.resumable?(@current_user.subscription) do %>
       <.change_plan_link {assigns} />
     <% else %>
-      <PlausibleWeb.Components.Billing.paddle_button {assigns}>
+      <PlausibleWeb.Components.Billing.paddle_button user={@current_user} {assigns}>
         Upgrade
       </PlausibleWeb.Components.Billing.paddle_button>
     <% end %>
@@ -259,21 +259,22 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
   defp check_usage_within_plan_limits(%{
          available: true,
          usage: usage,
-         user: user,
+         current_user: current_user,
          plan_to_render: plan
        }) do
     # At this point, the user is *not guaranteed* to have a `trial_expiry_date`,
     # because in the past we've let users upgrade without that constraint, as
     # well as transfer sites to those accounts. to these accounts we won't be
     # offering an extra pageview limit allowance margin though.
-    invited_user? = is_nil(user.trial_expiry_date)
+    invited_user? = is_nil(current_user.trial_expiry_date)
 
     trial_active_or_ended_recently? =
-      not invited_user? && Timex.diff(Date.utc_today(), user.trial_expiry_date, :days) <= 10
+      not invited_user? &&
+        Timex.diff(Date.utc_today(), current_user.trial_expiry_date, :days) <= 10
 
     limit_checking_opts =
       cond do
-        user.allow_next_upgrade_override ->
+        current_user.allow_next_upgrade_override ->
           [ignore_pageview_limit: true]
 
         trial_active_or_ended_recently? && plan.volume == "10k" ->

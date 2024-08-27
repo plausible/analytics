@@ -22,21 +22,19 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "shows the site form", %{conn: conn} do
       conn = get(conn, "/sites/new")
 
-      assert html_response(conn, 200) =~ "Your website details"
+      assert html_response(conn, 200) =~ "Add website info"
     end
 
-    test "shows onboarding steps if it's the first site for the user", %{conn: conn} do
-      conn = get(conn, "/sites/new")
+    test "shows onboarding steps regardless of sites provisioned", %{conn: conn1, user: user} do
+      conn = get(conn1, "/sites/new")
 
       assert html_response(conn, 200) =~ "Add site info"
-    end
 
-    test "does not show onboarding steps if user has a site already", %{conn: conn, user: user} do
       insert(:site, members: [user], domain: "test-site.com")
 
-      conn = get(conn, "/sites/new")
+      conn = get(conn1, "/sites/new")
 
-      refute html_response(conn, 200) =~ "Add site info"
+      assert html_response(conn, 200) =~ "Add site info"
     end
 
     test "does not display limit notice when user is on an enterprise plan", %{
@@ -245,7 +243,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) ==
-               "/#{URI.encode_www_form("éxample.com")}/snippet?site_created=true"
+               "/#{URI.encode_www_form("éxample.com")}/snippet?site_created=true&flow="
 
       assert site = Repo.get_by(Plausible.Site, domain: "éxample.com")
       assert site.timezone == "Europe/London"
@@ -343,7 +341,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/example.com/snippet?site_created=true"
+      assert redirected_to(conn) == "/example.com/snippet?site_created=true&flow="
       assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
@@ -363,7 +361,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/example.com/snippet?site_created=true"
+      assert redirected_to(conn) == "/example.com/snippet?site_created=true&flow="
       assert Plausible.Billing.Quota.Usage.site_usage(user) == 3
     end
 
@@ -377,7 +375,7 @@ defmodule PlausibleWeb.SiteControllerTest do
             }
           })
 
-        assert redirected_to(conn) == "/example.com/snippet?site_created=true"
+        assert redirected_to(conn) == "/example.com/snippet?site_created=true&flow="
         assert Repo.get_by(Plausible.Site, domain: "example.com")
       end
     end
@@ -459,7 +457,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) ==
-               "/example.com/snippet?site_created=true"
+               "/example.com/snippet?site_created=true&flow="
     end
   end
 
@@ -955,11 +953,11 @@ defmodule PlausibleWeb.SiteControllerTest do
   end
 
   describe "PUT /:website/settings/features/visibility/:setting" do
-    def build_conn_with_some_url(context) do
-      {:ok, Map.put(context, :conn, build_conn(:get, "/some_parent_path"))}
+    def query_conn_with_some_url(context) do
+      {:ok, Map.put(context, :conn, get(context.conn, "/some_parent_path"))}
     end
 
-    setup [:build_conn_with_some_url, :create_user, :log_in]
+    setup [:create_user, :log_in, :query_conn_with_some_url]
 
     for {title, setting} <- %{
           "Goals" => :conversions_enabled,

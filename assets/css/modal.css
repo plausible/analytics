@@ -1,3 +1,5 @@
+/* @format */
+/* stylelint-disable selector-class-pattern */
 .modal {
   display: none;
 }
@@ -6,12 +8,12 @@
   display: block;
 }
 
-.modal[aria-hidden="false"] .modal__overlay {
-  animation: mmfadeIn .2s ease-in;
+.modal[aria-hidden='false'] .modal__overlay {
+  animation: mm-fade-in 0.2s ease-in;
 }
 
-.modal[aria-hidden="true"] .modal__overlay {
-  animation: mmfadeOut .2s ease-in;
+.modal[aria-hidden='true'] .modal__overlay {
+  animation: mm-fade-out 0.2s ease-in;
 }
 
 .modal-enter {
@@ -25,14 +27,10 @@
 
 .modal__overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.6);
+  inset: 0;
+  background: rgb(0 0 0 / 60%);
   z-index: 99;
-  overflow-x: auto;
-  overflow-y: auto;
+  overflow: auto;
 }
 
 .modal__container {
@@ -54,18 +52,30 @@
   right: 24px;
 }
 
-.modal__close:before { content: "\2715"; }
+.modal__close::before {
+  content: '\2715';
+}
 
 .modal__content {
   margin-bottom: 2rem;
 }
 
-@keyframes mmfadeIn {
-    from { opacity: 0; }
-      to { opacity: 1; }
+@keyframes mm-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
-@keyframes mmfadeOut {
-    from { opacity: 1; }
-      to { opacity: 0; }
+@keyframes mm-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
 }

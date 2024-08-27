@@ -14,15 +14,11 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
 
   require Plausible.Imported.SiteImport
 
-  def mount(
-        _params,
-        %{"domain" => domain, "current_user_id" => user_id},
-        socket
-      ) do
+  def mount(_params, %{"domain" => domain}, socket) do
     socket =
       socket
-      |> assign_new(:site, fn ->
-        Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+      |> assign_new(:site, fn %{current_user: current_user} ->
+        Sites.get_for_user!(current_user, domain, [:owner, :admin, :super_admin])
       end)
       |> assign_new(:site_imports, fn %{site: site} ->
         site
@@ -33,9 +29,6 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       end)
       |> assign_new(:pageview_counts, fn %{site: site} ->
         Plausible.Stats.Clickhouse.imported_pageview_counts(site)
-      end)
-      |> assign_new(:current_user, fn ->
-        Plausible.Repo.get(Plausible.Auth.User, user_id)
       end)
 
     :ok = Imported.listen()

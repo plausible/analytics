@@ -11,13 +11,13 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
   def mount(
         _params,
-        %{"site_id" => site_id, "domain" => domain, "current_user_id" => user_id},
+        %{"site_id" => site_id, "domain" => domain},
         socket
       ) do
     socket =
       socket
-      |> assign_new(:site, fn ->
-        Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+      |> assign_new(:site, fn %{current_user: current_user} ->
+        Sites.get_for_user!(current_user, domain, [:owner, :admin, :super_admin])
       end)
       |> assign_new(:all_funnels, fn %{site: %{id: ^site_id} = site} ->
         Funnels.list(site)
@@ -32,7 +32,6 @@ defmodule PlausibleWeb.Live.FunnelSettings do
        displayed_funnels: socket.assigns.all_funnels,
        setup_funnel?: false,
        filter_text: "",
-       current_user_id: user_id,
        funnel_id: nil
      )}
   end
@@ -50,7 +49,6 @@ defmodule PlausibleWeb.Live.FunnelSettings do
           PlausibleWeb.Live.FunnelSettings.Form,
           id: "funnels-form",
           session: %{
-            "current_user_id" => @current_user_id,
             "domain" => @domain,
             "funnel_id" => @funnel_id
           }
@@ -103,7 +101,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
   def handle_event("delete-funnel", %{"funnel-id" => id}, socket) do
     site =
-      Sites.get_for_user!(socket.assigns.current_user_id, socket.assigns.domain, [:owner, :admin])
+      Sites.get_for_user!(socket.assigns.current_user, socket.assigns.domain, [:owner, :admin])
 
     id = String.to_integer(id)
     :ok = Funnels.delete(site, id)

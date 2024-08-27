@@ -84,7 +84,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
              }
     end
 
-    test "validates that interval is `date` or `month`", %{conn: conn, site: site} do
+    test "legacy `date` interval is overridden to `day`", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "date" => "2021-06-30",
+          "period" => "6mo",
+          "interval" => "date"
+        })
+
+      results = json_response(conn, 200)["results"]
+
+      assert Enum.at(results, 0)["date"] == "2021-01-01"
+      assert Enum.at(results, 1)["date"] == "2021-01-02"
+    end
+
+    test "validates that interval is `day` or `month`", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
@@ -94,7 +109,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
 
       assert json_response(conn, 400) == %{
                "error" =>
-                 "Error parsing `interval` parameter: invalid interval `alskd`. Valid intervals are `date`, `month`"
+                 "Error parsing `interval` parameter: invalid interval `alskd`. Valid intervals are `day`, `month`"
              }
     end
   end
@@ -1822,7 +1837,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "site_id" => site.domain,
           "period" => "custom",
           "date" => "2021-01-01,2021-01-01",
-          "interval" => "date",
+          "interval" => "day",
           "metrics" => "conversion_rate",
           "filters" => "event:goal==Signup;event:page==/register",
           "with_imported" => "true"

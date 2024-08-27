@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
-         query <- Query.from(site, params),
+         query <- Query.from(site, params, debug_metadata(conn)),
          :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, query),
          :ok <- ensure_custom_props_access(site, query) do
@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          :ok <- validate_property(params),
-         query <- Query.from(site, params),
+         query <- Query.from(site, params, debug_metadata(conn)),
          :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, query),
          {:ok, limit} <- validate_or_default_limit(params),
@@ -259,10 +259,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
     params = Map.put(params, "property", nil)
 
+    params =
+      if Map.get(params, "interval") == "date" do
+        %{params | "interval" => "day"}
+      else
+        params
+      end
+
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          :ok <- validate_interval(params),
-         query <- Query.from(site, params),
+         query <- Query.from(site, params, debug_metadata(conn)),
          :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, query),
          :ok <- ensure_custom_props_access(site, query) do
@@ -316,7 +323,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp validate_period(_), do: :ok
 
-  @valid_intervals ["date", "month"]
+  @valid_intervals ["day", "month"]
   @valid_intervals_str Enum.map(@valid_intervals, &("`" <> &1 <> "`")) |> Enum.join(", ")
 
   defp validate_interval(%{"interval" => interval}) do
@@ -341,8 +348,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp validate_filter(site, [_type, "event:goal", goal_filter]) do
     configured_goals =
-      Plausible.Goals.for_site(site)
-      |> Enum.map(&Plausible.Goal.display_name/1)
+      site
+      |> Plausible.Goals.for_site()
+      |> Enum.map(& &1.display_name)
 
     goals_in_filter = List.wrap(goal_filter)
 

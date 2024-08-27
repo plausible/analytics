@@ -11,7 +11,7 @@ function testLocalStorageAvailability(){
     localStorage.setItem(testItem, testItem);
     localStorage.removeItem(testItem);
     return true;
-  } catch(e) {
+  } catch (_e) {
     return false;
   }
 }
@@ -33,3 +33,5 @@ export function getItem(key) {
     return memStore[key]
   }
 }
+
+export const getDomainScopedStorageKey = (key, domain) => `${key}__${domain}`

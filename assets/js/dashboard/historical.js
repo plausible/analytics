@@ -1,6 +1,6 @@
 import React from 'react';
 
-import Datepicker from './datepicker'
+import QueryPeriodPicker from './datepicker'
 import SiteSwitcher from './site-switcher'
 import Filters from './filters'
 import CurrentVisitors from './stats/current-visitors'
@@ -10,7 +10,6 @@ import Pages from './stats/pages'
 import Locations from './stats/locations';
 import Devices from './stats/devices'
 import Behaviours from './stats/behaviours'
-import ComparisonInput from './comparison-input'
 import { withPinnedHeader } from './pinned-header-hoc';
 import { statsBoxClass } from './index';
 import { useSiteContext } from './site-context';
@@ -33,8 +32,7 @@ function Historical({ stuck, importedDataInView, updateImportedDataInView }) {
             <CurrentVisitors tooltipBoundary={tooltipBoundary.current} />
             <Filters className="flex" />
           </div>
-          <Datepicker />
-          <ComparisonInput />
+          <QueryPeriodPicker />
         </div>
       </div>
       <VisitorGraph updateImportedDataInView={updateImportedDataInView} />

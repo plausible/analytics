@@ -3,14 +3,22 @@ defmodule Plausible.MigrationUtils do
   Base module for to use in Clickhouse migrations
   """
 
+  alias Plausible.IngestRepo
+
   def on_cluster_statement(table) do
-    if(clustered_table?(table), do: "ON CLUSTER '{cluster}'", else: "")
+    if(IngestRepo.clustered_table?(table), do: "ON CLUSTER '{cluster}'", else: "")
   end
 
-  def clustered_table?(table) do
-    case Plausible.IngestRepo.query("SELECT 1 FROM system.replicas WHERE table = '#{table}'") do
-      {:ok, %{rows: []}} -> false
-      {:ok, _} -> true
-    end
+  # See https://clickhouse.com/docs/en/sql-reference/dictionaries#clickhouse for context
+  def dictionary_connection_params() do
+    IngestRepo.config()
+    |> Enum.map(fn
+      {:database, database} -> "DB '#{database}'"
+      {:username, username} -> "USER '#{username}'"
+      {:password, password} -> "PASSWORD '#{password}'"
+      _ -> nil
+    end)
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" ")
   end
 end

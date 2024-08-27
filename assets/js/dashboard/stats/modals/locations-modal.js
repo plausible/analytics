@@ -1,13 +1,13 @@
 import React, { useCallback } from "react";
-import { withRouter } from 'react-router-dom'
 
-import Modal from './modal'
+import Modal from "./modal";
 import { hasGoalFilter } from "../../util/filters";
 import BreakdownModal from "./breakdown-modal";
 import * as metrics from "../reports/metrics";
-import * as url from '../../util/url';
+import * as url from "../../util/url";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
+import { addFilter } from "../../query";
 
 const VIEWS = {
   countries: { title: 'Top Countries', dimension: 'country', endpoint: '/countries', dimensionLabel: 'Country' },
@@ -15,12 +15,9 @@ const VIEWS = {
   cities: { title: 'Top Cities', dimension: 'city', endpoint: '/cities', dimensionLabel: 'City' },
 }
 
-function LocationsModal({ location }) {
+function LocationsModal({ currentView }) {
   const { query } = useQueryContext();
   const site = useSiteContext();
-
-  const urlParts = location.pathname.split('/')
-  const currentView = urlParts[urlParts.length - 1]
 
   let reportInfo = VIEWS[currentView]
   reportInfo = {...reportInfo, endpoint: url.apiPath(site, reportInfo.endpoint)}
@@ -31,6 +28,10 @@ function LocationsModal({ location }) {
       filter: ["is", reportInfo.dimension, [listItem.code]],
       labels: { [listItem.code]: listItem.name }
     }
+  }, [reportInfo.dimension])
+
+  const addSearchFilter = useCallback((query, searchString) => {
+    return addFilter(query, ['contains', `${reportInfo.dimension}_name`, [searchString]])
   }, [reportInfo.dimension])
 
   function chooseMetrics() {
@@ -67,10 +68,10 @@ function LocationsModal({ location }) {
         metrics={chooseMetrics()}
         getFilterInfo={getFilterInfo}
         renderIcon={renderIcon}
-        searchEnabled={false}
+        addSearchFilter={addSearchFilter}
       />
     </Modal>
   )
 }
 
-export default withRouter(LocationsModal)
+export default LocationsModal

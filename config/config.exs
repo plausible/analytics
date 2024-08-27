@@ -20,13 +20,13 @@ config :esbuild,
   version: "0.17.11",
   default: [
     args:
-      ~w(js/app.js js/dashboard.js js/embed.host.js js/embed.content.js --bundle --target=es2017 --loader:.js=jsx --outdir=../priv/static/js --define:BUILD_EXTRA=true),
+      ~w(js/app.js js/dashboard.tsx js/embed.host.js js/embed.content.js --bundle --target=es2017 --loader:.js=jsx --outdir=../priv/static/js --define:BUILD_EXTRA=true),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
 
 config :tailwind,
-  version: "3.3.3",
+  version: "3.4.7",
   default: [
     args: ~w(
       --config=tailwind.config.js

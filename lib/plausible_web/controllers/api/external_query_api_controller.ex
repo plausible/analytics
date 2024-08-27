@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
   def query(conn, params) do
     site = Repo.preload(conn.assigns.site, :owner)
 
-    case Query.build(site, params) do
+    case Query.build(site, :public, params, debug_metadata(conn)) do
       {:ok, query} ->
         results = Plausible.Stats.query(site, query)
         json(conn, results)
@@ -19,5 +19,9 @@ defmodule PlausibleWeb.Api.ExternalQueryApiController do
         |> put_status(400)
         |> json(%{error: message})
     end
+  end
+
+  def schema(conn, _params) do
+    json(conn, Plausible.Stats.JSONSchema.raw_public_schema())
   end
 end

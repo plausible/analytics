@@ -11,8 +11,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   import PlausibleWeb.Live.Components.Form
   alias Plausible.{Sites, Goals, Funnels}
 
-  def mount(_params, %{"current_user_id" => user_id, "domain" => domain} = session, socket) do
-    site = Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+  def mount(_params, %{"domain" => domain} = session, socket) do
+    site =
+      Sites.get_for_user!(socket.assigns.current_user, domain, [:owner, :admin, :super_admin])
 
     # We'll have the options trimmed to only the data we care about, to keep
     # it minimal at the socket assigns, yet, we want to retain specific %Goal{}
@@ -23,7 +24,10 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       |> Goals.for_site()
       |> Enum.map(fn goal ->
         {goal.id,
-         struct!(Plausible.Goal, Map.take(goal, [:id, :event_name, :page_path, :currency]))}
+         struct!(
+           Plausible.Goal,
+           Map.take(goal, [:id, :display_name, :event_name, :page_path, :currency])
+         )}
       end)
 
     socket =

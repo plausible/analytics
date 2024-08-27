@@ -132,7 +132,9 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
 
     from(e in q,
-      array_join: goal in Expression.event_goal_join(events, page_regexes),
+      join: goal in Expression.event_goal_join(events, page_regexes),
+      hints: "ARRAY",
+      on: true,
       select_merge: %{
         ^shortname(query, dimension) => fragment("?", goal)
       },

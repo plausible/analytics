@@ -9,15 +9,11 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
   alias Plausible.Sites
   alias Plausible.Plugins.API.Tokens
 
-  def mount(
-        _params,
-        %{"domain" => domain, "current_user_id" => user_id} = session,
-        socket
-      ) do
+  def mount(_params, %{"domain" => domain} = session, socket) do
     socket =
       socket
-      |> assign_new(:site, fn ->
-        Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+      |> assign_new(:site, fn %{current_user: current_user} ->
+        Sites.get_for_user!(current_user, domain, [:owner, :admin, :super_admin])
       end)
       |> assign_new(:displayed_tokens, fn %{site: site} ->
         Tokens.list(site)
@@ -27,8 +23,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
      assign(socket,
        domain: domain,
        add_token?: not is_nil(session["new_token"]),
-       token_description: session["new_token"] || "",
-       current_user_id: user_id
+       token_description: session["new_token"] || ""
      )}
   end
 
@@ -42,7 +37,6 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
         PlausibleWeb.Live.Plugins.API.TokenForm,
         id: "token-form",
         session: %{
-          "current_user_id" => @current_user_id,
           "domain" => @domain,
           "token_description" => @token_description,
           "rendered_by" => self()

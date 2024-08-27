@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Router do
       plug PlausibleWeb.Plugs.NoRobots
       plug :fetch_session
 
-      plug PlausibleWeb.CRMAuthPlug
+      plug PlausibleWeb.SuperAdminOnlyPlug
     end
   end
 
@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Router do
   on_ee do
     use Kaffy.Routes,
       scope: "/crm",
-      pipe_through: [PlausibleWeb.Plugs.NoRobots, PlausibleWeb.CRMAuthPlug]
+      pipe_through: [PlausibleWeb.Plugs.NoRobots, PlausibleWeb.SuperAdminOnlyPlug]
   end
 
   on_ee do
@@ -181,6 +181,16 @@ defmodule PlausibleWeb.Router do
     post "/query", ExternalQueryApiController, :query
   end
 
+  scope "/api/docs", PlausibleWeb.Api do
+    get "/query/schema.json", ExternalQueryApiController, :schema
+
+    scope assigns: %{} do
+      pipe_through :internal_stats_api
+
+      post "/query", ExternalQueryApiController, :query
+    end
+  end
+
   on_ee do
     scope "/api/v1/sites", PlausibleWeb.Api do
       pipe_through :public_api
@@ -246,8 +256,6 @@ defmodule PlausibleWeb.Router do
       end
     end
 
-    post "/register", AuthController, :register
-    post "/register/invitation/:invitation_id", AuthController, :register_from_invitation
     get "/activate", AuthController, :activate_form
     post "/activate/request-code", AuthController, :request_activation_code
     post "/activate", AuthController, :activate
@@ -428,6 +436,8 @@ defmodule PlausibleWeb.Router do
 
     get "/:website/download/export", SiteController, :download_export
     get "/:website/settings/import", SiteController, :csv_import
+
+    get "/debug/clickhouse", DebugController, :clickhouse
 
     get "/:domain/export", StatsController, :csv_export
     get "/:domain/*path", StatsController, :stats

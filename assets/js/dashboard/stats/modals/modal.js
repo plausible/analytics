@@ -1,7 +1,8 @@
 import React from "react";
 import { createPortal } from "react-dom";
-import { withRouter } from 'react-router-dom';
-import { shouldIgnoreKeypress } from '../../keybinding'
+import { NavigateKeybind } from '../../keybinding'
+import { rootRoute } from "../../router";
+import { useAppNavigate } from "../../navigation/use-app-navigate";
 
 // This corresponds to the 'md' breakpoint on TailwindCSS.
 const MD_WIDTH = 768;
@@ -17,7 +18,6 @@ class Modal extends React.Component {
     }
     this.node = React.createRef()
     this.handleClickOutside = this.handleClickOutside.bind(this)
-    this.handleKeyup = this.handleKeyup.bind(this)
     this.handleResize = this.handleResize.bind(this)
   }
 
@@ -25,7 +25,6 @@ class Modal extends React.Component {
     document.body.style.overflow = 'hidden';
     document.body.style.height = '100vh';
     document.addEventListener("mousedown", this.handleClickOutside);
-    document.addEventListener("keyup", this.handleKeyup);
     window.addEventListener('resize', this.handleResize, false);
     this.handleResize();
   }
@@ -34,7 +33,6 @@ class Modal extends React.Component {
     document.body.style.overflow = null;
     document.body.style.height = null;
     document.removeEventListener("mousedown", this.handleClickOutside);
-    document.removeEventListener("keyup", this.handleKeyup);
     window.removeEventListener('resize', this.handleResize, false);
   }
 
@@ -46,18 +44,15 @@ class Modal extends React.Component {
     this.close()
   }
 
-  handleKeyup(e) {
-    if (!shouldIgnoreKeypress(e) && e.code === 'Escape') {
-      this.close()
-    }
-  }
-
   handleResize() {
     this.setState({ viewport: window.innerWidth });
   }
 
   close() {
-    this.props.history.push(`/${this.props.location.search}`)
+    this.props.navigate({
+      path: rootRoute.path,
+      search: (search) => search,
+    })
   }
 
   /**
@@ -81,23 +76,28 @@ class Modal extends React.Component {
 
   render() {
     return createPortal(
-      <div className="modal is-open" onClick={this.props.onClick}>
-        <div className="modal__overlay">
-          <button className="modal__close"></button>
-          <div
-            ref={this.node}
-            className="modal__container dark:bg-gray-800"
-            style={this.getStyle()}
-          >
-            {this.props.children}
+      <>
+        <NavigateKeybind keyboardKey="Escape" type="keyup" navigateProps={{ path: rootRoute.path, search: (search) => search }} />
+        <div className="modal is-open" onClick={this.props.onClick}>
+          <div className="modal__overlay">
+            <button className="modal__close"></button>
+            <div
+              ref={this.node}
+              className="modal__container dark:bg-gray-800"
+              style={this.getStyle()}
+            >
+              {this.props.children}
+            </div>
           </div>
-
         </div>
-      </div>,
+      </>
+,
       document.getElementById("modal_root"),
     );
   }
 }
 
-
-export default withRouter(Modal)
+export default function ModalWithRouting(props) {
+  const navigate = useAppNavigate()
+  return <Modal {...props} navigate={navigate} />
+}

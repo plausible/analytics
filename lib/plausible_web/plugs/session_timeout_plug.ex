@@ -1,5 +1,12 @@
 defmodule PlausibleWeb.SessionTimeoutPlug do
+  @moduledoc """
+  NOTE: This plug will be replaced with a different
+  session expiration mechanism once server-side persisted
+  sessions are rolled out.
+  """
   import Plug.Conn
+
+  alias PlausibleWeb.UserAuth
 
   def init(opts \\ []) do
     opts
@@ -7,13 +14,16 @@ defmodule PlausibleWeb.SessionTimeoutPlug do
 
   def call(conn, opts) do
     timeout_at = get_session(conn, :session_timeout_at)
-    user_id = get_session(conn, :current_user_id)
+
+    user_id =
+      case UserAuth.get_user_session(conn) do
+        {:ok, session} -> session.user_id
+        _ -> nil
+      end
 
     cond do
       user_id && timeout_at && now() > timeout_at ->
-        conn
-        |> configure_session(drop: true)
-        |> delete_resp_cookie("logged_in")
+        PlausibleWeb.UserAuth.log_out_user(conn)
 
       user_id ->
         put_session(

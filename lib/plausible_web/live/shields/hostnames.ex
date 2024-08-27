@@ -8,24 +8,14 @@ defmodule PlausibleWeb.Live.Shields.Hostnames do
   alias Plausible.Shields
   alias Plausible.Sites
 
-  def mount(
-        _params,
-        %{
-          "domain" => domain,
-          "current_user_id" => user_id
-        },
-        socket
-      ) do
+  def mount(_params, %{"domain" => domain}, socket) do
     socket =
       socket
-      |> assign_new(:site, fn ->
-        Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+      |> assign_new(:site, fn %{current_user: current_user} ->
+        Sites.get_for_user!(current_user, domain, [:owner, :admin, :super_admin])
       end)
       |> assign_new(:hostname_rules_count, fn %{site: site} ->
         Shields.count_hostname_rules(site)
-      end)
-      |> assign_new(:current_user, fn ->
-        Plausible.Repo.get(Plausible.Auth.User, user_id)
       end)
 
     {:ok, socket}
@@ -40,7 +30,7 @@ defmodule PlausibleWeb.Live.Shields.Hostnames do
         current_user={@current_user}
         hostname_rules_count={@hostname_rules_count}
         site={@site}
-        id="hostname-rules-#{@current_user.id}"
+        id={"hostname-rules-#{@current_user.id}"}
       />
     </div>
     """

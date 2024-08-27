@@ -57,7 +57,7 @@ defmodule Plausible.Stats.QueryTest do
 
     assert q.date_range.first == ~D[2019-01-01]
     assert q.date_range.last == ~D[2019-01-31]
-    assert q.interval == "date"
+    assert q.interval == "day"
   end
 
   test "parses 6 month format", %{site: site} do
@@ -138,7 +138,7 @@ defmodule Plausible.Stats.QueryTest do
     assert q.date_range.first == Timex.today() |> Timex.shift(days: -1)
     assert q.date_range.last == Timex.today()
     assert q.period == "all"
-    assert q.interval == "date"
+    assert q.interval == "day"
   end
 
   test "all time shows monthly if site is more than a month old", %{site: site} do
@@ -174,7 +174,7 @@ defmodule Plausible.Stats.QueryTest do
 
     assert q.date_range.first == ~D[2019-01-01]
     assert q.date_range.last == ~D[2019-01-15]
-    assert q.interval == "date"
+    assert q.interval == "day"
   end
 
   @tag :ee_only

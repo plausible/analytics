@@ -14,14 +14,13 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def choose_plan(conn, _params) do
-    user = conn.assigns.current_user
+    current_user = conn.assigns.current_user
 
-    if Plausible.Auth.enterprise_configured?(user) do
+    if Plausible.Auth.enterprise_configured?(current_user) do
       redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
     else
       render(conn, "choose_plan.html",
         skip_plausible_tracking: true,
-        user: user,
         layout: {PlausibleWeb.LayoutView, "focus.html"},
         connect_live_socket: true
       )
@@ -29,19 +28,20 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def upgrade_to_enterprise_plan(conn, _params) do
-    user = Plausible.Users.with_subscription(conn.assigns.current_user)
+    current_user = conn.assigns.current_user
 
     {latest_enterprise_plan, price} =
-      Plans.latest_enterprise_plan_with_price(user, PlausibleWeb.RemoteIP.get(conn))
+      Plans.latest_enterprise_plan_with_price(current_user, PlausibleWeb.RemoteIP.get(conn))
 
-    subscription_resumable? = Plausible.Billing.Subscriptions.resumable?(user.subscription)
+    subscription_resumable? =
+      Plausible.Billing.Subscriptions.resumable?(current_user.subscription)
 
     subscribed_to_latest? =
       subscription_resumable? &&
-        user.subscription.paddle_plan_id == latest_enterprise_plan.paddle_plan_id
+        current_user.subscription.paddle_plan_id == latest_enterprise_plan.paddle_plan_id
 
     cond do
-      Subscription.Status.in?(user.subscription, [
+      Subscription.Status.in?(current_user.subscription, [
         Subscription.Status.past_due(),
         Subscription.Status.paused()
       ]) ->
@@ -55,7 +55,6 @@ defmodule PlausibleWeb.BillingController do
 
       true ->
         render(conn, "upgrade_to_enterprise_plan.html",
-          user: user,
           latest_enterprise_plan: latest_enterprise_plan,
           price: price,
           subscription_resumable: subscription_resumable?,
@@ -71,9 +70,9 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do
-    user = conn.assigns.current_user
+    current_user = conn.assigns.current_user
 
-    case preview_subscription(user, new_plan_id) do
+    case preview_subscription(current_user, new_plan_id) do
       {:ok, {subscription, preview_info}} ->
         render(conn, "change_plan_preview.html",
           back_link: Routes.billing_path(conn, :choose_plan),
@@ -91,7 +90,7 @@ defmodule PlausibleWeb.BillingController do
           extra: %{
             message: msg,
             new_plan_id: new_plan_id,
-            user_id: user.id
+            user_id: current_user.id
           }
         )
 
@@ -102,7 +101,9 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def change_plan(conn, %{"new_plan_id" => new_plan_id}) do
-    case Billing.change_plan(conn.assigns.current_user, new_plan_id) do
+    current_user = conn.assigns.current_user
+
+    case Billing.change_plan(current_user, new_plan_id) do
       {:ok, _subscription} ->
         conn
         |> put_flash(:success, "Plan changed successfully")
@@ -130,7 +131,7 @@ defmodule PlausibleWeb.BillingController do
             errors: inspect(e),
             message: msg,
             new_plan_id: new_plan_id,
-            user_id: conn.assigns[:current_user].id
+            user_id: current_user.id
           }
         )
 

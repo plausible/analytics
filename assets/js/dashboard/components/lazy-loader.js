@@ -10,8 +10,9 @@ export default function LazyLoader(props) {
   useEffect(() => {
     if (inView && !hasBecomeVisibleYet) {
       setHasBecomeVisibleYet(true)
-      props.onVisible && props.onVisible()
+      if (props.onVisible) props.onVisible()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inView])
 
   return (

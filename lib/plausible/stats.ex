@@ -22,8 +22,8 @@ defmodule Plausible.Stats do
 
     optimized_query
     |> SQL.QueryBuilder.build(site)
-    |> ClickhouseRepo.all()
-    |> QueryResult.from(optimized_query)
+    |> ClickhouseRepo.all(query: query)
+    |> QueryResult.from(site, optimized_query)
   end
 
   def breakdown(site, query, metrics, pagination) do

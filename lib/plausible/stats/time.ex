@@ -10,11 +10,13 @@ defmodule Plausible.Stats.Time do
     last_datetime =
       now
       |> NaiveDateTime.shift(second: 5)
-      |> beginning_of_time(site.native_stats_start_at)
       |> NaiveDateTime.truncate(:second)
 
     first_datetime =
-      now |> NaiveDateTime.shift(minute: -5) |> NaiveDateTime.truncate(:second)
+      now
+      |> NaiveDateTime.shift(minute: -5)
+      |> NaiveDateTime.truncate(:second)
+      |> beginning_of_time(site.native_stats_start_at)
 
     {first_datetime, last_datetime}
   end
@@ -23,11 +25,13 @@ defmodule Plausible.Stats.Time do
     last_datetime =
       now
       |> NaiveDateTime.shift(second: 5)
-      |> beginning_of_time(site.native_stats_start_at)
       |> NaiveDateTime.truncate(:second)
 
     first_datetime =
-      now |> NaiveDateTime.shift(minute: -30) |> NaiveDateTime.truncate(:second)
+      now
+      |> NaiveDateTime.shift(minute: -30)
+      |> NaiveDateTime.truncate(:second)
+      |> beginning_of_time(site.native_stats_start_at)
 
     {first_datetime, last_datetime}
   end
@@ -58,7 +62,7 @@ defmodule Plausible.Stats.Time do
   def format_datetime(%Date{} = date), do: Date.to_string(date)
 
   def format_datetime(%DateTime{} = datetime),
-    do: Timex.format!(datetime, "{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
+    do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S")
 
   # Realtime graphs return numbers
   def format_datetime(other), do: other

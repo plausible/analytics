@@ -74,7 +74,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
     with site <- Plausible.Repo.preload(site, :owner),
          :ok <- check_invitation_permissions(site, inviter, role, opts),
          :ok <- check_team_member_limit(site, role, invitee_email),
-         invitee <- Plausible.Auth.find_user_by(email: invitee_email),
+         invitee = Plausible.Auth.find_user_by(email: invitee_email),
          :ok <- Invitations.ensure_transfer_valid(site, invitee, role),
          :ok <- ensure_new_membership(site, invitee, role),
          %Ecto.Changeset{} = changeset <- Invitation.new(attrs),

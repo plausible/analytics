@@ -20,7 +20,7 @@ export const FILTER_GROUP_TO_MODAL_TYPE = Object.fromEntries(
     .flatMap(([modalName, filterGroups]) => filterGroups.map((filterGroup) => [filterGroup, modalName]))
 )
 
-export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_MODAL_TO_FILTER_GROUP['location']))
+export const NO_CONTAINS_OPERATOR = new Set(['screen'].concat(FILTER_MODAL_TO_FILTER_GROUP['location']))
 
 export const EVENT_PROPS_PREFIX = "props:"
 

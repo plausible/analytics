@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Components.Generic do
       "border border-gray-300 dark:border-gray-500 text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:border-blue-300 active:text-red-800"
   }
 
-  @button_base_class "inline-flex items-center justify-center gap-x-2 rounded-md px-3.5 py-2.5 text-sm font-semibold shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700"
+  @button_base_class "inline-flex items-center justify-center gap-x-2 rounded-md px-3.5 py-2.5 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700"
 
   attr(:type, :string, default: "button")
   attr(:theme, :string, default: "primary")
@@ -367,5 +367,47 @@ defmodule PlausibleWeb.Components.Generic do
     else
       ["w-4 h-4"]
     end
+  end
+
+  slot :title
+  slot :subtitle
+  slot :inner_block, required: true
+  slot :footer
+
+  attr :outer_markup, :boolean, default: true
+
+  def focus_box(assigns) do
+    ~H"""
+    <div class={[
+      "bg-white w-full max-w-lg mx-auto dark:bg-gray-800 text-black dark:text-gray-100",
+      @outer_markup && "shadow-md  rounded mb-4 mt-8"
+    ]}>
+      <div class={[@outer_markup && "p-8"]}>
+        <h2 :if={@title != []} class="text-xl font-black dark:text-gray-100">
+          <%= render_slot(@title) %>
+        </h2>
+
+        <div :if={@subtitle != []} class="mt-2 dark:text-gray-200">
+          <%= render_slot(@subtitle) %>
+        </div>
+
+        <div :if={@title != []} class="mt-8">
+          <%= render_slot(@inner_block) %>
+        </div>
+
+        <div :if={@title == []}>
+          <%= render_slot(@inner_block) %>
+        </div>
+      </div>
+      <div
+        :if={@footer != []}
+        class="flex flex-col dark:text-gray-200 border-t border-gray-300 dark:border-gray-700"
+      >
+        <div class={[@outer_markup && "p-8"]}>
+          <%= render_slot(@footer) %>
+        </div>
+      </div>
+    </div>
+    """
   end
 end

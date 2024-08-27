@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 
 import { FilterLink } from "../reports/list";
 import { useQueryContext } from "../../query-context";
-import { useSiteContext } from "../../site-context";
 import { useDebounce } from "../../custom-hooks";
 import { useAPIClient } from "../../hooks/api-client";
+import { rootRoute } from "../../router";
 
 export const MIN_HEIGHT_PX = 500
 
@@ -85,7 +85,6 @@ export default function BreakdownModal({
 }) {
   const searchBoxRef = useRef(null)
   const { query } = useQueryContext();
-  const site = useSiteContext();
 
   const [search, setSearch] = useState('')
 
@@ -159,7 +158,7 @@ export default function BreakdownModal({
         <td className="w-48 md:w-80 break-all p-2 flex items-center">
           {maybeRenderIcon(item)}
           <FilterLink
-            pathname={`/${encodeURIComponent(site.domain)}`}
+            path={rootRoute.path}
             filterInfo={getFilterInfo(item)}
           >
             {item.name}

@@ -17,7 +17,6 @@
   <%= live_render(@conn, PlausibleWeb.Live.CSVImport,
     session: %{
       "site_id" => @site.id,
-      "current_user_id" => @current_user.id,
       "storage" => on_ee(do: "s3", else: "local")
     }
   ) %>

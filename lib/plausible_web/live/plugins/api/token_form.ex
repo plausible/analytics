@@ -5,7 +5,6 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
   use PlausibleWeb, live_view: :no_sentry_context
   import PlausibleWeb.Live.Components.Form
 
-  alias Plausible.Repo
   alias Plausible.Sites
   alias Plausible.Plugins.API.{Token, Tokens}
 
@@ -13,7 +12,6 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
         _params,
         %{
           "token_description" => token_description,
-          "current_user_id" => user_id,
           "domain" => domain,
           "rendered_by" => pid
         },
@@ -21,8 +19,8 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
       ) do
     socket =
       socket
-      |> assign_new(:site, fn ->
-        Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+      |> assign_new(:site, fn %{current_user: current_user} ->
+        Sites.get_for_user!(current_user, domain, [:owner, :admin, :super_admin])
       end)
 
     token = Token.generate()
@@ -32,7 +30,6 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
      assign(socket,
        token_description: token_description,
        token: token,
-       current_user: Repo.get(Plausible.Auth.User, user_id),
        form: form,
        domain: domain,
        rendered_by: pid,

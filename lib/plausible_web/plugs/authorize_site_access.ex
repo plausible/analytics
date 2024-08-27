@@ -8,7 +8,8 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
   def call(conn, allowed_roles) do
     site =
       Repo.get_by(Plausible.Site,
-        domain: conn.path_params["domain"] || conn.path_params["website"]
+        domain:
+          conn.path_params["domain"] || conn.path_params["website"] || conn.params["site_id"]
       )
 
     shared_link_auth = conn.params["auth"]
@@ -19,7 +20,12 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
     if !site do
       PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt
     else
-      user_id = get_session(conn, :current_user_id)
+      user_id =
+        case PlausibleWeb.UserAuth.get_user_session(conn) do
+          {:ok, user_session} -> user_session.user_id
+          _ -> nil
+        end
+
       membership_role = user_id && Plausible.Sites.role(user_id, site)
 
       role =

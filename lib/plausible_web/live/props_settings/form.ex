@@ -10,23 +10,25 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
         _params,
         %{
           "site_id" => _site_id,
-          "current_user_id" => user_id,
           "domain" => domain,
           "rendered_by" => pid
         },
         socket
       ) do
-    site = Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
-
-    form = new_form(site)
+    socket =
+      socket
+      |> assign_new(:site, fn %{current_user: current_user} ->
+        Plausible.Sites.get_for_user!(current_user, domain, [:owner, :admin, :super_admin])
+      end)
+      |> assign_new(:form, fn %{site: site} ->
+        new_form(site)
+      end)
 
     {:ok,
      assign(socket,
-       form: form,
        domain: domain,
        rendered_by: pid,
-       prop_key_options_count: 0,
-       site: site
+       prop_key_options_count: 0
      )}
   end
 

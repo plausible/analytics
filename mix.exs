@@ -69,7 +69,7 @@ defmodule Plausible.MixProject do
       {:bamboo_mua, "~> 0.2.0"},
       {:bcrypt_elixir, "~> 3.0"},
       {:bypass, "~> 2.1", only: [:dev, :test, :ce_test]},
-      {:ecto_ch, "~> 0.3.5"},
+      {:ecto_ch, "~> 0.3.9"},
       {:cloak, "~> 1.1"},
       {:cloak_ecto, "~> 1.2"},
       {:combination, "~> 0.0.3"},
@@ -77,8 +77,8 @@ defmodule Plausible.MixProject do
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:double, "~> 0.8.0", only: [:test, :ce_test]},
-      {:ecto, "~> 3.11.0"},
-      {:ecto_sql, "~> 3.11.0"},
+      {:ecto, "~> 3.12.0"},
+      {:ecto_sql, "~> 3.12.0"},
       {:envy, "~> 1.1.1"},
       {:eqrcode, "~> 0.1.10"},
       {:ex_machina, "~> 2.3", only: [:dev, :test, :ce_dev, :ce_test]},
@@ -114,7 +114,7 @@ defmodule Plausible.MixProject do
       {:php_serializer, "~> 2.0"},
       {:plug, "~> 1.13", override: true},
       {:plug_cowboy, "~> 2.3"},
-      {:postgrex, "~> 0.17.0"},
+      {:postgrex, "~> 0.19.0"},
       {:prom_ex, "~> 1.8"},
       {:public_suffix, git: "https://github.com/axelson/publicsuffix-elixir"},
       {:ref_inspector, "~> 2.0"},
@@ -144,7 +144,9 @@ defmodule Plausible.MixProject do
       {:zstream, "~> 0.6.4"},
       {:con_cache, "~> 1.1.0"},
       {:req, "~> 0.5.0"},
-      {:happy_tcp, github: "ruslandoga/happy_tcp", only: [:ce, :ce_dev, :ce_test]}
+      {:happy_tcp, github: "ruslandoga/happy_tcp", only: [:ce, :ce_dev, :ce_test]},
+      {:ex_json_schema, "~> 0.10.2"},
+      {:odgn_json_pointer, "~> 3.0.1"}
     ]
   end
 
@@ -155,6 +157,7 @@ defmodule Plausible.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      "assets.typecheck": ["cmd npm --prefix assets run typecheck"],
       "assets.build": [
         "tailwind default",
         "esbuild default"

@@ -239,7 +239,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert event.browser_version == "70.0"
     end
 
-    test "parses referrer", %{conn: conn, site: site} do
+    test "parses referrer source", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
         url: "http://example.com/",
@@ -405,6 +405,22 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert session.referrer_source == "betalist"
+    end
+
+    test "if utm_source matches a capitalized form from ref_inspector, the capitalized form is recorded",
+         %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://www.example.com/?utm_source=facebook",
+        domain: site.domain
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert session.referrer_source == "Facebook"
     end
 
     test "utm tags are stored", %{conn: conn, site: site} do

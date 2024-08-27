@@ -287,7 +287,17 @@ defmodule Plausible.Sites do
     base <> domain <> "?auth=" <> link.slug
   end
 
-  def get_for_user!(user_id, domain, roles \\ [:owner, :admin, :viewer]) do
+  @spec get_for_user!(Auth.User.t() | pos_integer(), String.t(), [
+          :super_admin | :owner | :admin | :viewer
+        ]) ::
+          Site.t()
+  def get_for_user!(user, domain, roles \\ [:owner, :admin, :viewer])
+
+  def get_for_user!(%Auth.User{id: user_id}, domain, roles) do
+    get_for_user!(user_id, domain, roles)
+  end
+
+  def get_for_user!(user_id, domain, roles) do
     if :super_admin in roles and Auth.is_super_admin?(user_id) do
       get_by_domain!(domain)
     else
@@ -297,7 +307,17 @@ defmodule Plausible.Sites do
     end
   end
 
-  def get_for_user(user_id, domain, roles \\ [:owner, :admin, :viewer]) do
+  @spec get_for_user(Auth.User.t() | pos_integer(), String.t(), [
+          :super_admin | :owner | :admin | :viewer
+        ]) ::
+          Site.t() | nil
+  def get_for_user(user, domain, roles \\ [:owner, :admin, :viewer])
+
+  def get_for_user(%Auth.User{id: user_id}, domain, roles) do
+    get_for_user(user_id, domain, roles)
+  end
+
+  def get_for_user(user_id, domain, roles) do
     if :super_admin in roles and Auth.is_super_admin?(user_id) do
       get_by_domain(domain)
     else

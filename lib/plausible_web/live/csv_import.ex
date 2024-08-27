@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Live.CSVImport do
   # to check that current_user_role is allowed to make site imports
   @impl true
   def mount(:not_mounted_at_router, session, socket) do
-    %{"site_id" => site_id, "current_user_id" => user_id, "storage" => storage} = session
+    %{"site_id" => site_id, "storage" => storage} = session
 
     upload_opts = [
       accept: [".csv", "text/csv"],
@@ -64,7 +64,6 @@ defmodule PlausibleWeb.Live.CSVImport do
       socket
       |> assign(
         site_id: site_id,
-        user_id: user_id,
         storage: storage,
         upload_consumer: upload_consumer,
         occupied_ranges: occupied_ranges,
@@ -214,17 +213,16 @@ defmodule PlausibleWeb.Live.CSVImport do
     %{
       storage: storage,
       site: site,
-      user_id: user_id,
+      current_user: current_user,
       clamped_date_range: clamped_date_range,
       upload_consumer: upload_consumer
     } =
       socket.assigns
 
-    user = Plausible.Repo.get!(Plausible.Auth.User, user_id)
     uploads = consume_uploaded_entries(socket, :import, upload_consumer)
 
     {:ok, _job} =
-      CSVImporter.new_import(site, user,
+      CSVImporter.new_import(site, current_user,
         start_date: clamped_date_range.first,
         end_date: clamped_date_range.last,
         uploads: uploads,

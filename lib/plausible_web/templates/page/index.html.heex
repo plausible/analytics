@@ -1,0 +1,40 @@
+<PlausibleWeb.Components.Generic.focus_box>
+  <:title>
+    Welcome to Plausible!
+  </:title>
+
+  <p>
+    <.styled_link href="https://plausible.io/">
+      Plausible Analytics
+    </.styled_link>
+    is a simple, open source, lightweight (&lt;&nbsp;1&nbsp;KB) and privacy-friendly alternative to Google Analytics. We're completely independent and solely funded by our 10,000+ paying subscribers. Read more
+    <.styled_link href="https://plausible.io/about">
+      about us.
+    </.styled_link>
+  </p>
+
+  <:footer>
+    <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
+      <li>
+        <.styled_link href={Routes.auth_path(@conn, :login)}>
+          Login
+        </.styled_link>
+      </li>
+      <li>
+        <.styled_link href={Routes.auth_path(@conn, :register_form)}>
+          Register
+        </.styled_link>
+      </li>
+      <li>
+        <.styled_link href="https://plausible.io/docs">
+          Guides & Docs
+        </.styled_link>
+      </li>
+      <li>
+        <.styled_link href="https://twitter.com/plausiblehq">
+          Follow on Twitter
+        </.styled_link>
+      </li>
+    </ol>
+  </:footer>
+</PlausibleWeb.Components.Generic.focus_box>

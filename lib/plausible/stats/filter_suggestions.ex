@@ -155,7 +155,7 @@ defmodule Plausible.Stats.FilterSuggestions do
   def filter_suggestions(site, _query, "goal", filter_search) do
     site
     |> Plausible.Goals.for_site()
-    |> Enum.map(&Plausible.Goal.display_name/1)
+    |> Enum.map(& &1.display_name)
     |> Enum.filter(fn goal ->
       String.contains?(
         String.downcase(goal),
@@ -169,7 +169,9 @@ defmodule Plausible.Stats.FilterSuggestions do
     filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
 
     from(e in base_event_query(site, query),
-      array_join: meta in "meta",
+      join: meta in "meta",
+      hints: "ARRAY",
+      on: true,
       as: :meta,
       select: meta.key,
       where: fragment("? ilike ?", meta.key, ^filter_query),
