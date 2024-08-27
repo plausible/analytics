@@ -42,17 +42,17 @@ defmodule Plausible.ReleaseTest do
   end
 
   test "ecto_repos sanity check" do
-    # if the repos here are modified, please make sure `interweave_migrate/0` is properly updated as well
+    # if the repos here are modified, please make sure `interweave_migrate/0` tests below are properly updated as well
     assert Application.get_env(:plausible, :ecto_repos) == [Plausible.Repo, Plausible.IngestRepo]
   end
 
-  # these tests create new pg and ch databases (plausible_test_migrations),
+  # these tests create new pg and ch databases (named plausible_test_migrations),
   # run various migrations between released versions (e.g. v2.0.0 -> v2.1.0-rc.0 -> ... -> master)
-  # and then drop it in the end.
+  # and then drop them in the end.
   #
   # since completely separate databases are used, these tests are safe to run async
   describe "interweave_migrate/0" do
-    # @describetag :slow
+    @describetag :migrations
 
     # this repo is used in place of Plausible.Repo
     defmodule PostgreSQL do
@@ -68,11 +68,13 @@ defmodule Plausible.ReleaseTest do
       pg_config =
         Plausible.Repo.config()
         |> Keyword.replace!(:database, "plausible_test_migrations")
+        # to see priv/repo/migrations from this fake pg repo
         |> Keyword.put(:priv, "priv/repo")
 
       ch_config =
         Plausible.IngestRepo.config()
         |> Keyword.replace!(:database, "plausible_test_migrations")
+        # to see priv/ingest_repo/migrations from this fake ch repo
         |> Keyword.put(:priv, "priv/ingest_repo")
 
       Application.put_env(:plausible, PostgreSQL, pg_config)
@@ -81,11 +83,13 @@ defmodule Plausible.ReleaseTest do
       Application.put_env(:plausible, ClickHouse, ch_config)
       on_exit(fn -> Application.delete_env(:plausible, ClickHouse) end)
 
-      :ok = PostgreSQL.__adapter__().storage_up(PostgreSQL.config())
-      on_exit(fn -> :ok = PostgreSQL.__adapter__().storage_down(PostgreSQL.config()) end)
+      pg_config = PostgreSQL.config()
+      :ok = Ecto.Adapters.Postgres.storage_up(pg_config)
+      on_exit(fn -> :ok = Ecto.Adapters.Postgres.storage_down(pg_config) end)
 
-      :ok = ClickHouse.__adapter__().storage_up(ClickHouse.config())
-      on_exit(fn -> :ok = ClickHouse.__adapter__().storage_down(ClickHouse.config()) end)
+      ch_config = ClickHouse.config()
+      :ok = Ecto.Adapters.ClickHouse.storage_up(ch_config)
+      on_exit(fn -> :ok = Ecto.Adapters.ClickHouse.storage_down(ch_config) end)
 
       :ok
     end
@@ -223,6 +227,7 @@ defmodule Plausible.ReleaseTest do
                {ClickHouse, 20_240_502_115_822},
                {PostgreSQL, 20_240_708_120_453}
 
+               # unreleased
                # {ClickHouse, 20_240_709_181_437}
                # {PostgreSQL, 20_240_809_100_853}
 

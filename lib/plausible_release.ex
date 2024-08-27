@@ -38,8 +38,6 @@ defmodule Plausible.Release do
     Enum.each(streaks, fn {repo, up_to_version} ->
       {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, to: up_to_version))
     end)
-
-    IO.puts("Migrations successful!")
   end
 
   @doc false
