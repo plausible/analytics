@@ -244,6 +244,7 @@ defmodule PlausibleWeb.Live.Installation do
   end
 
   defp script_extension_control(assigns) do
+  def script_extension_control(assigns) do
     ~H"""
     <div class="mt-2 p-1">
       <div class="flex items-center">
@@ -258,12 +259,14 @@ defmodule PlausibleWeb.Live.Installation do
           <%= @label %>
         </label>
         <div class="ml-2">
-          <.tooltip icon?={false} position="z-50 w-64 margin-x-auto">
+          <.tooltip_non_sticky icon?={false} position="z-50 w-64 margin-x-auto">
             <:tooltip_content>
               <%= @tooltip %>
             </:tooltip_content>
-            <Heroicons.information_circle class="text-gray-700 dark:text-gray-500 w-5 h-5" />
-          </.tooltip>
+            <a href={@learn_more} target="_blank" rel="noopener noreferrer">
+              <Heroicons.information_circle class="text-gray-700 dark:text-gray-500 w-5 h-5" />
+            </a>
+          </.tooltip_non_sticky>
         </div>
       </div>
     </div>
@@ -299,36 +302,42 @@ defmodule PlausibleWeb.Live.Installation do
         variant="outbound-links"
         label="Outbound links"
         tooltip="Automatically track clicks on external links"
+        learn_more="https://plausible.io/docs/outbound-link-click-tracking"
       />
       <.script_extension_control
         config={@script_config}
         variant="file-downloads"
         label="File downloads"
         tooltip="Automatically track file downloads"
+        learn_more="https://plausible.io/docs/file-downloads-tracking"
       />
       <.script_extension_control
         config={@script_config}
         variant="hash"
         label="Hashed page paths"
         tooltip="Automatically track page paths that use a # in the URL"
+        learn_more="https://plausible.io/docs/hash-based-routing"
       />
       <.script_extension_control
         config={@script_config}
         variant="tagged-events"
         label="Custom events"
         tooltip="Tag site elements like buttons, links and forms to track user activity. Additional action required."
+        learn_more="https://plausible.io/docs/custom-event-goals"
       />
       <.script_extension_control
         config={@script_config}
         variant="pageview-props"
         label="Custom properties"
         tooltip="Attach custom properties (also known as custom dimensions) to pageviews or custom events to create custom metrics. Additional action required."
+        learn_more="https://plausible.io/docs/custom-props/introduction"
       />
       <.script_extension_control
         config={@script_config}
         variant="revenue"
         label="Ecommerce revenue"
         tooltip="Assign monetary values to purchases and track revenue attribution. Additional action required."
+        learn_more="https://plausible.io/docs/ecommerce-revenue-tracking"
       />
     </form>
     """
