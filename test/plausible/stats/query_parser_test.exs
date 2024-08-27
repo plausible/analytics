@@ -548,7 +548,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   end
 
   describe "date range validation" do
-    test "parsing public shortcut options for date_range", %{site: site} do
+    test "parsing shortcut options", %{site: site} do
       check_date_range("day", site, @date_range_day)
       check_date_range("7d", site, @date_range_7d)
       check_date_range("30d", site, @date_range_30d)
