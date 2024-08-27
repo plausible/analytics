@@ -284,7 +284,7 @@ defmodule PlausibleWeb.Live.Installation do
         <a
           onclick="var input = document.getElementById('snippet'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"
           href="javascript:void(0)"
-          class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline top-2 right-4"
+          class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline bottom-2 right-4 p-2 bg-white dark:bg-gray-900"
         >
           <Heroicons.document_duplicate class="pr-1 text-indigo-600 dark:text-indigo-500 w-5 h-5" />
           <span>
