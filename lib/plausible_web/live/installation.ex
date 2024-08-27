@@ -59,6 +59,7 @@ defmodule PlausibleWeb.Live.Installation do
     {:ok,
      assign(socket,
        uri_params: Map.take(params, @valid_qs_params),
+       connected?: connected?(socket),
        site: site,
        site_created?: params["site_created"] == "true",
        flow: flow,
@@ -112,10 +113,15 @@ defmodule PlausibleWeb.Live.Installation do
 
         <:subtitle :if={is_nil(@installation_type)}>
           <div class="text-center">
-            Determining installation type.
-            <.styled_link href="#" phx-click="switch-installation-type" phx-value-method="manual">
+            Determining installation type...
+            <.styled_link
+              :if={@connected?}
+              href="#"
+              phx-click="switch-installation-type"
+              phx-value-method="manual"
+            >
               Skip
-            </.styled_link>.
+            </.styled_link>
           </div>
         </:subtitle>
 
