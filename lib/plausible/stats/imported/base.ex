@@ -8,6 +8,8 @@ defmodule Plausible.Stats.Imported.Base do
   alias Plausible.Imported
   alias Plausible.Stats.Query
 
+  import Plausible.Stats.Filters.Utils, only: [dimensions_used_in_filters: 1]
+
   @property_to_table_mappings %{
     "visit:source" => "imported_sources",
     "visit:referrer" => "imported_sources",
@@ -78,7 +80,7 @@ defmodule Plausible.Stats.Imported.Base do
   end
 
   defp custom_prop_query?(query) do
-    dimensions_used_in_filters(query)
+    dimensions_used_in_filters(query.filters)
     |> Enum.concat(query.dimensions)
     |> Enum.any?(&(&1 in @imported_custom_props))
   end
@@ -93,7 +95,7 @@ defmodule Plausible.Stats.Imported.Base do
     if dimensions == [] or
          (length(dimensions) == 1 and hd(dimensions) in @queriable_custom_prop_dimensions) do
       custom_prop_filters =
-        dimensions_used_in_filters(query)
+        dimensions_used_in_filters(query.filters)
         |> Enum.filter(&(&1 in @imported_custom_props))
         |> Enum.uniq()
 
@@ -138,7 +140,7 @@ defmodule Plausible.Stats.Imported.Base do
   end
 
   defp do_decide_tables(%Query{dimensions: ["event:goal"]} = query) do
-    filter_dimensions = dimensions_used_in_filters(query)
+    filter_dimensions = dimensions_used_in_filters(query.filters)
 
     filter_goals = get_filter_goals(query)
 
@@ -163,7 +165,7 @@ defmodule Plausible.Stats.Imported.Base do
 
   defp do_decide_tables(query) do
     table_candidates =
-      dimensions_used_in_filters(query)
+      dimensions_used_in_filters(query.filters)
       |> Enum.concat(query.dimensions)
       |> Enum.reject(&(&1 in @queriable_time_dimensions or &1 == "event:goal"))
       |> Enum.flat_map(fn
@@ -198,12 +200,6 @@ defmodule Plausible.Stats.Imported.Base do
         |> Plausible.Goals.Filters.filter_preloaded(operation, clause)
       end)
     end)
-  end
-
-  defp dimensions_used_in_filters(query) do
-    query.filters
-    |> Plausible.Stats.Filters.traverse()
-    |> Enum.map(fn {[_operator, dimension | _rest], _root, _depth} -> dimension end)
   end
 
   def special_goals_for("event:props:url"), do: Imported.goals_with_url()

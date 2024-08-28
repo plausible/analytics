@@ -5,11 +5,12 @@ defmodule Plausible.Stats.TableDecider do
   """
 
   import Enum, only: [empty?: 1]
+  import Plausible.Stats.Filters.Utils, only: [dimensions_used_in_filters: 1]
 
   alias Plausible.Stats.Query
 
   def events_join_sessions?(query) do
-    query
+    query.filters
     |> dimensions_used_in_filters()
     |> Enum.any?(&(filters_partitioner(query, &1) == :session))
   end
@@ -25,7 +26,7 @@ defmodule Plausible.Stats.TableDecider do
       partition(metrics, query, &metric_partitioner/2)
 
     %{event: event_only_filters, session: session_only_filters} =
-      query
+      query.filters
       |> dimensions_used_in_filters()
       |> partition(query, &filters_partitioner/2)
 
@@ -53,12 +54,6 @@ defmodule Plausible.Stats.TableDecider do
         {event_only_metrics ++ either_metrics ++ sample_percent,
          session_only_metrics ++ sample_percent, other_metrics}
     end
-  end
-
-  defp dimensions_used_in_filters(query) do
-    query.filters
-    |> Plausible.Stats.Filters.traverse()
-    |> Enum.map(fn {[_operator, dimension | _rest], _root, _depth} -> dimension end)
   end
 
   defp metric_partitioner(%Query{v2: true}, :conversion_rate), do: :either

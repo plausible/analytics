@@ -48,4 +48,10 @@ defmodule Plausible.Stats.Filters.Utils do
 
     "^#{escaped}$"
   end
+
+  def dimensions_used_in_filters(filters) do
+    filters
+    |> Plausible.Stats.Filters.traverse()
+    |> Enum.map(fn {[_operator, dimension | _rest], _root, _depth} -> dimension end)
+  end
 end

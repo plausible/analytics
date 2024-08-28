@@ -93,18 +93,7 @@ defmodule Plausible.Stats.Filters do
     |> String.to_existing_atom()
   end
 
-  @doc """
-  Returns all filters matching `filter_key_prefix` together with depth and root node.
-  """
-  def filter_by_key(filters, filter_key_prefix) do
-    filters
-    |> traverse()
-    |> Enum.filter(fn {[_operation, key | _rest], _depth, _root} ->
-      String.starts_with?(key, filter_key_prefix)
-    end)
-  end
-
-  def traverse(filters, root \\ nil, depth \\ 0) do
+  def traverse(filters, root \\ nil, depth \\ -1) do
     filters
     |> Enum.flat_map(&traverse_tree(&1, root || &1, depth + 1))
   end
@@ -119,7 +108,7 @@ defmodule Plausible.Stats.Filters do
 
       # Leaf node
       _ ->
-        [{filter, depth, root}]
+        [{filter, root, depth}]
     end
   end
 end

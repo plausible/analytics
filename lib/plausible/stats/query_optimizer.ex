@@ -112,6 +112,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   # filter is present for breakdowns, add entry/exit page hostname
   # filters
   defp extend_hostname_filters_to_visit(query) do
+    # Note: Only works since event:goal is allowed as a top level filter
     hostname_filters =
       query.filters
       |> Enum.filter(fn [_operation, filter_key | _rest] -> filter_key == "event:hostname" end)

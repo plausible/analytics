@@ -7,6 +7,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
   alias Plausible.Stats.Metrics
   alias Plausible.Stats.JSONSchema
 
+  import Plausible.Stats.Filters.Utils, only: [dimensions_used_in_filters: 1]
+
   @default_include %{
     imports: false,
     time_labels: false
@@ -33,7 +35,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
            include: include
          },
          :ok <- validate_order_by(query),
-         :ok <- validate_goal_filters(query),
+         :ok <- validate_toplevel_only_filters(query),
+         :ok <- validate_special_metrics_filters(query),
+         :ok <- validate_filtered_goals_exist(query),
          :ok <- validate_custom_props_access(site, query),
          :ok <- validate_metrics(query),
          :ok <- validate_include(query) do
@@ -335,7 +339,49 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp validate_goal_filters(query) do
+  @only_toplevel ["event:goal", "event:hostname"]
+  defp validate_toplevel_only_filters(query) do
+    not_toplevel =
+      query.filters
+      |> Plausible.Stats.Filters.traverse()
+      |> Enum.flat_map(fn
+        {[_operation, dimension | _rest], _root, depth}
+        when depth > 0 and dimension in @only_toplevel ->
+          [dimension]
+
+        _ ->
+          []
+      end)
+
+    if length(not_toplevel) > 0 do
+      {:error,
+       "Invalid filters. `#{List.first(not_toplevel)}` can only be filtered at the top level."}
+    else
+      :ok
+    end
+  end
+
+  @special_metrics [:conversion_rate, :group_conversion_rate]
+  defp validate_special_metrics_filters(query) do
+    special_metric? = Enum.any?(@special_metrics, &(&1 in query.metrics))
+
+    deep_custom_property? =
+      query.filters
+      |> Plausible.Stats.Filters.traverse()
+      |> Enum.any?(fn {[_operation, dimension | _rest], _root, depth} ->
+        depth > 0 and String.starts_with?(dimension, "event:props:")
+      end)
+
+    if special_metric? and deep_custom_property? do
+      {:error,
+       "Invalid filters. When `conversion_rate` or `group_conversion_rate` metrics are used, custom property filters can only be used on top level."}
+    else
+      :ok
+    end
+  end
+
+  defp validate_filtered_goals_exist(query) do
+    # Note: Only works since event:goal is allowed as a top level filter
     goal_filter_clauses =
       Enum.flat_map(query.filters, fn
         [:is, "event:goal", clauses] -> clauses
@@ -372,7 +418,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp validate_custom_props_access(_site, query, allowed_props) do
     valid? =
       query.filters
-      |> Enum.map(fn [_operation, filter_key | _rest] -> filter_key end)
+      |> dimensions_used_in_filters()
       |> Enum.concat(query.dimensions)
       |> Enum.all?(fn
         "event:props:" <> prop -> prop in allowed_props
