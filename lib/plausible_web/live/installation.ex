@@ -350,16 +350,7 @@ defmodule PlausibleWeb.Live.Installation do
 
   def handle_event("update-script-config", params, socket) do
     new_params =
-      @script_config_params
-      |> Enum.into(%{}, fn param ->
-        {param, false}
-      end)
-      |> Map.merge(
-        params
-        |> Enum.filter(fn {key, value} -> key in @script_config_params and value == "on" end)
-        |> Enum.map(fn {key, _} -> {key, true} end)
-        |> Enum.into(%{})
-      )
+      Enum.into(@script_config_params, %{}, &{&1, params[&1] == "on"})
 
     socket = update_uri_params(socket, new_params)
     {:noreply, socket}
