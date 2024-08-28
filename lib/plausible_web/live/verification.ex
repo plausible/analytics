@@ -12,17 +12,13 @@ defmodule PlausibleWeb.Live.Verification do
   @component PlausibleWeb.Live.Components.Verification
   @slowdown_for_frequent_checking :timer.seconds(5)
 
-  def mount(:not_mounted_at_router, %{"domain" => domain} = session, socket) do
-    mount(%{"website" => domain}, session, socket)
-  end
-
   def mount(
         %{"website" => domain} = params,
         session,
         socket
       ) do
     site =
-      Plausible.Sites.get_for_user!(session["current_user_id"], domain, [
+      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain, [
         :owner,
         :admin,
         :super_admin,
