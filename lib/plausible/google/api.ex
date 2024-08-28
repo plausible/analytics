@@ -7,7 +7,7 @@ defmodule Plausible.Google.API do
 
   alias Plausible.Google.HTTP
   alias Plausible.Google.SearchConsole
-  alias Plausible.Stats.NaiveDateTimeRange
+  alias Plausible.Stats.DateTimeRange
 
   require Logger
 
@@ -65,7 +65,7 @@ defmodule Plausible.Google.API do
          {:ok, access_token} <- maybe_refresh_token(site.google_auth),
          {:ok, gsc_filters} <-
            SearchConsole.Filters.transform(site.google_auth.property, query.filters, search),
-         date_range = NaiveDateTimeRange.to_date_range(query.date_range),
+         date_range = DateTimeRange.to_date_range(query.date_range),
          {:ok, stats} <-
            HTTP.list_stats(
              access_token,

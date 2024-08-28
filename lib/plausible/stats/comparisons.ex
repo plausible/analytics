@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Comparisons do
   """
 
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, NaiveDateTimeRange}
+  alias Plausible.Stats.{Query, DateTimeRange}
 
   @modes ~w(previous_period year_over_year custom)
   @disallowed_periods ~w(realtime all)
@@ -61,7 +61,7 @@ defmodule Plausible.Stats.Comparisons do
       |> Keyword.put_new(:now, Timex.now(site.timezone))
       |> Keyword.put_new(:match_day_of_week?, false)
 
-    source_date_range = NaiveDateTimeRange.to_date_range(source_query.date_range)
+    source_date_range = DateTimeRange.to_date_range(source_query.date_range)
 
     with :ok <- validate_mode(source_query, mode),
          {:ok, comparison_date_range} <- get_comparison_date_range(source_date_range, mode, opts) do
@@ -69,7 +69,7 @@ defmodule Plausible.Stats.Comparisons do
 
       comparison_query =
         source_query
-        |> Query.set(date_range: NaiveDateTimeRange.new!(first, last))
+        |> Query.set(date_range: DateTimeRange.new!(first, last, site.timezone))
         |> maybe_include_imported(source_query)
 
       {:ok, comparison_query}

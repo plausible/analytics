@@ -7,7 +7,7 @@ defmodule Plausible.Stats.QueryResult do
   produced by Jason.encode(query_result) is ordered.
   """
 
-  alias Plausible.Stats.{Util, Filters, NaiveDateTimeRange}
+  alias Plausible.Stats.{Util, Filters, DateTimeRange}
 
   defstruct results: [],
             meta: %{},
@@ -23,7 +23,7 @@ defmodule Plausible.Stats.QueryResult do
         }
       end)
 
-    %{first: first, last: last} = NaiveDateTimeRange.to_date_range(query.date_range)
+    %{first: first, last: last} = DateTimeRange.to_date_range(query.date_range)
 
     struct!(
       __MODULE__,

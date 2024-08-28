@@ -2,13 +2,13 @@ defmodule Plausible.Stats.TimeTest do
   use Plausible.DataCase, async: true
 
   import Plausible.Stats.Time
-  alias Plausible.Stats.NaiveDateTimeRange
+  alias Plausible.Stats.DateTimeRange
 
   describe "time_labels/1" do
     test "with time:month dimension" do
       assert time_labels(%{
                dimensions: ["visit:device", "time:month"],
-               date_range: NaiveDateTimeRange.new!(~D[2022-01-17], ~D[2022-02-01])
+               date_range: DateTimeRange.new!(~D[2022-01-17], ~D[2022-02-01], "UTC")
              }) == [
                "2022-01-01",
                "2022-02-01"
@@ -16,7 +16,7 @@ defmodule Plausible.Stats.TimeTest do
 
       assert time_labels(%{
                dimensions: ["visit:device", "time:month"],
-               date_range: NaiveDateTimeRange.new!(~D[2022-01-01], ~D[2022-03-07])
+               date_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-03-07], "UTC")
              }) == [
                "2022-01-01",
                "2022-02-01",
@@ -27,7 +27,7 @@ defmodule Plausible.Stats.TimeTest do
     test "with time:week dimension" do
       assert time_labels(%{
                dimensions: ["time:week"],
-               date_range: NaiveDateTimeRange.new!(~D[2020-12-20], ~D[2021-01-08])
+               date_range: DateTimeRange.new!(~D[2020-12-20], ~D[2021-01-08], "UTC")
              }) == [
                "2020-12-20",
                "2020-12-21",
@@ -37,7 +37,7 @@ defmodule Plausible.Stats.TimeTest do
 
       assert time_labels(%{
                dimensions: ["time:week"],
-               date_range: NaiveDateTimeRange.new!(~D[2020-12-21], ~D[2021-01-03])
+               date_range: DateTimeRange.new!(~D[2020-12-21], ~D[2021-01-03], "UTC")
              }) == [
                "2020-12-21",
                "2020-12-28"
@@ -47,7 +47,7 @@ defmodule Plausible.Stats.TimeTest do
     test "with time:day dimension" do
       assert time_labels(%{
                dimensions: ["time:day"],
-               date_range: NaiveDateTimeRange.new!(~D[2022-01-17], ~D[2022-02-02])
+               date_range: DateTimeRange.new!(~D[2022-01-17], ~D[2022-02-02], "UTC")
              }) == [
                "2022-01-17",
                "2022-01-18",
@@ -72,7 +72,7 @@ defmodule Plausible.Stats.TimeTest do
     test "with time:hour dimension" do
       assert time_labels(%{
                dimensions: ["time:hour"],
-               date_range: NaiveDateTimeRange.new!(~D[2022-01-17], ~D[2022-01-17])
+               date_range: DateTimeRange.new!(~D[2022-01-17], ~D[2022-01-17], "UTC")
              }) == [
                "2022-01-17 00:00:00",
                "2022-01-17 01:00:00",
@@ -102,7 +102,7 @@ defmodule Plausible.Stats.TimeTest do
 
       assert time_labels(%{
                dimensions: ["time:hour"],
-               date_range: NaiveDateTimeRange.new!(~D[2022-01-17], ~D[2022-01-18])
+               date_range: DateTimeRange.new!(~D[2022-01-17], ~D[2022-01-18], "UTC")
              }) == [
                "2022-01-17 00:00:00",
                "2022-01-17 01:00:00",

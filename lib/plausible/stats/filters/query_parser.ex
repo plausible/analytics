@@ -1,17 +1,20 @@
 defmodule Plausible.Stats.Filters.QueryParser do
   @moduledoc false
 
-  alias Plausible.Stats.{TableDecider, Filters, Query, Metrics, NaiveDateTimeRange, JSONSchema}
+  alias Plausible.Stats.{TableDecider, Filters, Query, Metrics, DateTimeRange, JSONSchema}
 
   @default_include %{
     imports: false,
     time_labels: false
   }
 
-  def parse(site, schema_type, params, now_for_site \\ nil) when is_map(params) do
+  def parse(site, schema_type, params, test_opts \\ []) when is_map(params) do
+    now = Keyword.get(test_opts, :now, DateTime.utc_now(:second))
+    date = Keyword.get(test_opts, :date, today(site))
+
     with :ok <- JSONSchema.validate(schema_type, params),
-         now <- if(now_for_site, do: now_for_site, else: now_for_site(site)),
-         {:ok, date} <- parse_date(site, Map.get(params, "date"), now),
+         now <- if(now, do: now, else: DateTime.utc_now(:second)),
+         {:ok, date} <- parse_date(site, Map.get(params, "date"), date),
          {:ok, date_range} <- parse_date_range(site, Map.get(params, "date_range"), date, now),
          {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
@@ -107,17 +110,15 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{i(filter)}'"}
 
-  defp parse_date(site, nil, nil), do: {:ok, today(site)}
-
-  defp parse_date(_site, date_string, _) when is_binary(date_string) do
+  defp parse_date(_site, date_string, _date) when is_binary(date_string) do
     case Date.from_iso8601(date_string) do
       {:ok, date} -> {:ok, date}
       _ -> {:error, "Invalid date '#{date_string}'."}
     end
   end
 
-  defp parse_date(_site, _date_string, now) do
-    {:ok, NaiveDateTime.to_date(now)}
+  defp parse_date(_site, _date_string, date) do
+    {:ok, date}
   end
 
   defp parse_date_range(_site, date_range, _date, now) when date_range in ["realtime", "30m"] do
@@ -127,33 +128,33 @@ defmodule Plausible.Stats.Filters.QueryParser do
         "30m" -> 30
       end
 
-    first = NaiveDateTime.shift(now, minute: -duration_minutes)
-    last = NaiveDateTime.shift(now, second: 5)
+    first_datetime = DateTime.shift(now, minute: -duration_minutes)
+    last_datetime = DateTime.shift(now, second: 5)
 
-    {:ok, NaiveDateTimeRange.new!(first, last)}
+    {:ok, DateTimeRange.new!(first_datetime, last_datetime)}
   end
 
-  defp parse_date_range(_site, "day", date, _now) do
-    {:ok, NaiveDateTimeRange.new!(date, date)}
+  defp parse_date_range(site, "day", date, _now) do
+    {:ok, DateTimeRange.new!(date, date, site.timezone)}
   end
 
-  defp parse_date_range(_site, "7d", date, _now) do
+  defp parse_date_range(site, "7d", date, _now) do
     first = date |> Date.add(-6)
-    {:ok, NaiveDateTimeRange.new!(first, date)}
+    {:ok, DateTimeRange.new!(first, date, site.timezone)}
   end
 
-  defp parse_date_range(_site, "30d", date, _now) do
+  defp parse_date_range(site, "30d", date, _now) do
     first = date |> Date.add(-30)
-    {:ok, NaiveDateTimeRange.new!(first, date)}
+    {:ok, DateTimeRange.new!(first, date, site.timezone)}
   end
 
-  defp parse_date_range(_site, "month", date, _now) do
+  defp parse_date_range(site, "month", date, _now) do
     last = date |> Date.end_of_month()
     first = last |> Date.beginning_of_month()
-    {:ok, NaiveDateTimeRange.new!(first, last)}
+    {:ok, DateTimeRange.new!(first, last, site.timezone)}
   end
 
-  defp parse_date_range(_site, "6mo", date, _now) do
+  defp parse_date_range(site, "6mo", date, _now) do
     last = date |> Date.end_of_month()
 
     first =
@@ -161,10 +162,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
       |> Date.shift(month: -5)
       |> Date.beginning_of_month()
 
-    {:ok, NaiveDateTimeRange.new!(first, last)}
+    {:ok, DateTimeRange.new!(first, last, site.timezone)}
   end
 
-  defp parse_date_range(_site, "12mo", date, _now) do
+  defp parse_date_range(site, "12mo", date, _now) do
     last = date |> Date.end_of_month()
 
     first =
@@ -172,26 +173,26 @@ defmodule Plausible.Stats.Filters.QueryParser do
       |> Date.shift(month: -11)
       |> Date.beginning_of_month()
 
-    {:ok, NaiveDateTimeRange.new!(first, last)}
+    {:ok, DateTimeRange.new!(first, last, site.timezone)}
   end
 
-  defp parse_date_range(_site, "year", date, _now) do
+  defp parse_date_range(site, "year", date, _now) do
     last = date |> Timex.end_of_year()
     first = last |> Timex.beginning_of_year()
-    {:ok, NaiveDateTimeRange.new!(first, last)}
+    {:ok, DateTimeRange.new!(first, last, site.timezone)}
   end
 
   defp parse_date_range(site, "all", date, _now) do
     start_date = Plausible.Sites.stats_start_date(site) || date
 
-    {:ok, NaiveDateTimeRange.new!(start_date, date)}
+    {:ok, DateTimeRange.new!(start_date, date, site.timezone)}
   end
 
-  defp parse_date_range(_site, [from_date_string, to_date_string], _date, _now)
+  defp parse_date_range(site, [from_date_string, to_date_string], _date, _now)
        when is_binary(from_date_string) and is_binary(to_date_string) do
     with {:ok, from_date} <- Date.from_iso8601(from_date_string),
          {:ok, to_date} <- Date.from_iso8601(to_date_string) do
-      {:ok, NaiveDateTimeRange.new!(from_date, to_date)}
+      {:ok, DateTimeRange.new!(from_date, to_date, site.timezone)}
     else
       _ -> {:error, "Invalid date_range '#{i([from_date_string, to_date_string])}'."}
     end
@@ -201,13 +202,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
     do: {:error, "Invalid date_range '#{i(unknown)}'."}
 
   defp today(site), do: DateTime.now!(site.timezone) |> DateTime.to_date()
-
-  defp now_for_site(site) do
-    site.timezone
-    |> DateTime.now!()
-    |> DateTime.to_naive()
-    |> NaiveDateTime.truncate(:second)
-  end
 
   defp parse_dimensions(dimensions) when is_list(dimensions) do
     parse_list(

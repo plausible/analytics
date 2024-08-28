@@ -1,56 +1,60 @@
 defmodule Plausible.Stats.Filters.QueryParserTest do
   use Plausible.DataCase
 
-  alias Plausible.Stats.NaiveDateTimeRange
+  alias Plausible.Stats.DateTimeRange
   alias Plausible.Stats.Filters
   import Plausible.Stats.Filters.QueryParser
 
   setup [:create_user, :create_new_site]
 
-  @now ~N[2021-05-05 12:30:00]
-  @date_range_realtime %NaiveDateTimeRange{
-    first: ~N[2021-05-05 12:25:00],
-    last: ~N[2021-05-05 12:30:05]
+  @now DateTime.new!(~D[2021-05-05], ~T[12:30:00], "UTC")
+  @today DateTime.to_date(@now)
+  @date_range_realtime %DateTimeRange{
+    first: DateTime.new!(~D[2021-05-05], ~T[12:25:00], "UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "UTC")
   }
-  @date_range_30m %NaiveDateTimeRange{
-    first: ~N[2021-05-05 12:00:00],
-    last: ~N[2021-05-05 12:30:05]
+  @date_range_30m %DateTimeRange{
+    first: DateTime.new!(~D[2021-05-05], ~T[12:00:00], "UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "UTC")
   }
-  @date_range_day %NaiveDateTimeRange{
-    first: ~N[2021-05-05 00:00:00],
-    last: ~N[2021-05-06 00:00:00]
+  @date_range_day %DateTimeRange{
+    first: DateTime.new!(~D[2021-05-05], ~T[00:00:00], "UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "UTC")
   }
-  @date_range_7d %NaiveDateTimeRange{
-    first: ~N[2021-04-29 00:00:00],
-    last: ~N[2021-05-06 00:00:00]
+  @date_range_7d %DateTimeRange{
+    first: DateTime.new!(~D[2021-04-29], ~T[00:00:00], "UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "UTC")
   }
-  @date_range_30d %NaiveDateTimeRange{
-    first: ~N[2021-04-05 00:00:00],
-    last: ~N[2021-05-06 00:00:00]
+  @date_range_30d %DateTimeRange{
+    first: DateTime.new!(~D[2021-04-05], ~T[00:00:00], "UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "UTC")
   }
-  @date_range_month %NaiveDateTimeRange{
-    first: ~N[2021-05-01 00:00:00],
-    last: ~N[2021-06-01 00:00:00]
+  @date_range_month %DateTimeRange{
+    first: DateTime.new!(~D[2021-05-01], ~T[00:00:00], "UTC"),
+    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "UTC")
   }
-  @date_range_6mo %NaiveDateTimeRange{
-    first: ~N[2020-12-01 00:00:00],
-    last: ~N[2021-06-01 00:00:00]
+  @date_range_6mo %DateTimeRange{
+    first: DateTime.new!(~D[2020-12-01], ~T[00:00:00], "UTC"),
+    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "UTC")
   }
-  @date_range_year %NaiveDateTimeRange{
-    first: ~N[2021-01-01 00:00:00],
-    last: ~N[2022-01-01 00:00:00]
+  @date_range_year %DateTimeRange{
+    first: DateTime.new!(~D[2021-01-01], ~T[00:00:00], "UTC"),
+    last: DateTime.new!(~D[2021-12-31], ~T[23:59:59], "UTC")
   }
-  @date_range_12mo %NaiveDateTimeRange{
-    first: ~N[2020-06-01 00:00:00],
-    last: ~N[2021-06-01 00:00:00]
+  @date_range_12mo %DateTimeRange{
+    first: DateTime.new!(~D[2020-06-01], ~T[00:00:00], "UTC"),
+    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "UTC")
   }
 
   def check_success(params, site, expected_result, schema_type \\ :public) do
-    assert {:ok, ^expected_result} = parse(site, schema_type, params, @now)
+    test_opts = [now: @now, date: @today]
+    assert {:ok, result} = parse(site, schema_type, params, test_opts)
+    assert result == expected_result
   end
 
   def check_error(params, site, expected_error_message, schema_type \\ :public) do
-    {:error, message} = parse(site, schema_type, params, @now)
+    test_opts = [now: @now, date: @today]
+    {:error, message} = parse(site, schema_type, params, test_opts)
     assert message == expected_error_message
   end
 
@@ -75,16 +79,11 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   # Checks parsing the date range relative to the `date` parameter (which is only
   # available in the internal API schema) instead of using `@now`.
   def check_date_range_with_date(date_range, site, expected_date_range) do
-    date =
-      @now
-      |> NaiveDateTime.to_date()
-      |> Date.to_string()
-
     params = %{
       "site_id" => site.domain,
       "metrics" => ["visitors", "events"],
       "date_range" => date_range,
-      "date" => date
+      "date" => Date.to_string(@today)
     }
 
     expected_result = %{
@@ -496,7 +495,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         ]
       }
 
-      assert {:ok, res} = parse(site, :public, params, @now)
+      assert {:ok, res} = parse(site, :public, params, now: @now, date: @today)
       expected_timezone = site.timezone
 
       assert %{
@@ -574,7 +573,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "parsing `all` with previous data", %{site: site} do
       site = Map.put(site, :stats_start_date, ~D[2020-01-01])
-      check_date_range("all", site, NaiveDateTimeRange.new!(~D[2020-01-01], ~D[2021-05-05]))
+      check_date_range("all", site, DateTimeRange.new!(~D[2020-01-01], ~D[2021-05-05], "UTC"))
     end
 
     test "parsing `all` with no previous data", %{site: site} do
@@ -613,6 +612,54 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "date" => "2021-05-05"
       }
       |> check_error(site, "#/date: Schema does not allow additional properties.")
+    end
+
+    test "parses date_range.first into a datetime right after the gap in site.timezone", %{
+      site: site
+    } do
+      site = %{site | timezone: "America/Santiago"}
+
+      expected_date_range =
+        DateTimeRange.new!(
+          DateTime.new!(~D[2022-09-11], ~T[01:00:00], site.timezone),
+          DateTime.new!(~D[2022-09-11], ~T[23:59:59], site.timezone)
+        )
+
+      check_date_range(["2022-09-11", "2022-09-11"], site, expected_date_range)
+    end
+
+    test "parses date_range.first into the latest of ambiguous datetimes in site.timezone", %{
+      site: site
+    } do
+      site = %{site | timezone: "America/Havana"}
+
+      {:ambiguous, _, expected_first_datetime} =
+        DateTime.new(~D[2023-11-05], ~T[00:00:00], site.timezone)
+
+      expected_date_range =
+        DateTimeRange.new!(
+          expected_first_datetime,
+          DateTime.new!(~D[2023-11-05], ~T[23:59:59], site.timezone)
+        )
+
+      check_date_range(["2023-11-05", "2023-11-05"], site, expected_date_range)
+    end
+
+    test "parses date_range.last into the earliest of ambiguous datetimes in site.timezone", %{
+      site: site
+    } do
+      site = %{site | timezone: "America/Asuncion"}
+
+      {:ambiguous, first_dt, _second_dt} =
+        DateTime.new(~D[2024-03-23], ~T[23:59:59], site.timezone)
+
+      expected_date_range =
+        DateTimeRange.new!(
+          DateTime.new!(~D[2024-03-23], ~T[00:00:00], site.timezone),
+          first_dt
+        )
+
+      check_date_range(["2024-03-23", "2024-03-23"], site, expected_date_range)
     end
   end
 

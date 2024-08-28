@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Interval do
   `week`, and `month`.
   """
 
-  alias Plausible.Stats.NaiveDateTimeRange
+  alias Plausible.Stats.DateTimeRange
 
   @type t() :: String.t()
   @type(opt() :: {:site, Plausible.Site.t()} | {:from, Date.t()}, {:to, Date.t()})
@@ -36,12 +36,12 @@ defmodule Plausible.Stats.Interval do
     end
   end
 
-  @spec default_for_date_range(NaiveDateTimeRange.t()) :: t()
+  @spec default_for_date_range(DateTimeRange.t()) :: t()
   @doc """
-  Returns the suggested interval for the given `NaiveDateTimeRange` struct.
+  Returns the suggested interval for the given `DateTimeRange` struct.
   """
-  def default_for_date_range(%NaiveDateTimeRange{} = date_range) do
-    %Date.Range{first: first, last: last} = NaiveDateTimeRange.to_date_range(date_range)
+  def default_for_date_range(%DateTimeRange{} = date_range) do
+    %Date.Range{first: first, last: last} = DateTimeRange.to_date_range(date_range)
 
     cond do
       Timex.diff(last, first, :months) > 0 ->

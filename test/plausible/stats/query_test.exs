@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.QueryTest do
   use Plausible.DataCase, async: true
-  alias Plausible.Stats.{Query, NaiveDateTimeRange}
+  alias Plausible.Stats.{Query, DateTimeRange}
 
   setup do
     user = insert(:user)
@@ -19,8 +19,8 @@ defmodule Plausible.Stats.QueryTest do
   test "keeps current timestamp so that utc_boundaries don't depend on time passing by", %{
     site: site
   } do
-    q1 = %{now: %NaiveDateTime{}} = Query.from(site, %{"period" => "realtime"})
-    q2 = %{now: %NaiveDateTime{}} = Query.from(site, %{"period" => "30m"})
+    q1 = %{now: %DateTime{}} = Query.from(site, %{"period" => "realtime"})
+    q2 = %{now: %DateTime{}} = Query.from(site, %{"period" => "30m"})
     boundaries1 = Plausible.Stats.Time.utc_boundaries(q1, site)
     boundaries2 = Plausible.Stats.Time.utc_boundaries(q2, site)
     :timer.sleep(1500)
@@ -31,16 +31,16 @@ defmodule Plausible.Stats.QueryTest do
   test "parses day format", %{site: site} do
     q = Query.from(site, %{"period" => "day", "date" => "2019-01-01"})
 
-    assert q.date_range.first == ~N[2019-01-01 00:00:00]
-    assert q.date_range.last == ~N[2019-01-02 00:00:00]
+    assert q.date_range.first == DateTime.new!(~D[2019-01-01], ~T[00:00:00], site.timezone)
+    assert q.date_range.last == DateTime.new!(~D[2019-01-01], ~T[23:59:59], site.timezone)
     assert q.interval == "hour"
   end
 
   test "day format defaults to today", %{site: site} do
     q = Query.from(site, %{"period" => "day"})
 
-    expected_first_datetime = Date.utc_today() |> NaiveDateTime.new!(~T[00:00:00])
-    expected_last_datetime = expected_first_datetime |> NaiveDateTime.shift(day: 1)
+    expected_first_datetime = Date.utc_today() |> DateTime.new!(~T[00:00:00], site.timezone)
+    expected_last_datetime = Date.utc_today() |> DateTime.new!(~T[23:59:59], site.timezone)
 
     assert q.date_range.first == expected_first_datetime
     assert q.date_range.last == expected_last_datetime
@@ -50,8 +50,10 @@ defmodule Plausible.Stats.QueryTest do
   test "parses realtime format", %{site: site} do
     q = Query.from(site, %{"period" => "realtime"})
 
-    expected_first_datetime = q.now |> NaiveDateTime.shift(minute: -5)
-    expected_last_datetime = q.now |> NaiveDateTime.shift(second: 5)
+    utc_now = DateTime.shift_zone!(q.now, "Etc/UTC")
+
+    expected_first_datetime = utc_now |> DateTime.shift(minute: -5)
+    expected_last_datetime = utc_now |> DateTime.shift(second: 5)
 
     assert q.date_range.first == expected_first_datetime
     assert q.date_range.last == expected_last_datetime
@@ -61,8 +63,8 @@ defmodule Plausible.Stats.QueryTest do
   test "parses month format", %{site: site} do
     q = Query.from(site, %{"period" => "month", "date" => "2019-01-01"})
 
-    assert q.date_range.first == ~N[2019-01-01 00:00:00]
-    assert q.date_range.last == ~N[2019-02-01 00:00:00]
+    assert q.date_range.first == DateTime.new!(~D[2019-01-01], ~T[00:00:00], site.timezone)
+    assert q.date_range.last == DateTime.new!(~D[2019-01-31], ~T[23:59:59], site.timezone)
     assert q.interval == "day"
   end
 
@@ -71,17 +73,16 @@ defmodule Plausible.Stats.QueryTest do
 
     expected_first_datetime =
       q.now
-      |> NaiveDateTime.to_date()
+      |> DateTime.to_date()
       |> Date.shift(month: -5)
       |> Date.beginning_of_month()
-      |> NaiveDateTime.new!(~T[00:00:00])
+      |> DateTime.new!(~T[00:00:00], site.timezone)
 
     expected_last_datetime =
       q.now
-      |> NaiveDateTime.to_date()
+      |> DateTime.to_date()
       |> Date.end_of_month()
-      |> Date.shift(day: 1)
-      |> NaiveDateTime.new!(~T[00:00:00])
+      |> DateTime.new!(~T[23:59:59], site.timezone)
 
     assert q.date_range.first == expected_first_datetime
     assert q.date_range.last == expected_last_datetime
@@ -93,17 +94,16 @@ defmodule Plausible.Stats.QueryTest do
 
     expected_first_datetime =
       q.now
-      |> NaiveDateTime.to_date()
+      |> DateTime.to_date()
       |> Date.shift(month: -11)
       |> Date.beginning_of_month()
-      |> NaiveDateTime.new!(~T[00:00:00])
+      |> DateTime.new!(~T[00:00:00], site.timezone)
 
     expected_last_datetime =
       q.now
-      |> NaiveDateTime.to_date()
+      |> DateTime.to_date()
       |> Date.end_of_month()
-      |> Date.shift(day: 1)
-      |> NaiveDateTime.new!(~T[00:00:00])
+      |> DateTime.new!(~T[23:59:59], site.timezone)
 
     assert q.date_range.first == expected_first_datetime
     assert q.date_range.last == expected_last_datetime
@@ -113,14 +113,15 @@ defmodule Plausible.Stats.QueryTest do
   test "parses year to date format", %{site: site} do
     q = Query.from(site, %{"period" => "year"})
 
-    %Date{year: current_year} = NaiveDateTime.to_date(q.now)
+    %Date{year: current_year} = DateTime.to_date(q.now)
 
     expected_first_datetime =
       Date.new!(current_year, 1, 1)
-      |> NaiveDateTime.new!(~T[00:00:00])
+      |> DateTime.new!(~T[00:00:00], site.timezone)
 
     expected_last_datetime =
-      NaiveDateTime.shift(expected_first_datetime, year: 1)
+      Date.new!(current_year, 12, 31)
+      |> DateTime.new!(~T[23:59:59], site.timezone)
 
     assert q.date_range.first == expected_first_datetime
     assert q.date_range.last == expected_last_datetime
@@ -132,11 +133,10 @@ defmodule Plausible.Stats.QueryTest do
 
     expected_last_datetime =
       q.now
-      |> NaiveDateTime.to_date()
-      |> Date.shift(day: 1)
-      |> NaiveDateTime.new!(~T[00:00:00])
+      |> DateTime.to_date()
+      |> DateTime.new!(~T[23:59:59], site.timezone)
 
-    assert q.date_range.first == site.inserted_at
+    assert DateTime.to_naive(q.date_range.first) == site.inserted_at
     assert q.date_range.last == expected_last_datetime
     assert q.period == "all"
     assert q.interval == "month"
@@ -147,12 +147,11 @@ defmodule Plausible.Stats.QueryTest do
       site = Map.put(site, :timezone, timezone)
       query = Query.from(site, %{"period" => "all"})
 
-      expected_first_datetime = ~N[2020-01-01 00:00:00]
+      expected_first_datetime = DateTime.new!(~D[2020-01-01], ~T[00:00:00], site.timezone)
 
       expected_last_datetime =
-        Timex.today(timezone)
-        |> Date.shift(day: 1)
-        |> NaiveDateTime.new!(~T[00:00:00])
+        Timex.today(site.timezone)
+        |> DateTime.new!(~T[23:59:59], site.timezone)
 
       assert query.date_range.first == expected_first_datetime
       assert query.date_range.last == expected_last_datetime
@@ -165,7 +164,7 @@ defmodule Plausible.Stats.QueryTest do
 
     today = Date.utc_today()
 
-    assert q.date_range == NaiveDateTimeRange.new!(today, today)
+    assert q.date_range == DateTimeRange.new!(today, today, site.timezone)
     assert q.period == "all"
     assert q.interval == "hour"
   end
@@ -176,7 +175,7 @@ defmodule Plausible.Stats.QueryTest do
 
     today = Date.utc_today()
 
-    assert q.date_range == NaiveDateTimeRange.new!(today, today)
+    assert q.date_range == DateTimeRange.new!(today, today, site.timezone)
     assert q.period == "all"
     assert q.interval == "hour"
   end
@@ -189,7 +188,7 @@ defmodule Plausible.Stats.QueryTest do
 
     q = Query.from(site, %{"period" => "all"})
 
-    assert q.date_range == NaiveDateTimeRange.new!(yesterday, today)
+    assert q.date_range == DateTimeRange.new!(yesterday, today, site.timezone)
     assert q.period == "all"
     assert q.interval == "day"
   end
@@ -202,7 +201,7 @@ defmodule Plausible.Stats.QueryTest do
 
     q = Query.from(site, %{"period" => "all"})
 
-    assert q.date_range == NaiveDateTimeRange.new!(last_month, today)
+    assert q.date_range == DateTimeRange.new!(last_month, today, site.timezone)
     assert q.period == "all"
     assert q.interval == "month"
   end
@@ -215,7 +214,7 @@ defmodule Plausible.Stats.QueryTest do
 
     q = Query.from(site, %{"period" => "all", "interval" => "week"})
 
-    assert q.date_range == NaiveDateTimeRange.new!(last_month, today)
+    assert q.date_range == DateTimeRange.new!(last_month, today, site.timezone)
     assert q.period == "all"
     assert q.interval == "week"
   end
@@ -227,8 +226,8 @@ defmodule Plausible.Stats.QueryTest do
   test "parses custom format", %{site: site} do
     q = Query.from(site, %{"period" => "custom", "from" => "2019-01-01", "to" => "2019-01-15"})
 
-    assert q.date_range.first == ~N[2019-01-01 00:00:00]
-    assert q.date_range.last == ~N[2019-01-16 00:00:00]
+    assert q.date_range.first == DateTime.new!(~D[2019-01-01], ~T[00:00:00], site.timezone)
+    assert q.date_range.last == DateTime.new!(~D[2019-01-15], ~T[23:59:59], site.timezone)
     assert q.interval == "day"
   end
 

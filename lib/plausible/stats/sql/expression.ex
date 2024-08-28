@@ -50,7 +50,7 @@ defmodule Plausible.Stats.SQL.Expression do
       key =>
         weekstart_not_before(
           to_timezone(t.timestamp, ^query.timezone),
-          ^query.date_range.first
+          ^DateTime.to_naive(query.date_range.first)
         )
     })
   end

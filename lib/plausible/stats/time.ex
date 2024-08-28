@@ -3,18 +3,18 @@ defmodule Plausible.Stats.Time do
   Collection of functions to work with time in queries.
   """
 
-  alias Plausible.Stats.{Query, NaiveDateTimeRange}
-  alias Plausible.Timezones
+  alias Plausible.Stats.{Query, DateTimeRange}
 
   def utc_boundaries(%Query{date_range: date_range}, site) do
-    %NaiveDateTimeRange{first: first, last: last} = date_range
+    %DateTimeRange{first: first, last: last} = date_range
 
     first =
       first
-      |> Timezones.to_utc_datetime(site.timezone)
+      |> DateTime.shift_zone!("Etc/UTC")
+      |> DateTime.to_naive()
       |> beginning_of_time(site.native_stats_start_at)
 
-    last = Timezones.to_utc_datetime(last, site.timezone)
+    last = DateTime.shift_zone!(last, "Etc/UTC") |> DateTime.to_naive()
 
     {first, last}
   end
@@ -47,7 +47,7 @@ defmodule Plausible.Stats.Time do
   end
 
   defp time_labels_for_dimension("time:month", query) do
-    date_range = NaiveDateTimeRange.to_date_range(query.date_range)
+    date_range = DateTimeRange.to_date_range(query.date_range)
 
     n_buckets =
       Timex.diff(
@@ -65,7 +65,7 @@ defmodule Plausible.Stats.Time do
   end
 
   defp time_labels_for_dimension("time:week", query) do
-    date_range = NaiveDateTimeRange.to_date_range(query.date_range)
+    date_range = DateTimeRange.to_date_range(query.date_range)
 
     n_buckets =
       Timex.diff(
@@ -84,25 +84,29 @@ defmodule Plausible.Stats.Time do
 
   defp time_labels_for_dimension("time:day", query) do
     query.date_range
-    |> NaiveDateTimeRange.to_date_range()
+    |> DateTimeRange.to_date_range()
     |> Enum.into([])
     |> Enum.map(&format_datetime/1)
   end
 
   defp time_labels_for_dimension("time:hour", query) do
-    n_buckets = NaiveDateTime.diff(query.date_range.last, query.date_range.first, :hour) - 1
+    n_buckets = DateTime.diff(query.date_range.last, query.date_range.first, :hour)
 
     Enum.map(0..n_buckets, fn step ->
       query.date_range.first
+      |> DateTime.to_naive()
       |> NaiveDateTime.shift(hour: step)
       |> format_datetime()
     end)
   end
 
   defp time_labels_for_dimension("time:minute", query) do
-    n_buckets = NaiveDateTime.diff(query.date_range.last, query.date_range.first, :minute) - 1
+    n_buckets = DateTime.diff(query.date_range.last, query.date_range.first, :minute) - 1
 
-    first_datetime = %NaiveDateTime{query.date_range.first | second: 0}
+    first_datetime =
+      query.date_range.first
+      |> DateTime.to_naive()
+      |> Map.put(:second, 0)
 
     Enum.map(0..n_buckets, fn step ->
       first_datetime
@@ -114,7 +118,7 @@ defmodule Plausible.Stats.Time do
   def date_or_weekstart(date, query) do
     weekstart = Date.beginning_of_week(date)
 
-    date_range = NaiveDateTimeRange.to_date_range(query.date_range)
+    date_range = DateTimeRange.to_date_range(query.date_range)
 
     if Enum.member?(date_range, weekstart) do
       weekstart

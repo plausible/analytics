@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use PlausibleWeb.Plugs.ErrorHandler
 
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, Comparisons, Time, NaiveDateTimeRange}
+  alias Plausible.Stats.{Query, Comparisons, Time, DateTimeRange}
   alias Plausible.Stats.Filters.LegacyDashboardFilterParser
   alias PlausibleWeb.Api.Helpers, as: H
 
@@ -167,12 +167,12 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp build_full_intervals(%{interval: "week", date_range: date_range}, labels) do
-    date_range = NaiveDateTimeRange.to_date_range(date_range)
+    date_range = DateTimeRange.to_date_range(date_range)
     build_intervals(labels, date_range, &Timex.beginning_of_week/1, &Timex.end_of_week/1)
   end
 
   defp build_full_intervals(%{interval: "month", date_range: date_range}, labels) do
-    date_range = NaiveDateTimeRange.to_date_range(date_range)
+    date_range = DateTimeRange.to_date_range(date_range)
     build_intervals(labels, date_range, &Timex.beginning_of_month/1, &Timex.end_of_month/1)
   end
 
@@ -215,12 +215,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
     {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_query)
 
-    %{first: first_date, last: last_date} = NaiveDateTimeRange.to_date_range(query.date_range)
+    %{first: first_date, last: last_date} = DateTimeRange.to_date_range(query.date_range)
 
     {comparing_from, comparing_to} =
       if comparison_query do
         %{first: first_date, last: last_date} =
-          NaiveDateTimeRange.to_date_range(comparison_query.date_range)
+          DateTimeRange.to_date_range(comparison_query.date_range)
 
         {Date.to_string(first_date), Date.to_string(last_date)}
       else
