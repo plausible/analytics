@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Imported.Base do
   alias Plausible.Imported
   alias Plausible.Stats.Query
 
-  import Plausible.Stats.Filters.Utils, only: [dimensions_used_in_filters: 1]
+  import Plausible.Stats.Filters, only: [dimensions_used_in_filters: 1]
 
   @property_to_table_mappings %{
     "visit:source" => "imported_sources",

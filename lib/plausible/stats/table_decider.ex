@@ -5,7 +5,7 @@ defmodule Plausible.Stats.TableDecider do
   """
 
   import Enum, only: [empty?: 1]
-  import Plausible.Stats.Filters.Utils, only: [dimensions_used_in_filters: 1]
+  import Plausible.Stats.Filters, only: [dimensions_used_in_filters: 1]
 
   alias Plausible.Stats.Query
 

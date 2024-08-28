@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   alias Plausible.Stats.Metrics
   alias Plausible.Stats.JSONSchema
 
-  import Plausible.Stats.Filters.Utils, only: [dimensions_used_in_filters: 1]
+  import Plausible.Stats.Filters, only: [dimensions_used_in_filters: 1]
 
   @default_include %{
     imports: false,

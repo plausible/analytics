@@ -98,6 +98,18 @@ defmodule Plausible.Stats.Filters do
     |> Enum.flat_map(&traverse_tree(&1, root || &1, depth + 1))
   end
 
+  def dimensions_used_in_filters(filters) do
+    filters
+    |> Plausible.Stats.Filters.traverse()
+    |> Enum.map(fn {[_operator, dimension | _rest], _root, _depth} -> dimension end)
+  end
+
+  def filtering_on_dimension?(query, dimension) do
+    query.filters
+    |> Plausible.Stats.Filters.traverse()
+    |> Enum.any?(fn {[_operator, filter_dimension | _rest], _root, _depth} -> filter_dimension == dimension end)
+  end
+
   defp traverse_tree(filter, root, depth) do
     case filter do
       [:not, child_filter] ->
