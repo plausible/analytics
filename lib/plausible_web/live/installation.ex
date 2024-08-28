@@ -258,7 +258,7 @@ defmodule PlausibleWeb.Live.Installation do
           <%= @label %>
         </label>
         <div class="ml-2">
-          <.tooltip_non_sticky icon?={false} position="z-50 w-64 margin-x-auto">
+          <.tooltip_non_sticky icon?={false} position="z-50 w-64 hidden sm:block">
             <:tooltip_content>
               <%= @tooltip %>
             </:tooltip_content>
