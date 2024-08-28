@@ -23,7 +23,7 @@ export const TestContextProviders = ({
 }: TestContextProvidersProps) => {
   const defaultSite: PlausibleSite = {
     domain: 'plausible.io/unit',
-    offset: '0',
+    offset: 0,
     hasGoals: false,
     hasProps: false,
     funnelsAvailable: false,
@@ -35,7 +35,7 @@ export const TestContextProviders = ({
     funnels: [],
     statsBegin: '',
     nativeStatsBegin: '',
-    embedded: '',
+    embedded: false,
     background: '',
     isDbip: false,
     flags: {},
