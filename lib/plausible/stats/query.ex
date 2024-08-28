@@ -103,18 +103,6 @@ defmodule Plausible.Stats.Query do
     end)
   end
 
-  def get_filter_by_prefix(query, prefix) do
-    Enum.find(query.filters, fn [_op, prop | _rest] ->
-      String.starts_with?(prop, prefix)
-    end)
-  end
-
-  def get_filter(query, name) do
-    Enum.find(query.filters, fn [_op, prop | _rest] ->
-      prop == name
-    end)
-  end
-
   def put_imported_opts(query, site, params) do
     requested? = params["with_imported"] == "true" || query.include.imports
 

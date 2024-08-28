@@ -121,7 +121,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
           :ok | {:error, {402, String.t()}}
   defp ensure_custom_props_access(site, query) do
     allowed_props = Plausible.Props.allowed_for(site, bypass_setup?: true)
-    prop_filter = Query.get_filter_by_prefix(query, "event:props:")
+    prop_filter = Filters.get_toplevel_filter(query, "event:props:")
 
     query_allowed? =
       case {prop_filter, query.dimensions, allowed_props} do

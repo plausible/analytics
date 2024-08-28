@@ -107,6 +107,18 @@ defmodule Plausible.Stats.Filters do
     end)
   end
 
+  @doc """
+  Gets the first top level filter with matching dimension (or nil).
+
+  Only use in cases where it's known that filters are only set on the top level as it
+  does not handle AND/OR/NOT!
+  """
+  def get_toplevel_filter(query, prefix) do
+    Enum.find(query.filters, fn [_op, dimension | _rest] ->
+      String.starts_with?(dimension, prefix)
+    end)
+  end
+
   def traverse(filters, root \\ nil, depth \\ -1) do
     filters
     |> Enum.flat_map(&traverse_tree(&1, root || &1, depth + 1))
