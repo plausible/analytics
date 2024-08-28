@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Endpoint do
     end
 
   static_compression =
-    on_ce do
+    if Plausible.ce?() do
       [brotli: true, gzip: true]
     else
       [gzip: false]
