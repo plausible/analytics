@@ -49,7 +49,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     if :conversion_rate in query.metrics do
       total_query =
         query
-        |> Query.remove_filters(["event:goal", "event:props"])
+        |> Query.remove_top_level_filters(["event:goal", "event:props"])
         |> Query.set(
           dimensions: [],
           include_imported: query.include_imported
@@ -89,7 +89,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     if :group_conversion_rate in query.metrics do
       group_totals_query =
         query
-        |> Query.remove_filters(["event:goal", "event:props"])
+        |> Query.remove_top_level_filters(["event:goal", "event:props"])
         |> Query.set(
           metrics: [:visitors],
           order_by: [],

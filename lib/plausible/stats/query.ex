@@ -76,7 +76,13 @@ defmodule Plausible.Stats.Query do
     |> refresh_imported_opts()
   end
 
-  def remove_filters(query, prefixes) do
+  @doc """
+  Removes top level filters matching any of passed prefix from the query.
+
+  Note that this doesn't handle cases with AND/OR/NOT and as such is discouraged
+  from use.
+  """
+  def remove_top_level_filters(query, prefixes) do
     new_filters =
       Enum.reject(query.filters, fn [_, filter_key | _rest] ->
         Enum.any?(prefixes, &String.starts_with?(filter_key, &1))

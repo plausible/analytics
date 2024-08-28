@@ -49,7 +49,7 @@ defmodule Plausible.Stats.Aggregate do
 
   defp aggregate_time_on_page(site, query) do
     windowed_pages_q =
-      from e in base_event_query(site, Query.remove_filters(query, ["event:page"])),
+      from e in base_event_query(site, Query.remove_top_level_filters(query, ["event:page"])),
         select: %{
           next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
           next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
