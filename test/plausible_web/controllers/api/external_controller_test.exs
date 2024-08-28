@@ -995,6 +995,28 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.country_code == "US"
     end
 
+    # details: https://developers.cloudflare.com/fundamentals/reference/http-request-headers/#cf-connecting-ip-in-worker-subrequests
+    test "does not use cloudflare's special header for client IP address if it's from another worker",
+         %{
+           conn: conn,
+           site: site
+         } do
+      params = %{
+        name: "pageview",
+        domain: site.domain,
+        url: "http://example.com/"
+      }
+
+      conn
+      |> put_req_header("x-forwarded-for", "[2001:218:1:1:1:1:1:1]:123")
+      |> put_req_header("cf-connecting-ip", "2a06:98c0:3600::103")
+      |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert session.country_code == "JP"
+    end
+
     test "uses BunnyCDN's custom header for client IP address if present", %{
       conn: conn,
       site: site
