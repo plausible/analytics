@@ -80,13 +80,13 @@ defmodule Plausible.Session.CacheStoreTest do
     # with 2^32-(small n) for bounce_rate value.
 
     assert removed_session11 == %{session1 | sign: -1}
-    assert removed_session12 == %{session1 | sign: -1}
     assert updated_session12.sign == 1
     assert updated_session12.events == 2
     assert updated_session12.pageviews == 2
+    assert removed_session12 == %{updated_session12 | sign: -1}
     assert updated_session13.sign == 1
-    assert updated_session13.events == 2
-    assert updated_session13.pageviews == 2
+    assert updated_session13.events == 3
+    assert updated_session13.pageviews == 3
   end
 
   test "creates a session from an event", %{buffer: buffer} do
