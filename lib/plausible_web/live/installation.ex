@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Live.Installation do
 
   def mount(
         %{"website" => domain} = params,
-        %{"current_user_id" => user_id},
+        _session,
         socket
       ) do
     site = Plausible.Sites.get_for_user!(user_id, domain)
