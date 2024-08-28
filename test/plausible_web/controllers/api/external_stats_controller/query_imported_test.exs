@@ -742,5 +742,73 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
                %{"dimensions" => ["London", "Canada"], "metrics" => [1]}
              ]
     end
+
+    test "imported country and city names with complex conditions", %{
+      site: site,
+      conn: conn
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview,
+          country_code: "GB",
+          # London
+          city_geoname_id: 2_643_743
+        ),
+        build(:pageview,
+          country_code: "CA",
+          # Different London
+          city_geoname_id: 6_058_560
+        ),
+        build(:imported_locations,
+          country: "EE",
+          # Tallinn
+          city: 588_409,
+          visitors: 3
+        ),
+        build(:imported_locations,
+          country: "EE",
+          # Kärdla
+          city: 591_632,
+          visitors: 2
+        ),
+        build(:imported_locations,
+          country: "GB",
+          # London
+          city: 2_643_743,
+          visitors: 33
+        )
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "dimensions" => ["visit:city_name", "visit:country_name"],
+          "filters" => [
+            [
+              "or",
+              [
+                [
+                  "and",
+                  [
+                    ["is", "visit:city_name", ["London"]],
+                    ["not", ["is", "visit:country_name", ["Canada"]]]
+                  ]
+                ],
+                ["is", "visit:country_name", ["Estonia"]]
+              ]
+            ]
+          ],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["London", "United Kingdom"], "metrics" => [34]},
+               %{"dimensions" => ["Tallinn", "Estonia"], "metrics" => [3]},
+               %{"dimensions" => ["Kärdla", "Estonia"], "metrics" => [2]}
+             ]
+    end
   end
 end
