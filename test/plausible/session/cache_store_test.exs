@@ -58,9 +58,11 @@ defmodule Plausible.Session.CacheStoreTest do
     assert_receive({:slow_buffer, :insert, [[removed_session11, updated_session12]]})
     assert_receive({:slow_buffer, :insert, [[removed_session12, updated_session13]]})
 
-    # event2 and event3 both get executed in parallel and treat event1 as
-    # event to be updated. This results in a following set of entries
-    # in Clickhouse sessions table for _the same_ session:
+    # Without isolation enforced in `CacheStore.on_event/4`,
+    # event2 and event3 would both get executed in parallel
+    # and treat event1 as event to be updated. This would result
+    # in a following set of entries in Clickhouse sessions
+    # table for _the same_ session:
     #
     #             session_id | is_bounce | sign
     # (event1)      123           1         1
@@ -69,15 +71,15 @@ defmodule Plausible.Session.CacheStoreTest do
     # (event3)      123           1         -1
     #               123           0         1
     #
-    # Once collapsing merge tree table does collapsing, we end up with:
+    # Once collapsing merge tree table does collapsing, we'd end up with:
     #
     # session_id | is_bounce | sign
     #   123           0         1
     #   123           1         -1
     #   123           0         1
     #
-    # This leads to sum(sign * is_bounce) < 0 which, after underflowed casting, ends up
-    # with 2^32-(small n) for bounce_rate value.
+    # This in turn led to sum(sign * is_bounce) < 0 which, after underflowed casting,
+    # ended up with 2^32-(small n) for bounce_rate value.
 
     assert removed_session11 == %{session1 | sign: -1}
     assert updated_session12.sign == 1
