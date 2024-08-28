@@ -295,14 +295,31 @@ defmodule Plausible.ConfigTest do
   end
 
   describe "storage" do
-    test "with only DATA_DIR set" do
-      env = [
-        {"MAXMIND_LICENSE_KEY", "abc"},
-        {"PERSISTENT_CACHE_DIR", nil},
-        {"DATA_DIR", "/data"}
+    setup do
+      defaults = [
+        # comes from our Dockerfile
+        {"DEFAULT_DATA_DIR", "/var/lib/plausible"},
+        # needed to exercise Plausible.Geo :cache_dir
+        {"MAXMIND_LICENSE_KEY", "abc"}
       ]
 
-      config = runtime_config(env)
+      env = fn env -> env ++ defaults end
+      {:ok, env: env}
+    end
+
+    test "defaults", %{env: env} do
+      config = runtime_config(env.([{"PERSISTENT_CACHE_DIR", nil}, {"DATA_DIR", nil}]))
+
+      # exports/imports
+      assert get_in(config, [:plausible, :data_dir]) == "/var/lib/plausible"
+      # locus (mmdb cache)
+      assert get_in(config, [:plausible, Plausible.Geo, :cache_dir]) == "/var/lib/plausible"
+      # tzdata (timezones cache)
+      assert get_in(config, [:tzdata, :data_dir]) == "/var/lib/plausible/tzdata_data"
+    end
+
+    test "with only DATA_DIR set", %{env: env} do
+      config = runtime_config(env.([{"PERSISTENT_CACHE_DIR", nil}, {"DATA_DIR", "/data"}]))
 
       # exports/imports
       assert get_in(config, [:plausible, :data_dir]) == "/data"
@@ -312,14 +329,8 @@ defmodule Plausible.ConfigTest do
       assert get_in(config, [:tzdata, :data_dir]) == "/data/tzdata_data"
     end
 
-    test "with only PERSISTENT_CACHE_DIR set" do
-      env = [
-        {"MAXMIND_LICENSE_KEY", "abc"},
-        {"PERSISTENT_CACHE_DIR", "/cache"},
-        {"DATA_DIR", nil}
-      ]
-
-      config = runtime_config(env)
+    test "with only PERSISTENT_CACHE_DIR set", %{env: env} do
+      config = runtime_config(env.([{"PERSISTENT_CACHE_DIR", "/cache"}, {"DATA_DIR", nil}]))
 
       # exports/imports
       assert get_in(config, [:plausible, :data_dir]) == "/cache"
@@ -329,14 +340,8 @@ defmodule Plausible.ConfigTest do
       assert get_in(config, [:tzdata, :data_dir]) == "/cache/tzdata_data"
     end
 
-    test "with both DATA_DIR and PERSISTENT_CACHE_DIR set" do
-      env = [
-        {"MAXMIND_LICENSE_KEY", "abc"},
-        {"PERSISTENT_CACHE_DIR", "/cache"},
-        {"DATA_DIR", "/data"}
-      ]
-
-      config = runtime_config(env)
+    test "with both DATA_DIR and PERSISTENT_CACHE_DIR set", %{env: env} do
+      config = runtime_config(env.([{"PERSISTENT_CACHE_DIR", "/cache"}, {"DATA_DIR", "/data"}]))
 
       # exports/imports
       assert get_in(config, [:plausible, :data_dir]) == "/data"
