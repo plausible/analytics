@@ -15,7 +15,9 @@ defmodule Plausible.MigrationUtils do
   end
 
   def cluster_name do
-    case Plausible.IngestRepo.query("SELECT cluster FROM system.clusters where cluster != 'default' limit 1;") do
+    case Plausible.IngestRepo.query(
+           "SELECT cluster FROM system.clusters where cluster != 'default' limit 1;"
+         ) do
       {:ok, %{rows: [[cluster]]}} -> cluster
       {:ok, _} -> raise "No cluster defined."
       {:error, _} -> raise "Cluster not found"
