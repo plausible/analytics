@@ -2,15 +2,91 @@ defmodule Plausible.Session.CacheStoreTest do
   use Plausible.DataCase
   alias Plausible.Session.CacheStore
 
-  defmodule FakeBuffer do
-    def insert(sessions) do
-      send(self(), {WriteBuffer, :insert, [sessions]})
+  setup do
+    current_pid = self()
+
+    buffer = fn sessions ->
+      send(current_pid, {:buffer, :insert, [sessions]})
       {:ok, sessions}
     end
+
+    slow_buffer = fn sessions ->
+      Process.sleep(200)
+      send(current_pid, {:slow_buffer, :insert, [sessions]})
+      {:ok, sessions}
+    end
+
+    [buffer: buffer, slow_buffer: slow_buffer]
   end
 
-  setup do
-    [buffer: FakeBuffer]
+  test "event processing is sequential within session", %{
+    buffer: buffer,
+    slow_buffer: slow_buffer
+  } do
+    event1 = build(:event, name: "pageview")
+    event2 = build(:event, name: "pageview", user_id: event1.user_id, site_id: event1.site_id)
+    event3 = build(:event, name: "pageview", user_id: event1.user_id, site_id: event1.site_id)
+
+    session_params = %{
+      referrer: "ref",
+      referrer_source: "refsource",
+      utm_medium: "medium",
+      utm_source: "source",
+      utm_campaign: "campaign",
+      utm_content: "content",
+      utm_term: "term",
+      browser: "browser",
+      browser_version: "55",
+      country_code: "EE",
+      screen_size: "Desktop",
+      operating_system: "Mac",
+      operating_system_version: "11"
+    }
+
+    CacheStore.on_event(event1, session_params, nil, buffer)
+
+    assert_receive({:buffer, :insert, [[session1]]})
+
+    [event2, event3]
+    |> Enum.map(fn e ->
+      Task.async(fn ->
+        CacheStore.on_event(e, session_params, nil, slow_buffer)
+      end)
+    end)
+    |> Task.await_many()
+
+    assert_receive({:slow_buffer, :insert, [[removed_session11, updated_session12]]})
+    assert_receive({:slow_buffer, :insert, [[removed_session12, updated_session13]]})
+
+    # event2 and event3 both get executed in parallel and treat event1 as
+    # event to be updated. This results in a following set of entries
+    # in Clickhouse sessions table for _the same_ session:
+    #
+    #             session_id | is_bounce | sign
+    # (event1)      123           1         1
+    # (event2)      123           1         -1
+    #               123           0         1
+    # (event3)      123           1         -1
+    #               123           0         1
+    #
+    # Once collapsing merge tree table does collapsing, we end up with:
+    #
+    # session_id | is_bounce | sign
+    #   123           0         1
+    #   123           1         -1
+    #   123           0         1
+    #
+    # This leads to sum(sign * is_bounce) < 0 which, after underflowed casting, ends up
+    # with 2^32-(small n) for bounce_rate value.
+
+    assert removed_session11 == %{session1 | sign: -1}
+    assert removed_session12 == %{session1 | sign: -1}
+    assert updated_session12.sign == 1
+    assert updated_session12.events == 2
+    assert updated_session12.pageviews == 2
+    assert updated_session13.sign == 1
+    assert updated_session13.events == 2
+    assert updated_session13.pageviews == 2
   end
 
   test "creates a session from an event", %{buffer: buffer} do
@@ -39,7 +115,7 @@ defmodule Plausible.Session.CacheStoreTest do
 
     CacheStore.on_event(event, session_params, nil, buffer)
 
-    assert_receive({WriteBuffer, :insert, [sessions]})
+    assert_receive({:buffer, :insert, [sessions]})
     assert [session] = sessions
     assert session.hostname == event.hostname
 
@@ -82,7 +158,7 @@ defmodule Plausible.Session.CacheStoreTest do
 
     CacheStore.on_event(event1, %{}, nil, buffer)
     CacheStore.on_event(event2, %{}, nil, buffer)
-    assert_receive({WriteBuffer, :insert, [[_negative_record, session]]})
+    assert_receive({:buffer, :insert, [[_negative_record, session]]})
     assert session.is_bounce == false
     assert session.duration == 10
     assert session.pageviews == 2
@@ -286,7 +362,7 @@ defmodule Plausible.Session.CacheStoreTest do
     CacheStore.on_event(event1, %{}, nil, buffer)
     CacheStore.on_event(event2, %{}, nil, buffer)
 
-    assert_receive({WriteBuffer, :insert, [[_negative_record, session]]})
+    assert_receive({:buffer, :insert, [[_negative_record, session]]})
     assert session.duration == 10
   end
 

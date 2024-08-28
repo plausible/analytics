@@ -2,16 +2,16 @@ defmodule Plausible.Session.CacheStore do
   require Logger
   alias Plausible.Session.WriteBuffer
 
-  def on_event(event, session_attributes, prev_user_id, buffer \\ WriteBuffer) do
+  def on_event(event, session_attributes, prev_user_id, buffer_insert \\ &WriteBuffer.insert/1) do
     found_session = find_session(event, event.user_id) || find_session(event, prev_user_id)
 
     if found_session do
       updated_session = update_session(found_session, event)
-      buffer.insert([%{found_session | sign: -1}, %{updated_session | sign: 1}])
+      buffer_insert.([%{found_session | sign: -1}, %{updated_session | sign: 1}])
       persist_session(updated_session)
     else
       new_session = new_session_from_event(event, session_attributes)
-      buffer.insert([new_session])
+      buffer_insert.([new_session])
       persist_session(new_session)
     end
   end
