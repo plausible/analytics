@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
-  alias Plausible.Stats.{Query, Compare, Comparisons, Metrics}
+  alias Plausible.Stats.{Query, Compare, Comparisons, Metrics, Filters}
 
   def realtime_visitors(conn, _params) do
     site = conn.assigns.site
@@ -165,10 +165,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp validate_metric("time_on_page" = metric, query) do
     cond do
-      Query.get_filter(query, "event:goal") ->
+      Filters.filtering_on_dimension?(query, "event:goal") ->
         {:error, "Metric `#{metric}` cannot be queried when filtering by `event:goal`"}
 
-      Query.get_filter(query, "event:name") ->
+      Filters.filtering_on_dimension?(query, "event:name") ->
         {:error, "Metric `#{metric}` cannot be queried when filtering by `event:name`"}
 
       query.dimensions == ["event:page"] ->
@@ -178,7 +178,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
         {:error,
          "Metric `#{metric}` is not supported in breakdown queries (except `event:page` breakdown)"}
 
-      Query.get_filter(query, "event:page") ->
+      Filters.filtering_on_dimension?(query, "event:page") ->
         {:ok, metric}
 
       true ->
@@ -192,7 +192,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       query.dimensions == ["event:goal"] ->
         {:ok, metric}
 
-      Query.get_filter(query, "event:goal") ->
+      Filters.filtering_on_dimension?(query, "event:goal") ->
         {:ok, metric}
 
       true ->
@@ -207,7 +207,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp validate_metric("views_per_visit" = metric, query) do
     cond do
-      Query.get_filter(query, "event:page") ->
+      Filters.filtering_on_dimension?(query, "event:page") ->
         {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`."}
 
       not Enum.empty?(query.dimensions) ->

@@ -3,11 +3,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   alias Plausible.Stats.TableDecider
   alias Plausible.Stats.Filters
-  alias Plausible.Stats.Query
   alias Plausible.Stats.Metrics
   alias Plausible.Stats.JSONSchema
-
-  import Plausible.Stats.Filters, only: [dimensions_used_in_filters: 1]
 
   @default_include %{
     imports: false,
@@ -418,7 +415,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp validate_custom_props_access(_site, query, allowed_props) do
     valid? =
       query.filters
-      |> dimensions_used_in_filters()
+      |> Filters.dimensions_used_in_filters()
       |> Enum.concat(query.dimensions)
       |> Enum.all?(fn
         "event:props:" <> prop -> prop in allowed_props
@@ -440,7 +437,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp validate_metric(metric, query) when metric in [:conversion_rate, :group_conversion_rate] do
     if Enum.member?(query.dimensions, "event:goal") or
-         not is_nil(Query.get_filter(query, "event:goal")) do
+         Filters.filtering_on_dimension?(query, "event:goal") do
       :ok
     else
       {:error, "Metric `#{metric}` can only be queried with event:goal filters or dimensions."}
@@ -449,7 +446,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp validate_metric(:views_per_visit = metric, query) do
     cond do
-      not is_nil(Query.get_filter(query, "event:page")) ->
+      Filters.filtering_on_dimension?(query, "event:page") ->
         {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`."}
 
       length(query.dimensions) > 0 ->

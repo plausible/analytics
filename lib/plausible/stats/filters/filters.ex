@@ -93,11 +93,6 @@ defmodule Plausible.Stats.Filters do
     |> String.to_existing_atom()
   end
 
-  def traverse(filters, root \\ nil, depth \\ -1) do
-    filters
-    |> Enum.flat_map(&traverse_tree(&1, root || &1, depth + 1))
-  end
-
   def dimensions_used_in_filters(filters) do
     filters
     |> Plausible.Stats.Filters.traverse()
@@ -107,7 +102,14 @@ defmodule Plausible.Stats.Filters do
   def filtering_on_dimension?(query, dimension) do
     query.filters
     |> Plausible.Stats.Filters.traverse()
-    |> Enum.any?(fn {[_operator, filter_dimension | _rest], _root, _depth} -> filter_dimension == dimension end)
+    |> Enum.any?(fn {[_operator, filter_dimension | _rest], _root, _depth} ->
+      filter_dimension == dimension
+    end)
+  end
+
+  def traverse(filters, root \\ nil, depth \\ -1) do
+    filters
+    |> Enum.flat_map(&traverse_tree(&1, root || &1, depth + 1))
   end
 
   defp traverse_tree(filter, root, depth) do
