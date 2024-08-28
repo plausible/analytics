@@ -4,7 +4,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   """
 
   use Plausible
-  alias Plausible.Stats.{Query, TableDecider, Util}
+  alias Plausible.Stats.{Filters, Query, TableDecider, Util}
 
   @doc """
     This module manipulates an existing query, updating it according to business logic.
@@ -112,7 +112,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   # filter is present for breakdowns, add entry/exit page hostname
   # filters
   defp extend_hostname_filters_to_visit(query) do
-    # Note: Only works since event:goal is allowed as a top level filter
+    # Note: Only works since event:hostname is only allowed as a top level filter
     hostname_filters =
       query.filters
       |> Enum.filter(fn [_operation, filter_key | _rest] -> filter_key == "event:hostname" end)
@@ -153,10 +153,9 @@ defmodule Plausible.Stats.QueryOptimizer do
 
     filters =
       if "event:page" in query.dimensions do
-        query.filters
-        |> Enum.map(fn
-          [op, "event:page" | rest] -> [op, "visit:entry_page" | rest]
-          filter -> filter
+        Filters.transform_filters(query.filters, fn
+          [op, "event:page" | rest] -> [[op, "visit:entry_page" | rest]]
+          _ -> nil
         end)
       else
         query.filters

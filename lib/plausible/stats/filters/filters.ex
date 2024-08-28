@@ -119,6 +119,37 @@ defmodule Plausible.Stats.Filters do
     end)
   end
 
+  @doc """
+  Updates filters via `transformer`.
+
+  Transformer will receive each node (filter, and/or/not subtree) of
+  query and must return a list of nodes to replace it with or nil
+  to ignore and look deeper.
+  """
+  def transform_filters(filters, transformer) do
+    filters
+    |> Enum.flat_map(&transform_tree(&1, transformer))
+  end
+
+  defp transform_tree(filter, transformer) do
+    case {transformer.(filter), filter} do
+      # Transformer did not return that value - transform that subtree
+      {nil, [:not, child_filter]} ->
+        transform_filters(child_filter, transformer)
+
+      {nil, [operation, filters]} when operation in [:and, :or] ->
+        transform_filters(filters, transformer)
+
+      # Reached a leaf node, return existing value
+      {nil, filter} ->
+        [filter]
+
+      # Transformer returned a value - don't transform that subtree
+      {transformed_filters, _filter} ->
+        transformed_filters
+    end
+  end
+
   def traverse(filters, root \\ nil, depth \\ -1) do
     filters
     |> Enum.flat_map(&traverse_tree(&1, root || &1, depth + 1))
