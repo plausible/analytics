@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 - `DATABASE_CACERTFILE` now forces TLS for PostgreSQL connections, so you don't need to add `?ssl=true` in `DATABASE_URL`
 - Change auth session cookies to token-based ones with server-side expiration management.
 - Improve Google error messages in CE plausible/analytics#4485
+- Compress static assets plausible/analytics#4476
 
 ### Fixed
 
