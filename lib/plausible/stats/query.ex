@@ -97,12 +97,6 @@ defmodule Plausible.Stats.Query do
     put_imported_opts(query, nil, %{})
   end
 
-  def has_event_filters?(query) do
-    Enum.any?(query.filters, fn [_op, prop | _rest] ->
-      String.starts_with?(prop, "event:")
-    end)
-  end
-
   def put_imported_opts(query, site, params) do
     requested? = params["with_imported"] == "true" || query.include.imports
 

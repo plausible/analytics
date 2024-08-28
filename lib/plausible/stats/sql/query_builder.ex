@@ -89,7 +89,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   end
 
   def join_events_if_needed(q, site, query) do
-    if Query.has_event_filters?(query) do
+    if TableDecider.sessions_join_events?(query) do
       events_q =
         from(e in "events_v2",
           where: ^SQL.WhereBuilder.build(:events, site, query),

@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use PlausibleWeb.Plugs.ErrorHandler
 
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, Comparisons, Filters}
+  alias Plausible.Stats.{Query, Comparisons, Filters, TableDecider}
   alias Plausible.Stats.Filters.LegacyDashboardFilterParser
   alias PlausibleWeb.Api.Helpers, as: H
 
@@ -929,7 +929,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp add_exit_rate(breakdown_results, site, query, limit) do
-    if Query.has_event_filters?(query) do
+    if TableDecider.sessions_join_events?(query) do
       breakdown_results
     else
       pages = Enum.map(breakdown_results, & &1[:exit_page])

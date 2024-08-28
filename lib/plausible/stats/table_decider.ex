@@ -15,6 +15,12 @@ defmodule Plausible.Stats.TableDecider do
     |> Enum.any?(&(filters_partitioner(query, &1) == :session))
   end
 
+  def sessions_join_events?(query) do
+    query.filters
+    |> dimensions_used_in_filters()
+    |> Enum.any?(&(filters_partitioner(query, &1) == :event))
+  end
+
   def partition_metrics(metrics, query) do
     %{
       event: event_only_metrics,
