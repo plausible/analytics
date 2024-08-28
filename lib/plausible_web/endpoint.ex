@@ -43,11 +43,16 @@ defmodule PlausibleWeb.Endpoint do
       static_paths ++ ["robots.txt"]
     end
 
-  plug(Plug.Static,
-    at: "/",
-    from: :plausible,
-    gzip: false,
-    only: static_paths
+  static_compression =
+    on_ce do
+      [brotli: true, gzip: true]
+    else
+      [gzip: false]
+    end
+
+  plug(
+    Plug.Static,
+    [at: "/", from: :plausible, only: static_paths] ++ static_compression
   )
 
   on_ee do

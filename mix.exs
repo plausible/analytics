@@ -146,7 +146,8 @@ defmodule Plausible.MixProject do
       {:req, "~> 0.5.0"},
       {:happy_tcp, github: "ruslandoga/happy_tcp", only: [:ce, :ce_dev, :ce_test]},
       {:ex_json_schema, "~> 0.10.2"},
-      {:odgn_json_pointer, "~> 3.0.1"}
+      {:odgn_json_pointer, "~> 3.0.1"},
+      {:phoenix_bakery, "~> 0.1.2", only: [:ce, :ce_dev, :ce_test]}
     ]
   end
 
