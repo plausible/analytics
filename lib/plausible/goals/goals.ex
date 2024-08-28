@@ -248,6 +248,12 @@ defmodule Plausible.Goals do
     :ok
   end
 
+  @spec create_404(Plausible.Site.t()) :: :ok
+  def create_404(%Plausible.Site{} = site) do
+    create(site, %{"event_name" => "404"}, upsert?: true)
+    :ok
+  end
+
   @spec delete_outbound_links(Plausible.Site.t()) :: :ok
   def delete_outbound_links(%Plausible.Site{} = site) do
     q =
@@ -265,6 +271,17 @@ defmodule Plausible.Goals do
       from g in Goal,
         where: g.site_id == ^site.id,
         where: g.event_name == "File Download"
+
+    Repo.delete_all(q)
+    :ok
+  end
+
+  @spec delete_404(Plausible.Site.t()) :: :ok
+  def delete_404(%Plausible.Site{} = site) do
+    q =
+      from g in Goal,
+        where: g.site_id == ^site.id,
+        where: g.event_name == "404"
 
     Repo.delete_all(q)
     :ok
