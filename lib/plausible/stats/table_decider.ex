@@ -57,7 +57,8 @@ defmodule Plausible.Stats.TableDecider do
 
   defp filter_keys(query) do
     query.filters
-    |> Enum.map(fn [_, filter_key | _rest] -> filter_key end)
+    |> Plausible.Stats.Filters.traverse()
+    |> Enum.map(fn {[_operator, filter_key | _rest], _root, _depth} -> filter_key end)
   end
 
   defp metric_partitioner(%Query{v2: true}, :conversion_rate), do: :either

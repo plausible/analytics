@@ -4,20 +4,27 @@ defmodule Plausible.Stats.TableDeciderTest do
 
   import Plausible.Stats.TableDecider
 
-  test "events_join_sessions? with experimental_reduced_joins disabled" do
-    assert not events_join_sessions?(make_query(false, []))
-    assert not events_join_sessions?(make_query(false, ["event:name"]))
-    assert events_join_sessions?(make_query(false, ["visit:source"]))
-    assert events_join_sessions?(make_query(false, ["visit:entry_page"]))
-    assert events_join_sessions?(make_query(false, ["visit:exit_page"]))
-  end
+  describe "events_join_sessions?" do
+    test "with experimental_reduced_joins disabled" do
+      assert not events_join_sessions?(make_query(false, []))
+      assert not events_join_sessions?(make_query(false, ["event:name"]))
+      assert events_join_sessions?(make_query(false, ["visit:source"]))
+      assert events_join_sessions?(make_query(false, ["visit:entry_page"]))
+      assert events_join_sessions?(make_query(false, ["visit:exit_page"]))
+    end
 
-  test "events_join_sessions? with experimental_reduced_joins enabled" do
-    assert not events_join_sessions?(make_query(true, []))
-    assert not events_join_sessions?(make_query(true, ["event:name"]))
-    assert not events_join_sessions?(make_query(true, ["visit:source"]))
-    assert events_join_sessions?(make_query(true, ["visit:entry_page"]))
-    assert events_join_sessions?(make_query(true, ["visit:exit_page"]))
+    test "with experimental_reduced_joins enabled" do
+      assert not events_join_sessions?(make_query(true, []))
+      assert not events_join_sessions?(make_query(true, ["event:name"]))
+      assert not events_join_sessions?(make_query(true, ["visit:source"]))
+      assert events_join_sessions?(make_query(true, ["visit:entry_page"]))
+      assert events_join_sessions?(make_query(true, ["visit:exit_page"]))
+    end
+
+    test "with nested filter" do
+      assert not events_join_sessions?(make_query([["not", ["is", "event:name", []]]]))
+      assert events_join_sessions?(make_query([["not", ["is", "visit:exit_page", []]]]))
+    end
   end
 
   describe "partition_metrics" do
@@ -163,6 +170,13 @@ defmodule Plausible.Stats.TableDeciderTest do
       "experimental_reduced_joins" => to_string(experimental_reduced_joins?),
       "filters" => Enum.map(filter_keys, fn filter_key -> ["is", filter_key, []] end),
       "dimensions" => dimensions
+    })
+  end
+
+  defp make_query(filters) do
+    Query.from(build(:site), %{
+      "dimensions" => [],
+      "filters" => filters
     })
   end
 end
