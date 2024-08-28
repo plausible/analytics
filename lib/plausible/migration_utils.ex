@@ -4,7 +4,7 @@ defmodule Plausible.MigrationUtils do
   """
 
   def on_cluster_statement(table) do
-    if(clustered_table?(table), do: "ON CLUSTER #{cluster_name()}", else: "")
+    if(clustered_table?(table), do: "ON CLUSTER '#{cluster_name()}'", else: "")
   end
 
   def clustered_table?(table) do
