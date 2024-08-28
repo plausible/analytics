@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.Imported.SQL.Builder do
+defmodule Plausible.Stats.Imported.SQL.Expression do
   @moduledoc """
   This module is responsible for generating SQL/Ecto expressions
   for dimensions, filters and metrics used in import table queries
