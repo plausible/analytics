@@ -32,10 +32,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
            include: include
          },
          :ok <- validate_order_by(query),
+         :ok <- validate_custom_props_access(site, query),
          :ok <- validate_toplevel_only_filters(query),
          :ok <- validate_special_metrics_filters(query),
          :ok <- validate_filtered_goals_exist(query),
-         :ok <- validate_custom_props_access(site, query),
          :ok <- validate_metrics(query),
          :ok <- validate_include(query) do
       {:ok, query}
