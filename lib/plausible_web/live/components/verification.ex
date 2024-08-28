@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
 
         <:footer :if={@finished? and not @success?}>
           <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
-            <%= if ee?() and @finished? and not @success? and @attempts >= 3 do %>
+            <%= if ee?() and @attempts >= 3 do %>
               <li>
                 <b>Need further help with your installation?</b>
                 <.styled_link href="https://plausible.io/contact">
