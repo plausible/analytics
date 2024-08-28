@@ -14,7 +14,9 @@ defmodule PlausibleWeb.RemoteIP do
       byte_size(x_plausible_ip) > 0 ->
         clean_ip(x_plausible_ip)
 
-      byte_size(cf_connecting_ip) > 0 ->
+      # https://developers.cloudflare.com/fundamentals/reference/http-request-headers/#cf-connecting-ip-in-worker-subrequests
+      # we don't want to use the Cloudflare Worker IP
+      byte_size(cf_connecting_ip) > 0 and cf_connecting_ip != "2a06:98c0:3600::103" ->
         clean_ip(cf_connecting_ip)
 
       byte_size(b_forwarded_for) > 0 ->
