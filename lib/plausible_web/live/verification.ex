@@ -14,7 +14,7 @@ defmodule PlausibleWeb.Live.Verification do
 
   def mount(
         %{"website" => domain} = params,
-        session,
+        _session,
         socket
       ) do
     site =
@@ -25,17 +25,19 @@ defmodule PlausibleWeb.Live.Verification do
         :viewer
       ])
 
+    private = socket.private.connect_info.private
+
     socket =
       assign(socket,
         site: site,
         domain: domain,
         has_pageviews?: has_pageviews?(site),
         component: @component,
-        installation_type: params["installation_type"] || session["installation_type"],
-        report_to: session["report_to"] || self(),
-        delay: session["slowdown"] || 500,
-        slowdown: session["slowdown"] || 500,
-        flow: params["flow"] || session["flow"] || "",
+        installation_type: params["installation_type"],
+        report_to: self(),
+        delay: private[:delay] || 500,
+        slowdown: private[:slowdown] || 500,
+        flow: params["flow"] || "",
         checks_pid: nil,
         attempts: 0
       )

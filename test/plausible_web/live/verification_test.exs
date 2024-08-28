@@ -137,20 +137,26 @@ defmodule PlausibleWeb.Live.VerificationTest do
   end
 
   defp kick_off_live_verification(conn, site) do
-    {:ok, lv, _} =
-      live_isolated(conn, PlausibleWeb.Live.Verification,
-        session: %{
-          "domain" => site.domain,
-          "delay" => 0,
-          "slowdown" => 0
-        }
-      )
+    {:ok, lv, _html} = conn |> no_slowdown() |> no_delay() |> live("/#{site.domain}/verification")
 
+    # {:ok, lv, _} =
+    #   live_isolated(conn, PlausibleWeb.Live.Verification,
+    #     session: %{
+    #       "domain" => site.domain,
+    #       "delay" => 0,
+    #       "slowdown" => 0
+    #     }
+    #   )
+    #
     {:ok, lv}
   end
 
   defp no_slowdown(conn) do
-    Plug.Conn.put_private(conn, :verification_slowdown, 0)
+    Plug.Conn.put_private(conn, :slowdown, 0)
+  end
+
+  defp no_delay(conn) do
+    Plug.Conn.put_private(conn, :delay, 0)
   end
 
   defp stub_fetch_body(f) when is_function(f, 1) do
