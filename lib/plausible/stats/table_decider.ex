@@ -10,7 +10,7 @@ defmodule Plausible.Stats.TableDecider do
 
   def events_join_sessions?(query) do
     query
-    |> filter_keys()
+    |> dimensions_used_in_filters()
     |> Enum.any?(&(filters_partitioner(query, &1) == :session))
   end
 
@@ -26,7 +26,7 @@ defmodule Plausible.Stats.TableDecider do
 
     %{event: event_only_filters, session: session_only_filters} =
       query
-      |> filter_keys()
+      |> dimensions_used_in_filters()
       |> partition(query, &filters_partitioner/2)
 
     %{event: event_only_dimensions, session: session_only_dimensions} =
@@ -55,10 +55,10 @@ defmodule Plausible.Stats.TableDecider do
     end
   end
 
-  defp filter_keys(query) do
+  defp dimensions_used_in_filters(query) do
     query.filters
     |> Plausible.Stats.Filters.traverse()
-    |> Enum.map(fn {[_operator, filter_key | _rest], _root, _depth} -> filter_key end)
+    |> Enum.map(fn {[_operator, dimension | _rest], _root, _depth} -> dimension end)
   end
 
   defp metric_partitioner(%Query{v2: true}, :conversion_rate), do: :either
