@@ -140,7 +140,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       assert text_of_element(html, "textarea#snippet") ==
                "&amp;lt;script defer data-domain=&amp;quot;#{site.domain}&amp;quot; src=&amp;quot;http://localhost:8000/js/script.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;"
 
-      for param <- PlausibleWeb.Live.Installation.script_config_params() do
+      for param <- PlausibleWeb.Live.Installation.script_extension_params() do
         lv
         |> element(~s|form#snippet-form|)
         |> render_change(%{
@@ -164,7 +164,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       assert text_of_element(html, "textarea#snippet") =~ "script.defer = true"
 
-      for param <- PlausibleWeb.Live.Installation.script_config_params() do
+      for param <- PlausibleWeb.Live.Installation.script_extension_params() do
         lv
         |> element(~s|form#snippet-form|)
         |> render_change(%{

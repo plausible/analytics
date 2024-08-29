@@ -8,15 +8,16 @@ defmodule PlausibleWeb.Live.Installation do
   alias Plausible.Verification.{Checks, State}
   import PlausibleWeb.Components.Generic
 
-  @script_config_params [
+  @script_extension_params [
     "outbound-links",
     "tagged-events",
     "file-downloads",
     "hash",
     "pageview-props",
     "revenue",
-    "404"
   ]
+
+  @script_config_params ["404" | @script_extension_params]
 
   @installation_types [
     "GTM",
@@ -26,7 +27,7 @@ defmodule PlausibleWeb.Live.Installation do
 
   @valid_qs_params @script_config_params ++ ["installation_type", "flow"]
 
-  def script_config_params, do: @script_config_params
+  def script_extension_params, do: @script_extension_params
 
   def mount(
         %{"website" => domain} = params,
@@ -232,7 +233,7 @@ defmodule PlausibleWeb.Live.Installation do
 
     """
     #{render_snippet("manual", domain, script_config)}
-    #{render_snippet_404("manual")}
+    #{render_snippet_404()}
     """
   end
 
@@ -262,12 +263,12 @@ defmodule PlausibleWeb.Live.Installation do
     """
   end
 
-  def render_snippet_404("manual") do
+  def render_snippet_404() do
     "<script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>"
   end
 
   def render_snippet_404("GTM") do
-    render_snippet_404("manual")
+    render_snippet_404()
   end
 
   defp script_extension_control(assigns) do
