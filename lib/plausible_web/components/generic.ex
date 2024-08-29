@@ -335,7 +335,7 @@ defmodule PlausibleWeb.Components.Generic do
     assigns = assign(assigns, wrapper_data: wrapper_data, show_inner: show_inner)
 
     ~H"""
-    <div x-data={wrapper_data} class={["tooltip-wrapper relative", @wrapper_class]}>
+    <div x-data={@wrapper_data} class={["tooltip-wrapper relative", @wrapper_class]}>
       <p
         x-on:click="sticky = true; hovered = true"
         x-on:click.outside="sticky = false; hovered = false"
@@ -347,7 +347,7 @@ defmodule PlausibleWeb.Components.Generic do
         <Heroicons.information_circle :if={@icon?} class="w-5 h-5 ml-2" />
       </p>
       <span
-        x-show={show_inner}
+        x-show={@show_inner}
         class={[
           "bg-gray-900 pointer-events-none absolute transition-opacity p-4 rounded text-sm text-white",
           @position
