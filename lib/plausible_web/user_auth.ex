@@ -82,17 +82,9 @@ defmodule PlausibleWeb.UserAuth do
   end
 
   def touch_user_session(user_session, now \\ NaiveDateTime.utc_now(:second)) do
-    %{token: token, timeout_at: timeout_at, last_used_at: last_used_at} =
-      user_session
-      |> Auth.UserSession.touch_session(now)
-      |> Ecto.Changeset.apply_changes()
-
-    Repo.update_all(
-      from(us in Auth.UserSession, where: us.token == ^token),
-      set: [timeout_at: timeout_at, last_used_at: last_used_at]
-    )
-
-    Repo.reload!(user_session)
+    user_session
+    |> Auth.UserSession.touch_session(now)
+    |> Repo.update!(allow_stale: true)
   end
 
   @doc """

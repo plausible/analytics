@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.UserAuthTest do
   use PlausibleWeb.ConnCase, async: true
 
+  import Ecto.Query, only: [from: 2]
   import ExUnit.CaptureLog
 
   alias Plausible.Auth
@@ -211,6 +212,37 @@ defmodule PlausibleWeb.UserAuthTest do
       assert refreshed_session.id == user_session.id
       assert NaiveDateTime.compare(refreshed_session.last_used_at, two_days_later) == :eq
       assert NaiveDateTime.compare(refreshed_session.timeout_at, user_session.timeout_at) == :gt
+    end
+
+    test "handles concurrent refresh gracefully", %{user: user} do
+      %{sessions: [user_session]} = Repo.preload(user, :sessions)
+
+      # concurrent update
+      now = NaiveDateTime.utc_now(:second)
+      two_days_later = NaiveDateTime.shift(now, day: 2)
+
+      Repo.update_all(
+        from(us in Auth.UserSession, where: us.token == ^user_session.token),
+        set: [timeout_at: two_days_later, last_used_at: now]
+      )
+
+      assert refreshed_session =
+               %Auth.UserSession{} = UserAuth.touch_user_session(user_session)
+
+      assert refreshed_session.id == user_session.id
+      assert Repo.reload(user_session)
+    end
+
+    test "handles deleted session case gracefully", %{user: user} do
+      %{sessions: [user_session]} = Repo.preload(user, :sessions)
+      Repo.delete!(user_session)
+
+      assert refreshed_session =
+               %Auth.UserSession{} = UserAuth.touch_user_session(user_session)
+
+      assert refreshed_session.id == user_session.id
+
+      refute Repo.reload(user_session)
     end
 
     test "skips refreshing legacy session", %{user: user} do
