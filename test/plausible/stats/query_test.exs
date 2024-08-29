@@ -1,6 +1,9 @@
 defmodule Plausible.Stats.QueryTest do
   use Plausible.DataCase, async: true
   alias Plausible.Stats.{Query, DateTimeRange}
+  alias Plausible.Stats.Legacy.QueryBuilder
+
+  doctest Plausible.Stats.Legacy.QueryBuilder
 
   setup do
     user = insert(:user)
