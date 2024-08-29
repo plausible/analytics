@@ -59,6 +59,7 @@ defmodule PlausibleWeb.Router do
       plug PlausibleWeb.Plugs.NoRobots
       plug :fetch_session
 
+      plug PlausibleWeb.AuthPlug
       plug PlausibleWeb.SuperAdminOnlyPlug
     end
   end
@@ -70,7 +71,11 @@ defmodule PlausibleWeb.Router do
   on_ee do
     use Kaffy.Routes,
       scope: "/crm",
-      pipe_through: [PlausibleWeb.Plugs.NoRobots, PlausibleWeb.SuperAdminOnlyPlug]
+      pipe_through: [
+        PlausibleWeb.Plugs.NoRobots,
+        PlausibleWeb.AuthPlug,
+        PlausibleWeb.SuperAdminOnlyPlug
+      ]
   end
 
   on_ee do
