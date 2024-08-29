@@ -1884,14 +1884,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "site_id" => site.domain,
           "metrics" => "visitors",
           "filters" => [
-            ["matches", "event:props:tier", ["small*"]]
+            ["matches_wildcard", "event:props:tier", ["small*"]]
           ]
         })
 
       assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 3}}
     end
 
-    test "does_not_match custom event property", %{conn: conn, site: site} do
+    test "not matches_wildcard custom event property", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           "meta.key": ["tier"],
@@ -1916,7 +1916,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "site_id" => site.domain,
           "metrics" => "visitors",
           "filters" => [
-            ["does_not_match", "event:props:tier", ["small*"]]
+            ["not_matches_wildcard", "event:props:tier", ["small*"]]
           ]
         })
 

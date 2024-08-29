@@ -27,12 +27,12 @@ defmodule Plausible.Stats.FiltersTest do
 
     test "wildcard" do
       "event:page==/blog/post-*"
-      |> assert_parsed([[:matches, "event:page", ["/blog/post-*"]]])
+      |> assert_parsed([[:matches_wildcard, "event:page", ["/blog/post-*"]]])
     end
 
     test "negative wildcard" do
       "event:page!=/blog/post-*"
-      |> assert_parsed([[:does_not_match, "event:page", ["/blog/post-*"]]])
+      |> assert_parsed([[:not_matches_wildcard, "event:page", ["/blog/post-*"]]])
     end
 
     test "custom event goal" do
@@ -52,13 +52,13 @@ defmodule Plausible.Stats.FiltersTest do
 
     test "member + wildcard" do
       "event:page==/blog**|/newsletter|/*/"
-      |> assert_parsed([[:matches, "event:page", ["/blog**|/newsletter|/*/"]]])
+      |> assert_parsed([[:matches_wildcard, "event:page", ["/blog**|/newsletter|/*/"]]])
     end
 
     test "combined with \";\"" do
       "event:page==/blog**|/newsletter|/*/ ; visit:country==FR|GB|DE"
       |> assert_parsed([
-        [:matches, "event:page", ["/blog**|/newsletter|/*/"]],
+        [:matches_wildcard, "event:page", ["/blog**|/newsletter|/*/"]],
         [:is, "visit:country", ["FR", "GB", "DE"]]
       ])
     end
@@ -75,7 +75,7 @@ defmodule Plausible.Stats.FiltersTest do
 
     test "keeps escape characters in is + wildcard filter" do
       "event:page==/**\\|page|/other/page"
-      |> assert_parsed([[:matches, "event:page", ["/**\\|page|/other/page"]]])
+      |> assert_parsed([[:matches_wildcard, "event:page", ["/**\\|page|/other/page"]]])
     end
 
     test "gracefully fails to parse garbage" do

@@ -180,7 +180,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:matches, _, clauses]) do
+  defp filter_custom_prop(prop_name, column_name, [:matches_wildcard, _, clauses]) do
     regexes = Enum.map(clauses, &page_regex/1)
 
     dynamic(
@@ -194,17 +194,10 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:does_not_match, _, clauses]) do
-    regexes = Enum.map(clauses, &page_regex/1)
-
+  defp filter_custom_prop(prop_name, column_name, [:not_matches_wildcard, key, clauses]) do
     dynamic(
-      [t],
-      has_key(t, column_name, ^prop_name) and
-        fragment(
-          "not(arrayExists(k -> match(?, k), ?))",
-          get_by_key(t, column_name, ^prop_name),
-          ^regexes
-        )
+      [x],
+      not (^filter_custom_prop(prop_name, column_name, [:matches_wildcard, key, clauses]))
     )
   end
 
@@ -232,7 +225,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_field(db_field, [:matches, _key, glob_exprs]) do
+  defp filter_field(db_field, [:matches_wildcard, _key, glob_exprs]) do
     page_regexes = Enum.map(glob_exprs, &page_regex/1)
 
     dynamic(
@@ -241,12 +234,10 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_field(db_field, [:does_not_match, _key, glob_exprs]) do
-    page_regexes = Enum.map(glob_exprs, &page_regex/1)
-
+  defp filter_field(db_field, [:not_matches_wildcard, key, clauses]) do
     dynamic(
       [x],
-      fragment("not(multiMatchAny(?, ?))", type(field(x, ^db_field), :string), ^page_regexes)
+      not (^filter_field(db_field, [:matches_wildcard, key, clauses]))
     )
   end
 

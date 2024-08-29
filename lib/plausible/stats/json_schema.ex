@@ -18,11 +18,11 @@ defmodule Plausible.Stats.JSONSchema do
                          # Add overrides for things allowed in the internal API
                          |> JSONPointer.add!(
                            "#/definitions/filter_entry/oneOf/0/items/0/enum/0",
-                           "matches"
+                           "matches_wildcard"
                          )
                          |> JSONPointer.add!(
                            "#/definitions/filter_entry/oneOf/0/items/0/enum/0",
-                           "does_not_match"
+                           "not_matches_wildcard"
                          )
                          |> JSONPointer.add!("#/definitions/metric/oneOf/0", %{
                            "const" => "time_on_page"
