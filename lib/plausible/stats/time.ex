@@ -101,18 +101,17 @@ defmodule Plausible.Stats.Time do
   end
 
   defp time_labels_for_dimension("time:minute", query) do
-    n_buckets = DateTime.diff(query.date_range.last, query.date_range.first, :minute) - 1
+    first_datetime = Map.put(query.date_range.first, :second, 0)
 
-    first_datetime =
-      query.date_range.first
-      |> DateTime.to_naive()
-      |> Map.put(:second, 0)
+    first_datetime
+    |> Stream.iterate(fn datetime -> DateTime.shift(datetime, minute: 1) end)
+    |> Enum.take_while(fn datetime ->
+      current_minute = Map.put(query.now, :second, 0)
 
-    Enum.map(0..n_buckets, fn step ->
-      first_datetime
-      |> NaiveDateTime.shift(minute: step)
-      |> format_datetime()
+      DateTime.before?(datetime, query.date_range.last) &&
+        DateTime.before?(datetime, current_minute)
     end)
+    |> Enum.map(&format_datetime/1)
   end
 
   def date_or_weekstart(date, query) do
