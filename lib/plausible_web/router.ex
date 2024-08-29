@@ -31,6 +31,10 @@ defmodule PlausibleWeb.Router do
     plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
   end
 
+  pipeline :external_api do
+    plug :accepts, ["json"]
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
     plug :fetch_session
@@ -214,19 +218,24 @@ defmodule PlausibleWeb.Router do
   end
 
   scope "/api", PlausibleWeb do
-    pipe_through :api
+    scope assigns: %{} do
+      pipe_through :external_api
 
-    post "/event", Api.ExternalController, :event
-    get "/error", Api.ExternalController, :error
-    get "/health", Api.ExternalController, :health
-    get "/system", Api.ExternalController, :info
+      post "/event", Api.ExternalController, :event
+      get "/error", Api.ExternalController, :error
+      get "/health", Api.ExternalController, :health
+      get "/system", Api.ExternalController, :info
+    end
 
-    post "/paddle/webhook", Api.PaddleController, :webhook
-    get "/paddle/currency", Api.PaddleController, :currency
+    scope assigns: %{} do
+      pipe_through :api
+      post "/paddle/webhook", Api.PaddleController, :webhook
+      get "/paddle/currency", Api.PaddleController, :currency
 
-    put "/:domain/disable-feature", Api.InternalController, :disable_feature
+      put "/:domain/disable-feature", Api.InternalController, :disable_feature
 
-    get "/sites", Api.InternalController, :sites
+      get "/sites", Api.InternalController, :sites
+    end
   end
 
   scope "/", PlausibleWeb do
