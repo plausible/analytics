@@ -35,7 +35,7 @@ defmodule Plausible.Stats.Query do
         struct!(__MODULE__, Map.to_list(query_data))
         |> put_imported_opts(site, %{})
         |> put_experimental_reduced_joins(site, params)
-        |> struct!(v2: true, now: NaiveDateTime.utc_now(:second), debug_metadata: debug_metadata)
+        |> struct!(v2: true, now: DateTime.utc_now(:second), debug_metadata: debug_metadata)
 
       {:ok, query}
     end
