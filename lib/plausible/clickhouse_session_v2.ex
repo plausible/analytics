@@ -58,7 +58,7 @@ defmodule Plausible.ClickhouseSessionV2 do
     field :utm_term, :string
     field :referrer, :string
     field :referrer_source, :string
-    field :channel, :string, type: "LowCardinality(String)"
+    field :channel, Ch, type: "LowCardinality(String)"
 
     field :country_code, Ch, type: "LowCardinality(FixedString(2))"
     field :subdivision1_code, Ch, type: "LowCardinality(String)"

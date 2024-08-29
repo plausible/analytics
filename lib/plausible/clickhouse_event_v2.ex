@@ -26,7 +26,7 @@ defmodule Plausible.ClickhouseEventV2 do
     # Session attributes
     field :referrer, :string
     field :referrer_source, :string
-    field :channel, :string, type: "LowCardinality(String)"
+    field :channel, Ch, type: "LowCardinality(String)"
     field :utm_medium, :string
     field :utm_source, :string
     field :utm_campaign, :string
