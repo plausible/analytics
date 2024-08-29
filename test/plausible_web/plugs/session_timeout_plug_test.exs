@@ -1,8 +1,14 @@
 defmodule PlausibleWeb.SessionTimeoutPlugTest do
-  use ExUnit.Case, async: true
+  use Plausible.DataCase, async: true
   use Plug.Test
+
+  import Plausible.Factory
+
   alias PlausibleWeb.SessionTimeoutPlug
+
   @opts %{timeout_after_seconds: 10}
+
+  @moduletag :capture_log
 
   test "does nothing if user is not logged in" do
     conn =
@@ -14,9 +20,11 @@ defmodule PlausibleWeb.SessionTimeoutPlugTest do
   end
 
   test "sets session timeout if user is logged in" do
+    user = insert(:user)
+
     conn =
       conn(:get, "/")
-      |> init_test_session(%{current_user_id: 1})
+      |> init_test_session(%{current_user_id: user.id})
       |> SessionTimeoutPlug.call(@opts)
 
     timeout = get_session(conn, :session_timeout_at)
@@ -25,9 +33,11 @@ defmodule PlausibleWeb.SessionTimeoutPlugTest do
   end
 
   test "logs user out if timeout passed" do
+    user = insert(:user)
+
     conn =
       conn(:get, "/")
-      |> init_test_session(%{current_user_id: 1, session_timeout_at: 1})
+      |> init_test_session(%{current_user_id: user.id, session_timeout_at: 1})
       |> SessionTimeoutPlug.call(@opts)
 
     assert conn.private[:plug_session_info] == :renew
