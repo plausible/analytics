@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## v2.1.2 - 2024-09-24
+
 ### Added
 - UI to edit goals along with display names
 - Support contains filter for goals
