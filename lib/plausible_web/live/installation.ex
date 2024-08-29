@@ -94,6 +94,7 @@ defmodule PlausibleWeb.Live.Installation do
   def render(assigns) do
     ~H"""
     <div>
+      <.flash_messages flash={@flash} />
       <PlausibleWeb.Components.FirstDashboardLaunchBanner.set :if={@site_created?} site={@site} />
       <PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Install Plausible" />
 
@@ -388,7 +389,7 @@ defmodule PlausibleWeb.Live.Installation do
       Enum.into(@script_config_params, %{}, &{&1, params[&1] == "on"})
 
     socket = update_uri_params(socket, new_params)
-    {:noreply, socket}
+    {:noreply, put_live_flash(socket, :success, "Snippet updated")}
   end
 
   def handle_params(params, _uri, socket) do
