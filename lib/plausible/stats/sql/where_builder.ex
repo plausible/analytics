@@ -156,26 +156,26 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     false
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:is, _, values]) do
-    none_value_included = Enum.member?(values, "(none)")
+  defp filter_custom_prop(prop_name, column_name, [:is, _, clauses]) do
+    none_value_included = Enum.member?(clauses, "(none)")
 
     dynamic(
       [t],
-      (has_key(t, column_name, ^prop_name) and get_by_key(t, column_name, ^prop_name) in ^values) or
+      (has_key(t, column_name, ^prop_name) and get_by_key(t, column_name, ^prop_name) in ^clauses) or
         (^none_value_included and not has_key(t, column_name, ^prop_name))
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:is_not, _, values]) do
-    none_value_included = Enum.member?(values, "(none)")
+  defp filter_custom_prop(prop_name, column_name, [:is_not, _, clauses]) do
+    none_value_included = Enum.member?(clauses, "(none)")
 
     dynamic(
       [t],
       (has_key(t, column_name, ^prop_name) and
-         get_by_key(t, column_name, ^prop_name) not in ^values) or
+         get_by_key(t, column_name, ^prop_name) not in ^clauses) or
         (^none_value_included and
            has_key(t, column_name, ^prop_name) and
-           get_by_key(t, column_name, ^prop_name) not in ^values) or
+           get_by_key(t, column_name, ^prop_name) not in ^clauses) or
         (not (^none_value_included) and not has_key(t, column_name, ^prop_name))
     )
   end
@@ -237,8 +237,19 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     dynamic([x], fragment("multiSearchAny(?, ?)", type(field(x, ^db_field), :string), ^values))
   end
 
-  defp filter_field(db_field, [:does_not_contain, dimension, values]) do
+  defp filter_field(db_field, [:does_not_contain, dimension, clauses]) do
     dynamic([], not (^filter_field(db_field, [:contains, dimension, clauses])))
+  end
+
+  defp filter_field(db_field, [:match, _dimension, clauses]) do
+    dynamic(
+      [x],
+      fragment("multiMatchAny(?, ?)", type(field(x, ^db_field), :string), ^clauses)
+    )
+  end
+
+  defp filter_field(db_field, [:not_match, dimension, clauses]) do
+    dynamic([], not (^filter_field(db_field, [:match, dimension, clauses])))
   end
 
   defp filter_field(db_field, [:is, _dimension, clauses]) do

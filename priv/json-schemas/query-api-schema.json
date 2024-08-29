@@ -246,7 +246,9 @@
               "type": "string",
               "enum": [
                 "is_not",
-                "does_not_contain"
+                "does_not_contain",
+                "match",
+                "not_match"
               ],
               "description": "filter operation"
             },

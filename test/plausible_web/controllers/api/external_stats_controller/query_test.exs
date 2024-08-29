@@ -848,6 +848,50 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
     end
 
+    test "`match` operator", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/user/1234"),
+        build(:pageview, pathname: "/user/789/contributions"),
+        build(:pageview, pathname: "/blog/user/1234"),
+        build(:pageview, pathname: "/user/ef/contributions"),
+        build(:pageview, pathname: "/other/path")
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [
+            ["match", "event:page", ["^/user/[0-9]+"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
+    end
+
+    test "`not_match` operator", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/user/1234"),
+        build(:pageview, pathname: "/user/789/contributions"),
+        build(:pageview, pathname: "/blog/user/1234"),
+        build(:pageview, pathname: "/user/ef/contributions"),
+        build(:pageview, pathname: "/other/path")
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [
+            ["not_match", "event:page", ["^/user/[0-9]+"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
+    end
+
     test "handles filtering by visit:country", %{
       conn: conn,
       site: site
