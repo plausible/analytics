@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
   use PlausibleWeb, :live_view
   use Phoenix.HTML
   import PlausibleWeb.Live.Components.Form
+  import PlausibleWeb.Components.Generic
 
   alias Plausible.Auth
   alias Plausible.Repo
@@ -188,10 +189,10 @@ defmodule PlausibleWeb.Live.RegisterForm do
         </PlausibleWeb.Components.Generic.button>
 
         <p class="text-center text-gray-600 dark:text-gray-500  mt-4">
-          Already have an account? <%= link("Log in",
-            to: "/login",
-            class: "underline text-gray-800 dark:text-gray-50"
-          ) %>
+          Already have an account?
+          <.styled_link href="/login">
+            Log in
+          </.styled_link>
         </p>
       </.form>
     </PlausibleWeb.Components.Generic.focus_box>

@@ -40,17 +40,18 @@
     <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
       <%= if Keyword.fetch!(Application.get_env(:plausible, :selfhost),:disable_registration) == false do %>
         <li>
-          Don't have an account? <%= link("Register",
-            to: "/register",
-            class: "text-gray-800 dark:text-gray-50 underline"
-          ) %> instead.
+          Don't have an account
+          <.styled_link href="/register">
+            Register
+          </.styled_link>
+          instead.
         </li>
       <% end %>
       <li>
         Forgot password?
-        <a href="/password/request-reset" class="underline text-gray-800 dark:text-gray-50">
-          Click here
-        </a>
+        <.styled_link href="/password/reset-request">
+        Click here
+        </.styled_link>
         to reset it.
       </li>
     </ol>
