@@ -8,6 +8,8 @@ defmodule PlausibleWeb.Plugs.UserSessionTouchTest do
 
   setup [:create_user, :log_in]
 
+  @moduletag :capture_log
+
   test "refreshes session", %{conn: conn, user: user} do
     now = NaiveDateTime.utc_now(:second)
     one_day_ago = NaiveDateTime.shift(now, day: -1)
