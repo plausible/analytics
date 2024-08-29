@@ -385,12 +385,16 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp get_referrer_source(request, ref) do
-    source =
+    tagged_source =
       request.query_params["utm_source"] ||
         request.query_params["source"] ||
         request.query_params["ref"]
 
-    source || PlausibleWeb.RefInspector.parse(ref)
+    if tagged_source do
+      Plausible.Ingestion.Acquisition.find_mapping(tagged_source)
+    else
+      PlausibleWeb.RefInspector.parse(ref)
+    end
   end
 
   defp clean_referrer(nil), do: nil

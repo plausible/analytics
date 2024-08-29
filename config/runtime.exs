@@ -232,7 +232,8 @@ maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLi
 data_dir = get_var_from_path_or_env(config_dir, "DATA_DIR")
 persistent_cache_dir = get_var_from_path_or_env(config_dir, "PERSISTENT_CACHE_DIR")
 
-data_dir = data_dir || persistent_cache_dir
+# DEFAULT_DATA_DIR comes from the container image, please see our Dockerfile
+data_dir = data_dir || persistent_cache_dir || System.get_env("DEFAULT_DATA_DIR")
 persistent_cache_dir = persistent_cache_dir || data_dir
 
 enable_email_verification =
