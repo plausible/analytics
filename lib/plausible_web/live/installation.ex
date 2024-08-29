@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Live.Installation do
       |> Map.merge(meta.script_config)
       |> Map.take(@script_config_params)
 
-    installation_type = get_installation_type(params)
+    installation_type = get_installation_type(flow, meta, params)
 
     if connected?(socket) and is_nil(installation_type) do
       Checks.run("https://#{domain}", domain,
@@ -474,7 +474,11 @@ defmodule PlausibleWeb.Live.Installation do
     )
   end
 
-  defp get_installation_type(params) do
+  defp get_installation_type("domain_change", meta, params) do
+    meta.installation_type || get_installation_type(nil, nil, params)
+  end
+
+  defp get_installation_type(_site, _meta, params) do
     Enum.find(@installation_types, &(&1 == params["installation_type"]))
   end
 

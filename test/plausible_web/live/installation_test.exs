@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
   setup [:create_user, :log_in, :create_site]
 
-  describe "GET /:domain" do
+  describe "GET /:domain/installation" do
     test "static verification screen renders", %{conn: conn, site: site} do
       resp = get(conn, "/#{site.domain}/installation") |> html_response(200)
 
@@ -30,11 +30,33 @@ defmodule PlausibleWeb.Live.InstallationTest do
     test "static verification screen renders for flow=domain_change", %{conn: conn, site: site} do
       resp =
         conn
-        |> get("/#{site.domain}/installation?flow=domain_change&installation_type=manual")
+        |> get("/#{site.domain}/installation?flow=domain_change")
         |> html_response(200)
 
       assert resp =~ "Your domain has been changed"
       assert resp =~ "I understand, I'll update my website"
+      assert resp =~ "Manual installation"
+      refute resp =~ "Review your existing installation."
+
+      assert resp =~
+               Routes.site_path(PlausibleWeb.Endpoint, :verification, site.domain,
+                 flow: "domain_change"
+               )
+    end
+
+    test "static verification screen renders for flow=domain_change using original installation type",
+         %{conn: conn, site: site} do
+      site = Plausible.Sites.update_installation_meta!(site, %{installation_type: "WordPress"})
+
+      resp =
+        conn
+        |> get("/#{site.domain}/installation?flow=domain_change")
+        |> html_response(200)
+
+      assert resp =~ "Your domain has been changed"
+      assert resp =~ "I understand, I'll update my website"
+      assert resp =~ "WordPress plugin"
+      refute resp =~ "Manuial installation"
       refute resp =~ "Review your existing installation."
 
       assert resp =~
