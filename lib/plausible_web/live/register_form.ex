@@ -78,12 +78,12 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
     <PlausibleWeb.Components.FlowProgress.render
       :if={@live_action == :register_form}
-      flow="register"
+      flow={PlausibleWeb.Flows.register()}
       current_step="Register"
     />
     <PlausibleWeb.Components.FlowProgress.render
       :if={@live_action == :register_from_invitation_form}
-      flow="invitation"
+      flow={PlausibleWeb.Flows.invitation()}
       current_step="Register"
     />
 

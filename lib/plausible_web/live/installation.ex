@@ -128,7 +128,7 @@ defmodule PlausibleWeb.Live.Installation do
           </div>
         </:subtitle>
 
-        <:subtitle :if={@flow == "domain_change"}>
+        <:subtitle :if={@flow == PlausibleWeb.Flows.domain_change()}>
           <p class="mb-4">
             Your domain has been changed.
             <strong>
@@ -139,7 +139,7 @@ defmodule PlausibleWeb.Live.Installation do
           </p>
         </:subtitle>
 
-        <:subtitle :if={@flow == "review" and not is_nil(@installation_type)}>
+        <:subtitle :if={@flow == PlausibleWeb.Flows.review() and not is_nil(@installation_type)}>
           <p class="mb-4">
             Review your existing installation. You can skip this step and proceed to verifying your installation.
           </p>
@@ -193,10 +193,10 @@ defmodule PlausibleWeb.Live.Installation do
           type="submit"
           class="w-full mt-8"
         >
-          <%= if @flow == "domain_change" do %>
+          <%= if @flow == PlausibleWeb.Flows.domain_change() do %>
             I understand, I'll update my website
           <% else %>
-            <%= if @flow == "review" do %>
+            <%= if @flow == PlausibleWeb.Flows.review() do %>
               Verify your installation
             <% else %>
               Start collecting data
@@ -474,7 +474,8 @@ defmodule PlausibleWeb.Live.Installation do
     )
   end
 
-  defp get_installation_type("domain_change", meta, params) do
+  @domain_change PlausibleWeb.Flows.domain_change()
+  defp get_installation_type(@domain_change, meta, params) do
     meta.installation_type || get_installation_type(nil, nil, params)
   end
 

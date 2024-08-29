@@ -78,7 +78,9 @@
     <div class="my-4">
       <PlausibleWeb.Components.Generic.button_link
         class="mt-4"
-        href={Routes.site_path(@conn, :installation, @site.domain, flow: "review")}
+        href={
+          Routes.site_path(@conn, :installation, @site.domain, flow: PlausibleWeb.Flows.review())
+        }
       >
         Review Installation
       </PlausibleWeb.Components.Generic.button_link>

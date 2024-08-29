@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Components.FlowProgressTest do
   test "register" do
     rendered =
       render_component(&FlowProgress.render/1,
-        flow: "register",
+        flow: PlausibleWeb.Flows.register(),
         current_step: "Register"
       )
 
@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Components.FlowProgressTest do
   test "invitation" do
     rendered =
       render_component(&FlowProgress.render/1,
-        flow: "invitation",
+        flow: PlausibleWeb.Flows.invitation(),
         current_step: "Register"
       )
 
@@ -49,7 +49,7 @@ defmodule PlausibleWeb.Components.FlowProgressTest do
   test "provisioning" do
     rendered =
       render_component(&FlowProgress.render/1,
-        flow: "provisioning",
+        flow: PlausibleWeb.Flows.provisioning(),
         current_step: "Add site info"
       )
 
@@ -60,7 +60,7 @@ defmodule PlausibleWeb.Components.FlowProgressTest do
   test "review" do
     rendered =
       render_component(&FlowProgress.render/1,
-        flow: "review",
+        flow: PlausibleWeb.Flows.review(),
         current_step: "Install Plausible"
       )
 
@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Components.FlowProgressTest do
   test "domain_change" do
     rendered =
       render_component(&FlowProgress.render/1,
-        flow: "domain_change",
+        flow: PlausibleWeb.Flows.domain_change(),
         current_step: "Set up new domain"
       )
 

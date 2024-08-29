@@ -24,13 +24,15 @@ defmodule PlausibleWeb.Live.InstallationTest do
       assert resp =~ "Verify your installation"
 
       assert resp =~
-               Routes.site_path(PlausibleWeb.Endpoint, :verification, site.domain, flow: "review")
+               Routes.site_path(PlausibleWeb.Endpoint, :verification, site.domain,
+                 flow: PlausibleWeb.Flows.review()
+               )
     end
 
     test "static verification screen renders for flow=domain_change", %{conn: conn, site: site} do
       resp =
         conn
-        |> get("/#{site.domain}/installation?flow=domain_change")
+        |> get("/#{site.domain}/installation?flow=#{PlausibleWeb.Flows.domain_change()}")
         |> html_response(200)
 
       assert resp =~ "Your domain has been changed"
@@ -40,7 +42,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       assert resp =~
                Routes.site_path(PlausibleWeb.Endpoint, :verification, site.domain,
-                 flow: "domain_change"
+                 flow: PlausibleWeb.Flows.domain_change()
                )
     end
 
@@ -50,7 +52,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       resp =
         conn
-        |> get("/#{site.domain}/installation?flow=domain_change")
+        |> get("/#{site.domain}/installation?flow=#{PlausibleWeb.Flows.domain_change()}")
         |> html_response(200)
 
       assert resp =~ "Your domain has been changed"
@@ -61,7 +63,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       assert resp =~
                Routes.site_path(PlausibleWeb.Endpoint, :verification, site.domain,
-                 flow: "domain_change"
+                 flow: PlausibleWeb.Flows.domain_change()
                )
     end
 

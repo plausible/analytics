@@ -1,47 +1,16 @@
 defmodule PlausibleWeb.Components.FlowProgress do
   @moduledoc """
   Component for provisioning/registration flows displaying
-  progress status.
+  progress status. See `PlausibleWeb.Flows` for the list of
+  flow definitions.
   """
   use Phoenix.Component
 
-  @flows %{
-    "review" => [
-      "Install Plausible",
-      "Verify installation"
-    ],
-    "domain_change" => [
-      "Set up new domain",
-      "Install Plausible",
-      "Verify installation"
-    ],
-    "register" => [
-      "Register",
-      "Activate account",
-      "Add site info",
-      "Install Plausible",
-      "Verify installation"
-    ],
-    "invitation" => [
-      "Register",
-      "Activate account"
-    ],
-    "provisioning" => [
-      "Add site info",
-      "Install Plausible",
-      "Verify installation"
-    ]
-  }
-
-  @values @flows |> Enum.flat_map(fn {_, steps} -> steps end) |> Enum.uniq()
-
-  def flows, do: @flows
-
-  attr :flow, :string, required: true
-  attr :current_step, :string, required: true, values: @values
+  attr :flow, :string, required: true, values: PlausibleWeb.Flows.valid_keys()
+  attr :current_step, :string, required: true, values: PlausibleWeb.Flows.valid_values()
 
   def render(assigns) do
-    steps = Map.get(flows(), assigns.flow, [])
+    steps = PlausibleWeb.Flows.steps(assigns.flow)
     current_step_idx = Enum.find_index(steps, &(&1 == assigns.current_step))
 
     assigns =

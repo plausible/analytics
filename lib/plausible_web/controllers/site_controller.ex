@@ -14,7 +14,7 @@ defmodule PlausibleWeb.SiteController do
   )
 
   def new(conn, params) do
-    flow = params["flow"] || "register"
+    flow = params["flow"] || PlausibleWeb.Flows.register()
     current_user = conn.assigns[:current_user]
 
     render(conn, "new.html",
@@ -739,7 +739,9 @@ defmodule PlausibleWeb.SiteController do
         |> put_flash(:success, "Website domain changed successfully")
         |> redirect(
           external:
-            Routes.site_path(conn, :installation, updated_site.domain, flow: "domain_change")
+            Routes.site_path(conn, :installation, updated_site.domain,
+              flow: PlausibleWeb.Flows.domain_change()
+            )
         )
 
       {:error, changeset} ->

@@ -103,7 +103,9 @@ defmodule Plausible.Workers.TrafficChangeNotifier do
       if Enum.any?(site.members, &(&1.email == recipient)) do
         {
           Routes.stats_url(PlausibleWeb.Endpoint, :stats, site.domain, []),
-          Routes.site_url(PlausibleWeb.Endpoint, :installation, site.domain, flow: "review")
+          Routes.site_url(PlausibleWeb.Endpoint, :installation, site.domain,
+            flow: PlausibleWeb.Flows.review()
+          )
         }
       else
         {nil, nil}

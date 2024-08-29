@@ -62,7 +62,7 @@ defmodule PlausibleWeb.AuthController do
 
   def activate_form(conn, params) do
     user = conn.assigns.current_user
-    flow = params["flow"] || "register"
+    flow = params["flow"] || PlausibleWeb.Flows.register()
 
     render(conn, "activate.html",
       has_email_code?: Plausible.Users.has_email_code?(user),
@@ -205,9 +205,9 @@ defmodule PlausibleWeb.AuthController do
 
             flow =
               if params["register_action"] == "register_form" do
-                "register"
+                PlausibleWeb.Flows.register()
               else
-                "invitation"
+                PlausibleWeb.Flows.invitation()
               end
 
             Routes.auth_path(conn, :activate_form, flow: flow)

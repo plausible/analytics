@@ -1661,7 +1661,9 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) ==
-               Routes.site_path(conn, :installation, new_domain, flow: "domain_change")
+               Routes.site_path(conn, :installation, new_domain,
+                 flow: PlausibleWeb.Flows.domain_change()
+               )
 
       site = Repo.reload!(site)
       assert site.domain == new_domain

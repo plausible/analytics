@@ -89,7 +89,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
         success?: false,
         finished?: true,
         installation_type: "WordPress",
-        flow: "review"
+        flow: PlausibleWeb.Flows.review()
       )
 
     assert element_exists?(html, ~s|a[href="/example.com/settings/general"]|)
