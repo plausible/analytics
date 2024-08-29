@@ -44,6 +44,7 @@ defmodule PlausibleWeb.Router do
   pipeline :internal_stats_api do
     plug :accepts, ["json"]
     plug :fetch_session
+    plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.AuthorizeSiteAccess
     plug PlausibleWeb.Plugs.NoRobots
   end
