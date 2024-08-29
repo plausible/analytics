@@ -10,6 +10,10 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
 
   require Plausible.Imported.SiteImport
 
+  if Plausible.ce?() do
+    @moduletag :capture_log
+  end
+
   setup :verify_on_exit!
 
   describe "GET /:website/import/google-analytics/property" do
@@ -99,6 +103,43 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "We were unable to authenticate your Google Analytics account"
+    end
+
+    @tag :ce_build_only
+    test "redirects to imports and exports on disabled API with flash error", %{
+      conn: conn,
+      site: site
+    } do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn _url, _opts ->
+          body = "fixture/ga4_api_disabled_error.json" |> File.read!() |> Jason.decode!()
+          {:error, %HTTPClient.Non200Error{reason: %{status: 403, body: body}}}
+        end
+      )
+
+      conn =
+        conn
+        |> get("/#{site.domain}/import/google-analytics/property", %{
+          "access_token" => "token",
+          "refresh_token" => "foo",
+          "expires_at" => "2022-09-22T20:01:37.112777"
+        })
+
+      assert redirected_to(conn, 302) ==
+               PlausibleWeb.Router.Helpers.site_path(
+                 conn,
+                 :settings_imports_exports,
+                 site.domain
+               )
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               """
+               Google Analytics Admin API has not been used in project 752168887897 before or it is disabled. \
+               Enable it by visiting https://console.developers.google.com/apis/api/analyticsadmin.googleapis.com/overview?project=752168887897 then retry. \
+               If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.\
+               """
     end
 
     test "redirects to imports and exports on timeout error with flash error", %{
@@ -391,6 +432,44 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
                "Google Analytics authentication seems to have expired."
     end
 
+    @tag :ce_build_only
+    test "redirects to imports and exports on disabled API with flash error", %{
+      conn: conn,
+      site: site
+    } do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :post,
+        fn _url, _opts, _params ->
+          body = "fixture/ga4_api_disabled_error.json" |> File.read!() |> Jason.decode!()
+          {:error, %HTTPClient.Non200Error{reason: %Finch.Response{status: 403, body: body}}}
+        end
+      )
+
+      conn =
+        conn
+        |> post("/#{site.domain}/import/google-analytics/property", %{
+          "property" => "properties/428685906",
+          "access_token" => "token",
+          "refresh_token" => "foo",
+          "expires_at" => "2022-09-22T20:01:37.112777"
+        })
+
+      assert redirected_to(conn, 302) ==
+               PlausibleWeb.Router.Helpers.site_path(
+                 conn,
+                 :settings_imports_exports,
+                 site.domain
+               )
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               """
+               Google Analytics Admin API has not been used in project 752168887897 before or it is disabled. \
+               Enable it by visiting https://console.developers.google.com/apis/api/analyticsadmin.googleapis.com/overview?project=752168887897 then retry. \
+               If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.\
+               """
+    end
+
     test "redirects to imports and exports on timeout with flash error",
          %{
            conn: conn,
@@ -571,6 +650,47 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Google Analytics authentication seems to have expired."
+    end
+
+    @tag :ce_build_only
+    test "redirects to imports and exports on disabled API with flash error",
+         %{
+           conn: conn,
+           site: site
+         } do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn _url, _params ->
+          body = "fixture/ga4_api_disabled_error.json" |> File.read!() |> Jason.decode!()
+          {:error, %HTTPClient.Non200Error{reason: %{status: 403, body: body}}}
+        end
+      )
+
+      conn =
+        conn
+        |> get("/#{site.domain}/import/google-analytics/confirm", %{
+          "property" => "properties/428685906",
+          "access_token" => "token",
+          "refresh_token" => "foo",
+          "expires_at" => "2022-09-22T20:01:37.112777",
+          "start_date" => "2024-02-22",
+          "end_date" => "2024-02-26"
+        })
+
+      assert redirected_to(conn, 302) ==
+               PlausibleWeb.Router.Helpers.site_path(
+                 conn,
+                 :settings_imports_exports,
+                 site.domain
+               )
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               """
+               Google Analytics Admin API has not been used in project 752168887897 before or it is disabled. \
+               Enable it by visiting https://console.developers.google.com/apis/api/analyticsadmin.googleapis.com/overview?project=752168887897 then retry. \
+               If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.\
+               """
     end
 
     test "redirects to imports and exports on timeout with flash error",
