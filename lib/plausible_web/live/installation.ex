@@ -340,6 +340,13 @@ defmodule PlausibleWeb.Live.Installation do
       />
       <.script_extension_control
         config={@script_config}
+        variant="404"
+        label="404 error pages"
+        tooltip="Find 404 error pages on your site. Additional action required."
+        learn_more="https://plausible.io/docs/error-pages-tracking-404"
+      />
+      <.script_extension_control
+        config={@script_config}
         variant="hash"
         label="Hashed page paths"
         tooltip="Automatically track page paths that use a # in the URL"
@@ -365,13 +372,6 @@ defmodule PlausibleWeb.Live.Installation do
         label="Ecommerce revenue"
         tooltip="Assign monetary values to purchases and track revenue attribution. Additional action required."
         learn_more="https://plausible.io/docs/ecommerce-revenue-tracking"
-      />
-      <.script_extension_control
-        config={@script_config}
-        variant="404"
-        label="404 errors"
-        tooltip="Automatically track 404 error pages. Additional action required."
-        learn_more="https://plausible.io/docs/error-pages-tracking-404"
       />
     </form>
     """
