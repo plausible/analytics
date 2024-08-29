@@ -49,26 +49,12 @@ defmodule PlausibleWeb.UserAuth do
     |> clear_logged_in_cookie()
   end
 
-  @spec get_user(Plug.Conn.t() | Auth.UserSession.t() | map()) ::
-          {:ok, Auth.User.t()} | {:error, :no_valid_token | :session_not_found | :user_not_found}
-  def get_user(%Auth.UserSession{} = user_session) do
-    if user = Plausible.Users.with_subscription(user_session.user_id) do
-      {:ok, user}
-    else
-      # NOTE: Only possible in a fringe corner case where user is deleted
-      # between retrieving the session and retrieving the user themselves.
-      {:error, :user_not_found}
-    end
-  end
-
-  def get_user(conn_or_session) do
-    with {:ok, user_session} <- get_user_session(conn_or_session) do
-      get_user(user_session)
-    end
-  end
-
   @spec get_user_session(Plug.Conn.t() | map()) ::
-          {:ok, map()} | {:error, :no_valid_token | :session_not_found}
+          {:ok, Auth.UserSession.t()} | {:error, :no_valid_token | :session_not_found}
+  def get_user_session(%Plug.Conn{assigns: %{current_user_session: user_session}}) do
+    {:ok, user_session}
+  end
+
   def get_user_session(conn_or_session) do
     with {:ok, token} <- get_user_token(conn_or_session) do
       get_session_by_token(token)
@@ -119,15 +105,28 @@ defmodule PlausibleWeb.UserAuth do
   end
 
   defp get_session_by_token({:legacy, user_id}) do
-    {:ok, %Auth.UserSession{user_id: user_id}}
+    case Plausible.Users.with_subscription(user_id) do
+      %Auth.User{} = user ->
+        {:ok, %Auth.UserSession{user_id: user.id, user: user}}
+
+      nil ->
+        {:error, :session_not_found}
+    end
   end
 
   defp get_session_by_token({:new, token}) do
     now = NaiveDateTime.utc_now(:second)
 
+    last_subscription_query = Plausible.Users.last_subscription_join_query()
+
     token_query =
       from(us in Auth.UserSession,
-        where: us.token == ^token and us.timeout_at > ^now
+        inner_join: u in assoc(us, :user),
+        as: :user,
+        left_lateral_join: s in subquery(last_subscription_query),
+        on: true,
+        where: us.token == ^token and us.timeout_at > ^now,
+        preload: [user: {u, subscription: s}]
       )
 
     case Repo.one(token_query) do

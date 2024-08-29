@@ -91,60 +91,6 @@ defmodule PlausibleWeb.UserAuthTest do
     end
   end
 
-  describe "get_user/1" do
-    setup [:create_user, :log_in]
-
-    test "gets user from session data in conn", %{conn: conn, user: user} do
-      assert {:ok, session_user} = UserAuth.get_user(conn)
-      assert session_user.id == user.id
-    end
-
-    test "gets user from session data map", %{user: user} do
-      %{sessions: [user_session]} = Repo.preload(user, :sessions)
-      assert {:ok, session_user} = UserAuth.get_user(%{"current_user_id" => user.id})
-      assert session_user.id == user.id
-
-      assert {:ok, ^session_user} = UserAuth.get_user(%{"user_token" => user_session.token})
-      assert session_user.id == user.id
-    end
-
-    test "gets user from session schema", %{user: user} do
-      %{sessions: [user_session]} = Repo.preload(user, :sessions)
-
-      assert {:ok, session_user} =
-               UserAuth.get_user(%Plausible.Auth.UserSession{user_id: user.id})
-
-      assert {:ok, ^session_user} = UserAuth.get_user(user_session)
-
-      assert session_user.id == user.id
-    end
-
-    test "returns error on invalid or missing session data" do
-      conn = init_session(build_conn())
-      assert {:error, :no_valid_token} = UserAuth.get_user(conn)
-      assert {:error, :no_valid_token} = UserAuth.get_user(%{})
-    end
-
-    test "returns error on missing user (legacy only)", %{user: user} do
-      Plausible.Repo.delete!(user)
-
-      assert {:error, :user_not_found} = UserAuth.get_user(%{"current_user_id" => user.id})
-
-      assert {:error, :user_not_found} =
-               UserAuth.get_user(%Plausible.Auth.UserSession{user_id: user.id})
-    end
-
-    test "returns error on missing session", %{conn: conn, user: user} do
-      %{sessions: [user_session]} = Repo.preload(user, :sessions)
-      Repo.delete!(user_session)
-
-      assert {:error, :session_not_found} = UserAuth.get_user(conn)
-
-      assert {:error, :session_not_found} =
-               UserAuth.get_user(%{"user_token" => user_session.token})
-    end
-  end
-
   describe "get_user_session/1" do
     setup [:create_user, :log_in]
 
@@ -157,8 +103,10 @@ defmodule PlausibleWeb.UserAuthTest do
       user_id = user.id
       %{sessions: [user_session]} = Repo.preload(user, :sessions)
 
-      assert {:ok, ^user_session} =
+      assert {:ok, session_from_token} =
                UserAuth.get_user_session(%{"user_token" => user_session.token})
+
+      assert session_from_token.id == user_session.id
 
       capture_log(fn ->
         assert {:ok, %Auth.UserSession{user_id: ^user_id, token: nil}} =
