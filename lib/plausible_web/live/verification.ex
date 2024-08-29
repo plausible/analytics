@@ -25,7 +25,7 @@ defmodule PlausibleWeb.Live.Verification do
         :viewer
       ])
 
-    private = socket.private.connect_info.private
+    private = Map.get(socket.private.connect_info, :private, %{})
 
     socket =
       assign(socket,
