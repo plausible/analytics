@@ -14,7 +14,8 @@ defmodule PlausibleWeb.Live.Installation do
     "file-downloads",
     "hash",
     "pageview-props",
-    "revenue"
+    "revenue",
+    "404"
   ]
 
   @installation_types [
@@ -226,8 +227,26 @@ defmodule PlausibleWeb.Live.Installation do
     """
   end
 
+  defp render_snippet("manual", domain, %{"404" => true} = script_config) do
+    script_config = Map.put(script_config, "404", false)
+
+    """
+    #{render_snippet("manual", domain, script_config)}
+    #{render_snippet_404("manual")}
+    """
+  end
+
   defp render_snippet("manual", domain, script_config) do
     ~s|<script defer data-domain="#{domain}" src="#{tracker_url(script_config)}"></script>|
+  end
+
+  defp render_snippet("GTM", domain, %{"404" => true} = script_config) do
+    script_config = Map.put(script_config, "404", false)
+
+    """
+    #{render_snippet("GTM", domain, script_config)}
+    #{render_snippet_404("GTM")}
+    """
   end
 
   defp render_snippet("GTM", domain, script_config) do
@@ -241,6 +260,14 @@ defmodule PlausibleWeb.Live.Installation do
     document.getElementsByTagName('head')[0].appendChild(script);
     </script>
     """
+  end
+
+  def render_snippet_404("manual") do
+    "<script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>"
+  end
+
+  def render_snippet_404("GTM") do
+    render_snippet_404("manual")
   end
 
   defp script_extension_control(assigns) do
@@ -338,6 +365,13 @@ defmodule PlausibleWeb.Live.Installation do
         tooltip="Assign monetary values to purchases and track revenue attribution. Additional action required."
         learn_more="https://plausible.io/docs/ecommerce-revenue-tracking"
       />
+      <.script_extension_control
+        config={@script_config}
+        variant="404"
+        label="404 errors"
+        tooltip="Automatically track 404 error pages. Additional action required."
+        learn_more="https://plausible.io/docs/error-pages-tracking-404"
+      />
     </form>
     """
   end
@@ -400,6 +434,16 @@ defmodule PlausibleWeb.Live.Installation do
 
   defp update_script_config(socket, "file-downloads" = key, false) do
     Plausible.Goals.delete_file_downloads(socket.assigns.site)
+    update_script_config(socket, %{key => false})
+  end
+
+  defp update_script_config(socket, "404" = key, true) do
+    Plausible.Goals.create_404(socket.assigns.site)
+    update_script_config(socket, %{key => true})
+  end
+
+  defp update_script_config(socket, "404" = key, false) do
+    Plausible.Goals.delete_404(socket.assigns.site)
     update_script_config(socket, %{key => false})
   end
 

@@ -183,7 +183,31 @@ defmodule PlausibleWeb.Live.InstallationTest do
       end
     end
 
-    test "turning on file-downloads and outbound-links creates special goals", %{
+    test "allows manual snippet customization with 404 links", %{conn: conn, site: site} do
+      {lv, _html} = get_lv(conn, site, "?installation_type=manual")
+
+      lv
+      |> element(~s|form#snippet-form|)
+      |> render_change(%{
+        "404" => "on"
+      })
+
+      html = lv |> render()
+
+      assert text_of_element(html, "textarea#snippet") =~
+               "function() { (window.plausible.q = window.plausible.q || []).push(arguments) }&amp;lt;/script&amp;gt;"
+
+      lv
+      |> element(~s|form#snippet-form|)
+      |> render_change(%{})
+
+      html = lv |> render()
+
+      refute text_of_element(html, "textarea#snippet") =~
+      "function() { (window.plausible.q = window.plausible.q || []).push(arguments) }&amp;lt;/script&amp;gt;"
+    end
+
+    test "turning on file-downloads, outbound-links and 404 creates special goals", %{
       conn: conn,
       site: site
     } do
@@ -195,14 +219,16 @@ defmodule PlausibleWeb.Live.InstallationTest do
       |> element(~s|form#snippet-form|)
       |> render_change(%{
         "file-downloads" => "on",
-        "outbound-links" => "on"
+        "outbound-links" => "on",
+        "404" => "on"
       })
 
       lv |> render()
 
-      assert [clicks, downloads] = Plausible.Goals.for_site(site)
+      assert [clicks, downloads, error_404] = Plausible.Goals.for_site(site)
       assert clicks.event_name == "Outbound Link: Click"
       assert downloads.event_name == "File Download"
+      assert error_404.event_name == "404"
     end
 
     test "turning off file-downloads and outbound-links deletes special goals", %{
