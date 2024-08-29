@@ -1323,6 +1323,88 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.channel == "Paid Search"
     end
 
+    test "parses paid search channel based on gclid", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?gclid=123identifier",
+        referrer: "https://google.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Paid Search"
+    end
+
+    test "is not paid search when gclid is present on non-google referrer", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?gclid=123identifier",
+        referrer: "https://duckduckgo.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Organic Search"
+    end
+
+    test "parses paid search channel based on msclkid", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?msclkid=123identifier",
+        referrer: "https://bing.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Paid Search"
+    end
+
+    test "is not paid search when msclkid is present on non-bing referrer", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?msclkid=123identifier",
+        referrer: "https://duckduckgo.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Organic Search"
+    end
+
     test "parses paid search channel based on utm_source and medium", %{conn: conn, site: site} do
       params = %{
         name: "pageview",

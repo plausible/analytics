@@ -63,7 +63,9 @@ defmodule Plausible.Ingestion.Acquisition do
   end
 
   defp paid_search?(request, source) do
-    search_source?(source) and paid_medium?(request.query_params["utm_medium"])
+    (search_source?(source) and paid_medium?(request.query_params["utm_medium"])) or
+      (source == "Google" and !!request.query_params["gclid"]) or
+      (source == "Bing" and !!request.query_params["msclkid"])
   end
 
   defp paid_social?(request, source) do
