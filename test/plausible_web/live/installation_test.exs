@@ -204,7 +204,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       html = lv |> render()
 
       refute text_of_element(html, "textarea#snippet") =~
-      "function() { (window.plausible.q = window.plausible.q || []).push(arguments) }&amp;lt;/script&amp;gt;"
+               "function() { (window.plausible.q = window.plausible.q || []).push(arguments) }&amp;lt;/script&amp;gt;"
     end
 
     test "turning on file-downloads, outbound-links and 404 creates special goals", %{

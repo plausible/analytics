@@ -14,7 +14,7 @@ defmodule PlausibleWeb.Live.Installation do
     "file-downloads",
     "hash",
     "pageview-props",
-    "revenue",
+    "revenue"
   ]
 
   @script_config_params ["404" | @script_extension_params]
