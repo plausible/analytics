@@ -582,8 +582,28 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       check_date_range("all", site, @date_range_day)
     end
 
-    test "parsing custom date range", %{site: site} do
+    test "parsing custom date range from simple date strings", %{site: site} do
       check_date_range(["2021-05-05", "2021-05-05"], site, @date_range_day)
+    end
+
+    test "parsing custom date range from iso8601 timestamps", %{site: site} do
+      check_date_range(
+        ["2024-01-01T00:00:00 UTC", "2024-01-02T23:59:59 UTC"],
+        site,
+        DateTimeRange.new!(
+          DateTime.new!(~D[2024-01-01], ~T[00:00:00], "UTC"),
+          DateTime.new!(~D[2024-01-02], ~T[23:59:59], "UTC")
+        )
+      )
+
+      check_date_range(
+        ["2024-08-29T07:12:34 America/Los_Angeles", "2024-08-29T10:12:34 America/Los_Angeles"],
+        site,
+        DateTimeRange.new!(
+          DateTime.new!(~D[2024-08-29], ~T[07:12:34], "America/Los_Angeles"),
+          DateTime.new!(~D[2024-08-29], ~T[10:12:34], "America/Los_Angeles")
+        )
+      )
     end
 
     test "parsing invalid custom date range", %{site: site} do
@@ -592,6 +612,53 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
       %{"site_id" => site.domain, "date_range" => ["21415-00", "eee"], "metrics" => ["visitors"]}
       |> check_error(site, "#/date_range: Invalid date range [\"21415-00\", \"eee\"]")
+
+      # Timestamps do not include timezone information
+      %{
+        "site_id" => site.domain,
+        "date_range" => ["2021-02-03T00:00:00", "2021-02-03T23:59:59"],
+        "metrics" => ["visitors"]
+      }
+      |> check_error(
+        site,
+        "#/date_range: Invalid date range [\"2021-02-03T00:00:00\", \"2021-02-03T23:59:59\"]"
+      )
+
+      # Unknown timezone
+      %{
+        "site_id" => site.domain,
+        "date_range" => ["2021-02-03T00:00:00 Fake/Timezone", "2021-02-03T23:59:59 UTC"],
+        "metrics" => ["visitors"]
+      }
+      |> check_error(
+        site,
+        "Invalid date_range '[\"2021-02-03T00:00:00 Fake/Timezone\", \"2021-02-03T23:59:59 UTC\"]'."
+      )
+
+      # Cannot combine date and timestamp
+      %{
+        "site_id" => site.domain,
+        "date_range" => ["2021-02-03T00:00:00 UTC", "2021-02-04"],
+        "metrics" => ["visitors"]
+      }
+      |> check_error(
+        site,
+        "Invalid date_range '[\"2021-02-03T00:00:00 UTC\", \"2021-02-04\"]'."
+      )
+
+      # Datetime doesn't exist due to a gap in the given timezone
+      %{
+        "site_id" => site.domain,
+        "date_range" => [
+          "2024-03-31T03:30:00 Europe/Tallinn",
+          "2024-04-15T10:00:00 Europe/Tallinn"
+        ],
+        "metrics" => ["visitors"]
+      }
+      |> check_error(
+        site,
+        "Invalid date_range '[\"2024-03-31T03:30:00 Europe/Tallinn\", \"2024-04-15T10:00:00 Europe/Tallinn\"]'."
+      )
     end
 
     test "parses date_range relative to date param", %{site: site} do

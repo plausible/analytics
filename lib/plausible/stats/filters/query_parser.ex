@@ -188,18 +188,42 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {:ok, DateTimeRange.new!(start_date, date, site.timezone)}
   end
 
-  defp parse_date_range(site, [from_date_string, to_date_string], _date, _now)
-       when is_binary(from_date_string) and is_binary(to_date_string) do
-    with {:ok, from_date} <- Date.from_iso8601(from_date_string),
-         {:ok, to_date} <- Date.from_iso8601(to_date_string) do
-      {:ok, DateTimeRange.new!(from_date, to_date, site.timezone)}
-    else
-      _ -> {:error, "Invalid date_range '#{i([from_date_string, to_date_string])}'."}
+  defp parse_date_range(site, [from, to], _date, _now)
+       when is_binary(from) and is_binary(to) do
+    case date_range_from_date_strings(site, from, to) do
+      {:ok, date_range} -> {:ok, date_range}
+      {:error, _} -> date_range_from_timestamps(from, to)
     end
   end
 
   defp parse_date_range(_site, unknown, _date, _now),
     do: {:error, "Invalid date_range '#{i(unknown)}'."}
+
+  defp date_range_from_date_strings(site, from, to) do
+    with {:ok, from_date} <- Date.from_iso8601(from),
+         {:ok, to_date} <- Date.from_iso8601(to) do
+      {:ok, DateTimeRange.new!(from_date, to_date, site.timezone)}
+    end
+  end
+
+  defp date_range_from_timestamps(from, to) do
+    with {:ok, from_datetime} <- datetime_from_timestamp(from),
+         {:ok, to_datetime} <- datetime_from_timestamp(to) do
+      {:ok, DateTimeRange.new!(from_datetime, to_datetime)}
+    else
+      _ -> {:error, "Invalid date_range '#{i([from, to])}'."}
+    end
+  end
+
+  defp datetime_from_timestamp(timestamp_string) do
+    with [timestamp, timezone] <- String.split(timestamp_string),
+         {:ok, naive_datetime} <- NaiveDateTime.from_iso8601(timestamp),
+         {:ok, datetime} <- DateTime.from_naive(naive_datetime, timezone) do
+      {:ok, datetime}
+    else
+      _ -> {:error, :invalid}
+    end
+  end
 
   defp today(site), do: DateTime.now!(site.timezone) |> DateTime.to_date()
 
