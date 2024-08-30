@@ -332,11 +332,6 @@ defmodule Plausible.ReleaseTest do
              Plausible.ReleaseTest.ClickHouse [_build/test/lib/plausible/priv/ingest_repo/migrations] streak up to version 20240709181437:
                * 20240709181437_populate_location_data
 
-             Plausible.ReleaseTest.PostgreSQL [_build/test/lib/plausible/priv/repo/migrations] streak up to version 20240809100853:
-               * 20240722143005_create_helpscout_mappings
-               * 20240801052902_add_goal_display_name
-               * 20240801052903_make_goal_display_names_unique
-               * 20240809100853_turn_google_auth_tokens_into_text
              """ <> _future = pending_streaks
 
       #
