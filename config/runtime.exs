@@ -232,7 +232,8 @@ maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLi
 data_dir = get_var_from_path_or_env(config_dir, "DATA_DIR")
 persistent_cache_dir = get_var_from_path_or_env(config_dir, "PERSISTENT_CACHE_DIR")
 
-data_dir = data_dir || persistent_cache_dir
+# DEFAULT_DATA_DIR comes from the container image, please see our Dockerfile
+data_dir = data_dir || persistent_cache_dir || System.get_env("DEFAULT_DATA_DIR")
 persistent_cache_dir = persistent_cache_dir || data_dir
 
 enable_email_verification =
@@ -352,7 +353,7 @@ if db_socket_dir = get_var_from_path_or_env(config_dir, "DATABASE_SOCKET_DIR") d
   """)
 end
 
-db_cacertfile = get_var_from_path_or_env(config_dir, "DATABASE_CACERTFILE", CAStore.file_path())
+db_cacertfile = get_var_from_path_or_env(config_dir, "DATABASE_CACERTFILE")
 %URI{host: db_host} = db_uri = URI.parse(db_url)
 db_socket_dir? = String.starts_with?(db_host, "%2F") or db_host == ""
 
@@ -381,14 +382,11 @@ if db_socket_dir? do
 else
   config :plausible, Plausible.Repo,
     url: db_url,
-    socket_options: db_maybe_ipv6,
-    ssl_opts: [
-      cacertfile: db_cacertfile,
-      verify: :verify_peer,
-      customize_hostname_check: [
-        match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-      ]
-    ]
+    socket_options: db_maybe_ipv6
+
+  if db_cacertfile do
+    config :plausible, Plausible.Repo, ssl: [cacertfile: db_cacertfile]
+  end
 end
 
 sentry_app_version = runtime_metadata[:version] || app_version

@@ -295,14 +295,31 @@ defmodule Plausible.ConfigTest do
   end
 
   describe "storage" do
-    test "with only DATA_DIR set" do
-      env = [
-        {"MAXMIND_LICENSE_KEY", "abc"},
-        {"PERSISTENT_CACHE_DIR", nil},
-        {"DATA_DIR", "/data"}
+    setup do
+      defaults = [
+        # comes from our Dockerfile
+        {"DEFAULT_DATA_DIR", "/var/lib/plausible"},
+        # needed to exercise Plausible.Geo :cache_dir
+        {"MAXMIND_LICENSE_KEY", "abc"}
       ]
 
-      config = runtime_config(env)
+      env = fn env -> env ++ defaults end
+      {:ok, env: env}
+    end
+
+    test "defaults", %{env: env} do
+      config = runtime_config(env.([{"PERSISTENT_CACHE_DIR", nil}, {"DATA_DIR", nil}]))
+
+      # exports/imports
+      assert get_in(config, [:plausible, :data_dir]) == "/var/lib/plausible"
+      # locus (mmdb cache)
+      assert get_in(config, [:plausible, Plausible.Geo, :cache_dir]) == "/var/lib/plausible"
+      # tzdata (timezones cache)
+      assert get_in(config, [:tzdata, :data_dir]) == "/var/lib/plausible/tzdata_data"
+    end
+
+    test "with only DATA_DIR set", %{env: env} do
+      config = runtime_config(env.([{"PERSISTENT_CACHE_DIR", nil}, {"DATA_DIR", "/data"}]))
 
       # exports/imports
       assert get_in(config, [:plausible, :data_dir]) == "/data"
@@ -312,14 +329,8 @@ defmodule Plausible.ConfigTest do
       assert get_in(config, [:tzdata, :data_dir]) == "/data/tzdata_data"
     end
 
-    test "with only PERSISTENT_CACHE_DIR set" do
-      env = [
-        {"MAXMIND_LICENSE_KEY", "abc"},
-        {"PERSISTENT_CACHE_DIR", "/cache"},
-        {"DATA_DIR", nil}
-      ]
-
-      config = runtime_config(env)
+    test "with only PERSISTENT_CACHE_DIR set", %{env: env} do
+      config = runtime_config(env.([{"PERSISTENT_CACHE_DIR", "/cache"}, {"DATA_DIR", nil}]))
 
       # exports/imports
       assert get_in(config, [:plausible, :data_dir]) == "/cache"
@@ -329,14 +340,8 @@ defmodule Plausible.ConfigTest do
       assert get_in(config, [:tzdata, :data_dir]) == "/cache/tzdata_data"
     end
 
-    test "with both DATA_DIR and PERSISTENT_CACHE_DIR set" do
-      env = [
-        {"MAXMIND_LICENSE_KEY", "abc"},
-        {"PERSISTENT_CACHE_DIR", "/cache"},
-        {"DATA_DIR", "/data"}
-      ]
-
-      config = runtime_config(env)
+    test "with both DATA_DIR and PERSISTENT_CACHE_DIR set", %{env: env} do
+      config = runtime_config(env.([{"PERSISTENT_CACHE_DIR", "/cache"}, {"DATA_DIR", "/data"}]))
 
       # exports/imports
       assert get_in(config, [:plausible, :data_dir]) == "/data"
@@ -354,14 +359,7 @@ defmodule Plausible.ConfigTest do
 
       assert get_in(config, [:plausible, Plausible.Repo]) == [
                url: "postgres://postgres:postgres@plausible_db:5432/plausible_db",
-               socket_options: [],
-               ssl_opts: [
-                 cacertfile: CAStore.file_path(),
-                 verify: :verify_peer,
-                 customize_hostname_check: [
-                   match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-                 ]
-               ]
+               socket_options: []
              ]
     end
 
@@ -403,14 +401,24 @@ defmodule Plausible.ConfigTest do
       assert get_in(config, [:plausible, Plausible.Repo]) == [
                url:
                  "postgresql://your_username:your_password@cluster-do-user-1234567-0.db.ondigitalocean.com:25060/defaultdb",
+               socket_options: []
+             ]
+    end
+
+    test "DATABASE_CACERTFILE enables SSL" do
+      env = [
+        {"DATABASE_URL",
+         "postgresql://your_username:your_password@cluster-do-user-1234567-0.db.ondigitalocean.com:25060/defaultdb"},
+        {"DATABASE_CACERTFILE", "/path/to/cacert.pem"}
+      ]
+
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               url:
+                 "postgresql://your_username:your_password@cluster-do-user-1234567-0.db.ondigitalocean.com:25060/defaultdb",
                socket_options: [],
-               ssl_opts: [
-                 cacertfile: CAStore.file_path(),
-                 verify: :verify_peer,
-                 customize_hostname_check: [
-                   match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-                 ]
-               ]
+               ssl: [cacertfile: "/path/to/cacert.pem"]
              ]
     end
   end
