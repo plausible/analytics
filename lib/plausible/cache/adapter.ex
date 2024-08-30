@@ -111,5 +111,8 @@ defmodule Plausible.Cache.Adapter do
   @spec with_lock!(atom(), any(), pos_integer(), (-> result)) :: result when result: any()
   def with_lock!(cache_name, key, timeout, fun) do
     ConCache.isolated(cache_name, key, timeout, fun)
+  catch
+    :exit, {:timeout, _} ->
+      Logger.error("Timeout while executing with lock on key in '#{inspect(cache_name)}'")
   end
 end

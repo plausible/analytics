@@ -1,5 +1,8 @@
 defmodule Plausible.Session.CacheStoreTest do
   use Plausible.DataCase
+
+  import ExUnit.CaptureLog
+
   alias Plausible.Session.CacheStore
 
   setup do
@@ -89,6 +92,90 @@ defmodule Plausible.Session.CacheStoreTest do
     assert updated_session13.sign == 1
     assert updated_session13.events == 3
     assert updated_session13.pageviews == 3
+  end
+
+  @tag :slow
+  test "in case of lock kicking in, the slow event finishes processing", %{buffer: buffer} do
+    # FIXME: for some reason sometimes `very_slow_buffer` is called twice,
+    # as if there was some implicit retry? Happens once per multiple runs
+    # of this test.
+    current_pid = self()
+
+    very_slow_buffer = fn sessions ->
+      Process.sleep(1000)
+      send(current_pid, {:very_slow_buffer, :insert, [sessions]})
+      {:ok, sessions}
+    end
+
+    event1 = build(:event, name: "pageview")
+    event2 = build(:event, name: "pageview", user_id: event1.user_id, site_id: event1.site_id)
+    event3 = build(:event, name: "pageview", user_id: event1.user_id, site_id: event1.site_id)
+
+    session_params = %{
+      referrer: "ref",
+      referrer_source: "refsource",
+      utm_medium: "medium",
+      utm_source: "source",
+      utm_campaign: "campaign",
+      utm_content: "content",
+      utm_term: "term",
+      browser: "browser",
+      browser_version: "55",
+      country_code: "EE",
+      screen_size: "Desktop",
+      operating_system: "Mac",
+      operating_system_version: "11"
+    }
+
+    async1 =
+      Task.async(fn ->
+        CacheStore.on_event(event1, session_params, nil, very_slow_buffer)
+      end)
+
+    async2 =
+      Task.async(fn ->
+        CacheStore.on_event(event2, session_params, nil, buffer)
+      end)
+
+    async3 =
+      Task.async(fn ->
+        CacheStore.on_event(event3, session_params, nil, buffer)
+      end)
+
+    capture_log(fn ->
+      Task.await_many([async1, async2, async3])
+    end) =~ "Timeout while executing with lock on key in ':sessions'"
+
+    assert_receive({:very_slow_buffer, :insert, [[_session]]})
+    refute_receive({:buffer, :insert, [[_updated_session]]})
+  end
+
+  test "exploding event processing is passed through by locking mechanism" do
+    crashing_buffer = fn _sessions ->
+      raise "boom"
+    end
+
+    event = build(:event, name: "pageview")
+
+    session_params = %{
+      referrer: "ref",
+      referrer_source: "refsource",
+      utm_medium: "medium",
+      utm_source: "source",
+      utm_campaign: "campaign",
+      utm_term: "term",
+      utm_content: "content",
+      browser: "browser",
+      browser_version: "55",
+      country_code: "EE",
+      screen_size: "Desktop",
+      operating_system: "Mac",
+      operating_system_version: "11"
+    }
+
+    assert_raise RuntimeError, "boom", fn ->
+      CacheStore.on_event(event, session_params, nil, crashing_buffer)
+    end
   end
 
   test "creates a session from an event", %{buffer: buffer} do
