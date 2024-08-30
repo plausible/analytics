@@ -234,6 +234,16 @@ defmodule Plausible.ReleaseTest do
                | _future
              ] = Release.migration_streaks([PostgreSQL, ClickHouse])
 
+      pending_streaks = capture_io(fn -> Release.pending_streaks([PostgreSQL, ClickHouse]) end)
+
+      pending_streaks =
+        if Plausible.ce?() do
+          # just to make the tests pass in CI
+          String.replace(pending_streaks, "_build/ce_test/lib", "_build/test/lib")
+        else
+          pending_streaks
+        end
+
       assert """
              Loading plausible..
              Starting dependencies..
@@ -327,8 +337,7 @@ defmodule Plausible.ReleaseTest do
                * 20240801052902_add_goal_display_name
                * 20240801052903_make_goal_display_names_unique
                * 20240809100853_turn_google_auth_tokens_into_text
-             """ <> _future =
-               capture_io(fn -> Release.pending_streaks([PostgreSQL, ClickHouse]) end)
+             """ <> _future = pending_streaks
 
       #
       # and finally migrate all the way up to to master
