@@ -2,20 +2,27 @@ defmodule Plausible.Session.CacheStore do
   require Logger
   alias Plausible.Session.WriteBuffer
 
-  def on_event(event, session_attributes, prev_user_id, buffer_insert \\ &WriteBuffer.insert/1) do
-    ConCache.isolated(:sessions, {event.site_id, event.user_id}, fn ->
-      found_session = find_session(event, event.user_id) || find_session(event, prev_user_id)
+  @lock_timeout 500
 
-      if found_session do
-        updated_session = update_session(found_session, event)
-        buffer_insert.([%{found_session | sign: -1}, %{updated_session | sign: 1}])
-        persist_session(updated_session)
-      else
-        new_session = new_session_from_event(event, session_attributes)
-        buffer_insert.([new_session])
-        persist_session(new_session)
+  def on_event(event, session_attributes, prev_user_id, buffer_insert \\ &WriteBuffer.insert/1) do
+    Plausible.Cache.Adapter.with_lock!(
+      :sessions,
+      {event.site_id, event.user_id},
+      @lock_timeout,
+      fn ->
+        found_session = find_session(event, event.user_id) || find_session(event, prev_user_id)
+
+        if found_session do
+          updated_session = update_session(found_session, event)
+          buffer_insert.([%{found_session | sign: -1}, %{updated_session | sign: 1}])
+          persist_session(updated_session)
+        else
+          new_session = new_session_from_event(event, session_attributes)
+          buffer_insert.([new_session])
+          persist_session(new_session)
+        end
       end
-    end)
+    )
   end
 
   defp find_session(_domain, nil), do: nil

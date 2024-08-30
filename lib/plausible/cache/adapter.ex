@@ -107,4 +107,9 @@ defmodule Plausible.Cache.Adapter do
       Logger.error("Error retrieving key from '#{inspect(cache_name)}'")
       []
   end
+
+  @spec with_lock!(atom(), any(), pos_integer(), (-> result)) :: result when result: any()
+  def with_lock!(cache_name, key, timeout, fun) do
+    ConCache.isolated(cache_name, key, timeout, fun)
+  end
 end
