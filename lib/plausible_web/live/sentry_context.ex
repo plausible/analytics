@@ -50,9 +50,9 @@ defmodule PlausibleWeb.Live.SentryContext do
       Sentry.Context.set_request_context(request_context)
 
       if current_user = socket.assigns[:current_user] do
-          Sentry.Context.set_user_context(%{
-            id: current_user.id
-          })
+        Sentry.Context.set_user_context(%{
+          id: current_user.id
+        })
       end
     end
 
