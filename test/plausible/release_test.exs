@@ -92,6 +92,13 @@ defmodule Plausible.ReleaseTest do
     defp fake_migrate(repo, up_to_migration) do
       {up_to_version, _name} = Integer.parse(up_to_migration)
 
+      insert_opts =
+        if repo == ClickHouse do
+          [types: [version: "Int64", inserted_at: "DateTime"]]
+        else
+          []
+        end
+
       Ecto.Migrator.with_repo(repo, fn repo ->
         schema_versions =
           Ecto.Migrator.migrations(repo)
@@ -99,10 +106,10 @@ defmodule Plausible.ReleaseTest do
             status == :down and version <= up_to_version
           end)
           |> Enum.map(fn {_status, version, _name} ->
-            {version, NaiveDateTime.utc_now(:second)}
+            [version: version, inserted_at: NaiveDateTime.utc_now(:second)]
           end)
 
-        repo.insert_all("schema_versions", schema_versions)
+        repo.insert_all("schema_migrations", schema_versions, insert_opts)
       end)
     end
 
