@@ -80,6 +80,46 @@ defmodule Plausible.Release do
     Enum.each(repos(), &list_pending_migrations_for/1)
   end
 
+  def pending_streaks(repos \\ repos()) do
+    prepare()
+    IO.puts("Collecting pending migrations..\n")
+
+    streaks = migration_streaks(repos)
+
+    all_pending =
+      Enum.flat_map(repos, fn repo ->
+        # credo:disable-for-lines:6 Credo.Check.Refactor.Nesting
+        {:ok, pending, _started} =
+          Ecto.Migrator.with_repo(repo, fn repo ->
+            Ecto.Migrator.migrations(repo)
+            |> Enum.filter(fn {status, _version, _name} -> status == :down end)
+            |> Enum.map(fn {_status, version, name} -> {repo, version, name} end)
+          end)
+
+        pending
+      end)
+
+    print_streaks(streaks, all_pending)
+  end
+
+  defp print_streaks([{repo, up_to_version} | streaks], pending) do
+    {streak, pending} =
+      Enum.split_with(pending, fn {pending_repo, version, _name} ->
+        pending_repo == repo and version <= up_to_version
+      end)
+
+    IO.puts(
+      "#{inspect(repo)} [#{Path.relative_to_cwd(Ecto.Migrator.migrations_path(repo))}] streak up to version #{up_to_version}:"
+    )
+
+    Enum.each(streak, fn {_repo, version, name} -> IO.puts("  * #{version}_#{name}") end)
+    IO.puts("")
+
+    print_streaks(streaks, pending)
+  end
+
+  defp print_streaks([], []), do: :ok
+
   def seed do
     prepare()
     # Run seed script

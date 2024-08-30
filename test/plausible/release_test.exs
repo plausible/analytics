@@ -234,11 +234,107 @@ defmodule Plausible.ReleaseTest do
                | _future
              ] = Release.migration_streaks([PostgreSQL, ClickHouse])
 
+      assert """
+             Loading plausible..
+             Starting dependencies..
+             Starting repos..
+             Collecting pending migrations..
+
+             Plausible.ReleaseTest.PostgreSQL [_build/test/lib/plausible/priv/repo/migrations] streak up to version 20231011101825:
+               * 20230530161856_add_enable_feature_fields_for_site
+               * 20230724131709_change_allowed_event_props_type
+               * 20230802081520_cascade_delete_user
+               * 20230914071244_fix_broken_goals
+               * 20230914071245_goals_unique
+               * 20230925072840_plugins_api_tokens
+               * 20231003081927_add_user_previous_email
+               * 20231010074900_add_unique_index_on_site_memberships_site_id_when_owner
+               * 20231011101825_add_email_activation_codes
+
+             Plausible.ReleaseTest.ClickHouse [_build/test/lib/plausible/priv/ingest_repo/migrations] streak up to version 20231017073642:
+               * 20231017073642_disable_deduplication_window_for_imports
+
+             Plausible.ReleaseTest.PostgreSQL [_build/test/lib/plausible/priv/repo/migrations] streak up to version 20240123095646:
+               * 20231018081657_add_last_used_at_to_plugins_api_tokens
+               * 20231109090334_add_site_user_preferences
+               * 20231115131025_add_limits_to_enterprise_plans
+               * 20231115140646_add_totp_user_fields_and_recovery_codes
+               * 20231121131602_create_plans_table
+               * 20231127132321_remove_custom_domains
+               * 20231129103158_add_allow_next_upgrade_override_to_users
+               * 20231129161022_add_totp_token_to_users
+               * 20231204151831_backfill_last_bill_date_to_subscriptions
+               * 20231208125624_add_data_retention_in_years_to_plans
+               * 20231211092344_add_accept_traffic_until_to_sites
+               * 20231219083050_track_accept_traffic_until_notifcations
+               * 20231220072829_add_accept_traffic_until_to_user
+               * 20231220101920_backfill_accept_traffic_until
+               * 20240103090304_upgrade_oban_jobs_to_v12
+               * 20240123085318_add_ip_block_list_table
+               * 20240123095646_remove_google_analytics_imports_jobs
+
+             Plausible.ReleaseTest.ClickHouse [_build/test/lib/plausible/priv/ingest_repo/migrations] streak up to version 20240123142959:
+               * 20240123142959_add_import_id_to_imported_tables
+
+             Plausible.ReleaseTest.PostgreSQL [_build/test/lib/plausible/priv/repo/migrations] streak up to version 20240129113531:
+               * 20240123144308_add_site_imports
+               * 20240129102900_migrate_accepted_traffic_until
+               * 20240129113531_backfill_accept_traffic_until_for_users_missing_notifications
+
+             Plausible.ReleaseTest.ClickHouse [_build/test/lib/plausible/priv/ingest_repo/migrations] streak up to version 20240209085338:
+               * 20240209085338_minmax_index_session_timestamp
+
+             Plausible.ReleaseTest.PostgreSQL [_build/test/lib/plausible/priv/repo/migrations] streak up to version 20240214114158:
+               * 20240214114158_add_legacy_flag_to_site_imports
+
+             Plausible.ReleaseTest.ClickHouse [_build/test/lib/plausible/priv/ingest_repo/migrations] streak up to version 20240220123656:
+               * 20240220123656_create_sessions_events_compression_options
+
+             Plausible.ReleaseTest.PostgreSQL [_build/test/lib/plausible/priv/repo/migrations] streak up to version 20240221122626:
+               * 20240220144655_cascade_delete_ip_rules
+               * 20240221122626_shield_country_rules
+
+             Plausible.ReleaseTest.ClickHouse [_build/test/lib/plausible/priv/ingest_repo/migrations] streak up to version 20240305085310:
+               * 20240222082911_sessions_v2_versioned_collapsing_merge_tree
+               * 20240305085310_events_sessions_columns_improved
+
+             Plausible.ReleaseTest.PostgreSQL [_build/test/lib/plausible/priv/repo/migrations] streak up to version 20240319094940:
+               * 20240307083402_shield_page_rules
+               * 20240319094940_add_label_to_site_imports
+
+             Plausible.ReleaseTest.ClickHouse [_build/test/lib/plausible/priv/ingest_repo/migrations] streak up to version 20240327085855:
+               * 20240326134840_add_metrics_to_imported_tables
+               * 20240327085855_hostnames_in_sessions
+
+             Plausible.ReleaseTest.PostgreSQL [_build/test/lib/plausible/priv/repo/migrations] streak up to version 20240407104659:
+               * 20240407104659_shield_hostname_rules
+
+             Plausible.ReleaseTest.ClickHouse [_build/test/lib/plausible/priv/ingest_repo/migrations] streak up to version 20240502115822:
+               * 20240419133926_add_active_visitors_to_imported_pages
+               * 20240423094014_add_imported_custom_events
+               * 20240502115822_alias_api_prop_names
+
+             Plausible.ReleaseTest.PostgreSQL [_build/test/lib/plausible/priv/repo/migrations] streak up to version 20240708120453:
+               * 20240528115149_migrate_site_imports
+               * 20240702055817_traffic_drop_notifications
+               * 20240708120453_create_help_scout_credentials
+
+             Plausible.ReleaseTest.ClickHouse [_build/test/lib/plausible/priv/ingest_repo/migrations] streak up to version 20240709181437:
+               * 20240709181437_populate_location_data
+
+             Plausible.ReleaseTest.PostgreSQL [_build/test/lib/plausible/priv/repo/migrations] streak up to version 20240809100853:
+               * 20240722143005_create_helpscout_mappings
+               * 20240801052902_add_goal_display_name
+               * 20240801052903_make_goal_display_names_unique
+               * 20240809100853_turn_google_auth_tokens_into_text
+             """ <> _future =
+               capture_io(fn -> Release.pending_streaks([PostgreSQL, ClickHouse]) end)
+
       #
-      # migrate all the way up to to master
+      # and finally migrate all the way up to to master
       #
 
-      Release.interweave_migrate([PostgreSQL, ClickHouse])
+      _logs = capture_io(fn -> Release.interweave_migrate([PostgreSQL, ClickHouse]) end)
     end
   end
 end
