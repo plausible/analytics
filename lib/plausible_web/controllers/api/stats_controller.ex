@@ -215,18 +215,6 @@ defmodule PlausibleWeb.Api.StatsController do
 
     {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_query)
 
-    %{first: first_date, last: last_date} = DateTimeRange.to_date_range(query.date_range)
-
-    {comparing_from, comparing_to} =
-      if comparison_query do
-        %{first: first_date, last: last_date} =
-          DateTimeRange.to_date_range(comparison_query.date_range)
-
-        {Date.to_string(first_date), Date.to_string(last_date)}
-      else
-        {nil, nil}
-      end
-
     json(conn, %{
       top_stats: top_stats,
       interval: query.interval,
@@ -234,10 +222,10 @@ defmodule PlausibleWeb.Api.StatsController do
       with_imported_switch: with_imported_switch_info(query, comparison_query),
       includes_imported: includes_imported?(query, comparison_query),
       imports_exist: site.complete_import_ids != [],
-      comparing_from: comparing_from,
-      comparing_to: comparing_to,
-      from: Date.to_string(first_date),
-      to: Date.to_string(last_date)
+      comparing_from: comparison_query && DateTime.to_date(comparison_query.date_range.first),
+      comparing_to: comparison_query && DateTime.to_date(comparison_query.date_range.last),
+      from: DateTime.to_date(query.date_range.first),
+      to: DateTime.to_date(query.date_range.last)
     })
   end
 
