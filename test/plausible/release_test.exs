@@ -1,5 +1,5 @@
 defmodule Plausible.ReleaseTest do
-  use Plausible.DataCase, async: false
+  use Plausible.DataCase, async: true
   alias Plausible.{Release, Auth}
   import ExUnit.CaptureIO
 
