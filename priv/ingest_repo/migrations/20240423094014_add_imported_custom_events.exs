@@ -4,13 +4,14 @@ defmodule Plausible.IngestRepo.Migrations.AddImportedCustomEvents do
   def change do
     # NOTE: Using another table for determining cluster presence
     on_cluster = Plausible.MigrationUtils.on_cluster_statement("imported_pages")
+    cluster_name = Plausible.MigrationUtils.cluster_name()
 
     settings =
       if Plausible.MigrationUtils.clustered_table?("imported_pages") do
         """
-        ENGINE = ReplicatedMergeTree('/clickhouse/{cluster}/tables/{shard}/{database}/imported_custom_events', '{replica}')
+        ENGINE = ReplicatedMergeTree('/clickhouse/#{cluster_name}/tables/{shard}/{database}/imported_custom_events', '{replica}')
         ORDER BY (site_id, import_id, date, name)
-        SETTINGS replicated_deduplication_window = 0, storage_policy = 'tiered'
+        SETTINGS replicated_deduplication_window = 0, storage_policy = 's3_with_keeper'
         """
       else
         """

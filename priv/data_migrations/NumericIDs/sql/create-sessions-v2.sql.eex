@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS sessions_v2 <%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+CREATE TABLE IF NOT EXISTS sessions_v2 <%= if @cluster? do %>ON CLUSTER '<%= @cluster_name %>'<% end %>
 (
     `session_id` UInt64,
     `sign` Int8,
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS sessions_v2 <%= if @cluster? do %>ON CLUSTER '{cluste
     `entry_meta.value` Array(String)
 )
 <%= if @cluster? do %>
-ENGINE = ReplicatedCollapsingMergeTree('/clickhouse/{cluster}/tables/{shard}/plausible_prod/sessions_v2', '{replica}', sign)
+ENGINE = ReplicatedCollapsingMergeTree('/clickhouse/<%= @cluster_name %>/tables/{shard}/plausible_prod/sessions_v2', '{replica}', sign)
 <% else %>
 ENGINE = CollapsingMergeTree(sign)
 <% end %>

@@ -1,8 +1,8 @@
 CREATE TABLE sessions_v2_tmp_versioned
-<%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+<%= if @cluster? do %>ON CLUSTER '<%= @cluster_name %>'<% end %>
 AS sessions_v2
 <%= if @cluster? do %>
-ENGINE = ReplicatedVersionedCollapsingMergeTree('/clickhouse/{cluster}/tables/{shard}/plausible_prod/sessions_v2_<%= @unique_suffix %>', '{replica}', sign, events)
+ENGINE = ReplicatedVersionedCollapsingMergeTree('/clickhouse/<%= @cluster_name %>/tables/{shard}/plausible_prod/sessions_v2_<%= @unique_suffix %>', '{replica}', sign, events)
 <% else %>
 ENGINE = VersionedCollapsingMergeTree(sign, events)
 <% end %>

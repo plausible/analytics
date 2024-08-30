@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS events_v2 <%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+CREATE TABLE IF NOT EXISTS events_v2 <%= if @cluster? do %>ON CLUSTER '<%= @cluster_name %>'<% end %>
 (
     `timestamp` DateTime CODEC(Delta(4), LZ4),
     `name` LowCardinality(String),
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS events_v2 <%= if @cluster? do %>ON CLUSTER '{cluster}
     `transferred_from` String
 )
 <%= if @cluster? do %>
-ENGINE = ReplicatedMergeTree('/clickhouse/{cluster}/tables/{shard}/{database}/events_v2', '{replica}')
+ENGINE = ReplicatedMergeTree('/clickhouse/<%= @cluster_name %>/tables/{shard}/{database}/events_v2', '{replica}')
 <% else %>
 ENGINE = MergeTree()
 <% end %>
