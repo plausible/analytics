@@ -359,14 +359,7 @@ defmodule Plausible.ConfigTest do
 
       assert get_in(config, [:plausible, Plausible.Repo]) == [
                url: "postgres://postgres:postgres@plausible_db:5432/plausible_db",
-               socket_options: [],
-               ssl_opts: [
-                 cacertfile: CAStore.file_path(),
-                 verify: :verify_peer,
-                 customize_hostname_check: [
-                   match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-                 ]
-               ]
+               socket_options: []
              ]
     end
 
@@ -408,14 +401,24 @@ defmodule Plausible.ConfigTest do
       assert get_in(config, [:plausible, Plausible.Repo]) == [
                url:
                  "postgresql://your_username:your_password@cluster-do-user-1234567-0.db.ondigitalocean.com:25060/defaultdb",
+               socket_options: []
+             ]
+    end
+
+    test "DATABASE_CACERTFILE enables SSL" do
+      env = [
+        {"DATABASE_URL",
+         "postgresql://your_username:your_password@cluster-do-user-1234567-0.db.ondigitalocean.com:25060/defaultdb"},
+        {"DATABASE_CACERTFILE", "/path/to/cacert.pem"}
+      ]
+
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               url:
+                 "postgresql://your_username:your_password@cluster-do-user-1234567-0.db.ondigitalocean.com:25060/defaultdb",
                socket_options: [],
-               ssl_opts: [
-                 cacertfile: CAStore.file_path(),
-                 verify: :verify_peer,
-                 customize_hostname_check: [
-                   match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-                 ]
-               ]
+               ssl: [cacertfile: "/path/to/cacert.pem"]
              ]
     end
   end
