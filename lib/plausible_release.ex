@@ -25,11 +25,43 @@ defmodule Plausible.Release do
     IO.puts("Migrations successful!")
   end
 
-  # Unlike `migrate/0` above this function:
-  # - lists all pending migrations across repos,
-  # - sorts them into a single list,
-  # - groups consequent migration into "streaks" by repo,
-  # - and migrates the repos through each streak
+  @doc """
+  `interweave_migrate/0` is a more advanced (compared to `migrate/0`) migration function that:
+
+  - Lists all pending migrations across multiple repositories.
+  - Sorts these migrations into a single list.
+  - Groups consecutive migrations by repository into "streaks".
+  - Executes the migrations in the correct order by processing each streak sequentially.
+
+  ### Why Use This Approach?
+
+  This function resolves dependencies between migrations that span across different repositories.
+  The default `migrate/0` function migrates each repository independently, which may result in
+  migrations running in the wrong order when there are cross-repository dependencies.
+
+  Consider the following example:
+
+  - **Migration 1**: The PostgreSQL (PG) repository creates a table named `site_imports`.
+  - **Migration 2**: The ClickHouse (CH) repository creates `import_id` columns in `imported_*` tables.
+  - **Migration 3**: The PG repository runs a data migration that utilizes both PG and CH databases,
+    reading from the `import_id` column in `imported_*` tables.
+
+  The default `migrate/0` would execute these migrations by repository, resulting in the following order:
+
+  1. Migration 1 (PG)
+  2. Migration 3 (PG)
+  3. Migration 2 (CH)
+
+  This sequence would fail at Migration 3, as the `import_id` columns in the CH repository have not been created yet.
+
+  `interweave_migrate/0` addresses this issue by consolidating all pending migrations into a single, ordered queue:
+
+  1. Migration 1 (PG)
+  2. Migration 2 (CH)
+  3. Migration 3 (PG)
+
+  This ensures all dependencies are resolved in the correct order.
+  """
   def interweave_migrate(repos \\ repos()) do
     prepare()
 
