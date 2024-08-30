@@ -4,7 +4,14 @@ defmodule Plausible.IngestRepo.Migrations.AddImportedCustomEvents do
   def change do
     # NOTE: Using another table for determining cluster presence
     on_cluster = Plausible.MigrationUtils.on_cluster_statement("imported_pages")
-    cluster_name = Plausible.MigrationUtils.cluster_name()
+    cluster? = Plausible.MigrationUtils.clustered_table?("imported_pages")
+
+    cluster_name =
+      if cluster? do
+        Plausible.MigrationUtils.cluster_name()
+      else
+        nil
+      end
 
     settings =
       if Plausible.MigrationUtils.clustered_table?("imported_pages") do
