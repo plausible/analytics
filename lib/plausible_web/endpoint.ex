@@ -3,6 +3,11 @@ defmodule PlausibleWeb.Endpoint do
   use Sentry.PlugCapture
   use Phoenix.Endpoint, otp_app: :plausible
 
+  on_ce do
+    plug :maybe_handle_acme_challenge
+    plug :maybe_force_ssl, Plug.SSL.init(_no_opts = [])
+  end
+
   @session_options [
     # key to be patched
     key: "",
@@ -112,5 +117,87 @@ defmodule PlausibleWeb.Endpoint do
     :plausible
     |> Application.fetch_env!(__MODULE__)
     |> Keyword.fetch!(key)
+  end
+
+  on_ce do
+    require SiteEncrypt
+    @behaviour SiteEncrypt
+    @https_key {:plausible, :https}
+
+    @doc false
+    def enable_https(force?) when is_boolean(force?) do
+      # this function is called from application.ex during app start up
+      :persistent_term.put(@https_key, force?)
+    end
+
+    defp https?, do: :persistent_term.get(@https_key)
+
+    defp maybe_handle_acme_challenge(conn, _opts) do
+      if https?() do
+        SiteEncrypt.AcmeChallenge.call(conn, _endpoint = __MODULE__)
+      else
+        conn
+      end
+    end
+
+    defp maybe_force_ssl(conn, opts) do
+      if https?() do
+        Plug.SSL.call(conn, opts)
+      else
+        conn
+      end
+    end
+
+    @impl SiteEncrypt
+    def handle_new_cert, do: :ok
+
+    @doc false
+    def app_env_config do
+      # this function is also being used by site_encrypt
+      Application.get_env(:plausible, _endpoint = __MODULE__, [])
+    end
+
+    @impl SiteEncrypt
+    def certification do
+      domain =
+        app_env_config()
+        |> Keyword.fetch!(:url)
+        |> Keyword.fetch!(:host)
+
+      domain_is_ip? =
+        case :inet.parse_address(to_charlist(domain)) do
+          {:ok, _address} -> true
+          _other -> false
+        end
+
+      domain_is_local? = domain == "localhost" or not String.contains?(domain, ".")
+
+      if domain_is_ip? or domain_is_local? do
+        raise ArgumentError, "Cannot generate TLS certificates for domain #{inspect(domain)}"
+      end
+
+      email =
+        case PlausibleWeb.Email.mailer_email_from() do
+          {_, email} -> email
+          email when is_binary(email) -> email
+        end
+
+      data_dir = Application.get_env(:plausible, :data_dir)
+      db_folder = Path.join(data_dir || System.tmp_dir!(), "site_encrypt")
+
+      directory_url =
+        Application.get_env(:plausible, :acme_directory_url) ||
+          "https://acme-v02.api.letsencrypt.org/directory"
+
+      SiteEncrypt.configure(
+        mode: :auto,
+        log_level: :notice,
+        client: :certbot,
+        domains: [domain],
+        emails: [email],
+        db_folder: db_folder,
+        directory_url: directory_url
+      )
+    end
   end
 end

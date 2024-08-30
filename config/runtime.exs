@@ -19,9 +19,11 @@ config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
 log_format =
   get_var_from_path_or_env(config_dir, "LOG_FORMAT", "standard")
 
+default_log_level = if config_env() == :ce, do: "notice", else: "warning"
+
 log_level =
   config_dir
-  |> get_var_from_path_or_env("LOG_LEVEL", "warning")
+  |> get_var_from_path_or_env("LOG_LEVEL", default_log_level)
   |> String.to_existing_atom()
 
 config :logger,
@@ -61,7 +63,13 @@ listen_ip =
   )
 
 # System.get_env does not accept a non string default
-port = get_var_from_path_or_env(config_dir, "PORT") || 8000
+http_port =
+  get_int_from_path_or_env(config_dir, "HTTP_PORT") ||
+    get_int_from_path_or_env(config_dir, "PORT", 8000)
+
+https_port = get_int_from_path_or_env(config_dir, "HTTPS_PORT")
+
+acme_directory_url = get_var_from_path_or_env(config_dir, "ACME_DIRECTORY_URL")
 
 base_url = get_var_from_path_or_env(config_dir, "BASE_URL")
 
@@ -302,23 +310,29 @@ config :plausible,
   custom_script_name: custom_script_name,
   log_failed_login_attempts: log_failed_login_attempts,
   license_key: license_key,
-  data_dir: data_dir
+  data_dir: data_dir,
+  acme_directory_url: acme_directory_url
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
   disable_registration: disable_registration
 
+default_http_opts = [
+  transport_options: [max_connections: :infinity],
+  protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
+]
+
 config :plausible, PlausibleWeb.Endpoint,
   url: [scheme: base_url.scheme, host: base_url.host, path: base_url.path, port: base_url.port],
-  http: [
-    port: port,
-    ip: listen_ip,
-    transport_options: [max_connections: :infinity],
-    protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
-  ],
+  http: [port: http_port, ip: listen_ip] ++ default_http_opts,
   secret_key_base: secret_key_base,
   websocket_url: websocket_url,
   secure_cookie: secure_cookie
+
+if https_port do
+  config :plausible, PlausibleWeb.Endpoint,
+    https: [port: https_port, ip: listen_ip, cipher_suite: :compatible] ++ default_http_opts
+end
 
 db_maybe_ipv6 =
   if get_var_from_path_or_env(config_dir, "ECTO_IPV6") do
