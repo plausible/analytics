@@ -1145,12 +1145,12 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       conn: conn,
       site: site
     } do
-      insert(:goal, event_name: unquote("WP Search Queries"), site: site)
+      insert(:goal, event_name: "WP Search Queries", site: site)
       site_import = insert(:site_import, site: site)
 
       populate_stats(site, site_import.id, [
         build(:event,
-          name: unquote("WP Search Queries"),
+          name: "WP Search Queries",
           "meta.key": ["search_query", "result_count"],
           "meta.value": ["some phrase", "12"]
         ),
@@ -1162,7 +1162,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
         build(:imported_visitors, visitors: 9)
       ])
 
-      filters = Jason.encode!(%{goal: unquote("WP Search Queries")})
+      filters = Jason.encode!(%{goal: "WP Search Queries"})
 
       conn =
         get(
