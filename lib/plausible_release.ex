@@ -65,33 +65,22 @@ defmodule Plausible.Release do
   def interweave_migrate(repos \\ repos()) do
     prepare()
 
-    streaks = migration_streaks(repos)
+    pending = all_pending_migrations(repos)
+    streaks = migration_streaks(pending)
 
     Enum.each(streaks, fn {repo, up_to_version} ->
       {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, to: up_to_version))
     end)
   end
 
-  @doc false
-  def migration_streaks(repos) do
-    all_pending =
-      Enum.flat_map(repos, fn repo ->
-        # credo:disable-for-lines:6 Credo.Check.Refactor.Nesting
-        {:ok, pending, _started} =
-          Ecto.Migrator.with_repo(repo, fn repo ->
-            Ecto.Migrator.migrations(repo)
-            |> Enum.filter(fn {status, _version, _name} -> status == :down end)
-            |> Enum.map(fn {_status, version, _name} -> {repo, version} end)
-          end)
-
-        pending
-      end)
-
-    all_sorted =
-      Enum.sort_by(all_pending, fn {_repo, version} -> version end, :asc)
+  defp migration_streaks(pending_migrations) do
+    sorted_migrations =
+      pending_migrations
+      |> Enum.map(fn {repo, version, _name} -> {repo, version} end)
+      |> Enum.sort_by(fn {_repo, version} -> version end, :asc)
 
     streaks_reversed =
-      Enum.reduce(all_sorted, [], fn {repo, _version} = latest_migration, streaks_acc ->
+      Enum.reduce(sorted_migrations, [], fn {repo, _version} = latest_migration, streaks_acc ->
         case streaks_acc do
           # start the streak for repo
           [] -> [latest_migration]
@@ -105,6 +94,21 @@ defmodule Plausible.Release do
     :lists.reverse(streaks_reversed)
   end
 
+  @spec all_pending_migrations([Ecto.Repo.t()]) :: [{Ecto.Repo.t(), integer, String.t()}]
+  defp all_pending_migrations(repos) do
+    Enum.flat_map(repos, fn repo ->
+      # credo:disable-for-lines:6 Credo.Check.Refactor.Nesting
+      {:ok, pending, _started} =
+        Ecto.Migrator.with_repo(repo, fn repo ->
+          Ecto.Migrator.migrations(repo)
+          |> Enum.filter(fn {status, _version, _name} -> status == :down end)
+          |> Enum.map(fn {_status, version, name} -> {repo, version, name} end)
+        end)
+
+      pending
+    end)
+  end
+
   def pending_migrations do
     prepare()
     IO.puts("Pending migrations")
@@ -116,25 +120,13 @@ defmodule Plausible.Release do
     prepare()
     IO.puts("Collecting pending migrations..\n")
 
-    streaks = migration_streaks(repos)
+    pending = all_pending_migrations(repos)
+    streaks = migration_streaks(pending)
 
-    all_pending =
-      Enum.flat_map(repos, fn repo ->
-        # credo:disable-for-lines:6 Credo.Check.Refactor.Nesting
-        {:ok, pending, _started} =
-          Ecto.Migrator.with_repo(repo, fn repo ->
-            Ecto.Migrator.migrations(repo)
-            |> Enum.filter(fn {status, _version, _name} -> status == :down end)
-            |> Enum.map(fn {_status, version, name} -> {repo, version, name} end)
-          end)
-
-        pending
-      end)
-
-    print_streaks(streaks, all_pending)
+    print_migration_streaks(streaks, pending)
   end
 
-  defp print_streaks([{repo, up_to_version} | streaks], pending) do
+  defp print_migration_streaks([{repo, up_to_version} | streaks], pending) do
     {streak, pending} =
       Enum.split_with(pending, fn {pending_repo, version, _name} ->
         pending_repo == repo and version <= up_to_version
@@ -147,10 +139,10 @@ defmodule Plausible.Release do
     Enum.each(streak, fn {_repo, version, name} -> IO.puts("  * #{version}_#{name}") end)
     IO.puts("")
 
-    print_streaks(streaks, pending)
+    print_migration_streaks(streaks, pending)
   end
 
-  defp print_streaks([], []), do: :ok
+  defp print_migration_streaks([], []), do: :ok
 
   def seed do
     prepare()
