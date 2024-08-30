@@ -1,4 +1,6 @@
 defmodule Plausible.ClickhouseRepo do
+  use Plausible
+
   use Ecto.Repo,
     otp_app: :plausible,
     adapter: Ecto.Adapters.ClickHouse,
@@ -12,7 +14,7 @@ defmodule Plausible.ClickhouseRepo do
     end
   end
 
-  @task_timeout 60_000
+  @task_timeout on_ee(do: 60_000, else: :infinity)
   def parallel_tasks(queries, opts \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
@@ -40,6 +42,10 @@ defmodule Plausible.ClickhouseRepo do
       Keyword.update(opts, :settings, [log_comment: log_comment], fn settings ->
         [{:log_comment, log_comment} | settings]
       end)
+
+    on_ce do
+      opts = Keyword.put_new(opts, :timeout, @task_timeout)
+    end
 
     {query, opts}
   end
