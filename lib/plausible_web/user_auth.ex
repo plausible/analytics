@@ -171,18 +171,16 @@ defmodule PlausibleWeb.UserAuth do
     |> get_user_token()
   end
 
-  defp get_user_token(session) do
-    case Enum.map(["user_token", "current_user_id"], &Map.get(session, &1)) do
-      [token, nil] when is_binary(token) ->
-        {:ok, {:new, token}}
+  defp get_user_token(%{"user_token" => token}) when is_binary(token) do
+    {:ok, {:new, token}}
+  end
 
-      [nil, current_user_id] when is_integer(current_user_id) ->
-        Logger.warning("Legacy user session detected (user: #{current_user_id})")
-        {:ok, {:legacy, current_user_id}}
+  defp get_user_token(%{"current_user_id" => user_id}) when is_integer(user_id) do
+    {:ok, {:legacy, user_id}}
+  end
 
-      [nil, nil] ->
-        {:error, :no_valid_token}
-    end
+  defp get_user_token(_) do
+    {:error, :no_valid_token}
   end
 
   defp create_user_session(conn, user) do
