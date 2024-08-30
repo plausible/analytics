@@ -44,7 +44,7 @@ defmodule Plausible.ClickhouseRepo do
       end)
 
     on_ce do
-      opts = Keyword.put_new(opts, :timeout, @task_timeout)
+      opts = Keyword.put_new(opts, :timeout, :infinity)
     end
 
     {query, opts}
