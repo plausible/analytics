@@ -21,6 +21,9 @@ defmodule Plausible.Stats.Comparisons do
   @doc """
   Generates a comparison query based on the source query and comparison mode.
 
+  Currently only historical periods are supported for comparisons (not `realtime`
+  and `30m` periods).
+
   The mode parameter specifies the type of comparison and can be one of the
   following:
 
