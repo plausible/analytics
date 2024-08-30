@@ -191,7 +191,7 @@ defmodule PlausibleWeb.Router do
   scope "/api/docs", PlausibleWeb.Api do
     get "/query/schema.json", ExternalQueryApiController, :schema
 
-    scope assigns: %{} do
+    scope [] do
       pipe_through :internal_stats_api
 
       post "/query", ExternalQueryApiController, :query
@@ -224,7 +224,7 @@ defmodule PlausibleWeb.Router do
   end
 
   scope "/api", PlausibleWeb do
-    scope assigns: %{} do
+    scope [] do
       pipe_through :external_api
 
       post "/event", Api.ExternalController, :event
@@ -233,7 +233,7 @@ defmodule PlausibleWeb.Router do
       get "/system", Api.ExternalController, :info
     end
 
-    scope assigns: %{} do
+    scope [] do
       pipe_through :api
       post "/paddle/webhook", Api.PaddleController, :webhook
       get "/paddle/currency", Api.PaddleController, :currency
