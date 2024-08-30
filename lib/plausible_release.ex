@@ -39,7 +39,7 @@ defmodule Plausible.Release do
   The default `migrate/0` function migrates each repository independently, which may result in
   migrations running in the wrong order when there are cross-repository dependencies.
 
-  Consider the following example:
+  Consider the following example (adapted from reality, not 100% accurate):
 
   - **Migration 1**: The PostgreSQL (PG) repository creates a table named `site_imports`.
   - **Migration 2**: The ClickHouse (CH) repository creates `import_id` columns in `imported_*` tables.
