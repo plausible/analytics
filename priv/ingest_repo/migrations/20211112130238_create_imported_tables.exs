@@ -5,7 +5,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     create_if_not_exists table(:imported_visitors,
                            primary_key: false,
                            engine: "MergeTree",
-                           options: "ORDER BY (site_id, date)"
+                           options: [order_by: "(site_id, date)"]
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
@@ -19,7 +19,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     create_if_not_exists table(:imported_sources,
                            primary_key: false,
                            engine: "MergeTree",
-                           options: "ORDER BY (site_id, date, source)"
+                           options: [order_by: "(site_id, date, source)"]
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
@@ -37,7 +37,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     create_if_not_exists table(:imported_pages,
                            primary_key: false,
                            engine: "MergeTree",
-                           options: "ORDER BY (site_id, date, hostname, page)"
+                           options: [order_by: "(site_id, date, hostname, page)"]
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
@@ -52,7 +52,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     create_if_not_exists table(:imported_entry_pages,
                            primary_key: false,
                            engine: "MergeTree",
-                           options: "ORDER BY (site_id, date, entry_page)"
+                           options: [order_by: "(site_id, date, entry_page)"]
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
@@ -66,7 +66,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     create_if_not_exists table(:imported_exit_pages,
                            primary_key: false,
                            engine: "MergeTree",
-                           options: "ORDER BY (site_id, date, exit_page)"
+                           options: [order_by: "(site_id, date, exit_page)"]
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
@@ -78,7 +78,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     create_if_not_exists table(:imported_locations,
                            primary_key: false,
                            engine: "MergeTree",
-                           options: "ORDER BY (site_id, date, country, region, city)"
+                           options: [order_by: "(site_id, date, country, region, city)"]
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
@@ -94,7 +94,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     create_if_not_exists table(:imported_devices,
                            primary_key: false,
                            engine: "MergeTree",
-                           options: "ORDER BY (site_id, date, device)"
+                           options: [order_by: "(site_id, date, device)"]
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
@@ -108,7 +108,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     create_if_not_exists table(:imported_browsers,
                            primary_key: false,
                            engine: "MergeTree",
-                           options: "ORDER BY (site_id, date, browser)"
+                           options: [order_by: "(site_id, date, browser)"]
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)
@@ -122,7 +122,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateImportedVisitors do
     create_if_not_exists table(:imported_operating_systems,
                            primary_key: false,
                            engine: "MergeTree",
-                           options: "ORDER BY (site_id, date, operating_system)"
+                           options: [order_by: "(site_id, date, operating_system)"]
                          ) do
       add(:site_id, :UInt64)
       add(:date, :date)

@@ -23,6 +23,13 @@ defmodule Plausible.DataMigration.VersionedSessions do
 
     cluster? = Plausible.MigrationUtils.clustered_table?("sessions_v2")
 
+    cluster_name =
+      if cluster? do
+        Plausible.MigrationUtils.cluster_name()
+      else
+        nil
+      end
+
     {:ok, %{rows: partitions}} = run_sql("list-partitions")
     partitions = Enum.map(partitions, fn [part] -> part end)
 
@@ -32,11 +39,13 @@ defmodule Plausible.DataMigration.VersionedSessions do
     if Enum.member?(@versioned_table_engines, current_table_engine) do
       IO.puts("sessions_v2 table is already versioned, no migration needed")
     else
-      {:ok, _} = run_sql("drop-sessions-tmp-table", cluster?: cluster?)
+      {:ok, _} =
+        run_sql("drop-sessions-tmp-table", cluster?: cluster?, cluster_name: cluster_name)
 
       {:ok, _} =
         run_sql("create-sessions-tmp-table",
           cluster?: cluster?,
+          cluster_name: cluster_name,
           table_settings: table_settings,
           unique_suffix: unique_suffix
         )
@@ -46,15 +55,15 @@ defmodule Plausible.DataMigration.VersionedSessions do
       end
 
       if run_exchange? do
-        run_exchange(cluster?)
+        run_exchange(cluster?, cluster_name)
       end
 
       IO.puts("Migration done!")
     end
   end
 
-  defp run_exchange(cluster?) do
-    case run_sql("exchange-sessions-tables", cluster?: cluster?) do
+  defp run_exchange(cluster?, cluster_name) do
+    case run_sql("exchange-sessions-tables", cluster?: cluster?, cluster_name: cluster_name) do
       {:ok, _} ->
         nil
 
@@ -66,14 +75,16 @@ defmodule Plausible.DataMigration.VersionedSessions do
           run_sql("rename-table",
             from: "sessions_v2",
             to: "sessions_v2_backup",
-            cluster?: cluster?
+            cluster?: cluster?,
+            cluster_name: cluster_name
           )
 
         {:ok, _} =
           run_sql("rename-table",
             from: "sessions_v2_tmp_versioned",
             to: "sessions_v2",
-            cluster?: cluster?
+            cluster?: cluster?,
+            cluster_name: cluster_name
           )
     end
   end

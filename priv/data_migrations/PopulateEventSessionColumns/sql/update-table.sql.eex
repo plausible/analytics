@@ -1,5 +1,5 @@
 ALTER TABLE events_v2
-<%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+<%= if @cluster? do %>ON CLUSTER '<%= @cluster_name %>'<% end %>
 UPDATE
     referrer = dictGet('sessions_dict', 'referrer', tuple(site_id, session_id)),
     referrer_source = dictGet('sessions_dict', 'referrer_source', tuple(site_id, session_id)),

@@ -1,5 +1,5 @@
 CREATE OR REPLACE DICTIONARY sessions_dict
-<%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+<%= if @cluster? do %>ON CLUSTER '<%= @cluster_name %>'<% end %>
 (
     site_id UInt64,
     session_id UInt64,
