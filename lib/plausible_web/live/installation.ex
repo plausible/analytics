@@ -147,27 +147,29 @@ defmodule PlausibleWeb.Live.Installation do
 
         <:subtitle :if={@installation_type == "WordPress"}>
           We've detected your website is using WordPress. Here's how to integrate Plausible:
-          <ol class="list-decimal space-y-1 ml-8 mt-4">
-            <li>
+          <.focus_list>
+            <:item>
               <.styled_link href="https://plausible.io/wordpress-analytics-plugin" new_tab={true}>
                 Install our WordPress plugin
               </.styled_link>
-            </li>
-            <li>After activating our plugin, click the button below to verify your installation</li>
-          </ol>
+            </:item>
+            <:item>
+              After activating our plugin, click the button below to verify your installation
+            </:item>
+          </.focus_list>
         </:subtitle>
         <:subtitle :if={@installation_type == "GTM"}>
           We've detected your website is using Google Tag Manager. Here's how to integrate Plausible:
-          <ol class="list-decimal space-y-1 ml-8 mt-4">
-            <li>
+          <.focus_list>
+            <:item>
               <.styled_link href="https://plausible.io/docs/google-tag-manager" new_tab={true}>
                 Read our Tag Manager guide
               </.styled_link>
-            </li>
-            <li>
+            </:item>
+            <:item>
               Paste this snippet into GTM's Custom HTML section. Once done, click the button below to verify your installation.
-            </li>
-          </ol>
+            </:item>
+          </.focus_list>
         </:subtitle>
 
         <:subtitle :if={@installation_type == "manual"}>

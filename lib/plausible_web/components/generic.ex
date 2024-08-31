@@ -181,6 +181,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr :new_tab, :boolean, default: false
   attr :class, :string, default: ""
   attr :rest, :global
+  attr :method, :string, default: "get"
   slot :inner_block
 
   def styled_link(assigns) do
@@ -188,6 +189,7 @@ defmodule PlausibleWeb.Components.Generic do
     <.unstyled_link
       new_tab={@new_tab}
       href={@href}
+      method={@method}
       class={"text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 " <> @class}
       {@rest}
     >
@@ -263,9 +265,23 @@ defmodule PlausibleWeb.Components.Generic do
   attr :class, :string, default: ""
   attr :id, :any, default: nil
   attr :rest, :global
+  attr :method, :string, default: "get"
   slot :inner_block
 
   def unstyled_link(assigns) do
+    extra =
+      if assigns.method == "get" do
+        []
+      else
+        [
+          "data-csrf": Phoenix.HTML.Tag.csrf_token_value(assigns.href),
+          "data-method": assigns.method,
+          "data-to": assigns.href
+        ]
+      end
+
+    assigns = assign(assigns, extra: extra)
+
     if assigns[:new_tab] do
       assigns = assign(assigns, :icon_class, icon_class(assigns))
 
@@ -279,6 +295,7 @@ defmodule PlausibleWeb.Components.Generic do
         href={@href}
         target="_blank"
         rel="noopener noreferrer"
+        {@extra}
         {@rest}
       >
         <%= render_slot(@inner_block) %>
@@ -287,7 +304,7 @@ defmodule PlausibleWeb.Components.Generic do
       """
     else
       ~H"""
-      <.link class={@class} href={@href} {@rest}>
+      <.link class={@class} href={@href} {@extra} {@rest}>
         <%= render_slot(@inner_block) %>
       </.link>
       """
@@ -380,6 +397,18 @@ defmodule PlausibleWeb.Components.Generic do
     else
       ["w-4 h-4"]
     end
+  end
+
+  slot :item, required: true
+
+  def focus_list(assigns) do
+    ~H"""
+    <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
+      <li :for={item <- @item} class="marker:text-indigo-700 dark:marker:text-indigo-700">
+        <%= render_slot(item) %>
+      </li>
+    </ol>
+    """
   end
 
   slot :title

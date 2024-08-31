@@ -96,16 +96,14 @@ defmodule PlausibleWeb.Live.Components.Verification do
         </div>
 
         <:footer :if={@finished? and not @success?}>
-          <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
-            <%= if ee?() and @attempts >= 3 do %>
-              <li>
-                <b>Need further help with your installation?</b>
-                <.styled_link href="https://plausible.io/contact">
-                  Contact us
-                </.styled_link>
-              </li>
-            <% end %>
-            <li>
+          <.focus_list>
+            <:item :if={ee?() and @attempts >= 3}>
+              <b>Need further help with your installation?</b>
+              <.styled_link href="https://plausible.io/contact">
+                Contact us
+              </.styled_link>
+            </:item>
+            <:item>
               Need to see installation instructions again?
               <.styled_link href={
                 Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain,
@@ -115,14 +113,14 @@ defmodule PlausibleWeb.Live.Components.Verification do
               }>
                 Click here
               </.styled_link>
-            </li>
-            <li>
+            </:item>
+            <:item>
               Run verification later and go to site settings?
               <.styled_link href={"/#{URI.encode_www_form(@domain)}/settings/general"}>
                 Click here
               </.styled_link>
-            </li>
-          </ol>
+            </:item>
+          </.focus_list>
         </:footer>
       </PlausibleWeb.Components.Generic.focus_box>
     </div>
