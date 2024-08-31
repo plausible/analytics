@@ -96,9 +96,6 @@ defmodule Plausible.Session.CacheStoreTest do
 
   @tag :slow
   test "in case of lock kicking in, the slow event finishes processing", %{buffer: buffer} do
-    # FIXME: for some reason sometimes `very_slow_buffer` is called twice,
-    # as if there was some implicit retry? Happens once per multiple runs
-    # of this test.
     current_pid = self()
 
     very_slow_buffer = fn sessions ->
@@ -132,6 +129,9 @@ defmodule Plausible.Session.CacheStoreTest do
         CacheStore.on_event(event1, session_params, nil, very_slow_buffer)
       end)
 
+    # Ensure next events are executed after processing event1 starts
+    Process.sleep(100)
+
     async2 =
       Task.async(fn ->
         CacheStore.on_event(event2, session_params, nil, buffer)
@@ -148,6 +148,68 @@ defmodule Plausible.Session.CacheStoreTest do
 
     assert_receive({:very_slow_buffer, :insert, [[_session]]})
     refute_receive({:buffer, :insert, [[_updated_session]]})
+  end
+
+  @tag :slow
+  test "lock on slow processing of one event does not affect unrelated events", %{buffer: buffer} do
+    current_pid = self()
+
+    very_slow_buffer = fn sessions ->
+      Process.sleep(1000)
+      send(current_pid, {:very_slow_buffer, :insert, [sessions]})
+      {:ok, sessions}
+    end
+
+    event1 = build(:event, name: "pageview")
+    event2 = build(:event, name: "pageview")
+    event3 = build(:event, name: "pageview", user_id: event2.user_id, site_id: event2.site_id)
+
+    session_params = %{
+      referrer: "ref",
+      referrer_source: "refsource",
+      utm_medium: "medium",
+      utm_source: "source",
+      utm_campaign: "campaign",
+      utm_content: "content",
+      utm_term: "term",
+      browser: "browser",
+      browser_version: "55",
+      country_code: "EE",
+      screen_size: "Desktop",
+      operating_system: "Mac",
+      operating_system_version: "11"
+    }
+
+    async1 =
+      Task.async(fn ->
+        CacheStore.on_event(event1, session_params, nil, very_slow_buffer)
+      end)
+
+    # Ensure next events are executed after processing event1 starts
+    Process.sleep(100)
+
+    async2 =
+      Task.async(fn ->
+        CacheStore.on_event(event2, session_params, nil, buffer)
+      end)
+
+    Process.sleep(100)
+
+    async3 =
+      Task.async(fn ->
+        CacheStore.on_event(event3, session_params, nil, buffer)
+      end)
+
+    Task.await_many([async1, async2, async3])
+
+    assert_receive({:very_slow_buffer, :insert, [[_slow_session]]})
+    assert_receive({:buffer, :insert, [[new_session1]]})
+    assert_receive({:buffer, :insert, [[removed_session1, updated_session1]]})
+    assert new_session1.sign == 1
+    assert removed_session1.session_id == new_session1.session_id
+    assert removed_session1.sign == -1
+    assert updated_session1.session_id == removed_session1.session_id
+    assert updated_session1.sign == 1
   end
 
   test "exploding event processing is passed through by locking mechanism" do
