@@ -115,7 +115,7 @@ defmodule PlausibleWeb.Live.Installation do
         </:title>
 
         <:subtitle :if={is_nil(@installation_type)}>
-          <div class="text-center">
+          <div class="text-center mt-8">
             Determining installation type...
             <.styled_link
               :if={@connected?}
