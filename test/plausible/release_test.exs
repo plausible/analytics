@@ -89,6 +89,17 @@ defmodule Plausible.ReleaseTest do
       :ok
     end
 
+    defp last_migration(repo) do
+      {:ok, {_status, version, name}, _started} =
+        Ecto.Migrator.with_repo(repo, fn repo ->
+          repo
+          |> Ecto.Migrator.migrations()
+          |> List.last()
+        end)
+
+      "#{version}_#{name}"
+    end
+
     defp fake_migrate(repo, up_to_migration) do
       {up_to_version, _name} = Integer.parse(up_to_migration)
 
@@ -220,6 +231,19 @@ defmodule Plausible.ReleaseTest do
 
              Plausible.ReleaseTest.PostgreSQL [_build/test/lib/plausible/priv/repo/migrations] streak up to version \
              """ <> _future = pending_streaks
+
+      fake_migrate(PostgreSQL, last_migration(PostgreSQL))
+      fake_migrate(ClickHouse, last_migration(ClickHouse))
+
+      no_streaks = capture_io(fn -> Release.pending_streaks([PostgreSQL, ClickHouse]) end)
+
+      assert no_streaks == """
+             Loading plausible..
+             Starting dependencies..
+             Starting repos..
+             Collecting pending migrations..
+             No pending migrations!
+             """
     end
   end
 end

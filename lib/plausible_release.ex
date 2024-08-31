@@ -118,12 +118,16 @@ defmodule Plausible.Release do
 
   def pending_streaks(repos \\ repos()) do
     prepare()
-    IO.puts("Collecting pending migrations..\n")
+    IO.puts("Collecting pending migrations..")
 
     pending = all_pending_migrations(repos)
-    streaks = migration_streaks(pending)
 
-    print_migration_streaks(streaks, pending)
+    if pending == [] do
+      IO.puts("No pending migrations!")
+    else
+      streaks = migration_streaks(pending)
+      print_migration_streaks(streaks, pending)
+    end
   end
 
   defp print_migration_streaks([{repo, up_to_version} | streaks], pending) do
@@ -133,12 +137,10 @@ defmodule Plausible.Release do
       end)
 
     IO.puts(
-      "#{inspect(repo)} [#{Path.relative_to_cwd(Ecto.Migrator.migrations_path(repo))}] streak up to version #{up_to_version}:"
+      "\n#{inspect(repo)} [#{Path.relative_to_cwd(Ecto.Migrator.migrations_path(repo))}] streak up to version #{up_to_version}:"
     )
 
     Enum.each(streak, fn {_repo, version, name} -> IO.puts("  * #{version}_#{name}") end)
-    IO.puts("")
-
     print_migration_streaks(streaks, pending)
   end
 
