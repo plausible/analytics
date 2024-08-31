@@ -39,7 +39,7 @@
   <:footer>
     <.focus_list>
       <:item>
-        <%= if Keyword.fetch!(Application.get_env(:plausible, :selfhost),:disable_registration) == false do %>
+        <%= if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == false do %>
           Don't have an account
           <.styled_link href="/register">
             Register
