@@ -41,7 +41,10 @@ defmodule Plausible.Stats.QueryResultTest do
     assert query_result_json == """
            {
              "results": [],
-             "meta": {},
+             "meta": {
+               "imports_included": false,
+               "imports_skip_reason": "no_imported_data"
+             },
              "query": {
                "site_id": "dummy.site",
                "metrics": [

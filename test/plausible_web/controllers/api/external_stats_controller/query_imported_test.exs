@@ -31,7 +31,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       conn2 = post(conn, "/api/v2/query", Map.put(query_params, "include", %{"imports" => true}))
 
       assert json_response(conn2, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
-      refute json_response(conn2, 200)["meta"]["warning"]
+      assert json_response(conn2, 200)["meta"]["imports_included"]
+      refute json_response(conn2, 200)["meta"]["imports_warning"]
     end
   end
 
@@ -425,7 +426,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
                  %{"dimensions" => ["https://one.com"], "metrics" => [3, 6, 30]}
                ]
 
-        refute json_response(conn, 200)["meta"]["warning"]
+        assert json_response(conn, 200)["meta"]["imports_included"]
+        refute json_response(conn, 200)["meta"]["imports_warning"]
       end
     end
 
@@ -477,7 +479,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
                  %{"dimensions" => ["/one"], "metrics" => [3, 6, 30]}
                ]
 
-        refute json_response(conn, 200)["meta"]["warning"]
+        assert json_response(conn, 200)["meta"]["imports_included"]
+        refute json_response(conn, 200)["meta"]["imports_warning"]
       end
     end
 
@@ -519,6 +522,73 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
              ]
     end
 
+    test "includes imported data for time:day dimension", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      insert(:goal, event_name: "Signup", site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:10:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 23:59:00]),
+        build(:imported_visitors, date: ~D[2021-01-01], visitors: 5)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => ["2021-01-01", "2021-01-02"],
+          "dimensions" => ["time:day"],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01"], "metrics" => [8]}
+             ]
+
+      assert json_response(conn, 200)["meta"] == %{"imports_included" => true}
+    end
+
+    test "adds a warning when time:hour dimension", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      insert(:goal, event_name: "Signup", site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:10:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 23:59:00]),
+        build(:imported_visitors, date: ~D[2021-01-01], visitors: 5)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => ["2021-01-01", "2021-01-02"],
+          "dimensions" => ["time:hour"],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["2021-01-01 00:00:00"], "metrics" => [2]},
+               %{"dimensions" => ["2021-01-01 23:00:00"], "metrics" => [1]}
+             ]
+
+      refute json_response(conn, 200)["meta"]["imports_included"]
+      assert json_response(conn, 200)["meta"]["imports_skip_reason"] == "unsupported_query"
+
+      assert json_response(conn, 200)["meta"]["imports_warning"] =~
+               "Imported stats are not included in the results because query parameters are not supported."
+    end
+
     test "adds a warning when query params are not supported for imported data", %{
       conn: conn,
       site: site
@@ -552,7 +622,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
                %{"dimensions" => ["large"], "metrics" => [1]}
              ]
 
-      assert json_response(conn, 200)["meta"]["warning"] =~
+      refute json_response(conn, 200)["meta"]["imports_included"]
+      assert json_response(conn, 200)["meta"]["imports_skip_reason"] == "unsupported_query"
+
+      assert json_response(conn, 200)["meta"]["imports_warning"] =~
                "Imported stats are not included in the results because query parameters are not supported."
     end
 
@@ -579,7 +652,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      refute json_response(conn, 200)["meta"]["warning"]
+      assert json_response(conn, 200)["meta"] == %{
+               "imports_included" => false,
+               "imports_skip_reason" => "no_imported_data"
+             }
     end
 
     test "does not add a warning when import is out of queried date range", %{
@@ -611,7 +687,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
           "include" => %{"imports" => true}
         })
 
-      refute json_response(conn, 200)["meta"]["warning"]
+      assert json_response(conn, 200)["meta"] == %{
+               "imports_included" => false,
+               "imports_skip_reason" => "out_of_range"
+             }
     end
 
     test "applies multiple filters if the properties belong to the same table", %{
@@ -677,7 +756,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
                "meta" => meta
              } = json_response(conn, 200)
 
-      assert meta["warning"] =~ "Imported stats are not included in the results"
+      refute json_response(conn, 200)["meta"]["imports_included"]
+      assert meta["imports_warning"] =~ "Imported stats are not included in the results"
     end
 
     test "imported country, region and city data",

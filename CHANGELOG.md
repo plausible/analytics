@@ -41,6 +41,7 @@ All notable changes to this project will be documented in this file.
 - Fix access to Stats API feature in CE plausible/analytics#4244
 - Fix filter suggestions when same filter previously applied
 - Fix MX lookup when using relays with Bamboo.Mua plausible/analytics#4350
+- Don't include imports when showing time series hourly interval. Previously imported data was shown each midnight
 
 ## v2.1.1 - 2024-06-06
 

@@ -57,7 +57,10 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{"plot" => ^zeroes, "includes_imported" => false} = json_response(conn, 200)
     end
 
-    test "displays visitors for a day with imported data", %{conn: conn, site: site} do
+    test "displays visitors for a day with imported data (not included for hourly)", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00]),
@@ -74,7 +77,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert %{"plot" => plot, "imports_exist" => true, "includes_imported" => true} =
                json_response(conn, 200)
 
-      assert plot == [2] ++ List.duplicate(0, 23)
+      assert plot == [1] ++ List.duplicate(0, 23)
     end
 
     test "displays hourly stats in configured timezone", %{conn: conn, user: user} do
