@@ -20,6 +20,7 @@ defmodule Plausible.Stats.Breakdown do
       Query.set(
         query,
         metrics: transformed_metrics,
+        # Concat client requested order with default order, overriding only if client explicitly requests it
         order_by:
           Enum.concat(query.order_by || [], infer_order_by(transformed_metrics, dimension))
           |> Enum.uniq_by(&elem(&1, 0)),
