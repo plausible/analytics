@@ -211,7 +211,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp date_range_from_timestamps(from, to) do
     with {:ok, from_datetime} <- datetime_from_timestamp(from),
-         {:ok, to_datetime} <- datetime_from_timestamp(to) do
+         {:ok, to_datetime} <- datetime_from_timestamp(to),
+         true <- from_datetime.time_zone == to_datetime.time_zone do
       {:ok, DateTimeRange.new!(from_datetime, to_datetime)}
     else
       _ -> {:error, "Invalid date_range '#{i([from, to])}'."}

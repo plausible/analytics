@@ -607,15 +607,27 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
     end
 
-    test "custom date range is invalid when timestamp timezone is invalid", %{site: site} do
+    test "custom date range is invalid when timestamp timezones are different", %{site: site} do
       %{
         "site_id" => site.domain,
-        "date_range" => ["2021-02-03T00:00:00 Fake/Timezone", "2021-02-03T23:59:59 UTC"],
+        "date_range" => ["2021-02-03T00:00:00 Europe/Tallinn", "2021-02-03T23:59:59 UTC"],
         "metrics" => ["visitors"]
       }
       |> check_error(
         site,
-        "Invalid date_range '[\"2021-02-03T00:00:00 Fake/Timezone\", \"2021-02-03T23:59:59 UTC\"]'."
+        "Invalid date_range '[\"2021-02-03T00:00:00 Europe/Tallinn\", \"2021-02-03T23:59:59 UTC\"]'."
+      )
+    end
+
+    test "custom date range is invalid when timestamp timezone is invalid", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "date_range" => ["2021-02-03T00:00:00 Fake/Timezone", "2021-02-03T23:59:59 Fake/Timezone"],
+        "metrics" => ["visitors"]
+      }
+      |> check_error(
+        site,
+        "Invalid date_range '[\"2021-02-03T00:00:00 Fake/Timezone\", \"2021-02-03T23:59:59 Fake/Timezone\"]'."
       )
     end
 
