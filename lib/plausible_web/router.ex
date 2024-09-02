@@ -14,7 +14,6 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
     plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.Plugs.UserSessionTouch
-    plug PlausibleWeb.LastSeenPlug
   end
 
   pipeline :shared_link do

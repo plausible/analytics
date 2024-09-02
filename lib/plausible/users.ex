@@ -35,6 +35,19 @@ defmodule Plausible.Users do
     |> Repo.update!()
   end
 
+  @spec bump_last_seen(Auth.User.t() | pos_integer(), NaiveDateTime.t()) :: :ok
+  def bump_last_seen(%Auth.User{id: user_id}, now) do
+    bump_last_seen(user_id, now)
+  end
+
+  def bump_last_seen(user_id, now) do
+    q = from(u in Auth.User, where: u.id == ^user_id)
+
+    Repo.update_all(q, set: [last_seen: now])
+
+    :ok
+  end
+
   @spec accept_traffic_until(Auth.User.t()) :: Date.t()
   on_ee do
     def accept_traffic_until(user) do

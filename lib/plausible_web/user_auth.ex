@@ -68,9 +68,15 @@ defmodule PlausibleWeb.UserAuth do
   end
 
   def touch_user_session(user_session, now \\ NaiveDateTime.utc_now(:second)) do
-    user_session
-    |> Auth.UserSession.touch_session(now)
-    |> Repo.update!(allow_stale: true)
+    if NaiveDateTime.diff(now, user_session.last_used_at, :hour) >= 1 do
+      Plausible.Users.bump_last_seen(user_session.user_id, now)
+
+      user_session
+      |> Auth.UserSession.touch_session(now)
+      |> Repo.update!(allow_stale: true)
+    else
+      user_session
+    end
   end
 
   @doc """

@@ -159,7 +159,44 @@ defmodule PlausibleWeb.UserAuthTest do
 
       assert refreshed_session.id == user_session.id
       assert NaiveDateTime.compare(refreshed_session.last_used_at, two_days_later) == :eq
+      assert NaiveDateTime.compare(Repo.reload(user).last_seen, two_days_later) == :eq
       assert NaiveDateTime.compare(refreshed_session.timeout_at, user_session.timeout_at) == :gt
+    end
+
+    test "does not refresh if timestamps were updated less than hour before", %{user: user} do
+      %{sessions: [user_session]} = Repo.preload(user, :sessions)
+      user_session = Repo.reload(user_session)
+      last_seen = Repo.reload(user).last_seen
+
+      fifty_minutes_later =
+        NaiveDateTime.utc_now(:second)
+        |> NaiveDateTime.shift(minute: 50)
+
+      assert refreshed_session1 =
+               %Auth.UserSession{} =
+               UserAuth.touch_user_session(user_session, fifty_minutes_later)
+
+      assert NaiveDateTime.compare(
+               refreshed_session1.last_used_at,
+               user_session.last_used_at
+             ) == :eq
+
+      assert NaiveDateTime.compare(Repo.reload(user).last_seen, last_seen) == :eq
+
+      sixty_five_minutes_later =
+        NaiveDateTime.utc_now(:second)
+        |> NaiveDateTime.shift(minute: 65)
+
+      assert refreshed_session2 =
+               %Auth.UserSession{} =
+               UserAuth.touch_user_session(user_session, sixty_five_minutes_later)
+
+      assert NaiveDateTime.compare(
+               refreshed_session2.last_used_at,
+               sixty_five_minutes_later
+             ) == :eq
+
+      assert NaiveDateTime.compare(Repo.reload(user).last_seen, sixty_five_minutes_later) == :eq
     end
 
     test "handles concurrent refresh gracefully", %{user: user} do
