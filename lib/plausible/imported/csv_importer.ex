@@ -323,7 +323,9 @@ defmodule Plausible.Imported.CSVImporter do
   @doc """
   Returns local directory for CSV imports storage.
 
-  Builds upon `$DATA_DIR` or `$PERSISTENT_CACHE_DIR` (if set) and falls back to /tmp
+  Builds upon `$DATA_DIR`, `$PERSISTENT_CACHE_DIR` or `$DEFAULT_DATA_DIR` (if set) and falls back to /tmp.
+
+  `$DEFAULT_DATA_DIR` is set to `/var/lib/plausible` in container images.
 
   Examples:
 
