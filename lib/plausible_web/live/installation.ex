@@ -475,7 +475,8 @@ defmodule PlausibleWeb.Live.Installation do
           :installation,
           socket.assigns.domain,
           uri_params
-        )
+        ),
+      replace: true
     )
   end
 
