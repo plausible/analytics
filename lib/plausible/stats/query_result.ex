@@ -70,7 +70,7 @@ defmodule Plausible.Stats.QueryResult do
 
   defp meta(query) do
     %{
-      imports_included: if(query.include.imports, do: query.include_imported, else: nil),
+      imports_included: query.include.imports,
       imports_skip_reason:
         if(query.skip_imported_reason, do: Atom.to_string(query.skip_imported_reason), else: nil),
       imports_warning:
