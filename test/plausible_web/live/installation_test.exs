@@ -180,6 +180,8 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
         html = lv |> render()
         assert text_of_element(html, "textarea#snippet") =~ "/js/script.js"
+
+        assert html =~ "Snippet updated"
       end
     end
 
@@ -204,6 +206,8 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
         html = lv |> render()
         assert text_of_element(html, "textarea#snippet") =~ "/js/script.js"
+
+        assert html =~ "Snippet updated"
       end
     end
 
@@ -255,7 +259,7 @@ defmodule PlausibleWeb.Live.InstallationTest do
       assert error_404.event_name == "404"
     end
 
-    test "turning off file-downloads and outbound-links deletes special goals", %{
+    test "turning off file-downloads, outbound-links and 404 deletes special goals", %{
       conn: conn,
       site: site
     } do
@@ -267,14 +271,60 @@ defmodule PlausibleWeb.Live.InstallationTest do
       |> element(~s|form#snippet-form|)
       |> render_change(%{
         "file-downloads" => "on",
+        "outbound-links" => "on",
+        "404" => "on"
+      })
+
+      assert [_, _, _] = Plausible.Goals.for_site(site)
+
+      lv
+      |> element(~s|form#snippet-form|)
+      |> render_change(%{
+        "file-downloads" => "on",
         "outbound-links" => "on"
       })
+
+      assert render(lv) =~ "Snippet updated and goal deleted"
+
+      lv
+      |> element(~s|form#snippet-form|)
+      |> render_change(%{
+        "file-downloads" => "on"
+      })
+
+      assert render(lv) =~ "Snippet updated and goal deleted"
 
       lv
       |> element(~s|form#snippet-form|)
       |> render_change(%{})
 
+      assert render(lv) =~ "Snippet updated and goal deleted"
+
       assert [] = Plausible.Goals.for_site(site)
+    end
+
+    test "turning off remaining checkboxes doesn't render goal deleted flash", %{
+      conn: conn,
+      site: site
+    } do
+      {lv, _html} = get_lv(conn, site, "?installation_type=manual")
+
+      lv
+      |> element(~s|form#snippet-form|)
+      |> render_change(%{
+        "tagged-events" => "on",
+        "hash" => "on",
+        "pageview-props" => "on",
+        "revenue" => "on"
+      })
+
+      assert render(lv) =~ "Snippet updated. Please insert the newest snippet into your site"
+
+      lv
+      |> element(~s|form#snippet-form|)
+      |> render_change(%{})
+
+      assert render(lv) =~ "Snippet updated. Please insert the newest snippet into your site"
     end
   end
 

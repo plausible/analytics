@@ -390,8 +390,10 @@ defmodule PlausibleWeb.Live.Installation do
     new_params =
       Enum.into(@script_config_params, %{}, &{&1, params[&1] == "on"})
 
+    flash = snippet_change_flash(socket.assigns.script_config, new_params)
+
     socket = update_uri_params(socket, new_params)
-    {:noreply, put_live_flash(socket, :success, "Snippet updated")}
+    {:noreply, put_live_flash(socket, :success, flash)}
   end
 
   def handle_params(params, _uri, socket) do
@@ -503,5 +505,22 @@ defmodule PlausibleWeb.Live.Installation do
         script_config: socket.assigns.script_config
       }
     )
+  end
+
+  defp snippet_change_flash(old_config, new_config) do
+    change =
+      Enum.find(new_config, fn {key, value} ->
+        if old_config[key] != new_config[key] do
+          {key, value}
+        end
+      end)
+
+    case change do
+      {k, false} when k in ["outbound-links", "file-downloads", "404"] ->
+        "Snippet updated and goal deleted. Please insert the newest snippet into your site"
+
+      {_, _} ->
+        "Snippet updated. Please insert the newest snippet into your site"
+    end
   end
 end
