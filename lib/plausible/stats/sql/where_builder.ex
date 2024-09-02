@@ -48,7 +48,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
     dynamic(
       [e],
-      e.site_id == ^site.id and e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
+      e.site_id == ^site.id and e.timestamp >= ^first_datetime and e.timestamp <= ^last_datetime
     )
   end
 
@@ -71,7 +71,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
       s.site_id == ^site.id and
         s.start >= ^NaiveDateTime.add(first_datetime, -7, :day) and
         s.timestamp >= ^first_datetime and
-        s.start < ^last_datetime
+        s.start <= ^last_datetime
     )
   end
 

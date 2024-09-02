@@ -4,5 +4,5 @@ We've recorded <%= @current_visitors %> visitors on <%= link(@site.domain, to: "
 <br /><br />
 View dashboard: <%= link(@dashboard_link, to: @dashboard_link) %>
 <br /><br />
-Something looks off? Please use our <%= link("integration testing tool", to: @settings_link) %> to verify that Plausible has been integrated correctly. 
+Something looks off? Please <%= link("review your installation", to: @installation_link) %> to verify that Plausible has been integrated correctly. 
 <% end %>
