@@ -31,7 +31,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
            date_range: date_range,
            dimensions: dimensions,
            order_by: order_by,
-           timezone: site.timezone,
+           timezone: date_range.first.time_zone,
            preloaded_goals: preloaded_goals,
            include: include
          },
