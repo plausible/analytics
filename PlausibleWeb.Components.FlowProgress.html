@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-A4079F72.js"></script>
+    <script src="dist/sidebar_items-BF1C2019.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -144,7 +144,8 @@ Pages
 
   <section id="moduledoc">
 <p>Component for provisioning/registration flows displaying
-progress status.</p>
+progress status. See <a href="PlausibleWeb.Flows.html"><code class="inline">PlausibleWeb.Flows</code></a> for the list of
+flow definitions.</p>
   </section>
 
 
@@ -162,19 +163,11 @@ progress status.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#flows/0" translate="no">flows()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#render/1" translate="no">render(assigns)</a>
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">flow</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">current_step</code> (<code class="inline">:string</code>) (required) - Must be one of <code class="inline">&quot;Register&quot;</code>, <code class="inline">&quot;Activate account&quot;</code>, <code class="inline">&quot;Add site info&quot;</code>, <code class="inline">&quot;Install snippet&quot;</code>, or <code class="inline">&quot;Verify snippet&quot;</code>.</li></ul></div>
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">flow</code> (<code class="inline">:string</code>) (required) - Must be one of <code class="inline">&quot;register&quot;</code>, <code class="inline">&quot;invitation&quot;</code>, <code class="inline">&quot;domain_change&quot;</code>, <code class="inline">&quot;review&quot;</code>, or <code class="inline">&quot;provisioning&quot;</code>.</li><li><code class="inline">current_step</code> (<code class="inline">:string</code>) (required) - Must be one of <code class="inline">&quot;Register&quot;</code>, <code class="inline">&quot;Activate account&quot;</code>, <code class="inline">&quot;Add site info&quot;</code>, <code class="inline">&quot;Install Plausible&quot;</code>, <code class="inline">&quot;Verify installation&quot;</code>, or <code class="inline">&quot;Set up new domain&quot;</code>.</li></ul></div>
 
     </div>
 
@@ -191,28 +184,6 @@ progress status.</p>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="flows/0">
-
-  <div class="detail-header">
-    <a href="#flows/0" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">flows()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/flow_progress.ex#L29" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
 <section class="detail" id="render/1">
 
   <div class="detail-header">
@@ -222,7 +193,7 @@ progress status.</p>
     </a>
     <h1 class="signature" translate="no">render(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/flow_progress.ex#L34" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/flow_progress.ex#L12" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -238,7 +209,7 @@ progress status.</p>
   </a>
   <span class="text">Attributes</span>
 </h2>
-<ul><li><code class="inline">flow</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">current_step</code> (<code class="inline">:string</code>) (required) - Must be one of <code class="inline">&quot;Register&quot;</code>, <code class="inline">&quot;Activate account&quot;</code>, <code class="inline">&quot;Add site info&quot;</code>, <code class="inline">&quot;Install snippet&quot;</code>, or <code class="inline">&quot;Verify snippet&quot;</code>.</li></ul>
+<ul><li><code class="inline">flow</code> (<code class="inline">:string</code>) (required) - Must be one of <code class="inline">&quot;register&quot;</code>, <code class="inline">&quot;invitation&quot;</code>, <code class="inline">&quot;domain_change&quot;</code>, <code class="inline">&quot;review&quot;</code>, or <code class="inline">&quot;provisioning&quot;</code>.</li><li><code class="inline">current_step</code> (<code class="inline">:string</code>) (required) - Must be one of <code class="inline">&quot;Register&quot;</code>, <code class="inline">&quot;Activate account&quot;</code>, <code class="inline">&quot;Add site info&quot;</code>, <code class="inline">&quot;Install Plausible&quot;</code>, <code class="inline">&quot;Verify installation&quot;</code>, or <code class="inline">&quot;Set up new domain&quot;</code>.</li></ul>
   </section>
 </section>
 

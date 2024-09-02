@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-A4079F72.js"></script>
+    <script src="dist/sidebar_items-BF1C2019.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -183,11 +183,59 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#create_404/1" translate="no">create_404(site)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#create_file_downloads/1" translate="no">create_file_downloads(site)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#create_outbound_links/1" translate="no">create_outbound_links(site)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#delete/2" translate="no">delete(id, site_id)</a>
 
       </div>
 
         <div class="summary-synopsis"><p>If a goal belongs to funnel(s), we need to inspect their number of steps.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#delete_404/1" translate="no">delete_404(site)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#delete_file_downloads/1" translate="no">delete_file_downloads(site)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#delete_outbound_links/1" translate="no">delete_outbound_links(site)</a>
+
+      </div>
 
     </div>
 
@@ -336,6 +384,90 @@ Pages
 refreshed by the sites cache, as revenue goals are used during ingestion.</p>
   </section>
 </section>
+<section class="detail" id="create_404/1">
+
+  <div class="detail-header">
+    <a href="#create_404/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">create_404(site)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L252" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> create_404(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="create_file_downloads/1">
+
+  <div class="detail-header">
+    <a href="#create_file_downloads/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">create_file_downloads(site)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L246" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> create_file_downloads(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="create_outbound_links/1">
+
+  <div class="detail-header">
+    <a href="#create_outbound_links/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">create_outbound_links(site)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L240" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> create_outbound_links(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="delete/2">
 
   <div class="detail-header">
@@ -360,6 +492,90 @@ the funnel will be reduced (i.e. a step associated with the goal to be deleted
 is removed), so that the minimum number of steps is preserved. This is done
 implicitly, by postgres, as per on_delete: :delete_all.</p><p>Otherwise, for associated funnel(s) consisting of minimum number steps only,
 funnel record(s) are removed completely along with the targeted goal.</p>
+  </section>
+</section>
+<section class="detail" id="delete_404/1">
+
+  <div class="detail-header">
+    <a href="#delete_404/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">delete_404(site)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L280" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> delete_404(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="delete_file_downloads/1">
+
+  <div class="detail-header">
+    <a href="#delete_file_downloads/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">delete_file_downloads(site)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L269" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> delete_file_downloads(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="delete_outbound_links/1">
+
+  <div class="detail-header">
+    <a href="#delete_outbound_links/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">delete_outbound_links(site)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/goals/goals.ex#L258" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> delete_outbound_links(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: :ok</pre>
+
+      </div>
+
+
   </section>
 </section>
 <section class="detail" id="find_or_create/2">
