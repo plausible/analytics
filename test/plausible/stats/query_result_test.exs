@@ -48,8 +48,8 @@ defmodule Plausible.Stats.QueryResultTest do
                  "pageviews"
                ],
                "date_range": [
-                 "2024-01-01",
-                 "2024-02-01"
+                 "2024-01-01T00:00:00 UTC",
+                 "2024-02-01T23:59:59 UTC"
                ],
                "filters": [],
                "dimensions": [],
