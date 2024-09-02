@@ -20,7 +20,10 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.any?(plot, fn pageviews -> pageviews > 0 end)
     end
 
-    test "displays pageviews for the last 30 minutes for a non-UTC timezone site", %{conn: conn, site: site} do
+    test "displays pageviews for the last 30 minutes for a non-UTC timezone site", %{
+      conn: conn,
+      site: site
+    } do
       Plausible.Site.changeset(site, %{timezone: "Europe/Tallinn"})
       |> Plausible.Repo.update()
 
