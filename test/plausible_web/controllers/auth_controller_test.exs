@@ -1504,8 +1504,10 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert element_exists?(html, "input[name=code]")
 
-      assert text_of_attr(html, "form#start-over-form", "action") ==
-               Routes.auth_path(conn, :initiate_2fa_setup)
+      assert element_exists?(
+               html,
+               ~s|a[data-method="post"][data-to="#{Routes.auth_path(conn, :initiate_2fa_setup)}"|
+             )
     end
 
     test "redirects back to settings if 2FA not initiated", %{conn: conn} do

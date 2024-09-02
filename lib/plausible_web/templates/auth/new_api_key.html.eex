@@ -1,3 +1,4 @@
+<PlausibleWeb.Components.Generic.focus_box>
 <%= form_for @changeset, "/settings/api-keys", [class: "w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mt-8"], fn f -> %>
   <h1 class="text-xl font-black dark:text-gray-100">Create new API key</h1>
   <div class="my-4">
@@ -20,3 +21,4 @@
   </div>
   <%= submit "Continue", class: "button mt-4 w-full" %>
 <% end %>
+</PlausibleWeb.Components.Generic.focus_box>

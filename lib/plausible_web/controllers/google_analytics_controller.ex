@@ -46,8 +46,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           expires_at: expires_at,
           site: conn.assigns.site,
           properties: properties,
-          selected_property_error: error,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          selected_property_error: error
         )
 
       {:error, :rate_limit_exceeded} ->
@@ -182,8 +181,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           selected_property: property,
           selected_property_name: property_name,
           start_date: start_date,
-          end_date: end_date,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          end_date: end_date
         )
 
       {:error, :rate_limit_exceeded} ->

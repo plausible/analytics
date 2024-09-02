@@ -37,22 +37,23 @@
   <% end %>
 
   <:footer>
-    <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
-      <%= if Keyword.fetch!(Application.get_env(:plausible, :selfhost),:disable_registration) == false do %>
-        <li>
-          Don't have an account? <%= link("Register",
-            to: "/register",
-            class: "text-gray-800 dark:text-gray-50 underline"
-          ) %> instead.
-        </li>
-      <% end %>
-      <li>
+    <.focus_list>
+      <:item>
+        <%= if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == false do %>
+          Don't have an account
+          <.styled_link href="/register">
+            Register
+          </.styled_link>
+          instead.
+        <% end %>
+      </:item>
+      <:item>
         Forgot password?
-        <a href="/password/request-reset" class="underline text-gray-800 dark:text-gray-50">
+        <.styled_link href="/password/reset-request">
           Click here
-        </a>
+        </.styled_link>
         to reset it.
-      </li>
-    </ol>
+      </:item>
+    </.focus_list>
   </:footer>
 </PlausibleWeb.Components.Generic.focus_box>
