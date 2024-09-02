@@ -2896,6 +2896,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         referrer_source: "Google",
         timestamp: ~N[2021-01-02 00:00:00]
       ),
+      build(:pageview,
+        referrer_source: "Google",
+        timestamp: ~N[2021-01-02 00:00:00]
+      ),
+      build(:pageview, timestamp: ~N[2021-01-03 00:00:00]),
       build(:pageview, timestamp: ~N[2021-01-03 00:00:00]),
       build(:pageview,
         referrer_source: "Twitter",
@@ -2912,11 +2917,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       })
 
     assert json_response(conn, 200)["results"] == [
-             %{"dimensions" => ["2021-01-01 00:00:00", "Google"], "metrics" => [1]},
-             %{"dimensions" => ["2021-01-02 00:00:00", "Google"], "metrics" => [1]},
-             %{"dimensions" => ["2021-01-02 00:00:00", "Direct / None"], "metrics" => [1]},
-             %{"dimensions" => ["2021-01-03 00:00:00", "Direct / None"], "metrics" => [1]},
-             %{"dimensions" => ["2021-01-03 00:00:00", "Twitter"], "metrics" => [1]}
+             %{"dimensions" => ["2021-01-01", "Google"], "metrics" => [1]},
+             %{"dimensions" => ["2021-01-02", "Google"], "metrics" => [2]},
+             %{"dimensions" => ["2021-01-02", "Direct / None"], "metrics" => [1]},
+             %{"dimensions" => ["2021-01-03", "Direct / None"], "metrics" => [2]},
+             %{"dimensions" => ["2021-01-03", "Twitter"], "metrics" => [1]}
            ]
   end
 
@@ -2974,5 +2979,33 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              %{"dimensions" => ["Estonia", "Harjumaa", "Tallinn"], "metrics" => [1]},
              %{"dimensions" => ["United Kingdom", "London", "London"], "metrics" => [1]}
            ]
+  end
+
+  describe "using the returned query object in a new POST request" do
+    test "yields the same results for a simple aggregate query", %{conn: conn, site: site} do
+      Plausible.Site.changeset(site, %{timezone: "Europe/Tallinn"})
+      |> Plausible.Repo.update()
+
+      populate_stats(site, [
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:25:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn1 =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["pageviews"],
+          "date_range" => "all"
+        })
+
+      assert %{"results" => results1, "query" => query} = json_response(conn1, 200)
+      assert results1 == [%{"metrics" => [3], "dimensions" => []}]
+
+      conn2 = post(conn, "/api/v2/query", query)
+
+      assert %{"results" => results2} = json_response(conn2, 200)
+      assert results2 == [%{"metrics" => [3], "dimensions" => []}]
+    end
   end
 end

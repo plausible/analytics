@@ -50,7 +50,7 @@ defmodule Plausible.Stats.SQL.Expression do
       key =>
         weekstart_not_before(
           to_timezone(t.timestamp, ^query.timezone),
-          ^query.date_range.first
+          ^DateTime.to_naive(query.date_range.first)
         )
     })
   end
@@ -80,27 +80,6 @@ defmodule Plausible.Stats.SQL.Expression do
   def select_dimension(q, key, "time:hour", _table, query) do
     select_merge_as(q, [t], %{
       key => fragment("toStartOfHour(toTimeZone(?, ?))", t.timestamp, ^query.timezone)
-    })
-  end
-
-  # :NOTE: This is not exposed in Query APIv2
-  def select_dimension(q, key, "time:minute", :sessions, %Query{
-        period: "30m"
-      }) do
-    select_merge_as(q, [s], %{
-      key =>
-        fragment(
-          "arrayJoin(range(dateDiff('minute', now(), ?), dateDiff('minute', now(), ?) + 1))",
-          s.start,
-          s.timestamp
-        )
-    })
-  end
-
-  # :NOTE: This is not exposed in Query APIv2
-  def select_dimension(q, key, "time:minute", _table, %Query{period: "30m"}) do
-    select_merge_as(q, [t], %{
-      key => fragment("dateDiff('minute', now(), ?)", t.timestamp)
     })
   end
 

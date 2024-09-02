@@ -61,7 +61,9 @@ defmodule Plausible.Stats.GoalSuggestions do
       from(i in "imported_custom_events",
         where: i.site_id == ^site.id,
         where: i.import_id in ^site.complete_import_ids,
-        where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
+        where:
+          i.date >= ^DateTime.to_naive(query.date_range.first) and
+            i.date <= ^DateTime.to_naive(query.date_range.last),
         where: i.visitors > 0,
         where: fragment("? ilike ?", i.name, ^matches),
         where: fragment("trim(?)", i.name) != "",
