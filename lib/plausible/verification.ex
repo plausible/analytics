@@ -4,10 +4,6 @@ defmodule Plausible.Verification do
   """
   use Plausible
 
-  def enabled?() do
-    :plausible |> Application.fetch_env!(__MODULE__) |> Keyword.fetch!(:enabled?)
-  end
-
   on_ee do
     def user_agent() do
       "Plausible Verification Agent - if abused, contact support@plausible.io"

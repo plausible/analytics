@@ -474,7 +474,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
     end
 
-    test "shows sources for a page", %{conn: conn, site: site} do
+    test "shows sources for a page (using old page filter)", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/page1", referrer_source: "Google"),
         build(:pageview, pathname: "/page1", referrer_source: "Google"),
@@ -496,6 +496,108 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       assert json_response(conn, 200)["results"] == [
                %{"name" => "Google", "visitors" => 2},
                %{"name" => "DuckDuckGo", "visitors" => 1}
+             ]
+    end
+
+    test "shows sources for a page (using new filters)", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/page1", referrer_source: "Google"),
+        build(:pageview, pathname: "/page1", referrer_source: "Google"),
+        build(:pageview,
+          user_id: 1,
+          pathname: "/page2",
+          referrer_source: "DuckDuckGo"
+        ),
+        build(:pageview,
+          user_id: 1,
+          pathname: "/page1",
+          referrer_source: "DuckDuckGo"
+        )
+      ])
+
+      filters = Jason.encode!([["is", "event:page", ["/page1"]]])
+      conn = get(conn, "/api/stats/#{site.domain}/sources?filters=#{filters}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{"name" => "Google", "visitors" => 2},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
+             ]
+    end
+
+    test "order_by [[visit:source, desc]] is respected", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, referrer_source: "C"),
+        build(:pageview, referrer_source: "A"),
+        build(:pageview, referrer_source: "B")
+      ])
+
+      order_by = Jason.encode!([["visit:source", "desc"]])
+      conn = get(conn, "/api/stats/#{site.domain}/sources?order_by=#{order_by}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{"name" => "C", "visitors" => 1},
+               %{"name" => "B", "visitors" => 1},
+               %{"name" => "A", "visitors" => 1}
+             ]
+    end
+
+    test "order_by [[visit_duration, asc], [visit:source, desc]]] is respected and flipping the sort orders works",
+         %{
+           conn: conn,
+           site: site
+         } do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/in",
+          user_id: @user_id,
+          referrer_source: "B",
+          timestamp: ~N[2024-08-10 09:00:00]
+        ),
+        build(:pageview,
+          pathname: "/out",
+          user_id: @user_id,
+          referrer_source: "B",
+          timestamp: ~N[2024-08-10 09:00:45]
+        ),
+        build(:pageview,
+          pathname: "/in",
+          user_id: @user_id,
+          referrer_source: "C",
+          timestamp: ~N[2024-08-10 10:00:00]
+        ),
+        build(:pageview,
+          pathname: "/out",
+          user_id: @user_id,
+          referrer_source: "C",
+          timestamp: ~N[2024-08-10 10:00:30]
+        ),
+        build(:pageview, referrer_source: "A"),
+        build(:pageview, referrer_source: "A"),
+        build(:pageview, referrer_source: "Z")
+      ])
+
+      order_by_asc = Jason.encode!([["visit_duration", "asc"], ["visit:source", "desc"]])
+
+      conn1 =
+        get(conn, "/api/stats/#{site.domain}/sources?detailed=true&order_by=#{order_by_asc}")
+
+      assert json_response(conn1, 200)["results"] == [
+               %{"name" => "Z", "visitors" => 1, "bounce_rate" => 100, "visit_duration" => 0},
+               %{"name" => "A", "visitors" => 2, "bounce_rate" => 100, "visit_duration" => 0},
+               %{"name" => "C", "visitors" => 1, "bounce_rate" => 0, "visit_duration" => 30},
+               %{"name" => "B", "visitors" => 1, "bounce_rate" => 0, "visit_duration" => 45}
+             ]
+
+      order_by_flipped = Jason.encode!([["visit_duration", "desc"], ["visit:source", "asc"]])
+
+      conn2 =
+        get(conn, "/api/stats/#{site.domain}/sources?detailed=true&order_by=#{order_by_flipped}")
+
+      assert json_response(conn2, 200)["results"] == [
+               %{"name" => "B", "visitors" => 1, "bounce_rate" => 0, "visit_duration" => 45},
+               %{"name" => "C", "visitors" => 1, "bounce_rate" => 0, "visit_duration" => 30},
+               %{"name" => "A", "visitors" => 2, "bounce_rate" => 100, "visit_duration" => 0},
+               %{"name" => "Z", "visitors" => 1, "bounce_rate" => 100, "visit_duration" => 0}
              ]
     end
   end

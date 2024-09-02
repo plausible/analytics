@@ -544,7 +544,7 @@ defmodule Plausible.Verification.ChecksTest do
     </html>
     """
 
-    test "disallowd via content-security-policy and GTM should make CSP a priority" do
+    test "disallowed via content-security-policy and GTM should make CSP a priority" do
       stub_fetch_body(fn conn ->
         conn
         |> put_resp_header("content-security-policy", "default-src 'self' foo.local")

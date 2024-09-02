@@ -46,12 +46,9 @@
     <div class="my-6">
       <%= label(f, :domain, class: "block font-medium dark:text-gray-300") %>
       <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">
-        Just the naked domain or subdomain without 'www'
+        Just the naked domain or subdomain without 'www', 'https' etc.
       </p>
       <div class="mt-2 flex rounded-md shadow-sm">
-        <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-500 bg-gray-50 dark:bg-gray-850 dark:text-gray-400">
-          https://
-        </span>
         <%= text_input(f, :domain,
           class:
             "focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 flex-1 block w-full px-3 py-2 rounded-none rounded-r-md border-gray-300 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300",

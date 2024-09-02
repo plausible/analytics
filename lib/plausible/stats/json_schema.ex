@@ -27,6 +27,13 @@ defmodule Plausible.Stats.JSONSchema do
                          |> JSONPointer.add!("#/definitions/metric/oneOf/0", %{
                            "const" => "time_on_page"
                          })
+                         |> JSONPointer.add!("#/definitions/date_range/oneOf/0", %{
+                           "const" => "30m"
+                         })
+                         |> JSONPointer.add!("#/definitions/date_range/oneOf/0", %{
+                           "const" => "realtime"
+                         })
+                         |> JSONPointer.add!("#/properties/date", %{"type" => "string"})
                          |> ExJsonSchema.Schema.resolve()
 
   def validate(schema_type, params) do

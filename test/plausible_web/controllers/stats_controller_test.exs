@@ -53,11 +53,24 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert text_of_element(resp, "title") == "Plausible Analytics: Live Demo"
     end
 
-    test "public site - shows waiting for first pageview", %{conn: conn} do
+    test "public site - redirect to /login when no stats because verification requires it", %{
+      conn: conn
+    } do
       insert(:site, domain: "some-other-public-site.io", public: true)
 
-      conn = get(conn, "/some-other-public-site.io")
-      assert html_response(conn, 200) =~ "Need to see the snippet again?"
+      conn = get(conn, conn |> get("/some-other-public-site.io") |> redirected_to())
+      assert redirected_to(conn) == "/login"
+    end
+
+    test "public site - no stats with skip_to_dashboard", %{
+      conn: conn
+    } do
+      insert(:site, domain: "some-other-public-site.io", public: true)
+
+      conn = get(conn, "/some-other-public-site.io?skip_to_dashboard=true")
+      resp = html_response(conn, 200)
+
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
     end
 
     test "can not view stats of a private website", %{conn: conn} do
@@ -81,7 +94,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn: conn,
       site: site
     } do
-      resp = conn |> get("/" <> site.domain) |> html_response(200)
+      resp = conn |> get(conn |> get("/" <> site.domain) |> redirected_to()) |> html_response(200)
       refute text_of_attr(resp, @react_container, "data-logged-in") == "true"
 
       resp = conn |> get("/" <> site.domain <> "?skip_to_dashboard=true") |> html_response(200)
@@ -101,7 +114,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "does not show CRM link to the site", %{conn: conn, site: site} do
-      conn = get(conn, "/" <> site.domain)
+      conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
       refute html_response(conn, 200) =~ "/crm/sites/site/#{site.id}"
     end
   end
@@ -118,11 +131,11 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert html_response(conn, 200) =~ "stats-react-container"
     end
 
-    test "can view a private dashboard without stats", %{conn: conn} do
+    test "can enter verification when site is without stats", %{conn: conn} do
       site = insert(:site)
 
-      conn = get(conn, "/" <> site.domain)
-      assert html_response(conn, 200) =~ "Need to see the snippet again?"
+      conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
+      assert html_response(conn, 200) =~ "Verifying your installation"
     end
 
     test "can view a private locked dashboard with stats", %{conn: conn} do
@@ -138,13 +151,12 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
     end
 
-    test "can view a private locked dashboard without stats", %{conn: conn} do
+    test "can view private locked verification without stats", %{conn: conn} do
       user = insert(:user)
       site = insert(:site, locked: true, members: [user])
 
-      conn = get(conn, "/" <> site.domain)
-      assert html_response(conn, 200) =~ "Need to see the snippet again?"
-      assert html_response(conn, 200) =~ "This dashboard is actually locked"
+      conn = get(conn, conn |> get("/#{site.domain}") |> redirected_to())
+      assert html_response(conn, 200) =~ "Verifying your installation"
     end
 
     test "can view a locked public dashboard", %{conn: conn} do
@@ -160,7 +172,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     test "shows CRM link to the site", %{conn: conn} do
       site = insert(:site)
-      conn = get(conn, "/" <> site.domain)
+      conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
       assert html_response(conn, 200) =~ "/crm/sites/site/#{site.id}"
     end
   end
