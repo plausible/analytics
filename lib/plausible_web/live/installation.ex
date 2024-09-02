@@ -292,9 +292,10 @@ defmodule PlausibleWeb.Live.Installation do
           <.tooltip sticky?={false} icon?={false} position="z-50 w-64 hidden sm:block">
             <:tooltip_content>
               <%= @tooltip %>
+              <br /><br />Click to learn more.
             </:tooltip_content>
             <a href={@learn_more} target="_blank" rel="noopener noreferrer">
-              <Heroicons.information_circle class="text-gray-700 dark:text-gray-500 w-5 h-5" />
+              <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
             </a>
           </.tooltip>
         </div>
