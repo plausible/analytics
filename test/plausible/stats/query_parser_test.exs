@@ -603,14 +603,17 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
     end
 
-    test "parsing invalid custom date range", %{site: site} do
+    test "parsing invalid custom date range with invalid dates", %{site: site} do
       %{"site_id" => site.domain, "date_range" => "foo", "metrics" => ["visitors"]}
       |> check_error(site, "#/date_range: Invalid date range \"foo\"")
 
       %{"site_id" => site.domain, "date_range" => ["21415-00", "eee"], "metrics" => ["visitors"]}
       |> check_error(site, "#/date_range: Invalid date range [\"21415-00\", \"eee\"]")
+    end
 
-      # Timestamps do not include timezone information
+    test "custom date range is invalid when timestamps do not include timezone info", %{
+      site: site
+    } do
       %{
         "site_id" => site.domain,
         "date_range" => ["2021-02-03T00:00:00", "2021-02-03T23:59:59"],
@@ -620,8 +623,9 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         site,
         "#/date_range: Invalid date range [\"2021-02-03T00:00:00\", \"2021-02-03T23:59:59\"]"
       )
+    end
 
-      # Unknown timezone
+    test "custom date range is invalid when timestamp timezone is invalid", %{site: site} do
       %{
         "site_id" => site.domain,
         "date_range" => ["2021-02-03T00:00:00 Fake/Timezone", "2021-02-03T23:59:59 UTC"],
@@ -631,8 +635,9 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         site,
         "Invalid date_range '[\"2021-02-03T00:00:00 Fake/Timezone\", \"2021-02-03T23:59:59 UTC\"]'."
       )
+    end
 
-      # Cannot combine date and timestamp
+    test "custom date range is invalid when date and timestamp are combined", %{site: site} do
       %{
         "site_id" => site.domain,
         "date_range" => ["2021-02-03T00:00:00 UTC", "2021-02-04"],
@@ -642,8 +647,10 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         site,
         "Invalid date_range '[\"2021-02-03T00:00:00 UTC\", \"2021-02-04\"]'."
       )
+    end
 
-      # Datetime doesn't exist due to a gap in the given timezone
+    test "custom date range is invalid when timestamp cannot be converted to datetime due to a gap in timezone",
+         %{site: site} do
       %{
         "site_id" => site.domain,
         "date_range" => [
