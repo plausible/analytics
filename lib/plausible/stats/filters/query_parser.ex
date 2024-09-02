@@ -220,9 +220,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp datetime_from_timestamp(timestamp_string) do
     with [timestamp, timezone] <- String.split(timestamp_string),
-         {:ok, naive_datetime} <- NaiveDateTime.from_iso8601(timestamp),
-         {:ok, datetime} <- DateTime.from_naive(naive_datetime, timezone) do
-      {:ok, datetime}
+         {:ok, naive_datetime} <- NaiveDateTime.from_iso8601(timestamp) do
+      DateTime.from_naive(naive_datetime, timezone)
     end
   end
 
