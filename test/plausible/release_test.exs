@@ -46,38 +46,79 @@ defmodule Plausible.ReleaseTest do
     assert Application.get_env(:plausible, :ecto_repos) == [Plausible.Repo, Plausible.IngestRepo]
   end
 
+  # this repo is used in place of Plausible.Repo
+  defmodule PostgreSQL do
+    use Ecto.Repo, otp_app: :plausible, adapter: Ecto.Adapters.Postgres
+  end
+
+  # this repo is used in place of Plausible.IngestRepo
+  defmodule ClickHouse do
+    use Ecto.Repo, otp_app: :plausible, adapter: Ecto.Adapters.ClickHouse
+  end
+
+  defp last_migration(repo) do
+    {:ok, {_status, version, name}, _started} =
+      Ecto.Migrator.with_repo(repo, fn repo ->
+        repo
+        |> Ecto.Migrator.migrations()
+        |> List.last()
+      end)
+
+    "#{version}_#{name}"
+  end
+
+  defp fake_migrate(repo, up_to_migration) do
+    {up_to_version, _name} = Integer.parse(up_to_migration)
+
+    insert_opts =
+      if repo == ClickHouse do
+        [types: [version: "Int64", inserted_at: "DateTime"]]
+      else
+        []
+      end
+
+    Ecto.Migrator.with_repo(repo, fn repo ->
+      schema_versions =
+        Ecto.Migrator.migrations(repo)
+        |> Enum.filter(fn {status, version, _name} ->
+          status == :down and version <= up_to_version
+        end)
+        |> Enum.map(fn {_status, version, _name} ->
+          [version: version, inserted_at: NaiveDateTime.utc_now(:second)]
+        end)
+
+      repo.insert_all("schema_migrations", schema_versions, insert_opts)
+    end)
+  end
+
+  defp fake_repos(_context) do
+    pg_config =
+      Plausible.Repo.config()
+      |> Keyword.replace!(:database, "plausible_test_migrations")
+      # to see priv/repo/migrations from this fake pg repo
+      |> Keyword.put_new(:priv, "priv/repo")
+
+    ch_config =
+      Plausible.IngestRepo.config()
+      |> Keyword.replace!(:database, "plausible_test_migrations")
+      # to see priv/ingest_repo/migrations from this fake ch repo
+      |> Keyword.put_new(:priv, "priv/ingest_repo")
+
+    Application.put_env(:plausible, PostgreSQL, pg_config)
+    on_exit(fn -> Application.delete_env(:plausible, PostgreSQL) end)
+
+    Application.put_env(:plausible, ClickHouse, ch_config)
+    on_exit(fn -> Application.delete_env(:plausible, ClickHouse) end)
+
+    {:ok, repos: [PostgreSQL, ClickHouse]}
+  end
+
   describe "pending_streaks/1" do
     @describetag :migrations
 
-    # this repo is used in place of Plausible.Repo
-    defmodule PostgreSQL do
-      use Ecto.Repo, otp_app: :plausible, adapter: Ecto.Adapters.Postgres
-    end
-
-    # this repo is used in place of Plausible.IngestRepo
-    defmodule ClickHouse do
-      use Ecto.Repo, otp_app: :plausible, adapter: Ecto.Adapters.ClickHouse
-    end
+    setup :fake_repos
 
     setup do
-      pg_config =
-        Plausible.Repo.config()
-        |> Keyword.replace!(:database, "plausible_test_migrations")
-        # to see priv/repo/migrations from this fake pg repo
-        |> Keyword.put_new(:priv, "priv/repo")
-
-      ch_config =
-        Plausible.IngestRepo.config()
-        |> Keyword.replace!(:database, "plausible_test_migrations")
-        # to see priv/ingest_repo/migrations from this fake ch repo
-        |> Keyword.put_new(:priv, "priv/ingest_repo")
-
-      Application.put_env(:plausible, PostgreSQL, pg_config)
-      on_exit(fn -> Application.delete_env(:plausible, PostgreSQL) end)
-
-      Application.put_env(:plausible, ClickHouse, ch_config)
-      on_exit(fn -> Application.delete_env(:plausible, ClickHouse) end)
-
       pg_config = PostgreSQL.config()
       :ok = Ecto.Adapters.Postgres.storage_up(pg_config)
       on_exit(fn -> :ok = Ecto.Adapters.Postgres.storage_down(pg_config) end)
@@ -87,41 +128,6 @@ defmodule Plausible.ReleaseTest do
       on_exit(fn -> :ok = Ecto.Adapters.ClickHouse.storage_down(ch_config) end)
 
       :ok
-    end
-
-    defp last_migration(repo) do
-      {:ok, {_status, version, name}, _started} =
-        Ecto.Migrator.with_repo(repo, fn repo ->
-          repo
-          |> Ecto.Migrator.migrations()
-          |> List.last()
-        end)
-
-      "#{version}_#{name}"
-    end
-
-    defp fake_migrate(repo, up_to_migration) do
-      {up_to_version, _name} = Integer.parse(up_to_migration)
-
-      insert_opts =
-        if repo == ClickHouse do
-          [types: [version: "Int64", inserted_at: "DateTime"]]
-        else
-          []
-        end
-
-      Ecto.Migrator.with_repo(repo, fn repo ->
-        schema_versions =
-          Ecto.Migrator.migrations(repo)
-          |> Enum.filter(fn {status, version, _name} ->
-            status == :down and version <= up_to_version
-          end)
-          |> Enum.map(fn {_status, version, _name} ->
-            [version: version, inserted_at: NaiveDateTime.utc_now(:second)]
-          end)
-
-        repo.insert_all("schema_migrations", schema_versions, insert_opts)
-      end)
     end
 
     test "v2.0.0 -> master" do
@@ -243,6 +249,42 @@ defmodule Plausible.ReleaseTest do
              Starting repos..
              Collecting pending migrations..
              No pending migrations!
+             """
+    end
+  end
+
+  describe "createdb/1" do
+    @describetag :migrations
+
+    setup :fake_repos
+
+    setup %{repos: repos} do
+      on_exit(fn ->
+        Enum.each(repos, fn repo -> :ok = repo.__adapter__().storage_down(repo.config()) end)
+      end)
+    end
+
+    test "does not create the database if it already exists", %{repos: repos} do
+      first_run = capture_io(fn -> Release.createdb(repos) end)
+
+      assert first_run == """
+             Loading plausible..
+             Starting dependencies..
+             Starting repos..
+             Creating Plausible.ReleaseTest.PostgreSQL database..
+             Creating Plausible.ReleaseTest.ClickHouse database..
+             Creation of Db successful!
+             """
+
+      second_run = capture_io(fn -> Release.createdb(repos) end)
+
+      assert second_run == """
+             Loading plausible..
+             Starting dependencies..
+             Starting repos..
+             Plausible.ReleaseTest.PostgreSQL database already exists
+             Plausible.ReleaseTest.ClickHouse database already exists
+             Creation of Db successful!
              """
     end
   end

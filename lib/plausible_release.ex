@@ -141,10 +141,10 @@ defmodule Plausible.Release do
     IO.puts("Success!")
   end
 
-  def createdb do
+  def createdb(repos \\ repos()) do
     prepare()
 
-    for repo <- repos() do
+    for repo <- repos do
       :ok = ensure_repo_created(repo)
     end
 
