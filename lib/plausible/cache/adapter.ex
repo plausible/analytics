@@ -68,6 +68,7 @@ defmodule Plausible.Cache.Adapter do
     else
       :ok = ConCache.put(cache_name, key, value)
     end
+
     value
   catch
     :exit, _ ->
