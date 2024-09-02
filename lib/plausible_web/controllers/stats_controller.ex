@@ -79,20 +79,7 @@ defmodule PlausibleWeb.StatsController do
         )
 
       !stats_start_date && can_see_stats? ->
-        render_opts = [
-          site: site,
-          dogfood_page_path: dogfood_page_path,
-          connect_live_socket: true
-        ]
-
-        render_opts =
-          if conn.params["flow"] do
-            Keyword.put(render_opts, :layout, {PlausibleWeb.LayoutView, "focus.html"})
-          else
-            render_opts
-          end
-
-        render(conn, "waiting_first_pageview.html", render_opts)
+        redirect(conn, external: Routes.site_path(conn, :verification, site.domain))
 
       Sites.locked?(site) ->
         site = Plausible.Repo.preload(site, :owner)
@@ -280,7 +267,6 @@ defmodule PlausibleWeb.StatsController do
         conn
         |> render("shared_link_password.html",
           link: shared_link,
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
           dogfood_page_path: "/share/:dashboard"
         )
     end
@@ -325,7 +311,6 @@ defmodule PlausibleWeb.StatsController do
         |> render("shared_link_password.html",
           link: shared_link,
           error: "Incorrect password. Please try again.",
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
           dogfood_page_path: "/share/:dashboard"
         )
       end
