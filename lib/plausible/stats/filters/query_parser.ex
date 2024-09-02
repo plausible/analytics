@@ -223,8 +223,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
          {:ok, naive_datetime} <- NaiveDateTime.from_iso8601(timestamp),
          {:ok, datetime} <- DateTime.from_naive(naive_datetime, timezone) do
       {:ok, datetime}
-    else
-      _ -> {:error, :invalid}
     end
   end
 
