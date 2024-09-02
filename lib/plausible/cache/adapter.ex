@@ -62,8 +62,12 @@ defmodule Plausible.Cache.Adapter do
   end
 
   @spec put(atom(), any(), any()) :: any()
-  def put(cache_name, key, value) do
-    :ok = ConCache.put(cache_name, key, value)
+  def put(cache_name, key, value, opts \\ []) do
+    if opts[:dirty?] do
+      :ok = ConCache.dirty_put(cache_name, key, value)
+    else
+      :ok = ConCache.put(cache_name, key, value)
+    end
     value
   catch
     :exit, _ ->

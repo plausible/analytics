@@ -4,12 +4,20 @@ defmodule Plausible.Session.CacheStore do
 
   @lock_timeout 500
 
+  @lock_telemetry_event [:plausible, :sessions, :cache, :lock]
+
+  def lock_telemetry_event, do: @lock_telemetry_event
+
   def on_event(event, session_attributes, prev_user_id, buffer_insert \\ &WriteBuffer.insert/1) do
+    lock_requested_at = System.monotonic_time()
+
     Plausible.Cache.Adapter.with_lock!(
       :sessions,
       {event.site_id, event.user_id},
       @lock_timeout,
       fn ->
+        lock_duration = System.monotonic_time() - lock_requested_at
+        :telemetry.execute(@lock_telemetry_event, %{duration: lock_duration}, %{})
         found_session = find_session(event, event.user_id) || find_session(event, prev_user_id)
 
         if found_session do
@@ -43,7 +51,7 @@ defmodule Plausible.Session.CacheStore do
 
   defp persist_session(session) do
     key = {session.site_id, session.user_id}
-    Plausible.Cache.Adapter.put(:sessions, key, session)
+    Plausible.Cache.Adapter.put(:sessions, key, session, dirty?: true)
   end
 
   defp update_session(session, event) do

@@ -24,8 +24,20 @@ defmodule Plausible.Session.CacheStoreTest do
 
   test "event processing is sequential within session", %{
     buffer: buffer,
-    slow_buffer: slow_buffer
+    slow_buffer: slow_buffer,
+    test: test
   } do
+    telemetry_event = CacheStore.lock_telemetry_event()
+
+    :telemetry.attach(
+      "#{test}-telemetry-handler",
+      telemetry_event,
+      fn ^telemetry_event, %{duration: d}, _, _ when is_integer(d) ->
+        send(self(), {:telemetry_handled, d})
+      end,
+      %{}
+    )
+
     event1 = build(:event, name: "pageview")
     event2 = build(:event, name: "pageview", user_id: event1.user_id, site_id: event1.site_id)
     event3 = build(:event, name: "pageview", user_id: event1.user_id, site_id: event1.site_id)
@@ -49,6 +61,8 @@ defmodule Plausible.Session.CacheStoreTest do
     CacheStore.on_event(event1, session_params, nil, buffer)
 
     assert_receive({:buffer, :insert, [[session1]]})
+    assert_receive({:telemetry_handled, duration})
+    assert is_integer(duration)
 
     [event2, event3]
     |> Enum.map(fn e ->
