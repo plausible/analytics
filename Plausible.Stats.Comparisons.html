@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9CE21158.js"></script>
+    <script src="dist/sidebar_items-A4079F72.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -249,7 +249,7 @@ main graph with last month or with the same month from last year.</p>
     </a>
     <h1 class="signature" translate="no">compare(site, source_query, mode, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L58" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L61" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -268,7 +268,8 @@ main graph with last month or with the same month from last year.</p>
 
       </div>
 
-<p>Generates a comparison query based on the source query and comparison mode.</p><p>The mode parameter specifies the type of comparison and can be one of the
+<p>Generates a comparison query based on the source query and comparison mode.</p><p>Currently only historical periods are supported for comparisons (not <code class="inline">realtime</code>
+and <code class="inline">30m</code> periods).</p><p>The mode parameter specifies the type of comparison and can be one of the
 following:</p><ul><li><p><code class="inline">&quot;previous_period&quot;</code> - shifts back the query by the same number of days the
 source query has.</p></li><li><p><code class="inline">&quot;year_over_year&quot;</code> - shifts back the query by 1 year.</p></li><li><p><code class="inline">&quot;custom&quot;</code> - compares the query using a custom date range. See options for
 more details.</p></li></ul><p>The comparison query returned by the function has its end date restricted to

@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-9CE21158.js"></script>
+    <script src="dist/sidebar_items-A4079F72.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -193,11 +193,11 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#default_for_date_range/1" translate="no">default_for_date_range(range)</a>
+        <a href="#default_for_date_range/1" translate="no">default_for_date_range(date_range)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns the suggested interval for the given <a href="https://hexdocs.pm/elixir/Date.Range.html"><code class="inline">Date.Range</code></a> struct.</p></div>
+        <div class="summary-synopsis"><p>Returns the suggested interval for the given <code class="inline">DateTimeRange</code> struct.</p></div>
 
     </div>
 
@@ -267,7 +267,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
     </a>
     <h1 class="signature" translate="no">opt()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L11" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L13" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -295,7 +295,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
     </a>
     <h1 class="signature" translate="no">opts()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L12" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L14" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -323,7 +323,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
     </a>
     <h1 class="signature" translate="no">t()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L10" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L12" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -361,9 +361,9 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">default_for_date_range(range)</h1>
+    <h1 class="signature" translate="no">default_for_date_range(date_range)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L41" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L43" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -375,11 +375,11 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> default_for_date_range(<a href="https://hexdocs.pm/elixir/Date.Range.html#t:t/0">Date.Range.t</a>()) :: <a href="#t:t/0">t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> default_for_date_range(<a href="Plausible.Stats.DateTimeRange.html#t:t/0">Plausible.Stats.DateTimeRange.t</a>()) :: <a href="#t:t/0">t</a>()</pre>
 
       </div>
 
-<p>Returns the suggested interval for the given <a href="https://hexdocs.pm/elixir/Date.Range.html"><code class="inline">Date.Range</code></a> struct.</p>
+<p>Returns the suggested interval for the given <code class="inline">DateTimeRange</code> struct.</p>
   </section>
 </section>
 <section class="detail" id="default_for_period/1">
@@ -391,7 +391,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
     </a>
     <h1 class="signature" translate="no">default_for_period(period)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L28" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L30" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -419,7 +419,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
     </a>
     <h1 class="signature" translate="no">list()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L17" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L19" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -447,7 +447,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
     </a>
     <h1 class="signature" translate="no">valid?(interval)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L20" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L22" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -477,7 +477,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
     </a>
     <h1 class="signature" translate="no">valid_by_period(opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L68" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L72" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -507,7 +507,7 @@ it as a <code class="inline">GROUP BY</code> clause. Possible values are <code c
     </a>
     <h1 class="signature" translate="no">valid_for_period?(period, interval, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L103" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/interval.ex#L107" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
