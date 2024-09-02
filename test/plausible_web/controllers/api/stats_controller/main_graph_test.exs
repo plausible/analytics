@@ -13,8 +13,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=realtime&metric=pageviews")
 
-      assert %{"plot" => plot} = json_response(conn, 200)
+      assert %{"plot" => plot, "labels" => labels} = json_response(conn, 200)
 
+      assert labels == Enum.to_list(-30..-1)
       assert Enum.count(plot) == 30
       assert Enum.any?(plot, fn pageviews -> pageviews > 0 end)
     end
@@ -1071,6 +1072,28 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                "2021-11-01" => true,
                "2021-12-01" => false
              }
+    end
+
+    test "returns stats for a day with a minute interval", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2023-03-01 12:00:00])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&metric=visitors&date=2023-03-01&interval=minute"
+        )
+
+      %{"labels" => labels, "plot" => plot} = json_response(conn, 200)
+
+      assert length(labels) == 24 * 60
+
+      assert List.first(labels) == "2023-03-01 00:00:00"
+      assert Enum.at(labels, 1) == "2023-03-01 00:01:00"
+      assert List.last(labels) == "2023-03-01 23:59:00"
+
+      assert Enum.at(plot, Enum.find_index(labels, &(&1 == "2023-03-01 12:00:00"))) == 1
     end
   end
 

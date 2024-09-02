@@ -6,7 +6,7 @@ defmodule Plausible.Stats.Imported.Base do
   import Ecto.Query
 
   alias Plausible.Imported
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, DateTimeRange}
 
   import Plausible.Stats.Filters, only: [dimensions_used_in_filters: 1]
 
@@ -59,7 +59,7 @@ defmodule Plausible.Stats.Imported.Base do
 
   def query_imported(table, site, query) do
     import_ids = site.complete_import_ids
-    %{first: date_from, last: date_to} = query.date_range
+    %{first: date_from, last: date_to} = DateTimeRange.to_date_range(query.date_range)
 
     from(i in table,
       where: i.site_id == ^site.id,

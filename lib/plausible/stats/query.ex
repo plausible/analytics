@@ -35,7 +35,7 @@ defmodule Plausible.Stats.Query do
         struct!(__MODULE__, Map.to_list(query_data))
         |> put_imported_opts(site, %{})
         |> put_experimental_reduced_joins(site, params)
-        |> struct!(v2: true, now: NaiveDateTime.utc_now(:second), debug_metadata: debug_metadata)
+        |> struct!(v2: true, now: DateTime.utc_now(:second), debug_metadata: debug_metadata)
 
       {:ok, query}
     end
@@ -131,6 +131,7 @@ defmodule Plausible.Stats.Query do
     cond do
       not requested? -> {:error, :not_requested}
       is_nil(query.latest_import_end_date) -> {:error, :no_imported_data}
+      query.period in ["realtime", "30m"] -> {:error, :unsupported_query}
       Date.after?(query.date_range.first, query.latest_import_end_date) -> {:error, :out_of_range}
       not Imported.schema_supports_query?(query) -> {:error, :unsupported_query}
       query.period == "realtime" -> {:error, :unsupported_query}

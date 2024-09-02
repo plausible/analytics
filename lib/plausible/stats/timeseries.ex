@@ -69,6 +69,7 @@ defmodule Plausible.Stats.Timeseries do
       )
       |> cast_revenue_metrics_to_money(currency)
     end)
+    |> transform_realtime_labels(query)
   end
 
   defp empty_row(date, metrics) do
@@ -101,6 +102,13 @@ defmodule Plausible.Stats.Timeseries do
       |> Enum.into(%{})
     end)
   end
+
+  defp transform_realtime_labels(results, %Query{period: "30m"}) do
+    Enum.with_index(results)
+    |> Enum.map(fn {entry, index} -> %{entry | date: -30 + index} end)
+  end
+
+  defp transform_realtime_labels(results, _query), do: results
 
   on_ee do
     defp cast_revenue_metrics_to_money(results, revenue_goals) do

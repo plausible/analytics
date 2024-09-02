@@ -481,6 +481,44 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
       end
     end
 
+    test "gracefully ignores unsupported WP Search Queries goal for imported data", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, event_name: "WP Search Queries", site: site)
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:event,
+          name: "WP Search Queries",
+          "meta.key": ["search_query", "result_count"],
+          "meta.value": ["some phrase", "12"]
+        ),
+        build(:imported_custom_events,
+          name: "view_search_results",
+          visitors: 100,
+          events: 200
+        ),
+        build(:imported_visitors, visitors: 9)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors", "events", "conversion_rate"],
+          "date_range" => "all",
+          "dimensions" => ["event:props:search_query"],
+          "filters" => [
+            ["is", "event:goal", ["WP Search Queries"]]
+          ],
+          "include" => %{"imports" => true}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["some phrase"], "metrics" => [1, 1, 100.0]}
+             ]
+    end
+
     test "adds a warning when query params are not supported for imported data", %{
       conn: conn,
       site: site

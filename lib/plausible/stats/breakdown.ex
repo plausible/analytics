@@ -120,7 +120,9 @@ defmodule Plausible.Stats.Breakdown do
           from i in "imported_pages",
             group_by: i.page,
             where: i.site_id == ^site.id,
-            where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
+            where:
+              i.date >= ^DateTime.to_naive(query.date_range.first) and
+                i.date <= ^DateTime.to_naive(query.date_range.last),
             where: i.page in ^pages,
             select: %{
               page: i.page,

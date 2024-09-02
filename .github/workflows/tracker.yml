@@ -13,7 +13,7 @@ concurrency:
 jobs:
   test:
     timeout-minutes: 15
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4

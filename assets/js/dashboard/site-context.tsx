@@ -4,7 +4,7 @@ import React, { createContext, ReactNode, useContext } from 'react'
 export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
   return {
     domain: dataset.domain!,
-    offset: dataset.offset!,
+    offset: parseInt(dataset.offset!, 10),
     hasGoals: dataset.hasGoals === 'true',
     hasProps: dataset.hasProps === 'true',
     funnelsAvailable: dataset.funnelsAvailable === 'true',
@@ -16,8 +16,8 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
     funnels: JSON.parse(dataset.funnels!),
     statsBegin: dataset.statsBegin!,
     nativeStatsBegin: dataset.nativeStatsBegin!,
-    embedded: dataset.embedded!,
-    background: dataset.background!,
+    embedded: dataset.embedded === 'true',
+    background: dataset.background,
     isDbip: dataset.isDbip === 'true',
     flags: JSON.parse(dataset.flags!),
     validIntervalsByPeriod: JSON.parse(dataset.validIntervalsByPeriod!),
@@ -27,7 +27,8 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
 
 const siteContextDefaultValue = {
   domain: '',
-  offset: '0',
+  /** offset in seconds from UTC at site load time, @example 7200 */
+  offset: 0,
   hasGoals: false,
   hasProps: false,
   funnelsAvailable: false,
@@ -37,10 +38,12 @@ const siteContextDefaultValue = {
   propsOptedOut: false,
   revenueGoals: [] as { event_name: string; currency: 'USD' }[],
   funnels: [] as { id: number; name: string; steps_count: number }[],
+  /** date in YYYY-MM-DD, @example "2023-01-01" */
   statsBegin: '',
+  /** date in YYYY-MM-DD, @example "2023-04-01" */
   nativeStatsBegin: '',
-  embedded: '',
-  background: '',
+  embedded: false,
+  background: undefined as string | undefined,
   isDbip: false,
   flags: {},
   validIntervalsByPeriod: {} as Record<string, Array<string>>,
