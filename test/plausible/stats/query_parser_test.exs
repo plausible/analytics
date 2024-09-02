@@ -435,7 +435,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range,
+        date_range: @date_range_day,
         filters: [
           [
             :or,
@@ -494,7 +494,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range,
+        date_range: @date_range_day,
         filters: [
           [:is, "event:hostname", ["a.plausible.io"]]
         ],
@@ -1150,7 +1150,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:conversion_rate, :group_conversion_rate],
-        date_range: @date_range,
+        date_range: @date_range_day,
         filters: [
           [:is, "event:props:foo", ["bar"]]
         ],
