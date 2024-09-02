@@ -8,7 +8,6 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   setup [:create_user, :create_new_site]
 
   @now DateTime.new!(~D[2021-05-05], ~T[12:30:00], "UTC")
-  @today DateTime.to_date(@now)
   @date_range_realtime %DateTimeRange{
     first: DateTime.new!(~D[2021-05-05], ~T[12:25:00], "UTC"),
     last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "UTC")
@@ -47,14 +46,12 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   }
 
   def check_success(params, site, expected_result, schema_type \\ :public) do
-    test_opts = [now: @now, date: @today]
-    assert {:ok, result} = parse(site, schema_type, params, test_opts)
+    assert {:ok, result} = parse(site, schema_type, params, @now)
     assert result == expected_result
   end
 
   def check_error(params, site, expected_error_message, schema_type \\ :public) do
-    test_opts = [now: @now, date: @today]
-    {:error, message} = parse(site, schema_type, params, test_opts)
+    {:error, message} = parse(site, schema_type, params, @now)
     assert message == expected_error_message
   end
 
@@ -83,7 +80,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       "site_id" => site.domain,
       "metrics" => ["visitors", "events"],
       "date_range" => date_range,
-      "date" => Date.to_string(@today)
+      "date" => @now |> DateTime.to_date() |> Date.to_string()
     }
 
     expected_result = %{
@@ -495,7 +492,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         ]
       }
 
-      assert {:ok, res} = parse(site, :public, params, now: @now, date: @today)
+      assert {:ok, res} = parse(site, :public, params, @now)
       expected_timezone = site.timezone
 
       assert %{

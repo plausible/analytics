@@ -8,12 +8,15 @@ defmodule Plausible.Stats.Filters.QueryParser do
     time_labels: false
   }
 
-  def parse(site, schema_type, params, test_opts \\ []) when is_map(params) do
-    now = Keyword.get(test_opts, :now, DateTime.utc_now(:second))
-    date = Keyword.get(test_opts, :date, today(site))
+  def parse(site, schema_type, params, now \\ nil) when is_map(params) do
+    {now, date} =
+      if now do
+        {now, DateTime.shift_zone!(now, site.timezone) |> DateTime.to_date()}
+      else
+        {DateTime.utc_now(:second), today(site)}
+      end
 
     with :ok <- JSONSchema.validate(schema_type, params),
-         now <- if(now, do: now, else: DateTime.utc_now(:second)),
          {:ok, date} <- parse_date(site, Map.get(params, "date"), date),
          {:ok, date_range} <- parse_date_range(site, Map.get(params, "date_range"), date, now),
          {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
