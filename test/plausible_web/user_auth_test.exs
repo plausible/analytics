@@ -16,12 +16,12 @@ defmodule PlausibleWeb.UserAuthTest do
     setup [:create_user]
 
     test "sets up user session and redirects to sites list", %{conn: conn, user: user} do
+      now = NaiveDateTime.utc_now(:second)
+
       conn =
         conn
         |> init_session()
         |> UserAuth.log_in_user(user)
-
-      now = NaiveDateTime.utc_now(:second)
 
       assert %{sessions: [session]} = user |> Repo.reload!() |> Repo.preload(:sessions)
       assert session.user_id == user.id
