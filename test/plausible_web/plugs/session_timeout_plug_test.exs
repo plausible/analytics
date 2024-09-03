@@ -41,5 +41,7 @@ defmodule PlausibleWeb.SessionTimeoutPlugTest do
       |> SessionTimeoutPlug.call(@opts)
 
     assert conn.private[:plug_session_info] == :renew
+    assert conn.halted
+    assert Phoenix.ConnTest.redirected_to(conn, 302) == "/login"
   end
 end
