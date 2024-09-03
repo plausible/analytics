@@ -118,7 +118,9 @@ describe(`${parseSearchFragment.name}`, () => {
     // Non-JSON strings that should return as string
     ['undefined', 'undefined'],
     ['not_json', 'not_json'],
-    ['plainstring', 'plainstring']
+    ['plainstring', 'plainstring'],
+    ['a|b', 'a|b'],
+    ['foo bar#', 'foo bar#']
   ])(
     'when searchStringFragment is %p, returns %p',
     (searchStringFragment, expected) => {

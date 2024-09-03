@@ -131,6 +131,9 @@ export function parseSearchFragment(
     /* @ts-expect-error API supposedly not present in compilation target */
     .replaceAll('=', encodeURIComponent('='))
     .replaceAll('#', encodeURIComponent('#'))
+    .replaceAll('|', encodeURIComponent('|'))
+    .replaceAll(' ', encodeURIComponent(' '))
+
   try {
     return JsonURL.parse(fragmentWithReEncodedSymbols)
   } catch (error) {
