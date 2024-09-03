@@ -84,28 +84,6 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   # :NOTE: This is not exposed in Query APIv2
-  def select_dimension(q, key, "time:minute", :sessions, %Query{period: period})
-      when period in ["realtime", "30m"] do
-    q
-    |> join(
-      :inner,
-      [s],
-      time_slot in fragment(
-        "timeSlots(?, toUInt32(timeDiff(?, ?)), toUInt32(60))",
-        s.start,
-        s.start,
-        s.timestamp
-      ),
-      as: :time_slot,
-      hints: "ARRAY",
-      on: true
-    )
-    |> select_merge_as([s, time_slot: time_slot], %{
-      key => fragment("?", time_slot)
-    })
-  end
-
-  # :NOTE: This is not exposed in Query APIv2
   def select_dimension(q, key, "time:minute", :sessions, query) do
     q
     |> join(:inner, [s], time_slot in time_slots(query, 60),
@@ -115,14 +93,6 @@ defmodule Plausible.Stats.SQL.Expression do
     )
     |> select_merge_as([s, time_slot: time_slot], %{
       key => fragment("?", time_slot)
-    })
-  end
-
-  # :NOTE: This is not exposed in Query APIv2
-  def select_dimension(q, key, "time:minute", _table, %Query{period: period})
-      when period in ["realtime", "30m"] do
-    select_merge_as(q, [t], %{
-      key => fragment("toStartOfMinute(?)", t.timestamp)
     })
   end
 
