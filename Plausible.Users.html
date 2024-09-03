@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-5214BD10.js"></script>
+    <script src="dist/sidebar_items-5F709355.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -177,7 +177,23 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#bump_last_seen/2" translate="no">bump_last_seen(user_id, now)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#has_email_code?/1" translate="no">has_email_code?(user)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#last_subscription_join_query/0" translate="no">last_subscription_join_query()</a>
 
       </div>
 
@@ -245,7 +261,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">accept_traffic_until(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/users.ex#L40" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/users.ex#L53" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -273,7 +289,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">allow_next_upgrade_override(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/users.ex#L89" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/users.ex#L101" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -282,6 +298,35 @@ Pages
   </div>
 
   <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="bump_last_seen/2">
+
+  <div class="detail-header">
+    <a href="#bump_last_seen/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">bump_last_seen(user_id, now)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/users.ex#L39" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> bump_last_seen(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(), <a href="https://hexdocs.pm/elixir/NaiveDateTime.html#t:t/0">NaiveDateTime.t</a>()) ::
+  :ok</pre>
+
+      </div>
 
 
   </section>
@@ -295,7 +340,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">has_email_code?(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/users.ex#L85" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/users.ex#L97" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -314,6 +359,28 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="last_subscription_join_query/0">
+
+  <div class="detail-header">
+    <a href="#last_subscription_join_query/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">last_subscription_join_query()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/users.ex#L117" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="maybe_reset_next_upgrade_override/1">
 
   <div class="detail-header">
@@ -323,7 +390,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">maybe_reset_next_upgrade_override(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/users.ex#L95" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/users.ex#L107" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -429,7 +496,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">with_subscription(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/users.ex#L67" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/users.ex#L80" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
