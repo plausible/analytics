@@ -148,7 +148,7 @@ defmodule Plausible.Stats.Query do
         {:error, :unsupported_query}
 
       "time:minute" in query.dimensions or "time:hour" in query.dimensions ->
-        {:error, :unsupported_query}
+        {:error, :unsupported_interval}
 
       Date.after?(query.date_range.first, query.latest_import_end_date) ->
         {:error, :out_of_range}

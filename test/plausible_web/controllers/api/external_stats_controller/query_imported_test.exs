@@ -583,10 +583,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
              ]
 
       refute json_response(conn, 200)["meta"]["imports_included"]
-      assert json_response(conn, 200)["meta"]["imports_skip_reason"] == "unsupported_query"
+      assert json_response(conn, 200)["meta"]["imports_skip_reason"] == "unsupported_interval"
 
       assert json_response(conn, 200)["meta"]["imports_warning"] =~
-               "Imported stats are not included in the results because query parameters are not supported."
+               "Imported stats are not included because the time dimension (i.e. the interval) is too short."
     end
 
     test "adds a warning when query params are not supported for imported data", %{
