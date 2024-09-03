@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-3E9F5BAF.js"></script>
+    <script src="dist/sidebar_items-5214BD10.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -211,7 +211,7 @@ processes are available to use, which is normally done via the child specificati
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#put/3" translate="no">put(cache_name, key, value)</a>
+        <a href="#put/4" translate="no">put(cache_name, key, value, opts \\ [])</a>
 
       </div>
 
@@ -228,6 +228,14 @@ processes are available to use, which is normally done via the child specificati
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#size/1" translate="no">size(cache_name)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#with_lock!/4" translate="no">with_lock!(cache_name, key, timeout, fun)</a>
 
       </div>
 
@@ -285,7 +293,7 @@ processes are available to use, which is normally done via the child specificati
     </a>
     <h1 class="signature" translate="no">delete(cache_name, key)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L85" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L90" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -397,7 +405,7 @@ processes are available to use, which is normally done via the child specificati
     </a>
     <h1 class="signature" translate="no">keys(cache_name)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L94" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L99" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -416,14 +424,16 @@ processes are available to use, which is normally done via the child specificati
 
   </section>
 </section>
-<section class="detail" id="put/3">
+<section class="detail" id="put/4">
+
+    <span id="put/3"></span>
 
   <div class="detail-header">
-    <a href="#put/3" class="detail-link" title="Link to this function">
+    <a href="#put/4" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">put(cache_name, key, value)</h1>
+    <h1 class="signature" translate="no">put(cache_name, key, value, opts \\ [])</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L65" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -434,12 +444,6 @@ processes are available to use, which is normally done via the child specificati
   </div>
 
   <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> put(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
-
-      </div>
 
 
   </section>
@@ -453,7 +457,7 @@ processes are available to use, which is normally done via the child specificati
     </a>
     <h1 class="signature" translate="no">put_many(cache_name, items)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L75" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L80" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -494,6 +498,35 @@ processes are available to use, which is normally done via the child specificati
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> size(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | nil</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="with_lock!/4">
+
+  <div class="detail-header">
+    <a href="#with_lock!/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">with_lock!(cache_name, key, timeout, fun)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L117" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> with_lock!(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(), (-&gt; result)) :: result
+when result: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
 
       </div>
 
