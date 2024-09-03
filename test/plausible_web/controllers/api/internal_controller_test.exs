@@ -2,41 +2,6 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
 
-  describe "GET /api/:domain/status" do
-    setup [:create_user, :log_in]
-
-    test "is WAITING when site has no pageviews", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
-      conn = get(conn, "/api/#{site.domain}/status")
-
-      assert json_response(conn, 200) == "WAITING"
-    end
-
-    test "is READY when site has at least 1 pageview", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
-      Plausible.TestUtils.create_pageviews([%{site: site}])
-
-      conn = get(conn, "/api/#{site.domain}/status")
-
-      assert json_response(conn, 200) == "READY"
-    end
-
-    test "is WAITING when unauthenticated", %{user: user} do
-      site = insert(:site, members: [user])
-      Plausible.TestUtils.create_pageviews([%{site: site}])
-
-      conn = get(build_conn(), "/api/#{site.domain}/status")
-
-      assert json_response(conn, 200) == "WAITING"
-    end
-
-    test "is WAITING when non-existing site", %{conn: conn} do
-      conn = get(conn, "/api/example.com/status")
-
-      assert json_response(conn, 200) == "WAITING"
-    end
-  end
-
   describe "GET /api/sites" do
     setup [:create_user, :log_in]
 

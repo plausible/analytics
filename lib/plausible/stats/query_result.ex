@@ -7,8 +7,7 @@ defmodule Plausible.Stats.QueryResult do
   produced by Jason.encode(query_result) is ordered.
   """
 
-  alias Plausible.Stats.Util
-  alias Plausible.Stats.Filters
+  alias Plausible.Stats.{Util, Filters}
 
   defstruct results: [],
             meta: %{},
@@ -32,7 +31,10 @@ defmodule Plausible.Stats.QueryResult do
         Jason.OrderedObject.new(
           site_id: site.domain,
           metrics: query.metrics,
-          date_range: [query.date_range.first, query.date_range.last],
+          date_range: [
+            to_iso_8601_with_timezone(query.date_range.first),
+            to_iso_8601_with_timezone(query.date_range.last)
+          ],
           filters: query.filters,
           dimensions: query.dimensions,
           order_by: query.order_by |> Enum.map(&Tuple.to_list/1),
@@ -78,6 +80,15 @@ defmodule Plausible.Stats.QueryResult do
     }
     |> Enum.reject(fn {_, value} -> is_nil(value) end)
     |> Enum.into(%{})
+  end
+
+  defp to_iso_8601_with_timezone(%DateTime{time_zone: timezone} = datetime) do
+    naive_iso8601 =
+      datetime
+      |> DateTime.to_naive()
+      |> NaiveDateTime.to_iso8601()
+
+    naive_iso8601 <> " " <> timezone
   end
 end
 

@@ -1,59 +1,57 @@
-<div class="w-full max-w-3xl mt-4 mx-auto flex">
+<PlausibleWeb.Components.Generic.focus_box>
+  <:title>
+    Enter Recovery Code
+  </:title>
+
+  <:subtitle>
+    Can't access your authenticator application? Enter a recovery code instead.
+  </:subtitle>
+
+  <:footer>
+    Authenticator application working again?
+    <a href={Routes.auth_path(@conn, :verify_2fa)} class="underline text-indigo-600">
+      Enter code
+    </a>
+    <%= if ee?() do %>
+      <br /> Lost your recovery codes?
+      <a href="https://plausible.io/contact" class="underline text-indigo-600">
+        Contact us
+      </a>
+    <% end %>
+  </:footer>
+
   <%= form_for @conn.params, 
   Routes.auth_path(@conn, :verify_2fa_recovery_code), 
   [
-    class: "w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8",
     onsubmit: "document.getElementById('use-code-button').disabled = true"
   ], fn f -> %>
-    <h2 class="text-xl font-black dark:text-gray-100">
-      Enter Recovery Code
-    </h2>
-
-    <div class="text-sm mt-2 text-gray-500 dark:text-gray-200 leading-tight">
-      Can't access your authenticator application? Enter a recovery code instead.
-      <div class="mt-6">
-        <div>
-          <%= text_input(f, :recovery_code,
-            value: "",
-            autocomplete: "off",
-            class:
-              "font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-2 border-gray-300 dark:border-gray-500 dark:text-gray-200 dark:bg-gray-900 rounded-md",
-            maxlength: "10",
-            oninvalid: "document.getElementById('use-code-button').disabled = false",
-            placeholder: "Enter recovery code",
-            required: "required"
-          ) %>
-        </div>
-        <.button
-          id="use-code-button"
-          type="submit"
-          class="w-full mt-2 [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
-        >
-          <span class="label-enabled pointer-events-none">
-            Use Code
-          </span>
-
-          <span class="label-disabled">
-            <PlausibleWeb.Components.Generic.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" />
-            Verifying...
-          </span>
-        </.button>
+    <div class="mt-6">
+      <div>
+        <%= text_input(f, :recovery_code,
+          value: "",
+          autocomplete: "off",
+          class:
+            "font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-2 border-gray-300 dark:border-gray-500 dark:text-gray-200 dark:bg-gray-900 rounded-md",
+          maxlength: "10",
+          oninvalid: "document.getElementById('use-code-button').disabled = false",
+          placeholder: "Enter recovery code",
+          required: "required"
+        ) %>
       </div>
+      <.button
+        id="use-code-button"
+        type="submit"
+        class="w-full mt-4 [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
+      >
+        <span class="label-enabled pointer-events-none">
+          Use Code
+        </span>
 
-      <div class="mt-6 flex flex-row justify-between items-center">
-        <p class="text-sm">
-          Authenticator application working again?
-          <a href={Routes.auth_path(@conn, :verify_2fa)} class="underline text-indigo-600">
-            Enter verification code
-          </a>
-          <%= if ee?() do %>
-            <br /> Lost your recovery codes?
-            <a href="https://plausible.io/contact" class="underline text-indigo-600">
-              Contact us
-            </a>
-          <% end %>
-        </p>
-      </div>
+        <span class="label-disabled">
+          <PlausibleWeb.Components.Generic.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" />
+          Verifying...
+        </span>
+      </.button>
     </div>
   <% end %>
-</div>
+</PlausibleWeb.Components.Generic.focus_box>

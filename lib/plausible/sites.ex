@@ -327,6 +327,13 @@ defmodule Plausible.Sites do
     end
   end
 
+  def update_installation_meta!(site, meta) do
+    site
+    |> Ecto.Changeset.change()
+    |> Ecto.Changeset.put_change(:installation_meta, meta)
+    |> Repo.update!()
+  end
+
   defp get_for_user_q(user_id, domain, roles) do
     from(s in Site,
       join: sm in Site.Membership,

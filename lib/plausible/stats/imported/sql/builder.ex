@@ -293,7 +293,7 @@ defmodule Plausible.Stats.Imported.SQL.Builder do
 
   defp select_group_fields(q, "time:week", key, query) do
     select_merge_as(q, [i], %{
-      key => weekstart_not_before(i.date, ^query.date_range.first)
+      key => weekstart_not_before(i.date, ^DateTime.to_naive(query.date_range.first))
     })
   end
 

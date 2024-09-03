@@ -26,10 +26,6 @@ defmodule PlausibleWeb.Router do
     plug :protect_from_forgery
   end
 
-  pipeline :focus_layout do
-    plug :put_root_layout, html: {PlausibleWeb.LayoutView, :focus}
-  end
-
   pipeline :app_layout do
     plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
   end
@@ -227,7 +223,6 @@ defmodule PlausibleWeb.Router do
     post "/paddle/webhook", Api.PaddleController, :webhook
     get "/paddle/currency", Api.PaddleController, :currency
 
-    get "/:domain/status", Api.InternalController, :domain_status
     put "/:domain/disable-feature", Api.InternalController, :disable_feature
 
     get "/sites", Api.InternalController, :sites
@@ -237,7 +232,7 @@ defmodule PlausibleWeb.Router do
     pipe_through [:browser, :csrf]
 
     scope alias: Live, assigns: %{connect_live_socket: true} do
-      pipe_through [PlausibleWeb.RequireLoggedOutPlug, :focus_layout]
+      pipe_through [PlausibleWeb.RequireLoggedOutPlug, :app_layout]
 
       scope assigns: %{disable_registration_for: [:invite_only, true]} do
         pipe_through PlausibleWeb.Plugs.MaybeDisableRegistration
@@ -325,7 +320,6 @@ defmodule PlausibleWeb.Router do
     post "/sites", SiteController, :create_site
     get "/sites/:website/change-domain", SiteController, :change_domain
     put "/sites/:website/change-domain", SiteController, :change_domain_submit
-    get "/:website/change-domain-snippet", SiteController, :add_snippet_after_domain_change
     post "/sites/:website/make-public", SiteController, :make_public
     post "/sites/:website/make-private", SiteController, :make_private
     post "/sites/:website/weekly-report/enable", SiteController, :enable_weekly_report
@@ -391,7 +385,13 @@ defmodule PlausibleWeb.Router do
     get "/sites/:website/weekly-report/unsubscribe", UnsubscribeController, :weekly_report
     get "/sites/:website/monthly-report/unsubscribe", UnsubscribeController, :monthly_report
 
-    get "/:website/snippet", SiteController, :add_snippet
+    scope alias: Live, assigns: %{connect_live_socket: true} do
+      pipe_through [:app_layout, PlausibleWeb.RequireAccountPlug]
+
+      live "/:website/installation", Installation, :installation, as: :site
+      live "/:website/verification", Verification, :verification, as: :site
+    end
+
     get "/:website/settings", SiteController, :settings
     get "/:website/settings/general", SiteController, :settings_general
     get "/:website/settings/people", SiteController, :settings_people
