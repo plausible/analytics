@@ -13,8 +13,9 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
     query =
       Query
-      |> struct!(now: now, timezone: site.timezone, debug_metadata: debug_metadata)
+      |> struct!(now: now, debug_metadata: debug_metadata)
       |> put_period(site, params)
+      |> put_timezone()
       |> put_dimensions(params)
       |> put_interval(params)
       |> put_parsed_filters(params)
@@ -154,6 +155,10 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   defp put_period(query, site, params) do
     put_period(query, site, Map.merge(params, %{"period" => "30d"}))
+  end
+
+  defp put_timezone(query) do
+    struct!(query, timezone: query.date_range.first.time_zone)
   end
 
   defp put_dimensions(query, params) do

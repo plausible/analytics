@@ -101,11 +101,11 @@ defmodule Plausible.TestUtils do
   def log_in(%{user: user, conn: conn}) do
     conn =
       conn
-      |> PlausibleWeb.UserAuth.set_logged_in_cookie()
+      |> init_session()
+      |> PlausibleWeb.UserAuth.log_in_user(user)
       |> Phoenix.ConnTest.recycle()
       |> Map.put(:secret_key_base, secret_key_base())
       |> init_session()
-      |> Plug.Conn.put_session(:current_user_id, user.id)
 
     {:ok, conn: conn}
   end

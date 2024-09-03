@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign(:enterprise_benefits, enterprise_benefits)
 
     ~H"""
-    <div class="bg-gray-100 dark:bg-gray-900 pt-1 pb-12 sm:pb-16 text-gray-900 dark:text-gray-100">
+    <div class="pt-1 pb-12 sm:pb-16 text-gray-900 dark:text-gray-100">
       <div class="mx-auto max-w-7xl px-6 lg:px-20">
         <Notice.pending_site_ownerships_notice
           class="pb-6"

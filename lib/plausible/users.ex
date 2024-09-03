@@ -35,6 +35,19 @@ defmodule Plausible.Users do
     |> Repo.update!()
   end
 
+  @spec bump_last_seen(Auth.User.t() | pos_integer(), NaiveDateTime.t()) :: :ok
+  def bump_last_seen(%Auth.User{id: user_id}, now) do
+    bump_last_seen(user_id, now)
+  end
+
+  def bump_last_seen(user_id, now) do
+    q = from(u in Auth.User, where: u.id == ^user_id)
+
+    Repo.update_all(q, set: [last_seen: now])
+
+    :ok
+  end
+
   @spec accept_traffic_until(Auth.User.t()) :: Date.t()
   on_ee do
     def accept_traffic_until(user) do
@@ -64,19 +77,18 @@ defmodule Plausible.Users do
     end
   end
 
-  def with_subscription(%Auth.User{id: user_id} = user) do
-    Repo.preload(user, subscription: last_subscription_query(user_id))
+  def with_subscription(%Auth.User{} = user) do
+    Repo.preload(user, subscription: last_subscription_query())
   end
 
   def with_subscription(user_id) when is_integer(user_id) do
     Repo.one(
       from(user in Auth.User,
-        left_join: last_subscription in subquery(last_subscription_query(user_id)),
-        on: last_subscription.user_id == user.id,
-        left_join: subscription in Subscription,
-        on: subscription.id == last_subscription.id,
+        as: :user,
+        left_lateral_join: s in subquery(last_subscription_join_query()),
+        on: true,
         where: user.id == ^user_id,
-        preload: [subscription: subscription]
+        preload: [subscription: s]
       )
     )
   end
@@ -102,9 +114,14 @@ defmodule Plausible.Users do
     end
   end
 
-  defp last_subscription_query(user_id) do
+  def last_subscription_join_query() do
+    from(subscription in last_subscription_query(),
+      where: subscription.user_id == parent_as(:user).id
+    )
+  end
+
+  defp last_subscription_query() do
     from(subscription in Subscription,
-      where: subscription.user_id == ^user_id,
       order_by: [desc: subscription.inserted_at],
       limit: 1
     )

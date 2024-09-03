@@ -35,12 +35,14 @@ All notable changes to this project will be documented in this file.
 - Make `TOTP_VAULT_KEY` optional plausible/analytics#4317
 - Sources like 'google' and 'facebook' are now stored in capitalized forms ('Google', 'Facebook') plausible/analytics#4417
 - `DATABASE_CACERTFILE` now forces TLS for PostgreSQL connections, so you don't need to add `?ssl=true` in `DATABASE_URL`
+- Change auth session cookies to token-based ones with server-side expiration management.
 
 ### Fixed
 
 - Fix access to Stats API feature in CE plausible/analytics#4244
 - Fix filter suggestions when same filter previously applied
 - Fix MX lookup when using relays with Bamboo.Mua plausible/analytics#4350
+- Fix property filter suggestions 500 error when property hasn't been selected
 
 ## v2.1.1 - 2024-06-06
 
