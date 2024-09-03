@@ -66,7 +66,7 @@ port = get_var_from_path_or_env(config_dir, "PORT") || 8000
 base_url = get_var_from_path_or_env(config_dir, "BASE_URL")
 
 if !base_url do
-  raise "BASE_URL configuration option is required. See https://github.com/plausible/community-edition/tree/v2.1.0?tab=readme-ov-file#quick-start"
+  raise "BASE_URL configuration option is required. See https://github.com/plausible/community-edition/wiki/configuration#base_url"
 end
 
 base_url = URI.parse(base_url)
@@ -79,10 +79,10 @@ secret_key_base = get_var_from_path_or_env(config_dir, "SECRET_KEY_BASE", nil)
 
 case secret_key_base do
   nil ->
-    raise "SECRET_KEY_BASE configuration option is required. See https://github.com/plausible/community-edition/tree/v2.1.0?tab=readme-ov-file#quick-start"
+    raise "SECRET_KEY_BASE configuration option is required. See https://github.com/plausible/community-edition/wiki/configuration#secret_key_base"
 
   key when byte_size(key) < 32 ->
-    raise "SECRET_KEY_BASE must be at least 32 bytes long. See https://github.com/plausible/community-edition/tree/v2.1.0?tab=readme-ov-file#quick-start"
+    raise "SECRET_KEY_BASE must be at least 32 bytes long. See https://github.com/plausible/community-edition/wiki/configuration#secret_key_base"
 
   _ ->
     nil
@@ -154,14 +154,14 @@ totp_vault_key =
           raise ArgumentError, """
           TOTP_VAULT_KEY must be Base64 encoded 32 bytes, e.g. `openssl rand -base64 32`.
           Got Base64 encoded #{byte_size(totp_vault_key)} bytes.
-          More info: https://github.com/plausible/community-edition/tree/v2.1.1#quick-start
+          More info: https://github.com/plausible/community-edition/wiki/configuration#totp_vault_key
           """
         end
 
       :error ->
         raise ArgumentError, """
         TOTP_VAULT_KEY must be Base64 encoded 32 bytes, e.g. `openssl rand -base64 32`
-        More info: https://github.com/plausible/community-edition/tree/v2.1.1#quick-start
+        More info: https://github.com/plausible/community-edition/wiki/configuration#totp_vault_key
         """
     end
   else
@@ -255,7 +255,7 @@ disable_registration =
   |> String.to_existing_atom()
 
 if disable_registration not in [true, false, :invite_only] do
-  raise "DISABLE_REGISTRATION must be one of `true`, `false`, or `invite_only`. See https://github.com/plausible/community-edition/tree/v2.1.0?tab=readme-ov-file#disable_registration"
+  raise "DISABLE_REGISTRATION must be one of `true`, `false`, or `invite_only`. See https://github.com/plausible/community-edition/wiki/configuration#disable_registration"
 end
 
 hcaptcha_sitekey = get_var_from_path_or_env(config_dir, "HCAPTCHA_SITEKEY")
