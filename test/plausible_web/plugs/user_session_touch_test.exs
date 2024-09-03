@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Plugs.UserSessionTouchTest do
 
   alias Plausible.Repo
   alias PlausibleWeb.AuthPlug
-  alias PlausibleWeb.UserAuth
   alias PlausibleWeb.Plugs.UserSessionTouch
 
   setup [:create_user, :log_in]
@@ -14,7 +13,10 @@ defmodule PlausibleWeb.Plugs.UserSessionTouchTest do
     now = NaiveDateTime.utc_now(:second)
     one_day_ago = NaiveDateTime.shift(now, day: -1)
     %{sessions: [user_session]} = Repo.preload(user, :sessions)
-    UserAuth.touch_user_session(user_session, one_day_ago)
+
+    user_session
+    |> Plausible.Auth.UserSession.touch_session(one_day_ago)
+    |> Repo.update!(allow_stale: true)
 
     assert %{assigns: %{current_user_session: user_session}} =
              conn
