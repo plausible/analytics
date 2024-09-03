@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+/** @format */
 
-import { FilterLink } from "../reports/list";
-import { useQueryContext } from "../../query-context";
-import { useDebounce } from "../../custom-hooks";
-import { useAPIClient } from "../../hooks/api-client";
-import { rootRoute } from "../../router";
+import React, { useState, useEffect, useRef } from 'react'
+
+import { FilterLink } from '../reports/list'
+import { useQueryContext } from '../../query-context'
+import { useDebounce } from '../../custom-hooks'
+import { useAPIClient } from '../../hooks/api-client'
+import { rootRoute } from '../../router'
+import { cycleSortDirection, useOrderBy } from '../../hooks/use-order-by'
+import { SortButton } from '../../components/sort-button'
 
 export const MIN_HEIGHT_PX = 500
 
@@ -84,9 +88,12 @@ export default function BreakdownModal({
   getFilterInfo
 }) {
   const searchBoxRef = useRef(null)
-  const { query } = useQueryContext();
+  const { query } = useQueryContext()
 
   const [search, setSearch] = useState('')
+  const { orderBy, orderByDictionary, toggleSortByMetric } = useOrderBy({
+    metrics
+  })
 
   const {
     data,
@@ -96,25 +103,29 @@ export default function BreakdownModal({
     isFetching,
     isPending
   } = useAPIClient({
-    key: [reportInfo.endpoint, {query, search}],
+    key: [reportInfo.endpoint, { query, search, orderBy }],
     getRequestParams: (key) => {
-      const [_endpoint, {query, search}] = key
+      const [_endpoint, { query, search }] = key
 
-      let queryWithSearchFilter = {...query}
+      let queryWithSearchFilter = { ...query }
 
       if (searchEnabled && search !== '') {
         queryWithSearchFilter = addSearchFilter(query, search)
       }
 
-      return [queryWithSearchFilter, {detailed: true}]
+      return [
+        queryWithSearchFilter,
+        { detailed: true, order_by: JSON.stringify(orderBy) }
+      ]
     },
     afterFetchData,
     afterFetchNextPage
   })
 
-
   useEffect(() => {
-    if (!searchEnabled) { return }
+    if (!searchEnabled) {
+      return
+    }
 
     const searchBox = searchBoxRef.current
 
@@ -125,10 +136,10 @@ export default function BreakdownModal({
       }
     }
 
-    searchBox.addEventListener('keyup', handleKeyUp);
+    searchBox.addEventListener('keyup', handleKeyUp)
 
     return () => {
-      searchBox.removeEventListener('keyup', handleKeyUp);
+      searchBox.removeEventListener('keyup', handleKeyUp)
     }
   }, [searchEnabled])
 
@@ -142,11 +153,25 @@ export default function BreakdownModal({
     if (typeof getExternalLinkURL === 'function') {
       const linkUrl = getExternalLinkURL(item)
 
-      if (!linkUrl) { return null }
+      if (!linkUrl) {
+        return null
+      }
 
       return (
-        <a target="_blank" href={linkUrl} rel="noreferrer" className="hidden group-hover:block">
-          <svg className="inline h-4 w-4 ml-1 -mt-1 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
+        <a
+          target="_blank"
+          href={linkUrl}
+          rel="noreferrer"
+          className="hidden group-hover:block"
+        >
+          <svg
+            className="inline h-4 w-4 ml-1 -mt-1 text-gray-600 dark:text-gray-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path>
+            <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path>
+          </svg>
         </a>
       )
     }
@@ -157,10 +182,7 @@ export default function BreakdownModal({
       <tr className="text-sm dark:text-gray-200" key={item.name}>
         <td className="w-48 md:w-80 break-all p-2 flex items-center">
           {maybeRenderIcon(item)}
-          <FilterLink
-            path={rootRoute.path}
-            filterInfo={getFilterInfo(item)}
-          >
+          <FilterLink path={rootRoute.path} filterInfo={getFilterInfo(item)}>
             {item.name}
           </FilterLink>
           {maybeRenderExternalLink(item)}
@@ -178,15 +200,22 @@ export default function BreakdownModal({
 
   function renderInitialLoadingSpinner() {
     return (
-      <div className="w-full h-full flex flex-col justify-center" style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
-        <div className="mx-auto loading"><div></div></div>
+      <div
+        className="w-full h-full flex flex-col justify-center"
+        style={{ minHeight: `${MIN_HEIGHT_PX}px` }}
+      >
+        <div className="mx-auto loading">
+          <div></div>
+        </div>
       </div>
     )
   }
 
   function renderSmallLoadingSpinner() {
     return (
-      <div className="loading sm"><div></div></div>
+      <div className="loading sm">
+        <div></div>
+      </div>
     )
   }
 
@@ -196,7 +225,11 @@ export default function BreakdownModal({
 
     return (
       <div className="flex flex-col w-full my-4 items-center justify-center h-10">
-        {!isFetching && <button onClick={fetchNextPage} type="button" className="button">Load more</button>}
+        {!isFetching && (
+          <button onClick={fetchNextPage} type="button" className="button">
+            Load more
+          </button>
+        )}
         {isFetchingNextPage && renderSmallLoadingSpinner()}
       </div>
     )
@@ -236,16 +269,32 @@ export default function BreakdownModal({
 
                 {metrics.map((metric) => {
                   return (
-                    <th key={metric.key} className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">
-                      {metric.renderLabel(query)}
+                    <th
+                      key={metric.key}
+                      className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                      align="right"
+                    >
+                      {metric.sortable ? (
+                        <SortButton
+                          sortDirection={orderByDictionary[metric.key] ?? null}
+                          toggleSort={() => toggleSortByMetric(metric)}
+                          hint={
+                            cycleSortDirection(
+                              orderByDictionary[metric.key] ?? null
+                            ).hint
+                          }
+                        >
+                          {metric.renderLabel(query)}
+                        </SortButton>
+                      ) : (
+                        metric.renderLabel(query)
+                      )}
                     </th>
                   )
                 })}
               </tr>
             </thead>
-            <tbody>
-              {data.pages.map((p) => p.map(renderRow))}
-            </tbody>
+            <tbody>{data.pages.map((p) => p.map(renderRow))}</tbody>
           </table>
         </main>
       )
@@ -256,7 +305,9 @@ export default function BreakdownModal({
     <div className="w-full h-full">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-x-2">
-          <h1 className="text-xl font-bold dark:text-gray-100">{reportInfo.title}</h1>
+          <h1 className="text-xl font-bold dark:text-gray-100">
+            {reportInfo.title}
+          </h1>
           {!isPending && isFetching && renderSmallLoadingSpinner()}
         </div>
         {searchEnabled && renderSearchInput()}
