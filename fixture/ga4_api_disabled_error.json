@@ -1,0 +1,27 @@
+{
+  "error": {
+    "code": 403,
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.Help",
+        "links": [
+          {
+            "description": "Google developers console API activation",
+            "url": "https://console.developers.google.com/apis/api/analyticsadmin.googleapis.com/overview?project=752168887897"
+          }
+        ]
+      },
+      {
+        "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+        "domain": "googleapis.com",
+        "metadata": {
+          "consumer": "projects/752168887897",
+          "service": "analyticsadmin.googleapis.com"
+        },
+        "reason": "SERVICE_DISABLED"
+      }
+    ],
+    "message": "Google Analytics Admin API has not been used in project 752168887897 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/analyticsadmin.googleapis.com/overview?project=752168887897 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.",
+    "status": "PERMISSION_DENIED"
+  }
+}
