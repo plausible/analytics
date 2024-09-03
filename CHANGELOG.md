@@ -26,7 +26,6 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Support Unix sockets in `DATABASE_URL` plausible/analytics#4202
-
 - Realtime and hourly graphs now show visits lasting their whole duration instead when specific events occur
 - Increase hourly request limit for API keys in CE from 600 to 1000000 (practically removing the limit) plausible/analytics#4200
 - Make TCP connections try IPv6 first with IPv4 fallback in CE plausible/analytics#4245
@@ -37,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - `DATABASE_CACERTFILE` now forces TLS for PostgreSQL connections, so you don't need to add `?ssl=true` in `DATABASE_URL`
 - Change auth session cookies to token-based ones with server-side expiration management.
 - Improve Google error messages in CE plausible/analytics#4485
+- Better compress static assets in CE plausible/analytics#4476
 
 ### Fixed
 
