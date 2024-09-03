@@ -60,54 +60,50 @@
   <:footer :if={@has_email_code?}>
     <b>Didn't receive an email?</b>
 
-    <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
-      <li>Check your spam folder</li>
-      <li>
-        <%= link("Send a new code",
-          class: "underline text-indigo-600",
-          to: "/activate/request-code",
-          method: :post
-        ) %> to <%= @conn.assigns[:current_user].email %>
-      </li>
-
-      <%= if ee?() do %>
-        <li>
-          <a class="underline text-indigo-600" href="https://plausible.io/contact">
-            Contact us
-          </a>
-          if the problem persists
-        </li>
-      <% else %>
-        <li>
-          Ask on our <%= link("community-supported forum",
-            to: "https://github.com/plausible/analytics/discussions",
-            class: "text-indigo-600 underline"
-          ) %>
-        </li>
-      <% end %>
-    </ol>
+    <.focus_list>
+      <:item>
+        Check your spam folder
+      </:item>
+      <:item>
+        <.styled_link href="/activate/request-code" method="post">
+          Send a new code
+        </.styled_link>
+        to <%= @conn.assigns[:current_user].email %>
+      </:item>
+      <:item :if={ee?()}>
+        <.styled_link href="https://plausible.io/contact" new_tab={true}>
+          Contact us
+        </.styled_link>
+        if the problem persists
+      </:item>
+      <:item :if={ce?()}>
+        Ask on our
+        <.styled_link href="https://github.com/plausible/analytics/discussions" new_tab={true}>
+          community-supported forum
+        </.styled_link>
+      </:item>
+    </.focus_list>
 
     <b>Entered the wrong email address?</b>
 
-    <ol class="list-disc space-y-1 ml-4 mt-1">
-      <%= if @has_any_memberships? do %>
-        <li>
-          <%= link("Change email back to",
-            class: "underline text-indigo-600",
-            to: "/settings/email/cancel",
-            method: "post"
-          ) %> to <%= @conn.assigns[:current_user].previous_email %>
-        </li>
-      <% else %>
-        <li>
-          <%= link("Delete this account",
-            class: "underline text-indigo-600",
-            to: "/me?redirect=/register",
-            method: "delete",
-            data: [confirm: "Deleting your account cannot be reversed. Are you sure?"]
-          ) %> and start over
-        </li>
-      <% end %>
-    </ol>
+    <.focus_list>
+      <:item :if={@has_any_memberships?}>
+        <.styled_link method="post" href="/settings/email/cancel">
+          Change email back to
+        </.styled_link>
+        <%= @conn.assigns[:current_user].previous_email %>
+      </:item>
+
+      <:item :if={not @has_any_memberships?}>
+        <.styled_link
+          method="delete"
+          href="/me?redirect=/register"
+          data-confim="Deleting your account cannot be reversed. Are you sure?"
+        >
+          Delete this account
+        </.styled_link>
+        and start over
+      </:item>
+    </.focus_list>
   </:footer>
 </PlausibleWeb.Components.Generic.focus_box>

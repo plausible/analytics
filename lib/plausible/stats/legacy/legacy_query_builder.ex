@@ -1,21 +1,26 @@
 defmodule Plausible.Stats.Legacy.QueryBuilder do
-  @moduledoc false
+  @moduledoc """
+  Module used to parse URL search params to a valid Query, used to power the API for the dashboard.
+  @deprecated
+  """
 
   use Plausible
 
-  alias Plausible.Stats.{Filters, Interval, Query, DateTimeRange}
+  alias Plausible.Stats.{Filters, Interval, Query, DateTimeRange, Metrics}
 
   def from(site, params, debug_metadata) do
     now = DateTime.utc_now(:second)
 
     query =
       Query
-      |> struct!(now: now, timezone: site.timezone, debug_metadata: debug_metadata)
+      |> struct!(now: now, debug_metadata: debug_metadata)
       |> put_period(site, params)
+      |> put_timezone()
       |> put_dimensions(params)
       |> put_interval(params)
       |> put_parsed_filters(params)
       |> put_preloaded_goals(site)
+      |> put_order_by(params)
       |> Query.put_experimental_reduced_joins(site, params)
       |> Query.put_imported_opts(site, params)
 
@@ -152,12 +157,71 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     put_period(query, site, Map.merge(params, %{"period" => "30d"}))
   end
 
+  defp put_timezone(query) do
+    struct!(query, timezone: query.date_range.first.time_zone)
+  end
+
   defp put_dimensions(query, params) do
     if not is_nil(params["property"]) do
       struct!(query, dimensions: [params["property"]])
     else
       struct!(query, dimensions: Map.get(params, "dimensions", []))
     end
+  end
+
+  @doc """
+  ### Examples:
+    iex> QueryBuilder.parse_order_by(nil)
+    []
+
+    iex> QueryBuilder.parse_order_by("")
+    []
+
+    iex> QueryBuilder.parse_order_by("0")
+    []
+
+    iex> QueryBuilder.parse_order_by("[}")
+    []
+
+    iex> QueryBuilder.parse_order_by(~s({"any":"object"}))
+    []
+
+    iex> QueryBuilder.parse_order_by(~s([["visitors","invalid"]]))
+    []
+
+    iex> QueryBuilder.parse_order_by(~s([["visitors","desc"]]))
+    [{:visitors, :desc}]
+
+    iex> QueryBuilder.parse_order_by(~s([["visitors","asc"],["visit:source","desc"]]))
+    [{:visitors, :asc}, {"visit:source", :desc}]
+  """
+  def parse_order_by(order_by) when is_binary(order_by) do
+    case Jason.decode(order_by) do
+      {:ok, parsed} when is_list(parsed) ->
+        Enum.flat_map(parsed, &parse_order_by_pair/1)
+
+      _ ->
+        []
+    end
+  end
+
+  def parse_order_by(_) do
+    []
+  end
+
+  defp parse_order_by_pair([metric_or_dimension, direction]) when direction in ["asc", "desc"] do
+    case Metrics.from_string(metric_or_dimension) do
+      {:ok, metric} -> [{metric, String.to_existing_atom(direction)}]
+      :error -> [{metric_or_dimension, String.to_existing_atom(direction)}]
+    end
+  end
+
+  defp parse_order_by_pair(_) do
+    []
+  end
+
+  defp put_order_by(query, %{} = params) do
+    struct!(query, order_by: parse_order_by(params["order_by"]))
   end
 
   defp put_interval(%{:period => "all"} = query, params) do
