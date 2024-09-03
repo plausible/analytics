@@ -182,6 +182,7 @@ defmodule PlausibleWeb.UserAuth do
   end
 
   defp get_user_token(%{"current_user_id" => user_id}) when is_integer(user_id) do
+    Logger.warning("Legacy user session detected (user: #{user_id})")
     {:ok, {:legacy, user_id}}
   end
 
