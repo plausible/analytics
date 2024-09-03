@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Comparisons do
   """
 
   alias Plausible.Stats
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, DateTimeRange}
 
   @modes ~w(previous_period year_over_year custom)
   @disallowed_periods ~w(realtime all)
@@ -20,6 +20,9 @@ defmodule Plausible.Stats.Comparisons do
           {:ok, Stats.Query.t()} | {:error, :not_supported} | {:error, :invalid_dates}
   @doc """
   Generates a comparison query based on the source query and comparison mode.
+
+  Currently only historical periods are supported for comparisons (not `realtime`
+  and `30m` periods).
 
   The mode parameter specifies the type of comparison and can be one of the
   following:
@@ -61,52 +64,55 @@ defmodule Plausible.Stats.Comparisons do
       |> Keyword.put_new(:now, Timex.now(site.timezone))
       |> Keyword.put_new(:match_day_of_week?, false)
 
+    source_date_range = DateTimeRange.to_date_range(source_query.date_range)
+
     with :ok <- validate_mode(source_query, mode),
-         {:ok, comparison_query} <- do_compare(source_query, mode, opts),
-         comparison_query <- maybe_include_imported(comparison_query, source_query),
-         do: {:ok, comparison_query}
+         {:ok, comparison_date_range} <- get_comparison_date_range(source_date_range, mode, opts) do
+      %Date.Range{first: first, last: last} = comparison_date_range
+
+      comparison_query =
+        source_query
+        |> Query.set(date_range: DateTimeRange.new!(first, last, site.timezone))
+        |> maybe_include_imported(source_query)
+
+      {:ok, comparison_query}
+    end
   end
 
-  defp do_compare(source_query, "year_over_year", opts) do
+  defp get_comparison_date_range(source_date_range, "year_over_year", opts) do
     now = Keyword.fetch!(opts, :now)
 
-    start_date = Date.add(source_query.date_range.first, -365)
-    end_date = earliest(source_query.date_range.last, now) |> Date.add(-365)
+    start_date = Date.add(source_date_range.first, -365)
+    end_date = earliest(source_date_range.last, now) |> Date.add(-365)
 
-    range = Date.range(start_date, end_date)
+    comparison_date_range =
+      Date.range(start_date, end_date)
+      |> maybe_match_day_of_week(source_date_range, opts)
 
-    comparison_query =
-      source_query
-      |> Map.put(:date_range, range)
-      |> maybe_match_day_of_week(source_query, opts)
-
-    {:ok, comparison_query}
+    {:ok, comparison_date_range}
   end
 
-  defp do_compare(source_query, "previous_period", opts) do
+  defp get_comparison_date_range(source_date_range, "previous_period", opts) do
     now = Keyword.fetch!(opts, :now)
 
-    last = earliest(source_query.date_range.last, now)
-    diff_in_days = Date.diff(source_query.date_range.first, last) - 1
+    last = earliest(source_date_range.last, now)
+    diff_in_days = Date.diff(source_date_range.first, last) - 1
 
-    new_first = Date.add(source_query.date_range.first, diff_in_days)
+    new_first = Date.add(source_date_range.first, diff_in_days)
     new_last = Date.add(last, diff_in_days)
 
-    range = Date.range(new_first, new_last)
+    comparison_date_range =
+      Date.range(new_first, new_last)
+      |> maybe_match_day_of_week(source_date_range, opts)
 
-    comparison_query =
-      source_query
-      |> Map.put(:date_range, range)
-      |> maybe_match_day_of_week(source_query, opts)
-
-    {:ok, comparison_query}
+    {:ok, comparison_date_range}
   end
 
-  defp do_compare(source_query, "custom", opts) do
+  defp get_comparison_date_range(_source_date_range, "custom", opts) do
     with {:ok, from} <- opts |> Keyword.fetch!(:from) |> Date.from_iso8601(),
          {:ok, to} <- opts |> Keyword.fetch!(:to) |> Date.from_iso8601(),
          result when result in [:eq, :lt] <- Date.compare(from, to) do
-      {:ok, %Stats.Query{source_query | date_range: Date.range(from, to)}}
+      {:ok, Date.range(from, to)}
     else
       _error -> {:error, :invalid_dates}
     end
@@ -116,24 +122,23 @@ defmodule Plausible.Stats.Comparisons do
     if Date.compare(a, b) in [:eq, :lt], do: a, else: b
   end
 
-  defp maybe_match_day_of_week(comparison_query, source_query, opts) do
+  defp maybe_match_day_of_week(comparison_date_range, source_date_range, opts) do
     if Keyword.fetch!(opts, :match_day_of_week?) do
-      day_to_match = Date.day_of_week(source_query.date_range.first)
+      day_to_match = Date.day_of_week(source_date_range.first)
 
       new_first =
         shift_to_nearest(
           day_to_match,
-          comparison_query.date_range.first,
-          source_query.date_range.first
+          comparison_date_range.first,
+          source_date_range.first
         )
 
-      days_shifted = Date.diff(new_first, comparison_query.date_range.first)
-      new_last = Date.add(comparison_query.date_range.last, days_shifted)
+      days_shifted = Date.diff(new_first, comparison_date_range.first)
+      new_last = Date.add(comparison_date_range.last, days_shifted)
 
-      new_range = Date.range(new_first, new_last)
-      %Stats.Query{comparison_query | date_range: new_range}
+      Date.range(new_first, new_last)
     else
-      comparison_query
+      comparison_date_range
     end
   end
 

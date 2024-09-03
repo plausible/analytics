@@ -1,121 +1,113 @@
-<%= form_for @conn, Routes.membership_path(@conn, :invite_member, @site.domain), [class: "max-w-lg w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
-  <h2 class="text-xl font-black dark:text-gray-100 mb-4">Invite member to <%= @site.domain %></h2>
+<PlausibleWeb.Components.Generic.focus_box>
+  <:title>
+    Invite member to <%= @site.domain %>
+  </:title>
 
-  <PlausibleWeb.Components.Billing.Notice.limit_exceeded
-    :if={Map.get(assigns, :is_at_limit, false)}
-    current_user={@current_user}
-    billable_user={@site.owner}
-    limit={Map.get(assigns, :team_member_limit, 0)}
-    resource="team members"
-  />
-
-  <p class="mt-4 max-w-2xl text-sm text-gray-500 dark:text-gray-200">
-    Enter the email address and role of the person you want to invite. We will contact them over email to offer them access to <%= @site.domain %> analytics.
-  </p>
-
-  <p class="mt-4 max-w-2xl text-sm text-gray-500 dark:text-gray-200">
+  <:subtitle>
+    Enter the email address and role of the person you want to invite. We will contact them over email to offer them access to <%= @site.domain %> analytics.<br /><br />
     The invitation will expire in 48 hours
-  </p>
+  </:subtitle>
 
-  <div class="my-6">
-    <%= label(f, :email, "Email address",
-      class: "block text-sm font-medium text-gray-700 dark:text-gray-300"
-    ) %>
-    <div class="mt-1 relative rounded-md shadow-sm">
-      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <svg
-          class="h-5 w-5 text-gray-500 dark:text-gray-400"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-        </svg>
-      </div>
-      <%= email_input(f, :email,
-        class:
-          "focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-full rounded-md pl-10 sm:text-sm border-gray-300 dark:border-gray-500",
-        placeholder: "john.doe@example.com",
-        required: "true"
+  <%= form_for @conn, Routes.membership_path(@conn, :invite_member, @site.domain), fn f -> %>
+    <PlausibleWeb.Components.Billing.Notice.limit_exceeded
+      :if={Map.get(assigns, :is_at_limit, false)}
+      current_user={@current_user}
+      billable_user={@site.owner}
+      limit={Map.get(assigns, :team_member_limit, 0)}
+      resource="team members"
+    />
+
+    <div class="my-6">
+      <%= label(f, :email, "Email address",
+        class: "block font-medium text-gray-700 dark:text-gray-300"
       ) %>
-    </div>
-    <%= error_tag(f, :email) %>
-
-    <%= if @conn.assigns[:error] do %>
-      <div class="text-red-500 text-xs mb-4"><%= @conn.assigns[:error] %></div>
-    <% end %>
-  </div>
-
-  <fieldset x-data="{selectedOption: null}">
-    <%= label(f, :role, class: "block text-sm font-medium text-gray-700 dark:text-gray-300") %>
-    <div class="mt-1 bg-white rounded-md -space-y-px dark:bg-gray-800">
-      <label
-        class="border-gray-200 dark:border-gray-500 rounded-tl-md rounded-tr-md relative border p-4 flex cursor-pointer"
-        x-class="{'bg-indigo-50 border-indigo-200 dark:bg-indigo-500 dark:border-indigo-800 z-10': selectedOption === 'admin', 'border-gray-200': selectedOption !== 'admin'}"
-      >
-        <%= radio_button(f, :role, "admin",
+      <div class="mt-1 relative rounded-md shadow-sm">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg
+            class="h-5 w-5 text-gray-500 dark:text-gray-400"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+          </svg>
+        </div>
+        <%= email_input(f, :email,
           class:
-            "dark:bg-gray-900 h-4 w-4 mt-0.5 cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500",
-          "x-model": "selectedOption",
+            "focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-full rounded-md pl-10 border-gray-300 dark:border-gray-500",
+          placeholder: "john.doe@example.com",
           required: "true"
         ) %>
-        <div class="ml-3 flex flex-col">
-          <span
-            class="text-gray-900 dark:text-gray-100 block text-sm font-medium"
-            x-class="{'text-indigo-900 dark:text-white': selectedOption === 'admin', 'text-gray-900 dark:text-gray-100': selectedOption !== 'admin'}"
-          >
-            Admin
-          </span>
-          <span
-            class="text-gray-500 dark:text-gray-200 block text-sm"
-            x-class="{'text-indigo-700 dark:text-gray-100': selectedOption === 'admin', 'text-gray-500 dark:text-gray-200': selectedOption !== 'admin'}"
-          >
-            Can view stats, change site settings and invite other members
-          </span>
-        </div>
-      </label>
+      </div>
+      <%= error_tag(f, :email) %>
 
-      <label
-        class="border-gray-200 dark:border-gray-500 rounded-bl-md rounded-br-md relative border p-4 flex cursor-pointer"
-        x-class="{'bg-indigo-50 border-indigo-200 dark:bg-indigo-500 dark:border-indigo-800 z-10': selectedOption === 'viewer', 'border-gray-200': selectedOption !== 'viewer'}"
-      >
-        <%= radio_button(f, :role, "viewer",
-          class:
-            "dark:bg-gray-900 h-4 w-4 mt-0.5 cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500",
-          "x-model": "selectedOption",
-          required: "true"
-        ) %>
-        <div class="ml-3 flex flex-col">
-          <span
-            class="text-gray-900 dark:text-gray-100 block text-sm font-medium"
-            x-class="{'text-indigo-900 dark:text-white': selectedOption === 'viewer', 'text-gray-900 dark:text-gray-100': selectedOption !== 'viewer'}"
-          >
-            Viewer
-          </span>
-          <span
-            class="text-gray-500 dark:text-gray-200 block text-sm"
-            x-class="{'text-indigo-700 dark:text-gray-100': selectedOption === 'viewer', 'text-gray-500 dark:text-gray-200': selectedOption !== 'viewer'}"
-          >
-            Can view stats but cannot access settings or invite members
-          </span>
-        </div>
-      </label>
+      <%= if @conn.assigns[:error] do %>
+        <div class="text-red-500 mb-4"><%= @conn.assigns[:error] %></div>
+      <% end %>
     </div>
-  </fieldset>
 
-  <div class="mt-6">
-    <%= submit(class: "button w-full") do %>
-      <svg
-        class="w-5 h-5 mr-1"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z">
-        </path>
-      </svg>
-      <span>Invite</span>
-    <% end %>
-  </div>
-<% end %>
+    <fieldset x-data="{selectedOption: null}">
+      <%= label(f, :role, class: "block font-medium text-gray-700 dark:text-gray-300") %>
+      <div class="mt-1 bg-white rounded-md -space-y-px dark:bg-gray-800">
+        <label
+          class="border-gray-200 dark:border-gray-500 rounded-tl-md rounded-tr-md relative border p-4 flex cursor-pointer"
+          x-class="{'bg-indigo-50 border-indigo-200 dark:bg-indigo-500 dark:border-indigo-800 z-10': selectedOption === 'admin', 'border-gray-200': selectedOption !== 'admin'}"
+        >
+          <%= radio_button(f, :role, "admin",
+            class:
+              "dark:bg-gray-900 h-4 w-4 mt-0.5 cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500",
+            "x-model": "selectedOption",
+            required: "true"
+          ) %>
+          <div class="ml-3 flex flex-col">
+            <span
+              class="text-gray-900 dark:text-gray-100 block font-medium"
+              x-class="{'text-indigo-900 dark:text-white': selectedOption === 'admin', 'text-gray-900 dark:text-gray-100': selectedOption !== 'admin'}"
+            >
+              Admin
+            </span>
+            <span
+              class="text-gray-500 dark:text-gray-200 block"
+              x-class="{'text-indigo-700 dark:text-gray-100': selectedOption === 'admin', 'text-gray-500 dark:text-gray-200': selectedOption !== 'admin'}"
+            >
+              Can view stats, change site settings and invite other members
+            </span>
+          </div>
+        </label>
+
+        <label
+          class="border-gray-200 dark:border-gray-500 rounded-bl-md rounded-br-md relative border p-4 flex cursor-pointer"
+          x-class="{'bg-indigo-50 border-indigo-200 dark:bg-indigo-500 dark:border-indigo-800 z-10': selectedOption === 'viewer', 'border-gray-200': selectedOption !== 'viewer'}"
+        >
+          <%= radio_button(f, :role, "viewer",
+            class:
+              "dark:bg-gray-900 h-4 w-4 mt-0.5 cursor-pointer text-indigo-600 border-gray-300 dark:border-gray-500 focus:ring-indigo-500",
+            "x-model": "selectedOption",
+            required: "true"
+          ) %>
+          <div class="ml-3 flex flex-col">
+            <span
+              class="text-gray-900 dark:text-gray-100 block font-medium"
+              x-class="{'text-indigo-900 dark:text-white': selectedOption === 'viewer', 'text-gray-900 dark:text-gray-100': selectedOption !== 'viewer'}"
+            >
+              Viewer
+            </span>
+            <span
+              class="text-gray-500 dark:text-gray-200 block"
+              x-class="{'text-indigo-700 dark:text-gray-100': selectedOption === 'viewer', 'text-gray-500 dark:text-gray-200': selectedOption !== 'viewer'}"
+            >
+              Can view stats but cannot access settings or invite members
+            </span>
+          </div>
+        </label>
+      </div>
+    </fieldset>
+
+    <div class="mt-6">
+      <%= submit(class: "button w-full") do %>
+        <span>Invite</span>
+      <% end %>
+    </div>
+  <% end %>
+</PlausibleWeb.Components.Generic.focus_box>

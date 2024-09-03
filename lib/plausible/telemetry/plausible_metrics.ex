@@ -57,6 +57,15 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           measurement: :duration,
           tags: [:step]
         ),
+        distribution(
+          metric_prefix ++ [:sessions, :cache, :register, :lock],
+          event_name: Plausible.Session.CacheStore.lock_telemetry_event(),
+          reporter_options: [
+            buckets: [10, 50, 100, 250, 350, 500, 1000, 5000, 10_000, 100_000, 500_000]
+          ],
+          unit: {:native, :microsecond},
+          measurement: :duration
+        ),
         counter(
           metric_prefix ++ [:ingest, :events, :buffered, :total],
           event_name: Ingestion.Event.telemetry_event_buffered()

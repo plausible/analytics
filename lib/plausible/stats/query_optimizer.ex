@@ -4,7 +4,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   """
 
   use Plausible
-  alias Plausible.Stats.{Query, TableDecider, Util}
+  alias Plausible.Stats.{Query, TableDecider, Util, DateTimeRange}
 
   @doc """
     This module manipulates an existing query, updating it according to business logic.
@@ -61,7 +61,7 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp update_group_by_time(
          %Query{
-           date_range: %Date.Range{first: first, last: last}
+           date_range: %DateTimeRange{first: first, last: last}
          } = query
        ) do
     dimensions =

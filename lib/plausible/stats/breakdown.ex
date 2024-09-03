@@ -20,7 +20,10 @@ defmodule Plausible.Stats.Breakdown do
       Query.set(
         query,
         metrics: transformed_metrics,
-        order_by: infer_order_by(transformed_metrics, dimension),
+        # Concat client requested order with default order, overriding only if client explicitly requests it
+        order_by:
+          Enum.concat(query.order_by || [], infer_order_by(transformed_metrics, dimension))
+          |> Enum.uniq_by(&elem(&1, 0)),
         dimensions: transform_dimensions(dimension),
         filters: query.filters ++ dimension_filters(dimension),
         v2: true,
@@ -117,7 +120,9 @@ defmodule Plausible.Stats.Breakdown do
           from i in "imported_pages",
             group_by: i.page,
             where: i.site_id == ^site.id,
-            where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
+            where:
+              i.date >= ^DateTime.to_naive(query.date_range.first) and
+                i.date <= ^DateTime.to_naive(query.date_range.last),
             where: i.page in ^pages,
             select: %{
               page: i.page,
@@ -172,7 +177,8 @@ defmodule Plausible.Stats.Breakdown do
     end)
   end
 
-  defp infer_order_by(metrics, "event:goal"), do: [{metric_to_order_by(metrics), :desc}]
+  defp infer_order_by(metrics, "event:goal"),
+    do: [{metric_to_order_by(metrics), :desc}]
 
   defp infer_order_by(metrics, dimension),
     do: [{metric_to_order_by(metrics), :desc}, {dimension, :asc}]

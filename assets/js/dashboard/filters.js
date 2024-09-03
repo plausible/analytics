@@ -24,7 +24,7 @@ function removeFilter(filterIndex, navigate, query) {
   const newLabels = cleanLabels(newFilters, query.labels)
 
   navigate({
-    search: ({ search }) => ({
+    search: (search) => ({
       ...search,
       filters: newFilters,
       labels: newLabels
@@ -34,7 +34,7 @@ function removeFilter(filterIndex, navigate, query) {
 
 function clearAllFilters(navigate) {
   navigate({
-    search: ({ search }) => ({
+    search: (search) => ({
       ...search,
       filters: null,
       labels: null
@@ -178,7 +178,7 @@ function Filters() {
   }
 
   function AppliedFilterPillHorizontal({filterIndex, filter}) {
-    const { query } = useQueryContext(); 
+    const { query } = useQueryContext();
     const [_operation, filterKey, _clauses] = filter
     const type = filterKey.startsWith(EVENT_PROPS_PREFIX) ? 'props' : filterKey
     return (
