@@ -34,7 +34,14 @@ defmodule PlausibleWeb.Live.Installation do
         _session,
         socket
       ) do
-    site = Plausible.Sites.get_for_user!(socket.assigns.current_user, domain)
+    site =
+      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain, [
+        :owner,
+        :admin,
+        :super_admin,
+        :viewer
+      ])
+
     flow = params["flow"]
     meta = site.installation_meta || %Plausible.Site.InstallationMeta{}
 
