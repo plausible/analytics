@@ -273,8 +273,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_filters(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, query),
          :ok <- ensure_custom_props_access(site, query) do
-      graph = Plausible.Stats.timeseries(site, query, metrics)
-      payload = maybe_add_warning(%{results: graph}, query)
+      %{results: results, meta: meta} = Plausible.Stats.timeseries(site, query, metrics)
+
+      payload =
+        case meta[:imports_warning] do
+          nil -> %{results: results}
+          warning -> %{results: results, warning: warning}
+        end
 
       json(conn, payload)
     else

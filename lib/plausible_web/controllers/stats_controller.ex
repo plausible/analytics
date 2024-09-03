@@ -173,6 +173,7 @@ defmodule PlausibleWeb.StatsController do
     prepend_column_headers = fn data -> [column_headers | data] end
 
     Plausible.Stats.timeseries(site, query, metrics)
+    |> Map.fetch!(:results)
     |> Enum.map(map_bucket_to_row)
     |> prepend_column_headers.()
     |> NimbleCSV.RFC4180.dump_to_iodata()

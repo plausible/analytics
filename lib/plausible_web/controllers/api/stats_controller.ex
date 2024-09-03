@@ -107,7 +107,7 @@ defmodule PlausibleWeb.Api.StatsController do
          params <- realtime_period_to_30m(params),
          query = Query.from(site, params, debug_metadata(conn)),
          {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
-      timeseries_result = Stats.timeseries(site, query, [metric])
+      %{results: timeseries_result} = Stats.timeseries(site, query, [metric])
 
       comparison_opts = parse_comparison_opts(params)
 
@@ -115,6 +115,7 @@ defmodule PlausibleWeb.Api.StatsController do
         case Comparisons.compare(site, query, params["comparison"], comparison_opts) do
           {:ok, comparison_query} ->
             Stats.timeseries(site, comparison_query, [metric])
+            |> Map.fetch!(:results)
 
           {:error, :not_supported} ->
             nil
