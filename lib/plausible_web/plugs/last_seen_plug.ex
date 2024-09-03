@@ -1,4 +1,6 @@
 defmodule PlausibleWeb.LastSeenPlug do
+  @moduledoc false
+
   import Plug.Conn
   use Plausible.Repo
 
