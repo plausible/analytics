@@ -123,15 +123,15 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         build(:imported_visitors, visitors: 2)
       ])
 
-      conn1 = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
+      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
 
-      assert json_response(conn1, 200)["results"] == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "Chrome", "visitors" => 1, "percentage" => 100}
              ]
 
-      conn2 = get(conn, "/api/stats/#{site.domain}/browsers?period=day&with_imported=true")
+      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&with_imported=true")
 
-      assert json_response(conn2, 200)["results"] == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "Chrome", "visitors" => 2, "percentage" => 66.7},
                %{"name" => "Firefox", "visitors" => 1, "percentage" => 33.3}
              ]

@@ -26,8 +26,10 @@ defmodule PlausibleWeb.Live.AuthContext do
         end
       end)
       |> assign_new(:current_user, fn context ->
-        case context.current_user_session do
-          %{user: user} -> user
+        with %{} = user_session <- context.current_user_session,
+             {:ok, user} <- UserAuth.get_user(user_session) do
+          user
+        else
           _ -> nil
         end
       end)

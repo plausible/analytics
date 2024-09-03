@@ -5,11 +5,11 @@ defmodule PlausibleWeb do
       use Phoenix.LiveView, global_prefixes: ~w(x-)
       use PlausibleWeb.Live.Flash
 
-      use PlausibleWeb.Live.AuthContext
-
       unless :no_sentry_context in unquote(opts) do
         use PlausibleWeb.Live.SentryContext
       end
+
+      use PlausibleWeb.Live.AuthContext
 
       alias PlausibleWeb.Router.Helpers, as: Routes
       alias Phoenix.LiveView.JS

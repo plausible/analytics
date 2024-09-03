@@ -54,16 +54,12 @@ defmodule PlausibleWeb.Live.SentryContextTest do
       assert_receive {:context, context}
       assert context.request.headers["User-Agent"] == "Firefox"
     end
-  end
 
-  describe "sentry context with logged in user" do
-    setup [:create_user, :log_in]
-
-    test "user_id is included", %{conn: conn, user: user} do
-      context_hook(conn)
+    test "user_id is included", %{conn: conn} do
+      context_hook(conn, %{"current_user_id" => 172})
 
       assert_receive {:context, context}
-      assert context.user.id == user.id
+      assert context.user.id == 172
     end
   end
 

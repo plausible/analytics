@@ -14,9 +14,9 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
         build(:imported_visitors, visitors: 2)
       ])
 
-      conn1 = get(conn, "/api/stats/#{site.domain}/countries?period=day")
+      conn = get(conn, "/api/stats/#{site.domain}/countries?period=day")
 
-      assert json_response(conn1, 200)["results"] == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "code" => "EE",
                  "alpha_3" => "EST",
@@ -35,9 +35,9 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                }
              ]
 
-      conn2 = get(conn, "/api/stats/#{site.domain}/countries?period=day&with_imported=true")
+      conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&with_imported=true")
 
-      assert json_response(conn2, 200)["results"] == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "code" => "EE",
                  "alpha_3" => "EST",

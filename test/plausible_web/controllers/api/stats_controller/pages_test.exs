@@ -860,17 +860,17 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         build(:pageview, pathname: "/contact")
       ])
 
-      conn1 = get(conn, "/api/stats/#{site.domain}/pages?period=day")
+      conn = get(conn, "/api/stats/#{site.domain}/pages?period=day")
 
-      assert json_response(conn1, 200)["results"] == [
+      assert json_response(conn, 200)["results"] == [
                %{"visitors" => 3, "name" => "/"},
                %{"visitors" => 2, "name" => "/register"},
                %{"visitors" => 1, "name" => "/contact"}
              ]
 
-      conn2 = get(conn, "/api/stats/#{site.domain}/pages?period=day&with_imported=true")
+      conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&with_imported=true")
 
-      assert json_response(conn2, 200)["results"] == [
+      assert json_response(conn, 200)["results"] == [
                %{"visitors" => 4, "name" => "/"},
                %{"visitors" => 3, "name" => "/register"},
                %{"visitors" => 1, "name" => "/contact"}
@@ -1529,9 +1529,9 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      conn1 = get(conn, "/api/stats/#{site.domain}/entry-pages?period=day&date=2021-01-01")
+      conn = get(conn, "/api/stats/#{site.domain}/entry-pages?period=day&date=2021-01-01")
 
-      assert json_response(conn1, 200)["results"] == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 2,
                  "visits" => 2,
@@ -1546,13 +1546,13 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                }
              ]
 
-      conn2 =
+      conn =
         get(
           conn,
           "/api/stats/#{site.domain}/entry-pages?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert json_response(conn2, 200)["results"] == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "visitors" => 3,
                  "visits" => 5,
@@ -1947,20 +1947,20 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
         )
       ])
 
-      conn1 = get(conn, "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01")
+      conn = get(conn, "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01")
 
-      assert json_response(conn1, 200)["results"] == [
+      assert json_response(conn, 200)["results"] == [
                %{"name" => "/page1", "visitors" => 2, "visits" => 2, "exit_rate" => 66},
                %{"name" => "/page2", "visitors" => 1, "visits" => 1, "exit_rate" => 100}
              ]
 
-      conn2 =
+      conn =
         get(
           conn,
           "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert json_response(conn2, 200)["results"] == [
+      assert json_response(conn, 200)["results"] == [
                %{
                  "name" => "/page2",
                  "visitors" => 3,

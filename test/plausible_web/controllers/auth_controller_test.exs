@@ -75,15 +75,14 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "logs the user in", %{conn: conn} do
-      user =
-        Repo.insert!(
-          User.new(%{
-            name: "Jane Doe",
-            email: "user@example.com",
-            password: "very-secret-and-very-long-123",
-            password_confirmation: "very-secret-and-very-long-123"
-          })
-        )
+      Repo.insert!(
+        User.new(%{
+          name: "Jane Doe",
+          email: "user@example.com",
+          password: "very-secret-and-very-long-123",
+          password_confirmation: "very-secret-and-very-long-123"
+        })
+      )
 
       conn =
         post(conn, "/login",
@@ -94,8 +93,7 @@ defmodule PlausibleWeb.AuthControllerTest do
           }
         )
 
-      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
-      assert get_session(conn, :user_token) == token
+      assert get_session(conn, :current_user_id)
     end
   end
 
@@ -131,17 +129,16 @@ defmodule PlausibleWeb.AuthControllerTest do
           role: :admin
         )
 
-      user =
-        Repo.insert!(
-          User.new(%{
-            name: "Jane Doe",
-            email: "user@example.com",
-            password: "very-secret-and-very-long-123",
-            password_confirmation: "very-secret-and-very-long-123"
-          })
-        )
+      Repo.insert!(
+        User.new(%{
+          name: "Jane Doe",
+          email: "user@example.com",
+          password: "very-secret-and-very-long-123",
+          password_confirmation: "very-secret-and-very-long-123"
+        })
+      )
 
-      {:ok, %{site: site, invitation: invitation, user: user}}
+      {:ok, %{site: site, invitation: invitation}}
     end
 
     test "registering sends an activation link", %{conn: conn} do
@@ -175,7 +172,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn, 302) == "/activate?flow=invitation"
     end
 
-    test "logs the user in", %{conn: conn, user: user} do
+    test "logs the user in", %{conn: conn} do
       conn =
         post(conn, "/login",
           user: %{
@@ -187,8 +184,7 @@ defmodule PlausibleWeb.AuthControllerTest do
           }
         )
 
-      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
-      assert get_session(conn, :user_token) == token
+      assert get_session(conn, :current_user_id)
     end
   end
 
@@ -338,8 +334,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = post(conn, "/login", email: user.email, password: "password")
 
-      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
-      assert get_session(conn, :user_token) == token
+      assert get_session(conn, :current_user_id) == user.id
       assert redirected_to(conn) == "/sites"
     end
 
@@ -370,7 +365,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn, 302) == Routes.auth_path(conn, :verify_2fa_form)
 
       assert fetch_cookies(conn).cookies["session_2fa"].current_2fa_user_id == user.id
-      refute get_session(conn)["user_token"]
+      refute get_session(conn)["current_user_id"]
     end
 
     test "valid email and password with 2FA enabled and remember 2FA cookie set - logs the user in",
@@ -388,8 +383,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
 
       assert conn.resp_cookies["session_2fa"].max_age == 0
-      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
-      assert get_session(conn, :user_token) == token
+      assert get_session(conn, :current_user_id) == user.id
     end
 
     test "valid email and password with 2FA enabled and rogue remember 2FA cookie set - logs the user in",
@@ -408,13 +402,13 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn, 302) == Routes.auth_path(conn, :verify_2fa_form)
 
       assert fetch_cookies(conn).cookies["session_2fa"].current_2fa_user_id == user.id
-      refute get_session(conn, :user_token)
+      refute get_session(conn, :current_user_id)
     end
 
     test "email does not exist - renders login form again", %{conn: conn} do
       conn = post(conn, "/login", email: "user@example.com", password: "password")
 
-      assert get_session(conn, :user_token) == nil
+      assert get_session(conn, :current_user_id) == nil
       assert html_response(conn, 200) =~ "Enter your account credentials"
     end
 
@@ -422,7 +416,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       user = insert(:user, password: "password")
       conn = post(conn, "/login", email: user.email, password: "wrong")
 
-      assert get_session(conn, :user_token) == nil
+      assert get_session(conn, :current_user_id) == nil
       assert html_response(conn, 200) =~ "Enter your account credentials"
     end
 
@@ -512,7 +506,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       # cookie state is as expected for logged out user
       assert conn.private[:plug_session_info] == :renew
       assert conn.resp_cookies["logged_in"].max_age == 0
-      assert get_session(conn, :user_token) == nil
+      assert get_session(conn, :current_user_id) == nil
 
       {:ok, %{conn: conn}} = PlausibleWeb.FirstLaunchPlug.Test.skip(%{conn: recycle(conn)})
       conn = get(conn, location)
@@ -531,7 +525,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       # cookie state is as expected for logged out user
       assert conn.private[:plug_session_info] == :renew
       assert conn.resp_cookies["logged_in"].max_age == 0
-      assert get_session(conn, :user_token) == nil
+      assert get_session(conn, :current_user_id) == nil
 
       {:ok, %{conn: conn}} = PlausibleWeb.FirstLaunchPlug.Test.skip(%{conn: recycle(conn)})
       conn = get(conn, location)
@@ -1703,8 +1697,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
 
-      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
-      assert get_session(conn)["user_token"] == token
+      assert get_session(conn)["current_user_id"] == user.id
       # 2FA session terminated
       assert conn.resp_cookies["session_2fa"].max_age == 0
       # Remember cookie unset
@@ -1747,8 +1740,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
 
-      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
-      assert get_session(conn)["user_token"] == token
+      assert get_session(conn)["current_user_id"] == user.id
       # 2FA session terminated
       assert conn.resp_cookies["session_2fa"].max_age == 0
       # Remember cookie set
@@ -1773,8 +1765,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
 
-      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
-      assert get_session(conn)["user_token"] == token
+      assert get_session(conn)["current_user_id"] == user.id
       # 2FA session terminated
       assert conn.resp_cookies["session_2fa"].max_age == 0
       # Remember cookie set
@@ -1800,8 +1791,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
 
-      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
-      assert get_session(conn, :user_token) == token
+      assert get_session(conn)["current_user_id"] == user.id
       # 2FA session terminated
       assert conn.resp_cookies["session_2fa"].max_age == 0
       # Remember cookie cleared
@@ -1856,8 +1846,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
 
-      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
-      assert get_session(conn)["user_token"] == token
+      assert get_session(conn)["current_user_id"] == user.id
       # 2FA session terminated
       assert conn.resp_cookies["session_2fa"].max_age == 0
     end
@@ -1888,7 +1877,7 @@ defmodule PlausibleWeb.AuthControllerTest do
           500
         )
 
-      assert get_session(response, :user_token) == nil
+      assert get_session(response, :current_user_id) == nil
       # 2FA session terminated
       assert response.resp_cookies["session_2fa"].max_age == 0
       assert html_response(response, 429) =~ "Too many login attempts"
@@ -1963,8 +1952,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
 
-      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
-      assert get_session(conn)["user_token"] == token
+      assert get_session(conn)["current_user_id"] == user.id
       # 2FA session terminated
       assert conn.resp_cookies["session_2fa"].max_age == 0
     end
@@ -2021,8 +2009,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
 
-      assert %{sessions: [%{token: token}]} = user |> Repo.reload!() |> Repo.preload(:sessions)
-      assert get_session(conn)["user_token"] == token
+      assert get_session(conn)["current_user_id"] == user.id
       # 2FA session terminated
       assert conn.resp_cookies["session_2fa"].max_age == 0
     end
@@ -2058,7 +2045,7 @@ defmodule PlausibleWeb.AuthControllerTest do
           500
         )
 
-      assert get_session(response, :user_token) == nil
+      assert get_session(response, :current_user_id) == nil
       # 2FA session terminated
       assert response.resp_cookies["session_2fa"].max_age == 0
       assert html_response(response, 429) =~ "Too many login attempts"

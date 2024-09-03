@@ -47,7 +47,6 @@ defmodule Plausible.Auth.User do
 
     embeds_one :grace_period, Plausible.Auth.GracePeriod, on_replace: :update
 
-    has_many :sessions, Plausible.Auth.UserSession
     has_many :site_memberships, Plausible.Site.Membership
     has_many :sites, through: [:site_memberships, :site]
     has_many :api_keys, Plausible.Auth.ApiKey

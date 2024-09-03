@@ -35,7 +35,6 @@ All notable changes to this project will be documented in this file.
 - Make `TOTP_VAULT_KEY` optional plausible/analytics#4317
 - Sources like 'google' and 'facebook' are now stored in capitalized forms ('Google', 'Facebook') plausible/analytics#4417
 - `DATABASE_CACERTFILE` now forces TLS for PostgreSQL connections, so you don't need to add `?ssl=true` in `DATABASE_URL`
-- Change auth session cookies to token-based ones with server-side expiration management.
 
 ### Fixed
 
