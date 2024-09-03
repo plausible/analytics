@@ -77,15 +77,12 @@ export function rearrangeOrderBy(
   const orderIndex = findOrderIndex(currentOrderBy, metric)
   if (orderIndex < 0) {
     const sortDirection = cycleSortDirection(null).direction as SortDirection
-    return [[metric.key, sortDirection], ...currentOrderBy]
+    return [[metric.key, sortDirection]]
   }
   const previousOrder = currentOrderBy[orderIndex]
   const sortDirection = cycleSortDirection(previousOrder[1]).direction
   if (sortDirection === null) {
-    return omitOrderByIndex(currentOrderBy, orderIndex)
+    return []
   }
-  return [
-    [metric.key, sortDirection],
-    ...omitOrderByIndex(currentOrderBy, orderIndex)
-  ]
+  return [[metric.key, sortDirection]]
 }

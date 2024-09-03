@@ -77,31 +77,14 @@ describe(`${rearrangeOrderBy.name}`, () => {
   const cases: [Pick<Metric, 'key'>, OrderBy, OrderBy][] = [
     [{ key: 'visitors' }, [['visitors', SortDirection.asc]], []],
     [
-      { key: 'bounce_rate' },
-      [
-        ['bounce_rate', SortDirection.desc],
-        ['visitors', SortDirection.asc]
-      ],
-      [
-        ['bounce_rate', SortDirection.asc],
-        ['visitors', SortDirection.asc]
-      ]
-    ],
-    [
       { key: 'visitors' },
-      [
-        ['bounce_rate', SortDirection.desc],
-        ['visitors', SortDirection.asc]
-      ],
-      [['bounce_rate', SortDirection.desc]]
+      [['visitors', SortDirection.desc]],
+      [['visitors', SortDirection.asc]]
     ],
     [
       { key: 'visit_duration' },
-      [['bounce_rate', SortDirection.desc]],
-      [
-        ['visit_duration', SortDirection.desc],
-        ['bounce_rate', SortDirection.desc]
-      ]
+      [['visitors', SortDirection.asc]],
+      [['visit_duration', SortDirection.desc]]
     ]
   ]
   it.each(cases)(
