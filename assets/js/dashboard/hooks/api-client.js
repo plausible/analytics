@@ -2,7 +2,7 @@ import { useEffect } from "react"
 import { useQueryClient, useInfiniteQuery } from "@tanstack/react-query"
 import * as api from "../api"
 
-const LIMIT = 100
+const LIMIT = 10 // FOR DEBUGGING
 
 /**
  * A wrapper for the React Query library. Constructs the necessary options
@@ -78,6 +78,7 @@ export function useAPIClient(props) {
     queryKey: key,
     queryFn,
     getNextPageParam,
-    initialPageParam
+    initialPageParam,
+    placeholderData: (previousData) => previousData,
   })
 }
