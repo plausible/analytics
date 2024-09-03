@@ -326,6 +326,20 @@ defmodule PlausibleWeb.Live.InstallationTest do
 
       assert render(lv) =~ "Snippet updated. Please insert the newest snippet into your site"
     end
+
+    test "no changes", %{conn: conn, site: site} do
+      {lv, _html} = get_lv(conn, site, "?installation_type=manual")
+
+      lv
+      |> element(~s|form#snippet-form|)
+      |> render_change(%{})
+
+      lv
+      |> element(~s|form#snippet-form|)
+      |> render_change(%{})
+
+      refute render(lv) =~ "Snippet updated"
+    end
   end
 
   defp stub_fetch_body(f) when is_function(f, 1) do
