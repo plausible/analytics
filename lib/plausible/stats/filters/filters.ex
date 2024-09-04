@@ -121,7 +121,7 @@ defmodule Plausible.Stats.Filters do
   def rename_dimensions_used_in_filter(filters, renames) do
     transform_filters(filters, fn
       [operation, dimension, clauses] ->
-        [operation, Map.get(renames, dimension, dimension), clauses]
+        [[operation, Map.get(renames, dimension, dimension), clauses]]
 
       _subtree ->
         nil
@@ -144,14 +144,14 @@ defmodule Plausible.Stats.Filters do
     case {transformer.(filter), filter} do
       # Transformer did not return that value - transform that subtree
       {nil, [:not, child_filter]} ->
-        transform_tree(child_filter, transformer)
+        [[:not, transform_tree(child_filter, transformer)]]
 
       {nil, [operation, filters]} when operation in [:and, :or] ->
-        transform_filters(filters, transformer)
+        [[operation, transform_filters(filters, transformer)]]
 
       # Reached a leaf node, return existing value
       {nil, filter} ->
-        [filter]
+        [[filter]]
 
       # Transformer returned a value - don't transform that subtree
       {transformed_filters, _filter} ->
