@@ -31,7 +31,7 @@ function EntryPages({ afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ defaultLabel: 'Unique Entrances', meta: { plot: true } }),
+      metrics.createVisitors({ defaultLabel: 'Unique Entrances', width: 'w-36',  meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
@@ -70,7 +70,7 @@ function ExitPages({ afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ defaultLabel: 'Unique Exits', meta: { plot: true } }),
+      metrics.createVisitors({ defaultLabel: 'Unique Exits', width: 'w-36', meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }

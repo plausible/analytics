@@ -1,14 +1,22 @@
 /** @format */
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, ReactNode } from 'react'
 
 import { FilterLink } from '../reports/list'
 import { useQueryContext } from '../../query-context'
 import { useDebounce } from '../../custom-hooks'
 import { useAPIClient } from '../../hooks/api-client'
 import { rootRoute } from '../../router'
-import { cycleSortDirection, useOrderBy } from '../../hooks/use-order-by'
+import {
+  cycleSortDirection,
+  Order,
+  OrderBy,
+  useOrderBy
+} from '../../hooks/use-order-by'
 import { SortButton } from '../../components/sort-button'
+import { Metric } from '../reports/metrics'
+import { DashboardQuery } from '../../query'
+import classNames from 'classnames'
 
 export const MIN_HEIGHT_PX = 500
 
@@ -76,7 +84,7 @@ export const MIN_HEIGHT_PX = 500
 
 //   * `afterFetchNextPage` - a function with the same behaviour as `afterFetchData`,
 //     but will be called after a successful next page load in `fetchNextPage`.
-export default function BreakdownModal({
+export default function BreakdownModal<TListItem extends {name: string}>({
   reportInfo,
   metrics,
   renderIcon,
@@ -86,13 +94,29 @@ export default function BreakdownModal({
   afterFetchNextPage,
   addSearchFilter,
   getFilterInfo
+}: {
+  reportInfo: {
+    title: string
+    endpoint: string
+    dimensionLabel: string
+    defaultOrder?: Order
+  }
+  metrics: Metric[]
+  renderIcon: (listItem: TListItem) => ReactNode
+  getExternalLinkURL: (listItem: TListItem) => string
+  searchEnabled?: boolean
+  afterFetchData: () => void
+  afterFetchNextPage: () => void
+  addSearchFilter: (q: DashboardQuery, search: string) => Record<string, unknown>
+  getFilterInfo: (listItem: TListItem) => void
 }) {
-  const searchBoxRef = useRef(null)
+  const searchBoxRef = useRef<HTMLInputElement>(null)
   const { query } = useQueryContext()
 
   const [search, setSearch] = useState('')
   const { orderBy, orderByDictionary, toggleSortByMetric } = useOrderBy({
-    metrics
+    metrics,
+    defaultOrderBy: reportInfo.defaultOrder  ? [reportInfo.defaultOrder] : []
   })
 
   const {
@@ -102,12 +126,15 @@ export default function BreakdownModal({
     isFetchingNextPage,
     isFetching,
     isPending
-  } = useAPIClient({
+  } = useAPIClient<
+    never,
+    [string, { query: DashboardQuery; search: string; orderBy: OrderBy }]
+  >({
     key: [reportInfo.endpoint, { query, search, orderBy }],
     getRequestParams: (key) => {
       const [_endpoint, { query, search }] = key
 
-      let queryWithSearchFilter = { ...query }
+      let queryWithSearchFilter: Record<string, unknown> = { ...query }
 
       if (searchEnabled && search !== '') {
         queryWithSearchFilter = addSearchFilter(query, search)
@@ -115,7 +142,10 @@ export default function BreakdownModal({
 
       return [
         queryWithSearchFilter,
-        { detailed: true, order_by: JSON.stringify(orderBy) }
+        {
+          detailed: true,
+          order_by: JSON.stringify(orderBy)
+        }
       ]
     },
     afterFetchData,
@@ -123,33 +153,32 @@ export default function BreakdownModal({
   })
 
   useEffect(() => {
-    if (!searchEnabled) {
+    const searchBox = searchBoxRef.current
+    if (!searchEnabled && searchBox) {
       return
     }
 
-    const searchBox = searchBoxRef.current
-
-    const handleKeyUp = (event) => {
+    const handleKeyUp = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        event.target.blur()
+        ;(event.target as HTMLElement | undefined)?.blur()
         event.stopPropagation()
       }
     }
 
-    searchBox.addEventListener('keyup', handleKeyUp)
+    searchBox?.addEventListener('keyup', handleKeyUp)
 
     return () => {
-      searchBox.removeEventListener('keyup', handleKeyUp)
+      searchBox?.removeEventListener('keyup', handleKeyUp)
     }
   }, [searchEnabled])
 
-  function maybeRenderIcon(item) {
+  function maybeRenderIcon(item: TListItem) {
     if (typeof renderIcon === 'function') {
       return renderIcon(item)
     }
   }
 
-  function maybeRenderExternalLink(item) {
+  function maybeRenderExternalLink(item: TListItem) {
     if (typeof getExternalLinkURL === 'function') {
       const linkUrl = getExternalLinkURL(item)
 
@@ -177,20 +206,20 @@ export default function BreakdownModal({
     }
   }
 
-  function renderRow(item) {
+  function renderRow(item: TListItem) {
     return (
       <tr className="text-sm dark:text-gray-200" key={item.name}>
         <td className="w-48 md:w-80 break-all p-2 flex items-center">
           {maybeRenderIcon(item)}
-          <FilterLink path={rootRoute.path} filterInfo={getFilterInfo(item)}>
+          <FilterLink path={rootRoute.path} filterInfo={getFilterInfo(item)} onClick={undefined} extraClass={undefined}>
             {item.name}
           </FilterLink>
           {maybeRenderExternalLink(item)}
         </td>
         {metrics.map((metric) => {
           return (
-            <td key={metric.key} className="p-2 w-24 font-medium" align="right">
-              {metric.renderValue(item[metric.key])}
+            <td key={metric.key} className={classNames(metric.width, "p-2 font-medium")} align="left">
+              {metric.renderValue(item[metric.key as keyof TListItem])}
             </td>
           )
         })}
@@ -226,7 +255,7 @@ export default function BreakdownModal({
     return (
       <div className="flex flex-col w-full my-4 items-center justify-center h-10">
         {!isFetching && (
-          <button onClick={fetchNextPage} type="button" className="button">
+          <button onClick={() => fetchNextPage()} type="button" className="button">
             Load more
           </button>
         )}
@@ -235,8 +264,12 @@ export default function BreakdownModal({
     )
   }
 
-  function handleInputChange(e) {
-    setSearch(e.target.value)
+  function handleInputChange(e: Event) {
+    const element = e.target as HTMLInputElement | null;
+    if (!element) {
+      return
+    }
+    setSearch(element.value)
   }
 
   const debouncedHandleInputChange = useDebounce(handleInputChange)
@@ -261,7 +294,7 @@ export default function BreakdownModal({
             <thead>
               <tr>
                 <th
-                  className="p-2 w-48 md:w-80 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                  className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
                   align="left"
                 >
                   {reportInfo.dimensionLabel}
@@ -271,12 +304,15 @@ export default function BreakdownModal({
                   return (
                     <th
                       key={metric.key}
-                      className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
-                      align="right"
+                      className={classNames(metric.width, "p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400")}
+                      align="left"
                     >
                       {metric.sortable ? (
                         <SortButton
                           sortDirection={orderByDictionary[metric.key] ?? null}
+                          nextSortDirection={cycleSortDirection(
+                            orderByDictionary[metric.key] ?? null
+                          ).direction!}
                           toggleSort={() => toggleSortByMetric(metric)}
                           hint={
                             cycleSortDirection(

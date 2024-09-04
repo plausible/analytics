@@ -16,7 +16,8 @@ function ExitPagesModal() {
     title: 'Exit Pages',
     dimension: 'exit_page',
     endpoint: url.apiPath(site, '/exit-pages'),
-    dimensionLabel: 'Page url'
+    dimensionLabel: 'Page url',
+    defaultOrder: []
   }
 
   const getFilterInfo = useCallback((listItem) => {
@@ -34,14 +35,14 @@ function ExitPagesModal() {
     if (hasGoalFilter(query)) {
       return [
         metrics.createTotalVisitors(),
-        metrics.createVisitors({ renderLabel: (_query) => 'Conversions' }),
+        metrics.createVisitors({ renderLabel: (_query) => 'Conversions', width: 'w-32' }),
         metrics.createConversionRate()
       ]
     }
 
     if (query.period === 'realtime') {
       return [
-        metrics.createVisitors({ renderLabel: (_query) => 'Current visitors' })
+        metrics.createVisitors({ renderLabel: (_query) => 'Current visitors', width: 'w-36' })
       ]
     }
 

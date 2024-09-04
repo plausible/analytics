@@ -8,11 +8,12 @@ import * as url from "../../util/url";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
 import { addFilter } from "../../query";
+import { SortDirection } from "../../hooks/use-order-by";
 
 const VIEWS = {
-  countries: { title: 'Top Countries', dimension: 'country', endpoint: '/countries', dimensionLabel: 'Country' },
-  regions: { title: 'Top Regions', dimension: 'region', endpoint: '/regions', dimensionLabel: 'Region' },
-  cities: { title: 'Top Cities', dimension: 'city', endpoint: '/cities', dimensionLabel: 'City' },
+  countries: { title: 'Top Countries', dimension: 'country', endpoint: '/countries', dimensionLabel: 'Country', defaultOrder: ["visitors", SortDirection.desc] },
+  regions: { title: 'Top Regions', dimension: 'region', endpoint: '/regions', dimensionLabel: 'Region', defaultOrder: ["visitors", SortDirection.desc] },
+  cities: { title: 'Top Cities', dimension: 'city', endpoint: '/cities', dimensionLabel: 'City', defaultOrder: ["visitors", SortDirection.desc] },
 }
 
 function LocationsModal({ currentView }) {
@@ -38,14 +39,14 @@ function LocationsModal({ currentView }) {
     if (hasGoalFilter(query)) {
       return [
         metrics.createTotalVisitors(),
-        metrics.createVisitors({ renderLabel: (_query) => 'Conversions' }),
+        metrics.createVisitors({ renderLabel: (_query) => 'Conversions', width: 'w-32' }),
         metrics.createConversionRate()
       ]
     }
 
     if (query.period === 'realtime') {
       return [
-        metrics.createVisitors({ renderLabel: (_query) => 'Current visitors' })
+        metrics.createVisitors({ renderLabel: (_query) => 'Current visitors', width: 'w-36' })
       ]
     }
 

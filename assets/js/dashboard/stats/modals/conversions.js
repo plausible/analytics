@@ -16,7 +16,8 @@ function ConversionsModal() {
     title: 'Goal Conversions',
     dimension: 'goal',
     endpoint: url.apiPath(site, '/conversions'),
-    dimensionLabel: "Goal"
+    dimensionLabel: "Goal",
+    defaultOrder: []
   }
 
   const getFilterInfo = useCallback((listItem) => {

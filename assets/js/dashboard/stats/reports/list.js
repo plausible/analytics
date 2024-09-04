@@ -170,7 +170,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
   function renderReport() {
     if (state.list && state.list.length > 0) {
       return (
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col ">
           <div style={{ height: ROW_HEIGHT }}>
             {renderReportHeader()}
           </div>
@@ -191,7 +191,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
       return (
         <div
           key={metric.key}
-          className={`${metric.key} text-right ${hiddenOnMobileClass(metric)}`}
+          className={`${metric.key} text-left ${hiddenOnMobileClass(metric)}`}
           style={{ minWidth: colMinWidth }}
         >
           {metric.renderLabel(query)}
@@ -200,7 +200,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
     })
 
     return (
-      <div className="pt-3 w-full text-xs font-bold tracking-wide text-gray-500 flex items-center dark:text-gray-400">
+      <div className="pt-3 w-full gap-x-4 text-xs font-bold tracking-wide text-gray-500 flex items-center dark:text-gray-400">
         <span className="flex-grow truncate">{keyLabel}</span>
         {metricLabels}
       </div>
@@ -218,7 +218,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
   function renderRow(listItem) {
     return (
       <div key={listItem.name} style={{ minHeight: ROW_HEIGHT }}>
-        <div className="flex w-full" style={{ marginTop: ROW_GAP_HEIGHT }}>
+        <div className="flex w-full gap-x-4" style={{ marginTop: ROW_GAP_HEIGHT }}>
           {renderBarFor(listItem)}
           {renderMetricValuesFor(listItem)}
         </div>
@@ -268,10 +268,10 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
       return (
         <div
           key={`${listItem.name}__${metric.key}`}
-          className={`text-right ${hiddenOnMobileClass(metric)}`}
+          className={`text-left ${hiddenOnMobileClass(metric)}`}
           style={{ width: colMinWidth, minWidth: colMinWidth }}
         >
-          <span className="font-medium text-sm dark:text-gray-200 text-right">
+          <span className="font-medium text-sm dark:text-gray-200 text-left">
             {metric.renderValue(listItem[metric.key])}
           </span>
         </div>

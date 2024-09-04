@@ -21,9 +21,9 @@ function GoogleKeywordsModal() {
 
   const metrics = [
     createVisitors({renderLabel: (_query) => 'Visitors'}),
-    new Metric({key: 'impressions', renderLabel: (_query) => 'Impressions', renderValue: renderNumberWithTooltip}),
-    new Metric({key: 'ctr', renderLabel: (_query) => 'CTR', renderValue: percentageFormatter}),
-    new Metric({key: 'position', renderLabel: (_query) => 'Position', renderValue: numberFormatter})
+    new Metric({width: 'w-28', key: 'impressions', renderLabel: (_query) => 'Impressions', renderValue: renderNumberWithTooltip, sortable: false}),
+    new Metric({width: 'w-16', key: 'ctr', renderLabel: (_query) => 'CTR', renderValue: percentageFormatter, sortable: false}),
+    new Metric({width: 'w-28', key: 'position', renderLabel: (_query) => 'Position', renderValue: numberFormatter, sortable: false})
   ]
 
   const {

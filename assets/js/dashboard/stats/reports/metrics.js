@@ -52,7 +52,8 @@ export class Metric {
     this.renderValue = props.renderValue
     this.renderLabel = props.renderLabel
     this.meta = props.meta || {}
-    this.sortable = props.sortable ?? true
+    this.sortable = props.sortable
+    this.width = props.width ?? 'w-24'
   }
 }
 
@@ -88,77 +89,77 @@ export const createVisitors = (props) => {
     }
   }
 
-  return new Metric({...props, key: "visitors", renderValue, renderLabel})
+  return new Metric({width: 'w-24', sortable: true, ...props, key: "visitors", renderValue, renderLabel})
 }
 
 export const createConversionRate = (props) => {
   const renderValue = percentageFormatter
   const renderLabel = (_query) => "CR"
-  return new Metric({...props, key: "conversion_rate", renderLabel, renderValue, sortable: false})
+  return new Metric({width: 'w-16', ...props, key: "conversion_rate", renderLabel, renderValue, sortable: false})
 }
 
 export const createPercentage = (props) => {
   const renderValue = (value) => value
   const renderLabel = (_query) => "%"
-  return new Metric({...props, key: "percentage", renderLabel, renderValue})
+  return new Metric({width: 'w-16', ...props, key: "percentage", renderLabel, renderValue, sortable: true})
 }
 
 export const createEvents = (props) => {
   const renderValue = typeof props.renderValue === 'function' ? props.renderValue : renderNumberWithTooltip
-  return new Metric({...props, key: "events", renderValue: renderValue})
+  return new Metric({width: 'w-24', ...props, key: "events", renderValue: renderValue, sortable: true})
 }
 
 export const createTotalRevenue = (props) => {
   const renderValue = (value) => <Money formatted={value} />
   const renderLabel = (_query) => "Revenue"
-  return new Metric({...props, key: "total_revenue", renderValue, renderLabel})
+  return new Metric({width: 'w-16', ...props, key: "total_revenue", renderValue, renderLabel, sortable: true})
 }
 
 export const createAverageRevenue = (props) => {
   const renderValue = (value) => <Money formatted={value} />
   const renderLabel = (_query) => "Average"
-  return new Metric({...props, key: "average_revenue", renderValue, renderLabel})
+  return new Metric({width: 'w-24', ...props, key: "average_revenue", renderValue, renderLabel, sortable: true})
 }
 
 export const createTotalVisitors = (props) => {
   const renderValue = renderNumberWithTooltip
   const renderLabel = (_query) => "Total Visitors"
-  return new Metric({...props, key: "total_visitors", renderValue, renderLabel, sortable: false })
+  return new Metric({width: 'w-32', ...props, key: "total_visitors", renderValue, renderLabel, sortable: false})
 }
 
 export const createVisits = (props) => {
   const renderValue = renderNumberWithTooltip
-  return new Metric({...props, key: "visits", renderValue})
+  return new Metric({width: 'w-24', sortable: true, ...props, key: "visits", renderValue })
 }
 
 export const createVisitDuration = (props) => {
   const renderValue = durationFormatter
   const renderLabel = (_query) => "Visit Duration"
-  return new Metric({...props, key: "visit_duration", renderValue, renderLabel})
+  return new Metric({width: 'w-36', ...props, key: "visit_duration", renderValue, renderLabel, sortable: true})
 }
 
 export const createBounceRate = (props) => {
   const renderValue = (value) => `${value}%`
   const renderLabel = (_query) => "Bounce Rate"
-  return new Metric({...props, key: "bounce_rate", renderValue, renderLabel})
+  return new Metric({width: 'w-36', ...props, key: "bounce_rate", renderValue, renderLabel, sortable: true})
 }
 
 export const createPageviews = (props) => {
   const renderValue = renderNumberWithTooltip
   const renderLabel = (_query) => "Pageviews"
-  return new Metric({...props, key: "pageviews", renderValue, renderLabel})
+  return new Metric({width: 'w-28', ...props, key: "pageviews", renderValue, renderLabel, sortable: true})
 }
 
 export const createTimeOnPage = (props) => {
   const renderValue = durationFormatter
   const renderLabel = (_query) => "Time on Page"
-  return new Metric({...props, key: "time_on_page", renderValue, renderLabel, sortable: false})
+  return new Metric({width: 'w-32', ...props, key: "time_on_page", renderValue, renderLabel, sortable: false})
 }
 
 export const createExitRate = (props) => {
   const renderValue = percentageFormatter
   const renderLabel = (_query) => "Exit Rate"
-  return new Metric({...props, key: "exit_rate", renderValue, renderLabel, sortable: false})
+  return new Metric({width: 'w-28', ...props, key: "exit_rate", renderValue, renderLabel, sortable: false})
 }
 
 export function renderNumberWithTooltip(value) {

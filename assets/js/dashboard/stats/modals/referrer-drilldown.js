@@ -9,6 +9,7 @@ import * as url from "../../util/url";
 import { addFilter } from "../../query";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
+import { SortDirection } from '../../hooks/use-order-by';
 
 function ReferrerDrilldownModal() {
   const { referrer } = useParams();
@@ -19,7 +20,8 @@ function ReferrerDrilldownModal() {
     title: "Referrer Drilldown",
     dimension: 'referrer',
     endpoint: url.apiPath(site, `/referrers/${referrer}`),
-    dimensionLabel: "Referrer"
+    dimensionLabel: "Referrer",
+    defaultOrder: ["visitors", SortDirection.desc]
   }
 
   const getFilterInfo = useCallback((listItem) => {
@@ -37,14 +39,14 @@ function ReferrerDrilldownModal() {
     if (hasGoalFilter(query)) {
       return [
         metrics.createTotalVisitors(),
-        metrics.createVisitors({ renderLabel: (_query) => 'Conversions' }),
+        metrics.createVisitors({ renderLabel: (_query) => 'Conversions', width: 'w-32' }),
         metrics.createConversionRate()
       ]
     }
 
     if (isRealTimeDashboard(query)) {
       return [
-        metrics.createVisitors({ renderLabel: (_query) => 'Current visitors' })
+        metrics.createVisitors({ renderLabel: (_query) => 'Current visitors', width: 'w-36' })
       ]
     }
 

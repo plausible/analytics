@@ -10,6 +10,7 @@ import * as metrics from "../reports/metrics";
 import * as url from "../../util/url";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
+import { SortDirection } from "../../hooks/use-order-by";
 
 function PropsModal() {
   const { query } = useQueryContext();
@@ -23,7 +24,8 @@ function PropsModal() {
     title: specialTitleWhenGoalFilter(query, 'Custom Property Breakdown'),
     dimension: propKey,
     endpoint: url.apiPath(site, `/custom-prop-values/${propKey}`),
-    dimensionLabel: propKey
+    dimensionLabel: propKey,
+    defaultOrder: ["visitors", SortDirection.desc]
   }
 
   const getFilterInfo = useCallback((listItem) => {

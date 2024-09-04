@@ -8,14 +8,9 @@ export enum SortDirection {
   desc = 'desc'
 }
 
-type Order = [Metric['key'], SortDirection]
+export type Order = [Metric['key'], SortDirection]
 
 export type OrderBy = Order[]
-
-export const getSortDirectionIndicator = (
-  sortDirection: SortDirection
-): string =>
-  ({ [SortDirection.asc]: '↑', [SortDirection.desc]: '↓' })[sortDirection]
 
 export const getSortDirectionLabel = (sortDirection: SortDirection): string =>
   ({
@@ -23,11 +18,20 @@ export const getSortDirectionLabel = (sortDirection: SortDirection): string =>
     [SortDirection.desc]: 'Sorted in descending order'
   })[sortDirection]
 
-export function useOrderBy({ metrics }: { metrics: Metric[] }) {
+export function useOrderBy({
+  metrics,
+  defaultOrderBy
+}: {
+  metrics: Metric[]
+  defaultOrderBy: OrderBy
+}) {
   const [orderBy, setOrderBy] = useState<OrderBy>([])
   const orderByDictionary = useMemo(
-    () => Object.fromEntries(orderBy),
-    [orderBy]
+    () =>
+      orderBy.length
+        ? Object.fromEntries(orderBy)
+        : Object.fromEntries(defaultOrderBy),
+    [orderBy, defaultOrderBy]
   )
 
   const toggleSortByMetric = useCallback(
@@ -35,19 +39,24 @@ export function useOrderBy({ metrics }: { metrics: Metric[] }) {
       if (!metrics.find(({ key }) => key === metric.key)) {
         return
       }
-      setOrderBy((currentOrderBy) => rearrangeOrderBy(currentOrderBy, metric))
+      setOrderBy((currentOrderBy) => rearrangeOrderBy(currentOrderBy.length ? currentOrderBy : defaultOrderBy, metric))
     },
-    [metrics]
+    [metrics, defaultOrderBy]
   )
 
-  return { orderBy, orderByDictionary, toggleSortByMetric }
+  return {
+    orderBy: orderBy.length ? orderBy : defaultOrderBy,
+    orderByDictionary,
+    toggleSortByMetric
+  }
 }
 
 export function cycleSortDirection(
   currentSortDirection: SortDirection | null
-): { direction: SortDirection | null; hint: string } {
+): { direction: SortDirection; hint: string } {
   switch (currentSortDirection) {
     case null:
+    case SortDirection.asc:
       return {
         direction: SortDirection.desc,
         hint: 'Press to sort column in descending order'
@@ -57,8 +66,8 @@ export function cycleSortDirection(
         direction: SortDirection.asc,
         hint: 'Press to sort column in ascending order'
       }
-    case SortDirection.asc:
-      return { direction: null, hint: 'Press to remove sorting from column' }
+    // case SortDirection.asc:
+    //   return { direction: SortDirection, hint: 'Press to remove sorting from column' }
   }
 }
 
