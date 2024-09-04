@@ -153,10 +153,9 @@ defmodule Plausible.Stats.QueryOptimizer do
 
     filters =
       if "event:page" in query.dimensions do
-        Filters.transform_filters(query.filters, fn
-          [op, "event:page" | rest] -> [[op, "visit:entry_page" | rest]]
-          _ -> nil
-        end)
+        Filters.rename_dimensions_used_in_filter(query.filters, %{
+          "event:page" => "visit:entry_page"
+        })
       else
         query.filters
       end

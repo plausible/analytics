@@ -118,6 +118,16 @@ defmodule Plausible.Stats.Filters do
     end)
   end
 
+  def rename_dimensions_used_in_filter(filters, renames) do
+    transform_filters(filters, fn
+      [operation, dimension, clauses] ->
+        [operation, Map.get(renames, dimension, dimension), clauses]
+
+      _subtree ->
+        nil
+    end)
+  end
+
   @doc """
   Updates filters via `transformer`.
 
