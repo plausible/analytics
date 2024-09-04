@@ -21,7 +21,12 @@ import {
   QueryPeriod,
   useSaveTimePreferencesToStorage
 } from './query-time-periods'
-import { Filter, FilterClauseLabels, queryDefaultValue, postProcessFilters } from './query'
+import {
+  Filter,
+  FilterClauseLabels,
+  queryDefaultValue,
+  postProcessFilters
+} from './query'
 
 const queryContextDefaultValue = {
   query: queryDefaultValue,
@@ -99,7 +104,7 @@ export default function QueryContextProvider({
         ? (with_imported as boolean)
         : defaultValues.with_imported,
       filters: Array.isArray(filters)
-        ? (postProcessFilters(filters as Filter[]))
+        ? postProcessFilters(filters as Filter[])
         : defaultValues.filters,
       labels: (labels as FilterClauseLabels) || defaultValues.labels
     }

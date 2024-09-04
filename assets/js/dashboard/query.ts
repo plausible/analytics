@@ -88,7 +88,7 @@ const LEGACY_URL_PARAMETERS = {
 export function postProcessFilters(filters: Array<Filter>): Array<Filter> {
   return filters.map(([operation, dimension, clauses]) => {
     // Rename old name of the operation
-    if (operation === "does_not_contain") {
+    if (operation === 'does_not_contain') {
       operation = FILTER_OPERATIONS.contains_not
     }
     return [operation, dimension, clauses]
