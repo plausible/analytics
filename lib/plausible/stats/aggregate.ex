@@ -9,7 +9,7 @@ defmodule Plausible.Stats.Aggregate do
   use Plausible
   import Plausible.Stats.Base
   import Ecto.Query
-  alias Plausible.Stats.{Query, Util, SQL}
+  alias Plausible.Stats.{Query, Util, SQL, Filters}
 
   def aggregate(site, query, metrics) do
     {currency, metrics} =
@@ -49,7 +49,7 @@ defmodule Plausible.Stats.Aggregate do
 
   defp aggregate_time_on_page(site, query) do
     windowed_pages_q =
-      from e in base_event_query(site, Query.remove_filters(query, ["event:page"])),
+      from e in base_event_query(site, Query.remove_top_level_filters(query, ["event:page"])),
         select: %{
           next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
           next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
@@ -65,7 +65,7 @@ defmodule Plausible.Stats.Aggregate do
           ]
         ]
 
-    event_page_filter = Query.get_filter(query, "event:page")
+    event_page_filter = Filters.get_toplevel_filter(query, "event:page")
 
     timed_page_transitions_q =
       from e in Ecto.Query.subquery(windowed_pages_q),

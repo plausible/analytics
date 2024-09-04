@@ -82,21 +82,24 @@ defmodule Plausible.Stats.Breakdown do
     import Ecto.Query
 
     windowed_pages_q =
-      from e in base_event_query(site, Query.remove_filters(query, ["event:page", "event:props"])),
-        select: %{
-          next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
-          next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
-          timestamp: e.timestamp,
-          pathname: e.pathname,
-          session_id: e.session_id
-        },
-        windows: [
-          event_horizon: [
-            partition_by: e.session_id,
-            order_by: e.timestamp,
-            frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-          ]
-        ]
+      from e in base_event_query(
+             site,
+             Query.remove_top_level_filters(query, ["event:page", "event:props"])
+           ),
+           select: %{
+             next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
+             next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
+             timestamp: e.timestamp,
+             pathname: e.pathname,
+             session_id: e.session_id
+           },
+           windows: [
+             event_horizon: [
+               partition_by: e.session_id,
+               order_by: e.timestamp,
+               frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+             ]
+           ]
 
     timed_page_transitions_q =
       from e in subquery(windowed_pages_q),

@@ -263,9 +263,7 @@
             {
               "$ref": "#/definitions/clauses"
             }
-          ],
-          "minItems": 3,
-          "maxItems": 3
+          ]
         },
         {
           "type": "array",
@@ -294,9 +292,43 @@
             {
               "$ref": "#/definitions/clauses"
             }
-          ],
-          "minItems": 3,
-          "maxItems": 3
+          ]
+        },
+        {
+          "$ref": "#/definitions/filter_and_or"
+        },
+        {
+          "$ref": "#/definitions/filter_not"
+        }
+      ]
+    },
+    "filter_not": {
+      "type": "array",
+      "items": [
+        {
+          "const": "not"
+        },
+        {
+          "$ref": "#/definitions/filter_entry"
+        }
+      ]
+    },
+    "filter_and_or": {
+      "type": "array",
+      "items": [
+        {
+          "type": "string",
+          "enum": [
+            "and",
+            "or"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/filter_entry"
+          },
+          "minItems": 1
         }
       ]
     },

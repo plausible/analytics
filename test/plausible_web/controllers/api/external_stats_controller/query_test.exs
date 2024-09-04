@@ -752,7 +752,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
     end
 
-    test "negated contains page filter", %{conn: conn, site: site} do
+    test "does_not_contain page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/en/page1"),
         build(:pageview, pathname: "/en/page2"),
@@ -770,6 +770,40 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         })
 
       assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
+    end
+
+    test "contains with and/or/not filters", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/en/page1"),
+        build(:pageview, pathname: "/en/page2"),
+        build(:pageview, pathname: "/eng/page1"),
+        build(:pageview, pathname: "/pl/page1"),
+        build(:pageview, pathname: "/gb/page1")
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [
+            [
+              "or",
+              [
+                [
+                  "and",
+                  [
+                    ["contains", "event:page", ["/en"]],
+                    ["not", ["contains", "event:page", ["/eng"]]]
+                  ]
+                ],
+                ["contains", "event:page", ["/gb"]]
+              ]
+            ]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
     end
 
     test "contains and member filter combined", %{conn: conn, site: site} do
