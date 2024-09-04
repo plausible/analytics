@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-5F709355.js"></script>
+    <script src="dist/sidebar_items-51208407.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -161,6 +161,14 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#dimensions_used_in_filters/2" translate="no">dimensions_used_in_filters(filters, opts \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#event_props/0" translate="no">event_props()</a>
 
       </div>
@@ -177,11 +185,47 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#filtering_on_dimension?/2" translate="no">filtering_on_dimension?(query, dimension)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_toplevel_filter/2" translate="no">get_toplevel_filter(query, prefix)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Gets the first top level filter with matching dimension (or nil).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#parse/1" translate="no">parse(filters)</a>
 
       </div>
 
         <div class="summary-synopsis"><p>Parses different filter formats.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#rename_dimensions_used_in_filter/2" translate="no">rename_dimensions_used_in_filter(filters, renames)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#transform_filters/2" translate="no">transform_filters(filters, transformer)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Updates filters via <code class="inline">transformer</code>.</p></div>
 
     </div>
 
@@ -214,6 +258,30 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="dimensions_used_in_filters/2">
+
+    <span id="dimensions_used_in_filters/1"></span>
+
+  <div class="detail-header">
+    <a href="#dimensions_used_in_filters/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">dimensions_used_in_filters(filters, opts \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/filters.ex#L96" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="event_props/0">
 
   <div class="detail-header">
@@ -258,6 +326,51 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="filtering_on_dimension?/2">
+
+  <div class="detail-header">
+    <a href="#filtering_on_dimension?/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">filtering_on_dimension?(query, dimension)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/filters.ex#L105" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="get_toplevel_filter/2">
+
+  <div class="detail-header">
+    <a href="#get_toplevel_filter/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_toplevel_filter(query, prefix)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/filters.ex#L115" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Gets the first top level filter with matching dimension (or nil).</p><p>Only use in cases where it's known that filters are only set on the top level as it
+does not handle AND/OR/NOT!</p>
+  </section>
+</section>
 <section class="detail" id="parse/1">
 
   <div class="detail-header">
@@ -283,14 +396,60 @@ Pages
   </a>
   <span class="text">Examples:</span>
 </h3>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Filters</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="0165657347-1">(</span><span class="s">&quot;{</span><span class="se">\&quot;</span><span class="s">page</span><span class="se">\&quot;</span><span class="s">:</span><span class="se">\&quot;</span><span class="s">/blog/**</span><span class="se">\&quot;</span><span class="s">}&quot;</span><span class="p" data-group-id="0165657347-1">)</span><span class="w">
-</span><span class="p" data-group-id="0165657347-2">[</span><span class="p" data-group-id="0165657347-3">[</span><span class="ss">:matches</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;event:page&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0165657347-4">[</span><span class="s">&quot;/blog/**&quot;</span><span class="p" data-group-id="0165657347-4">]</span><span class="p" data-group-id="0165657347-3">]</span><span class="p" data-group-id="0165657347-2">]</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Filters</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="6600950411-1">(</span><span class="s">&quot;{</span><span class="se">\&quot;</span><span class="s">page</span><span class="se">\&quot;</span><span class="s">:</span><span class="se">\&quot;</span><span class="s">/blog/**</span><span class="se">\&quot;</span><span class="s">}&quot;</span><span class="p" data-group-id="6600950411-1">)</span><span class="w">
+</span><span class="p" data-group-id="6600950411-2">[</span><span class="p" data-group-id="6600950411-3">[</span><span class="ss">:matches</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;event:page&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6600950411-4">[</span><span class="s">&quot;/blog/**&quot;</span><span class="p" data-group-id="6600950411-4">]</span><span class="p" data-group-id="6600950411-3">]</span><span class="p" data-group-id="6600950411-2">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Filters</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="0165657347-5">(</span><span class="s">&quot;visit:browser!=Chrome&quot;</span><span class="p" data-group-id="0165657347-5">)</span><span class="w">
-</span><span class="p" data-group-id="0165657347-6">[</span><span class="p" data-group-id="0165657347-7">[</span><span class="ss">:is_not</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;visit:browser&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0165657347-8">[</span><span class="s">&quot;Chrome&quot;</span><span class="p" data-group-id="0165657347-8">]</span><span class="p" data-group-id="0165657347-7">]</span><span class="p" data-group-id="0165657347-6">]</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Filters</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="6600950411-5">(</span><span class="s">&quot;visit:browser!=Chrome&quot;</span><span class="p" data-group-id="6600950411-5">)</span><span class="w">
+</span><span class="p" data-group-id="6600950411-6">[</span><span class="p" data-group-id="6600950411-7">[</span><span class="ss">:is_not</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;visit:browser&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6600950411-8">[</span><span class="s">&quot;Chrome&quot;</span><span class="p" data-group-id="6600950411-8">]</span><span class="p" data-group-id="6600950411-7">]</span><span class="p" data-group-id="6600950411-6">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Filters</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="0165657347-9">(</span><span class="no">nil</span><span class="p" data-group-id="0165657347-9">)</span><span class="w">
-</span><span class="p" data-group-id="0165657347-10">[</span><span class="p" data-group-id="0165657347-10">]</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Filters</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="6600950411-9">(</span><span class="no">nil</span><span class="p" data-group-id="6600950411-9">)</span><span class="w">
+</span><span class="p" data-group-id="6600950411-10">[</span><span class="p" data-group-id="6600950411-10">]</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="rename_dimensions_used_in_filter/2">
+
+  <div class="detail-header">
+    <a href="#rename_dimensions_used_in_filter/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">rename_dimensions_used_in_filter(filters, renames)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/filters.ex#L121" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="transform_filters/2">
+
+  <div class="detail-header">
+    <a href="#transform_filters/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">transform_filters(filters, transformer)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/filters.ex#L138" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Updates filters via <code class="inline">transformer</code>.</p><p>Transformer will receive each node (filter, and/or/not subtree) of
+query and must return a list of nodes to replace it with or nil
+to ignore and look deeper.</p>
   </section>
 </section>
 <section class="detail" id="visit_props/0">

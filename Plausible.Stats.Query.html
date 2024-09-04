@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-5F709355.js"></script>
+    <script src="dist/sidebar_items-51208407.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -205,30 +205,6 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_filter/2" translate="no">get_filter(query, name)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#get_filter_by_prefix/2" translate="no">get_filter_by_prefix(query, prefix)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#has_event_filters?/1" translate="no">has_event_filters?(query)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#put_experimental_reduced_joins/3" translate="no">put_experimental_reduced_joins(query, site, params)</a>
 
       </div>
@@ -245,9 +221,11 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#remove_filters/2" translate="no">remove_filters(query, prefixes)</a>
+        <a href="#remove_top_level_filters/2" translate="no">remove_top_level_filters(query, prefixes)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Removes top level filters matching any of passed prefix from the query.</p></div>
 
     </div>
 
@@ -393,7 +371,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">ensure_include_imported(query, requested?)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L142" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L130" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -439,72 +417,6 @@ Pages
 <p>Builds query from old-style params. New code should prefer Query.build</p>
   </section>
 </section>
-<section class="detail" id="get_filter/2">
-
-  <div class="detail-header">
-    <a href="#get_filter/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">get_filter(query, name)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L106" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="get_filter_by_prefix/2">
-
-  <div class="detail-header">
-    <a href="#get_filter_by_prefix/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">get_filter_by_prefix(query, prefix)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L100" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="has_event_filters?/1">
-
-  <div class="detail-header">
-    <a href="#has_event_filters?/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">has_event_filters?(query)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L94" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
 <section class="detail" id="put_experimental_reduced_joins/3">
 
   <div class="detail-header">
@@ -536,7 +448,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">put_imported_opts(query, site, params)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L112" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L100" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -549,16 +461,16 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="remove_filters/2">
+<section class="detail" id="remove_top_level_filters/2">
 
   <div class="detail-header">
-    <a href="#remove_filters/2" class="detail-link" title="Link to this function">
+    <a href="#remove_top_level_filters/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">remove_filters(query, prefixes)</h1>
+    <h1 class="signature" translate="no">remove_top_level_filters(query, prefixes)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L79" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L85" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -568,7 +480,8 @@ Pages
 
   <section class="docstring">
 
-
+<p>Removes top level filters matching any of passed prefix from the query.</p><p>Note that this doesn't handle cases with AND/OR/NOT and as such is discouraged
+from use.</p>
   </section>
 </section>
 <section class="detail" id="set/2">
@@ -602,7 +515,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">trace(query, metrics)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L168" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query.ex#L156" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
