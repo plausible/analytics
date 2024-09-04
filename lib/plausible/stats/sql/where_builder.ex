@@ -180,30 +180,38 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:matches_wildcard, _dimension, clauses]) do
+  defp filter_custom_prop(prop_name, column_name, [:matches_wildcard, dimension, clauses]) do
     regexes = Enum.map(clauses, &page_regex/1)
 
+    filter_custom_prop(prop_name, column_name, [:matches, dimension, regexes])
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:matches_wildcard_not, dimension, clauses]) do
+    regexes = Enum.map(clauses, &page_regex/1)
+
+    filter_custom_prop(prop_name, column_name, [:matches_not, dimension, regexes])
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:matches, _dimension, clauses]) do
     dynamic(
       [t],
       has_key(t, column_name, ^prop_name) and
         fragment(
           "arrayExists(k -> match(?, k), ?)",
           get_by_key(t, column_name, ^prop_name),
-          ^regexes
+          ^clauses
         )
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:matches_wildcard_not, _dimension, clauses]) do
-    regexes = Enum.map(clauses, &page_regex/1)
-
+  defp filter_custom_prop(prop_name, column_name, [:matches_not, _dimension, clauses]) do
     dynamic(
       [t],
       has_key(t, column_name, ^prop_name) and
         fragment(
           "not(arrayExists(k -> match(?, k), ?))",
           get_by_key(t, column_name, ^prop_name),
-          ^regexes
+          ^clauses
         )
     )
   end
