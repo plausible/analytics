@@ -1098,7 +1098,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   end
 
   describe "custom props access" do
-    test "error if invalid filter", %{site: site, user: user} do
+    test "filters - no access", %{site: site, user: user} do
       ep =
         insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
 
@@ -1116,7 +1116,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
     end
 
-    test "error if invalid dimension", %{site: site, user: user} do
+    test "dimensions - no access", %{site: site, user: user} do
       ep =
         insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
 
