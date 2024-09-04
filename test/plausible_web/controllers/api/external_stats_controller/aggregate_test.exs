@@ -1908,7 +1908,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         build(:pageview,
           "meta.key": ["tier"],
           "meta.value": ["small-2"]
-        )
+        ),
+        build(:pageview)
       ])
 
       conn =
