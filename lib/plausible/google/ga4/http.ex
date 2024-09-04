@@ -3,6 +3,8 @@ defmodule Plausible.Google.GA4.HTTP do
   HTTP client implementation for Google Analytics 4 API.
   """
 
+  use Plausible
+
   alias Plausible.HTTPClient
 
   require Logger
@@ -55,7 +57,9 @@ defmodule Plausible.Google.GA4.HTTP do
          {:ok, report} <- convert_to_maps(report) do
       {:ok, {report, row_count}}
     else
-      {:error, %{reason: %{status: 429, body: body}}} ->
+      {:error, %{reason: %{status: 429, body: body}} = error} ->
+        log_ce_error("retrieving report for #{report_request.dataset}", error)
+
         Logger.debug(
           "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset} due to exceeding rate limit."
         )
@@ -65,7 +69,9 @@ defmodule Plausible.Google.GA4.HTTP do
         {:error,
          {:rate_limit_exceeded, dataset: report_request.dataset, offset: report_request.offset}}
 
-      {:error, %{reason: %{status: status, body: body}}} ->
+      {:error, %{reason: %{status: status, body: body}} = error} ->
+        log_ce_error("retrieving report for #{report_request.dataset}", error)
+
         Logger.debug(
           "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset} with code #{status}: #{inspect(body)}"
         )
@@ -74,6 +80,8 @@ defmodule Plausible.Google.GA4.HTTP do
         {:error, :request_failed}
 
       {:error, reason} ->
+        log_ce_error("retrieving report for #{report_request.dataset}", reason)
+
         Logger.debug(
           "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset}: #{inspect(reason)}"
         )
@@ -152,16 +160,20 @@ defmodule Plausible.Google.GA4.HTTP do
       {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, body}
 
-      {:error, %HTTPClient.Non200Error{reason: %{status: 429}}} ->
+      {:error, %HTTPClient.Non200Error{reason: %{status: 429}} = error} ->
+        log_ce_error("listing accounts for user", error)
         {:error, :rate_limit_exceeded}
 
       {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
-        {:error, :authentication_failed}
+        log_ce_error("listing accounts for user", error)
+        {:error, authentication_failed(error)}
 
-      {:error, %{reason: :timeout}} ->
+      {:error, %{reason: :timeout} = error} ->
+        log_ce_error("listing accounts for user", error)
         {:error, :timeout}
 
       {:error, error} ->
+        log_ce_error("listing accounts for user", error)
         Sentry.capture_message("Error listing GA4 accounts for user", extra: %{error: error})
         {:error, :unknown}
     end
@@ -176,19 +188,25 @@ defmodule Plausible.Google.GA4.HTTP do
       {:ok, %Finch.Response{body: body, status: 200}} ->
         {:ok, body}
 
-      {:error, %HTTPClient.Non200Error{reason: %{status: 429}}} ->
+      {:error, %HTTPClient.Non200Error{reason: %{status: 429}} = error} ->
+        log_ce_error("retrieving property #{property}", error)
         {:error, :rate_limit_exceeded}
 
       {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
-        {:error, :authentication_failed}
+        log_ce_error("retrieving property #{property}", error)
+        {:error, authentication_failed(error)}
 
       {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [404] ->
+        log_ce_error("retrieving property #{property}", error)
         {:error, :not_found}
 
-      {:error, %{reason: :timeout}} ->
+      {:error, %{reason: :timeout} = error} ->
+        log_ce_error("retrieving property #{property}", error)
         {:error, :timeout}
 
       {:error, error} ->
+        log_ce_error("retrieving property #{property}", error)
+
         Sentry.capture_message("Error retrieving GA4 property #{property}",
           extra: %{error: error}
         )
@@ -245,16 +263,21 @@ defmodule Plausible.Google.GA4.HTTP do
 
         {:ok, date}
 
-      {:error, %HTTPClient.Non200Error{reason: %{status: 429}}} ->
+      {:error, %HTTPClient.Non200Error{reason: %{status: 429}} = error} ->
+        log_ce_error("retrieving #{edge} date", error)
         {:error, :rate_limit_exceeded}
 
       {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
-        {:error, :authentication_failed}
+        log_ce_error("retrieving #{edge} date", error)
+        {:error, authentication_failed(error)}
 
-      {:error, %{reason: :timeout}} ->
+      {:error, %{reason: :timeout} = error} ->
+        log_ce_error("retrieving #{edge} date", error)
         {:error, :timeout}
 
       {:error, error} ->
+        log_ce_error("retrieving #{edge} date", error)
+
         Sentry.capture_message("Error retrieving GA4 #{edge} date",
           extra: %{error: error}
         )
@@ -265,4 +288,29 @@ defmodule Plausible.Google.GA4.HTTP do
 
   defp reporting_api_url, do: "https://analyticsdata.googleapis.com"
   defp admin_api_url, do: "https://analyticsadmin.googleapis.com"
+
+  @spec authentication_failed(HTTPClient.Non200Error.t()) ::
+          {:authentication_failed, String.t() | nil}
+  defp authentication_failed(error) do
+    message =
+      case error.reason.body do
+        %{"error" => %{"message" => message}} when is_binary(message) -> message
+        _ -> nil
+      end
+
+    {:authentication_failed, message}
+  end
+
+  @spec log_ce_error(String.t(), any) :: :ok
+  defp log_ce_error(action, error)
+
+  on_ce do
+    defp log_ce_error(action, error) do
+      Logger.error("Google Analytics 4: Failed when #{action}. Reason: #{inspect(error)}")
+    end
+  end
+
+  on_ee do
+    defp log_ce_error(_action, _error), do: :ok
+  end
 end

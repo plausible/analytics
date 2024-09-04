@@ -55,23 +55,24 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     assert message == expected_error_message
   end
 
-  def check_date_range(date_params, site, expected_date_range, schema_type \\ :public) do
-    %{"site_id" => site.domain, "metrics" => ["visitors", "events"]}
-    |> Map.merge(date_params)
-    |> check_success(
-      site,
+  def check_date_range(date_params, site, expected_fields, schema_type \\ :public) do
+    params =
+      %{"site_id" => site.domain, "metrics" => ["visitors", "events"]}
+      |> Map.merge(date_params)
+
+    expected_parsed =
       %{
         metrics: [:visitors, :events],
-        date_range: expected_date_range,
+        date_range: expected_fields.date_range,
         filters: [],
         dimensions: [],
         order_by: nil,
-        timezone: site.timezone,
+        timezone: Map.get(expected_fields, :timezone, site.timezone),
         include: %{imports: false, time_labels: false},
         preloaded_goals: []
-      },
-      schema_type
-    )
+      }
+
+    check_success(params, site, expected_parsed, schema_type)
   end
 
   test "parsing empty map fails", %{site: site} do
@@ -665,18 +666,44 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
   describe "date range validation" do
     test "parsing shortcut options", %{site: site} do
-      check_date_range(%{"date_range" => "day"}, site, @date_range_day)
-      check_date_range(%{"date_range" => "7d"}, site, @date_range_7d)
-      check_date_range(%{"date_range" => "30d"}, site, @date_range_30d)
-      check_date_range(%{"date_range" => "month"}, site, @date_range_month)
-      check_date_range(%{"date_range" => "6mo"}, site, @date_range_6mo)
-      check_date_range(%{"date_range" => "12mo"}, site, @date_range_12mo)
-      check_date_range(%{"date_range" => "year"}, site, @date_range_year)
+      check_date_range(%{"date_range" => "day"}, site, %{date_range: @date_range_day})
+      check_date_range(%{"date_range" => "7d"}, site, %{date_range: @date_range_7d})
+      check_date_range(%{"date_range" => "30d"}, site, %{date_range: @date_range_30d})
+      check_date_range(%{"date_range" => "month"}, site, %{date_range: @date_range_month})
+      check_date_range(%{"date_range" => "6mo"}, site, %{date_range: @date_range_6mo})
+      check_date_range(%{"date_range" => "12mo"}, site, %{date_range: @date_range_12mo})
+      check_date_range(%{"date_range" => "year"}, site, %{date_range: @date_range_year})
     end
 
     test "30m and realtime are available in internal API", %{site: site} do
-      check_date_range(%{"date_range" => "30m"}, site, @date_range_30m, :internal)
-      check_date_range(%{"date_range" => "realtime"}, site, @date_range_realtime, :internal)
+      check_date_range(%{"date_range" => "30m"}, site, %{date_range: @date_range_30m}, :internal)
+
+      check_date_range(
+        %{"date_range" => "realtime"},
+        site,
+        %{date_range: @date_range_realtime},
+        :internal
+      )
+    end
+
+    test "timezone is UTC instead of site.timezone for realtime and 30m periods", %{
+      site: site
+    } do
+      site = struct!(site, timezone: "Europe/Tallinn")
+
+      check_date_range(
+        %{"date_range" => "30m"},
+        site,
+        %{date_range: @date_range_30m, timezone: "UTC"},
+        :internal
+      )
+
+      check_date_range(
+        %{"date_range" => "realtime"},
+        site,
+        %{date_range: @date_range_realtime, timezone: "UTC"},
+        :internal
+      )
     end
 
     test "30m and realtime date_ranges are unavailable in public API", %{
@@ -691,26 +718,31 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     test "parsing `all` with previous data", %{site: site} do
       site = Map.put(site, :stats_start_date, ~D[2020-01-01])
       expected_date_range = DateTimeRange.new!(~D[2020-01-01], ~D[2021-05-05], "UTC")
-      check_date_range(%{"date_range" => "all"}, site, expected_date_range)
+      check_date_range(%{"date_range" => "all"}, site, %{date_range: expected_date_range})
     end
 
     test "parsing `all` with no previous data", %{site: site} do
       site = Map.put(site, :stats_start_date, nil)
-      check_date_range(%{"date_range" => "all"}, site, @date_range_day)
+      check_date_range(%{"date_range" => "all"}, site, %{date_range: @date_range_day})
     end
 
     test "parsing custom date range from simple date strings", %{site: site} do
-      check_date_range(%{"date_range" => ["2021-05-05", "2021-05-05"]}, site, @date_range_day)
+      check_date_range(%{"date_range" => ["2021-05-05", "2021-05-05"]}, site, %{
+        date_range: @date_range_day
+      })
     end
 
     test "parsing custom date range from iso8601 timestamps", %{site: site} do
       check_date_range(
         %{"date_range" => ["2024-01-01T00:00:00 UTC", "2024-01-02T23:59:59 UTC"]},
         site,
-        DateTimeRange.new!(
-          DateTime.new!(~D[2024-01-01], ~T[00:00:00], "UTC"),
-          DateTime.new!(~D[2024-01-02], ~T[23:59:59], "UTC")
-        )
+        %{
+          date_range:
+            DateTimeRange.new!(
+              DateTime.new!(~D[2024-01-01], ~T[00:00:00], "UTC"),
+              DateTime.new!(~D[2024-01-02], ~T[23:59:59], "UTC")
+            )
+        }
       )
 
       check_date_range(
@@ -721,10 +753,14 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           ]
         },
         site,
-        DateTimeRange.new!(
-          DateTime.new!(~D[2024-08-29], ~T[07:12:34], "America/Los_Angeles"),
-          DateTime.new!(~D[2024-08-29], ~T[10:12:34], "America/Los_Angeles")
-        )
+        %{
+          date_range:
+            DateTimeRange.new!(
+              DateTime.new!(~D[2024-08-29], ~T[07:12:34], "America/Los_Angeles"),
+              DateTime.new!(~D[2024-08-29], ~T[10:12:34], "America/Los_Angeles")
+            ),
+          timezone: "America/Los_Angeles"
+        }
       )
     end
 
@@ -750,15 +786,27 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
     end
 
-    test "custom date range is invalid when timestamp timezone is invalid", %{site: site} do
+    test "custom date range is invalid when timestamp timezones are different", %{site: site} do
       %{
         "site_id" => site.domain,
-        "date_range" => ["2021-02-03T00:00:00 Fake/Timezone", "2021-02-03T23:59:59 UTC"],
+        "date_range" => ["2021-02-03T00:00:00 Europe/Tallinn", "2021-02-03T23:59:59 UTC"],
         "metrics" => ["visitors"]
       }
       |> check_error(
         site,
-        "Invalid date_range '[\"2021-02-03T00:00:00 Fake/Timezone\", \"2021-02-03T23:59:59 UTC\"]'."
+        "Invalid date_range '[\"2021-02-03T00:00:00 Europe/Tallinn\", \"2021-02-03T23:59:59 UTC\"]'."
+      )
+    end
+
+    test "custom date range is invalid when timestamp timezone is invalid", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "date_range" => ["2021-02-03T00:00:00 Fake/Timezone", "2021-02-03T23:59:59 Fake/Timezone"],
+        "metrics" => ["visitors"]
+      }
+      |> check_error(
+        site,
+        "Invalid date_range '[\"2021-02-03T00:00:00 Fake/Timezone\", \"2021-02-03T23:59:59 Fake/Timezone\"]'."
       )
     end
 
@@ -803,7 +851,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             {"year", @date_range_year}
           ] do
         %{"date_range" => date_range_shortcut, "date" => date}
-        |> check_date_range(site, expected_date_range, :internal)
+        |> check_date_range(site, %{date_range: expected_date_range}, :internal)
       end
     end
 
@@ -829,7 +877,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         )
 
       %{"date_range" => ["2022-09-11", "2022-09-11"]}
-      |> check_date_range(site, expected_date_range)
+      |> check_date_range(site, %{date_range: expected_date_range})
     end
 
     test "parses date_range.first into the latest of ambiguous datetimes in site.timezone", %{
@@ -847,7 +895,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         )
 
       %{"date_range" => ["2023-11-05", "2023-11-05"]}
-      |> check_date_range(site, expected_date_range)
+      |> check_date_range(site, %{date_range: expected_date_range})
     end
 
     test "parses date_range.last into the earliest of ambiguous datetimes in site.timezone", %{
@@ -865,7 +913,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         )
 
       %{"date_range" => ["2024-03-23", "2024-03-23"]}
-      |> check_date_range(site, expected_date_range)
+      |> check_date_range(site, %{date_range: expected_date_range})
     end
   end
 

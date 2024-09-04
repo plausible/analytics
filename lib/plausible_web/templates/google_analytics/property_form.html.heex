@@ -1,42 +1,45 @@
-<%= form_for @conn, Routes.google_analytics_path(@conn, :property, @site.domain), [onsubmit: "continueButton.disabled = true; return true;", class: "max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
-  <h2 class="text-xl font-black dark:text-gray-100">Import from Google Analytics</h2>
+<PlausibleWeb.Components.Generic.focus_box>
+  <:title>
+    Import from Google Analytics
+  </:title>
 
-  <%= hidden_input(f, :access_token, value: @access_token) %>
-  <%= hidden_input(f, :refresh_token, value: @refresh_token) %>
-  <%= hidden_input(f, :expires_at, value: @expires_at) %>
-
-  <div class="mt-6 text-sm text-gray-500 dark:text-gray-200">
+  <:subtitle>
     Choose the property in your Google Analytics account that will be imported to the <%= @site.domain %> dashboard.
-  </div>
+  </:subtitle>
+  <%= form_for @conn, Routes.google_analytics_path(@conn, :property, @site.domain), [onsubmit: "continueButton.disabled = true; return true;"], fn f -> %>
+    <%= hidden_input(f, :access_token, value: @access_token) %>
+    <%= hidden_input(f, :refresh_token, value: @refresh_token) %>
+    <%= hidden_input(f, :expires_at, value: @expires_at) %>
 
-  <div class="mt-3">
-    <%= styled_label(f, :property, "Google Analytics property") %>
-    <%= styled_select(f, :property, @properties,
-      prompt: "(Choose property)",
-      required: "true"
-    ) %>
-    <%= styled_error(@conn.assigns[:selected_property_error]) %>
-  </div>
+    <div class="mt-3">
+      <%= styled_label(f, :property, "Google Analytics property") %>
+      <%= styled_select(f, :property, @properties,
+        prompt: "(Choose property)",
+        required: "true"
+      ) %>
+      <%= styled_error(@conn.assigns[:selected_property_error]) %>
+    </div>
 
-  <div class="mt-6 flex flex-col-reverse sm:flex-row justify-between items-center">
-    <p class="text-sm mt-4 sm:mt-0 dark:text-gray-100">
-      <a
-        href={Routes.site_path(@conn, :settings_imports_exports, @site.domain)}
-        class="underline text-indigo-600"
-      >
-        Go back
-      </a>
-    </p>
+    <div class="mt-6 flex flex-col-reverse sm:flex-row justify-between items-center">
+      <p class="mt-4 sm:mt-0 dark:text-gray-100">
+        <a
+          href={Routes.site_path(@conn, :settings_imports_exports, @site.domain)}
+          class="underline text-indigo-600"
+        >
+          Go back
+        </a>
+      </p>
 
-    <%= submit(name: "continueButton", class: "button sm:w-auto w-full [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block") do %>
-      <span class="label-enabled pointer-events-none">
-        Continue ->
-      </span>
+      <%= submit(name: "continueButton", class: "button sm:w-auto w-full [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block") do %>
+        <span class="label-enabled pointer-events-none">
+          Continue
+        </span>
 
-      <span class="label-disabled">
-        <PlausibleWeb.Components.Generic.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" />
-        Checking...
-      </span>
-    <% end %>
-  </div>
-<% end %>
+        <span class="label-disabled">
+          <PlausibleWeb.Components.Generic.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" />
+          Checking...
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+</PlausibleWeb.Components.Generic.focus_box>

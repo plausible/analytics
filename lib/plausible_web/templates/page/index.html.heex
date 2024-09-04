@@ -14,27 +14,27 @@
   </p>
 
   <:footer>
-    <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
-      <li>
+    <.focus_list>
+      <:item>
         <.styled_link href={Routes.auth_path(@conn, :login)}>
           Login
         </.styled_link>
-      </li>
-      <li>
+      </:item>
+      <:item>
         <.styled_link href={Routes.auth_path(@conn, :register_form)}>
           Register
         </.styled_link>
-      </li>
-      <li>
+      </:item>
+      <:item>
         <.styled_link href="https://plausible.io/docs">
           Guides & Docs
         </.styled_link>
-      </li>
-      <li>
+      </:item>
+      <:item>
         <.styled_link href="https://twitter.com/plausiblehq">
           Follow on Twitter
         </.styled_link>
-      </li>
-    </ol>
+      </:item>
+    </.focus_list>
   </:footer>
 </PlausibleWeb.Components.Generic.focus_box>

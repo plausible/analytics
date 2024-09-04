@@ -46,8 +46,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           expires_at: expires_at,
           site: conn.assigns.site,
           properties: properties,
-          selected_property_error: error,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          selected_property_error: error
         )
 
       {:error, :rate_limit_exceeded} ->
@@ -58,12 +57,20 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         )
         |> redirect(external: redirect_route)
 
-      {:error, :authentication_failed} ->
-        conn
-        |> put_flash(
-          :error,
+      {:error, {:authentication_failed, message}} ->
+        default_message =
           "We were unable to authenticate your Google Analytics account. Please check that you have granted us permission to 'See and download your Google Analytics data' and try again."
-        )
+
+        message =
+          if Plausible.ce?() do
+            message || default_message
+          else
+            default_message
+          end
+
+        conn
+        |> put_flash(:ttl, :timer.seconds(5))
+        |> put_flash(:error, message)
         |> redirect(external: redirect_route)
 
       {:error, :timeout} ->
@@ -129,12 +136,20 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         )
         |> redirect(external: redirect_route)
 
-      {:error, :authentication_failed} ->
-        conn
-        |> put_flash(
-          :error,
+      {:error, {:authentication_failed, message}} ->
+        default_message =
           "Google Analytics authentication seems to have expired. Please try again."
-        )
+
+        message =
+          if Plausible.ce?() do
+            message || default_message
+          else
+            default_message
+          end
+
+        conn
+        |> put_flash(:ttl, :timer.seconds(5))
+        |> put_flash(:error, message)
         |> redirect(external: redirect_route)
 
       {:error, :timeout} ->
@@ -182,8 +197,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           selected_property: property,
           selected_property_name: property_name,
           start_date: start_date,
-          end_date: end_date,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          end_date: end_date
         )
 
       {:error, :rate_limit_exceeded} ->
@@ -194,12 +208,20 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         )
         |> redirect(external: redirect_route)
 
-      {:error, :authentication_failed} ->
-        conn
-        |> put_flash(
-          :error,
+      {:error, {:authentication_failed, message}} ->
+        default_message =
           "Google Analytics authentication seems to have expired. Please try again."
-        )
+
+        message =
+          if Plausible.ce?() do
+            message || default_message
+          else
+            default_message
+          end
+
+        conn
+        |> put_flash(:ttl, :timer.seconds(5))
+        |> put_flash(:error, message)
         |> redirect(external: redirect_route)
 
       {:error, :timeout} ->

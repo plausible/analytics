@@ -37,7 +37,6 @@ defmodule PlausibleWeb.Site.MembershipController do
       conn,
       "invite_member_form.html",
       site: site,
-      layout: {PlausibleWeb.LayoutView, "focus.html"},
       team_member_limit: limit,
       is_at_limit: not below_limit?,
       skip_plausible_tracking: true
@@ -64,7 +63,6 @@ defmodule PlausibleWeb.Site.MembershipController do
         render(conn, "invite_member_form.html",
           error: "Cannot send invite because #{email} is already a member of #{site.domain}",
           site: site,
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
           skip_plausible_tracking: true
         )
 
@@ -73,7 +71,6 @@ defmodule PlausibleWeb.Site.MembershipController do
           error:
             "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit.",
           site: site,
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
           skip_plausible_tracking: true,
           is_at_limit: true,
           team_member_limit: limit
@@ -103,7 +100,6 @@ defmodule PlausibleWeb.Site.MembershipController do
       conn,
       "transfer_ownership_form.html",
       site: site,
-      layout: {PlausibleWeb.LayoutView, "focus.html"},
       skip_plausible_tracking: true
     )
   end
