@@ -100,11 +100,7 @@ defmodule Plausible.Stats.Filters do
   end
 
   def filtering_on_dimension?(query, dimension) do
-    query.filters
-    |> Plausible.Stats.Filters.traverse()
-    |> Enum.any?(fn {[_operator, filter_dimension | _rest], _root, _depth} ->
-      filter_dimension == dimension
-    end)
+    dimension in dimensions_used_in_filters(query.filters)
   end
 
   @doc """
