@@ -516,7 +516,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid filters. `event:hostname` can only be filtered at the top level."
+        "Invalid filters. Dimension `event:hostname` can only be filtered at the top level."
       )
     end
   end
@@ -659,7 +659,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid filters. `event:goal` can only be filtered at the top level."
+        "Invalid filters. Dimension `event:goal` can only be filtered at the top level."
       )
     end
   end

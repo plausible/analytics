@@ -37,7 +37,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
          },
          :ok <- validate_order_by(query),
          :ok <- validate_custom_props_access(site, query),
-         :ok <- validate_toplevel_only_filters(query),
+         :ok <- validate_toplevel_only_filter_dimension(query),
          :ok <- validate_special_metrics_filters(query),
          :ok <- validate_filtered_goals_exist(query),
          :ok <- validate_metrics(query),
@@ -376,22 +376,12 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   @only_toplevel ["event:goal", "event:hostname"]
-  defp validate_toplevel_only_filters(query) do
-    not_toplevel =
-      query.filters
-      |> Plausible.Stats.Filters.traverse()
-      |> Enum.flat_map(fn
-        {[_operation, dimension | _rest], _root, depth}
-        when depth > 0 and dimension in @only_toplevel ->
-          [dimension]
+  defp validate_toplevel_only_filter_dimension(query) do
+    not_toplevel = Filters.dimensions_used_in_filters(query.filters, min_depth: 1)
 
-        _ ->
-          []
-      end)
-
-    if length(not_toplevel) > 0 do
+    if Enum.any?(not_toplevel, &(&1 in @only_toplevel)) do
       {:error,
-       "Invalid filters. `#{List.first(not_toplevel)}` can only be filtered at the top level."}
+       "Invalid filters. Dimension `#{List.first(not_toplevel)}` can only be filtered at the top level."}
     else
       :ok
     end
@@ -403,10 +393,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
     deep_custom_property? =
       query.filters
-      |> Plausible.Stats.Filters.traverse()
-      |> Enum.any?(fn {[_operation, dimension | _rest], _root, depth} ->
-        depth > 0 and String.starts_with?(dimension, "event:props:")
-      end)
+      |> Filters.dimensions_used_in_filters(min_depth: 1)
+      |> Enum.any?(fn dimension -> String.starts_with?(dimension, "event:props:") end)
 
     if special_metric? and deep_custom_property? do
       {:error,

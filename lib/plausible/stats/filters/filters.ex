@@ -93,9 +93,12 @@ defmodule Plausible.Stats.Filters do
     |> String.to_existing_atom()
   end
 
-  def dimensions_used_in_filters(filters) do
+  def dimensions_used_in_filters(filters, opts \\ []) do
+    min_depth = Keyword.get(opts, :min_depth, 0)
+
     filters
-    |> Plausible.Stats.Filters.traverse()
+    |> traverse()
+    |> Enum.filter(fn {_filter, _root, depth} -> depth >= min_depth end)
     |> Enum.map(fn {[_operator, dimension | _rest], _root, _depth} -> dimension end)
   end
 
@@ -146,7 +149,7 @@ defmodule Plausible.Stats.Filters do
     end
   end
 
-  def traverse(filters, root \\ nil, depth \\ -1) do
+  defp traverse(filters, root \\ nil, depth \\ -1) do
     filters
     |> Enum.flat_map(&traverse_tree(&1, root || &1, depth + 1))
   end
