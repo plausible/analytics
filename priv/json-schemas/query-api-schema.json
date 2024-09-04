@@ -249,8 +249,8 @@
                   "enum": [
                     "is_not",
                     "contains_not",
-                    "match",
-                    "match_not"
+                    "matches",
+                    "matches_not"
                   ]
                 },
                 {

@@ -73,8 +73,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_operator(["is" | _rest]), do: {:ok, :is}
   defp parse_operator(["is_not" | _rest]), do: {:ok, :is_not}
-  defp parse_operator(["match" | _rest]), do: {:ok, :match}
-  defp parse_operator(["match_not" | _rest]), do: {:ok, :match_not}
+  defp parse_operator(["matches" | _rest]), do: {:ok, :matches}
+  defp parse_operator(["matches_not" | _rest]), do: {:ok, :matches_not}
   defp parse_operator(["matches_wildcard" | _rest]), do: {:ok, :matches_wildcard}
   defp parse_operator(["matches_wildcard_not" | _rest]), do: {:ok, :matches_wildcard_not}
   defp parse_operator(["contains" | _rest]), do: {:ok, :contains}
@@ -103,8 +103,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
        when operator in [
               :is,
               :is_not,
-              :match,
-              :match_not,
+              :matches,
+              :matches_not,
               :matches_wildcard,
               :matches_wildcard_not,
               :contains,

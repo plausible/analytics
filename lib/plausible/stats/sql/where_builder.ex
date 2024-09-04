@@ -241,15 +241,15 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     dynamic([], not (^filter_field(db_field, [:contains, dimension, clauses])))
   end
 
-  defp filter_field(db_field, [:match, _dimension, clauses]) do
+  defp filter_field(db_field, [:matches, _dimension, clauses]) do
     dynamic(
       [x],
       fragment("multiMatchAny(?, ?)", type(field(x, ^db_field), :string), ^clauses)
     )
   end
 
-  defp filter_field(db_field, [:match_not, dimension, clauses]) do
-    dynamic([], not (^filter_field(db_field, [:match, dimension, clauses])))
+  defp filter_field(db_field, [:matches_not, dimension, clauses]) do
+    dynamic([], not (^filter_field(db_field, [:matches, dimension, clauses])))
   end
 
   defp filter_field(db_field, [:is, _dimension, clauses]) do

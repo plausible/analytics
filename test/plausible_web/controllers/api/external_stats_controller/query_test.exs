@@ -848,7 +848,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
     end
 
-    test "`match` operator", %{conn: conn, site: site} do
+    test "`matches` operator", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/user/1234"),
         build(:pageview, pathname: "/user/789/contributions"),
@@ -863,14 +863,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "metrics" => ["visitors"],
           "filters" => [
-            ["match", "event:page", ["^/user/[0-9]+"]]
+            ["matches", "event:page", ["^/user/[0-9]+"]]
           ]
         })
 
       assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
     end
 
-    test "`match_not` operator", %{conn: conn, site: site} do
+    test "`matches_not` operator", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/user/1234"),
         build(:pageview, pathname: "/user/789/contributions"),
@@ -885,7 +885,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "metrics" => ["visitors"],
           "filters" => [
-            ["match_not", "event:page", ["^/user/[0-9]+"]]
+            ["matches_not", "event:page", ["^/user/[0-9]+"]]
           ]
         })
 

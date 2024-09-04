@@ -172,8 +172,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           :is_not,
           :matches_wildcard,
           :matches_wildcard_not,
-          :match,
-          :match_not,
+          :matches,
+          :matches_not,
           :contains,
           :contains_not
         ] do
