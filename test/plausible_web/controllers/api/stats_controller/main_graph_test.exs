@@ -20,6 +20,26 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.any?(plot, fn pageviews -> pageviews > 0 end)
     end
 
+    test "displays pageviews for the last 30 minutes for a non-UTC timezone site", %{
+      conn: conn,
+      site: site
+    } do
+      Plausible.Site.changeset(site, %{timezone: "Europe/Tallinn"})
+      |> Plausible.Repo.update()
+
+      populate_stats(site, [
+        build(:pageview, timestamp: relative_time(minutes: -5))
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=realtime&metric=pageviews")
+
+      assert %{"plot" => plot, "labels" => labels} = json_response(conn, 200)
+
+      assert labels == Enum.to_list(-30..-1)
+      assert Enum.count(plot) == 30
+      assert Enum.any?(plot, fn pageviews -> pageviews > 0 end)
+    end
+
     test "displays pageviews for a day", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),

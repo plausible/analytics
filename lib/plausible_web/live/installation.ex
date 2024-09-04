@@ -34,7 +34,14 @@ defmodule PlausibleWeb.Live.Installation do
         _session,
         socket
       ) do
-    site = Plausible.Sites.get_for_user!(socket.assigns.current_user, domain)
+    site =
+      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain, [
+        :owner,
+        :admin,
+        :super_admin,
+        :viewer
+      ])
+
     flow = params["flow"]
     meta = site.installation_meta || %Plausible.Site.InstallationMeta{}
 
@@ -292,9 +299,10 @@ defmodule PlausibleWeb.Live.Installation do
           <.tooltip sticky?={false} icon?={false} position="z-50 w-64 hidden sm:block">
             <:tooltip_content>
               <%= @tooltip %>
+              <br /><br />Click to learn more.
             </:tooltip_content>
             <a href={@learn_more} target="_blank" rel="noopener noreferrer">
-              <Heroicons.information_circle class="text-gray-700 dark:text-gray-500 w-5 h-5" />
+              <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
             </a>
           </.tooltip>
         </div>
@@ -392,8 +400,15 @@ defmodule PlausibleWeb.Live.Installation do
 
     flash = snippet_change_flash(socket.assigns.script_config, new_params)
 
+    socket =
+      if flash do
+        put_live_flash(socket, :success, flash)
+      else
+        socket
+      end
+
     socket = update_uri_params(socket, new_params)
-    {:noreply, put_live_flash(socket, :success, flash)}
+    {:noreply, socket}
   end
 
   def handle_params(params, _uri, socket) do
@@ -474,7 +489,8 @@ defmodule PlausibleWeb.Live.Installation do
           :installation,
           socket.assigns.domain,
           uri_params
-        )
+        ),
+      replace: true
     )
   end
 
@@ -509,13 +525,14 @@ defmodule PlausibleWeb.Live.Installation do
 
   defp snippet_change_flash(old_config, new_config) do
     change =
-      Enum.find(new_config, fn {key, value} ->
-        if old_config[key] != new_config[key] do
-          {key, value}
-        end
+      Enum.find(new_config, fn {key, _value} ->
+        old_config[key] != new_config[key]
       end)
 
     case change do
+      nil ->
+        nil
+
       {k, false} when k in ["outbound-links", "file-downloads", "404"] ->
         "Snippet updated and goal deleted. Please insert the newest snippet into your site"
 

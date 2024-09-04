@@ -587,6 +587,8 @@ base_cron = [
   # Every day at 1am
   {"0 1 * * *", Plausible.Workers.CleanInvitations},
   # Every 2 hours
+  {"30 */2 * * *", Plausible.Workers.CleanUserSessions},
+  # Every 2 hours
   {"0 */2 * * *", Plausible.Workers.ExpireDomainChangeTransitions},
   # Daily at midnight
   {"0 0 * * *", Plausible.Workers.LocationsSync}
@@ -617,6 +619,7 @@ base_queues = [
   check_stats_emails: 1,
   site_setup_emails: 1,
   clean_invitations: 1,
+  clean_user_sessions: 1,
   analytics_imports: 1,
   analytics_exports: 1,
   notify_exported_analytics: 1,

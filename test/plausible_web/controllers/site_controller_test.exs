@@ -838,7 +838,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       resp = html_response(conn, 200)
       assert resp =~ "An extra step is needed"
       assert resp =~ "Google Search Console integration"
-      assert resp =~ "self-hosting-configuration"
+      assert resp =~ "google-integration"
     end
   end
 
@@ -957,7 +957,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
   describe "PUT /:website/settings/features/visibility/:setting" do
     def query_conn_with_some_url(context) do
-      {:ok, Map.put(context, :conn, get(context.conn, "/some_parent_path"))}
+      {:ok, Map.put(context, :conn_with_url, get(context.conn, "/some_parent_path"))}
     end
 
     setup [:create_user, :log_in, :query_conn_with_some_url]
@@ -969,7 +969,8 @@ defmodule PlausibleWeb.SiteControllerTest do
         } do
       test "can toggle #{title} with admin access", %{
         user: user,
-        conn: conn0
+        conn: conn0,
+        conn_with_url: conn_with_url
       } do
         site =
           insert(:site,
@@ -982,7 +983,12 @@ defmodule PlausibleWeb.SiteControllerTest do
         conn =
           put(
             conn0,
-            PlausibleWeb.Components.Site.Feature.target(site, unquote(setting), conn0, false)
+            PlausibleWeb.Components.Site.Feature.target(
+              site,
+              unquote(setting),
+              conn_with_url,
+              false
+            )
           )
 
         assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
@@ -995,7 +1001,12 @@ defmodule PlausibleWeb.SiteControllerTest do
         conn =
           put(
             conn0,
-            PlausibleWeb.Components.Site.Feature.target(site, unquote(setting), conn0, true)
+            PlausibleWeb.Components.Site.Feature.target(
+              site,
+              unquote(setting),
+              conn_with_url,
+              true
+            )
           )
 
         assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
@@ -1014,7 +1025,8 @@ defmodule PlausibleWeb.SiteControllerTest do
         } do
       test "cannot toggle #{title} with viewer access", %{
         user: user,
-        conn: conn0
+        conn: conn0,
+        conn_with_url: conn_with_url
       } do
         site = insert(:site)
         insert(:site_membership, user: user, site: site, role: :viewer)
@@ -1022,7 +1034,12 @@ defmodule PlausibleWeb.SiteControllerTest do
         conn =
           put(
             conn0,
-            PlausibleWeb.Components.Site.Feature.target(site, unquote(setting), conn0, false)
+            PlausibleWeb.Components.Site.Feature.target(
+              site,
+              unquote(setting),
+              conn_with_url,
+              false
+            )
           )
 
         assert conn.status == 404
@@ -1030,7 +1047,11 @@ defmodule PlausibleWeb.SiteControllerTest do
       end
     end
 
-    test "setting feature visibility is idempotent", %{user: user, conn: conn0} do
+    test "setting feature visibility is idempotent", %{
+      user: user,
+      conn: conn0,
+      conn_with_url: conn_with_url
+    } do
       site = insert(:site)
       insert(:site_membership, user: user, site: site, role: :admin)
 
@@ -1039,7 +1060,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn =
         put(
           conn0,
-          PlausibleWeb.Components.Site.Feature.target(site, setting, conn0, false)
+          PlausibleWeb.Components.Site.Feature.target(site, setting, conn_with_url, false)
         )
 
       assert %{^setting => false} = Plausible.Sites.get_by_domain(site.domain)
@@ -1048,7 +1069,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn =
         put(
           conn0,
-          PlausibleWeb.Components.Site.Feature.target(site, setting, conn0, false)
+          PlausibleWeb.Components.Site.Feature.target(site, setting, conn_with_url, false)
         )
 
       assert %{^setting => false} = Plausible.Sites.get_by_domain(site.domain)
@@ -1135,11 +1156,11 @@ defmodule PlausibleWeb.SiteControllerTest do
       site = insert(:site)
       insert(:weekly_report, site: site, recipients: ["recipient@email.com"])
 
-      conn = delete(conn, "/sites/#{site.domain}/weekly-report/recipients/recipient@email.com")
-      assert conn.status == 404
+      conn1 = delete(conn, "/sites/#{site.domain}/weekly-report/recipients/recipient@email.com")
+      assert conn1.status == 404
 
-      conn = delete(conn, "/sites/#{site.domain}/weekly-report/recipients/recipient%40email.com")
-      assert conn.status == 404
+      conn2 = delete(conn, "/sites/#{site.domain}/weekly-report/recipients/recipient%40email.com")
+      assert conn2.status == 404
 
       report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
       assert [_] = report.recipients
@@ -1218,11 +1239,13 @@ defmodule PlausibleWeb.SiteControllerTest do
       site = insert(:site)
       insert(:monthly_report, site: site, recipients: ["recipient@email.com"])
 
-      conn = delete(conn, "/sites/#{site.domain}/monthly-report/recipients/recipient@email.com")
-      assert conn.status == 404
+      conn1 = delete(conn, "/sites/#{site.domain}/monthly-report/recipients/recipient@email.com")
+      assert conn1.status == 404
 
-      conn = delete(conn, "/sites/#{site.domain}/monthly-report/recipients/recipient%40email.com")
-      assert conn.status == 404
+      conn2 =
+        delete(conn, "/sites/#{site.domain}/monthly-report/recipients/recipient%40email.com")
+
+      assert conn2.status == 404
 
       report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
       assert [_] = report.recipients

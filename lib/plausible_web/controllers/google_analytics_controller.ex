@@ -57,12 +57,20 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         )
         |> redirect(external: redirect_route)
 
-      {:error, :authentication_failed} ->
-        conn
-        |> put_flash(
-          :error,
+      {:error, {:authentication_failed, message}} ->
+        default_message =
           "We were unable to authenticate your Google Analytics account. Please check that you have granted us permission to 'See and download your Google Analytics data' and try again."
-        )
+
+        message =
+          if Plausible.ce?() do
+            message || default_message
+          else
+            default_message
+          end
+
+        conn
+        |> put_flash(:ttl, :timer.seconds(5))
+        |> put_flash(:error, message)
         |> redirect(external: redirect_route)
 
       {:error, :timeout} ->
@@ -128,12 +136,20 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         )
         |> redirect(external: redirect_route)
 
-      {:error, :authentication_failed} ->
-        conn
-        |> put_flash(
-          :error,
+      {:error, {:authentication_failed, message}} ->
+        default_message =
           "Google Analytics authentication seems to have expired. Please try again."
-        )
+
+        message =
+          if Plausible.ce?() do
+            message || default_message
+          else
+            default_message
+          end
+
+        conn
+        |> put_flash(:ttl, :timer.seconds(5))
+        |> put_flash(:error, message)
         |> redirect(external: redirect_route)
 
       {:error, :timeout} ->
@@ -192,12 +208,20 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         )
         |> redirect(external: redirect_route)
 
-      {:error, :authentication_failed} ->
-        conn
-        |> put_flash(
-          :error,
+      {:error, {:authentication_failed, message}} ->
+        default_message =
           "Google Analytics authentication seems to have expired. Please try again."
-        )
+
+        message =
+          if Plausible.ce?() do
+            message || default_message
+          else
+            default_message
+          end
+
+        conn
+        |> put_flash(:ttl, :timer.seconds(5))
+        |> put_flash(:error, message)
         |> redirect(external: redirect_route)
 
       {:error, :timeout} ->

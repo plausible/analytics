@@ -52,11 +52,31 @@ defmodule PlausibleWeb.ErrorView do
   end
 
   def template_not_found(template, assigns) do
+    if String.ends_with?(template, ".json") do
+      fallback_json_error(template, assigns)
+    else
+      fallback_html_error(template, assigns)
+    end
+  end
+
+  defp fallback_html_error(template, assigns) do
     assigns =
       assigns
       |> Map.put_new(:message, Phoenix.Controller.status_message_from_template(template))
       |> Map.put(:status, String.trim_trailing(template, ".html"))
 
     render("generic_error.html", assigns)
+  end
+
+  defp fallback_json_error(template, _assigns) do
+    status =
+      String.split(template, ".")
+      |> hd()
+      |> String.to_integer()
+
+    message = Plug.Conn.Status.reason_phrase(status)
+    %{status: status, message: message}
+  rescue
+    _ -> %{status: 500, message: "Server error"}
   end
 end
