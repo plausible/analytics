@@ -24,11 +24,13 @@ export const SortButton = ({
       className={classNames(
         'group',
         'hover:underline',
+        'relative',
       )}
     >
       {children}
       <span
         className={classNames(
+          'absolute',
           'rounded inline-block h-4 w-4',
           'ml-1',
           {
