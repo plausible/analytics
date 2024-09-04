@@ -870,7 +870,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
     end
 
-    test "`not_match` operator", %{conn: conn, site: site} do
+    test "`match_not` operator", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/user/1234"),
         build(:pageview, pathname: "/user/789/contributions"),
@@ -885,7 +885,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "metrics" => ["visitors"],
           "filters" => [
-            ["not_match", "event:page", ["^/user/[0-9]+"]]
+            ["match_not", "event:page", ["^/user/[0-9]+"]]
           ]
         })
 

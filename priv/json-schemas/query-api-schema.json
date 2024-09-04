@@ -248,7 +248,7 @@
                 "is_not",
                 "does_not_contain",
                 "match",
-                "not_match"
+                "match_not"
               ],
               "description": "filter operation"
             },

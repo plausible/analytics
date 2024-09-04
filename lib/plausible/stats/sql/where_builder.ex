@@ -248,7 +248,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_field(db_field, [:not_match, dimension, clauses]) do
+  defp filter_field(db_field, [:match_not, dimension, clauses]) do
     dynamic([], not (^filter_field(db_field, [:match, dimension, clauses])))
   end
 
