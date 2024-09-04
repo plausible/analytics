@@ -20,7 +20,6 @@ All notable changes to this project will be documented in this file.
 - Testing framework for `/assets`
 
 ### Removed
-- Stop returning imported stats in timeseries queries for intervals shorter than `day`
 - Deprecate `ECTO_IPV6` and `ECTO_CH_IPV6` env vars in CE plausible/analytics#4245
 - Remove support for importing data from no longer available Universal Analytics
 - Soft-deprecate `DATABASE_SOCKET_DIR` plausible/analytics#4202
