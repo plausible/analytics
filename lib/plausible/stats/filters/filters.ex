@@ -131,7 +131,7 @@ defmodule Plausible.Stats.Filters do
     case {transformer.(filter), filter} do
       # Transformer did not return that value - transform that subtree
       {nil, [:not, child_filter]} ->
-        transform_filters(child_filter, transformer)
+        transform_tree(child_filter, transformer)
 
       {nil, [operation, filters]} when operation in [:and, :or] ->
         transform_filters(filters, transformer)
