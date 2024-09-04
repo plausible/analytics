@@ -112,7 +112,7 @@ export const createEvents = (props) => {
 export const createTotalRevenue = (props) => {
   const renderValue = (value) => <Money formatted={value} />
   const renderLabel = (_query) => "Revenue"
-  return new Metric({width: 'w-16', ...props, key: "total_revenue", renderValue, renderLabel, sortable: true})
+  return new Metric({width: 'w-24', ...props, key: "total_revenue", renderValue, renderLabel, sortable: true})
 }
 
 export const createAverageRevenue = (props) => {

@@ -154,13 +154,13 @@ export default function BreakdownModal<TListItem extends {name: string}>({
 
   useEffect(() => {
     const searchBox = searchBoxRef.current
-    if (!searchEnabled && searchBox) {
+    if (!searchEnabled || !searchBox) {
       return
     }
 
     const handleKeyUp = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        ;(event.target as HTMLElement | undefined)?.blur()
+        (event.target as HTMLElement | undefined)?.blur()
         event.stopPropagation()
       }
     }
@@ -209,7 +209,7 @@ export default function BreakdownModal<TListItem extends {name: string}>({
   function renderRow(item: TListItem) {
     return (
       <tr className="text-sm dark:text-gray-200" key={item.name}>
-        <td className="w-48 md:w-80 break-all p-2 flex items-center">
+        <td className="w-48 md:w-80 break-all p-2 flex items-center" align="left">
           {maybeRenderIcon(item)}
           <FilterLink path={rootRoute.path} filterInfo={getFilterInfo(item)} onClick={undefined} extraClass={undefined}>
             {item.name}
@@ -218,7 +218,7 @@ export default function BreakdownModal<TListItem extends {name: string}>({
         </td>
         {metrics.map((metric) => {
           return (
-            <td key={metric.key} className={classNames(metric.width, "p-2 font-medium")} align="left">
+            <td key={metric.key} className={classNames(metric.width, "p-2 font-medium")} align="right">
               {metric.renderValue(item[metric.key as keyof TListItem])}
             </td>
           )
@@ -294,7 +294,7 @@ export default function BreakdownModal<TListItem extends {name: string}>({
             <thead>
               <tr>
                 <th
-                  className="p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
+                  className="w-48 md:w-80 p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
                   align="left"
                 >
                   {reportInfo.dimensionLabel}
@@ -305,7 +305,7 @@ export default function BreakdownModal<TListItem extends {name: string}>({
                     <th
                       key={metric.key}
                       className={classNames(metric.width, "p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400")}
-                      align="left"
+                      align="right"
                     >
                       {metric.sortable ? (
                         <SortButton
