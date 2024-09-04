@@ -107,17 +107,17 @@ defmodule PlausibleWeb.Api.StatsController do
          params <- realtime_period_to_30m(params),
          query = Query.from(site, params, debug_metadata(conn)),
          {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
-      timeseries_result = Stats.timeseries(site, query, [metric])
+      {timeseries_result, _meta} = Stats.timeseries(site, query, [metric])
 
       comparison_opts = parse_comparison_opts(params)
 
-      {comparison_query, comparison_result} =
+      comparison_result =
         case Comparisons.compare(site, query, params["comparison"], comparison_opts) do
           {:ok, comparison_query} ->
-            {comparison_query, Stats.timeseries(site, comparison_query, [metric])}
+            Stats.timeseries(site, comparison_query, [metric]) |> elem(0)
 
           {:error, :not_supported} ->
-            {nil, nil}
+            nil
         end
 
       labels = label_timeseries(timeseries_result, comparison_result)
@@ -131,8 +131,6 @@ defmodule PlausibleWeb.Api.StatsController do
         comparison_plot: comparison_result && plot_timeseries(comparison_result, metric),
         comparison_labels: comparison_result && label_timeseries(comparison_result, nil),
         present_index: present_index,
-        includes_imported: includes_imported?(query, comparison_query),
-        imports_exist: site.complete_import_ids != [],
         full_intervals: full_intervals
       })
     else

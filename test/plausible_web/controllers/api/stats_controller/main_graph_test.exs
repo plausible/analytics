@@ -74,10 +74,13 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
 
       zeroes = List.duplicate(0, 30)
-      assert %{"plot" => ^zeroes, "includes_imported" => false} = json_response(conn, 200)
+      assert %{"plot" => ^zeroes} = json_response(conn, 200)
     end
 
-    test "displays visitors for a day with imported data", %{conn: conn, site: site} do
+    test "imported data is not included for hourly interval", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00]),
@@ -91,10 +94,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imports_exist" => true, "includes_imported" => true} =
-               json_response(conn, 200)
+      assert %{"plot" => plot} = json_response(conn, 200)
 
-      assert plot == [2] ++ List.duplicate(0, 23)
+      assert plot == [1] ++ List.duplicate(0, 23)
     end
 
     test "displays hourly stats in configured timezone", %{conn: conn, user: user} do
@@ -158,8 +160,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imports_exist" => true, "includes_imported" => true} =
-               json_response(conn, 200)
+      assert %{"plot" => plot} = json_response(conn, 200)
 
       assert Enum.count(plot) == 31
       assert List.first(plot) == 2
@@ -179,8 +180,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imports_exist" => true, "includes_imported" => true} =
-               json_response(conn, 200)
+      assert %{"plot" => plot} = json_response(conn, 200)
 
       assert Enum.count(plot) == 31
       assert List.first(plot) == 1
@@ -1216,12 +1216,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=year&date=2021-01-01&with_imported=true&comparison=year_over_year&interval=month"
         )
 
-      assert %{
-               "plot" => plot,
-               "comparison_plot" => comparison_plot,
-               "imports_exist" => true,
-               "includes_imported" => true
-             } = json_response(conn, 200)
+      assert %{"plot" => plot, "comparison_plot" => comparison_plot} = json_response(conn, 200)
 
       assert 4 == Enum.sum(plot)
       assert 2 == Enum.sum(comparison_plot)
@@ -1262,12 +1257,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=year&date=2021-01-01&with_imported=false&comparison=year_over_year&interval=month"
         )
 
-      assert %{
-               "plot" => plot,
-               "comparison_plot" => comparison_plot,
-               "imports_exist" => true,
-               "includes_imported" => false
-             } = json_response(conn, 200)
+      assert %{"plot" => plot, "comparison_plot" => comparison_plot} = json_response(conn, 200)
 
       assert 4 == Enum.sum(plot)
       assert 0 == Enum.sum(comparison_plot)
@@ -1292,12 +1282,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-14&comparison=previous_period&metric=conversion_rate&filters=#{filters}"
         )
 
-      assert %{
-               "plot" => this_week_plot,
-               "comparison_plot" => last_week_plot,
-               "imports_exist" => true,
-               "includes_imported" => false
-             } = json_response(conn, 200)
+      assert %{"plot" => this_week_plot, "comparison_plot" => last_week_plot} =
+               json_response(conn, 200)
 
       assert this_week_plot == [50.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
       assert last_week_plot == [33.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]

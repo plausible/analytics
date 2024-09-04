@@ -129,12 +129,26 @@ defmodule Plausible.Stats.Query do
           :ok | {:error, :no_imported_data | :out_of_range | :unsupported_query | :not_requested}
   def ensure_include_imported(query, requested?) do
     cond do
-      not requested? -> {:error, :not_requested}
-      is_nil(query.latest_import_end_date) -> {:error, :no_imported_data}
-      query.period in ["realtime", "30m"] -> {:error, :unsupported_query}
-      Date.after?(query.date_range.first, query.latest_import_end_date) -> {:error, :out_of_range}
-      not Imported.schema_supports_query?(query) -> {:error, :unsupported_query}
-      true -> :ok
+      not requested? ->
+        {:error, :not_requested}
+
+      is_nil(query.latest_import_end_date) ->
+        {:error, :no_imported_data}
+
+      query.period in ["realtime", "30m"] ->
+        {:error, :unsupported_query}
+
+      "time:minute" in query.dimensions or "time:hour" in query.dimensions ->
+        {:error, :unsupported_interval}
+
+      Date.after?(query.date_range.first, query.latest_import_end_date) ->
+        {:error, :out_of_range}
+
+      not Imported.schema_supports_query?(query) ->
+        {:error, :unsupported_query}
+
+      true ->
+        :ok
     end
   end
 
