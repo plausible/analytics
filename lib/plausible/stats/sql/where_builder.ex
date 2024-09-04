@@ -213,7 +213,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:does_not_contain, dimension, clauses]) do
+  defp filter_custom_prop(prop_name, column_name, [:contains_not, dimension, clauses]) do
     dynamic(
       [],
       not (^filter_custom_prop(prop_name, column_name, [:contains, dimension, clauses]))
@@ -237,7 +237,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     dynamic([x], fragment("multiSearchAny(?, ?)", type(field(x, ^db_field), :string), ^values))
   end
 
-  defp filter_field(db_field, [:does_not_contain, dimension, clauses]) do
+  defp filter_field(db_field, [:contains_not, dimension, clauses]) do
     dynamic([], not (^filter_field(db_field, [:contains, dimension, clauses])))
   end
 

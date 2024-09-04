@@ -11,6 +11,7 @@ import {
   isAfter
 } from './util/date'
 import {
+  FILTER_OPERATIONS,
   getFiltersByKeyPrefix,
   parseLegacyFilter,
   parseLegacyPropsFilter
@@ -82,6 +83,16 @@ const LEGACY_URL_PARAMETERS = {
   hostname: null,
   entry_page: null,
   exit_page: null
+}
+
+export function postProcessFilters(filters: Array<Filter>): Array<Filter> {
+  return filters.map(([operation, dimension, clauses]) => {
+    // Rename old name of the operation
+    if (operation === "does_not_contain") {
+      operation = FILTER_OPERATIONS.contains_not
+    }
+    return [operation, dimension, clauses]
+  })
 }
 
 // Called once when dashboard is loaded load. Checks whether old filter style is used and if so,

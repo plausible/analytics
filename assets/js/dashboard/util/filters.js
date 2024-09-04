@@ -28,14 +28,14 @@ export const FILTER_OPERATIONS = {
   is: 'is',
   isNot: 'is_not',
   contains: 'contains',
-  does_not_contain: 'does_not_contain'
+  contains_not: 'contains_not'
 };
 
 export const FILTER_OPERATIONS_DISPLAY_NAMES = {
   [FILTER_OPERATIONS.is]: 'is',
   [FILTER_OPERATIONS.isNot]: 'is not',
   [FILTER_OPERATIONS.contains]: 'contains',
-  [FILTER_OPERATIONS.does_not_contain]: 'does not contain'
+  [FILTER_OPERATIONS.contains_not]: 'does not contain'
 }
 
 const OPERATION_PREFIX = {

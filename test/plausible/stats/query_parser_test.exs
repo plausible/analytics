@@ -175,7 +175,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           :match,
           :match_not,
           :contains,
-          :does_not_contain
+          :contains_not
         ] do
       test "#{operation} filter", %{site: site} do
         %{

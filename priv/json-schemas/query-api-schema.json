@@ -243,12 +243,21 @@
           "type": "array",
           "items": [
             {
-              "type": "string",
-              "enum": [
-                "is_not",
-                "does_not_contain",
-                "match",
-                "match_not"
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "is_not",
+                    "contains_not",
+                    "match",
+                    "match_not"
+                  ]
+                },
+                {
+                  "const": "does_not_contain",
+                  "deprecationMessage": "Legacy support, will be removed next week",
+                  "deprecated": true
+                }
               ],
               "description": "filter operation"
             },
