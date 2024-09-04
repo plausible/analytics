@@ -43,12 +43,12 @@ defmodule Plausible.Stats.Timeseries do
       |> ClickhouseRepo.all(query: query)
       |> QueryResult.from(site, query_with_metrics)
 
-    results =
+    timeseries_result =
       query_result
       |> build_timeseries_result(query_with_metrics, currency)
       |> transform_keys(%{group_conversion_rate: :conversion_rate})
 
-    {results, query_result.meta}
+    {timeseries_result, query_result.meta}
   end
 
   defp time_dimension(query), do: Map.fetch!(@time_dimension, query.interval)
