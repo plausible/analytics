@@ -145,9 +145,9 @@ export default function VisitorGraph({ updateImportedDataInView }) {
     const showingImported = importedSwitchVisible() && query.with_imported === true
 
     return (
-      <FadeIn show={showingImported && unsupportedInterval}>
+      <FadeIn show={showingImported && unsupportedInterval} className="h-6 mr-1">
         <span tooltip={"Inteval is too short to graph imported data"}>
-          <ExclamationCircleIcon className="w-6 h-6 dark:text-gray-100" />
+          <ExclamationCircleIcon className="w-6 h-6 text-gray-700 dark:text-gray-300" />
         </span>
       </FadeIn>
     )
