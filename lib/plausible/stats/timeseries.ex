@@ -48,7 +48,7 @@ defmodule Plausible.Stats.Timeseries do
       |> build_timeseries_result(query_with_metrics, currency)
       |> transform_keys(%{group_conversion_rate: :conversion_rate})
 
-    %{results: results, meta: query_result.meta}
+    {results, query_result.meta}
   end
 
   defp time_dimension(query), do: Map.fetch!(@time_dimension, query.interval)
