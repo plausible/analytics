@@ -403,8 +403,17 @@ defmodule PlausibleWeb.Router do
     scope alias: Live, assigns: %{connect_live_socket: true} do
       pipe_through [:app_layout, PlausibleWeb.RequireAccountPlug]
 
-      live "/:website/installation", Installation, :installation, as: :site
-      live "/:website/verification", Verification, :verification, as: :site
+      scope assigns: %{
+              dogfood_page_path: "/:website/installation"
+            } do
+        live "/:website/installation", Installation, :installation, as: :site
+      end
+
+      scope assigns: %{
+              dogfood_page_path: "/:website/verification"
+            } do
+        live "/:website/verification", Verification, :verification, as: :site
+      end
     end
 
     get "/:website/settings", SiteController, :settings
