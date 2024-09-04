@@ -139,9 +139,9 @@ defmodule PlausibleWeb.Live.Shields.IPAddressesTest do
       assert html =~ ip
       assert html =~ user.name
 
-      assert [%{id: id}] = Shields.list_ip_rules(site)
+      assert [%{id: _id}] = Shields.list_ip_rules(site)
 
-      tooltip = text_of_attr(html, "#inet-#{id}", "title")
+      tooltip = text_of_element(html, ".tooltip-content")
       assert tooltip =~ "Added at #{Date.utc_today()}"
       assert tooltip =~ "by #{user.name} <#{user.email}>"
 
