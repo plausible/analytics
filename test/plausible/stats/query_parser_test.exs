@@ -171,7 +171,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           :is,
           :is_not,
           :matches_wildcard,
-          :not_matches_wildcard,
+          :matches_wildcard_not,
           :match,
           :match_not,
           :contains,
@@ -221,7 +221,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       end
     end
 
-    for operation <- [:matches_wildcard, :not_matches_wildcard] do
+    for operation <- [:matches_wildcard, :matches_wildcard_not] do
       test "#{operation} is not a valid filter operation in public API", %{site: site} do
         %{
           "site_id" => site.domain,

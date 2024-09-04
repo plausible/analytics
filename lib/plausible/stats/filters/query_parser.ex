@@ -76,7 +76,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_operator(["match" | _rest]), do: {:ok, :match}
   defp parse_operator(["match_not" | _rest]), do: {:ok, :match_not}
   defp parse_operator(["matches_wildcard" | _rest]), do: {:ok, :matches_wildcard}
-  defp parse_operator(["not_matches_wildcard" | _rest]), do: {:ok, :not_matches_wildcard}
+  defp parse_operator(["matches_wildcard_not" | _rest]), do: {:ok, :matches_wildcard_not}
   defp parse_operator(["contains" | _rest]), do: {:ok, :contains}
   defp parse_operator(["contains_not" | _rest]), do: {:ok, :contains_not}
   # :TODO: Remove this once frontend support is gone
@@ -106,7 +106,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
               :match,
               :match_not,
               :matches_wildcard,
-              :not_matches_wildcard,
+              :matches_wildcard_not,
               :contains,
               :contains_not
             ],

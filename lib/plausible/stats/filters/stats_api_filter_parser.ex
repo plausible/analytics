@@ -27,7 +27,7 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
         final_value = remove_escape_chars(raw_value)
 
         cond do
-          is_wildcard? && is_negated? -> [:not_matches_wildcard, key, [raw_value]]
+          is_wildcard? && is_negated? -> [:matches_wildcard_not, key, [raw_value]]
           is_wildcard? -> [:matches_wildcard, key, [raw_value]]
           is_list? -> [:is, key, parse_member_list(raw_value)]
           is_negated? -> [:is_not, key, [final_value]]

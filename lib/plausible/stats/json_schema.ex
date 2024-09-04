@@ -22,7 +22,7 @@ defmodule Plausible.Stats.JSONSchema do
                          )
                          |> JSONPointer.add!(
                            "#/definitions/filter_entry/oneOf/0/items/0/oneOf/0/enum/0",
-                           "not_matches_wildcard"
+                           "matches_wildcard_not"
                          )
                          |> JSONPointer.add!("#/definitions/metric/oneOf/0", %{
                            "const" => "time_on_page"

@@ -35,23 +35,23 @@ defmodule Plausible.Stats.Filters.LegacyDashboardFilterParser do
 
     cond do
       is_negated && is_wildcard && is_list ->
-        [:not_matches_wildcard, key, val]
+        [:matches_wildcard_not, key, val]
 
       # TODO
       is_negated && is_contains && is_list ->
-        [:not_matches_wildcard, key, Enum.map(val, &"**#{&1}**")]
+        [:matches_wildcard_not, key, Enum.map(val, &"**#{&1}**")]
 
       is_wildcard && is_list ->
         [:matches_wildcard, key, val]
 
       is_negated && is_wildcard ->
-        [:not_matches_wildcard, key, [val]]
+        [:matches_wildcard_not, key, [val]]
 
       is_negated && is_list ->
         [:is_not, key, val]
 
       is_negated && is_contains ->
-        [:not_matches_wildcard, key, ["**" <> val <> "**"]]
+        [:matches_wildcard_not, key, ["**" <> val <> "**"]]
 
       is_negated ->
         [:is_not, key, [val]]

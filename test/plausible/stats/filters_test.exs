@@ -32,7 +32,7 @@ defmodule Plausible.Stats.FiltersTest do
 
     test "negative wildcard" do
       "event:page!=/blog/post-*"
-      |> assert_parsed([[:not_matches_wildcard, "event:page", ["/blog/post-*"]]])
+      |> assert_parsed([[:matches_wildcard_not, "event:page", ["/blog/post-*"]]])
     end
 
     test "custom event goal" do

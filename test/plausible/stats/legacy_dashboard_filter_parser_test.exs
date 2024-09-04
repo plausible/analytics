@@ -123,7 +123,7 @@ defmodule Plausible.Stats.Legacy.DashboardFilterParserTest do
 
     test "parses not_matches filter type" do
       %{"page" => "!/|/blog**"}
-      |> assert_parsed([[:not_matches_wildcard, "event:page", ["/", "/blog**"]]])
+      |> assert_parsed([[:matches_wildcard_not, "event:page", ["/", "/blog**"]]])
     end
 
     test "single matches" do
@@ -133,7 +133,7 @@ defmodule Plausible.Stats.Legacy.DashboardFilterParserTest do
 
     test "negated matches" do
       %{"page" => "!~articles"}
-      |> assert_parsed([[:not_matches_wildcard, "event:page", ["**articles**"]]])
+      |> assert_parsed([[:matches_wildcard_not, "event:page", ["**articles**"]]])
     end
 
     test "matches member" do
@@ -143,7 +143,7 @@ defmodule Plausible.Stats.Legacy.DashboardFilterParserTest do
 
     test "not matches member" do
       %{"page" => "!~articles|blog"}
-      |> assert_parsed([[:not_matches_wildcard, "event:page", ["**articles**", "**blog**"]]])
+      |> assert_parsed([[:matches_wildcard_not, "event:page", ["**articles**", "**blog**"]]])
     end
 
     test "other filters default to `is` even when wildcard is present" do
@@ -153,7 +153,7 @@ defmodule Plausible.Stats.Legacy.DashboardFilterParserTest do
 
     test "can be used with `page` filter" do
       %{"page" => "!/blog/post-*"}
-      |> assert_parsed([[:not_matches_wildcard, "event:page", ["/blog/post-*"]]])
+      |> assert_parsed([[:matches_wildcard_not, "event:page", ["/blog/post-*"]]])
     end
 
     test "other filters default to is_not even when wildcard is present" do

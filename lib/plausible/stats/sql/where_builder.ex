@@ -194,7 +194,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:not_matches_wildcard, dimension, clauses]) do
+  defp filter_custom_prop(prop_name, column_name, [:matches_wildcard_not, dimension, clauses]) do
     dynamic(
       [],
       not (^filter_custom_prop(prop_name, column_name, [:matches_wildcard, dimension, clauses]))
@@ -229,7 +229,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_field(db_field, [:not_matches_wildcard, dimension, clauses]) do
+  defp filter_field(db_field, [:matches_wildcard_not, dimension, clauses]) do
     dynamic([], not (^filter_field(db_field, [:matches_wildcard, dimension, clauses])))
   end
 

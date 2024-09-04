@@ -1916,7 +1916,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           "site_id" => site.domain,
           "metrics" => "visitors",
           "filters" => [
-            ["not_matches_wildcard", "event:props:tier", ["small*"]]
+            ["matches_wildcard_not", "event:props:tier", ["small*"]]
           ]
         })
 
