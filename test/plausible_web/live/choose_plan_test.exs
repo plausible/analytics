@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @slider_value "#slider-value"
 
   @growth_plan_box "#growth-plan-box"
-  @growth_plan_tooltip "#growth-plan-box .tooltip-wrapper span"
+  @growth_plan_tooltip "#growth-plan-box .tooltip-content"
   @growth_price_tag_amount "#growth-price-tag-amount"
   @growth_price_tag_interval "#growth-price-tag-interval"
   @growth_highlight_pill "#{@growth_plan_box} #highlight-pill"
@@ -842,18 +842,18 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none bg-gray-400"
       assert text_of_element(doc, @growth_checkout_button) =~ "Currently on this plan"
-      refute element_exists?(doc, "#{@growth_checkout_button} + p")
+      refute element_exists?(doc, "#{@growth_checkout_button} + div")
 
       assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none bg-gray-400"
 
-      assert text_of_element(doc, "#{@business_checkout_button} + p") =~
+      assert text_of_element(doc, "#{@business_checkout_button} + div") =~
                "Please update your billing details first"
 
       doc = set_slider(lv, "1M")
 
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none bg-gray-400"
 
-      assert text_of_element(doc, "#{@growth_checkout_button} + p") =~
+      assert text_of_element(doc, "#{@growth_checkout_button} + div") =~
                "Please update your billing details first"
     end
   end
@@ -875,18 +875,18 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none bg-gray-400"
       assert text_of_element(doc, @growth_checkout_button) =~ "Currently on this plan"
-      refute element_exists?(doc, "#{@growth_checkout_button} + p")
+      refute element_exists?(doc, "#{@growth_checkout_button} + div")
 
       assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none bg-gray-400"
 
-      assert text_of_element(doc, "#{@business_checkout_button} + p") =~
+      assert text_of_element(doc, "#{@business_checkout_button} + div") =~
                "Please update your billing details first"
 
       doc = set_slider(lv, "1M")
 
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none bg-gray-400"
 
-      assert text_of_element(doc, "#{@growth_checkout_button} + p") =~
+      assert text_of_element(doc, "#{@growth_checkout_button} + div") =~
                "Please update your billing details first"
     end
   end
