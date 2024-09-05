@@ -19,15 +19,6 @@ defmodule Plausible.TimezonesTest do
     refute Enum.empty?(options)
   end
 
-  test "to_utc_datetime/2" do
-    assert to_utc_datetime(~N[2022-09-11 00:00:00], "Etc/UTC") == ~U[2022-09-11 00:00:00Z]
-
-    assert to_utc_datetime(~N[2022-09-11 00:00:00], "America/Santiago") ==
-             ~U[2022-09-11 04:00:00Z]
-
-    assert to_utc_datetime(~N[2023-10-29 00:00:00], "Atlantic/Azores") == ~U[2023-10-29 01:00:00Z]
-  end
-
   test "to_date_in_timezone/1" do
     assert to_date_in_timezone(~D[2021-01-03], "Etc/UTC") == ~D[2021-01-03]
     assert to_date_in_timezone(~U[2015-01-13 13:00:07Z], "Etc/UTC") == ~D[2015-01-13]

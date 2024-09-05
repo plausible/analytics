@@ -6,16 +6,6 @@ defmodule Plausible.Timezones do
     |> Enum.sort_by(& &1[:offset], :desc)
   end
 
-  @spec to_utc_datetime(NaiveDateTime.t(), String.t()) :: DateTime.t()
-  def to_utc_datetime(naive_date_time, timezone) do
-    case DateTime.from_naive(naive_date_time, timezone) do
-      {:ok, date_time} -> DateTime.shift_zone!(date_time, "Etc/UTC")
-      {:gap, _before_dt, after_dt} -> DateTime.shift_zone!(after_dt, "Etc/UTC")
-      {:ambiguous, _first_dt, second_dt} -> DateTime.shift_zone!(second_dt, "Etc/UTC")
-      {:error, :time_zone_not_found} -> DateTime.from_naive!(naive_date_time, "Etc/UTC")
-    end
-  end
-
   @spec to_date_in_timezone(Date.t() | NaiveDateTime.t() | DateTime.t(), String.t()) :: Date.t()
   def to_date_in_timezone(dt, timezone) do
     to_datetime_in_timezone(dt, timezone) |> DateTime.to_date()
