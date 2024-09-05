@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 - Change auth session cookies to token-based ones with server-side expiration management.
 - Improve Google error messages in CE plausible/analytics#4485
 - Better compress static assets in CE plausible/analytics#4476
+- Return domain-less cookies in CE plausible/analytics#4482
 
 ### Fixed
 
