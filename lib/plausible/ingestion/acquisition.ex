@@ -6,6 +6,10 @@ defmodule Plausible.Ingestion.Acquisition do
                      |> NimbleCSV.RFC4180.parse_string(skip_headers: false)
                      |> Enum.map(fn [source, category] -> {source, category} end)
                      |> Enum.into(%{})
+  @mapping_overrides [
+    {"fb", "Facebook"},
+    {"ig", "Instagram"}
+  ]
 
   def init() do
     :ets.new(__MODULE__, [
@@ -17,10 +21,14 @@ defmodule Plausible.Ingestion.Acquisition do
 
     [{"referers.yml", map}] = RefInspector.Database.list(:default)
 
-    Enum.flat_map(map, fn {_, entries} ->
-      Enum.map(entries, fn {_, _, _, _, _, _, name} ->
+    Enum.each(map, fn {_, entries} ->
+      Enum.each(entries, fn {_, _, _, _, _, _, name} ->
         :ets.insert(__MODULE__, {String.downcase(name), name})
       end)
+    end)
+
+    Enum.each(@mapping_overrides, fn override ->
+      :ets.insert(__MODULE__, override)
     end)
   end
 

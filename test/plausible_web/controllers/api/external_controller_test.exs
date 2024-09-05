@@ -423,6 +423,40 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.referrer_source == "Facebook"
     end
 
+    test "utm_source fb is detected as Facebook",
+         %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://www.example.com/?utm_source=fb",
+        domain: site.domain
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert session.referrer_source == "Facebook"
+      assert session.channel == "Organic Social"
+    end
+
+    test "utm_source ig is detected as Instagram",
+         %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://www.example.com/?utm_source=ig",
+        domain: site.domain
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert session.referrer_source == "Instagram"
+      assert session.channel == "Organic Social"
+    end
+
     test "utm tags are stored", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
