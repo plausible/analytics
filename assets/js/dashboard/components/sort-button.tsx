@@ -21,11 +21,7 @@ export const SortButton = ({
     <button
       onClick={toggleSort}
       title={hint}
-      className={classNames(
-        'group',
-        'hover:underline',
-        'relative',
-      )}
+      className={classNames('group', 'hover:underline', 'relative')}
     >
       {children}
       <span
@@ -39,8 +35,9 @@ export const SortButton = ({
           }[sortDirection ?? nextSortDirection],
           !sortDirection && 'opacity-0',
           !sortDirection && 'group-hover:opacity-100',
-          sortDirection && 'group-hover:bg-gray-100 dark:group-hover:bg-gray-900',
-          'transition',
+          sortDirection &&
+            'group-hover:bg-gray-100 dark:group-hover:bg-gray-900',
+          'transition'
         )}
       >
         ↓

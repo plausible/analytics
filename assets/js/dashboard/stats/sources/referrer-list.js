@@ -54,7 +54,7 @@ export default function Referrers({ source }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createConversionRate(),
+      hasGoalFilter(query) && metrics.createGroupConversionRate(),
     ].filter(metric => !!metric)
   }
 

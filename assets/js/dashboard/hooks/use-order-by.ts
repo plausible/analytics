@@ -39,7 +39,12 @@ export function useOrderBy({
       if (!metrics.find(({ key }) => key === metric.key)) {
         return
       }
-      setOrderBy((currentOrderBy) => rearrangeOrderBy(currentOrderBy.length ? currentOrderBy : defaultOrderBy, metric))
+      setOrderBy((currentOrderBy) =>
+        rearrangeOrderBy(
+          currentOrderBy.length ? currentOrderBy : defaultOrderBy,
+          metric
+        )
+      )
     },
     [metrics, defaultOrderBy]
   )
@@ -73,10 +78,6 @@ export function cycleSortDirection(
 
 export function findOrderIndex(orderBy: OrderBy, metric: Pick<Metric, 'key'>) {
   return orderBy.findIndex(([metricKey]) => metricKey === metric.key)
-}
-
-export function omitOrderByIndex(orderBy: OrderBy, index: number) {
-  return orderBy.slice(0, index).concat(orderBy.slice(index + 1))
 }
 
 export function rearrangeOrderBy(

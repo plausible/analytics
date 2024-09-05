@@ -40,7 +40,7 @@ function ReferrerDrilldownModal() {
       return [
         metrics.createTotalVisitors(),
         metrics.createVisitors({ renderLabel: (_query) => 'Conversions', width: 'w-32' }),
-        metrics.createConversionRate()
+        metrics.createGroupConversionRate()
       ]
     }
 

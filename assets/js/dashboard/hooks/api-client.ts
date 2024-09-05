@@ -4,12 +4,12 @@ import { useEffect } from 'react'
 import {
   useQueryClient,
   useInfiniteQuery,
-  QueryFilters,
+  QueryFilters
 } from '@tanstack/react-query'
 import * as api from '../api'
-import { DashboardQuery } from '../query';
+import { DashboardQuery } from '../query'
 
-const LIMIT = 10 // FOR DEBUGGING
+const LIMIT = 100
 
 /**
  * A wrapper for the React Query library. Constructs the necessary options
@@ -36,15 +36,19 @@ const LIMIT = 10 // FOR DEBUGGING
  *   been fetched. Receives the API response as an argument.
  */
 
+type Endpoint = string
 
-type Endpoint = string;
+type InfiniteQueryKey = [Endpoint, { query: DashboardQuery }]
 
-type InfiniteQueryKey = [Endpoint, {query: DashboardQuery}]
-
-export function useAPIClient<TResponse, TKey extends InfiniteQueryKey = InfiniteQueryKey>(props: {
+export function useAPIClient<
+  TResponse,
+  TKey extends InfiniteQueryKey = InfiniteQueryKey
+>(props: {
   initialPageParam?: number
   key: TKey
-  getRequestParams: (key: TKey) => [Record<string, unknown>, Record<string, unknown>]
+  getRequestParams: (
+    key: TKey
+  ) => [Record<string, unknown>, Record<string, unknown>]
   afterFetchData: (response: TResponse) => void
   afterFetchNextPage: (response: TResponse) => void
 }) {
@@ -57,14 +61,17 @@ export function useAPIClient<TResponse, TKey extends InfiniteQueryKey = Infinite
   useEffect(() => {
     const queryKeyToClean = [endpoint] as QueryFilters
     return () => {
-      queryClient.setQueriesData<{pages: TResponse[], pageParams: unknown[]}>(queryKeyToClean, (data) => {
-        if (data?.pages?.length) {
-          return {
-            pages: data.pages.slice(0, 1),
-            pageParams: data.pageParams.slice(0, 1)
+      queryClient.setQueriesData<{ pages: TResponse[]; pageParams: unknown[] }>(
+        queryKeyToClean,
+        (data) => {
+          if (data?.pages?.length) {
+            return {
+              pages: data.pages.slice(0, 1),
+              pageParams: data.pageParams.slice(0, 1)
+            }
           }
         }
-      })
+      )
     }
   }, [queryClient, endpoint])
 
@@ -80,17 +87,17 @@ export function useAPIClient<TResponse, TKey extends InfiniteQueryKey = Infinite
       const [query, params] = getRequestParams(queryKey)
       params.limit = LIMIT
       params.page = pageParam
-  
+
       const response = await api.get(endpoint, query, params)
-  
+
       if (pageParam === 1 && typeof afterFetchData === 'function') {
         afterFetchData(response)
       }
-  
+
       if (pageParam > 1 && typeof afterFetchNextPage === 'function') {
         afterFetchNextPage(response)
       }
-  
+
       return response.results
     },
     getNextPageParam: (lastPageResults, _, lastPageIndex) => {

@@ -6,7 +6,6 @@ import {
   SortDirection,
   cycleSortDirection,
   findOrderIndex,
-  omitOrderByIndex,
   rearrangeOrderBy
 } from './use-order-by'
 
@@ -15,29 +14,14 @@ describe(`${findOrderIndex.name}`, () => {
   const cases: [OrderBy, Pick<Metric, 'key'>, number][] = [
     [[], { key: 'anything' }, -1],
     [[['visitors', SortDirection.asc]], { key: 'anything' }, -1],
+    [[['bounce_rate', SortDirection.desc], ['visitors', SortDirection.asc]], {key: 'bounce_rate'}, 0],
     [[['bounce_rate', SortDirection.desc], ['visitors', SortDirection.asc]], {key: 'visitors'}, 1]
   ]
 
   test.each(cases)(
-    `in order by %p, the index of metric %p is %p`,
+    `[%#] in order by %p, the index of metric %p is %p`,
     (orderBy, metric, expectedIndex) => {
       expect(findOrderIndex(orderBy, metric)).toEqual(expectedIndex)
-    }
-  )
-})
-
-describe(`${omitOrderByIndex.name}`, () => {
-  /* prettier-ignore */
-  const cases: [OrderBy, number, OrderBy][] = [
-        [[['visitors', SortDirection.asc]], 0, []],
-        [[['bounce_rate', SortDirection.desc], ['visitors', SortDirection.asc]], 1, [['bounce_rate', SortDirection.desc]]],
-        [[['a', SortDirection.desc], ['b', SortDirection.asc], ['c', SortDirection.desc]], 1, [['a', SortDirection.desc], ['c', SortDirection.desc]]]
-      ]
-
-  test.each(cases)(
-    `in order by %p, omitting the index %p yields %p`,
-    (orderBy, index, expectedOrderBy) => {
-      expect(omitOrderByIndex(orderBy, index)).toEqual(expectedOrderBy)
     }
   )
 })
@@ -61,8 +45,8 @@ describe(`${cycleSortDirection.name}`, () => {
     [
       SortDirection.asc,
       {
-        direction: null,
-        hint: 'Press to remove sorting from column'
+        direction: SortDirection.desc,
+        hint: 'Press to sort column in descending order'
       }
     ]
   ])(
@@ -75,7 +59,11 @@ describe(`${cycleSortDirection.name}`, () => {
 
 describe(`${rearrangeOrderBy.name}`, () => {
   const cases: [Pick<Metric, 'key'>, OrderBy, OrderBy][] = [
-    [{ key: 'visitors' }, [['visitors', SortDirection.asc]], []],
+    [
+      { key: 'visitors' },
+      [['visitors', SortDirection.asc]],
+      [['visitors', SortDirection.desc]]
+    ],
     [
       { key: 'visitors' },
       [['visitors', SortDirection.desc]],
@@ -88,7 +76,7 @@ describe(`${rearrangeOrderBy.name}`, () => {
     ]
   ]
   it.each(cases)(
-    'clicking on %p with order %p yields %p',
+    `[%#] clicking on %p yields expected order`,
     (metric, currentOrderBy, expectedOrderBy) => {
       expect(rearrangeOrderBy(currentOrderBy, metric)).toEqual(expectedOrderBy)
     }

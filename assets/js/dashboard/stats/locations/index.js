@@ -31,7 +31,7 @@ function Countries({ query, site, onClick, afterFetchData }) {
 	function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: {plot: true}}),
-      hasGoalFilter(query) && metrics.createConversionRate(),
+      hasGoalFilter(query) && metrics.createGroupConversionRate(),
     ].filter(metric => !!metric)
   }
 
@@ -70,7 +70,7 @@ function Regions({ query, site, onClick, afterFetchData }) {
 	function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: {plot: true}}),
-      hasGoalFilter(query) && metrics.createConversionRate(),
+      hasGoalFilter(query) && metrics.createGroupConversionRate(),
     ].filter(metric => !!metric)
   }
 
@@ -109,7 +109,7 @@ function Cities({ query, site, afterFetchData }) {
 	function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: {plot: true}}),
-      hasGoalFilter(query) && metrics.createConversionRate(),
+      hasGoalFilter(query) && metrics.createGroupConversionRate(),
     ].filter(metric => !!metric)
   }
 

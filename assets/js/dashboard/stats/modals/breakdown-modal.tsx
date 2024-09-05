@@ -84,7 +84,7 @@ export const MIN_HEIGHT_PX = 500
 
 //   * `afterFetchNextPage` - a function with the same behaviour as `afterFetchData`,
 //     but will be called after a successful next page load in `fetchNextPage`.
-export default function BreakdownModal<TListItem extends {name: string}>({
+export default function BreakdownModal<TListItem extends { name: string }>({
   reportInfo,
   metrics,
   renderIcon,
@@ -107,7 +107,10 @@ export default function BreakdownModal<TListItem extends {name: string}>({
   searchEnabled?: boolean
   afterFetchData: () => void
   afterFetchNextPage: () => void
-  addSearchFilter: (q: DashboardQuery, search: string) => Record<string, unknown>
+  addSearchFilter: (
+    q: DashboardQuery,
+    search: string
+  ) => Record<string, unknown>
   getFilterInfo: (listItem: TListItem) => void
 }) {
   const searchBoxRef = useRef<HTMLInputElement>(null)
@@ -116,7 +119,7 @@ export default function BreakdownModal<TListItem extends {name: string}>({
   const [search, setSearch] = useState('')
   const { orderBy, orderByDictionary, toggleSortByMetric } = useOrderBy({
     metrics,
-    defaultOrderBy: reportInfo.defaultOrder  ? [reportInfo.defaultOrder] : []
+    defaultOrderBy: reportInfo.defaultOrder ? [reportInfo.defaultOrder] : []
   })
 
   const {
@@ -160,7 +163,7 @@ export default function BreakdownModal<TListItem extends {name: string}>({
 
     const handleKeyUp = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        (event.target as HTMLElement | undefined)?.blur()
+        ;(event.target as HTMLElement | undefined)?.blur()
         event.stopPropagation()
       }
     }
@@ -209,17 +212,29 @@ export default function BreakdownModal<TListItem extends {name: string}>({
   function renderRow(item: TListItem) {
     return (
       <tr className="text-sm dark:text-gray-200" key={item.name}>
-        <td className="w-48 md:w-80 break-all p-2 flex items-center" align="left">
+        <td
+          className="w-48 md:w-80 break-all p-2 flex items-center"
+          align="left"
+        >
           {maybeRenderIcon(item)}
-          <FilterLink path={rootRoute.path} filterInfo={getFilterInfo(item)} onClick={undefined} extraClass={undefined}>
+          <FilterLink
+            path={rootRoute.path}
+            filterInfo={getFilterInfo(item)}
+            onClick={undefined}
+            extraClass={undefined}
+          >
             {item.name}
           </FilterLink>
           {maybeRenderExternalLink(item)}
         </td>
         {metrics.map((metric) => {
           return (
-            <td key={metric.key} className={classNames(metric.width, "p-2 font-medium")} align="right">
-              {metric.renderValue(item[metric.key as keyof TListItem])}
+            <td
+              key={metric.key}
+              className={classNames(metric.width, 'p-2 font-medium')}
+              align="right"
+            >
+              {metric.renderValue(item[metric.accessor as keyof TListItem])}
             </td>
           )
         })}
@@ -255,7 +270,11 @@ export default function BreakdownModal<TListItem extends {name: string}>({
     return (
       <div className="flex flex-col w-full my-4 items-center justify-center h-10">
         {!isFetching && (
-          <button onClick={() => fetchNextPage()} type="button" className="button">
+          <button
+            onClick={() => fetchNextPage()}
+            type="button"
+            className="button"
+          >
             Load more
           </button>
         )}
@@ -265,7 +284,7 @@ export default function BreakdownModal<TListItem extends {name: string}>({
   }
 
   function handleInputChange(e: Event) {
-    const element = e.target as HTMLInputElement | null;
+    const element = e.target as HTMLInputElement | null
     if (!element) {
       return
     }
@@ -304,15 +323,20 @@ export default function BreakdownModal<TListItem extends {name: string}>({
                   return (
                     <th
                       key={metric.key}
-                      className={classNames(metric.width, "p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400")}
+                      className={classNames(
+                        metric.width,
+                        'p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400'
+                      )}
                       align="right"
                     >
                       {metric.sortable ? (
                         <SortButton
                           sortDirection={orderByDictionary[metric.key] ?? null}
-                          nextSortDirection={cycleSortDirection(
-                            orderByDictionary[metric.key] ?? null
-                          ).direction!}
+                          nextSortDirection={
+                            cycleSortDirection(
+                              orderByDictionary[metric.key] ?? null
+                            ).direction!
+                          }
                           toggleSort={() => toggleSortByMetric(metric)}
                           hint={
                             cycleSortDirection(

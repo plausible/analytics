@@ -70,7 +70,7 @@ function GoogleKeywordsModal() {
         {metrics.map((metric) => {
           return (
             <td key={metric.key} className="p-2 w-32 font-medium" align="right">
-              {metric.renderValue(item[metric.key])}
+              {metric.renderValue(item[metric.accessor])}
             </td>
           )
         })}

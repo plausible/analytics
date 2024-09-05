@@ -170,6 +170,7 @@ defmodule Plausible.Stats.Breakdown do
         metrics
       end
 
+    # not needed for dashboard any more
     Enum.map(metrics, fn metric ->
       case {metric, dimension} do
         {:conversion_rate, "event:props:" <> _} -> :conversion_rate
