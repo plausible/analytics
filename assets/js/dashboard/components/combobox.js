@@ -74,6 +74,7 @@ export default function PlausibleCombobox({
   }, [])
 
   const initialFetchOptions = useCallback(() => {
+    setLoading(true)
     fetchOptions('').then(afterFetchOptions)
   }, [fetchOptions, afterFetchOptions])
 
