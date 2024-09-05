@@ -349,7 +349,7 @@ defmodule PlausibleWeb.Components.Generic do
 
     ~H"""
     <div x-data={@wrapper_data} class="tooltip-wrapper w-full relative">
-      <button
+      <div
         x-cloak
         x-show={@show_inner}
         class="tooltip-content z-[1000] bg-gray-900 rounded text-white absolute bottom-24 sm:bottom-7 left-0 sm:w-72 p-4 text-sm font-medium"
@@ -361,7 +361,7 @@ defmodule PlausibleWeb.Components.Generic do
         x-transition:leave-end="opacity-0"
       >
         <%= render_slot(List.first(@tooltip_content)) %>
-      </button>
+      </div>
       <div
         x-on:click="sticky = true; hovered = true"
         x-on:click.outside="sticky = false; hovered = false"
