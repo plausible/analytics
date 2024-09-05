@@ -1,5 +1,6 @@
 defmodule Plausible.Ingestion.Acquisition do
   @moduledoc false
+  @external_resource "priv/ga4-source-categories.csv"
   @source_categories Application.app_dir(:plausible, "priv/ga4-source-categories.csv")
                      |> File.read!()
                      |> NimbleCSV.RFC4180.parse_string(skip_headers: false)
