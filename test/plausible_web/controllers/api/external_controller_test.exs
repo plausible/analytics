@@ -1940,7 +1940,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Direct"
+      assert session.channel == ""
     end
   end
 

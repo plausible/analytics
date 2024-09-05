@@ -50,7 +50,7 @@ defmodule Plausible.Ingestion.Acquisition do
       sms?(request) -> "SMS"
       mobile_push_notifications?(request, source) -> "Mobile Push Notifications"
       referral?(request, source) -> "Referral"
-      true -> "Direct"
+      true -> ""
     end
   end
 
