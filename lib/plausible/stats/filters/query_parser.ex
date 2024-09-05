@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Filters.QueryParser do
   @moduledoc false
 
-  alias Plausible.Stats.{TableDecider, Filters, Query, Metrics, DateTimeRange, JSONSchema}
+  alias Plausible.Stats.{TableDecider, Filters, Metrics, DateTimeRange, JSONSchema}
 
   @default_include %{
     imports: false,
@@ -36,8 +36,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
            include: include
          },
          :ok <- validate_order_by(query),
-         :ok <- validate_goal_filters(query),
          :ok <- validate_custom_props_access(site, query),
+         :ok <- validate_toplevel_only_filter_dimension(query),
+         :ok <- validate_special_metrics_filters(query),
+         :ok <- validate_filtered_goals_exist(query),
          :ok <- validate_metrics(query),
          :ok <- validate_include(query) do
       {:ok, query}
@@ -63,9 +65,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_filter(filter) do
     with {:ok, operator} <- parse_operator(filter),
-         {:ok, filter_key} <- parse_filter_key(filter),
+         {:ok, second} <- parse_filter_second(operator, filter),
          {:ok, rest} <- parse_filter_rest(operator, filter) do
-      {:ok, [operator, filter_key | rest]}
+      {:ok, [operator, second | rest]}
     end
   end
 
@@ -75,7 +77,17 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_operator(["does_not_match" | _rest]), do: {:ok, :does_not_match}
   defp parse_operator(["contains" | _rest]), do: {:ok, :contains}
   defp parse_operator(["does_not_contain" | _rest]), do: {:ok, :does_not_contain}
+  defp parse_operator(["not" | _rest]), do: {:ok, :not}
+  defp parse_operator(["and" | _rest]), do: {:ok, :and}
+  defp parse_operator(["or" | _rest]), do: {:ok, :or}
   defp parse_operator(filter), do: {:error, "Unknown operator for filter '#{i(filter)}'."}
+
+  def parse_filter_second(:not, [_, filter | _rest]), do: parse_filter(filter)
+
+  def parse_filter_second(operator, [_, filters | _rest]) when operator in [:and, :or],
+    do: parse_filters(filters)
+
+  def parse_filter_second(_operator, filter), do: parse_filter_key(filter)
 
   defp parse_filter_key([_operator, filter_key | _rest] = filter) do
     parse_filter_key_string(filter_key, "Invalid filter '#{i(filter)}")
@@ -86,6 +98,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_filter_rest(operator, filter)
        when operator in [:is, :is_not, :matches, :does_not_match, :contains, :does_not_contain],
        do: parse_clauses_list(filter)
+
+  defp parse_filter_rest(operator, _filter)
+       when operator in [:not, :and, :or],
+       do: {:ok, []}
 
   defp parse_clauses_list([operation, filter_key, list] = filter) when is_list(list) do
     all_strings? = Enum.all?(list, &is_binary/1)
@@ -359,7 +375,37 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp validate_goal_filters(query) do
+  @only_toplevel ["event:goal", "event:hostname"]
+  defp validate_toplevel_only_filter_dimension(query) do
+    not_toplevel = Filters.dimensions_used_in_filters(query.filters, min_depth: 1)
+
+    if Enum.any?(not_toplevel, &(&1 in @only_toplevel)) do
+      {:error,
+       "Invalid filters. Dimension `#{List.first(not_toplevel)}` can only be filtered at the top level."}
+    else
+      :ok
+    end
+  end
+
+  @special_metrics [:conversion_rate, :group_conversion_rate]
+  defp validate_special_metrics_filters(query) do
+    special_metric? = Enum.any?(@special_metrics, &(&1 in query.metrics))
+
+    deep_custom_property? =
+      query.filters
+      |> Filters.dimensions_used_in_filters(min_depth: 1)
+      |> Enum.any?(fn dimension -> String.starts_with?(dimension, "event:props:") end)
+
+    if special_metric? and deep_custom_property? do
+      {:error,
+       "Invalid filters. When `conversion_rate` or `group_conversion_rate` metrics are used, custom property filters can only be used on top level."}
+    else
+      :ok
+    end
+  end
+
+  defp validate_filtered_goals_exist(query) do
+    # Note: Only works since event:goal is allowed as a top level filter
     goal_filter_clauses =
       Enum.flat_map(query.filters, fn
         [:is, "event:goal", clauses] -> clauses
@@ -396,7 +442,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp validate_custom_props_access(_site, query, allowed_props) do
     valid? =
       query.filters
-      |> Enum.map(fn [_operation, filter_key | _rest] -> filter_key end)
+      |> Filters.dimensions_used_in_filters()
       |> Enum.concat(query.dimensions)
       |> Enum.all?(fn
         "event:props:" <> prop -> prop in allowed_props
@@ -418,7 +464,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp validate_metric(metric, query) when metric in [:conversion_rate, :group_conversion_rate] do
     if Enum.member?(query.dimensions, "event:goal") or
-         not is_nil(Query.get_filter(query, "event:goal")) do
+         Filters.filtering_on_dimension?(query, "event:goal") do
       :ok
     else
       {:error, "Metric `#{metric}` can only be queried with event:goal filters or dimensions."}
@@ -427,7 +473,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp validate_metric(:views_per_visit = metric, query) do
     cond do
-      not is_nil(Query.get_filter(query, "event:page")) ->
+      Filters.filtering_on_dimension?(query, "event:page") ->
         {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`."}
 
       length(query.dimensions) > 0 ->

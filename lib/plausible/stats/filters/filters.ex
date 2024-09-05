@@ -92,4 +92,89 @@ defmodule Plausible.Stats.Filters do
     |> List.last()
     |> String.to_existing_atom()
   end
+
+  def dimensions_used_in_filters(filters, opts \\ []) do
+    min_depth = Keyword.get(opts, :min_depth, 0)
+
+    filters
+    |> traverse()
+    |> Enum.filter(fn {_filter, _root, depth} -> depth >= min_depth end)
+    |> Enum.map(fn {[_operator, dimension | _rest], _root, _depth} -> dimension end)
+  end
+
+  def filtering_on_dimension?(query, dimension) do
+    dimension in dimensions_used_in_filters(query.filters)
+  end
+
+  @doc """
+  Gets the first top level filter with matching dimension (or nil).
+
+  Only use in cases where it's known that filters are only set on the top level as it
+  does not handle AND/OR/NOT!
+  """
+  def get_toplevel_filter(query, prefix) do
+    Enum.find(query.filters, fn [_op, dimension | _rest] ->
+      String.starts_with?(dimension, prefix)
+    end)
+  end
+
+  def rename_dimensions_used_in_filter(filters, renames) do
+    transform_filters(filters, fn
+      [operation, dimension, clauses] ->
+        [[operation, Map.get(renames, dimension, dimension), clauses]]
+
+      _subtree ->
+        nil
+    end)
+  end
+
+  @doc """
+  Updates filters via `transformer`.
+
+  Transformer will receive each node (filter, and/or/not subtree) of
+  query and must return a list of nodes to replace it with or nil
+  to ignore and look deeper.
+  """
+  def transform_filters(filters, transformer) do
+    filters
+    |> Enum.flat_map(&transform_tree(&1, transformer))
+  end
+
+  defp transform_tree(filter, transformer) do
+    case {transformer.(filter), filter} do
+      # Transformer did not return that value - transform that subtree
+      {nil, [:not, child_filter]} ->
+        [[:not, transform_tree(child_filter, transformer)]]
+
+      {nil, [operation, filters]} when operation in [:and, :or] ->
+        [[operation, transform_filters(filters, transformer)]]
+
+      # Reached a leaf node, return existing value
+      {nil, filter} ->
+        [[filter]]
+
+      # Transformer returned a value - don't transform that subtree
+      {transformed_filters, _filter} ->
+        transformed_filters
+    end
+  end
+
+  defp traverse(filters, root \\ nil, depth \\ -1) do
+    filters
+    |> Enum.flat_map(&traverse_tree(&1, root || &1, depth + 1))
+  end
+
+  defp traverse_tree(filter, root, depth) do
+    case filter do
+      [:not, child_filter] ->
+        traverse_tree(child_filter, root, depth + 1)
+
+      [operation, filters] when operation in [:and, :or] ->
+        traverse(filters, root || filter, depth + 1)
+
+      # Leaf node
+      _ ->
+        [{filter, root, depth}]
+    end
+  end
 end

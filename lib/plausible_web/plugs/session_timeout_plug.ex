@@ -18,6 +18,7 @@ defmodule PlausibleWeb.SessionTimeoutPlug do
       user_id && timeout_at && now() > timeout_at ->
         conn
         |> PlausibleWeb.UserAuth.log_out_user()
+        |> Phoenix.Controller.redirect(to: "/login")
         |> halt()
 
       user_id ->
