@@ -412,6 +412,113 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code."
       )
     end
+
+    test "valid nested `not`, `and` and `or`", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [
+          [
+            "or",
+            [
+              [
+                "and",
+                [
+                  ["is", "visit:city_name", ["Tallinn"]],
+                  ["is", "visit:country_name", ["Estonia"]]
+                ]
+              ],
+              ["not", ["is", "visit:country_name", ["Estonia"]]]
+            ]
+          ]
+        ]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        date_range: @date_range_day,
+        filters: [
+          [
+            :or,
+            [
+              [
+                :and,
+                [
+                  [:is, "visit:city_name", ["Tallinn"]],
+                  [:is, "visit:country_name", ["Estonia"]]
+                ]
+              ],
+              [:not, [:is, "visit:country_name", ["Estonia"]]]
+            ]
+          ]
+        ],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false},
+        preloaded_goals: []
+      })
+    end
+
+    test "invalid `not` clause", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["not", []]]
+      }
+      |> check_error(
+        site,
+        "#/filters/0: Invalid filter [\"not\", []]"
+      )
+    end
+
+    test "invalid `or` clause", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["or", []]]
+      }
+      |> check_error(
+        site,
+        "#/filters/0: Invalid filter [\"or\", []]"
+      )
+    end
+
+    test "event:hostname filter", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "event:hostname", ["a.plausible.io"]]]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        date_range: @date_range_day,
+        filters: [
+          [:is, "event:hostname", ["a.plausible.io"]]
+        ],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false},
+        preloaded_goals: []
+      })
+    end
+
+    test "event:hostname filter not at top level is invalid", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["not", ["is", "event:hostname", ["a.plausible.io"]]]]
+      }
+      |> check_error(
+        site,
+        "Invalid filters. Dimension `event:hostname` can only be filtered at the top level."
+      )
+    end
   end
 
   describe "include validation" do
@@ -517,6 +624,42 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       |> check_error(
         site,
         "The goal `Visit /thank-you` is not configured for this site. Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
+      )
+    end
+
+    test "unsupported filter", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [
+          ["is_not", "event:goal", ["Signup"]]
+        ]
+      }
+      |> check_error(
+        site,
+        "#/filters/0: Invalid filter [\"is_not\", \"event:goal\", [\"Signup\"]]"
+      )
+    end
+
+    test "not top-level filter", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [
+          [
+            "or",
+            [
+              ["is", "event:goal", ["Signup"]],
+              ["is", "event:name", ["pageview"]]
+            ]
+          ]
+        ]
+      }
+      |> check_error(
+        site,
+        "Invalid filters. Dimension `event:goal` can only be filtered at the top level."
       )
     end
   end
@@ -955,7 +1098,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   end
 
   describe "custom props access" do
-    test "error if invalid filter", %{site: site, user: user} do
+    test "filters - no access", %{site: site, user: user} do
       ep =
         insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
 
@@ -965,7 +1108,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "site_id" => site.domain,
         "metrics" => ["visitors"],
         "date_range" => "all",
-        "filters" => [["is", "event:props:foobar", ["foo"]]]
+        "filters" => [["not", ["is", "event:props:foobar", ["foo"]]]]
       }
       |> check_error(
         site,
@@ -973,7 +1116,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
     end
 
-    test "error if invalid dimension", %{site: site, user: user} do
+    test "dimensions - no access", %{site: site, user: user} do
       ep =
         insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
 
@@ -1044,6 +1187,42 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     #     preloaded_goals: [goal]
     #   })
     # end
+
+    test "custom properties filter with special metric", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["conversion_rate", "group_conversion_rate"],
+        "date_range" => "all",
+        "filters" => [["is", "event:props:foo", ["bar"]]],
+        "dimensions" => ["event:goal"]
+      }
+      |> check_success(site, %{
+        metrics: [:conversion_rate, :group_conversion_rate],
+        date_range: @date_range_day,
+        filters: [
+          [:is, "event:props:foo", ["bar"]]
+        ],
+        dimensions: ["event:goal"],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false},
+        preloaded_goals: []
+      })
+    end
+
+    test "not top level custom properties filter with special metric is invalid", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["conversion_rate", "group_conversion_rate"],
+        "date_range" => "all",
+        "filters" => [["not", ["is", "event:props:foo", ["bar"]]]],
+        "dimensions" => ["event:goal"]
+      }
+      |> check_error(
+        site,
+        "Invalid filters. When `conversion_rate` or `group_conversion_rate` metrics are used, custom property filters can only be used on top level."
+      )
+    end
   end
 
   describe "views_per_visit metric" do

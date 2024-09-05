@@ -1611,6 +1611,34 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                "Imported stats are not included in the results because query parameters are not supported."
     end
 
+    test "is not included for a day period and an appropriate warning is returned", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(site, site_import.id, [
+        build(:imported_visitors, visitors: 1, date: ~D[2021-01-01])
+      ])
+
+      conn =
+        conn
+        |> get("/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors",
+          "date" => "2021-01-01",
+          "with_imported" => "true"
+        })
+
+      assert %{"results" => results, "warning" => warning} = json_response(conn, 200)
+
+      Enum.each(results, &assert(&1["visitors"] == 0))
+
+      assert warning ==
+               "Imported stats are not included because the time dimension (i.e. the interval) is too short."
+    end
+
     test "does not add a warning when there are no site imports", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,

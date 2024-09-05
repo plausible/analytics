@@ -45,7 +45,7 @@ defmodule PlausibleWeb.StatsController do
   use Plausible.Repo
 
   alias Plausible.Sites
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Filters, Query}
   alias PlausibleWeb.Api
 
   plug(PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export])
@@ -173,6 +173,7 @@ defmodule PlausibleWeb.StatsController do
     prepend_column_headers = fn data -> [column_headers | data] end
 
     Plausible.Stats.timeseries(site, query, metrics)
+    |> elem(0)
     |> Enum.map(map_bucket_to_row)
     |> prepend_column_headers.()
     |> NimbleCSV.RFC4180.dump_to_iodata()
@@ -180,7 +181,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp csv_graph_metrics(query) do
     {metrics, column_headers} =
-      if Query.get_filter(query, "event:goal") do
+      if Filters.filtering_on_dimension?(query, "event:goal") do
         {
           [:visitors, :events, :conversion_rate],
           [:date, :unique_conversions, :total_conversions, :conversion_rate]
