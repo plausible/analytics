@@ -3,7 +3,7 @@ import React, { useMemo } from "react"
 import FilterOperatorSelector from "../../components/filter-operator-selector"
 import Combobox from '../../components/combobox'
 
-import { FILTER_OPERATIONS, fetchSuggestions, isFreeChoiceFilter, getLabel, formattedFilters } from "../../util/filters"
+import { FILTER_OPERATIONS, fetchSuggestions, isFreeChoiceFilterOperation, getLabel, formattedFilters } from "../../util/filters"
 import { apiPath } from '../../util/url'
 import { useQueryContext } from "../../query-context"
 import { useSiteContext } from "../../site-context"
@@ -57,7 +57,7 @@ export default function FilterModalRow({
       <div className="col-span-8 ml-2">
         <Combobox
           fetchOptions={fetchOptions}
-          freeChoice={isFreeChoiceFilter(filterKey)}
+          freeChoice={isFreeChoiceFilterOperation(operation)}
           values={selectedClauses}
           onSelect={onComboboxSelect}
           placeholder={`Select ${withIndefiniteArticle(formattedFilters[filterKey])}`}

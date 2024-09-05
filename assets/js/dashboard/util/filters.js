@@ -20,8 +20,6 @@ export const FILTER_GROUP_TO_MODAL_TYPE = Object.fromEntries(
     .flatMap(([modalName, filterGroups]) => filterGroups.map((filterGroup) => [filterGroup, modalName]))
 )
 
-export const NO_CONTAINS_OPERATOR = new Set(['screen'].concat(FILTER_MODAL_TO_FILTER_GROUP['location']))
-
 export const EVENT_PROPS_PREFIX = "props:"
 
 export const FILTER_OPERATIONS = {
@@ -49,8 +47,12 @@ export function supportsIsNot(filterName) {
   return !['goal', 'prop_key'].includes(filterName)
 }
 
-export function isFreeChoiceFilter(filterName) {
-  return !NO_CONTAINS_OPERATOR.has(filterName)
+export function supportsContains(filterName) {
+  return !['screen'].concat(FILTER_MODAL_TO_FILTER_GROUP['location']).includes(filterName)
+}
+
+export function isFreeChoiceFilterOperation(operation) {
+  return [FILTER_OPERATIONS.contains, FILTER_OPERATIONS.contains_not].includes(operation)
 }
 
 // As of March 2023, Safari does not support negative lookbehind regexes. In case it throws an error, falls back to plain | matching. This means

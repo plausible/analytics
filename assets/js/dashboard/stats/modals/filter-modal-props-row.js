@@ -5,7 +5,7 @@ import FilterOperatorSelector from "../../components/filter-operator-selector"
 import Combobox from '../../components/combobox'
 
 import { apiPath } from '../../util/url'
-import { EVENT_PROPS_PREFIX, FILTER_OPERATIONS, fetchSuggestions, getPropertyKeyFromFilterKey } from '../../util/filters'
+import { EVENT_PROPS_PREFIX, FILTER_OPERATIONS, fetchSuggestions, getPropertyKeyFromFilterKey, isFreeChoiceFilterOperation } from '../../util/filters'
 import { useQueryContext } from "../../query-context"
 import { useSiteContext } from "../../site-context"
 
@@ -83,7 +83,7 @@ export default function FilterModalPropsRow({
           values={selectedClauses}
           onSelect={onPropValueSelect}
           placeholder={'Value'}
-          freeChoice={operation == FILTER_OPERATIONS.contains}
+          freeChoice={isFreeChoiceFilterOperation(operation)}
         />
       </div>
       {showDelete && (
