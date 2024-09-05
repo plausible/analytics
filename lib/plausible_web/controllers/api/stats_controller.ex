@@ -277,10 +277,12 @@ defmodule PlausibleWeb.Api.StatsController do
         Enum.find_index(dates, &(&1 == current_date))
 
       "week" ->
+        date_range = query.date_range |> DateTimeRange.to_date_range()
+
         current_date =
           DateTime.now!(site.timezone)
           |> Timex.to_date()
-          |> Time.date_or_weekstart(query)
+          |> Time.date_or_weekstart(date_range)
           |> Date.to_string()
 
         Enum.find_index(dates, &(&1 == current_date))

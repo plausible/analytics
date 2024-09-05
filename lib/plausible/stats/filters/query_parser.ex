@@ -18,7 +18,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
     with :ok <- JSONSchema.validate(schema_type, params),
          {:ok, date} <- parse_date(site, Map.get(params, "date"), date),
-         {:ok, date_range} <- parse_date_range(site, Map.get(params, "date_range"), date, now),
+         {:ok, raw_date_range} <-
+           parse_date_range(site, Map.get(params, "date_range"), date, now),
+         utc_date_range = raw_date_range |> DateTimeRange.to_timezone("Etc/UTC"),
          {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
@@ -28,10 +30,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
          query = %{
            metrics: metrics,
            filters: filters,
-           date_range: date_range,
+           date_range: utc_date_range,
            dimensions: dimensions,
            order_by: order_by,
-           timezone: date_range.first.time_zone,
+           timezone: site.timezone,
            preloaded_goals: preloaded_goals,
            include: include
          },
@@ -239,19 +241,11 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp date_range_from_timestamps(from, to) do
-    with {:ok, from_datetime} <- datetime_from_timestamp(from),
-         {:ok, to_datetime} <- datetime_from_timestamp(to),
-         true <- from_datetime.time_zone == to_datetime.time_zone do
+    with {:ok, from_datetime, _offset} <- DateTime.from_iso8601(from),
+         {:ok, to_datetime, _offset} <- DateTime.from_iso8601(to) do
       {:ok, DateTimeRange.new!(from_datetime, to_datetime)}
     else
       _ -> {:error, "Invalid date_range '#{i([from, to])}'."}
-    end
-  end
-
-  defp datetime_from_timestamp(timestamp_string) do
-    with [timestamp, timezone] <- String.split(timestamp_string),
-         {:ok, naive_datetime} <- NaiveDateTime.from_iso8601(timestamp) do
-      DateTime.from_naive(naive_datetime, timezone)
     end
   end
 

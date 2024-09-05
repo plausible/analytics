@@ -43,11 +43,13 @@ defmodule Plausible.Stats.Time do
   end
 
   def time_labels(query) do
-    time_labels_for_dimension(time_dimension(query), query)
+    date_range = query.date_range |> DateTimeRange.to_timezone(query.timezone)
+
+    time_labels_for_dimension(time_dimension(query), query, date_range)
   end
 
-  defp time_labels_for_dimension("time:month", query) do
-    date_range = DateTimeRange.to_date_range(query.date_range)
+  defp time_labels_for_dimension("time:month", _query, date_range) do
+    date_range = DateTimeRange.to_date_range(date_range)
 
     n_buckets =
       Timex.diff(
@@ -64,8 +66,8 @@ defmodule Plausible.Stats.Time do
     end)
   end
 
-  defp time_labels_for_dimension("time:week", query) do
-    date_range = DateTimeRange.to_date_range(query.date_range)
+  defp time_labels_for_dimension("time:week", _query, date_range) do
+    date_range = DateTimeRange.to_date_range(date_range)
 
     n_buckets =
       Timex.diff(
@@ -77,47 +79,46 @@ defmodule Plausible.Stats.Time do
     Enum.map(0..n_buckets, fn shift ->
       date_range.first
       |> Date.shift(week: shift)
-      |> date_or_weekstart(query)
+      |> date_or_weekstart(date_range)
       |> format_datetime()
     end)
   end
 
-  defp time_labels_for_dimension("time:day", query) do
-    query.date_range
+  defp time_labels_for_dimension("time:day", _query, date_range) do
+    date_range
     |> DateTimeRange.to_date_range()
     |> Enum.into([])
     |> Enum.map(&format_datetime/1)
   end
 
-  defp time_labels_for_dimension("time:hour", query) do
-    n_buckets = DateTime.diff(query.date_range.last, query.date_range.first, :hour)
+  defp time_labels_for_dimension("time:hour", _query, date_range) do
+    from_timestamp = date_range.first |> Map.merge(%{minute: 0, second: 0})
+    n_buckets = DateTime.diff(date_range.last, from_timestamp, :hour)
 
     Enum.map(0..n_buckets, fn step ->
-      query.date_range.first
+      from_timestamp
       |> DateTime.to_naive()
       |> NaiveDateTime.shift(hour: step)
       |> format_datetime()
     end)
   end
 
-  defp time_labels_for_dimension("time:minute", query) do
-    first_datetime = Map.put(query.date_range.first, :second, 0)
+  defp time_labels_for_dimension("time:minute", query, date_range) do
+    first_datetime = Map.put(date_range.first, :second, 0)
 
     first_datetime
     |> Stream.iterate(fn datetime -> DateTime.shift(datetime, minute: 1) end)
     |> Enum.take_while(fn datetime ->
       current_minute = Map.put(query.now, :second, 0)
 
-      DateTime.before?(datetime, query.date_range.last) &&
+      DateTime.before?(datetime, date_range.last) &&
         DateTime.before?(datetime, current_minute)
     end)
     |> Enum.map(&format_datetime/1)
   end
 
-  def date_or_weekstart(date, query) do
+  def date_or_weekstart(date, date_range) do
     weekstart = Date.beginning_of_week(date)
-
-    date_range = DateTimeRange.to_date_range(query.date_range)
 
     if Enum.member?(date_range, weekstart) do
       weekstart
