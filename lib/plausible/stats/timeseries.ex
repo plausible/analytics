@@ -1,13 +1,8 @@
 defmodule Plausible.Stats.Timeseries do
-  @moduledoc """
-  Builds timeseries results for v1 of our stats API and dashboards.
-
-  Avoid adding new logic here - update QueryBuilder etc instead.
-  """
-
   use Plausible
   use Plausible.ClickhouseRepo
   alias Plausible.Stats.{Query, QueryOptimizer, QueryResult, SQL}
+  alias Plausible.Stats.Goal.Revenue
 
   @time_dimension %{
     "month" => "time:month",
@@ -17,35 +12,43 @@ defmodule Plausible.Stats.Timeseries do
     "minute" => "time:minute"
   }
 
-  def timeseries(site, query, metrics) do
-    {currency, metrics} =
+  def timeseries(site, %Query{v2: false} = query, metrics) do
+    v2_query =
+      query
+      |> Query.set(metrics: metrics)
+      |> Query.set(dimensions: [time_dimension(query)])
+      |> Query.set(v2: true)
+
+    timeseries(site, v2_query)
+  end
+
+  def timeseries(site, %Query{v2: true} = query) do
+    {currency, query} =
       on_ee do
-        Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
+        Revenue.get_revenue_tracking_currency(site, query)
       else
-        {nil, metrics}
+        {nil, query}
       end
 
-    query_with_metrics =
-      Query.set(
-        query,
-        metrics: transform_metrics(metrics, %{conversion_rate: :group_conversion_rate}),
-        dimensions: [time_dimension(query)],
-        order_by: [{time_dimension(query), :asc}],
-        v2: true,
-        include: %{time_labels: true, imports: query.include.imports}
-      )
+    [time_dimension] = query.dimensions
+
+    query =
+      query
+      |> Query.set(order_by: [{time_dimension, :asc}])
+      |> Query.set(include: Map.put(query.include, :time_labels, :true))
+      |> transform_metrics(%{conversion_rate: :group_conversion_rate})
       |> QueryOptimizer.optimize()
 
-    q = SQL.QueryBuilder.build(query_with_metrics, site)
+    q = SQL.QueryBuilder.build(query, site)
 
     query_result =
       q
       |> ClickhouseRepo.all(query: query)
-      |> QueryResult.from(site, query_with_metrics)
+      |> QueryResult.from(site, query)
 
     timeseries_result =
       query_result
-      |> build_timeseries_result(query_with_metrics, currency)
+      |> build_timeseries_result(query, currency)
       |> transform_keys(%{group_conversion_rate: :conversion_rate})
 
     {timeseries_result, query_result.meta}
@@ -96,8 +99,9 @@ defmodule Plausible.Stats.Timeseries do
     end)
   end
 
-  defp transform_metrics(metrics, to_replace) do
-    Enum.map(metrics, &Map.get(to_replace, &1, &1))
+  defp transform_metrics(%Query{metrics: metrics} = query, to_replace) do
+    new_metrics = Enum.map(metrics, &Map.get(to_replace, &1, &1))
+    Query.set(query, metrics: new_metrics)
   end
 
   defp transform_keys(results, keys_to_replace) do
@@ -109,12 +113,14 @@ defmodule Plausible.Stats.Timeseries do
     end)
   end
 
-  defp transform_realtime_labels(results, %Query{period: "30m"}) do
-    Enum.with_index(results)
-    |> Enum.map(fn {entry, index} -> %{entry | date: -30 + index} end)
+  defp transform_realtime_labels(results, query) do
+    if query.period == "30m" or query.include[:realtime_labels] == true do
+      Enum.with_index(results)
+      |> Enum.map(fn {entry, index} -> %{entry | date: -30 + index} end)
+    else
+      results
+    end
   end
-
-  defp transform_realtime_labels(results, _query), do: results
 
   on_ee do
     defp cast_revenue_metrics_to_money(results, revenue_goals) do

@@ -1,5 +1,6 @@
 import { formatISO } from './util/date'
-import { serializeApiFilters } from './util/filters'
+import { addPrefixes, serializeApiFilters } from './util/filters'
+import { apiPath } from './util/url'
 
 let abortController = new AbortController()
 let SHARED_LINK_AUTH = null
@@ -71,6 +72,47 @@ export function put(url, body) {
   return fetch(url, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  })
+}
+
+export function fetchGraph(site, query, params) {
+  const url = apiPath(site, '/main-graph-v2')
+  const {interval, metrics } = params
+
+  let dateRange
+  
+  if (query.period === 'realtime') {
+    dateRange = '30m'
+  } else if (query.period == 'custom') {
+    dateRange = [formatISO(query.from), formatISO(query.to)]
+  } else {
+    dateRange = query.period
+  }
+
+  const body = {
+    dimensions: [`time:${interval}`],
+    metrics: metrics,
+    date_range: dateRange,
+    date: formatISO(query.date),
+    filters: addPrefixes(query.filters),
+    include: {imports: query.with_imported === true}
+  }
+
+  if (query.comparison) {
+    let comparisonParams = {mode: query.comparison, match_day_of_week: query.match_day_of_week}
+
+    if (query.comparison === 'custom') {
+      comparisonParams.from = formatISO(query.compare_from)
+      comparisonParams.to = formatISO(query.compare_to)
+    }
+
+    body.comparison_params = comparisonParams
+  }
+
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   })
 }

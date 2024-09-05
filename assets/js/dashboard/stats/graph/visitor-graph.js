@@ -27,8 +27,13 @@ function fetchTopStats(site, query) {
 }
 
 function fetchMainGraph(site, query, metric, interval) {
-  const params = { metric, interval }
-  return api.get(url.apiPath(site, '/main-graph'), query, params)
+  if (site.flags.dashboard_api_v2) {
+    const params = { metrics: [metric], interval }
+    return api.fetchGraph(site, query, params).then((res) => { return res.json() })
+  } else {
+    const params = { metric, interval }
+    return api.get(url.apiPath(site, '/main-graph'), query, params)
+  }
 }
 
 export default function VisitorGraph({ updateImportedDataInView }) {

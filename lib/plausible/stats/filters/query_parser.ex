@@ -24,6 +24,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          {:ok, include} <- parse_include(Map.get(params, "include", %{})),
+         include <-
+           maybe_include_realtime_labels(include, dimensions, Map.get(params, "date_range")),
          preloaded_goals <- preload_goals_if_needed(site, filters, dimensions),
          query = %{
            metrics: metrics,
@@ -274,6 +276,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_time("time"), do: {:ok, "time"}
+  defp parse_time("time:minute"), do: {:ok, "time:minute"}
   defp parse_time("time:hour"), do: {:ok, "time:hour"}
   defp parse_time("time:day"), do: {:ok, "time:day"}
   defp parse_time("time:week"), do: {:ok, "time:week"}
@@ -297,6 +300,12 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_include_value({"time_labels", value}) when is_boolean(value),
     do: {:ok, {:time_labels, value}}
+
+  defp maybe_include_realtime_labels(include, ["time:minute"], "30m") do
+    Map.put(include, :realtime_labels, true)
+  end
+
+  defp maybe_include_realtime_labels(include, _, _), do: include
 
   defp parse_filter_key_string(filter_key, error_message \\ "") do
     case filter_key do

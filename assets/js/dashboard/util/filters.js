@@ -184,16 +184,18 @@ export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
 
 const EVENT_FILTER_KEYS = new Set(["name", "page", "goal", "hostname"])
 
-export function serializeApiFilters(filters) {
-  const apiFilters = filters.map(([operation, filterKey, clauses]) => {
+export function addPrefixes(filters) {
+  return filters.map(([operation, filterKey, clauses]) => {
     let apiFilterKey = `visit:${filterKey}`
     if (filterKey.startsWith(EVENT_PROPS_PREFIX) || EVENT_FILTER_KEYS.has(filterKey)) {
       apiFilterKey = `event:${filterKey}`
     }
     return [operation, apiFilterKey, clauses]
   })
+}
 
-  return JSON.stringify(apiFilters)
+export function serializeApiFilters(filters) {
+  return JSON.stringify(addPrefixes(filters))
 }
 
 export function fetchSuggestions(apiPath, query, input, additionalFilter) {

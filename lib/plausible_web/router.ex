@@ -170,6 +170,8 @@ defmodule PlausibleWeb.Router do
     get "/:domain/conversions", StatsController, :conversions
     get "/:domain/custom-prop-values/:prop_key", StatsController, :custom_prop_values
     get "/:domain/suggestions/:filter_name", StatsController, :filter_suggestions
+
+    post "/:domain/main-graph-v2", GraphController, :graph
   end
 
   scope "/api/v1/stats", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*"} do

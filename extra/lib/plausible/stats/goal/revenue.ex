@@ -55,6 +55,17 @@ defmodule Plausible.Stats.Goal.Revenue do
     end
   end
 
+  @doc """
+  Calls `get_revenue_tracking_currency/3` under the hood. Returns `{currency, query}`,
+  instead of `{currency, metrics}`.
+  """
+  def get_revenue_tracking_currency(site, %Query{v2: true, metrics: metrics} = query) do
+    {currency, metrics} = get_revenue_tracking_currency(site, query, metrics)
+    query = struct!(query, metrics: metrics)
+
+    {currency, query}
+  end
+
   def cast_revenue_metrics_to_money([%{goal: _goal} | _rest] = results, revenue_goals)
       when is_list(revenue_goals) do
     for result <- results do
