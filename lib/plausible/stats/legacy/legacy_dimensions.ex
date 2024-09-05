@@ -5,6 +5,7 @@ defmodule Plausible.Stats.Legacy.Dimensions do
   @event_props ["event:page", "event:name", "event:goal", "event:hostname"]
   @session_props [
     "visit:source",
+    "visit:channel",
     "visit:country",
     "visit:region",
     "visit:city",

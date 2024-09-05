@@ -15,6 +15,7 @@ defmodule Plausible.Stats.SQL.Expression do
   alias Plausible.Stats.{Query, Filters, SQL}
 
   @no_ref "Direct / None"
+  @no_channel "Direct"
   @not_set "(not set)"
 
   defmacrop field_or_blank_value(q, key, expr, empty_value) do
@@ -148,6 +149,9 @@ defmodule Plausible.Stats.SQL.Expression do
 
   def select_dimension(q, key, "visit:source", _table, _query),
     do: field_or_blank_value(q, key, t.source, @no_ref)
+
+  def select_dimension(q, key, "visit:channel", _table, _query),
+    do: field_or_blank_value(q, key, t.channel, @no_channel)
 
   def select_dimension(q, key, "visit:referrer", _table, _query),
     do: field_or_blank_value(q, key, t.referrer, @no_ref)

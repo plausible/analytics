@@ -6,7 +6,7 @@ import { useQueryContext } from '../query-context'
 
 export const FILTER_MODAL_TO_FILTER_GROUP = {
   page: ['page', 'entry_page', 'exit_page'],
-  source: ['source', 'referrer'],
+  source: ['source', 'channel', 'referrer'],
   location: ['country', 'region', 'city'],
   screen: ['screen'],
   browser: ['browser', 'browser_version'],
@@ -273,6 +273,7 @@ export const formattedFilters = {
   prop_key: 'Property',
   prop_value: 'Value',
   source: 'Source',
+  channel: 'Channel',
   utm_medium: 'UTM Medium',
   utm_source: 'UTM Source',
   utm_campaign: 'UTM Campaign',
