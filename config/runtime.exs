@@ -537,7 +537,8 @@ case mailer_adapter do
     config :plausible, Plausible.Mailer, adapter: Bamboo.Mua
 
     # prevents common problems with Erlang's TLS v1.3
-    middlebox_comp_mode = !!get_var_from_path_or_env(config_dir, "SMTP_MIDDLEBOX_COMP_MODE")
+    middlebox_comp_mode = get_var_from_path_or_env(config_dir, "SMTP_MIDDLEBOX_COMP_MODE", "false")
+    middlebox_comp_mode = String.to_existing_atom(middlebox_comp_mode)
     config :plausible, Plausible.Mailer, ssl: [middlebox_comp_mode: middlebox_comp_mode]
 
     if relay = get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR") do
