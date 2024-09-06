@@ -1,11 +1,10 @@
 /** @format */
 
-import React, { useState, useEffect, useRef, ReactNode } from 'react'
+import React, { useState,  ReactNode } from 'react'
 
 import { FilterLink } from '../reports/list'
 import { useQueryContext } from '../../query-context'
-import { useDebounce } from '../../custom-hooks'
-import { useAPIClient } from '../../hooks/api-client'
+import { usePaginatedGetAPI } from '../../hooks/api-client'
 import { rootRoute } from '../../router'
 import {
   cycleSortDirection,
@@ -17,6 +16,7 @@ import { SortButton } from '../../components/sort-button'
 import { Metric } from '../reports/metrics'
 import { DashboardQuery } from '../../query'
 import classNames from 'classnames'
+import { SearchInput } from '../../components/search-input'
 
 export const MIN_HEIGHT_PX = 500
 
@@ -84,6 +84,7 @@ export const MIN_HEIGHT_PX = 500
 
 //   * `afterFetchNextPage` - a function with the same behaviour as `afterFetchData`,
 //     but will be called after a successful next page load in `fetchNextPage`.
+
 export default function BreakdownModal<TListItem extends { name: string }>({
   reportInfo,
   metrics,
@@ -105,15 +106,14 @@ export default function BreakdownModal<TListItem extends { name: string }>({
   renderIcon: (listItem: TListItem) => ReactNode
   getExternalLinkURL: (listItem: TListItem) => string
   searchEnabled?: boolean
-  afterFetchData: () => void
-  afterFetchNextPage: () => void
+  afterFetchData?: (response: {results: TListItem[]}) => void
+  afterFetchNextPage?: (response: {results: TListItem[]}) => void
   addSearchFilter: (
     q: DashboardQuery,
     search: string
-  ) => Record<string, unknown>
+  ) => DashboardQuery
   getFilterInfo: (listItem: TListItem) => void
 }) {
-  const searchBoxRef = useRef<HTMLInputElement>(null)
   const { query } = useQueryContext()
 
   const [search, setSearch] = useState('')
@@ -129,15 +129,15 @@ export default function BreakdownModal<TListItem extends { name: string }>({
     isFetchingNextPage,
     isFetching,
     isPending
-  } = useAPIClient<
+  } = usePaginatedGetAPI<
     {results: Array<TListItem>},
     [string, { query: DashboardQuery; search: string; orderBy: OrderBy }]
-  >({
+  >({    
     key: [reportInfo.endpoint, { query, search, orderBy }],
     getRequestParams: (key) => {
       const [_endpoint, { query, search }] = key
 
-      let queryWithSearchFilter: Record<string, unknown> = { ...query }
+      let queryWithSearchFilter = { ...query }
 
       if (searchEnabled && search !== '') {
         queryWithSearchFilter = addSearchFilter(query, search)
@@ -154,26 +154,6 @@ export default function BreakdownModal<TListItem extends { name: string }>({
     afterFetchData,
     afterFetchNextPage
   })
-
-  useEffect(() => {
-    const searchBox = searchBoxRef.current
-    if (!searchEnabled || !searchBox) {
-      return
-    }
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        ;(event.target as HTMLElement | undefined)?.blur()
-        event.stopPropagation()
-      }
-    }
-
-    searchBox?.addEventListener('keyup', handleKeyUp)
-
-    return () => {
-      searchBox?.removeEventListener('keyup', handleKeyUp)
-    }
-  }, [searchEnabled])
 
   function maybeRenderIcon(item: TListItem) {
     if (typeof renderIcon === 'function') {
@@ -231,7 +211,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
           return (
             <td
               key={metric.key}
-              className={classNames(metric.width, 'p-2 font-medium')}
+              className={classNames('p-2 font-medium', metric.width)}
               align="right"
             >
               {metric.renderValue(item[metric.accessor as keyof TListItem])}
@@ -283,28 +263,6 @@ export default function BreakdownModal<TListItem extends { name: string }>({
     )
   }
 
-  function handleInputChange(e: Event) {
-    const element = e.target as HTMLInputElement | null
-    if (!element) {
-      return
-    }
-    setSearch(element.value)
-  }
-
-  const debouncedHandleInputChange = useDebounce(handleInputChange)
-
-  function renderSearchInput() {
-    return (
-      <input
-        ref={searchBoxRef}
-        type="text"
-        placeholder="Search"
-        className="shadow-sm dark:bg-gray-900 dark:text-gray-100 focus:ring-indigo-500 focus:border-indigo-500 block sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800 w-48"
-        onChange={debouncedHandleInputChange}
-      />
-    )
-  }
-
   function renderModalBody() {
     if (data?.pages?.length) {
       return (
@@ -324,8 +282,8 @@ export default function BreakdownModal<TListItem extends { name: string }>({
                     <th
                       key={metric.key}
                       className={classNames(
+                        'p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400',
                         metric.width,
-                        'p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400'
                       )}
                       align="right"
                     >
@@ -370,7 +328,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
           </h1>
           {!isPending && isFetching && renderSmallLoadingSpinner()}
         </div>
-        {searchEnabled && renderSearchInput()}
+        {searchEnabled && <SearchInput onSearch={setSearch}/>}
       </div>
       <div className="my-4 border-b border-gray-300"></div>
       <div style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>

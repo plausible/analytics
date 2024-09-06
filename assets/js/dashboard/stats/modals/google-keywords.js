@@ -4,7 +4,7 @@ import Modal from './modal'
 import RocketIcon from './rocket-icon'
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
-import { useAPIClient } from "../../hooks/api-client";
+import { usePaginatedGetAPI } from "../../hooks/api-client";
 import { useDebounce } from "../../custom-hooks";
 import { createVisitors, Metric, renderNumberWithTooltip } from "../reports/metrics";
 import numberFormatter, { percentageFormatter } from "../../util/number-formatter";
@@ -35,7 +35,7 @@ function GoogleKeywordsModal() {
     isPending,
     error,
     status
-  } = useAPIClient({
+  } = usePaginatedGetAPI({
     key: [endpoint, {query, search}],
     getRequestParams: (key) => {
       const [_endpoint, {query, search}] = key
@@ -169,7 +169,7 @@ function GoogleKeywordsModal() {
   }
 
   return (
-    <Modal >
+    <Modal>
       <div className="w-full h-full">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-x-2">
