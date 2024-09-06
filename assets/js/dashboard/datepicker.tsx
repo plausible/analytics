@@ -9,7 +9,13 @@ import {
 import classNames from 'classnames'
 import { useQueryContext } from './query-context'
 import { useSiteContext } from './site-context'
-import { isModifierPressed, isTyping, Keybind, KeybindHint, NavigateKeybind } from './keybinding'
+import {
+  isModifierPressed,
+  isTyping,
+  Keybind,
+  KeybindHint,
+  NavigateKeybind
+} from './keybinding'
 import {
   AppNavigationLink,
   useAppNavigate

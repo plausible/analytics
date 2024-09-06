@@ -1,7 +1,10 @@
 /** @format */
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Metric } from '../stats/reports/metrics'
+import { getDomainScopedStorageKey, getItem, setItem } from '../util/storage'
+import { useSiteContext } from '../site-context'
+import { ReportInfo } from '../stats/modals/breakdown-modal'
 
 export enum SortDirection {
   asc = 'asc',
@@ -93,4 +96,109 @@ export function rearrangeOrderBy(
     return []
   }
   return [[metric.key, sortDirection]]
+}
+
+export function getOrderByStorageKey(
+  domain: string,
+  reportInfo: Pick<ReportInfo, 'dimensionLabel'>
+) {
+  const storageKey = getDomainScopedStorageKey(
+    `order_${reportInfo.dimensionLabel}_by`,
+    domain
+  )
+  return storageKey
+}
+
+export function validateOrderBy(
+  orderBy: unknown,
+  metrics: Pick<Metric, 'key'>[]
+): orderBy is OrderBy {
+  if (!Array.isArray(orderBy)) {
+    return false
+  }
+  if (orderBy.length !== 1) {
+    return false
+  }
+  if (!Array.isArray(orderBy[0])) {
+    return false
+  }
+  if (
+    orderBy[0].length === 2 &&
+    metrics.findIndex((m) => m.key === orderBy[0][0]) > -1 &&
+    [SortDirection.asc, SortDirection.desc].includes(orderBy[0][1])
+  ) {
+    return true
+  }
+  return false
+}
+
+export function getStoredOrderBy({
+  domain,
+  reportInfo,
+  metrics,
+  fallbackValue
+}: {
+  domain: string
+  reportInfo: Pick<ReportInfo, 'dimensionLabel'>
+  metrics: Pick<Metric, 'key' | 'sortable'>[]
+  fallbackValue: OrderBy
+}): OrderBy {
+  try {
+    const storedItem = getItem(getOrderByStorageKey(domain, reportInfo))
+    const parsed = JSON.parse(storedItem)
+    if (
+      validateOrderBy(
+        parsed,
+        metrics.filter((m) => m.sortable)
+      )
+    ) {
+      return parsed
+    } else {
+      throw new Error('Invalid stored order_by value')
+    }
+  } catch (_e) {
+    return fallbackValue
+  }
+}
+
+export function maybeStoreOrderBy({
+  domain,
+  reportInfo,
+  metrics,
+  orderBy
+}: {
+  domain: string
+  reportInfo: Pick<ReportInfo, 'dimensionLabel'>
+  metrics: Pick<Metric, 'key' | 'sortable'>[]
+  orderBy: OrderBy
+}) {
+  if (
+    validateOrderBy(
+      orderBy,
+      metrics.filter((m) => m.sortable)
+    )
+  ) {
+    setItem(getOrderByStorageKey(domain, reportInfo), JSON.stringify(orderBy))
+  }
+}
+
+export function useRememberOrderBy({
+  effectiveOrderBy,
+  metrics,
+  reportInfo
+}: {
+  effectiveOrderBy: OrderBy
+  metrics: Pick<Metric, 'key' | 'sortable'>[]
+  reportInfo: Pick<ReportInfo, 'dimensionLabel'>
+}) {
+  const site = useSiteContext()
+
+  useEffect(() => {
+    maybeStoreOrderBy({
+      domain: site.domain,
+      metrics,
+      reportInfo,
+      orderBy: effectiveOrderBy
+    })
+  }, [site, reportInfo, effectiveOrderBy, metrics])
 }

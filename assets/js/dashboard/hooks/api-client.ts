@@ -20,10 +20,10 @@ type GetRequestParams<TKey extends PaginatedQueryKeyBase> = (
   k: TKey
 ) => [Record<string, unknown>, Record<string, unknown>]
 
-/** 
- * Hook that fetches the first page from the defined GET endpoint on mount, 
- * then subsequent pages when component calls fetchNextPage. 
- * Stores fetched pages locally, but only the first page of the results. 
+/**
+ * Hook that fetches the first page from the defined GET endpoint on mount,
+ * then subsequent pages when component calls fetchNextPage.
+ * Stores fetched pages locally, but only the first page of the results.
  */
 export function usePaginatedGetAPI<
   TResponse extends { results: unknown[] },
@@ -33,7 +33,7 @@ export function usePaginatedGetAPI<
   getRequestParams,
   afterFetchData,
   afterFetchNextPage,
-  initialPageParam = 1,
+  initialPageParam = 1
 }: {
   key: TKey
   getRequestParams: GetRequestParams<TKey>
@@ -63,11 +63,17 @@ export function usePaginatedGetAPI<
         page: pageParam
       })
 
-      if (pageParam === initialPageParam && typeof afterFetchData === 'function') {
+      if (
+        pageParam === initialPageParam &&
+        typeof afterFetchData === 'function'
+      ) {
         afterFetchData(response)
       }
 
-      if (pageParam > initialPageParam && typeof afterFetchNextPage === 'function') {
+      if (
+        pageParam > initialPageParam &&
+        typeof afterFetchNextPage === 'function'
+      ) {
         afterFetchNextPage(response)
       }
 

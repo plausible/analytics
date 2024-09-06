@@ -7,13 +7,13 @@ import classNames from 'classnames'
 export const SortButton = ({
   children,
   toggleSort,
-  sortDirection,
+  sortDirection
 }: {
   children: ReactNode
   toggleSort: () => void
   sortDirection: SortDirection | null
 }) => {
-  const next = cycleSortDirection(sortDirection);
+  const next = cycleSortDirection(sortDirection)
   return (
     <button
       onClick={toggleSort}

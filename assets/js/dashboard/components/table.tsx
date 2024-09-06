@@ -19,7 +19,7 @@ export type ColumnConfiguraton<T extends Record<string, unknown>> = {
   width: string
   /** Aligns column content. */
   align?: 'left' | 'right'
-  /**  
+  /**
    * Function used to transform the value found at item[accessor] for the cell. Superseded by renderItem if present. @example 1120 => "1.1k"
    */
   renderValue?: (value: unknown) => ReactNode

@@ -6,11 +6,18 @@ import { FilterLink } from '../reports/list'
 import { useQueryContext } from '../../query-context'
 import { usePaginatedGetAPI } from '../../hooks/api-client'
 import { rootRoute } from '../../router'
-import { Order, OrderBy, useOrderBy } from '../../hooks/use-order-by'
+import {
+  getStoredOrderBy,
+  Order,
+  OrderBy,
+  useOrderBy,
+  useRememberOrderBy
+} from '../../hooks/use-order-by'
 import { Metric } from '../reports/metrics'
 import { DashboardQuery } from '../../query'
 import { ColumnConfiguraton } from '../../components/table'
 import { BreakdownTable } from './breakdown-table'
+import { useSiteContext } from '../../site-context'
 
 export type ReportInfo = {
   /** Title of the report to render on the top left. */
@@ -70,14 +77,25 @@ export default function BreakdownModal<TListItem extends { name: string }>({
   addSearchFilter?: (q: DashboardQuery, searchValue: string) => DashboardQuery
   searchEnabled?: boolean
 }) {
+  const site = useSiteContext()
   const { query } = useQueryContext()
 
   const [search, setSearch] = useState('')
+  const defaultOrderBy = getStoredOrderBy({
+    domain: site.domain,
+    reportInfo,
+    metrics,
+    fallbackValue: reportInfo.defaultOrder ? [reportInfo.defaultOrder] : []
+  })
   const { orderBy, orderByDictionary, toggleSortByMetric } = useOrderBy({
     metrics,
-    defaultOrderBy: reportInfo.defaultOrder ? [reportInfo.defaultOrder] : []
+    defaultOrderBy
   })
-
+  useRememberOrderBy({
+    effectiveOrderBy: orderBy,
+    metrics,
+    reportInfo
+  })
   const apiState = usePaginatedGetAPI<
     { results: Array<TListItem> },
     [string, { query: DashboardQuery; search: string; orderBy: OrderBy }]
@@ -160,12 +178,12 @@ export default function BreakdownModal<TListItem extends { name: string }>({
   )
 }
 
-/** 
- * Most interactive cell in the breakdown table. 
- * May have an icon. 
+/**
+ * Most interactive cell in the breakdown table.
+ * May have an icon.
  * If `getFilterInfo(item)` does not return null,
  * drills down the dashboard to that particular item.
- * May have a tiny icon button to navigate to the actual resource. 
+ * May have a tiny icon button to navigate to the actual resource.
  * */
 const NameCell = <TListItem extends { name: string }>({
   item,
