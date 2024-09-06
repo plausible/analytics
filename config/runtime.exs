@@ -767,7 +767,7 @@ else
     traces_exporter: :none
 end
 
-config :tzdata, :data_dir, Path.join(persistent_cache_dir || System.tmp_dir!(), "tzdata_data"),
+config :tzdata, :data_dir, Path.join(persistent_cache_dir || System.tmp_dir!(), "tzdata_data")
 config :tzdata, :autoupdate, :disabled
 
 promex_disabled? =
