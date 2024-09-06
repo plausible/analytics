@@ -1,22 +1,20 @@
 /** @format */
 
-import React, { useState,  ReactNode } from 'react'
+import React, { useState, ReactNode } from 'react'
 
 import { FilterLink } from '../reports/list'
 import { useQueryContext } from '../../query-context'
 import { usePaginatedGetAPI } from '../../hooks/api-client'
 import { rootRoute } from '../../router'
 import {
-  cycleSortDirection,
   Order,
   OrderBy,
   useOrderBy
 } from '../../hooks/use-order-by'
-import { SortButton } from '../../components/sort-button'
 import { Metric } from '../reports/metrics'
 import { DashboardQuery } from '../../query'
-import classNames from 'classnames'
 import { SearchInput } from '../../components/search-input'
+import { ColumnConfiguraton, Table } from '../../components/table'
 
 export const MIN_HEIGHT_PX = 500
 
@@ -100,19 +98,16 @@ export default function BreakdownModal<TListItem extends { name: string }>({
     title: string
     endpoint: string
     dimensionLabel: string
-    defaultOrder?: Order
+    defaultOrder?: Order,
   }
   metrics: Metric[]
   renderIcon: (listItem: TListItem) => ReactNode
   getExternalLinkURL: (listItem: TListItem) => string
   searchEnabled?: boolean
-  afterFetchData?: (response: {results: TListItem[]}) => void
-  afterFetchNextPage?: (response: {results: TListItem[]}) => void
-  addSearchFilter: (
-    q: DashboardQuery,
-    search: string
-  ) => DashboardQuery
-  getFilterInfo: (listItem: TListItem) => void
+  afterFetchData?: (response: { results: TListItem[] }) => void
+  afterFetchNextPage?: (response: { results: TListItem[] }) => void
+  addSearchFilter?: (q: DashboardQuery, search: string) => DashboardQuery
+  getFilterInfo: (listItem: TListItem) => unknown
 }) {
   const { query } = useQueryContext()
 
@@ -130,16 +125,16 @@ export default function BreakdownModal<TListItem extends { name: string }>({
     isFetching,
     isPending
   } = usePaginatedGetAPI<
-    {results: Array<TListItem>},
+    { results: Array<TListItem> },
     [string, { query: DashboardQuery; search: string; orderBy: OrderBy }]
-  >({    
+  >({
     key: [reportInfo.endpoint, { query, search, orderBy }],
     getRequestParams: (key) => {
       const [_endpoint, { query, search }] = key
 
       let queryWithSearchFilter = { ...query }
 
-      if (searchEnabled && search !== '') {
+      if (searchEnabled && typeof addSearchFilter === 'function' && search !== '') {
         queryWithSearchFilter = addSearchFilter(query, search)
       }
 
@@ -189,36 +184,20 @@ export default function BreakdownModal<TListItem extends { name: string }>({
     }
   }
 
-  function renderRow(item: TListItem) {
+  function renderNameCell(item: TListItem) {
     return (
-      <tr className="text-sm dark:text-gray-200" key={item.name}>
-        <td
-          className="w-48 md:w-80 break-all p-2 flex items-center"
-          align="left"
+      <>
+        {maybeRenderIcon(item)}
+        <FilterLink
+          path={rootRoute.path}
+          filterInfo={getFilterInfo(item)}
+          onClick={undefined}
+          extraClass={undefined}
         >
-          {maybeRenderIcon(item)}
-          <FilterLink
-            path={rootRoute.path}
-            filterInfo={getFilterInfo(item)}
-            onClick={undefined}
-            extraClass={undefined}
-          >
-            {item.name}
-          </FilterLink>
-          {maybeRenderExternalLink(item)}
-        </td>
-        {metrics.map((metric) => {
-          return (
-            <td
-              key={metric.key}
-              className={classNames('p-2 font-medium', metric.width)}
-              align="right"
-            >
-              {metric.renderValue(item[metric.accessor as keyof TListItem])}
-            </td>
-          )
-        })}
-      </tr>
+          {item.name}
+        </FilterLink>
+        {maybeRenderExternalLink(item)}
+      </>
     )
   }
 
@@ -267,53 +246,28 @@ export default function BreakdownModal<TListItem extends { name: string }>({
     if (data?.pages?.length) {
       return (
         <main className="modal__content">
-          <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
-            <thead>
-              <tr>
-                <th
-                  className="w-48 md:w-80 p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
-                  align="left"
-                >
-                  {reportInfo.dimensionLabel}
-                </th>
-
-                {metrics.map((metric) => {
-                  return (
-                    <th
-                      key={metric.key}
-                      className={classNames(
-                        'p-2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400',
-                        metric.width,
-                      )}
-                      align="right"
-                    >
-                      {metric.sortable ? (
-                        <SortButton
-                          sortDirection={orderByDictionary[metric.key] ?? null}
-                          nextSortDirection={
-                            cycleSortDirection(
-                              orderByDictionary[metric.key] ?? null
-                            ).direction!
-                          }
-                          toggleSort={() => toggleSortByMetric(metric)}
-                          hint={
-                            cycleSortDirection(
-                              orderByDictionary[metric.key] ?? null
-                            ).hint
-                          }
-                        >
-                          {metric.renderLabel(query)}
-                        </SortButton>
-                      ) : (
-                        metric.renderLabel(query)
-                      )}
-                    </th>
-                  )
-                })}
-              </tr>
-            </thead>
-            <tbody>{data.pages.map((p) => p.map(renderRow))}</tbody>
-          </table>
+          <Table<TListItem>
+            data={data}
+            columns={[
+              {
+                key: 'name',
+                accessor: 'name',
+                width: 'w-48 md:w-80 flex items-center break-all',
+                align: 'left',
+                label: reportInfo.dimensionLabel,
+                renderItem: renderNameCell
+              },
+              ...metrics.map((m): ColumnConfiguraton<TListItem> => ({
+                key: m.key,
+                accessor: m.accessor,
+                width: m.width,
+                align: 'right',
+                label: m.renderLabel(query),
+                onSort: m.sortable ? () => toggleSortByMetric(m) : undefined,
+                sortDirection: orderByDictionary[m.key]
+              }))
+            ]}
+          />
         </main>
       )
     }
@@ -328,7 +282,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
           </h1>
           {!isPending && isFetching && renderSmallLoadingSpinner()}
         </div>
-        {searchEnabled && <SearchInput onSearch={setSearch}/>}
+        {searchEnabled && <SearchInput onSearch={setSearch} />}
       </div>
       <div className="my-4 border-b border-gray-300"></div>
       <div style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
@@ -339,3 +293,4 @@ export default function BreakdownModal<TListItem extends { name: string }>({
     </div>
   )
 }
+

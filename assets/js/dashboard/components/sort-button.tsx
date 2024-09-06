@@ -1,26 +1,23 @@
 /** @format */
 
 import React, { ReactNode } from 'react'
-import { SortDirection } from '../hooks/use-order-by'
+import { cycleSortDirection, SortDirection } from '../hooks/use-order-by'
 import classNames from 'classnames'
 
 export const SortButton = ({
   children,
   toggleSort,
-  hint,
   sortDirection,
-  nextSortDirection
 }: {
   children: ReactNode
   toggleSort: () => void
-  hint: string
   sortDirection: SortDirection | null
-  nextSortDirection: SortDirection
 }) => {
+  const next = cycleSortDirection(sortDirection);
   return (
     <button
       onClick={toggleSort}
-      title={hint}
+      title={next.hint}
       className={classNames('group', 'hover:underline', 'relative')}
     >
       {children}
@@ -32,7 +29,7 @@ export const SortButton = ({
           {
             [SortDirection.asc]: 'rotate-180',
             [SortDirection.desc]: 'rotate-0'
-          }[sortDirection ?? nextSortDirection],
+          }[sortDirection ?? next.direction],
           !sortDirection && 'opacity-0',
           !sortDirection && 'group-hover:opacity-100',
           sortDirection &&

@@ -22,11 +22,11 @@ export function useOrderBy({
   metrics,
   defaultOrderBy
 }: {
-  metrics: Metric[]
+  metrics: Pick<Metric, 'key'>[]
   defaultOrderBy: OrderBy
 }) {
   const [orderBy, setOrderBy] = useState<OrderBy>([])
-  const orderByDictionary = useMemo(
+  const orderByDictionary: Record<Metric['key'], SortDirection> = useMemo(
     () =>
       orderBy.length
         ? Object.fromEntries(orderBy)
@@ -71,8 +71,6 @@ export function cycleSortDirection(
         direction: SortDirection.asc,
         hint: 'Press to sort column in ascending order'
       }
-    // case SortDirection.asc:
-    //   return { direction: SortDirection, hint: 'Press to remove sorting from column' }
   }
 }
 
