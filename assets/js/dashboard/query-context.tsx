@@ -2,10 +2,7 @@
 import React, {
   createContext,
   useMemo,
-  useEffect,
   useContext,
-  useState,
-  useCallback,
   ReactNode
 } from 'react'
 import { useLocation } from 'react-router'
@@ -30,8 +27,7 @@ import {
 
 const queryContextDefaultValue = {
   query: queryDefaultValue,
-  otherSearch: {} as Record<string, unknown>,
-  lastLoadTimestamp: new Date()
+  otherSearch: {} as Record<string, unknown>
 }
 
 export type QueryContextValue = typeof queryContextDefaultValue
@@ -130,26 +126,12 @@ export default function QueryContextProvider({
     match_day_of_week
   })
 
-  const [lastLoadTimestamp, setLastLoadTimestamp] = useState(new Date())
-  const updateLastLoadTimestamp = useCallback(() => {
-    setLastLoadTimestamp(new Date())
-  }, [setLastLoadTimestamp])
-
-  useEffect(() => {
-    document.addEventListener('tick', updateLastLoadTimestamp)
-
-    return () => {
-      document.removeEventListener('tick', updateLastLoadTimestamp)
-    }
-  }, [updateLastLoadTimestamp])
-
   useMountedEffect(() => {
     api.cancelAll()
-    updateLastLoadTimestamp()
   }, [])
 
   return (
-    <QueryContext.Provider value={{ query, otherSearch, lastLoadTimestamp }}>
+    <QueryContext.Provider value={{ query, otherSearch }}>
       {children}
     </QueryContext.Provider>
   )

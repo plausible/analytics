@@ -5,9 +5,11 @@ import { Tooltip } from '../util/tooltip';
 import { SecondsSinceLastLoad } from '../util/seconds-since-last-load';
 import { useQueryContext } from '../query-context';
 import { useSiteContext } from '../site-context';
+import { useLastLoadContext } from '../last-load-context';
 
 export default function CurrentVisitors({ tooltipBoundary }) {
-  const { query, lastLoadTimestamp } = useQueryContext();
+  const { query } = useQueryContext();
+  const lastLoadTimestamp = useLastLoadContext();
   const site = useSiteContext();
   const [currentVisitors, setCurrentVisitors] = useState(null)
 

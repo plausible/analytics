@@ -8,6 +8,7 @@ import { formatDateRange } from '../../util/date';
 import { getGraphableMetrics } from "./graph-util";
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
+import { useLastLoadContext } from "../../last-load-context";
 
 function Maybe({ condition, children }) {
   if (condition) {
@@ -68,7 +69,8 @@ function topStatNumberLong(name, value) {
 }
 
 export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
-  const { query, lastLoadTimestamp } = useQueryContext();
+  const { query } = useQueryContext();
+  const lastLoadTimestamp = useLastLoadContext();
   const site = useSiteContext();
 
   function tooltip(stat) {
