@@ -252,30 +252,39 @@ defmodule Plausible.Stats.SQL.Expression do
     wrap_alias([], %{
       bounce_rate:
         fragment(
-          "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
+          "toUInt32(greatest(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0), 0))",
           ^condition,
           ^condition
         ),
-      __internal_visits: fragment("toUInt32(sum(sign))")
+      __internal_visits: fragment("toUInt32(greatest(sum(sign), 0))")
     })
   end
 
   def session_metric(:visits, _query) do
     wrap_alias([s], %{
-      visits: fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign)
+      visits: fragment("toUInt64(round(greatest(sum(?), 0) * any(_sample_factor)))", s.sign)
     })
   end
 
   def session_metric(:pageviews, _query) do
     wrap_alias([s], %{
       pageviews:
-        fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
+        fragment(
+          "toUInt64(round(greatest(sum(? * ?), 0) * any(_sample_factor)))",
+          s.sign,
+          s.pageviews
+        )
     })
   end
 
   def session_metric(:events, _query) do
     wrap_alias([s], %{
-      events: fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
+      events:
+        fragment(
+          "toUInt64(round(greatest(sum(? * ?), 0) * any(_sample_factor)))",
+          s.sign,
+          s.events
+        )
     })
   end
 
@@ -288,8 +297,8 @@ defmodule Plausible.Stats.SQL.Expression do
   def session_metric(:visit_duration, _query) do
     wrap_alias([], %{
       visit_duration:
-        fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))"),
-      __internal_visits: fragment("toUInt32(sum(sign))")
+        fragment("toUInt32(greatest(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0), 0))"),
+      __internal_visits: fragment("toUInt32(greatest(sum(sign), 0))")
     })
   end
 
@@ -297,12 +306,12 @@ defmodule Plausible.Stats.SQL.Expression do
     wrap_alias([s], %{
       views_per_visit:
         fragment(
-          "ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)",
+          "greatest(ifNotFinite(round(sum(? * ?) / sum(?), 2), 0), 0)",
           s.sign,
           s.pageviews,
           s.sign
         ),
-      __internal_visits: fragment("toUInt32(sum(sign))")
+      __internal_visits: fragment("toUInt32(greatest(sum(sign), 0))")
     })
   end
 
