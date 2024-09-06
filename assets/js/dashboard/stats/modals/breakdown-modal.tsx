@@ -6,15 +6,12 @@ import { FilterLink } from '../reports/list'
 import { useQueryContext } from '../../query-context'
 import { usePaginatedGetAPI } from '../../hooks/api-client'
 import { rootRoute } from '../../router'
-import {
-  Order,
-  OrderBy,
-  useOrderBy
-} from '../../hooks/use-order-by'
+import { Order, OrderBy, useOrderBy } from '../../hooks/use-order-by'
 import { Metric } from '../reports/metrics'
 import { DashboardQuery } from '../../query'
 import { SearchInput } from '../../components/search-input'
 import { ColumnConfiguraton, Table } from '../../components/table'
+import RocketIcon from './rocket-icon'
 
 export const MIN_HEIGHT_PX = 500
 
@@ -98,7 +95,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
     title: string
     endpoint: string
     dimensionLabel: string
-    defaultOrder?: Order,
+    defaultOrder?: Order
   }
   metrics: Metric[]
   renderIcon: (listItem: TListItem) => ReactNode
@@ -134,7 +131,11 @@ export default function BreakdownModal<TListItem extends { name: string }>({
 
       let queryWithSearchFilter = { ...query }
 
-      if (searchEnabled && typeof addSearchFilter === 'function' && search !== '') {
+      if (
+        searchEnabled &&
+        typeof addSearchFilter === 'function' &&
+        search !== ''
+      ) {
         queryWithSearchFilter = addSearchFilter(query, search)
       }
 
@@ -257,15 +258,17 @@ export default function BreakdownModal<TListItem extends { name: string }>({
                 label: reportInfo.dimensionLabel,
                 renderItem: renderNameCell
               },
-              ...metrics.map((m): ColumnConfiguraton<TListItem> => ({
-                key: m.key,
-                accessor: m.accessor,
-                width: m.width,
-                align: 'right',
-                label: m.renderLabel(query),
-                onSort: m.sortable ? () => toggleSortByMetric(m) : undefined,
-                sortDirection: orderByDictionary[m.key]
-              }))
+              ...metrics.map(
+                (m): ColumnConfiguraton<TListItem> => ({
+                  key: m.key,
+                  accessor: m.accessor,
+                  width: m.width,
+                  align: 'right',
+                  label: m.renderLabel(query),
+                  onSort: m.sortable ? () => toggleSortByMetric(m) : undefined,
+                  sortDirection: orderByDictionary[m.key]
+                })
+              )
             ]}
           />
         </main>
@@ -294,3 +297,99 @@ export default function BreakdownModal<TListItem extends { name: string }>({
   )
 }
 
+const InitialLoadingSpinner = () => (
+  <div
+    className="w-full h-full flex flex-col justify-center"
+    style={{ minHeight: `${MIN_HEIGHT_PX}px` }}
+  >
+    <div className="mx-auto loading">
+      <div />
+    </div>
+  </div>
+)
+
+const SmallLoadingSpinner = () => (
+  <div className="loading sm">
+    <div />
+  </div>
+)
+
+const ErrorMessage = ({ error }: { error?: unknown }) => (
+  <div
+    className="grid grid-rows-2 text-gray-700 dark:text-gray-300"
+    style={{ height: `${MIN_HEIGHT_PX}px` }}
+  >
+    <div className="text-center self-end">
+      <RocketIcon />
+    </div>
+    <div className="text-lg text-center">
+      {error ? (error as { message: string }).message : 'Something went wrong'}
+    </div>
+  </div>
+)
+
+const LoadMore = ({ onClick }: { onClick: () => void }) => (
+  <button onClick={onClick} type="button" className="button">
+    Load more
+  </button>
+)
+
+export const PaginatedSearchableTable = <TListItem extends { name: string }>({
+  title,
+  isPending,
+  isFetching,
+  onSearch,
+  hasNextPage,
+  isFetchingNextPage,
+  fetchNextPage,
+  columns,
+  data,
+  status,
+  error,
+  displayError
+}: {
+  title: ReactNode
+  isPending: boolean
+  isFetching: boolean
+  onSearch?: (input: string) => void
+  hasNextPage: boolean
+  isFetchingNextPage: boolean
+  fetchNextPage: () => void
+  columns: ColumnConfiguraton<TListItem>[]
+  data?: TListItem[] | { pages: TListItem[][] }
+  status?: 'error'
+  error?: Error
+  displayError?: boolean
+}) => (
+  <div className="w-full h-full">
+    <div className="flex justify-between items-center">
+      <div className="flex items-center gap-x-2">
+        <h1 className="text-xl font-bold dark:text-gray-100">{title}</h1>
+        {!isPending && isFetching && <SmallLoadingSpinner />}
+      </div>
+      {!!onSearch && (
+        <SearchInput
+          onSearch={onSearch}
+          className={
+            displayError && status === 'error' ? 'pointer-events-none' : ''
+          }
+        />
+      )}
+    </div>
+    <div className="my-4 border-b border-gray-300"></div>
+    <div style={{ minHeight: `${MIN_HEIGHT_PX}px` }}>
+      {displayError && status === 'error' && <ErrorMessage error={error} />}
+      {isPending && <InitialLoadingSpinner />}
+      {data && <Table<TListItem> data={data} columns={columns} />}
+      {!isPending && !isFetching && hasNextPage && (
+        <div className="flex flex-col w-full my-4 items-center justify-center h-10">
+          {isFetchingNextPage ? (
+            <SmallLoadingSpinner />
+          ) : (
+            <LoadMore onClick={() => fetchNextPage()} />
+          )}
+        </div>
+      )}
+    </div>
+  </div>
+)
