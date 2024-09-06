@@ -29,8 +29,10 @@ defmodule Plausible.ClickhouseRepo do
       on_ee do
         @task_timeout
       else
+        # Quadruple the repo timeout to ensure the task doesn't timeout before db_connection does.
+        # This maintains the default ratio (@task_timeout / default_timeout = 60_000 / 15_000 = 4).
         ch_timeout = Keyword.fetch!(config(), :timeout)
-        max(ch_timeout * 2, @task_timeout)
+        max(ch_timeout * 4, @task_timeout)
       end
 
     Task.async_stream(queries, execute_with_tracing,
