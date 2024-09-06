@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import Modal from './modal';
 import { EVENT_PROPS_PREFIX, FILTER_GROUP_TO_MODAL_TYPE, formatFilterGroup, FILTER_OPERATIONS, getFilterGroup, FILTER_MODAL_TO_FILTER_GROUP, cleanLabels } from '../../util/filters';
 import { useQueryContext } from '../../query-context';
-import { shouldIgnoreKeypress } from '../../keybinding';
+import { isModifierPressed, isTyping } from '../../keybinding';
 import FilterModalGroup from "./filter-modal-group";
 import { rootRoute } from '../../router';
 import { useAppNavigate } from '../../navigation/use-app-navigate';
@@ -62,7 +62,7 @@ class FilterModal extends React.Component {
   }
 
   handleKeydown(e) {
-    if (shouldIgnoreKeypress(e)) return
+    if (isTyping(e) || isModifierPressed(e)) return
 
     if (e.target.tagName === 'BODY' && e.key === 'Enter') {
       this.handleSubmit()
