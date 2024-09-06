@@ -52,6 +52,7 @@ defmodule PlausibleWeb.UserAuth do
     end
   end
 
+  @spec touch_user_session(Auth.UserSession.t(), NaiveDateTime.t()) :: Auth.UserSession.t()
   def touch_user_session(user_session, now \\ NaiveDateTime.utc_now(:second)) do
     if NaiveDateTime.diff(now, user_session.last_used_at, :hour) >= 1 do
       Plausible.Users.bump_last_seen(user_session.user_id, now)
@@ -62,6 +63,18 @@ defmodule PlausibleWeb.UserAuth do
     else
       user_session
     end
+  end
+
+  @spec revoke_all_user_sessions(Auth.User.t()) :: :ok
+  def revoke_all_user_sessions(user) do
+    {_count, tokens} =
+      Repo.delete_all(
+        from us in Auth.UserSession, where: us.user_id == ^user.id, select: us.token
+      )
+
+    Enum.each(tokens, fn token ->
+      PlausibleWeb.Endpoint.broadcast(live_socket_id(token), "disconnect", %{})
+    end)
   end
 
   @doc """
@@ -127,7 +140,11 @@ defmodule PlausibleWeb.UserAuth do
   defp put_token_in_session(conn, token) do
     conn
     |> Plug.Conn.put_session(:user_token, token)
-    |> Plug.Conn.put_session(:live_socket_id, "user_sessions:#{Base.url_encode64(token)}")
+    |> Plug.Conn.put_session(:live_socket_id, live_socket_id(token))
+  end
+
+  defp live_socket_id(token) do
+    "user_sessions:#{Base.url_encode64(token)}"
   end
 
   defp get_user_token(%Plug.Conn{} = conn) do
