@@ -2,7 +2,6 @@ defmodule PlausibleWeb.Router do
   use PlausibleWeb, :router
   use Plausible
   import Phoenix.LiveView.Router
-  @two_weeks_in_seconds 60 * 60 * 24 * 14
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -11,7 +10,6 @@ defmodule PlausibleWeb.Router do
     plug :put_secure_browser_headers
     plug PlausibleWeb.Plugs.NoRobots
     on_ee(do: nil, else: plug(PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"))
-    plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
     plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.Plugs.UserSessionTouch
   end
