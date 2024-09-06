@@ -128,6 +128,8 @@ All notable changes to this project will be documented in this file.
 - Replace `CLICKHOUSE_MAX_BUFFER_SIZE` with `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES`
 - Validate metric isn't queried multiple times
 - Filters in dashboard are represented by jsonurl
+- `MAILER_EMAIL` now defaults to an address built off of `BASE_URL` plausible/analytics#4538
+- default `MAILER_ADAPTER` has been changed to `Bamboo.Mua` plausible/analytics#4538
 
 ### Fixed
 - Creating many sites no longer leads to cookie overflow
