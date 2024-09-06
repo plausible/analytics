@@ -5,7 +5,7 @@ export default function chooseMetrics(query) {
   if (hasGoalFilter(query)) {
     return [
       metrics.createTotalVisitors(),
-      metrics.createVisitors({ renderLabel: (_query) => 'Conversions', width: 'w-32' }),
+      metrics.createVisitors({ renderLabel: (_query) => 'Conversions', width: 'w-28' }),
       metrics.createGroupConversionRate()
     ]
   }

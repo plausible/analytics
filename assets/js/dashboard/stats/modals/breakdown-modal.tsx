@@ -130,7 +130,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
     isFetching,
     isPending
   } = useAPIClient<
-    never,
+    {results: Array<TListItem>},
     [string, { query: DashboardQuery; search: string; orderBy: OrderBy }]
   >({
     key: [reportInfo.endpoint, { query, search, orderBy }],

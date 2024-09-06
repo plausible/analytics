@@ -40,8 +40,22 @@ type Endpoint = string
 
 type InfiniteQueryKey = [Endpoint, { query: DashboardQuery }]
 
+export const cleanToPageOne = <
+  T extends { pages: unknown[]; pageParams: unknown[] }
+>(
+  data?: T
+) => {
+  if (data?.pages?.length) {
+    return {
+      pages: data.pages.slice(0, 1),
+      pageParams: data.pageParams.slice(0, 1)
+    }
+  }
+  return data
+}
+
 export function useAPIClient<
-  TResponse,
+  TResponse extends {results: unknown[]},
   TKey extends InfiniteQueryKey = InfiniteQueryKey
 >(props: {
   initialPageParam?: number
@@ -56,23 +70,15 @@ export function useAPIClient<
   const [endpoint] = key
   const queryClient = useQueryClient()
 
-  // During the cleanup phase, make sure only the first page of results
-  // is cached under any `queryKey` containing this endpoint.
   useEffect(() => {
-    const queryKeyToClean = [endpoint] as QueryFilters
-    return () => {
-      queryClient.setQueriesData<{ pages: TResponse[]; pageParams: unknown[] }>(
+    const onDismountCleanToPageOne = () => {
+      const queryKeyToClean = [endpoint] as QueryFilters
+      queryClient.setQueriesData(
         queryKeyToClean,
-        (data) => {
-          if (data?.pages?.length) {
-            return {
-              pages: data.pages.slice(0, 1),
-              pageParams: data.pageParams.slice(0, 1)
-            }
-          }
-        }
+        cleanToPageOne
       )
     }
+    return onDismountCleanToPageOne
   }, [queryClient, endpoint])
 
   const defaultInitialPageParam = 1
@@ -88,7 +94,7 @@ export function useAPIClient<
       params.limit = LIMIT
       params.page = pageParam
 
-      const response = await api.get(endpoint, query, params)
+      const response: TResponse = await api.get(endpoint, query, params)
 
       if (pageParam === 1 && typeof afterFetchData === 'function') {
         afterFetchData(response)

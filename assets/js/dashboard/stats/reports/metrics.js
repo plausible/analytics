@@ -131,7 +131,7 @@ export const createAverageRevenue = (props) => {
 export const createTotalVisitors = (props) => {
   const renderValue = renderNumberWithTooltip
   const renderLabel = (_query) => "Total Visitors"
-  return new Metric({width: 'w-32', ...props, key: "total_visitors", renderValue, renderLabel, sortable: false}) 
+  return new Metric({width: 'w-28', ...props, key: "total_visitors", renderValue, renderLabel, sortable: false}) 
 }
 
 export const createVisits = (props) => {
@@ -148,7 +148,7 @@ export const createVisitDuration = (props) => {
 export const createBounceRate = (props) => {
   const renderValue = (value) => `${value}%`
   const renderLabel = (_query) => "Bounce Rate"
-  return new Metric({width: 'w-36', ...props, key: "bounce_rate", renderValue, renderLabel, sortable: true})
+  return new Metric({width: 'w-32', ...props, key: "bounce_rate", renderValue, renderLabel, sortable: true})
 }
 
 export const createPageviews = (props) => {
