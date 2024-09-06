@@ -99,8 +99,8 @@ super_admin_user_ids =
   |> Enum.filter(& &1)
 
 env = get_var_from_path_or_env(config_dir, "ENVIRONMENT", "prod")
-mailer_adapter = get_var_from_path_or_env(config_dir, "MAILER_ADAPTER", "Bamboo.SMTPAdapter")
-mailer_email = get_var_from_path_or_env(config_dir, "MAILER_EMAIL", "hello@plausible.local")
+mailer_adapter = get_var_from_path_or_env(config_dir, "MAILER_ADAPTER", "Bamboo.Mua")
+mailer_email = get_var_from_path_or_env(config_dir, "MAILER_EMAIL", "plausible@#{base_url.host}")
 
 mailer_email =
   if mailer_name = get_var_from_path_or_env(config_dir, "MAILER_NAME") do
@@ -535,6 +535,13 @@ case mailer_adapter do
 
   "Bamboo.Mua" ->
     config :plausible, Plausible.Mailer, adapter: Bamboo.Mua
+
+    # prevents common problems with Erlang's TLS v1.3
+    middlebox_comp_mode =
+      get_var_from_path_or_env(config_dir, "SMTP_MIDDLEBOX_COMP_MODE", "false")
+
+    middlebox_comp_mode = String.to_existing_atom(middlebox_comp_mode)
+    config :plausible, Plausible.Mailer, ssl: [middlebox_comp_mode: middlebox_comp_mode]
 
     if relay = get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR") do
       port = get_int_from_path_or_env(config_dir, "SMTP_HOST_PORT", 25)
