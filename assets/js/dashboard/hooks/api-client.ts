@@ -11,6 +11,7 @@ import { DashboardQuery } from '../query'
 
 const LIMIT = 100
 
+/** full endpoint URL */
 type Endpoint = string
 
 type PaginatedQueryKeyBase = [Endpoint, { query: DashboardQuery }]
@@ -19,7 +20,11 @@ type GetRequestParams<TKey extends PaginatedQueryKeyBase> = (
   k: TKey
 ) => [Record<string, unknown>, Record<string, unknown>]
 
-/** Function to  */
+/** 
+ * Hook that fetches the first page from the defined GET endpoint on mount, 
+ * then subsequent pages when component calls fetchNextPage. 
+ * Stores fetched pages locally, but only the first page of the results. 
+ */
 export function usePaginatedGetAPI<
   TResponse extends { results: unknown[] },
   TKey extends PaginatedQueryKeyBase = PaginatedQueryKeyBase
@@ -28,7 +33,7 @@ export function usePaginatedGetAPI<
   getRequestParams,
   afterFetchData,
   afterFetchNextPage,
-  initialPageParam = 1
+  initialPageParam = 1,
 }: {
   key: TKey
   getRequestParams: GetRequestParams<TKey>

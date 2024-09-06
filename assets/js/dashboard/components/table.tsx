@@ -5,6 +5,28 @@ import React, { ReactNode } from 'react'
 import { SortDirection } from '../hooks/use-order-by'
 import { SortButton } from './sort-button'
 
+export type ColumnConfiguraton<T extends Record<string, unknown>> = {
+  /** Unique ID */
+  key: string
+  /** Column title */
+  label: ReactNode
+  /** Where to find the value for any particular item for this column. @example "name" */
+  accessor: keyof T
+  /** If defined, the column is considered sortable. @see SortButton */
+  onSort?: () => void
+  sortDirection?: SortDirection
+  /** CSS class string. @example "w-24 md:w-32" */
+  width: string
+  /** Aligns column content. */
+  align?: 'left' | 'right'
+  /**  
+   * Function used to transform the value found at item[accessor] for the cell. Superseded by renderItem if present. @example 1120 => "1.1k"
+   */
+  renderValue?: (value: unknown) => ReactNode
+  /** Function used to create richer cells */
+  renderItem?: (item: T) => ReactNode
+}
+
 export const TableHeaderCell = ({
   children,
   className,
@@ -43,18 +65,6 @@ export const TableCell = ({
   )
 }
 
-export type ColumnConfiguraton<T> = {
-  key: string
-  accessor: keyof T
-  onSort?: () => void
-  sortDirection?: SortDirection
-  width: string
-  label: ReactNode
-  align?: 'left' | 'right'
-  renderValue?: (value: unknown) => ReactNode
-  renderItem?: (item: T) => ReactNode
-}
-
 export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
   item,
   columns
@@ -71,7 +81,7 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
               ? renderItem(item)
               : renderValue
                 ? renderValue(item[accessor])
-                : item[accessor]}
+                : (item[accessor] ?? '')}
           </TableCell>
         )
       )}
