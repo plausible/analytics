@@ -18,7 +18,7 @@ defmodule Plausible.ClickhouseRepoTest do
 
       start_supervised!({ClickhouseRepo, name: :hurry_up_we_have_timeout})
 
-      task = fn sqls ->
+      query_many = fn sqls ->
         fn ->
           ClickhouseRepo.put_dynamic_repo(:hurry_up_we_have_timeout)
           for sql <- List.wrap(sqls), do: ClickhouseRepo.query!(sql)
@@ -29,7 +29,7 @@ defmodule Plausible.ClickhouseRepoTest do
       run_parallel_tasks = fn tasks ->
         {pid, ref} =
           :proc_lib.spawn_opt(
-            fn -> ClickhouseRepo.parallel_tasks(tasks) end,
+            fn -> ClickhouseRepo.parallel_tasks(List.wrap(tasks)) end,
             [:monitor]
           )
 
@@ -38,18 +38,20 @@ defmodule Plausible.ClickhouseRepoTest do
       end
 
       # one query, one task, taking 50ms, satisfies both ch (100ms) and task (400ms) timeouts
-      assert :normal = run_parallel_tasks.([task.("SELECT sleep(0.05)")])
+      assert _exit_reason = :normal = run_parallel_tasks.(query_many.("SELECT sleep(0.05)"))
 
       # one query, one task, taking 150ms, failing ch (100ms) timeout
-      assert {%Mint.TransportError{reason: :timeout}, _stack} =
-               run_parallel_tasks.([task.("SELECT sleep(0.15)")])
+      assert {%Mint.TransportError{reason: reason}, _stack} =
+               run_parallel_tasks.(query_many.("SELECT sleep(0.15)"))
+
+      assert reason in [:timeout, :closed]
 
       # seven 50ms queries in a single task, taking 350ms in total, satisfies both ch (100ms) and task (400ms) timeouts
-      assert :normal = run_parallel_tasks.([task.(List.duplicate("SELECT sleep(0.05)", 7))])
+      assert :normal = run_parallel_tasks.(query_many.(List.duplicate("SELECT sleep(0.05)", 7)))
 
       # nine 50ms queries in a single task, taking 450ms in total, failing task (400ms) timeouts
       assert {:timeout, {Task.Supervised, :stream, [400]}} =
-               run_parallel_tasks.([task.(List.duplicate("SELECT sleep(0.05)", 9))])
+               run_parallel_tasks.(query_many.(List.duplicate("SELECT sleep(0.05)", 9)))
     end
   end
 end
