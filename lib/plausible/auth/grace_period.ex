@@ -82,7 +82,7 @@ defmodule Plausible.Auth.GracePeriod do
   def active?(user)
 
   def active?(%User{grace_period: %__MODULE__{end_date: %Date{} = end_date}}) do
-    Timex.diff(end_date, Date.utc_today(), :days) >= 0
+    Date.diff(end_date, Date.utc_today()) >= 0
   end
 
   def active?(%User{grace_period: %__MODULE__{manual_lock: true}}) do

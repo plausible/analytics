@@ -78,9 +78,9 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp resolve_time_dimension(first, last) do
     cond do
-      Timex.diff(last, first, :hours) <= 48 -> "time:hour"
-      Timex.diff(last, first, :days) <= 40 -> "time:day"
-      Timex.diff(last, first, :weeks) <= 52 -> "time:week"
+      NaiveDateTime.diff(last, first, :hour) <= 48 -> "time:hour"
+      NaiveDateTime.diff(last, first, :day) <= 40 -> "time:day"
+      NaiveDateTime.diff(last, first, :day) <= 52 * 7 -> "time:week"
       true -> "time:month"
     end
   end

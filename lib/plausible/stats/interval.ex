@@ -47,7 +47,7 @@ defmodule Plausible.Stats.Interval do
       Timex.diff(last, first, :months) > 0 ->
         "month"
 
-      Timex.diff(last, first, :days) > 0 ->
+      Date.diff(last, first) > 0 ->
         "day"
 
       true ->
