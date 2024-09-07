@@ -1,10 +1,11 @@
 defmodule Plausible.ClickhouseRepoTest do
   use ExUnit.Case, async: false
   use Plausible.TestUtils
-  alias Plausible.ClickhouseRepo
 
   describe "parallel_tasks/2" do
     if Plausible.ce?() do
+      alias Plausible.ClickhouseRepo
+
       @tag :slow
       @tag :capture_log
       test "has configurable timeout in CE" do
