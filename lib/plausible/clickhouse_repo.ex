@@ -14,7 +14,6 @@ defmodule Plausible.ClickhouseRepo do
     end
   end
 
-  @task_timeout 60_000
   def parallel_tasks(queries, opts \\ []) do
     ctx = OpenTelemetry.Ctx.get_current()
 
@@ -27,12 +26,12 @@ defmodule Plausible.ClickhouseRepo do
 
     task_timeout =
       on_ee do
-        @task_timeout
+        60_000
       else
         # Quadruple the repo timeout to ensure the task doesn't timeout before db_connection does.
         # This maintains the default ratio (@task_timeout / default_timeout = 60_000 / 15_000 = 4).
         ch_timeout = Keyword.fetch!(config(), :timeout)
-        max(ch_timeout * 4, @task_timeout)
+        ch_timeout * 4
       end
 
     Task.async_stream(queries, execute_with_tracing,
