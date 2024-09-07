@@ -19,14 +19,8 @@ defmodule Plausible.Release do
     end
   end
 
-  def migrate do
-    prepare()
-    Enum.each(repos(), &run_migrations_for/1)
-    IO.puts("Migrations successful!")
-  end
-
   @doc """
-  `interweave_migrate/0` is a more advanced (compared to `migrate/0`) migration function that:
+  `interweave_migrate/0` is a migration function that:
 
   - Lists all pending migrations across multiple repositories.
   - Sorts these migrations into a single list.
@@ -107,13 +101,6 @@ defmodule Plausible.Release do
 
       pending
     end)
-  end
-
-  def pending_migrations do
-    prepare()
-    IO.puts("Pending migrations")
-    IO.puts("")
-    Enum.each(repos(), &list_pending_migrations_for/1)
   end
 
   def pending_streaks(repos \\ repos()) do
@@ -235,33 +222,6 @@ defmodule Plausible.Release do
       IO.puts("Running seed script..")
       Code.eval_file(seed_script)
     end
-  end
-
-  defp run_migrations_for(repo) do
-    IO.puts("Running migrations for #{repo}")
-    {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
-  end
-
-  defp list_pending_migrations_for(repo) do
-    IO.puts("Listing pending migrations for #{repo}")
-    IO.puts("")
-
-    migration_directory = Ecto.Migrator.migrations_path(repo)
-
-    pending =
-      repo
-      |> Ecto.Migrator.migrations([migration_directory])
-      |> Enum.filter(fn {status, _version, _migration} -> status == :down end)
-
-    if pending == [] do
-      IO.puts("No pending migrations")
-    else
-      Enum.each(pending, fn {_, version, migration} ->
-        IO.puts("* #{version}_#{migration}")
-      end)
-    end
-
-    IO.puts("")
   end
 
   defp ensure_repo_created(repo) do
