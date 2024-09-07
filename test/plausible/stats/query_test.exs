@@ -153,7 +153,8 @@ defmodule Plausible.Stats.QueryTest do
       expected_first_datetime = DateTime.new!(~D[2020-01-01], ~T[00:00:00], site.timezone)
 
       expected_last_datetime =
-        Timex.today(site.timezone)
+        DateTime.now!(site.timezone)
+        |> DateTime.to_date()
         |> DateTime.new!(~T[23:59:59], site.timezone)
 
       assert query.date_range.first == expected_first_datetime
