@@ -25,36 +25,31 @@ defmodule Plausible.ClickhouseRepoTest do
         end
       end
 
-      # to avoid task exits bringing down the test
-      Process.flag(:trap_exit, true)
+      # spawn and monitor the tasks in a separate process to avoid taking down the test
+      run_parallel_tasks = fn tasks ->
+        {pid, ref} =
+          :proc_lib.spawn_opt(
+            fn -> ClickhouseRepo.parallel_tasks(tasks) end,
+            [:monitor]
+          )
 
-      # one query, taking 50ms, satisfies both ch (100ms) and task (400ms) timeouts
-      assert [[%Ch.Result{rows: [[0]]}]] =
-               ClickhouseRepo.parallel_tasks([task.("SELECT sleep(0.05)")])
+        assert_receive {:DOWN, ^ref, :process, ^pid, exit_reason}, 500
+        exit_reason
+      end
 
-      # one query, taking 150ms, failing ch (100ms) timeout
-      assert [{%Mint.TransportError{reason: ch_error_reason}, _stack}] =
-               ClickhouseRepo.parallel_tasks([task.("SELECT sleep(0.15)")])
+      # one query, one task, taking 50ms, satisfies both ch (100ms) and task (400ms) timeouts
+      assert :normal = run_parallel_tasks.([task.("SELECT sleep(0.05)")])
 
-      assert ch_error_reason in [:closed, :timeout]
+      # one query, one task, taking 150ms, failing ch (100ms) timeout
+      assert {%Mint.TransportError{reason: :timeout}, _stack} =
+               run_parallel_tasks.([task.("SELECT sleep(0.15)")])
 
       # seven 50ms queries in a single task, taking 350ms in total, satisfies both ch (100ms) and task (400ms) timeouts
-      assert [
-               [
-                 %Ch.Result{rows: [[0]]},
-                 %Ch.Result{rows: [[0]]},
-                 %Ch.Result{rows: [[0]]},
-                 %Ch.Result{rows: [[0]]},
-                 %Ch.Result{rows: [[0]]},
-                 %Ch.Result{rows: [[0]]},
-                 %Ch.Result{rows: [[0]]}
-               ]
-             ] = ClickhouseRepo.parallel_tasks([task.(List.duplicate("SELECT sleep(0.05)", 7))])
+      assert :normal = run_parallel_tasks.([task.(List.duplicate("SELECT sleep(0.05)", 7))])
 
       # nine 50ms queries in a single task, taking 450ms in total, failing task (400ms) timeouts
-      assert catch_exit(
-               ClickhouseRepo.parallel_tasks([task.(List.duplicate("SELECT sleep(0.05)", 9))])
-             ) == {:timeout, {Task.Supervised, :stream, [400]}}
+      assert {:timeout, {Task.Supervised, :stream, [400]}} =
+               run_parallel_tasks.([task.(List.duplicate("SELECT sleep(0.05)", 9))])
     end
   end
 end
