@@ -6,7 +6,6 @@ defmodule Plausible.Stats.Clickhouse do
 
   import Ecto.Query, only: [from: 2, dynamic: 1, dynamic: 2]
 
-  alias Plausible.Stats.Query
   alias Plausible.Timezones
 
   @spec pageview_start_date_local(Plausible.Site.t()) :: Date.t() | nil
@@ -78,7 +77,7 @@ defmodule Plausible.Stats.Clickhouse do
   def top_sources_for_spike(site, query, limit, page) do
     offset = (page - 1) * limit
 
-    {first_datetime, last_datetime} = utc_boundaries(query, site)
+    {first_datetime, last_datetime} = Plausible.Stats.Time.utc_boundaries(query, site)
 
     referrers =
       from(s in "sessions_v2",
@@ -249,54 +248,6 @@ defmodule Plausible.Stats.Clickhouse do
         interval: NaiveDateTime.add(first, offset, :hour),
         visitors: 0
       }
-    end
-  end
-
-  defp utc_boundaries(%Query{now: now, period: "30m"}, site) do
-    last_datetime = now |> NaiveDateTime.truncate(:second)
-
-    first_datetime =
-      last_datetime
-      |> NaiveDateTime.shift(minute: -30)
-      |> beginning_of_time(site.native_stats_start_at)
-      |> NaiveDateTime.truncate(:second)
-
-    {first_datetime, last_datetime}
-  end
-
-  defp utc_boundaries(%Query{now: now, period: "realtime"}, site) do
-    last_datetime = now |> NaiveDateTime.truncate(:second)
-
-    first_datetime =
-      last_datetime
-      |> NaiveDateTime.shift(minute: -5)
-      |> beginning_of_time(site.native_stats_start_at)
-      |> NaiveDateTime.truncate(:second)
-
-    {first_datetime, last_datetime}
-  end
-
-  defp utc_boundaries(%Query{date_range: date_range}, site) do
-    {:ok, first} = NaiveDateTime.new(date_range.first, ~T[00:00:00])
-
-    first_datetime =
-      first
-      |> Timezones.to_utc_datetime(site.timezone)
-      |> beginning_of_time(site.native_stats_start_at)
-
-    {:ok, last} = NaiveDateTime.new(date_range.last |> Date.shift(day: 1), ~T[00:00:00])
-
-    last_datetime =
-      Timezones.to_utc_datetime(last, site.timezone)
-
-    {first_datetime, last_datetime}
-  end
-
-  defp beginning_of_time(candidate, site_creation_date) do
-    if Timex.after?(site_creation_date, candidate) do
-      site_creation_date
-    else
-      candidate
     end
   end
 end

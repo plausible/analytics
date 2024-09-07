@@ -35,7 +35,9 @@ export default function FilterModalPropsRow({
   }
 
   function fetchPropValueOptions(input) {
-    if ([FILTER_OPERATIONS.contains, FILTER_OPERATIONS.does_not_contain].includes(operation)) { return Promise.resolve([]) }
+    if ([FILTER_OPERATIONS.contains, FILTER_OPERATIONS.does_not_contain].includes(operation) || propKey == "") {
+      return Promise.resolve([])
+    }
     return fetchSuggestions(apiPath(site, `/suggestions/prop_value`), query, input, [
       FILTER_OPERATIONS.isNot, filterKey, ['(none)']
     ])

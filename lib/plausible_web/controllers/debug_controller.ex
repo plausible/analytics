@@ -43,8 +43,7 @@ defmodule PlausibleWeb.DebugController do
 
     conn
     |> render("clickhouse.html",
-      queries: queries,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
+      queries: queries
     )
   end
 

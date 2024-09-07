@@ -7,8 +7,7 @@ defmodule Plausible.Stats.QueryResult do
   produced by Jason.encode(query_result) is ordered.
   """
 
-  alias Plausible.Stats.Util
-  alias Plausible.Stats.Filters
+  alias Plausible.Stats.{Util, Filters}
 
   defstruct results: [],
             meta: %{},
@@ -32,7 +31,10 @@ defmodule Plausible.Stats.QueryResult do
         Jason.OrderedObject.new(
           site_id: site.domain,
           metrics: query.metrics,
-          date_range: [query.date_range.first, query.date_range.last],
+          date_range: [
+            to_iso_8601_with_timezone(query.date_range.first),
+            to_iso_8601_with_timezone(query.date_range.last)
+          ],
           filters: query.filters,
           dimensions: query.dimensions,
           order_by: query.order_by |> Enum.map(&Tuple.to_list/1),
@@ -66,11 +68,17 @@ defmodule Plausible.Stats.QueryResult do
   @imports_unsupported_query_warning "Imported stats are not included in the results because query parameters are not supported. " <>
                                        "For more information, see: https://plausible.io/docs/stats-api#filtering-imported-stats"
 
+  @imports_unsupported_interval_warning "Imported stats are not included because the time dimension (i.e. the interval) is too short."
+
   defp meta(query) do
     %{
-      warning:
+      imports_included: if(query.include.imports, do: query.include_imported, else: nil),
+      imports_skip_reason:
+        if(query.skip_imported_reason, do: Atom.to_string(query.skip_imported_reason), else: nil),
+      imports_warning:
         case query.skip_imported_reason do
           :unsupported_query -> @imports_unsupported_query_warning
+          :unsupported_interval -> @imports_unsupported_interval_warning
           _ -> nil
         end,
       time_labels:
@@ -78,6 +86,15 @@ defmodule Plausible.Stats.QueryResult do
     }
     |> Enum.reject(fn {_, value} -> is_nil(value) end)
     |> Enum.into(%{})
+  end
+
+  defp to_iso_8601_with_timezone(%DateTime{time_zone: timezone} = datetime) do
+    naive_iso8601 =
+      datetime
+      |> DateTime.to_naive()
+      |> NaiveDateTime.to_iso8601()
+
+    naive_iso8601 <> " " <> timezone
   end
 end
 

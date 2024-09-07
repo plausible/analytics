@@ -26,7 +26,6 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Support Unix sockets in `DATABASE_URL` plausible/analytics#4202
-
 - Realtime and hourly graphs now show visits lasting their whole duration instead when specific events occur
 - Increase hourly request limit for API keys in CE from 600 to 1000000 (practically removing the limit) plausible/analytics#4200
 - Make TCP connections try IPv6 first with IPv4 fallback in CE plausible/analytics#4245
@@ -35,12 +34,19 @@ All notable changes to this project will be documented in this file.
 - Make `TOTP_VAULT_KEY` optional plausible/analytics#4317
 - Sources like 'google' and 'facebook' are now stored in capitalized forms ('Google', 'Facebook') plausible/analytics#4417
 - `DATABASE_CACERTFILE` now forces TLS for PostgreSQL connections, so you don't need to add `?ssl=true` in `DATABASE_URL`
+- Change auth session cookies to token-based ones with server-side expiration management.
+- Improve Google error messages in CE plausible/analytics#4485
+- Better compress static assets in CE plausible/analytics#4476
+- Return domain-less cookies in CE plausible/analytics#4482
 
 ### Fixed
 
 - Fix access to Stats API feature in CE plausible/analytics#4244
 - Fix filter suggestions when same filter previously applied
 - Fix MX lookup when using relays with Bamboo.Mua plausible/analytics#4350
+- Don't include imports when showing time series hourly interval. Previously imported data was shown each midnight
+- Fix property filter suggestions 500 error when property hasn't been selected
+- Bamboo.Mua: add Date and Message-ID headers if missing plausible/analytics#4474
 
 ## v2.1.1 - 2024-06-06
 
@@ -122,6 +128,8 @@ All notable changes to this project will be documented in this file.
 - Replace `CLICKHOUSE_MAX_BUFFER_SIZE` with `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES`
 - Validate metric isn't queried multiple times
 - Filters in dashboard are represented by jsonurl
+- `MAILER_EMAIL` now defaults to an address built off of `BASE_URL` plausible/analytics#4538
+- default `MAILER_ADAPTER` has been changed to `Bamboo.Mua` plausible/analytics#4538
 
 ### Fixed
 - Creating many sites no longer leads to cookie overflow

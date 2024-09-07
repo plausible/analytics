@@ -8,20 +8,20 @@
   </:subtitle>
 
   <:footer>
-    <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
-      <li>
-        Can't access your authenticator application?
+    <.focus_list>
+      <:item>
+        Can't access your authenticator app?
         <.styled_link href={Routes.auth_path(@conn, :verify_2fa_recovery_code_form)}>
           Use recovery code
         </.styled_link>
-      </li>
-      <li :if={ee?()}>
+      </:item>
+      <:item :if={ee?()}>
         Lost your recovery codes?
         <.styled_link href="https://plausible.io/contact">
           Contact us
         </.styled_link>
-      </li>
-    </ol>
+      </:item>
+    </.focus_list>
   </:footer>
 
   <%= form_for @conn.params, Routes.auth_path(@conn, :verify_2fa), [

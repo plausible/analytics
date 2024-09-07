@@ -1219,6 +1219,731 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     end
   end
 
+  describe "acquisition channel tests" do
+    setup do
+      site = insert(:site)
+      {:ok, site: site}
+    end
+
+    test "parses cross network channel", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com/?utm_campaign=cross-network",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Cross-network"
+    end
+
+    test "parses paid shopping channel based on campaign/medium", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com/?utm_campaign=shopping&utm_medium=paid",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Paid Shopping"
+    end
+
+    test "parses paid shopping channel based on referrer source and medium", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=paid",
+        referrer: "https://shopify.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Paid Shopping"
+    end
+
+    test "parses paid shopping channel based on referrer utm_source and medium", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=shopify&utm_medium=paid",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Paid Shopping"
+    end
+
+    test "parses paid search channel based on referrer and medium", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=paid",
+        referrer: "https://duckduckgo.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Paid Search"
+    end
+
+    test "parses paid search channel based on gclid", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?gclid=123identifier",
+        referrer: "https://google.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Paid Search"
+    end
+
+    test "is not paid search when gclid is present on non-google referrer", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?gclid=123identifier",
+        referrer: "https://duckduckgo.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Organic Search"
+    end
+
+    test "parses paid search channel based on msclkid", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?msclkid=123identifier",
+        referrer: "https://bing.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Paid Search"
+    end
+
+    test "is not paid search when msclkid is present on non-bing referrer", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?msclkid=123identifier",
+        referrer: "https://duckduckgo.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Organic Search"
+    end
+
+    test "parses paid search channel based on utm_source and medium", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=google&utm_medium=paid",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Paid Search"
+    end
+
+    test "parses paid social channel based on referrer and medium", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=paid",
+        referrer: "https://tiktok.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Paid Social"
+    end
+
+    test "parses paid social channel based on utm_source and medium", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=tiktok&utm_medium=paid",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Paid Social"
+    end
+
+    test "parses paid video channel based on referrer and medium", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=paid",
+        referrer: "https://youtube.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Paid Video"
+    end
+
+    test "parses paid video channel based on utm_source and medium", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=youtube&utm_medium=paid",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Paid Video"
+    end
+
+    test "parses display channel", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=banner",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Display"
+    end
+
+    test "parses paid other channel", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=cpc",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Paid Other"
+    end
+
+    test "parses organic shopping channel from referrer", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://walmart.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Organic Shopping"
+    end
+
+    test "parses organic shopping channel from utm_source", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=walmart",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Organic Shopping"
+    end
+
+    test "parses organic shopping channel from utm_campaign", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_campaign=shop",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Organic Shopping"
+    end
+
+    test "parses organic social channel from referrer", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "http://facebook.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Organic Social"
+    end
+
+    test "parses organic social channel from utm_source", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=twitter",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Organic Social"
+    end
+
+    test "parses organic social channel from utm_medium", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=social",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Organic Social"
+    end
+
+    test "parses organic video channel from referrer", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://vimeo.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Organic Video"
+    end
+
+    test "parses organic video channel from utm_source", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=vimeo",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Organic Video"
+    end
+
+    test "parses organic video channel from utm_medium", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=video",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Organic Video"
+    end
+
+    test "parses organic search channel from referrer", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "http://duckduckgo.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Organic Search"
+    end
+
+    test "parses organic search channel from utm_source", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=duckduckgo",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Organic Search"
+    end
+
+    test "parses referral channel from utm_medium", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=referral",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Referral"
+    end
+
+    test "parses email channel from utm_source", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=email",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Email"
+    end
+
+    test "parses email channel from utm_medium", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=email",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Email"
+    end
+
+    test "parses affiliates channel from utm_medium", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=affiliate",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Affiliates"
+    end
+
+    test "parses audio channel from utm_medium", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=audio",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Audio"
+    end
+
+    test "parses sms channel from utm_source", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=sms",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "SMS"
+    end
+
+    test "parses sms channel from utm_medium", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=sms",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "SMS"
+    end
+
+    test "parses mobile push notifications channel from utm_medium with push", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=app-push",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Mobile Push Notifications"
+    end
+
+    test "parses mobile push notifications channel from utm_medium", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=example-mobile",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Mobile Push Notifications"
+    end
+
+    test "parses referral channel if session starts with a simple referral", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://othersite.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Referral"
+    end
+
+    test "parses direct channel if session starts without referrer or utm tags", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.channel == "Direct"
+    end
+  end
+
   describe "user_id generation" do
     setup do
       site = insert(:site)

@@ -13,4 +13,12 @@ defmodule PlausibleWeb.ErrorViewTest do
 
     refute error_html =~ "data-domain="
   end
+
+  test "renders json errors" do
+    assert Phoenix.View.render_to_string(PlausibleWeb.ErrorView, "500.json", %{}) ==
+             ~s[{"message":"Server error","status":500}]
+
+    assert Phoenix.View.render_to_string(PlausibleWeb.ErrorView, "406.json", %{}) ==
+             ~s[{"message":"Not Acceptable","status":406}]
+  end
 end

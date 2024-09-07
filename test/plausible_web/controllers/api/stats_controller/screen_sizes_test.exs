@@ -87,19 +87,17 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         )
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
+      conn1 = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn1, 200)["results"] == [
                %{"name" => "(not set)", "visitors" => 1, "percentage" => 50},
                %{"name" => "Desktop", "visitors" => 1, "percentage" => 50}
              ]
 
-      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
-
       filters = Jason.encode!(%{screen: "(not set)"})
-      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
+      conn2 = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn2, 200)["results"] == [
                %{"name" => "(not set)", "visitors" => 1, "percentage" => 100}
              ]
     end
@@ -203,16 +201,16 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         build(:imported_visitors, visitors: 2)
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
+      conn1 = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn1, 200)["results"] == [
                %{"name" => "Desktop", "visitors" => 2, "percentage" => 66.7},
                %{"name" => "Laptop", "visitors" => 1, "percentage" => 33.3}
              ]
 
-      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&with_imported=true")
+      conn2 = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&with_imported=true")
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn2, 200)["results"] == [
                %{"name" => "Desktop", "visitors" => 2, "percentage" => 40},
                %{"name" => "Laptop", "visitors" => 2, "percentage" => 40},
                %{"name" => "Mobile", "visitors" => 1, "percentage" => 20}

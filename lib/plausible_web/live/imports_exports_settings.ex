@@ -143,7 +143,7 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
         <div :if={@entry.live_status == SiteImport.failed()} class="ml-2 mr-1">
           Import failed -
         </div>
-        <.tooltip :if={@entry.tooltip} wrapper_class={[@label_class, "grow"]} class="justify-left">
+        <.tooltip :if={@entry.tooltip}>
           <%= Plausible.Imported.SiteImport.label(@entry.site_import) %>
           <:tooltip_content>
             <.notice_message message_label={@entry.tooltip} />

@@ -48,7 +48,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
     dynamic(
       [e],
-      e.site_id == ^site.id and e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
+      e.site_id == ^site.id and e.timestamp >= ^first_datetime and e.timestamp <= ^last_datetime
     )
   end
 
@@ -71,8 +71,24 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
       s.site_id == ^site.id and
         s.start >= ^NaiveDateTime.add(first_datetime, -7, :day) and
         s.timestamp >= ^first_datetime and
-        s.start < ^last_datetime
+        s.start <= ^last_datetime
     )
+  end
+
+  defp add_filter(table, query, [:not, filter]) do
+    dynamic([e], not (^add_filter(table, query, filter)))
+  end
+
+  defp add_filter(table, query, [:and, filters]) do
+    filters
+    |> Enum.map(&add_filter(table, query, &1))
+    |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
+  end
+
+  defp add_filter(table, query, [:or, filters]) do
+    filters
+    |> Enum.map(&add_filter(table, query, &1))
+    |> Enum.reduce(fn condition, acc -> dynamic([], ^acc or ^condition) end)
   end
 
   defp add_filter(:events, _query, [:is, "event:name", list]) do

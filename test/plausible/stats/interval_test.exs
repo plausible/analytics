@@ -2,6 +2,7 @@ defmodule Plausible.Stats.IntervalTest do
   use Plausible.DataCase, async: true
 
   import Plausible.Stats.Interval
+  alias Plausible.Stats.DateTimeRange
 
   test "default_for_period/1" do
     assert default_for_period("realtime") == "minute"
@@ -11,9 +12,13 @@ defmodule Plausible.Stats.IntervalTest do
   end
 
   test "default_for_date_range/1" do
-    assert default_for_date_range(Date.range(~D[2022-01-01], ~D[2023-01-01])) == "month"
-    assert default_for_date_range(Date.range(~D[2022-01-01], ~D[2022-01-15])) == "day"
-    assert default_for_date_range(Date.range(~D[2022-01-01], ~D[2022-01-01])) == "hour"
+    year = DateTimeRange.new!(~D[2022-01-01], ~D[2023-01-01], "UTC")
+    fifteen_days = DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-15], "UTC")
+    day = DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-01], "UTC")
+
+    assert default_for_date_range(year) == "month"
+    assert default_for_date_range(fifteen_days) == "day"
+    assert default_for_date_range(day) == "hour"
   end
 
   describe "valid_by_period/1" do

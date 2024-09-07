@@ -764,13 +764,13 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:imported_locations, country: "EE", region: "Hiiumaa", pageviews: 1)
       ])
 
-      conn =
+      conn1 =
         get(
           conn,
           "/api/stats/#{site.domain}/suggestions/region?q=&with_imported=true"
         )
 
-      assert json_response(conn, 200) == [
+      assert json_response(conn1, 200) == [
                %{"value" => "EE-37", "label" => "Harjumaa"},
                %{"value" => "Hiiumaa", "label" => "Hiiumaa"}
              ]

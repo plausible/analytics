@@ -32,6 +32,10 @@ defmodule Plausible.Site do
     # NOTE: needed by `SiteImports` data migration script
     embeds_one :imported_data, Plausible.Site.ImportedData, on_replace: :update
 
+    embeds_one :installation_meta, Plausible.Site.InstallationMeta,
+      on_replace: :update,
+      defaults_to_struct: true
+
     many_to_many :members, User, join_through: Plausible.Site.Membership
     has_many :memberships, Plausible.Site.Membership
     has_many :invitations, Plausible.Auth.Invitation

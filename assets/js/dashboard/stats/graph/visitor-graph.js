@@ -14,6 +14,7 @@ import { isComparisonEnabled } from '../../query-time-periods';
 import LineGraphWithRouter from './line-graph';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
+import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
 
 function fetchTopStats(site, query) {
   const q = { ...query }
@@ -135,6 +136,22 @@ export default function VisitorGraph({ updateImportedDataInView }) {
     }
   }
 
+  function importedSwitchVisible() {
+    return !!topStatData?.with_imported_switch && topStatData?.with_imported_switch.visible
+  }
+
+  function renderImportedIntervalUnsupportedWarning() {
+    const unsupportedInterval = ['hour', 'minute'].includes(getCurrentInterval(site, query))
+    const showingImported = importedSwitchVisible() && query.with_imported === true
+
+    return (
+      <FadeIn show={showingImported && unsupportedInterval} className="h-6 mr-1">
+        <span tooltip={"Inteval is too short to graph imported data"}>
+          <ExclamationCircleIcon className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+        </span>
+      </FadeIn>
+    )
+  }
 
   return (
     <div className={"relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825"}>
@@ -150,9 +167,10 @@ export default function VisitorGraph({ updateImportedDataInView }) {
         <div className="relative px-2">
           {graphRefreshing && renderLoader()}
           <div className="absolute right-4 -top-8 py-1 flex items-center">
+            {renderImportedIntervalUnsupportedWarning()}
             {!isRealtime && <StatsExport />}
             <SamplingNotice samplePercent={topStatData} />
-            {!!topStatData?.with_imported_switch && topStatData?.with_imported_switch.visible &&
+            {importedSwitchVisible() &&
               <WithImportedSwitch
                 tooltipMessage={topStatData.with_imported_switch.tooltip_msg}
                 disabled={!topStatData.with_imported_switch.togglable}

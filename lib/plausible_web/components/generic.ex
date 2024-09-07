@@ -181,6 +181,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr :new_tab, :boolean, default: false
   attr :class, :string, default: ""
   attr :rest, :global
+  attr :method, :string, default: "get"
   slot :inner_block
 
   def styled_link(assigns) do
@@ -188,6 +189,7 @@ defmodule PlausibleWeb.Components.Generic do
     <.unstyled_link
       new_tab={@new_tab}
       href={@href}
+      method={@method}
       class={"text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 " <> @class}
       {@rest}
     >
@@ -263,9 +265,23 @@ defmodule PlausibleWeb.Components.Generic do
   attr :class, :string, default: ""
   attr :id, :any, default: nil
   attr :rest, :global
+  attr :method, :string, default: "get"
   slot :inner_block
 
   def unstyled_link(assigns) do
+    extra =
+      if assigns.method == "get" do
+        []
+      else
+        [
+          "data-csrf": Phoenix.HTML.Tag.csrf_token_value(assigns.href),
+          "data-method": assigns.method,
+          "data-to": assigns.href
+        ]
+      end
+
+    assigns = assign(assigns, extra: extra)
+
     if assigns[:new_tab] do
       assigns = assign(assigns, :icon_class, icon_class(assigns))
 
@@ -279,6 +295,7 @@ defmodule PlausibleWeb.Components.Generic do
         href={@href}
         target="_blank"
         rel="noopener noreferrer"
+        {@extra}
         {@rest}
       >
         <%= render_slot(@inner_block) %>
@@ -287,7 +304,7 @@ defmodule PlausibleWeb.Components.Generic do
       """
     else
       ~H"""
-      <.link class={@class} href={@href} {@rest}>
+      <.link class={@class} href={@href} {@extra} {@rest}>
         <%= render_slot(@inner_block) %>
       </.link>
       """
@@ -318,30 +335,41 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr :wrapper_class, :any, default: ""
-  attr :class, :any, default: ""
+  attr :sticky?, :boolean, default: true
   slot :inner_block, required: true
   slot :tooltip_content, required: true
 
   def tooltip(assigns) do
+    wrapper_data =
+      if assigns[:sticky?], do: "{sticky: false, hovered: false}", else: "{hovered: false}"
+
+    show_inner = if assigns[:sticky?], do: "hovered || sticky", else: "hovered"
+
+    assigns = assign(assigns, wrapper_data: wrapper_data, show_inner: show_inner)
+
     ~H"""
-    <div x-data="{sticky: false, hovered: false}" class={["tooltip-wrapper relative", @wrapper_class]}>
-      <p
+    <div x-data={@wrapper_data} class="tooltip-wrapper w-full relative">
+      <div
+        x-cloak
+        x-show={@show_inner}
+        class="tooltip-content z-[1000] bg-gray-900 rounded text-white absolute bottom-24 sm:bottom-7 left-0 sm:w-72 p-4 text-sm font-medium"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+      >
+        <%= render_slot(List.first(@tooltip_content)) %>
+      </div>
+      <div
         x-on:click="sticky = true; hovered = true"
         x-on:click.outside="sticky = false; hovered = false"
         x-on:mouseover="hovered = true"
         x-on:mouseout="hovered = false"
-        class={["cursor-pointer flex align-items-center", @class]}
       >
         <%= render_slot(@inner_block) %>
-        <Heroicons.information_circle class="w-5 h-5 ml-2" />
-      </p>
-      <span
-        x-show="hovered || sticky"
-        class="bg-gray-900 pointer-events-none absolute bottom-10 margin-x-auto left-10 right-10 transition-opacity p-4 rounded text-sm text-white"
-      >
-        <%= render_slot(List.first(@tooltip_content)) %>
-      </span>
+      </div>
     </div>
     """
   end
@@ -369,20 +397,27 @@ defmodule PlausibleWeb.Components.Generic do
     end
   end
 
+  slot :item, required: true
+
+  def focus_list(assigns) do
+    ~H"""
+    <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
+      <li :for={item <- @item} class="marker:text-indigo-700 dark:marker:text-indigo-700">
+        <%= render_slot(item) %>
+      </li>
+    </ol>
+    """
+  end
+
   slot :title
   slot :subtitle
   slot :inner_block, required: true
   slot :footer
 
-  attr :outer_markup, :boolean, default: true
-
   def focus_box(assigns) do
     ~H"""
-    <div class={[
-      "bg-white w-full max-w-lg mx-auto dark:bg-gray-800 text-black dark:text-gray-100",
-      @outer_markup && "shadow-md  rounded mb-4 mt-8"
-    ]}>
-      <div class={[@outer_markup && "p-8"]}>
+    <div class="focus-box bg-white w-full max-w-lg mx-auto dark:bg-gray-800 text-black dark:text-gray-100 shadow-md  rounded mb-4 mt-8">
+      <div class="p-8">
         <h2 :if={@title != []} class="text-xl font-black dark:text-gray-100">
           <%= render_slot(@title) %>
         </h2>
@@ -403,7 +438,7 @@ defmodule PlausibleWeb.Components.Generic do
         :if={@footer != []}
         class="flex flex-col dark:text-gray-200 border-t border-gray-300 dark:border-gray-700"
       >
-        <div class={[@outer_markup && "p-8"]}>
+        <div class="p-8">
           <%= render_slot(@footer) %>
         </div>
       </div>

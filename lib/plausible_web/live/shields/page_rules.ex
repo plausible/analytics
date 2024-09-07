@@ -113,7 +113,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
         </p>
         <div
           :if={not Enum.empty?(@page_rules)}
-          class="mt-8 overflow-hidden border-b border-gray-200 shadow dark:border-gray-900 sm:rounded-lg"
+          class="mt-8 overflow-visible border-b border-gray-200 shadow dark:border-gray-900 sm:rounded-lg"
         >
           <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-900">
             <thead class="bg-gray-50 dark:bg-gray-900">
@@ -138,16 +138,18 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
             <tbody>
               <%= for rule <- @page_rules do %>
                 <tr class="text-gray-900 dark:text-gray-100">
-                  <td class="px-6 py-4 text-sm font-medium max-w-xs truncate text-ellipsis overflow-hidden">
-                    <div class="flex items-center">
-                      <span
+                  <td class="px-6 py-4 text-sm font-medium">
+                    <PlausibleWeb.Components.Generic.tooltip>
+                      <:tooltip_content>
+                        Added at <%= format_added_at(rule.inserted_at, @site.timezone) %> by <%= rule.added_by %>
+                      </:tooltip_content>
+                      <div
                         id={"page-#{rule.id}"}
-                        class="mr-4 cursor-help border-b border-dotted border-gray-400 text-ellipsis overflow-hidden"
-                        title={"#{rule.page_path}\n\nAdded at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
+                        class="mr-4 cursor-help text-ellipsis truncate max-w-xs"
                       >
                         <%= rule.page_path %>
-                      </span>
-                    </div>
+                      </div>
+                    </PlausibleWeb.Components.Generic.tooltip>
                   </td>
                   <td class="px-6 py-4 text-sm text-gray-500">
                     <div class="flex items-center">

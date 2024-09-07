@@ -13,8 +13,29 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=realtime&metric=pageviews")
 
-      assert %{"plot" => plot} = json_response(conn, 200)
+      assert %{"plot" => plot, "labels" => labels} = json_response(conn, 200)
 
+      assert labels == Enum.to_list(-30..-1)
+      assert Enum.count(plot) == 30
+      assert Enum.any?(plot, fn pageviews -> pageviews > 0 end)
+    end
+
+    test "displays pageviews for the last 30 minutes for a non-UTC timezone site", %{
+      conn: conn,
+      site: site
+    } do
+      Plausible.Site.changeset(site, %{timezone: "Europe/Tallinn"})
+      |> Plausible.Repo.update()
+
+      populate_stats(site, [
+        build(:pageview, timestamp: relative_time(minutes: -5))
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/main-graph?period=realtime&metric=pageviews")
+
+      assert %{"plot" => plot, "labels" => labels} = json_response(conn, 200)
+
+      assert labels == Enum.to_list(-30..-1)
       assert Enum.count(plot) == 30
       assert Enum.any?(plot, fn pageviews -> pageviews > 0 end)
     end
@@ -53,10 +74,13 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         )
 
       zeroes = List.duplicate(0, 30)
-      assert %{"plot" => ^zeroes, "includes_imported" => false} = json_response(conn, 200)
+      assert %{"plot" => ^zeroes} = json_response(conn, 200)
     end
 
-    test "displays visitors for a day with imported data", %{conn: conn, site: site} do
+    test "imported data is not included for hourly interval", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-31 00:00:00]),
@@ -70,10 +94,9 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imports_exist" => true, "includes_imported" => true} =
-               json_response(conn, 200)
+      assert %{"plot" => plot} = json_response(conn, 200)
 
-      assert plot == [2] ++ List.duplicate(0, 23)
+      assert plot == [1] ++ List.duplicate(0, 23)
     end
 
     test "displays hourly stats in configured timezone", %{conn: conn, user: user} do
@@ -137,8 +160,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imports_exist" => true, "includes_imported" => true} =
-               json_response(conn, 200)
+      assert %{"plot" => plot} = json_response(conn, 200)
 
       assert Enum.count(plot) == 31
       assert List.first(plot) == 2
@@ -158,8 +180,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imports_exist" => true, "includes_imported" => true} =
-               json_response(conn, 200)
+      assert %{"plot" => plot} = json_response(conn, 200)
 
       assert Enum.count(plot) == 31
       assert List.first(plot) == 1
@@ -1072,6 +1093,28 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                "2021-12-01" => false
              }
     end
+
+    test "returns stats for a day with a minute interval", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2023-03-01 12:00:00])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&metric=visitors&date=2023-03-01&interval=minute"
+        )
+
+      %{"labels" => labels, "plot" => plot} = json_response(conn, 200)
+
+      assert length(labels) == 24 * 60
+
+      assert List.first(labels) == "2023-03-01 00:00:00"
+      assert Enum.at(labels, 1) == "2023-03-01 00:01:00"
+      assert List.last(labels) == "2023-03-01 23:59:00"
+
+      assert Enum.at(plot, Enum.find_index(labels, &(&1 == "2023-03-01 12:00:00"))) == 1
+    end
   end
 
   describe "GET /api/stats/main-graph - comparisons" do
@@ -1173,12 +1216,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=year&date=2021-01-01&with_imported=true&comparison=year_over_year&interval=month"
         )
 
-      assert %{
-               "plot" => plot,
-               "comparison_plot" => comparison_plot,
-               "imports_exist" => true,
-               "includes_imported" => true
-             } = json_response(conn, 200)
+      assert %{"plot" => plot, "comparison_plot" => comparison_plot} = json_response(conn, 200)
 
       assert 4 == Enum.sum(plot)
       assert 2 == Enum.sum(comparison_plot)
@@ -1219,12 +1257,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=year&date=2021-01-01&with_imported=false&comparison=year_over_year&interval=month"
         )
 
-      assert %{
-               "plot" => plot,
-               "comparison_plot" => comparison_plot,
-               "imports_exist" => true,
-               "includes_imported" => false
-             } = json_response(conn, 200)
+      assert %{"plot" => plot, "comparison_plot" => comparison_plot} = json_response(conn, 200)
 
       assert 4 == Enum.sum(plot)
       assert 0 == Enum.sum(comparison_plot)
@@ -1249,12 +1282,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-14&comparison=previous_period&metric=conversion_rate&filters=#{filters}"
         )
 
-      assert %{
-               "plot" => this_week_plot,
-               "comparison_plot" => last_week_plot,
-               "imports_exist" => true,
-               "includes_imported" => false
-             } = json_response(conn, 200)
+      assert %{"plot" => this_week_plot, "comparison_plot" => last_week_plot} =
+               json_response(conn, 200)
 
       assert this_week_plot == [50.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
       assert last_week_plot == [33.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]

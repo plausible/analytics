@@ -9,7 +9,7 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
     setup [:create_user, :log_in, :create_site]
 
     test "does not display the Plugins API section by default", %{conn: conn, site: site} do
-      conn = get(conn, "/#{site.domain}/integrations")
+      conn = get(conn, "/#{site.domain}/settings/integrations")
       resp = html_response(conn, 200)
 
       refute resp =~ "Plugin Tokens"

@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Imported do
   use Plausible.Stats.SQL.Fragments
 
   import Ecto.Query
-  import Plausible.Stats.Imported.SQL.Builder
+  import Plausible.Stats.Imported.SQL.Expression
 
   alias Plausible.Stats.Filters
   alias Plausible.Stats.Imported
