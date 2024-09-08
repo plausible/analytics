@@ -228,10 +228,15 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:contains_not, dimension, clauses]) do
+  defp filter_custom_prop(prop_name, column_name, [:contains_not, _dimension, clauses]) do
     dynamic(
-      [],
-      not (^filter_custom_prop(prop_name, column_name, [:contains, dimension, clauses]))
+      [t],
+      has_key(t, column_name, ^prop_name) and
+        fragment(
+          "not(multiSearchAny(?, ?))",
+          get_by_key(t, column_name, ^prop_name),
+          ^clauses
+        )
     )
   end
 
