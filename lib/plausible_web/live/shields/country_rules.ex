@@ -104,7 +104,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
         </p>
         <div
           :if={not Enum.empty?(@country_rules)}
-          class="mt-8 overflow-hidden border-b border-gray-200 shadow dark:border-gray-900 sm:rounded-lg"
+          class="mt-8 overflow-visible border-b border-gray-200 shadow dark:border-gray-900 sm:rounded-lg"
         >
           <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-900">
             <thead class="bg-gray-50 dark:bg-gray-900">
@@ -131,15 +131,14 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
                 <% country = Location.Country.get_country(rule.country_code) %>
                 <tr class="text-gray-900 dark:text-gray-100">
                   <td class="px-6 py-4 text-sm font-medium">
-                    <div class="flex items-center">
-                      <span
-                        id={"country-#{rule.id}"}
-                        class="mr-4 cursor-help border-b border-dotted border-gray-400"
-                        title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
-                      >
+                    <PlausibleWeb.Components.Generic.tooltip>
+                      <:tooltip_content>
+                        Added at <%= format_added_at(rule.inserted_at, @site.timezone) %> by <%= rule.added_by %>
+                      </:tooltip_content>
+                      <span id={"country-#{rule.id}"} class="mr-4 cursor-help">
                         <%= country.flag %> <%= country.name %>
                       </span>
-                    </div>
+                    </PlausibleWeb.Components.Generic.tooltip>
                   </td>
                   <td class="px-6 py-4 text-sm text-gray-500">
                     <span :if={rule.action == :deny}>

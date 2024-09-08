@@ -335,11 +335,7 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr :wrapper_class, :any, default: ""
-  attr :class, :any, default: ""
-  attr :icon?, :boolean, default: true
   attr :sticky?, :boolean, default: true
-  attr :position, :string, default: "bottom-10 margin-x-auto left-10 right-10"
   slot :inner_block, required: true
   slot :tooltip_content, required: true
 
@@ -352,26 +348,28 @@ defmodule PlausibleWeb.Components.Generic do
     assigns = assign(assigns, wrapper_data: wrapper_data, show_inner: show_inner)
 
     ~H"""
-    <div x-data={@wrapper_data} class={["tooltip-wrapper relative", @wrapper_class]}>
-      <p
+    <div x-data={@wrapper_data} class="tooltip-wrapper w-full relative">
+      <div
+        x-cloak
+        x-show={@show_inner}
+        class="tooltip-content z-[1000] bg-gray-900 rounded text-white absolute bottom-24 sm:bottom-7 left-0 sm:w-72 p-4 text-sm font-medium"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+      >
+        <%= render_slot(List.first(@tooltip_content)) %>
+      </div>
+      <div
         x-on:click="sticky = true; hovered = true"
         x-on:click.outside="sticky = false; hovered = false"
         x-on:mouseover="hovered = true"
         x-on:mouseout="hovered = false"
-        class={["cursor-pointer flex align-items-center", @class]}
       >
         <%= render_slot(@inner_block) %>
-        <Heroicons.information_circle :if={@icon?} class="w-5 h-5 ml-2" />
-      </p>
-      <span
-        x-show={@show_inner}
-        class={[
-          "bg-gray-900 pointer-events-none absolute transition-opacity p-4 rounded text-sm text-white",
-          @position
-        ]}
-      >
-        <%= render_slot(List.first(@tooltip_content)) %>
-      </span>
+      </div>
     </div>
     """
   end

@@ -127,7 +127,7 @@ defmodule Plausible.MixProject do
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
       {:ex_money, "~> 5.12"},
       {:mjml_eex, "~> 0.11.0"},
-      {:mjml, "~> 1.5.0"},
+      {:mjml, "~> 3.1.0"},
       {:heroicons, "~> 0.5.0"},
       {:zxcvbn, git: "https://github.com/techgaun/zxcvbn-elixir.git"},
       {:open_api_spex, "~> 3.18"},
@@ -147,7 +147,8 @@ defmodule Plausible.MixProject do
       {:happy_tcp, github: "ruslandoga/happy_tcp", only: [:ce, :ce_dev, :ce_test]},
       {:ex_json_schema, "~> 0.10.2"},
       {:odgn_json_pointer, "~> 3.0.1"},
-      {:phoenix_bakery, "~> 0.1.2", only: [:ce, :ce_dev, :ce_test]}
+      {:phoenix_bakery, "~> 0.1.2", only: [:ce, :ce_dev, :ce_test]},
+      {:tzdata, github: "ruslandoga/tzdata", branch: "fix-for-2024b", override: true}
     ]
   end
 
