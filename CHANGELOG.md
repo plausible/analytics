@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 - Add a search functionality in all Details views
 - Icons for browsers plausible/analytics#4239
 - Automatic custom property selection in the dashboard Properties report
-- Add `does_not_contain` filter support to dashboard
+- Add `contains_not` filter support to dashboard
 - Traffic drop notifications plausible/analytics#4300
 - Add search and pagination functionality into Google Keywords > Details modal
 - ClickHouse system.query_log table log_comment column now contains information about source of queries. Useful for debugging
@@ -47,6 +47,7 @@ All notable changes to this project will be documented in this file.
 - Don't include imports when showing time series hourly interval. Previously imported data was shown each midnight
 - Fix property filter suggestions 500 error when property hasn't been selected
 - Bamboo.Mua: add Date and Message-ID headers if missing plausible/analytics#4474
+- Fix migration order across `plausible_db` and `plausible_events_db` databases plausible/analytics#4466
 
 ## v2.1.1 - 2024-06-06
 

@@ -34,7 +34,7 @@ export default function FilterModalRow({
   }
 
   function fetchOptions(input) {
-    if ([FILTER_OPERATIONS.contains, FILTER_OPERATIONS.does_not_contain].includes(operation)) {
+    if ([FILTER_OPERATIONS.contains, FILTER_OPERATIONS.contains_not].includes(operation)) {
       return Promise.resolve([])
     }
 
