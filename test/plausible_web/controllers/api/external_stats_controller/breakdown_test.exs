@@ -3156,6 +3156,59 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                ]
              }
     end
+
+    test "bounce rate calculation handles invalid session data gracefully", %{
+      conn: conn,
+      site: site
+    } do
+      user_id = 123
+
+      populate_stats(site, [
+        build(:pageview,
+          user_id: user_id,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      first_session = Plausible.Cache.Adapter.get(:sessions, {site.id, user_id})
+
+      populate_stats(site, [
+        build(:pageview,
+          user_id: user_id,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:01:00]
+        )
+      ])
+
+      Plausible.Cache.Adapter.put(:sessions, {site.id, user_id}, first_session)
+
+      populate_stats(site, [
+        build(:pageview,
+          user_id: user_id,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:01:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:page",
+          "metrics" => "bounce_rate"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "page" => "/",
+                   "bounce_rate" => 0
+                 }
+               ]
+             }
+    end
   end
 
   describe "imported data" do
