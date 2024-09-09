@@ -1,10 +1,5 @@
 /* @format */
-import React, {
-  createContext,
-  useMemo,
-  useContext,
-  ReactNode
-} from 'react'
+import React, { createContext, useMemo, useContext, ReactNode } from 'react'
 import { useLocation } from 'react-router'
 import { useMountedEffect } from './custom-hooks'
 import * as api from './api'
