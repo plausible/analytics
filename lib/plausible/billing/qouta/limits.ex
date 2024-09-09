@@ -18,7 +18,7 @@ defmodule Plausible.Billing.Quota.Limits do
 
     @spec site_limit(User.t()) :: non_neg_integer() | :unlimited
     def site_limit(user) do
-      if Timex.before?(user.inserted_at, @limit_sites_since) do
+      if Date.before?(user.inserted_at, @limit_sites_since) do
         :unlimited
       else
         get_site_limit_from_plan(user)
