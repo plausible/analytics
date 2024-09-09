@@ -752,7 +752,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
     end
 
-    test "does_not_contain page filter", %{conn: conn, site: site} do
+    test "contains_not page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/en/page1"),
         build(:pageview, pathname: "/en/page2"),
@@ -765,7 +765,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "metrics" => ["visitors"],
           "filters" => [
-            ["does_not_contain", "event:page", ["/en/"]]
+            ["contains_not", "event:page", ["/en/"]]
           ]
         })
 
@@ -846,6 +846,150 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         })
 
       assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
+    end
+
+    test "`matches` operator", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/user/1234"),
+        build(:pageview, pathname: "/user/789/contributions"),
+        build(:pageview, pathname: "/blog/user/1234"),
+        build(:pageview, pathname: "/user/ef/contributions"),
+        build(:pageview, pathname: "/other/path")
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [
+            ["matches", "event:page", ["^/user/[0-9]+"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
+    end
+
+    test "`matches_not` operator", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/user/1234"),
+        build(:pageview, pathname: "/user/789/contributions"),
+        build(:pageview, pathname: "/blog/user/1234"),
+        build(:pageview, pathname: "/user/ef/contributions"),
+        build(:pageview, pathname: "/other/path")
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [
+            ["matches_not", "event:page", ["^/user/[0-9]+"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
+    end
+
+    test "`contains` and `contains_not` operator with custom properties", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["tier", "value"],
+          "meta.value": ["large-1", "ax"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier", "value"],
+          "meta.value": ["small-1", "bx"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier", "value"],
+          "meta.value": ["small-1", "ax"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier", "value"],
+          "meta.value": ["small-2", "bx"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier", "value"],
+          "meta.value": ["small-2", "cx"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["small-3"]
+        ),
+        build(:pageview,
+          "meta.key": ["value"],
+          "meta.value": ["ax"]
+        ),
+        build(:pageview)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [
+            ["contains", "event:props:tier", ["small"]],
+            ["contains_not", "event:props:value", ["b", "c"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
+    end
+
+    test "`matches` and `matches_not` operator with custom properties", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["tier", "value"],
+          "meta.value": ["large-1", "a"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier", "value"],
+          "meta.value": ["small-1", "b"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier", "value"],
+          "meta.value": ["small-1", "a"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier", "value"],
+          "meta.value": ["small-2", "b"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier", "value"],
+          "meta.value": ["small-2", "c"]
+        ),
+        build(:pageview,
+          "meta.key": ["tier"],
+          "meta.value": ["small-3"]
+        ),
+        build(:pageview,
+          "meta.key": ["value"],
+          "meta.value": ["a"]
+        ),
+        build(:pageview)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [
+            ["matches", "event:props:tier", ["small.+"]],
+            ["matches_not", "event:props:value", ["b|c"]]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
     end
 
     test "handles filtering by visit:country", %{
