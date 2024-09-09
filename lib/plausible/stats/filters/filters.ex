@@ -60,7 +60,7 @@ defmodule Plausible.Stats.Filters do
   ### Examples:
 
       iex> Filters.parse("{\\"page\\":\\"/blog/**\\"}")
-      [[:matches, "event:page", ["/blog/**"]]]
+      [[:matches_wildcard, "event:page", ["/blog/**"]]]
 
       iex> Filters.parse("visit:browser!=Chrome")
       [[:is_not, "visit:browser", ["Chrome"]]]

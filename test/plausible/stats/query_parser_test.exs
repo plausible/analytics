@@ -167,7 +167,16 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   end
 
   describe "filters validation" do
-    for operation <- [:is, :is_not, :matches, :does_not_match, :contains, :does_not_contain] do
+    for operation <- [
+          :is,
+          :is_not,
+          :matches_wildcard,
+          :matches_wildcard_not,
+          :matches,
+          :matches_not,
+          :contains,
+          :contains_not
+        ] do
       test "#{operation} filter", %{site: site} do
         %{
           "site_id" => site.domain,
@@ -212,7 +221,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       end
     end
 
-    for operation <- [:matches, :does_not_match] do
+    for operation <- [:matches_wildcard, :matches_wildcard_not] do
       test "#{operation} is not a valid filter operation in public API", %{site: site} do
         %{
           "site_id" => site.domain,

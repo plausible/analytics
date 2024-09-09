@@ -74,9 +74,13 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_operator(["is" | _rest]), do: {:ok, :is}
   defp parse_operator(["is_not" | _rest]), do: {:ok, :is_not}
   defp parse_operator(["matches" | _rest]), do: {:ok, :matches}
-  defp parse_operator(["does_not_match" | _rest]), do: {:ok, :does_not_match}
+  defp parse_operator(["matches_not" | _rest]), do: {:ok, :matches_not}
+  defp parse_operator(["matches_wildcard" | _rest]), do: {:ok, :matches_wildcard}
+  defp parse_operator(["matches_wildcard_not" | _rest]), do: {:ok, :matches_wildcard_not}
   defp parse_operator(["contains" | _rest]), do: {:ok, :contains}
-  defp parse_operator(["does_not_contain" | _rest]), do: {:ok, :does_not_contain}
+  defp parse_operator(["contains_not" | _rest]), do: {:ok, :contains_not}
+  # :TODO: Remove this once frontend support is gone
+  defp parse_operator(["does_not_contain" | _rest]), do: {:ok, :contains_not}
   defp parse_operator(["not" | _rest]), do: {:ok, :not}
   defp parse_operator(["and" | _rest]), do: {:ok, :and}
   defp parse_operator(["or" | _rest]), do: {:ok, :or}
@@ -96,7 +100,16 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_filter_key(filter), do: {:error, "Invalid filter '#{i(filter)}'."}
 
   defp parse_filter_rest(operator, filter)
-       when operator in [:is, :is_not, :matches, :does_not_match, :contains, :does_not_contain],
+       when operator in [
+              :is,
+              :is_not,
+              :matches,
+              :matches_not,
+              :matches_wildcard,
+              :matches_wildcard_not,
+              :contains,
+              :contains_not
+            ],
        do: parse_clauses_list(filter)
 
   defp parse_filter_rest(operator, _filter)

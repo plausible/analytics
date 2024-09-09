@@ -106,7 +106,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    test "returns top pages with :matches filter on custom pageview props", %{
+    test "returns top pages with :matches_wildcard filter on custom pageview props", %{
       conn: conn,
       site: site
     } do
@@ -1328,7 +1328,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
-    test "filter by :matches page with imported data", %{conn: conn, site: site} do
+    test "filter by :matches_wildcard page with imported data", %{conn: conn, site: site} do
       site_import = insert(:site_import, site: site)
 
       populate_stats(site, site_import.id, [

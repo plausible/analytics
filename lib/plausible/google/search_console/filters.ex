@@ -31,7 +31,7 @@ defmodule Plausible.Google.SearchConsole.Filters do
     %{dimension: "page", operator: "includingRegex", expression: expression}
   end
 
-  defp transform_filter(property, [:matches, "visit:entry_page", pages])
+  defp transform_filter(property, [:matches_wildcard, "visit:entry_page", pages])
        when is_list(pages) do
     expression =
       Enum.map_join(pages, "|", fn page -> page_regex(property_url(property, page)) end)

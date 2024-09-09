@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 - Add a search functionality in all Details views
 - Icons for browsers plausible/analytics#4239
 - Automatic custom property selection in the dashboard Properties report
-- Add `does_not_contain` filter support to dashboard
+- Add `contains_not` filter support to dashboard
 - Traffic drop notifications plausible/analytics#4300
 - Add search and pagination functionality into Google Keywords > Details modal
 - ClickHouse system.query_log table log_comment column now contains information about source of queries. Useful for debugging
