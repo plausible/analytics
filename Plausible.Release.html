@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-51208407.js"></script>
+    <script src="dist/sidebar_items-7A113531.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -189,15 +189,17 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#migrate/0" translate="no">migrate()</a>
+        <a href="#interweave_migrate/1" translate="no">interweave_migrate(repos \\ repos())</a>
 
       </div>
+
+        <div class="summary-synopsis"><p><a href="#interweave_migrate/0"><code class="inline">interweave_migrate/0</code></a> is a migration function that</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#pending_migrations/0" translate="no">pending_migrations()</a>
+        <a href="#pending_streaks/1" translate="no">pending_streaks(repos \\ repos())</a>
 
       </div>
 
@@ -249,7 +251,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">configure_ref_inspector()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L71" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L172" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -271,7 +273,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">configure_ua_inspector()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L76" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L177" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -293,7 +295,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">createdb()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L43" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L144" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -315,7 +317,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">dump_plans()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L81" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L182" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -328,16 +330,18 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="migrate/0">
+<section class="detail" id="interweave_migrate/1">
+
+    <span id="interweave_migrate/0"></span>
 
   <div class="detail-header">
-    <a href="#migrate/0" class="detail-link" title="Link to this function">
+    <a href="#interweave_migrate/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">migrate()</h1>
+    <h1 class="signature" translate="no">interweave_migrate(repos \\ repos())</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L22" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L59" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -347,19 +351,30 @@ Pages
 
   <section class="docstring">
 
-
+<p><a href="#interweave_migrate/0"><code class="inline">interweave_migrate/0</code></a> is a migration function that:</p><ul><li>Lists all pending migrations across multiple repositories.</li><li>Sorts these migrations into a single list.</li><li>Groups consecutive migrations by repository into &quot;streaks&quot;.</li><li>Executes the migrations in the correct order by processing each streak sequentially.</li></ul><h3 id="interweave_migrate/1-why-use-this-approach" class="section-heading">
+  <a href="#interweave_migrate/1-why-use-this-approach" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Why Use This Approach?</span>
+</h3>
+<p>This function resolves dependencies between migrations that span across different repositories.
+The default <code class="inline">migrate/0</code> function migrates each repository independently, which may result in
+migrations running in the wrong order when there are cross-repository dependencies.</p><p>Consider the following example (adapted from reality, not 100% accurate):</p><ul><li><strong>Migration 1</strong>: The PostgreSQL (PG) repository creates a table named <code class="inline">site_imports</code>.</li><li><strong>Migration 2</strong>: The ClickHouse (CH) repository creates <code class="inline">import_id</code> columns in <code class="inline">imported_*</code> tables.</li><li><strong>Migration 3</strong>: The PG repository runs a data migration that utilizes both PG and CH databases,
+reading from the <code class="inline">import_id</code> column in <code class="inline">imported_*</code> tables.</li></ul><p>The default <code class="inline">migrate/0</code> would execute these migrations by repository, resulting in the following order:</p><ol><li>Migration 1 (PG)</li><li>Migration 3 (PG)</li><li>Migration 2 (CH)</li></ol><p>This sequence would fail at Migration 3, as the <code class="inline">import_id</code> columns in the CH repository have not been created yet.</p><p><a href="#interweave_migrate/0"><code class="inline">interweave_migrate/0</code></a> addresses this issue by consolidating all pending migrations into a single, ordered queue:</p><ol><li>Migration 1 (PG)</li><li>Migration 2 (CH)</li><li>Migration 3 (PG)</li></ol><p>This ensures all dependencies are resolved in the correct order.</p>
   </section>
 </section>
-<section class="detail" id="pending_migrations/0">
+<section class="detail" id="pending_streaks/1">
+
+    <span id="pending_streaks/0"></span>
 
   <div class="detail-header">
-    <a href="#pending_migrations/0" class="detail-link" title="Link to this function">
+    <a href="#pending_streaks/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">pending_migrations()</h1>
+    <h1 class="signature" translate="no">pending_streaks(repos \\ repos())</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L28" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L106" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -381,7 +396,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">rollback()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L53" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L154" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -403,7 +418,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">seed()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L35" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L136" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
