@@ -10,6 +10,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
   @check_circle ~s|div#progress-indicator #check-circle|
   @error_circle ~s|div#progress-indicator #error-circle|
   @recommendations ~s|#recommendation|
+  @super_admin_report ~s|#super-admin-report|
 
   test "renders initial state" do
     html = render_component(@component, domain: "example.com")
@@ -22,6 +23,7 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
     refute class_of_element(html, @pulsating_circle) =~ "hidden"
     refute element_exists?(html, @recommendations)
     refute element_exists?(html, @check_circle)
+    refute element_exists?(html, @super_admin_report)
   end
 
   test "renders error badge on error" do
@@ -51,6 +53,30 @@ defmodule PlausibleWeb.Live.Components.VerificationTest do
     assert recommendations == [
              "If your site is running at a different location, please manually check your integration.  Learn more"
            ]
+
+    refute element_exists?(html, @super_admin_report)
+  end
+
+  test "renders super-admin report" do
+    state = %Plausible.Verification.State{
+      url: "example.com"
+    }
+
+    interpretation =
+      Plausible.Verification.Checks.interpret_diagnostics(state)
+
+    html =
+      render_component(@component,
+        domain: "example.com",
+        success?: false,
+        finished?: true,
+        interpretation: interpretation,
+        verification_state: state,
+        super_admin?: true
+      )
+
+    assert element_exists?(html, @super_admin_report)
+    assert text_of_element(html, @super_admin_report) =~ "Snippets found in body: 0"
   end
 
   test "hides pulsating circle when finished, shows check circle" do
