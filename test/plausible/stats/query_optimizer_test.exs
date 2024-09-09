@@ -127,16 +127,16 @@ defmodule Plausible.Stats.QueryOptimizerTest do
                date_range: Date.range(~N[2022-01-01 00:00:00], ~N[2022-01-01 05:00:00]),
                filters: [
                  [:is, "event:hostname", ["example.com"]],
-                 [:matches, "event:hostname", ["*.com"]]
+                 [:matches_wildcard, "event:hostname", ["*.com"]]
                ],
                dimensions: ["visit:referrer", "visit:exit_page"]
              }).filters == [
                [:is, "event:hostname", ["example.com"]],
-               [:matches, "event:hostname", ["*.com"]],
+               [:matches_wildcard, "event:hostname", ["*.com"]],
                [:is, "visit:entry_page_hostname", ["example.com"]],
-               [:matches, "visit:entry_page_hostname", ["*.com"]],
+               [:matches_wildcard, "visit:entry_page_hostname", ["*.com"]],
                [:is, "visit:exit_page_hostname", ["example.com"]],
-               [:matches, "visit:exit_page_hostname", ["*.com"]]
+               [:matches_wildcard, "visit:exit_page_hostname", ["*.com"]]
              ]
     end
 
