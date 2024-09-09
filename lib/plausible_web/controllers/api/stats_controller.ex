@@ -263,14 +263,14 @@ defmodule PlausibleWeb.Api.StatsController do
     case query.interval do
       "hour" ->
         current_date =
-          Timex.now(site.timezone)
+          DateTime.now!(site.timezone)
           |> Calendar.strftime("%Y-%m-%d %H:00:00")
 
         Enum.find_index(dates, &(&1 == current_date))
 
       "day" ->
         current_date =
-          Timex.now(site.timezone)
+          DateTime.now!(site.timezone)
           |> Timex.to_date()
           |> Date.to_string()
 
@@ -278,7 +278,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
       "week" ->
         current_date =
-          Timex.now(site.timezone)
+          DateTime.now!(site.timezone)
           |> Timex.to_date()
           |> Time.date_or_weekstart(query)
           |> Date.to_string()
@@ -287,7 +287,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
       "month" ->
         current_date =
-          Timex.now(site.timezone)
+          DateTime.now!(site.timezone)
           |> Timex.to_date()
           |> Timex.beginning_of_month()
           |> Date.to_string()
@@ -296,7 +296,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
       "minute" ->
         current_date =
-          Timex.now(site.timezone)
+          DateTime.now!(site.timezone)
           |> Calendar.strftime("%Y-%m-%d %H:%M:00")
 
         Enum.find_index(dates, &(&1 == current_date))

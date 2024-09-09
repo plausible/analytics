@@ -61,7 +61,7 @@ defmodule Plausible.Stats.Comparisons do
   def compare(%Plausible.Site{} = site, %Stats.Query{} = source_query, mode, opts \\ []) do
     opts =
       opts
-      |> Keyword.put_new(:now, Timex.now(site.timezone))
+      |> Keyword.put_new(:now, DateTime.now!(site.timezone))
       |> Keyword.put_new(:match_day_of_week?, false)
 
     source_date_range = DateTimeRange.to_date_range(source_query.date_range)
