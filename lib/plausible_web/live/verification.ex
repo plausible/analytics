@@ -27,9 +27,12 @@ defmodule PlausibleWeb.Live.Verification do
 
     private = Map.get(socket.private.connect_info, :private, %{})
 
+    super_admin? = Plausible.Auth.is_super_admin?(socket.assigns.current_user)
+
     socket =
       assign(socket,
         site: site,
+        super_admin?: super_admin?,
         domain: domain,
         has_pageviews?: has_pageviews?(site),
         component: @component,
@@ -61,6 +64,7 @@ defmodule PlausibleWeb.Live.Verification do
       attempts={@attempts}
       flow={@flow}
       awaiting_first_pageview?={not @has_pageviews?}
+      super_admin?={@super_admin?}
     />
     """
   end
@@ -118,7 +122,8 @@ defmodule PlausibleWeb.Live.Verification do
     update_component(socket,
       finished?: true,
       success?: interpretation.ok?,
-      interpretation: interpretation
+      interpretation: interpretation,
+      verification_state: state
     )
 
     {:noreply, assign(socket, checks_pid: nil)}
