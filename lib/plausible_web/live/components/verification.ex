@@ -10,18 +10,21 @@ defmodule PlausibleWeb.Live.Components.Verification do
 
   import PlausibleWeb.Components.Generic
 
-  attr :domain, :string, required: true
+  attr(:domain, :string, required: true)
 
-  attr :message, :string, default: "We're visiting your site to ensure that everything is working"
-  attr :super_admin?, :boolean, default: false
-  attr :finished?, :boolean, default: false
-  attr :success?, :boolean, default: false
-  attr :verification_state, Plausible.Verification.State, default: nil
-  attr :interpretation, Plausible.Verification.Diagnostics.Result, default: nil
-  attr :attempts, :integer, default: 0
-  attr :flow, :string, default: ""
-  attr :installation_type, :string, default: nil
-  attr :awaiting_first_pageview?, :boolean, default: false
+  attr(:message, :string,
+    default: "We're visiting your site to ensure that everything is working"
+  )
+
+  attr(:super_admin?, :boolean, default: false)
+  attr(:finished?, :boolean, default: false)
+  attr(:success?, :boolean, default: false)
+  attr(:verification_state, Plausible.Verification.State, default: nil)
+  attr(:interpretation, Plausible.Verification.Diagnostics.Result, default: nil)
+  attr(:attempts, :integer, default: 0)
+  attr(:flow, :string, default: "")
+  attr(:installation_type, :string, default: nil)
+  attr(:awaiting_first_pageview?, :boolean, default: false)
 
   def render(assigns) do
     ~H"""
@@ -139,10 +142,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
             </p>
             <div x-show="showDiagnostics" x-cloak>
               <.focus_list>
-                <:item
-                  :for={{diag, value} <- Map.from_struct(@verification_state.diagnostics)}
-                  :if={@verification_state && @super_admin?}
-                >
+                <:item :for={{diag, value} <- Map.from_struct(@verification_state.diagnostics)}>
                   <span class="text-sm">
                     <%= Phoenix.Naming.humanize(diag) %>: <span class="font-mono"><%= value %></span>
                   </span>
