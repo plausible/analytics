@@ -58,7 +58,7 @@ defmodule Plausible.Workers.SendEmailReport do
 
   defp put_last_month_query(%{site: site} = assigns) do
     last_month =
-      Timex.now(site.timezone)
+      DateTime.now!(site.timezone)
       |> DateTime.shift(month: -1)
       |> Timex.beginning_of_month()
       |> Date.to_iso8601()
@@ -69,7 +69,7 @@ defmodule Plausible.Workers.SendEmailReport do
   end
 
   defp put_last_week_query(%{site: site} = assigns) do
-    today = Timex.now(site.timezone) |> DateTime.to_date()
+    today = DateTime.now!(site.timezone) |> DateTime.to_date()
     date = Date.shift(today, week: -1) |> Timex.end_of_week() |> Date.to_iso8601()
     query = Query.from(site, %{"period" => "7d", "date" => date})
 
