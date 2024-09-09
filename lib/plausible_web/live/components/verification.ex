@@ -10,17 +10,21 @@ defmodule PlausibleWeb.Live.Components.Verification do
 
   import PlausibleWeb.Components.Generic
 
-  attr :domain, :string, required: true
+  attr(:domain, :string, required: true)
 
-  attr :message, :string, default: "We're visiting your site to ensure that everything is working"
+  attr(:message, :string,
+    default: "We're visiting your site to ensure that everything is working"
+  )
 
-  attr :finished?, :boolean, default: false
-  attr :success?, :boolean, default: false
-  attr :interpretation, Plausible.Verification.Diagnostics.Result, default: nil
-  attr :attempts, :integer, default: 0
-  attr :flow, :string, default: ""
-  attr :installation_type, :string, default: nil
-  attr :awaiting_first_pageview?, :boolean, default: false
+  attr(:super_admin?, :boolean, default: false)
+  attr(:finished?, :boolean, default: false)
+  attr(:success?, :boolean, default: false)
+  attr(:verification_state, Plausible.Verification.State, default: nil)
+  attr(:interpretation, Plausible.Verification.Diagnostics.Result, default: nil)
+  attr(:attempts, :integer, default: 0)
+  attr(:flow, :string, default: "")
+  attr(:installation_type, :string, default: nil)
+  attr(:awaiting_first_pageview?, :boolean, default: false)
 
   def render(assigns) do
     ~H"""
@@ -121,6 +125,34 @@ defmodule PlausibleWeb.Live.Components.Verification do
               </.styled_link>
             </:item>
           </.focus_list>
+          <div
+            :if={@verification_state && @super_admin? && @finished?}
+            class="flex flex-col dark:text-gray-200 border-t border-gray-300 dark:border-gray-700"
+            x-data="{ showDiagnostics: false }"
+            id="super-admin-report"
+          >
+            <p class="mt-4 text-sm">
+              <a
+                href="#"
+                @click.prevent="showDiagnostics = !showDiagnostics"
+                class="bg-yellow-100 dark:text-gray-800"
+              >
+                As a super-admin, you're eligible to see diagnostics details. Click to expand.
+              </a>
+            </p>
+            <div x-show="showDiagnostics" x-cloak>
+              <.focus_list>
+                <:item
+                  :for={{diag, value} <- Map.from_struct(@verification_state.diagnostics)}
+                  :if={@verification_state && @super_admin?}
+                >
+                  <span class="text-sm">
+                    <%= Phoenix.Naming.humanize(diag) %>: <span class="font-mono"><%= value %></span>
+                  </span>
+                </:item>
+              </.focus_list>
+            </div>
+          </div>
         </:footer>
       </PlausibleWeb.Components.Generic.focus_box>
     </div>

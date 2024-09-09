@@ -127,6 +127,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
       assert element_exists?(html, @retry_button)
 
       assert html =~ "Please insert the snippet into your site"
+      refute element_exists?(html, "#super-admin-report")
     end
   end
 
