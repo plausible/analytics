@@ -141,10 +141,10 @@ defmodule Plausible.Release do
     IO.puts("Success!")
   end
 
-  def createdb do
+  def createdb(repos \\ repos()) do
     prepare()
 
-    for repo <- repos() do
+    for repo <- repos do
       :ok = ensure_repo_created(repo)
     end
 
@@ -225,12 +225,25 @@ defmodule Plausible.Release do
   end
 
   defp ensure_repo_created(repo) do
-    IO.puts("create #{inspect(repo)} database if it doesn't exist")
+    config = repo.config()
+    adapter = repo.__adapter__()
 
-    case repo.__adapter__.storage_up(repo.config) do
-      :ok -> :ok
-      {:error, :already_up} -> :ok
-      {:error, term} -> {:error, term}
+    case adapter.storage_status(config) do
+      :up ->
+        IO.puts("#{inspect(repo)} database already exists")
+        :ok
+
+      :down ->
+        IO.puts("Creating #{inspect(repo)} database..")
+
+        case adapter.storage_up(config) do
+          :ok -> :ok
+          {:error, :already_up} -> :ok
+          {:error, _reason} = error -> error
+        end
+
+      {:error, _reason} = error ->
+        error
     end
   end
 
