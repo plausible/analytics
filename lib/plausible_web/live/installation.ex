@@ -339,35 +339,35 @@ defmodule PlausibleWeb.Live.Installation do
         config={@script_config}
         variant="outbound-links"
         label="Outbound links"
-        tooltip="Automatically track clicks on external links"
+        tooltip="Automatically track clicks on external links. These count towards your billable pageviews."
         learn_more="https://plausible.io/docs/outbound-link-click-tracking"
       />
       <.script_extension_control
         config={@script_config}
         variant="file-downloads"
         label="File downloads"
-        tooltip="Automatically track file downloads"
+        tooltip="Automatically track file downloads. These count towards your billable pageviews."
         learn_more="https://plausible.io/docs/file-downloads-tracking"
       />
       <.script_extension_control
         config={@script_config}
         variant="404"
         label="404 error pages"
-        tooltip="Find 404 error pages on your site. Additional action required."
+        tooltip="Find 404 error pages on your site. These count towards your billable pageviews. Additional action required."
         learn_more="https://plausible.io/docs/error-pages-tracking-404"
       />
       <.script_extension_control
         config={@script_config}
         variant="hash"
         label="Hashed page paths"
-        tooltip="Automatically track page paths that use a # in the URL"
+        tooltip="Automatically track page paths that use a # in the URL."
         learn_more="https://plausible.io/docs/hash-based-routing"
       />
       <.script_extension_control
         config={@script_config}
         variant="tagged-events"
         label="Custom events"
-        tooltip="Tag site elements like buttons, links and forms to track user activity. Additional action required."
+        tooltip="Tag site elements like buttons, links and forms to track user activity. These count towards your billable pageviews. Additional action required."
         learn_more="https://plausible.io/docs/custom-event-goals"
       />
       <.script_extension_control
