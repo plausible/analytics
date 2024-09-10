@@ -44,8 +44,8 @@ defmodule Plausible.Stats.Query do
   @doc """
   Builds query from old-style params. New code should prefer Query.build
   """
-  def from(site, params, debug_metadata \\ %{}) do
-    Legacy.QueryBuilder.from(site, params, debug_metadata)
+  def from(site, params, debug_metadata \\ %{}, now \\ nil) do
+    Legacy.QueryBuilder.from(site, params, debug_metadata, now)
   end
 
   def put_experimental_reduced_joins(query, site, params) do

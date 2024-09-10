@@ -10,11 +10,10 @@ defmodule Plausible.Stats.Time do
 
     first =
       first
-      |> DateTime.shift_zone!("Etc/UTC")
       |> DateTime.to_naive()
       |> beginning_of_time(site.native_stats_start_at)
 
-    last = DateTime.shift_zone!(last, "Etc/UTC") |> DateTime.to_naive()
+    last = DateTime.to_naive(last)
 
     {first, last}
   end
