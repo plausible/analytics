@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.AuthorizeSiteAccess do
+defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   import Plug.Conn
   import Phoenix.Controller, only: [get_format: 1]
   use Plausible.Repo

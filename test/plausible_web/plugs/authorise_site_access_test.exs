@@ -1,6 +1,6 @@
-defmodule PlausibleWeb.AuthorizeSiteAccessTest do
+defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   use PlausibleWeb.ConnCase, async: true
-  alias PlausibleWeb.AuthorizeSiteAccess
+  alias PlausibleWeb.Plugs.AuthorizeSiteAccess
 
   setup [:create_user, :log_in]
 

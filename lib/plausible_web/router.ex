@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["json"]
     plug :fetch_session
     plug PlausibleWeb.AuthPlug
-    plug PlausibleWeb.AuthorizeSiteAccess
+    plug PlausibleWeb.Plugs.AuthorizeSiteAccess
     plug PlausibleWeb.Plugs.NoRobots
   end
 
@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Router do
     plug :fetch_session
     plug PlausibleWeb.AuthPlug
 
-    plug PlausibleWeb.AuthorizeSiteAccess, [:admin, :super_admin, :owner]
+    plug PlausibleWeb.Plugs.AuthorizeSiteAccess, [:admin, :super_admin, :owner]
 
     plug PlausibleWeb.Plugs.NoRobots
   end
