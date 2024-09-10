@@ -238,6 +238,60 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       end
     end
 
+    for too_short_filter <- [
+          [],
+          ["and"],
+          ["or"],
+          ["and", []],
+          ["or", []],
+          ["not"],
+          ["is_not"],
+          ["is_not", "event:name"]
+        ] do
+      test "errors on too short filter #{inspect(too_short_filter)}", %{
+        site: site
+      } do
+        %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [
+            unquote(too_short_filter)
+          ]
+        }
+        |> check_error(
+          site,
+          ~s(#/filters/0: Invalid filter #{inspect(unquote(too_short_filter))})
+        )
+      end
+    end
+
+    valid_filter = ["is", "event:props:foobar", ["value"]]
+
+    for too_long_filter <- [
+          ["and", [valid_filter], "extra"],
+          ["or", [valid_filter], []],
+          ["not", valid_filter, 1],
+          Enum.concat(valid_filter, [true])
+        ] do
+      test "errors on too long filter #{inspect(too_long_filter)}", %{
+        site: site
+      } do
+        %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [
+            unquote(too_long_filter)
+          ]
+        }
+        |> check_error(
+          site,
+          ~s(#/filters/0: Invalid filter #{inspect(unquote(too_long_filter))})
+        )
+      end
+    end
+
     test "filtering by invalid operation", %{site: site} do
       %{
         "site_id" => site.domain,
