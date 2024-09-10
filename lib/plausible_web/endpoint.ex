@@ -134,18 +134,21 @@ defmodule PlausibleWeb.Endpoint do
   on_ce do
     require SiteEncrypt
     @behaviour SiteEncrypt
-    @https_key {:plausible, :https}
+    @force_https_key {:plausible, :force_https}
+    @allow_acme_challenges_key {:plausible, :allow_acme_challenges}
 
     @doc false
-    def enable_https(enable?) when is_boolean(enable?) do
-      # this function is called from application.ex during app start up
-      :persistent_term.put(@https_key, enable?)
+    def force_https do
+      :persistent_term.put(@force_https_key, true)
     end
 
-    defp https?, do: :persistent_term.get(@https_key)
+    @doc false
+    def allow_acme_challenges do
+      :persistent_term.put(@allow_acme_challenges_key, true)
+    end
 
     defp maybe_handle_acme_challenge(conn, _opts) do
-      if https?() do
+      if :persistent_term.get(@allow_acme_challenges_key, false) do
         SiteEncrypt.AcmeChallenge.call(conn, _endpoint = __MODULE__)
       else
         conn
@@ -153,7 +156,7 @@ defmodule PlausibleWeb.Endpoint do
     end
 
     defp maybe_force_ssl(conn, opts) do
-      if https?() do
+      if :persistent_term.get(@force_https_key, false) do
         Plug.SSL.call(conn, opts)
       else
         conn
@@ -165,41 +168,19 @@ defmodule PlausibleWeb.Endpoint do
 
     @doc false
     def app_env_config do
-      # this function is also being used by site_encrypt
+      # this function is being used by site_encrypt
       Application.get_env(:plausible, _endpoint = __MODULE__, [])
     end
 
     @impl SiteEncrypt
     def certification do
-      domain =
-        app_env_config()
-        |> Keyword.fetch!(:url)
-        |> Keyword.fetch!(:host)
+      selfhost_config = Application.fetch_env!(:plausible, :selfhost)
+      config = Keyword.fetch!(selfhost_config, :site_encrypt)
 
-      domain_is_ip? =
-        case :inet.parse_address(to_charlist(domain)) do
-          {:ok, _address} -> true
-          _other -> false
-        end
-
-      domain_is_local? = domain == "localhost" or not String.contains?(domain, ".")
-
-      if domain_is_ip? or domain_is_local? do
-        raise ArgumentError, "Cannot generate TLS certificates for domain #{inspect(domain)}"
-      end
-
-      email =
-        case PlausibleWeb.Email.mailer_email_from() do
-          {_, email} -> email
-          email when is_binary(email) -> email
-        end
-
-      data_dir = Application.get_env(:plausible, :data_dir)
-      db_folder = Path.join(data_dir || System.tmp_dir!(), "site_encrypt")
-
-      directory_url =
-        Application.get_env(:plausible, :acme_directory_url) ||
-          "https://acme-v02.api.letsencrypt.org/directory"
+      domain = Keyword.fetch!(config, :domain)
+      email = Keyword.fetch!(config, :email)
+      db_folder = Keyword.fetch!(config, :db_folder)
+      directory_url = Keyword.fetch!(config, :directory_url)
 
       SiteEncrypt.configure(
         mode: :auto,
