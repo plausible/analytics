@@ -326,8 +326,8 @@ config :plausible, PlausibleWeb.Endpoint,
   websocket_url: websocket_url,
   secure_cookie: secure_cookie
 
-if config_env() == :ce do
-  # maybe enable HTTPS in CE
+# maybe enable HTTPS in CE
+if config_env() in [:ce, :ce_dev, :ce_test] do
   if https_port do
     https_opts = [
       port: https_port,
@@ -339,58 +339,55 @@ if config_env() == :ce do
     https_opts = Config.Reader.merge(default_http_opts, https_opts)
     config :plausible, PlausibleWeb.Endpoint, https: https_opts
 
-    # maybe enable automatic HTTPS certificate generation in CE
-  end
-end
+    domain = base_url.host
 
-if https_port do
-  domain = base_url.host
+    # do stricter checking in CE prod
+    if config_env() == :ce do
+      domain_is_ip? =
+        case :inet.parse_address(to_charlist(domain)) do
+          {:ok, _address} -> true
+          _other -> false
+        end
 
-  if config_env() == :ce do
-    domain_is_ip? =
-      case :inet.parse_address(to_charlist(domain)) do
-        {:ok, _address} -> true
-        _other -> false
+      if domain_is_ip? do
+        raise ArgumentError, "Cannot generate TLS certificates for IP address #{inspect(domain)}"
       end
 
-    if domain_is_ip? do
-      raise ArgumentError, "Cannot generate TLS certificates for IP address #{inspect(domain)}"
+      domain_is_local? = domain == "localhost" or not String.contains?(domain, ".")
+
+      raise ArgumentError, "Cannot generate TLS certificates for local domain #{inspect(domain)}"
+
+      unless http_port == 80 do
+        Logger.warning("""
+        HTTPS is enabled but the HTTP port is not 80. \
+        This will prevent automatic TLS certificate issuance as ACME validates the domain on port 80.\
+        """)
+      end
     end
 
-    domain_is_local? = domain == "localhost" or not String.contains?(domain, ".")
+    acme_directory_url =
+      get_var_from_path_or_env(
+        config_dir,
+        "ACME_DIRECTORY_URL",
+        "https://acme-v02.api.letsencrypt.org/directory"
+      )
 
-    raise ArgumentError, "Cannot generate TLS certificates for local domain #{inspect(domain)}"
+    db_folder = Path.join(data_dir || System.tmp_dir!(), "site_encrypt")
 
-    unless http_port == 80 do
-      Logger.warning("""
-      HTTPS is enabled but the HTTP port is not 80. \
-      This will prevent automatic TLS certificate issuance as ACME validates the domain on port 80.\
-      """)
-    end
+    email =
+      case mailer_email do
+        {_, email} -> email
+        email when is_binary(email) -> email
+      end
+
+    config :plausible, :selfhost,
+      site_encrypt: [
+        domain: domain,
+        email: email,
+        db_folder: db_folder,
+        directory_url: acme_directory_url
+      ]
   end
-
-  acme_directory_url =
-    get_var_from_path_or_env(
-      config_dir,
-      "ACME_DIRECTORY_URL",
-      "https://acme-v02.api.letsencrypt.org/directory"
-    )
-
-  db_folder = Path.join(data_dir || System.tmp_dir!(), "site_encrypt")
-
-  email =
-    case mailer_email do
-      {_, email} -> email
-      email when is_binary(email) -> email
-    end
-
-  config :plausible, :selfhost,
-    site_encrypt: [
-      domain: domain,
-      email: email,
-      db_folder: db_folder,
-      directory_url: acme_directory_url
-    ]
 end
 
 db_maybe_ipv6 =
