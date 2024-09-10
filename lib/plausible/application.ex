@@ -259,12 +259,23 @@ defmodule Plausible.Application do
   on_ce do
     defp maybe_https_endpoint do
       endpoint_config = Application.fetch_env!(:plausible, PlausibleWeb.Endpoint)
-      https_port = get_in(endpoint_config, [:https, :port])
-      https_enabled? = !!https_port
 
+      http_port = get_in(endpoint_config, [:http, :port])
+      https_port = get_in(endpoint_config, [:https, :port])
+
+      https_enabled? = !!https_port
       PlausibleWeb.Endpoint.enable_https(https_enabled?)
 
-      if https_enabled? do
+      auto_tls? = http_port == 80 and https_enabled?
+
+      if https_enabled? and not auto_tls? do
+        Logger.warning("""
+        HTTPS is enabled but the HTTP port is not 80.
+        This will prevent automatic TLS certificate issuance as ACME validates the domain on port 80.
+        """)
+      end
+
+      if auto_tls? do
         {SiteEncrypt.Phoenix.Endpoint, endpoint: PlausibleWeb.Endpoint}
       else
         PlausibleWeb.Endpoint

@@ -137,9 +137,9 @@ defmodule PlausibleWeb.Endpoint do
     @https_key {:plausible, :https}
 
     @doc false
-    def enable_https(force?) when is_boolean(force?) do
+    def enable_https(enable?) when is_boolean(enable?) do
       # this function is called from application.ex during app start up
-      :persistent_term.put(@https_key, force?)
+      :persistent_term.put(@https_key, enable?)
     end
 
     defp https?, do: :persistent_term.get(@https_key)
