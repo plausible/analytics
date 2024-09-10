@@ -69,11 +69,13 @@ defmodule Plausible.Stats.Comparisons do
 
     with :ok <- validate_mode(source_query, mode),
          {:ok, comparison_date_range} <- get_comparison_date_range(source_date_range, mode, opts) do
-      %Date.Range{first: first, last: last} = comparison_date_range
+      new_range =
+        DateTimeRange.new!(comparison_date_range.first, comparison_date_range.last, site.timezone)
+        |> DateTimeRange.to_timezone("Etc/UTC")
 
       comparison_query =
         source_query
-        |> Query.set(date_range: DateTimeRange.new!(first, last, site.timezone))
+        |> Query.set(date_range: new_range)
         |> maybe_include_imported(source_query)
 
       {:ok, comparison_query}

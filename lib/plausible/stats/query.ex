@@ -128,6 +128,9 @@ defmodule Plausible.Stats.Query do
   @spec ensure_include_imported(t(), boolean()) ::
           :ok | {:error, :no_imported_data | :out_of_range | :unsupported_query | :not_requested}
   def ensure_include_imported(query, requested?) do
+    query_start_date =
+      query.date_range.first |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
+
     cond do
       not requested? ->
         {:error, :not_requested}
@@ -141,7 +144,7 @@ defmodule Plausible.Stats.Query do
       "time:minute" in query.dimensions or "time:hour" in query.dimensions ->
         {:error, :unsupported_interval}
 
-      Date.after?(query.date_range.first, query.latest_import_end_date) ->
+      Date.after?(query_start_date, query.latest_import_end_date) ->
         {:error, :out_of_range}
 
       not Imported.schema_supports_query?(query) ->

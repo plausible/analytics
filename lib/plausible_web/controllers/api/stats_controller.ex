@@ -226,10 +226,14 @@ defmodule PlausibleWeb.Api.StatsController do
       with_imported_switch: with_imported_switch_info(query, comparison_query),
       includes_imported: includes_imported?(query, comparison_query),
       imports_exist: site.complete_import_ids != [],
-      comparing_from: comparison_query && DateTime.to_date(comparison_query.date_range.first),
-      comparing_to: comparison_query && DateTime.to_date(comparison_query.date_range.last),
-      from: DateTime.to_date(query.date_range.first),
-      to: DateTime.to_date(query.date_range.last)
+      comparing_from:
+        comparison_query &&
+          DateTimeRange.to_date_range(comparison_query.date_range, query.timezone).first,
+      comparing_to:
+        comparison_query &&
+          DateTimeRange.to_date_range(comparison_query.date_range, query.timezone).last,
+      from: DateTimeRange.to_date_range(query.date_range, query.timezone).first,
+      to: DateTimeRange.to_date_range(query.date_range, query.timezone).last
     })
   end
 

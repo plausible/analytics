@@ -45,7 +45,7 @@ defmodule PlausibleWeb.StatsController do
   use Plausible.Repo
 
   alias Plausible.Sites
-  alias Plausible.Stats.{Filters, Query}
+  alias Plausible.Stats.{DateTimeRange, Filters, Query}
   alias PlausibleWeb.Api
 
   plug(PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export])
@@ -110,8 +110,10 @@ defmodule PlausibleWeb.StatsController do
       site = Plausible.Repo.preload(conn.assigns.site, :owner)
       query = Query.from(site, params, debug_metadata(conn))
 
+      date_range = DateTimeRange.to_date_range(query.date_range, query.timezone)
+
       filename =
-        ~c"Plausible export #{params["domain"]} #{Date.to_iso8601(query.date_range.first)}  to #{Date.to_iso8601(query.date_range.last)} .zip"
+        ~c"Plausible export #{params["domain"]} #{Date.to_iso8601(date_range.first)}  to #{Date.to_iso8601(date_range.last)} .zip"
 
       params = Map.merge(params, %{"limit" => "300", "csv" => "True", "detailed" => "True"})
       limited_params = Map.merge(params, %{"limit" => "100"})
