@@ -7,40 +7,24 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
   def init(allowed_roles), do: allowed_roles
 
   def call(conn, allowed_roles) do
-    site =
-      Repo.get_by(Plausible.Site,
-        domain:
-          conn.path_params["domain"] || conn.path_params["website"] || conn.params["site_id"]
-      )
+    current_user = conn.assigns[:current_user]
 
-    shared_link_auth = conn.params["auth"]
-
-    shared_link_record =
-      shared_link_auth && Repo.get_by(Plausible.Site.SharedLink, slug: shared_link_auth)
-
-    if !site do
-      fail(conn)
-    else
-      user_id =
-        case PlausibleWeb.UserAuth.get_user_session(conn) do
-          {:ok, user_session} -> user_session.user_id
-          _ -> nil
-        end
-
-      membership_role = user_id && Plausible.Sites.role(user_id, site)
+    with {:ok, site} <- get_site(conn),
+         {:ok, shared_link} <- maybe_get_shared_link(conn, site) do
+      membership_role = get_membership_role(current_user, site)
 
       role =
         cond do
-          user_id && membership_role ->
+          membership_role ->
             membership_role
 
-          Plausible.Auth.is_super_admin?(user_id) ->
+          Plausible.Auth.is_super_admin?(current_user) ->
             :super_admin
 
           site.public ->
             :public
 
-          shared_link_record && shared_link_record.site_id == site.id ->
+          shared_link ->
             :public
 
           true ->
@@ -48,8 +32,10 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
         end
 
       if role in allowed_roles do
-        Sentry.Context.set_user_context(%{id: user_id})
-        Plausible.OpenTelemetry.add_user_attributes(user_id)
+        if current_user do
+          Sentry.Context.set_user_context(%{id: current_user.id})
+          Plausible.OpenTelemetry.add_user_attributes(current_user.id)
+        end
 
         Sentry.Context.set_extra_context(%{site_id: site.id, domain: site.domain})
         Plausible.OpenTelemetry.add_site_attributes(site)
@@ -58,21 +44,51 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
 
         merge_assigns(conn, site: site, current_user_role: role)
       else
-        fail(conn)
+        error_not_found(conn)
       end
     end
   end
 
-  defp fail(conn) do
+  defp get_site(conn) do
+    domain = conn.path_params["domain"] || conn.path_params["website"] || conn.params["site_id"]
+
+    if site = Repo.get_by(Plausible.Site, domain: domain) do
+      {:ok, site}
+    else
+      error_not_found(conn)
+    end
+  end
+
+  defp maybe_get_shared_link(conn, site) do
+    slug = conn.params["slug"] || conn.params["auth"]
+    site_id = site.id
+
+    if is_binary(slug) do
+      case Repo.get_by(Plausible.Site.SharedLink, slug: slug) do
+        %{site_id: ^site_id} = shared_link -> {:ok, shared_link}
+        _ -> error_not_found(conn)
+      end
+    else
+      {:ok, nil}
+    end
+  end
+
+  defp get_membership_role(nil, _site), do: nil
+  defp get_membership_role(user, site), do: Plausible.Sites.role(user.id, site)
+
+  defp error_not_found(conn) do
     case get_format(conn) do
       "json" ->
-        PlausibleWeb.Api.Helpers.not_found(
-          conn,
+        conn
+        |> PlausibleWeb.Api.Helpers.not_found(
           "Site does not exist or user does not have sufficient access."
         )
+        |> halt()
 
       _ ->
-        PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt
+        conn
+        |> PlausibleWeb.ControllerHelpers.render_error(404)
+        |> halt()
     end
   end
 end
