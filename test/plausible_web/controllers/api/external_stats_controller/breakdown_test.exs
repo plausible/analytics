@@ -3161,7 +3161,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       conn: conn,
       site: site
     } do
-      user_id = 123
+      user_id = System.unique_integer([:positive])
 
       populate_stats(site, [
         build(:pageview,
