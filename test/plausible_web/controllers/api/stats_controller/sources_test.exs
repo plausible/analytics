@@ -571,15 +571,18 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           referrer_source: "C",
           timestamp: ~N[2024-08-10 10:00:30]
         ),
-        build(:pageview, referrer_source: "A"),
-        build(:pageview, referrer_source: "A"),
-        build(:pageview, referrer_source: "Z")
+        build(:pageview, referrer_source: "A", timestamp: ~N[2024-08-10 10:00:30]),
+        build(:pageview, referrer_source: "A", timestamp: ~N[2024-08-10 10:00:30]),
+        build(:pageview, referrer_source: "Z", timestamp: ~N[2024-08-10 10:00:30])
       ])
 
       order_by_asc = Jason.encode!([["visit_duration", "asc"], ["visit:source", "desc"]])
 
       conn1 =
-        get(conn, "/api/stats/#{site.domain}/sources?detailed=true&order_by=#{order_by_asc}")
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&date=2024-08-10&detailed=true&order_by=#{order_by_asc}"
+        )
 
       assert json_response(conn1, 200)["results"] == [
                %{"name" => "Z", "visitors" => 1, "bounce_rate" => 100, "visit_duration" => 0},
@@ -591,7 +594,10 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       order_by_flipped = Jason.encode!([["visit_duration", "desc"], ["visit:source", "asc"]])
 
       conn2 =
-        get(conn, "/api/stats/#{site.domain}/sources?detailed=true&order_by=#{order_by_flipped}")
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&date=2024-08-10&detailed=true&order_by=#{order_by_flipped}"
+        )
 
       assert json_response(conn2, 200)["results"] == [
                %{"name" => "B", "visitors" => 1, "bounce_rate" => 0, "visit_duration" => 45},
