@@ -64,7 +64,8 @@ defmodule Plausible.Stats.Comparisons do
       |> Keyword.put_new(:now, DateTime.now!(site.timezone))
       |> Keyword.put_new(:match_day_of_week?, false)
 
-    source_date_range = DateTimeRange.to_date_range(source_query.date_range)
+    source_date_range =
+      DateTimeRange.to_date_range(source_query.date_range, source_query.timezone)
 
     with :ok <- validate_mode(source_query, mode),
          {:ok, comparison_date_range} <- get_comparison_date_range(source_date_range, mode, opts) do

@@ -48,8 +48,8 @@ defmodule Plausible.Stats.Time do
     time_labels_for_dimension(time_dimension(query), query, date_range)
   end
 
-  defp time_labels_for_dimension("time:month", _query, date_range) do
-    date_range = DateTimeRange.to_date_range(date_range)
+  defp time_labels_for_dimension("time:month", query, date_range) do
+    date_range = DateTimeRange.to_date_range(date_range, query.timezone)
 
     n_buckets =
       Timex.diff(
@@ -66,8 +66,8 @@ defmodule Plausible.Stats.Time do
     end)
   end
 
-  defp time_labels_for_dimension("time:week", _query, date_range) do
-    date_range = DateTimeRange.to_date_range(date_range)
+  defp time_labels_for_dimension("time:week", query, date_range) do
+    date_range = DateTimeRange.to_date_range(date_range, query.timezone)
 
     n_buckets =
       Timex.diff(
@@ -84,9 +84,9 @@ defmodule Plausible.Stats.Time do
     end)
   end
 
-  defp time_labels_for_dimension("time:day", _query, date_range) do
+  defp time_labels_for_dimension("time:day", query, date_range) do
     date_range
-    |> DateTimeRange.to_date_range()
+    |> DateTimeRange.to_date_range(query.timezone)
     |> Enum.into([])
     |> Enum.map(&format_datetime/1)
   end
