@@ -43,11 +43,18 @@ defmodule PlausibleWeb.Live.Components.Form do
          multiple pattern placeholder readonly required rows size step)
   )
 
+  attr(:class, :any,
+    default:
+      "dark:bg-gray-900 w-full block pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100 text-gray-500"
+  )
+
+  attr(:mt?, :boolean, default: true)
+
   slot(:inner_block)
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     assigns
-    |> assign(field: nil, id: assigns.id || field.id)
+    |> assign(field: nil, id: assigns.id || field.id, class: assigns.class, mt?: assigns.mt?)
     |> assign(:errors, Enum.map(field.errors, &translate_error(&1)))
     |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
     |> assign_new(:value, fn -> field.value end)
@@ -57,8 +64,8 @@ defmodule PlausibleWeb.Live.Components.Form do
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div phx-feedback-for={@name}>
-      <.label :if={@label != nil and @label != ""} for={@id}>
+    <div phx-feedback-for={@name} class={@mt? && "mt-4"}>
+      <.label :if={@label != nil and @label != ""} for={@id} class="mb-2">
         <%= @label %>
       </.label>
       <input
@@ -66,6 +73,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         name={@name}
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+        class={@class}
         {@rest}
       />
       <%= render_slot(@inner_block) %>
@@ -104,7 +112,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         <a
           onclick={"var input = document.getElementById('#{@id}'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"}
           href="javascript:void(0)"
-          class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline top-2 right-4"
+          class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline top-3 right-4"
         >
           <Heroicons.document_duplicate class="pr-1 text-indigo-600 dark:text-indigo-500 w-5 h-5" />
           <span>
@@ -257,12 +265,13 @@ defmodule PlausibleWeb.Live.Components.Form do
   @doc """
   Renders a label.
   """
-  attr(:for, :string, default: nil)
-  slot(:inner_block, required: true)
+  attr :for, :string, default: nil
+  slot :inner_block, required: true
+  attr :class, :string, default: ""
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="block font-medium dark:text-gray-100">
+    <label for={@for} class={["block font-medium dark:text-gray-100", @class]}>
       <%= render_slot(@inner_block) %>
     </label>
     """
