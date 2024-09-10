@@ -9,7 +9,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   import Plausible.Stats.Util, only: [shortname: 2]
   import Ecto.Query
 
-  alias Plausible.Stats.DateTimeRange
+  alias Plausible.Stats.Query
 
   @no_ref "Direct / None"
   @not_set "(not set)"
@@ -294,7 +294,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   end
 
   defp select_group_fields(q, "time:week", key, query) do
-    date_range = DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
+    date_range = Query.date_range(query)
 
     select_merge_as(q, [i], %{
       key => weekstart_not_before(i.date, ^date_range.first)

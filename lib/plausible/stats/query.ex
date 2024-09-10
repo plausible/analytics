@@ -60,6 +60,10 @@ defmodule Plausible.Stats.Query do
     end
   end
 
+  def date_range(query) do
+    Plausible.Stats.DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
+  end
+
   def set(query, keywords) do
     new_query = struct!(query, keywords)
 

@@ -11,7 +11,7 @@ defmodule Plausible.Stats.Breakdown do
 
   import Plausible.Stats.Base
   import Ecto.Query
-  alias Plausible.Stats.{DateTimeRange, Query, QueryOptimizer, QueryResult, SQL}
+  alias Plausible.Stats.{Query, QueryOptimizer, QueryResult, SQL}
 
   def breakdown(site, %Query{dimensions: [dimension]} = query, metrics, pagination, _opts \\ []) do
     transformed_metrics = transform_metrics(metrics, dimension)
@@ -116,7 +116,7 @@ defmodule Plausible.Stats.Breakdown do
       from e in subquery(timed_page_transitions_q),
         group_by: e.pathname
 
-    date_range = DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
+    date_range = Query.date_range(query)
 
     timed_pages_q =
       if query.include_imported do

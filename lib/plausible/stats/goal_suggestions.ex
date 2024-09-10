@@ -2,7 +2,7 @@ defmodule Plausible.Stats.GoalSuggestions do
   @moduledoc false
 
   alias Plausible.{Repo, ClickhouseRepo}
-  alias Plausible.Stats.{DateTimeRange, Query}
+  alias Plausible.Stats.Query
   import Plausible.Stats.Base
   import Ecto.Query
 
@@ -57,7 +57,7 @@ defmodule Plausible.Stats.GoalSuggestions do
       )
       |> maybe_set_limit(limit)
 
-    date_range = DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
+    date_range = Query.date_range(query)
 
     imported_q =
       from(i in "imported_custom_events",

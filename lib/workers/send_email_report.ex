@@ -1,7 +1,7 @@
 defmodule Plausible.Workers.SendEmailReport do
   use Plausible.Repo
   use Oban.Worker, queue: :send_email_reports, max_attempts: 1
-  alias Plausible.Stats.{DateTimeRange, Query}
+  alias Plausible.Stats.Query
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"interval" => "weekly", "site_id" => site_id}}) do
@@ -78,7 +78,7 @@ defmodule Plausible.Workers.SendEmailReport do
   end
 
   defp put_monthly_report_name_and_date(%{query: query} = assigns) do
-    date_range = DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
+    date_range = Query.date_range(query)
 
     Map.merge(assigns, %{
       name: Calendar.strftime(date_range.first, "%B"),

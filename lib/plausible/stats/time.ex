@@ -40,13 +40,11 @@ defmodule Plausible.Stats.Time do
   end
 
   def time_labels(query) do
-    date_range = query.utc_time_range |> DateTimeRange.to_timezone(query.timezone)
-
-    time_labels_for_dimension(time_dimension(query), query, date_range)
+    time_labels_for_dimension(time_dimension(query), query)
   end
 
-  defp time_labels_for_dimension("time:month", query, date_range) do
-    date_range = DateTimeRange.to_date_range(date_range, query.timezone)
+  defp time_labels_for_dimension("time:month", query) do
+    date_range = Query.date_range(query)
 
     n_buckets =
       Timex.diff(
@@ -63,8 +61,8 @@ defmodule Plausible.Stats.Time do
     end)
   end
 
-  defp time_labels_for_dimension("time:week", query, date_range) do
-    date_range = DateTimeRange.to_date_range(date_range, query.timezone)
+  defp time_labels_for_dimension("time:week", query) do
+    date_range = Query.date_range(query)
 
     n_buckets =
       Timex.diff(
@@ -81,16 +79,17 @@ defmodule Plausible.Stats.Time do
     end)
   end
 
-  defp time_labels_for_dimension("time:day", query, date_range) do
-    date_range
-    |> DateTimeRange.to_date_range(query.timezone)
+  defp time_labels_for_dimension("time:day", query) do
+    Query.date_range(query)
     |> Enum.into([])
     |> Enum.map(&format_datetime/1)
   end
 
-  defp time_labels_for_dimension("time:hour", _query, date_range) do
-    from_timestamp = date_range.first |> Map.merge(%{minute: 0, second: 0})
-    n_buckets = DateTime.diff(date_range.last, from_timestamp, :hour)
+  defp time_labels_for_dimension("time:hour", query) do
+    time_range = query.utc_time_range |> DateTimeRange.to_timezone(query.timezone)
+
+    from_timestamp = time_range.first |> Map.merge(%{minute: 0, second: 0})
+    n_buckets = DateTime.diff(time_range.last, from_timestamp, :hour)
 
     Enum.map(0..n_buckets, fn step ->
       from_timestamp
@@ -100,15 +99,16 @@ defmodule Plausible.Stats.Time do
     end)
   end
 
-  defp time_labels_for_dimension("time:minute", query, date_range) do
-    first_datetime = Map.put(date_range.first, :second, 0)
+  defp time_labels_for_dimension("time:minute", query) do
+    time_range = query.utc_time_range |> DateTimeRange.to_timezone(query.timezone)
+    first_datetime = Map.put(time_range.first, :second, 0)
 
     first_datetime
     |> Stream.iterate(fn datetime -> DateTime.shift(datetime, minute: 1) end)
     |> Enum.take_while(fn datetime ->
       current_minute = Map.put(query.now, :second, 0)
 
-      DateTime.before?(datetime, date_range.last) &&
+      DateTime.before?(datetime, time_range.last) &&
         DateTime.before?(datetime, current_minute)
     end)
     |> Enum.map(&format_datetime/1)

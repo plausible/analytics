@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use PlausibleWeb.Plugs.ErrorHandler
 
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, Comparisons, Filters, Time, TableDecider, DateTimeRange}
+  alias Plausible.Stats.{Query, Comparisons, Filters, Time, TableDecider}
   alias Plausible.Stats.Filters.LegacyDashboardFilterParser
   alias PlausibleWeb.Api.Helpers, as: H
 
@@ -165,18 +165,18 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp build_full_intervals(
-         %Query{interval: "week", utc_time_range: time_range, timezone: timezone},
+         %Query{interval: "week"} = query,
          labels
        ) do
-    date_range = DateTimeRange.to_date_range(time_range, timezone)
+    date_range = Query.date_range(query)
     build_intervals(labels, date_range, &Timex.beginning_of_week/1, &Timex.end_of_week/1)
   end
 
   defp build_full_intervals(
-         %Query{interval: "month", utc_time_range: time_range, timezone: timezone},
+         %Query{interval: "month"} = query,
          labels
        ) do
-    date_range = DateTimeRange.to_date_range(time_range, timezone)
+    date_range = Query.date_range(query)
     build_intervals(labels, date_range, &Timex.beginning_of_month/1, &Timex.end_of_month/1)
   end
 
@@ -226,14 +226,10 @@ defmodule PlausibleWeb.Api.StatsController do
       with_imported_switch: with_imported_switch_info(query, comparison_query),
       includes_imported: includes_imported?(query, comparison_query),
       imports_exist: site.complete_import_ids != [],
-      comparing_from:
-        comparison_query &&
-          DateTimeRange.to_date_range(comparison_query.utc_time_range, query.timezone).first,
-      comparing_to:
-        comparison_query &&
-          DateTimeRange.to_date_range(comparison_query.utc_time_range, query.timezone).last,
-      from: DateTimeRange.to_date_range(query.utc_time_range, query.timezone).first,
-      to: DateTimeRange.to_date_range(query.utc_time_range, query.timezone).last
+      comparing_from: comparison_query && Query.date_range(comparison_query).first,
+      comparing_to: comparison_query && Query.date_range(comparison_query).last,
+      from: Query.date_range(query).first,
+      to: Query.date_range(query).last
     })
   end
 
@@ -287,7 +283,7 @@ defmodule PlausibleWeb.Api.StatsController do
         Enum.find_index(dates, &(&1 == current_date))
 
       "week" ->
-        date_range = query.utc_time_range |> DateTimeRange.to_date_range(query.timezone)
+        date_range = Query.date_range(query)
 
         current_date =
           DateTime.now!(site.timezone)
