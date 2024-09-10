@@ -3159,6 +3159,66 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
            ]
   end
 
+  test "bounce rate calculation handles invalid session data gracefully", %{
+    conn: conn,
+    site: site
+  } do
+    # NOTE: At the time of this test is added, it appears it does _not_
+    # catch the regression on MacOS (ARM), regardless if Clickhouse is run
+    # natively or from a docker container. The test still does catch
+    # that regression when ran on Linux for instance (including CI).
+    user_id = System.unique_integer([:positive])
+
+    populate_stats(site, [
+      build(:pageview,
+        user_id: user_id,
+        pathname: "/",
+        timestamp: ~N[2021-01-01 00:00:00]
+      )
+    ])
+
+    first_session = Plausible.Cache.Adapter.get(:sessions, {site.id, user_id})
+
+    populate_stats(site, [
+      build(:pageview,
+        user_id: user_id,
+        pathname: "/",
+        timestamp: ~N[2021-01-01 00:01:00]
+      )
+    ])
+
+    Plausible.Cache.Adapter.put(:sessions, {site.id, user_id}, first_session)
+
+    populate_stats(site, [
+      build(:pageview,
+        user_id: user_id,
+        pathname: "/",
+        timestamp: ~N[2021-01-01 00:01:00]
+      )
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "property" => "event:page",
+        "metrics" => "bounce_rate"
+      })
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "date_range" => "all",
+        "metrics" => ["bounce_rate"],
+        "dimensions" => ["event:page"]
+      })
+
+    assert json_response(conn, 200)["results"] == [
+             %{"dimensions" => ["/"], "metrics" => [0]}
+           ]
+  end
+
   describe "using the returned query object in a new POST request" do
     test "yields the same results for a simple aggregate query", %{conn: conn, site: site} do
       Plausible.Site.changeset(site, %{timezone: "Europe/Tallinn"})
