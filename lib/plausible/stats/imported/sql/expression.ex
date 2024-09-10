@@ -294,7 +294,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   end
 
   defp select_group_fields(q, "time:week", key, query) do
-    date_range = DateTimeRange.to_date_range(query.date_range, query.timezone)
+    date_range = DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
 
     select_merge_as(q, [i], %{
       key => weekstart_not_before(i.date, ^date_range.first)

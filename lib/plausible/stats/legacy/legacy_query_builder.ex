@@ -53,10 +53,10 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     first_datetime = DateTime.shift(now, minute: -duration_minutes)
     last_datetime = DateTime.shift(now, second: 5)
 
-    date_range =
+    datetime_range =
       DateTimeRange.new!(first_datetime, last_datetime) |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: period, date_range: date_range)
+    struct!(query, period: period, utc_time_range: datetime_range)
   end
 
   defp put_period(query, site, %{"period" => "day"} = params) do
@@ -65,7 +65,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     datetime_range =
       DateTimeRange.new!(date, date, site.timezone) |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "day", date_range: datetime_range)
+    struct!(query, period: "day", utc_time_range: datetime_range)
   end
 
   defp put_period(query, site, %{"period" => "7d"} = params) do
@@ -76,7 +76,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       DateTimeRange.new!(start_date, end_date, site.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "7d", date_range: datetime_range)
+    struct!(query, period: "7d", utc_time_range: datetime_range)
   end
 
   defp put_period(query, site, %{"period" => "30d"} = params) do
@@ -87,7 +87,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       DateTimeRange.new!(start_date, end_date, site.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "30d", date_range: datetime_range)
+    struct!(query, period: "30d", utc_time_range: datetime_range)
   end
 
   defp put_period(query, site, %{"period" => "month"} = params) do
@@ -99,7 +99,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       DateTimeRange.new!(start_date, end_date, site.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "month", date_range: datetime_range)
+    struct!(query, period: "month", utc_time_range: datetime_range)
   end
 
   defp put_period(query, site, %{"period" => "6mo"} = params) do
@@ -115,7 +115,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       DateTimeRange.new!(start_date, end_date, site.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "6mo", date_range: datetime_range)
+    struct!(query, period: "6mo", utc_time_range: datetime_range)
   end
 
   defp put_period(query, site, %{"period" => "12mo"} = params) do
@@ -131,7 +131,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       DateTimeRange.new!(start_date, end_date, site.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "12mo", date_range: datetime_range)
+    struct!(query, period: "12mo", utc_time_range: datetime_range)
   end
 
   defp put_period(query, site, %{"period" => "year"} = params) do
@@ -145,7 +145,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       DateTimeRange.new!(start_date, end_date, site.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "year", date_range: datetime_range)
+    struct!(query, period: "year", utc_time_range: datetime_range)
   end
 
   defp put_period(query, site, %{"period" => "all"}) do
@@ -155,7 +155,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
     datetime_range =
       DateTimeRange.new!(start_date, today, site.timezone) |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "all", date_range: datetime_range)
+    struct!(query, period: "all", utc_time_range: datetime_range)
   end
 
   defp put_period(query, site, %{"period" => "custom", "from" => from, "to" => to} = params) do
@@ -176,7 +176,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       DateTimeRange.new!(from_date, to_date, site.timezone)
       |> DateTimeRange.to_timezone("Etc/UTC")
 
-    struct!(query, period: "custom", date_range: datetime_range)
+    struct!(query, period: "custom", utc_time_range: datetime_range)
   end
 
   defp put_period(query, site, params) do
@@ -251,7 +251,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
   end
 
   defp put_interval(%{:period => "all"} = query, params) do
-    interval = Map.get(params, "interval", Interval.default_for_date_range(query.date_range))
+    interval = Map.get(params, "interval", Interval.default_for_date_range(query.utc_time_range))
     struct!(query, interval: interval)
   end
 

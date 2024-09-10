@@ -165,18 +165,18 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp build_full_intervals(
-         %{interval: "week", date_range: date_range, timezone: timezone},
+         %Query{interval: "week", utc_time_range: time_range, timezone: timezone},
          labels
        ) do
-    date_range = DateTimeRange.to_date_range(date_range, timezone)
+    date_range = DateTimeRange.to_date_range(time_range, timezone)
     build_intervals(labels, date_range, &Timex.beginning_of_week/1, &Timex.end_of_week/1)
   end
 
   defp build_full_intervals(
-         %{interval: "month", date_range: date_range, timezone: timezone},
+         %Query{interval: "month", utc_time_range: time_range, timezone: timezone},
          labels
        ) do
-    date_range = DateTimeRange.to_date_range(date_range, timezone)
+    date_range = DateTimeRange.to_date_range(time_range, timezone)
     build_intervals(labels, date_range, &Timex.beginning_of_month/1, &Timex.end_of_month/1)
   end
 
@@ -228,12 +228,12 @@ defmodule PlausibleWeb.Api.StatsController do
       imports_exist: site.complete_import_ids != [],
       comparing_from:
         comparison_query &&
-          DateTimeRange.to_date_range(comparison_query.date_range, query.timezone).first,
+          DateTimeRange.to_date_range(comparison_query.utc_time_range, query.timezone).first,
       comparing_to:
         comparison_query &&
-          DateTimeRange.to_date_range(comparison_query.date_range, query.timezone).last,
-      from: DateTimeRange.to_date_range(query.date_range, query.timezone).first,
-      to: DateTimeRange.to_date_range(query.date_range, query.timezone).last
+          DateTimeRange.to_date_range(comparison_query.utc_time_range, query.timezone).last,
+      from: DateTimeRange.to_date_range(query.utc_time_range, query.timezone).first,
+      to: DateTimeRange.to_date_range(query.utc_time_range, query.timezone).last
     })
   end
 
@@ -287,7 +287,7 @@ defmodule PlausibleWeb.Api.StatsController do
         Enum.find_index(dates, &(&1 == current_date))
 
       "week" ->
-        date_range = query.date_range |> DateTimeRange.to_date_range(query.timezone)
+        date_range = query.utc_time_range |> DateTimeRange.to_date_range(query.timezone)
 
         current_date =
           DateTime.now!(site.timezone)

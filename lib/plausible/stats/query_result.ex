@@ -32,8 +32,8 @@ defmodule Plausible.Stats.QueryResult do
           site_id: site.domain,
           metrics: query.metrics,
           date_range: [
-            to_iso8601(query.date_range.first, query.timezone),
-            to_iso8601(query.date_range.last, query.timezone)
+            to_iso8601(query.utc_time_range.first, query.timezone),
+            to_iso8601(query.utc_time_range.last, query.timezone)
           ],
           filters: query.filters,
           dimensions: query.dimensions,

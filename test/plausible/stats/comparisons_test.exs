@@ -11,8 +11,8 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       {:ok, comparison} = Comparisons.compare(site, query, "previous_period", now: now)
 
-      assert comparison.date_range.first == ~U[2023-02-27 00:00:00Z]
-      assert comparison.date_range.last == ~U[2023-02-28 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2023-02-27 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2023-02-28 23:59:59Z]
     end
 
     test "shifts back this month period when it's the first day of the month and mode is previous_period" do
@@ -22,8 +22,8 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       {:ok, comparison} = Comparisons.compare(site, query, "previous_period", now: now)
 
-      assert comparison.date_range.first == ~U[2023-02-28 00:00:00Z]
-      assert comparison.date_range.last == ~U[2023-02-28 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2023-02-28 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2023-02-28 23:59:59Z]
     end
 
     test "matches the day of the week when nearest day is original query start date and mode is previous_period" do
@@ -34,8 +34,8 @@ defmodule Plausible.Stats.ComparisonsTest do
       {:ok, comparison} =
         Comparisons.compare(site, query, "previous_period", now: now, match_day_of_week?: true)
 
-      assert comparison.date_range.first == ~U[2023-02-22 00:00:00Z]
-      assert comparison.date_range.last == ~U[2023-02-23 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2023-02-22 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2023-02-23 23:59:59Z]
     end
 
     test "custom time zone sets timezone to UTC" do
@@ -45,8 +45,8 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       {:ok, comparison} = Comparisons.compare(site, query, "previous_period", now: now)
 
-      assert comparison.date_range.first == ~U[2023-02-27 05:00:00Z]
-      assert comparison.date_range.last == ~U[2023-03-01 04:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2023-02-27 05:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2023-03-01 04:59:59Z]
     end
   end
 
@@ -58,8 +58,8 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       {:ok, comparison} = Comparisons.compare(site, query, "previous_period", now: now)
 
-      assert comparison.date_range.first == ~U[2023-01-04 00:00:00Z]
-      assert comparison.date_range.last == ~U[2023-01-31 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2023-01-04 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2023-01-31 23:59:59Z]
     end
 
     test "shifts back the full month when mode is year_over_year" do
@@ -69,8 +69,8 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       {:ok, comparison} = Comparisons.compare(site, query, "year_over_year", now: now)
 
-      assert comparison.date_range.first == ~U[2022-02-01 00:00:00Z]
-      assert comparison.date_range.last == ~U[2022-02-28 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2022-02-01 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2022-02-28 23:59:59Z]
     end
 
     test "shifts back whole month plus one day when mode is year_over_year and a leap year" do
@@ -80,8 +80,8 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       {:ok, comparison} = Comparisons.compare(site, query, "year_over_year", now: now)
 
-      assert comparison.date_range.first == ~U[2019-02-01 00:00:00Z]
-      assert comparison.date_range.last == ~U[2019-03-01 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2019-02-01 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2019-03-01 23:59:59Z]
     end
 
     test "matches the day of the week when mode is previous_period keeping the same day" do
@@ -92,8 +92,8 @@ defmodule Plausible.Stats.ComparisonsTest do
       {:ok, comparison} =
         Comparisons.compare(site, query, "previous_period", now: now, match_day_of_week?: true)
 
-      assert comparison.date_range.first == ~U[2023-01-04 00:00:00Z]
-      assert comparison.date_range.last == ~U[2023-01-31 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2023-01-04 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2023-01-31 23:59:59Z]
     end
 
     test "matches the day of the week when mode is previous_period" do
@@ -104,8 +104,8 @@ defmodule Plausible.Stats.ComparisonsTest do
       {:ok, comparison} =
         Comparisons.compare(site, query, "previous_period", now: now, match_day_of_week?: true)
 
-      assert comparison.date_range.first == ~U[2022-12-04 00:00:00Z]
-      assert comparison.date_range.last == ~U[2023-01-03 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2022-12-04 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2023-01-03 23:59:59Z]
     end
   end
 
@@ -117,8 +117,8 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       {:ok, comparison} = Comparisons.compare(site, query, "previous_period", now: now)
 
-      assert comparison.date_range.first == ~U[2022-11-02 00:00:00Z]
-      assert comparison.date_range.last == ~U[2022-12-31 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2022-11-02 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2022-12-31 23:59:59Z]
     end
 
     test "shifts back by the same number of days when mode is year_over_year" do
@@ -128,8 +128,8 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       {:ok, comparison} = Comparisons.compare(site, query, "year_over_year", now: now)
 
-      assert comparison.date_range.first == ~U[2022-01-01 00:00:00Z]
-      assert comparison.date_range.last == ~U[2022-03-01 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2022-01-01 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2022-03-01 23:59:59Z]
     end
 
     test "matches the day of the week when mode is year_over_year" do
@@ -140,8 +140,8 @@ defmodule Plausible.Stats.ComparisonsTest do
       {:ok, comparison} =
         Comparisons.compare(site, query, "year_over_year", now: now, match_day_of_week?: true)
 
-      assert comparison.date_range.first == ~U[2022-01-02 00:00:00Z]
-      assert comparison.date_range.last == ~U[2022-03-02 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2022-01-02 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2022-03-02 23:59:59Z]
     end
   end
 
@@ -152,8 +152,8 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       {:ok, comparison} = Comparisons.compare(site, query, "year_over_year")
 
-      assert comparison.date_range.first == ~U[2021-01-01 00:00:00Z]
-      assert comparison.date_range.last == ~U[2021-12-31 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2021-01-01 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2021-12-31 23:59:59Z]
     end
 
     test "shifts back a whole year when mode is previous_period" do
@@ -162,8 +162,8 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       {:ok, comparison} = Comparisons.compare(site, query, "previous_period")
 
-      assert comparison.date_range.first == ~U[2021-01-01 00:00:00Z]
-      assert comparison.date_range.last == ~U[2021-12-31 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2021-01-01 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2021-12-31 23:59:59Z]
     end
   end
 
@@ -174,8 +174,8 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       {:ok, comparison} = Comparisons.compare(site, query, "previous_period")
 
-      assert comparison.date_range.first == ~U[2022-12-25 00:00:00Z]
-      assert comparison.date_range.last == ~U[2022-12-31 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2022-12-25 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2022-12-31 23:59:59Z]
     end
 
     test "shifts back to last year when mode is year_over_year" do
@@ -184,8 +184,8 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       {:ok, comparison} = Comparisons.compare(site, query, "year_over_year")
 
-      assert comparison.date_range.first == ~U[2022-01-01 00:00:00Z]
-      assert comparison.date_range.last == ~U[2022-01-07 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2022-01-01 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2022-01-07 23:59:59Z]
     end
   end
 
@@ -197,8 +197,8 @@ defmodule Plausible.Stats.ComparisonsTest do
       {:ok, comparison} =
         Comparisons.compare(site, query, "custom", from: "2022-05-25", to: "2022-05-30")
 
-      assert comparison.date_range.first == ~U[2022-05-25 00:00:00Z]
-      assert comparison.date_range.last == ~U[2022-05-30 23:59:59Z]
+      assert comparison.utc_time_range.first == ~U[2022-05-25 00:00:00Z]
+      assert comparison.utc_time_range.last == ~U[2022-05-30 23:59:59Z]
     end
 
     test "validates from and to dates" do

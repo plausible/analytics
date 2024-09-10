@@ -46,7 +46,7 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def select_dimension(q, key, "time:week", _table, query) do
-    date_range = DateTimeRange.to_date_range(query.date_range, query.timezone)
+    date_range = DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
 
     select_merge_as(q, [t], %{
       key =>

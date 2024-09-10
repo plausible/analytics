@@ -37,64 +37,64 @@ defmodule Plausible.Stats.QueryTest do
   test "parses day format", %{site: site} do
     q = Query.from(site, %{"period" => "day", "date" => "2019-01-01"}, %{}, @now)
 
-    assert q.date_range.first == ~U[2019-01-01 05:00:00Z]
-    assert q.date_range.last == ~U[2019-01-02 04:59:59Z]
+    assert q.utc_time_range.first == ~U[2019-01-01 05:00:00Z]
+    assert q.utc_time_range.last == ~U[2019-01-02 04:59:59Z]
     assert q.interval == "hour"
   end
 
   test "day format defaults to today", %{site: site} do
     q = Query.from(site, %{"period" => "day"}, %{}, @now)
 
-    assert q.date_range.first == ~U[2024-05-03 04:00:00Z]
-    assert q.date_range.last == ~U[2024-05-04 03:59:59Z]
+    assert q.utc_time_range.first == ~U[2024-05-03 04:00:00Z]
+    assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
     assert q.interval == "hour"
   end
 
   test "parses realtime format", %{site: site} do
     q = Query.from(site, %{"period" => "realtime"}, %{}, @now)
 
-    assert q.date_range.first == ~U[2024-05-03 16:25:00Z]
-    assert q.date_range.last == ~U[2024-05-03 16:30:05Z]
+    assert q.utc_time_range.first == ~U[2024-05-03 16:25:00Z]
+    assert q.utc_time_range.last == ~U[2024-05-03 16:30:05Z]
     assert q.period == "realtime"
   end
 
   test "parses month format", %{site: site} do
     q = Query.from(site, %{"period" => "month", "date" => "2019-01-01"}, %{}, @now)
 
-    assert q.date_range.first == ~U[2019-01-01 05:00:00Z]
-    assert q.date_range.last == ~U[2019-02-01 04:59:59Z]
+    assert q.utc_time_range.first == ~U[2019-01-01 05:00:00Z]
+    assert q.utc_time_range.last == ~U[2019-02-01 04:59:59Z]
     assert q.interval == "day"
   end
 
   test "parses 6 month format", %{site: site} do
     q = Query.from(site, %{"period" => "6mo"}, %{}, @now)
 
-    assert q.date_range.first == ~U[2023-12-01 05:00:00Z]
-    assert q.date_range.last == ~U[2024-06-01 03:59:59Z]
+    assert q.utc_time_range.first == ~U[2023-12-01 05:00:00Z]
+    assert q.utc_time_range.last == ~U[2024-06-01 03:59:59Z]
     assert q.interval == "month"
   end
 
   test "parses 12 month format", %{site: site} do
     q = Query.from(site, %{"period" => "12mo"}, %{}, @now)
 
-    assert q.date_range.first == ~U[2023-06-01 04:00:00Z]
-    assert q.date_range.last == ~U[2024-06-01 03:59:59Z]
+    assert q.utc_time_range.first == ~U[2023-06-01 04:00:00Z]
+    assert q.utc_time_range.last == ~U[2024-06-01 03:59:59Z]
     assert q.interval == "month"
   end
 
   test "parses year to date format", %{site: site} do
     q = Query.from(site, %{"period" => "year"}, %{}, @now)
 
-    assert q.date_range.first == ~U[2024-01-01 05:00:00Z]
-    assert q.date_range.last == ~U[2025-01-01 04:59:59Z]
+    assert q.utc_time_range.first == ~U[2024-01-01 05:00:00Z]
+    assert q.utc_time_range.last == ~U[2025-01-01 04:59:59Z]
     assert q.interval == "month"
   end
 
   test "parses all time", %{site: site} do
     q = Query.from(site, %{"period" => "all"}, %{}, @now)
 
-    assert q.date_range.first == ~U[2020-01-01 05:00:00Z]
-    assert q.date_range.last == ~U[2024-05-04 03:59:59Z]
+    assert q.utc_time_range.first == ~U[2020-01-01 05:00:00Z]
+    assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
     assert q.period == "all"
     assert q.interval == "month"
   end
@@ -103,16 +103,16 @@ defmodule Plausible.Stats.QueryTest do
     site = Map.put(site, :timezone, "Etc/GMT+12")
     q = Query.from(site, %{"period" => "all"}, %{}, @now)
 
-    assert q.date_range.first == ~U[2020-01-01 12:00:00Z]
-    assert q.date_range.last == ~U[2024-05-04 11:59:59Z]
+    assert q.utc_time_range.first == ~U[2020-01-01 12:00:00Z]
+    assert q.utc_time_range.last == ~U[2024-05-04 11:59:59Z]
   end
 
   test "all time shows today if site has no start date", %{site: site} do
     site = Map.put(site, :stats_start_date, nil)
     q = Query.from(site, %{"period" => "all"}, %{}, @now)
 
-    assert q.date_range.first == ~U[2024-05-03 04:00:00Z]
-    assert q.date_range.last == ~U[2024-05-04 03:59:59Z]
+    assert q.utc_time_range.first == ~U[2024-05-03 04:00:00Z]
+    assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
     assert q.period == "all"
     assert q.interval == "hour"
   end
@@ -121,8 +121,8 @@ defmodule Plausible.Stats.QueryTest do
     site = Map.put(site, :stats_start_date, @now |> DateTime.to_date())
     q = Query.from(site, %{"period" => "all"}, %{}, @now)
 
-    assert q.date_range.first == ~U[2024-05-03 04:00:00Z]
-    assert q.date_range.last == ~U[2024-05-04 03:59:59Z]
+    assert q.utc_time_range.first == ~U[2024-05-03 04:00:00Z]
+    assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
     assert q.period == "all"
     assert q.interval == "hour"
   end
@@ -133,8 +133,8 @@ defmodule Plausible.Stats.QueryTest do
 
     q = Query.from(site, %{"period" => "all"}, %{}, @now)
 
-    assert q.date_range.first == ~U[2024-05-02 04:00:00Z]
-    assert q.date_range.last == ~U[2024-05-04 03:59:59Z]
+    assert q.utc_time_range.first == ~U[2024-05-02 04:00:00Z]
+    assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
     assert q.period == "all"
     assert q.interval == "day"
   end
@@ -145,8 +145,8 @@ defmodule Plausible.Stats.QueryTest do
 
     q = Query.from(site, %{"period" => "all"}, %{}, @now)
 
-    assert q.date_range.first == ~U[2024-04-03 04:00:00Z]
-    assert q.date_range.last == ~U[2024-05-04 03:59:59Z]
+    assert q.utc_time_range.first == ~U[2024-04-03 04:00:00Z]
+    assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
     assert q.period == "all"
     assert q.interval == "month"
   end
@@ -157,8 +157,8 @@ defmodule Plausible.Stats.QueryTest do
 
     q = Query.from(site, %{"period" => "all", "interval" => "week"}, %{}, @now)
 
-    assert q.date_range.first == ~U[2024-04-03 04:00:00Z]
-    assert q.date_range.last == ~U[2024-05-04 03:59:59Z]
+    assert q.utc_time_range.first == ~U[2024-04-03 04:00:00Z]
+    assert q.utc_time_range.last == ~U[2024-05-04 03:59:59Z]
     assert q.period == "all"
     assert q.interval == "week"
   end
@@ -176,8 +176,8 @@ defmodule Plausible.Stats.QueryTest do
         @now
       )
 
-    assert q.date_range.first == ~U[2019-01-01 05:00:00Z]
-    assert q.date_range.last == ~U[2019-01-16 04:59:59Z]
+    assert q.utc_time_range.first == ~U[2019-01-01 05:00:00Z]
+    assert q.utc_time_range.last == ~U[2019-01-16 04:59:59Z]
     assert q.interval == "day"
   end
 

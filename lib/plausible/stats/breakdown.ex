@@ -116,7 +116,7 @@ defmodule Plausible.Stats.Breakdown do
       from e in subquery(timed_page_transitions_q),
         group_by: e.pathname
 
-    date_range = DateTimeRange.to_date_range(query.date_range, query.timezone)
+    date_range = DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
 
     timed_pages_q =
       if query.include_imported do

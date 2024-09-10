@@ -5,15 +5,13 @@ defmodule Plausible.Stats.Time do
 
   alias Plausible.Stats.{Query, DateTimeRange}
 
-  def utc_boundaries(%Query{date_range: date_range}, site) do
-    %DateTimeRange{first: first, last: last} = date_range
-
+  def utc_boundaries(%Query{utc_time_range: time_range}, site) do
     first =
-      first
+      time_range.first
       |> DateTime.to_naive()
       |> beginning_of_time(site.native_stats_start_at)
 
-    last = DateTime.to_naive(last)
+    last = DateTime.to_naive(time_range.last)
 
     {first, last}
   end
@@ -42,7 +40,7 @@ defmodule Plausible.Stats.Time do
   end
 
   def time_labels(query) do
-    date_range = query.date_range |> DateTimeRange.to_timezone(query.timezone)
+    date_range = query.utc_time_range |> DateTimeRange.to_timezone(query.timezone)
 
     time_labels_for_dimension(time_dimension(query), query, date_range)
   end

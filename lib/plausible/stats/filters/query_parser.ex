@@ -18,9 +18,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
     with :ok <- JSONSchema.validate(schema_type, params),
          {:ok, date} <- parse_date(site, Map.get(params, "date"), date),
-         {:ok, raw_date_range} <-
-           parse_date_range(site, Map.get(params, "date_range"), date, now),
-         utc_date_range = raw_date_range |> DateTimeRange.to_timezone("Etc/UTC"),
+         {:ok, raw_time_range} <-
+           parse_time_range(site, Map.get(params, "date_range"), date, now),
+         utc_time_range = raw_time_range |> DateTimeRange.to_timezone("Etc/UTC"),
          {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
@@ -30,7 +30,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
          query = %{
            metrics: metrics,
            filters: filters,
-           date_range: utc_date_range,
+           utc_time_range: utc_time_range,
            dimensions: dimensions,
            order_by: order_by,
            timezone: site.timezone,
@@ -155,7 +155,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {:ok, date}
   end
 
-  defp parse_date_range(_site, date_range, _date, now) when date_range in ["realtime", "30m"] do
+  defp parse_time_range(_site, date_range, _date, now) when date_range in ["realtime", "30m"] do
     duration_minutes =
       case date_range do
         "realtime" -> 5
@@ -168,27 +168,27 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {:ok, DateTimeRange.new!(first_datetime, last_datetime)}
   end
 
-  defp parse_date_range(site, "day", date, _now) do
+  defp parse_time_range(site, "day", date, _now) do
     {:ok, DateTimeRange.new!(date, date, site.timezone)}
   end
 
-  defp parse_date_range(site, "7d", date, _now) do
+  defp parse_time_range(site, "7d", date, _now) do
     first = date |> Date.add(-6)
     {:ok, DateTimeRange.new!(first, date, site.timezone)}
   end
 
-  defp parse_date_range(site, "30d", date, _now) do
+  defp parse_time_range(site, "30d", date, _now) do
     first = date |> Date.add(-30)
     {:ok, DateTimeRange.new!(first, date, site.timezone)}
   end
 
-  defp parse_date_range(site, "month", date, _now) do
+  defp parse_time_range(site, "month", date, _now) do
     last = date |> Date.end_of_month()
     first = last |> Date.beginning_of_month()
     {:ok, DateTimeRange.new!(first, last, site.timezone)}
   end
 
-  defp parse_date_range(site, "6mo", date, _now) do
+  defp parse_time_range(site, "6mo", date, _now) do
     last = date |> Date.end_of_month()
 
     first =
@@ -199,7 +199,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {:ok, DateTimeRange.new!(first, last, site.timezone)}
   end
 
-  defp parse_date_range(site, "12mo", date, _now) do
+  defp parse_time_range(site, "12mo", date, _now) do
     last = date |> Date.end_of_month()
 
     first =
@@ -210,19 +210,19 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {:ok, DateTimeRange.new!(first, last, site.timezone)}
   end
 
-  defp parse_date_range(site, "year", date, _now) do
+  defp parse_time_range(site, "year", date, _now) do
     last = date |> Timex.end_of_year()
     first = last |> Timex.beginning_of_year()
     {:ok, DateTimeRange.new!(first, last, site.timezone)}
   end
 
-  defp parse_date_range(site, "all", date, _now) do
+  defp parse_time_range(site, "all", date, _now) do
     start_date = Plausible.Sites.stats_start_date(site) || date
 
     {:ok, DateTimeRange.new!(start_date, date, site.timezone)}
   end
 
-  defp parse_date_range(site, [from, to], _date, _now)
+  defp parse_time_range(site, [from, to], _date, _now)
        when is_binary(from) and is_binary(to) do
     case date_range_from_date_strings(site, from, to) do
       {:ok, date_range} -> {:ok, date_range}
@@ -230,7 +230,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  defp parse_date_range(_site, unknown, _date, _now),
+  defp parse_time_range(_site, unknown, _date, _now),
     do: {:error, "Invalid date_range '#{i(unknown)}'."}
 
   defp date_range_from_date_strings(site, from, to) do

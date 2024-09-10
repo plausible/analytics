@@ -78,7 +78,7 @@ defmodule Plausible.Workers.SendEmailReport do
   end
 
   defp put_monthly_report_name_and_date(%{query: query} = assigns) do
-    date_range = DateTimeRange.to_date_range(query.date_range, query.timezone)
+    date_range = DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
 
     Map.merge(assigns, %{
       name: Calendar.strftime(date_range.first, "%B"),

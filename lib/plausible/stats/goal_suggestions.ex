@@ -57,7 +57,7 @@ defmodule Plausible.Stats.GoalSuggestions do
       )
       |> maybe_set_limit(limit)
 
-    date_range = DateTimeRange.to_date_range(query.date_range, query.timezone)
+    date_range = DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
 
     imported_q =
       from(i in "imported_custom_events",

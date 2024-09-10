@@ -110,7 +110,7 @@ defmodule PlausibleWeb.StatsController do
       site = Plausible.Repo.preload(conn.assigns.site, :owner)
       query = Query.from(site, params, debug_metadata(conn))
 
-      date_range = DateTimeRange.to_date_range(query.date_range, query.timezone)
+      date_range = DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
 
       filename =
         ~c"Plausible export #{params["domain"]} #{Date.to_iso8601(date_range.first)}  to #{Date.to_iso8601(date_range.last)} .zip"

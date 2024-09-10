@@ -8,7 +8,7 @@ defmodule Plausible.Stats.TimeTest do
     test "with time:month dimension" do
       assert time_labels(%{
                dimensions: ["visit:device", "time:month"],
-               date_range: DateTimeRange.new!(~D[2022-01-17], ~D[2022-02-01], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-17], ~D[2022-02-01], "UTC"),
                timezone: "UTC"
              }) == [
                "2022-01-01",
@@ -17,7 +17,7 @@ defmodule Plausible.Stats.TimeTest do
 
       assert time_labels(%{
                dimensions: ["visit:device", "time:month"],
-               date_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-03-07], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-03-07], "UTC"),
                timezone: "UTC"
              }) == [
                "2022-01-01",
@@ -29,7 +29,7 @@ defmodule Plausible.Stats.TimeTest do
     test "with time:week dimension" do
       assert time_labels(%{
                dimensions: ["time:week"],
-               date_range: DateTimeRange.new!(~D[2020-12-20], ~D[2021-01-08], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2020-12-20], ~D[2021-01-08], "UTC"),
                timezone: "UTC"
              }) == [
                "2020-12-20",
@@ -40,7 +40,7 @@ defmodule Plausible.Stats.TimeTest do
 
       assert time_labels(%{
                dimensions: ["time:week"],
-               date_range: DateTimeRange.new!(~D[2020-12-21], ~D[2021-01-03], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2020-12-21], ~D[2021-01-03], "UTC"),
                timezone: "UTC"
              }) == [
                "2020-12-21",
@@ -51,7 +51,7 @@ defmodule Plausible.Stats.TimeTest do
     test "with time:day dimension" do
       assert time_labels(%{
                dimensions: ["time:day"],
-               date_range: DateTimeRange.new!(~D[2022-01-17], ~D[2022-02-02], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-17], ~D[2022-02-02], "UTC"),
                timezone: "UTC"
              }) == [
                "2022-01-17",
@@ -77,7 +77,7 @@ defmodule Plausible.Stats.TimeTest do
     test "with time:hour dimension" do
       assert time_labels(%{
                dimensions: ["time:hour"],
-               date_range: DateTimeRange.new!(~D[2022-01-17], ~D[2022-01-17], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-17], ~D[2022-01-17], "UTC"),
                timezone: "UTC"
              }) == [
                "2022-01-17 00:00:00",
@@ -108,7 +108,7 @@ defmodule Plausible.Stats.TimeTest do
 
       assert time_labels(%{
                dimensions: ["time:hour"],
-               date_range: DateTimeRange.new!(~D[2022-01-17], ~D[2022-01-18], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-17], ~D[2022-01-18], "UTC"),
                timezone: "UTC"
              }) == [
                "2022-01-17 00:00:00",
@@ -168,7 +168,7 @@ defmodule Plausible.Stats.TimeTest do
 
       assert time_labels(%{
                dimensions: ["time:hour"],
-               date_range:
+               utc_time_range:
                  DateTimeRange.new!(from_timestamp, to_timestamp)
                  |> DateTimeRange.to_timezone("Etc/UTC"),
                timezone: "Europe/Tallinn"
@@ -196,7 +196,7 @@ defmodule Plausible.Stats.TimeTest do
       assert time_labels(%{
                dimensions: ["time:minute"],
                now: now,
-               date_range: DateTimeRange.new!(first_dt, last_dt),
+               utc_time_range: DateTimeRange.new!(first_dt, last_dt),
                timezone: "UTC"
              }) == [
                "2024-01-01 12:00:00",

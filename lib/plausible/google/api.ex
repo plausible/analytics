@@ -65,7 +65,7 @@ defmodule Plausible.Google.API do
          {:ok, access_token} <- maybe_refresh_token(site.google_auth),
          {:ok, gsc_filters} <-
            SearchConsole.Filters.transform(site.google_auth.property, query.filters, search),
-         date_range = DateTimeRange.to_date_range(query.date_range, query.timezone),
+         date_range = DateTimeRange.to_date_range(query.utc_time_range, query.timezone),
          {:ok, stats} <-
            HTTP.list_stats(
              access_token,

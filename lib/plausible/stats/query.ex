@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Query do
   use Plausible
 
-  defstruct date_range: nil,
+  defstruct utc_time_range: nil,
             interval: nil,
             period: nil,
             dimensions: [],
@@ -129,7 +129,7 @@ defmodule Plausible.Stats.Query do
           :ok | {:error, :no_imported_data | :out_of_range | :unsupported_query | :not_requested}
   def ensure_include_imported(query, requested?) do
     query_start_date =
-      query.date_range.first |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
+      query.utc_time_range.first |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
 
     cond do
       not requested? ->
