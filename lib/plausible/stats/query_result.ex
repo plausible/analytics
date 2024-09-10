@@ -74,7 +74,10 @@ defmodule Plausible.Stats.QueryResult do
     %{
       imports_included: if(query.include.imports, do: query.include_imported, else: nil),
       imports_skip_reason:
-        if(query.skip_imported_reason, do: Atom.to_string(query.skip_imported_reason), else: nil),
+        if(query.include.imports and query.skip_imported_reason,
+          do: Atom.to_string(query.skip_imported_reason),
+          else: nil
+        ),
       imports_warning:
         case query.skip_imported_reason do
           :unsupported_query -> @imports_unsupported_query_warning
