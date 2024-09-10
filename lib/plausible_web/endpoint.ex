@@ -3,6 +3,11 @@ defmodule PlausibleWeb.Endpoint do
   use Sentry.PlugCapture
   use Phoenix.Endpoint, otp_app: :plausible
 
+  on_ce do
+    plug :maybe_handle_acme_challenge
+    plug :maybe_force_ssl, Plug.SSL.init(_no_opts = [])
+  end
+
   @session_options [
     # key to be patched
     key: "",
@@ -124,5 +129,68 @@ defmodule PlausibleWeb.Endpoint do
     :plausible
     |> Application.fetch_env!(__MODULE__)
     |> Keyword.fetch!(key)
+  end
+
+  on_ce do
+    require SiteEncrypt
+    @behaviour SiteEncrypt
+    @force_https_key {:plausible, :force_https}
+    @allow_acme_challenges_key {:plausible, :allow_acme_challenges}
+
+    @doc false
+    def force_https do
+      :persistent_term.put(@force_https_key, true)
+    end
+
+    @doc false
+    def allow_acme_challenges do
+      :persistent_term.put(@allow_acme_challenges_key, true)
+    end
+
+    defp maybe_handle_acme_challenge(conn, _opts) do
+      if :persistent_term.get(@allow_acme_challenges_key, false) do
+        SiteEncrypt.AcmeChallenge.call(conn, _endpoint = __MODULE__)
+      else
+        conn
+      end
+    end
+
+    defp maybe_force_ssl(conn, opts) do
+      if :persistent_term.get(@force_https_key, false) do
+        Plug.SSL.call(conn, opts)
+      else
+        conn
+      end
+    end
+
+    @impl SiteEncrypt
+    def handle_new_cert, do: :ok
+
+    @doc false
+    def app_env_config do
+      # this function is being used by site_encrypt
+      Application.get_env(:plausible, _endpoint = __MODULE__, [])
+    end
+
+    @impl SiteEncrypt
+    def certification do
+      selfhost_config = Application.fetch_env!(:plausible, :selfhost)
+      config = Keyword.fetch!(selfhost_config, :site_encrypt)
+
+      domain = Keyword.fetch!(config, :domain)
+      email = Keyword.fetch!(config, :email)
+      db_folder = Keyword.fetch!(config, :db_folder)
+      directory_url = Keyword.fetch!(config, :directory_url)
+
+      SiteEncrypt.configure(
+        mode: :auto,
+        log_level: :notice,
+        client: :certbot,
+        domains: [domain],
+        emails: [email],
+        db_folder: db_folder,
+        directory_url: directory_url
+      )
+    end
   end
 end

@@ -19,9 +19,11 @@ config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
 log_format =
   get_var_from_path_or_env(config_dir, "LOG_FORMAT", "standard")
 
+default_log_level = if config_env() == :ce, do: "notice", else: "warning"
+
 log_level =
   config_dir
-  |> get_var_from_path_or_env("LOG_LEVEL", "warning")
+  |> get_var_from_path_or_env("LOG_LEVEL", default_log_level)
   |> String.to_existing_atom()
 
 config :logger,
@@ -61,7 +63,11 @@ listen_ip =
   )
 
 # System.get_env does not accept a non string default
-port = get_var_from_path_or_env(config_dir, "PORT") || 8000
+http_port =
+  get_int_from_path_or_env(config_dir, "HTTP_PORT") ||
+    get_int_from_path_or_env(config_dir, "PORT", 8000)
+
+https_port = get_int_from_path_or_env(config_dir, "HTTPS_PORT")
 
 base_url = get_var_from_path_or_env(config_dir, "BASE_URL")
 
@@ -308,17 +314,84 @@ config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
   disable_registration: disable_registration
 
+default_http_opts = [
+  transport_options: [max_connections: :infinity],
+  protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
+]
+
 config :plausible, PlausibleWeb.Endpoint,
   url: [scheme: base_url.scheme, host: base_url.host, path: base_url.path, port: base_url.port],
-  http: [
-    port: port,
-    ip: listen_ip,
-    transport_options: [max_connections: :infinity],
-    protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
-  ],
+  http: [port: http_port, ip: listen_ip] ++ default_http_opts,
   secret_key_base: secret_key_base,
   websocket_url: websocket_url,
   secure_cookie: secure_cookie
+
+# maybe enable HTTPS in CE
+if config_env() in [:ce, :ce_dev, :ce_test] do
+  if https_port do
+    https_opts = [
+      port: https_port,
+      ip: listen_ip,
+      cipher_suite: :compatible,
+      transport_options: [socket_opts: [log_level: :warning]]
+    ]
+
+    https_opts = Config.Reader.merge(default_http_opts, https_opts)
+    config :plausible, PlausibleWeb.Endpoint, https: https_opts
+
+    domain = base_url.host
+
+    # do stricter checking in CE prod
+    if config_env() == :ce do
+      domain_is_ip? =
+        case :inet.parse_address(to_charlist(domain)) do
+          {:ok, _address} -> true
+          _other -> false
+        end
+
+      if domain_is_ip? do
+        raise ArgumentError, "Cannot generate TLS certificates for IP address #{inspect(domain)}"
+      end
+
+      domain_is_local? = domain == "localhost" or not String.contains?(domain, ".")
+
+      if domain_is_local? do
+        raise ArgumentError,
+              "Cannot generate TLS certificates for local domain #{inspect(domain)}"
+      end
+
+      unless http_port == 80 do
+        Logger.warning("""
+        HTTPS is enabled but the HTTP port is not 80. \
+        This will prevent automatic TLS certificate issuance as ACME validates the domain on port 80.\
+        """)
+      end
+    end
+
+    acme_directory_url =
+      get_var_from_path_or_env(
+        config_dir,
+        "ACME_DIRECTORY_URL",
+        "https://acme-v02.api.letsencrypt.org/directory"
+      )
+
+    db_folder = Path.join(data_dir || System.tmp_dir!(), "site_encrypt")
+
+    email =
+      case mailer_email do
+        {_, email} -> email
+        email when is_binary(email) -> email
+      end
+
+    config :plausible, :selfhost,
+      site_encrypt: [
+        domain: domain,
+        email: email,
+        db_folder: db_folder,
+        directory_url: acme_directory_url
+      ]
+  end
+end
 
 db_maybe_ipv6 =
   if get_var_from_path_or_env(config_dir, "ECTO_IPV6") do

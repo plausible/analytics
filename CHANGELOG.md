@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - New /debug/clickhouse route for super admins which shows information on clickhouse queries executed by user
 - Typescript support for `/assets`
 - Testing framework for `/assets`
+- Automatic HTTPS plausible/analytics#4491
 
 ### Removed
 - Deprecate `ECTO_IPV6` and `ECTO_CH_IPV6` env vars in CE plausible/analytics#4245
