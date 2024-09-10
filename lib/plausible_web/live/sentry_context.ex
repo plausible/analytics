@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Live.SentryContext do
     end
   end
 
-  def on_mount(:default, _params, session, socket) do
+  def on_mount(:default, _params, _session, socket) do
     if Phoenix.LiveView.connected?(socket) do
       peer = Phoenix.LiveView.get_connect_info(socket, :peer_data)
       uri = Phoenix.LiveView.get_connect_info(socket, :uri)
@@ -49,14 +49,10 @@ defmodule PlausibleWeb.Live.SentryContext do
 
       Sentry.Context.set_request_context(request_context)
 
-      case PlausibleWeb.UserAuth.get_user_session(session) do
-        {:ok, user_session} ->
-          Sentry.Context.set_user_context(%{
-            id: user_session.user_id
-          })
-
-        _ ->
-          :pass
+      if current_user = socket.assigns[:current_user] do
+        Sentry.Context.set_user_context(%{
+          id: current_user.id
+        })
       end
     end
 

@@ -6,32 +6,39 @@ defmodule PlausibleWeb.Live.Components.Verification do
   use Phoenix.LiveComponent
   use Plausible
 
+  alias PlausibleWeb.Router.Helpers, as: Routes
+
   import PlausibleWeb.Components.Generic
 
-  attr :domain, :string, required: true
-  attr :modal?, :boolean, default: false
+  attr(:domain, :string, required: true)
 
-  attr :message, :string, default: "We're visiting your site to ensure that everything is working"
+  attr(:message, :string,
+    default: "We're visiting your site to ensure that everything is working"
+  )
 
-  attr :finished?, :boolean, default: false
-  attr :success?, :boolean, default: false
-  attr :interpretation, Plausible.Verification.Diagnostics.Result, default: nil
-  attr :attempts, :integer, default: 0
-  attr :flow, :string, default: ""
+  attr(:super_admin?, :boolean, default: false)
+  attr(:finished?, :boolean, default: false)
+  attr(:success?, :boolean, default: false)
+  attr(:verification_state, Plausible.Verification.State, default: nil)
+  attr(:interpretation, Plausible.Verification.Diagnostics.Result, default: nil)
+  attr(:attempts, :integer, default: 0)
+  attr(:flow, :string, default: "")
+  attr(:installation_type, :string, default: nil)
+  attr(:awaiting_first_pageview?, :boolean, default: false)
 
   def render(assigns) do
     ~H"""
     <div id="progress-indicator">
-      <PlausibleWeb.Components.Generic.focus_box outer_markup={not @modal?}>
+      <PlausibleWeb.Components.Generic.focus_box>
         <div
-          :if={not @finished? or (not @modal? and @success?)}
+          :if={not @finished?}
           class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-gray-700"
         >
           <div class="block pulsating-circle"></div>
         </div>
 
         <div
-          :if={@finished? and @success? and @modal?}
+          :if={@finished? and @success?}
           class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-500"
           id="check-circle"
         >
@@ -49,17 +56,21 @@ defmodule PlausibleWeb.Live.Components.Verification do
         <div class="mt-6">
           <h3 class="font-semibold leading-6 text-xl">
             <span :if={@finished? and @success?}>Success!</span>
-            <span :if={not @finished?}>Verifying your integration</span>
+            <span :if={not @finished?}>Verifying your installation</span>
 
             <span :if={@finished? and not @success? and @interpretation}>
               <%= List.first(@interpretation.errors) %>
             </span>
           </h3>
-          <p :if={@finished? and @success? and @modal?} id="progress" class="mt-2">
-            Your integration is working and visitors are being counted accurately
+          <p :if={@finished? and @success?} id="progress" class="mt-2">
+            Your installation is working and visitors are being counted accurately
           </p>
-          <p :if={@finished? and @success? and not @modal?} id="progress" class="mt-2 animate-pulse">
-            Your integration is working. Awaiting your first pageview.
+          <p
+            :if={@finished? and @success? and @awaiting_first_pageview?}
+            id="progress"
+            class="mt-2 animate-pulse"
+          >
+            Awaiting your first pageview
           </p>
           <p :if={not @finished?} class="mt-2 animate-pulse" id="progress"><%= @message %></p>
 
@@ -77,7 +88,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
 
         <div :if={@finished?} class="mt-8">
           <.button_link :if={not @success?} href="#" phx-click="retry" class="w-full">
-            Verify integration again
+            Verify installation again
           </.button_link>
           <.button_link
             :if={@success?}
@@ -88,34 +99,57 @@ defmodule PlausibleWeb.Live.Components.Verification do
           </.button_link>
         </div>
 
-        <:footer :if={
-          (not @modal? and not @success?) or
-            (@finished? and not @success?)
-        }>
-          <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
-            <%= if ee?() and @finished? and not @success? and @attempts >= 3 do %>
-              <li>
-                <b>Need further help with your integration?</b>
-                <.styled_link href="https://plausible.io/contact">
-                  Contact us
-                </.styled_link>
-              </li>
-            <% end %>
-            <%= if not @success? and not @modal? do %>
-              <li>
-                Need to see the snippet again?
-                <.styled_link href={"/#{URI.encode_www_form(@domain)}/snippet?flow=#{@flow}"}>
-                  Click here
-                </.styled_link>
-              </li>
-              <li>
-                Run verification later and go to Site Settings?
-                <.styled_link href={"/#{URI.encode_www_form(@domain)}/settings/general"}>
-                  Click here
-                </.styled_link>
-              </li>
-            <% end %>
-          </ol>
+        <:footer :if={@finished? and not @success?}>
+          <.focus_list>
+            <:item :if={ee?() and @attempts >= 3}>
+              <b>Need further help with your installation?</b>
+              <.styled_link href="https://plausible.io/contact">
+                Contact us
+              </.styled_link>
+            </:item>
+            <:item>
+              Need to see installation instructions again?
+              <.styled_link href={
+                Routes.site_path(PlausibleWeb.Endpoint, :installation, @domain,
+                  flow: @flow,
+                  installation_type: @installation_type
+                )
+              }>
+                Click here
+              </.styled_link>
+            </:item>
+            <:item>
+              Run verification later and go to site settings?
+              <.styled_link href={"/#{URI.encode_www_form(@domain)}/settings/general"}>
+                Click here
+              </.styled_link>
+            </:item>
+          </.focus_list>
+          <div
+            :if={@verification_state && @super_admin? && @finished?}
+            class="flex flex-col dark:text-gray-200 border-t border-gray-300 dark:border-gray-700"
+            x-data="{ showDiagnostics: false }"
+            id="super-admin-report"
+          >
+            <p class="mt-4 text-sm">
+              <a
+                href="#"
+                @click.prevent="showDiagnostics = !showDiagnostics"
+                class="bg-yellow-100 dark:text-gray-800"
+              >
+                As a super-admin, you're eligible to see diagnostics details. Click to expand.
+              </a>
+            </p>
+            <div x-show="showDiagnostics" x-cloak>
+              <.focus_list>
+                <:item :for={{diag, value} <- Map.from_struct(@verification_state.diagnostics)}>
+                  <span class="text-sm">
+                    <%= Phoenix.Naming.humanize(diag) %>: <span class="font-mono"><%= value %></span>
+                  </span>
+                </:item>
+              </.focus_list>
+            </div>
+          </div>
         </:footer>
       </PlausibleWeb.Components.Generic.focus_box>
     </div>

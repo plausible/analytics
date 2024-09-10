@@ -49,7 +49,7 @@ defmodule Plausible.Workers.ScheduleEmailReports do
   end
 
   def monday_9am(timezone) do
-    Timex.now(timezone)
+    DateTime.now!(timezone)
     |> DateTime.shift(week: 1)
     |> Timex.beginning_of_week()
     |> DateTime.shift(hour: 9)
@@ -89,7 +89,7 @@ defmodule Plausible.Workers.ScheduleEmailReports do
   end
 
   def first_of_month_9am(timezone) do
-    Timex.now(timezone)
+    DateTime.now!(timezone)
     |> DateTime.shift(month: 1)
     |> Timex.beginning_of_month()
     |> DateTime.shift(hour: 9)

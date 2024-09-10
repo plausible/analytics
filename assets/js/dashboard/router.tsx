@@ -26,6 +26,7 @@ import ConversionsModal from './stats/modals/conversions'
 import FilterModal from './stats/modals/filter-modal'
 import QueryContextProvider from './query-context'
 import { DashboardKeybinds } from './dashboard-keybinds'
+import LastLoadContextProvider from './last-load-context'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,8 +40,10 @@ function DashboardElement() {
   return (
     <QueryClientProvider client={queryClient}>
       <QueryContextProvider>
-        <Dashboard />
-        {/** render any children of the root route below */}
+        <LastLoadContextProvider>
+          <Dashboard />
+          {/** render any children of the root route below */}
+        </LastLoadContextProvider>
         <Outlet />
       </QueryContextProvider>
     </QueryClientProvider>

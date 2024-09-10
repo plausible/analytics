@@ -29,6 +29,7 @@ defmodule Plausible.DataMigration.SiteImports do
     sites_with_only_legacy_import =
       from(s in Site,
         as: :site,
+        select: %{id: s.id, imported_data: s.imported_data},
         where:
           not is_nil(s.imported_data) and fragment("?->>'status'", s.imported_data) == "ok" and
             not exists(site_import_query)

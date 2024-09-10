@@ -38,11 +38,17 @@ defmodule Plausible.Stats.Timeseries do
 
     q = SQL.QueryBuilder.build(query_with_metrics, site)
 
-    q
-    |> ClickhouseRepo.all(query: query)
-    |> QueryResult.from(site, query_with_metrics)
-    |> build_timeseries_result(query_with_metrics, currency)
-    |> transform_keys(%{group_conversion_rate: :conversion_rate})
+    query_result =
+      q
+      |> ClickhouseRepo.all(query: query)
+      |> QueryResult.from(site, query_with_metrics)
+
+    timeseries_result =
+      query_result
+      |> build_timeseries_result(query_with_metrics, currency)
+      |> transform_keys(%{group_conversion_rate: :conversion_rate})
+
+    {timeseries_result, query_result.meta}
   end
 
   defp time_dimension(query), do: Map.fetch!(@time_dimension, query.interval)
@@ -69,6 +75,7 @@ defmodule Plausible.Stats.Timeseries do
       )
       |> cast_revenue_metrics_to_money(currency)
     end)
+    |> transform_realtime_labels(query)
   end
 
   defp empty_row(date, metrics) do
@@ -101,6 +108,13 @@ defmodule Plausible.Stats.Timeseries do
       |> Enum.into(%{})
     end)
   end
+
+  defp transform_realtime_labels(results, %Query{period: "30m"}) do
+    Enum.with_index(results)
+    |> Enum.map(fn {entry, index} -> %{entry | date: -30 + index} end)
+  end
+
+  defp transform_realtime_labels(results, _query), do: results
 
   on_ee do
     defp cast_revenue_metrics_to_money(results, revenue_goals) do

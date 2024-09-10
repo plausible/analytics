@@ -3,4 +3,4 @@
 
 BIN_DIR=$(dirname "$0")
 
-"${BIN_DIR}"/bin/plausible eval Plausible.Release.pending_migrations
+"${BIN_DIR}"/bin/plausible eval Plausible.Release.pending_streaks

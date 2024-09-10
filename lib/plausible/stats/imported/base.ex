@@ -6,7 +6,9 @@ defmodule Plausible.Stats.Imported.Base do
   import Ecto.Query
 
   alias Plausible.Imported
-  alias Plausible.Stats.{Filters, Query, SQL}
+  alias Plausible.Stats.{Query, DateTimeRange}
+
+  import Plausible.Stats.Filters, only: [dimensions_used_in_filters: 1]
 
   @property_to_table_mappings %{
     "visit:source" => "imported_sources",
@@ -47,20 +49,6 @@ defmodule Plausible.Stats.Imported.Base do
 
   @imported_custom_props Imported.imported_custom_props()
 
-  @db_field_mappings %{
-    referrer_source: :source,
-    screen_size: :device,
-    screen: :device,
-    os: :operating_system,
-    os_version: :operating_system_version,
-    country_code: :country,
-    subdivision1_code: :region,
-    city_geoname_id: :city,
-    entry_page_hostname: :hostname,
-    pathname: :page,
-    url: :link_url
-  }
-
   def property_to_table_mappings(), do: @property_to_table_mappings
 
   def query_imported(site, query) do
@@ -71,16 +59,16 @@ defmodule Plausible.Stats.Imported.Base do
 
   def query_imported(table, site, query) do
     import_ids = site.complete_import_ids
-    %{first: date_from, last: date_to} = query.date_range
+    %{first: date_from, last: date_to} = DateTimeRange.to_date_range(query.date_range)
 
     from(i in table,
       where: i.site_id == ^site.id,
       where: i.import_id in ^import_ids,
       where: i.date >= ^date_from,
       where: i.date <= ^date_to,
+      where: ^Plausible.Stats.Imported.SQL.WhereBuilder.build(query),
       select: %{}
     )
-    |> apply_filter(query)
   end
 
   def decide_tables(query) do
@@ -92,8 +80,7 @@ defmodule Plausible.Stats.Imported.Base do
   end
 
   defp custom_prop_query?(query) do
-    query.filters
-    |> Enum.map(&Enum.at(&1, 1))
+    dimensions_used_in_filters(query.filters)
     |> Enum.concat(query.dimensions)
     |> Enum.any?(&(&1 in @imported_custom_props))
   end
@@ -108,8 +95,7 @@ defmodule Plausible.Stats.Imported.Base do
     if dimensions == [] or
          (length(dimensions) == 1 and hd(dimensions) in @queriable_custom_prop_dimensions) do
       custom_prop_filters =
-        query.filters
-        |> Enum.map(&Enum.at(&1, 1))
+        dimensions_used_in_filters(query.filters)
         |> Enum.filter(&(&1 in @imported_custom_props))
         |> Enum.uniq()
 
@@ -153,8 +139,8 @@ defmodule Plausible.Stats.Imported.Base do
     ["imported_pages", "imported_custom_events"]
   end
 
-  defp do_decide_tables(%Query{filters: filters, dimensions: ["event:goal"]} = query) do
-    filter_props = Enum.map(filters, &Enum.at(&1, 1))
+  defp do_decide_tables(%Query{dimensions: ["event:goal"]} = query) do
+    filter_dimensions = dimensions_used_in_filters(query.filters)
 
     filter_goals = get_filter_goals(query)
 
@@ -163,11 +149,11 @@ defmodule Plausible.Stats.Imported.Base do
     any_pageview_goals? =
       Enum.any?(filter_goals, fn goal -> Plausible.Goal.type(goal) == :page end)
 
-    any_event_name_filters? = "event:name" in filter_props or any_event_goals?
-    any_page_filters? = "event:page" in filter_props or any_pageview_goals?
+    any_event_name_filters? = "event:name" in filter_dimensions or any_event_goals?
+    any_page_filters? = "event:page" in filter_dimensions or any_pageview_goals?
 
     any_other_filters? =
-      Enum.any?(filter_props, &(&1 not in ["event:page", "event:name", "event:goal"]))
+      Enum.any?(filter_dimensions, &(&1 not in ["event:page", "event:name", "event:goal"]))
 
     cond do
       any_other_filters? -> []
@@ -177,11 +163,10 @@ defmodule Plausible.Stats.Imported.Base do
     end
   end
 
-  defp do_decide_tables(%Query{filters: filters, dimensions: dimensions} = query) do
+  defp do_decide_tables(query) do
     table_candidates =
-      filters
-      |> Enum.map(fn [_, filter_key | _] -> filter_key end)
-      |> Enum.concat(dimensions)
+      dimensions_used_in_filters(query.filters)
+      |> Enum.concat(query.dimensions)
       |> Enum.reject(&(&1 in @queriable_time_dimensions or &1 == "event:goal"))
       |> Enum.flat_map(fn
         "visit:screen" -> ["visit:device"]
@@ -206,30 +191,14 @@ defmodule Plausible.Stats.Imported.Base do
     end
   end
 
-  defp get_filter_goals(%Query{filters: filters} = query) do
-    filters
-    |> Enum.filter(fn [_, key, _] -> key == "event:goal" end)
-    |> Enum.flat_map(fn [operation, _, clauses] ->
+  defp get_filter_goals(query) do
+    query.filters
+    |> Enum.filter(fn [_, dimension | _rest] -> dimension == "event:goal" end)
+    |> Enum.flat_map(fn [operation, _dimension, clauses] ->
       Enum.flat_map(clauses, fn clause ->
         query.preloaded_goals
         |> Plausible.Goals.Filters.filter_preloaded(operation, clause)
       end)
-    end)
-  end
-
-  defp apply_filter(q, %Query{filters: filters} = query) do
-    Enum.reduce(filters, q, fn [_, filter_key, _] = filter, q ->
-      db_field = Filters.without_prefix(filter_key)
-
-      if db_field == :goal do
-        condition = Plausible.Goals.Filters.add_filter(query, filter, imported?: true)
-        where(q, ^condition)
-      else
-        mapped_db_field = Map.get(@db_field_mappings, db_field, db_field)
-        condition = SQL.WhereBuilder.build_condition(mapped_db_field, filter)
-
-        where(q, ^condition)
-      end
     end)
   end
 

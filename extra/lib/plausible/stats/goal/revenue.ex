@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Goal.Revenue do
   """
   import Ecto.Query
 
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.Filters
 
   @revenue_metrics [:average_revenue, :total_revenue]
 
@@ -25,7 +25,7 @@ defmodule Plausible.Stats.Goal.Revenue do
   """
   def get_revenue_tracking_currency(site, query, metrics) do
     goal_filters =
-      case Query.get_filter(query, "event:goal") do
+      case Filters.get_toplevel_filter(query, "event:goal") do
         [:is, "event:goal", list] -> list
         _ -> []
       end

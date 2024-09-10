@@ -7,6 +7,7 @@ defmodule Plausible.Google.API do
 
   alias Plausible.Google.HTTP
   alias Plausible.Google.SearchConsole
+  alias Plausible.Stats.DateTimeRange
 
   require Logger
 
@@ -64,11 +65,12 @@ defmodule Plausible.Google.API do
          {:ok, access_token} <- maybe_refresh_token(site.google_auth),
          {:ok, gsc_filters} <-
            SearchConsole.Filters.transform(site.google_auth.property, query.filters, search),
+         date_range = DateTimeRange.to_date_range(query.date_range),
          {:ok, stats} <-
            HTTP.list_stats(
              access_token,
              site.google_auth.property,
-             query.date_range,
+             date_range,
              pagination,
              gsc_filters
            ) do
@@ -129,7 +131,7 @@ defmodule Plausible.Google.API do
   end
 
   defp needs_to_refresh_token?(%NaiveDateTime{} = expires_at) do
-    thirty_seconds_ago = DateTime.shift(Timex.now(), second: 30)
+    thirty_seconds_ago = DateTime.shift(DateTime.utc_now(), second: 30)
     Timex.before?(expires_at, thirty_seconds_ago)
   end
 

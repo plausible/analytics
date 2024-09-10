@@ -8,15 +8,14 @@
   </:subtitle>
 
   <:footer>
-    <p>
-      Changed your mind?
-      <a
-        href={Routes.auth_path(@conn, :user_settings) <> "#setup-2fa"}
-        class="underline text-indigo-600"
-      >
-        Go back to Settings
-      </a>
-    </p>
+    <.focus_list>
+      <:item>
+        Changed your mind?
+        <.styled_link href={Routes.auth_path(@conn, :user_settings) <> "#setup-2fa"}>
+          Go back to Settings
+        </.styled_link>
+      </:item>
+    </.focus_list>
   </:footer>
 
   <div class="flex flex-col sm:flex-row items-center sm:items-start">
@@ -27,27 +26,17 @@
     </div>
 
     <div class="mt-8 sm:ml-4">
-      <ol>
-        <li class="flex items-start">
-          <div class="flex-shrink-0 h-5 w-5 relative flex items-center justify-center">
-            <div class="h-2 w-2 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
-          </div>
+      <.focus_list>
+        <:item>
           Open the authenticator application
-        </li>
-        <li class="mt-1 flex items-start">
-          <div class="flex-shrink-0 h-5 w-5 relative flex items-center justify-center">
-            <div class="h-2 w-2 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
-          </div>
+        </:item>
+        <:item>
           Tap Scan a QR Code
-        </li>
-        <li class="mt-1 flex items-start">
-          <div class="flex-shrink-0 h-5 w-5 relative flex items-center justify-center">
-            <div class="h-2 w-2 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
-          </div>
+        </:item>
+        <:item>
           Scan this code with your phone camera or paste the code manually
-        </li>
-      </ol>
-
+        </:item>
+      </.focus_list>
       <div class="sm:ml-2">
         <PlausibleWeb.Live.Components.Form.input_with_clipboard
           id="secret"

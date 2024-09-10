@@ -4,7 +4,14 @@ defmodule Plausible.ConfigTest do
   describe "mailer" do
     test "mailer email default" do
       env = [{"MAILER_EMAIL", nil}]
-      assert get_in(runtime_config(env), [:plausible, :mailer_email]) == "hello@plausible.local"
+      assert get_in(runtime_config(env), [:plausible, :mailer_email]) == "plausible@localhost"
+    end
+
+    test "mailer email from base url" do
+      env = [{"MAILER_EMAIL", nil}, {"BASE_URL", "https://plausible.example.com:8443"}]
+
+      assert get_in(runtime_config(env), [:plausible, :mailer_email]) ==
+               "plausible@plausible.example.com"
     end
 
     test "mailer email custom" do
@@ -16,7 +23,7 @@ defmodule Plausible.ConfigTest do
       env = [{"MAILER_EMAIL", nil}, {"MAILER_NAME", "John"}]
 
       assert get_in(runtime_config(env), [:plausible, :mailer_email]) ==
-               {"John", "hello@plausible.local"}
+               {"John", "plausible@localhost"}
 
       env = [{"MAILER_EMAIL", "custom@mailer.email"}, {"MAILER_NAME", "John"}]
 
@@ -24,21 +31,12 @@ defmodule Plausible.ConfigTest do
                {"John", "custom@mailer.email"}
     end
 
-    test "defaults to Bamboo.SMTPAdapter" do
+    test "defaults to Bamboo.Mua" do
       env = {"MAILER_ADAPTER", nil}
 
       assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
-               adapter: Bamboo.SMTPAdapter,
-               server: "mail",
-               hostname: "localhost",
-               port: "25",
-               username: nil,
-               password: nil,
-               tls: :if_available,
-               allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
-               ssl: false,
-               retries: 2,
-               no_mx_lookups: true
+               adapter: Bamboo.Mua,
+               ssl: [middlebox_comp_mode: false]
              ]
     end
 
@@ -144,7 +142,17 @@ defmodule Plausible.ConfigTest do
       env = [{"MAILER_ADAPTER", "Bamboo.Mua"}]
 
       assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
-               {:adapter, Bamboo.Mua}
+               {:adapter, Bamboo.Mua},
+               {:ssl, [middlebox_comp_mode: false]}
+             ]
+    end
+
+    test "Bamboo.Mua (middlebox_comp_mode enabled)" do
+      env = [{"MAILER_ADAPTER", "Bamboo.Mua"}, {"SMTP_MIDDLEBOX_COMP_MODE", "true"}]
+
+      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+               {:adapter, Bamboo.Mua},
+               {:ssl, [middlebox_comp_mode: true]}
              ]
     end
 
@@ -159,6 +167,7 @@ defmodule Plausible.ConfigTest do
 
       assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
                {:adapter, Bamboo.Mua},
+               {:ssl, [middlebox_comp_mode: false]},
                {:relay, "localhost"},
                {:port, 2525},
                {:auth, [username: "neo", password: "one"]}
@@ -176,6 +185,7 @@ defmodule Plausible.ConfigTest do
 
       assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
                adapter: Bamboo.Mua,
+               ssl: [middlebox_comp_mode: false],
                relay: "localhost",
                port: 2525
              ]
@@ -359,14 +369,7 @@ defmodule Plausible.ConfigTest do
 
       assert get_in(config, [:plausible, Plausible.Repo]) == [
                url: "postgres://postgres:postgres@plausible_db:5432/plausible_db",
-               socket_options: [],
-               ssl_opts: [
-                 cacertfile: CAStore.file_path(),
-                 verify: :verify_peer,
-                 customize_hostname_check: [
-                   match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-                 ]
-               ]
+               socket_options: []
              ]
     end
 
@@ -408,14 +411,24 @@ defmodule Plausible.ConfigTest do
       assert get_in(config, [:plausible, Plausible.Repo]) == [
                url:
                  "postgresql://your_username:your_password@cluster-do-user-1234567-0.db.ondigitalocean.com:25060/defaultdb",
+               socket_options: []
+             ]
+    end
+
+    test "DATABASE_CACERTFILE enables SSL" do
+      env = [
+        {"DATABASE_URL",
+         "postgresql://your_username:your_password@cluster-do-user-1234567-0.db.ondigitalocean.com:25060/defaultdb"},
+        {"DATABASE_CACERTFILE", "/path/to/cacert.pem"}
+      ]
+
+      config = runtime_config(env)
+
+      assert get_in(config, [:plausible, Plausible.Repo]) == [
+               url:
+                 "postgresql://your_username:your_password@cluster-do-user-1234567-0.db.ondigitalocean.com:25060/defaultdb",
                socket_options: [],
-               ssl_opts: [
-                 cacertfile: CAStore.file_path(),
-                 verify: :verify_peer,
-                 customize_hostname_check: [
-                   match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-                 ]
-               ]
+               ssl: [cacertfile: "/path/to/cacert.pem"]
              ]
     end
   end

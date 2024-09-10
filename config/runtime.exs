@@ -107,8 +107,8 @@ super_admin_user_ids =
   |> Enum.filter(& &1)
 
 env = get_var_from_path_or_env(config_dir, "ENVIRONMENT", "prod")
-mailer_adapter = get_var_from_path_or_env(config_dir, "MAILER_ADAPTER", "Bamboo.SMTPAdapter")
-mailer_email = get_var_from_path_or_env(config_dir, "MAILER_EMAIL", "hello@plausible.local")
+mailer_adapter = get_var_from_path_or_env(config_dir, "MAILER_ADAPTER", "Bamboo.Mua")
+mailer_email = get_var_from_path_or_env(config_dir, "MAILER_EMAIL", "plausible@#{base_url.host}")
 
 mailer_email =
   if mailer_name = get_var_from_path_or_env(config_dir, "MAILER_NAME") do
@@ -367,7 +367,7 @@ if db_socket_dir = get_var_from_path_or_env(config_dir, "DATABASE_SOCKET_DIR") d
   """)
 end
 
-db_cacertfile = get_var_from_path_or_env(config_dir, "DATABASE_CACERTFILE", CAStore.file_path())
+db_cacertfile = get_var_from_path_or_env(config_dir, "DATABASE_CACERTFILE")
 %URI{host: db_host} = db_uri = URI.parse(db_url)
 db_socket_dir? = String.starts_with?(db_host, "%2F") or db_host == ""
 
@@ -396,14 +396,11 @@ if db_socket_dir? do
 else
   config :plausible, Plausible.Repo,
     url: db_url,
-    socket_options: db_maybe_ipv6,
-    ssl_opts: [
-      cacertfile: db_cacertfile,
-      verify: :verify_peer,
-      customize_hostname_check: [
-        match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-      ]
-    ]
+    socket_options: db_maybe_ipv6
+
+  if db_cacertfile do
+    config :plausible, Plausible.Repo, ssl: [cacertfile: db_cacertfile]
+  end
 end
 
 sentry_app_version = runtime_metadata[:version] || app_version
@@ -553,6 +550,13 @@ case mailer_adapter do
   "Bamboo.Mua" ->
     config :plausible, Plausible.Mailer, adapter: Bamboo.Mua
 
+    # prevents common problems with Erlang's TLS v1.3
+    middlebox_comp_mode =
+      get_var_from_path_or_env(config_dir, "SMTP_MIDDLEBOX_COMP_MODE", "false")
+
+    middlebox_comp_mode = String.to_existing_atom(middlebox_comp_mode)
+    config :plausible, Plausible.Mailer, ssl: [middlebox_comp_mode: middlebox_comp_mode]
+
     if relay = get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR") do
       port = get_int_from_path_or_env(config_dir, "SMTP_HOST_PORT", 25)
       config :plausible, Plausible.Mailer, relay: relay, port: port
@@ -604,6 +608,8 @@ base_cron = [
   # Every day at 1am
   {"0 1 * * *", Plausible.Workers.CleanInvitations},
   # Every 2 hours
+  {"30 */2 * * *", Plausible.Workers.CleanUserSessions},
+  # Every 2 hours
   {"0 */2 * * *", Plausible.Workers.ExpireDomainChangeTransitions},
   # Daily at midnight
   {"0 0 * * *", Plausible.Workers.LocationsSync}
@@ -634,6 +640,7 @@ base_queues = [
   check_stats_emails: 1,
   site_setup_emails: 1,
   clean_invitations: 1,
+  clean_user_sessions: 1,
   analytics_imports: 1,
   analytics_exports: 1,
   notify_exported_analytics: 1,
@@ -782,6 +789,7 @@ else
 end
 
 config :tzdata, :data_dir, Path.join(persistent_cache_dir || System.tmp_dir!(), "tzdata_data")
+config :tzdata, :autoupdate, :disabled
 
 promex_disabled? =
   config_dir
@@ -794,11 +802,6 @@ config :plausible, Plausible.PromEx,
   drop_metrics_groups: [],
   grafana: :disabled,
   metrics_server: :disabled
-
-config :plausible, Plausible.Verification,
-  enabled?:
-    get_var_from_path_or_env(config_dir, "VERIFICATION_ENABLED", "false")
-    |> String.to_existing_atom()
 
 config :plausible, Plausible.Verification.Checks.Installation,
   token: get_var_from_path_or_env(config_dir, "BROWSERLESS_TOKEN", "dummy_token"),

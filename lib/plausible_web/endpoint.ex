@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Endpoint do
     # 5 years, this is super long but the SlidingSessionTimeout will log people out if they don't return for 2 weeks
     max_age: 60 * 60 * 24 * 365 * 5,
     extra: "SameSite=Lax"
-    # domain added dynamically via RuntimeSessionAdapter, see below
+    # in EE domain is added dynamically via RuntimeSessionAdapter, see below
   ]
 
   socket("/live", Phoenix.LiveView.Socket,
@@ -48,11 +48,16 @@ defmodule PlausibleWeb.Endpoint do
       static_paths ++ ["robots.txt"]
     end
 
-  plug(Plug.Static,
-    at: "/",
-    from: :plausible,
-    gzip: false,
-    only: static_paths
+  static_compression =
+    if Plausible.ce?() do
+      [brotli: true, gzip: true]
+    else
+      [gzip: false]
+    end
+
+  plug(
+    Plug.Static,
+    [at: "/", from: :plausible, only: static_paths] ++ static_compression
   )
 
   on_ee do
@@ -103,12 +108,19 @@ defmodule PlausibleWeb.Endpoint do
   end
 
   def runtime_session_opts() do
-    # `host()` provided by Phoenix.Endpoint's compilation hooks
-    # is used to inject the domain - this way we can authenticate
-    # websocket requests within single root domain, in case websocket_url()
-    # returns a ws{s}:// scheme (in which case SameSite=Lax is not applicable).
-    @session_options
-    |> Keyword.put(:domain, host())
+    session_options =
+      on_ee do
+        # `host()` provided by Phoenix.Endpoint's compilation hooks
+        # is used to inject the domain - this way we can authenticate
+        # websocket requests within single root domain, in case websocket_url()
+        # returns a ws{s}:// scheme (in which case SameSite=Lax is not applicable).
+        Keyword.put(@session_options, :domain, host())
+      else
+        # CE setup is simpler and we don't need to worry about WS domain being different
+        @session_options
+      end
+
+    session_options
     |> Keyword.put(:key, "_plausible_#{Application.fetch_env!(:plausible, :environment)}")
     |> Keyword.put(:secure, secure_cookie?())
   end

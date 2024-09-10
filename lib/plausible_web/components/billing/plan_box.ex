@@ -231,24 +231,24 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
         Upgrade
       </PlausibleWeb.Components.Billing.paddle_button>
     <% end %>
-    <p
-      :if={@disabled_message}
-      class="h-0 text-center text-sm text-red-700 dark:text-red-500 disabled-message"
-    >
-      <%= if @exceeded_plan_limits != [] do %>
-        <PlausibleWeb.Components.Generic.tooltip class="text-sm text-red-700 dark:text-red-500 mt-1 justify-center">
-          <%= @disabled_message %>
-          <:tooltip_content>
-            Your usage exceeds the following limit(s):<br /><br />
-            <p :for={limit <- @exceeded_plan_limits}>
-              <%= Phoenix.Naming.humanize(limit) %><br />
-            </p>
-          </:tooltip_content>
-        </PlausibleWeb.Components.Generic.tooltip>
-      <% else %>
+    <PlausibleWeb.Components.Generic.tooltip :if={@exceeded_plan_limits != [] && @disabled_message}>
+      <div class="pt-2 text-sm w-full flex items-center text-red-700 dark:text-red-500 justify-center">
         <%= @disabled_message %>
-      <% end %>
-    </p>
+        <Heroicons.information_circle class="hidden sm:block w-5 h-5 sm:ml-2" />
+      </div>
+      <:tooltip_content>
+        Your usage exceeds the following limit(s):<br /><br />
+        <p :for={limit <- @exceeded_plan_limits}>
+          <%= Phoenix.Naming.humanize(limit) %><br />
+        </p>
+      </:tooltip_content>
+    </PlausibleWeb.Components.Generic.tooltip>
+    <div
+      :if={@disabled_message && @exceeded_plan_limits == []}
+      class="pt-2 text-sm w-full text-red-700 dark:text-red-500 text-center"
+    >
+      <%= @disabled_message %>
+    </div>
     """
   end
 

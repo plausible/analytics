@@ -45,7 +45,7 @@ defmodule PlausibleWeb.StatsController do
   use Plausible.Repo
 
   alias Plausible.Sites
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Filters, Query}
   alias PlausibleWeb.Api
 
   plug(PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export])
@@ -79,20 +79,7 @@ defmodule PlausibleWeb.StatsController do
         )
 
       !stats_start_date && can_see_stats? ->
-        render_opts = [
-          site: site,
-          dogfood_page_path: dogfood_page_path,
-          connect_live_socket: true
-        ]
-
-        render_opts =
-          if conn.params["flow"] do
-            Keyword.put(render_opts, :layout, {PlausibleWeb.LayoutView, "focus.html"})
-          else
-            render_opts
-          end
-
-        render(conn, "waiting_first_pageview.html", render_opts)
+        redirect(conn, external: Routes.site_path(conn, :verification, site.domain))
 
       Sites.locked?(site) ->
         site = Plausible.Repo.preload(site, :owner)
@@ -186,6 +173,7 @@ defmodule PlausibleWeb.StatsController do
     prepend_column_headers = fn data -> [column_headers | data] end
 
     Plausible.Stats.timeseries(site, query, metrics)
+    |> elem(0)
     |> Enum.map(map_bucket_to_row)
     |> prepend_column_headers.()
     |> NimbleCSV.RFC4180.dump_to_iodata()
@@ -193,7 +181,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp csv_graph_metrics(query) do
     {metrics, column_headers} =
-      if Query.get_filter(query, "event:goal") do
+      if Filters.filtering_on_dimension?(query, "event:goal") do
         {
           [:visitors, :events, :conversion_rate],
           [:date, :unique_conversions, :total_conversions, :conversion_rate]
@@ -280,7 +268,6 @@ defmodule PlausibleWeb.StatsController do
         conn
         |> render("shared_link_password.html",
           link: shared_link,
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
           dogfood_page_path: "/share/:dashboard"
         )
     end
@@ -325,7 +312,6 @@ defmodule PlausibleWeb.StatsController do
         |> render("shared_link_password.html",
           link: shared_link,
           error: "Incorrect password. Please try again.",
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
           dogfood_page_path: "/share/:dashboard"
         )
       end

@@ -48,7 +48,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
     dynamic(
       [e],
-      e.site_id == ^site.id and e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
+      e.site_id == ^site.id and e.timestamp >= ^first_datetime and e.timestamp <= ^last_datetime
     )
   end
 
@@ -71,8 +71,24 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
       s.site_id == ^site.id and
         s.start >= ^NaiveDateTime.add(first_datetime, -7, :day) and
         s.timestamp >= ^first_datetime and
-        s.start < ^last_datetime
+        s.start <= ^last_datetime
     )
+  end
+
+  defp add_filter(table, query, [:not, filter]) do
+    dynamic([e], not (^add_filter(table, query, filter)))
+  end
+
+  defp add_filter(table, query, [:and, filters]) do
+    filters
+    |> Enum.map(&add_filter(table, query, &1))
+    |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
+  end
+
+  defp add_filter(table, query, [:or, filters]) do
+    filters
+    |> Enum.map(&add_filter(table, query, &1))
+    |> Enum.reduce(fn condition, acc -> dynamic([], ^acc or ^condition) end)
   end
 
   defp add_filter(:events, _query, [:is, "event:name", list]) do
@@ -140,59 +156,67 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     false
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:is, _, values]) do
-    none_value_included = Enum.member?(values, "(none)")
+  defp filter_custom_prop(prop_name, column_name, [:is, _, clauses]) do
+    none_value_included = Enum.member?(clauses, "(none)")
 
     dynamic(
       [t],
-      (has_key(t, column_name, ^prop_name) and get_by_key(t, column_name, ^prop_name) in ^values) or
+      (has_key(t, column_name, ^prop_name) and get_by_key(t, column_name, ^prop_name) in ^clauses) or
         (^none_value_included and not has_key(t, column_name, ^prop_name))
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:is_not, _, values]) do
-    none_value_included = Enum.member?(values, "(none)")
+  defp filter_custom_prop(prop_name, column_name, [:is_not, _, clauses]) do
+    none_value_included = Enum.member?(clauses, "(none)")
 
     dynamic(
       [t],
       (has_key(t, column_name, ^prop_name) and
-         get_by_key(t, column_name, ^prop_name) not in ^values) or
+         get_by_key(t, column_name, ^prop_name) not in ^clauses) or
         (^none_value_included and
            has_key(t, column_name, ^prop_name) and
-           get_by_key(t, column_name, ^prop_name) not in ^values) or
+           get_by_key(t, column_name, ^prop_name) not in ^clauses) or
         (not (^none_value_included) and not has_key(t, column_name, ^prop_name))
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:matches, _, clauses]) do
+  defp filter_custom_prop(prop_name, column_name, [:matches_wildcard, dimension, clauses]) do
     regexes = Enum.map(clauses, &page_regex/1)
 
+    filter_custom_prop(prop_name, column_name, [:matches, dimension, regexes])
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:matches_wildcard_not, dimension, clauses]) do
+    regexes = Enum.map(clauses, &page_regex/1)
+
+    filter_custom_prop(prop_name, column_name, [:matches_not, dimension, regexes])
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:matches, _dimension, clauses]) do
     dynamic(
       [t],
       has_key(t, column_name, ^prop_name) and
         fragment(
           "arrayExists(k -> match(?, k), ?)",
           get_by_key(t, column_name, ^prop_name),
-          ^regexes
+          ^clauses
         )
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:does_not_match, _, clauses]) do
-    regexes = Enum.map(clauses, &page_regex/1)
-
+  defp filter_custom_prop(prop_name, column_name, [:matches_not, _dimension, clauses]) do
     dynamic(
       [t],
       has_key(t, column_name, ^prop_name) and
         fragment(
           "not(arrayExists(k -> match(?, k), ?))",
           get_by_key(t, column_name, ^prop_name),
-          ^regexes
+          ^clauses
         )
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:contains, _, clauses]) do
+  defp filter_custom_prop(prop_name, column_name, [:contains, _dimension, clauses]) do
     dynamic(
       [t],
       has_key(t, column_name, ^prop_name) and
@@ -204,7 +228,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:does_not_contain, _, clauses]) do
+  defp filter_custom_prop(prop_name, column_name, [:contains_not, _dimension, clauses]) do
     dynamic(
       [t],
       has_key(t, column_name, ^prop_name) and
@@ -216,7 +240,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_field(db_field, [:matches, _key, glob_exprs]) do
+  defp filter_field(db_field, [:matches_wildcard, _dimension, glob_exprs]) do
     page_regexes = Enum.map(glob_exprs, &page_regex/1)
 
     dynamic(
@@ -225,34 +249,36 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_field(db_field, [:does_not_match, _key, glob_exprs]) do
-    page_regexes = Enum.map(glob_exprs, &page_regex/1)
-
-    dynamic(
-      [x],
-      fragment("not(multiMatchAny(?, ?))", type(field(x, ^db_field), :string), ^page_regexes)
-    )
+  defp filter_field(db_field, [:matches_wildcard_not, dimension, clauses]) do
+    dynamic([], not (^filter_field(db_field, [:matches_wildcard, dimension, clauses])))
   end
 
-  defp filter_field(db_field, [:contains, _key, values]) do
+  defp filter_field(db_field, [:contains, _dimension, values]) do
     dynamic([x], fragment("multiSearchAny(?, ?)", type(field(x, ^db_field), :string), ^values))
   end
 
-  defp filter_field(db_field, [:does_not_contain, _key, values]) do
+  defp filter_field(db_field, [:contains_not, dimension, clauses]) do
+    dynamic([], not (^filter_field(db_field, [:contains, dimension, clauses])))
+  end
+
+  defp filter_field(db_field, [:matches, _dimension, clauses]) do
     dynamic(
       [x],
-      fragment("not(multiSearchAny(?, ?))", type(field(x, ^db_field), :string), ^values)
+      fragment("multiMatchAny(?, ?)", type(field(x, ^db_field), :string), ^clauses)
     )
   end
 
-  defp filter_field(db_field, [:is, _key, list]) do
-    list = Enum.map(list, &db_field_val(db_field, &1))
+  defp filter_field(db_field, [:matches_not, dimension, clauses]) do
+    dynamic([], not (^filter_field(db_field, [:matches, dimension, clauses])))
+  end
+
+  defp filter_field(db_field, [:is, _dimension, clauses]) do
+    list = Enum.map(clauses, &db_field_val(db_field, &1))
     dynamic([x], field(x, ^db_field) in ^list)
   end
 
-  defp filter_field(db_field, [:is_not, _key, list]) do
-    list = Enum.map(list, &db_field_val(db_field, &1))
-    dynamic([x], field(x, ^db_field) not in ^list)
+  defp filter_field(db_field, [:is_not, dimension, clauses]) do
+    dynamic([], not (^filter_field(db_field, [:is, dimension, clauses])))
   end
 
   @no_ref "Direct / None"

@@ -268,16 +268,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/sources")
+      conn1 = get(conn, "/api/stats/#{site.domain}/sources")
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn1, 200)["results"] == [
                %{"name" => "Google", "visitors" => 2},
                %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
 
-      conn = get(conn, "/api/stats/#{site.domain}/sources?with_imported=true")
+      conn2 = get(conn, "/api/stats/#{site.domain}/sources?with_imported=true")
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn2, 200)["results"] == [
                %{"name" => "Google", "visitors" => 4},
                %{"name" => "DuckDuckGo", "visitors" => 2}
              ]
@@ -369,13 +369,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn =
+      conn1 =
         get(
           conn,
           "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&detailed=true"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn1, 200)["results"] == [
                %{
                  "name" => "DuckDuckGo",
                  "visitors" => 1,
@@ -390,13 +390,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                }
              ]
 
-      conn =
+      conn2 =
         get(
           conn,
           "/api/stats/#{site.domain}/sources?period=day&date=2021-01-01&detailed=true&with_imported=true"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn2, 200)["results"] == [
                %{
                  "name" => "Google",
                  "visitors" => 3,
@@ -461,20 +461,20 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/sources?limit=1&page=2")
+      conn1 = get(conn, "/api/stats/#{site.domain}/sources?limit=1&page=2")
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn1, 200)["results"] == [
                %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
 
-      conn = get(conn, "/api/stats/#{site.domain}/sources?limit=1&page=2&with_imported=true")
+      conn2 = get(conn, "/api/stats/#{site.domain}/sources?limit=1&page=2&with_imported=true")
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn2, 200)["results"] == [
                %{"name" => "Google", "visitors" => 2}
              ]
     end
 
-    test "shows sources for a page", %{conn: conn, site: site} do
+    test "shows sources for a page (using old page filter)", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/page1", referrer_source: "Google"),
         build(:pageview, pathname: "/page1", referrer_source: "Google"),
@@ -496,6 +496,108 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       assert json_response(conn, 200)["results"] == [
                %{"name" => "Google", "visitors" => 2},
                %{"name" => "DuckDuckGo", "visitors" => 1}
+             ]
+    end
+
+    test "shows sources for a page (using new filters)", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/page1", referrer_source: "Google"),
+        build(:pageview, pathname: "/page1", referrer_source: "Google"),
+        build(:pageview,
+          user_id: 1,
+          pathname: "/page2",
+          referrer_source: "DuckDuckGo"
+        ),
+        build(:pageview,
+          user_id: 1,
+          pathname: "/page1",
+          referrer_source: "DuckDuckGo"
+        )
+      ])
+
+      filters = Jason.encode!([["is", "event:page", ["/page1"]]])
+      conn = get(conn, "/api/stats/#{site.domain}/sources?filters=#{filters}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{"name" => "Google", "visitors" => 2},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
+             ]
+    end
+
+    test "order_by [[visit:source, desc]] is respected", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, referrer_source: "C"),
+        build(:pageview, referrer_source: "A"),
+        build(:pageview, referrer_source: "B")
+      ])
+
+      order_by = Jason.encode!([["visit:source", "desc"]])
+      conn = get(conn, "/api/stats/#{site.domain}/sources?order_by=#{order_by}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{"name" => "C", "visitors" => 1},
+               %{"name" => "B", "visitors" => 1},
+               %{"name" => "A", "visitors" => 1}
+             ]
+    end
+
+    test "order_by [[visit_duration, asc], [visit:source, desc]]] is respected and flipping the sort orders works",
+         %{
+           conn: conn,
+           site: site
+         } do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/in",
+          user_id: @user_id,
+          referrer_source: "B",
+          timestamp: ~N[2024-08-10 09:00:00]
+        ),
+        build(:pageview,
+          pathname: "/out",
+          user_id: @user_id,
+          referrer_source: "B",
+          timestamp: ~N[2024-08-10 09:00:45]
+        ),
+        build(:pageview,
+          pathname: "/in",
+          user_id: @user_id,
+          referrer_source: "C",
+          timestamp: ~N[2024-08-10 10:00:00]
+        ),
+        build(:pageview,
+          pathname: "/out",
+          user_id: @user_id,
+          referrer_source: "C",
+          timestamp: ~N[2024-08-10 10:00:30]
+        ),
+        build(:pageview, referrer_source: "A"),
+        build(:pageview, referrer_source: "A"),
+        build(:pageview, referrer_source: "Z")
+      ])
+
+      order_by_asc = Jason.encode!([["visit_duration", "asc"], ["visit:source", "desc"]])
+
+      conn1 =
+        get(conn, "/api/stats/#{site.domain}/sources?detailed=true&order_by=#{order_by_asc}")
+
+      assert json_response(conn1, 200)["results"] == [
+               %{"name" => "Z", "visitors" => 1, "bounce_rate" => 100, "visit_duration" => 0},
+               %{"name" => "A", "visitors" => 2, "bounce_rate" => 100, "visit_duration" => 0},
+               %{"name" => "C", "visitors" => 1, "bounce_rate" => 0, "visit_duration" => 30},
+               %{"name" => "B", "visitors" => 1, "bounce_rate" => 0, "visit_duration" => 45}
+             ]
+
+      order_by_flipped = Jason.encode!([["visit_duration", "desc"], ["visit:source", "asc"]])
+
+      conn2 =
+        get(conn, "/api/stats/#{site.domain}/sources?detailed=true&order_by=#{order_by_flipped}")
+
+      assert json_response(conn2, 200)["results"] == [
+               %{"name" => "B", "visitors" => 1, "bounce_rate" => 0, "visit_duration" => 45},
+               %{"name" => "C", "visitors" => 1, "bounce_rate" => 0, "visit_duration" => 30},
+               %{"name" => "A", "visitors" => 2, "bounce_rate" => 100, "visit_duration" => 0},
+               %{"name" => "Z", "visitors" => 1, "bounce_rate" => 100, "visit_duration" => 0}
              ]
     end
   end
@@ -586,13 +688,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn =
+      conn1 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_mediums?period=day&date=2021-01-01"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn1, 200)["results"] == [
                %{
                  "name" => "email",
                  "visitors" => 1,
@@ -607,13 +709,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                }
              ]
 
-      conn =
+      conn2 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_mediums?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn2, 200)["results"] == [
                %{
                  "name" => "email",
                  "visitors" => 2,
@@ -666,13 +768,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn =
+      conn1 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_mediums?period=day&date=2021-01-01"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn1, 200)["results"] == [
                %{
                  "name" => "social",
                  "visitors" => 1,
@@ -681,13 +783,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                }
              ]
 
-      conn =
+      conn2 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_mediums?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn2, 200)["results"] == [
                %{
                  "name" => "social",
                  "visitors" => 2,
@@ -742,13 +844,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn =
+      conn1 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_campaigns?period=day&date=2021-01-01"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn1, 200)["results"] == [
                %{
                  "name" => "august",
                  "visitors" => 2,
@@ -763,13 +865,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                }
              ]
 
-      conn =
+      conn2 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_campaigns?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn2, 200)["results"] == [
                %{
                  "name" => "august",
                  "visitors" => 3,
@@ -826,13 +928,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn =
+      conn1 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_campaigns?period=day&date=2021-01-01"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn1, 200)["results"] == [
                %{
                  "name" => "profile",
                  "visitors" => 1,
@@ -841,13 +943,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                }
              ]
 
-      conn =
+      conn2 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_campaigns?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn2, 200)["results"] == [
                %{
                  "name" => "profile",
                  "visitors" => 2,
@@ -950,13 +1052,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn =
+      conn1 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn1, 200)["results"] == [
                %{
                  "name" => "Sweden",
                  "visitors" => 2,
@@ -971,13 +1073,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                }
              ]
 
-      conn =
+      conn2 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn2, 200)["results"] == [
                %{
                  "name" => "Sweden",
                  "visitors" => 3,
@@ -1034,13 +1136,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn =
+      conn1 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn1, 200)["results"] == [
                %{
                  "name" => "oat milk",
                  "visitors" => 1,
@@ -1049,13 +1151,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                }
              ]
 
-      conn =
+      conn2 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn2, 200)["results"] == [
                %{
                  "name" => "oat milk",
                  "visitors" => 2,
@@ -1110,13 +1212,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn =
+      conn1 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn1, 200)["results"] == [
                %{
                  "name" => "blog",
                  "visitors" => 2,
@@ -1131,13 +1233,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                }
              ]
 
-      conn =
+      conn2 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn2, 200)["results"] == [
                %{
                  "name" => "blog",
                  "visitors" => 3,
@@ -1194,13 +1296,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn =
+      conn1 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn1, 200)["results"] == [
                %{
                  "name" => "ad",
                  "visitors" => 1,
@@ -1209,13 +1311,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                }
              ]
 
-      conn =
+      conn2 =
         get(
           conn,
           "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn2, 200)["results"] == [
                %{
                  "name" => "ad",
                  "visitors" => 2,
@@ -1655,15 +1757,15 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/referrers/!Google?period=day")
+      conn1 = get(conn, "/api/stats/#{site.domain}/referrers/!Google?period=day")
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn1, 200)["results"] == [
                %{"name" => "duckduckgo.com", "visitors" => 1}
              ]
 
-      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google|DuckDuckGo?period=day")
+      conn2 = get(conn, "/api/stats/#{site.domain}/referrers/Google|DuckDuckGo?period=day")
 
-      assert [entry1, entry2] = json_response(conn, 200)["results"]
+      assert [entry1, entry2] = json_response(conn2, 200)["results"]
       assert %{"name" => "google.com", "visitors" => 2} in [entry1, entry2]
       assert %{"name" => "duckduckgo.com", "visitors" => 1} in [entry1, entry2]
     end

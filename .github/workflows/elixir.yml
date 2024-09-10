@@ -103,16 +103,17 @@ jobs:
       - run: mix deps.get --only $MIX_ENV
       - run: mix compile --warnings-as-errors --all-warnings
       - run: mix do ecto.create, ecto.migrate
-      - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
+      # 2024b is buggy, so we need to use 2024a
+      # - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
 
       - run: make minio
         if: env.MIX_ENV == 'test'
-      - run: mix test --include slow --include minio --max-failures 1 --warnings-as-errors
+      - run: mix test --include slow --include minio --include migrations --max-failures 1 --warnings-as-errors
         if: env.MIX_ENV == 'test'
         env:
           MINIO_HOST_FOR_CLICKHOUSE: "172.17.0.1"
 
-      - run: mix test --include slow --max-failures 1 --warnings-as-errors
+      - run: mix test --include slow --include migrations --max-failures 1 --warnings-as-errors
         if: env.MIX_ENV == 'ce_test'
 
   static:

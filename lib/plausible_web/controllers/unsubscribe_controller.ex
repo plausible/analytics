@@ -17,8 +17,7 @@ defmodule PlausibleWeb.UnsubscribeController do
     |> assign(:skip_plausible_tracking, true)
     |> render("success.html",
       interval: "weekly",
-      site: website,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
+      site: site || %{domain: website}
     )
   end
 
@@ -40,8 +39,7 @@ defmodule PlausibleWeb.UnsubscribeController do
     |> assign(:skip_plausible_tracking, true)
     |> render("success.html",
       interval: "monthly",
-      site: website,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
+      site: site || %{domain: website}
     )
   end
 

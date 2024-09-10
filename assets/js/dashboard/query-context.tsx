@@ -1,13 +1,5 @@
 /* @format */
-import React, {
-  createContext,
-  useMemo,
-  useEffect,
-  useContext,
-  useState,
-  useCallback,
-  ReactNode
-} from 'react'
+import React, { createContext, useMemo, useContext, ReactNode } from 'react'
 import { useLocation } from 'react-router'
 import { useMountedEffect } from './custom-hooks'
 import * as api from './api'
@@ -21,12 +13,16 @@ import {
   QueryPeriod,
   useSaveTimePreferencesToStorage
 } from './query-time-periods'
-import { Filter, FilterClauseLabels, queryDefaultValue } from './query'
+import {
+  Filter,
+  FilterClauseLabels,
+  queryDefaultValue,
+  postProcessFilters
+} from './query'
 
 const queryContextDefaultValue = {
   query: queryDefaultValue,
-  otherSearch: {} as Record<string, unknown>,
-  lastLoadTimestamp: new Date()
+  otherSearch: {} as Record<string, unknown>
 }
 
 export type QueryContextValue = typeof queryContextDefaultValue
@@ -99,7 +95,7 @@ export default function QueryContextProvider({
         ? (with_imported as boolean)
         : defaultValues.with_imported,
       filters: Array.isArray(filters)
-        ? (filters as Filter[])
+        ? postProcessFilters(filters as Filter[])
         : defaultValues.filters,
       labels: (labels as FilterClauseLabels) || defaultValues.labels
     }
@@ -125,26 +121,12 @@ export default function QueryContextProvider({
     match_day_of_week
   })
 
-  const [lastLoadTimestamp, setLastLoadTimestamp] = useState(new Date())
-  const updateLastLoadTimestamp = useCallback(() => {
-    setLastLoadTimestamp(new Date())
-  }, [setLastLoadTimestamp])
-
-  useEffect(() => {
-    document.addEventListener('tick', updateLastLoadTimestamp)
-
-    return () => {
-      document.removeEventListener('tick', updateLastLoadTimestamp)
-    }
-  }, [updateLastLoadTimestamp])
-
   useMountedEffect(() => {
     api.cancelAll()
-    updateLastLoadTimestamp()
   }, [])
 
   return (
-    <QueryContext.Provider value={{ query, otherSearch, lastLoadTimestamp }}>
+    <QueryContext.Provider value={{ query, otherSearch }}>
       {children}
     </QueryContext.Provider>
   )

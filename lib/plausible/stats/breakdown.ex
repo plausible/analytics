@@ -20,7 +20,10 @@ defmodule Plausible.Stats.Breakdown do
       Query.set(
         query,
         metrics: transformed_metrics,
-        order_by: infer_order_by(transformed_metrics, dimension),
+        # Concat client requested order with default order, overriding only if client explicitly requests it
+        order_by:
+          Enum.concat(query.order_by || [], infer_order_by(transformed_metrics, dimension))
+          |> Enum.uniq_by(&elem(&1, 0)),
         dimensions: transform_dimensions(dimension),
         filters: query.filters ++ dimension_filters(dimension),
         v2: true,
@@ -79,21 +82,24 @@ defmodule Plausible.Stats.Breakdown do
     import Ecto.Query
 
     windowed_pages_q =
-      from e in base_event_query(site, Query.remove_filters(query, ["event:page", "event:props"])),
-        select: %{
-          next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
-          next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
-          timestamp: e.timestamp,
-          pathname: e.pathname,
-          session_id: e.session_id
-        },
-        windows: [
-          event_horizon: [
-            partition_by: e.session_id,
-            order_by: e.timestamp,
-            frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-          ]
-        ]
+      from e in base_event_query(
+             site,
+             Query.remove_top_level_filters(query, ["event:page", "event:props"])
+           ),
+           select: %{
+             next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
+             next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
+             timestamp: e.timestamp,
+             pathname: e.pathname,
+             session_id: e.session_id
+           },
+           windows: [
+             event_horizon: [
+               partition_by: e.session_id,
+               order_by: e.timestamp,
+               frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+             ]
+           ]
 
     timed_page_transitions_q =
       from e in subquery(windowed_pages_q),
@@ -117,7 +123,9 @@ defmodule Plausible.Stats.Breakdown do
           from i in "imported_pages",
             group_by: i.page,
             where: i.site_id == ^site.id,
-            where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
+            where:
+              i.date >= ^DateTime.to_naive(query.date_range.first) and
+                i.date <= ^DateTime.to_naive(query.date_range.last),
             where: i.page in ^pages,
             select: %{
               page: i.page,
@@ -172,7 +180,8 @@ defmodule Plausible.Stats.Breakdown do
     end)
   end
 
-  defp infer_order_by(metrics, "event:goal"), do: [{metric_to_order_by(metrics), :desc}]
+  defp infer_order_by(metrics, "event:goal"),
+    do: [{metric_to_order_by(metrics), :desc}]
 
   defp infer_order_by(metrics, dimension),
     do: [{metric_to_order_by(metrics), :desc}, {dimension, :asc}]
