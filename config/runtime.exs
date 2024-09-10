@@ -355,7 +355,10 @@ if config_env() in [:ce, :ce_dev, :ce_test] do
 
       domain_is_local? = domain == "localhost" or not String.contains?(domain, ".")
 
-      raise ArgumentError, "Cannot generate TLS certificates for local domain #{inspect(domain)}"
+      if domain_is_local? do
+        raise ArgumentError,
+              "Cannot generate TLS certificates for local domain #{inspect(domain)}"
+      end
 
       unless http_port == 80 do
         Logger.warning("""
