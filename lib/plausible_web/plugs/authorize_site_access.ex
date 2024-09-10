@@ -1,4 +1,8 @@
 defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
+  @moduledoc """
+  Plug restricting access to site and shared link, when present.
+  """
+
   import Plug.Conn
   import Phoenix.Controller, only: [get_format: 1]
   use Plausible.Repo
