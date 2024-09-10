@@ -330,8 +330,15 @@ config :plausible, PlausibleWeb.Endpoint,
   secure_cookie: secure_cookie
 
 if https_port do
-  config :plausible, PlausibleWeb.Endpoint,
-    https: [port: https_port, ip: listen_ip, cipher_suite: :compatible] ++ default_http_opts
+  https_opts = [
+    port: https_port,
+    ip: listen_ip,
+    cipher_suite: :compatible,
+    transport_options: [socket_opts: [log_level: :warning]]
+  ]
+
+  https_opts = Config.Reader.merge(default_http_opts, https_opts)
+  config :plausible, PlausibleWeb.Endpoint, https: https_opts
 end
 
 db_maybe_ipv6 =
