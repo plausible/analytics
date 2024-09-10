@@ -3161,6 +3161,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       conn: conn,
       site: site
     } do
+      # NOTE: At the time of this test is added, it appears it does _not_
+      # catch the regression on MacOS (ARM), regardless if Clickhouse is run
+      # natively or from a docker container. The test still does catch
+      # that regression when ran on Linux for instance (including CI).
       user_id = System.unique_integer([:positive])
 
       populate_stats(site, [
