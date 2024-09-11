@@ -330,7 +330,8 @@ config :plausible, PlausibleWeb.Endpoint,
 if config_env() in [:ce, :ce_dev, :ce_test] do
   if https_port do
     # the following configuration is based on https://wiki.mozilla.org/Security/Server_Side_TLS#Intermediate_compatibility_.28recommended.29
-    # except we enforce the cipher and ecc order
+    # except we enforce the cipher and ecc order and only use ciphers with support
+    # for ecdsa certificates since that's what certbot generates by default
     https_opts =
       [
         port: https_port,
@@ -348,14 +349,8 @@ if config_env() in [:ce, :ce_dev, :ce_test] do
           ~c"TLS_CHACHA20_POLY1305_SHA256",
           # Mozilla recommended cipher suites (TLS 1.2)
           ~c"ECDHE-ECDSA-AES128-GCM-SHA256",
-          ~c"ECDHE-RSA-AES128-GCM-SHA256",
           ~c"ECDHE-ECDSA-AES256-GCM-SHA384",
-          ~c"ECDHE-RSA-AES256-GCM-SHA384",
-          ~c"ECDHE-ECDSA-CHACHA20-POLY1305",
-          ~c"ECDHE-RSA-CHACHA20-POLY1305",
-          ~c"DHE-RSA-AES128-GCM-SHA256",
-          ~c"DHE-RSA-AES256-GCM-SHA384",
-          ~c"DHE-RSA-CHACHA20-POLY1305"
+          ~c"ECDHE-ECDSA-CHACHA20-POLY1305"
         ]
       ]
 
