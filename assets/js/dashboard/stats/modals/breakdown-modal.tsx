@@ -131,7 +131,6 @@ export default function BreakdownModal<TListItem extends { name: string }>({
       {
         label: reportInfo.dimensionLabel,
         key: 'name',
-        accessor: 'name',
         width: 'w-48 md:w-80 flex items-center break-all',
         align: 'left',
         renderItem: (item) => (
@@ -147,7 +146,6 @@ export default function BreakdownModal<TListItem extends { name: string }>({
         (m): ColumnConfiguraton<TListItem> => ({
           label: m.renderLabel(query),
           key: m.key,
-          accessor: m.accessor,
           width: m.width,
           align: 'right',
           renderValue: m.renderValue,

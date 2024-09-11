@@ -155,7 +155,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
   // we want to display are actually there in the API response.
   function getAvailableMetrics() {
     return metrics.filter((metric) => {
-      return state.list.some((listItem) => listItem[metric.accessor] != null)
+      return state.list.some((listItem) => listItem[metric.key] != null)
     })
   }
 
@@ -272,7 +272,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
           style={{ width: colMinWidth, minWidth: colMinWidth }}
         >
           <span className="font-medium text-sm dark:text-gray-200 text-right">
-            {metric.renderValue(listItem[metric.accessor])}
+            {metric.renderValue(listItem[metric.key])}
           </span>
         </div>
       )

@@ -54,7 +54,6 @@ export class Metric {
     this.meta = props.meta || {}
     this.sortable = props.sortable
     this.width = props.width ?? 'w-24'
-    this.accessor = props.accessor ?? this.key
   }
 }
 
@@ -91,12 +90,6 @@ export const createVisitors = (props) => {
   }
 
   return new Metric({width: 'w-24', sortable: true, ...props, key: "visitors", renderValue, renderLabel})
-}
-
-export const createGroupConversionRate = (props) => {
-  const renderValue = percentageFormatter
-  const renderLabel = (_query) => "CR"
-  return new Metric({width: 'w-16', ...props, key: "conversion_rate", accessor: "conversion_rate", renderLabel, renderValue, sortable: true})
 }
 
 export const createConversionRate = (props) => {

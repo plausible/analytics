@@ -13,9 +13,16 @@ defmodule Plausible.Stats.Breakdown do
   import Ecto.Query
   alias Plausible.Stats.{Query, QueryOptimizer, QueryResult, SQL}
 
-  def breakdown(site, %Query{dimensions: [dimension], order_by: order_by} = query, metrics, pagination, _opts \\ []) do
+  def breakdown(
+        site,
+        %Query{dimensions: [dimension], order_by: order_by} = query,
+        metrics,
+        pagination,
+        _opts \\ []
+      ) do
     transformed_metrics = transform_metrics(metrics, dimension)
     transformed_order_by = transform_order_by(order_by || [], dimension)
+
     query_with_metrics =
       Query.set(
         query,
@@ -183,7 +190,9 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp transform_order_by(order_by, dimension) do
-    Enum.map(order_by, fn {metric, direction} -> {maybe_remap_to_group_conversion_rate(metric, dimension), direction} end)
+    Enum.map(order_by, fn {metric, direction} ->
+      {maybe_remap_to_group_conversion_rate(metric, dimension), direction}
+    end)
   end
 
   defp infer_order_by(metrics, "event:goal"),

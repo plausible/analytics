@@ -32,7 +32,7 @@ function EntryPages({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ defaultLabel: 'Unique Entrances', width: 'w-36',  meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createGroupConversionRate(),
+      hasGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
 
@@ -71,7 +71,7 @@ function ExitPages({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ defaultLabel: 'Unique Exits', width: 'w-36', meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createGroupConversionRate(),
+      hasGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
 
@@ -110,7 +110,7 @@ function TopPages({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createGroupConversionRate(),
+      hasGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
 

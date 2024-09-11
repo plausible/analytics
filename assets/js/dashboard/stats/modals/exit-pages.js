@@ -37,7 +37,7 @@ function ExitPagesModal() {
       return [
         metrics.createTotalVisitors(),
         metrics.createVisitors({ renderLabel: (_query) => 'Conversions', width: 'w-28' }),
-        metrics.createGroupConversionRate()
+        metrics.createConversionRate()
       ]
     }
 

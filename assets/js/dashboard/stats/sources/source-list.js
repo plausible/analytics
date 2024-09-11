@@ -49,7 +49,7 @@ function AllSources({ afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createGroupConversionRate(),
+      hasGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
 
@@ -94,7 +94,7 @@ function UTMSources({ tab, afterFetchData }) {
   function chooseMetrics() {
     return [
       metrics.createVisitors({ meta: { plot: true } }),
-      hasGoalFilter(query) && metrics.createGroupConversionRate(),
+      hasGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
 

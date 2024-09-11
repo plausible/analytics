@@ -78,7 +78,6 @@ function GoogleKeywordsModal() {
       {
         label: 'Search term',
         key: 'name',
-        accessor: 'name',
         width: 'w-48 md:w-56 lg:w-1/3',
         align: 'left'
       },
@@ -86,7 +85,6 @@ function GoogleKeywordsModal() {
         (m): ColumnConfiguraton<GoogleKeywordItem> => ({
           label: m.renderLabel(query),
           key: m.key,
-          accessor: m.accessor,
           width: m.width,
           align: 'right'
         })
