@@ -170,7 +170,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
   function renderReport() {
     if (state.list && state.list.length > 0) {
       return (
-        <div className="h-full flex flex-col ">
+        <div className="h-full flex flex-col">
           <div style={{ height: ROW_HEIGHT }}>
             {renderReportHeader()}
           </div>

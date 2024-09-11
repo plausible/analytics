@@ -31,7 +31,7 @@ function EntryPages({ afterFetchData }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ defaultLabel: 'Unique Entrances', width: 'w-36',  meta: { plot: true } }),
+      metrics.createVisitors({ defaultLabel: 'Unique Entrances', width: 'w-36', meta: { plot: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
     ].filter(metric => !!metric)
   }
