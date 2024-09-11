@@ -329,93 +329,35 @@ config :plausible, PlausibleWeb.Endpoint,
 # maybe enable HTTPS in CE
 if config_env() in [:ce, :ce_dev, :ce_test] do
   if https_port do
-    # https://wiki.mozilla.org/Security/Server_Side_TLS#Cipher_names_correspondence_table
-    # we default to "old" for compatibility with older clients
-    # please see https://github.com/plausible/analytics/issues/1708#issuecomment-1093891180 for details
-    cipher_suite = get_var_from_path_or_env(config_dir, "CIPHER_SUITE", "old")
-
-    cipher_suite_opts =
-      case cipher_suite do
-        "old" ->
-          [
-            versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2", :"tlsv1.3"],
-            honor_cipher_order: true,
-            ciphers: [
-              ~c"ECDHE-ECDSA-AES128-GCM-SHA256",
-              ~c"ECDHE-RSA-AES128-GCM-SHA256",
-              ~c"ECDHE-ECDSA-AES256-GCM-SHA384",
-              ~c"ECDHE-RSA-AES256-GCM-SHA384",
-              ~c"ECDHE-ECDSA-CHACHA20-POLY1305",
-              ~c"ECDHE-RSA-CHACHA20-POLY1305",
-              ~c"DHE-RSA-AES128-GCM-SHA256",
-              ~c"DHE-RSA-AES256-GCM-SHA384",
-              ~c"DHE-RSA-CHACHA20-POLY1305",
-              ~c"ECDHE-ECDSA-AES128-SHA256",
-              ~c"ECDHE-RSA-AES128-SHA256",
-              ~c"ECDHE-ECDSA-AES128-SHA",
-              ~c"ECDHE-RSA-AES128-SHA",
-              ~c"ECDHE-ECDSA-AES256-SHA384",
-              ~c"ECDHE-RSA-AES256-SHA384",
-              ~c"ECDHE-ECDSA-AES256-SHA",
-              ~c"ECDHE-RSA-AES256-SHA",
-              ~c"DHE-RSA-AES128-SHA256",
-              ~c"DHE-RSA-AES256-SHA256",
-              ~c"AES128-GCM-SHA256",
-              ~c"AES256-GCM-SHA384",
-              ~c"AES128-SHA256",
-              ~c"AES256-SHA256",
-              ~c"AES128-SHA",
-              ~c"AES256-SHA",
-              ~c"DES-CBC3-SHA"
-            ]
-          ]
-
-        "intermediate" ->
-          [
-            versions: [:"tlsv1.2", :"tlsv1.3"],
-            honor_cipher_order: true,
-            ciphers: [
-              ~c"ECDHE-ECDSA-AES128-GCM-SHA256",
-              ~c"ECDHE-RSA-AES128-GCM-SHA256",
-              ~c"ECDHE-ECDSA-AES256-GCM-SHA384",
-              ~c"ECDHE-RSA-AES256-GCM-SHA384",
-              ~c"ECDHE-ECDSA-CHACHA20-POLY1305",
-              ~c"ECDHE-RSA-CHACHA20-POLY1305",
-              ~c"DHE-RSA-AES128-GCM-SHA256",
-              ~c"DHE-RSA-AES256-GCM-SHA384",
-              # TODO
-              ~c"DHE-RSA-CHACHA20-POLY1305"
-            ]
-          ]
-
-        "modern" ->
-          [
-            versions: [:"tlsv1.3"],
-            eccs: [:secp256r1, :secp384r1, :secp521r1],
-            ciphers: [
-              ~c"TLS_AES_128_GCM_SHA256",
-              ~c"TLS_AES_256_GCM_SHA384",
-              ~c"TLS_CHACHA20_POLY1305_SHA256"
-            ]
-          ]
-
-        _ ->
-          raise ArgumentError,
-                "Invalid CIPHER_SUITE: #{cipher_suite}. Expected one of: old, intermediate, modern."
-      end
-
+    # the following configuration is based on https://wiki.mozilla.org/Security/Server_Side_TLS#Intermediate_compatibility_.28recommended.29
+    # except we make the server choose the cipher preference
     https_opts =
       [
         port: https_port,
         ip: listen_ip,
-        transport_options: [socket_opts: [log_level: :warning]]
+        transport_options: [socket_opts: [log_level: :warning]],
+        versions: [:"tlsv1.2", :"tlsv1.3"],
+        honor_cipher_order: true,
+        eccs: [:x25519, :x448, :secp256r1, :secp384r1],
+        ciphers: [
+          # Cipher suites (TLS 1.3)
+          ~c"TLS_AES_128_GCM_SHA256",
+          ~c"TLS_AES_256_GCM_SHA384",
+          ~c"TLS_CHACHA20_POLY1305_SHA256",
+          # Cipher suites (TLS 1.2)
+          ~c"ECDHE-ECDSA-AES128-GCM-SHA256",
+          ~c"ECDHE-RSA-AES128-GCM-SHA256",
+          ~c"ECDHE-ECDSA-AES256-GCM-SHA384",
+          ~c"ECDHE-RSA-AES256-GCM-SHA384",
+          ~c"ECDHE-ECDSA-CHACHA20-POLY1305",
+          ~c"ECDHE-RSA-CHACHA20-POLY1305",
+          ~c"DHE-RSA-AES128-GCM-SHA256",
+          ~c"DHE-RSA-AES256-GCM-SHA384",
+          ~c"DHE-RSA-CHACHA20-POLY1305"
+        ]
       ]
 
-    https_opts =
-      default_http_opts
-      |> Config.Reader.merge(cipher_suite_opts)
-      |> Config.Reader.merge(https_opts)
-
+    https_opts = Config.Reader.merge(default_http_opts, https_opts)
     config :plausible, PlausibleWeb.Endpoint, https: https_opts
 
     domain = base_url.host
