@@ -330,7 +330,7 @@ config :plausible, PlausibleWeb.Endpoint,
 if config_env() in [:ce, :ce_dev, :ce_test] do
   if https_port do
     # the following configuration is based on https://wiki.mozilla.org/Security/Server_Side_TLS#Intermediate_compatibility_.28recommended.29
-    # except we make the server choose the cipher preference
+    # except we enforce the cipher and ecc order
     https_opts =
       [
         port: https_port,
@@ -338,13 +338,15 @@ if config_env() in [:ce, :ce_dev, :ce_test] do
         transport_options: [socket_opts: [log_level: :warning]],
         versions: [:"tlsv1.2", :"tlsv1.3"],
         honor_cipher_order: true,
-        eccs: [:x25519, :x448, :secp256r1, :secp384r1],
+        honor_ecc_order: true,
+        eccs: [:x25519, :secp256r1, :secp384r1],
+        supported_groups: [:x25519, :secp256r1, :secp384r1],
         ciphers: [
-          # Cipher suites (TLS 1.3)
+          # Mozilla recommended cipher suites (TLS 1.3)
           ~c"TLS_AES_128_GCM_SHA256",
           ~c"TLS_AES_256_GCM_SHA384",
           ~c"TLS_CHACHA20_POLY1305_SHA256",
-          # Cipher suites (TLS 1.2)
+          # Mozilla recommended cipher suites (TLS 1.2)
           ~c"ECDHE-ECDSA-AES128-GCM-SHA256",
           ~c"ECDHE-RSA-AES128-GCM-SHA256",
           ~c"ECDHE-ECDSA-AES256-GCM-SHA384",
