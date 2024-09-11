@@ -96,7 +96,7 @@ export const createVisitors = (props) => {
 export const createGroupConversionRate = (props) => {
   const renderValue = percentageFormatter
   const renderLabel = (_query) => "CR"
-  return new Metric({width: 'w-16', ...props, key: "group_conversion_rate", accessor: "conversion_rate", renderLabel, renderValue, sortable: true})
+  return new Metric({width: 'w-16', ...props, key: "conversion_rate", accessor: "conversion_rate", renderLabel, renderValue, sortable: true})
 }
 
 export const createConversionRate = (props) => {
