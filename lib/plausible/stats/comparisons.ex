@@ -58,10 +58,10 @@ defmodule Plausible.Stats.Comparisons do
       January 1st. Defaults to false.
 
   """
-  def compare(%Plausible.Site{} = site, %Stats.Query{} = source_query, mode, opts \\ []) do
+  def compare(%Plausible.Site{} = _site, %Stats.Query{} = source_query, mode, opts \\ []) do
     opts =
       opts
-      |> Keyword.put_new(:now, DateTime.now!(site.timezone))
+      |> Keyword.put_new(:now, DateTime.now!(source_query.timezone))
       |> Keyword.put_new(:match_day_of_week?, false)
 
     source_date_range = Query.date_range(source_query)
@@ -69,7 +69,11 @@ defmodule Plausible.Stats.Comparisons do
     with :ok <- validate_mode(source_query, mode),
          {:ok, comparison_date_range} <- get_comparison_date_range(source_date_range, mode, opts) do
       new_range =
-        DateTimeRange.new!(comparison_date_range.first, comparison_date_range.last, site.timezone)
+        DateTimeRange.new!(
+          comparison_date_range.first,
+          comparison_date_range.last,
+          source_query.timezone
+        )
         |> DateTimeRange.to_timezone("Etc/UTC")
 
       comparison_query =
