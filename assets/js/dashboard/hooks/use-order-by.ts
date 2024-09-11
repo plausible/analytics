@@ -62,18 +62,16 @@ export function useOrderBy({
 export function cycleSortDirection(
   currentSortDirection: SortDirection | null
 ): { direction: SortDirection; hint: string } {
-  switch (currentSortDirection) {
-    case null:
-    case SortDirection.asc:
-      return {
-        direction: SortDirection.desc,
-        hint: 'Press to sort column in descending order'
-      }
-    case SortDirection.desc:
-      return {
-        direction: SortDirection.asc,
-        hint: 'Press to sort column in ascending order'
-      }
+  if (currentSortDirection === SortDirection.desc) {
+    return {
+      direction: SortDirection.asc,
+      hint: 'Press to sort column in ascending order'
+    }
+  }
+
+  return {
+    direction: SortDirection.desc,
+    hint: 'Press to sort column in descending order'
   }
 }
 
