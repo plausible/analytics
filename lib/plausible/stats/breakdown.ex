@@ -116,6 +116,8 @@ defmodule Plausible.Stats.Breakdown do
       from e in subquery(timed_page_transitions_q),
         group_by: e.pathname
 
+    date_range = Query.date_range(query)
+
     timed_pages_q =
       if query.include_imported do
         # Imported page views have pre-calculated values
@@ -123,9 +125,7 @@ defmodule Plausible.Stats.Breakdown do
           from i in "imported_pages",
             group_by: i.page,
             where: i.site_id == ^site.id,
-            where:
-              i.date >= ^DateTime.to_naive(query.date_range.first) and
-                i.date <= ^DateTime.to_naive(query.date_range.last),
+            where: i.date >= ^date_range.first and i.date <= ^date_range.last,
             where: i.page in ^pages,
             select: %{
               page: i.page,

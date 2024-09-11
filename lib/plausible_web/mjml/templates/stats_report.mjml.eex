@@ -22,7 +22,7 @@
           <%= @site.domain %>
         </mj-text>
         <mj-text mj-class="text-sm" padding="0 25px 0 25px">
-          <%= @name %> Report (<%= Calendar.strftime(@query.date_range.last, "%-d %b %Y") %>)
+          <%= @name %> Report (<%= @date %>)
         </mj-text>
       </mj-column>
     </mj-section>
