@@ -32,8 +32,8 @@ defmodule Plausible.Stats.QueryResult do
           site_id: site.domain,
           metrics: query.metrics,
           date_range: [
-            to_iso_8601_with_timezone(query.date_range.first),
-            to_iso_8601_with_timezone(query.date_range.last)
+            to_iso8601(query.utc_time_range.first, query.timezone),
+            to_iso8601(query.utc_time_range.last, query.timezone)
           ],
           filters: query.filters,
           dimensions: query.dimensions,
@@ -88,13 +88,10 @@ defmodule Plausible.Stats.QueryResult do
     |> Enum.into(%{})
   end
 
-  defp to_iso_8601_with_timezone(%DateTime{time_zone: timezone} = datetime) do
-    naive_iso8601 =
-      datetime
-      |> DateTime.to_naive()
-      |> NaiveDateTime.to_iso8601()
-
-    naive_iso8601 <> " " <> timezone
+  defp to_iso8601(datetime, timezone) do
+    datetime
+    |> DateTime.shift_zone!(timezone)
+    |> DateTime.to_iso8601(:extended)
   end
 end
 

@@ -12,7 +12,7 @@ defmodule Plausible.Stats.SQL.Expression do
 
   import Ecto.Query
 
-  alias Plausible.Stats.{Filters, SQL}
+  alias Plausible.Stats.{Query, Filters, SQL}
 
   @no_ref "Direct / None"
   @not_set "(not set)"
@@ -46,11 +46,13 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def select_dimension(q, key, "time:week", _table, query) do
+    date_range = Query.date_range(query)
+
     select_merge_as(q, [t], %{
       key =>
         weekstart_not_before(
           to_timezone(t.timestamp, ^query.timezone),
-          ^DateTime.to_naive(query.date_range.first)
+          ^date_range.first
         )
     })
   end

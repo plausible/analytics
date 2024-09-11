@@ -7,42 +7,42 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
   setup [:create_user, :create_new_site]
 
-  @now DateTime.new!(~D[2021-05-05], ~T[12:30:00], "UTC")
+  @now DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
   @date_range_realtime %DateTimeRange{
-    first: DateTime.new!(~D[2021-05-05], ~T[12:25:00], "UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "UTC")
+    first: DateTime.new!(~D[2021-05-05], ~T[12:25:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "Etc/UTC")
   }
   @date_range_30m %DateTimeRange{
-    first: DateTime.new!(~D[2021-05-05], ~T[12:00:00], "UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "UTC")
+    first: DateTime.new!(~D[2021-05-05], ~T[12:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[12:30:05], "Etc/UTC")
   }
   @date_range_day %DateTimeRange{
-    first: DateTime.new!(~D[2021-05-05], ~T[00:00:00], "UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "UTC")
+    first: DateTime.new!(~D[2021-05-05], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_7d %DateTimeRange{
-    first: DateTime.new!(~D[2021-04-29], ~T[00:00:00], "UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "UTC")
+    first: DateTime.new!(~D[2021-04-29], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_30d %DateTimeRange{
-    first: DateTime.new!(~D[2021-04-05], ~T[00:00:00], "UTC"),
-    last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "UTC")
+    first: DateTime.new!(~D[2021-04-05], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-05], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_month %DateTimeRange{
-    first: DateTime.new!(~D[2021-05-01], ~T[00:00:00], "UTC"),
-    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "UTC")
+    first: DateTime.new!(~D[2021-05-01], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_6mo %DateTimeRange{
-    first: DateTime.new!(~D[2020-12-01], ~T[00:00:00], "UTC"),
-    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "UTC")
+    first: DateTime.new!(~D[2020-12-01], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_year %DateTimeRange{
-    first: DateTime.new!(~D[2021-01-01], ~T[00:00:00], "UTC"),
-    last: DateTime.new!(~D[2021-12-31], ~T[23:59:59], "UTC")
+    first: DateTime.new!(~D[2021-01-01], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-12-31], ~T[23:59:59], "Etc/UTC")
   }
   @date_range_12mo %DateTimeRange{
-    first: DateTime.new!(~D[2020-06-01], ~T[00:00:00], "UTC"),
-    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "UTC")
+    first: DateTime.new!(~D[2020-06-01], ~T[00:00:00], "Etc/UTC"),
+    last: DateTime.new!(~D[2021-05-31], ~T[23:59:59], "Etc/UTC")
   }
 
   def check_success(params, site, expected_result, schema_type \\ :public) do
@@ -55,7 +55,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     assert message == expected_error_message
   end
 
-  def check_date_range(date_params, site, expected_fields, schema_type \\ :public) do
+  def check_date_range(date_params, site, expected_date_range, schema_type \\ :public) do
     params =
       %{"site_id" => site.domain, "metrics" => ["visitors", "events"]}
       |> Map.merge(date_params)
@@ -63,11 +63,11 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     expected_parsed =
       %{
         metrics: [:visitors, :events],
-        date_range: expected_fields.date_range,
+        utc_time_range: expected_date_range,
         filters: [],
         dimensions: [],
         order_by: nil,
-        timezone: Map.get(expected_fields, :timezone, site.timezone),
+        timezone: site.timezone,
         include: %{imports: false, time_labels: false},
         preloaded_goals: []
       }
@@ -85,7 +85,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       %{"site_id" => site.domain, "metrics" => ["visitors", "events"], "date_range" => "all"}
       |> check_success(site, %{
         metrics: [:visitors, :events],
-        date_range: @date_range_day,
+        utc_time_range: @date_range_day,
         filters: [],
         dimensions: [],
         order_by: nil,
@@ -126,7 +126,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             :bounce_rate,
             :visit_duration
           ],
-          date_range: @date_range_day,
+          utc_time_range: @date_range_day,
           filters: [],
           dimensions: [],
           order_by: nil,
@@ -190,7 +190,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           site,
           %{
             metrics: [:visitors],
-            date_range: @date_range_day,
+            utc_time_range: @date_range_day,
             filters: [
               [unquote(operation), "event:name", ["foo"]]
             ],
@@ -315,7 +315,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range_day,
+        utc_time_range: @date_range_day,
         filters: [
           [:is, "event:props:foobar", ["value"]]
         ],
@@ -340,7 +340,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           }
           |> check_success(site, %{
             metrics: [:visitors],
-            date_range: @date_range_day,
+            utc_time_range: @date_range_day,
             filters: [
               [:is, "event:#{unquote(dimension)}", ["foo"]]
             ],
@@ -366,7 +366,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
         |> check_success(site, %{
           metrics: [:visitors],
-          date_range: @date_range_day,
+          utc_time_range: @date_range_day,
           filters: [
             [:is, "visit:#{unquote(dimension)}", ["ab"]]
           ],
@@ -432,7 +432,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range_day,
+        utc_time_range: @date_range_day,
         filters: [
           [:is, "visit:city", [123, 456]]
         ],
@@ -451,7 +451,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range_day,
+        utc_time_range: @date_range_day,
         filters: [
           [:is, "visit:city", ["123", "456"]]
         ],
@@ -499,7 +499,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range_day,
+        utc_time_range: @date_range_day,
         filters: [
           [
             :or,
@@ -558,7 +558,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range_day,
+        utc_time_range: @date_range_day,
         filters: [
           [:is, "event:hostname", ["a.plausible.io"]]
         ],
@@ -595,7 +595,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range_day,
+        utc_time_range: @date_range_day,
         filters: [],
         dimensions: ["time"],
         order_by: nil,
@@ -645,7 +645,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
       assert %{
                metrics: [:visitors],
-               date_range: @date_range_day,
+               utc_time_range: @date_range_day,
                filters: [
                  [:is, "event:goal", ["Signup", "Visit /thank-you"]]
                ],
@@ -729,42 +729,22 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
   describe "date range validation" do
     test "parsing shortcut options", %{site: site} do
-      check_date_range(%{"date_range" => "day"}, site, %{date_range: @date_range_day})
-      check_date_range(%{"date_range" => "7d"}, site, %{date_range: @date_range_7d})
-      check_date_range(%{"date_range" => "30d"}, site, %{date_range: @date_range_30d})
-      check_date_range(%{"date_range" => "month"}, site, %{date_range: @date_range_month})
-      check_date_range(%{"date_range" => "6mo"}, site, %{date_range: @date_range_6mo})
-      check_date_range(%{"date_range" => "12mo"}, site, %{date_range: @date_range_12mo})
-      check_date_range(%{"date_range" => "year"}, site, %{date_range: @date_range_year})
+      check_date_range(%{"date_range" => "day"}, site, @date_range_day)
+      check_date_range(%{"date_range" => "7d"}, site, @date_range_7d)
+      check_date_range(%{"date_range" => "30d"}, site, @date_range_30d)
+      check_date_range(%{"date_range" => "month"}, site, @date_range_month)
+      check_date_range(%{"date_range" => "6mo"}, site, @date_range_6mo)
+      check_date_range(%{"date_range" => "12mo"}, site, @date_range_12mo)
+      check_date_range(%{"date_range" => "year"}, site, @date_range_year)
     end
 
     test "30m and realtime are available in internal API", %{site: site} do
-      check_date_range(%{"date_range" => "30m"}, site, %{date_range: @date_range_30m}, :internal)
+      check_date_range(%{"date_range" => "30m"}, site, @date_range_30m, :internal)
 
       check_date_range(
         %{"date_range" => "realtime"},
         site,
-        %{date_range: @date_range_realtime},
-        :internal
-      )
-    end
-
-    test "timezone is UTC instead of site.timezone for realtime and 30m periods", %{
-      site: site
-    } do
-      site = struct!(site, timezone: "Europe/Tallinn")
-
-      check_date_range(
-        %{"date_range" => "30m"},
-        site,
-        %{date_range: @date_range_30m, timezone: "UTC"},
-        :internal
-      )
-
-      check_date_range(
-        %{"date_range" => "realtime"},
-        site,
-        %{date_range: @date_range_realtime, timezone: "UTC"},
+        @date_range_realtime,
         :internal
       )
     end
@@ -780,50 +760,41 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
     test "parsing `all` with previous data", %{site: site} do
       site = Map.put(site, :stats_start_date, ~D[2020-01-01])
-      expected_date_range = DateTimeRange.new!(~D[2020-01-01], ~D[2021-05-05], "UTC")
-      check_date_range(%{"date_range" => "all"}, site, %{date_range: expected_date_range})
+      expected_date_range = DateTimeRange.new!(~D[2020-01-01], ~D[2021-05-05], "Etc/UTC")
+      check_date_range(%{"date_range" => "all"}, site, expected_date_range)
     end
 
     test "parsing `all` with no previous data", %{site: site} do
       site = Map.put(site, :stats_start_date, nil)
-      check_date_range(%{"date_range" => "all"}, site, %{date_range: @date_range_day})
+      check_date_range(%{"date_range" => "all"}, site, @date_range_day)
     end
 
     test "parsing custom date range from simple date strings", %{site: site} do
-      check_date_range(%{"date_range" => ["2021-05-05", "2021-05-05"]}, site, %{
-        date_range: @date_range_day
-      })
+      check_date_range(%{"date_range" => ["2021-05-05", "2021-05-05"]}, site, @date_range_day)
     end
 
     test "parsing custom date range from iso8601 timestamps", %{site: site} do
       check_date_range(
-        %{"date_range" => ["2024-01-01T00:00:00 UTC", "2024-01-02T23:59:59 UTC"]},
+        %{"date_range" => ["2024-01-01T00:00:00Z", "2024-01-02T23:59:59Z"]},
         site,
-        %{
-          date_range:
-            DateTimeRange.new!(
-              DateTime.new!(~D[2024-01-01], ~T[00:00:00], "UTC"),
-              DateTime.new!(~D[2024-01-02], ~T[23:59:59], "UTC")
-            )
-        }
+        DateTimeRange.new!(
+          DateTime.new!(~D[2024-01-01], ~T[00:00:00], "Etc/UTC"),
+          DateTime.new!(~D[2024-01-02], ~T[23:59:59], "Etc/UTC")
+        )
       )
 
       check_date_range(
         %{
           "date_range" => [
-            "2024-08-29T07:12:34 America/Los_Angeles",
-            "2024-08-29T10:12:34 America/Los_Angeles"
+            "2024-08-29T07:12:34-07:00",
+            "2024-08-29T10:12:34-07:00"
           ]
         },
         site,
-        %{
-          date_range:
-            DateTimeRange.new!(
-              DateTime.new!(~D[2024-08-29], ~T[07:12:34], "America/Los_Angeles"),
-              DateTime.new!(~D[2024-08-29], ~T[10:12:34], "America/Los_Angeles")
-            ),
-          timezone: "America/Los_Angeles"
-        }
+        DateTimeRange.new!(
+          ~U[2024-08-29 14:12:34Z],
+          ~U[2024-08-29 17:12:34Z]
+        )
       )
     end
 
@@ -845,59 +816,31 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "#/date_range: Invalid date range [\"2021-02-03T00:00:00\", \"2021-02-03T23:59:59\"]"
-      )
-    end
-
-    test "custom date range is invalid when timestamp timezones are different", %{site: site} do
-      %{
-        "site_id" => site.domain,
-        "date_range" => ["2021-02-03T00:00:00 Europe/Tallinn", "2021-02-03T23:59:59 UTC"],
-        "metrics" => ["visitors"]
-      }
-      |> check_error(
-        site,
-        "Invalid date_range '[\"2021-02-03T00:00:00 Europe/Tallinn\", \"2021-02-03T23:59:59 UTC\"]'."
+        "Invalid date_range '[\"2021-02-03T00:00:00\", \"2021-02-03T23:59:59\"]'."
       )
     end
 
     test "custom date range is invalid when timestamp timezone is invalid", %{site: site} do
       %{
         "site_id" => site.domain,
-        "date_range" => ["2021-02-03T00:00:00 Fake/Timezone", "2021-02-03T23:59:59 Fake/Timezone"],
+        "date_range" => ["2021-02-03T00:00:00-25:00", "2021-02-03T23:59:59-25:00"],
         "metrics" => ["visitors"]
       }
       |> check_error(
         site,
-        "Invalid date_range '[\"2021-02-03T00:00:00 Fake/Timezone\", \"2021-02-03T23:59:59 Fake/Timezone\"]'."
+        "#/date_range: Invalid date range [\"2021-02-03T00:00:00-25:00\", \"2021-02-03T23:59:59-25:00\"]"
       )
     end
 
     test "custom date range is invalid when date and timestamp are combined", %{site: site} do
       %{
         "site_id" => site.domain,
-        "date_range" => ["2021-02-03T00:00:00 UTC", "2021-02-04"],
+        "date_range" => ["2021-02-03T00:00:00Z", "2021-02-04"],
         "metrics" => ["visitors"]
       }
       |> check_error(
         site,
-        "Invalid date_range '[\"2021-02-03T00:00:00 UTC\", \"2021-02-04\"]'."
-      )
-    end
-
-    test "custom date range is invalid when timestamp cannot be converted to datetime due to a gap in timezone",
-         %{site: site} do
-      %{
-        "site_id" => site.domain,
-        "date_range" => [
-          "2024-03-31T03:30:00 Europe/Tallinn",
-          "2024-04-15T10:00:00 Europe/Tallinn"
-        ],
-        "metrics" => ["visitors"]
-      }
-      |> check_error(
-        site,
-        "Invalid date_range '[\"2024-03-31T03:30:00 Europe/Tallinn\", \"2024-04-15T10:00:00 Europe/Tallinn\"]'."
+        "Invalid date_range '[\"2021-02-03T00:00:00Z\", \"2021-02-04\"]'."
       )
     end
 
@@ -914,7 +857,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             {"year", @date_range_year}
           ] do
         %{"date_range" => date_range_shortcut, "date" => date}
-        |> check_date_range(site, %{date_range: expected_date_range}, :internal)
+        |> check_date_range(site, expected_date_range, :internal)
       end
     end
 
@@ -933,14 +876,11 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     } do
       site = %{site | timezone: "America/Santiago"}
 
-      expected_date_range =
-        DateTimeRange.new!(
-          DateTime.new!(~D[2022-09-11], ~T[01:00:00], site.timezone),
-          DateTime.new!(~D[2022-09-11], ~T[23:59:59], site.timezone)
-        )
-
       %{"date_range" => ["2022-09-11", "2022-09-11"]}
-      |> check_date_range(site, %{date_range: expected_date_range})
+      |> check_date_range(
+        site,
+        DateTimeRange.new!(~U[2022-09-11 04:00:00Z], ~U[2022-09-12 02:59:59Z])
+      )
     end
 
     test "parses date_range.first into the latest of ambiguous datetimes in site.timezone", %{
@@ -948,17 +888,11 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     } do
       site = %{site | timezone: "America/Havana"}
 
-      {:ambiguous, _, expected_first_datetime} =
-        DateTime.new(~D[2023-11-05], ~T[00:00:00], site.timezone)
-
-      expected_date_range =
-        DateTimeRange.new!(
-          expected_first_datetime,
-          DateTime.new!(~D[2023-11-05], ~T[23:59:59], site.timezone)
-        )
-
       %{"date_range" => ["2023-11-05", "2023-11-05"]}
-      |> check_date_range(site, %{date_range: expected_date_range})
+      |> check_date_range(
+        site,
+        DateTimeRange.new!(~U[2023-11-05 05:00:00Z], ~U[2023-11-06 04:59:59Z])
+      )
     end
 
     test "parses date_range.last into the earliest of ambiguous datetimes in site.timezone", %{
@@ -966,17 +900,11 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     } do
       site = %{site | timezone: "America/Asuncion"}
 
-      {:ambiguous, first_dt, _second_dt} =
-        DateTime.new(~D[2024-03-23], ~T[23:59:59], site.timezone)
-
-      expected_date_range =
-        DateTimeRange.new!(
-          DateTime.new!(~D[2024-03-23], ~T[00:00:00], site.timezone),
-          first_dt
-        )
-
       %{"date_range" => ["2024-03-23", "2024-03-23"]}
-      |> check_date_range(site, %{date_range: expected_date_range})
+      |> check_date_range(
+        site,
+        DateTimeRange.new!(~U[2024-03-23 03:00:00Z], ~U[2024-03-24 02:59:59Z])
+      )
     end
   end
 
@@ -991,7 +919,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
         |> check_success(site, %{
           metrics: [:visitors],
-          date_range: @date_range_day,
+          utc_time_range: @date_range_day,
           filters: [],
           dimensions: ["event:#{unquote(dimension)}"],
           order_by: nil,
@@ -1012,7 +940,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         }
         |> check_success(site, %{
           metrics: [:visitors],
-          date_range: @date_range_day,
+          utc_time_range: @date_range_day,
           filters: [],
           dimensions: ["visit:#{unquote(dimension)}"],
           order_by: nil,
@@ -1032,7 +960,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range_day,
+        utc_time_range: @date_range_day,
         filters: [],
         dimensions: ["event:props:foobar"],
         order_by: nil,
@@ -1093,7 +1021,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors, :events],
-        date_range: @date_range_day,
+        utc_time_range: @date_range_day,
         filters: [],
         dimensions: [],
         order_by: [{:events, :desc}, {:visitors, :asc}],
@@ -1113,7 +1041,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:visitors],
-        date_range: @date_range_day,
+        utc_time_range: @date_range_day,
         filters: [],
         dimensions: ["event:name"],
         order_by: [{"event:name", :desc}],
@@ -1221,7 +1149,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     #   }
     #   |> check_success(site, %{
     #     metrics: [:conversion_rate],
-    #     date_range: @date_range_day,
+    #     utc_time_range: @date_range_day,
     #     filters: [[:is, "event:goal", [event: "Signup"]]],
     #     dimensions: [],
     #     order_by: nil,
@@ -1241,7 +1169,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     #   }
     #   |> check_success(site, %{
     #     metrics: [:conversion_rate],
-    #     date_range: @date_range_day,
+    #     utc_time_range: @date_range_day,
     #     filters: [],
     #     dimensions: ["event:goal"],
     #     order_by: nil,
@@ -1261,7 +1189,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:conversion_rate, :group_conversion_rate],
-        date_range: @date_range_day,
+        utc_time_range: @date_range_day,
         filters: [
           [:is, "event:props:foo", ["bar"]]
         ],
@@ -1299,7 +1227,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     #   }
     #   |> check_success(site, %{
     #     metrics: [:views_per_visit],
-    #     date_range: @date_range_day,
+    #     utc_time_range: @date_range_day,
     #     filters: [[:is, "event:goal", [event: "Signup"]]],
     #     dimensions: [],
     #     order_by: nil,
@@ -1346,7 +1274,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:bounce_rate],
-        date_range: @date_range_day,
+        utc_time_range: @date_range_day,
         filters: [],
         dimensions: ["visit:device"],
         order_by: nil,
@@ -1378,7 +1306,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:bounce_rate],
-        date_range: @date_range_day,
+        utc_time_range: @date_range_day,
         filters: [],
         dimensions: ["event:page"],
         order_by: nil,
@@ -1397,7 +1325,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_success(site, %{
         metrics: [:bounce_rate],
-        date_range: @date_range_day,
+        utc_time_range: @date_range_day,
         filters: [[:is, "event:props:foo", ["(none)"]]],
         dimensions: [],
         order_by: nil,

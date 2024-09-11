@@ -40,9 +40,7 @@ defmodule Plausible.Stats.Interval do
   @doc """
   Returns the suggested interval for the given `DateTimeRange` struct.
   """
-  def default_for_date_range(%DateTimeRange{} = date_range) do
-    %Date.Range{first: first, last: last} = DateTimeRange.to_date_range(date_range)
-
+  def default_for_date_range(%DateTimeRange{first: first, last: last}) do
     cond do
       Timex.diff(last, first, :months) > 0 ->
         "month"
