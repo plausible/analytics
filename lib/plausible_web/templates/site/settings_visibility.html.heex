@@ -52,9 +52,13 @@
             class="focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50 dark:bg-gray-850 dark:text-gray-300 block rounded-md border-gray-300 dark:border-gray-500"
           />
         </.td>
-        <.td actions={true}>
-          <.edit_button href={Routes.site_path(@conn, :edit_shared_link, @site.domain, link.slug)} />
+        <.td actions>
+          <.edit_button
+            class="mt-2"
+            href={Routes.site_path(@conn, :edit_shared_link, @site.domain, link.slug)}
+          />
           <.delete_button
+            class="mt-2"
             method="delete"
             href={Routes.site_path(@conn, :delete_shared_link, @site.domain, link.slug)}
             data-confirm="Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."

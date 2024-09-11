@@ -19,42 +19,18 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
 
     ~H"""
     <div>
-      <%!-- <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between"> --%>
-      <%!--   <form id="filter-form" phx-change="filter"> --%>
-      <%!--     <div class="text-gray-800 text-sm inline-flex items-center"> --%>
-      <%!--       <div class="relative rounded-md shadow-sm flex"> --%>
-      <%!--         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"> --%>
-      <%!--           <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" /> --%>
-      <%!--         </div> --%>
-      <%!--         <input --%>
-      <%!--           type="text" --%>
-      <%!--           name="filter-text" --%>
-      <%!--           id="filter-text" --%>
-      <%!--           class="pl-8 shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800" --%>
-      <%!--           placeholder="Search Goals" --%>
-      <%!--           value={@filter_text} --%>
-      <%!--         /> --%>
-      <%!--       </div> --%>
-      <%!----%>
-      <%!--       <Heroicons.backspace --%>
-      <%!--         :if={String.trim(@filter_text) != ""} --%>
-      <%!--         class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500" --%>
-      <%!--         phx-click="reset-filter-text" --%>
-      <%!--         id="reset-filter" --%>
-      <%!--       /> --%>
-      <%!--     </div> --%>
-      <%!--   </form> --%>
-      <%!--   <div class="mt-4 flex sm:ml-4 sm:mt-0"> --%>
-      <%!--     <PlausibleWeb.Components.Generic.button --%>
-      <%!--       id="add-goal-button" --%>
-      <%!--       phx-click="add-goal" --%>
-      <%!--       x-data --%>
-      <%!--       x-on:click={Modal.JS.preopen("goals-form-modal")} --%>
-      <%!--     > --%>
-      <%!--       Add Goal --%>
-      <%!--     </PlausibleWeb.Components.Generic.button> --%>
-      <%!--   </div> --%>
-      <%!-- </div> --%>
+      <.filter_bar filter_text={@filter_text} placeholder="Search Goals">
+        <PlausibleWeb.Components.Generic.button
+          id={@id}
+          phx-click="add-goal"
+          mt?={false}
+          x-data
+          x-on:click={Modal.JS.preopen("goals-form-modal")}
+        >
+          Add Goal
+        </PlausibleWeb.Components.Generic.button>
+      </.filter_bar>
+
       <%= if Enum.count(@goals) > 0 do %>
         <.table rows={@goals}>
           <:thead>
@@ -115,16 +91,12 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           </:tbody>
         </.table>
       <% else %>
-        <p class="text-sm text-gray-800 dark:text-gray-200 mt-12 mb-8 text-center">
+        <p class="mt-12 mb-8 text-center">
           <span :if={String.trim(@filter_text) != ""}>
             No goals found for this site. Please refine or
-            <a
-              class="text-indigo-500 cursor-pointer underline"
-              phx-click="reset-filter-text"
-              id="reset-filter-hint"
-            >
+            <.styled_link phx-click="reset-filter-text" id="reset-filter-hint">
               reset your search.
-            </a>
+            </.styled_link>
           </span>
           <span :if={String.trim(@filter_text) == "" && Enum.empty?(@goals)}>
             No goals configured for this site.

@@ -33,6 +33,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:theme, :string, default: "primary")
   attr(:class, :string, default: "")
   attr(:disabled, :boolean, default: false)
+  attr(:mt?, :boolean, default: true)
   attr(:rest, :global)
 
   slot(:inner_block)
@@ -49,7 +50,7 @@ defmodule PlausibleWeb.Components.Generic do
       type={@type}
       disabled={@disabled}
       class={[
-        "mt-6",
+        @mt? && "mt-6",
         @button_base_class,
         @theme_class,
         @class
@@ -113,7 +114,7 @@ defmodule PlausibleWeb.Components.Generic do
   def docs_info(assigns) do
     ~H"""
     <a href={"https://plausible.io/docs/#{@slug}"} rel="noopener noreferrer" target="_blank">
-      <Heroicons.information_circle class="text-indigo-600 dark:text-indigo-500 w-6 h-6 stroke-2 absolute top-4 right-4" />
+      <Heroicons.information_circle class="text-indigo-800 dark:text-indigo-500 w-6 h-6 stroke-2 absolute top-4 right-4 hover:text-indigo-500 dark:hover:text-indigo-300" />
     </a>
     """
   end
@@ -365,7 +366,7 @@ defmodule PlausibleWeb.Components.Generic do
         </p>
       </header>
 
-      <div class={@no_inner_pad || "px-6 pb-6 pt-2"}>
+      <div class={[@no_inner_pad && "pb-2", @no_inner_pad || "pb-6 px-6 pt-2"]}>
         <%= render_slot(@inner_block) %>
       </div>
     </div>
@@ -512,7 +513,7 @@ defmodule PlausibleWeb.Components.Generic do
     <td class={[
       "px-6 py-4 whitespace-nowrap",
       @truncate && "truncate max-w-xs",
-      @actions && "flex text-right justify-end mt-2"
+      @actions && "flex text-right justify-end"
     ]}>
       <div :if={@actions} class="flex gap-2">
         <%= render_slot(@inner_block) %>
@@ -618,5 +619,41 @@ defmodule PlausibleWeb.Components.Generic do
       </button>
       """
     end
+  end
+
+  attr :filter_text, :string, default: ""
+  attr :placeholder, :string, default: ""
+  slot :inner_block, required: false
+
+  def filter_bar(assigns) do
+    ~H"""
+    <div class="border-t border-gray-200 p-6 sm:flex sm:items-center sm:justify-between">
+      <form id="filter-form" phx-change="filter">
+        <div class="text-gray-800 inline-flex items-center">
+          <div class="relative rounded-md shadow-sm flex">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
+            </div>
+            <input
+              type="text"
+              name="filter-text"
+              id="filter-text"
+              class="pl-8 shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+              placeholder={@placeholder}
+              value={@filter_text}
+            />
+          </div>
+
+          <Heroicons.backspace
+            :if={String.trim(@filter_text) != ""}
+            class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500"
+            phx-click="reset-filter-text"
+            id="reset-filter"
+          />
+        </div>
+      </form>
+      <%= render_slot(@inner_block) %>
+    </div>
+    """
   end
 end
