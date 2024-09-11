@@ -148,7 +148,6 @@ defmodule Plausible.MixProject do
       {:ex_json_schema, "~> 0.10.2"},
       {:odgn_json_pointer, "~> 3.0.1"},
       {:phoenix_bakery, "~> 0.1.2", only: [:ce, :ce_dev, :ce_test]},
-      {:tzdata, github: "ruslandoga/tzdata", branch: "fix-for-2024b", override: true},
       {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test]}
     ]
   end
