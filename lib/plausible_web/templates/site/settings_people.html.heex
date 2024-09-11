@@ -15,7 +15,7 @@
               </div>
               <div class="flex-1 min-w-0">
                 <p class="font-medium text-gray-900 dark:text-gray-50 truncate">
-                  <%= membership.user.name %>
+                  <%= membership.user.name %> &lt;<%= membership.user.email %>&gt;
                   <.styled_link
                     :if={ee?() and Plausible.Auth.is_super_admin?(@current_user)}
                     new_tab={true}
@@ -23,9 +23,6 @@
                   >
                     CRM
                   </.styled_link>
-                </p>
-                <p class="truncate mt-1">
-                  <%= membership.user.email %>
                 </p>
               </div>
 
@@ -54,7 +51,7 @@
                   x-transition:leave="transition ease-in duration-100"
                   x-transition:leave-start="opacity-100"
                   x-transition:leave-end="opacity-0"
-                  class="origin-top-right absolute z-10 right-0 mt-2 w-72 rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-400 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                  class="origin-top-right absolute z-50 right-0 mt-2 w-72 rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-400 ring-1 ring-black ring-opacity-5 focus:outline-none"
                   tabindex="-1"
                   role="listbox"
                   aria-labelledby="listbox-label"
@@ -184,13 +181,13 @@
       <:thead>
         <.th>Email</.th>
         <.th>Role</.th>
-        <.th invisible>Edit</.th>
+        <.th invisible>Actions</.th>
       </:thead>
       <:tbody :let={invitation}>
         <.td><%= invitation.email %></.td>
         <.td><%= Phoenix.Naming.humanize(invitation.role) %></.td>
-        <.td>
-          <.unstyled_link
+        <.td actions>
+          <.delete_button
             href={
               Routes.invitation_path(
                 @conn,
@@ -199,11 +196,8 @@
                 invitation.invitation_id
               )
             }
-            class="text-red-600 hover:text-red-900"
             method="delete"
-          >
-            Remove
-          </.unstyled_link>
+          />
         </.td>
       </:tbody>
     </.table>

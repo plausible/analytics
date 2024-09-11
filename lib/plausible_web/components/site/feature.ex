@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Components.Site.Feature do
   attr(:site, Plausible.Site, required: true)
   attr(:feature_mod, :atom, required: true, values: Plausible.Billing.Feature.list())
   attr(:conn, Plug.Conn, required: true)
+  attr(:class, :any, default: nil)
   slot(:inner_block)
 
   def toggle(assigns) do
@@ -22,6 +23,7 @@ defmodule PlausibleWeb.Components.Site.Feature do
         action={target(@site, @feature_mod.toggle_field(), @conn, !@current_setting)}
         method="put"
         for={nil}
+        class={@class}
       >
         <PlausibleWeb.Components.Generic.toggle_submit
           set_to={@current_setting}

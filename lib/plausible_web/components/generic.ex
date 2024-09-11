@@ -113,7 +113,7 @@ defmodule PlausibleWeb.Components.Generic do
   def docs_info(assigns) do
     ~H"""
     <a href={"https://plausible.io/docs/#{@slug}"} rel="noopener noreferrer" target="_blank">
-      <Heroicons.information_circle class="text-indigo-600 dark:text-gray-500 w-6 h-6 stroke-2 absolute top-4 right-4" />
+      <Heroicons.information_circle class="text-indigo-600 dark:text-indigo-500 w-6 h-6 stroke-2 absolute top-4 right-4" />
     </a>
     """
   end
@@ -353,7 +353,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def tile(assigns) do
     ~H"""
-    <div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden mb-6">
+    <div class="shadow bg-white dark:bg-gray-800 sm:rounded-md mb-6">
       <header class="relative border-b dark:border-gray-700 p-6">
         <h2 class="font-semibold leading-6 font-medium text-gray-900 dark:text-gray-100">
           <%= render_slot(@title) %>
@@ -385,7 +385,7 @@ defmodule PlausibleWeb.Components.Generic do
     assigns = assign(assigns, wrapper_data: wrapper_data, show_inner: show_inner)
 
     ~H"""
-    <div x-data={@wrapper_data} class="tooltip-wrapper w-full relative">
+    <div x-data={@wrapper_data} class="tooltip-wrapper w-full relative z-[1000]">
       <div
         x-cloak
         x-show={@show_inner}
@@ -486,7 +486,7 @@ defmodule PlausibleWeb.Components.Generic do
   def table(assigns) do
     ~H"""
     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-400 mb-2">
-      <thead class="bg-gray-50 dark:bg-gray-900">
+      <thead>
         <tr>
           <%= render_slot(@thead) %>
         </tr>
@@ -494,7 +494,7 @@ defmodule PlausibleWeb.Components.Generic do
       <tbody>
         <tr
           :for={item <- @rows}
-          class="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-850 dark:even:bg-gray-825"
+          class="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-800 dark:even:bg-gray-825"
         >
           <%= render_slot(@tbody, item) %>
         </tr>
@@ -505,28 +505,34 @@ defmodule PlausibleWeb.Components.Generic do
 
   slot :inner_block, required: true
   attr :truncate, :boolean, default: false
+  attr :actions, :boolean, default: nil
 
   def td(assigns) do
     ~H"""
     <td class={[
-      "px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-gray-100",
-      @truncate && "truncate max-w-xs"
+      "px-6 py-4 whitespace-nowrap",
+      @truncate && "truncate max-w-xs",
+      @actions && "flex text-right justify-end mt-2"
     ]}>
-      <%= render_slot(@inner_block) %>
+      <div :if={@actions} class="flex gap-2">
+        <%= render_slot(@inner_block) %>
+      </div>
+      <div :if={!@actions}>
+        <%= render_slot(@inner_block) %>
+      </div>
     </td>
     """
   end
 
   slot :inner_block, required: true
   attr :invisible, :boolean, default: false
-  attr :colspan, :any, required: false
 
   def th(assigns) do
     class =
       if assigns[:invisible] do
         "sr-only"
       else
-        "px-6 py-3 text-left text-xs text-gray-700 dark:text-gray-200 uppercase tracking-wider"
+        "px-6 py-3 text-left"
       end
 
     assigns = assign(assigns, class: class)
@@ -544,7 +550,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def toggle_submit(assigns) do
     ~H"""
-    <div class="mt-4 mb-8 flex items-center">
+    <div class="mt-4 mb-2 flex items-center">
       <button
         type="submit"
         class={[
@@ -574,5 +580,43 @@ defmodule PlausibleWeb.Components.Generic do
       </span>
     </div>
     """
+  end
+
+  attr :href, :string, default: nil
+  attr :rest, :global, include: ~w(method disabled)
+
+  def edit_button(assigns) do
+    if assigns[:href] do
+      ~H"""
+      <.unstyled_link href={@href} {@rest}>
+        <Heroicons.pencil_square class="w-5 h-5 text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300" />
+      </.unstyled_link>
+      """
+    else
+      ~H"""
+      <button {@rest}>
+        <Heroicons.pencil_square class="w-5 h-5 text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300" />
+      </button>
+      """
+    end
+  end
+
+  attr :href, :string, default: nil
+  attr :rest, :global, include: ~w(method disabled)
+
+  def delete_button(assigns) do
+    if assigns[:href] do
+      ~H"""
+      <.unstyled_link href={@href} {@rest}>
+        <Heroicons.trash class="w-5 h-5 text-red-800 hover:text-red-500 dark:text-red-500 dark:hover:text-red-300" />
+      </.unstyled_link>
+      """
+    else
+      ~H"""
+      <button {@rest}>
+        <Heroicons.trash class="w-5 h-5 text-red-800 hover:text-red-500 dark:text-red-500 dark:hover:text-red-300" />
+      </button>
+      """
+    end
   end
 end

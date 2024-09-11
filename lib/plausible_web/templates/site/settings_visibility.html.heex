@@ -36,8 +36,7 @@
       <:thead>
         <.th>Name</.th>
         <.th>Link</.th>
-        <.th></.th>
-        <.th></.th>
+        <.th invisible>Actions</.th>
       </:thead>
       <:tbody :let={link}>
         <.td truncate={true}>
@@ -47,27 +46,19 @@
         </.td>
         <.td>
           <PlausibleWeb.Live.Components.Form.input_with_clipboard
-            label=""
             name={link.slug}
             id={link.slug}
             value={shared_link_dest(@site, link)}
             class="focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50 dark:bg-gray-850 dark:text-gray-300 block rounded-md border-gray-300 dark:border-gray-500"
           />
         </.td>
-        <.td>
-          <.styled_link href={Routes.site_path(@conn, :edit_shared_link, @site.domain, link.slug)}>
-            Edit
-          </.styled_link>
-        </.td>
-        <.td>
-          <.unstyled_link
-            href={Routes.site_path(@conn, :delete_shared_link, @site.domain, link.slug)}
-            class="text-red-600 hover:text-red-900"
+        <.td actions={true}>
+          <.edit_button href={Routes.site_path(@conn, :edit_shared_link, @site.domain, link.slug)} />
+          <.delete_button
             method="delete"
+            href={Routes.site_path(@conn, :delete_shared_link, @site.domain, link.slug)}
             data-confirm="Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."
-          >
-            Remove
-          </.unstyled_link>
+          />
         </.td>
       </:tbody>
     </.table>
@@ -76,117 +67,69 @@
       New Link
     </.button_link>
   </.tile>
-</.settings_tiles>
 
-<div class="px-4 py-6 bg-white shadow dark:bg-gray-800 sm:rounded-md sm:overflow-hidden sm:p-6">
-  <header class="relative">
-    <h2 class="text-lg font-medium text-gray-900 leading-6 dark:text-gray-100">
+  <.tile docs="embed-dashboard">
+    <:title>
       Embed Dashboard
-    </h2>
-    <p class="mt-1 text-sm text-gray-500 leading-5 dark:text-gray-200">
+    </:title>
+    <:subtitle>
       You can use shared links to embed your stats in any other webpage using an <code>iframe</code>. Copy & paste a shared link into the form below to generate the embed code.
-    </p>
+    </:subtitle>
 
-    <PlausibleWeb.Components.Generic.docs_info slug="embed-dashboard" />
-  </header>
+    <PlausibleWeb.Live.Components.Form.input
+      name="embed-link"
+      id="embed-link"
+      label="Enter Shared Link (only public shared links without password can be embedded)"
+      value=""
+    />
 
-  <div class="max-w-xl mt-4">
-    <div>
-      <label for="embed-link" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Enter Shared Link
-      </label>
-      <p class="mt-1 text-xs text-gray-500 dark:text-gray-200">
-        Only public shared links without password protection can be embedded
-      </p>
-      <div class="mt-1">
-        <input
-          type="text"
-          name="embed-link"
-          id="embed-link"
-          onclick="this.select()"
-          class="block w-full border-gray-300 dark:border-gray-700 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-900 dark:text-gray-300"
-        />
-      </div>
-    </div>
+    <%= label(nil, :theme, "Select Theme",
+      class: "mt-4 mb-2 block font-medium dark:text-gray-100"
+    ) %>
+    <%= select(nil, :theme, ["Light", "Dark", "System"],
+      class:
+        "dark:bg-gray-900 mt-1 block w-full pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100 cursor-pointer",
+      id: "theme"
+    ) %>
 
-    <div class="mt-4">
-      <label for="theme" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Select Theme
-      </label>
-      <select
-        id="theme"
-        name="theme"
-        class="block w-full py-2 pl-3 pr-10 mt-1 text-base border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300"
+    <PlausibleWeb.Live.Components.Form.input
+      name="background"
+      id="background"
+      label="Custom Background Colour (optional). Try using `transparent` background to blend the dashboard with your site."
+      value=""
+      placeholder="e.g. #F9FAFB"
+    />
+
+    <PlausibleWeb.Live.Components.Form.input
+      name="base-url"
+      type="hidden"
+      id="base-url"
+      value={plausible_url()}
+    />
+    <PlausibleWeb.Components.Generic.button id="generate-embed" class="mt-4">
+      Generate Embed Code
+    </PlausibleWeb.Components.Generic.button>
+
+    <%= label(nil, "embed-code", "Embed Code",
+      class: "mt-8 mb-2 block font-medium dark:text-gray-100"
+    ) %>
+
+    <div class="relative mt-1">
+      <textarea
+        id="embed-code"
+        name="embed-code"
+        rows="6"
+        readonly="readonly"
+        onclick="this.select()"
+        class="block w-full border-gray-300 dark:border-gray-700 resize-none shadow-sm focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:bg-gray-900 dark:text-gray-300"
+      ></textarea>
+      <a
+        onclick="var textarea = document.getElementById('embed-code'); textarea.focus(); textarea.select(); document.execCommand('copy');"
+        href="javascript:void(0)"
+        class="text-sm text-indigo-500 no-underline hover:underline"
       >
-        <option selected>Light</option>
-        <option>Dark</option>
-        <option>System</option>
-      </select>
+        <Heroicons.document_duplicate class="h-5 w-5 absolute text-indigo-700 top-3 right-3" />
+      </a>
     </div>
-
-    <div class="mt-4">
-      <label for="background" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Custom Background Colour (optional)
-      </label>
-      <p class="mt-1 text-xs text-gray-500 dark:text-gray-200">
-        Hint: try using `transparent` background to blend the dashboard with your site background
-      </p>
-      <div class="mt-1">
-        <input
-          type="text"
-          name="background"
-          id="background"
-          class="block w-full border-gray-300 dark:border-gray-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300"
-          placeholder="#F9FAFB"
-        />
-      </div>
-    </div>
-  </div>
-
-  <input type="hidden" id="base-url" value={plausible_url()} />
-  <PlausibleWeb.Components.Generic.button id="generate-embed" class="mt-4">
-    Generate Embed Code 👇
-  </PlausibleWeb.Components.Generic.button>
-
-  <div class="mt-2">
-    <div class="max-w-xl">
-      <label for="embed-code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Embed Code
-      </label>
-
-      <div class="relative mt-1">
-        <textarea
-          id="embed-code"
-          name="embed-code"
-          rows="3"
-          readonly="readonly"
-          onclick="this.select()"
-          class="block w-full max-w-xl border-gray-300 dark:border-gray-700 resize-none shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300"
-        >
-        </textarea>
-        <a
-          onclick="var textarea = document.getElementById('embed-code'); textarea.focus(); textarea.select(); document.execCommand('copy');"
-          href="javascript:void(0)"
-          class="text-sm text-indigo-500 no-underline hover:underline"
-        >
-          <svg
-            class="absolute text-indigo-800"
-            style="top: 12px; right: 12px;"
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-          </svg>
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
+  </.tile>
+</.settings_tiles>

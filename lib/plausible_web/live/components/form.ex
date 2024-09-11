@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   attr(:class, :any,
     default:
-      "dark:bg-gray-900 w-full block pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100 text-gray-500"
+      "dark:bg-gray-900 w-full block pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
   )
 
   attr(:mt?, :boolean, default: true)
@@ -88,25 +88,26 @@ defmodule PlausibleWeb.Live.Components.Form do
   attr(:id, :string, required: true)
   attr(:class, :string, default: "")
   attr(:name, :string, required: true)
-  attr(:label, :string, required: true)
+  attr(:label, :string, default: nil)
   attr(:value, :string, default: "")
 
   def input_with_clipboard(assigns) do
     ~H"""
-    <div class="my-4">
-      <div>
+    <div>
+      <div :if={@label}>
         <.label for={@id}>
           <%= @label %>
         </.label>
       </div>
-      <div class="relative mt-1">
+      <div class="relative">
         <.input
+          mt?={false}
           id={@id}
           name={@name}
           value={@value}
           type="text"
           readonly="readonly"
-          class={[@class, "pr-20"]}
+          class={[@class, "pr-20 w-full"]}
           {@rest}
         />
         <a
