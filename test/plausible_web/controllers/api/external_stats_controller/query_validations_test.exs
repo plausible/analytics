@@ -258,5 +258,23 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
                  "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code."
              }
     end
+
+    test "handles invalid timezones", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["pageviews"],
+          "timezone" => "invalid"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Invalid time zone `\"invalid\"`. Check IANA time zone database for a list of supported timezones."
+             }
+    end
   end
 end

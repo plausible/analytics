@@ -67,7 +67,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         filters: [],
         dimensions: [],
         order_by: nil,
-        timezone: site.timezone,
+        timezone: Map.get(date_params, "timezone", site.timezone),
         include: %{imports: false, time_labels: false},
         preloaded_goals: []
       }
@@ -871,6 +871,14 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       |> check_error(site, "#/date: Schema does not allow additional properties.")
     end
 
+    test "parses date_range according to passed timezone", %{site: site} do
+      %{"date_range" => "7d", "timezone" => "America/Havana"}
+      |> check_date_range(
+        site,
+        DateTimeRange.new!(~U[2021-04-29 04:00:00Z], ~U[2021-05-06 03:59:59Z])
+      )
+    end
+
     test "parses date_range.first into a datetime right after the gap in site.timezone", %{
       site: site
     } do
@@ -1084,6 +1092,52 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       |> check_error(
         site,
         "Invalid order_by entry '{\"event:name\", :desc}'. Entry is not a queried metric or dimension."
+      )
+    end
+  end
+
+  describe "timezone validation" do
+    for timezone <- [
+          "UTC",
+          "US/Eastern"
+        ] do
+      test "#{timezone} is valid", %{site: site} do
+        %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => ["2024-01-01T00:00:00Z", "2024-01-02T23:59:59Z"],
+          "timezone" => unquote(timezone)
+        }
+        |> check_success(
+          site,
+          %{
+            metrics: [:visitors],
+            utc_time_range:
+              DateTimeRange.new!(
+                DateTime.new!(~D[2024-01-01], ~T[00:00:00], "Etc/UTC"),
+                DateTime.new!(~D[2024-01-02], ~T[23:59:59], "Etc/UTC")
+              ),
+            filters: [],
+            dimensions: [],
+            order_by: nil,
+            timezone: unquote(timezone),
+            include: %{imports: false, time_labels: false},
+            preloaded_goals: []
+          }
+        )
+      end
+    end
+
+    test "invalid timezone", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "timezone" => "foobar"
+      }
+      |> check_error(
+        site,
+        "Invalid time zone `\"foobar\"`. Check IANA time zone database for a list of supported timezones."
       )
     end
   end

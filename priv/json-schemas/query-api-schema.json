@@ -50,6 +50,15 @@
           "type": "boolean"
         }
       }
+    },
+    "timezone": {
+      "type": "string",
+      "description": "Time zone for query results to be reported in. Defaults to site timezone.",
+      "examples": [
+        "Europe/Tallinn",
+        "US/Eastern",
+        "UTC"
+      ]
     }
   },
   "required": ["site_id", "metrics", "date_range"],
