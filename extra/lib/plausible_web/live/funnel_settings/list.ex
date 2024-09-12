@@ -49,12 +49,12 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
       <% else %>
         <p class="mt-12 mb-8 text-center">
           <span :if={String.trim(@filter_text) != ""}>
-            No goals found for this site. Please refine or
+            No funnels found for this site. Please refine or
             <.styled_link phx-click="reset-filter-text" id="reset-filter-hint">
               reset your search.
             </.styled_link>
           </span>
-          <span :if={String.trim(@filter_text) == "" && Enum.empty?(@goals)}>
+          <span :if={String.trim(@filter_text) == "" && Enum.empty?(@funnels)}>
             No funnels configured for this site.
           </span>
         </p>
