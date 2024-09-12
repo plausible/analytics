@@ -34,12 +34,12 @@
 
     <.table :if={@shared_links} rows={@shared_links}>
       <:thead>
-        <.th>Name</.th>
+        <.th hide_on_mobile>Name</.th>
         <.th>Link</.th>
         <.th invisible>Actions</.th>
       </:thead>
       <:tbody :let={link}>
-        <.td truncate={true}>
+        <.td truncate hide_on_mobile>
           <Heroicons.lock_closed :if={link.password_hash} class="w-6 h-6 feather mr-2" />
           <Heroicons.lock_open :if={!link.password_hash} class="w-6 h-6 feather mr-2" />
           <%= link.name %>

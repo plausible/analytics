@@ -28,14 +28,14 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
         <.table rows={@funnels}>
           <:thead>
             <.th>Funnel</.th>
-            <.th>Type</.th>
+            <.th hide_on_mobile>Type</.th>
             <.th invisible>Actions</.th>
           </:thead>
           <:tbody :let={funnel}>
             <.td truncate>
               <%= funnel.name %>
             </.td>
-            <.td>
+            <.td hide_on_mobile>
               <%= funnel.steps_count %>-step funnel
             </.td>
             <.td actions>

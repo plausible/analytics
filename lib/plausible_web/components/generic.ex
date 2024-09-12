@@ -507,13 +507,15 @@ defmodule PlausibleWeb.Components.Generic do
   slot :inner_block, required: true
   attr :truncate, :boolean, default: false
   attr :actions, :boolean, default: nil
+  attr :hide_on_mobile, :boolean, default: nil
 
   def td(assigns) do
     ~H"""
     <td class={[
       "px-6 py-4 whitespace-nowrap",
       @truncate && "truncate max-w-xs",
-      @actions && "flex text-right justify-end"
+      @actions && "flex text-right justify-end",
+      @hide_on_mobile && "hidden md:table-cell"
     ]}>
       <div :if={@actions} class="flex gap-2">
         <%= render_slot(@inner_block) %>
@@ -527,6 +529,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   slot :inner_block, required: true
   attr :invisible, :boolean, default: false
+  attr :hide_on_mobile, :boolean, default: nil
 
   def th(assigns) do
     class =
@@ -539,7 +542,7 @@ defmodule PlausibleWeb.Components.Generic do
     assigns = assign(assigns, class: class)
 
     ~H"""
-    <th scope="col" class={@class} @colspan>
+    <th scope="col" class={[@hide_on_mobile && "hidden md:table-cell", @class]} @colspan>
       <%= render_slot(@inner_block) %>
     </th>
     """

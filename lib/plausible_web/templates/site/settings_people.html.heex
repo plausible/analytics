@@ -180,12 +180,12 @@
     <.table rows={@site.invitations}>
       <:thead>
         <.th>Email</.th>
-        <.th>Role</.th>
+        <.th hide_on_mobile>Role</.th>
         <.th invisible>Actions</.th>
       </:thead>
       <:tbody :let={invitation}>
         <.td><%= invitation.email %></.td>
-        <.td><%= Phoenix.Naming.humanize(invitation.role) %></.td>
+        <.td hide_on_mobile><%= Phoenix.Naming.humanize(invitation.role) %></.td>
         <.td actions>
           <.delete_button
             href={

@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
         <.table rows={@goals}>
           <:thead>
             <.th>Goal</.th>
-            <.th>Type</.th>
+            <.th hide_on_mobile>Type</.th>
             <.th invisible>Actions</.th>
           </:thead>
           <:tbody :let={goal}>
@@ -56,14 +56,10 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                 </div>
               </div>
             </.td>
-            <.td>
-              <div class="hidden md:block">
-                <span :if={goal.page_path}>Pageview</span><span :if={
-                  goal.event_name && !goal.currency
-                }>Custom Event</span><span :if={goal.currency}>Revenue Goal (<%= goal.currency %>)</span><span :if={
-                  not Enum.empty?(goal.funnels)
-                }>, in funnel(s)</span>
-              </div>
+            <.td hide_on_mobile>
+              <span :if={goal.page_path}>Pageview</span><span :if={goal.event_name && !goal.currency}>Custom Event</span><span :if={
+                goal.currency
+              }>Revenue Goal (<%= goal.currency %>)</span><span :if={not Enum.empty?(goal.funnels)}>, in funnel(s)</span>
             </.td>
             <.td actions>
               <.edit_button
