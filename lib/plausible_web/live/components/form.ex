@@ -44,8 +44,9 @@ defmodule PlausibleWeb.Live.Components.Form do
   )
 
   attr(:class, :any,
-    default:
-      "dark:bg-gray-900 w-full block pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+    default: [
+      "dark:bg-gray-900 w-full block pl-3 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+    ]
   )
 
   attr(:mt?, :boolean, default: true)
