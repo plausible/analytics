@@ -4,6 +4,7 @@ on:
   push:
     branches: [master, stable]
   pull_request:
+  merge_group:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

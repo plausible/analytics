@@ -3,7 +3,7 @@ import { Menu, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import classNames from 'classnames';
 import * as storage from '../../util/storage';
-import { isKeyPressed } from '../../keybinding';
+import { isKeyPressed, isModifierPressed, isTyping } from '../../keybinding';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
 
@@ -73,7 +73,7 @@ function storeInterval(period, domain, interval) {
 
 function useIKeybinding(ref) {
   const handleKeyPress = useCallback((event) => {
-    if (isKeyPressed(event, "i")) {
+    if (isKeyPressed(event, { keyboardKey: "i", shouldIgnoreWhen: [isTyping, isModifierPressed] })) {
       ref.current?.click()
     }
   }, [ref])

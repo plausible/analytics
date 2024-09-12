@@ -329,12 +329,30 @@ config :plausible, PlausibleWeb.Endpoint,
 # maybe enable HTTPS in CE
 if config_env() in [:ce, :ce_dev, :ce_test] do
   if https_port do
-    https_opts = [
-      port: https_port,
-      ip: listen_ip,
-      cipher_suite: :compatible,
-      transport_options: [socket_opts: [log_level: :warning]]
-    ]
+    # the following configuration is based on https://wiki.mozilla.org/Security/Server_Side_TLS#Intermediate_compatibility_.28recommended.29
+    # except we enforce the cipher and ecc order and only use ciphers with support
+    # for ecdsa certificates since that's what certbot generates by default
+    https_opts =
+      [
+        port: https_port,
+        ip: listen_ip,
+        transport_options: [socket_opts: [log_level: :warning]],
+        versions: [:"tlsv1.2", :"tlsv1.3"],
+        honor_cipher_order: true,
+        honor_ecc_order: true,
+        eccs: [:x25519, :secp256r1, :secp384r1],
+        supported_groups: [:x25519, :secp256r1, :secp384r1],
+        ciphers: [
+          # Mozilla recommended cipher suites (TLS 1.3)
+          ~c"TLS_AES_128_GCM_SHA256",
+          ~c"TLS_AES_256_GCM_SHA384",
+          ~c"TLS_CHACHA20_POLY1305_SHA256",
+          # Mozilla recommended cipher suites (TLS 1.2)
+          ~c"ECDHE-ECDSA-AES128-GCM-SHA256",
+          ~c"ECDHE-ECDSA-AES256-GCM-SHA384",
+          ~c"ECDHE-ECDSA-CHACHA20-POLY1305"
+        ]
+      ]
 
     https_opts = Config.Reader.merge(default_http_opts, https_opts)
     config :plausible, PlausibleWeb.Endpoint, https: https_opts

@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - Typescript support for `/assets`
 - Testing framework for `/assets`
 - Automatic HTTPS plausible/analytics#4491
+- Make details views on dashboard sortable
 
 ### Removed
 - Deprecate `ECTO_IPV6` and `ECTO_CH_IPV6` env vars in CE plausible/analytics#4245
@@ -39,6 +40,7 @@ All notable changes to this project will be documented in this file.
 - Improve Google error messages in CE plausible/analytics#4485
 - Better compress static assets in CE plausible/analytics#4476
 - Return domain-less cookies in CE plausible/analytics#4482
+- Internal stats API routes now return a JSON error over HTML in case of invalid access.
 
 ### Fixed
 
