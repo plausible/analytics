@@ -39,7 +39,7 @@ All notable changes to this project will be documented in this file.
 - Improve Google error messages in CE plausible/analytics#4485
 - Better compress static assets in CE plausible/analytics#4476
 - Return domain-less cookies in CE plausible/analytics#4482
-- Internal stats API routes now return 401 over 404 in case of invalid access.
+- Internal stats API routes now return a JSON error over HTML in case of invalid access.
 
 ### Fixed
 
