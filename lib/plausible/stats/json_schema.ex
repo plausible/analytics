@@ -8,33 +8,34 @@ defmodule Plausible.Stats.JSONSchema do
 
   @external_resource "priv/json-schemas/query-api-schema.json"
 
-  @raw_public_schema Application.app_dir(:plausible, "priv/json-schemas/query-api-schema.json")
-                     |> File.read!()
-                     |> Jason.decode!()
+  @raw_internal_schema Application.app_dir(:plausible, "priv/json-schemas/query-api-schema.json")
+                       |> File.read!()
+                       |> Jason.decode!()
 
+  @raw_public_schema (with {:ok, s1, _} <-
+                             JSONPointer.remove(
+                               @raw_internal_schema,
+                               "#/definitions/filter_operation_without_goals/enum/0"
+                             ),
+                           {:ok, s2, _} <-
+                             JSONPointer.remove(
+                               s1,
+                               "#/definitions/filter_operation_without_goals/enum/0"
+                             ),
+                           {:ok, s3, _} <-
+                             JSONPointer.remove(s2, "#/definitions/date_range_shorthand/oneOf/0"),
+                           {:ok, s4, _} <-
+                             JSONPointer.remove(s3, "#/definitions/date_range_shorthand/oneOf/0"),
+                           {:ok, s5, _} <- JSONPointer.remove(s4, "#/definitions/metric/oneOf/0"),
+                           {:ok, s6, _} <- JSONPointer.remove(s5, "#/properties/date") do
+                        s6
+                      else
+                        {:error, message} -> raise message
+                        _ -> raise "Something went wrong deriving the public query schema"
+                      end)
+
+  @internal_query_schema ExJsonSchema.Schema.resolve(@raw_internal_schema)
   @public_query_schema ExJsonSchema.Schema.resolve(@raw_public_schema)
-
-  @internal_query_schema @raw_public_schema
-                         # Add overrides for things allowed in the internal API
-                         |> JSONPointer.add!(
-                           "#/definitions/filter_operation_without_goals/enum/0",
-                           "matches_wildcard"
-                         )
-                         |> JSONPointer.add!(
-                           "#/definitions/filter_operation_without_goals/enum/0",
-                           "matches_wildcard_not"
-                         )
-                         |> JSONPointer.add!("#/definitions/metric/oneOf/0", %{
-                           "const" => "time_on_page"
-                         })
-                         |> JSONPointer.add!("#/definitions/date_range/oneOf/0", %{
-                           "const" => "30m"
-                         })
-                         |> JSONPointer.add!("#/definitions/date_range/oneOf/0", %{
-                           "const" => "realtime"
-                         })
-                         |> JSONPointer.add!("#/properties/date", %{"type" => "string"})
-                         |> ExJsonSchema.Schema.resolve()
 
   def validate(schema_type, params) do
     case ExJsonSchema.Validator.validate(schema(schema_type), params) do

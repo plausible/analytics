@@ -6,6 +6,7 @@
  */
 
 export type Metric =
+  | "time_on_page"
   | "visitors"
   | "visits"
   | "pageviews"
@@ -16,6 +17,12 @@ export type Metric =
   | "percentage"
   | "conversion_rate"
   | "group_conversion_rate";
+export type DateRangeShorthand = "30m" | "realtime" | "all" | "day" | "7d" | "30d" | "month" | "6mo" | "12mo" | "year";
+/**
+ * @minItems 2
+ * @maxItems 2
+ */
+export type DateRange = [string | string, string | string];
 export type Dimensions = SimpleFilterDimensions | CustomPropertyFilterDimensions | GoalDimension | TimeDimensions;
 export type SimpleFilterDimensions =
   | "event:name"
@@ -61,7 +68,13 @@ export type FilterWithoutGoals = [
 /**
  * filter operation
  */
-export type FilterOperationWithoutGoals = "is_not" | "contains_not" | "matches" | "matches_not";
+export type FilterOperationWithoutGoals =
+  | "matches_wildcard"
+  | "matches_wildcard_not"
+  | "is_not"
+  | "contains_not"
+  | "matches"
+  | "matches_not";
 export type Clauses = (string | number)[];
 /**
  * @minItems 3
@@ -106,10 +119,11 @@ export interface QueryApiSchema {
    * @minItems 1
    */
   metrics: [Metric, ...Metric[]];
+  date?: string;
   /**
    * Date range to query
    */
-  date_range: "all" | "day" | "7d" | "30d" | "month" | "6mo" | "12mo" | "year" | [string | string, string | string];
+  date_range: DateRangeShorthand | DateRange;
   /**
    * What to group the results by. Same as `property` in Plausible API v1
    */
@@ -125,6 +139,5 @@ export interface QueryApiSchema {
   include?: {
     time_labels?: boolean;
     imports?: boolean;
-    [k: string]: unknown;
   };
 }
