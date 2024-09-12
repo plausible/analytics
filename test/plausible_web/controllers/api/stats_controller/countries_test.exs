@@ -114,7 +114,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
              ]
     end
 
-    test "handles group_conversion_rate sort directive", %{conn: conn, site: site} do
+    test "handles conversion_rate sort directive", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           user_id: 1,
@@ -139,7 +139,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}&order_by=#{Jason.encode!([["group_conversion_rate", "desc"]])}"
+          "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}&order_by=#{Jason.encode!([["conversion_rate", "desc"]])}"
         )
 
       assert json_response(conn, 200)["results"] == [
