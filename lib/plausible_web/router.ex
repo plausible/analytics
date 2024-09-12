@@ -48,6 +48,16 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.Plugs.NoRobots
   end
 
+  pipeline :docs_stats_api do
+    plug :accepts, ["json"]
+    plug :fetch_session
+    plug PlausibleWeb.AuthPlug
+
+    plug PlausibleWeb.AuthorizeSiteAccess, [:admin, :super_admin, :owner]
+
+    plug PlausibleWeb.Plugs.NoRobots
+  end
+
   pipeline :public_api do
     plug :accepts, ["json"]
   end
@@ -191,7 +201,7 @@ defmodule PlausibleWeb.Router do
     get "/query/schema.json", ExternalQueryApiController, :schema
 
     scope [] do
-      pipe_through :internal_stats_api
+      pipe_through :docs_stats_api
 
       post "/query", ExternalQueryApiController, :query
     end
