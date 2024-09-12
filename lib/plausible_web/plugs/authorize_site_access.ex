@@ -66,7 +66,10 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
   defp fail(conn) do
     case get_format(conn) do
       "json" ->
-        PlausibleWeb.Api.Helpers.unauthorized(conn, "User does not have sufficient access.")
+        PlausibleWeb.Api.Helpers.not_found(
+          conn,
+          "Site does not exist or user does not have sufficient access."
+        )
 
       _ ->
         PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt

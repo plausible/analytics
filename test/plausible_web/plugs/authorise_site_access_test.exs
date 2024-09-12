@@ -21,7 +21,7 @@ defmodule PlausibleWeb.AuthorizeSiteAccessTest do
     assert conn.path_params == %{"website" => other_site.domain}
   end
 
-  test "returns 401 for failed API routes", %{conn: conn, user: user} do
+  test "returns 404 with custom error message for failed API routes", %{conn: conn, user: user} do
     site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
 
     conn =
@@ -31,7 +31,9 @@ defmodule PlausibleWeb.AuthorizeSiteAccessTest do
       |> AuthorizeSiteAccess.call([:admin, :owner, :super_admin])
 
     assert conn.halted
-    assert conn.status == 401
-    assert conn.resp_body == "{\"error\":\"User does not have sufficient access.\"}"
+    assert conn.status == 404
+
+    assert conn.resp_body ==
+             "{\"error\":\"Site does not exist or user does not have sufficient access.\"}"
   end
 end
