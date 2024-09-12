@@ -48,6 +48,28 @@
         },
         "imports": {
           "type": "boolean"
+        },
+        "total_rows": {
+          "type": "boolean",
+          "default": false,
+          "description": "If set, returns the total number of result rows rows before pagination under `meta.total_rows`"
+        }
+      }
+    },
+    "pagination": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "Number of rows to limit result to."
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Pagination offset."
         }
       }
     }

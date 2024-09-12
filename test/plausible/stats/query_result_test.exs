@@ -64,6 +64,10 @@ defmodule Plausible.Stats.QueryResultTest do
                ],
                "include": {
                  "imports": true
+               },
+               "pagination": {
+                 "offset": 0,
+                 "limit": 10000
                }
              }
            }\

@@ -26,7 +26,7 @@ defmodule Plausible.Stats.QueryResult do
     struct!(
       __MODULE__,
       results: results_list,
-      meta: meta(query),
+      meta: meta(query, results),
       query:
         Jason.OrderedObject.new(
           site_id: site.domain,
@@ -38,7 +38,8 @@ defmodule Plausible.Stats.QueryResult do
           filters: query.filters,
           dimensions: query.dimensions,
           order_by: query.order_by |> Enum.map(&Tuple.to_list/1),
-          include: query.include |> Map.filter(fn {_key, val} -> val end)
+          include: query.include |> Map.filter(fn {_key, val} -> val end),
+          pagination: query.pagination
         )
     )
   end
@@ -70,7 +71,7 @@ defmodule Plausible.Stats.QueryResult do
 
   @imports_unsupported_interval_warning "Imported stats are not included because the time dimension (i.e. the interval) is too short."
 
-  defp meta(query) do
+  defp meta(query, results) do
     %{
       imports_included: if(query.include.imports, do: query.include_imported, else: nil),
       imports_skip_reason:
@@ -82,11 +83,15 @@ defmodule Plausible.Stats.QueryResult do
           _ -> nil
         end,
       time_labels:
-        if(query.include.time_labels, do: Plausible.Stats.Time.time_labels(query), else: nil)
+        if(query.include.time_labels, do: Plausible.Stats.Time.time_labels(query), else: nil),
+      total_rows: if(query.include.total_rows, do: total_rows(results), else: nil)
     }
     |> Enum.reject(fn {_, value} -> is_nil(value) end)
     |> Enum.into(%{})
   end
+
+  defp total_rows([]), do: 0
+  defp total_rows([first_row | _rest]), do: first_row.total_rows
 
   defp to_iso8601(datetime, timezone) do
     datetime

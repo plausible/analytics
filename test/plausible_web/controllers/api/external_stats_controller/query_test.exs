@@ -3198,15 +3198,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     ])
 
     conn =
-      get(conn, "/api/v1/stats/breakdown", %{
-        "site_id" => site.domain,
-        "period" => "day",
-        "date" => "2021-01-01",
-        "property" => "event:page",
-        "metrics" => "bounce_rate"
-      })
-
-    conn =
       post(conn, "/api/v2/query", %{
         "site_id" => site.domain,
         "date_range" => "all",
@@ -3244,6 +3235,96 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
       assert %{"results" => results2} = json_response(conn2, 200)
       assert results2 == [%{"metrics" => [3], "dimensions" => []}]
+    end
+  end
+
+  describe "pagination" do
+    setup %{site: site} = context do
+      populate_stats(site, [
+        build(:pageview, pathname: "/1"),
+        build(:pageview, pathname: "/2"),
+        build(:pageview, pathname: "/3"),
+        build(:pageview, pathname: "/4"),
+        build(:pageview, pathname: "/5"),
+        build(:pageview, pathname: "/6"),
+        build(:pageview, pathname: "/7"),
+        build(:pageview, pathname: "/8")
+      ])
+
+      context
+    end
+
+    test "pagination above total count - all results are returned", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["pageviews"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"],
+          "order_by" => [["event:page", "asc"]],
+          "include" => %{"total_rows" => true},
+          "pagination" => %{"limit" => 10}
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"dimensions" => ["/1"], "metrics" => [1]},
+               %{"dimensions" => ["/2"], "metrics" => [1]},
+               %{"dimensions" => ["/3"], "metrics" => [1]},
+               %{"dimensions" => ["/4"], "metrics" => [1]},
+               %{"dimensions" => ["/5"], "metrics" => [1]},
+               %{"dimensions" => ["/6"], "metrics" => [1]},
+               %{"dimensions" => ["/7"], "metrics" => [1]},
+               %{"dimensions" => ["/8"], "metrics" => [1]}
+             ]
+
+      assert json_response(conn, 200)["meta"]["total_rows"] == 8
+    end
+
+    test "pagination with offset", %{conn: conn, site: site} do
+      query = %{
+        "site_id" => site.domain,
+        "metrics" => ["pageviews"],
+        "date_range" => "all",
+        "dimensions" => ["event:page"],
+        "order_by" => [["event:page", "asc"]],
+        "include" => %{"total_rows" => true}
+      }
+
+      conn1 = post(conn, "/api/v2/query", Map.put(query, "pagination", %{"limit" => 3}))
+
+      assert json_response(conn1, 200)["results"] == [
+               %{"dimensions" => ["/1"], "metrics" => [1]},
+               %{"dimensions" => ["/2"], "metrics" => [1]},
+               %{"dimensions" => ["/3"], "metrics" => [1]}
+             ]
+
+      assert json_response(conn1, 200)["meta"]["total_rows"] == 8
+
+      conn2 =
+        post(conn, "/api/v2/query", Map.put(query, "pagination", %{"limit" => 3, "offset" => 3}))
+
+      assert json_response(conn2, 200)["results"] == [
+               %{"dimensions" => ["/4"], "metrics" => [1]},
+               %{"dimensions" => ["/5"], "metrics" => [1]},
+               %{"dimensions" => ["/6"], "metrics" => [1]}
+             ]
+
+      assert json_response(conn2, 200)["meta"]["total_rows"] == 8
+
+      conn3 =
+        post(conn, "/api/v2/query", Map.put(query, "pagination", %{"limit" => 3, "offset" => 6}))
+
+      assert json_response(conn3, 200)["results"] == [
+               %{"dimensions" => ["/7"], "metrics" => [1]},
+               %{"dimensions" => ["/8"], "metrics" => [1]}
+             ]
+
+      assert json_response(conn3, 200)["meta"]["total_rows"] == 8
+
+      conn4 =
+        post(conn, "/api/v2/query", Map.put(query, "pagination", %{"limit" => 3, "offset" => 9}))
+
+      assert json_response(conn4, 200)["results"] == []
     end
   end
 end
