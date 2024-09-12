@@ -2,6 +2,7 @@ defmodule PlausibleWeb.UserAuthTest do
   use PlausibleWeb.ConnCase, async: true
 
   import Ecto.Query, only: [from: 2]
+  import Phoenix.ChannelTest
 
   alias Plausible.Auth
   alias Plausible.Repo
@@ -219,6 +220,38 @@ defmodule PlausibleWeb.UserAuthTest do
       assert refreshed_session.id == user_session.id
 
       refute Repo.reload(user_session)
+    end
+  end
+
+  describe "revoke_all_user_sessions/1" do
+    setup [:create_user, :log_in]
+
+    test "deletes and disconnects all user's sessions", %{user: user} do
+      assert [active_session] = Repo.preload(user, :sessions).sessions
+      live_socket_id = "user_sessions:" <> Base.url_encode64(active_session.token)
+      Phoenix.PubSub.subscribe(Plausible.PubSub, live_socket_id)
+
+      another_session =
+        user
+        |> Auth.UserSession.new_session("Some Device")
+        |> Repo.insert!()
+
+      unrelated_session =
+        insert(:user)
+        |> Auth.UserSession.new_session("Some Device")
+        |> Repo.insert!()
+
+      assert :ok = UserAuth.revoke_all_user_sessions(user)
+      assert [] = Repo.preload(user, :sessions).sessions
+      assert_broadcast "disconnect", %{}
+      refute Repo.reload(another_session)
+      assert Repo.reload(unrelated_session)
+    end
+
+    test "executes gracefully when user has no sessions" do
+      user = insert(:user)
+
+      assert :ok = UserAuth.revoke_all_user_sessions(user)
     end
   end
 
