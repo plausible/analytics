@@ -7,6 +7,7 @@ import * as metrics from '../reports/metrics'
 import * as url from '../../util/url';
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
+import { SortDirection } from "../../hooks/use-order-by";
 
 function PagesModal() {
   const { query } = useQueryContext();
@@ -16,7 +17,8 @@ function PagesModal() {
     title: 'Top Pages',
     dimension: 'page',
     endpoint: url.apiPath(site, '/pages'),
-    dimensionLabel: 'Page url'
+    dimensionLabel: 'Page url',
+    defaultOrder: ["visitors", SortDirection.desc]
   }
 
   const getFilterInfo = useCallback((listItem) => {
@@ -34,14 +36,14 @@ function PagesModal() {
     if (hasGoalFilter(query)) {
       return [
         metrics.createTotalVisitors(),
-        metrics.createVisitors({renderLabel: (_query) => 'Conversions'}),
+        metrics.createVisitors({renderLabel: (_query) => 'Conversions', width: 'w-28'}),
         metrics.createConversionRate()
       ]
     }
 
     if (isRealTimeDashboard(query)) {
       return [
-        metrics.createVisitors({renderLabel: (_query) => 'Current visitors'})
+        metrics.createVisitors({renderLabel: (_query) => 'Current visitors', width: 'w-36'})
       ]
     }
     
