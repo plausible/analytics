@@ -48,7 +48,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
 
       <div class="mt-4">
         <div class="grid mb-16">
-          <div class="mt-4 mr-6 sm:ml-4 sm:mt-0 justify-self-end">
+          <div class="mr-6 justify-self-end">
             <PlausibleWeb.Components.Generic.button phx-click="add-token">
               Add Plugin Token
             </PlausibleWeb.Components.Generic.button>
@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
         <.table :if={not Enum.empty?(@displayed_tokens)} rows={@displayed_tokens}>
           <:thead>
             <.th>Description</.th>
-            <.th>Hint</.th>
+            <.th hide_on_mobile>Hint</.th>
             <.th hide_on_mobile>Last used</.th>
             <.th invisible>Actions</.th>
           </:thead>
@@ -66,10 +66,10 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
             <.td>
               <%= token.description %>
             </.td>
-            <.td>
+            <.td hide_on_mobile>
               **********<%= token.hint %>
             </.td>
-            <.td>
+            <.td hide_on_mobile>
               <%= Plausible.Plugins.API.Token.last_used_humanize(token) %>
             </.td>
             <.td actions>
