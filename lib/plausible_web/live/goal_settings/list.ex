@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
     <div>
       <.filter_bar filter_text={@filter_text} placeholder="Search Goals">
         <PlausibleWeb.Components.Generic.button
-          id={@id}
+          id="add-goal-button"
           phx-click="add-goal"
           mt?={false}
           x-data
