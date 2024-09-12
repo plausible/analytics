@@ -20,7 +20,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
     ~H"""
     <div>
       <.filter_bar filter_text={@filter_text} placeholder="Search Goals">
-        <PlausibleWeb.Components.Generic.button
+        <.button
           id="add-goal-button"
           phx-click="add-goal"
           mt?={false}
@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           x-on:click={Modal.JS.preopen("goals-form-modal")}
         >
           Add Goal
-        </PlausibleWeb.Components.Generic.button>
+        </.button>
       </.filter_bar>
 
       <%= if Enum.count(@goals) > 0 do %>

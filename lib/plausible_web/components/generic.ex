@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Components.Generic do
       "border border-gray-300 dark:border-gray-500 text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:border-blue-300 active:text-red-800"
   }
 
-  @button_base_class "inline-flex items-center justify-center gap-x-2 rounded-md px-3.5 py-2.5 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700"
+  @button_base_class "whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 rounded-md px-3.5 py-2.5 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700"
 
   attr(:type, :string, default: "button")
   attr(:theme, :string, default: "primary")
@@ -484,9 +484,14 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
+  attr :rest, :global
+  attr :rows, :list, default: []
+  slot :thead, required: true
+  slot :tbody, required: true
+
   def table(assigns) do
     ~H"""
-    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-400 mb-2">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-400 mb-2" {@rest}>
       <thead>
         <tr>
           <%= render_slot(@thead) %>
@@ -508,15 +513,19 @@ defmodule PlausibleWeb.Components.Generic do
   attr :truncate, :boolean, default: false
   attr :actions, :boolean, default: nil
   attr :hide_on_mobile, :boolean, default: nil
+  attr :rest, :global
 
   def td(assigns) do
     ~H"""
-    <td class={[
-      "px-6 py-4 whitespace-nowrap",
-      @truncate && "truncate max-w-xs",
-      @actions && "flex text-right justify-end",
-      @hide_on_mobile && "hidden md:table-cell"
-    ]}>
+    <td
+      class={[
+        "px-6 py-4 whitespace-nowrap",
+        @truncate && "truncate max-w-xs",
+        @actions && "flex text-right justify-end",
+        @hide_on_mobile && "hidden md:table-cell"
+      ]}
+      {@rest}
+    >
       <div :if={@actions} class="flex gap-2">
         <%= render_slot(@inner_block) %>
       </div>
@@ -630,7 +639,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def filter_bar(assigns) do
     ~H"""
-    <div class="border-t border-gray-200 p-6 sm:flex sm:items-center sm:justify-between">
+    <div class="border-t border-gray-200 p-6 flex items-center justify-between">
       <form id="filter-form" phx-change="filter">
         <div class="text-gray-800 inline-flex items-center">
           <div class="relative rounded-md shadow-sm flex">

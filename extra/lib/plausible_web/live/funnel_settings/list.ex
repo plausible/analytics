@@ -15,13 +15,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
     ~H"""
     <div>
       <.filter_bar filter_text={@filter_text} placeholder="Search Funnels">
-        <PlausibleWeb.Components.Generic.button
-          id="add-funnel-button"
-          phx-click="add-funnel"
-          mt?={false}
-        >
+        <.button id="add-funnel-button" phx-click="add-funnel" mt?={false}>
           Add Funnel
-        </PlausibleWeb.Components.Generic.button>
+        </.button>
       </.filter_bar>
 
       <%= if Enum.count(@funnels) > 0 do %>
