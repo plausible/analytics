@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - Typescript support for `/assets`
 - Testing framework for `/assets`
 - Automatic HTTPS plausible/analytics#4491
+- Make details views on dashboard sortable
 
 ### Removed
 - Deprecate `ECTO_IPV6` and `ECTO_CH_IPV6` env vars in CE plausible/analytics#4245

@@ -114,6 +114,56 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
              ]
     end
 
+    test "handles conversion_rate sort directive", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          country_code: "EE"
+        ),
+        build(:event, user_id: 1, name: "Signup"),
+        build(:pageview,
+          user_id: 2,
+          country_code: "EE"
+        ),
+        build(:pageview,
+          user_id: 3,
+          country_code: "GB"
+        ),
+        build(:event, user_id: 3, name: "Signup")
+      ])
+
+      insert(:goal, site: site, event_name: "Signup")
+
+      filters = Jason.encode!(%{"goal" => "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}&order_by=#{Jason.encode!([["conversion_rate", "desc"]])}"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "code" => "GB",
+                 "alpha_3" => "GBR",
+                 "name" => "United Kingdom",
+                 "flag" => "🇬🇧",
+                 "total_visitors" => 1,
+                 "visitors" => 1,
+                 "conversion_rate" => 100.0
+               },
+               %{
+                 "code" => "EE",
+                 "alpha_3" => "EST",
+                 "name" => "Estonia",
+                 "flag" => "🇪🇪",
+                 "total_visitors" => 2,
+                 "visitors" => 1,
+                 "conversion_rate" => 50.0
+               }
+             ]
+    end
+
     test "returns top countries with :is filter on custom pageview props", %{
       conn: conn,
       site: site

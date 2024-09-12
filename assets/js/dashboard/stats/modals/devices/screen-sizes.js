@@ -6,6 +6,7 @@ import { useQueryContext } from "../../../query-context";
 import { useSiteContext } from "../../../site-context";
 import { screenSizeIconFor } from "../../devices";
 import chooseMetrics from './choose-metrics';
+import { SortDirection } from "../../../hooks/use-order-by";
 
 function ScreenSizesModal() {
   const { query } = useQueryContext();
@@ -15,7 +16,8 @@ function ScreenSizesModal() {
     title: 'Screen Sizes',
     dimension: 'screen',
     endpoint: url.apiPath(site, '/screen-sizes'),
-    dimensionLabel: 'Screen size'
+    dimensionLabel: 'Screen size',
+    defaultOrder: ["visitors", SortDirection.desc]
   }
 
   const getFilterInfo = useCallback((listItem) => {

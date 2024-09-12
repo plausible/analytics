@@ -40,8 +40,7 @@ const WorldMap = ({
   const navigate = useAppNavigate()
   const { mode } = useTheme()
   const site = useSiteContext()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { query } = useQueryContext() as { query: any }
+  const { query } = useQueryContext()
   const svgRef = useRef<SVGSVGElement | null>(null)
   const [tooltip, setTooltip] = useState<{
     x: number

@@ -7,6 +7,7 @@ import { useQueryContext } from "../../../query-context";
 import { useSiteContext } from "../../../site-context";
 import { osIconFor } from "../../devices";
 import chooseMetrics from './choose-metrics';
+import { SortDirection } from "../../../hooks/use-order-by";
 
 function OperatingSystemVersionsModal() {
   const { query } = useQueryContext();
@@ -16,7 +17,8 @@ function OperatingSystemVersionsModal() {
     title: 'Operating System Versions',
     dimension: 'os_version',
     endpoint: url.apiPath(site, '/operating-system-versions'),
-    dimensionLabel: 'Operating system version'
+    dimensionLabel: 'Operating system version',
+    defaultOrder: ["visitors", SortDirection.desc]
   }
 
   const getFilterInfo = useCallback((listItem) => {
