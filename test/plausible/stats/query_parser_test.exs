@@ -68,7 +68,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        include: %{imports: false, time_labels: false},
+        include: %{imports: false, time_labels: false, total_rows: false},
+        pagination: %{limit: 10_000, offset: 0},
         preloaded_goals: []
       }
 
@@ -90,7 +91,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        include: %{imports: false, time_labels: false},
+        include: %{imports: false, time_labels: false, total_rows: false},
+        pagination: %{limit: 10_000, offset: 0},
         preloaded_goals: []
       })
     end
@@ -131,7 +133,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           dimensions: [],
           order_by: nil,
           timezone: site.timezone,
-          include: %{imports: false, time_labels: false},
+          include: %{imports: false, time_labels: false, total_rows: false},
+          pagination: %{limit: 10_000, offset: 0},
           preloaded_goals: []
         },
         :internal
@@ -197,7 +200,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             dimensions: [],
             order_by: nil,
             timezone: site.timezone,
-            include: %{imports: false, time_labels: false},
+            include: %{imports: false, time_labels: false, total_rows: false},
+            pagination: %{limit: 10_000, offset: 0},
             preloaded_goals: []
           },
           :internal
@@ -322,7 +326,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        include: %{imports: false, time_labels: false},
+        include: %{imports: false, time_labels: false, total_rows: false},
+        pagination: %{limit: 10_000, offset: 0},
         preloaded_goals: []
       })
     end
@@ -347,7 +352,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             dimensions: [],
             order_by: nil,
             timezone: site.timezone,
-            include: %{imports: false, time_labels: false},
+            include: %{imports: false, time_labels: false, total_rows: false},
+            pagination: %{limit: 10_000, offset: 0},
             preloaded_goals: []
           })
         end
@@ -373,7 +379,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           dimensions: [],
           order_by: nil,
           timezone: site.timezone,
-          include: %{imports: false, time_labels: false},
+          include: %{imports: false, time_labels: false, total_rows: false},
+          pagination: %{limit: 10_000, offset: 0},
           preloaded_goals: []
         })
       end
@@ -439,7 +446,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        include: %{imports: false, time_labels: false},
+        include: %{imports: false, time_labels: false, total_rows: false},
+        pagination: %{limit: 10_000, offset: 0},
         preloaded_goals: []
       })
 
@@ -458,7 +466,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        include: %{imports: false, time_labels: false},
+        include: %{imports: false, time_labels: false, total_rows: false},
+        pagination: %{limit: 10_000, offset: 0},
         preloaded_goals: []
       })
     end
@@ -518,7 +527,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        include: %{imports: false, time_labels: false},
+        include: %{imports: false, time_labels: false, total_rows: false},
+        pagination: %{limit: 10_000, offset: 0},
         preloaded_goals: []
       })
     end
@@ -565,7 +575,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        include: %{imports: false, time_labels: false},
+        include: %{imports: false, time_labels: false, total_rows: false},
+        pagination: %{limit: 10_000, offset: 0},
         preloaded_goals: []
       })
     end
@@ -591,7 +602,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "metrics" => ["visitors"],
         "date_range" => "all",
         "dimensions" => ["time"],
-        "include" => %{"imports" => true, "time_labels" => true}
+        "include" => %{"imports" => true, "time_labels" => true, "total_rows" => true}
       }
       |> check_success(site, %{
         metrics: [:visitors],
@@ -600,7 +611,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: ["time"],
         order_by: nil,
         timezone: site.timezone,
-        include: %{imports: true, time_labels: true},
+        include: %{imports: true, time_labels: true, total_rows: true},
+        pagination: %{limit: 10_000, offset: 0},
         preloaded_goals: []
       })
     end
@@ -623,6 +635,49 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "include" => %{"time_labels" => true}
       }
       |> check_error(site, "Invalid include.time_labels: requires a time dimension.")
+    end
+  end
+
+  describe "pagination validation" do
+    test "setting pagination values", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["time"],
+        "pagination" => %{"limit" => 100, "offset" => 200}
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        utc_time_range: @date_range_day,
+        filters: [],
+        dimensions: ["time"],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false},
+        pagination: %{limit: 100, offset: 200},
+        preloaded_goals: []
+      })
+    end
+
+    test "out of range limit value", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "pagination" => %{"limit" => 100_000}
+      }
+      |> check_error(site, "#/pagination/limit: Expected the value to be <= 10000")
+    end
+
+    test "out of range offset value", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "pagination" => %{"offset" => -5}
+      }
+      |> check_error(site, "#/pagination/offset: Expected the value to be >= 0")
     end
   end
 
@@ -652,7 +707,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
                dimensions: [],
                order_by: nil,
                timezone: ^expected_timezone,
-               include: %{imports: false, time_labels: false},
+               include: %{imports: false, time_labels: false, total_rows: false},
+               pagination: %{limit: 10_000, offset: 0},
                preloaded_goals: [
                  %Plausible.Goal{page_path: "/thank-you"},
                  %Plausible.Goal{event_name: "Signup"}
@@ -924,7 +980,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           dimensions: ["event:#{unquote(dimension)}"],
           order_by: nil,
           timezone: site.timezone,
-          include: %{imports: false, time_labels: false},
+          include: %{imports: false, time_labels: false, total_rows: false},
+          pagination: %{limit: 10_000, offset: 0},
           preloaded_goals: []
         })
       end
@@ -945,7 +1002,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           dimensions: ["visit:#{unquote(dimension)}"],
           order_by: nil,
           timezone: site.timezone,
-          include: %{imports: false, time_labels: false},
+          include: %{imports: false, time_labels: false, total_rows: false},
+          pagination: %{limit: 10_000, offset: 0},
           preloaded_goals: []
         })
       end
@@ -965,7 +1023,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: ["event:props:foobar"],
         order_by: nil,
         timezone: site.timezone,
-        include: %{imports: false, time_labels: false},
+        include: %{imports: false, time_labels: false, total_rows: false},
+        pagination: %{limit: 10_000, offset: 0},
         preloaded_goals: []
       })
     end
@@ -1026,7 +1085,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: [{:events, :desc}, {:visitors, :asc}],
         timezone: site.timezone,
-        include: %{imports: false, time_labels: false},
+        include: %{imports: false, time_labels: false, total_rows: false},
+        pagination: %{limit: 10_000, offset: 0},
         preloaded_goals: []
       })
     end
@@ -1046,7 +1106,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: ["event:name"],
         order_by: [{"event:name", :desc}],
         timezone: site.timezone,
-        include: %{imports: false, time_labels: false},
+        include: %{imports: false, time_labels: false, total_rows: false},
+        pagination: %{limit: 10_000, offset: 0},
         preloaded_goals: []
       })
     end
@@ -1196,7 +1257,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: ["event:goal"],
         order_by: nil,
         timezone: site.timezone,
-        include: %{imports: false, time_labels: false},
+        include: %{imports: false, time_labels: false, total_rows: false},
+        pagination: %{limit: 10_000, offset: 0},
         preloaded_goals: []
       })
     end
@@ -1279,7 +1341,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: ["visit:device"],
         order_by: nil,
         timezone: site.timezone,
-        include: %{imports: false, time_labels: false},
+        include: %{imports: false, time_labels: false, total_rows: false},
+        pagination: %{limit: 10_000, offset: 0},
         preloaded_goals: []
       })
     end
@@ -1311,7 +1374,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: ["event:page"],
         order_by: nil,
         timezone: site.timezone,
-        include: %{imports: false, time_labels: false},
+        include: %{imports: false, time_labels: false, total_rows: false},
+        pagination: %{limit: 10_000, offset: 0},
         preloaded_goals: []
       })
     end
@@ -1330,7 +1394,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
-        include: %{imports: false, time_labels: false},
+        include: %{imports: false, time_labels: false, total_rows: false},
+        pagination: %{limit: 10_000, offset: 0},
         preloaded_goals: []
       })
     end

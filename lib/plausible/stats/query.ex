@@ -20,9 +20,11 @@ defmodule Plausible.Stats.Query do
             preloaded_goals: [],
             include: %{
               imports: false,
-              time_labels: false
+              time_labels: false,
+              total_rows: false
             },
-            debug_metadata: %{}
+            debug_metadata: %{},
+            pagination: nil
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{Filters, Imported, Legacy}
