@@ -58,6 +58,10 @@ export function get(url, query = {}, ...extraQuery) {
   url = url + serializeQuery(query, extraQuery)
   return fetch(url, { signal: abortController.signal, headers: headers })
     .then(response => {
+      if (response.status === 404) {
+        window.location.reload()
+      }
+
       if (!response.ok) {
         return response.json().then((payload) => {
           throw new ApiError(payload.error, payload)
