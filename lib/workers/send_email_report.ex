@@ -9,9 +9,11 @@ defmodule Plausible.Workers.SendEmailReport do
 
     if site && site.weekly_report do
       %{site: site}
+      |> put_last_week_query()
+      |> put_date_range()
       |> Map.put(:type, :weekly)
       |> Map.put(:name, "Weekly")
-      |> put_last_week_query()
+      |> put(:date, &Calendar.strftime(&1.date_range.last, "%-d %b %Y"))
       |> put_stats()
       |> send_report_for_all(site.weekly_report.recipients)
     else
@@ -25,9 +27,11 @@ defmodule Plausible.Workers.SendEmailReport do
 
     if site && site.monthly_report do
       %{site: site}
-      |> Map.put(:type, :monthly)
       |> put_last_month_query()
-      |> put_monthly_report_name()
+      |> put_date_range()
+      |> Map.put(:type, :monthly)
+      |> put(:name, &Calendar.strftime(&1.date_range.first, "%B"))
+      |> put(:date, &Calendar.strftime(&1.date_range.last, "%-d %b %Y"))
       |> put_stats()
       |> send_report_for_all(site.monthly_report.recipients)
     else
@@ -58,7 +62,7 @@ defmodule Plausible.Workers.SendEmailReport do
 
   defp put_last_month_query(%{site: site} = assigns) do
     last_month =
-      Timex.now(site.timezone)
+      DateTime.now!(site.timezone)
       |> DateTime.shift(month: -1)
       |> Timex.beginning_of_month()
       |> Date.to_iso8601()
@@ -69,18 +73,22 @@ defmodule Plausible.Workers.SendEmailReport do
   end
 
   defp put_last_week_query(%{site: site} = assigns) do
-    today = Timex.now(site.timezone) |> DateTime.to_date()
+    today = DateTime.now!(site.timezone) |> DateTime.to_date()
     date = Date.shift(today, week: -1) |> Timex.end_of_week() |> Date.to_iso8601()
     query = Query.from(site, %{"period" => "7d", "date" => date})
 
     Map.put(assigns, :query, query)
   end
 
-  defp put_monthly_report_name(%{query: query} = assigns) do
-    Map.put(assigns, :name, Calendar.strftime(query.date_range.first, "%B"))
+  defp put_date_range(%{query: query} = assigns) do
+    Map.put(assigns, :date_range, Query.date_range(query))
   end
 
   defp put_stats(%{site: site, query: query} = assigns) do
     Map.put(assigns, :stats, Plausible.Stats.EmailReport.get(site, query))
+  end
+
+  defp put(assigns, key, value_fn) do
+    Map.put(assigns, key, value_fn.(assigns))
   end
 end

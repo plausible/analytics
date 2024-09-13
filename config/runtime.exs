@@ -19,9 +19,11 @@ config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
 log_format =
   get_var_from_path_or_env(config_dir, "LOG_FORMAT", "standard")
 
+default_log_level = if config_env() == :ce, do: "notice", else: "warning"
+
 log_level =
   config_dir
-  |> get_var_from_path_or_env("LOG_LEVEL", "warning")
+  |> get_var_from_path_or_env("LOG_LEVEL", default_log_level)
   |> String.to_existing_atom()
 
 config :logger,
@@ -61,7 +63,11 @@ listen_ip =
   )
 
 # System.get_env does not accept a non string default
-port = get_var_from_path_or_env(config_dir, "PORT") || 8000
+http_port =
+  get_int_from_path_or_env(config_dir, "HTTP_PORT") ||
+    get_int_from_path_or_env(config_dir, "PORT", 8000)
+
+https_port = get_int_from_path_or_env(config_dir, "HTTPS_PORT")
 
 base_url = get_var_from_path_or_env(config_dir, "BASE_URL")
 
@@ -99,8 +105,8 @@ super_admin_user_ids =
   |> Enum.filter(& &1)
 
 env = get_var_from_path_or_env(config_dir, "ENVIRONMENT", "prod")
-mailer_adapter = get_var_from_path_or_env(config_dir, "MAILER_ADAPTER", "Bamboo.SMTPAdapter")
-mailer_email = get_var_from_path_or_env(config_dir, "MAILER_EMAIL", "hello@plausible.local")
+mailer_adapter = get_var_from_path_or_env(config_dir, "MAILER_ADAPTER", "Bamboo.Mua")
+mailer_email = get_var_from_path_or_env(config_dir, "MAILER_EMAIL", "plausible@#{base_url.host}")
 
 mailer_email =
   if mailer_name = get_var_from_path_or_env(config_dir, "MAILER_NAME") do
@@ -308,17 +314,102 @@ config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
   disable_registration: disable_registration
 
+default_http_opts = [
+  transport_options: [max_connections: :infinity],
+  protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
+]
+
 config :plausible, PlausibleWeb.Endpoint,
   url: [scheme: base_url.scheme, host: base_url.host, path: base_url.path, port: base_url.port],
-  http: [
-    port: port,
-    ip: listen_ip,
-    transport_options: [max_connections: :infinity],
-    protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
-  ],
+  http: [port: http_port, ip: listen_ip] ++ default_http_opts,
   secret_key_base: secret_key_base,
   websocket_url: websocket_url,
   secure_cookie: secure_cookie
+
+# maybe enable HTTPS in CE
+if config_env() in [:ce, :ce_dev, :ce_test] do
+  if https_port do
+    # the following configuration is based on https://wiki.mozilla.org/Security/Server_Side_TLS#Intermediate_compatibility_.28recommended.29
+    # except we enforce the cipher and ecc order and only use ciphers with support
+    # for ecdsa certificates since that's what certbot generates by default
+    https_opts =
+      [
+        port: https_port,
+        ip: listen_ip,
+        transport_options: [socket_opts: [log_level: :warning]],
+        versions: [:"tlsv1.2", :"tlsv1.3"],
+        honor_cipher_order: true,
+        honor_ecc_order: true,
+        eccs: [:x25519, :secp256r1, :secp384r1],
+        supported_groups: [:x25519, :secp256r1, :secp384r1],
+        ciphers: [
+          # Mozilla recommended cipher suites (TLS 1.3)
+          ~c"TLS_AES_128_GCM_SHA256",
+          ~c"TLS_AES_256_GCM_SHA384",
+          ~c"TLS_CHACHA20_POLY1305_SHA256",
+          # Mozilla recommended cipher suites (TLS 1.2)
+          ~c"ECDHE-ECDSA-AES128-GCM-SHA256",
+          ~c"ECDHE-ECDSA-AES256-GCM-SHA384",
+          ~c"ECDHE-ECDSA-CHACHA20-POLY1305"
+        ]
+      ]
+
+    https_opts = Config.Reader.merge(default_http_opts, https_opts)
+    config :plausible, PlausibleWeb.Endpoint, https: https_opts
+
+    domain = base_url.host
+
+    # do stricter checking in CE prod
+    if config_env() == :ce do
+      domain_is_ip? =
+        case :inet.parse_address(to_charlist(domain)) do
+          {:ok, _address} -> true
+          _other -> false
+        end
+
+      if domain_is_ip? do
+        raise ArgumentError, "Cannot generate TLS certificates for IP address #{inspect(domain)}"
+      end
+
+      domain_is_local? = domain == "localhost" or not String.contains?(domain, ".")
+
+      if domain_is_local? do
+        raise ArgumentError,
+              "Cannot generate TLS certificates for local domain #{inspect(domain)}"
+      end
+
+      unless http_port == 80 do
+        Logger.warning("""
+        HTTPS is enabled but the HTTP port is not 80. \
+        This will prevent automatic TLS certificate issuance as ACME validates the domain on port 80.\
+        """)
+      end
+    end
+
+    acme_directory_url =
+      get_var_from_path_or_env(
+        config_dir,
+        "ACME_DIRECTORY_URL",
+        "https://acme-v02.api.letsencrypt.org/directory"
+      )
+
+    db_folder = Path.join(data_dir || System.tmp_dir!(), "site_encrypt")
+
+    email =
+      case mailer_email do
+        {_, email} -> email
+        email when is_binary(email) -> email
+      end
+
+    config :plausible, :selfhost,
+      site_encrypt: [
+        domain: domain,
+        email: email,
+        db_folder: db_folder,
+        directory_url: acme_directory_url
+      ]
+  end
+end
 
 db_maybe_ipv6 =
   if get_var_from_path_or_env(config_dir, "ECTO_IPV6") do
@@ -536,6 +627,13 @@ case mailer_adapter do
   "Bamboo.Mua" ->
     config :plausible, Plausible.Mailer, adapter: Bamboo.Mua
 
+    # prevents common problems with Erlang's TLS v1.3
+    middlebox_comp_mode =
+      get_var_from_path_or_env(config_dir, "SMTP_MIDDLEBOX_COMP_MODE", "false")
+
+    middlebox_comp_mode = String.to_existing_atom(middlebox_comp_mode)
+    config :plausible, Plausible.Mailer, ssl: [middlebox_comp_mode: middlebox_comp_mode]
+
     if relay = get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR") do
       port = get_int_from_path_or_env(config_dir, "SMTP_HOST_PORT", 25)
       config :plausible, Plausible.Mailer, relay: relay, port: port
@@ -587,6 +685,8 @@ base_cron = [
   # Every day at 1am
   {"0 1 * * *", Plausible.Workers.CleanInvitations},
   # Every 2 hours
+  {"30 */2 * * *", Plausible.Workers.CleanUserSessions},
+  # Every 2 hours
   {"0 */2 * * *", Plausible.Workers.ExpireDomainChangeTransitions},
   # Daily at midnight
   {"0 0 * * *", Plausible.Workers.LocationsSync}
@@ -617,6 +717,7 @@ base_queues = [
   check_stats_emails: 1,
   site_setup_emails: 1,
   clean_invitations: 1,
+  clean_user_sessions: 1,
   analytics_imports: 1,
   analytics_exports: 1,
   notify_exported_analytics: 1,

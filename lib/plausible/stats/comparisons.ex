@@ -61,18 +61,20 @@ defmodule Plausible.Stats.Comparisons do
   def compare(%Plausible.Site{} = site, %Stats.Query{} = source_query, mode, opts \\ []) do
     opts =
       opts
-      |> Keyword.put_new(:now, Timex.now(site.timezone))
+      |> Keyword.put_new(:now, DateTime.now!(site.timezone))
       |> Keyword.put_new(:match_day_of_week?, false)
 
-    source_date_range = DateTimeRange.to_date_range(source_query.date_range)
+    source_date_range = Query.date_range(source_query)
 
     with :ok <- validate_mode(source_query, mode),
          {:ok, comparison_date_range} <- get_comparison_date_range(source_date_range, mode, opts) do
-      %Date.Range{first: first, last: last} = comparison_date_range
+      new_range =
+        DateTimeRange.new!(comparison_date_range.first, comparison_date_range.last, site.timezone)
+        |> DateTimeRange.to_timezone("Etc/UTC")
 
       comparison_query =
         source_query
-        |> Query.set(date_range: DateTimeRange.new!(first, last, site.timezone))
+        |> Query.set(utc_time_range: new_range)
         |> maybe_include_imported(source_query)
 
       {:ok, comparison_query}

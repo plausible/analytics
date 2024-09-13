@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.Imported.SQL.Builder do
+defmodule Plausible.Stats.Imported.SQL.Expression do
   @moduledoc """
   This module is responsible for generating SQL/Ecto expressions
   for dimensions, filters and metrics used in import table queries
@@ -8,6 +8,8 @@ defmodule Plausible.Stats.Imported.SQL.Builder do
 
   import Plausible.Stats.Util, only: [shortname: 2]
   import Ecto.Query
+
+  alias Plausible.Stats.Query
 
   @no_ref "Direct / None"
   @not_set "(not set)"
@@ -292,8 +294,10 @@ defmodule Plausible.Stats.Imported.SQL.Builder do
   end
 
   defp select_group_fields(q, "time:week", key, query) do
+    date_range = Query.date_range(query)
+
     select_merge_as(q, [i], %{
-      key => weekstart_not_before(i.date, ^DateTime.to_naive(query.date_range.first))
+      key => weekstart_not_before(i.date, ^date_range.first)
     })
   end
 

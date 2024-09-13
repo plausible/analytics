@@ -30,7 +30,12 @@ defmodule Plausible.Stats.SQL.Fragments do
 
   defmacro bounce_rate() do
     quote do
-      fragment("toUInt32(ifNotFinite(round(sum(is_bounce * sign) / sum(sign) * 100), 0))")
+      fragment(
+        # :TRICKY: Before PR #4493, we could have sessions where `sum(is_bounce * sign)`
+        # is negative, leading to an underflow and >100% bounce rate. This works around
+        # that issue.
+        "toUInt32(greatest(ifNotFinite(round(sum(is_bounce * sign) / sum(sign) * 100), 0), 0))"
+      )
     end
   end
 

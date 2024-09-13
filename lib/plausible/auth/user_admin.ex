@@ -99,7 +99,7 @@ defmodule Plausible.Auth.UserAdmin do
         "ended"
 
       %{end_date: %Date{} = end_date} ->
-        days_left = Timex.diff(end_date, Timex.now(), :days)
+        days_left = Timex.diff(end_date, DateTime.utc_now(), :days)
         "#{days_left} days left"
     end
   end

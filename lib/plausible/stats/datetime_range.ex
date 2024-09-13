@@ -45,7 +45,16 @@ defmodule Plausible.Stats.DateTimeRange do
     %__MODULE__{first: first, last: last}
   end
 
-  def to_date_range(%__MODULE__{first: first, last: last}) do
+  def to_timezone(%__MODULE__{first: first, last: last}, timezone) do
+    first = DateTime.shift_zone!(first, timezone)
+    last = DateTime.shift_zone!(last, timezone)
+
+    %__MODULE__{first: first, last: last}
+  end
+
+  def to_date_range(datetime_range, timezone) do
+    %__MODULE__{first: first, last: last} = to_timezone(datetime_range, timezone)
+
     first = DateTime.to_date(first)
     last = DateTime.to_date(last)
 

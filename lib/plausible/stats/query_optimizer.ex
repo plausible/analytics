@@ -4,7 +4,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   """
 
   use Plausible
-  alias Plausible.Stats.{Query, TableDecider, Util, DateTimeRange}
+  alias Plausible.Stats.{DateTimeRange, Filters, Query, TableDecider, Util}
 
   @doc """
     This module manipulates an existing query, updating it according to business logic.
@@ -61,7 +61,7 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp update_group_by_time(
          %Query{
-           date_range: %DateTimeRange{first: first, last: last}
+           utc_time_range: %DateTimeRange{first: first, last: last}
          } = query
        ) do
     dimensions =
@@ -112,6 +112,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   # filter is present for breakdowns, add entry/exit page hostname
   # filters
   defp extend_hostname_filters_to_visit(query) do
+    # Note: Only works since event:hostname is only allowed as a top level filter
     hostname_filters =
       query.filters
       |> Enum.filter(fn [_operation, filter_key | _rest] -> filter_key == "event:hostname" end)
@@ -152,11 +153,9 @@ defmodule Plausible.Stats.QueryOptimizer do
 
     filters =
       if "event:page" in query.dimensions do
-        query.filters
-        |> Enum.map(fn
-          [op, "event:page" | rest] -> [op, "visit:entry_page" | rest]
-          filter -> filter
-        end)
+        Filters.rename_dimensions_used_in_filter(query.filters, %{
+          "event:page" => "visit:entry_page"
+        })
       else
         query.filters
       end

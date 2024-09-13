@@ -250,9 +250,12 @@ defmodule Plausible.Ingestion.Event do
 
   defp put_referrer(%__MODULE__{} = event) do
     ref = parse_referrer(event.request.uri, event.request.referrer)
+    source = get_referrer_source(event.request, ref)
+    channel = Plausible.Ingestion.Acquisition.get_channel(event.request, source)
 
     update_session_attrs(event, %{
-      referrer_source: get_referrer_source(event.request, ref),
+      channel: channel,
+      referrer_source: source,
       referrer: clean_referrer(ref)
     })
   end

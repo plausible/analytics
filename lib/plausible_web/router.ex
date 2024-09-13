@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Router do
     on_ee(do: nil, else: plug(PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"))
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
     plug PlausibleWeb.AuthPlug
-    plug PlausibleWeb.LastSeenPlug
+    plug PlausibleWeb.Plugs.UserSessionTouch
   end
 
   pipeline :shared_link do
@@ -30,6 +30,10 @@ defmodule PlausibleWeb.Router do
     plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
   end
 
+  pipeline :external_api do
+    plug :accepts, ["json"]
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
     plug :fetch_session
@@ -39,7 +43,18 @@ defmodule PlausibleWeb.Router do
   pipeline :internal_stats_api do
     plug :accepts, ["json"]
     plug :fetch_session
+    plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.AuthorizeSiteAccess
+    plug PlausibleWeb.Plugs.NoRobots
+  end
+
+  pipeline :docs_stats_api do
+    plug :accepts, ["json"]
+    plug :fetch_session
+    plug PlausibleWeb.AuthPlug
+
+    plug PlausibleWeb.AuthorizeSiteAccess, [:admin, :super_admin, :owner]
+
     plug PlausibleWeb.Plugs.NoRobots
   end
 
@@ -54,6 +69,7 @@ defmodule PlausibleWeb.Router do
       plug PlausibleWeb.Plugs.NoRobots
       plug :fetch_session
 
+      plug PlausibleWeb.AuthPlug
       plug PlausibleWeb.SuperAdminOnlyPlug
     end
   end
@@ -65,7 +81,11 @@ defmodule PlausibleWeb.Router do
   on_ee do
     use Kaffy.Routes,
       scope: "/crm",
-      pipe_through: [PlausibleWeb.Plugs.NoRobots, PlausibleWeb.SuperAdminOnlyPlug]
+      pipe_through: [
+        PlausibleWeb.Plugs.NoRobots,
+        PlausibleWeb.AuthPlug,
+        PlausibleWeb.SuperAdminOnlyPlug
+      ]
   end
 
   on_ee do
@@ -180,8 +200,8 @@ defmodule PlausibleWeb.Router do
   scope "/api/docs", PlausibleWeb.Api do
     get "/query/schema.json", ExternalQueryApiController, :schema
 
-    scope assigns: %{} do
-      pipe_through :internal_stats_api
+    scope [] do
+      pipe_through :docs_stats_api
 
       post "/query", ExternalQueryApiController, :query
     end
@@ -213,19 +233,24 @@ defmodule PlausibleWeb.Router do
   end
 
   scope "/api", PlausibleWeb do
-    pipe_through :api
+    scope [] do
+      pipe_through :external_api
 
-    post "/event", Api.ExternalController, :event
-    get "/error", Api.ExternalController, :error
-    get "/health", Api.ExternalController, :health
-    get "/system", Api.ExternalController, :info
+      post "/event", Api.ExternalController, :event
+      get "/error", Api.ExternalController, :error
+      get "/health", Api.ExternalController, :health
+      get "/system", Api.ExternalController, :info
+    end
 
-    post "/paddle/webhook", Api.PaddleController, :webhook
-    get "/paddle/currency", Api.PaddleController, :currency
+    scope [] do
+      pipe_through :api
+      post "/paddle/webhook", Api.PaddleController, :webhook
+      get "/paddle/currency", Api.PaddleController, :currency
 
-    put "/:domain/disable-feature", Api.InternalController, :disable_feature
+      put "/:domain/disable-feature", Api.InternalController, :disable_feature
 
-    get "/sites", Api.InternalController, :sites
+      get "/sites", Api.InternalController, :sites
+    end
   end
 
   scope "/", PlausibleWeb do
@@ -388,8 +413,17 @@ defmodule PlausibleWeb.Router do
     scope alias: Live, assigns: %{connect_live_socket: true} do
       pipe_through [:app_layout, PlausibleWeb.RequireAccountPlug]
 
-      live "/:website/installation", Installation, :installation, as: :site
-      live "/:website/verification", Verification, :verification, as: :site
+      scope assigns: %{
+              dogfood_page_path: "/:website/installation"
+            } do
+        live "/:website/installation", Installation, :installation, as: :site
+      end
+
+      scope assigns: %{
+              dogfood_page_path: "/:website/verification"
+            } do
+        live "/:website/verification", Verification, :verification, as: :site
+      end
     end
 
     get "/:website/settings", SiteController, :settings

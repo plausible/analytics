@@ -10,6 +10,9 @@ defmodule Plausible.Application do
     on_ee(do: Plausible.License.ensure_valid_license())
     on_ce(do: :inet_db.set_tcp_module(:happy_tcp))
 
+    # in CE we start the endpoint under site_encrypt for automatic https
+    endpoint = on_ee(do: PlausibleWeb.Endpoint, else: maybe_https_endpoint())
+
     children = [
       Plausible.Cache.Stats,
       Plausible.Repo,
@@ -88,7 +91,7 @@ defmodule Plausible.Application do
         ]
       ),
       {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
-      PlausibleWeb.Endpoint,
+      endpoint,
       {Oban, Application.get_env(:plausible, Oban)},
       Plausible.PromEx
     ]
@@ -251,5 +254,24 @@ defmodule Plausible.Application do
       end)
 
     [{impl_mod, Keyword.fetch!(opts, :adapter_opts)} | warmer_specs]
+  end
+
+  on_ce do
+    defp maybe_https_endpoint do
+      endpoint_config = Application.fetch_env!(:plausible, PlausibleWeb.Endpoint)
+      selfhost_config = Application.fetch_env!(:plausible, :selfhost)
+      site_encrypt_config = Keyword.get(selfhost_config, :site_encrypt)
+
+      if get_in(endpoint_config, [:https, :port]) do
+        PlausibleWeb.Endpoint.force_https()
+      end
+
+      if site_encrypt_config do
+        PlausibleWeb.Endpoint.allow_acme_challenges()
+        {SiteEncrypt.Phoenix.Endpoint, endpoint: PlausibleWeb.Endpoint}
+      else
+        PlausibleWeb.Endpoint
+      end
+    end
   end
 end

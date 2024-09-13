@@ -14,9 +14,9 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
         build(:imported_visitors, visitors: 2)
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/countries?period=day")
+      conn1 = get(conn, "/api/stats/#{site.domain}/countries?period=day")
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn1, 200)["results"] == [
                %{
                  "code" => "EE",
                  "alpha_3" => "EST",
@@ -35,9 +35,9 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                }
              ]
 
-      conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&with_imported=true")
+      conn2 = get(conn, "/api/stats/#{site.domain}/countries?period=day&with_imported=true")
 
-      assert json_response(conn, 200)["results"] == [
+      assert json_response(conn2, 200)["results"] == [
                %{
                  "code" => "EE",
                  "alpha_3" => "EST",
@@ -110,6 +110,56 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                  "total_visitors" => 1,
                  "visitors" => 1,
                  "conversion_rate" => 100.0
+               }
+             ]
+    end
+
+    test "handles conversion_rate sort directive", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          country_code: "EE"
+        ),
+        build(:event, user_id: 1, name: "Signup"),
+        build(:pageview,
+          user_id: 2,
+          country_code: "EE"
+        ),
+        build(:pageview,
+          user_id: 3,
+          country_code: "GB"
+        ),
+        build(:event, user_id: 3, name: "Signup")
+      ])
+
+      insert(:goal, site: site, event_name: "Signup")
+
+      filters = Jason.encode!(%{"goal" => "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}&order_by=#{Jason.encode!([["conversion_rate", "desc"]])}"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "code" => "GB",
+                 "alpha_3" => "GBR",
+                 "name" => "United Kingdom",
+                 "flag" => "🇬🇧",
+                 "total_visitors" => 1,
+                 "visitors" => 1,
+                 "conversion_rate" => 100.0
+               },
+               %{
+                 "code" => "EE",
+                 "alpha_3" => "EST",
+                 "name" => "Estonia",
+                 "flag" => "🇪🇪",
+                 "total_visitors" => 2,
+                 "visitors" => 1,
+                 "conversion_rate" => 50.0
                }
              ]
     end

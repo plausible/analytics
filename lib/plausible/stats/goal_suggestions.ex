@@ -57,13 +57,13 @@ defmodule Plausible.Stats.GoalSuggestions do
       )
       |> maybe_set_limit(limit)
 
+    date_range = Query.date_range(query)
+
     imported_q =
       from(i in "imported_custom_events",
         where: i.site_id == ^site.id,
         where: i.import_id in ^site.complete_import_ids,
-        where:
-          i.date >= ^DateTime.to_naive(query.date_range.first) and
-            i.date <= ^DateTime.to_naive(query.date_range.last),
+        where: i.date >= ^date_range.first and i.date <= ^date_range.last,
         where: i.visitors > 0,
         where: fragment("? ilike ?", i.name, ^matches),
         where: fragment("trim(?)", i.name) != "",

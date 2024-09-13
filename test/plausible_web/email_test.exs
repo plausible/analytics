@@ -275,6 +275,39 @@ defmodule PlausibleWeb.EmailTest do
     end
   end
 
+  describe "site_setup_success" do
+    setup do
+      trial_user =
+        build(:user,
+          id: -1,
+          subscription: nil,
+          trial_expiry_date: Date.add(Date.utc_today(), 100)
+        )
+
+      site = build(:site, members: [trial_user])
+      email = PlausibleWeb.Email.site_setup_success(trial_user, site)
+      {:ok, email: email}
+    end
+
+    @tag :ee_only
+    test "renders 'trial' and 'reply' blocks", %{email: email} do
+      assert email.html_body =~
+               "You're on a 30-day free trial with no obligations so do take your time to explore Plausible."
+
+      assert email.html_body =~
+               "Do reply back to this email if you have any questions. We're here to help."
+    end
+
+    @tag :ce_build_only
+    test "does not render 'trial' and 'reply' blocks", %{email: email} do
+      refute email.html_body =~
+               "You're on a 30-day free trial with no obligations so do take your time to explore Plausible."
+
+      refute email.html_body =~
+               "Do reply back to this email if you have any questions. We're here to help."
+    end
+  end
+
   def plausible_link() do
     plausible_url = PlausibleWeb.EmailView.plausible_url()
     "<a href=\"#{plausible_url}\">#{plausible_url}</a>"

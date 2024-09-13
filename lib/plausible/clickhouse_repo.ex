@@ -1,4 +1,6 @@
 defmodule Plausible.ClickhouseRepo do
+  use Plausible
+
   use Ecto.Repo,
     otp_app: :plausible,
     adapter: Ecto.Adapters.ClickHouse,
@@ -23,9 +25,19 @@ defmodule Plausible.ClickhouseRepo do
 
     max_concurrency = Keyword.get(opts, :max_concurrency, 3)
 
+    task_timeout =
+      on_ee do
+        @task_timeout
+      else
+        # Quadruple the repo timeout to ensure the task doesn't timeout before db_connection does.
+        # This maintains the default ratio (@task_timeout / default_timeout = 60_000 / 15_000 = 4).
+        ch_timeout = Keyword.fetch!(config(), :timeout)
+        max(ch_timeout * 4, @task_timeout)
+      end
+
     Task.async_stream(queries, execute_with_tracing,
       max_concurrency: max_concurrency,
-      timeout: @task_timeout
+      timeout: task_timeout
     )
     |> Enum.to_list()
     |> Keyword.values()

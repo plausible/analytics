@@ -19,7 +19,7 @@ defmodule Plausible.DataMigration.VersionedSessions do
   def run(opts \\ []) do
     run_exchange? = Keyword.get(opts, :run_exchange?, true)
 
-    unique_suffix = Timex.now() |> Calendar.strftime(@suffix_format)
+    unique_suffix = DateTime.utc_now() |> Calendar.strftime(@suffix_format)
 
     cluster? = Plausible.IngestRepo.clustered_table?("sessions_v2")
 

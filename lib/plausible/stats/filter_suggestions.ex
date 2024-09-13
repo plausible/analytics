@@ -8,6 +8,7 @@ defmodule Plausible.Stats.FilterSuggestions do
 
   alias Plausible.Stats.Query
   alias Plausible.Stats.Imported
+  alias Plausible.Stats.Filters
 
   def filter_suggestions(site, query, "country", filter_search) do
     matches = Location.search_country(filter_search)
@@ -187,10 +188,10 @@ defmodule Plausible.Stats.FilterSuggestions do
   def filter_suggestions(site, query, "prop_value", filter_search) do
     filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
 
-    [_op, "event:props:" <> key | _rest] = Query.get_filter_by_prefix(query, "event:props")
+    [_op, "event:props:" <> key | _rest] = Filters.get_toplevel_filter(query, "event:props")
 
     none_q =
-      from(e in base_event_query(site, Query.remove_filters(query, ["event:props"])),
+      from(e in base_event_query(site, Query.remove_top_level_filters(query, ["event:props"])),
         select: "(none)",
         where: not has_key(e, :meta, ^key),
         limit: 1

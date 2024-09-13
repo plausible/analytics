@@ -23,6 +23,8 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
       {event_q, event_query},
       {sessions_q, sessions_query}
     )
+    |> paginate(query.pagination)
+    |> select_total_rows(query.include.total_rows)
   end
 
   defp build_events_query(_site, %Query{metrics: []}), do: nil
@@ -89,7 +91,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
   end
 
   def join_events_if_needed(q, site, query) do
-    if Query.has_event_filters?(query) do
+    if TableDecider.sessions_join_events?(query) do
       events_q =
         from(e in "events_v2",
           where: ^SQL.WhereBuilder.build(:events, site, query),
@@ -182,6 +184,22 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> select_join_fields(events_query, events_query.metrics, e)
     |> select_join_fields(sessions_query, List.delete(sessions_query.metrics, :sample_percent), s)
     |> build_order_by(events_query)
+  end
+
+  # NOTE: Old queries do their own pagination
+  defp paginate(q, nil = _pagination), do: q
+
+  defp paginate(q, pagination) do
+    q
+    |> limit(^pagination.limit)
+    |> offset(^pagination.offset)
+  end
+
+  defp select_total_rows(q, false = _include_total_rows), do: q
+
+  defp select_total_rows(q, true = _include_total_rows) do
+    q
+    |> select_merge([], %{total_rows: fragment("count() over ()")})
   end
 
   def build_group_by_join(%Query{dimensions: []}), do: true

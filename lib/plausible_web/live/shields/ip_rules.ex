@@ -125,7 +125,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
         </p>
         <div
           :if={not Enum.empty?(@ip_rules)}
-          class="mt-8 overflow-hidden border-b border-gray-200 shadow dark:border-gray-900 sm:rounded-lg"
+          class="mt-8 overflow-visible border-b border-gray-200 shadow dark:border-gray-900 sm:rounded-lg"
         >
           <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-900">
             <thead class="bg-gray-50 dark:bg-gray-900">
@@ -158,13 +158,14 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                 <tr class="text-gray-900 dark:text-gray-100">
                   <td class="px-6 py-4 text-xs font-medium">
                     <div class="flex items-center">
-                      <span
-                        id={"inet-#{rule.id}"}
-                        class="font-mono mr-4 cursor-help border-b border-dotted border-gray-400"
-                        title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
-                      >
-                        <%= rule.inet %>
-                      </span>
+                      <.tooltip>
+                        <:tooltip_content>
+                          Added at <%= format_added_at(rule.inserted_at, @site.timezone) %> by <%= rule.added_by %>
+                        </:tooltip_content>
+                        <span id={"inet-#{rule.id}"} class="font-mono mr-4 cursor-help">
+                          <%= rule.inet %>
+                        </span>
+                      </.tooltip>
 
                       <span
                         :if={to_string(rule.inet) == @remote_ip}

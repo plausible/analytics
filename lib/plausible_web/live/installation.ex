@@ -296,7 +296,7 @@ defmodule PlausibleWeb.Live.Installation do
           <%= @label %>
         </label>
         <div class="ml-2">
-          <.tooltip sticky?={false} icon?={false} position="z-50 w-64 hidden sm:block">
+          <.tooltip sticky?={false}>
             <:tooltip_content>
               <%= @tooltip %>
               <br /><br />Click to learn more.
@@ -400,8 +400,15 @@ defmodule PlausibleWeb.Live.Installation do
 
     flash = snippet_change_flash(socket.assigns.script_config, new_params)
 
+    socket =
+      if flash do
+        put_live_flash(socket, :success, flash)
+      else
+        socket
+      end
+
     socket = update_uri_params(socket, new_params)
-    {:noreply, put_live_flash(socket, :success, flash)}
+    {:noreply, socket}
   end
 
   def handle_params(params, _uri, socket) do
@@ -518,13 +525,14 @@ defmodule PlausibleWeb.Live.Installation do
 
   defp snippet_change_flash(old_config, new_config) do
     change =
-      Enum.find(new_config, fn {key, value} ->
-        if old_config[key] != new_config[key] do
-          {key, value}
-        end
+      Enum.find(new_config, fn {key, _value} ->
+        old_config[key] != new_config[key]
       end)
 
     case change do
+      nil ->
+        nil
+
       {k, false} when k in ["outbound-links", "file-downloads", "404"] ->
         "Snippet updated and goal deleted. Please insert the newest snippet into your site"
 

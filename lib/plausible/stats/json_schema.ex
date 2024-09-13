@@ -17,12 +17,12 @@ defmodule Plausible.Stats.JSONSchema do
   @internal_query_schema @raw_public_schema
                          # Add overrides for things allowed in the internal API
                          |> JSONPointer.add!(
-                           "#/definitions/filter_entry/oneOf/0/items/0/enum/0",
-                           "matches"
+                           "#/definitions/filter_operation_without_goals/enum/0",
+                           "matches_wildcard"
                          )
                          |> JSONPointer.add!(
-                           "#/definitions/filter_entry/oneOf/0/items/0/enum/0",
-                           "does_not_match"
+                           "#/definitions/filter_operation_without_goals/enum/0",
+                           "matches_wildcard_not"
                          )
                          |> JSONPointer.add!("#/definitions/metric/oneOf/0", %{
                            "const" => "time_on_page"

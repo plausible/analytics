@@ -16,15 +16,17 @@ defmodule PlausibleWeb.AuthPlug do
   end
 
   def call(conn, _opts) do
-    with {:ok, user_session} <- UserAuth.get_user_session(conn),
-         {:ok, user} <- UserAuth.get_user(user_session) do
-      Plausible.OpenTelemetry.add_user_attributes(user)
-      Sentry.Context.set_user_context(%{id: user.id, name: user.name, email: user.email})
+    case UserAuth.get_user_session(conn) do
+      {:ok, user_session} ->
+        user = user_session.user
 
-      conn
-      |> assign(:current_user, user)
-      |> assign(:current_user_session, user_session)
-    else
+        Plausible.OpenTelemetry.add_user_attributes(user)
+        Sentry.Context.set_user_context(%{id: user.id, name: user.name, email: user.email})
+
+        conn
+        |> assign(:current_user, user)
+        |> assign(:current_user_session, user_session)
+
       _ ->
         conn
     end

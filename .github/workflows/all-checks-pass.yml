@@ -2,6 +2,7 @@ name: All checks pass
 
 on:
   pull_request:
+  merge_group:
 
 jobs:
   enforce-all-checks:
