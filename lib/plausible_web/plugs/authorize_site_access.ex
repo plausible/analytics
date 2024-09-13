@@ -3,12 +3,24 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   Plug restricting access to site and shared link, when present.
   """
 
-  import Plug.Conn
-  import Phoenix.Controller, only: [get_format: 1]
   use Plausible.Repo
 
-  def init([]), do: [:public, :viewer, :admin, :super_admin, :owner]
-  def init(allowed_roles), do: allowed_roles
+  import Plug.Conn
+  import Phoenix.Controller, only: [get_format: 1]
+
+  @all_roles [:public, :viewer, :admin, :super_admin, :owner]
+
+  def init([]), do: @all_roles
+
+  def init(allowed_roles) do
+    unknown_roles = allowed_roles -- @all_roles
+
+    if unknown_roles != [] do
+      raise ArgumentError, "Unknown allowed roles configured: #{inspect(unknown_roles)}"
+    end
+
+    allowed_roles
+  end
 
   def call(conn, allowed_roles) do
     current_user = conn.assigns[:current_user]
@@ -54,7 +66,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   end
 
   defp get_site(conn) do
-    domain = conn.path_params["domain"] || conn.path_params["website"] || conn.params["site_id"]
+    domain = conn.path_params["domain"] || conn.path_params["website"]
 
     if site = Repo.get_by(Plausible.Site, domain: domain) do
       {:ok, site}
@@ -64,7 +76,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   end
 
   defp maybe_get_shared_link(conn, site) do
-    slug = conn.params["slug"] || conn.params["auth"]
+    slug = conn.path_params["slug"] || conn.params["auth"]
     site_id = site.id
 
     if is_binary(slug) do
