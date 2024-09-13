@@ -6,7 +6,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
   @default_include %{
     imports: false,
     time_labels: false,
-    total_rows: false
+    total_rows: false,
+    comparisons: nil
   }
 
   @default_pagination %{

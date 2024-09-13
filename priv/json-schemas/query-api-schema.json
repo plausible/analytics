@@ -53,6 +53,30 @@
           "type": "boolean",
           "default": false,
           "description": "If set, returns the total number of result rows rows before pagination under `meta.total_rows`"
+        },
+        "comparisons": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": ["previous_period", "year_over_year", "custom"]
+            },
+            "date_range": {
+              "$ref": "#/definitions/date_time_array",
+              "description": "Date range to query for comparisons"
+            }
+          },
+          "required": ["mode"],
+          "dependencies": {
+            "date_range": {
+              "properties": {
+                "mode": {
+                  "const": "custom"
+                }
+              },
+              "required": ["mode"]
+            }
+          }
         }
       }
     },
@@ -112,31 +136,34 @@
           "description": "Since the start of this year"
         },
         {
-          "type": "array",
-          "additionalItems": false,
-          "minItems": 2,
-          "maxItems": 2,
-          "items": {
-            "oneOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "string",
-                "format": "date-time"
-              }
-            ]
-          },
-          "markdownDescription": "A list of two ISO8601 dates or timestamps to determine the query date range.",
-          "examples": [
-            ["2024-01-01", "2024-01-31"],
-            [
-              "2024-01-01T00:00:00+03:00",
-              "2024-01-02T12:00:00+03:00"
-            ]
-          ]
+          "$ref": "#/definitions/date_time_array"
         }
+      ]
+    },
+    "date_time_array": {
+      "type": "array",
+      "additionalItems": false,
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "type": "string",
+            "format": "date-time"
+          }
+        ]
+      },
+      "markdownDescription": "A list of two ISO8601 dates or timestamps to determine the query date range.",
+      "examples": [
+        ["2024-01-01", "2024-01-31"],
+        [
+          "2024-01-01T00:00:00+03:00",
+          "2024-01-02T12:00:00+03:00"
+        ]
       ]
     },
     "metric": {

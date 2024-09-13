@@ -9,7 +9,7 @@ defmodule Plausible.Stats do
     Timeseries,
     CurrentVisitors,
     FilterSuggestions,
-    QueryOptimizer,
+    QueryExecutor,
     SQL
   }
 
@@ -18,12 +18,7 @@ defmodule Plausible.Stats do
   def query(site, query) do
     include_sentry_replay_info()
 
-    optimized_query = QueryOptimizer.optimize(query)
-
-    optimized_query
-    |> SQL.QueryBuilder.build(site)
-    |> ClickhouseRepo.all(query: query)
-    |> QueryResult.from(site, optimized_query)
+    QueryExecutor.execute(site, query)
   end
 
   def breakdown(site, query, metrics, pagination) do
