@@ -14,6 +14,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
     offset: 0
   }
 
+  def default_include(), do: @default_include
+
   def parse(site, schema_type, params, now \\ nil) when is_map(params) do
     {now, date} =
       if now do
