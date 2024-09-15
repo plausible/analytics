@@ -393,6 +393,72 @@
     </div>
   </div>
 
+  <div
+    id="user-sessions"
+    class="max-w-2xl px-8 pt-6 pb-8 mx-auto mt-16 bg-white border-t-2 border-indigo-100 rounded rounded-t-none shadow-md dark:bg-gray-800 dark:border-indigo-500"
+  >
+    <h2 class="text-xl font-black dark:text-gray-100">Sessions</h2>
+    <div class="my-4 border-b border-gray-300 dark:border-gray-500"></div>
+
+    <div class="flex flex-col mt-6">
+      <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+          <%= if Enum.any?(@user_sessions) do %>
+            <div class="overflow-hidden border-b border-gray-200 shadow dark:border-gray-900 sm:rounded-lg">
+              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-900">
+                <thead class="bg-gray-50 dark:bg-gray-900">
+                  <tr>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-100"
+                    >
+                      Device
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-100"
+                    >
+                      Last seen
+                    </th>
+                    <th scope="col" class="relative px-6 py-3">
+                      <span class="sr-only">Revoke</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <%= for session <- @user_sessions do %>
+                    <tr class="bg-white dark:bg-gray-800">
+                      <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                        <%= session.device %>
+                      </td>
+                      <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-100 whitespace-nowrap">
+                        <%= Plausible.Auth.UserSessions.last_used_humanize(session) %>
+                      </td>
+                      <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
+                        <%= if @current_user_session.id == session.id do %>
+                          <span class="text-gray-500 dark:text-gray-100">
+                            Current
+                          </span>
+                        <% else %>
+                          <%= button("Revoke",
+                            to: "/settings/user-sessions/#{session.id}",
+                            class: "text-red-600 hover:text-red-900",
+                            method: :delete,
+                            "data-confirm": "Are you sure you want to revoke this session?"
+                          ) %>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="max-w-2xl px-8 pt-6 pb-8 mx-auto mt-16 mb-24 bg-white border-t-2 border-red-600 rounded rounded-t-none shadow-md dark:bg-gray-800">
     <div class="flex items-center justify-between">
       <h2 class="text-xl font-black dark:text-gray-100">Delete account</h2>

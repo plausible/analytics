@@ -65,6 +65,16 @@ defmodule PlausibleWeb.UserAuth do
     end
   end
 
+  @spec revoke_user_session(Auth.User.t(), pos_integer()) :: :ok
+  def revoke_user_session(user, session_id) do
+    {_, _} =
+      Repo.delete_all(
+        from us in Auth.UserSession, where: us.user_id == ^user.id and us.id == ^session_id
+      )
+
+    :ok
+  end
+
   @spec revoke_all_user_sessions(Auth.User.t()) :: :ok
   def revoke_all_user_sessions(user) do
     {_count, tokens} =
