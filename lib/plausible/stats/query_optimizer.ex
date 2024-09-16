@@ -61,7 +61,7 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp update_group_by_time(
          %Query{
-           date_range: %DateTimeRange{first: first, last: last}
+           utc_time_range: %DateTimeRange{first: first, last: last}
          } = query
        ) do
     dimensions =

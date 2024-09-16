@@ -20,29 +20,39 @@ import {
  * @return {boolean} Whether the event should be ignored or not.
  *
  */
-export function shouldIgnoreKeypress(event: KeyboardEvent) {
+
+export const isModifierPressed = (event: KeyboardEvent): boolean =>
+  event.ctrlKey || event.metaKey || event.altKey || event.keyCode == 229
+
+export const isTyping = (event: KeyboardEvent): boolean => {
   const targetElement = event.target as Element | undefined
-  const modifierPressed =
-    event.ctrlKey || event.metaKey || event.altKey || event.keyCode == 229
-  const isTyping =
+  return (
     event.isComposing ||
     targetElement?.tagName == 'INPUT' ||
     targetElement?.tagName == 'TEXTAREA'
-
-  return modifierPressed || isTyping
+  )
 }
 
-/**
- * Returns whether the given keybinding has been pressed and should be
- * processed. Events can be ignored based on `shouldIgnoreKeypress(event)`.
- *
- * @param {string} keyboardKey - The target key to checked, e.g. `"i"`.
- * @return {boolean} Whether the event should be processed or not.
- *
- */
-export function isKeyPressed(event: KeyboardEvent, keyboardKey: string) {
-  const keyPressed = event.key.toLowerCase() == keyboardKey.toLowerCase()
-  return keyPressed && !shouldIgnoreKeypress(event)
+export function isKeyPressed(
+  event: KeyboardEvent,
+  {
+    keyboardKey,
+    shouldIgnoreWhen
+  }: {
+    keyboardKey: string
+    shouldIgnoreWhen?: Array<(event: KeyboardEvent) => boolean>
+  }
+): boolean {
+  if (event.key.toLowerCase() !== keyboardKey.toLowerCase()) {
+    return false
+  }
+  if (
+    shouldIgnoreWhen?.length &&
+    shouldIgnoreWhen.some((shouldIgnore) => shouldIgnore(event))
+  ) {
+    return false
+  }
+  return true
 }
 
 type KeyboardEventType = keyof Pick<
@@ -53,19 +63,21 @@ type KeyboardEventType = keyof Pick<
 export function Keybind({
   keyboardKey,
   type,
-  handler
+  handler,
+  shouldIgnoreWhen = []
 }: {
   keyboardKey: string
   type: KeyboardEventType
-  handler: () => void
+  handler: (event: KeyboardEvent) => void
+  shouldIgnoreWhen?: Array<(event: KeyboardEvent) => boolean>
 }) {
   const wrappedHandler = useCallback(
     (event: KeyboardEvent) => {
-      if (isKeyPressed(event, keyboardKey)) {
-        handler()
+      if (isKeyPressed(event, { keyboardKey, shouldIgnoreWhen })) {
+        handler(event)
       }
     },
-    [keyboardKey, handler]
+    [keyboardKey, handler, shouldIgnoreWhen]
   )
 
   useEffect(() => {
@@ -89,7 +101,7 @@ export function NavigateKeybind({
   navigateProps
 }: {
   keyboardKey: string
-  type: 'keyup' | 'keydown' | 'keypress'
+  type: KeyboardEventType
   navigateProps: AppNavigationTarget
 }) {
   const navigate = useAppNavigate()
@@ -97,7 +109,14 @@ export function NavigateKeybind({
     navigate({ ...navigateProps })
   }, [navigateProps, navigate])
 
-  return <Keybind keyboardKey={keyboardKey} type={type} handler={handler} />
+  return (
+    <Keybind
+      keyboardKey={keyboardKey}
+      type={type}
+      handler={handler}
+      shouldIgnoreWhen={[isModifierPressed, isTyping]}
+    />
+  )
 }
 
 export function KeybindHint({ children }: { children: ReactNode }) {

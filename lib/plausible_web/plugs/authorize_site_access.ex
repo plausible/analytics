@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.AuthorizeSiteAccess do
   import Plug.Conn
+  import Phoenix.Controller, only: [get_format: 1]
   use Plausible.Repo
 
   def init([]), do: [:public, :viewer, :admin, :super_admin, :owner]
@@ -18,7 +19,7 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
       shared_link_auth && Repo.get_by(Plausible.Site.SharedLink, slug: shared_link_auth)
 
     if !site do
-      PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt
+      fail(conn)
     else
       user_id =
         case PlausibleWeb.UserAuth.get_user_session(conn) do
@@ -57,8 +58,21 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
 
         merge_assigns(conn, site: site, current_user_role: role)
       else
-        PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt
+        fail(conn)
       end
+    end
+  end
+
+  defp fail(conn) do
+    case get_format(conn) do
+      "json" ->
+        PlausibleWeb.Api.Helpers.not_found(
+          conn,
+          "Site does not exist or user does not have sufficient access."
+        )
+
+      _ ->
+        PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt
     end
   end
 end

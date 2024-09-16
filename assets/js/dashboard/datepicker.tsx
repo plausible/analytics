@@ -9,7 +9,13 @@ import {
 import classNames from 'classnames'
 import { useQueryContext } from './query-context'
 import { useSiteContext } from './site-context'
-import { Keybind, KeybindHint, NavigateKeybind } from './keybinding'
+import {
+  isModifierPressed,
+  isTyping,
+  Keybind,
+  KeybindHint,
+  NavigateKeybind
+} from './keybinding'
 import {
   AppNavigationLink,
   useAppNavigate
@@ -429,6 +435,7 @@ export default function QueryPeriodPicker() {
                       keyboardKey={keyboardKey}
                       type="keydown"
                       handler={onClick || closeMenu}
+                      shouldIgnoreWhen={[isModifierPressed, isTyping]}
                     />
                   ) : (
                     <NavigateKeybind

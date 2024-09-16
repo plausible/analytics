@@ -29,9 +29,7 @@
     },
     "filters": {
       "type": "array",
-      "items": {
-        "$ref": "#/definitions/filter_entry"
-      },
+      "items": { "$ref": "#/definitions/filter_tree" },
       "description": "How to drill into your data"
     },
     "order_by": {
@@ -50,15 +48,33 @@
         },
         "imports": {
           "type": "boolean"
+        },
+        "total_rows": {
+          "type": "boolean",
+          "default": false,
+          "description": "If set, returns the total number of result rows rows before pagination under `meta.total_rows`"
+        }
+      }
+    },
+    "pagination": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "Number of rows to limit result to."
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Pagination offset."
         }
       }
     }
   },
-  "required": [
-    "site_id",
-    "metrics",
-    "date_range"
-  ],
+  "required": ["site_id", "metrics", "date_range"],
   "additionalProperties": false,
   "definitions": {
     "date_range": {
@@ -97,23 +113,29 @@
         },
         {
           "type": "array",
-          "items": {
-            "type": "string",
-            "pattern": "^\\d{4}-\\d{2}-\\d{2}(?:T\\d{2}:\\d{2}:\\d{2}\\s[A-Za-z/_]+)?$"
-          },
-          "markdownDescription": "A list of two elements to determine the query date range. Both elements should have the same format - either `YYYY-MM-DD` or `YYYY-MM-DDThh:mm:ss <timezone>`",
-          "examples": [
-            [
-              "2024-01-01",
-              "2024-01-31"
-            ],
-            [
-              "2024-01-01T00:00:00 Europe/Tallinn",
-              "2024-01-01T12:00:00 Europe/Tallinn"
-            ]
-          ],
+          "additionalItems": false,
           "minItems": 2,
-          "maxItems": 2
+          "maxItems": 2,
+          "items": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              }
+            ]
+          },
+          "markdownDescription": "A list of two ISO8601 dates or timestamps to determine the query date range.",
+          "examples": [
+            ["2024-01-01", "2024-01-31"],
+            [
+              "2024-01-01T00:00:00+03:00",
+              "2024-01-02T12:00:00+03:00"
+            ]
+          ]
         }
       ]
     },
@@ -196,10 +218,7 @@
       "type": "string",
       "pattern": "^event:props:.+",
       "markdownDescription": "Custom property. See [documentation](https://plausible.io/docs/custom-props/introduction) for more information",
-      "examples": [
-        "event:props:url",
-        "event:props:path"
-      ]
+      "examples": ["event:props:url", "event:props:path"]
     },
     "goal_dimension": {
       "const": "event:goal",
@@ -207,28 +226,14 @@
     },
     "time_dimensions": {
       "type": "string",
-      "enum": [
-        "time",
-        "time:month",
-        "time:week",
-        "time:day",
-        "time:hour"
-      ]
+      "enum": ["time", "time:month", "time:week", "time:day", "time:hour"]
     },
     "dimensions": {
       "oneOf": [
-        {
-          "$ref": "#/definitions/simple_filter_dimensions"
-        },
-        {
-          "$ref": "#/definitions/custom_property_filter_dimensions"
-        },
-        {
-          "$ref": "#/definitions/goal_dimension"
-        },
-        {
-          "$ref": "#/definitions/time_dimensions"
-        }
+        { "$ref": "#/definitions/simple_filter_dimensions" },
+        { "$ref": "#/definitions/custom_property_filter_dimensions" },
+        { "$ref": "#/definitions/goal_dimension" },
+        { "$ref": "#/definitions/time_dimensions" }
       ]
     },
     "clauses": {
@@ -237,138 +242,108 @@
         "type": ["string", "integer"]
       }
     },
+    "filter_operation_without_goals": {
+      "type": "string",
+      "enum": ["is_not", "contains_not", "matches", "matches_not"],
+      "description": "filter operation"
+    },
+    "filter_operation_with_goals": {
+      "type": "string",
+      "enum": ["is", "contains"],
+      "description": "filter operation"
+    },
+    "filter_without_goals": {
+      "type": "array",
+      "additionalItems": false,
+      "minItems": 3,
+      "maxItems": 3,
+      "items": [
+        { "$ref": "#/definitions/filter_operation_without_goals" },
+        {
+          "oneOf": [
+            { "$ref": "#/definitions/simple_filter_dimensions" },
+            { "$ref": "#/definitions/custom_property_filter_dimensions" }
+          ]
+        },
+        { "$ref": "#/definitions/clauses" }
+      ]
+    },
+    "filter_with_goals": {
+      "type": "array",
+      "additionalItems": false,
+      "minItems": 3,
+      "maxItems": 3,
+      "items": [
+        {
+          "$ref": "#/definitions/filter_operation_with_goals"
+        },
+        {
+          "oneOf": [
+            { "$ref": "#/definitions/goal_dimension" },
+            { "$ref": "#/definitions/simple_filter_dimensions" },
+            { "$ref": "#/definitions/custom_property_filter_dimensions" }
+          ]
+        },
+        {
+          "$ref": "#/definitions/clauses"
+        }
+      ]
+    },
     "filter_entry": {
       "oneOf": [
-        {
-          "type": "array",
-          "items": [
-            {
-              "oneOf": [
-                {
-                  "type": "string",
-                  "enum": [
-                    "is_not",
-                    "contains_not",
-                    "matches",
-                    "matches_not"
-                  ]
-                },
-                {
-                  "const": "does_not_contain",
-                  "deprecationMessage": "Legacy support, will be removed next week",
-                  "deprecated": true
-                }
-              ],
-              "description": "filter operation"
-            },
-            {
-              "oneOf": [
-                {
-                  "$ref": "#/definitions/simple_filter_dimensions"
-                },
-                {
-                  "$ref": "#/definitions/custom_property_filter_dimensions"
-                }
-              ]
-            },
-            {
-              "$ref": "#/definitions/clauses"
-            }
-          ]
-        },
-        {
-          "type": "array",
-          "items": [
-            {
-              "type": "string",
-              "enum": [
-                "is",
-                "contains"
-              ],
-              "description": "filter operation"
-            },
-            {
-              "oneOf": [
-                {
-                  "$ref": "#/definitions/goal_dimension"
-                },
-                {
-                  "$ref": "#/definitions/simple_filter_dimensions"
-                },
-                {
-                  "$ref": "#/definitions/custom_property_filter_dimensions"
-                }
-              ]
-            },
-            {
-              "$ref": "#/definitions/clauses"
-            }
-          ]
-        },
-        {
-          "$ref": "#/definitions/filter_and_or"
-        },
-        {
-          "$ref": "#/definitions/filter_not"
-        }
+        { "$ref": "#/definitions/filter_without_goals" },
+        { "$ref": "#/definitions/filter_with_goals" }
+      ]
+    },
+    "filter_tree": {
+      "oneOf": [
+        { "$ref": "#/definitions/filter_entry" },
+        { "$ref": "#/definitions/filter_and_or" },
+        { "$ref": "#/definitions/filter_not" }
       ]
     },
     "filter_not": {
       "type": "array",
-      "items": [
-        {
-          "const": "not"
-        },
-        {
-          "$ref": "#/definitions/filter_entry"
-        }
-      ]
+      "additionalItems": false,
+      "minItems": 2,
+      "maxItems": 2,
+      "items": [{ "const": "not" }, { "$ref": "#/definitions/filter_tree" }]
     },
     "filter_and_or": {
       "type": "array",
+      "additionalItems": false,
+      "minItems": 2,
+      "maxItems": 2,
       "items": [
         {
           "type": "string",
-          "enum": [
-            "and",
-            "or"
-          ]
+          "enum": ["and", "or"]
         },
         {
           "type": "array",
-          "items": {
-            "$ref": "#/definitions/filter_entry"
-          },
+          "items": { "$ref": "#/definitions/filter_tree" },
           "minItems": 1
         }
       ]
     },
     "order_by_entry": {
       "type": "array",
+      "additionalItems": false,
+      "minItems": 2,
+      "maxItems": 2,
       "items": [
         {
           "oneOf": [
-            {
-              "$ref": "#/definitions/metric"
-            },
-            {
-              "$ref": "#/definitions/simple_filter_dimensions"
-            },
-            {
-              "$ref": "#/definitions/custom_property_filter_dimensions"
-            },
-            {
-              "$ref": "#/definitions/time_dimensions"
-            }
+            { "$ref": "#/definitions/metric" },
+            { "$ref": "#/definitions/simple_filter_dimensions" },
+            { "$ref": "#/definitions/custom_property_filter_dimensions" },
+            { "$ref": "#/definitions/time_dimensions" }
           ],
           "markdownDescription": "Metric or dimension to order by. Must be listed under `metrics` or `dimensions`"
         },
         {
           "type": "string",
-          "enum": [
-            "asc",
-            "desc"
-          ],
+          "enum": ["asc", "desc"],
           "description": "Sorting order"
         }
       ]

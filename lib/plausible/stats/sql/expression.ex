@@ -12,7 +12,7 @@ defmodule Plausible.Stats.SQL.Expression do
 
   import Ecto.Query
 
-  alias Plausible.Stats.{Filters, SQL}
+  alias Plausible.Stats.{Query, Filters, SQL}
 
   @no_ref "Direct / None"
   @not_set "(not set)"
@@ -46,11 +46,13 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def select_dimension(q, key, "time:week", _table, query) do
+    date_range = Query.date_range(query)
+
     select_merge_as(q, [t], %{
       key =>
         weekstart_not_before(
           to_timezone(t.timestamp, ^query.timezone),
-          ^DateTime.to_naive(query.date_range.first)
+          ^date_range.first
         )
     })
   end
@@ -252,7 +254,10 @@ defmodule Plausible.Stats.SQL.Expression do
     wrap_alias([], %{
       bounce_rate:
         fragment(
-          "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
+          # :TRICKY: Before PR #4493, we could have sessions where `sum(is_bounce * sign)`
+          # is negative, leading to an underflow and >100% bounce rate. This works around
+          # that issue.
+          "toUInt32(greatest(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0), 0))",
           ^condition,
           ^condition
         ),

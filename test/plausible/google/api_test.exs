@@ -3,7 +3,7 @@ defmodule Plausible.Google.APITest do
   use Plausible.Test.Support.HTTPMocker
 
   alias Plausible.Google
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{DateTimeRange, Query}
 
   import ExUnit.CaptureLog
   import Mox
@@ -111,7 +111,8 @@ defmodule Plausible.Google.APITest do
   end
 
   test "returns error when google auth not configured", %{site: site} do
-    query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+    time_range = DateTimeRange.new!(~U[2022-01-01 00:00:00Z], ~U[2022-01-05 23:59:59Z])
+    query = %Plausible.Stats.Query{utc_time_range: time_range}
 
     assert {:error, :google_property_not_configured} = Google.API.fetch_stats(site, query, 5, "")
   end

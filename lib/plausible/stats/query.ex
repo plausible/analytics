@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Query do
   use Plausible
 
-  defstruct date_range: nil,
+  defstruct utc_time_range: nil,
             interval: nil,
             period: nil,
             dimensions: [],
@@ -20,9 +20,11 @@ defmodule Plausible.Stats.Query do
             preloaded_goals: [],
             include: %{
               imports: false,
-              time_labels: false
+              time_labels: false,
+              total_rows: false
             },
-            debug_metadata: %{}
+            debug_metadata: %{},
+            pagination: nil
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{Filters, Imported, Legacy}
@@ -44,8 +46,8 @@ defmodule Plausible.Stats.Query do
   @doc """
   Builds query from old-style params. New code should prefer Query.build
   """
-  def from(site, params, debug_metadata \\ %{}) do
-    Legacy.QueryBuilder.from(site, params, debug_metadata)
+  def from(site, params, debug_metadata \\ %{}, now \\ nil) do
+    Legacy.QueryBuilder.from(site, params, debug_metadata, now)
   end
 
   def put_experimental_reduced_joins(query, site, params) do
@@ -58,6 +60,10 @@ defmodule Plausible.Stats.Query do
         experimental_reduced_joins?: FunWithFlags.enabled?(:experimental_reduced_joins, for: site)
       )
     end
+  end
+
+  def date_range(query) do
+    Plausible.Stats.DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
   end
 
   def set(query, keywords) do
@@ -141,7 +147,7 @@ defmodule Plausible.Stats.Query do
       "time:minute" in query.dimensions or "time:hour" in query.dimensions ->
         {:error, :unsupported_interval}
 
-      Date.after?(query.date_range.first, query.latest_import_end_date) ->
+      Date.after?(date_range(query).first, query.latest_import_end_date) ->
         {:error, :out_of_range}
 
       not Imported.schema_supports_query?(query) ->

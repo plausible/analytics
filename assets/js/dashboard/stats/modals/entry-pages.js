@@ -7,6 +7,7 @@ import * as metrics from '../reports/metrics'
 import * as url from '../../util/url';
 import { useQueryContext } from "../../query-context";
 import { useSiteContext } from "../../site-context";
+import { SortDirection } from "../../hooks/use-order-by";
 
 function EntryPagesModal() {
   const { query } = useQueryContext();
@@ -16,7 +17,8 @@ function EntryPagesModal() {
     title: 'Entry Pages',
     dimension: 'entry_page',
     endpoint: url.apiPath(site, '/entry-pages'),
-    dimensionLabel: 'Entry page'
+    dimensionLabel: 'Entry page',
+    defaultOrder: ["visitors", SortDirection.desc]
   }
 
   const getFilterInfo = useCallback((listItem) => {
@@ -34,20 +36,20 @@ function EntryPagesModal() {
     if (hasGoalFilter(query)) {
       return [
         metrics.createTotalVisitors(),
-        metrics.createVisitors({ renderLabel: (_query) => 'Conversions' }),
+        metrics.createVisitors({ renderLabel: (_query) => 'Conversions', width: 'w-28' }),
         metrics.createConversionRate()
       ]
     }
 
     if (isRealTimeDashboard(query)) {
       return [
-        metrics.createVisitors({ renderLabel: (_query) => 'Current visitors' })
+        metrics.createVisitors({ renderLabel: (_query) => 'Current visitors', width: 'w-36' })
       ]
     }
 
     return [
       metrics.createVisitors({ renderLabel: (_query) => "Visitors" }),
-      metrics.createVisits({ renderLabel: (_query) => "Total Entrances" }),
+      metrics.createVisits({ renderLabel: (_query) => "Total Entrances", width: 'w-36' }),
       metrics.createVisitDuration()
     ]
   }
