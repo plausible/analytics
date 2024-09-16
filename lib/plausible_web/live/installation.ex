@@ -295,7 +295,7 @@ defmodule PlausibleWeb.Live.Installation do
         <label for={"check-#{@variant}"}>
           <%= @label %>
         </label>
-        <div class="ml-2">
+        <div class="ml-2 collapse md:visible">
           <.tooltip sticky?={false}>
             <:tooltip_content>
               <%= @tooltip %>
@@ -305,6 +305,11 @@ defmodule PlausibleWeb.Live.Installation do
               <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
             </a>
           </.tooltip>
+        </div>
+        <div class="ml-2 visible md:invisible">
+          <a href={@learn_more} target="_blank" rel="noopener noreferrer">
+            <Heroicons.information_circle class="text-indigo-700 dark:text-gray-500 w-5 h-5 hover:stroke-2" />
+          </a>
         </div>
       </div>
     </div>
