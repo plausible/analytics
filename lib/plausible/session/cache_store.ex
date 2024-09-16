@@ -52,6 +52,7 @@ defmodule Plausible.Session.CacheStore do
   defp persist_session(session) do
     key = {session.site_id, session.user_id}
     Plausible.Cache.Adapter.put(:sessions, key, session, dirty?: true)
+    session
   end
 
   defp update_session(session, event) do
