@@ -48,8 +48,8 @@ defmodule Plausible.Ingestion.Event do
           changeset: %Ecto.Changeset{}
         }
 
-  @spec build_and_buffer(Request.t()) :: {:ok, %{buffered: [t()], dropped: [t()]}}
-  def build_and_buffer(%Request{domains: domains} = request) do
+  @spec build_and_buffer(Request.t(), Keyword.t()) :: {:ok, %{buffered: [t()], dropped: [t()]}}
+  def build_and_buffer(%Request{domains: domains} = request, context \\ []) do
     processed_events =
       if spam_referrer?(request) do
         for domain <- domains, do: drop(new(domain, request), :spam_referrer)
@@ -60,7 +60,7 @@ defmodule Plausible.Ingestion.Event do
               processed =
                 domain
                 |> new(site, request)
-                |> process_unless_dropped(pipeline())
+                |> process_unless_dropped(pipeline(), context)
 
               [processed | acc]
 
@@ -107,39 +107,39 @@ defmodule Plausible.Ingestion.Event do
 
   defp pipeline() do
     [
-      drop_verification_agent: &drop_verification_agent/1,
-      drop_datacenter_ip: &drop_datacenter_ip/1,
-      drop_shield_rule_hostname: &drop_shield_rule_hostname/1,
-      drop_shield_rule_page: &drop_shield_rule_page/1,
-      drop_shield_rule_ip: &drop_shield_rule_ip/1,
-      put_geolocation: &put_geolocation/1,
-      drop_shield_rule_country: &drop_shield_rule_country/1,
-      put_user_agent: &put_user_agent/1,
-      put_basic_info: &put_basic_info/1,
-      put_referrer: &put_referrer/1,
-      put_utm_tags: &put_utm_tags/1,
-      put_props: &put_props/1,
-      put_revenue: &put_revenue/1,
-      put_salts: &put_salts/1,
-      put_user_id: &put_user_id/1,
-      validate_clickhouse_event: &validate_clickhouse_event/1,
-      register_session: &register_session/1,
-      write_to_buffer: &write_to_buffer/1
+      drop_verification_agent: &drop_verification_agent/2,
+      drop_datacenter_ip: &drop_datacenter_ip/2,
+      drop_shield_rule_hostname: &drop_shield_rule_hostname/2,
+      drop_shield_rule_page: &drop_shield_rule_page/2,
+      drop_shield_rule_ip: &drop_shield_rule_ip/2,
+      put_geolocation: &put_geolocation/2,
+      drop_shield_rule_country: &drop_shield_rule_country/2,
+      put_user_agent: &put_user_agent/2,
+      put_basic_info: &put_basic_info/2,
+      put_referrer: &put_referrer/2,
+      put_utm_tags: &put_utm_tags/2,
+      put_props: &put_props/2,
+      put_revenue: &put_revenue/2,
+      put_salts: &put_salts/2,
+      put_user_id: &put_user_id/2,
+      validate_clickhouse_event: &validate_clickhouse_event/2,
+      register_session: &register_session/2,
+      write_to_buffer: &write_to_buffer/2
     ]
   end
 
-  defp process_unless_dropped(%__MODULE__{} = initial_event, pipeline) do
+  defp process_unless_dropped(%__MODULE__{} = initial_event, pipeline, context) do
     Enum.reduce_while(pipeline, initial_event, fn {step_name, step_fn}, acc_event ->
       Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
         telemetry_pipeline_step_duration(),
-        fn -> execute_step(step_fn, acc_event) end,
+        fn -> execute_step(step_fn, acc_event, context) end,
         %{step: "#{step_name}"}
       )
     end)
   end
 
-  defp execute_step(step_fn, acc_event) do
-    case step_fn.(acc_event) do
+  defp execute_step(step_fn, acc_event, context) do
+    case step_fn.(acc_event, context) do
       %__MODULE__{dropped?: true} = dropped -> {:halt, dropped}
       %__MODULE__{dropped?: false} = event -> {:cont, event}
     end
@@ -171,7 +171,7 @@ defmodule Plausible.Ingestion.Event do
     struct!(event, clickhouse_session_attrs: Map.merge(event.clickhouse_session_attrs, attrs))
   end
 
-  defp drop_verification_agent(%__MODULE__{} = event) do
+  defp drop_verification_agent(%__MODULE__{} = event, _context) do
     case event.request.user_agent do
       @verification_user_agent ->
         drop(event, :verification_agent)
@@ -181,7 +181,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp drop_datacenter_ip(%__MODULE__{} = event) do
+  defp drop_datacenter_ip(%__MODULE__{} = event, _context) do
     case event.request.ip_classification do
       "dc_ip" ->
         drop(event, :dc_ip)
@@ -191,7 +191,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp drop_shield_rule_ip(%__MODULE__{} = event) do
+  defp drop_shield_rule_ip(%__MODULE__{} = event, _context) do
     if Plausible.Shields.ip_blocked?(event.domain, event.request.remote_ip) do
       drop(event, :site_ip_blocklist)
     else
@@ -199,7 +199,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp drop_shield_rule_hostname(%__MODULE__{} = event) do
+  defp drop_shield_rule_hostname(%__MODULE__{} = event, _context) do
     if Plausible.Shields.hostname_allowed?(event.domain, event.request.hostname) do
       event
     else
@@ -207,7 +207,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp drop_shield_rule_page(%__MODULE__{} = event) do
+  defp drop_shield_rule_page(%__MODULE__{} = event, _context) do
     if Plausible.Shields.page_blocked?(event.domain, event.request.pathname) do
       drop(event, :site_page_blocklist)
     else
@@ -215,7 +215,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp put_user_agent(%__MODULE__{} = event) do
+  defp put_user_agent(%__MODULE__{} = event, _context) do
     case parse_user_agent(event.request) do
       %UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}} ->
         drop(event, :bot)
@@ -237,7 +237,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp put_basic_info(%__MODULE__{} = event) do
+  defp put_basic_info(%__MODULE__{} = event, _context) do
     update_event_attrs(event, %{
       domain: event.domain,
       site_id: event.site.id,
@@ -248,7 +248,7 @@ defmodule Plausible.Ingestion.Event do
     })
   end
 
-  defp put_referrer(%__MODULE__{} = event) do
+  defp put_referrer(%__MODULE__{} = event, _context) do
     ref = parse_referrer(event.request.uri, event.request.referrer)
     source = get_referrer_source(event.request, ref)
     channel = Plausible.Ingestion.Acquisition.get_channel(event.request, source)
@@ -260,7 +260,7 @@ defmodule Plausible.Ingestion.Event do
     })
   end
 
-  defp put_utm_tags(%__MODULE__{} = event) do
+  defp put_utm_tags(%__MODULE__{} = event, _context) do
     query_params = event.request.query_params
 
     update_session_attrs(event, %{
@@ -272,7 +272,7 @@ defmodule Plausible.Ingestion.Event do
     })
   end
 
-  defp put_geolocation(%__MODULE__{} = event) do
+  defp put_geolocation(%__MODULE__{} = event, _context) do
     case event.request.ip_classification do
       "anonymous_vpn_ip" ->
         update_session_attrs(event, %{country_code: "A1"})
@@ -284,7 +284,8 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp drop_shield_rule_country(
-         %__MODULE__{domain: domain, clickhouse_session_attrs: %{country_code: cc}} = event
+         %__MODULE__{domain: domain, clickhouse_session_attrs: %{country_code: cc}} = event,
+         _context
        )
        when is_binary(domain) and is_binary(cc) do
     if Plausible.Shields.country_blocked?(domain, cc) do
@@ -294,9 +295,9 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp drop_shield_rule_country(%__MODULE__{} = event), do: event
+  defp drop_shield_rule_country(%__MODULE__{} = event, _context), do: event
 
-  defp put_props(%__MODULE__{request: %{props: %{} = props}} = event) do
+  defp put_props(%__MODULE__{request: %{props: %{} = props}} = event, _context) do
     # defensive: ensuring the keys/values are always in the same order
     {keys, values} = Enum.unzip(props)
 
@@ -306,9 +307,9 @@ defmodule Plausible.Ingestion.Event do
     })
   end
 
-  defp put_props(%__MODULE__{} = event), do: event
+  defp put_props(%__MODULE__{} = event, _context), do: event
 
-  defp put_revenue(event) do
+  defp put_revenue(event, _context) do
     on_ee do
       attrs = Plausible.Ingestion.Event.Revenue.get_revenue_attrs(event)
       update_event_attrs(event, attrs)
@@ -317,11 +318,11 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp put_salts(%__MODULE__{} = event) do
+  defp put_salts(%__MODULE__{} = event, _context) do
     %{event | salts: Plausible.Session.Salts.fetch()}
   end
 
-  defp put_user_id(%__MODULE__{} = event) do
+  defp put_user_id(%__MODULE__{} = event, _context) do
     update_event_attrs(event, %{
       user_id:
         generate_user_id(
@@ -333,7 +334,7 @@ defmodule Plausible.Ingestion.Event do
     })
   end
 
-  defp validate_clickhouse_event(%__MODULE__{} = event) do
+  defp validate_clickhouse_event(%__MODULE__{} = event, _context) do
     clickhouse_event =
       event
       |> Map.fetch!(:clickhouse_event_attrs)
@@ -348,7 +349,10 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp register_session(%__MODULE__{} = event) do
+  defp register_session(%__MODULE__{} = event, context) do
+    write_buffer_insert =
+      Keyword.get(context, :session_write_buffer_insert, &Plausible.Session.WriteBuffer.insert/1)
+
     previous_user_id =
       generate_user_id(
         event.request,
@@ -361,7 +365,8 @@ defmodule Plausible.Ingestion.Event do
       Plausible.Session.CacheStore.on_event(
         event.clickhouse_event,
         event.clickhouse_session_attrs,
-        previous_user_id
+        previous_user_id,
+        write_buffer_insert
       )
 
     case session_result do
@@ -376,7 +381,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event) do
+  defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event, _context) do
     {:ok, _} = Plausible.Event.WriteBuffer.insert(clickhouse_event)
     emit_telemetry_buffered(event)
     event
