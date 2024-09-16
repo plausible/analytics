@@ -357,17 +357,23 @@ defmodule Plausible.Ingestion.Event do
         event.salts.previous
       )
 
-    session =
+    session_result =
       Plausible.Session.CacheStore.on_event(
         event.clickhouse_event,
         event.clickhouse_session_attrs,
         previous_user_id
       )
 
-    %{
-      event
-      | clickhouse_event: ClickhouseEventV2.merge_session(event.clickhouse_event, session)
-    }
+    case session_result do
+      {:ok, session} ->
+        %{
+          event
+          | clickhouse_event: ClickhouseEventV2.merge_session(event.clickhouse_event, session)
+        }
+
+      {:error, :timeout} ->
+        drop(event, :lock_timeout)
+    end
   end
 
   defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event) do
