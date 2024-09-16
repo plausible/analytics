@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-02004BF9.js"></script>
+    <script src="dist/sidebar_items-506BBC99.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -235,7 +235,7 @@ processes are available to use, which is normally done via the child specificati
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#with_lock!/4" translate="no">with_lock!(cache_name, key, timeout, fun)</a>
+        <a href="#with_lock/4" translate="no">with_lock(cache_name, key, timeout, fun)</a>
 
       </div>
 
@@ -504,16 +504,16 @@ processes are available to use, which is normally done via the child specificati
 
   </section>
 </section>
-<section class="detail" id="with_lock!/4">
+<section class="detail" id="with_lock/4">
 
   <div class="detail-header">
-    <a href="#with_lock!/4" class="detail-link" title="Link to this function">
+    <a href="#with_lock/4" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">with_lock!(cache_name, key, timeout, fun)</h1>
+    <h1 class="signature" translate="no">with_lock(cache_name, key, timeout, fun)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L117" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/adapter.ex#L118" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -525,7 +525,8 @@ processes are available to use, which is normally done via the child specificati
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> with_lock!(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(), (-&gt; result)) :: result
+          <pre translate="no"><span class="attribute">@spec</span> with_lock(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(), (-&gt; result)) ::
+  {:ok, result} | {:error, :timeout}
 when result: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
 
       </div>
