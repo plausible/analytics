@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   alias Plausible.Billing.Feature
 
   setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
-  @user_id 123
+  @user_id Enum.random(1000..9999)
 
   describe "feature access" do
     test "cannot filter by a custom prop without access to the props feature", %{

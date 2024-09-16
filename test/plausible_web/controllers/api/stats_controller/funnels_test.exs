@@ -4,8 +4,8 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
   @moduletag :ee_only
 
   on_ee do
-    @user_id 123
-    @other_user_id 456
+    @user_id Enum.random(1000..9999)
+    @other_user_id @user_id + 1
 
     @build_funnel_with [
       {"page_path", "/blog/announcement"},
