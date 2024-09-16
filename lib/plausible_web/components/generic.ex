@@ -488,9 +488,12 @@ defmodule PlausibleWeb.Components.Generic do
 
   def table(assigns) do
     ~H"""
-    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-400 mb-2" {@rest}>
+    <table
+      class="min-w-full divide-y divide-gray-200 dark:divide-gray-400 mb-2 border-b border-gray-200 dark:border-gray-400"
+      {@rest}
+    >
       <thead>
-        <tr>
+        <tr class="border-b border-gray-400 dark:border-gray-200">
           <%= render_slot(@thead) %>
         </tr>
       </thead>
