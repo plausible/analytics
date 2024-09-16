@@ -5,7 +5,13 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   @default_include %{
     imports: false,
-    time_labels: false
+    time_labels: false,
+    total_rows: false
+  }
+
+  @default_pagination %{
+    limit: 10_000,
+    offset: 0
   }
 
   def parse(site, schema_type, params, now \\ nil) when is_map(params) do
@@ -26,6 +32,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          {:ok, include} <- parse_include(Map.get(params, "include", %{})),
+         {:ok, pagination} <- parse_pagination(Map.get(params, "pagination", %{})),
          preloaded_goals <- preload_goals_if_needed(site, filters, dimensions),
          query = %{
            metrics: metrics,
@@ -35,7 +42,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
            order_by: order_by,
            timezone: site.timezone,
            preloaded_goals: preloaded_goals,
-           include: include
+           include: include,
+           pagination: pagination
          },
          :ok <- validate_order_by(query),
          :ok <- validate_custom_props_access(site, query),
@@ -306,18 +314,15 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_order_direction(entry), do: {:error, "Invalid order_by entry '#{i(entry)}'."}
 
   defp parse_include(include) when is_map(include) do
-    with {:ok, parsed_include_list} <- parse_list(include, &parse_include_value/1) do
-      include = Map.merge(@default_include, Enum.into(parsed_include_list, %{}))
-
-      {:ok, include}
-    end
+    {:ok, Map.merge(@default_include, atomize_keys(include))}
   end
 
-  defp parse_include_value({"imports", value}) when is_boolean(value),
-    do: {:ok, {:imports, value}}
+  defp parse_pagination(pagination) when is_map(pagination) do
+    {:ok, Map.merge(@default_pagination, atomize_keys(pagination))}
+  end
 
-  defp parse_include_value({"time_labels", value}) when is_boolean(value),
-    do: {:ok, {:time_labels, value}}
+  defp atomize_keys(map),
+    do: Map.new(map, fn {key, value} -> {String.to_existing_atom(key), value} end)
 
   defp parse_filter_key_string(filter_key, error_message \\ "") do
     case filter_key do

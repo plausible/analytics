@@ -72,7 +72,7 @@ https_port = get_int_from_path_or_env(config_dir, "HTTPS_PORT")
 base_url = get_var_from_path_or_env(config_dir, "BASE_URL")
 
 if !base_url do
-  raise "BASE_URL configuration option is required. See https://github.com/plausible/community-edition/tree/v2.1.0?tab=readme-ov-file#quick-start"
+  raise "BASE_URL configuration option is required. See https://github.com/plausible/community-edition/wiki/configuration#base_url"
 end
 
 base_url = URI.parse(base_url)
@@ -85,10 +85,10 @@ secret_key_base = get_var_from_path_or_env(config_dir, "SECRET_KEY_BASE", nil)
 
 case secret_key_base do
   nil ->
-    raise "SECRET_KEY_BASE configuration option is required. See https://github.com/plausible/community-edition/tree/v2.1.0?tab=readme-ov-file#quick-start"
+    raise "SECRET_KEY_BASE configuration option is required. See https://github.com/plausible/community-edition/wiki/configuration#secret_key_base"
 
   key when byte_size(key) < 32 ->
-    raise "SECRET_KEY_BASE must be at least 32 bytes long. See https://github.com/plausible/community-edition/tree/v2.1.0?tab=readme-ov-file#quick-start"
+    raise "SECRET_KEY_BASE must be at least 32 bytes long. See https://github.com/plausible/community-edition/wiki/configuration#secret_key_base"
 
   _ ->
     nil
@@ -160,14 +160,14 @@ totp_vault_key =
           raise ArgumentError, """
           TOTP_VAULT_KEY must be Base64 encoded 32 bytes, e.g. `openssl rand -base64 32`.
           Got Base64 encoded #{byte_size(totp_vault_key)} bytes.
-          More info: https://github.com/plausible/community-edition/tree/v2.1.1#quick-start
+          More info: https://github.com/plausible/community-edition/wiki/configuration#totp_vault_key
           """
         end
 
       :error ->
         raise ArgumentError, """
         TOTP_VAULT_KEY must be Base64 encoded 32 bytes, e.g. `openssl rand -base64 32`
-        More info: https://github.com/plausible/community-edition/tree/v2.1.1#quick-start
+        More info: https://github.com/plausible/community-edition/wiki/configuration#totp_vault_key
         """
     end
   else
@@ -261,7 +261,7 @@ disable_registration =
   |> String.to_existing_atom()
 
 if disable_registration not in [true, false, :invite_only] do
-  raise "DISABLE_REGISTRATION must be one of `true`, `false`, or `invite_only`. See https://github.com/plausible/community-edition/tree/v2.1.0?tab=readme-ov-file#disable_registration"
+  raise "DISABLE_REGISTRATION must be one of `true`, `false`, or `invite_only`. See https://github.com/plausible/community-edition/wiki/configuration#disable_registration"
 end
 
 hcaptcha_sitekey = get_var_from_path_or_env(config_dir, "HCAPTCHA_SITEKEY")
@@ -329,12 +329,30 @@ config :plausible, PlausibleWeb.Endpoint,
 # maybe enable HTTPS in CE
 if config_env() in [:ce, :ce_dev, :ce_test] do
   if https_port do
-    https_opts = [
-      port: https_port,
-      ip: listen_ip,
-      cipher_suite: :compatible,
-      transport_options: [socket_opts: [log_level: :warning]]
-    ]
+    # the following configuration is based on https://wiki.mozilla.org/Security/Server_Side_TLS#Intermediate_compatibility_.28recommended.29
+    # except we enforce the cipher and ecc order and only use ciphers with support
+    # for ecdsa certificates since that's what certbot generates by default
+    https_opts =
+      [
+        port: https_port,
+        ip: listen_ip,
+        transport_options: [socket_opts: [log_level: :warning]],
+        versions: [:"tlsv1.2", :"tlsv1.3"],
+        honor_cipher_order: true,
+        honor_ecc_order: true,
+        eccs: [:x25519, :secp256r1, :secp384r1],
+        supported_groups: [:x25519, :secp256r1, :secp384r1],
+        ciphers: [
+          # Mozilla recommended cipher suites (TLS 1.3)
+          ~c"TLS_AES_128_GCM_SHA256",
+          ~c"TLS_AES_256_GCM_SHA384",
+          ~c"TLS_CHACHA20_POLY1305_SHA256",
+          # Mozilla recommended cipher suites (TLS 1.2)
+          ~c"ECDHE-ECDSA-AES128-GCM-SHA256",
+          ~c"ECDHE-ECDSA-AES256-GCM-SHA384",
+          ~c"ECDHE-ECDSA-CHACHA20-POLY1305"
+        ]
+      ]
 
     https_opts = Config.Reader.merge(default_http_opts, https_opts)
     config :plausible, PlausibleWeb.Endpoint, https: https_opts

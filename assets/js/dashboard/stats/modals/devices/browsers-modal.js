@@ -7,6 +7,7 @@ import { useQueryContext } from "../../../query-context";
 import { useSiteContext } from "../../../site-context";
 import { browserIconFor } from "../../devices";
 import chooseMetrics from './choose-metrics';
+import { SortDirection } from "../../../hooks/use-order-by";
 
 function BrowsersModal() {
   const { query } = useQueryContext();
@@ -16,7 +17,8 @@ function BrowsersModal() {
     title: 'Browsers',
     dimension: 'browser',
     endpoint: url.apiPath(site, '/browsers'),
-    dimensionLabel: 'Browser'
+    dimensionLabel: 'Browser',
+    defaultOrder: ["visitors", SortDirection.desc]
   }
 
   const getFilterInfo = useCallback((listItem) => {

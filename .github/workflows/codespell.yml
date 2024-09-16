@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches: [ master ]
+  merge_group:
 
 jobs:
   codespell:
