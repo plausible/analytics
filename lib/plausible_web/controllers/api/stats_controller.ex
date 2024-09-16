@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use PlausibleWeb.Plugs.ErrorHandler
 
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, Comparisons, Filters, Time, TableDecider}
+  alias Plausible.Stats.{Query, DateTimeRange, Comparisons, Filters, Time, TableDecider}
   alias Plausible.Stats.Filters.LegacyDashboardFilterParser
   alias PlausibleWeb.Api.Helpers, as: H
 
@@ -109,15 +109,11 @@ defmodule PlausibleWeb.Api.StatsController do
          {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
       {timeseries_result, _meta} = Stats.timeseries(site, query, [metric])
 
-      comparison_opts = parse_comparison_opts(params)
+      comparison_query = comparison_query(site, query, params)
 
       comparison_result =
-        case Comparisons.compare(site, query, params["comparison"], comparison_opts) do
-          {:ok, comparison_query} ->
-            Stats.timeseries(site, comparison_query, [metric]) |> elem(0)
-
-          {:error, :not_supported} ->
-            nil
+        if comparison_query do
+          Stats.timeseries(site, comparison_query, [metric]) |> elem(0)
         end
 
       labels = label_timeseries(timeseries_result, comparison_result)
@@ -208,14 +204,7 @@ defmodule PlausibleWeb.Api.StatsController do
     params = realtime_period_to_30m(params)
 
     query = Query.from(site, params, debug_metadata(conn))
-
-    comparison_opts = parse_comparison_opts(params)
-
-    comparison_query =
-      case Stats.Comparisons.compare(site, query, params["comparison"], comparison_opts) do
-        {:ok, query} -> query
-        {:error, _cause} -> nil
-      end
+    comparison_query = comparison_query(site, query, params)
 
     {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_query)
 
@@ -1530,13 +1519,40 @@ defmodule PlausibleWeb.Api.StatsController do
     |> halt()
   end
 
-  defp parse_comparison_opts(params) do
-    [
-      from: params["compare_from"],
-      to: params["compare_to"],
-      match_day_of_week?: params["match_day_of_week"] == "true"
-    ]
+  def comparison_query(site, query, params) do
+    options = parse_comparison_options(site, params)
+
+    if options do
+      Comparisons.compare(query, options)
+    end
   end
+
+  def parse_comparison_options(_site, %{"period" => period}) when period in ~w(realtime all),
+    do: nil
+
+  def parse_comparison_options(_site, %{"comparison" => mode} = params)
+      when mode in ["previous_period", "year_over_year"] do
+    %{
+      mode: mode,
+      match_day_of_week?: params["match_day_of_week"] == "true"
+    }
+  end
+
+  def parse_comparison_options(site, %{"comparison" => "custom"} = params) do
+    {:ok, date_range} =
+      Filters.QueryParser.parse_date_range_pair(site, [
+        params["compare_from"],
+        params["compare_to"]
+      ])
+
+    %{
+      mode: "custom",
+      date_range: date_range |> DateTimeRange.to_timezone("Etc/UTC"),
+      match_day_of_week?: params["match_day_of_week"] == "true"
+    }
+  end
+
+  def parse_comparison_options(_site, _options), do: nil
 
   defp includes_imported?(source_query, comparison_query) do
     cond do

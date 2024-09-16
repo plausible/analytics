@@ -56,6 +56,12 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
+  def parse_date_range_pair(site, [from, to]) when is_binary(from) and is_binary(to) do
+    date_range_from_date_strings(site, from, to)
+  end
+
+  def parse_date_range_pair(_site, unknown), do: {:error, "Invalid date_range '#{i(unknown)}'."}
+
   defp parse_metrics(metrics) when is_list(metrics) do
     parse_list(metrics, &parse_metric/1)
   end
@@ -228,8 +234,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {:ok, DateTimeRange.new!(start_date, date, site.timezone)}
   end
 
-  defp parse_time_range(site, [from, to], _date, _now)
-       when is_binary(from) and is_binary(to) do
+  defp parse_time_range(site, [from, to], _date, _now) when is_binary(from) and is_binary(to) do
     case date_range_from_date_strings(site, from, to) do
       {:ok, date_range} -> {:ok, date_range}
       {:error, _} -> date_range_from_timestamps(from, to)

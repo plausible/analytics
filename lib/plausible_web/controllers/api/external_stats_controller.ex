@@ -22,11 +22,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- ensure_custom_props_access(site, query) do
       results =
         if params["compare"] == "previous_period" do
-          {:ok, prev_query} = Comparisons.compare(site, query, "previous_period")
+          comparison_query = Comparisons.compare(query, %{mode: "previous_period"})
 
           [prev_result, curr_result] =
             Plausible.ClickhouseRepo.parallel_tasks([
-              fn -> Plausible.Stats.aggregate(site, prev_query, metrics) end,
+              fn -> Plausible.Stats.aggregate(site, comparison_query, metrics) end,
               fn -> Plausible.Stats.aggregate(site, query, metrics) end
             ])
 
