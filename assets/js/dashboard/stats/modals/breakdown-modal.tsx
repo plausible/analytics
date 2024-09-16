@@ -170,7 +170,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
     <BreakdownTable<TListItem>
       title={reportInfo.title}
       {...apiState}
-      onSearch={setSearch}
+      onSearch={searchEnabled ? setSearch : undefined}
       columns={columns}
     />
   )

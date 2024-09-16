@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   use PlausibleWeb.ConnCase
 
-  @user_id 123
+  @user_id Enum.random(1000..9999)
 
   describe "GET /api/stats/main-graph - plot" do
     setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]

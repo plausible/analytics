@@ -1,8 +1,6 @@
 defmodule Plausible.Session.CacheStoreTest do
   use Plausible.DataCase
 
-  import ExUnit.CaptureLog
-
   alias Plausible.Session.CacheStore
 
   setup do
@@ -156,9 +154,7 @@ defmodule Plausible.Session.CacheStoreTest do
         CacheStore.on_event(event3, session_params, nil, buffer)
       end)
 
-    capture_log(fn ->
-      Task.await_many([async1, async2, async3])
-    end) =~ "Timeout while executing with lock on key in ':sessions'"
+    Task.await_many([async1, async2, async3])
 
     assert_receive({:very_slow_buffer, :insert, [[_session]]})
     refute_receive({:buffer, :insert, [[_updated_session]]})
