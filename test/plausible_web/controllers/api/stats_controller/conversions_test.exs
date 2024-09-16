@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   use PlausibleWeb.ConnCase
 
-  @user_id 123
+  @user_id Enum.random(1000..9999)
 
   describe "GET /api/stats/:domain/conversions" do
     setup [:create_user, :log_in, :create_new_site]

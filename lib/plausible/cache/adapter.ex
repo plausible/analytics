@@ -113,11 +113,18 @@ defmodule Plausible.Cache.Adapter do
       []
   end
 
-  @spec with_lock!(atom(), any(), pos_integer(), (-> result)) :: result when result: any()
-  def with_lock!(cache_name, key, timeout, fun) do
-    ConCache.isolated(cache_name, key, timeout, fun)
+  @spec with_lock(atom(), any(), pos_integer(), (-> result)) :: {:ok, result} | {:error, :timeout}
+        when result: any()
+  def with_lock(cache_name, key, timeout, fun) do
+    result = ConCache.isolated(cache_name, key, timeout, fun)
+    {:ok, result}
   catch
     :exit, {:timeout, _} ->
-      Logger.error("Timeout while executing with lock on key in '#{inspect(cache_name)}'")
+      Sentry.capture_message(
+        "Timeout while executing with lock on key in '#{inspect(cache_name)}'",
+        extra: %{key: key}
+      )
+
+      {:error, :timeout}
   end
 end

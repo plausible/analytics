@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   use PlausibleWeb.ConnCase
 
-  @user_id 1231
+  @user_id Enum.random(1000..9999)
 
   setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
 

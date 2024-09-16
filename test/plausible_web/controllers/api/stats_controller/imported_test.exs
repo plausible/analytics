@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
   use PlausibleWeb.ConnCase
   use Timex
 
-  @user_id 123
+  @user_id Enum.random(1000..9999)
 
   defp import_data(ga_data, site_id, import_id, table_name) do
     ga_data
