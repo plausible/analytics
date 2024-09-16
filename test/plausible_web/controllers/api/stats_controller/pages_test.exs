@@ -1825,6 +1825,40 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "returns top exit pages by ascending visits", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/page1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page1",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page2",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01&order_by=#{Jason.encode!([["visits", "asc"]])}"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{"name" => "/page2", "visitors" => 1, "visits" => 1, "exit_rate" => 100},
+               %{"name" => "/page1", "visitors" => 2, "visits" => 2, "exit_rate" => 66}
+             ]
+    end
+
     test "returns top exit pages by visitors filtered by hostname",
          %{conn: conn, site: site} do
       populate_stats(site, [

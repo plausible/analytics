@@ -24,7 +24,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
 
     test "adds time and first metric to order_by if order_by not specified" do
       assert perform(%{
-               date_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-31], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-31], "UTC"),
                metrics: [:pageviews, :visitors],
                dimensions: ["time", "event:page"]
              }).order_by ==
@@ -35,14 +35,14 @@ defmodule Plausible.Stats.QueryOptimizerTest do
   describe "update_group_by_time" do
     test "does nothing if `time` dimension not passed" do
       assert perform(%{
-               date_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-04], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-04], "UTC"),
                dimensions: ["time:month"]
              }).dimensions == ["time:month"]
     end
 
     test "updating time dimension" do
       assert perform(%{
-               date_range:
+               utc_time_range:
                  DateTimeRange.new!(
                    DateTime.new!(~D[2022-01-01], ~T[00:00:00], "UTC"),
                    DateTime.new!(~D[2022-01-01], ~T[05:00:00], "UTC")
@@ -51,57 +51,57 @@ defmodule Plausible.Stats.QueryOptimizerTest do
              }).dimensions == ["time:hour"]
 
       assert perform(%{
-               date_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-01], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-01], "UTC"),
                dimensions: ["time"]
              }).dimensions == ["time:hour"]
 
       assert perform(%{
-               date_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-02], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-02], "UTC"),
                dimensions: ["time"]
              }).dimensions == ["time:hour"]
 
       assert perform(%{
-               date_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-03], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-03], "UTC"),
                dimensions: ["time"]
              }).dimensions == ["time:day"]
 
       assert perform(%{
-               date_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-10], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-10], "UTC"),
                dimensions: ["time"]
              }).dimensions == ["time:day"]
 
       assert perform(%{
-               date_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-16], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-01-16], "UTC"),
                dimensions: ["time"]
              }).dimensions == ["time:day"]
 
       assert perform(%{
-               date_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-02-16], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-02-16], "UTC"),
                dimensions: ["time"]
              }).dimensions == ["time:week"]
 
       assert perform(%{
-               date_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-03-16], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-03-16], "UTC"),
                dimensions: ["time"]
              }).dimensions == ["time:week"]
 
       assert perform(%{
-               date_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-03-16], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-01], ~D[2022-03-16], "UTC"),
                dimensions: ["time"]
              }).dimensions == ["time:week"]
 
       assert perform(%{
-               date_range: DateTimeRange.new!(~D[2022-01-01], ~D[2023-11-16], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-01], ~D[2023-11-16], "UTC"),
                dimensions: ["time"]
              }).dimensions == ["time:month"]
 
       assert perform(%{
-               date_range: DateTimeRange.new!(~D[2022-01-01], ~D[2024-01-16], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-01], ~D[2024-01-16], "UTC"),
                dimensions: ["time"]
              }).dimensions == ["time:month"]
 
       assert perform(%{
-               date_range: DateTimeRange.new!(~D[2022-01-01], ~D[2026-01-01], "UTC"),
+               utc_time_range: DateTimeRange.new!(~D[2022-01-01], ~D[2026-01-01], "UTC"),
                dimensions: ["time"]
              }).dimensions == ["time:month"]
     end
@@ -110,7 +110,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
   describe "update_time_in_order_by" do
     test "updates explicit time dimension in order_by" do
       assert perform(%{
-               date_range:
+               utc_time_range:
                  DateTimeRange.new!(
                    DateTime.new!(~D[2022-01-01], ~T[00:00:00], "UTC"),
                    DateTime.new!(~D[2022-01-01], ~T[05:00:00], "UTC")
@@ -124,7 +124,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
   describe "extend_hostname_filters_to_visit" do
     test "updates filters it filtering by event:hostname and visit:referrer and visit:exit_page dimensions" do
       assert perform(%{
-               date_range: Date.range(~N[2022-01-01 00:00:00], ~N[2022-01-01 05:00:00]),
+               utc_time_range: Date.range(~N[2022-01-01 00:00:00], ~N[2022-01-01 05:00:00]),
                filters: [
                  [:is, "event:hostname", ["example.com"]],
                  [:matches_wildcard, "event:hostname", ["*.com"]]
@@ -142,7 +142,7 @@ defmodule Plausible.Stats.QueryOptimizerTest do
 
     test "does not update filters if not needed" do
       assert perform(%{
-               date_range: Date.range(~N[2022-01-01 00:00:00], ~N[2022-01-01 05:00:00]),
+               utc_time_range: Date.range(~N[2022-01-01 00:00:00], ~N[2022-01-01 05:00:00]),
                filters: [
                  [:is, "event:hostname", ["example.com"]]
                ],

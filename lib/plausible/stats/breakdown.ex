@@ -13,8 +13,15 @@ defmodule Plausible.Stats.Breakdown do
   import Ecto.Query
   alias Plausible.Stats.{Query, QueryOptimizer, QueryResult, SQL}
 
-  def breakdown(site, %Query{dimensions: [dimension]} = query, metrics, pagination, _opts \\ []) do
+  def breakdown(
+        site,
+        %Query{dimensions: [dimension], order_by: order_by} = query,
+        metrics,
+        pagination,
+        _opts \\ []
+      ) do
     transformed_metrics = transform_metrics(metrics, dimension)
+    transformed_order_by = transform_order_by(order_by || [], dimension)
 
     query_with_metrics =
       Query.set(
@@ -22,7 +29,7 @@ defmodule Plausible.Stats.Breakdown do
         metrics: transformed_metrics,
         # Concat client requested order with default order, overriding only if client explicitly requests it
         order_by:
-          Enum.concat(query.order_by || [], infer_order_by(transformed_metrics, dimension))
+          Enum.concat(transformed_order_by, infer_order_by(transformed_metrics, dimension))
           |> Enum.uniq_by(&elem(&1, 0)),
         dimensions: transform_dimensions(dimension),
         filters: query.filters ++ dimension_filters(dimension),
@@ -116,6 +123,8 @@ defmodule Plausible.Stats.Breakdown do
       from e in subquery(timed_page_transitions_q),
         group_by: e.pathname
 
+    date_range = Query.date_range(query)
+
     timed_pages_q =
       if query.include_imported do
         # Imported page views have pre-calculated values
@@ -123,9 +132,7 @@ defmodule Plausible.Stats.Breakdown do
           from i in "imported_pages",
             group_by: i.page,
             where: i.site_id == ^site.id,
-            where:
-              i.date >= ^DateTime.to_naive(query.date_range.first) and
-                i.date <= ^DateTime.to_naive(query.date_range.last),
+            where: i.date >= ^date_range.first and i.date <= ^date_range.last,
             where: i.page in ^pages,
             select: %{
               page: i.page,
@@ -162,6 +169,15 @@ defmodule Plausible.Stats.Breakdown do
     |> Map.new()
   end
 
+  defp maybe_remap_to_group_conversion_rate(metric, dimension) do
+    case {metric, dimension} do
+      {:conversion_rate, "event:props:" <> _} -> :conversion_rate
+      {:conversion_rate, "event:goal"} -> :conversion_rate
+      {:conversion_rate, _} -> :group_conversion_rate
+      _ -> metric
+    end
+  end
+
   defp transform_metrics(metrics, dimension) do
     metrics =
       if is_nil(metric_to_order_by(metrics)) do
@@ -170,13 +186,12 @@ defmodule Plausible.Stats.Breakdown do
         metrics
       end
 
-    Enum.map(metrics, fn metric ->
-      case {metric, dimension} do
-        {:conversion_rate, "event:props:" <> _} -> :conversion_rate
-        {:conversion_rate, "event:goal"} -> :conversion_rate
-        {:conversion_rate, _} -> :group_conversion_rate
-        _ -> metric
-      end
+    Enum.map(metrics, fn metric -> maybe_remap_to_group_conversion_rate(metric, dimension) end)
+  end
+
+  defp transform_order_by(order_by, dimension) do
+    Enum.map(order_by, fn {metric, direction} ->
+      {maybe_remap_to_group_conversion_rate(metric, dimension), direction}
     end)
   end
 

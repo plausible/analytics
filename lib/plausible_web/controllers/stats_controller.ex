@@ -110,8 +110,10 @@ defmodule PlausibleWeb.StatsController do
       site = Plausible.Repo.preload(conn.assigns.site, :owner)
       query = Query.from(site, params, debug_metadata(conn))
 
+      date_range = Query.date_range(query)
+
       filename =
-        ~c"Plausible export #{params["domain"]} #{Date.to_iso8601(query.date_range.first)}  to #{Date.to_iso8601(query.date_range.last)} .zip"
+        ~c"Plausible export #{params["domain"]} #{Date.to_iso8601(date_range.first)}  to #{Date.to_iso8601(date_range.last)} .zip"
 
       params = Map.merge(params, %{"limit" => "300", "csv" => "True", "detailed" => "True"})
       limited_params = Map.merge(params, %{"limit" => "100"})

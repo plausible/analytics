@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches: [master, stable]
+  merge_group:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -103,8 +104,7 @@ jobs:
       - run: mix deps.get --only $MIX_ENV
       - run: mix compile --warnings-as-errors --all-warnings
       - run: mix do ecto.create, ecto.migrate
-      # 2024b is buggy, so we need to use 2024a
-      # - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
+      - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
 
       - run: make minio
         if: env.MIX_ENV == 'test'
