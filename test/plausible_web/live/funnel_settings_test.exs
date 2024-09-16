@@ -300,7 +300,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         lv = get_liveview(conn, site)
 
         lv
-        |> element(~s/a[phx-click="edit-funnel"][phx-value-funnel-id=#{f1_id}]/)
+        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id=#{f1_id}]/)
         |> render_click()
 
         assert lv = find_live_child(lv, "funnels-form")
@@ -321,7 +321,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         lv = get_liveview(conn, site)
 
         lv
-        |> element(~s/a[phx-click="edit-funnel"][phx-value-funnel-id=#{f1_id}]/)
+        |> element(~s/button[phx-click="edit-funnel"][phx-value-funnel-id=#{f1_id}]/)
         |> render_click()
 
         assert lv = find_live_child(lv, "funnels-form")

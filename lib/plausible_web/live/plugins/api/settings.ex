@@ -64,7 +64,9 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
           </:thead>
           <:tbody :let={token}>
             <.td>
+          <span class="token-description">
               <%= token.description %>
+          </span>
             </.td>
             <.td hide_on_mobile>
               **********<%= token.hint %>
