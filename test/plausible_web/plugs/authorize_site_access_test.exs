@@ -181,6 +181,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     end
   end
 
+  @tag :ee_only
   test "allows user based on their superadmin status", %{conn: conn, user: user} do
     site = insert(:site, members: [build(:user)])
 
