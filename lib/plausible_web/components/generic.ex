@@ -179,7 +179,6 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr(:id, :any, default: nil)
   attr(:href, :string, default: "#")
   attr(:new_tab, :boolean, default: false)
   attr(:class, :string, default: "")
@@ -266,7 +265,6 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:href, :string, required: true)
   attr(:new_tab, :boolean, default: false)
   attr(:class, :string, default: "")
-  attr(:id, :any, default: nil)
   attr(:rest, :global)
   attr(:method, :string, default: "get")
   slot(:inner_block)
@@ -290,7 +288,6 @@ defmodule PlausibleWeb.Components.Generic do
 
       ~H"""
       <.link
-        id={@id}
         class={[
           "inline-flex items-center gap-x-0.5",
           @class
