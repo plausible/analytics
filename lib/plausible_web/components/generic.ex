@@ -548,7 +548,7 @@ defmodule PlausibleWeb.Components.Generic do
     assigns = assign(assigns, class: class)
 
     ~H"""
-    <th scope="col" class={[@hide_on_mobile && "hidden md:table-cell", @class]} @colspan>
+    <th scope="col" class={[@hide_on_mobile && "hidden md:table-cell", @class]}>
       <%= render_slot(@inner_block) %>
     </th>
     """

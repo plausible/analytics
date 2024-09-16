@@ -40,17 +40,20 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           </:thead>
           <:tbody :let={goal}>
             <.td truncate>
-              <div class="flex" title={goal.page_path || goal.event_name}>
+              <div class="flex">
                 <div class="truncate block">
                   <%= if not @revenue_goals_enabled? && goal.currency do %>
-                    <div class="text-gray-600 flex items-center">
-                      <Heroicons.lock_closed class="w-4 h-4 mr-1 inline" />
-                      <div class="truncate"><%= goal %></div>
+                    <div class="truncate">
+                      <%= goal %>
+                      <br />
+                      <span class="text-red-600">
+                        Unlock Revenue Goals by upgrading to a business plan
+                      </span>
                     </div>
                   <% else %>
                     <div class="truncate">
                       <span><%= goal %></span>
-                      <.goal_description goal={goal} revenue_goals_enabled?={@revenue_goals_enabled?} />
+                      <.goal_description goal={goal} />
                     </div>
                   <% end %>
                 </div>
@@ -124,10 +127,6 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
 
     <span :if={@goal.event_name} class="truncate text-gray-400 dark:text-gray-600">
       <%= custom_event_description(@goal) %>
-    </span>
-
-    <span :if={@goal.currency && not @revenue_goals_enabled?} class="text-red-600">
-      Unlock Revenue Goals by upgrading to a business plan
     </span>
     """
   end
