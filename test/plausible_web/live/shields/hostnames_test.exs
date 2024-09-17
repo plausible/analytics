@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Live.Shields.HostnamesTest do
       conn = get(conn, "/#{site.domain}/settings/shields/hostnames")
       resp = html_response(conn, 200)
 
-      assert resp =~ "No Hostname Rules configured for this Site"
+      assert resp =~ "No Hostname Rules configured for this site"
       assert resp =~ "Hostnames Allow List"
       assert resp =~ "Traffic from all hostnames is currently accepted."
     end
@@ -172,7 +172,7 @@ defmodule PlausibleWeb.Live.Shields.HostnamesTest do
       assert html =~ "subdomain.example.com"
 
       assert html =~
-               "This rule might be redundant because the following rules may match first:\n\n*example.com"
+               "This rule might be redundant because the following rules may match first:<br/>*example.com"
 
       broader_rule_id =
         site

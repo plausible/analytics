@@ -306,7 +306,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         billable_user={@site.owner}
         current_user={@current_user}
         feature_mod={Plausible.Billing.Feature.RevenueGoals}
-        size={:xs}
         class="rounded-b-md"
       />
       <button

@@ -655,9 +655,9 @@ defmodule PlausibleWeb.Components.Generic do
   def filter_bar(assigns) do
     ~H"""
     <div class="p-6 flex items-center justify-between">
-      <form id="filter-form" phx-change="filter">
-        <div class="text-gray-800 inline-flex items-center">
-          <div :if={@filtering_enabled?} class="relative rounded-md shadow-sm flex">
+      <div class="text-gray-800 inline-flex items-center">
+        <div :if={@filtering_enabled?} class="relative rounded-md shadow-sm flex">
+          <form id="filter-form" phx-change="filter">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
             </div>
@@ -669,7 +669,6 @@ defmodule PlausibleWeb.Components.Generic do
               placeholder={@placeholder}
               value={@filter_text}
             />
-          </div>
 
           <Heroicons.backspace
             :if={String.trim(@filter_text) != ""}
@@ -677,8 +676,9 @@ defmodule PlausibleWeb.Components.Generic do
             phx-click="reset-filter-text"
             id="reset-filter"
           />
+          </form>
         </div>
-      </form>
+      </div>
       <%= render_slot(@inner_block) %>
     </div>
     """
