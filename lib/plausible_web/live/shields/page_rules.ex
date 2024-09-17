@@ -101,10 +101,9 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
                     <Heroicons.exclamation_triangle class="ml-4 h-5 w-5 text-red-800" />
                     <:tooltip_content>
                       <span>
-                        This rule might be redundant because the following rules may match first: <%= Enum.join(
+                    This rule might be redundant because the following rules may match first:<br/><%= Enum.join(
                           @redundant_rules[rule.id],
-                          "<br
-                        />"
+                          "<br/>"
                         ) %>
                       </span>
                     </:tooltip_content>

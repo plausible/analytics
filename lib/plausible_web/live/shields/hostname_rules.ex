@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
     <div>
       <.settings_tiles>
         <.tile docs="excluding#exclude-visits-by-hostname" no_inner_pad>
-          <:title>Hostnames Block List</:title>
+          <:title>Hostnames Allow List</:title>
           <:subtitle>Accept incoming traffic only from familiar hostnames</:subtitle>
           <.filter_bar
             :if={@hostname_rules_count < Shields.maximum_hostname_rules()}
@@ -65,6 +65,9 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
 
           <p :if={Enum.empty?(@hostname_rules)} class="mt-12 mb-8 text-center">
             No Hostname Rules configured for this site.
+            <strong>
+              Traffic from all hostnames is currently accepted.
+            </strong>
           </p>
 
           <.table :if={not Enum.empty?(@hostname_rules)} rows={@hostname_rules}>
