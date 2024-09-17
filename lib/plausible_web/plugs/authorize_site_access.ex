@@ -94,12 +94,12 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
 
   defp maybe_get_shared_link(conn, site) do
     slug = conn.path_params["slug"] || conn.params["auth"]
-    site_id = site.id
 
     if is_binary(slug) do
-      case Repo.get_by(Plausible.Site.SharedLink, slug: slug) do
-        %{site_id: ^site_id} = shared_link -> {:ok, shared_link}
-        _ -> error_not_found(conn)
+      if shared_link = Repo.get_by(Plausible.Site.SharedLink, slug: slug, site_id: site.id) do
+        {:ok, shared_link}
+      else
+        error_not_found(conn)
       end
     else
       {:ok, nil}
