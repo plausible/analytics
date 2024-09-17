@@ -85,4 +85,4 @@ jobs:
         with:
           apikey: ${{ secrets.HONEYCOMB_MARKER_APIKEY }}
           dataset: 'plausible-prod'
-          message: "PR: ${{ github.event.number }}"
+          message: "${{ github.sha }}"
