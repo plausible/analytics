@@ -44,7 +44,7 @@ defmodule Plausible.Stats.Breakdown do
     q
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all(query: query)
-    |> QueryResult.from(site, query_with_metrics)
+    |> QueryResult.from(site, query_with_metrics, %{})
     |> build_breakdown_result(query_with_metrics, metrics)
     |> maybe_add_time_on_page(site, query_with_metrics, metrics)
     |> update_currency_metrics(site, query_with_metrics)

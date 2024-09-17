@@ -41,7 +41,7 @@ defmodule Plausible.Stats.Timeseries do
     query_result =
       q
       |> ClickhouseRepo.all(query: query)
-      |> QueryResult.from(site, query_with_metrics)
+      |> QueryResult.from(site, query_with_metrics, %{})
 
     timeseries_result =
       query_result
