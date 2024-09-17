@@ -69,7 +69,7 @@ RUN apk upgrade --no-cache
 RUN apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates \
   && if [ "$MIX_ENV" = "ce" ]; then apk add --no-cache certbot; fi
 
-COPY --from=buildcontainer --chmod=a+rX /app/_build/${MIX_ENV}/rel/plausible /app
+COPY --from=buildcontainer --chmod=555 /app/_build/${MIX_ENV}/rel/plausible /app
 COPY --chmod=755 ./rel/docker-entrypoint.sh /entrypoint.sh
 
 # we need to allow "others" access to app folder, because
