@@ -22,6 +22,9 @@ const VIEWS = {
       )
     }
   },
+  channels: {
+    info: { title: 'Top Acquisition Channels', dimension: 'channel', endpoint: '/channels', dimensionLabel: 'Channel', defaultOrder: ["visitors", SortDirection.desc] }
+  },
   utm_mediums: {
     info: { title: 'Top UTM Mediums', dimension: 'utm_medium', endpoint: '/utm_mediums', dimensionLabel: 'UTM Medium', defaultOrder: ["visitors", SortDirection.desc] }
   },

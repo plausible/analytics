@@ -12,7 +12,7 @@ import classNames from 'classnames';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
-import { sourcesRoute, utmCampaignsRoute, utmContentsRoute, utmMediumsRoute, utmSourcesRoute, utmTermsRoute } from '../../router';
+import { sourcesRoute, channelsRoute, utmCampaignsRoute, utmContentsRoute, utmMediumsRoute, utmSourcesRoute, utmTermsRoute } from '../../router';
 
 const UTM_TAGS = {
   utm_medium: { label: 'UTM Medium', shortLabel: 'UTM Medium', endpoint: '/utm_mediums' },
@@ -96,7 +96,7 @@ function Channels({ afterFetchData }) {
       getFilterFor={getFilterFor}
       keyLabel="Channel"
       metrics={chooseMetrics()}
-      detailsLinkProps={{ path: sourcesRoute.path, search: (search) => search }}
+      detailsLinkProps={{ path: channelsRoute.path, search: (search) => search }}
       color="bg-blue-50"
     />
   )
