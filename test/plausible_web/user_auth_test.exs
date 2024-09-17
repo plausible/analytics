@@ -2,15 +2,13 @@ defmodule PlausibleWeb.UserAuthTest do
   use PlausibleWeb.ConnCase, async: true
 
   import Ecto.Query, only: [from: 2]
-  import ExUnit.CaptureLog
+  import Phoenix.ChannelTest
 
   alias Plausible.Auth
   alias Plausible.Repo
   alias PlausibleWeb.UserAuth
 
   alias PlausibleWeb.Router.Helpers, as: Routes
-
-  @moduletag capture_log: true
 
   describe "log_in_user/2,3" do
     setup [:create_user]
@@ -86,7 +84,6 @@ defmodule PlausibleWeb.UserAuthTest do
       assert another_session.token == another_session_token
       assert conn.private[:plug_session_info] == :renew
       assert conn.resp_cookies["logged_in"].max_age == 0
-      assert get_session(conn, :current_user_id) == nil
       assert get_session(conn, :login_dest) == nil
     end
   end
@@ -100,27 +97,22 @@ defmodule PlausibleWeb.UserAuthTest do
     end
 
     test "gets session from session data map", %{user: user} do
-      user_id = user.id
       %{sessions: [user_session]} = Repo.preload(user, :sessions)
 
       assert {:ok, session_from_token} =
                UserAuth.get_user_session(%{"user_token" => user_session.token})
 
       assert session_from_token.id == user_session.id
-
-      capture_log(fn ->
-        assert {:ok, %Auth.UserSession{user_id: ^user_id, token: nil}} =
-                 UserAuth.get_user_session(%{"current_user_id" => user.id})
-      end) =~ "Legacy user session detected"
     end
 
     test "returns error on invalid or missing session data" do
       conn = init_session(build_conn())
       assert {:error, :no_valid_token} = UserAuth.get_user_session(conn)
       assert {:error, :no_valid_token} = UserAuth.get_user_session(%{})
+      assert {:error, :no_valid_token} = UserAuth.get_user_session(%{"current_user_id" => 123})
     end
 
-    test "returns error on missing session (new token scaffold; to be revised)", %{
+    test "returns error on missing session", %{
       conn: conn,
       user: user
     } do
@@ -229,64 +221,37 @@ defmodule PlausibleWeb.UserAuthTest do
 
       refute Repo.reload(user_session)
     end
-
-    test "skips refreshing legacy session", %{user: user} do
-      user_session = %Auth.UserSession{user_id: user.id}
-
-      assert UserAuth.touch_user_session(user_session) == user_session
-    end
   end
 
-  describe "convert_legacy_session/1" do
+  describe "revoke_all_user_sessions/1" do
     setup [:create_user, :log_in]
 
-    test "does nothing when there's no authenticated session" do
-      conn =
-        build_conn()
-        |> init_session()
-        |> UserAuth.convert_legacy_session()
+    test "deletes and disconnects all user's sessions", %{user: user} do
+      assert [active_session] = Repo.preload(user, :sessions).sessions
+      live_socket_id = "user_sessions:" <> Base.url_encode64(active_session.token)
+      Phoenix.PubSub.subscribe(Plausible.PubSub, live_socket_id)
 
-      refute get_session(conn, :user_token)
-      refute get_session(conn, :live_socket_id)
-      refute conn.assigns[:current_user_session]
+      another_session =
+        user
+        |> Auth.UserSession.new_session("Some Device")
+        |> Repo.insert!()
+
+      unrelated_session =
+        insert(:user)
+        |> Auth.UserSession.new_session("Some Device")
+        |> Repo.insert!()
+
+      assert :ok = UserAuth.revoke_all_user_sessions(user)
+      assert [] = Repo.preload(user, :sessions).sessions
+      assert_broadcast "disconnect", %{}
+      refute Repo.reload(another_session)
+      assert Repo.reload(unrelated_session)
     end
 
-    test "does nothing when there's a new token-based session already", %{conn: conn, user: user} do
-      %{sessions: [user_session]} = Repo.preload(user, :sessions)
+    test "executes gracefully when user has no sessions" do
+      user = insert(:user)
 
-      conn =
-        conn
-        |> UserAuth.convert_legacy_session()
-        |> PlausibleWeb.AuthPlug.call([])
-
-      assert get_session(conn, :user_token) == user_session.token
-
-      assert get_session(conn, :live_socket_id) ==
-               "user_sessions:#{Base.url_encode64(user_session.token)}"
-
-      assert conn.assigns.current_user_session.id == user_session.id
-    end
-
-    test "converts legacy session to a new one", %{user: user} do
-      %{sessions: [existing_session]} = Repo.preload(user, :sessions)
-
-      conn =
-        build_conn()
-        |> init_session()
-        |> put_session(:current_user_id, user.id)
-        |> PlausibleWeb.AuthPlug.call([])
-        |> UserAuth.convert_legacy_session()
-
-      assert conn.assigns.current_user_session.id
-      assert conn.assigns.current_user_session.id != existing_session.id
-      assert conn.assigns.current_user_session.token != existing_session.token
-      assert conn.assigns.current_user_session.user_id == user.id
-      assert conn.assigns.current_user.id == user.id
-      refute get_session(conn, :current_user_id)
-      assert get_session(conn, :user_token) == conn.assigns.current_user_session.token
-
-      assert get_session(conn, :live_socket_id) ==
-               "user_sessions:#{Base.url_encode64(conn.assigns.current_user_session.token)}"
+      assert :ok = UserAuth.revoke_all_user_sessions(user)
     end
   end
 
