@@ -592,7 +592,7 @@ defmodule PlausibleWeb.AuthController do
     :ok = UserAuth.revoke_user_session(current_user, session_id)
 
     conn
-    |> put_flash(:success, "Session revoked successfully")
+    |> put_flash(:success, "Session logged out successfully")
     |> redirect(to: "/settings#user-sessions")
   end
 
