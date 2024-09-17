@@ -119,7 +119,7 @@ defmodule Plausible.Stats.FilterSuggestions do
       city = Location.get_city(c)
 
       %{
-        value: Integer.to_string(c),
+        value: c,
         label: (city && city.name) || "N/A"
       }
     end)
@@ -145,12 +145,7 @@ defmodule Plausible.Stats.FilterSuggestions do
       city && String.contains?(String.downcase(city.name), filter_search)
     end)
     |> Enum.slice(0..24)
-    |> Enum.map(fn c ->
-      %{
-        value: Integer.to_string(c.id),
-        label: c.name
-      }
-    end)
+    |> Enum.map(fn c -> %{value: c.id, label: c.name} end)
   end
 
   def filter_suggestions(site, _query, "goal", filter_search) do
