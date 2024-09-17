@@ -1480,8 +1480,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = delete(conn, "/sites/#{site.domain}/shared-links/#{link.slug}")
 
       assert Repo.one(Plausible.Site.SharedLink)
-      assert redirected_to(conn, 302) =~ "/#{URI.encode_www_form(site.domain)}/settings"
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find Shared Link"
+      assert html_response(conn, 404)
     end
   end
 

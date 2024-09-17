@@ -9,7 +9,7 @@ defmodule PlausibleWeb.SiteController do
   plug(PlausibleWeb.RequireAccountPlug)
 
   plug(
-    PlausibleWeb.AuthorizeSiteAccess,
+    PlausibleWeb.Plugs.AuthorizeSiteAccess,
     [:owner, :admin, :super_admin] when action not in [:new, :create_site]
   )
 
