@@ -25,8 +25,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   def call(conn, allowed_roles) do
     current_user = conn.assigns[:current_user]
 
-    with {:ok, %{site: site, membership_role: membership_role}} <-
-           get_site_stuff(conn, current_user),
+    with {:ok, %{site: site, role: membership_role}} <- get_site_with_role(conn, current_user),
          {:ok, shared_link} <- maybe_get_shared_link(conn, site) do
       role =
         cond do
@@ -64,30 +63,30 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
     end
   end
 
-  defp get_site_stuff(conn, current_user) do
+  defp get_site_with_role(conn, current_user) do
     domain = conn.path_params["domain"] || conn.path_params["website"]
 
-    ecto_query =
+    site_query =
       from(
         s in Plausible.Site,
         where: s.domain == ^domain,
         select: %{site: s}
       )
 
-    ecto_query =
+    full_query =
       if current_user do
-        from(s in ecto_query,
+        from(s in site_query,
           left_join: sm in Plausible.Site.Membership,
           on: sm.site_id == s.id and sm.user_id == ^current_user.id,
-          select_merge: %{membership_role: sm.role}
+          select_merge: %{role: sm.role}
         )
       else
-        from(s in ecto_query,
-          select_merge: %{membership_role: nil}
+        from(s in site_query,
+          select_merge: %{role: nil}
         )
       end
 
-    case Repo.one(ecto_query) do
+    case Repo.one(full_query) do
       %{site: _site} = result -> {:ok, result}
       _ -> error_not_found(conn)
     end
