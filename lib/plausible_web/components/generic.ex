@@ -135,7 +135,6 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr(:title, :any, default: nil)
-  attr(:size, :atom, default: :sm)
   attr(:theme, :atom, default: :yellow)
   attr(:dismissable_id, :any, default: nil)
   attr(:class, :string, default: "")
@@ -147,7 +146,7 @@ defmodule PlausibleWeb.Components.Generic do
 
     ~H"""
     <div id={@dismissable_id} class={@dismissable_id && "hidden"}>
-      <div class={["rounded-md p-4 relative", @theme.bg, @class]} {@rest}>
+      <div class={["rounded-md p-8 relative", @theme.bg, @class]} {@rest}>
         <button
           :if={@dismissable_id}
           class={"absolute right-0 top-0 m-2 #{@theme.title_text}"}
@@ -171,10 +170,10 @@ defmodule PlausibleWeb.Components.Generic do
             </svg>
           </div>
           <div class={["w-full", @title && "ml-3"]}>
-            <h3 :if={@title} class={"text-#{@size} font-medium #{@theme.title_text} mb-2"}>
+            <h3 :if={@title} class={"font-medium #{@theme.title_text} mb-2"}>
               <%= @title %>
             </h3>
-            <div class={"text-#{@size} #{@theme.body_text}"}>
+            <div class={"#{@theme.body_text}"}>
               <p>
                 <%= render_slot(@inner_block) %>
               </p>
@@ -650,14 +649,15 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr :filter_text, :string, default: ""
   attr :placeholder, :string, default: ""
+  attr :filtering_enabled?, :boolean, default: true
   slot :inner_block, required: false
 
   def filter_bar(assigns) do
     ~H"""
-    <div class="border-t border-gray-200 p-6 flex items-center justify-between">
+    <div class="p-6 flex items-center justify-between">
       <form id="filter-form" phx-change="filter">
         <div class="text-gray-800 inline-flex items-center">
-          <div class="relative rounded-md shadow-sm flex">
+          <div :if={@filtering_enabled?} class="relative rounded-md shadow-sm flex">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
             </div>
@@ -681,6 +681,12 @@ defmodule PlausibleWeb.Components.Generic do
       </form>
       <%= render_slot(@inner_block) %>
     </div>
+    """
+  end
+
+  def hr(assigns) do
+    ~H"""
+    <hr class="border-t border-gray-200 dark:border-gray-700" />
     """
   end
 

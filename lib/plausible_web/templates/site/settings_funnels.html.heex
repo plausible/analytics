@@ -16,7 +16,7 @@
       feature_mod={Plausible.Billing.Feature.Funnels}
       site={@site}
       conn={@conn}
-      class="mt-8 ml-6 mb-12"
+      class="mt-8 ml-6 mb-8"
     >
       <%= live_render(@conn, PlausibleWeb.Live.FunnelSettings,
         session: %{"site_id" => @site.id, "domain" => @site.domain}

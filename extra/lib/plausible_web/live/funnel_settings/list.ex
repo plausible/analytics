@@ -14,6 +14,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
   def render(assigns) do
     ~H"""
     <div>
+      <.hr />
       <.filter_bar filter_text={@filter_text} placeholder="Search Funnels">
         <.button id="add-funnel-button" phx-click="add-funnel" mt?={false}>
           Add Funnel

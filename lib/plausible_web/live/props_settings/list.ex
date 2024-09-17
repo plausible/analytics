@@ -13,6 +13,7 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
   def render(assigns) do
     ~H"""
     <div>
+      <.hr />
       <.filter_bar filter_text={@filter_text} placeholder="Search Properties">
         <.button phx-click="add-prop" mt?={false}>
           Add Property

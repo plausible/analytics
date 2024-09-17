@@ -171,7 +171,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
     ~H"""
     <div
       id={@id}
-      class="relative z-[49] [&[data-phx-ref]_div.modal-dialog]:hidden [&[data-phx-ref]_div.modal-loading]:block"
+      class="relative z-[2049] [&[data-phx-ref]_div.modal-dialog]:hidden [&[data-phx-ref]_div.modal-loading]:block"
       data-modal
       x-cloak
       x-data="{
@@ -223,12 +223,12 @@ defmodule PlausibleWeb.Live.Components.Modal do
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="bg-opacity-75"
         x-transition:leave-end="bg-opacity-0"
-        class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50"
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 z-[2050]"
       >
       </div>
       <div
         x-show="modalPreopen"
-        class="fixed flex inset-0 items-start z-50 overflow-y-auto overflow-x-hidden"
+        class="fixed flex inset-0 items-start z-[2050] overflow-y-auto overflow-x-hidden"
       >
         <div class="modal-pre-loading w-full self-center">
           <div class="text-center">
@@ -238,7 +238,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
       </div>
       <div
         x-show="modalOpen"
-        class="fixed flex inset-0 items-start z-50 overflow-y-auto overflow-x-hidden"
+        class="fixed flex inset-0 items-start z-[2050] overflow-y-auto overflow-x-hidden"
       >
         <Phoenix.Component.focus_wrap
           :if={@load_content?}

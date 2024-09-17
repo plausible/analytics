@@ -19,7 +19,7 @@
       feature_mod={Plausible.Billing.Feature.Goals}
       site={@site}
       conn={@conn}
-      class="mt-8 ml-6 mb-12"
+      class="mt-8 ml-6 mb-8"
     >
       <%= live_render(@conn, PlausibleWeb.Live.GoalSettings,
         session: %{"site_id" => @site.id, "domain" => @site.domain}
