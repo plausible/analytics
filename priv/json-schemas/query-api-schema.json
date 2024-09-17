@@ -22,6 +22,7 @@
     "date_range": {
       "oneOf": [
         { "$ref": "#/definitions/date_range_shorthand" },
+        { "$ref": "#/definitions/date_time_range" },
         { "$ref": "#/definitions/date_range" }
       ],
       "description": "Date range to query"
@@ -66,6 +67,7 @@
     },
     "pagination": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "limit": {
           "type": "integer",
@@ -85,40 +87,39 @@
   "required": ["site_id", "metrics", "date_range"],
   "additionalProperties": false,
   "definitions": {
+    "date_time_range": {
+      "type": "array",
+      "additionalItems": false,
+      "minItems": 2,
+      "maxItems": 2,
+      "markdownDescription": "A list of two ISO8601 datetimes.",
+      "examples": [["2024-01-01T00:00:00+03:00", "2024-01-02T12:00:00+03:00"]],
+      "items": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "string",
+          "format": "date-time"
+        }
+      ]
+    },
     "date_range": {
       "type": "array",
       "additionalItems": false,
       "minItems": 2,
       "maxItems": 2,
-      "markdownDescription": "A list of two ISO8601 dates or datetimes.",
-      "examples": [
-        ["2024-09-01", "2024-09-30"],
-        ["2024-01-01T00:00:00+03:00", "2024-01-02T12:00:00+03:00"]
-      ],
+      "markdownDescription": "A list of two ISO8601 dates.",
+      "examples": [["2024-09-01", "2024-09-30"]],
       "items": [
         {
-          "oneOf": [
-            {
-              "type": "string",
-              "format": "date"
-            },
-            {
-              "type": "string",
-              "format": "date-time"
-            }
-          ]
+          "type": "string",
+          "format": "date"
         },
         {
-          "oneOf": [
-            {
-              "type": "string",
-              "format": "date"
-            },
-            {
-              "type": "string",
-              "format": "date-time"
-            }
-          ]
+          "type": "string",
+          "format": "date"
         }
       ]
     },
@@ -274,16 +275,14 @@
         "type": ["string", "integer"]
       }
     },
+    "filter_operation_wildcard": {
+      "type": "string",
+      "enum": ["matches_wildcard", "matches_wildcard_not"],
+      "description": "filter operation"
+    },
     "filter_operation_without_goals": {
       "type": "string",
-      "enum": [
-        "matches_wildcard",
-        "matches_wildcard_not",
-        "is_not",
-        "contains_not",
-        "matches",
-        "matches_not"
-      ],
+      "enum": ["is_not", "contains_not", "matches", "matches_not"],
       "description": "filter operation"
     },
     "filter_operation_with_goals": {
@@ -297,7 +296,15 @@
       "minItems": 3,
       "maxItems": 3,
       "items": [
-        { "$ref": "#/definitions/filter_operation_without_goals" },
+        {
+          "oneOf": [
+            { "$ref": "#/definitions/filter_operation_without_goals" },
+            {
+              "$ref": "#/definitions/filter_operation_wildcard",
+              "$comment": "private"
+            }
+          ]
+        },
         {
           "oneOf": [
             { "$ref": "#/definitions/simple_filter_dimensions" },

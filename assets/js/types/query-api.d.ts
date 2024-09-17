@@ -22,7 +22,12 @@ export type DateRangeShorthand = "30m" | "realtime" | "all" | "day" | "7d" | "30
  * @minItems 2
  * @maxItems 2
  */
-export type DateRange = [string | string, string | string];
+export type DateTimeRange = [string, string];
+/**
+ * @minItems 2
+ * @maxItems 2
+ */
+export type DateRange = [string, string];
 export type Dimensions = SimpleFilterDimensions | CustomPropertyFilterDimensions | GoalDimension | TimeDimensions;
 export type SimpleFilterDimensions =
   | "event:name"
@@ -61,20 +66,14 @@ export type FilterEntry = FilterWithoutGoals | FilterWithGoals;
  * @maxItems 3
  */
 export type FilterWithoutGoals = [
-  FilterOperationWithoutGoals,
+  FilterOperationWithoutGoals | ("matches_wildcard" | "matches_wildcard_not"),
   SimpleFilterDimensions | CustomPropertyFilterDimensions,
   Clauses
 ];
 /**
  * filter operation
  */
-export type FilterOperationWithoutGoals =
-  | "matches_wildcard"
-  | "matches_wildcard_not"
-  | "is_not"
-  | "contains_not"
-  | "matches"
-  | "matches_not";
+export type FilterOperationWithoutGoals = "is_not" | "contains_not" | "matches" | "matches_not";
 export type Clauses = (string | number)[];
 /**
  * @minItems 3
@@ -123,7 +122,7 @@ export interface QueryApiSchema {
   /**
    * Date range to query
    */
-  date_range: DateRangeShorthand | DateRange;
+  date_range: DateRangeShorthand | DateTimeRange | DateRange;
   /**
    * What to group the results by. Same as `property` in Plausible API v1
    */
@@ -139,5 +138,19 @@ export interface QueryApiSchema {
   include?: {
     time_labels?: boolean;
     imports?: boolean;
+    /**
+     * If set, returns the total number of result rows rows before pagination under `meta.total_rows`
+     */
+    total_rows?: boolean;
+  };
+  pagination?: {
+    /**
+     * Number of rows to limit result to.
+     */
+    limit?: number;
+    /**
+     * Pagination offset.
+     */
+    offset?: number;
   };
 }
