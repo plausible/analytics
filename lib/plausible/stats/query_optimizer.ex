@@ -33,7 +33,11 @@ defmodule Plausible.Stats.QueryOptimizer do
       |> TableDecider.partition_metrics(query)
 
     {
-      Query.set(query, metrics: event_metrics, include_imported: query.include_imported),
+      Query.set(query,
+        metrics: event_metrics,
+        include_imported: query.include_imported,
+        pagination: nil
+      ),
       split_sessions_query(query, sessions_metrics)
     }
   end
@@ -164,7 +168,8 @@ defmodule Plausible.Stats.QueryOptimizer do
       filters: filters,
       metrics: session_metrics,
       dimensions: dimensions,
-      include_imported: query.include_imported
+      include_imported: query.include_imported,
+      pagination: nil
     )
   end
 end
