@@ -34,6 +34,7 @@ export type SimpleFilterDimensions =
   | "event:page"
   | "event:hostname"
   | "visit:source"
+  | "visit:channel"
   | "visit:referrer"
   | "visit:utm_medium"
   | "visit:utm_source"

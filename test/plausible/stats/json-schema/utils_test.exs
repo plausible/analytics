@@ -1,40 +1,40 @@
-defmodule Plausible.Stats.JSONSchemaToolsTest do
+defmodule Plausible.Stats.JSONSchema.UtilsTest do
   use ExUnit.Case, async: true
 
-  alias Plausible.Stats.JSONSchemaTools
+  alias Plausible.Stats.JSONSchema
 
   describe "traversing" do
     test "transform 'fn value -> value end' does not drop anything" do
       json = %{foo: %{bar: [0, ""], baz: nil, pax: %{}}}
-      assert JSONSchemaTools.traverse(json, fn value -> value end) == json
+      assert JSONSchema.Utils.traverse(json, fn value -> value end) == json
     end
 
-    test "can remove specific items" do
-      assert JSONSchemaTools.traverse(
+    test "can remove specific items, keeping the original order of lists" do
+      assert JSONSchema.Utils.traverse(
                %{
                  foo: [
                    "a",
-                   %{type: "string", "$comment": "private"},
+                   %{type: "string", "$comment": "only :internal"},
                    %{type: "number"}
                  ]
                },
                fn
-                 %{"$comment": "private"} -> :remove
+                 %{"$comment": "only :internal"} -> :remove
                  value -> value
                end
              ) == %{foo: ["a", %{type: "number"}]}
     end
 
     test "can transform specific items" do
-      assert JSONSchemaTools.traverse(
+      assert JSONSchema.Utils.traverse(
                %{
                  foo: [
-                   %{type: "string", "$comment": "private"},
+                   %{type: "string", "$comment": "anything"},
                    %{type: "number"}
                  ]
                },
                fn
-                 %{"$comment": "private"} -> %{type: "number", "$comment": "transformed"}
+                 %{"$comment": "anything"} -> %{type: "number", "$comment": "transformed"}
                  value -> value
                end
              ) == %{foo: [%{type: "number", "$comment": "transformed"}, %{type: "number"}]}

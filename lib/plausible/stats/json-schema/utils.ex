@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.JSONSchemaTools do
+defmodule Plausible.Stats.JSONSchema.Utils do
   @moduledoc """
   Module for traversing and modifying JSON schemas.
   """

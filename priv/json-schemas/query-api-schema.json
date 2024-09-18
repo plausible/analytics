@@ -17,7 +17,7 @@
     },
     "date": {
       "type": "string",
-      "$comment": "private"
+      "$comment": "only :internal"
     },
     "date_range": {
       "oneOf": [
@@ -127,11 +127,11 @@
       "oneOf": [
         {
           "const": "30m",
-          "$comment": "private"
+          "$comment": "only :internal"
         },
         {
           "const": "realtime",
-          "$comment": "private"
+          "$comment": "only :internal"
         },
         {
           "const": "all",
@@ -171,7 +171,7 @@
       "oneOf": [
         {
           "const": "time_on_page",
-          "$comment": "private"
+          "$comment": "only :internal"
         },
         {
           "const": "visitors",
@@ -301,7 +301,7 @@
             { "$ref": "#/definitions/filter_operation_without_goals" },
             {
               "$ref": "#/definitions/filter_operation_wildcard",
-              "$comment": "private"
+              "$comment": "only :internal"
             }
           ]
         },
