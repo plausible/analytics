@@ -197,11 +197,14 @@ build_metadata =
       _fallback = %{}
   end
 
+app_host = get_var_from_path_or_env(config_dir, "APP_HOST")
+
 runtime_metadata = [
   version: get_in(build_metadata, ["labels", "org.opencontainers.image.version"]),
   commit: get_in(build_metadata, ["labels", "org.opencontainers.image.revision"]),
   created: get_in(build_metadata, ["labels", "org.opencontainers.image.created"]),
-  tags: get_in(build_metadata, ["tags"])
+  tags: get_in(build_metadata, ["tags"]),
+  app_host: app_host
 ]
 
 config :plausible, :runtime_metadata, runtime_metadata
@@ -486,7 +489,10 @@ config :sentry,
   dsn: sentry_dsn,
   environment_name: env,
   release: sentry_app_version,
-  tags: %{app_version: sentry_app_version},
+  tags: %{
+    app_version: sentry_app_version,
+    app_host: app_host
+  },
   client: Plausible.Sentry.Client,
   send_max_attempts: 1,
   before_send: {Plausible.SentryFilter, :before_send}
