@@ -71,14 +71,13 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
             <:tbody :let={rule}>
               <.td>
                 <div class="flex items-center">
-                  <.tooltip>
-                    <:tooltip_content>
-                      Added at <%= format_added_at(rule.inserted_at, @site.timezone) %> by <%= rule.added_by %>
-                    </:tooltip_content>
-                    <span id={"inet-#{rule.id}"} class="font-mono mr-4 cursor-help">
-                      <%= rule.inet %>
-                    </span>
-                  </.tooltip>
+                  <span
+                    id={"inet-#{rule.id}"}
+                    class="mr-4 cursor-help"
+                    tooltip={"Added at #{format_added_at(rule.inserted_at, @site.timezone)}\nby #{rule.added_by}"}
+                  >
+                    <%= rule.inet %>
+                  </span>
 
                   <span
                     :if={to_string(rule.inet) == @remote_ip}
