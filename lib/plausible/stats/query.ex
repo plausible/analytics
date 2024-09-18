@@ -72,6 +72,10 @@ defmodule Plausible.Stats.Query do
     end
   end
 
+  def set_include(query, key, value) do
+    struct!(query, include: Map.put(query.include, key, value))
+  end
+
   def add_filter(query, filter) do
     query
     |> struct!(filters: query.filters ++ [filter])

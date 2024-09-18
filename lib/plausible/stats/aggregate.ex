@@ -29,16 +29,36 @@ defmodule Plausible.Stats.Aggregate do
     |> Enum.map(fn {metric, index} ->
       {
         metric,
-        %{
-          value:
-            entry.metrics
-            |> Enum.at(index)
-            |> maybe_round_value(metric)
-            |> maybe_cast_metric_to_money(metric, currency)
-        }
+        metric_map(entry, index, metric, currency)
       }
     end)
     |> Enum.into(%{})
+  end
+
+  def metric_map(
+        %{metrics: metrics, comparison: %{metrics: comparison_metrics, change: change}},
+        index,
+        metric,
+        currency
+      ) do
+    %{
+      value: get_value(metrics, index, metric, currency),
+      comparison_value: get_value(comparison_metrics, index, metric, currency),
+      change: Enum.at(change, index)
+    }
+  end
+
+  def metric_map(%{metrics: metrics}, index, metric, currency) do
+    %{
+      value: get_value(metrics, index, metric, currency)
+    }
+  end
+
+  def get_value(metric_list, index, metric, currency) do
+    metric_list
+    |> Enum.at(index)
+    |> maybe_round_value(metric)
+    |> maybe_cast_metric_to_money(metric, currency)
   end
 
   @metrics_to_round [:bounce_rate, :time_on_page, :visit_duration, :sample_percent]
