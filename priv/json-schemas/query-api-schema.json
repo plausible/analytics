@@ -15,8 +15,16 @@
       "uniqueItems": true,
       "description": "List of metrics to query"
     },
+    "date": {
+      "type": "string",
+      "$comment": "only :internal"
+    },
     "date_range": {
-      "$ref": "#/definitions/date_range",
+      "oneOf": [
+        { "$ref": "#/definitions/date_range_shorthand" },
+        { "$ref": "#/definitions/date_time_range" },
+        { "$ref": "#/definitions/date_range" }
+      ],
       "description": "Date range to query"
     },
     "dimensions": {
@@ -41,6 +49,7 @@
     },
     "include": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "time_labels": {
           "type": "boolean",
@@ -58,6 +67,7 @@
     },
     "pagination": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "limit": {
           "type": "integer",
@@ -77,8 +87,52 @@
   "required": ["site_id", "metrics", "date_range"],
   "additionalProperties": false,
   "definitions": {
+    "date_time_range": {
+      "type": "array",
+      "additionalItems": false,
+      "minItems": 2,
+      "maxItems": 2,
+      "markdownDescription": "A list of two ISO8601 datetimes.",
+      "examples": [["2024-01-01T00:00:00+03:00", "2024-01-02T12:00:00+03:00"]],
+      "items": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "string",
+          "format": "date-time"
+        }
+      ]
+    },
     "date_range": {
+      "type": "array",
+      "additionalItems": false,
+      "minItems": 2,
+      "maxItems": 2,
+      "markdownDescription": "A list of two ISO8601 dates.",
+      "examples": [["2024-09-01", "2024-09-30"]],
+      "items": [
+        {
+          "type": "string",
+          "format": "date"
+        },
+        {
+          "type": "string",
+          "format": "date"
+        }
+      ]
+    },
+    "date_range_shorthand": {
       "oneOf": [
+        {
+          "const": "30m",
+          "$comment": "only :internal"
+        },
+        {
+          "const": "realtime",
+          "$comment": "only :internal"
+        },
         {
           "const": "all",
           "description": "Since the start of stats in Plausible"
@@ -110,37 +164,15 @@
         {
           "const": "year",
           "description": "Since the start of this year"
-        },
-        {
-          "type": "array",
-          "additionalItems": false,
-          "minItems": 2,
-          "maxItems": 2,
-          "items": {
-            "oneOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "string",
-                "format": "date-time"
-              }
-            ]
-          },
-          "markdownDescription": "A list of two ISO8601 dates or timestamps to determine the query date range.",
-          "examples": [
-            ["2024-01-01", "2024-01-31"],
-            [
-              "2024-01-01T00:00:00+03:00",
-              "2024-01-02T12:00:00+03:00"
-            ]
-          ]
         }
       ]
     },
     "metric": {
       "oneOf": [
+        {
+          "const": "time_on_page",
+          "$comment": "only :internal"
+        },
         {
           "const": "visitors",
           "description": "Metric counting the number of unique visitors"
@@ -243,6 +275,11 @@
         "type": ["string", "integer"]
       }
     },
+    "filter_operation_wildcard": {
+      "type": "string",
+      "enum": ["matches_wildcard", "matches_wildcard_not"],
+      "description": "filter operation"
+    },
     "filter_operation_without_goals": {
       "type": "string",
       "enum": ["is_not", "contains_not", "matches", "matches_not"],
@@ -259,7 +296,15 @@
       "minItems": 3,
       "maxItems": 3,
       "items": [
-        { "$ref": "#/definitions/filter_operation_without_goals" },
+        {
+          "oneOf": [
+            { "$ref": "#/definitions/filter_operation_without_goals" },
+            {
+              "$ref": "#/definitions/filter_operation_wildcard",
+              "$comment": "only :internal"
+            }
+          ]
+        },
         {
           "oneOf": [
             { "$ref": "#/definitions/simple_filter_dimensions" },
