@@ -7,9 +7,7 @@ defmodule Plausible.Stats.Aggregate do
 
   use Plausible.ClickhouseRepo
   use Plausible
-  import Plausible.Stats.Base
-  import Ecto.Query
-  alias Plausible.Stats.{Query, QueryExecutor, Util, SQL, Filters}
+  alias Plausible.Stats.{Query, QueryExecutor, Util}
 
   def aggregate(site, query, metrics) do
     {currency, metrics} =
@@ -23,18 +21,7 @@ defmodule Plausible.Stats.Aggregate do
 
     query_with_metrics = %Query{query | metrics: metrics}
 
-    time_on_page_task =
-      if :time_on_page in query_with_metrics.metrics do
-        fn -> aggregate_time_on_page(site, query) end
-      else
-        fn -> %{} end
-      end
-
-    Plausible.ClickhouseRepo.parallel_tasks([
-      fn -> run_query(site, query_with_metrics) end,
-      time_on_page_task
-    ])
-    |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(task_result, aggregate) end)
+    run_query(site, query_with_metrics)
     |> Util.keep_requested_metrics(metrics)
     |> cast_revenue_metrics_to_money(currency)
     |> Enum.map(&maybe_round_value/1)
@@ -49,49 +36,6 @@ defmodule Plausible.Stats.Aggregate do
 
     Enum.zip(query.metrics, metrics_values)
     |> Map.new()
-  end
-
-  defp aggregate_time_on_page(site, query) do
-    windowed_pages_q =
-      from e in base_event_query(site, Query.remove_top_level_filters(query, ["event:page"])),
-        select: %{
-          next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
-          next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
-          timestamp: e.timestamp,
-          pathname: e.pathname,
-          session_id: e.session_id
-        },
-        windows: [
-          event_horizon: [
-            partition_by: e.session_id,
-            order_by: e.timestamp,
-            frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-          ]
-        ]
-
-    event_page_filter = Filters.get_toplevel_filter(query, "event:page")
-
-    timed_page_transitions_q =
-      from e in Ecto.Query.subquery(windowed_pages_q),
-        group_by: [e.pathname, e.next_pathname, e.session_id],
-        where: ^SQL.WhereBuilder.build_condition(:pathname, event_page_filter),
-        where: e.next_timestamp != 0,
-        select: %{
-          pathname: e.pathname,
-          transition: e.next_pathname != e.pathname,
-          duration: sum(e.next_timestamp - e.timestamp)
-        }
-
-    avg_time_per_page_transition_q =
-      from e in Ecto.Query.subquery(timed_page_transitions_q),
-        select: %{avg: fragment("sum(?)/countIf(?)", e.duration, e.transition)},
-        group_by: e.pathname
-
-    time_on_page_q =
-      from e in Ecto.Query.subquery(avg_time_per_page_transition_q),
-        select: fragment("avg(ifNotFinite(?,NULL))", e.avg)
-
-    %{time_on_page: ClickhouseRepo.one(time_on_page_q, query: query)}
   end
 
   @metrics_to_round [:bounce_rate, :time_on_page, :visit_duration, :sample_percent]

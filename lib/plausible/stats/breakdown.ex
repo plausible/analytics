@@ -9,8 +9,6 @@ defmodule Plausible.Stats.Breakdown do
   use Plausible
   use Plausible.Stats.SQL.Fragments
 
-  import Plausible.Stats.Base
-  import Ecto.Query
   alias Plausible.Stats.{Query, QueryOptimizer, QueryExecutor}
 
   def breakdown(
@@ -42,7 +40,6 @@ defmodule Plausible.Stats.Breakdown do
 
     QueryExecutor.execute(site, query_with_metrics)
     |> build_breakdown_result(query_with_metrics, metrics)
-    |> maybe_add_time_on_page(site, query_with_metrics, metrics)
     |> update_currency_metrics(site, query_with_metrics)
   end
 
@@ -62,108 +59,6 @@ defmodule Plausible.Stats.Breakdown do
   defp result_key("event:" <> key), do: key |> String.to_existing_atom()
   defp result_key("visit:" <> key), do: key |> String.to_existing_atom()
   defp result_key(dimension), do: dimension
-
-  defp maybe_add_time_on_page(event_results, site, query, metrics) do
-    if query.dimensions == ["event:page"] and :time_on_page in metrics do
-      pages = Enum.map(event_results, & &1[:page])
-      time_on_page_result = breakdown_time_on_page(site, query, pages)
-
-      event_results
-      |> Enum.map(fn row ->
-        Map.put(row, :time_on_page, time_on_page_result[row[:page]])
-      end)
-    else
-      event_results
-    end
-  end
-
-  defp breakdown_time_on_page(_site, _query, []) do
-    %{}
-  end
-
-  defp breakdown_time_on_page(site, query, pages) do
-    import Ecto.Query
-
-    windowed_pages_q =
-      from e in base_event_query(
-             site,
-             Query.remove_top_level_filters(query, ["event:page", "event:props"])
-           ),
-           select: %{
-             next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
-             next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
-             timestamp: e.timestamp,
-             pathname: e.pathname,
-             session_id: e.session_id
-           },
-           windows: [
-             event_horizon: [
-               partition_by: e.session_id,
-               order_by: e.timestamp,
-               frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-             ]
-           ]
-
-    timed_page_transitions_q =
-      from e in subquery(windowed_pages_q),
-        group_by: [e.pathname, e.next_pathname, e.session_id],
-        where: e.pathname in ^pages,
-        where: e.next_timestamp != 0,
-        select: %{
-          pathname: e.pathname,
-          transition: e.next_pathname != e.pathname,
-          duration: sum(e.next_timestamp - e.timestamp)
-        }
-
-    no_select_timed_pages_q =
-      from e in subquery(timed_page_transitions_q),
-        group_by: e.pathname
-
-    date_range = Query.date_range(query)
-
-    timed_pages_q =
-      if query.include_imported do
-        # Imported page views have pre-calculated values
-        imported_timed_pages_q =
-          from i in "imported_pages",
-            group_by: i.page,
-            where: i.site_id == ^site.id,
-            where: i.date >= ^date_range.first and i.date <= ^date_range.last,
-            where: i.page in ^pages,
-            select: %{
-              page: i.page,
-              time_on_page: sum(i.time_on_page),
-              visits: sum(i.pageviews) - sum(i.exits)
-            }
-
-        timed_pages_q =
-          from e in no_select_timed_pages_q,
-            select: %{
-              page: e.pathname,
-              time_on_page: sum(e.duration),
-              visits: fragment("countIf(?)", e.transition)
-            }
-
-        "timed_pages"
-        |> with_cte("timed_pages", as: ^timed_pages_q)
-        |> with_cte("imported_timed_pages", as: ^imported_timed_pages_q)
-        |> join(:full, [t], i in "imported_timed_pages", on: t.page == i.page)
-        |> select(
-          [t, i],
-          {
-            fragment("if(empty(?),?,?)", t.page, i.page, t.page),
-            (t.time_on_page + i.time_on_page) / (t.visits + i.visits)
-          }
-        )
-      else
-        from e in no_select_timed_pages_q,
-          select: {e.pathname, fragment("sum(?)/countIf(?)", e.duration, e.transition)}
-      end
-
-    timed_pages_q
-    |> Plausible.ClickhouseRepo.all(query: query)
-    |> Map.new()
-  end
 
   defp maybe_remap_to_group_conversion_rate(metric, dimension) do
     case {metric, dimension} do

@@ -28,10 +28,12 @@ defmodule Plausible.Stats.QueryExecutor do
       |> SQL.QueryBuilder.build(site)
       |> ClickhouseRepo.all(query: query)
 
-    build_results_list(ch_results, comparison_results, query)
+    time_on_page = Plausible.Stats.Legacy.TimeOnPage.calculate(site, query, ch_results)
+
+    build_results_list(ch_results, time_on_page, comparison_results, query)
   end
 
-  defp build_results_list(ch_results, comparison_results, query) do
+  defp build_results_list(ch_results, time_on_page, comparison_results, query) do
     comparison_map =
       if comparison_results do
         comparison_results
@@ -47,7 +49,7 @@ defmodule Plausible.Stats.QueryExecutor do
 
         %{
           dimensions: dimensions,
-          metrics: Enum.map(query.metrics, &Map.get(entry, &1))
+          metrics: Enum.map(query.metrics, &get_metric(entry, &1, dimensions, time_on_page))
         }
         |> add_comparison_results(comparison_map, query, not is_nil(query.include.comparisons))
       end)
@@ -76,6 +78,11 @@ defmodule Plausible.Stats.QueryExecutor do
   defp dimension_label(dimension, entry, query) do
     Map.get(entry, Util.shortname(query, dimension))
   end
+
+  defp get_metric(_entry, :time_on_page, dimensions, time_on_page),
+    do: Map.get(time_on_page, dimensions)
+
+  defp get_metric(entry, metric, _dimensions, _time_on_page), do: Map.get(entry, metric)
 
   defp add_comparison_results(row, _comparison_row, _query, false = _include_comparisons), do: row
 
