@@ -5,9 +5,15 @@ defmodule Plausible.Stats.QueryExecutor do
 
   def execute(site, query) do
     optimized_query = QueryOptimizer.optimize(query)
+    {results_list, meta_extra} = execute_raw(site, optimized_query)
 
+    Plausible.Stats.QueryResult.from(results_list, site, optimized_query, meta_extra)
+  end
+
+  # Exposed for legacy endpoints
+  def execute_raw(site, optimized_query) do
     {comparison_results, _} =
-      if query.include.comparisons do
+      if optimized_query.include.comparisons do
         {:ok, comparison_query} =
           Plausible.Stats.Comparisons.compare(site, optimized_query, "previous_period")
 
@@ -16,10 +22,7 @@ defmodule Plausible.Stats.QueryExecutor do
         {nil, nil}
       end
 
-    {results_list, meta_extra} =
-      execute_and_build_results(optimized_query, site, comparison_results)
-
-    Plausible.Stats.QueryResult.from(results_list, site, optimized_query, meta_extra)
+    execute_and_build_results(optimized_query, site, comparison_results)
   end
 
   defp execute_and_build_results(query, site, comparison_results \\ nil) do
@@ -31,7 +34,7 @@ defmodule Plausible.Stats.QueryExecutor do
     build_results_list(ch_results, comparison_results, query)
   end
 
-  def build_results_list(ch_results, comparison_results, query) do
+  defp build_results_list(ch_results, comparison_results, query) do
     comparison_map =
       if comparison_results do
         comparison_results
