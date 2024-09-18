@@ -22,7 +22,6 @@ defmodule Plausible.Stats.Aggregate do
     query_with_metrics = %Query{query | metrics: metrics}
 
     run_query(site, query_with_metrics)
-    |> Util.keep_requested_metrics(metrics)
     |> cast_revenue_metrics_to_money(currency)
     |> Enum.map(&maybe_round_value/1)
     |> Enum.map(fn {metric, value} -> {metric, %{value: value}} end)
