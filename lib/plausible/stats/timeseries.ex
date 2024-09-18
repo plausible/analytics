@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Timeseries do
 
   use Plausible
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Query, QueryOptimizer, QueryResult, SQL}
+  alias Plausible.Stats.{Query, QueryOptimizer, QueryExecutor}
 
   @time_dimension %{
     "month" => "time:month",
@@ -32,16 +32,15 @@ defmodule Plausible.Stats.Timeseries do
         dimensions: [time_dimension(query)],
         order_by: [{time_dimension(query), :asc}],
         v2: true,
-        include: %{time_labels: true, imports: query.include.imports, total_rows: false}
+        include: %{
+          time_labels: true,
+          imports: query.include.imports,
+          total_rows: false,
+          comparisons: false
+        }
       )
-      |> QueryOptimizer.optimize()
 
-    q = SQL.QueryBuilder.build(query_with_metrics, site)
-
-    query_result =
-      q
-      |> ClickhouseRepo.all(query: query)
-      |> QueryResult.from(site, query_with_metrics, %{})
+    query_result = QueryExecutor.execute(site, query_with_metrics)
 
     timeseries_result =
       query_result
