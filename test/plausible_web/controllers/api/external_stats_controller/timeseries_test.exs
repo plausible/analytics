@@ -725,6 +725,27 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       assert List.first(res["results"]) == %{"date" => "2021-01-01", "visitors" => 1}
     end
 
+    test "can filter by channel", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          channel: "Organic Search",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters" => "visit:channel==Organic Search"
+        })
+
+      res = json_response(conn, 200)
+      assert List.first(res["results"]) == %{"date" => "2021-01-01", "visitors" => 1}
+    end
+
     test "can filter by no source/referrer", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),

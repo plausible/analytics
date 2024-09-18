@@ -274,6 +274,38 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  test "breakdown by visit:channel", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:pageview,
+        channel: "Organic Search",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:pageview,
+        channel: "Organic Search",
+        timestamp: ~N[2021-01-01 00:25:00]
+      ),
+      build(:pageview,
+        channel: "",
+        timestamp: ~N[2021-01-01 00:00:00]
+      )
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "property" => "visit:channel"
+      })
+
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"channel" => "Organic Search", "visitors" => 2},
+               %{"channel" => "Direct", "visitors" => 1}
+             ]
+           }
+  end
+
   test "breakdown by visit:country", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview, country_code: "EE", timestamp: ~N[2021-01-01 00:00:00]),

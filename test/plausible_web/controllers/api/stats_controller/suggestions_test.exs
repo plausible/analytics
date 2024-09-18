@@ -74,6 +74,25 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
              ]
     end
 
+    test "returns suggestions for channels", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], channel: "Organic Search"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], channel: "Organic Search"),
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:00],
+          channel: "Video"
+        )
+      ])
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/suggestions/channel?period=month&date=2019-01-01")
+
+      assert json_response(conn, 200) == [
+               %{"label" => "Organic Search", "value" => "Organic Search"},
+               %{"label" => "Video", "value" => "Video"}
+             ]
+    end
+
     test "returns suggestions for countries", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
