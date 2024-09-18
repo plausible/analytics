@@ -1,25 +1,33 @@
 defmodule Plausible.Stats.QueryExecutor do
   use Plausible.ClickhouseRepo
 
-  alias Plausible.Stats.{QueryOptimizer, Filters, SQL, Util}
+  alias Plausible.Stats.{
+    Comparisons,
+    Compare,
+    QueryOptimizer,
+    QueryResult,
+    Legacy,
+    Filters,
+    SQL,
+    Util,
+    Time
+  }
 
   def execute(site, query) do
     optimized_query = QueryOptimizer.optimize(query)
 
-    {comparison_results, _} =
+    comparison_results =
       if optimized_query.include.comparisons do
-        {:ok, comparison_query} =
-          Plausible.Stats.Comparisons.compare(site, optimized_query, "previous_period")
-
-        execute_and_build_results(comparison_query, site)
-      else
-        {nil, nil}
+        optimized_query
+        |> Comparisons.compare(optimized_query.include.comparisons)
+        |> execute_and_build_results(site)
+        |> elem(0)
       end
 
     {results_list, meta_extra} =
       execute_and_build_results(optimized_query, site, comparison_results)
 
-    Plausible.Stats.QueryResult.from(results_list, site, optimized_query, meta_extra)
+    QueryResult.from(results_list, site, optimized_query, meta_extra)
   end
 
   defp execute_and_build_results(query, site, comparison_results \\ nil) do
@@ -28,7 +36,7 @@ defmodule Plausible.Stats.QueryExecutor do
       |> SQL.QueryBuilder.build(site)
       |> ClickhouseRepo.all(query: query)
 
-    time_on_page = Plausible.Stats.Legacy.TimeOnPage.calculate(site, query, ch_results)
+    time_on_page = Legacy.TimeOnPage.calculate(site, query, ch_results)
 
     build_results_list(ch_results, time_on_page, comparison_results, query)
   end
@@ -62,7 +70,7 @@ defmodule Plausible.Stats.QueryExecutor do
 
     goal_index = Map.get(entry, Util.shortname(query, "event:goal"))
 
-    # Closely coupled logic with Plausible.Stats.SQL.Expression.event_goal_join/2
+    # Closely coupled logic with SQL.Expression.event_goal_join/2
     cond do
       goal_index < 0 -> Enum.at(events, -goal_index - 1) |> Plausible.Goal.display_name()
       goal_index > 0 -> Enum.at(paths, goal_index - 1) |> Plausible.Goal.display_name()
@@ -72,7 +80,7 @@ defmodule Plausible.Stats.QueryExecutor do
   defp dimension_label("time:" <> _ = time_dimension, entry, query) do
     datetime = Map.get(entry, Util.shortname(query, time_dimension))
 
-    Plausible.Stats.Time.format_datetime(datetime)
+    Time.format_datetime(datetime)
   end
 
   defp dimension_label(dimension, entry, query) do
@@ -92,7 +100,7 @@ defmodule Plausible.Stats.QueryExecutor do
     change =
       Enum.zip([query.metrics, row.metrics, comparison_metrics])
       |> Enum.map(fn {metric, metric_value, comparison_value} ->
-        Plausible.Stats.Compare.calculate_change(metric, comparison_value, metric_value)
+        Compare.calculate_change(metric, comparison_value, metric_value)
       end)
 
     Map.merge(row, %{
