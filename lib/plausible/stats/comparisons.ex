@@ -10,10 +10,6 @@ defmodule Plausible.Stats.Comparisons do
   alias Plausible.Stats
   alias Plausible.Stats.{Query, DateTimeRange}
 
-  @modes ~w(previous_period year_over_year custom)
-  # :TODO: This is no longer validated.
-  @disallowed_periods ~w(realtime all)
-
   @spec compare(Stats.Query.t(), map()) :: Stats.Query.t()
   @doc """
   Generates a comparison query based on the source query and comparison mode.
@@ -21,29 +17,19 @@ defmodule Plausible.Stats.Comparisons do
   Currently only historical periods are supported for comparisons (not `realtime`
   and `30m` periods).
 
-  The mode parameter specifies the type of comparison and can be one of the
+  ## Options
+    * `mode` (required) - specifies the type of comparison and can be one of the
   following:
 
-    * `"previous_period"` - shifts back the query by the same number of days the
-      source query has.
+      * `"previous_period"` - shifts back the query by the same number of days the
+        source query has.
 
-    * `"year_over_year"` - shifts back the query by 1 year.
+      * `"year_over_year"` - shifts back the query by 1 year.
 
-    * `"custom"` - compares the query using a custom date range. See options for
-      more details.
+      * `"custom"` - compares the query using a custom date range. See `date_range` for
+        more details.
 
-  The comparison query returned by the function has its end date restricted to
-  the current day. This can be overridden by the `now` option, described below.
-
-  ## Options
-
-    * `:now` - a `NaiveDateTime` struct with the current date and time. This is
-      optional and used for testing purposes.
-
-    * `:from` - a ISO-8601 date string used when mode is `"custom"`.
-
-    * `:to` - a ISO-8601 date string used when mode is `"custom"`. Must be
-      after `from`.
+    * `:date_range` - a ISO-8601 date string pair used when mode is `"custom"`.
 
     * `:match_day_of_week?` - determines whether the comparison query should be
       adjusted to match the day of the week of the source query. When this option

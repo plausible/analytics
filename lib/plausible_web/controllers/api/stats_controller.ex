@@ -207,8 +207,8 @@ defmodule PlausibleWeb.Api.StatsController do
       Query.from(site, params, debug_metadata(conn))
       |> Query.set_include(:comparisons, parse_comparison_options(site, params))
 
-    comparison_query = comparison_query(site, query, params)
     {top_stats, sample_percent} = fetch_top_stats(site, query)
+    comparison_query = comparison_query(site, query, params)
 
     json(conn, %{
       top_stats: top_stats,

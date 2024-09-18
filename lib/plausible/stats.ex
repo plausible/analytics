@@ -1,6 +1,5 @@
 defmodule Plausible.Stats do
   use Plausible
-  alias Plausible.Stats.QueryResult
   use Plausible.ClickhouseRepo
 
   alias Plausible.Stats.{
@@ -9,8 +8,7 @@ defmodule Plausible.Stats do
     Timeseries,
     CurrentVisitors,
     FilterSuggestions,
-    QueryExecutor,
-    SQL
+    QueryExecutor
   }
 
   use Plausible.DebugReplayInfo

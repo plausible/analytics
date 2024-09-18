@@ -1,4 +1,14 @@
 defmodule Plausible.Stats.QueryExecutor do
+  @doc """
+  This module is responsible for executing a Plausible.Stats.Query
+  and gathering results.
+
+  Some secondary responsibilities are:
+  1. Dealing with comparison queries and combining results with main
+  2. Dealing with time-on-page
+  3. Passing total_rows from clickhouse to QueryResult meta
+  """
+
   use Plausible.ClickhouseRepo
 
   alias Plausible.Stats.{

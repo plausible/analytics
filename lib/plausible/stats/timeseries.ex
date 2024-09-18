@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Timeseries do
 
   use Plausible
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Query, QueryOptimizer, QueryExecutor}
+  alias Plausible.Stats.{Query, QueryExecutor}
 
   @time_dimension %{
     "month" => "time:month",
