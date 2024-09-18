@@ -17,7 +17,7 @@ defmodule Plausible.Stats.Breakdown do
         site,
         %Query{dimensions: [dimension], order_by: order_by} = query,
         metrics,
-        { limit, page },
+        {limit, page},
         _opts \\ []
       ) do
     transformed_metrics = transform_metrics(metrics, dimension)
@@ -33,23 +33,21 @@ defmodule Plausible.Stats.Breakdown do
           |> Enum.uniq_by(&elem(&1, 0)),
         dimensions: transform_dimensions(dimension),
         filters: query.filters ++ dimension_filters(dimension),
-        pagination: %{ limit: limit, offset: (page - 1) * limit },
+        pagination: %{limit: limit, offset: (page - 1) * limit},
         v2: true,
         # Allow pageview and event metrics to be queried off of sessions table
         legacy_breakdown: true
       )
       |> QueryOptimizer.optimize()
 
-    {result_list, _} = QueryExecutor.execute_raw(site, query_with_metrics)
-
-    result_list
+    QueryExecutor.execute(site, query_with_metrics)
     |> build_breakdown_result(query_with_metrics, metrics)
     |> maybe_add_time_on_page(site, query_with_metrics, metrics)
     |> update_currency_metrics(site, query_with_metrics)
   end
 
-  defp build_breakdown_result(query_result_list, query, metrics) do
-    query_result_list
+  defp build_breakdown_result(query_result, query, metrics) do
+    query_result.results
     |> Enum.map(fn %{dimensions: dimensions, metrics: entry_metrics} ->
       dimension_map =
         query.dimensions |> Enum.map(&result_key/1) |> Enum.zip(dimensions) |> Enum.into(%{})

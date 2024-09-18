@@ -5,13 +5,7 @@ defmodule Plausible.Stats.QueryExecutor do
 
   def execute(site, query) do
     optimized_query = QueryOptimizer.optimize(query)
-    {results_list, meta_extra} = execute_raw(site, optimized_query)
 
-    Plausible.Stats.QueryResult.from(results_list, site, optimized_query, meta_extra)
-  end
-
-  # Exposed for legacy endpoints
-  def execute_raw(site, optimized_query) do
     {comparison_results, _} =
       if optimized_query.include.comparisons do
         {:ok, comparison_query} =
@@ -22,7 +16,10 @@ defmodule Plausible.Stats.QueryExecutor do
         {nil, nil}
       end
 
-    execute_and_build_results(optimized_query, site, comparison_results)
+    {results_list, meta_extra} =
+      execute_and_build_results(optimized_query, site, comparison_results)
+
+    Plausible.Stats.QueryResult.from(results_list, site, optimized_query, meta_extra)
   end
 
   defp execute_and_build_results(query, site, comparison_results \\ nil) do
