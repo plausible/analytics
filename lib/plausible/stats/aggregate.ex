@@ -9,7 +9,7 @@ defmodule Plausible.Stats.Aggregate do
   use Plausible
   import Plausible.Stats.Base
   import Ecto.Query
-  alias Plausible.Stats.{Query, Util, SQL, Filters}
+  alias Plausible.Stats.{Query, QueryExecutor, Util, SQL, Filters}
 
   def aggregate(site, query, metrics) do
     {currency, metrics} =
@@ -23,8 +23,6 @@ defmodule Plausible.Stats.Aggregate do
 
     query_with_metrics = %Query{query | metrics: metrics}
 
-    q = Plausible.Stats.SQL.QueryBuilder.build(query_with_metrics, site)
-
     time_on_page_task =
       if :time_on_page in query_with_metrics.metrics do
         fn -> aggregate_time_on_page(site, query) end
@@ -33,10 +31,10 @@ defmodule Plausible.Stats.Aggregate do
       end
 
     Plausible.ClickhouseRepo.parallel_tasks([
-      run_query_task(q, query),
+      fn -> run_query(site, query_with_metrics) end,
       time_on_page_task
     ])
-    |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)
+    |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(task_result, aggregate) end)
     |> Util.keep_requested_metrics(metrics)
     |> cast_revenue_metrics_to_money(currency)
     |> Enum.map(&maybe_round_value/1)
@@ -44,8 +42,14 @@ defmodule Plausible.Stats.Aggregate do
     |> Enum.into(%{})
   end
 
-  defp run_query_task(nil, _query), do: fn -> %{} end
-  defp run_query_task(q, query), do: fn -> ClickhouseRepo.one(q, query: query) end
+  def run_query(site, query) do
+    query_result = QueryExecutor.execute(site, query)
+
+    [%{metrics: metrics_values}] = query_result.results
+
+    Enum.zip(query.metrics, metrics_values)
+    |> Map.new()
+  end
 
   defp aggregate_time_on_page(site, query) do
     windowed_pages_q =
