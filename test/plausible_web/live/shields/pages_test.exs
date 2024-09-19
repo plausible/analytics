@@ -148,7 +148,7 @@ defmodule PlausibleWeb.Live.Shields.PagesTest do
       assert html =~ "/test/another"
 
       assert html =~
-               "This rule might be redundant because the following rules may match first:<br/>/test/*"
+               "This rule might be redundant because the following rules may match first:\n\n/test/*"
 
       broader_rule_id =
         site

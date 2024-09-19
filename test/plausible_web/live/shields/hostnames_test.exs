@@ -172,7 +172,7 @@ defmodule PlausibleWeb.Live.Shields.HostnamesTest do
       assert html =~ "subdomain.example.com"
 
       assert html =~
-               "This rule might be redundant because the following rules may match first:<br/>*example.com"
+               "This rule might be redundant because the following rules may match first:\n\n*example.com"
 
       broader_rule_id =
         site
