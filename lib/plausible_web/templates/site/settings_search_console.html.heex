@@ -9,18 +9,20 @@
   </:subtitle>
   <%= if Keyword.get(Application.get_env(:plausible, :google), :client_id) do %>
     <%= if @site.google_auth do %>
-      <div class="flex py-8">
-        <span class="flex-1">
-          Linked Google account: <b><%= @site.google_auth.email %></b>
-        </span>
+      <PlausibleWeb.Live.Components.Form.input
+        name="account"
+        label="Linked Google account"
+        value={@site.google_auth.email}
+        disabled="disabled"
+      />
 
-        <%= link("Unlink Google account",
-          to: "/#{URI.encode_www_form(@site.domain)}/settings/google-search",
-          class:
-            "inline-block px-4 leading-5 font-medium text-red-600 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150",
-          method: "delete"
-        ) %>
-      </div>
+      <.button_link
+        theme="danger"
+        href={Routes.site_path(@conn, :delete_google_auth, @site.domain)}
+        method="delete"
+      >
+        Unlink Google Account
+      </.button_link>
 
       <%= case @search_console_domains do %>
         <% {:ok, domains} -> %>
@@ -55,26 +57,27 @@
             <.button type="submit">Save</.button>
           <% end %>
         <% {:error, error} -> %>
-          <p class="mt-6">
-            The following error happened when fetching your Google Search Console domains:
-          </p>
-
-          <%= case error do %>
-            <% "invalid_grant" -> %>
-              <p class="text-red-700 font-medium mt-3">
-                <a href="https://plausible.io/docs/google-search-console-integration#i-get-the-invalid-grant-error">
-                  Invalid Grant error returned from Google. <span class="text-indigo-500">See here on how to fix it</span>.
-                </a>
-              </p>
-            <% "google_auth_error" -> %>
-              <p class="text-red-700 font-medium mt-3">
-                Your Search Console account hasn't been connected successfully. Please unlink your Google account and try linking it again.
-              </p>
-            <% _ -> %>
-              <p class="text-red-700 font-medium mt-3">
-                Something went wrong, but looks temporary. If the problem persists, try re-linking your Google account.
-              </p>
-          <% end %>
+          <.notice title="Intergration Error" theme={:red} class="mt-8">
+            <p>
+              The following error happened when fetching your Google Search Console domains:
+            </p>
+            <p class="mt-4">
+              <%= case error do %>
+                <% "invalid_grant" -> %>
+                  Invalid Grant error returned from Google.
+                  <.styled_link
+                    new_tab={true}
+                    href="https://plausible.io/docs/google-search-console-integration#i-get-the-invalid-grant-error"
+                  >
+                    See here on how to fix it
+                  </.styled_link>
+                <% "google_auth_error" -> %>
+                  Your Search Console account hasn't been connected successfully. Please unlink your Google account and try linking it again.
+                <% _ -> %>
+                  Something went wrong, but looks temporary. If the problem persists, try re-linking your Google account.
+              <% end %>
+            </p>
+          </.notice>
       <% end %>
     <% else %>
       <PlausibleWeb.Components.Google.button

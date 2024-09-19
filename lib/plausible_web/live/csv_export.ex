@@ -147,12 +147,9 @@ defmodule PlausibleWeb.Live.CSVExport do
 
   defp fetch_export_failed(assigns) do
     ~H"""
-    <div class="flex items-center">
-      <Heroicons.exclamation_circle class="w-4 h-4 text-red-500" />
-      <p class="ml-2 text-sm text-gray-500">
-        Something went wrong when fetching exports. Please try again later.
-      </p>
-    </div>
+    <.notice class="mt-4" title="Something went wrong when fetching exports" theme={:red}>
+      Please try again later.
+    </.notice>
     """
   end
 

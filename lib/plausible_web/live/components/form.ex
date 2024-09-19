@@ -17,6 +17,9 @@ defmodule PlausibleWeb.Live.Components.Form do
   <.input field={@form[:email]} type="email" />
   <.input name="my-input" errors={["oh no!"]} />
   """
+
+  @default_input_class "dark:bg-gray-900 w-full block pl-3 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+
   attr(:id, :any, default: nil)
   attr(:name, :any)
   attr(:label, :string, default: nil)
@@ -43,13 +46,10 @@ defmodule PlausibleWeb.Live.Components.Form do
          multiple pattern placeholder readonly required rows size step)
   )
 
-  attr(:class, :any,
-    default: [
-      "dark:bg-gray-900 w-full block pl-3 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
-    ]
-  )
+  attr(:class, :any, default: @default_input_class)
 
   attr(:mt?, :boolean, default: true)
+  attr(:disabled, :any, default: nil)
 
   slot(:inner_block)
 
@@ -74,7 +74,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         name={@name}
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-        class={@class}
+        class={[@class, assigns[:disabled] && "text-gray-500 dark:text-gray-600"]}
         {@rest}
       />
       <%= render_slot(@inner_block) %>
@@ -87,16 +87,18 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   attr(:rest, :global)
   attr(:id, :string, required: true)
-  attr(:class, :string, default: "")
   attr(:name, :string, required: true)
   attr(:label, :string, default: nil)
   attr(:value, :string, default: "")
 
   def input_with_clipboard(assigns) do
+    class = [@default_input_class, "pr-20 w-full"]
+    assigns = assign(assigns, class: class)
+
     ~H"""
     <div>
       <div :if={@label}>
-        <.label for={@id}>
+        <.label for={@id} class="mb-2">
           <%= @label %>
         </.label>
       </div>
@@ -108,7 +110,7 @@ defmodule PlausibleWeb.Live.Components.Form do
           value={@value}
           type="text"
           readonly="readonly"
-          class={[@class, "pr-20 w-full"]}
+          class={@class}
           {@rest}
         />
         <a

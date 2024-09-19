@@ -46,14 +46,12 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
         ) %>
       <% end %>
 
-      <div class="mt-4">
-        <div class="grid mb-16">
-          <div class="mr-6 justify-self-end">
-            <PlausibleWeb.Components.Generic.button phx-click="add-token">
-              Add Plugin Token
-            </PlausibleWeb.Components.Generic.button>
-          </div>
-        </div>
+      <div>
+        <.filter_bar filtering_enabled?={false}>
+          <.button phx-click="add-token" mt?={false}>
+            Add Plugin Token
+          </.button>
+        </.filter_bar>
 
         <.table :if={not Enum.empty?(@displayed_tokens)} rows={@displayed_tokens}>
           <:thead>
@@ -64,9 +62,9 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
           </:thead>
           <:tbody :let={token}>
             <.td>
-          <span class="token-description">
-              <%= token.description %>
-          </span>
+              <span class="token-description">
+                <%= token.description %>
+              </span>
             </.td>
             <.td hide_on_mobile>
               **********<%= token.hint %>

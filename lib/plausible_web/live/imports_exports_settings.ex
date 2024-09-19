@@ -66,23 +66,20 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       )
 
     ~H"""
-    <div class="mt-5 flex gap-x-4">
+    <div class="mt-4 text-gray-800 flex justify-end gap-x-4">
       <.button_link
-        class="w-36 h-20"
         theme="bright"
-        disabled={@import_in_progress? or @at_maximum?}
         href={Plausible.Google.API.import_authorize_url(@site.id)}
+        disabled={@import_in_progress? or @at_maximum?}
       >
-        <img src="/images/icon/google_analytics_logo.svg" alt="Google Analytics import" />
+        Import from
+        <img src="/images/icon/google_analytics_logo.svg" alt="Google Analytics import" class="h-6" />
       </.button_link>
-
       <.button_link
-        class="w-36 h-20"
-        theme="bright"
         disabled={@import_in_progress? or @at_maximum?}
         href={"/#{URI.encode_www_form(@site.domain)}/settings/import"}
       >
-        <img class="h-16" src="/images/icon/csv_logo.svg" alt="New CSV import" />
+        Import from CSV
       </.button_link>
     </div>
 
@@ -90,26 +87,68 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       <%= @import_warning %>
     </p>
 
-    <header class="relative border-b border-gray-200 pb-4">
-      <h3 class="mt-6 text-md leading-6 font-medium text-gray-900 dark:text-gray-100">
-        Existing Imports
-      </h3>
-      <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-        A maximum of <%= @max_imports %> imports at any time is allowed.
-      </p>
-    </header>
+    <%!-- <.h2> --%>
+    <%!--   A maximum of <%= @max_imports %> imports at any time is allowed. --%>
+    <%!-- </.h2> --%>
 
-    <div
-      :if={Enum.empty?(@site_imports)}
-      class="text-gray-800 dark:text-gray-200 text-center mt-8 mb-12"
-    >
-      <p>There are no imports yet for this site.</p>
+    <p :if={Enum.empty?(@site_imports)} class="text-center mt-8 mb-12">
+      There are no imports yet for this site.
+    </p>
+
+    <div class="mt-8">
+      <.table :if={not Enum.empty?(@site_imports)} rows={@site_imports}>
+        <:thead>
+          <.th invisible>Status</.th>
+          <.th>Created</.th>
+          <.th>From</.th>
+          <.th>To</.th>
+          <.th>Pageviews</.th>
+          <.th invisible>Actions</.th>
+        </:thead>
+
+        <:tbody :let={entry}>
+          <.td>
+            <Heroicons.clock
+              :if={entry.live_status == SiteImport.pending()}
+              class="block h-6 w-5 text-indigo-600 dark:text-green-600"
+            />
+            <.spinner
+              :if={entry.live_status == SiteImport.importing()}
+              class="block h-6 w-5 text-indigo-600 dark:text-green-600"
+            />
+            <Heroicons.check
+              :if={entry.live_status == SiteImport.completed()}
+              class="block h-6 w-5 text-indigo-600 dark:text-green-600"
+            />
+            <Heroicons.exclamation_triangle
+              :if={entry.live_status == SiteImport.failed()}
+              class="block h-6 w-5 text-red-700 dark:text-red-700"
+            />
+          </.td>
+
+          <.td><%= format_date(entry.site_import.inserted_at) %></.td>
+
+          <.td><%= format_date(entry.site_import.start_date) %></.td>
+
+          <.td><%= format_date(entry.site_import.end_date) %></.td>
+
+          <.td>
+            <%= if entry.live_status == SiteImport.completed(),
+              do:
+                PlausibleWeb.StatsView.large_number_format(
+                  pageview_count(entry.site_import, @pageview_counts)
+                ) %>
+          </.td>
+          <.td actions>
+            <.delete_button
+              href={"/#{URI.encode_www_form(@site.domain)}/settings/forget-import/#{entry.site_import.id}"}
+              method="delete"
+              data-confirm="Are you sure you want to delete this import?"
+            />
+          </.td>
+        </:tbody>
+      </.table>
     </div>
-    <ul :if={not Enum.empty?(@site_imports)}>
-      <li :for={entry <- @site_imports} class="py-4 flex items-center justify-between space-x-4">
-        <.import_entry entry={entry} site={@site} pageview_counts={@pageview_counts} />
-      </li>
-    </ul>
     """
   end
 

@@ -1,23 +1,16 @@
-<div class="max-w-lg w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded p-6  mb-4 mt-8">
-  <h2 class="text-xl font-black dark:text-gray-100">Import from CSV files</h2>
-
-  <div class="my-3 space-y-1.5 text-sm text-gray-400">
-    <p>
-      Please ensure each file follows
-      <.styled_link href="https://plausible.io/docs/csv-import">
-        our CSV format guidelines.
-      </.styled_link>
-    </p>
-
-    <p>
-      You can upload multiple files simultaneously by either selecting them in the file dialog or dragging and dropping them into the designated area.
-    </p>
-  </div>
-
+<PlausibleWeb.Components.Generic.focus_box>
+  <:title>Import from CSV files</:title>
+  <:subtitle>
+    Please ensure each file follows
+    <.styled_link href="https://plausible.io/docs/csv-import">
+      our CSV format guidelines.
+    </.styled_link>
+    You can upload multiple files simultaneously by either selecting them in the file dialog or dragging and dropping them into the designated area.
+  </:subtitle>
   <%= live_render(@conn, PlausibleWeb.Live.CSVImport,
     session: %{
       "site_id" => @site.id,
       "storage" => on_ee(do: "s3", else: "local")
     }
   ) %>
-</div>
+</PlausibleWeb.Components.Generic.focus_box>
