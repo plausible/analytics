@@ -366,7 +366,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         lv |> element("li#dropdown-step-2-option-1 a") |> render_click()
 
         doc = lv |> element("#step-eval-0") |> render()
-        assert text_of_element(doc, ~s/#step-eval-0/) =~ "Entering Visitors: 0"
+        assert text_of_element(doc, ~s/#step-eval-0/) =~ "Visitors: 0"
 
         doc = lv |> element("#step-eval-1") |> render()
         assert text_of_element(doc, ~s/#step-eval-1/) =~ "Dropoff: 0%"

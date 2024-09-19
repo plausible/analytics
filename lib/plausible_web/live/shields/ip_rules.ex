@@ -126,15 +126,9 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
               phx-target={@myself}
               class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
             >
-              <h2 class="text-xl font-black dark:text-gray-100 mb-8">Add IP to Block List</h2>
+              <.title>Add IP to Block List</.title>
 
-              <.input
-                autofocus
-                field={f[:inet]}
-                label="IP Address"
-                class="focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-7/12 rounded-md sm:text-sm border-gray-300 dark:border-gray-500 w-full p-2 mt-2"
-                placeholder="e.g. 192.168.127.12"
-              />
+              <.input autofocus field={f[:inet]} label="IP Address" placeholder="e.g. 192.168.127.12" />
 
               <div class="mt-4">
                 <p
@@ -150,21 +144,14 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                 </p>
               </div>
 
-              <.input
-                field={f[:description]}
-                label="Description"
-                class="focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-7/12 rounded-md sm:text-sm border-gray-300 dark:border-gray-500 w-full p-2 mt-2"
-                placeholder="e.g. The Office"
-              />
+              <.input field={f[:description]} label="Description" placeholder="e.g. The Office" />
 
-              <p class="text-sm mt-2 text-gray-500 dark:text-gray-200">
+              <p class="mt-4">
                 Once added, we will start rejecting traffic from this IP within a few minutes.
               </p>
-              <div class="py-4 mt-8">
-                <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-                  Add IP Address →
-                </PlausibleWeb.Components.Generic.button>
-              </div>
+              <.button type="submit" class="w-full">
+                Add IP Address →
+              </.button>
             </.form>
           </.live_component>
         </.tile>

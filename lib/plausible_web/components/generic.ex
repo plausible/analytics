@@ -367,11 +367,11 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <div class="shadow bg-white dark:bg-gray-800 sm:rounded-md mb-6">
       <header class="relative border-b dark:border-gray-700 p-6">
-        <.h2>
+        <.title>
           <%= render_slot(@title) %>
 
           <.docs_info :if={@docs} slug={@docs} />
-        </.h2>
+        </.title>
         <p class="mt-1 dark:text-gray-300 leading-5">
           <%= render_slot(@subtitle) %>
         </p>
@@ -458,18 +458,22 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  slot(:title)
-  slot(:subtitle)
-  slot(:inner_block, required: true)
-  slot(:footer)
+  slot :title
+  slot :subtitle
+  slot :inner_block, required: true
+  slot :footer
+  attr :rest, :global
 
   def focus_box(assigns) do
     ~H"""
-    <div class="focus-box bg-white w-full max-w-lg mx-auto dark:bg-gray-800 text-black dark:text-gray-100 shadow-md  rounded mb-4 mt-8">
+    <div
+      class="focus-box bg-white w-full max-w-lg mx-auto dark:bg-gray-800 text-black dark:text-gray-100 shadow-md  rounded mb-4 mt-8"
+      {@rest}
+    >
       <div class="p-8">
-        <h2 :if={@title != []} class="text-xl font-black dark:text-gray-100">
+        <.title :if={@title != []}>
           <%= render_slot(@title) %>
-        </h2>
+        </.title>
 
         <div :if={@subtitle != []} class="mt-2 dark:text-gray-200">
           <%= render_slot(@subtitle) %>
@@ -670,12 +674,12 @@ defmodule PlausibleWeb.Components.Generic do
               value={@filter_text}
             />
 
-          <Heroicons.backspace
-            :if={String.trim(@filter_text) != ""}
-            class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500"
-            phx-click="reset-filter-text"
-            id="reset-filter"
-          />
+            <Heroicons.backspace
+              :if={String.trim(@filter_text) != ""}
+              class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500"
+              phx-click="reset-filter-text"
+              id="reset-filter"
+            />
           </form>
         </div>
       </div>
@@ -691,12 +695,23 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   slot :inner_block, required: true
+  attr :class, :any, default: nil
 
   def h2(assigns) do
     ~H"""
-    <h2 class="font-semibold leading-6 font-medium text-gray-900 dark:text-gray-100">
+    <h2 class={[@class || "font-semibold leading-6 font-medium text-gray-900 dark:text-gray-100"]}>
       <%= render_slot(@inner_block) %>
     </h2>
+    """
+  end
+
+  slot :inner_block, required: true
+
+  def title(assigns) do
+    ~H"""
+    <.h2 class="text-xl font-black dark:text-gray-100">
+      <%= render_slot(@inner_block) %>
+    </.h2>
     """
   end
 end

@@ -125,9 +125,10 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
               phx-target={@myself}
               class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
             >
-              <h2 class="text-xl font-black dark:text-gray-100 mb-8">Add Hostname to Allow List</h2>
+              <.title>Add Hostname to Allow List</.title>
 
               <.live_component
+                class="mt-8"
                 submit_name="hostname_rule[hostname]"
                 submit_value={f[:hostname].value}
                 display_value={f[:hostname].value || ""}
@@ -139,7 +140,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
 
               <%= error_tag(f, :hostname) %>
 
-              <p class="text-sm mt-2 text-gray-500 dark:text-gray-200">
+              <p class="mt-4">
                 You can use a wildcard (<code>*</code>) to match multiple hostnames. For example,
                 <code>*<%= @site.domain %></code>
                 will only record traffic on your main domain and all of its subdomains.<br /><br />
@@ -150,11 +151,9 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
                   NB: Once added, we will start rejecting traffic from non-matching hostnames within a few minutes.
                 <% end %>
               </p>
-              <div class="py-4 mt-8">
-                <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-                  Add Hostname →
-                </PlausibleWeb.Components.Generic.button>
-              </div>
+              <.button type="submit" class="w-full">
+                Add Hostname
+              </.button>
             </.form>
           </.live_component>
         </.tile>

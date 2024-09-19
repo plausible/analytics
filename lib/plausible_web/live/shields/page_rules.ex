@@ -120,9 +120,10 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
               phx-target={@myself}
               class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
             >
-              <h2 class="text-xl font-black dark:text-gray-100 mb-8">Add Page to Block List</h2>
+              <.title>Add Page to Block List</.title>
 
               <.live_component
+                class="mt-4"
                 submit_name="page_rule[page_path]"
                 submit_value={f[:page_path].value}
                 display_value={f[:page_path].value || ""}
@@ -134,17 +135,15 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
 
               <%= error_tag(f, :page_path) %>
 
-              <p class="text-sm mt-2 text-gray-500 dark:text-gray-200">
+              <p class="mt-4">
                 You can use a wildcard (<code>*</code>) to match multiple pages. For example,
                 <code>/blog/*</code>
                 will match <code>/blog/post</code>.
                 Once added, we will start rejecting traffic from this page within a few minutes.
               </p>
-              <div class="py-4 mt-8">
-                <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-                  Add Page
-                </PlausibleWeb.Components.Generic.button>
-              </div>
+              <.button type="submit" class="w-full">
+                Add Page
+              </.button>
             </.form>
           </.live_component>
         </.tile>

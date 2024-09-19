@@ -109,9 +109,10 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
               phx-target={@myself}
               class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
             >
-              <h2 class="text-xl font-black dark:text-gray-100 mb-8">Add Country to Block List</h2>
+              <.title>Add Country to Block List</.title>
 
               <.live_component
+                class="mt-4"
                 submit_name="country_rule[country_code]"
                 submit_value={f[:country_code].value}
                 display_value=""
@@ -122,14 +123,12 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
                 options={options(@country_rules)}
               />
 
-              <p class="text-sm mt-2 text-gray-500 dark:text-gray-200">
+              <p class="mt-4">
                 Once added, we will start rejecting traffic from this country within a few minutes.
               </p>
-              <div class="py-4 mt-8">
-                <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-                  Add Country
-                </PlausibleWeb.Components.Generic.button>
-              </div>
+              <.button type="submit" class="w-full">
+                Add Country
+              </.button>
             </.form>
           </.live_component>
         </.tile>

@@ -98,10 +98,10 @@ defmodule PlausibleWeb.Live.Shields.CountriesTest do
 
       added_by = "#{user.name} <#{user.email}>"
 
-      assert [%{country_code: "EE", added_by: ^added_by}] =
+      assert [%{id: id, country_code: "EE", added_by: ^added_by}] =
                Shields.list_country_rules(site)
 
-      tooltip = text_of_element(html, ".tooltip-content")
+      tooltip = text_of_attr(html, "#country-#{id}", "title")
       assert tooltip =~ "Added at #{Date.utc_today()}"
       assert tooltip =~ "by #{added_by}"
     end
