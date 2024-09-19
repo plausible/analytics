@@ -8,7 +8,7 @@ config :plausible, PlausibleWeb.Endpoint,
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
     tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]},
-    npm: ["--prefix", "assets", "run", "typecheck", "--", "--watch"],
+    npm: ["--prefix", "assets", "run", "typecheck", "--", "--watch", "--preserveWatchOutput"],
     npm: [
       "run",
       "deploy",
