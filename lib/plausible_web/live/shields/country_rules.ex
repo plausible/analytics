@@ -72,14 +72,13 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
               <% country = Location.Country.get_country(rule.country_code) %>
               <.td>
                 <div class="flex items-center">
-                  <.tooltip>
-                    <:tooltip_content>
-                      Added at <%= format_added_at(rule.inserted_at, @site.timezone) %> by <%= rule.added_by %>
-                    </:tooltip_content>
-                    <span id={"country-#{rule.id}"} class="mr-4 cursor-help">
-                      <%= country.flag %> <%= country.name %>
-                    </span>
-                  </.tooltip>
+                  <span
+                    id={"country-#{rule.id}"}
+                    class="mr-4 cursor-help"
+                    title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
+                  >
+                    <%= country.flag %> <%= country.name %>
+                  </span>
                 </div>
               </.td>
               <.td>

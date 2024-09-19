@@ -79,17 +79,13 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
             <:tbody :let={rule}>
               <.td>
                 <div class="flex items-center">
-                  <.tooltip>
-                    <:tooltip_content>
-                      Added at <%= format_added_at(rule.inserted_at, @site.timezone) %> by <%= rule.added_by %>
-                    </:tooltip_content>
-                    <div
-                      id={"hostname-#{rule.id}"}
-                      class="mr-4 cursor-help text-ellipsis truncate max-w-xs"
-                    >
-                      <%= rule.hostname %>
-                    </div>
-                  </.tooltip>
+                  <span
+                    id={"hostname-#{rule.id}"}
+                    class="mr-4 cursor-help text-ellipsis truncate max-w-xs"
+                    title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
+                  >
+                    <%= rule.hostname %>
+                  </span>
                 </div>
               </.td>
               <.td>
@@ -100,17 +96,13 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
                   <span :if={rule.action == :allow}>
                     Allowed
                   </span>
-                  <.tooltip :if={@redundant_rules[rule.id]}>
-                    <Heroicons.exclamation_triangle class="ml-4 h-5 w-5 text-red-800" />
-                    <:tooltip_content>
-                      <span>
-                        This rule might be redundant because the following rules may match first:<br /><%= Enum.join(
-                          @redundant_rules[rule.id],
-                          "<br/>"
-                        ) %>
-                      </span>
-                    </:tooltip_content>
-                  </.tooltip>
+                  <span
+                    :if={@redundant_rules[rule.id]}
+                    title={"This rule might be redundant because the following rules may match first:\n\n#{Enum.join(@redundant_rules[rule.id], "\n")}"}
+                    class="pl-4 cursor-help"
+                  >
+                    <Heroicons.exclamation_triangle class="h-5 w-5 text-red-800" />
+                  </span>
                 </div>
               </.td>
               <.td actions>

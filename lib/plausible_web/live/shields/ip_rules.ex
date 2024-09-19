@@ -74,7 +74,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                   <span
                     id={"inet-#{rule.id}"}
                     class="mr-4 cursor-help"
-                    tooltip={"Added at #{format_added_at(rule.inserted_at, @site.timezone)}\nby #{rule.added_by}"}
+                    title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
                   >
                     <%= rule.inet %>
                   </span>
