@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
     init({allowed_roles, nil})
   end
 
-  def init({allowed_roles, conn_params_domain_accessor})
+  def init({allowed_roles, site_param})
       when is_list(allowed_roles) do
     unknown_roles = allowed_roles -- @all_roles
 
@@ -24,18 +24,19 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
       raise ArgumentError, "Unknown allowed roles configured: #{inspect(unknown_roles)}"
     end
 
-    if !is_binary(conn_params_domain_accessor) && !is_nil(conn_params_domain_accessor) do
-      raise ArgumentError, "Invalid site param given: #{inspect(conn_params_domain_accessor)}"
+    if !is_binary(site_param) && !is_nil(site_param) do
+      raise ArgumentError, "Invalid site param given: #{inspect(site_param)}"
     end
 
-    {allowed_roles, conn_params_domain_accessor}
+    {allowed_roles, site_param}
   end
 
-  def call(conn, {allowed_roles, conn_params_domain_accessor}) do
+  def call(conn, {allowed_roles, site_param}) do
     current_user = conn.assigns[:current_user]
 
-    with {:ok, %{site: site, role: membership_role}} <-
-           get_site_with_role(conn, current_user, conn_params_domain_accessor),
+    with {:ok, domain} <- get_domain(conn, site_param),
+         {:ok, %{site: site, role: membership_role}} <-
+           get_site_with_role(conn, current_user, domain),
          {:ok, shared_link} <- maybe_get_shared_link(conn, site) do
       role =
         cond do
@@ -73,17 +74,23 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
     end
   end
 
-  defp get_domain_from_conn(conn, nil) do
-    conn.path_params["domain"] || conn.path_params["website"]
+  defp get_domain(conn, nil) do
+    if domain = conn.path_params["domain"] do
+      {:ok, domain}
+    else
+      error_not_found(conn)
+    end
   end
 
-  defp get_domain_from_conn(conn, conn_params_domain_accessor) do
-    conn.params[conn_params_domain_accessor]
+  defp get_domain(conn, site_param) do
+    if domain = conn.params[site_param] do
+      {:ok, domain}
+    else
+      error_not_found(conn)
+    end
   end
 
-  defp get_site_with_role(conn, current_user, conn_params_domain_accessor) do
-    domain = get_domain_from_conn(conn, conn_params_domain_accessor)
-
+  defp get_site_with_role(conn, current_user, domain) do
     site_query =
       from(
         s in Plausible.Site,
