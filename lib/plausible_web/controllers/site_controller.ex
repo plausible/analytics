@@ -227,6 +227,8 @@ defmodule PlausibleWeb.SiteController do
         Plausible.Google.API.fetch_verified_properties(site.google_auth)
       end
 
+    search_console_domains = {:ok, ["foo.example"]}
+
     has_plugins_tokens? = Plausible.Plugins.API.Tokens.any?(site)
 
     conn

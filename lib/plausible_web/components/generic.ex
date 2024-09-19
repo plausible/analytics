@@ -67,6 +67,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:theme, :string, default: "primary")
   attr(:disabled, :boolean, default: false)
   attr(:method, :string, default: "get")
+  attr(:mt?, :boolean, default: true)
   attr(:rest, :global)
 
   slot(:inner_block)
@@ -111,7 +112,7 @@ defmodule PlausibleWeb.Components.Generic do
       href={@href}
       onclick={@onclick}
       class={[
-        "mt-6",
+        @mt? && "mt-6",
         @button_base_class,
         @theme_class,
         @class
@@ -507,6 +508,7 @@ defmodule PlausibleWeb.Components.Generic do
   def table(assigns) do
     ~H"""
     <table
+      :if={not Enum.empty?(@rows)}
       class="min-w-full divide-y divide-gray-200 dark:divide-gray-400 mb-2 border-b border-gray-200 dark:border-gray-400"
       {@rest}
     >

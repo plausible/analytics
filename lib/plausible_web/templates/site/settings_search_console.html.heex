@@ -27,11 +27,11 @@
       <%= case @search_console_domains do %>
         <% {:ok, domains} -> %>
           <%= if @site.google_auth.property && !(@site.google_auth.property in domains) do %>
-            <p class="mt-6 font-bold">
-              NB: Your Google account does not have access to your currently configured property, <%= @site.google_auth.property %>. Please select a verified property from the list below.
-            </p>
+            <.notice class="mt-4 mb-4">
+              Your Google account does not have access to your currently configured property, <%= @site.google_auth.property %>. Please select a verified property from the list below.
+            </.notice>
           <% else %>
-            <p class="mt-6">
+            <p class="mt-4">
               Select the Google Search Console property you would like to pull keyword data from. If you don't see your domain,
               <.styled_link
                 href="https://plausible.io/docs/google-search-console-integration"
@@ -44,14 +44,12 @@
           <% end %>
 
           <%= form_for Plausible.Site.GoogleAuth.changeset(@site.google_auth), "/#{URI.encode_www_form(@site.domain)}/settings/google", [class: "max-w-xs"], fn f -> %>
-            <div class="my-6">
-              <div class="inline-block relative w-full">
-                <%= select(f, :property, domains,
-                  prompt: "(Choose property)",
-                  class:
-                    "dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:rounded-md "
-                ) %>
-              </div>
+            <div class="inline-block relative w-full">
+              <%= select(f, :property, domains,
+                prompt: "(Choose property)",
+                class:
+                  "dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:rounded-md "
+              ) %>
             </div>
 
             <.button type="submit">Save</.button>

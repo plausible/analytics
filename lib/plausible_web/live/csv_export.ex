@@ -127,7 +127,7 @@ defmodule PlausibleWeb.Live.CSVExport do
 
   defp in_progress(assigns) do
     ~H"""
-    <div class="flex items-center justify-between space-x-2">
+    <div class="flex items-center justify-between space-x-2 p-6">
       <div class="flex items-center">
         <.spinner />
         <span class="ml-2">We are preparing your download ...</span>
@@ -140,7 +140,7 @@ defmodule PlausibleWeb.Live.CSVExport do
         Cancel
       </button>
     </div>
-    <p class="mt-4 text-gray-500">
+    <p class="p-6">
       The preparation of your stats might take a while. Depending on the volume of your data, it might take up to 20 minutes. Feel free to leave the page and return later.
     </p>
     """
@@ -158,7 +158,7 @@ defmodule PlausibleWeb.Live.CSVExport do
     ~H"""
     <div class="flex items-center">
       <Heroicons.exclamation_circle class="w-4 h-4 text-red-500" />
-      <p class="ml-2 text-gray-500">
+      <p class="ml-2 p-6">
         Something went wrong when preparing your download. Please
         <button phx-click="export" class="text-indigo-500">try again.</button>
       </p>

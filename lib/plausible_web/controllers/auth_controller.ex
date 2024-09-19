@@ -530,6 +530,7 @@ defmodule PlausibleWeb.AuthController do
     api_keys = Repo.preload(current_user, :api_keys).api_keys
 
     render(conn, "user_settings.html",
+      layout: {PlausibleWeb.LayoutView, "app.html"},
       api_keys: api_keys,
       settings_changeset: settings_changeset,
       email_changeset: email_changeset,

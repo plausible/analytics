@@ -32,7 +32,17 @@
       You can share your stats privately by generating a shared link. The links are impossible to guess and you can add password protection for extra security.
     </:subtitle>
 
-    <.table :if={@shared_links} rows={@shared_links}>
+    <.filter_bar filtering_enabled?={false}>
+      <.button_link href={Routes.site_path(@conn, :new_shared_link, @site.domain)} mt?={false}>
+        New Link
+      </.button_link>
+    </.filter_bar>
+
+    <p :if={Enum.empty?(@shared_links)} class="mb-8 text-center">
+      No Shared Links configured for this site.
+    </p>
+
+    <.table rows={@shared_links}>
       <:thead>
         <.th hide_on_mobile>Name</.th>
         <.th>Link</.th>
@@ -65,10 +75,6 @@
         </.td>
       </:tbody>
     </.table>
-
-    <.button_link href={Routes.site_path(@conn, :new_shared_link, @site.domain)} class="m-6">
-      New Link
-    </.button_link>
   </.tile>
 
   <.tile docs="embed-dashboard">
