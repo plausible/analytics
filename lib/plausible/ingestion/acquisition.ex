@@ -1,10 +1,38 @@
 defmodule Plausible.Ingestion.Acquisition do
   @moduledoc false
   @external_resource "priv/ga4-source-categories.csv"
+  @mapping_overrides [
+    {"fb", "Facebook"},
+    {"ig", "Instagram"},
+    {"perplexity", "Perplexity"},
+    {"linktree", "Linktree"}
+  ]
+  @custom_source_categories [
+    {"hacker news", "SOURCE_CATEGORY_SOCIAL"},
+    {"yahoo!", "SOURCE_CATEGORY_SEARCH"},
+    {"gmail", "SOURCE_CATEGORY_EMAIL"},
+    {"telegram", "SOURCE_CATEGORY_SOCIAL"},
+    {"slack", "SOURCE_CATEGORY_SOCIAL"},
+    {"producthunt", "SOURCE_CATEGORY_SOCIAL"},
+    {"github", "SOURCE_CATEGORY_SOCIAL"},
+    {"steamcommunity.com", "SOURCE_CATEGORY_SOCIAL"},
+    {"statics.teams.cdn.office.net", "SOURCE_CATEGORY_SOCIAL"},
+    {"vkontakte", "SOURCE_CATEGORY_SOCIAL"},
+    {"threads", "SOURCE_CATEGORY_SOCIAL"},
+    {"ecosia", "SOURCE_CATEGORY_SEARCH"},
+    {"perplexity", "SOURCE_CATEGORY_SEARCH"},
+    {"brave", "SOURCE_CATEGORY_SEARCH"},
+    {"chatgpt.com", "SOURCE_CATEGORY_SEARCH"},
+    {"temu.com", "SOURCE_CATEGORY_SHOPPING"},
+    {"discord", "SOURCE_CATEGORY_SOCIAL"},
+    {"sogou", "SOURCE_CATEGORY_SEARCH"},
+    {"microsoft teams", "SOURCE_CATEGORY_SOCIAL"}
+  ]
   @source_categories Application.app_dir(:plausible, "priv/ga4-source-categories.csv")
                      |> File.read!()
                      |> NimbleCSV.RFC4180.parse_string(skip_headers: false)
                      |> Enum.map(fn [source, category] -> {source, category} end)
+                     |> then(&(@custom_source_categories ++ &1))
                      |> Enum.into(%{})
 
   def init() do
@@ -17,10 +45,14 @@ defmodule Plausible.Ingestion.Acquisition do
 
     [{"referers.yml", map}] = RefInspector.Database.list(:default)
 
-    Enum.flat_map(map, fn {_, entries} ->
-      Enum.map(entries, fn {_, _, _, _, _, _, name} ->
+    Enum.each(map, fn {_, entries} ->
+      Enum.each(entries, fn {_, _, _, _, _, _, name} ->
         :ets.insert(__MODULE__, {String.downcase(name), name})
       end)
+    end)
+
+    Enum.each(@mapping_overrides, fn override ->
+      :ets.insert(__MODULE__, override)
     end)
   end
 
@@ -44,7 +76,7 @@ defmodule Plausible.Ingestion.Acquisition do
       organic_social?(request, source) -> "Organic Social"
       organic_video?(request, source) -> "Organic Video"
       search_source?(source) -> "Organic Search"
-      email?(request) -> "Email"
+      email?(request, source) -> "Email"
       affiliates?(request) -> "Affiliates"
       audio?(request) -> "Audio"
       sms?(request) -> "SMS"
@@ -116,10 +148,11 @@ defmodule Plausible.Ingestion.Acquisition do
       !!source
   end
 
-  @email_tags ["email", "e-mail", "e_mail", "e mail"]
-  defp email?(request) do
-    String.contains?(request.query_params["utm_source"] || "", @email_tags) or
-      String.contains?(request.query_params["utm_medium"] || "", @email_tags)
+  @email_tags ["email", "e-mail", "e_mail", "e mail", "newsletter"]
+  defp email?(request, source) do
+    email_source?(source) or
+      String.contains?(String.downcase(request.query_params["utm_source"] || ""), @email_tags) or
+      String.contains?(String.downcase(request.query_params["utm_medium"] || ""), @email_tags)
   end
 
   defp affiliates?(request) do
@@ -170,6 +203,12 @@ defmodule Plausible.Ingestion.Acquisition do
 
   defp video_source?(source) do
     @source_categories[String.downcase(source)] == "SOURCE_CATEGORY_VIDEO"
+  end
+
+  defp email_source?(nil), do: false
+
+  defp email_source?(source) do
+    @source_categories[String.downcase(source)] == "SOURCE_CATEGORY_EMAIL"
   end
 
   defp paid_medium?(medium) do
