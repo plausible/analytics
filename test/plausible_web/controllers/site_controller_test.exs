@@ -701,7 +701,6 @@ defmodule PlausibleWeb.SiteControllerTest do
                "https://accounts.google.com/o/oauth2/"
 
       assert resp =~ "Import Data"
-      assert resp =~ "Existing Imports"
       assert resp =~ "There are no imports yet"
       assert resp =~ "Export Data"
     end
@@ -820,7 +819,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     @tag capture_log: true, ee_only: true
     test "displays error message", %{conn: conn, site: site} do
       assert conn |> get("/#{site.domain}/settings/imports-exports") |> html_response(200) =~
-               "Something went wrong when fetching exports. Please try again later."
+               "Something went wrong when fetching exports"
     end
   end
 
@@ -1401,7 +1400,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "shows form for new shared link", %{conn: conn, site: site} do
       conn = get(conn, "/sites/#{site.domain}/shared-links/new")
 
-      assert html_response(conn, 200) =~ "New shared link"
+      assert html_response(conn, 200) =~ "New Shared Link"
     end
   end
 

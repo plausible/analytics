@@ -87,10 +87,6 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       </.button_link>
     </div>
 
-    <%!-- <.h2> --%>
-    <%!--   . --%>
-    <%!-- </.h2> --%>
-
     <p :if={Enum.empty?(@site_imports)} class="text-center mt-8 mb-12">
       There are no imports yet for this site.
     </p>
@@ -109,7 +105,7 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
         <:tbody :let={entry}>
           <.td truncate>
             <div class="flex items-center gap-x-2">
-              <div class="w-6">
+              <div class="w-6" title={notice_message(entry.tooltip)}>
                 <Heroicons.clock
                   :if={entry.live_status == SiteImport.pending()}
                   class="block h-6 w-6 text-indigo-600 dark:text-green-600"
@@ -122,12 +118,10 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
                   :if={entry.live_status == SiteImport.completed()}
                   class="block h-6 w-6 text-indigo-600 dark:text-green-600"
                 />
-                <div
+                <Heroicons.exclamation_triangle
                   :if={entry.live_status == SiteImport.failed()}
-                  title={notice_message(entry.tooltip)}
-                >
-                  <Heroicons.exclamation_triangle class="block h-6 w-6 text-red-700 dark:text-red-500" />
-                </div>
+                  class="block h-6 w-6 text-red-700 dark:text-red-500"
+                />
               </div>
               <div
                 class="max-w-sm"
