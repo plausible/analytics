@@ -27,6 +27,39 @@
     {{/if}}
   }
 
+  {{#if pageleave}}
+  // :NOTE: Tracking pageleave events is currently experimental.
+
+  // Multiple pageviews might be sent by the same script when the page
+  // uses client-side routing (e.g. hash or history-based). This flag
+  // prevents registering multiple listeners in those cases.
+  var listeningPageLeave = false
+
+  function triggerPageLeave(pageviewPayload) {
+    var payload = {
+      n: 'pageleave',
+      d: pageviewPayload.d,
+      u: pageviewPayload.u,
+      h: pageviewPayload.h ? pageviewPayload.h : 0
+    }
+
+    if (navigator.sendBeacon) {
+      var blob = new Blob([JSON.stringify(payload)], { type: 'text/plain' });
+      navigator.sendBeacon(endpoint, blob)
+    }
+  }
+
+  function registerPageLeaveListener(pageviewPayload) {
+    if (listeningPageLeave) { return }
+
+    window.addEventListener('pagehide', function () {
+      triggerPageLeave(pageviewPayload)
+    })
+
+    listeningPageLeave = true
+  }
+  {{/if}}
+
 
   function trigger(eventName, options) {
     {{#unless local}}
@@ -115,6 +148,11 @@
 
     request.onreadystatechange = function() {
       if (request.readyState === 4) {
+        {{#if pageleave}}
+        if (eventName === 'pageview') {
+          registerPageLeaveListener(payload)
+        }
+        {{/if}}
         options && options.callback && options.callback({status: request.status})
       }
     }
