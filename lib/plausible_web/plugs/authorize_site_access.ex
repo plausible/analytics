@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
 
   def init([]), do: @all_roles
 
-  def init(allowed_roles) do
+  def init(allowed_roles) when is_list(allowed_roles) do
     unknown_roles = allowed_roles -- @all_roles
 
     if unknown_roles != [] do
@@ -22,10 +22,23 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
     allowed_roles
   end
 
-  def call(conn, allowed_roles) do
+  def init({allowed_roles, conn_params_domain_accessor})
+      when is_list(allowed_roles) and is_binary(conn_params_domain_accessor) do
+    {init(allowed_roles), conn_params_domain_accessor}
+  end
+
+  def call(conn, options) do
     current_user = conn.assigns[:current_user]
 
-    with {:ok, %{site: site, role: membership_role}} <- get_site_with_role(conn, current_user),
+    {allowed_roles, conn_params_domain_accessor} =
+      if is_tuple(options) do
+        options
+      else
+        {options, nil}
+      end
+
+    with {:ok, %{site: site, role: membership_role}} <-
+           get_site_with_role(conn, current_user, conn_params_domain_accessor),
          {:ok, shared_link} <- maybe_get_shared_link(conn, site) do
       role =
         cond do
@@ -63,12 +76,16 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
     end
   end
 
-  defp get_site_with_role(conn, current_user) do
-    # addition is flimsy, do we need an extra argument on plug init to control where we look for the domain?
-    domain =
-      conn.path_params["domain"] ||
-        (conn.method == "POST" && conn.path_info == ["api", "docs", "query"] &&
-           conn.params["site_id"])
+  defp get_domain_from_conn(conn, nil) do
+    conn.path_params["domain"] || conn.path_params["website"]
+  end
+
+  defp get_domain_from_conn(conn, conn_params_domain_accessor) do
+    conn.params[conn_params_domain_accessor]
+  end
+
+  defp get_site_with_role(conn, current_user, conn_params_domain_accessor) do
+    domain = get_domain_from_conn(conn, conn_params_domain_accessor)
 
     site_query =
       from(

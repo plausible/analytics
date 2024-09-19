@@ -48,7 +48,7 @@ defmodule PlausibleWeb.Api.InternalController.DocsQueryTest do
       ])
 
       conn =
-        post(conn, "/api/docs/query", %{
+        post(conn, "/api/docs/query?site_id=ignored", %{
           "site_id" => site.domain,
           "metrics" => ["pageviews"],
           "date_range" => "all"
