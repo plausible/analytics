@@ -105,10 +105,10 @@ defmodule PlausibleWeb.Live.Installation do
       <PlausibleWeb.Components.FirstDashboardLaunchBanner.set :if={@site_created?} site={@site} />
       <PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Install Plausible" />
 
-      <PlausibleWeb.Components.Generic.focus_box>
+      <.focus_box>
         <:title :if={is_nil(@installation_type)}>
           <div class="flex w-full mx-auto justify-center">
-            <PlausibleWeb.Components.Generic.spinner class="spinner block text-center h-8 w-8" />
+            <.spinner class="spinner block text-center h-8 w-8" />
           </div>
         </:title>
         <:title :if={@installation_type == "WordPress"}>
@@ -233,7 +233,7 @@ defmodule PlausibleWeb.Live.Installation do
           </.styled_link>
           if you prefer manual installation method.
         </:footer>
-      </PlausibleWeb.Components.Generic.focus_box>
+      </.focus_box>
     </div>
     """
   end
