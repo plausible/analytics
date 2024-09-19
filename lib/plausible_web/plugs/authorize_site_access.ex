@@ -10,32 +10,29 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
 
   @all_roles [:public, :viewer, :admin, :super_admin, :owner]
 
-  def init([]), do: @all_roles
+  def init([]), do: {@all_roles, nil}
 
   def init(allowed_roles) when is_list(allowed_roles) do
+    init({allowed_roles, nil})
+  end
+
+  def init({allowed_roles, conn_params_domain_accessor})
+      when is_list(allowed_roles) do
     unknown_roles = allowed_roles -- @all_roles
 
     if unknown_roles != [] do
       raise ArgumentError, "Unknown allowed roles configured: #{inspect(unknown_roles)}"
     end
 
-    allowed_roles
+    if !is_binary(conn_params_domain_accessor) && !is_nil(conn_params_domain_accessor) do
+      raise ArgumentError, "Invalid site param given: #{inspect(conn_params_domain_accessor)}"
+    end
+
+    {allowed_roles, conn_params_domain_accessor}
   end
 
-  def init({allowed_roles, conn_params_domain_accessor})
-      when is_list(allowed_roles) and is_binary(conn_params_domain_accessor) do
-    {init(allowed_roles), conn_params_domain_accessor}
-  end
-
-  def call(conn, options) do
+  def call(conn, {allowed_roles, conn_params_domain_accessor}) do
     current_user = conn.assigns[:current_user]
-
-    {allowed_roles, conn_params_domain_accessor} =
-      if is_tuple(options) do
-        options
-      else
-        {options, nil}
-      end
 
     with {:ok, %{site: site, role: membership_role}} <-
            get_site_with_role(conn, current_user, conn_params_domain_accessor),
