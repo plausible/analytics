@@ -25,7 +25,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
     end
 
     if !is_binary(site_param) && !is_nil(site_param) do
-      raise ArgumentError, "Invalid site param given: #{inspect(site_param)}"
+      raise ArgumentError, "Invalid site param configured: #{inspect(site_param)}"
     end
 
     {allowed_roles, site_param}
@@ -83,7 +83,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   end
 
   defp get_domain(conn, site_param) do
-    if domain = conn.params[site_param] do
+    if is_binary(domain = conn.params[site_param]) do
       {:ok, domain}
     else
       error_not_found(conn)
