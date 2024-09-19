@@ -1,11 +1,12 @@
 <.settings_tiles docs="google-analytics-import">
-  <.tile>
+  <.tile no_inner_pad>
     <:title>
       Import Data
     </:title>
     <:subtitle>
       Import existing data from external sources.
-      Pick one of the options below to start a new import.
+      Pick one of the options below to start a new import. <br />
+      A maximum of <%= Plausible.Imported.max_complete_imports() %> imports at any time is allowed.
     </:subtitle>
 
     <%= live_render(@conn, PlausibleWeb.Live.ImportsExportsSettings,
@@ -13,7 +14,7 @@
     ) %>
   </.tile>
 
-  <.tile>
+  <.tile no_inner_pad>
     <:title>
       Export Data
     </:title>

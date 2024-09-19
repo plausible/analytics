@@ -66,7 +66,11 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       )
 
     ~H"""
-    <div class="mt-4 text-gray-800 flex justify-end gap-x-4">
+    <.notice :if={@import_warning}>
+      <%= @import_warning %>
+    </.notice>
+
+    <div class="mt-4 text-gray-800 flex justify-end gap-x-4 mr-8">
       <.button_link
         theme="bright"
         href={Plausible.Google.API.import_authorize_url(@site.id)}
@@ -83,12 +87,8 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       </.button_link>
     </div>
 
-    <p :if={@import_warning} class="mt-4 text-gray-400 text-sm italic">
-      <%= @import_warning %>
-    </p>
-
     <%!-- <.h2> --%>
-    <%!--   A maximum of <%= @max_imports %> imports at any time is allowed. --%>
+    <%!--   . --%>
     <%!-- </.h2> --%>
 
     <p :if={Enum.empty?(@site_imports)} class="text-center mt-8 mb-12">
@@ -98,46 +98,60 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
     <div class="mt-8">
       <.table :if={not Enum.empty?(@site_imports)} rows={@site_imports}>
         <:thead>
-          <.th invisible>Status</.th>
-          <.th>Created</.th>
-          <.th>From</.th>
-          <.th>To</.th>
-          <.th>Pageviews</.th>
+          <.th>Import</.th>
+          <.th hide_on_mobile>Date Range</.th>
+          <.th>
+            <div class="text-right">Pageviews</div>
+          </.th>
           <.th invisible>Actions</.th>
         </:thead>
 
         <:tbody :let={entry}>
-          <.td>
-            <Heroicons.clock
-              :if={entry.live_status == SiteImport.pending()}
-              class="block h-6 w-5 text-indigo-600 dark:text-green-600"
-            />
-            <.spinner
-              :if={entry.live_status == SiteImport.importing()}
-              class="block h-6 w-5 text-indigo-600 dark:text-green-600"
-            />
-            <Heroicons.check
-              :if={entry.live_status == SiteImport.completed()}
-              class="block h-6 w-5 text-indigo-600 dark:text-green-600"
-            />
-            <Heroicons.exclamation_triangle
-              :if={entry.live_status == SiteImport.failed()}
-              class="block h-6 w-5 text-red-700 dark:text-red-700"
-            />
+          <.td truncate>
+            <div class="flex items-center gap-x-2">
+              <div class="w-6">
+                <Heroicons.clock
+                  :if={entry.live_status == SiteImport.pending()}
+                  class="block h-6 w-6 text-indigo-600 dark:text-green-600"
+                />
+                <.spinner
+                  :if={entry.live_status == SiteImport.importing()}
+                  class="block h-6 w-6 text-indigo-600 dark:text-green-600"
+                />
+                <Heroicons.check
+                  :if={entry.live_status == SiteImport.completed()}
+                  class="block h-6 w-6 text-indigo-600 dark:text-green-600"
+                />
+                <div
+                  :if={entry.live_status == SiteImport.failed()}
+                  title={notice_message(entry.tooltip)}
+                >
+                  <Heroicons.exclamation_triangle class="block h-6 w-6 text-red-700 dark:text-red-500" />
+                </div>
+              </div>
+              <div
+                class="max-w-sm"
+                title={"#{Plausible.Imported.SiteImport.label(entry.site_import)} created at #{format_date(entry.site_import.inserted_at)}"}
+              >
+                <%= Plausible.Imported.SiteImport.label(entry.site_import) %>
+              </div>
+            </div>
           </.td>
 
-          <.td><%= format_date(entry.site_import.inserted_at) %></.td>
-
-          <.td><%= format_date(entry.site_import.start_date) %></.td>
-
-          <.td><%= format_date(entry.site_import.end_date) %></.td>
+          <.td hide_on_mobile>
+            <%= format_date(entry.site_import.start_date) %> - <%= format_date(
+              entry.site_import.end_date
+            ) %>
+          </.td>
 
           <.td>
-            <%= if entry.live_status == SiteImport.completed(),
-              do:
-                PlausibleWeb.StatsView.large_number_format(
-                  pageview_count(entry.site_import, @pageview_counts)
-                ) %>
+            <div class="text-right">
+              <%= if entry.live_status == SiteImport.completed(),
+                do:
+                  PlausibleWeb.StatsView.large_number_format(
+                    pageview_count(entry.site_import, @pageview_counts)
+                  ) %>
+            </div>
           </.td>
           <.td actions>
             <.delete_button
@@ -282,8 +296,8 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
     end
   end
 
-  defp notice_message(%{message_label: :slow_import} = assigns) do
-    ~H"""
+  defp notice_message(:slow_import) do
+    """
     The import process might be taking longer due to the amount of data
     and rate limiting enforced by Google Analytics.
     """

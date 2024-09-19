@@ -33,7 +33,6 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
                 data-confirm={delete_confirmation_text(prop)}
                 phx-click="disallow-prop"
                 phx-value-prop={prop}
-                class="w-4 h-4 text-red-600 hover:text-red-700"
                 aria-label={"Remove #{prop} property"}
               />
             </.td>

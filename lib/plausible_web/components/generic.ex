@@ -24,7 +24,7 @@ defmodule PlausibleWeb.Components.Generic do
     "bright" =>
       "border border-gray-200 bg-gray-100 dark:bg-gray-300 text-gray-800 hover:bg-gray-200 focus-visible:outline-gray-100",
     "danger" =>
-      "border border-gray-300 dark:border-gray-500 text-red-700 bg-white dark:bg-gray-900 hover:text-red-500 dark:hover:text-red-500 focus:border-blue-300 dark:text-red-600 active:text-red-800"
+      "border border-gray-300 dark:border-gray-500 text-red-700 bg-white dark:bg-gray-900 hover:text-red-500 dark:hover:text-red-400 focus:border-blue-300 dark:text-red-500 active:text-red-800"
   }
 
   @button_base_class "whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 rounded-md px-3.5 py-2.5 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700"
@@ -538,7 +538,7 @@ defmodule PlausibleWeb.Components.Generic do
     <td
       class={[
         "px-6 py-4 whitespace-nowrap",
-        @truncate && "truncate max-w-xs",
+        @truncate && "truncate max-w-sm",
         @actions && "flex text-right justify-end",
         @hide_on_mobile && "hidden md:table-cell"
       ]}
@@ -561,7 +561,7 @@ defmodule PlausibleWeb.Components.Generic do
   def th(assigns) do
     class =
       if assigns[:invisible] do
-        "sr-only"
+        "invisible"
       else
         "px-6 py-3 text-left"
       end
@@ -639,13 +639,13 @@ defmodule PlausibleWeb.Components.Generic do
     if assigns[:href] do
       ~H"""
       <.unstyled_link href={@href} {@rest}>
-        <Heroicons.trash class="w-5 h-5 text-red-800 hover:text-red-500 dark:text-red-500 dark:hover:text-red-300" />
+        <Heroicons.trash class="w-5 h-5 text-red-800 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400" />
       </.unstyled_link>
       """
     else
       ~H"""
       <button {@rest}>
-        <Heroicons.trash class="w-5 h-5 text-red-800 hover:text-red-500 dark:text-red-500 dark:hover:text-red-300" />
+        <Heroicons.trash class="w-5 h-5 text-red-800 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400" />
       </button>
       """
     end
