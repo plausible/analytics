@@ -98,7 +98,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                   Allowed
                 </span>
               </.td>
-              <.td hide_on_mobile>
+              <.td hide_on_mobile truncate>
                 <span :if={rule.description} title={rule.description}>
                   <%= rule.description %>
                 </span>
