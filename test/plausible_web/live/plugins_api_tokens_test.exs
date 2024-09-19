@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Live.PluginsAPISettingsTest do
 
   alias Plausible.Plugins.API.Tokens
 
-  describe "GET /:website/settings/integrations" do
+  describe "GET /:domain/settings/integrations" do
     setup [:create_user, :log_in, :create_site]
 
     test "does not display the Plugins API section by default", %{conn: conn, site: site} do

@@ -4,7 +4,7 @@ defmodule PlausibleWeb.UnsubscribeControllerTest do
 
   setup {PlausibleWeb.FirstLaunchPlug.Test, :skip}
 
-  describe "GET /sites/:website/weekly-report/unsubscribe" do
+  describe "GET /sites/:domain/weekly-report/unsubscribe" do
     test "removes a recipient from the weekly report without them having to log in", %{conn: conn} do
       site = insert(:site)
       insert(:weekly_report, site: site, recipients: ["recipient@email.com"])
@@ -33,7 +33,7 @@ defmodule PlausibleWeb.UnsubscribeControllerTest do
     end
   end
 
-  describe "GET /sites/:website/monthly-report/unsubscribe" do
+  describe "GET /sites/:domain/monthly-report/unsubscribe" do
     test "removes a recipient from the weekly report without them having to log in", %{conn: conn} do
       site = insert(:site)
       insert(:monthly_report, site: site, recipients: ["recipient@email.com"])

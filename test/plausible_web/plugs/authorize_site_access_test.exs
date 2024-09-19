@@ -34,27 +34,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     assert html_response(conn, 404)
   end
 
-  test "doesn't allow bypassing :domain in path with :website or :domain in query param", %{
-    conn: conn,
-    site: site
-  } do
-    other_site = insert(:site, members: [build(:user)])
-
-    conn =
-      conn
-      |> bypass_through(PlausibleWeb.Router)
-      |> get("/#{other_site.domain}/export", %{
-        "domain" => site.domain,
-        "website" => site.domain
-      })
-      |> AuthorizeSiteAccess.call(_allowed_roles = [:admin, :owner])
-
-    assert conn.halted
-    assert html_response(conn, 404)
-    assert conn.path_params == %{"domain" => other_site.domain}
-  end
-
-  test "doesn't allow bypassing :website in path with :website or :domain in query param", %{
+  test "doesn't allow bypassing :domain in path with :domain in query param", %{
     conn: conn,
     site: site
   } do
@@ -64,14 +44,13 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
       conn
       |> bypass_through(PlausibleWeb.Router)
       |> get("/sites/#{other_site.domain}/change-domain", %{
-        "domain" => site.domain,
-        "website" => site.domain
+        "domain" => site.domain
       })
       |> AuthorizeSiteAccess.call(_allowed_roles = [:admin, :owner])
 
     assert conn.halted
     assert conn.status == 404
-    assert conn.path_params == %{"website" => other_site.domain}
+    assert conn.path_params == %{"domain" => other_site.domain}
   end
 
   test "returns 404 with custom error message for failed API routes", %{conn: conn, user: user} do
