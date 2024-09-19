@@ -157,7 +157,7 @@ defmodule PlausibleWeb.Live.CSVExport do
   defp export_failed(assigns) do
     ~H"""
     <div class="flex items-center">
-      <Heroicons.exclamation_circle class="w-4 h-4 text-red-400" />
+      <Heroicons.exclamation_circle class="w-4 h-4 text-red-500" />
       <p class="ml-2 text-gray-500">
         Something went wrong when preparing your download. Please
         <button phx-click="export" class="text-indigo-500">try again.</button>
