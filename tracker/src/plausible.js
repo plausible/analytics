@@ -10,6 +10,7 @@
   var scriptEl = document.currentScript;
   {{/if}}
   var endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint(scriptEl)
+  var dataDomain = scriptEl.getAttribute('data-domain')
 
   function onIgnoredEvent(reason, options) {
     if (reason) console.warn('Ignoring Event: ' + reason);
@@ -35,13 +36,16 @@
   // prevents registering multiple listeners in those cases.
   var listeningPageLeave = false
 
-  function triggerPageLeave(pageviewPayload) {
+  function triggerPageLeave(url) {
     var payload = {
       n: 'pageleave',
-      d: pageviewPayload.d,
-      u: pageviewPayload.u,
-      h: pageviewPayload.h ? pageviewPayload.h : 0
+      d: dataDomain,
+      u: url,
     }
+
+    {{#if hash}}
+    payload.h = 1
+    {{/if}}
 
     if (navigator.sendBeacon) {
       var blob = new Blob([JSON.stringify(payload)], { type: 'text/plain' });
@@ -49,11 +53,11 @@
     }
   }
 
-  function registerPageLeaveListener(pageviewPayload) {
+  function registerPageLeaveListener(url) {
     if (listeningPageLeave) { return }
 
     window.addEventListener('pagehide', function () {
-      triggerPageLeave(pageviewPayload)
+      triggerPageLeave(url)
     })
 
     listeningPageLeave = true
@@ -106,7 +110,7 @@
     {{else}}
     payload.u = location.href
     {{/if}}
-    payload.d = scriptEl.getAttribute('data-domain')
+    payload.d = dataDomain
     payload.r = document.referrer || null
     if (options && options.meta) {
       payload.m = JSON.stringify(options.meta)
@@ -150,7 +154,7 @@
       if (request.readyState === 4) {
         {{#if pageleave}}
         if (eventName === 'pageview') {
-          registerPageLeaveListener(payload)
+          registerPageLeaveListener(payload.u)
         }
         {{/if}}
         options && options.callback && options.callback({status: request.status})
@@ -167,25 +171,41 @@
   {{#unless manual}}
     var lastPage;
 
-    function page() {
+    {{#if pageleave}}
+    var lastUrl = location.href
+
+    function pageLeave() {
+      triggerPageLeave(lastUrl);
+      lastUrl = location.href;
+    }
+    {{/if}}
+
+    function page(isSPANavigation) {
       {{#unless hash}}
       if (lastPage === location.pathname) return;
       {{/unless}}
+      
+      {{#if pageleave}}
+      if (isSPANavigation) {pageLeave()}
+      {{/if}}
+
       lastPage = location.pathname
       trigger('pageview')
     }
 
+    var onSPANavigation = function() {page(true)}
+
     {{#if hash}}
-    window.addEventListener('hashchange', page)
+    window.addEventListener('hashchange', onSPANavigation)
     {{else}}
     var his = window.history
     if (his.pushState) {
       var originalPushState = his['pushState']
       his.pushState = function() {
         originalPushState.apply(this, arguments)
-        page();
+        onSPANavigation();
       }
-      window.addEventListener('popstate', page)
+      window.addEventListener('popstate', onSPANavigation)
     }
     {{/if}}
 
