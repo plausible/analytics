@@ -4,9 +4,8 @@ defmodule Plausible.IngestRepo.Migrations.RemapSources do
   @mappings %{
     "android-app://com.reddit.frontpage" => "Reddit",
     "perplexity.ai" => "Perplexity",
-    "perplexity" => "Perplexity",
     "search.brave.com" => "Brave",
-    "python.orgyandex.com.tr" => "Yandex",
+    "yandex.com.tr" => "Yandex",
     "yandex.kz" => "Yandex",
     "ya.ru" => "Yandex",
     "yandex.uz" => "Yandex",
@@ -16,12 +15,20 @@ defmodule Plausible.IngestRepo.Migrations.RemapSources do
     "discord.com" => "Discord",
     "t.me" => "Telegram",
     "webk.telegram.org" => "Telegram",
+    "sogou.com" => "Sogou",
+    "m.sogou.com" => "Sogou",
+    "wap.sogou.com" => "Sogou",
     "canary.discord.com" => "Discord",
     "ptb.discord.com" => "Discord",
     "discordapp.com" => "Discord",
+    "linktr.ee" => "Linktree",
     "baidu.com" => "Baidu",
+    "statics.teams.cdn.office.net" => "Microsoft Teams",
+    "ntp.msn.com" => "Bing",
+    "fb" => "Facebook",
     "ig" => "Instagram",
-    "fb" => "Facebook"
+    "perplexity" => "Perplexity",
+    "linktree" => "Linktree"
   }
 
   def up do
