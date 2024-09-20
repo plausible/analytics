@@ -99,6 +99,26 @@ defmodule PlausibleWeb.Router do
     end
   end
 
+  # Routes for plug integration testing
+  if Mix.env() in [:test, :ce_test] do
+    scope "/plug-tests", PlausibleWeb do
+      scope [] do
+        pipe_through :browser
+
+        get("/basic", TestController, :browser)
+        get("/:domain/shared-link/:slug", TestController, :browser)
+        get("/:domain/with-domain", TestController, :browser)
+      end
+
+      scope [] do
+        pipe_through :api
+
+        get("/api-basic", TestController, :api)
+        get("/:domain/api-with-domain", TestController, :api)
+      end
+    end
+  end
+
   scope path: "/api/plugins", as: :plugins_api do
     pipeline :plugins_api_auth do
       plug(PlausibleWeb.Plugs.AuthorizePluginsAPI)

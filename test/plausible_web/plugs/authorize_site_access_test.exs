@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn =
       conn
       |> bypass_through(PlausibleWeb.Router)
-      |> get("/invalid.domain")
+      |> get("/plug-tests/invalid.domain/with-domain")
       |> AuthorizeSiteAccess.call(opts)
 
     assert conn.halted
@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn =
       conn
       |> bypass_through(PlausibleWeb.Router)
-      |> get("/#{site.domain}")
+      |> get("/plug-tests/#{site.domain}/with-domain")
       |> AuthorizeSiteAccess.call(opts)
 
     assert conn.halted
@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn =
       conn
       |> bypass_through(PlausibleWeb.Router)
-      |> get("/api/docs/query/schema.json", %{"wrong_key" => site.domain})
+      |> get("/plug-tests/basic", %{"wrong_key" => site.domain})
       |> AuthorizeSiteAccess.call(opts)
 
     assert conn.halted
@@ -82,10 +82,10 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn =
       conn
       |> bypass_through(PlausibleWeb.Router)
-      |> get("/api/docs/query/schema.json", %{"some_key" => site.domain})
+      |> get("/plug-tests/basic", %{"some_key" => site.domain})
       |> AuthorizeSiteAccess.call(opts)
 
-    assert conn.status == 200
+    refute conn.halted
     assert conn.assigns.site.id == site.id
   end
 
@@ -100,7 +100,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn =
       conn
       |> bypass_through(PlausibleWeb.Router)
-      |> get("/sites/#{other_site.domain}/change-domain", %{
+      |> get("/plug-tests/#{other_site.domain}/with-domain", %{
         "domain" => site.domain
       })
       |> AuthorizeSiteAccess.call(opts)
@@ -118,7 +118,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn =
       conn
       |> bypass_through(PlausibleWeb.Router)
-      |> get("/api/stats/#{site.domain}/main-graph")
+      |> get("/plug-tests/#{site.domain}/api-with-domain")
       |> AuthorizeSiteAccess.call(opts)
 
     assert conn.halted
@@ -141,7 +141,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn =
       conn
       |> bypass_through(PlausibleWeb.Router)
-      |> put("/sites/#{site.domain}/shared-links/#{shared_link_other_site.slug}", params)
+      |> get("/plug-tests/#{site.domain}/shared-link/#{shared_link_other_site.slug}", params)
       |> AuthorizeSiteAccess.call(opts)
 
     assert conn.halted
@@ -162,7 +162,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn =
       conn
       |> bypass_through(PlausibleWeb.Router)
-      |> get("/#{other_site.domain}", %{"auth" => shared_link.slug})
+      |> get("/plug-tests/#{other_site.domain}/with-domain", %{"auth" => shared_link.slug})
       |> AuthorizeSiteAccess.call(opts)
 
     assert conn.halted
@@ -187,7 +187,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn =
       conn
       |> bypass_through(PlausibleWeb.Router)
-      |> put("/sites/#{site.domain}/shared-links/#{shared_link_other_site.slug}", params)
+      |> get("/plug-tests/#{site.domain}/shared-link/#{shared_link_other_site.slug}", params)
       |> AuthorizeSiteAccess.call(opts)
 
     assert conn.halted
@@ -203,7 +203,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn =
       conn
       |> bypass_through(PlausibleWeb.Router)
-      |> get("/#{site.domain}")
+      |> get("/plug-tests/#{site.domain}/with-domain")
       |> AuthorizeSiteAccess.call(opts)
 
     assert conn.halted
@@ -220,7 +220,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
       conn =
         conn
         |> bypass_through(PlausibleWeb.Router)
-        |> get("/#{site.domain}")
+        |> get("/plug-tests/#{site.domain}/with-domain")
         |> AuthorizeSiteAccess.call(opts)
 
       refute conn.halted
@@ -240,7 +240,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn =
       conn
       |> bypass_through(PlausibleWeb.Router)
-      |> get("/#{site.domain}")
+      |> get("/plug-tests/#{site.domain}/with-domain")
       |> AuthorizeSiteAccess.call(opts)
 
     refute conn.halted
@@ -256,7 +256,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn =
       conn
       |> bypass_through(PlausibleWeb.Router)
-      |> get("/#{site.domain}")
+      |> get("/plug-tests/#{site.domain}/with-domain")
       |> AuthorizeSiteAccess.call(opts)
 
     refute conn.halted
@@ -271,7 +271,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn =
       build_conn()
       |> bypass_through(PlausibleWeb.Router)
-      |> get("/#{site.domain}")
+      |> get("/plug-tests/#{site.domain}/with-domain")
       |> AuthorizeSiteAccess.call(opts)
 
     refute conn.halted
@@ -287,7 +287,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn =
       conn
       |> bypass_through(PlausibleWeb.Router)
-      |> get("/#{site.domain}", %{"auth" => shared_link.slug})
+      |> get("/plug-tests/#{site.domain}/with-domain", %{"auth" => shared_link.slug})
       |> AuthorizeSiteAccess.call(opts)
 
     refute conn.halted
@@ -303,7 +303,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     conn =
       build_conn()
       |> bypass_through(PlausibleWeb.Router)
-      |> get("/#{site.domain}", %{"auth" => shared_link.slug})
+      |> get("/plug-tests/#{site.domain}/with-domain", %{"auth" => shared_link.slug})
       |> AuthorizeSiteAccess.call(opts)
 
     refute conn.halted

@@ -84,6 +84,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
 
   defp get_domain(conn, site_param) do
     domain = conn.params[site_param]
+
     if is_binary(domain) do
       {:ok, domain}
     else
