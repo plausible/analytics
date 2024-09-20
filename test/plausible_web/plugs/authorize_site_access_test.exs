@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
          site: site
        } do
     opts =
-      AuthorizeSiteAccess.init({[:public, :viewer, :admin, :super_admin, :owner], "some_key"})
+      AuthorizeSiteAccess.init({[], "some_key"})
 
     conn =
       conn
@@ -77,7 +77,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
          site: site
        } do
     opts =
-      AuthorizeSiteAccess.init({[:public, :viewer, :admin, :super_admin, :owner], "some_key"})
+      AuthorizeSiteAccess.init({[], "some_key"})
 
     conn =
       conn

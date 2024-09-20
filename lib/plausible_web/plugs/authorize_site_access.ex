@@ -16,8 +16,14 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
     init({allowed_roles, nil})
   end
 
-  def init({allowed_roles, site_param})
-      when is_list(allowed_roles) do
+  def init({allowed_roles, site_param}) when is_list(allowed_roles) do
+    allowed_roles =
+      if allowed_roles == [] do
+        @all_roles
+      else
+        allowed_roles
+      end
+
     unknown_roles = allowed_roles -- @all_roles
 
     if unknown_roles != [] do
