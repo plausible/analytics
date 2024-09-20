@@ -12,14 +12,26 @@ defmodule Plausible.Verification.Checks do
 
   require Logger
 
-  @checks [
+  default_checks = [
     Checks.FetchBody,
     Checks.CSP,
     Checks.ScanBody,
     Checks.Snippet,
-    Checks.SnippetCacheBust,
+    Checks.SnippetCacheBust
+  ]
+
+  ee_checks = [
     Checks.Installation
   ]
+
+  checks =
+    if Plausible.ee?() do
+      default_checks ++ ee_checks
+    else
+      default_checks
+    end
+
+  @checks checks
 
   def run(url, data_domain, opts \\ []) do
     checks = Keyword.get(opts, :checks, @checks)
