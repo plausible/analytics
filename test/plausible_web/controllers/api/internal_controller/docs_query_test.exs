@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Api.InternalController.DocsQueryTest do
-  use PlausibleWeb.ConnCase, async: true
+  use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
   @user_id Enum.random(1000..9999)
 
@@ -70,7 +70,6 @@ defmodule PlausibleWeb.Api.InternalController.DocsQueryTest do
       assert json_response(conn, 200)["results"] == [%{"metrics" => [3], "dimensions" => []}]
     end
 
-    # not ideal that it succeeds
     test "succeeds when site_id missing in body, but present in query params", %{
       conn: conn,
       site: site

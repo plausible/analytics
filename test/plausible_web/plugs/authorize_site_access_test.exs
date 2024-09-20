@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     end
   end
 
-  for init_argument <- [[], {[:public, :viewer, :admin, :super_admin, :owner], nil}] do
+  for init_argument <- [[], {[], nil}, {[:public, :viewer, :admin, :super_admin, :owner], nil}] do
     test "init resolves to expected options with argument #{inspect(init_argument)}" do
       assert {[:public, :viewer, :admin, :super_admin, :owner], nil} ==
                AuthorizeSiteAccess.init(unquote(init_argument))
