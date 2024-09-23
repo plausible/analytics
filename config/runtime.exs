@@ -642,14 +642,17 @@ case mailer_adapter do
 
     if relay = get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR") do
       port = get_int_from_path_or_env(config_dir, "SMTP_HOST_PORT", 587)
-      ssl_enabled = get_var_from_path_or_env(config_dir, "SMTP_HOST_SSL_ENABLED", "false")
-      ssl_enabled = String.to_existing_atom(ssl_enabled)
+
+      ssl_enabled =
+        if ssl_enabled = get_var_from_path_or_env(config_dir, "SMTP_HOST_SSL_ENABLED") do
+          String.to_existing_atom(ssl_enabled)
+        end
 
       protocol =
-        if ssl_enabled || port == 465 do
-          :ssl
-        else
-          :tcp
+        cond do
+          ssl_enabled -> :ssl
+          is_nil(ssl_enabled) and port == 465 -> :ssl
+          true -> :tcp
         end
 
       config :plausible, Plausible.Mailer, protocol: protocol, relay: relay, port: port
