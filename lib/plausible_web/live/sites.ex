@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Live.Sites do
           You don't have any sites yet.
         </p>
         <div class="mt-4 flex sm:ml-4 sm:mt-0">
-          <a href="/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}" class="button">
+          <a href={"/sites/new?flow=#{PlausibleWeb.Flows.provisioning()}"} class="button">
             + Add Website
           </a>
         </div>
