@@ -220,7 +220,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div id="custom-events-form" class="my-6" {@rest}>
       <div id="event-fields">
-        <div class="pb-6 text-gray-700 dark:text-gray-200 text-justify rounded-md">
+        <div class="text-sm pb-6 text-gray-700 dark:text-gray-200 text-justify rounded-md">
           Custom Events are not tracked by default - you have to configure them on your site to be sent to Plausible. See examples and learn more in
           <.styled_link href="https://plausible.io/docs/custom-event-goals" new_tab={true}>
             our docs
@@ -362,7 +362,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def tabs(assigns) do
     ~H"""
-    <div class="mt-6 font-medium dark:text-gray-100">Goal Trigger</div>
+    <div class="text-sm mt-6 font-medium dark:text-gray-100">Goal Trigger</div>
     <div class="my-3 w-full flex rounded border border-gray-300 dark:border-gray-500">
       <.custom_events_tab selected?={@selected_tab == "custom_events"} myself={@myself} />
       <.pageviews_tab selected?={@selected_tab == "pageviews"} myself={@myself} />

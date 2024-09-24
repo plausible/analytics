@@ -21,10 +21,6 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
       </.filter_bar>
       <%= if is_list(@props) && length(@props) > 0 do %>
         <.table id="allowed-props" rows={Enum.with_index(@props)}>
-          <:thead>
-            <.th>Property</.th>
-            <.th invisible>Actions</.th>
-          </:thead>
           <:tbody :let={{prop, index}}>
             <.td id={"prop-#{index}"}><%= prop %></.td>
             <.td actions>

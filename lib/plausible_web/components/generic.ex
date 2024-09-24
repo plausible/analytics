@@ -373,9 +373,9 @@ defmodule PlausibleWeb.Components.Generic do
 
           <.docs_info :if={@docs} slug={@docs} />
         </.title>
-        <p class="mt-1 dark:text-gray-300 leading-5">
+        <div class="text-sm mt-1 dark:text-gray-300 leading-5">
           <%= render_slot(@subtitle) %>
-        </p>
+        </div>
       </header>
 
       <div class={[@no_inner_pad && "pb-2", @no_inner_pad || "pb-6 px-6 pt-2"]}>
@@ -476,7 +476,7 @@ defmodule PlausibleWeb.Components.Generic do
           <%= render_slot(@title) %>
         </.title>
 
-        <div :if={@subtitle != []} class="mt-2 dark:text-gray-200">
+        <div :if={@subtitle != []} class="text-sm mt-2 dark:text-gray-200">
           <%= render_slot(@subtitle) %>
         </div>
 
@@ -501,27 +501,21 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr :rest, :global
+  attr :width, :string, default: "min-w-full"
   attr :rows, :list, default: []
-  slot :thead, required: true
+  slot :thead, required: false
   slot :tbody, required: true
 
   def table(assigns) do
     ~H"""
-    <table
-      :if={not Enum.empty?(@rows)}
-      class="min-w-full divide-y divide-gray-200 dark:divide-gray-400 mb-2 border-b border-gray-200 dark:border-gray-400"
-      {@rest}
-    >
-      <thead>
-        <tr class="border-b border-gray-400 dark:border-gray-200">
+    <table :if={not Enum.empty?(@rows)} class={[@width, "mb-2"]} {@rest}>
+      <thead :if={@thead}>
+        <tr>
           <%= render_slot(@thead) %>
         </tr>
       </thead>
       <tbody>
-        <tr
-          :for={item <- @rows}
-          class="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-800 dark:even:bg-gray-825"
-        >
+        <tr :for={item <- @rows}>
           <%= render_slot(@tbody, item) %>
         </tr>
       </tbody>
@@ -539,7 +533,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <td
       class={[
-        "px-6 py-4 whitespace-nowrap",
+        "px-6 py-3 whitespace-nowrap",
         @truncate && "truncate max-w-sm",
         @actions && "flex text-right justify-end",
         @hide_on_mobile && "hidden md:table-cell"
@@ -565,7 +559,7 @@ defmodule PlausibleWeb.Components.Generic do
       if assigns[:invisible] do
         "invisible"
       else
-        "px-6 py-3 text-left"
+        "px-6 py-1 text-left text-sm font-semibold text-gray-500 dark:text-gray-400"
       end
 
     assigns = assign(assigns, class: class)
@@ -701,7 +695,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def h2(assigns) do
     ~H"""
-    <h2 class={[@class || "font-semibold leading-6 font-medium text-gray-900 dark:text-gray-100"]}>
+    <h2 class={[@class || "font-semibold leading-6 text-gray-900 dark:text-gray-100"]}>
       <%= render_slot(@inner_block) %>
     </h2>
     """
@@ -711,7 +705,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def title(assigns) do
     ~H"""
-    <.h2 class="text-xl font-black dark:text-gray-100">
+    <.h2 class="text-lg font-medium dark:text-gray-100">
       <%= render_slot(@inner_block) %>
     </.h2>
     """

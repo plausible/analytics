@@ -50,9 +50,9 @@
       </:thead>
       <:tbody :let={link}>
         <.td truncate hide_on_mobile>
-          <Heroicons.lock_closed :if={link.password_hash} class="w-6 h-6 feather mr-2" />
-          <Heroicons.lock_open :if={!link.password_hash} class="w-6 h-6 feather mr-2" />
           <%= link.name %>
+          <Heroicons.lock_closed :if={link.password_hash} class="w-6 h-6 feather ml-2" />
+          <Heroicons.lock_open :if={!link.password_hash} class="w-6 h-6 feather ml-2" />
         </.td>
         <.td>
           <PlausibleWeb.Live.Components.Form.input_with_clipboard
@@ -90,14 +90,15 @@
       id="embed-link"
       label="Enter Shared Link (only public shared links without password can be embedded)"
       value=""
+      width="w-1/2"
     />
 
     <%= label(nil, :theme, "Select Theme",
-      class: "mt-4 mb-2 block font-medium dark:text-gray-100"
+      class: "text-sm mt-4 mb-2 block font-medium dark:text-gray-100"
     ) %>
     <%= select(nil, :theme, ["Light", "Dark", "System"],
       class:
-        "dark:bg-gray-900 mt-1 block w-full pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100 cursor-pointer",
+        "dark:bg-gray-900 mt-1 block w-1/2 pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100 cursor-pointer",
       id: "theme"
     ) %>
 
@@ -107,6 +108,7 @@
       label="Custom Background Colour (optional). Try using `transparent` background to blend the dashboard with your site."
       value=""
       placeholder="e.g. #F9FAFB"
+      width="w-1/2"
     />
 
     <PlausibleWeb.Live.Components.Form.input

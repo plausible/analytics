@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
         </div>
 
         <div class="mt-6">
-          <h3 class="font-semibold leading-6 text-xl">
+          <h3 class="leading-6 text-lg">
             <span :if={@finished? and @success?}>Success!</span>
             <span :if={not @finished?}>Verifying your installation</span>
 

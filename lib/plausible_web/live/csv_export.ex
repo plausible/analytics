@@ -148,7 +148,7 @@ defmodule PlausibleWeb.Live.CSVExport do
 
   defp fetch_export_failed(assigns) do
     ~H"""
-    <.notice class="mt-4" title="Something went wrong when fetching exports" theme={:red}>
+    <.notice title="Something went wrong when fetching exports" theme={:red}>
       Please try again later.
     </.notice>
     """

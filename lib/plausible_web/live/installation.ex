@@ -283,7 +283,7 @@ defmodule PlausibleWeb.Live.Installation do
 
   defp script_extension_control(assigns) do
     ~H"""
-    <div class="mt-2 p-1">
+    <div class="mt-2 p-1 text-sm">
       <div class="flex items-center">
         <input
           type="checkbox"
@@ -339,7 +339,7 @@ defmodule PlausibleWeb.Live.Installation do
         </a>
       </div>
 
-      <h3 class="text-normal mt-4 font-semibold">Enable optional measurements:</h3>
+      <.h2 class="mt-8">Enable optional measurements:</.h2>
       <.script_extension_control
         config={@script_config}
         variant="outbound-links"

@@ -11,6 +11,7 @@
       label="Domain"
       value={@site.domain}
       disabled="disabled"
+      width="w-1/2"
     />
 
     <.button_link href={Routes.site_path(@conn, :change_domain, @site.domain)}>
@@ -23,11 +24,11 @@
     <:subtitle>Update your reporting timezone</:subtitle>
     <%= form_for @changeset, "/#{URI.encode_www_form(@site.domain)}/settings", fn f -> %>
       <%= label(f, :timezone, "Reporting Timezone",
-        class: "mt-4 mb-2 block font-medium dark:text-gray-100"
+        class: "text-sm mt-4 mb-2 block font-medium dark:text-gray-100"
       ) %>
       <%= select(f, :timezone, Plausible.Timezones.options(),
         class:
-          "dark:bg-gray-900 mt-1 block w-full pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100 cursor-pointer"
+          "w-1/2 dark:bg-gray-900 mt-1 block pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100 cursor-pointer"
       ) %>
       <.button type="submit">
         Save timezone

@@ -18,12 +18,13 @@ defmodule PlausibleWeb.Live.Components.Form do
   <.input name="my-input" errors={["oh no!"]} />
   """
 
-  @default_input_class "dark:bg-gray-900 w-full block pl-3 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+  @default_input_class "text-sm dark:bg-gray-900 block pl-3 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
 
   attr(:id, :any, default: nil)
   attr(:name, :any)
   attr(:label, :string, default: nil)
   attr(:value, :any)
+  attr(:width, :string, default: "w-full")
 
   attr(:type, :string,
     default: "text",
@@ -55,7 +56,13 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     assigns
-    |> assign(field: nil, id: assigns.id || field.id, class: assigns.class, mt?: assigns.mt?)
+    |> assign(
+      field: nil,
+      id: assigns.id || field.id,
+      class: assigns.class,
+      mt?: assigns.mt?,
+      width: assigns.width
+    )
     |> assign(:errors, Enum.map(field.errors, &translate_error(&1)))
     |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
     |> assign_new(:value, fn -> field.value end)
@@ -65,7 +72,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div phx-feedback-for={@name} class={@mt? && "mt-4"}>
+    <div phx-feedback-for={@name} class={@mt? && "mt-2"}>
       <.label :if={@label != nil and @label != ""} for={@id} class="mb-2">
         <%= @label %>
       </.label>
@@ -74,7 +81,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         name={@name}
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-        class={[@class, assigns[:disabled] && "text-gray-500 dark:text-gray-600"]}
+        class={[@class, @width, assigns[:disabled] && "text-gray-500 dark:text-gray-600"]}
         {@rest}
       />
       <%= render_slot(@inner_block) %>
@@ -275,7 +282,7 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class={["block font-medium dark:text-gray-100", @class]}>
+    <label for={@for} class={["text-sm block font-medium dark:text-gray-100", @class]}>
       <%= render_slot(@inner_block) %>
     </label>
     """

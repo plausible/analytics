@@ -23,11 +23,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
 
       <%= if Enum.count(@funnels) > 0 do %>
         <.table rows={@funnels}>
-          <:thead>
-            <.th>Funnel</.th>
-            <.th hide_on_mobile>Type</.th>
-            <.th invisible>Actions</.th>
-          </:thead>
           <:tbody :let={funnel}>
             <.td truncate>
               <%= funnel.name %>

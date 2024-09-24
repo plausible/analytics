@@ -34,11 +34,6 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
 
       <%= if Enum.count(@goals) > 0 do %>
         <.table rows={@goals}>
-          <:thead>
-            <.th>Goal</.th>
-            <.th hide_on_mobile>Type</.th>
-            <.th invisible>Actions</.th>
-          </:thead>
           <:tbody :let={goal}>
             <.td truncate>
               <div class="flex">

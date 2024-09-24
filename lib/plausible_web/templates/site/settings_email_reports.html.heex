@@ -47,8 +47,12 @@
       </div>
     </.form>
 
-    <div :if={meta.report} class="mt-6">
-      <.table :if={Enum.count(meta.report.recipients) > 0} rows={meta.report.recipients}>
+    <div :if={meta.report} class="mt-8">
+      <.table
+        :if={Enum.count(meta.report.recipients) > 0}
+        width="w-1/2"
+        rows={meta.report.recipients}
+      >
         <:thead>
           <.th>
             Recipients
@@ -58,7 +62,12 @@
 
         <:tbody :let={recipient}>
           <.td>
-            <%= recipient %>
+            <div class="flex items-center gap-x-2">
+              <Heroicons.envelope_open class="w-6 h-6 feather" />
+              <div>
+                <%= recipient %>
+              </div>
+            </div>
           </.td>
           <.td actions>
             <.delete_button
@@ -78,7 +87,7 @@
 
       <.form
         :let={f}
-        class="p-6"
+        class="px-6 pb-6"
         for={@conn}
         action={Routes.site_path(@conn, meta.add_route, @site.domain)}
         method="post"
@@ -87,11 +96,11 @@
           <PlausibleWeb.Live.Components.Form.input
             field={f[:recipient]}
             type="email"
-            label="Email"
             required
             placeholder="e.g. joe@example.com"
+            mt?={false}
           />
-          <.button type="submit" mt?={false} class="mt-4">
+          <.button type="submit" mt?={false}>
             Add Recipient
           </.button>
         </div>
@@ -154,7 +163,7 @@
             required
             label={meta.threshold_text}
           />
-          <.button type="submit" mt?={false} class="mt-4">
+          <.button type="submit" mt?={false}>
             Save Threshold
           </.button>
         </div>
@@ -164,6 +173,7 @@
     <div class="mt-8">
       <.table
         :if={meta.notification && Enum.count(meta.notification.recipients) > 0}
+        width="w-1/2"
         rows={meta.notification.recipients}
       >
         <:thead>
@@ -175,7 +185,12 @@
 
         <:tbody :let={recipient}>
           <.td>
-            <%= recipient %>
+            <div class="flex items-cetner gap-x-2">
+              <Heroicons.envelope_open class="w-6 h-6 feather" />
+              <div>
+                <%= recipient %>
+              </div>
+            </div>
           </.td>
           <.td actions>
             <.delete_button
@@ -195,7 +210,7 @@
       </.table>
     </div>
 
-    <div :if={meta.notification} class="px-6 pb-6 mt-6">
+    <div :if={meta.notification} class="px-6 pb-6">
       <.form
         :let={f}
         for={@conn}
@@ -212,8 +227,8 @@
           <PlausibleWeb.Live.Components.Form.input
             field={f[:recipient]}
             type="email"
-            label="Email"
             placeholder="e.g. joe@example.com"
+            mt?={false}
             required
           />
           <.button type="submit" mt?={false}>
