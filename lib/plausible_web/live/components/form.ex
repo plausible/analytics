@@ -50,8 +50,6 @@ defmodule PlausibleWeb.Live.Components.Form do
   attr(:class, :any, default: @default_input_class)
 
   attr(:mt?, :boolean, default: true)
-  attr(:disabled, :any, default: nil)
-
   slot(:inner_block)
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
@@ -81,7 +79,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         name={@name}
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-        class={[@class, @width, assigns[:disabled] && "text-gray-500 dark:text-gray-600"]}
+        class={[@class, @width, assigns[:rest][:disabled] && "text-gray-500 dark:text-gray-600"]}
         {@rest}
       />
       <%= render_slot(@inner_block) %>

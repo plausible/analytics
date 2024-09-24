@@ -57,6 +57,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
             :if={@page_rules_count >= Shields.maximum_page_rules()}
             class="mt-4"
             title="Maximum number of pages reached"
+            theme={:gray}
           >
             <p>
               You've reached the maximum number of pages you can block (<%= Shields.maximum_page_rules() %>). Please remove one before adding another.

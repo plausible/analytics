@@ -51,6 +51,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
             :if={@ip_rules_count >= Shields.maximum_ip_rules()}
             class="mt-4"
             title="Maximum number of addresses reached"
+            theme={:gray}
           >
             <p>
               You've reached the maximum number of IP addresses you can block (<%= Shields.maximum_ip_rules() %>). Please remove one before adding another.

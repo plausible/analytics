@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       )
 
     ~H"""
-    <.notice :if={@import_warning}>
+    <.notice :if={@import_warning} theme={:gray}>
       <%= @import_warning %>
     </.notice>
 

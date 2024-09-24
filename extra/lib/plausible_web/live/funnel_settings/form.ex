@@ -119,10 +119,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                 <p id="funnel-eval" class="text-gray-500 dark:text-gray-400 mt-2 mb-2">
                   <%= if @evaluation_result do %>
                     Last month conversion rate: <strong><%= List.last(@evaluation_result.steps).conversion_rate %></strong>%
-                  <% else %>
-                    <span class="text-red-600">
-                      Choose minimum <%= Funnel.min_steps() %> steps to evaluate funnel.
-                    </span>
                   <% end %>
                 </p>
               </div>

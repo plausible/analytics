@@ -5,6 +5,12 @@ defmodule PlausibleWeb.Components.Generic do
   use Phoenix.Component, global_prefixes: ~w(x-)
 
   @notice_themes %{
+    gray: %{
+      bg: "bg-white dark:bg-gray-800",
+      icon: "text-gray-400",
+      title_text: "text-gray-800 dark:text-gray-400",
+      body_text: "text-gray-700 dark:text-gray-500 leading-5"
+    },
     yellow: %{
       bg: "bg-yellow-50 dark:bg-yellow-100",
       icon: "text-yellow-400",
@@ -146,7 +152,7 @@ defmodule PlausibleWeb.Components.Generic do
     assigns = assign(assigns, :theme, Map.fetch!(@notice_themes, assigns.theme))
 
     ~H"""
-    <div id={@dismissable_id} class={@dismissable_id && "hidden"}>
+    <div id={@dismissable_id} class={[@dismissable_id && "hidden", "mb-4"]}>
       <div class={["rounded-md p-8 relative", @theme.bg, @class]} {@rest}>
         <button
           :if={@dismissable_id}

@@ -66,6 +66,10 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
               placeholder="e.g. Signup"
               value={@token_description}
               autocomplete="off"
+              data-1p-ignore
+              data-lp-ignore="true"
+              data-form-type="other"
+              data-bwignore
             />
           </div>
 

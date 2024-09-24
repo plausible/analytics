@@ -57,6 +57,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
             :if={@hostname_rules_count >= Shields.maximum_hostname_rules()}
             class="mt-4"
             title="Maximum number of hostnames reached"
+            theme={:gray}
           >
             <p>
               You've reached the maximum number of hostnames you can block (<%= Shields.maximum_hostname_rules() %>). Please remove one before adding another.
