@@ -168,8 +168,48 @@ defmodule Plausible.ConfigTest do
       assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
                {:adapter, Bamboo.Mua},
                {:ssl, [middlebox_comp_mode: false]},
+               {:protocol, :tcp},
                {:relay, "localhost"},
                {:port, 2525},
+               {:auth, [username: "neo", password: "one"]}
+             ]
+    end
+
+    test "Bamboo.Mua (ssl relay config)" do
+      env = [
+        {"MAILER_ADAPTER", "Bamboo.Mua"},
+        {"SMTP_HOST_ADDR", "localhost"},
+        {"SMTP_HOST_PORT", "2525"},
+        {"SMTP_HOST_SSL_ENABLED", "true"},
+        {"SMTP_USER_NAME", "neo"},
+        {"SMTP_USER_PWD", "one"}
+      ]
+
+      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+               {:adapter, Bamboo.Mua},
+               {:ssl, [middlebox_comp_mode: false]},
+               {:protocol, :ssl},
+               {:relay, "localhost"},
+               {:port, 2525},
+               {:auth, [username: "neo", password: "one"]}
+             ]
+    end
+
+    test "Bamboo.Mua (port=465 relay config)" do
+      env = [
+        {"MAILER_ADAPTER", "Bamboo.Mua"},
+        {"SMTP_HOST_ADDR", "localhost"},
+        {"SMTP_HOST_PORT", "465"},
+        {"SMTP_USER_NAME", "neo"},
+        {"SMTP_USER_PWD", "one"}
+      ]
+
+      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+               {:adapter, Bamboo.Mua},
+               {:ssl, [middlebox_comp_mode: false]},
+               {:protocol, :ssl},
+               {:relay, "localhost"},
+               {:port, 465},
                {:auth, [username: "neo", password: "one"]}
              ]
     end
@@ -186,6 +226,7 @@ defmodule Plausible.ConfigTest do
       assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
                adapter: Bamboo.Mua,
                ssl: [middlebox_comp_mode: false],
+               protocol: :tcp,
                relay: "localhost",
                port: 2525
              ]
