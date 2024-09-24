@@ -83,7 +83,7 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
             />
           </div>
 
-          <p class="mt-4">
+          <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
             Once created, we will not be able to show the Plugin Token again.
             Please copy the Plugin Token now and store it in a secure place.
             <span :if={@token_description == "WordPress"}>

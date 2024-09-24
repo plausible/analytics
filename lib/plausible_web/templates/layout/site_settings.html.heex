@@ -2,15 +2,15 @@
   <div class="container pt-6">
     <%= link("← Back to Stats",
       to: "/#{URI.encode_www_form(@site.domain)}",
-      class: "text-indigo-600 font-bold"
+      class: "text-indigo-600 font-bold text-sm"
     ) %>
-    <div class="pb-5 mt-2 border-b border-gray-200 dark:border-gray-500">
+    <div class="pb-5 border-b border-gray-200 dark:border-gray-500">
       <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate">
         Settings for <%= @site.domain %>
       </h2>
     </div>
-    <div class="lg:grid lg:grid-cols-5 lg:gap-x-5 lg:mt-4">
-      <div class="py-4 g:py-0 lg:col-span-1">
+    <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:mt-4">
+      <div class="py-4 g:py-0 lg:col-span-3">
         <%= form_for @conn, "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/recipients", [class: "lg:hidden"], fn f -> %>
           <% options = flat_settings_options(@conn) %>
           <%= select(f, :tab, options,
@@ -60,7 +60,7 @@
         </div>
       </div>
 
-      <div class="space-y-6 lg:col-span-4 lg:mt-4">
+      <div class="space-y-6 lg:col-span-9 lg:mt-4">
         <%= @inner_content %>
       </div>
     </div>

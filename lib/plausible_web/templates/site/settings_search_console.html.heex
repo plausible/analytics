@@ -57,25 +57,20 @@
           <% end %>
         <% {:error, error} -> %>
           <.notice title="Integration Error" theme={:red} class="mt-8">
-            <p>
-              The following error happened when fetching your Google Search Console domains:
-            </p>
-            <p class="mt-4">
-              <%= case error do %>
-                <% "invalid_grant" -> %>
-                  Invalid Grant error returned from Google.
-                  <.styled_link
-                    new_tab={true}
-                    href="https://plausible.io/docs/google-search-console-integration#i-get-the-invalid-grant-error"
-                  >
-                    See here on how to fix it
-                  </.styled_link>
-                <% "google_auth_error" -> %>
-                  Your Search Console account hasn't been connected successfully. Please unlink your Google account and try linking it again.
-                <% _ -> %>
-                  Something went wrong, but looks temporary. If the problem persists, try re-linking your Google account.
-              <% end %>
-            </p>
+            <%= case error do %>
+              <% "invalid_grant" -> %>
+                Invalid Grant error returned from Google.
+                <.styled_link
+                  new_tab={true}
+                  href="https://plausible.io/docs/google-search-console-integration#i-get-the-invalid-grant-error"
+                >
+                  See here on how to fix it
+                </.styled_link>
+              <% "google_auth_error" -> %>
+                Your Search Console account hasn't been connected successfully. Please unlink your Google account and try linking it again.
+              <% _ -> %>
+                Something went wrong, but looks temporary. If the problem persists, try re-linking your Google account.
+            <% end %>
           </.notice>
       <% end %>
     <% else %>

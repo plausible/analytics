@@ -24,8 +24,9 @@
                   ) %>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="font-medium text-gray-900 dark:text-gray-50 truncate">
-                    <%= membership.user.name %> <br /><%= membership.user.email %>
+                  <p class="text-sm truncate">
+                    <span class="font-medium text-gray-900 dark:text-gray-50"><%= membership.user.name %></span><br />
+                    <span class="text-gray-500 dark:text-gray-400"><%= membership.user.email %></span>
                     <.styled_link
                       :if={ee?() and Plausible.Auth.is_super_admin?(@current_user)}
                       new_tab={true}
