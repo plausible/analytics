@@ -14,14 +14,14 @@ defmodule PlausibleWeb.Components.Generic do
     yellow: %{
       bg: "bg-yellow-50 dark:bg-yellow-100",
       icon: "text-yellow-400",
-      title_text: "text-yellow-800 dark:text-yellow-900",
-      body_text: "text-yellow-700 dark:text-yellow-800 leading-5"
+      title_text: "text-sm text-yellow-800 dark:text-yellow-900",
+      body_text: "text-sm text-yellow-700 dark:text-yellow-800 leading-5"
     },
     red: %{
       bg: "bg-red-100",
       icon: "text-red-700",
-      title_text: "text-red-800 dark:text-red-900",
-      body_text: "text-red-700 dark:text-red-800"
+      title_text: "text-sm text-red-800 dark:text-red-900",
+      body_text: "text-sm text-red-700 dark:text-red-800"
     }
   }
 
@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Components.Generic do
       "border border-gray-300 dark:border-gray-500 text-red-700 bg-white dark:bg-gray-900 hover:text-red-500 dark:hover:text-red-400 focus:border-blue-300 dark:text-red-500 active:text-red-800"
   }
 
-  @button_base_class "whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 rounded-md px-3.5 py-2.5 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700"
+  @button_base_class "whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 font-medium rounded-md px-3.5 py-2.5 text-sm shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700"
 
   attr(:type, :string, default: "button")
   attr(:theme, :string, default: "primary")
@@ -136,7 +136,7 @@ defmodule PlausibleWeb.Components.Generic do
   def docs_info(assigns) do
     ~H"""
     <a href={"https://plausible.io/docs/#{@slug}"} rel="noopener noreferrer" target="_blank">
-      <Heroicons.information_circle class="text-indigo-800 dark:text-indigo-500 w-6 h-6 stroke-2 absolute top-4 right-4 hover:text-indigo-500 dark:hover:text-indigo-300" />
+      <Heroicons.information_circle class="text-gray-500 dark:text-indigo-500 w-6 h-6 stroke-2 absolute top-4 right-4 hover:text-indigo-500 dark:hover:text-indigo-300" />
     </a>
     """
   end
@@ -153,7 +153,7 @@ defmodule PlausibleWeb.Components.Generic do
 
     ~H"""
     <div id={@dismissable_id} class={[@dismissable_id && "hidden", "mb-4"]}>
-      <div class={["rounded-md p-8 relative", @theme.bg, @class]} {@rest}>
+      <div class={["rounded-md p-4 relative", @theme.bg, @class]} {@rest}>
         <button
           :if={@dismissable_id}
           class={"absolute right-0 top-0 m-2 #{@theme.title_text}"}
@@ -379,7 +379,7 @@ defmodule PlausibleWeb.Components.Generic do
 
           <.docs_info :if={@docs} slug={@docs} />
         </.title>
-        <div class="text-sm mt-1 dark:text-gray-300 leading-5">
+        <div class="text-sm mt-px text-gray-500 dark:text-gray-400 leading-5">
           <%= render_slot(@subtitle) %>
         </div>
       </header>
@@ -539,7 +539,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <td
       class={[
-        "px-6 py-3 whitespace-nowrap",
+        "text-sm px-6 py-3 whitespace-nowrap",
         @truncate && "truncate max-w-sm",
         @actions && "flex text-right justify-end",
         @hide_on_mobile && "hidden md:table-cell"
@@ -603,9 +603,9 @@ defmodule PlausibleWeb.Components.Generic do
       </button>
 
       <span class={[
-        "ml-2 font-medium leading-5",
+        "ml-2 font-medium leading-5 text-sm",
         if(@disabled?,
-          do: "text-gray-500 dark:text-gray-300",
+          do: "text-gray-500 dark:text-gray-400",
           else: "text-gray-900 dark:text-gray-100"
         )
       ]}>
@@ -671,7 +671,7 @@ defmodule PlausibleWeb.Components.Generic do
               type="text"
               name="filter-text"
               id="filter-text"
-              class="pl-8 shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+              class="pl-8 text-sm shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
               placeholder={@placeholder}
               value={@filter_text}
             />

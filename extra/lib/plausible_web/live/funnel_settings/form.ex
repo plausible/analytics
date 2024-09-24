@@ -116,26 +116,24 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               } />
 
               <div class="mt-6">
-                <p id="funnel-eval" class="text-gray-500 dark:text-gray-400 mt-2 mb-2">
+                <p id="funnel-eval" class="text-gray-500 dark:text-gray-400 text-sm mt-2 mb-2">
                   <%= if @evaluation_result do %>
                     Last month conversion rate: <strong><%= List.last(@evaluation_result.steps).conversion_rate %></strong>%
                   <% end %>
                 </p>
               </div>
 
-              <div class="mt-6">
-                <PlausibleWeb.Components.Generic.button
-                  id="save"
-                  type="submit"
-                  class="w-full"
-                  disabled={
-                    has_steps_errors?(f) or map_size(@selections_made) < Funnel.min_steps() or
-                      length(@step_ids) > map_size(@selections_made)
-                  }
-                >
-                  <span><%= if @funnel, do: "Update", else: "Add" %> Funnel</span>
-                </PlausibleWeb.Components.Generic.button>
-              </div>
+              <PlausibleWeb.Components.Generic.button
+                id="save"
+                type="submit"
+                class="w-full"
+                disabled={
+                  has_steps_errors?(f) or map_size(@selections_made) < Funnel.min_steps() or
+                    length(@step_ids) > map_size(@selections_made)
+                }
+              >
+                <span><%= if @funnel, do: "Update", else: "Add" %> Funnel</span>
+              </PlausibleWeb.Components.Generic.button>
             </div>
           </.form>
         </div>
@@ -174,7 +172,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def add_step_button(assigns) do
     ~H"""
-    <a class="underline text-indigo-500 cursor-pointer mt-6" phx-click="add-step">
+    <a class="underline text-indigo-500 text-sm cursor-pointer mt-6" phx-click="add-step">
       + Add another step
     </a>
     """
