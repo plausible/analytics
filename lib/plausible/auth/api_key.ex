@@ -17,6 +17,7 @@ defmodule Plausible.Auth.ApiKey do
     field :key_prefix, :string
 
     belongs_to :user, Plausible.Auth.User
+    belongs_to :team, Plausible.Teams.Team
 
     timestamps()
   end
