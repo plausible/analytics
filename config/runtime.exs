@@ -641,8 +641,21 @@ case mailer_adapter do
     config :plausible, Plausible.Mailer, ssl: [middlebox_comp_mode: middlebox_comp_mode]
 
     if relay = get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR") do
-      port = get_int_from_path_or_env(config_dir, "SMTP_HOST_PORT", 25)
-      config :plausible, Plausible.Mailer, relay: relay, port: port
+      port = get_int_from_path_or_env(config_dir, "SMTP_HOST_PORT", 587)
+
+      ssl_enabled =
+        if ssl_enabled = get_var_from_path_or_env(config_dir, "SMTP_HOST_SSL_ENABLED") do
+          String.to_existing_atom(ssl_enabled)
+        end
+
+      protocol =
+        cond do
+          ssl_enabled -> :ssl
+          is_nil(ssl_enabled) and port == 465 -> :ssl
+          true -> :tcp
+        end
+
+      config :plausible, Plausible.Mailer, protocol: protocol, relay: relay, port: port
     end
 
     username = get_var_from_path_or_env(config_dir, "SMTP_USER_NAME")
