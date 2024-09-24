@@ -23,6 +23,7 @@ defmodule Plausible.Billing.EnterprisePlan do
     field :hourly_api_request_limit, :integer
 
     belongs_to :user, Plausible.Auth.User
+    belongs_to :team, Plausible.Teams.Team
 
     timestamps()
   end
