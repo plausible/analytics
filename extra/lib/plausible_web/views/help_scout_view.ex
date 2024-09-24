@@ -43,6 +43,16 @@ defmodule PlausibleWeb.HelpScoutView do
             Owner of <b><a href={@sites_link} target="_blank"><%= @sites_count %> sites</a></b>
           </p>
         </div>
+
+        <div :if={@notes} class="notes">
+          <p class="label">
+            Notes
+          </p>
+
+          <p class="value">
+            <%= Phoenix.HTML.Format.text_to_html(@notes, escape: true) %>
+          </p>
+        </div>
       <% end %>
     </.layout>
     """
