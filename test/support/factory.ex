@@ -3,6 +3,41 @@ defmodule Plausible.Factory do
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
 
+  def team_factory do
+    %Plausible.Teams.Team{
+      name: "My Team",
+      trial_expiry_date: Timex.today() |> Timex.shift(days: 30)
+    }
+  end
+
+  def team_membership_factory do
+    %Plausible.Teams.Membership{
+      user: build(:user),
+      role: :viewer
+    }
+  end
+
+  def guest_membership_factory do
+    %Plausible.Teams.GuestMembership{
+      team_membership: build(:team_membership, role: :guest)
+    }
+  end
+
+  def team_invitation_factory do
+    %Plausible.Teams.Invitation{
+      invitation_id: Nanoid.generate(),
+      email: sequence(:email, &"email-#{&1}@example.com"),
+      role: :admin
+    }
+  end
+
+  def guest_invitation_factory do
+    %Plausible.Teams.GuestInvitation{
+      role: :editor,
+      team_invitation: build(:team_invitation, role: :guest)
+    }
+  end
+
   def user_factory(attrs) do
     pw = Map.get(attrs, :password, "password")
 
