@@ -93,6 +93,7 @@ defmodule Plausible.Stats.Breakdown do
              site,
              Query.remove_top_level_filters(query, ["event:page", "event:props"])
            ),
+           where: e.name != "pageleave",
            select: %{
              next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
              next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
