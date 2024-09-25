@@ -31,8 +31,8 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-        with:
-          cli_config_credentials_token: ${{ secrets.TF_CLOUD_CHECKLY_API_TOKEN }}
+        #with:
+        #  cli_config_credentials_token: ${{ secrets.TF_CLOUD_CHECKLY_API_TOKEN }}
 
       - name: Terraform Format
         id: fmt
