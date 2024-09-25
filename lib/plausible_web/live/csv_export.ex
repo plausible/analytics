@@ -116,21 +116,19 @@ defmodule PlausibleWeb.Live.CSVExport do
 
   defp prepare_download(assigns) do
     ~H"""
-    <div class="p-6">
-      <p>
-        Prepare your data for download by clicking the button below. When that's done, a Zip file that you can download will appear.
-      </p>
-      <.button phx-click="export">Prepare download</.button>
-    </div>
+    <p class="text-sm">
+      Prepare your data for download by clicking the button below. When that's done, a Zip file that you can download will appear.
+    </p>
+    <.button phx-click="export">Prepare download</.button>
     """
   end
 
   defp in_progress(assigns) do
     ~H"""
-    <div class="flex items-center justify-between space-x-2 p-6">
+    <div class="flex items-center justify-between space-x-2">
       <div class="flex items-center">
         <.spinner />
-        <span class="ml-2">We are preparing your download ...</span>
+        <span class="ml-2 text-sm">We are preparing your download ...</span>
       </div>
       <button
         phx-click="cancel"
@@ -140,7 +138,7 @@ defmodule PlausibleWeb.Live.CSVExport do
         Cancel
       </button>
     </div>
-    <p class="p-6">
+    <p class="text-sm">
       The preparation of your stats might take a while. Depending on the volume of your data, it might take up to 20 minutes. Feel free to leave the page and return later.
     </p>
     """
@@ -158,7 +156,7 @@ defmodule PlausibleWeb.Live.CSVExport do
     ~H"""
     <div class="flex items-center">
       <Heroicons.exclamation_circle class="w-4 h-4 text-red-500" />
-      <p class="ml-2 p-6">
+      <p class="ml-2 text-sm">
         Something went wrong when preparing your download. Please
         <button phx-click="export" class="text-indigo-500">try again.</button>
       </p>
@@ -186,14 +184,14 @@ defmodule PlausibleWeb.Live.CSVExport do
       </:tbody>
     </.table>
 
-    <p :if={@export.expires_at} class="p-6">
+    <p :if={@export.expires_at} class="text-sm">
       Note: this file will expire
       <.hint message={@export.expires_at}>
         <%= Timex.Format.DateTime.Formatters.Relative.format!(@export.expires_at, "{relative}") %>.
       </.hint>
     </p>
 
-    <p :if={@storage == "local"} class="p-6">
+    <p :if={@storage == "local"} class="text-sm">
       Located at
       <.hint message={@export.path}><%= format_path(@export.path) %></.hint>
       (<%= format_bytes(@export.size) %>)
