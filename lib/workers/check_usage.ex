@@ -36,24 +36,31 @@ defmodule Plausible.Workers.CheckUsage do
   def perform(_job, usage_mod \\ Quota.Usage, today \\ Date.utc_today()) do
     yesterday = today |> Date.shift(day: -1)
 
+    last_subscription_query =
+      from(s in Subscription,
+        order_by: [desc: s.inserted_at],
+        where:
+          s.status in [
+            ^Subscription.Status.active(),
+            ^Subscription.Status.past_due(),
+            ^Subscription.Status.deleted()
+          ],
+        where: not is_nil(s.last_bill_date),
+        # Accounts for situations like last_bill_date==2021-01-31 AND today==2021-03-01. Since February never reaches the 31st day, the account is checked on 2021-03-01.
+        where: s.next_bill_date >= ^today,
+        where:
+          least(day_of_month(s.last_bill_date), day_of_month(last_day_of_month(^yesterday))) ==
+            day_of_month(^yesterday),
+        limit: 1
+      )
+
     active_subscribers =
       Repo.all(
         from(u in User,
-          join: s in Plausible.Billing.Subscription,
+          join: s in subquery(last_subscription_query),
           on: s.user_id == u.id,
           left_join: ep in Plausible.Billing.EnterprisePlan,
           on: ep.user_id == u.id,
-          where:
-            s.status in [
-              ^Subscription.Status.active(),
-              ^Subscription.Status.past_due(),
-              ^Subscription.Status.deleted()
-            ],
-          where: not is_nil(s.last_bill_date),
-          # Accounts for situations like last_bill_date==2021-01-31 AND today==2021-03-01. Since February never reaches the 31st day, the account is checked on 2021-03-01.
-          where:
-            least(day_of_month(s.last_bill_date), day_of_month(last_day_of_month(^yesterday))) ==
-              day_of_month(^yesterday),
           preload: [subscription: s, enterprise_plan: ep]
         )
       )
