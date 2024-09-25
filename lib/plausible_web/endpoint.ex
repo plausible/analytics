@@ -9,8 +9,8 @@ defmodule PlausibleWeb.Endpoint do
   end
 
   @session_options [
-    # key to be patched
-    key: "",
+    # in EE key is replaced, dynamically via RuntimeSessionAdapter, see below
+    key: "_plausible_key",
     store: :cookie,
     signing_salt: "I45i0SKHEku2f3tJh6y4v8gztrb/eG5KGCOe/o/AwFb7VHeuvDOn7AAq6KsdmOFM",
     # 5 years, this is super long but the SlidingSessionTimeout will log people out if they don't return for 2 weeks
@@ -115,13 +115,13 @@ defmodule PlausibleWeb.Endpoint do
         # websocket requests within single root domain, in case websocket_url()
         # returns a ws{s}:// scheme (in which case SameSite=Lax is not applicable).
         Keyword.put(@session_options, :domain, host())
+        |> Keyword.put(:key, "_plausible_#{Application.fetch_env!(:plausible, :environment)}")
       else
         # CE setup is simpler and we don't need to worry about WS domain being different
         @session_options
       end
 
     session_options
-    |> Keyword.put(:key, "_plausible_#{Application.fetch_env!(:plausible, :environment)}")
     |> Keyword.put(:secure, secure_cookie?())
   end
 
