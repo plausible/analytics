@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
             </p>
           </.notice>
 
-          <p :if={Enum.empty?(@hostname_rules)} class="mt-12 mb-8 text-center">
+          <p :if={Enum.empty?(@hostname_rules)} class="mt-12 mb-8 text-center text-sm">
             No Hostname Rules configured for this site.
             <strong>
               Traffic from all hostnames is currently accepted.
@@ -141,7 +141,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
 
               <%= error_tag(f, :hostname) %>
 
-              <p class="mt-4">
+              <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
                 You can use a wildcard (<code>*</code>) to match multiple hostnames. For example,
                 <code>*<%= @site.domain %></code>
                 will only record traffic on your main domain and all of its subdomains.<br /><br />

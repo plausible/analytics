@@ -67,6 +67,19 @@ defmodule PlausibleWeb.Live.Components.Form do
     |> input()
   end
 
+  def input(%{type: "select"} = assigns) do
+    ~H"""
+    <div phx-feedback-for={@name} class={@mt? && "mt-2"}>
+      <.label for={@id} class="mb-2"><%= @label %></.label>
+      <select id={@id} name={@name} multiple={@multiple} class={[@class, @width]} {@rest}>
+        <option :if={@prompt} value=""><%= @prompt %></option>
+        <%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
+      </select>
+      <.error :for={msg <- @errors}><%= msg %></.error>
+    </div>
+    """
+  end
+
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""

@@ -25,8 +25,13 @@
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-sm truncate">
-                    <span class="font-medium text-gray-900 dark:text-gray-50"><%= membership.user.name %></span><br />
-                    <span class="text-gray-500 dark:text-gray-400"><%= membership.user.email %></span>
+                    <span class="font-medium text-gray-900 dark:text-gray-50">
+                      <%= membership.user.name %>
+                    </span>
+                    <br />
+                    <span class="text-gray-500 dark:text-gray-400">
+                      <%= membership.user.email %>
+                    </span>
                     <.styled_link
                       :if={ee?() and Plausible.Auth.is_super_admin?(@current_user)}
                       new_tab={true}
@@ -40,7 +45,7 @@
                 <div x-data="{open: false}" @click.away="open = false" x-cloak class="relative">
                   <button
                     @click="open = !open"
-                    class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 dark:border-gray-500  leading-5 font-medium rounded-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
                     <%= membership.role |> Atom.to_string() |> String.capitalize() %>
                     <svg
@@ -71,10 +76,10 @@
                     <%= if membership.role == :owner do %>
                       <li class="p-4 cursor-default group flex justify-between" role="option">
                         <div>
-                          <p class="text-base font-medium text-gray-900 dark:text-gray-100">
+                          <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
                             Owner
                           </p>
-                          <p class="mt-1 text-gray-500">
+                          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                             Site owner cannot be assigned to any other role
                           </p>
                         </div>
@@ -107,17 +112,17 @@
                                 :transfer_ownership_form,
                                 @site.domain
                               ),
-                            class: "inline-block w-full p-4 text-red-600 font-medium"
+                            class: "inline-block w-full text-sm p-4 text-red-600 font-medium"
                           ) %>
                         </li>
                       <% end %>
                     <% else %>
                       <%= link(to: Routes.membership_path(@conn, :update_role, @site.domain, membership.id, "admin"), method: :put, class: "p-4 flex justify-between group hover:bg-indigo-500") do %>
                         <div>
-                          <p class="text-base font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
+                          <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
                             Admin
                           </p>
-                          <p class="mt-1 text-gray-500 dark:text-gray-300 group-hover:text-gray-100 dark:group-hover:text-white">
+                          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 group-hover:text-gray-100 dark:group-hover:text-white">
                             View stats and edit site settings
                           </p>
                         </div>
@@ -142,10 +147,10 @@
                       <% end %>
                       <%= link(to: Routes.membership_path(@conn, :update_role, @site.domain, membership.id, "viewer"), method: :put, class: "p-4 flex justify-between group hover:bg-indigo-500") do %>
                         <div>
-                          <p class="text-base font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
+                          <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
                             Viewer
                           </p>
-                          <p class="mt-1 text-gray-500 dark:text-gray-300 group-hover:text-gray-100 dark:group-hover:text-white">
+                          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 group-hover:text-gray-100 dark:group-hover:text-white">
                             View stats only
                           </p>
                         </div>
@@ -169,8 +174,8 @@
                         <% end %>
                       <% end %>
 
-                      <%= link(to: Routes.membership_path(@conn, :remove_member, @site.domain, membership.id), method: :delete, class: "p-4 flex hover:bg-gray-100 hover:bg-gray-900 text-red-600") do %>
-                        <p class="text-red-600 font-medium">Remove member</p>
+                      <%= link(to: Routes.membership_path(@conn, :remove_member, @site.domain, membership.id), method: :delete, class: "p-4 flex hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600") do %>
+                        <p class="text-red-600 font-medium text-sm">Remove member</p>
                       <% end %>
                     <% end %>
                   </ul>

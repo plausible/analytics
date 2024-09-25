@@ -19,7 +19,6 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
 
     ~H"""
     <div>
-      <.hr />
       <.filter_bar filter_text={@filter_text} placeholder="Search Goals">
         <.button
           id="add-goal-button"

@@ -322,7 +322,7 @@ defmodule PlausibleWeb.Live.Installation do
       <div class="relative">
         <textarea
           id="snippet"
-          class="w-full border-1 border-gray-300 rounded-md p-4 text-gray-700 0 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300"
+          class="w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300"
           rows="5"
           readonly
         ><%= render_snippet(@installation_type, @domain, @script_config) %></textarea>
@@ -339,7 +339,7 @@ defmodule PlausibleWeb.Live.Installation do
         </a>
       </div>
 
-      <.h2 class="mt-8">Enable optional measurements:</.h2>
+      <.h2 class="mt-8 text-sm font-medium">Enable optional measurements:</.h2>
       <.script_extension_control
         config={@script_config}
         variant="outbound-links"

@@ -62,13 +62,13 @@
           ) %>
           <div class="ml-3 flex flex-col">
             <span
-              class="text-gray-900 dark:text-gray-100 block font-medium"
+              class="text-gray-900 dark:text-gray-100 block text-sm font-medium"
               x-class="{'text-indigo-900 dark:text-white': selectedOption === 'admin', 'text-gray-900 dark:text-gray-100': selectedOption !== 'admin'}"
             >
               Admin
             </span>
             <span
-              class="text-gray-500 dark:text-gray-200 block"
+              class="text-gray-500 dark:text-gray-400 text-sm block"
               x-class="{'text-indigo-700 dark:text-gray-100': selectedOption === 'admin', 'text-gray-500 dark:text-gray-200': selectedOption !== 'admin'}"
             >
               Can view stats, change site settings and invite other members
@@ -88,13 +88,13 @@
           ) %>
           <div class="ml-3 flex flex-col">
             <span
-              class="text-gray-900 dark:text-gray-100 block font-medium"
+              class="text-gray-900 dark:text-gray-100 text-sm block font-medium"
               x-class="{'text-indigo-900 dark:text-white': selectedOption === 'viewer', 'text-gray-900 dark:text-gray-100': selectedOption !== 'viewer'}"
             >
               Viewer
             </span>
             <span
-              class="text-gray-500 dark:text-gray-200 block"
+              class="text-gray-500 dark:text-gray-400 text-sm block"
               x-class="{'text-indigo-700 dark:text-gray-100': selectedOption === 'viewer', 'text-gray-500 dark:text-gray-200': selectedOption !== 'viewer'}"
             >
               Can view stats but cannot access settings or invite members

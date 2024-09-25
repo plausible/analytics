@@ -49,7 +49,7 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
           phx-submit="allow-prop"
           phx-click-away="cancel-allow-prop"
         >
-          <h2 class="text-xl font-black dark:text-gray-100">Add Property for <%= @domain %></h2>
+          <.title>Add Property for <%= @domain %></.title>
 
           <div class="mt-6">
             <.label for="prop_input">

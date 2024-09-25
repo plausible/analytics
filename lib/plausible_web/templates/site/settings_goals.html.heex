@@ -1,5 +1,11 @@
 <.settings_tiles>
-  <.tile docs="goal-conversions" no_inner_pad>
+  <.tile
+    docs="goal-conversions"
+    feature_mod={Plausible.Billing.Feature.Goals}
+    site={@site}
+    conn={@conn}
+    no_inner_pad
+  >
     <:title>
       Goals
     </:title>
@@ -15,15 +21,10 @@
       </p>
     </:subtitle>
 
-    <PlausibleWeb.Components.Site.Feature.toggle
-      feature_mod={Plausible.Billing.Feature.Goals}
-      site={@site}
-      conn={@conn}
-      class="mt-8 ml-6 mb-8"
-    >
+    <div :if={Plausible.Billing.Feature.Goals.enabled?(@site)}>
       <%= live_render(@conn, PlausibleWeb.Live.GoalSettings,
         session: %{"site_id" => @site.id, "domain" => @site.domain}
       ) %>
-    </PlausibleWeb.Components.Site.Feature.toggle>
+    </div>
   </.tile>
 </.settings_tiles>

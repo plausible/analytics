@@ -358,7 +358,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def settings_tiles(assigns) do
     ~H"""
-    <div class="sm:overflow-hidden text-gray-900 leading-5 dark:text-gray-100">
+    <div class="text-gray-900 leading-5 dark:text-gray-100">
       <%= render_slot(@inner_block) %>
     </div>
     """
@@ -368,12 +368,20 @@ defmodule PlausibleWeb.Components.Generic do
   slot :inner_block, required: true
   slot :title, required: true
   slot :subtitle, required: true
+  attr :feature_mod, :atom, default: nil
   attr :no_inner_pad, :boolean, default: false
+  attr :site, :any
+  attr :conn, :any
 
   def tile(assigns) do
+    assigns =
+      assign(assigns,
+        enabled: @feature_mod && @feature_mod.enabled?(@site)
+      )
+
     ~H"""
-    <div class="shadow bg-white dark:bg-gray-800 sm:rounded-md mb-6">
-      <header class="relative border-b dark:border-gray-700 p-6">
+    <div class="shadow bg-white dark:bg-gray-800 rounded-md mb-6">
+      <header class="relative py-4 px-6">
         <.title>
           <%= render_slot(@title) %>
 
@@ -382,6 +390,14 @@ defmodule PlausibleWeb.Components.Generic do
         <div class="text-sm mt-px text-gray-500 dark:text-gray-400 leading-5">
           <%= render_slot(@subtitle) %>
         </div>
+        <%= if @feature_mod do %>
+          <PlausibleWeb.Components.Site.Feature.toggle
+            feature_mod={@feature_mod}
+            site={@site}
+            conn={@conn}
+          />
+        <% end %>
+        <div class="border-b dark:border-gray-700 pb-4"></div>
       </header>
 
       <div class={[@no_inner_pad && "pb-2", @no_inner_pad || "pb-6 px-6 pt-2"]}>
@@ -457,7 +473,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def focus_list(assigns) do
     ~H"""
-    <ol class="list-disc space-y-1 ml-4 mt-1 mb-4">
+    <ol class="list-disc space-y-1 ml-4 text-sm">
       <li :for={item <- @item} class="marker:text-indigo-700 dark:marker:text-indigo-700">
         <%= render_slot(item) %>
       </li>
@@ -474,15 +490,16 @@ defmodule PlausibleWeb.Components.Generic do
   def focus_box(assigns) do
     ~H"""
     <div
-      class="focus-box bg-white w-full max-w-lg mx-auto dark:bg-gray-800 text-black dark:text-gray-100 shadow-md  rounded mb-4 mt-8"
+      class="bg-white w-full max-w-lg mx-auto dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-md rounded-md mt-12"
       {@rest}
     >
       <div class="p-8">
         <.title :if={@title != []}>
           <%= render_slot(@title) %>
         </.title>
+        <div></div>
 
-        <div :if={@subtitle != []} class="text-sm mt-2 dark:text-gray-200">
+        <div :if={@subtitle != []} class="text-sm mt-4 leading-6">
           <%= render_slot(@subtitle) %>
         </div>
 
@@ -690,12 +707,6 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  def hr(assigns) do
-    ~H"""
-    <hr class="border-t border-gray-200 dark:border-gray-700" />
-    """
-  end
-
   slot :inner_block, required: true
   attr :class, :any, default: nil
 
@@ -708,10 +719,11 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   slot :inner_block, required: true
+  attr :class, :any, default: nil
 
   def title(assigns) do
     ~H"""
-    <.h2 class="text-lg font-medium dark:text-gray-100">
+    <.h2 class={["text-lg font-medium text-gray-900 dark:text-gray-100 leading-7", @class]}>
       <%= render_slot(@inner_block) %>
     </.h2>
     """

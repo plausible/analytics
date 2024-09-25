@@ -23,13 +23,13 @@
     <:title>Site Timezone</:title>
     <:subtitle>Update your reporting timezone</:subtitle>
     <%= form_for @changeset, "/#{URI.encode_www_form(@site.domain)}/settings", fn f -> %>
-      <%= label(f, :timezone, "Reporting Timezone",
-        class: "text-sm mt-4 mb-2 block font-medium dark:text-gray-100"
-      ) %>
-      <%= select(f, :timezone, Plausible.Timezones.options(),
-        class:
-          "w-1/2 dark:bg-gray-900 mt-1 block pl-3 pr-10 py-2 text-sm border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100 cursor-pointer"
-      ) %>
+      <PlausibleWeb.Live.Components.Form.input
+        field={f[:timezone]}
+        label="Reporting Timezone"
+        type="select"
+        options={Plausible.Timezones.options()}
+        width="w-1/2"
+      />
       <.button type="submit">
         Save timezone
       </.button>

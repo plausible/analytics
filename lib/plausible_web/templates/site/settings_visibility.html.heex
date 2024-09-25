@@ -93,14 +93,15 @@
       width="w-1/2"
     />
 
-    <%= label(nil, :theme, "Select Theme",
-      class: "text-sm mt-4 mb-2 block font-medium dark:text-gray-100"
-    ) %>
-    <%= select(nil, :theme, ["Light", "Dark", "System"],
-      class:
-        "dark:bg-gray-900 mt-1 block w-1/2 pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100 cursor-pointer",
-      id: "theme"
-    ) %>
+    <PlausibleWeb.Live.Components.Form.input
+      type="select"
+      name="theme"
+      id="theme"
+      label="Select Theme"
+      options={["Light", "Dark", "System"]}
+      value="Light"
+      width="w-1/2"
+    />
 
     <PlausibleWeb.Live.Components.Form.input
       name="background"
