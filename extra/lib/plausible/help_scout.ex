@@ -88,6 +88,7 @@ defmodule Plausible.HelpScout do
       {:ok,
        %{
          email: user.email,
+         notes: user.notes,
          status_label: status_label(user),
          status_link:
            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id),

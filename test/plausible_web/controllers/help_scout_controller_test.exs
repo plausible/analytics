@@ -104,9 +104,9 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
       end
     end
 
-    describe "shows/2" do
+    describe "show/2" do
       test "returns details on success", %{conn: conn} do
-        user = insert(:user, email: "hs.match@plausible.test")
+        user = insert(:user, email: "hs.match@plausible.test", notes: "Some note\nwith new line")
 
         conn =
           conn
@@ -115,7 +115,9 @@ defmodule PlausibleWeb.HelpScoutControllerTest do
             "/helpscout/show?conversation_id=123&customer_id=500&email=hs.match@plausible.test"
           )
 
-        assert html_response(conn, 200) =~ "/crm/auth/user/#{user.id}"
+        assert html = html_response(conn, 200)
+        assert html =~ "/crm/auth/user/#{user.id}"
+        assert html =~ "Some note<br>\nwith new line"
       end
 
       test "returns error when cookie is missing", %{conn: conn} do
