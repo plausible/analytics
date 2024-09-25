@@ -5,7 +5,7 @@
     search_console_domains={@search_console_domains}
   />
 
-  <.tile :if={@has_plugins_tokens? || @conn.query_params["new_token"]} no_inner_pad>
+  <.tile :if={@has_plugins_tokens? || @conn.query_params["new_token"]}>
     <:title>
       Plugin Tokens
     </:title>

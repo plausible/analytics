@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
               <div class="flex">
                 <div class="truncate block">
                   <%= if not @revenue_goals_enabled? && goal.currency do %>
-                    <div class="truncate">
+                    <div class="font-medium truncate">
                       <%= goal %>
                       <br />
                       <span class="text-red-600">
@@ -46,18 +46,24 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                       </span>
                     </div>
                   <% else %>
-                    <div class="truncate">
+                    <div class="font-medium truncate">
                       <span><%= goal %></span>
-                      <.goal_description goal={goal} />
                     </div>
                   <% end %>
                 </div>
               </div>
             </.td>
-            <.td hide_on_mobile>
-              <span :if={goal.page_path}>Pageview</span><span :if={goal.event_name && !goal.currency}>Custom Event</span><span :if={
-                goal.currency
-              }>Revenue Goal (<%= goal.currency %>)</span><span :if={not Enum.empty?(goal.funnels)}>, in funnel(s)</span>
+            <.td hide_on_mobile truncate max_width="max-w-40">
+              <span :if={goal.page_path}>
+                <div class="text-gray-500 text-xs">Pageview</div>
+                <%= goal.page_path %>
+              </span>
+              <span :if={goal.event_name}>
+                <div class="text-gray-500 text-xs">
+                  Custom Event <span :if={goal.currency}>(<%= goal.currency %>)</span>
+                </div>
+                <%= goal.event_name %>
+              </span>
             </.td>
             <.td actions>
               <.edit_button
