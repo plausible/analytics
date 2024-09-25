@@ -152,7 +152,7 @@ defmodule PlausibleWeb.Components.Generic do
     assigns = assign(assigns, :theme, Map.fetch!(@notice_themes, assigns.theme))
 
     ~H"""
-    <div id={@dismissable_id} class={[@dismissable_id && "hidden", "mb-4"]}>
+    <div id={@dismissable_id} class={[@dismissable_id && "hidden"]}>
       <div class={["rounded-md p-4 relative", @theme.bg, @class]} {@rest}>
         <button
           :if={@dismissable_id}
@@ -369,16 +369,10 @@ defmodule PlausibleWeb.Components.Generic do
   slot :title, required: true
   slot :subtitle, required: true
   attr :feature_mod, :atom, default: nil
-  attr :no_inner_pad, :boolean, default: false
   attr :site, :any
   attr :conn, :any
 
   def tile(assigns) do
-    assigns =
-      assign(assigns,
-        enabled: @feature_mod && @feature_mod.enabled?(@site)
-      )
-
     ~H"""
     <div class="shadow bg-white dark:bg-gray-800 rounded-md mb-6">
       <header class="relative py-4 px-6">
@@ -400,7 +394,7 @@ defmodule PlausibleWeb.Components.Generic do
         <div class="border-b dark:border-gray-700 pb-4"></div>
       </header>
 
-      <div class={[@no_inner_pad && "pb-2", @no_inner_pad || "pb-6 px-6 pt-2"]}>
+      <div class="pb-4 px-6">
         <%= render_slot(@inner_block) %>
       </div>
     </div>
@@ -531,13 +525,13 @@ defmodule PlausibleWeb.Components.Generic do
 
   def table(assigns) do
     ~H"""
-    <table :if={not Enum.empty?(@rows)} class={[@width, "mb-2"]} {@rest}>
-      <thead :if={@thead}>
-        <tr>
+    <table :if={not Enum.empty?(@rows)} class={@width} {@rest}>
+      <thead :if={@thead != []}>
+        <tr class="border-b border-gray-200">
           <%= render_slot(@thead) %>
         </tr>
       </thead>
-      <tbody>
+      <tbody class="divide-y divide-gray-200">
         <tr :for={item <- @rows}>
           <%= render_slot(@tbody, item) %>
         </tr>
@@ -548,16 +542,27 @@ defmodule PlausibleWeb.Components.Generic do
 
   slot :inner_block, required: true
   attr :truncate, :boolean, default: false
+  attr :max_width, :string, default: ""
   attr :actions, :boolean, default: nil
   attr :hide_on_mobile, :boolean, default: nil
   attr :rest, :global
 
   def td(assigns) do
+    max_width =
+      cond do
+        assigns.max_width != "" -> assigns.max_width
+        assigns.truncate -> "max-w-sm"
+        true -> ""
+      end
+
+    assigns = assign(assigns, max_width: max_width)
+
     ~H"""
     <td
       class={[
-        "text-sm px-6 py-3 whitespace-nowrap",
-        @truncate && "truncate max-w-sm",
+        "text-sm px-6 py-3 first:pl-0 last:pr-0 whitespace-nowrap",
+        @truncate && "truncate",
+        @max_width,
         @actions && "flex text-right justify-end",
         @hide_on_mobile && "hidden md:table-cell"
       ]}
@@ -582,7 +587,7 @@ defmodule PlausibleWeb.Components.Generic do
       if assigns[:invisible] do
         "invisible"
       else
-        "px-6 py-1 text-left text-sm font-semibold text-gray-500 dark:text-gray-400"
+        "px-6 first:pl-0 last:pr-0 py-3 text-left text-sm font-medium"
       end
 
     assigns = assign(assigns, class: class)
@@ -677,7 +682,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def filter_bar(assigns) do
     ~H"""
-    <div class="p-6 flex items-center justify-between">
+    <div class="mb-6 flex items-center justify-between">
       <div class="text-gray-800 inline-flex items-center">
         <div :if={@filtering_enabled?} class="relative rounded-md shadow-sm flex">
           <form id="filter-form" phx-change="filter" class="flex items-center">

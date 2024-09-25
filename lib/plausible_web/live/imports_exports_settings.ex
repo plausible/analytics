@@ -70,14 +70,18 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       <%= @import_warning %>
     </.notice>
 
-    <div class="mt-4 text-gray-800 flex justify-end gap-x-4 mr-8">
+    <div class="mt-4 flex justify-end gap-x-4">
       <.button_link
         theme="bright"
         href={Plausible.Google.API.import_authorize_url(@site.id)}
         disabled={@import_in_progress? or @at_maximum?}
       >
         Import from
-        <img src="/images/icon/google_analytics_logo.svg" alt="Google Analytics import" class="h-6" />
+        <img
+          src="/images/icon/google_analytics_logo.svg"
+          alt="Google Analytics import"
+          class="h-6 w-12"
+        />
       </.button_link>
       <.button_link
         disabled={@import_in_progress? or @at_maximum?}

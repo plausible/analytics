@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
     ~H"""
     <div>
       <.settings_tiles>
-        <.tile docs="excluding#exclude-visits-by-hostname" no_inner_pad>
+        <.tile docs="excluding#exclude-visits-by-hostname">
           <:title>Hostnames Allow List</:title>
           <:subtitle>Accept incoming traffic only from familiar hostnames</:subtitle>
           <.filter_bar

@@ -24,7 +24,7 @@
     }
   ] %>
 
-  <.tile :for={{_type, meta} <- email_reports} docs="email-reports" no_inner_pad>
+  <.tile :for={{_type, meta} <- email_reports} docs="email-reports">
     <:title>
       <%= meta.heading %>
     </:title>
@@ -40,14 +40,14 @@
       }
       method="post"
     >
-      <div class="px-6">
+      <div>
         <.toggle_submit set_to={meta.report}>
           <%= meta.toggle %>
         </.toggle_submit>
       </div>
     </.form>
 
-    <div :if={meta.report} class="mt-8">
+    <div :if={meta.report} class="mt-4">
       <.table
         :if={Enum.count(meta.report.recipients) > 0}
         width="w-1/2"
@@ -87,7 +87,7 @@
 
       <.form
         :let={f}
-        class="px-6 pb-6"
+        class="mt-4"
         for={@conn}
         action={Routes.site_path(@conn, meta.add_route, @site.domain)}
         method="post"
@@ -126,7 +126,7 @@
     }
   ] %>
 
-  <.tile :for={{type, meta} <- change_notifications} docs="traffic-spikes" no_inner_pad>
+  <.tile :for={{type, meta} <- change_notifications} docs="traffic-spikes">
     <:title>
       <%= meta.heading %>
     </:title>
@@ -134,7 +134,6 @@
       <%= meta.subtitle %>
     </:subtitle>
 
-    <div class="px-6">
       <.form
         for={nil}
         action={
@@ -152,7 +151,7 @@
       <.form
         :let={f}
         :if={meta.notification}
-        class="mt-8"
+        class="mt-4"
         for={Plausible.Site.TrafficChangeNotification.changeset(meta.notification, %{})}
         action={Routes.site_path(@conn, :update_traffic_change_notification, @site.domain, type)}
       >
@@ -168,9 +167,8 @@
           </.button>
         </div>
       </.form>
-    </div>
 
-    <div class="mt-8">
+    <div class="mt-4">
       <.table
         :if={meta.notification && Enum.count(meta.notification.recipients) > 0}
         width="w-1/2"
@@ -210,10 +208,11 @@
       </.table>
     </div>
 
-    <div :if={meta.notification} class="px-6 pb-6">
+    <div :if={meta.notification}>
       <.form
         :let={f}
         for={@conn}
+        class="mt-4"
         action={
           Routes.site_path(
             @conn,

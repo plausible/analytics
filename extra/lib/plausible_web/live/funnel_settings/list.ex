@@ -24,10 +24,12 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
         <.table rows={@funnels}>
           <:tbody :let={funnel}>
             <.td truncate>
-              <%= funnel.name %>
+              <span class="font-medium"><%= funnel.name %></span>
             </.td>
             <.td hide_on_mobile>
-              <%= funnel.steps_count %>-step funnel
+              <span class="text-gray-500 dark:text-gray-400">
+                <%= funnel.steps_count %>-step funnel
+              </span>
             </.td>
             <.td actions>
               <.edit_button phx-click="edit-funnel" phx-value-funnel-id={funnel.id} />
