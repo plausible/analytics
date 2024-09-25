@@ -9,14 +9,14 @@ defmodule PlausibleWeb.Endpoint do
   end
 
   @session_options [
-    # in EE key is replaced, dynamically via RuntimeSessionAdapter, see below
+    # in EE key is replaced dynamically via runtime_session_opts, see below
     key: "_plausible_key",
     store: :cookie,
     signing_salt: "I45i0SKHEku2f3tJh6y4v8gztrb/eG5KGCOe/o/AwFb7VHeuvDOn7AAq6KsdmOFM",
     # 5 years, this is super long but the SlidingSessionTimeout will log people out if they don't return for 2 weeks
     max_age: 60 * 60 * 24 * 365 * 5,
     extra: "SameSite=Lax"
-    # in EE domain is added dynamically via RuntimeSessionAdapter, see below
+    # in EE domain is added dynamically via runtime_session_opts, see below
   ]
 
   socket("/live", Phoenix.LiveView.Socket,
