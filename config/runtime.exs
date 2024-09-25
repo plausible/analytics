@@ -255,8 +255,13 @@ is_selfhost =
   |> get_var_from_path_or_env("SELFHOST", "true")
   |> String.to_existing_atom()
 
-# by default, registration is disabled in self-hosted setups
-disable_registration_default = to_string(is_selfhost)
+# by default, only registration from invites is enabled in CE
+disable_registration_default =
+  if config_env() == :ce do
+    "invite_only"
+  else
+    "false"
+  end
 
 disable_registration =
   config_dir
