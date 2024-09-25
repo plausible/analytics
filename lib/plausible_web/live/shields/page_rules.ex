@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
     ~H"""
     <div>
       <.settings_tiles>
-        <.tile docs="top-pages#block-traffic-from-specific-pages-or-sections" no_inner_pad>
+        <.tile docs="top-pages#block-traffic-from-specific-pages-or-sections">
           <:title>Pages Block List</:title>
           <:subtitle>Reject incoming traffic for specific pages</:subtitle>
           <.filter_bar

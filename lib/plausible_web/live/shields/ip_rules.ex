@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
     ~H"""
     <div>
       <.settings_tiles>
-        <.tile docs="excluding" no_inner_pad>
+        <.tile docs="excluding">
           <:title>IP Block List</:title>
           <:subtitle>Reject incoming traffic from specific IP addresses</:subtitle>
           <.filter_bar :if={@ip_rules_count < Shields.maximum_ip_rules()} filtering_enabled?={false}>
