@@ -39,6 +39,7 @@ defmodule Plausible.Workers.CheckUsage do
     last_subscription_query =
       from(s in Subscription,
         order_by: [desc: s.inserted_at],
+        where: s.user_id == parent_as(:user).id,
         where:
           s.status in [
             ^Subscription.Status.active(),
@@ -57,10 +58,12 @@ defmodule Plausible.Workers.CheckUsage do
     active_subscribers =
       Repo.all(
         from(u in User,
-          join: s in subquery(last_subscription_query),
-          on: s.user_id == u.id,
+          as: :user,
+          inner_lateral_join: s in subquery(last_subscription_query),
+          on: true,
           left_join: ep in Plausible.Billing.EnterprisePlan,
           on: ep.user_id == u.id,
+          order_by: u.id,
           preload: [subscription: s, enterprise_plan: ep]
         )
       )

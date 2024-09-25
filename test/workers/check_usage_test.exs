@@ -59,6 +59,42 @@ defmodule Plausible.Workers.CheckUsageTest do
     )
   end
 
+  test "sends more than one email", %{user: user} do
+    usage_stub =
+      Plausible.Billing.Quota.Usage
+      |> stub(:monthly_pageview_usage, fn _user ->
+        %{
+          penultimate_cycle: %{date_range: @date_range, total: 11_000},
+          last_cycle: %{date_range: @date_range, total: 11_000}
+        }
+      end)
+
+    user2 = insert(:user)
+    insert(:site, members: [user2])
+
+    for u <- [user, user2] do
+      insert(:subscription,
+        user: u,
+        paddle_plan_id: @paddle_id_10k,
+        last_bill_date: Timex.shift(Timex.today(), days: -1),
+        next_bill_date: Timex.shift(Timex.today(), days: +5),
+        status: :active
+      )
+    end
+
+    CheckUsage.perform(nil, usage_stub)
+
+    assert_email_delivered_with(
+      to: [user],
+      subject: "[Action required] You have outgrown your Plausible subscription tier"
+    )
+
+    assert_email_delivered_with(
+      to: [user2],
+      subject: "[Action required] You have outgrown your Plausible subscription tier"
+    )
+  end
+
   test "ignores user with paused subscription", %{user: user} do
     insert(:subscription,
       user: user,
