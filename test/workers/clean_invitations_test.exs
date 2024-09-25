@@ -3,8 +3,10 @@ defmodule Plausible.Workers.CleanInvitationsTest do
   alias Plausible.Workers.CleanInvitations
 
   test "cleans invitation that is more than 48h old" do
+    now = NaiveDateTime.utc_now(:second)
+
     insert(:invitation,
-      inserted_at: Timex.shift(Timex.now(), hours: -49),
+      inserted_at: NaiveDateTime.shift(now, hour: -49),
       site: build(:site),
       inviter: build(:user)
     )
@@ -15,8 +17,10 @@ defmodule Plausible.Workers.CleanInvitationsTest do
   end
 
   test "does not clean invitation that is less than 48h old" do
+    now = NaiveDateTime.utc_now(:second)
+
     insert(:invitation,
-      inserted_at: Timex.shift(Timex.now(), hours: -47),
+      inserted_at: NaiveDateTime.shift(now, hour: -47),
       site: build(:site),
       inviter: build(:user)
     )
