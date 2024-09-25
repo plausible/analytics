@@ -265,7 +265,13 @@ defmodule Plausible.Billing do
     user =
       User
       |> Repo.get!(subscription.user_id)
-      |> Map.put(:subscription, subscription)
+      |> Plausible.Users.with_subscription()
+
+    if subscription.id != user.subscription.id do
+      Sentry.capture_message("Susbscription ID mismatch",
+        extra: %{subscription: inspect(subscription), user_id: user.id}
+      )
+    end
 
     user
     |> Plausible.Users.update_accept_traffic_until()
