@@ -69,9 +69,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   def edit_form(assigns) do
     ~H"""
     <.form :let={f} for={@form} phx-submit="save-goal" phx-target={@myself}>
-      <h2 class="text-xl font-black dark:text-gray-100">
-        Edit Goal for <%= @domain %>
-      </h2>
+      <.title>Edit Goal for <%= @domain %></.title>
 
       <.custom_event_fields
         :if={@selected_tab == "custom_events"}
@@ -110,9 +108,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     >
       <.spinner class="spinner block absolute right-9 top-8" x-show="tabSelectionInProgress" />
 
-      <h2 class="text-xl font-black dark:text-gray-100">
-        Add Goal for <%= @domain %>
-      </h2>
+      <.title>Add Goal for <%= @domain %></.title>
 
       <.tabs selected_tab={@selected_tab} myself={@myself} />
 

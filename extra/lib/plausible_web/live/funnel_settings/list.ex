@@ -14,7 +14,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
   def render(assigns) do
     ~H"""
     <div>
-      <.hr />
       <.filter_bar filter_text={@filter_text} placeholder="Search Funnels">
         <.button id="add-funnel-button" phx-click="add-funnel" mt?={false}>
           Add Funnel
@@ -43,7 +42,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
           </:tbody>
         </.table>
       <% else %>
-        <p class="mt-12 mb-8 text-center">
+        <p class="mt-12 mb-8 text-sm text-center">
           <span :if={String.trim(@filter_text) != ""}>
             No funnels found for this site. Please refine or
             <.styled_link phx-click="reset-filter-text" id="reset-filter-hint">

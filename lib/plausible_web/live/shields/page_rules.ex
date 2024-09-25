@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
             </p>
           </.notice>
 
-          <p :if={Enum.empty?(@page_rules)} class="mt-12 mb-8 text-center">
+          <p :if={Enum.empty?(@page_rules)} class="mt-12 mb-8 text-center text-sm">
             No Page Rules configured for this site.
           </p>
 
@@ -136,7 +136,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
 
               <%= error_tag(f, :page_path) %>
 
-              <p class="mt-4">
+              <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
                 You can use a wildcard (<code>*</code>) to match multiple pages. For example,
                 <code>/blog/*</code>
                 will match <code>/blog/post</code>.

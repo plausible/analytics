@@ -1,5 +1,11 @@
 <.settings_tiles>
-  <.tile docs="funnel-analysis" no_inner_pad>
+  <.tile
+    docs="funnel-analysis"
+    feature_mod={Plausible.Billing.Feature.Funnels}
+    site={@site}
+    conn={@conn}
+    no_inner_pad
+  >
     <:title>
       Funnels
     </:title>
@@ -7,20 +13,15 @@
       Compose Goals into Funnels
     </:subtitle>
 
-    <PlausibleWeb.Components.Billing.Notice.premium_feature
-      billable_user={@site.owner}
-      current_user={@current_user}
-      feature_mod={Plausible.Billing.Feature.Funnels}
-    />
-    <PlausibleWeb.Components.Site.Feature.toggle
-      feature_mod={Plausible.Billing.Feature.Funnels}
-      site={@site}
-      conn={@conn}
-      class="mt-8 ml-6 mb-8"
-    >
+    <div :if={Plausible.Billing.Feature.Funnels.enabled?(@site)}>
+      <PlausibleWeb.Components.Billing.Notice.premium_feature
+        billable_user={@site.owner}
+        current_user={@current_user}
+        feature_mod={Plausible.Billing.Feature.Funnels}
+      />
       <%= live_render(@conn, PlausibleWeb.Live.FunnelSettings,
         session: %{"site_id" => @site.id, "domain" => @site.domain}
       ) %>
-    </PlausibleWeb.Components.Site.Feature.toggle>
+    </div>
   </.tile>
 </.settings_tiles>

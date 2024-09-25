@@ -59,9 +59,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
             onkeydown="return event.key != 'Enter';"
             class="bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
           >
-            <h2 class="text-xl font-black dark:text-gray-100 mb-6">
+            <.title class="mb-6">
               <%= if @funnel, do: "Edit", else: "Add" %> Funnel
-            </h2>
+            </.title>
 
             <.input
               field={f[:name]}

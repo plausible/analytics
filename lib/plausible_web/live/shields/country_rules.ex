@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
     ~H"""
     <div>
       <.settings_tiles>
-        <.tile docs="excluding" no_inner_pad>
+        <.tile docs="excluding">
           <:title>Country Block List</:title>
           <:subtitle>Reject incoming traffic from specific countries</:subtitle>
           <.filter_bar
@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
             </p>
           </.notice>
 
-          <p :if={Enum.empty?(@country_rules)} class="mt-12 mb-8 text-center">
+          <p :if={Enum.empty?(@country_rules)} class="mt-12 mb-8 text-center text-sm">
             No Country Rules configured for this site.
           </p>
 
@@ -124,7 +124,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
                 options={options(@country_rules)}
               />
 
-              <p class="mt-4">
+              <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
                 Once added, we will start rejecting traffic from this country within a few minutes.
               </p>
               <.button type="submit" class="w-full">

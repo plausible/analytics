@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
             </p>
           </.notice>
 
-          <p :if={Enum.empty?(@ip_rules)} class="mt-12 mb-8 text-center">
+          <p :if={Enum.empty?(@ip_rules)} class="mt-12 mb-8 text-center text-sm">
             No IP Rules configured for this site.
           </p>
 
@@ -129,25 +129,33 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
             >
               <.title>Add IP to Block List</.title>
 
-              <.input autofocus field={f[:inet]} label="IP Address" placeholder="e.g. 192.168.127.12" />
-
               <div class="mt-4">
                 <p
                   :if={not ip_rule_present?(@ip_rules, @remote_ip)}
-                  class="text-sm text-gray-500 dark:text-gray-200 mb-4"
+                  class="text-sm text-gray-500 dark:text-gray-400 mb-4"
                 >
-                  Your current IP address is: <span class="font-mono"><%= @remote_ip %></span>
-                  <br />
+                  Your current IP address is: <span class="font-mono"><%= @remote_ip %></span>.
                   <.styled_link phx-target={@myself} phx-click="prefill-own-ip-rule">
                     Click here
                   </.styled_link>
-                  to block your own traffic, or enter a custom address.
+                  to block your own traffic, or enter a custom address below.
                 </p>
+
+                <.input
+                  autofocus
+                  field={f[:inet]}
+                  label="IP Address"
+                  placeholder="e.g. 192.168.127.12"
+                />
               </div>
 
-              <.input field={f[:description]} label="Description" placeholder="e.g. The Office" />
+              <.input
+                field={f[:description]}
+                label="Description (optional)"
+                placeholder="e.g. The Office"
+              />
 
-              <p class="mt-4">
+              <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
                 Once added, we will start rejecting traffic from this IP within a few minutes.
               </p>
               <.button type="submit" class="w-full">
