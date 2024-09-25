@@ -38,17 +38,17 @@ defmodule Plausible.Workers.CheckUsageTest do
 
     insert(:subscription,
       user: user,
-      paddle_plan_id: "wont-exist-should-crash",
+      paddle_plan_id: @paddle_id_10k,
       last_bill_date: Timex.shift(Timex.today(), days: -1),
-      inserted_at: DateTime.shift(DateTime.utc_now(), day: -2),
-      status: :deleted
+      status: :active
     )
 
     insert(:subscription,
       user: user,
-      paddle_plan_id: @paddle_id_10k,
+      paddle_plan_id: "wont-exist-should-crash",
       last_bill_date: Timex.shift(Timex.today(), days: -1),
-      status: :active
+      inserted_at: DateTime.shift(DateTime.utc_now(), day: -2),
+      status: :deleted
     )
 
     CheckUsage.perform(nil, usage_stub)
