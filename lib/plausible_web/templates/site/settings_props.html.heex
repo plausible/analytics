@@ -1,5 +1,11 @@
 <.settings_tiles>
-  <.tile docs="custom-props/introduction" no_inner_pad>
+  <.tile
+    docs="custom-props/introduction"
+    feature_mod={Plausible.Billing.Feature.Props}
+    site={@site}
+    conn={@conn}
+    no_inner_pad
+  >
     <:title>
       Custom Properties
     </:title>
@@ -8,22 +14,17 @@
       create custom metrics.
     </:subtitle>
 
-    <PlausibleWeb.Components.Billing.Notice.premium_feature
-      billable_user={@site.owner}
-      current_user={@current_user}
-      feature_mod={Plausible.Billing.Feature.Props}
-      grandfathered?
-    />
-    <PlausibleWeb.Components.Site.Feature.toggle
-      feature_mod={Plausible.Billing.Feature.Props}
-      site={@site}
-      conn={@conn}
-      class="mt-8 ml-6 mb-8"
-    >
+    <div :if={Plausible.Billing.Feature.Props.enabled?(@site)}>
+      <PlausibleWeb.Components.Billing.Notice.premium_feature
+        billable_user={@site.owner}
+        current_user={@current_user}
+        feature_mod={Plausible.Billing.Feature.Props}
+        grandfathered?
+      />
       <%= live_render(@conn, PlausibleWeb.Live.PropsSettings,
         id: "props-form",
         session: %{"site_id" => @site.id, "domain" => @site.domain}
       ) %>
-    </PlausibleWeb.Components.Site.Feature.toggle>
+    </div>
   </.tile>
 </.settings_tiles>

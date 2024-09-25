@@ -87,7 +87,7 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       </.button_link>
     </div>
 
-    <p :if={Enum.empty?(@site_imports)} class="text-center mt-8 mb-12">
+    <p :if={Enum.empty?(@site_imports)} class="text-center text-sm mt-8 mb-12">
       There are no imports yet for this site.
     </p>
 
