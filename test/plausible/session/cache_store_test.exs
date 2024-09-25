@@ -262,6 +262,21 @@ defmodule Plausible.Session.CacheStoreTest do
     assert session.events == 2
   end
 
+  test "does not update session counters on pageleave event", %{buffer: buffer} do
+    now = Timex.now()
+    pageview = build(:pageview, timestamp: Timex.shift(now, seconds: -10))
+    pageleave = %{pageview | name: "pageleave", timestamp: now}
+
+    CacheStore.on_event(pageview, %{}, nil, buffer)
+    CacheStore.on_event(pageleave, %{}, nil, buffer)
+    assert_receive({:buffer, :insert, [[session]]})
+
+    assert session.is_bounce == true
+    assert session.duration == 0
+    assert session.pageviews == 1
+    assert session.events == 1
+  end
+
   describe "hostname-related attributes" do
     test "initial for non-pageview" do
       site_id = new_site_id()
