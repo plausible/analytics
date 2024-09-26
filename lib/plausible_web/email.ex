@@ -233,23 +233,26 @@ defmodule PlausibleWeb.Email do
     |> render("cancellation_email.html", user: user)
   end
 
-  def new_user_invitation(invitation) do
+  def new_user_invitation(email, invitation_id, site, inviter) do
     priority_email()
-    |> to(invitation.email)
+    |> to(email)
     |> tag("new-user-invitation")
-    |> subject("[#{Plausible.product_name()}] You've been invited to #{invitation.site.domain}")
+    |> subject("[#{Plausible.product_name()}] You've been invited to #{site.domain}")
     |> render("new_user_invitation.html",
-      invitation: invitation
+      invitation_id: invitation_id,
+      site: site,
+      inviter: inviter
     )
   end
 
-  def existing_user_invitation(invitation) do
+  def existing_user_invitation(email, site, inviter) do
     priority_email()
-    |> to(invitation.email)
+    |> to(email)
     |> tag("existing-user-invitation")
-    |> subject("[#{Plausible.product_name()}] You've been invited to #{invitation.site.domain}")
+    |> subject("[#{Plausible.product_name()}] You've been invited to #{site.domain}")
     |> render("existing_user_invitation.html",
-      invitation: invitation
+      site: site,
+      inviter: inviter
     )
   end
 
