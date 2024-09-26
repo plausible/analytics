@@ -123,20 +123,13 @@ defmodule PlausibleWeb.Live.CSVImport do
 
   defp confirm_button(assigns) do
     ~H"""
-    <button
-      type="submit"
-      disabled={not @can_confirm?}
-      class={[
-        "rounded-md w-full bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400 dark:disabled:text-gray-400 dark:disabled:bg-gray-700 mt-4",
-        unless(@can_confirm?, do: "cursor-not-allowed")
-      ]}
-    >
+    <.button type="submit" disabled={not @can_confirm?} class="w-full">
       <%= if @date_range do %>
         Confirm import <.dates range={@date_range} />
       <% else %>
         Confirm import
       <% end %>
-    </button>
+    </.button>
     """
   end
 
