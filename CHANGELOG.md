@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## v2.1.3 - 2024-09-26
+
+### Fixed
+- Change cookie key to resolve login issue plausible/analytics#4621
+- Set secure attribute on cookies when BASE_URL has HTTPS scheme plausible/analytics#4623
+- Don't track custom events in CE plausible/analytics#4627
+
 ## v2.1.2 - 2024-09-24
 
 ### Added
