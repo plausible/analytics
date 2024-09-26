@@ -175,7 +175,9 @@ defmodule PlausibleWeb.Live.CSVExport do
       </:thead>
       <:tbody :let={export}>
         <.td>
-          <%= export.name %>
+          <.styled_link href={@href}>
+            <%= export.name %>
+          </.styled_link>
         </.td>
         <.td actions>
           <.delete_button
