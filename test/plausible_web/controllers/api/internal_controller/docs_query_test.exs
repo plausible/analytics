@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Api.InternalController.DocsQueryTest do
-  use PlausibleWeb.ConnCase, async: false
+  use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
   @user_id Enum.random(1000..9999)
 
