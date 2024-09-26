@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   defp get_site_with_role(conn, current_user) do
     # addition is flimsy, do we need an extra argument on plug init to control where we look for the domain?
     domain =
-      conn.path_params["domain"] || conn.path_params["website"] ||
+      conn.path_params["domain"] ||
         (conn.method == "POST" && conn.path_info == ["api", "docs", "query"] &&
            conn.params["site_id"])
 

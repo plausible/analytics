@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Live.Installation do
   def script_extension_params, do: @script_extension_params
 
   def mount(
-        %{"website" => domain} = params,
+        %{"domain" => domain} = params,
         _session,
         socket
       ) do

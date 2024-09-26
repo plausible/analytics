@@ -5,7 +5,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
   @react_container "div#stats-react-container"
 
-  describe "GET /:website - anonymous user" do
+  describe "GET /:domain - anonymous user" do
     test "public site - shows site stats", %{conn: conn} do
       site = insert(:site, public: true)
       populate_stats(site, [build(:pageview)])
@@ -80,7 +80,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "GET /:website - as a logged in user" do
+  describe "GET /:domain - as a logged in user" do
     setup [:create_user, :log_in, :create_site]
 
     test "can view stats of a website I've created", %{conn: conn, site: site} do
@@ -119,7 +119,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "GET /:website - as a super admin" do
+  describe "GET /:domain - as a super admin" do
     @describetag :ee_only
     setup [:create_user, :make_user_super_admin, :log_in]
 
@@ -181,7 +181,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     Application.put_env(:plausible, :super_admin_user_ids, [user.id])
   end
 
-  describe "GET /:website/export" do
+  describe "GET /:domain/export" do
     setup [:create_user, :create_new_site, :log_in]
 
     test "exports all the necessary CSV files", %{conn: conn, site: site} do
@@ -590,7 +590,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     |> Enum.map(&String.split(&1, ","))
   end
 
-  describe "GET /:website/export - via shared link" do
+  describe "GET /:domain/export - via shared link" do
     test "exports data in zipped csvs", %{conn: conn} do
       site = insert(:site, domain: "new-site.com")
       link = insert(:shared_link, site: site)
@@ -601,7 +601,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "GET /:website/export - for past 6 months" do
+  describe "GET /:domain/export - for past 6 months" do
     setup [:create_user, :create_new_site, :log_in]
 
     test "exports 6 months of data in zipped csvs", %{conn: conn, site: site} do
@@ -611,7 +611,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "GET /:website/export - with path filter" do
+  describe "GET /:domain/export - with path filter" do
     setup [:create_user, :create_new_site, :log_in]
 
     test "exports filtered data in zipped csvs", %{conn: conn, site: site} do
@@ -623,7 +623,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "GET /:website/export - with a custom prop filter" do
+  describe "GET /:domain/export - with a custom prop filter" do
     setup [:create_user, :create_new_site, :log_in]
 
     test "custom-props.csv only returns the prop and its value in filter", %{
@@ -751,7 +751,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     insert(:goal, %{site: site, event_name: "Signup"})
   end
 
-  describe "GET /:website/export - with goal filter" do
+  describe "GET /:domain/export - with goal filter" do
     setup [:create_user, :create_new_site, :log_in]
 
     test "exports goal-filtered data in zipped csvs", %{conn: conn, site: site} do
