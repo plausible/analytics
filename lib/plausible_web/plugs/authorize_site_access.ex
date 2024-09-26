@@ -1,6 +1,36 @@
 defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   @moduledoc """
   Plug restricting access to site and shared link, when present.
+
+  In order to permit access to site regardless of role:
+
+  ```elixir
+  plug AuthorizeSiteAccess
+  ```
+
+  or
+
+  ```elixir
+  plug AuthorizeSiteAccess, :all_roles
+  ```
+
+  Permit access for a subset of roles only:
+
+  ```elixir
+  plug AuthorizeSiteAccess, [:admin, :owner, :super_admin]
+  ```
+
+  Permit access using a custom site param:
+
+  ```elixir
+  plug AuthorizeSiteAccess, {[:admin, :owner, :super_admin], "site_id"}
+  ```
+
+  or in case where any role is allowed:
+
+  ```elixir
+  plug AuthorizeSiteAccess, {:all_roles, "site_id"}
+  ```
   """
 
   use Plausible.Repo
@@ -10,22 +40,45 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
 
   @all_roles [:public, :viewer, :admin, :super_admin, :owner]
 
-  def init([]), do: @all_roles
+  def init([]), do: {@all_roles, nil}
 
-  def init(allowed_roles) do
+  def init(:all_roles), do: {@all_roles, nil}
+
+  def init(allowed_roles) when is_list(allowed_roles) do
+    init({allowed_roles, nil})
+  end
+
+  def init({:all_roles, site_param}) do
+    init({@all_roles, site_param})
+  end
+
+  def init({allowed_roles, site_param}) when is_list(allowed_roles) do
+    allowed_roles =
+      if allowed_roles == [] do
+        @all_roles
+      else
+        allowed_roles
+      end
+
     unknown_roles = allowed_roles -- @all_roles
 
     if unknown_roles != [] do
       raise ArgumentError, "Unknown allowed roles configured: #{inspect(unknown_roles)}"
     end
 
-    allowed_roles
+    if !is_binary(site_param) && !is_nil(site_param) do
+      raise ArgumentError, "Invalid site param configured: #{inspect(site_param)}"
+    end
+
+    {allowed_roles, site_param}
   end
 
-  def call(conn, allowed_roles) do
+  def call(conn, {allowed_roles, site_param}) do
     current_user = conn.assigns[:current_user]
 
-    with {:ok, %{site: site, role: membership_role}} <- get_site_with_role(conn, current_user),
+    with {:ok, domain} <- get_domain(conn, site_param),
+         {:ok, %{site: site, role: membership_role}} <-
+           get_site_with_role(conn, current_user, domain),
          {:ok, shared_link} <- maybe_get_shared_link(conn, site) do
       role =
         cond do
@@ -63,13 +116,25 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
     end
   end
 
-  defp get_site_with_role(conn, current_user) do
-    # addition is flimsy, do we need an extra argument on plug init to control where we look for the domain?
-    domain =
-      conn.path_params["domain"] ||
-        (conn.method == "POST" && conn.path_info == ["api", "docs", "query"] &&
-           conn.params["site_id"])
+  defp get_domain(conn, nil) do
+    if domain = conn.path_params["domain"] do
+      {:ok, domain}
+    else
+      error_not_found(conn)
+    end
+  end
 
+  defp get_domain(conn, site_param) do
+    domain = conn.params[site_param]
+
+    if is_binary(domain) do
+      {:ok, domain}
+    else
+      error_not_found(conn)
+    end
+  end
+
+  defp get_site_with_role(conn, current_user, domain) do
     site_query =
       from(
         s in Plausible.Site,

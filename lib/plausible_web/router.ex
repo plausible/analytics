@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["json"]
     plug :fetch_session
     plug PlausibleWeb.AuthPlug
-    plug PlausibleWeb.Plugs.AuthorizeSiteAccess, [:admin, :super_admin, :owner]
+    plug PlausibleWeb.Plugs.AuthorizeSiteAccess, {[:admin, :super_admin, :owner], "site_id"}
     plug PlausibleWeb.Plugs.NoRobots
   end
 
@@ -96,6 +96,26 @@ defmodule PlausibleWeb.Router do
     scope path: "/flags" do
       pipe_through :flags
       forward "/", FunWithFlags.UI.Router, namespace: "flags"
+    end
+  end
+
+  # Routes for plug integration testing
+  if Mix.env() in [:test, :ce_test] do
+    scope "/plug-tests", PlausibleWeb do
+      scope [] do
+        pipe_through :browser
+
+        get("/basic", TestController, :browser)
+        get("/:domain/shared-link/:slug", TestController, :browser)
+        get("/:domain/with-domain", TestController, :browser)
+      end
+
+      scope [] do
+        pipe_through :api
+
+        get("/api-basic", TestController, :api)
+        get("/:domain/api-with-domain", TestController, :api)
+      end
     end
   end
 
