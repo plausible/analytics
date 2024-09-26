@@ -726,7 +726,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert length(buttons) == 4
 
       assert resp =~ "Google Analytics (123456)"
-      assert resp =~ "9998"
+      assert resp =~ "9.9k"
     end
 
     test "disables import buttons when imports are at maximum", %{conn: conn, site: site} do
@@ -754,7 +754,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       resp = html_response(conn, 200)
 
-      assert resp =~ "9998"
+      assert resp =~ "9.9k"
     end
 
     test "disables import buttons when there's import in progress", %{conn: conn, site: site} do
