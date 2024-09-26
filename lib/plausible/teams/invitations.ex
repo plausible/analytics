@@ -8,9 +8,8 @@ defmodule Plausible.Teams.Invitations do
 
   def invite(site, inviter, invitee_email, role, opts \\ [])
 
-  # ownership transfer => site transfer
   def invite(_site, _inviter, _invitee_email, :owner, _opts) do
-    # TODO
+    # TODO: site transfer
     {:error, :not_implemented}
   end
 
@@ -27,6 +26,47 @@ defmodule Plausible.Teams.Invitations do
          {:ok, guest_invitation} <- create_invitation(site, invitee_email, role, inviter) do
       send_invitation_email(guest_invitation, invitee)
       {:ok, guest_invitation}
+    end
+  end
+
+  def accept(invitation_id, user) do
+    with {:ok, team_invitation} <- find_for_user(invitation_id, user) do
+      if team_invitation.role == :owner do
+        # TODO: site transfer
+        {:error, :not_implemented}
+      else
+        do_accept(team_invitation, user)
+      end
+    end
+  end
+
+  defp do_accept(team_invitation, user) do
+    guest_invitations = team_invitation.guest_invitations
+
+    Repo.transaction(fn ->
+      with {:ok, team_membership} <- create_team_membership(team_invitation, user),
+           {:ok, _guest_memberships} <-
+             create_guest_memberships(team_membership, guest_invitations) do
+        Repo.delete!(team_invitation)
+        send_invitation_accepted_email(team_invitation, guest_invitations)
+
+        team_membership
+      else
+        {:error, changeset} -> Repo.rollback(changeset)
+      end
+    end)
+  end
+
+  defp find_for_user(invitation_id, user) do
+    invitation =
+      Teams.Invitation
+      |> Repo.get_by(invitation_id: invitation_id, email: user.email)
+      |> Repo.preload([:team, :inviter, guest_invitations: :site])
+
+    if invitation do
+      {:ok, invitation}
+    else
+      {:error, :invitation_not_found}
     end
   end
 
@@ -118,5 +158,56 @@ defmodule Plausible.Teams.Invitations do
       end
 
     Plausible.Mailer.send(email)
+  end
+
+  defp create_team_membership(team_invitation, user) do
+    now = NaiveDateTime.utc_now(:second)
+    %{team: team, role: role} = team_invitation
+
+    team
+    |> Teams.Membership.changeset(user, role)
+    |> Repo.insert(
+      on_conflict: [set: [updated_at: now]],
+      conflict_target: [:team_id, :user_id]
+    )
+  end
+
+  defp create_guest_memberships(_team_membership, []) do
+    {:ok, []}
+  end
+
+  defp create_guest_memberships(%{role: role} = _team_membership, _) when role != :guest do
+    {:ok, []}
+  end
+
+  defp create_guest_memberships(team_membership, guest_invitations) do
+    now = NaiveDateTime.utc_now(:second)
+
+    Enum.reduce_while(guest_invitations, {:ok, []}, fn guest_invitation,
+                                                       {:ok, guest_memberships} ->
+      result =
+        team_membership
+        |> Teams.GuestMembership.changeset(guest_invitation.site, guest_invitation.role)
+        |> Repo.insert(
+          on_conflict: [set: [updated_at: now, role: guest_invitation.role]],
+          conflict_target: [:team_membership_id, :site_id]
+        )
+
+      case result do
+        {:ok, guest_membership} -> {:cont, {:ok, [guest_membership | guest_memberships]}}
+        {:error, changeset} -> {:halt, {:error, changeset}}
+      end
+    end)
+  end
+
+  defp send_invitation_accepted_email(_team_invitation, []) do
+    # NOOP for now
+    :ok
+  end
+
+  defp send_invitation_accepted_email(team_invitation, [guest_invitation | _]) do
+    team_invitation.inviter.email
+    |> PlausibleWeb.Email.invitation_accepted(team_invitation.email, guest_invitation.site)
+    |> Plausible.Mailer.send()
   end
 end

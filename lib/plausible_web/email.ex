@@ -269,16 +269,16 @@ defmodule PlausibleWeb.Email do
     )
   end
 
-  def invitation_accepted(invitation) do
+  def invitation_accepted(inviter_email, invitee_email, site) do
     priority_email()
-    |> to(invitation.inviter.email)
+    |> to(inviter_email)
     |> tag("invitation-accepted")
     |> subject(
-      "[#{Plausible.product_name()}] #{invitation.email} accepted your invitation to #{invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{invitee_email} accepted your invitation to #{site.domain}"
     )
     |> render("invitation_accepted.html",
-      user: invitation.inviter,
-      invitation: invitation
+      invitee_email: invitee_email,
+      site: site
     )
   end
 

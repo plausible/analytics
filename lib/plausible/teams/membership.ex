@@ -5,6 +5,8 @@ defmodule Plausible.Teams.Membership do
 
   use Ecto.Schema
 
+  import Ecto.Changeset
+
   schema "team_memberships" do
     field :role, Ecto.Enum, values: [:guest, :viewer, :editor, :admin, :owner]
 
@@ -14,5 +16,13 @@ defmodule Plausible.Teams.Membership do
     has_many :guest_memberships, Plausible.Teams.GuestMembership, foreign_key: :team_membership_id
 
     timestamps()
+  end
+
+  def changeset(team, user, role) do
+    %__MODULE__{}
+    |> change()
+    |> put_change(:role, role)
+    |> put_assoc(:team, team)
+    |> put_assoc(:user, user)
   end
 end

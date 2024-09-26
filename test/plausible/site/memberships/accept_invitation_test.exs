@@ -216,6 +216,51 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       )
     end
 
+    test "converts an invitation into a membership (TEAMS)" do
+      inviter = insert(:user)
+      invitee = insert(:user)
+      team = insert(:team)
+      site = insert(:site, team: team, members: [inviter])
+      insert(:team_membership, team: team, user: inviter, role: :owner)
+
+      _invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: inviter,
+          email: invitee.email,
+          role: :admin
+        )
+
+      team_invitation =
+        insert(:team_invitation,
+          team: team,
+          inviter: inviter,
+          email: invitee.email,
+          role: :guest
+        )
+
+      insert(:guest_invitation, team_invitation: team_invitation, site: site, role: :editor)
+
+      assert {:ok, team_membership} =
+               Plausible.Teams.Invitations.accept(team_invitation.invitation_id, invitee)
+
+      assert [guest_membership] =
+               Repo.preload(team_membership, :guest_memberships).guest_memberships
+
+      assert guest_membership.site_id == site.id
+      assert team_membership.user_id == invitee.id
+      assert guest_membership.role == :editor
+      assert team_membership.role == :guest
+      assert team_membership.team_id == team.id
+
+      refute Repo.reload(team_invitation)
+
+      assert_email_delivered_with(
+        to: [nil: inviter.email],
+        subject: @subject_prefix <> "#{invitee.email} accepted your invitation to #{site.domain}"
+      )
+    end
+
     test "does not degrade role when trying to invite self as an owner" do
       user = insert(:user)
 
