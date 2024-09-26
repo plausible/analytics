@@ -5,11 +5,17 @@ defmodule PlausibleWeb.Components.Generic do
   use Phoenix.Component, global_prefixes: ~w(x-)
 
   @notice_themes %{
+    gray: %{
+      bg: "bg-white dark:bg-gray-800",
+      icon: "text-gray-400",
+      title_text: "text-gray-800 dark:text-gray-400",
+      body_text: "text-gray-700 dark:text-gray-500 leading-5"
+    },
     yellow: %{
       bg: "bg-yellow-50 dark:bg-yellow-100",
       icon: "text-yellow-400",
       title_text: "text-yellow-800 dark:text-yellow-900",
-      body_text: "text-yellow-700 dark:text-yellow-800"
+      body_text: "text-yellow-700 dark:text-yellow-800 leading-5"
     },
     red: %{
       bg: "bg-red-100",
@@ -24,15 +30,16 @@ defmodule PlausibleWeb.Components.Generic do
     "bright" =>
       "border border-gray-200 bg-gray-100 dark:bg-gray-300 text-gray-800 hover:bg-gray-200 focus-visible:outline-gray-100",
     "danger" =>
-      "border border-gray-300 dark:border-gray-500 text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:border-blue-300 active:text-red-800"
+      "border border-gray-300 dark:border-gray-500 text-red-700 bg-white dark:bg-gray-900 hover:text-red-500 dark:hover:text-red-400 focus:border-blue-300 dark:text-red-500 active:text-red-800"
   }
 
-  @button_base_class "inline-flex items-center justify-center gap-x-2 rounded-md px-3.5 py-2.5 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700"
+  @button_base_class "whitespace-nowrap truncate inline-flex items-center justify-center gap-x-2 rounded-md px-3.5 py-2.5 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700"
 
   attr(:type, :string, default: "button")
   attr(:theme, :string, default: "primary")
   attr(:class, :string, default: "")
   attr(:disabled, :boolean, default: false)
+  attr(:mt?, :boolean, default: true)
   attr(:rest, :global)
 
   slot(:inner_block)
@@ -49,6 +56,7 @@ defmodule PlausibleWeb.Components.Generic do
       type={@type}
       disabled={@disabled}
       class={[
+        @mt? && "mt-6",
         @button_base_class,
         @theme_class,
         @class
@@ -64,11 +72,26 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:class, :string, default: "")
   attr(:theme, :string, default: "primary")
   attr(:disabled, :boolean, default: false)
+  attr(:method, :string, default: "get")
+  attr(:mt?, :boolean, default: true)
   attr(:rest, :global)
 
   slot(:inner_block)
 
   def button_link(assigns) do
+    extra =
+      if assigns.method == "get" do
+        []
+      else
+        [
+          "data-csrf": Phoenix.HTML.Tag.csrf_token_value(assigns.href),
+          "data-method": assigns.method,
+          "data-to": assigns.href
+        ]
+      end
+
+    assigns = assign(assigns, extra: extra)
+
     theme_class =
       if assigns.disabled do
         "bg-gray-400 text-white dark:text-white dark:text-gray-400 dark:bg-gray-700 cursor-not-allowed"
@@ -95,10 +118,12 @@ defmodule PlausibleWeb.Components.Generic do
       href={@href}
       onclick={@onclick}
       class={[
+        @mt? && "mt-6",
         @button_base_class,
         @theme_class,
         @class
       ]}
+      {@extra}
       {@rest}
     >
       <%= render_slot(@inner_block) %>
@@ -110,14 +135,13 @@ defmodule PlausibleWeb.Components.Generic do
 
   def docs_info(assigns) do
     ~H"""
-    <a href={"https://plausible.io/docs/#{@slug}"} rel="noreferrer" target="_blank">
-      <Heroicons.information_circle class="text-gray-400 w-6 h-6 absolute top-0 right-0" />
+    <a href={"https://plausible.io/docs/#{@slug}"} rel="noopener noreferrer" target="_blank">
+      <Heroicons.information_circle class="text-indigo-800 dark:text-indigo-500 w-6 h-6 stroke-2 absolute top-4 right-4 hover:text-indigo-500 dark:hover:text-indigo-300" />
     </a>
     """
   end
 
   attr(:title, :any, default: nil)
-  attr(:size, :atom, default: :sm)
   attr(:theme, :atom, default: :yellow)
   attr(:dismissable_id, :any, default: nil)
   attr(:class, :string, default: "")
@@ -128,8 +152,8 @@ defmodule PlausibleWeb.Components.Generic do
     assigns = assign(assigns, :theme, Map.fetch!(@notice_themes, assigns.theme))
 
     ~H"""
-    <div id={@dismissable_id} class={@dismissable_id && "hidden"}>
-      <div class={["rounded-md p-4 relative", @theme.bg, @class]} {@rest}>
+    <div id={@dismissable_id} class={[@dismissable_id && "hidden", "mb-4"]}>
+      <div class={["rounded-md p-8 relative", @theme.bg, @class]} {@rest}>
         <button
           :if={@dismissable_id}
           class={"absolute right-0 top-0 m-2 #{@theme.title_text}"}
@@ -153,10 +177,10 @@ defmodule PlausibleWeb.Components.Generic do
             </svg>
           </div>
           <div class={["w-full", @title && "ml-3"]}>
-            <h3 :if={@title} class={"text-#{@size} font-medium #{@theme.title_text} mb-2"}>
+            <h3 :if={@title} class={"font-medium #{@theme.title_text} mb-2"}>
               <%= @title %>
             </h3>
-            <div class={"text-#{@size} #{@theme.body_text}"}>
+            <div class={"#{@theme.body_text}"}>
               <p>
                 <%= render_slot(@inner_block) %>
               </p>
@@ -176,13 +200,12 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr :id, :any, default: nil
-  attr :href, :string, default: "#"
-  attr :new_tab, :boolean, default: false
-  attr :class, :string, default: ""
-  attr :rest, :global
-  attr :method, :string, default: "get"
-  slot :inner_block
+  attr(:href, :string, default: "#")
+  attr(:new_tab, :boolean, default: false)
+  attr(:class, :string, default: "")
+  attr(:rest, :global)
+  attr(:method, :string, default: "get")
+  slot(:inner_block)
 
   def styled_link(assigns) do
     ~H"""
@@ -199,11 +222,11 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   slot :button, required: true do
-    attr :class, :string
+    attr(:class, :string)
   end
 
   slot :panel, required: true do
-    attr :class, :string
+    attr(:class, :string)
   end
 
   def dropdown(assigns) do
@@ -235,10 +258,10 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr :href, :string, required: true
-  attr :new_tab, :boolean, default: false
-  attr :rest, :global
-  slot :inner_block, required: true
+  attr(:href, :string, required: true)
+  attr(:new_tab, :boolean, default: false)
+  attr(:rest, :global)
+  slot(:inner_block, required: true)
 
   def dropdown_link(assigns) do
     class =
@@ -260,13 +283,12 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr :href, :string, required: true
-  attr :new_tab, :boolean, default: false
-  attr :class, :string, default: ""
-  attr :id, :any, default: nil
-  attr :rest, :global
-  attr :method, :string, default: "get"
-  slot :inner_block
+  attr(:href, :string, required: true)
+  attr(:new_tab, :boolean, default: false)
+  attr(:class, :string, default: "")
+  attr(:rest, :global)
+  attr(:method, :string, default: "get")
+  slot(:inner_block)
 
   def unstyled_link(assigns) do
     extra =
@@ -287,7 +309,6 @@ defmodule PlausibleWeb.Components.Generic do
 
       ~H"""
       <.link
-        id={@id}
         class={[
           "inline-flex items-center gap-x-0.5",
           @class
@@ -311,8 +332,8 @@ defmodule PlausibleWeb.Components.Generic do
     end
   end
 
-  attr :class, :any, default: ""
-  attr :rest, :global
+  attr(:class, :any, default: "")
+  attr(:rest, :global)
 
   def spinner(assigns) do
     ~H"""
@@ -335,9 +356,44 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr :sticky?, :boolean, default: true
+  def settings_tiles(assigns) do
+    ~H"""
+    <div class="sm:overflow-hidden text-gray-900 leading-5 dark:text-gray-100">
+      <%= render_slot(@inner_block) %>
+    </div>
+    """
+  end
+
+  attr :docs, :string, default: nil
   slot :inner_block, required: true
-  slot :tooltip_content, required: true
+  slot :title, required: true
+  slot :subtitle, required: true
+  attr :no_inner_pad, :boolean, default: false
+
+  def tile(assigns) do
+    ~H"""
+    <div class="shadow bg-white dark:bg-gray-800 sm:rounded-md mb-6">
+      <header class="relative border-b dark:border-gray-700 p-6">
+        <.title>
+          <%= render_slot(@title) %>
+
+          <.docs_info :if={@docs} slug={@docs} />
+        </.title>
+        <div class="text-sm mt-1 dark:text-gray-300 leading-5">
+          <%= render_slot(@subtitle) %>
+        </div>
+      </header>
+
+      <div class={[@no_inner_pad && "pb-2", @no_inner_pad || "pb-6 px-6 pt-2"]}>
+        <%= render_slot(@inner_block) %>
+      </div>
+    </div>
+    """
+  end
+
+  attr(:sticky?, :boolean, default: true)
+  slot(:inner_block, required: true)
+  slot(:tooltip_content, required: true)
 
   def tooltip(assigns) do
     wrapper_data =
@@ -348,7 +404,7 @@ defmodule PlausibleWeb.Components.Generic do
     assigns = assign(assigns, wrapper_data: wrapper_data, show_inner: show_inner)
 
     ~H"""
-    <div x-data={@wrapper_data} class="tooltip-wrapper w-full relative">
+    <div x-data={@wrapper_data} class="tooltip-wrapper w-full relative z-[1000]">
       <div
         x-cloak
         x-show={@show_inner}
@@ -374,19 +430,19 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr :rest, :global, include: ~w(fill stroke stroke-width)
-  attr :name, :atom, required: true
-  attr :outline, :boolean, default: true
-  attr :solid, :boolean, default: false
-  attr :mini, :boolean, default: false
+  attr(:rest, :global, include: ~w(fill stroke stroke-width))
+  attr(:name, :atom, required: true)
+  attr(:outline, :boolean, default: true)
+  attr(:solid, :boolean, default: false)
+  attr(:mini, :boolean, default: false)
 
   def dynamic_icon(assigns) do
     apply(Heroicons, assigns.name, [assigns])
   end
 
-  attr :width, :integer, default: 100
-  attr :height, :integer, default: 100
-  attr :id, :string, default: "shuttle"
+  attr(:width, :integer, default: 100)
+  attr(:height, :integer, default: 100)
+  attr(:id, :string, default: "shuttle")
 
   defp icon_class(link_assigns) do
     if String.contains?(link_assigns[:class], "text-sm") or
@@ -397,7 +453,7 @@ defmodule PlausibleWeb.Components.Generic do
     end
   end
 
-  slot :item, required: true
+  slot(:item, required: true)
 
   def focus_list(assigns) do
     ~H"""
@@ -413,16 +469,20 @@ defmodule PlausibleWeb.Components.Generic do
   slot :subtitle
   slot :inner_block, required: true
   slot :footer
+  attr :rest, :global
 
   def focus_box(assigns) do
     ~H"""
-    <div class="focus-box bg-white w-full max-w-lg mx-auto dark:bg-gray-800 text-black dark:text-gray-100 shadow-md  rounded mb-4 mt-8">
+    <div
+      class="focus-box bg-white w-full max-w-lg mx-auto dark:bg-gray-800 text-black dark:text-gray-100 shadow-md  rounded mb-4 mt-8"
+      {@rest}
+    >
       <div class="p-8">
-        <h2 :if={@title != []} class="text-xl font-black dark:text-gray-100">
+        <.title :if={@title != []}>
           <%= render_slot(@title) %>
-        </h2>
+        </.title>
 
-        <div :if={@subtitle != []} class="mt-2 dark:text-gray-200">
+        <div :if={@subtitle != []} class="text-sm mt-2 dark:text-gray-200">
           <%= render_slot(@subtitle) %>
         </div>
 
@@ -443,6 +503,217 @@ defmodule PlausibleWeb.Components.Generic do
         </div>
       </div>
     </div>
+    """
+  end
+
+  attr :rest, :global
+  attr :width, :string, default: "min-w-full"
+  attr :rows, :list, default: []
+  slot :thead, required: false
+  slot :tbody, required: true
+
+  def table(assigns) do
+    ~H"""
+    <table :if={not Enum.empty?(@rows)} class={[@width, "mb-2"]} {@rest}>
+      <thead :if={@thead}>
+        <tr>
+          <%= render_slot(@thead) %>
+        </tr>
+      </thead>
+      <tbody>
+        <tr :for={item <- @rows}>
+          <%= render_slot(@tbody, item) %>
+        </tr>
+      </tbody>
+    </table>
+    """
+  end
+
+  slot :inner_block, required: true
+  attr :truncate, :boolean, default: false
+  attr :actions, :boolean, default: nil
+  attr :hide_on_mobile, :boolean, default: nil
+  attr :rest, :global
+
+  def td(assigns) do
+    ~H"""
+    <td
+      class={[
+        "px-6 py-3 whitespace-nowrap",
+        @truncate && "truncate max-w-sm",
+        @actions && "flex text-right justify-end",
+        @hide_on_mobile && "hidden md:table-cell"
+      ]}
+      {@rest}
+    >
+      <div :if={@actions} class="flex gap-2">
+        <%= render_slot(@inner_block) %>
+      </div>
+      <div :if={!@actions}>
+        <%= render_slot(@inner_block) %>
+      </div>
+    </td>
+    """
+  end
+
+  slot :inner_block, required: true
+  attr :invisible, :boolean, default: false
+  attr :hide_on_mobile, :boolean, default: nil
+
+  def th(assigns) do
+    class =
+      if assigns[:invisible] do
+        "invisible"
+      else
+        "px-6 py-1 text-left text-sm font-semibold text-gray-500 dark:text-gray-400"
+      end
+
+    assigns = assign(assigns, class: class)
+
+    ~H"""
+    <th scope="col" class={[@hide_on_mobile && "hidden md:table-cell", @class]}>
+      <%= render_slot(@inner_block) %>
+    </th>
+    """
+  end
+
+  attr :set_to, :boolean, default: false
+  attr :disabled?, :boolean, default: false
+  slot :inner_block, required: true
+
+  def toggle_submit(assigns) do
+    ~H"""
+    <div class="mt-4 mb-2 flex items-center">
+      <button
+        type="submit"
+        class={[
+          "relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full transition-colors ease-in-out duration-200 focus:outline-none focus:ring",
+          if(@set_to, do: "bg-indigo-600", else: "bg-gray-200 dark:bg-gray-700"),
+          if(@disabled?, do: "cursor-not-allowed")
+        ]}
+        disabled={@disabled?}
+      >
+        <span
+          aria-hidden="true"
+          class={[
+            "inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200",
+            if(@set_to, do: "translate-x-5", else: "translate-x-0")
+          ]}
+        />
+      </button>
+
+      <span class={[
+        "ml-2 font-medium leading-5",
+        if(@disabled?,
+          do: "text-gray-500 dark:text-gray-300",
+          else: "text-gray-900 dark:text-gray-100"
+        )
+      ]}>
+        <%= render_slot(@inner_block) %>
+      </span>
+    </div>
+    """
+  end
+
+  attr :href, :string, default: nil
+  attr :rest, :global, include: ~w(method disabled)
+
+  def edit_button(assigns) do
+    if assigns[:href] do
+      ~H"""
+      <.unstyled_link href={@href} {@rest}>
+        <Heroicons.pencil_square class="w-5 h-5 text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300" />
+      </.unstyled_link>
+      """
+    else
+      ~H"""
+      <button {@rest}>
+        <Heroicons.pencil_square class="w-5 h-5 text-indigo-800 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-300" />
+      </button>
+      """
+    end
+  end
+
+  attr :href, :string, default: nil
+  attr :rest, :global, include: ~w(method disabled)
+
+  def delete_button(assigns) do
+    if assigns[:href] do
+      ~H"""
+      <.unstyled_link href={@href} {@rest}>
+        <Heroicons.trash class="w-5 h-5 text-red-800 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400" />
+      </.unstyled_link>
+      """
+    else
+      ~H"""
+      <button {@rest}>
+        <Heroicons.trash class="w-5 h-5 text-red-800 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400" />
+      </button>
+      """
+    end
+  end
+
+  attr :filter_text, :string, default: ""
+  attr :placeholder, :string, default: ""
+  attr :filtering_enabled?, :boolean, default: true
+  slot :inner_block, required: false
+
+  def filter_bar(assigns) do
+    ~H"""
+    <div class="p-6 flex items-center justify-between">
+      <div class="text-gray-800 inline-flex items-center">
+        <div :if={@filtering_enabled?} class="relative rounded-md shadow-sm flex">
+          <form id="filter-form" phx-change="filter" class="flex items-center">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
+            </div>
+            <input
+              type="text"
+              name="filter-text"
+              id="filter-text"
+              class="pl-8 shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+              placeholder={@placeholder}
+              value={@filter_text}
+            />
+
+            <Heroicons.backspace
+              :if={String.trim(@filter_text) != ""}
+              class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500"
+              phx-click="reset-filter-text"
+              id="reset-filter"
+            />
+          </form>
+        </div>
+      </div>
+      <%= render_slot(@inner_block) %>
+    </div>
+    """
+  end
+
+  def hr(assigns) do
+    ~H"""
+    <hr class="border-t border-gray-200 dark:border-gray-700" />
+    """
+  end
+
+  slot :inner_block, required: true
+  attr :class, :any, default: nil
+
+  def h2(assigns) do
+    ~H"""
+    <h2 class={[@class || "font-semibold leading-6 text-gray-900 dark:text-gray-100"]}>
+      <%= render_slot(@inner_block) %>
+    </h2>
+    """
+  end
+
+  slot :inner_block, required: true
+
+  def title(assigns) do
+    ~H"""
+    <.h2 class="text-lg font-medium dark:text-gray-100">
+      <%= render_slot(@inner_block) %>
+    </.h2>
     """
   end
 end
