@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
 
   alias Plausible.Sites
   alias Plausible.Plugins.API.Tokens
+  import PlausibleWeb.Components.Generic
 
   def mount(_params, %{"domain" => domain} = session, socket) do
     socket =
@@ -29,89 +30,58 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
 
   def render(assigns) do
     ~H"""
-    <.flash_messages flash={@flash} />
+    <div>
+      <.flash_messages flash={@flash} />
 
-    <%= if @add_token? do %>
-      <%= live_render(
-        @socket,
-        PlausibleWeb.Live.Plugins.API.TokenForm,
-        id: "token-form",
-        session: %{
-          "domain" => @domain,
-          "token_description" => @token_description,
-          "rendered_by" => self()
-        }
-      ) %>
-    <% end %>
+      <%= if @add_token? do %>
+        <%= live_render(
+          @socket,
+          PlausibleWeb.Live.Plugins.API.TokenForm,
+          id: "token-form",
+          session: %{
+            "domain" => @domain,
+            "token_description" => @token_description,
+            "rendered_by" => self()
+          }
+        ) %>
+      <% end %>
 
-    <div class="mt-4">
-      <div class="border-t border-gray-200 pt-4 grid">
-        <div class="mt-4 sm:ml-4 sm:mt-0 justify-self-end">
-          <PlausibleWeb.Components.Generic.button phx-click="add-token">
-            + Add Plugin Token
-          </PlausibleWeb.Components.Generic.button>
-        </div>
-      </div>
+      <div>
+        <.filter_bar filtering_enabled?={false}>
+          <.button phx-click="add-token" mt?={false}>
+            Add Plugin Token
+          </.button>
+        </.filter_bar>
 
-      <div
-        :if={not Enum.empty?(@displayed_tokens)}
-        class="mt-8 overflow-hidden border-b border-gray-200 shadow dark:border-gray-900 sm:rounded-lg"
-      >
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-900">
-          <thead class="bg-gray-50 dark:bg-gray-900">
-            <tr>
-              <th
-                scope="col"
-                class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100"
-              >
-                Description
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100"
-              >
-                Hint
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100"
-              >
-                Last used
-              </th>
-              <th scope="col" class="px-6 py-3">
-                <span class="sr-only">Revoke</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <%= for token <- @displayed_tokens do %>
-              <tr class="bg-white dark:bg-gray-800">
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                  <span class="token-description">
-                    <%= token.description %>
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-100 font-mono">
-                  **********<%= token.hint %>
-                </td>
-                <td class="px-6 py-4 text-sm font-normal whitespace-nowrap">
-                  <%= Plausible.Plugins.API.Token.last_used_humanize(token) %>
-                </td>
-                <td class="px-6 py-4 text-sm font-medium text-right">
-                  <button
-                    id={"revoke-token-#{token.id}"}
-                    phx-click="revoke-token"
-                    phx-value-token-id={token.id}
-                    class="text-sm text-red-600"
-                    data-confirm="Are you sure you want to revoke this Token? This action cannot be reversed."
-                  >
-                    Revoke
-                  </button>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
+        <.table :if={not Enum.empty?(@displayed_tokens)} rows={@displayed_tokens}>
+          <:thead>
+            <.th>Description</.th>
+            <.th hide_on_mobile>Hint</.th>
+            <.th hide_on_mobile>Last used</.th>
+            <.th invisible>Actions</.th>
+          </:thead>
+          <:tbody :let={token}>
+            <.td>
+              <span class="token-description">
+                <%= token.description %>
+              </span>
+            </.td>
+            <.td hide_on_mobile>
+              **********<%= token.hint %>
+            </.td>
+            <.td hide_on_mobile>
+              <%= Plausible.Plugins.API.Token.last_used_humanize(token) %>
+            </.td>
+            <.td actions>
+              <.delete_button
+                id={"revoke-token-#{token.id}"}
+                phx-click="revoke-token"
+                phx-value-token-id={token.id}
+                data-confirm="Are you sure you want to revoke this Token? This action cannot be reversed."
+              />
+            </.td>
+          </:tbody>
+        </.table>
       </div>
     </div>
     """
