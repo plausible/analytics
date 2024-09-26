@@ -10,7 +10,12 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     end
   end
 
-  for init_argument <- [[], {[], nil}, {[:public, :viewer, :admin, :super_admin, :owner], nil}] do
+  for init_argument <- [
+        [],
+        :all_roles,
+        {:all_roles, nil},
+        {[:public, :viewer, :admin, :super_admin, :owner], nil}
+      ] do
     test "init resolves to expected options with argument #{inspect(init_argument)}" do
       assert {[:public, :viewer, :admin, :super_admin, :owner], nil} ==
                AuthorizeSiteAccess.init(unquote(init_argument))
@@ -26,7 +31,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   end
 
   test "returns 404 on non-existent site", %{conn: conn} do
-    opts = AuthorizeSiteAccess.init(_all_allowed_roles = [])
+    opts = AuthorizeSiteAccess.init(:all_roles)
 
     conn =
       conn
@@ -39,7 +44,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   end
 
   test "rejects user completely unrelated to the site", %{conn: conn} do
-    opts = AuthorizeSiteAccess.init(_all_allowed_roles = [])
+    opts = AuthorizeSiteAccess.init(:all_roles)
 
     site = insert(:site, members: [build(:user)])
 
@@ -59,7 +64,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
          site: site
        } do
     opts =
-      AuthorizeSiteAccess.init({[], "some_key"})
+      AuthorizeSiteAccess.init({:all_roles, "some_key"})
 
     conn =
       conn
@@ -77,7 +82,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
          site: site
        } do
     opts =
-      AuthorizeSiteAccess.init({[], "some_key"})
+      AuthorizeSiteAccess.init({:all_roles, "some_key"})
 
     conn =
       conn
@@ -95,7 +100,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   } do
     other_site = insert(:site, members: [build(:user)])
 
-    opts = AuthorizeSiteAccess.init(_allowed_roles = [:admin, :owner])
+    opts = AuthorizeSiteAccess.init([:admin, :owner])
 
     conn =
       conn
@@ -182,7 +187,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
       "auth" => shared_link.slug
     }
 
-    opts = AuthorizeSiteAccess.init(_allowed_roles = [:super_admin, :admin, :owner])
+    opts = AuthorizeSiteAccess.init([:super_admin, :admin, :owner])
 
     conn =
       conn
@@ -198,7 +203,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     site =
       insert(:site, memberships: [build(:site_membership, user: user, role: :admin)])
 
-    opts = AuthorizeSiteAccess.init(_allowed_roles = [:owner])
+    opts = AuthorizeSiteAccess.init([:owner])
 
     conn =
       conn
@@ -215,7 +220,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
       site =
         insert(:site, memberships: [build(:site_membership, user: user, role: unquote(role))])
 
-      opts = AuthorizeSiteAccess.init(_allowed_roles = [unquote(role)])
+      opts = AuthorizeSiteAccess.init([unquote(role)])
 
       conn =
         conn
@@ -251,7 +256,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   test "allows user based on website visibility (authenticated user)", %{conn: conn} do
     site = insert(:site, members: [build(:user)], public: true)
 
-    opts = AuthorizeSiteAccess.init(_allowed_roles = [:public])
+    opts = AuthorizeSiteAccess.init([:public])
 
     conn =
       conn
@@ -266,7 +271,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
   test "allows user based on website visibility (anonymous request)" do
     site = insert(:site, members: [build(:user)], public: true)
 
-    opts = AuthorizeSiteAccess.init(_allowed_roles = [:public])
+    opts = AuthorizeSiteAccess.init([:public])
 
     conn =
       build_conn()
@@ -282,7 +287,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     site = insert(:site, members: [build(:user)])
     shared_link = insert(:shared_link, site: site)
 
-    opts = AuthorizeSiteAccess.init(_allowed_roles = [:public])
+    opts = AuthorizeSiteAccess.init([:public])
 
     conn =
       conn
@@ -298,7 +303,7 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccessTest do
     site = insert(:site, members: [build(:user)])
     shared_link = insert(:shared_link, site: site)
 
-    opts = AuthorizeSiteAccess.init(_allowed_roles = [:public])
+    opts = AuthorizeSiteAccess.init([:public])
 
     conn =
       build_conn()

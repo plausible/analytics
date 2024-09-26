@@ -1,6 +1,36 @@
 defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   @moduledoc """
   Plug restricting access to site and shared link, when present.
+
+  In order to permit access to site regardless of role:
+
+  ```elixir
+  plug #{inspect(__MODULE__)}
+  ```
+
+  or
+
+  ```elixir
+  plug #{inspect(__MODULE__)}, :all_roles
+  ```
+
+  Permit access for a subset of roles only:
+
+  ```elixir
+  plug #{inspect(__MODULE__)}, [:admin, :owner, :super_admin]
+  ```
+
+  Permit access using a custom site param:
+
+  ```elixir
+  plug #{inspect(__MODULE__)}, {[:admin, :owner, :super_admin], "site_id"}
+  ```
+
+  or in case where any role is allowed:
+
+  ```elixir
+  plug #{inspect(__MODULE__)}, {:all_roles, "site_id"}
+  ```
   """
 
   use Plausible.Repo
@@ -12,8 +42,14 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
 
   def init([]), do: {@all_roles, nil}
 
+  def init(:all_roles), do: {@all_roles, nil}
+
   def init(allowed_roles) when is_list(allowed_roles) do
     init({allowed_roles, nil})
+  end
+
+  def init({:all_roles, site_param}) do
+    init({@all_roles, site_param})
   end
 
   def init({allowed_roles, site_param}) when is_list(allowed_roles) do
