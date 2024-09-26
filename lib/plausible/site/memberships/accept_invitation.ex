@@ -187,7 +187,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   end
 
   defp notify_invitation_accepted(invitation) do
-    PlausibleWeb.Email.invitation_accepted(invitation)
+    invitation.inviter.email
+    |> PlausibleWeb.Email.invitation_accepted(invitation.email, invitation.site)
     |> Plausible.Mailer.send()
   end
 end
