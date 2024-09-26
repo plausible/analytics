@@ -5,6 +5,8 @@ defmodule Plausible.Teams.Invitation do
 
   use Ecto.Schema
 
+  import Ecto.Changeset
+
   schema "team_invitations" do
     field :invitation_id, :string
     field :email, :string
@@ -16,5 +18,17 @@ defmodule Plausible.Teams.Invitation do
     has_many :guest_invitations, Plausible.Teams.GuestInvitation, foreign_key: :team_invitation_id
 
     timestamps()
+  end
+
+  def changeset(team, opts) do
+    email = Keyword.fetch!(opts, :email)
+    role = Keyword.fetch!(opts, :role)
+    inviter = Keyword.fetch!(opts, :inviter)
+
+    %__MODULE__{invitation_id: Nanoid.generate()}
+    |> cast(%{email: email, role: role}, [:email, :role])
+    |> validate_required([:email, :role])
+    |> put_assoc(:team, team)
+    |> put_assoc(:inviter, inviter)
   end
 end

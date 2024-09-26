@@ -10,17 +10,39 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
     test "creates an invitation" do
       inviter = insert(:user)
       invitee = insert(:user)
-      site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
+      team = insert(:team)
+
+      site =
+        insert(:site,
+          team: team,
+          memberships: [build(:site_membership, user: inviter, role: :owner)]
+        )
+
+      insert(:team_membership, team: team, user: inviter, role: :owner)
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
+
+      assert {:ok, %Plausible.Teams.GuestInvitation{}} =
+               Plausible.Teams.Invitations.invite(site, inviter, invitee.email, :viewer)
     end
 
     test "returns validation errors" do
       inviter = insert(:user)
-      site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
+      team = insert(:team)
+
+      site =
+        insert(:site,
+          team: team,
+          memberships: [build(:site_membership, user: inviter, role: :owner)]
+        )
+
+      insert(:team_membership, team: team, user: inviter, role: :owner)
 
       assert {:error, changeset} = CreateInvitation.create_invitation(site, inviter, "", :viewer)
+      assert {"can't be blank", _} = changeset.errors[:email]
+
+      assert {:error, changeset} = Plausible.Teams.Invitations.invite(site, inviter, "", :viewer)
       assert {"can't be blank", _} = changeset.errors[:email]
     end
 
@@ -28,19 +50,32 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       inviter = insert(:user)
       invitee = insert(:user)
 
+      team = insert(:team)
+
       site =
         insert(:site,
+          team: team,
           memberships: [
             build(:site_membership, user: inviter, role: :owner),
             build(:site_membership, user: invitee, role: :viewer)
           ]
         )
 
+      insert(:team_membership, team: team, user: inviter, role: :owner)
+      team_membership = insert(:team_membership, team: team, user: invitee, role: :guest)
+      insert(:guest_membership, team_membership: team_membership, site: site, role: :viewer)
+
       assert {:error, :already_a_member} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
 
       assert {:error, :already_a_member} =
+               Plausible.Teams.Invitations.invite(site, inviter, invitee.email, :viewer)
+
+      assert {:error, :already_a_member} =
                CreateInvitation.create_invitation(site, inviter, inviter.email, :viewer)
+
+      assert {:error, :already_a_member} =
+               Plausible.Teams.Invitations.invite(site, inviter, inviter.email, :viewer)
     end
 
     test "sends invitation email for existing users" do
