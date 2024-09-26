@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Live.Shields.PagesTest do
       conn = get(conn, "/#{site.domain}/settings/shields/pages")
       resp = html_response(conn, 200)
 
-      assert resp =~ "No Page Rules configured for this Site"
+      assert resp =~ "No Page Rules configured for this site"
       assert resp =~ "Pages Block List"
     end
 
