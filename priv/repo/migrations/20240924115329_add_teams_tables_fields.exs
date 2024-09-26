@@ -76,6 +76,22 @@ defmodule Plausible.Repo.Migrations.AddTeamsTablesFields do
       add :team_id, references(:teams, on_delete: :delete_all), null: true
     end
 
+    create table(:team_site_transfers) do
+      add :transfer_id, :string, null: false
+      add :email, :citext
+      add :transfer_guests, :boolean, default: true, null: false
+
+      add :site_id, references(:sites, on_delete: :delete_all), null: false
+      add :destination_team_id, references(:teams, on_delete: :delete_all)
+      add :initiator_id, references(:users, on_delete: :delete_all), null: false
+
+      timestamps()
+    end
+
+    create index(:team_site_transfers, [:transfer_id])
+    create unique_index(:team_site_transfers, [:destination_team_id, :site_id])
+    create unique_index(:team_site_transfers, [:email, :site_id])
+
     create index(:sites, [:team_id])
 
     alter table(:subscriptions) do
