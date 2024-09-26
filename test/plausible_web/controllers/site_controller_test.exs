@@ -715,18 +715,18 @@ defmodule PlausibleWeb.SiteControllerTest do
       _site_import4 = insert(:site_import, site: site, status: SiteImport.failed())
 
       populate_stats(site, site_import3.id, [
-        build(:imported_visitors, pageviews: 77),
-        build(:imported_visitors, pageviews: 21)
+        build(:imported_visitors, pageviews: 7777),
+        build(:imported_visitors, pageviews: 2221)
       ])
 
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
       resp = html_response(conn, 200)
 
-      buttons = find(resp, ~s|button[data-method="delete"]|)
+      buttons = find(resp, ~s|a[data-method="delete"]|)
       assert length(buttons) == 4
 
       assert resp =~ "Google Analytics (123456)"
-      assert resp =~ "(98 page views)"
+      assert resp =~ "9998"
     end
 
     test "disables import buttons when imports are at maximum", %{conn: conn, site: site} do
@@ -746,13 +746,15 @@ defmodule PlausibleWeb.SiteControllerTest do
         insert(:site_import, site: site, legacy: true, status: SiteImport.completed())
 
       populate_stats(site, [
-        build(:imported_visitors, pageviews: 77),
-        build(:imported_visitors, pageviews: 21)
+        build(:imported_visitors, pageviews: 7777),
+        build(:imported_visitors, pageviews: 2221)
       ])
 
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
 
-      assert html_response(conn, 200) =~ "(98 page views)"
+      resp = html_response(conn, 200)
+
+      assert resp =~ "9998"
     end
 
     test "disables import buttons when there's import in progress", %{conn: conn, site: site} do
