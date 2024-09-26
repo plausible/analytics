@@ -1,40 +1,29 @@
-<section class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden">
-  <PlausibleWeb.Components.Billing.Notice.premium_feature
-    billable_user={@site.owner}
-    current_user={@current_user}
-    feature_mod={Plausible.Billing.Feature.Props}
-    grandfathered?
-  />
+<.settings_tiles>
+  <.tile docs="custom-props/introduction" no_inner_pad>
+    <:title>
+      Custom Properties
+    </:title>
+    <:subtitle>
+      Attach Custom Properties when sending a Pageview or an Event to
+      create custom metrics.
+    </:subtitle>
 
-  <div class="py-6 px-4 sm:p-6">
-    <header class="w-full flex relative">
-      <span class="flex-1">
-        <h1 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-          Custom Properties
-        </h1>
-
-        <p class="mt-2 text-sm leading-5 text-gray-500 dark:text-gray-200">
-          Attach Custom Properties when sending a Pageview or an Event to
-          create custom metrics.
-        </p>
-        <p class="text-sm leading-5 text-gray-500 dark:text-gray-200">
-          In order for the properties to show up on your dashboard, you need to
-          explicitly add them below first.
-        </p>
-      </span>
-
-      <PlausibleWeb.Components.Generic.docs_info slug="custom-props/introduction" />
-    </header>
-
+    <PlausibleWeb.Components.Billing.Notice.premium_feature
+      billable_user={@site.owner}
+      current_user={@current_user}
+      feature_mod={Plausible.Billing.Feature.Props}
+      grandfathered?
+    />
     <PlausibleWeb.Components.Site.Feature.toggle
       feature_mod={Plausible.Billing.Feature.Props}
       site={@site}
       conn={@conn}
+      class="mt-8 ml-6 mb-8"
     >
       <%= live_render(@conn, PlausibleWeb.Live.PropsSettings,
         id: "props-form",
         session: %{"site_id" => @site.id, "domain" => @site.domain}
       ) %>
     </PlausibleWeb.Components.Site.Feature.toggle>
-  </div>
-</section>
+  </.tile>
+</.settings_tiles>
