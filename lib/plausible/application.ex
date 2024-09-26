@@ -20,6 +20,7 @@ defmodule Plausible.Application do
       Plausible.IngestRepo,
       Plausible.AsyncInsertRepo,
       Plausible.ImportDeletionRepo,
+      {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
       {Plausible.RateLimit, clean_period: :timer.minutes(10)},
       Plausible.Ingestion.Counters,
       {Finch, name: Plausible.Finch, pools: finch_pool_config()},
@@ -90,7 +91,6 @@ defmodule Plausible.Application do
             {Plausible.Shield.HostnameRuleCache.RecentlyUpdated, interval: :timer.seconds(25)}
         ]
       ),
-      {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
       endpoint,
       {Oban, Application.get_env(:plausible, Oban)},
       Plausible.PromEx
