@@ -5,31 +5,31 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
   In order to permit access to site regardless of role:
 
   ```elixir
-  plug #{inspect(__MODULE__)}
+  plug AuthorizeSiteAccess
   ```
 
   or
 
   ```elixir
-  plug #{inspect(__MODULE__)}, :all_roles
+  plug AuthorizeSiteAccess, :all_roles
   ```
 
   Permit access for a subset of roles only:
 
   ```elixir
-  plug #{inspect(__MODULE__)}, [:admin, :owner, :super_admin]
+  plug AuthorizeSiteAccess, [:admin, :owner, :super_admin]
   ```
 
   Permit access using a custom site param:
 
   ```elixir
-  plug #{inspect(__MODULE__)}, {[:admin, :owner, :super_admin], "site_id"}
+  plug AuthorizeSiteAccess, {[:admin, :owner, :super_admin], "site_id"}
   ```
 
   or in case where any role is allowed:
 
   ```elixir
-  plug #{inspect(__MODULE__)}, {:all_roles, "site_id"}
+  plug AuthorizeSiteAccess, {:all_roles, "site_id"}
   ```
   """
 
