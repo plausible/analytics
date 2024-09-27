@@ -8,9 +8,17 @@ defmodule Plausible.Teams.Invitations do
 
   def invite(site, inviter, invitee_email, role, opts \\ [])
 
-  def invite(_site, _inviter, _invitee_email, :owner, _opts) do
-    # TODO: site transfer
-    {:error, :not_implemented}
+  def invite(site, initiator, invitee_email, :owner, opts) do
+    check_permissions? = opts[:check_permissions]
+    site = Repo.preload(site, :team)
+
+    with :ok <- check_transfer_permissions(site.team, initiator, check_permissions?),
+         new_owner = Plausible.Auth.find_user_by(email: invitee_email),
+         :ok <- ensure_transfer_valid(site.team, new_owner),
+         {:ok, site_transfer} <- create_site_transfer(site, initiator, invitee_email) do
+      send_transfer_init_email(site_transfer, new_owner)
+      {:ok, site_transfer}
+    end
   end
 
   def invite(site, inviter, invitee_email, role, opts) do
@@ -21,7 +29,6 @@ defmodule Plausible.Teams.Invitations do
     with :ok <- check_invitation_permissions(site.team, inviter, check_permissions?),
          :ok <- check_team_member_limit(site.team, role, invitee_email),
          invitee = Auth.find_user_by(email: invitee_email),
-         :ok <- ensure_transfer_valid(site.team, invitee, role),
          :ok <- ensure_new_membership(site, invitee, role),
          {:ok, guest_invitation} <- create_invitation(site, invitee_email, role, inviter) do
       send_invitation_email(guest_invitation, invitee)
@@ -38,6 +45,45 @@ defmodule Plausible.Teams.Invitations do
         do_accept(team_invitation, user)
       end
     end
+  end
+
+  defp check_transfer_permissions(_team, _initiator, false = _check_permissions?) do
+    :ok
+  end
+
+  defp check_transfer_permissions(team, initiator, _) do
+    case Teams.Memberships.team_role(team, initiator) do
+      {:ok, :owner} -> :ok
+      _ -> {:error, :forbidden}
+    end
+  end
+
+  defp ensure_transfer_valid(_team, nil), do: :ok
+
+  defp ensure_transfer_valid(team, new_owner) do
+    case Teams.Memberships.team_role(team, new_owner) do
+      {:ok, :owner} -> {:error, :transfer_to_self}
+      _ -> :ok
+    end
+  end
+
+  defp create_site_transfer(site, initiator, invitee_email) do
+    site
+    |> Teams.SiteTransfer.changeset(initiator: initiator, email: invitee_email)
+    |> Repo.insert()
+  end
+
+  defp send_transfer_init_email(site_transfer, new_owner) do
+    email =
+      PlausibleWeb.Email.ownership_transfer_request(
+        site_transfer.email,
+        site_transfer.transfer_id,
+        site_transfer.site,
+        site_transfer.initiator,
+        new_owner
+      )
+
+    Plausible.Mailer.send(email)
   end
 
   defp do_accept(team_invitation, user) do
@@ -84,8 +130,6 @@ defmodule Plausible.Teams.Invitations do
   defp translate_role(:admin), do: :editor
   defp translate_role(role), do: role
 
-  defp check_team_member_limit(_team, :owner, _invitee_email), do: :ok
-
   defp check_team_member_limit(team, _role, invitee_email) do
     limit = Teams.Billing.team_member_limit(team)
     usage = Teams.Billing.team_member_usage(team, exclude_emails: [invitee_email])
@@ -96,12 +140,6 @@ defmodule Plausible.Teams.Invitations do
       {:error, {:over_limit, limit}}
     end
   end
-
-  defp ensure_transfer_valid(_team, nil, _role), do: :ok
-
-  defp ensure_transfer_valid(_site, _new_owner, :owner), do: {:error, :use_site_transfer}
-
-  defp ensure_transfer_valid(_site, _new_owner, _role), do: :ok
 
   defp ensure_new_membership(_site, nil, _role), do: :ok
 

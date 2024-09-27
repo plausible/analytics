@@ -212,8 +212,14 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
           ]
         )
 
+      insert(:team_membership, team: site.team, user: inviter, role: :owner)
+      insert(:team_membership, team: site.team, user: invitee, role: :viewer)
+
       assert {:ok, %Plausible.Auth.Invitation{}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :owner)
+
+      assert {:ok, %Plausible.Teams.SiteTransfer{}} =
+               Plausible.Teams.Invitations.invite(site, inviter, invitee.email, :owner)
     end
 
     test "does not allow transferring ownership to existing owner" do
@@ -226,8 +232,13 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
           ]
         )
 
+      insert(:team_membership, team: site.team, user: inviter, role: :owner)
+
       assert {:error, :transfer_to_self} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :owner)
+
+      assert {:error, :transfer_to_self} =
+               Plausible.Teams.Invitations.invite(site, inviter, "vini@plausible.test", :owner)
     end
 
     test "allows creating an ownership transfer even when at team member limit" do
@@ -249,17 +260,24 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
     test "does not allow viewers to invite users" do
       inviter = insert(:user)
+      owner = insert(:user)
 
       site =
         insert(:site,
           memberships: [
-            build(:site_membership, user: build(:user), role: :owner),
+            build(:site_membership, user: owner, role: :owner),
             build(:site_membership, user: inviter, role: :viewer)
           ]
         )
 
+      insert(:team_membership, team: site.team, user: owner, role: :owner)
+      insert(:team_membership, team: site.team, user: inviter, role: :viewer)
+
       assert {:error, :forbidden} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :viewer)
+
+      assert {:error, :forbidden} =
+               Plausible.Teams.Invitations.invite(site, inviter, "vini@plausible.test", :viewer)
     end
 
     test "allows admins to invite other admins" do

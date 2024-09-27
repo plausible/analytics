@@ -256,15 +256,15 @@ defmodule PlausibleWeb.Email do
     )
   end
 
-  def ownership_transfer_request(invitation, new_owner_account) do
+  def ownership_transfer_request(email, invitation_id, site, inviter, new_owner_account) do
     priority_email()
-    |> to(invitation.email)
+    |> to(email)
     |> tag("ownership-transfer-request")
-    |> subject(
-      "[#{Plausible.product_name()}] Request to transfer ownership of #{invitation.site.domain}"
-    )
+    |> subject("[#{Plausible.product_name()}] Request to transfer ownership of #{site.domain}")
     |> render("ownership_transfer_request.html",
-      invitation: invitation,
+      invitation_id: invitation_id,
+      inviter: inviter,
+      site: site,
       new_owner_account: new_owner_account
     )
   end
