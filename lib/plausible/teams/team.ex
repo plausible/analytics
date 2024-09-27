@@ -4,6 +4,9 @@ defmodule Plausible.Teams.Team do
   """
 
   use Ecto.Schema
+  use Plausible
+
+  import Ecto.Changeset
 
   schema "teams" do
     field :name, :string
@@ -20,5 +23,19 @@ defmodule Plausible.Teams.Team do
     has_one :enterprise_plan, Plausible.Billing.EnterprisePlan
 
     timestamps()
+  end
+
+  def changeset(name, today \\ Date.utc_today()) do
+    trial_expiry_date =
+      if ee?() do
+        Date.shift(today, day: 30)
+      else
+        Date.shift(today, year: 100)
+      end
+
+    %__MODULE__{}
+    |> cast(%{name: name}, [:name])
+    |> validate_required(:name)
+    |> put_change(:trial_expiry_date, trial_expiry_date)
   end
 end
