@@ -109,7 +109,13 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
     email =
       case {invitee, invitation.role} do
         {invitee, :owner} ->
-          PlausibleWeb.Email.ownership_transfer_request(invitation, invitee)
+          PlausibleWeb.Email.ownership_transfer_request(
+            invitation.email,
+            invitation.invitation_id,
+            invitation.site,
+            invitation.inviter,
+            invitee
+          )
 
         {nil, _role} ->
           PlausibleWeb.Email.new_user_invitation(
