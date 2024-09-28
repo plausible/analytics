@@ -461,7 +461,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:website/installation" do
+  describe "GET /:domain/installation" do
     setup [:create_user, :log_in, :create_site]
 
     test "static render - spinner determining installation type", %{
@@ -474,7 +474,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:website/settings/general" do
+  describe "GET /:domain/settings/general" do
     setup [:create_user, :log_in, :create_site]
 
     setup_patch_env(:google, client_id: "some", api_url: "https://www.googleapis.com")
@@ -489,7 +489,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:website/settings/people" do
+  describe "GET /:domain/settings/people" do
     setup [:create_user, :log_in, :create_site]
 
     @tag :ee_only
@@ -514,7 +514,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:website/settings/goals" do
+  describe "GET /:domain/settings/goals" do
     setup [:create_user, :log_in, :create_site]
 
     test "lists goals for the site", %{conn: conn, site: site} do
@@ -538,7 +538,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "PUT /:website/settings" do
+  describe "PUT /:domain/settings" do
     setup [:create_user, :log_in, :create_site]
 
     test "updates the timezone", %{conn: conn, site: site} do
@@ -555,7 +555,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "POST /sites/:website/make-public" do
+  describe "POST /sites/:domain/make-public" do
     setup [:create_user, :log_in, :create_site]
 
     test "makes the site public", %{conn: conn, site: site} do
@@ -589,7 +589,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "POST /sites/:website/make-private" do
+  describe "POST /sites/:domain/make-private" do
     setup [:create_user, :log_in, :create_site]
 
     test "makes the site private", %{conn: conn, site: site} do
@@ -603,7 +603,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "DELETE /:website" do
+  describe "DELETE /:domain" do
     setup [:create_user, :log_in, :create_site]
 
     test "deletes the site", %{conn: conn, user: user} do
@@ -645,7 +645,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "PUT /:website/settings/google" do
+  describe "PUT /:domain/settings/google" do
     setup [:create_user, :log_in, :create_site]
 
     test "updates google auth property", %{conn: conn, user: user, site: site} do
@@ -664,7 +664,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "DELETE /:website/settings/google" do
+  describe "DELETE /:domain/settings/google" do
     setup [:create_user, :log_in, :create_site]
 
     test "deletes associated google auth", %{conn: conn, user: user, site: site} do
@@ -690,7 +690,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:website/settings/imports-exports" do
+  describe "GET /:domain/settings/imports-exports" do
     setup [:create_user, :log_in, :create_site, :maybe_fake_minio]
 
     test "renders empty imports list", %{conn: conn, site: site} do
@@ -803,7 +803,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:website/settings/imports-exports when object storage is unreachable" do
+  describe "GET /:domain/settings/imports-exports when object storage is unreachable" do
     setup [:create_user, :log_in, :create_site]
 
     setup tags do
@@ -824,7 +824,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:website/settings/integrations for self-hosting" do
+  describe "GET /:domain/settings/integrations for self-hosting" do
     setup [:create_user, :log_in, :create_site]
 
     setup_patch_env(:google,
@@ -842,7 +842,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:website/integrations (search-console)" do
+  describe "GET /:domain/integrations (search-console)" do
     setup [:create_user, :log_in, :create_site]
 
     setup_patch_env(:google, client_id: "some", api_url: "https://www.googleapis.com")
@@ -955,7 +955,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "PUT /:website/settings/features/visibility/:setting" do
+  describe "PUT /:domain/settings/features/visibility/:setting" do
     def query_conn_with_some_url(context) do
       {:ok, Map.put(context, :conn_with_url, get(context.conn, "/some_parent_path"))}
     end
@@ -1077,7 +1077,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "POST /sites/:website/weekly-report/enable" do
+  describe "POST /sites/:domain/weekly-report/enable" do
     setup [:create_user, :log_in, :create_site]
 
     test "creates a weekly report record with the user email", %{
@@ -1106,7 +1106,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "POST /sites/:website/weekly-report/disable" do
+  describe "POST /sites/:domain/weekly-report/disable" do
     setup [:create_user, :log_in, :create_site]
 
     test "deletes the weekly report record", %{conn: conn, site: site} do
@@ -1127,7 +1127,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "POST /sites/:website/weekly-report/recipients" do
+  describe "POST /sites/:domain/weekly-report/recipients" do
     setup [:create_user, :log_in, :create_site]
 
     test "adds a recipient to the weekly report", %{conn: conn, site: site} do
@@ -1140,7 +1140,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "DELETE /sites/:website/weekly-report/recipients/:recipient" do
+  describe "DELETE /sites/:domain/weekly-report/recipients/:recipient" do
     setup [:create_user, :log_in, :create_site]
 
     test "removes a recipient from the weekly report", %{conn: conn, site: site} do
@@ -1167,7 +1167,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "POST /sites/:website/monthly-report/enable" do
+  describe "POST /sites/:domain/monthly-report/enable" do
     setup [:create_user, :log_in, :create_site]
 
     test "creates a monthly report record with the user email", %{
@@ -1196,7 +1196,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "POST /sites/:website/monthly-report/disable" do
+  describe "POST /sites/:domain/monthly-report/disable" do
     setup [:create_user, :log_in, :create_site]
 
     test "deletes the monthly report record", %{conn: conn, site: site} do
@@ -1208,7 +1208,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "POST /sites/:website/monthly-report/recipients" do
+  describe "POST /sites/:domain/monthly-report/recipients" do
     setup [:create_user, :log_in, :create_site]
 
     test "adds a recipient to the monthly report", %{conn: conn, site: site} do
@@ -1221,7 +1221,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "DELETE /sites/:website/monthly-report/recipients/:recipient" do
+  describe "DELETE /sites/:domain/monthly-report/recipients/:recipient" do
     setup [:create_user, :log_in, :create_site]
 
     test "removes a recipient from the monthly report", %{conn: conn, site: site} do
@@ -1253,7 +1253,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   end
 
   for type <- [:spike, :drop] do
-    describe "POST /sites/:website/traffic-change-notification/#{type}/enable" do
+    describe "POST /sites/:domain/traffic-change-notification/#{type}/enable" do
       setup [:create_user, :log_in, :create_site]
 
       test "creates a #{type} notification record with the user email", %{
@@ -1288,7 +1288,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       end
     end
 
-    describe "POST /sites/:website/traffic-change-notification/#{type}/disable" do
+    describe "POST /sites/:domain/traffic-change-notification/#{type}/disable" do
       setup [:create_user, :log_in, :create_site]
 
       test "deletes the #{type} notification record", %{conn: conn, site: site} do
@@ -1300,7 +1300,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       end
     end
 
-    describe "PUT /sites/:website/traffic-change-notification/#{type}" do
+    describe "PUT /sites/:domain/traffic-change-notification/#{type}" do
       setup [:create_user, :log_in, :create_site]
 
       test "updates #{type} notification threshold", %{conn: conn, site: site} do
@@ -1320,7 +1320,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       end
     end
 
-    describe "POST /sites/:website/traffic-change-notification/#{type}/recipients" do
+    describe "POST /sites/:domain/traffic-change-notification/#{type}/recipients" do
       setup [:create_user, :log_in, :create_site]
 
       test "adds a recipient to the #{type} notification", %{conn: conn, site: site} do
@@ -1342,7 +1342,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       end
     end
 
-    describe "DELETE /sites/:website/traffic-change-notification/#{type}/recipients/:recipient" do
+    describe "DELETE /sites/:domain/traffic-change-notification/#{type}/recipients/:recipient" do
       setup [:create_user, :log_in, :create_site]
 
       test "removes a recipient from the #{type} notification", %{conn: conn, site: site} do
@@ -1395,7 +1395,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /sites/:website/shared-links/new" do
+  describe "GET /sites/:domain/shared-links/new" do
     setup [:create_user, :log_in, :create_site]
 
     test "shows form for new shared link", %{conn: conn, site: site} do
@@ -1405,7 +1405,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "POST /sites/:website/shared-links" do
+  describe "POST /sites/:domain/shared-links" do
     setup [:create_user, :log_in, :create_site]
 
     test "creates shared link without password", %{conn: conn, site: site} do
@@ -1433,7 +1433,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /sites/:website/shared-links/edit" do
+  describe "GET /sites/:domain/shared-links/edit" do
     setup [:create_user, :log_in, :create_site]
 
     test "shows form to edit shared link", %{conn: conn, site: site} do
@@ -1444,7 +1444,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "PUT /sites/:website/shared-links/:slug" do
+  describe "PUT /sites/:domain/shared-links/:slug" do
     setup [:create_user, :log_in, :create_site]
 
     test "can update link name", %{conn: conn, site: site} do
@@ -1460,7 +1460,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "DELETE /sites/:website/shared-links/:slug" do
+  describe "DELETE /sites/:domain/shared-links/:slug" do
     setup [:create_user, :log_in, :create_site]
 
     test "deletes shared link", %{conn: conn, site: site} do
@@ -1484,7 +1484,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "DELETE /:website/settings/:forget_import/:import_id" do
+  describe "DELETE /:domain/settings/:forget_import/:import_id" do
     setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
 
     test "removes site import, associated data and cancels oban job for a particular import", %{
@@ -1562,7 +1562,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "DELETE /:website/settings/forget_imported" do
+  describe "DELETE /:domain/settings/forget_imported" do
     setup [:create_user, :log_in, :create_new_site]
 
     test "removes actual imported data from Clickhouse", %{conn: conn, user: user, site: site} do

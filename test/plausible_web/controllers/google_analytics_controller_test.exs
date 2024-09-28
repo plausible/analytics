@@ -16,7 +16,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
 
   setup :verify_on_exit!
 
-  describe "GET /:website/import/google-analytics/property" do
+  describe "GET /:domain/import/google-analytics/property" do
     setup [:create_user, :log_in, :create_new_site]
 
     test "lists Google Analytics properties", %{conn: conn, site: site} do
@@ -206,7 +206,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
     end
   end
 
-  describe "POST /:website/import/google-analytics/property" do
+  describe "POST /:domain/import/google-analytics/property" do
     setup [:create_user, :log_in, :create_new_site]
 
     test "redirects to confirmation", %{conn: conn, site: site} do
@@ -504,7 +504,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
     end
   end
 
-  describe "GET /:website/import/google-analytics/confirm" do
+  describe "GET /:domain/import/google-analytics/confirm" do
     setup [:create_user, :log_in, :create_new_site]
 
     test "renders confirmation form for Google Analytics 4 import", %{conn: conn, site: site} do
@@ -729,7 +729,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
     end
   end
 
-  describe "POST /:website/settings/google-import" do
+  describe "POST /:domain/settings/google-import" do
     setup [:create_user, :log_in, :create_new_site]
 
     test "creates Google Analytics 4 site import instance", %{conn: conn, site: site} do

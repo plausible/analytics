@@ -296,9 +296,15 @@ if byte_size(websocket_url) > 0 and
   """
 end
 
+secure_cookie_default =
+  case base_url.scheme do
+    "http" -> "false"
+    "https" -> "true"
+  end
+
 secure_cookie =
   config_dir
-  |> get_var_from_path_or_env("SECURE_COOKIE", if(is_selfhost, do: "false", else: "true"))
+  |> get_var_from_path_or_env("SECURE_COOKIE", secure_cookie_default)
   |> String.to_existing_atom()
 
 license_key = get_var_from_path_or_env(config_dir, "LICENSE_KEY", "")
