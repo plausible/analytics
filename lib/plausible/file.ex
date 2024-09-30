@@ -21,7 +21,7 @@ defmodule Plausible.File do
           _ -> reraise(e, __STACKTRACE__)
         end
       after
-        File.rm!(source)
+        File.rm(source)
       end
   end
 end
