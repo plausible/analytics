@@ -36,7 +36,18 @@
   // prevents registering multiple listeners in those cases.
   var listeningPageLeave = false
 
+  // In SPA-s, multiple listeners that trigger the pageleave event
+  // might fire nearly at the same time. E.g. when navigating back
+  // in browser history while using hash-based routing - a popstate
+  // and hashchange will be fired in a very quick succession. This
+  // flag prevents sending multiple pageleaves in those cases.
+  var pageLeaveSending = false
+
   function triggerPageLeave(url) {
+    if (pageLeaveSending) {return}
+    pageLeaveSending = true
+    setTimeout(function () {pageLeaveSending = false}, 500)
+
     var payload = {
       n: 'pageleave',
       d: dataDomain,
