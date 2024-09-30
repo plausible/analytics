@@ -35,17 +35,17 @@ defmodule Plausible.Stats.QueryRunner do
       |> add_meta_extra()
       |> add_results_list()
 
-    QueryResult.from(assigns.query_result, site, optimized_query, assigns.meta_extra)
+    QueryResult.from(assigns.results_list, site, optimized_query, assigns.meta_extra)
   end
 
-  defp add_comparison_query(%{query: query} = assigns) when query.include.comparisons do
+  defp add_comparison_query(%{query: query} = assigns) when is_map(query.include.comparisons) do
     comparison_query = Comparisons.compare(query, query.include.comparisons)
     Map.put(assigns, :comparison_query, comparison_query)
   end
 
   defp add_comparison_query(assigns), do: assigns
 
-  defp execute_comparison(%{comparison_query: comparison_query, site: site}) do
+  defp execute_comparison(%{comparison_query: comparison_query, site: site} = assigns) do
     {ch_results, time_on_page} = execute_query(comparison_query, site)
 
     comparison_results =
@@ -68,7 +68,7 @@ defmodule Plausible.Stats.QueryRunner do
            query: query
          } = assigns
        ) do
-    time_dimension = query.dimensions |> Time.time_dimension()
+    time_dimension = Time.time_dimension(query)
 
     time_lookup =
       if time_dimension do
@@ -104,8 +104,8 @@ defmodule Plausible.Stats.QueryRunner do
 
   defp add_comparison_map(assigns), do: assigns
 
-  defp execute_main_query(assigns) do
-    {ch_results, time_on_page} = execute_query(assigns.query, site)
+  defp execute_main_query(%{query: query, site: site} = assigns) do
+    {ch_results, time_on_page} = execute_query(query, site)
 
     Map.merge(assigns, %{
       ch_results: ch_results,
@@ -187,7 +187,8 @@ defmodule Plausible.Stats.QueryRunner do
 
   defp get_metric(entry, metric, _dimensions, _time_on_page), do: Map.get(entry, metric)
 
-  defp add_comparison_results(row, comparison_map, query) when query.include.comparisons do
+  defp add_comparison_results(row, comparison_map, query)
+       when is_map(query.include.comparisons) do
     comparison_metrics = get_comparison_metrics(comparison_map, row.dimensions, query)
 
     change =
