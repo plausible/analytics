@@ -693,7 +693,7 @@ defmodule PlausibleWeb.Components.Generic do
               type="text"
               name="filter-text"
               id="filter-text"
-              class="pl-8 text-sm shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+              class="w-36 sm:w-full pl-8 text-sm shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
               placeholder={@placeholder}
               value={@filter_text}
             />
