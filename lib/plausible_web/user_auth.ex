@@ -67,10 +67,20 @@ defmodule PlausibleWeb.UserAuth do
 
   @spec revoke_user_session(Auth.User.t(), pos_integer()) :: :ok
   def revoke_user_session(user, session_id) do
-    {_, _} =
+    {_, tokens} =
       Repo.delete_all(
-        from us in Auth.UserSession, where: us.user_id == ^user.id and us.id == ^session_id
+        from us in Auth.UserSession,
+          where: us.user_id == ^user.id and us.id == ^session_id,
+          select: us.token
       )
+
+    case tokens do
+      [token] ->
+        PlausibleWeb.Endpoint.broadcast(live_socket_id(token), "disconnect", %{})
+
+      _ ->
+        :pass
+    end
 
     :ok
   end
