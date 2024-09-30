@@ -15,9 +15,9 @@ defmodule PlausibleWeb.Dogfood do
 
   def script_url() do
     if Application.get_env(:plausible, :environment) in ["prod", "staging"] do
-      "#{PlausibleWeb.Endpoint.url()}/js/script.manual.pageview-props.tagged-events.js"
+      "#{PlausibleWeb.Endpoint.url()}/js/script.manual.pageview-props.tagged-events.pageleave.js"
     else
-      "#{PlausibleWeb.Endpoint.url()}/js/script.local.manual.pageview-props.tagged-events.js"
+      "#{PlausibleWeb.Endpoint.url()}/js/script.local.manual.pageview-props.tagged-events.pageleave.js"
     end
   end
 
