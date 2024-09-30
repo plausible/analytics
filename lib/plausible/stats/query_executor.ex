@@ -26,21 +26,114 @@ defmodule Plausible.Stats.QueryExecutor do
   def execute(site, query) do
     optimized_query = QueryOptimizer.optimize(query)
 
-    comparison_results =
-      if optimized_query.include.comparisons do
-        optimized_query
-        |> Comparisons.compare(optimized_query.include.comparisons)
-        |> execute_and_build_results(site)
-        |> elem(0)
-      end
+    assigns =
+      %{query: optimized_query, site: site}
+      |> add_comparison_query()
+      |> execute_comparison()
+      |> add_comparison_map()
+      |> execute_main_query()
+      |> add_meta_extra()
+      |> add_results_list()
 
-    {results_list, meta_extra} =
-      execute_and_build_results(optimized_query, site, comparison_results)
-
-    QueryResult.from(results_list, site, optimized_query, meta_extra)
+    QueryResult.from(assigns.query_result, site, optimized_query, assigns.meta_extra)
   end
 
-  defp execute_and_build_results(query, site, comparison_results \\ nil) do
+  defp add_comparison_query(%{query: query} = assigns) do
+    if optimized_query.include.comparisons do
+      comparison_query = Comparisons.compare(query, query.include.comparisons)
+      Map.put(assigns, :comparison_query, comparison_query)
+    else
+      assigns
+    end
+  end
+
+  defp execute_comparison(%{comparison_query: comparison_query, site: site}) do
+    {ch_results, time_on_page} = execute_query(comparison_query, site)
+
+    comparison_results =
+      build_results_list(
+        ch_results,
+        comparison_query,
+        time_on_page,
+        %{}
+      )
+
+    Map.put(assigns, :comparison_results, comparison_results)
+  end
+
+  defp execute_comparison(assigns), do: assigns
+
+  defp execute_main_query(assigns) do
+    {ch_results, time_on_page} = execute_query(assigns.query, site)
+
+    Map.merge(assigns, %{
+      ch_results: ch_results,
+      time_on_page: time_on_page
+    })
+  end
+
+  defp add_meta_extra(%{query: query, ch_results: ch_results} = assigns) do
+    Map.put(assigns, :meta_extra, %{
+      total_rows: if(query.include.total_rows, do: total_rows(ch_results), else: nil)
+    })
+  end
+
+  defp add_results_list(assigns) do
+    results_list =
+      build_results_list(
+        assigns.ch_results,
+        assigns.query,
+        assigns.time_on_page,
+        assigns
+      )
+
+    Map.put(assigns, :results_list, results_list)
+  end
+
+  defp add_comparison_map(
+         %{
+           comparison_query: comparison_query,
+           comparison_results: comparison_results,
+           query: query
+         } = assigns
+       ) do
+    time_dimension = query.dimensions |> Time.time_dimension()
+
+    time_lookup =
+      if time_dimension do
+        Enum.zip(
+          Time.time_labels(comparison_query),
+          Time.time_labels(query)
+        )
+        |> Map.new()
+      else
+        %{}
+      end
+
+    comparison_map =
+      comparison_results
+      |> Map.new(fn entry ->
+        dimensions_key =
+          entry.dimensions
+          |> Enum.zip(query.dimensions)
+          |> Enum.map(fn {dimension_value, dimension} ->
+            # If dealing with time series, look up comparison in main path
+            if dimension == time_dimension do
+              Map.get(time_lookup, dimension_value, dimension_value)
+            else
+              dimension_value
+            end
+          end)
+
+        {dimensions_key, entry.metrics}
+      end)
+
+    Map.put(assigns, :comparison_map, comparison_map)
+  end
+
+  defp add_comparison_map(assigns), do: assigns
+
+  defp execute_query(query, site) do
     ch_results =
       query
       |> SQL.QueryBuilder.build(site)
@@ -48,17 +141,11 @@ defmodule Plausible.Stats.QueryExecutor do
 
     time_on_page = Legacy.TimeOnPage.calculate(site, query, ch_results)
 
-    build_results_list(ch_results, time_on_page, comparison_results, query)
+    {ch_results, time_on_page}
   end
 
-  defp build_results_list(ch_results, time_on_page, comparison_results, query) do
-    comparison_map =
-      if comparison_results do
-        comparison_results
-        |> Map.new(fn row -> {row.dimensions, row.metrics} end)
-      else
-        %{}
-      end
+  defp build_results_list(ch_results, query, time_on_page, assigns) do
+    comparison_map = Map.get(assigns, :comparison_map, %{})
 
     results_list =
       ch_results
@@ -72,7 +159,7 @@ defmodule Plausible.Stats.QueryExecutor do
         |> add_comparison_results(comparison_map, query, not is_nil(query.include.comparisons))
       end)
 
-    {results_list, extra_meta(query, ch_results)}
+    results_list
   end
 
   defp dimension_label("event:goal", entry, query) do
@@ -127,12 +214,6 @@ defmodule Plausible.Stats.QueryExecutor do
     else
       Enum.map(query.metrics, fn _ -> 0 end)
     end
-  end
-
-  defp extra_meta(query, ch_results) do
-    %{
-      total_rows: if(query.include.total_rows, do: total_rows(ch_results), else: nil)
-    }
   end
 
   defp total_rows([]), do: 0
