@@ -33,6 +33,7 @@ defmodule PlausibleWeb.AuthController do
            :new_api_key,
            :create_api_key,
            :delete_api_key,
+           :delete_session,
            :delete_me,
            :activate_form,
            :activate,
