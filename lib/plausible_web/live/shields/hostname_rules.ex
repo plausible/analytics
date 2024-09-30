@@ -74,7 +74,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
           <.table :if={not Enum.empty?(@hostname_rules)} rows={@hostname_rules}>
             <:thead>
               <.th>Hostname</.th>
-              <.th>Status</.th>
+              <.th hide_on_mobile>Status</.th>
               <.th invisible>Actions</.th>
             </:thead>
             <:tbody :let={rule}>
@@ -89,7 +89,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
                   </span>
                 </div>
               </.td>
-              <.td>
+              <.td hide_on_mobile>
                 <div class="flex items-center">
                   <span :if={rule.action == :deny}>
                     Blocked
