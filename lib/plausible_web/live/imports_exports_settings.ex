@@ -100,15 +100,15 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
         <:thead>
           <.th>Import</.th>
           <.th hide_on_mobile>Date Range</.th>
-          <.th>
+          <.th hide_on_mobile>
             <div class="text-right">Pageviews</div>
           </.th>
           <.th invisible>Actions</.th>
         </:thead>
 
         <:tbody :let={entry}>
-          <.td truncate>
-            <div class="flex items-center gap-x-2">
+          <.td max_width="max-w-40">
+            <div class="flex items-center gap-x-2 truncate">
               <div class="w-6" title={notice_message(entry.tooltip)}>
                 <Heroicons.clock
                   :if={entry.live_status == SiteImport.pending()}
