@@ -174,7 +174,7 @@
     {{#if pageleave}}
     var lastUrl = location.href
 
-    function pageLeave() {
+    function pageLeaveSPA() {
       triggerPageLeave(lastUrl);
       lastUrl = location.href;
     }
@@ -186,7 +186,7 @@
       {{/unless}}
       
       {{#if pageleave}}
-      if (isSPANavigation) {pageLeave()}
+      if (isSPANavigation) {pageLeaveSPA()}
       {{/if}}
 
       lastPage = location.pathname
