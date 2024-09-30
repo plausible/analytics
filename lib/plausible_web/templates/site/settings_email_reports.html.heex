@@ -134,39 +134,39 @@
       <%= meta.subtitle %>
     </:subtitle>
 
-      <.form
-        for={nil}
-        action={
-          (meta.notification &&
-             Routes.site_path(@conn, :disable_traffic_change_notification, @site.domain, type)) ||
-            Routes.site_path(@conn, :enable_traffic_change_notification, @site.domain, type)
-        }
-        method="post"
-      >
-        <.toggle_submit set_to={meta.notification}>
-          <%= meta.toggle %>
-        </.toggle_submit>
-      </.form>
+    <.form
+      for={nil}
+      action={
+        (meta.notification &&
+           Routes.site_path(@conn, :disable_traffic_change_notification, @site.domain, type)) ||
+          Routes.site_path(@conn, :enable_traffic_change_notification, @site.domain, type)
+      }
+      method="post"
+    >
+      <.toggle_submit set_to={meta.notification}>
+        <%= meta.toggle %>
+      </.toggle_submit>
+    </.form>
 
-      <.form
-        :let={f}
-        :if={meta.notification}
-        class="mt-4"
-        for={Plausible.Site.TrafficChangeNotification.changeset(meta.notification, %{})}
-        action={Routes.site_path(@conn, :update_traffic_change_notification, @site.domain, type)}
-      >
-        <div class="flex items-end gap-x-4">
-          <PlausibleWeb.Live.Components.Form.input
-            field={f[:threshold]}
-            type="number"
-            required
-            label={meta.threshold_text}
-          />
-          <.button type="submit" mt?={false}>
-            Save Threshold
-          </.button>
-        </div>
-      </.form>
+    <.form
+      :let={f}
+      :if={meta.notification}
+      class="mt-4"
+      for={Plausible.Site.TrafficChangeNotification.changeset(meta.notification, %{})}
+      action={Routes.site_path(@conn, :update_traffic_change_notification, @site.domain, type)}
+    >
+      <div class="flex items-end gap-x-4">
+        <PlausibleWeb.Live.Components.Form.input
+          field={f[:threshold]}
+          type="number"
+          required
+          label={meta.threshold_text}
+        />
+        <.button type="submit" mt?={false}>
+          Save Threshold
+        </.button>
+      </div>
+    </.form>
 
     <div class="mt-4">
       <.table
