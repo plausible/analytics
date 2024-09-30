@@ -561,7 +561,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <td
       class={[
-        @height, 
+        @height,
         "text-sm px-6 py-3 first:pl-0 last:pr-0 whitespace-nowrap",
         @truncate && "truncate",
         @max_width,
