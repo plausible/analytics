@@ -65,6 +65,7 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
               label="Description"
               placeholder="e.g. Your Plugin Name"
               value={@token_description}
+              autocomplete="off"
             />
           </div>
 
