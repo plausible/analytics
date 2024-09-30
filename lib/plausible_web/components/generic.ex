@@ -527,11 +527,11 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <table :if={not Enum.empty?(@rows)} class={@width} {@rest}>
       <thead :if={@thead != []}>
-        <tr class="border-b border-gray-200">
+        <tr class="border-b border-gray-200 dark:border-gray-700">
           <%= render_slot(@thead) %>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-200">
+      <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
         <tr :for={item <- @rows}>
           <%= render_slot(@tbody, item) %>
         </tr>
