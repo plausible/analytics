@@ -65,13 +65,13 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
           <.table :if={not Enum.empty?(@ip_rules)} rows={@ip_rules}>
             <:thead>
               <.th>IP Address</.th>
-              <.th>Status</.th>
+              <.th hide_on_mobile>Status</.th>
               <.th hide_on_mobile>Description</.th>
               <.th invisible>Actions</.th>
             </:thead>
             <:tbody :let={rule}>
-              <.td>
-                <div class="flex items-center">
+              <.td max_width="max-w-40">
+                <div class="flex items-center truncate">
                   <span
                     id={"inet-#{rule.id}"}
                     class="mr-4 cursor-help"
@@ -91,7 +91,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                   </span>
                 </div>
               </.td>
-              <.td>
+              <.td hide_on_mobile>
                 <span :if={rule.action == :deny}>
                   Blocked
                 </span>
