@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Add ability to review and revoke particular logged in user sessions
+
+### Removed
+
+### Changed
+
+### Fixed
+
 ## v2.1.3 - 2024-09-26
 
 ### Fixed
@@ -60,6 +70,7 @@ All notable changes to this project will be documented in this file.
 - Fix property filter suggestions 500 error when property hasn't been selected
 - Bamboo.Mua: add Date and Message-ID headers if missing plausible/analytics#4474
 - Fix migration order across `plausible_db` and `plausible_events_db` databases plausible/analytics#4466
+- Fix tooltips for countries/cities/regions links in dashboard
 
 ## v2.1.1 - 2024-06-06
 

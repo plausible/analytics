@@ -334,6 +334,7 @@ defmodule PlausibleWeb.Router do
     get "/settings/api-keys/new", AuthController, :new_api_key
     post "/settings/api-keys", AuthController, :create_api_key
     delete "/settings/api-keys/:id", AuthController, :delete_api_key
+    delete "/settings/user-sessions/:id", AuthController, :delete_session
 
     get "/auth/google/callback", AuthController, :google_auth_callback
 
