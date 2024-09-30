@@ -60,6 +60,11 @@ export const sourcesRoute = {
   element: <SourcesModal currentView="sources" />
 }
 
+export const channelsRoute = {
+  path: 'channels',
+  element: <SourcesModal currentView="channels" />
+}
+
 export const utmMediumsRoute = {
   path: 'utm_mediums',
   element: <SourcesModal currentView="utm_mediums" />
@@ -195,6 +200,7 @@ export function createAppRouter(site: PlausibleSite) {
         children: [
           { index: true, element: <DashboardKeybinds /> },
           sourcesRoute,
+          channelsRoute,
           utmMediumsRoute,
           utmSourcesRoute,
           utmCampaignsRoute,

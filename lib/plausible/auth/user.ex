@@ -35,6 +35,9 @@ defmodule Plausible.Auth.User do
     field :previous_email, :string
     field :accept_traffic_until, :date
 
+    # Field for purely informational purposes in CRM context
+    field :notes, :string
+
     # A field only used as a manual override - allow subscribing
     # to any plan, even when exceeding its pageview limit
     field :allow_next_upgrade_override, :boolean
@@ -113,7 +116,8 @@ defmodule Plausible.Auth.User do
       :theme,
       :trial_expiry_date,
       :allow_next_upgrade_override,
-      :accept_traffic_until
+      :accept_traffic_until,
+      :notes
     ])
     |> validate_required([:email, :name, :email_verified])
     |> maybe_bump_accept_traffic_until()

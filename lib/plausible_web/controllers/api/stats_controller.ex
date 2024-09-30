@@ -501,6 +501,27 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  def channels(conn, params) do
+    site = conn.assigns[:site]
+    params = Map.put(params, "property", "visit:channel")
+    query = Query.from(site, params, debug_metadata(conn))
+    pagination = parse_pagination(params)
+
+    extra_metrics =
+      if params["detailed"], do: [:bounce_rate, :visit_duration], else: []
+
+    metrics = breakdown_metrics(query, extra_metrics)
+
+    res =
+      Stats.breakdown(site, query, metrics, pagination)
+      |> transform_keys(%{channel: :name})
+
+    json(conn, %{
+      results: res,
+      skip_imported_reason: query.skip_imported_reason
+    })
+  end
+
   on_ee do
     def funnel(conn, %{"id" => funnel_id} = params) do
       site = Plausible.Repo.preload(conn.assigns.site, :owner)

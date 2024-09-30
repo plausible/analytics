@@ -48,7 +48,7 @@ defmodule PlausibleWeb.StatsController do
   alias Plausible.Stats.{Filters, Query}
   alias PlausibleWeb.Api
 
-  plug(PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export])
+  plug(PlausibleWeb.Plugs.AuthorizeSiteAccess when action in [:stats, :csv_export])
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
     site = Plausible.Repo.preload(site, :owner)
@@ -364,7 +364,11 @@ defmodule PlausibleWeb.StatsController do
 
   defp shared_link_cookie_name(slug), do: "shared-link-" <> slug
 
-  defp get_flags(_user, _site), do: %{}
+  defp get_flags(user, site),
+    do: %{
+      channels:
+        FunWithFlags.enabled?(:channels, for: user) || FunWithFlags.enabled?(:channels, for: site)
+    }
 
   defp is_dbip() do
     on_ee do

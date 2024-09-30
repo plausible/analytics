@@ -26,6 +26,7 @@ jobs:
         node-version: ${{steps.versions.outputs.nodejs}}
     - run: npm install --prefix ./assets
     - run: npm install --prefix ./tracker
+    - run: npm run generate-types --prefix ./assets && git diff --exit-code -- ./assets/js/types
     - run: npm run typecheck --prefix ./assets
     - run: npm run lint --prefix ./assets
     - run: npm run check-format --prefix ./assets

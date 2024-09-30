@@ -197,11 +197,14 @@ build_metadata =
       _fallback = %{}
   end
 
+app_host = get_var_from_path_or_env(config_dir, "APP_HOST")
+
 runtime_metadata = [
   version: get_in(build_metadata, ["labels", "org.opencontainers.image.version"]),
   commit: get_in(build_metadata, ["labels", "org.opencontainers.image.revision"]),
   created: get_in(build_metadata, ["labels", "org.opencontainers.image.created"]),
-  tags: get_in(build_metadata, ["tags"])
+  tags: get_in(build_metadata, ["tags"]),
+  app_host: app_host
 ]
 
 config :plausible, :runtime_metadata, runtime_metadata
@@ -293,9 +296,15 @@ if byte_size(websocket_url) > 0 and
   """
 end
 
+secure_cookie_default =
+  case base_url.scheme do
+    "http" -> "false"
+    "https" -> "true"
+  end
+
 secure_cookie =
   config_dir
-  |> get_var_from_path_or_env("SECURE_COOKIE", if(is_selfhost, do: "false", else: "true"))
+  |> get_var_from_path_or_env("SECURE_COOKIE", secure_cookie_default)
   |> String.to_existing_atom()
 
 license_key = get_var_from_path_or_env(config_dir, "LICENSE_KEY", "")
@@ -486,7 +495,10 @@ config :sentry,
   dsn: sentry_dsn,
   environment_name: env,
   release: sentry_app_version,
-  tags: %{app_version: sentry_app_version},
+  tags: %{
+    app_version: sentry_app_version,
+    app_host: app_host
+  },
   client: Plausible.Sentry.Client,
   send_max_attempts: 1,
   before_send: {Plausible.SentryFilter, :before_send}
@@ -635,8 +647,21 @@ case mailer_adapter do
     config :plausible, Plausible.Mailer, ssl: [middlebox_comp_mode: middlebox_comp_mode]
 
     if relay = get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR") do
-      port = get_int_from_path_or_env(config_dir, "SMTP_HOST_PORT", 25)
-      config :plausible, Plausible.Mailer, relay: relay, port: port
+      port = get_int_from_path_or_env(config_dir, "SMTP_HOST_PORT", 587)
+
+      ssl_enabled =
+        if ssl_enabled = get_var_from_path_or_env(config_dir, "SMTP_HOST_SSL_ENABLED") do
+          String.to_existing_atom(ssl_enabled)
+        end
+
+      protocol =
+        cond do
+          ssl_enabled -> :ssl
+          is_nil(ssl_enabled) and port == 465 -> :ssl
+          true -> :tcp
+        end
+
+      config :plausible, Plausible.Mailer, protocol: protocol, relay: relay, port: port
     end
 
     username = get_var_from_path_or_env(config_dir, "SMTP_USER_NAME")

@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
   setup [:create_user, :log_in]
 
-  describe "GET /sites/:website/memberships/invite" do
+  describe "GET /sites/:domain/memberships/invite" do
     test "shows invite form", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
   end
 
-  describe "POST /sites/:website/memberships/invite" do
+  describe "POST /sites/:domain/memberships/invite" do
     test "creates invitation", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
@@ -199,7 +199,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
   end
 
-  describe "GET /sites/:website/transfer-ownership" do
+  describe "GET /sites/:domain/transfer-ownership" do
     test "shows ownership transfer form", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
@@ -209,7 +209,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
   end
 
-  describe "POST /sites/:website/transfer-ownership" do
+  describe "POST /sites/:domain/transfer-ownership" do
     test "creates invitation with :owner role", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
@@ -416,7 +416,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
   end
 
-  describe "DELETE /sites/:website/memberships/:id" do
+  describe "DELETE /sites/:domain/memberships/:id" do
     test "removes a member from a site", %{conn: conn, user: user} do
       admin = insert(:user)
 

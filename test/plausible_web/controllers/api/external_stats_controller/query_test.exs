@@ -101,6 +101,34 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
+    test "can filter by channel", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "Google",
+          channel: "Organic Search",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+          "filters" => [["is", "visit:channel", ["Organic Search"]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
+             ]
+    end
+
     test "can filter by no source/referrer", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -1371,6 +1399,38 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     assert results == [
              %{"dimensions" => ["Google"], "metrics" => [2]},
              %{"dimensions" => ["Direct / None"], "metrics" => [1]}
+           ]
+  end
+
+  test "breakdown by visit:channel", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:pageview,
+        channel: "Organic Search",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:pageview,
+        channel: "Organic Search",
+        timestamp: ~N[2021-01-01 00:25:00]
+      ),
+      build(:pageview,
+        channel: "",
+        timestamp: ~N[2021-01-01 00:00:00]
+      )
+    ])
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["visit:channel"]
+      })
+
+    %{"results" => results} = json_response(conn, 200)
+
+    assert results == [
+             %{"dimensions" => ["Organic Search"], "metrics" => [2]},
+             %{"dimensions" => ["Direct"], "metrics" => [1]}
            ]
   end
 

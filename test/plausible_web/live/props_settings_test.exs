@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
-  describe "GET /:website/settings/properties" do
+  describe "GET /:domain/settings/properties" do
     setup [:create_user, :log_in, :create_site]
 
     test "lists props for the site and renders links", %{conn: conn, site: site} do
