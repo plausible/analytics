@@ -92,7 +92,7 @@ defmodule PlausibleWeb.Live.Components.Form do
         name={@name}
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-        class={[@class, @width, assigns[:rest][:disabled] && "text-gray-500 dark:text-gray-600"]}
+        class={[@class, @width, assigns[:rest][:disabled] && "text-gray-500 dark:text-gray-400"]}
         {@rest}
       />
       <%= render_slot(@inner_block) %>
