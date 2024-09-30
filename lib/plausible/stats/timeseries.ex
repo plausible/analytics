@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Timeseries do
 
   use Plausible
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.{Query, QueryExecutor}
+  alias Plausible.Stats.{Query, QueryRunner}
 
   @time_dimension %{
     "month" => "time:month",
@@ -40,7 +40,7 @@ defmodule Plausible.Stats.Timeseries do
         }
       )
 
-    query_result = QueryExecutor.execute(site, query_with_metrics)
+    query_result = QueryRunner.run(site, query_with_metrics)
 
     timeseries_result =
       query_result

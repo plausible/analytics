@@ -7,7 +7,7 @@ defmodule Plausible.Stats.Aggregate do
 
   use Plausible.ClickhouseRepo
   use Plausible
-  alias Plausible.Stats.{Query, QueryExecutor}
+  alias Plausible.Stats.{Query, QueryRunner}
 
   def aggregate(site, query, metrics) do
     {currency, metrics} =
@@ -20,7 +20,7 @@ defmodule Plausible.Stats.Aggregate do
     Query.trace(query, metrics)
 
     query = %Query{query | metrics: metrics}
-    query_result = QueryExecutor.execute(site, query)
+    query_result = QueryRunner.run(site, query)
 
     [entry] = query_result.results
 

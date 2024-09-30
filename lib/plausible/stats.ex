@@ -8,7 +8,7 @@ defmodule Plausible.Stats do
     Timeseries,
     CurrentVisitors,
     FilterSuggestions,
-    QueryExecutor
+    QueryRunner
   }
 
   use Plausible.DebugReplayInfo
@@ -16,7 +16,7 @@ defmodule Plausible.Stats do
   def query(site, query) do
     include_sentry_replay_info()
 
-    QueryExecutor.execute(site, query)
+    QueryRunner.run(site, query)
   end
 
   def breakdown(site, query, metrics, pagination) do

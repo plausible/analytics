@@ -14,7 +14,7 @@ defmodule Plausible.Stats.QueryResult do
   @doc """
   Builds full JSON-serializable query response.
 
-  `results` should already-built by Plausible.Stats.QueryExecutor
+  `results` should already-built by Plausible.Stats.QueryRunner
   """
   def from(results, site, query, meta_extra) do
     struct!(

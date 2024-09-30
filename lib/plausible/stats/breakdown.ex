@@ -9,7 +9,7 @@ defmodule Plausible.Stats.Breakdown do
   use Plausible
   use Plausible.Stats.SQL.Fragments
 
-  alias Plausible.Stats.{Query, QueryOptimizer, QueryExecutor}
+  alias Plausible.Stats.{Query, QueryOptimizer, QueryRunner}
 
   def breakdown(
         site,
@@ -38,7 +38,7 @@ defmodule Plausible.Stats.Breakdown do
       )
       |> QueryOptimizer.optimize()
 
-    QueryExecutor.execute(site, query_with_metrics)
+    QueryRunner.run(site, query_with_metrics)
     |> build_breakdown_result(query_with_metrics, metrics)
     |> update_currency_metrics(site, query_with_metrics)
   end

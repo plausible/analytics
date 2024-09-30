@@ -1,4 +1,4 @@
-defmodule Plausible.Stats.QueryExecutor do
+defmodule Plausible.Stats.QueryRunner do
   @doc """
   This module is responsible for executing a Plausible.Stats.Query
   and gathering results.
@@ -23,7 +23,7 @@ defmodule Plausible.Stats.QueryExecutor do
     Time
   }
 
-  def execute(site, query) do
+  def run(site, query) do
     optimized_query = QueryOptimizer.optimize(query)
 
     assigns =

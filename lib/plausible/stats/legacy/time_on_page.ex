@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Legacy.TimeOnPage do
   Calculation methods for legacy time_on_page metric. Note the metric
   has its own limitations and quirks.
 
-  Closely coupled with Plausible.Stats.QueryExecutor.
+  Closely coupled with Plausible.Stats.QueryRunner.
   """
 
   use Plausible.ClickhouseRepo
