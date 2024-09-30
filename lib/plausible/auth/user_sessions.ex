@@ -24,6 +24,7 @@ defmodule Plausible.Auth.UserSessions do
 
     cond do
       diff < 1 -> "Just recently"
+      diff == 1 -> "1 hour ago"
       diff < 24 -> "#{diff} hours ago"
       diff < 2 * 24 -> "Yesterday"
       true -> "#{diff_days} days ago"
