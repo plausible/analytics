@@ -63,13 +63,8 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
               autofocus
               field={f[:description]}
               label="Description"
-              placeholder="e.g. Signup"
+              placeholder="e.g. Your Plugin Name"
               value={@token_description}
-              autocomplete="off"
-              data-1p-ignore
-              data-lp-ignore="true"
-              data-form-type="other"
-              data-bwignore
             />
           </div>
 
