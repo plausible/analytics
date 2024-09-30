@@ -551,7 +551,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           )
         )
       else
-        File.rename!(local_path, Path.join(tmp_dir, "plausible-export.zip"))
+        Plausible.File.mv!(local_path, Path.join(tmp_dir, "plausible-export.zip"))
       end
 
       # unzip archive
