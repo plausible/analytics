@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
           <.table :if={not Enum.empty?(@country_rules)} rows={@country_rules}>
             <:thead>
               <.th>Country</.th>
-              <.th>Status</.th>
+              <.th hide_on_mobile>Status</.th>
               <.th invisible>Actions</.th>
             </:thead>
             <:tbody :let={rule}>
@@ -82,7 +82,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
                   </span>
                 </div>
               </.td>
-              <.td>
+              <.td hide_on_mobile>
                 <span :if={rule.action == :deny}>
                   Blocked
                 </span>
