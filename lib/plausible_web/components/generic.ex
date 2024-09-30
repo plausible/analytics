@@ -543,6 +543,7 @@ defmodule PlausibleWeb.Components.Generic do
   slot :inner_block, required: true
   attr :truncate, :boolean, default: false
   attr :max_width, :string, default: ""
+  attr :height, :string, default: ""
   attr :actions, :boolean, default: nil
   attr :hide_on_mobile, :boolean, default: nil
   attr :rest, :global
@@ -560,6 +561,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <td
       class={[
+        @height, 
         "text-sm px-6 py-3 first:pl-0 last:pr-0 whitespace-nowrap",
         @truncate && "truncate",
         @max_width,

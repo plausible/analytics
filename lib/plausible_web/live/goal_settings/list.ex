@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
       <%= if Enum.count(@goals) > 0 do %>
         <.table rows={@goals}>
           <:tbody :let={goal}>
-            <.td truncate>
+            <.td truncate max_width="max-w-40" height="h-16">
               <div class="flex">
                 <div class="truncate block">
                   <%= if not @revenue_goals_enabled? && goal.currency do %>
@@ -46,20 +46,21 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                       </span>
                     </div>
                   <% else %>
-                    <div class="truncate">
-                      <span><%= goal %></span>
-                      <.goal_description goal={goal} />
-                    </div>
+                    <.goal_description goal={goal} />
+                    <span><%= goal %></span>
                   <% end %>
                 </div>
               </div>
             </.td>
-            <.td hide_on_mobile>
+            <.td hide_on_mobile height="h-16">
               <span :if={goal.page_path}>Pageview</span><span :if={goal.event_name && !goal.currency}>Custom Event</span><span :if={
                 goal.currency
-              }>Revenue Goal (<%= goal.currency %>)</span><span :if={not Enum.empty?(goal.funnels)}>, in funnel(s)</span>
+              }>Revenue Goal (<%= goal.currency %>)</span><span
+                :if={not Enum.empty?(goal.funnels)}
+                class="text-gray-400 dark:text-gray-600"
+              ><br />Belongs to funnel(s)</span>
             </.td>
-            <.td actions>
+            <.td actions height="h-16">
               <.edit_button
                 :if={!goal.currency || (goal.currency && @revenue_goals_enabled?)}
                 x-data
@@ -111,16 +112,16 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   end
 
   def custom_event_description(goal) do
-    if goal.display_name == goal.event_name, do: "", else: "(#{goal.event_name})"
+    if goal.display_name == goal.event_name, do: "", else: "#{goal.event_name}"
   end
 
   def goal_description(assigns) do
     ~H"""
-    <span :if={@goal.page_path} class="truncate text-gray-400 dark:text-gray-600">
+    <span :if={@goal.page_path} class="block truncate text-gray-400 dark:text-gray-600">
       <%= pageview_description(@goal) %>
     </span>
 
-    <span :if={@goal.event_name} class="truncate text-gray-400 dark:text-gray-600">
+    <span :if={@goal.event_name} class="block truncate text-gray-400 dark:text-gray-600">
       <%= custom_event_description(@goal) %>
     </span>
     """
