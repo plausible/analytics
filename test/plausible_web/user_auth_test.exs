@@ -223,6 +223,49 @@ defmodule PlausibleWeb.UserAuthTest do
     end
   end
 
+  describe "revoke_user_session/2" do
+    setup [:create_user, :log_in]
+
+    test "deletes and disconnects user session", %{user: user} do
+      assert [active_session] = Repo.preload(user, :sessions).sessions
+      live_socket_id = "user_sessions:" <> Base.url_encode64(active_session.token)
+      Phoenix.PubSub.subscribe(Plausible.PubSub, live_socket_id)
+
+      another_session =
+        user
+        |> Auth.UserSession.new_session("Some Device")
+        |> Repo.insert!()
+
+      assert :ok = UserAuth.revoke_user_session(user, active_session.id)
+      assert [remaining_session] = Repo.preload(user, :sessions).sessions
+      assert_broadcast "disconnect", %{}
+      assert remaining_session.id == another_session.id
+      refute Repo.reload(active_session)
+      assert Repo.reload(another_session)
+    end
+
+    test "does not delete session of another user", %{user: user} do
+      assert [active_session] = Repo.preload(user, :sessions).sessions
+
+      other_session =
+        insert(:user)
+        |> Auth.UserSession.new_session("Some Device")
+        |> Repo.insert!()
+
+      assert :ok = UserAuth.revoke_user_session(user, other_session.id)
+
+      assert Repo.reload(active_session)
+      assert Repo.reload(other_session)
+    end
+
+    test "executes gracefully when session does not exist", %{user: user} do
+      assert [active_session] = Repo.preload(user, :sessions).sessions
+      Repo.delete!(active_session)
+
+      assert :ok = UserAuth.revoke_user_session(user, active_session.id)
+    end
+  end
+
   describe "revoke_all_user_sessions/1" do
     setup [:create_user, :log_in]
 

@@ -33,6 +33,7 @@ defmodule PlausibleWeb.AuthController do
            :new_api_key,
            :create_api_key,
            :delete_api_key,
+           :delete_session,
            :delete_me,
            :activate_form,
            :activate,
@@ -528,9 +529,11 @@ defmodule PlausibleWeb.AuthController do
     settings_changeset = Keyword.fetch!(opts, :settings_changeset)
     email_changeset = Keyword.fetch!(opts, :email_changeset)
     api_keys = Repo.preload(current_user, :api_keys).api_keys
+    user_sessions = Auth.UserSessions.list_for_user(current_user)
 
     render(conn, "user_settings.html",
       api_keys: api_keys,
+      user_sessions: user_sessions,
       settings_changeset: settings_changeset,
       email_changeset: email_changeset,
       subscription: current_user.subscription,
@@ -582,6 +585,16 @@ defmodule PlausibleWeb.AuthController do
     Plausible.Auth.delete_user(conn.assigns[:current_user])
 
     logout(conn, params)
+  end
+
+  def delete_session(conn, %{"id" => session_id}) do
+    current_user = conn.assigns.current_user
+
+    :ok = UserAuth.revoke_user_session(current_user, session_id)
+
+    conn
+    |> put_flash(:success, "Session logged out successfully")
+    |> redirect(to: "/settings#user-sessions")
   end
 
   def logout(conn, params) do

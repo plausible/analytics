@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Add ability to review and revoke particular logged in user sessions
+
+### Removed
+
+### Changed
+
+### Fixed
+
 ## v2.1.3 - 2024-09-26
 
 ### Fixed
