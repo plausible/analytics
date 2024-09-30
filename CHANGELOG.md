@@ -60,6 +60,7 @@ All notable changes to this project will be documented in this file.
 - Fix property filter suggestions 500 error when property hasn't been selected
 - Bamboo.Mua: add Date and Message-ID headers if missing plausible/analytics#4474
 - Fix migration order across `plausible_db` and `plausible_events_db` databases plausible/analytics#4466
+- Fix tooltips for countries/cities/regions links in dashboard
 
 ## v2.1.1 - 2024-06-06
 
