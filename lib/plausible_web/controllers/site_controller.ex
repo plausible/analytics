@@ -104,8 +104,8 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def settings(conn, %{"website" => website}) do
-    redirect(conn, to: Routes.site_path(conn, :settings_general, website))
+  def settings(conn, %{"domain" => domain}) do
+    redirect(conn, to: Routes.site_path(conn, :settings_general, domain))
   end
 
   def settings_general(conn, _params) do

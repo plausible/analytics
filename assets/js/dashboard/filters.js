@@ -224,7 +224,9 @@ function Filters() {
   }
 
   function trackFilterMenu() {
-    window.trackCustomEvent('Filter Menu: Open')
+    if (window.trackCustomEvent) {
+      window.trackCustomEvent('Filter Menu: Open')
+    }
   }
 
   function renderDropDown() {

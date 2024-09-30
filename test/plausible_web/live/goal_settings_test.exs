@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
-  describe "GET /:website/settings/goals" do
+  describe "GET /:domain/settings/goals" do
     setup [:create_user, :log_in, :create_site]
 
     @tag :ee_only

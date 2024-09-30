@@ -14,7 +14,9 @@ if (csrfToken && websocketUrl) {
           this.pushEvent("send-metrics-after", {event_name})
         }
         setTimeout(afterMetrics, 5000)
-        window.trackCustomEvent(event_name, {callback: afterMetrics})
+        if (window.trackCustomEvent) {
+          window.trackCustomEvent(event_name, { callback: afterMetrics })
+        }
       })
     }
   }
