@@ -71,11 +71,11 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
           <.table :if={not Enum.empty?(@page_rules)} rows={@page_rules}>
             <:thead>
               <.th>Page</.th>
-              <.th>Status</.th>
+              <.th hide_on_mobile>Status</.th>
               <.th invisible>Actions</.th>
             </:thead>
             <:tbody :let={rule}>
-              <.td truncate>
+              <.td max_width="max-w-40" truncate>
                 <span
                   id={"page-#{rule.id}"}
                   class="mr-4 cursor-help text-ellipsis truncate max-w-xs"
@@ -84,7 +84,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
                   <%= rule.page_path %>
                 </span>
               </.td>
-              <.td>
+              <.td hide_on_mobile>
                 <div class="flex items-center">
                   <span :if={rule.action == :deny}>
                     Blocked
