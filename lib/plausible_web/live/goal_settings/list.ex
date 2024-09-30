@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
       <%= if Enum.count(@goals) > 0 do %>
         <.table rows={@goals}>
           <:tbody :let={goal}>
-            <.td truncate>
+            <.td max_width="max-w-40">
               <div class="flex">
                 <div class="truncate block">
                   <%= if not @revenue_goals_enabled? && goal.currency do %>
