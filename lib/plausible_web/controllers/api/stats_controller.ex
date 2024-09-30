@@ -105,16 +105,11 @@ defmodule PlausibleWeb.Api.StatsController do
          :ok <- validate_interval(params),
          :ok <- validate_interval_granularity(site, params, dates),
          params <- realtime_period_to_30m(params),
-         query = Query.from(site, params, debug_metadata(conn)),
+         query =
+           Query.from(site, params, debug_metadata(conn))
+           |> Query.set_include(:comparisons, parse_comparison_options(site, params)),
          {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
-      {timeseries_result, _meta} = Stats.timeseries(site, query, [metric])
-
-      comparison_query = comparison_query(site, query, params)
-
-      comparison_result =
-        if comparison_query do
-          Stats.timeseries(site, comparison_query, [metric]) |> elem(0)
-        end
+      {timeseries_result, comparison_result, _meta} = Stats.timeseries(site, query, [metric])
 
       labels = label_timeseries(timeseries_result, comparison_result)
       present_index = present_index_for(site, query, labels)
