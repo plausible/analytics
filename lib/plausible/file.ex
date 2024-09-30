@@ -16,12 +16,10 @@ defmodule Plausible.File do
       case e.reason do
         # fallback to cp/rm for cross-device moves
         # https://github.com/plausible/analytics/issues/4638
-        :exdev ->
-          File.cp!(source, destination)
-          File.rm!(source)
-
-        _ ->
-          reraise(e, __STACKTRACE__)
+        :exdev -> File.cp!(source, destination)
+        _ -> reraise(e, __STACKTRACE__)
       end
+  after
+    File.rm(source)
   end
 end
