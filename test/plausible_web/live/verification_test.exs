@@ -13,6 +13,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
   @heading ~s|#progress-indicator h3|
 
   describe "GET /:domain" do
+    @tag :ee_only
     test "static verification screen renders", %{conn: conn, site: site} do
       resp =
         get(conn, conn |> no_slowdown() |> get("/#{site.domain}") |> redirected_to)
@@ -23,9 +24,19 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
       assert resp =~ "Verifying your installation"
     end
+
+    @tag :ce_build_only
+    test "static verification screen renders (ce)", %{conn: conn, site: site} do
+      resp =
+        get(conn, conn |> no_slowdown() |> get("/#{site.domain}") |> redirected_to)
+        |> html_response(200)
+
+      assert resp =~ "Awaiting your first pageview …"
+    end
   end
 
   describe "LiveView" do
+    @tag :ee_only
     test "LiveView mounts", %{conn: conn, site: site} do
       stub_fetch_body(200, "")
       stub_installation()
@@ -38,6 +49,13 @@ defmodule PlausibleWeb.Live.VerificationTest do
                "We're visiting your site to ensure that everything is working"
     end
 
+    @tag :ce_build_only
+    test "LiveView mounts (ce)", %{conn: conn, site: site} do
+      {_, html} = get_lv(conn, site)
+      assert html =~ "Awaiting your first pageview …"
+    end
+
+    @tag :ee_only
     test "eventually verifies installation", %{conn: conn, site: site} do
       stub_fetch_body(200, source(site.domain))
       stub_installation()
@@ -59,6 +77,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
       assert html =~ "Awaiting your first pageview"
     end
 
+    @tag :ee_only
     test "won't await first pageview if site has pageviews", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview)
@@ -106,6 +125,19 @@ defmodule PlausibleWeb.Live.VerificationTest do
       assert_redirect(lv, "http://localhost:8000/#{URI.encode_www_form(site.domain)}/")
     end
 
+    @tag :ce_build_only
+    test "will redirect when first pageview arrives (ce)", %{conn: conn, site: site} do
+      {:ok, lv} = kick_off_live_verification(conn, site)
+
+      html = render(lv)
+      assert text(html) =~ "Awaiting your first pageview …"
+
+      populate_stats(site, [build(:pageview)])
+
+      assert_redirect(lv, "http://localhost:8000/#{URI.encode_www_form(site.domain)}/")
+    end
+
+    @tag :ee_only
     test "eventually fails to verify installation", %{conn: conn, site: site} do
       stub_fetch_body(200, "")
       stub_installation(200, plausible_installed(false))

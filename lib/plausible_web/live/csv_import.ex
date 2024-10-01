@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Live.CSVImport do
 
           fn meta, entry ->
             local_path = Path.join(local_dir, Path.basename(meta.path))
-            File.rename!(meta.path, local_path)
+            Plausible.File.mv!(meta.path, local_path)
             {:ok, %{"local_path" => local_path, "filename" => entry.client_name}}
           end
       end

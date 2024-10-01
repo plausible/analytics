@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   use PlausibleWeb.ConnCase
 
-  @user_id 1231
+  @user_id Enum.random(1000..9999)
 
   setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
 
@@ -94,6 +94,74 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
           "date_range" => "all",
           "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
           "filters" => [["is", "visit:source", ["Google"]]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
+             ]
+    end
+
+    test "does not count pageleave events towards the events metric in a simple aggregate query",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 234, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, user_id: 234, name: "pageleave", timestamp: ~N[2021-01-01 00:00:01])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["events"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"metrics" => [1], "dimensions" => []}
+             ]
+    end
+
+    test "pageleave events do not affect bounce rate and visit duration", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, user_id: 123, name: "pageleave", timestamp: ~N[2021-01-01 00:00:03])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["bounce_rate", "visit_duration"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"metrics" => [100, 0], "dimensions" => []}
+             ]
+    end
+
+    test "can filter by channel", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "Google",
+          channel: "Organic Search",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+          "filters" => [["is", "visit:channel", ["Organic Search"]]]
         })
 
       assert json_response(conn, 200)["results"] == [
@@ -1371,6 +1439,38 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     assert results == [
              %{"dimensions" => ["Google"], "metrics" => [2]},
              %{"dimensions" => ["Direct / None"], "metrics" => [1]}
+           ]
+  end
+
+  test "breakdown by visit:channel", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:pageview,
+        channel: "Organic Search",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:pageview,
+        channel: "Organic Search",
+        timestamp: ~N[2021-01-01 00:25:00]
+      ),
+      build(:pageview,
+        channel: "",
+        timestamp: ~N[2021-01-01 00:00:00]
+      )
+    ])
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["visit:channel"]
+      })
+
+    %{"results" => results} = json_response(conn, 200)
+
+    assert results == [
+             %{"dimensions" => ["Organic Search"], "metrics" => [2]},
+             %{"dimensions" => ["Direct"], "metrics" => [1]}
            ]
   end
 

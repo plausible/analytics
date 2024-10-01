@@ -278,6 +278,62 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :payment_required
   end
 
+  @tag :slow
+  test "drops events on session lock timeout" do
+    site = insert(:site)
+
+    very_slow_buffer = fn sessions ->
+      Process.sleep(1000)
+      Plausible.Session.WriteBuffer.insert(sessions)
+    end
+
+    first_conn =
+      build_conn(:post, "/api/events", %{
+        name: "pageview",
+        url: "http://dummy.site",
+        d: "#{site.domain}"
+      })
+
+    assert {:ok, first_request} = Request.build(first_conn)
+
+    second_conn =
+      build_conn(:post, "/api/events", %{
+        name: "page_scrolled",
+        url: "http://dummy.site",
+        d: "#{site.domain}"
+      })
+
+    assert {:ok, second_request} = Request.build(second_conn)
+
+    Task.start(fn ->
+      assert {:ok, %{buffered: [_event], dropped: []}} =
+               Event.build_and_buffer(first_request,
+                 session_write_buffer_insert: very_slow_buffer
+               )
+    end)
+
+    Process.sleep(100)
+
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(second_request)
+    assert dropped.drop_reason == :lock_timeout
+  end
+
+  test "drops pageleave event when no session found from cache" do
+    site = insert(:site)
+
+    payload = %{
+      name: "pageleave",
+      url: "https://#{site.domain}/123",
+      d: "#{site.domain}"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    assert {:ok, request} = Request.build(conn)
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+    assert dropped.drop_reason == :no_session_for_pageleave
+  end
+
   @tag :ee_only
   test "saves revenue amount" do
     site = insert(:site)

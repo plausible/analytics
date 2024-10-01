@@ -8,6 +8,7 @@ defmodule Plausible.Stats.Filters do
 
   @visit_props [
     :source,
+    :channel,
     :referrer,
     :utm_medium,
     :utm_source,

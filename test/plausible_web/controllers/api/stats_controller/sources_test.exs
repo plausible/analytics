@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Api.StatsController.SourcesTest do
   use PlausibleWeb.ConnCase
 
-  @user_id 123
+  @user_id Enum.random(1000..9999)
 
   describe "GET /api/stats/:domain/sources" do
     setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
@@ -651,6 +651,54 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         # nobody landed on one.example.com from utm_param=ad
         assert json_response(conn, 200)["results"] == []
       end
+    end
+  end
+
+  describe "GET /api/stats/:domain/channels" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    test "returns top channels by unique user ids", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          channel: "Organic Search",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          channel: "Organic Search",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          channel: "Paid Social",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          channel: "Paid Social",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn1 =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/channels?period=day&&detailed=true&date=2021-01-01"
+        )
+
+      assert json_response(conn1, 200)["results"] == [
+               %{
+                 "name" => "Paid Social",
+                 "visitors" => 2,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0
+               },
+               %{
+                 "name" => "Organic Search",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 900
+               }
+             ]
     end
   end
 

@@ -152,7 +152,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
     end
   end
 
-  describe "DELETE /sites/:website/invitations/:invitation_id" do
+  describe "DELETE /sites/:domain/invitations/:invitation_id" do
     test "removes the invitation", %{conn: conn, user: user} do
       site = insert(:site, memberships: [build(:site_membership, user: user, role: :admin)])
 

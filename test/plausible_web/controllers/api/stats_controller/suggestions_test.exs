@@ -74,6 +74,25 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
              ]
     end
 
+    test "returns suggestions for channels", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], channel: "Organic Search"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], channel: "Organic Search"),
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:00],
+          channel: "Video"
+        )
+      ])
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/suggestions/channel?period=month&date=2019-01-01")
+
+      assert json_response(conn, 200) == [
+               %{"label" => "Organic Search", "value" => "Organic Search"},
+               %{"label" => "Video", "value" => "Video"}
+             ]
+    end
+
     test "returns suggestions for countries", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -131,7 +150,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
           "/api/stats/#{site.domain}/suggestions/city?q=Kär"
         )
 
-      assert json_response(conn, 200) == [%{"value" => "591632", "label" => "Kärdla"}]
+      assert json_response(conn, 200) == [%{"value" => 591_632, "label" => "Kärdla"}]
     end
 
     test "returns suggestions for countries without country in search", %{conn: conn, site: site} do
@@ -883,8 +902,8 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
           )
 
         assert json_response(conn, 200) == [
-                 %{"value" => "588409", "label" => "Tallinn"},
-                 %{"value" => "591632", "label" => "Kärdla"}
+                 %{"value" => 588_409, "label" => "Tallinn"},
+                 %{"value" => 591_632, "label" => "Kärdla"}
                ]
       end
     end
@@ -912,7 +931,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
           "/api/stats/#{site.domain}/suggestions/city?filters=#{filters}&q=&with_imported=true"
         )
 
-      assert json_response(conn, 200) == [%{"value" => "591632", "label" => "Kärdla"}]
+      assert json_response(conn, 200) == [%{"value" => 591_632, "label" => "Kärdla"}]
     end
 
     test "queries imported cities when filtering by city", %{
@@ -932,7 +951,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
           "/api/stats/#{site.domain}/suggestions/city?period=month&date=2019-01-01&filters=#{filters}&q=&with_imported=true"
         )
 
-      assert json_response(conn, 200) == [%{"value" => "591632", "label" => "Kärdla"}]
+      assert json_response(conn, 200) == [%{"value" => 591_632, "label" => "Kärdla"}]
     end
 
     test "ignores imported city data when not requested", %{

@@ -9,7 +9,7 @@ defmodule PlausibleWeb.SiteController do
   plug(PlausibleWeb.RequireAccountPlug)
 
   plug(
-    PlausibleWeb.AuthorizeSiteAccess,
+    PlausibleWeb.Plugs.AuthorizeSiteAccess,
     [:owner, :admin, :super_admin] when action not in [:new, :create_site]
   )
 
@@ -104,8 +104,8 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def settings(conn, %{"website" => website}) do
-    redirect(conn, to: Routes.site_path(conn, :settings_general, website))
+  def settings(conn, %{"domain" => domain}) do
+    redirect(conn, to: Routes.site_path(conn, :settings_general, domain))
   end
 
   def settings_general(conn, _params) do

@@ -41,6 +41,7 @@ defmodule Plausible.OpenTelemetry do
     [
       {"service.name", "analytics"},
       {"service.namespace", "plausible"},
+      {"service.instance.app_host", runtime_metadata[:app_host]},
       {"service.instance.id", runtime_metadata[:host]},
       {"service.version", runtime_metadata[:version]}
     ]

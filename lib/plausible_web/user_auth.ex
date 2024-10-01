@@ -1,15 +1,6 @@
 defmodule PlausibleWeb.UserAuth do
   @moduledoc """
   Functions for user session management.
-
-  In it's current shape, both current (legacy) and soon to be implemented (new)
-  user sessions are supported side by side.
-
-  The legacy token is still accepted from the session cookie. Once 14 days
-  pass (the current time window for which session cookie is valid without
-  any activity), the legacy cookies won't be accepted anymore (legacy token
-  retrieval is tracked with logging) and the logic will be cleaned of branching
-  for legacy session.
   """
 
   import Ecto.Query, only: [from: 2]
@@ -61,12 +52,7 @@ defmodule PlausibleWeb.UserAuth do
     end
   end
 
-  @spec touch_user_session(Auth.UserSession.t()) :: Auth.UserSession.t()
-  def touch_user_session(%{token: nil} = user_session) do
-    # NOTE: Legacy token sessions can't be touched.
-    user_session
-  end
-
+  @spec touch_user_session(Auth.UserSession.t(), NaiveDateTime.t()) :: Auth.UserSession.t()
   def touch_user_session(user_session, now \\ NaiveDateTime.utc_now(:second)) do
     if NaiveDateTime.diff(now, user_session.last_used_at, :hour) >= 1 do
       Plausible.Users.bump_last_seen(user_session.user_id, now)
@@ -77,6 +63,38 @@ defmodule PlausibleWeb.UserAuth do
     else
       user_session
     end
+  end
+
+  @spec revoke_user_session(Auth.User.t(), pos_integer()) :: :ok
+  def revoke_user_session(user, session_id) do
+    {_, tokens} =
+      Repo.delete_all(
+        from us in Auth.UserSession,
+          where: us.user_id == ^user.id and us.id == ^session_id,
+          select: us.token
+      )
+
+    case tokens do
+      [token] ->
+        PlausibleWeb.Endpoint.broadcast(live_socket_id(token), "disconnect", %{})
+
+      _ ->
+        :pass
+    end
+
+    :ok
+  end
+
+  @spec revoke_all_user_sessions(Auth.User.t()) :: :ok
+  def revoke_all_user_sessions(user) do
+    {_count, tokens} =
+      Repo.delete_all(
+        from us in Auth.UserSession, where: us.user_id == ^user.id, select: us.token
+      )
+
+    Enum.each(tokens, fn token ->
+      PlausibleWeb.Endpoint.broadcast(live_socket_id(token), "disconnect", %{})
+    end)
   end
 
   @doc """
@@ -94,33 +112,7 @@ defmodule PlausibleWeb.UserAuth do
     )
   end
 
-  @spec convert_legacy_session(Plug.Conn.t()) :: Plug.Conn.t()
-  def convert_legacy_session(conn) do
-    current_user = conn.assigns[:current_user]
-
-    if current_user && Plug.Conn.get_session(conn, :current_user_id) do
-      {token, user_session} = create_user_session(conn, current_user)
-
-      conn
-      |> put_token_in_session(token)
-      |> Plug.Conn.delete_session(:current_user_id)
-      |> Plug.Conn.assign(:current_user_session, user_session)
-    else
-      conn
-    end
-  end
-
-  defp get_session_by_token({:legacy, user_id}) do
-    case Plausible.Users.with_subscription(user_id) do
-      %Auth.User{} = user ->
-        {:ok, %Auth.UserSession{user_id: user.id, user: user}}
-
-      nil ->
-        {:error, :session_not_found}
-    end
-  end
-
-  defp get_session_by_token({:new, token}) do
+  defp get_session_by_token(token) do
     now = NaiveDateTime.utc_now(:second)
 
     last_subscription_query = Plausible.Users.last_subscription_join_query()
@@ -165,10 +157,14 @@ defmodule PlausibleWeb.UserAuth do
     Plug.Conn.delete_resp_cookie(conn, "logged_in")
   end
 
-  defp put_token_in_session(conn, {:new, token}) do
+  defp put_token_in_session(conn, token) do
     conn
     |> Plug.Conn.put_session(:user_token, token)
-    |> Plug.Conn.put_session(:live_socket_id, "user_sessions:#{Base.url_encode64(token)}")
+    |> Plug.Conn.put_session(:live_socket_id, live_socket_id(token))
+  end
+
+  defp live_socket_id(token) do
+    "user_sessions:#{Base.url_encode64(token)}"
   end
 
   defp get_user_token(%Plug.Conn{} = conn) do
@@ -178,12 +174,7 @@ defmodule PlausibleWeb.UserAuth do
   end
 
   defp get_user_token(%{"user_token" => token}) when is_binary(token) do
-    {:ok, {:new, token}}
-  end
-
-  defp get_user_token(%{"current_user_id" => user_id}) when is_integer(user_id) do
-    Logger.warning("Legacy user session detected (user: #{user_id})")
-    {:ok, {:legacy, user_id}}
+    {:ok, token}
   end
 
   defp get_user_token(_) do
@@ -198,12 +189,10 @@ defmodule PlausibleWeb.UserAuth do
       |> Auth.UserSession.new_session(device_name)
       |> Repo.insert!()
 
-    {{:new, user_session.token}, user_session}
+    {user_session.token, user_session}
   end
 
-  defp remove_user_session({:legacy, _}), do: :ok
-
-  defp remove_user_session({:new, token}) do
+  defp remove_user_session(token) do
     Repo.delete_all(from us in Auth.UserSession, where: us.token == ^token)
     :ok
   end

@@ -8,10 +8,29 @@ defmodule Plausible.Session.CacheStore do
 
   def lock_telemetry_event, do: @lock_telemetry_event
 
-  def on_event(event, session_attributes, prev_user_id, buffer_insert \\ &WriteBuffer.insert/1) do
+  def on_event(event, session_attributes, prev_user_id, buffer_insert \\ &WriteBuffer.insert/1)
+
+  def on_event(%{name: "pageleave"} = event, _, prev_user_id, _) do
+    # The `pageleave` event is currently experimental. In a real use case we would
+    # probably want to update the session as well (e.g. `is_bounce` or `duration`).
+
+    # However, for now we're only interested in finding out the success rate of
+    # pageleave events. So these events will simply be inserted into the events
+    # table with the session ID found from the cache. If there's no session, the
+    # event will be dropped.
+    found_session = find_session(event, event.user_id) || find_session(event, prev_user_id)
+
+    if found_session do
+      {:ok, found_session}
+    else
+      {:error, :no_session_for_pageleave}
+    end
+  end
+
+  def on_event(event, session_attributes, prev_user_id, buffer_insert) do
     lock_requested_at = System.monotonic_time()
 
-    Plausible.Cache.Adapter.with_lock!(
+    Plausible.Cache.Adapter.with_lock(
       :sessions,
       {event.site_id, event.user_id},
       @lock_timeout,
@@ -52,6 +71,7 @@ defmodule Plausible.Session.CacheStore do
   defp persist_session(session) do
     key = {session.site_id, session.user_id}
     Plausible.Cache.Adapter.put(:sessions, key, session, dirty?: true)
+    session
   end
 
   defp update_session(session, event) do

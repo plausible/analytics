@@ -896,7 +896,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "Invalid date_range '[\"2021-02-03T00:00:00Z\", \"2021-02-04\"]'."
+        "#/date_range: Invalid date range [\"2021-02-03T00:00:00Z\", \"2021-02-04\"]"
       )
     end
 

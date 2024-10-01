@@ -5,36 +5,19 @@ defmodule Plausible.Stats.JSONSchema do
   Note that `internal` queries expose some metrics, filter types and other features not
   available on the public API.
   """
+  alias Plausible.Stats.JSONSchema.Utils
 
   @external_resource "priv/json-schemas/query-api-schema.json"
 
-  @raw_public_schema Application.app_dir(:plausible, "priv/json-schemas/query-api-schema.json")
-                     |> File.read!()
-                     |> Jason.decode!()
-
+  @raw_internal_schema Application.app_dir(:plausible, "priv/json-schemas/query-api-schema.json")
+                       |> File.read!()
+                       |> Jason.decode!()
+  @raw_public_schema Utils.traverse(@raw_internal_schema, fn
+                       %{"$comment" => "only :internal"} -> :remove
+                       value -> value
+                     end)
+  @internal_query_schema ExJsonSchema.Schema.resolve(@raw_internal_schema)
   @public_query_schema ExJsonSchema.Schema.resolve(@raw_public_schema)
-
-  @internal_query_schema @raw_public_schema
-                         # Add overrides for things allowed in the internal API
-                         |> JSONPointer.add!(
-                           "#/definitions/filter_operation_without_goals/enum/0",
-                           "matches_wildcard"
-                         )
-                         |> JSONPointer.add!(
-                           "#/definitions/filter_operation_without_goals/enum/0",
-                           "matches_wildcard_not"
-                         )
-                         |> JSONPointer.add!("#/definitions/metric/oneOf/0", %{
-                           "const" => "time_on_page"
-                         })
-                         |> JSONPointer.add!("#/definitions/date_range/oneOf/0", %{
-                           "const" => "30m"
-                         })
-                         |> JSONPointer.add!("#/definitions/date_range/oneOf/0", %{
-                           "const" => "realtime"
-                         })
-                         |> JSONPointer.add!("#/properties/date", %{"type" => "string"})
-                         |> ExJsonSchema.Schema.resolve()
 
   def validate(schema_type, params) do
     case ExJsonSchema.Validator.validate(schema(schema_type), params) do

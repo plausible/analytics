@@ -12,7 +12,7 @@ import classNames from 'classnames';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
-import { sourcesRoute, utmCampaignsRoute, utmContentsRoute, utmMediumsRoute, utmSourcesRoute, utmTermsRoute } from '../../router';
+import { sourcesRoute, channelsRoute, utmCampaignsRoute, utmContentsRoute, utmMediumsRoute, utmSourcesRoute, utmTermsRoute } from '../../router';
 
 const UTM_TAGS = {
   utm_medium: { label: 'UTM Medium', shortLabel: 'UTM Medium', endpoint: '/utm_mediums' },
@@ -67,6 +67,41 @@ function AllSources({ afterFetchData }) {
   )
 }
 
+function Channels({ afterFetchData }) {
+  const { query } = useQueryContext();
+  const site = useSiteContext();
+
+  function fetchData() {
+    return api.get(url.apiPath(site, '/channels'), query, { limit: 9 })
+  }
+
+  function getFilterFor(listItem) {
+    return {
+      prefix: 'channel',
+      filter: ["is", "channel", [listItem['name']]]
+    }
+  }
+
+  function chooseMetrics() {
+    return [
+      metrics.createVisitors({ meta: { plot: true } }),
+      hasGoalFilter(query) && metrics.createConversionRate(),
+    ].filter(metric => !!metric)
+  }
+
+  return (
+    <ListReport
+      fetchData={fetchData}
+      afterFetchData={afterFetchData}
+      getFilterFor={getFilterFor}
+      keyLabel="Channel"
+      metrics={chooseMetrics()}
+      detailsLinkProps={{ path: channelsRoute.path, search: (search) => search }}
+      color="bg-blue-50"
+    />
+  )
+}
+
 function UTMSources({ tab, afterFetchData }) {
   const { query } = useQueryContext();
   const site = useSiteContext();
@@ -79,7 +114,7 @@ function UTMSources({ tab, afterFetchData }) {
     utm_content: utmContentsRoute,
     utm_term: utmTermsRoute,
     }[tab]
-    
+
   function fetchData() {
     return api.get(url.apiPath(site, utmTag.endpoint), query, { limit: 9 })
   }
@@ -138,6 +173,9 @@ export default function SourceList() {
     return (
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
         <div className={currentTab === 'all' ? activeClass : defaultClass} onClick={setTab('all')}>All</div>
+        {site.flags.channels &&
+          <div className={currentTab === 'channels' ? activeClass : defaultClass} onClick={setTab('channels')}>Channels</div>
+        }
 
         <Menu as="div" className="relative inline-block text-left">
           <div>
@@ -187,6 +225,8 @@ export default function SourceList() {
   function renderContent() {
     if (currentTab === 'all') {
       return <AllSources afterFetchData={afterFetchData} />
+    } else if (currentTab == 'channels') {
+      return <Channels afterFetchData={afterFetchData} />
     } else {
       return <UTMSources tab={currentTab} afterFetchData={afterFetchData} />
     }

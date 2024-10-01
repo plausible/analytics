@@ -101,7 +101,7 @@ defmodule Plausible.Workers.ExportAnalytics do
 
     File.mkdir_p!(Path.dirname(local_path))
     if File.exists?(local_path), do: File.rm!(local_path)
-    File.rename!(tmp_path, local_path)
+    Plausible.File.mv!(tmp_path, local_path)
   end
 
   defp email_failure(args) do
