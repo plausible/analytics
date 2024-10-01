@@ -30,10 +30,10 @@ defmodule Plausible.Stats.QueryRunner do
       %{query: optimized_query, site: site}
       |> add_comparison_query()
       |> execute_comparison()
-      |> add_comparison_map()
       |> execute_main_query()
       |> add_meta_extra()
-      |> add_results_list()
+      |> add_time_lookup()
+      |> build_results_list()
 
     QueryResult.from(assigns.results_list, site, optimized_query, assigns.meta_extra)
   end
@@ -49,7 +49,7 @@ defmodule Plausible.Stats.QueryRunner do
     {ch_results, time_on_page} = execute_query(comparison_query, site)
 
     comparison_results =
-      build_results_list(
+      build_from_ch(
         ch_results,
         comparison_query,
         time_on_page
@@ -60,43 +60,27 @@ defmodule Plausible.Stats.QueryRunner do
 
   defp execute_comparison(assigns), do: assigns
 
-  defp add_comparison_map(
-         %{
-           comparison_query: comparison_query,
-           comparison_results: comparison_results,
-           query: query
-         } = assigns
-       ) do
-    time_dimension = Time.time_dimension(query)
-
+  defp add_time_lookup(assigns) do
     time_lookup =
-      if time_dimension do
+      if Time.time_dimension(assigns.query) && assigns[:comparison_query] do
         Enum.zip(
-          Time.time_labels(query),
-          Time.time_labels(comparison_query)
+          Time.time_labels(assigns.query),
+          Time.time_labels(assigns.comparison_query)
         )
         |> Map.new()
       else
         %{}
       end
 
-    comparison_map =
-      Map.new(comparison_results, fn entry -> {entry.dimensions, entry.metrics} end)
-
-    Map.merge(assigns, %{
-      comparison_map: comparison_map,
-      time_lookup: time_lookup
-    })
+    Map.put(assigns, :time_lookup, time_lookup)
   end
-
-  defp add_comparison_map(assigns), do: assigns
 
   defp execute_main_query(%{query: query, site: site} = assigns) do
     {ch_results, time_on_page} = execute_query(query, site)
 
     Map.merge(assigns, %{
-      ch_results: ch_results,
-      time_on_page: time_on_page
+      main_results_list: build_from_ch(ch_results, query, time_on_page),
+      ch_results: ch_results
     })
   end
 
@@ -106,13 +90,12 @@ defmodule Plausible.Stats.QueryRunner do
     })
   end
 
-  defp add_results_list(assigns) do
+  defp build_results_list(%{query: query, main_results_list: main_results_list} = assigns) do
     results_list =
-      build_results_list(
-        assigns.ch_results,
-        assigns.query,
-        assigns.time_on_page
-      )
+      case query.dimensions do
+        ["time:" <> _] -> main_results_list |> add_empty_timeseries_rows(assigns)
+        _ -> main_results_list
+      end
       |> merge_with_comparison_results(assigns)
 
     Map.put(assigns, :results_list, results_list)
@@ -129,7 +112,7 @@ defmodule Plausible.Stats.QueryRunner do
     {ch_results, time_on_page}
   end
 
-  defp build_results_list(ch_results, query, time_on_page) do
+  defp build_from_ch(ch_results, query, time_on_page) do
     ch_results
     |> Enum.map(fn entry ->
       dimensions = Enum.map(query.dimensions, &dimension_label(&1, entry, query))
@@ -168,8 +151,29 @@ defmodule Plausible.Stats.QueryRunner do
 
   defp get_metric(entry, metric, _dimensions, _time_on_page), do: Map.get(entry, metric)
 
+  # Special case: If comparison and single time dimension, add 0 rows - otherwise
+  # comparisions would not be shown for timeseries with 0 values.
+  defp add_empty_timeseries_rows(results_list, %{query: query})
+       when is_map(query.include.comparisons) do
+    indexed_results = index_by_dimensions(results_list)
+
+    empty_timeseries_rows =
+      Time.time_labels(query)
+      |> Enum.reject(fn dimension_value -> Map.has_key?(indexed_results, [dimension_value]) end)
+      |> Enum.map(fn dimension_value ->
+        %{
+          metrics: empty_metrics(query),
+          dimensions: [dimension_value]
+        }
+      end)
+
+    results_list ++ empty_timeseries_rows
+  end
+
+  defp add_empty_timeseries_rows(results_list, _), do: results_list
+
   defp merge_with_comparison_results(results_list, assigns) do
-    comparison_map = Map.get(assigns, :comparison_map, %{})
+    comparison_map = Map.get(assigns, :comparison_results, []) |> index_by_dimensions()
     time_lookup = Map.get(assigns, :time_lookup, %{})
 
     Enum.map(
@@ -207,6 +211,11 @@ defmodule Plausible.Stats.QueryRunner do
       {"time:" <> _, value} -> time_lookup[value]
       {_, value} -> value
     end)
+  end
+
+  defp index_by_dimensions(results_list) do
+    results_list
+    |> Map.new(fn entry -> {entry.dimensions, entry.metrics} end)
   end
 
   defp get_comparison_metrics(comparison_map, dimensions, query) do
