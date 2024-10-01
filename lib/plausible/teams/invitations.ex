@@ -49,7 +49,9 @@ defmodule Plausible.Teams.Invitations do
           :ok = transfer_site_ownership(site, team, now)
         end)
 
-      {:ok, Teams.Memberships.get(team, new_owner)}
+      {:ok, team_membership} = Teams.Memberships.get(team, new_owner)
+
+      {:ok, team_membership}
     end
   end
 
@@ -145,7 +147,9 @@ defmodule Plausible.Teams.Invitations do
 
       send_transfer_accepted_email(site_transfer)
 
-      Teams.Memberships.get(team, new_owner)
+      {:ok, team_membership} = Teams.Memberships.get(team, new_owner)
+
+      {:ok, team_membership}
     end
   end
 
@@ -283,7 +287,7 @@ defmodule Plausible.Teams.Invitations do
   defp ensure_new_membership(_site, nil, _role), do: :ok
 
   defp ensure_new_membership(site, invitee, _role) do
-    if is_nil(Teams.Memberships.site_role(site, invitee)) do
+    if Teams.Memberships.site_role(site, invitee) == {:error, :not_a_member} do
       :ok
     else
       {:error, :already_a_member}

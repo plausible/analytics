@@ -17,7 +17,7 @@ defmodule Plausible.Teams.Memberships do
 
     case result do
       nil -> {:error, :not_a_member}
-      team_membership -> team_membership
+      team_membership -> {:ok, team_membership}
     end
   end
 
@@ -48,9 +48,9 @@ defmodule Plausible.Teams.Memberships do
       |> Repo.one()
 
     case result do
-      {:guest, role} -> role
-      {role, _} -> role
-      _ -> nil
+      {:guest, role} -> {:ok, role}
+      {role, _} -> {:ok, role}
+      _ -> {:error, :not_a_member}
     end
   end
 
