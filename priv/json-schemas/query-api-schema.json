@@ -70,6 +70,11 @@
               "type": "string",
               "enum": ["previous_period", "year_over_year", "custom"]
             },
+            "match_day_of_week": {
+              "type": "boolean",
+              "default": false,
+              "description": "If set and using time:day dimensions, day-of-week of comparison query is matched"
+            },
             "date_range": {
               "type": "array",
               "additionalItems": false,
@@ -79,22 +84,21 @@
                   "type": "string",
                   "format": "date"
               },
-              "markdownDescription": "A list of two ISO8601 dates or timestamps to compare against.",
+              "description": "If custom period. A list of two ISO8601 dates or timestamps to compare against.",
               "examples": [
                 ["2024-01-01", "2024-01-31"]
               ]
             }
           },
           "required": ["mode"],
-          "dependencies": {
-            "date_range": {
-              "properties": {
-                "mode": {
-                  "const": "custom"
-                }
-              },
-              "required": ["mode"]
-            }
+          "if": {
+            "properties": { "mode": { "const": "custom" } }
+          },
+          "then": {
+            "required": ["date_range"]
+          },
+          "else": {
+            "not": {"required": ["date_range"]}
           }
         }
       }
