@@ -152,7 +152,7 @@ defmodule Plausible.Stats.QueryRunner do
   defp get_metric(entry, metric, _dimensions, _time_on_page), do: Map.get(entry, metric)
 
   # Special case: If comparison and single time dimension, add 0 rows - otherwise
-  # comparisions would not be shown for timeseries with 0 values.
+  # comparisons would not be shown for timeseries with 0 values.
   defp add_empty_timeseries_rows(results_list, %{query: query})
        when is_map(query.include.comparisons) do
     indexed_results = index_by_dimensions(results_list)
