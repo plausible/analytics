@@ -289,22 +289,19 @@ defmodule PlausibleWeb.EmailTest do
       {:ok, email: email}
     end
 
+    @trial_message "You signed up for a free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool."
+    @reply_message "Do reply back to this email if you have any questions or need some guidance."
+
     @tag :ee_only
     test "renders 'trial' and 'reply' blocks", %{email: email} do
-      assert email.html_body =~
-               "You signed up for a free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool."
-
-      assert email.html_body =~
-               "Do reply back to this email if you have any questions or need some guidance."
+      assert email.html_body =~ @trial_message
+      assert email.html_body =~ @reply_message
     end
 
     @tag :ce_build_only
     test "does not render 'trial' and 'reply' blocks", %{email: email} do
-      refute email.html_body =~
-               "You signed up for a free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool."
-
-      refute email.html_body =~
-               "Do reply back to this email if you have any questions or need some guidance."
+      refute email.html_body =~ @trial_message
+      refute email.html_body =~ @reply_message
     end
   end
 
@@ -322,22 +319,19 @@ defmodule PlausibleWeb.EmailTest do
       {:ok, email: email}
     end
 
+    @trial_message "You're on a 30-day free trial with no obligations so do take your time to explore Plausible."
+    @reply_message "Do reply back to this email if you have any questions. We're here to help."
+
     @tag :ee_only
     test "renders 'trial' and 'reply' blocks", %{email: email} do
-      assert email.html_body =~
-               "You're on a 30-day free trial with no obligations so do take your time to explore Plausible."
-
-      assert email.html_body =~
-               "Do reply back to this email if you have any questions. We're here to help."
+      assert email.html_body =~ @trial_message
+      assert email.html_body =~ @reply_message
     end
 
     @tag :ce_build_only
     test "does not render 'trial' and 'reply' blocks", %{email: email} do
-      refute email.html_body =~
-               "You're on a 30-day free trial with no obligations so do take your time to explore Plausible."
-
-      refute email.html_body =~
-               "Do reply back to this email if you have any questions. We're here to help."
+      refute email.html_body =~ @trial_message
+      refute email.html_body =~ @reply_message
     end
   end
 
