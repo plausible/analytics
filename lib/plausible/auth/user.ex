@@ -19,8 +19,10 @@ defmodule Plausible.Auth.User do
 
   @required [:email, :name, :password]
 
-  @trial_accept_traffic_until_offset_days 14
-  @susbscription_accept_traffic_until_offset_days 30
+  on_ee do
+    @trial_accept_traffic_until_offset_days 14
+    @susbscription_accept_traffic_until_offset_days 30
+  end
 
   schema "users" do
     field :email, :string
@@ -62,17 +64,23 @@ defmodule Plausible.Auth.User do
   end
 
   def new(attrs \\ %{}) do
-    %Plausible.Auth.User{}
-    |> cast(attrs, @required)
-    |> validate_required(@required)
-    |> validate_length(:password, min: 12, message: "has to be at least 12 characters")
-    |> validate_length(:password, max: 128, message: "cannot be longer than 128 characters")
-    |> validate_confirmation(:password, required: true)
-    |> validate_password_strength()
-    |> hash_password()
-    |> start_trial()
-    |> set_email_verification_status()
-    |> unique_constraint(:email)
+    changeset =
+      %Plausible.Auth.User{}
+      |> cast(attrs, @required)
+      |> validate_required(@required)
+      |> validate_length(:password, min: 12, message: "has to be at least 12 characters")
+      |> validate_length(:password, max: 128, message: "cannot be longer than 128 characters")
+      |> validate_confirmation(:password, required: true)
+      |> validate_password_strength()
+      |> hash_password()
+      |> set_email_verification_status()
+      |> unique_constraint(:email)
+
+    on_ee do
+      start_trial(changeset)
+    else
+      changeset
+    end
   end
 
   def settings_changeset(user, attrs \\ %{}) do
@@ -108,33 +116,41 @@ defmodule Plausible.Auth.User do
   end
 
   def changeset(user, attrs \\ %{}) do
-    user
-    |> cast(attrs, [
-      :email,
-      :name,
-      :email_verified,
-      :theme,
-      :trial_expiry_date,
-      :allow_next_upgrade_override,
-      :accept_traffic_until,
-      :notes
-    ])
-    |> validate_required([:email, :name, :email_verified])
-    |> maybe_bump_accept_traffic_until()
-    |> unique_constraint(:email)
-  end
-
-  defp maybe_bump_accept_traffic_until(changeset) do
-    expiry_change = get_change(changeset, :trial_expiry_date)
-
-    if expiry_change do
-      put_change(
-        changeset,
+    changeset =
+      user
+      |> cast(attrs, [
+        :email,
+        :name,
+        :email_verified,
+        :theme,
+        :trial_expiry_date,
+        :allow_next_upgrade_override,
         :accept_traffic_until,
-        Date.add(expiry_change, @trial_accept_traffic_until_offset_days)
-      )
+        :notes
+      ])
+      |> validate_required([:email, :name, :email_verified])
+      |> unique_constraint(:email)
+
+    on_ee do
+      maybe_bump_accept_traffic_until(changeset)
     else
       changeset
+    end
+  end
+
+  on_ee do
+    defp maybe_bump_accept_traffic_until(changeset) do
+      expiry_change = get_change(changeset, :trial_expiry_date)
+
+      if expiry_change do
+        put_change(
+          changeset,
+          :accept_traffic_until,
+          Date.add(expiry_change, @trial_accept_traffic_until_offset_days)
+        )
+      else
+        changeset
+      end
     end
   end
 
@@ -155,21 +171,27 @@ defmodule Plausible.Auth.User do
 
   def hash_password(changeset), do: changeset
 
-  def remove_trial_expiry(user) do
-    change(user, trial_expiry_date: nil)
+  on_ee do
+    def remove_trial_expiry(user) do
+      change(user, trial_expiry_date: nil)
+    end
   end
 
-  def start_trial(user) do
-    trial_expiry = trial_expiry()
+  on_ee do
+    def start_trial(user) do
+      trial_expiry = Date.utc_today() |> Date.shift(day: 30)
 
-    change(user,
-      trial_expiry_date: trial_expiry,
-      accept_traffic_until: Date.add(trial_expiry, @trial_accept_traffic_until_offset_days)
-    )
+      change(user,
+        trial_expiry_date: trial_expiry,
+        accept_traffic_until: Date.add(trial_expiry, @trial_accept_traffic_until_offset_days)
+      )
+    end
   end
 
-  def end_trial(user) do
-    change(user, trial_expiry_date: Date.utc_today() |> Date.shift(day: -1))
+  on_ee do
+    def end_trial(user) do
+      change(user, trial_expiry_date: Date.utc_today() |> Date.shift(day: -1))
+    end
   end
 
   def password_strength(changeset) do
@@ -213,10 +235,14 @@ defmodule Plausible.Auth.User do
     Path.join(PlausibleWeb.Endpoint.url(), ["avatar/", hash])
   end
 
-  def trial_accept_traffic_until_offset_days(), do: @trial_accept_traffic_until_offset_days
+  on_ee do
+    def trial_accept_traffic_until_offset_days(), do: @trial_accept_traffic_until_offset_days
+  end
 
-  def subscription_accept_traffic_until_offset_days(),
-    do: @susbscription_accept_traffic_until_offset_days
+  on_ee do
+    def subscription_accept_traffic_until_offset_days(),
+      do: @susbscription_accept_traffic_until_offset_days
+  end
 
   defp validate_email_changed(changeset) do
     if !get_change(changeset, :email) && !changeset.errors[:email] do
@@ -254,14 +280,6 @@ defmodule Plausible.Auth.User do
     [phrase, parts]
     |> List.flatten(phrases)
     |> Enum.uniq()
-  end
-
-  defp trial_expiry() do
-    on_ee do
-      Date.utc_today() |> Date.shift(day: 30)
-    else
-      Date.utc_today() |> Date.shift(year: 100)
-    end
   end
 
   defp set_email_verification_status(user) do

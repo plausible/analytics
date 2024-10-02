@@ -293,11 +293,13 @@ defmodule PlausibleWeb.Live.RegisterForm do
         |> Map.put("email", invitation.email)
         |> Auth.User.new()
 
-      user =
-        case invitation.role do
-          :owner -> user
-          _ -> Plausible.Auth.User.remove_trial_expiry(user)
-        end
+      on_ee do
+        user =
+          case invitation.role do
+            :owner -> user
+            _ -> Plausible.Auth.User.remove_trial_expiry(user)
+          end
+      end
 
       add_user(socket, user)
     else

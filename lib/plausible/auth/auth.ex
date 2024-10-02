@@ -128,12 +128,14 @@ defmodule Plausible.Auth do
     def is_super_admin?(_), do: false
   end
 
-  def enterprise_configured?(nil), do: false
+  on_ee do
+    def enterprise_configured?(nil), do: false
 
-  def enterprise_configured?(%Plausible.Auth.User{} = user) do
-    user
-    |> Ecto.assoc(:enterprise_plan)
-    |> Repo.exists?()
+    def enterprise_configured?(%Plausible.Auth.User{} = user) do
+      user
+      |> Ecto.assoc(:enterprise_plan)
+      |> Repo.exists?()
+    end
   end
 
   @spec create_api_key(Auth.User.t(), String.t(), String.t()) ::

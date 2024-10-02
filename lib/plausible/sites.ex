@@ -3,6 +3,8 @@ defmodule Plausible.Sites do
   Sites context functions.
   """
 
+  use Plausible
+
   import Ecto.Query
 
   alias Plausible.Auth
@@ -176,43 +178,60 @@ defmodule Plausible.Sites do
   defp maybe_filter_by_domain(query, _), do: query
 
   def create(user, params) do
-    with :ok <- Quota.ensure_can_add_new_site(user) do
-      Ecto.Multi.new()
-      |> Ecto.Multi.put(:site_changeset, Site.new(params))
-      |> Ecto.Multi.run(:clear_changed_from, fn
-        _repo, %{site_changeset: %{changes: %{domain: domain}}} ->
-          case get_for_user(user.id, domain, [:owner]) do
-            %Site{domain_changed_from: ^domain} = site ->
-              site
-              |> Ecto.Changeset.change()
-              |> Ecto.Changeset.put_change(:domain_changed_from, nil)
-              |> Ecto.Changeset.put_change(:domain_changed_at, nil)
-              |> Repo.update()
+    ensure_can_add_new_site =
+      on_ee do
+        Quota.ensure_can_add_new_site(user)
+      else
+        :ok
+      end
 
-            _ ->
-              {:ok, :ignore}
-          end
+    with :ok <- ensure_can_add_new_site do
+      multi =
+        Ecto.Multi.new()
+        |> Ecto.Multi.put(:site_changeset, Site.new(params))
+        |> Ecto.Multi.run(:clear_changed_from, fn
+          _repo, %{site_changeset: %{changes: %{domain: domain}}} ->
+            case get_for_user(user.id, domain, [:owner]) do
+              %Site{domain_changed_from: ^domain} = site ->
+                site
+                |> Ecto.Changeset.change()
+                |> Ecto.Changeset.put_change(:domain_changed_from, nil)
+                |> Ecto.Changeset.put_change(:domain_changed_at, nil)
+                |> Repo.update()
 
-        _repo, _context ->
-          {:ok, :ignore}
-      end)
-      |> Ecto.Multi.insert(:site, fn %{site_changeset: site} -> site end)
-      |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
-        Site.Membership.new(site, user)
-      end)
-      |> maybe_start_trial(user)
-      |> Repo.transaction()
+              _ ->
+                {:ok, :ignore}
+            end
+
+          _repo, _context ->
+            {:ok, :ignore}
+        end)
+        |> Ecto.Multi.insert(:site, fn %{site_changeset: site} -> site end)
+        |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
+          Site.Membership.new(site, user)
+        end)
+
+      multi =
+        on_ee do
+          maybe_start_trial(multi, user)
+        else
+          multi
+        end
+
+      Repo.transaction(multi)
     end
   end
 
-  defp maybe_start_trial(multi, user) do
-    case user.trial_expiry_date do
-      nil ->
-        changeset = Auth.User.start_trial(user)
-        Ecto.Multi.update(multi, :user, changeset)
+  on_ee do
+    defp maybe_start_trial(multi, user) do
+      case user.trial_expiry_date do
+        nil ->
+          changeset = Auth.User.start_trial(user)
+          Ecto.Multi.update(multi, :user, changeset)
 
-      _ ->
-        multi
+        _ ->
+          multi
+      end
     end
   end
 
@@ -361,8 +380,10 @@ defmodule Plausible.Sites do
     role(user_id, site) in [:admin, :owner]
   end
 
-  def locked?(%Site{locked: locked}) do
-    locked
+  on_ee do
+    def locked?(%Site{locked: locked}) do
+      locked
+    end
   end
 
   def role(user_id, site) do
@@ -374,11 +395,13 @@ defmodule Plausible.Sites do
     )
   end
 
-  def owned_sites_locked?(user) do
-    user
-    |> owned_sites_query()
-    |> where([s], s.locked == true)
-    |> Repo.exists?()
+  on_ee do
+    def owned_sites_locked?(user) do
+      user
+      |> owned_sites_query()
+      |> where([s], s.locked == true)
+      |> Repo.exists?()
+    end
   end
 
   def owned_sites_count(user) do
