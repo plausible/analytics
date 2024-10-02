@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-128A95CD.js"></script>
+    <script src="dist/sidebar_items-594E5C20.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -185,7 +185,7 @@ Pages
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">id</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">name</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">label</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">value</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li>Global attributes are accepted.</li></ul></div>
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">id</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">name</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">label</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">value</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li>Global attributes are accepted.</li></ul></div>
 
     </div>
 
@@ -259,7 +259,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">error(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L276" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L307" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -287,7 +287,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">input(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L48" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L55" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -312,7 +312,7 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
   </a>
   <span class="text">Attributes</span>
 </h2>
-<ul><li><code class="inline">id</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">name</code> (<code class="inline">:any</code>)</li><li><code class="inline">label</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">value</code> (<code class="inline">:any</code>)</li><li><code class="inline">type</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;text&quot;</code>.</li><li><code class="inline">field</code> (<a href="https://hexdocs.pm/phoenix_html/3.3.4/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a>) - a form field struct retrieved from the form, for example: @form[:email].</li><li><code class="inline">errors</code> (<code class="inline">:list</code>) - Defaults to <code class="inline">[]</code>.</li><li><code class="inline">checked</code> (<code class="inline">:boolean</code>) - the checked flag for checkbox inputs.</li><li><code class="inline">prompt</code> (<code class="inline">:string</code>) - the prompt for select inputs. Defaults to <code class="inline">nil</code>.</li><li><code class="inline">options</code> (<code class="inline">:list</code>) - the options to pass to Phoenix.HTML.Form.options_for_select/2.</li><li><code class="inline">multiple</code> (<code class="inline">:boolean</code>) - the multiple flag for select inputs. Defaults to <code class="inline">false</code>.</li><li>Global attributes are accepted. Supports all globals plus: <code class="inline">[&quot;accept&quot;, &quot;autocomplete&quot;, &quot;capture&quot;, &quot;cols&quot;, &quot;disabled&quot;, &quot;form&quot;, &quot;list&quot;, &quot;max&quot;, &quot;maxlength&quot;, &quot;min&quot;, &quot;minlength&quot;, &quot;multiple&quot;, &quot;pattern&quot;, &quot;placeholder&quot;, &quot;readonly&quot;, &quot;required&quot;, &quot;rows&quot;, &quot;size&quot;, &quot;step&quot;]</code>.</li></ul><h2 id="input/1-slots" class="section-heading">
+<ul><li><code class="inline">id</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">name</code> (<code class="inline">:any</code>)</li><li><code class="inline">label</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">value</code> (<code class="inline">:any</code>)</li><li><code class="inline">width</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;w-full&quot;</code>.</li><li><code class="inline">type</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;text&quot;</code>.</li><li><code class="inline">field</code> (<a href="https://hexdocs.pm/phoenix_html/3.3.4/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a>) - a form field struct retrieved from the form, for example: @form[:email].</li><li><code class="inline">errors</code> (<code class="inline">:list</code>) - Defaults to <code class="inline">[]</code>.</li><li><code class="inline">checked</code> (<code class="inline">:boolean</code>) - the checked flag for checkbox inputs.</li><li><code class="inline">prompt</code> (<code class="inline">:string</code>) - the prompt for select inputs. Defaults to <code class="inline">nil</code>.</li><li><code class="inline">options</code> (<code class="inline">:list</code>) - the options to pass to Phoenix.HTML.Form.options_for_select/2.</li><li><code class="inline">multiple</code> (<code class="inline">:boolean</code>) - the multiple flag for select inputs. Defaults to <code class="inline">false</code>.</li><li><code class="inline">class</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">&quot;text-sm dark:bg-gray-900 block pl-3.5 py-2.5 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md&quot;</code>.</li><li><code class="inline">mt?</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">true</code>.</li><li>Global attributes are accepted. Supports all globals plus: <code class="inline">[&quot;accept&quot;, &quot;autocomplete&quot;, &quot;capture&quot;, &quot;cols&quot;, &quot;disabled&quot;, &quot;form&quot;, &quot;list&quot;, &quot;max&quot;, &quot;maxlength&quot;, &quot;min&quot;, &quot;minlength&quot;, &quot;multiple&quot;, &quot;pattern&quot;, &quot;placeholder&quot;, &quot;readonly&quot;, &quot;required&quot;, &quot;rows&quot;, &quot;size&quot;, &quot;step&quot;]</code>.</li></ul><h2 id="input/1-slots" class="section-heading">
   <a href="#input/1-slots" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -330,7 +330,7 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
     </a>
     <h1 class="signature" translate="no">input_with_clipboard(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L86" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L112" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -346,7 +346,7 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
   </a>
   <span class="text">Attributes</span>
 </h2>
-<ul><li><code class="inline">id</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">name</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">label</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">value</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li>Global attributes are accepted.</li></ul>
+<ul><li><code class="inline">id</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">name</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">label</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">value</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li>Global attributes are accepted.</li></ul>
   </section>
 </section>
 <section class="detail" id="label/1">
@@ -358,7 +358,7 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
     </a>
     <h1 class="signature" translate="no">label(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L263" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L294" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -374,7 +374,7 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
   </a>
   <span class="text">Attributes</span>
 </h2>
-<ul><li><code class="inline">for</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li></ul><h2 id="label/1-slots" class="section-heading">
+<ul><li><code class="inline">for</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li></ul><h2 id="label/1-slots" class="section-heading">
   <a href="#label/1-slots" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -392,7 +392,7 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
     </a>
     <h1 class="signature" translate="no">password_input_with_strength(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L133" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L163" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -420,7 +420,7 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
     </a>
     <h1 class="signature" translate="no">password_length_hint(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L174" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L204" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -448,7 +448,7 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
     </a>
     <h1 class="signature" translate="no">strength_meter(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L219" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L249" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -476,7 +476,7 @@ Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" 
     </a>
     <h1 class="signature" translate="no">translate_error(arg)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L284" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L315" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
