@@ -1,38 +1,38 @@
-<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
-  <header class="relative border-b border-gray-200 pb-4">
-    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-      Google Search Console Integration
-    </h2>
-    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
+<.tile docs="google-search-console-integration">
+  <:title>
+    Google Search Console Integration
+  </:title>
+  <:subtitle>
+    <p>
       You can integrate with Google Search Console to get all of your important search results stats such as keyword phrases people find your site with.
     </p>
-
-    <PlausibleWeb.Components.Generic.docs_info slug="google-search-console-integration" />
-  </header>
-
+  </:subtitle>
   <%= if Keyword.get(Application.get_env(:plausible, :google), :client_id) do %>
     <%= if @site.google_auth do %>
-      <div class="flex py-8">
-        <span class="flex-1 text-gray-700 dark:text-gray-300">
-          Linked Google account: <b><%= @site.google_auth.email %></b>
-        </span>
+      <PlausibleWeb.Live.Components.Form.input
+        name="account"
+        label="Linked Google account"
+        value={@site.google_auth.email}
+        disabled="disabled"
+        width="w-1/2"
+      />
 
-        <%= link("Unlink Google account",
-          to: "/#{URI.encode_www_form(@site.domain)}/settings/google-search",
-          class:
-            "inline-block px-4 text-sm leading-5 font-medium text-red-600 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150",
-          method: "delete"
-        ) %>
-      </div>
+      <.button_link
+        theme="danger"
+        href={Routes.site_path(@conn, :delete_google_auth, @site.domain)}
+        method="delete"
+      >
+        Unlink Google Account
+      </.button_link>
 
       <%= case @search_console_domains do %>
         <% {:ok, domains} -> %>
           <%= if @site.google_auth.property && !(@site.google_auth.property in domains) do %>
-            <p class="text-gray-700 dark:text-gray-300 mt-6 font-bold">
-              NB: Your Google account does not have access to your currently configured property, <%= @site.google_auth.property %>. Please select a verified property from the list below.
-            </p>
+            <.notice class="mt-4 mb-4">
+              Your Google account does not have access to your currently configured property, <%= @site.google_auth.property %>. Please select a verified property from the list below.
+            </.notice>
           <% else %>
-            <p class="text-gray-700 dark:text-gray-300 mt-6">
+            <p class="text-sm mt-4">
               Select the Google Search Console property you would like to pull keyword data from. If you don't see your domain,
               <.styled_link
                 href="https://plausible.io/docs/google-search-console-integration"
@@ -45,46 +45,40 @@
           <% end %>
 
           <%= form_for Plausible.Site.GoogleAuth.changeset(@site.google_auth), "/#{URI.encode_www_form(@site.domain)}/settings/google", [class: "max-w-xs"], fn f -> %>
-            <div class="my-6">
-              <div class="inline-block relative w-full">
-                <%= select(f, :property, domains,
-                  prompt: "(Choose property)",
-                  class:
-                    "dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100"
-                ) %>
-              </div>
+            <div class="inline-block relative w-full">
+              <%= select(f, :property, domains,
+                prompt: "(Choose property)",
+                class:
+                  "dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:rounded-md "
+              ) %>
             </div>
 
-            <%= submit("Save", class: "button") %>
+            <.button type="submit">Save</.button>
           <% end %>
         <% {:error, error} -> %>
-          <p class="text-gray-700 dark:text-gray-300 mt-6">
-            The following error happened when fetching your Google Search Console domains:
-          </p>
-
-          <%= case error do %>
-            <% "invalid_grant" -> %>
-              <p class="text-red-700 font-medium mt-3">
-                <a href="https://plausible.io/docs/google-search-console-integration#i-get-the-invalid-grant-error">
-                  Invalid Grant error returned from Google. <span class="text-indigo-500">See here on how to fix it</span>.
-                </a>
-              </p>
-            <% "google_auth_error" -> %>
-              <p class="text-red-700 font-medium mt-3">
+          <.notice title="Integration Error" theme={:red} class="mt-8">
+            <%= case error do %>
+              <% "invalid_grant" -> %>
+                Invalid Grant error returned from Google.
+                <.styled_link
+                  new_tab={true}
+                  href="https://plausible.io/docs/google-search-console-integration#i-get-the-invalid-grant-error"
+                >
+                  See here on how to fix it
+                </.styled_link>
+              <% "google_auth_error" -> %>
                 Your Search Console account hasn't been connected successfully. Please unlink your Google account and try linking it again.
-              </p>
-            <% _ -> %>
-              <p class="text-red-700 font-medium mt-3">
+              <% _ -> %>
                 Something went wrong, but looks temporary. If the problem persists, try re-linking your Google account.
-              </p>
-          <% end %>
+            <% end %>
+          </.notice>
       <% end %>
     <% else %>
       <PlausibleWeb.Components.Google.button
         id="search-console-connect"
         to={Plausible.Google.API.search_console_authorize_url(@site.id)}
       />
-      <div class="text-gray-700 dark:text-gray-300 mt-8">
+      <div class="mt-8 text-sm">
         NB: You also need to set up your site on
         <.styled_link href="https://search.google.com/search-console/about" new_tab={true}>
           Google Search Console
@@ -115,7 +109,7 @@
         >
         </path>
       </svg>
-      <p class="text-gray-900 dark:text-gray-200">
+      <p>
         An extra step is needed to set up your <%= Plausible.product_name() %> for the Google Search Console integration.
         Find instructions <%= link("here",
           to: "https://github.com/plausible/community-edition/wiki/google-integration",
@@ -124,4 +118,4 @@
       </p>
     </div>
   <% end %>
-</div>
+</.tile>

@@ -1,218 +1,240 @@
-<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
-  <header class="relative">
-    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Email Reports</h2>
-    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-      Send weekly/monthly analytics reports to as many addresses as you wish
-    </p>
+<.settings_tiles>
+  <% email_reports = [
+    weekly: %{
+      report: @weekly_report,
+      disable_route: :disable_weekly_report,
+      enable_route: :enable_weekly_report,
+      remove_route: :remove_weekly_report_recipient,
+      add_route: :add_weekly_report_recipient,
+      heading: "Weekly Email Reports",
+      subtitle: "Send weekly analytics reports to as many addresses as you wish",
+      toggle: "Send a weekly email report every Monday",
+      add_label: "Add Weekly Report Recipient"
+    },
+    monthly: %{
+      report: @monthly_report,
+      disable_route: :disable_monthly_report,
+      enable_route: :enable_monthly_report,
+      remove_route: :remove_monthly_report_recipient,
+      add_route: :add_monthly_report_recipient,
+      heading: "Monthly Email Reports",
+      subtitle: "Send monthly analytics reports to as many addresses as you wish",
+      toggle: "Send a monthly email report on 1st of the month",
+      add_label: "Add Monthly Report Recipient"
+    }
+  ] %>
 
-    <PlausibleWeb.Components.Generic.docs_info slug="email-reports" />
-  </header>
+  <.tile :for={{_type, meta} <- email_reports} docs="email-reports">
+    <:title>
+      <%= meta.heading %>
+    </:title>
+    <:subtitle>
+      <%= meta.subtitle %>
+    </:subtitle>
 
-  <div class="my-8 flex items-center">
-    <%= if @weekly_report do %>
-      <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/disable", method: :post, class: "bg-indigo-600 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-        <span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200">
-        </span>
-      <% end %>
-    <% else %>
-      <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/enable", method: :post, class: "bg-gray-200 dark:bg-gray-700 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-        <span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200">
-        </span>
-      <% end %>
-    <% end %>
-    <span class="ml-2 dark:text-gray-100">Send a weekly email report every Monday</span>
-  </div>
-  <%= if @weekly_report do %>
-    <div class="text-sm text-gray-700 dark:text-gray-300 mt-6">
-      <h4 class="font-bold my-2 dark:text-gray-100">Weekly report recipients</h4>
-      <%= for recipient <- @weekly_report.recipients do %>
-        <div class="p-2 pl-3 flex justify-between bg-gray-100 dark:bg-gray-900 rounded my-2 max-w-md">
-          <span>
-            <svg
-              class="h-5 w-5 text-gray-400 inline mr-3"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-            </svg>
-            <%= recipient %>
-          </span>
-          <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/recipients/#{recipient}", method: :delete) do %>
-            <svg
-              class="w-4 h-4 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              >
-              </path>
-            </svg>
-          <% end %>
-        </div>
-      <% end %>
-      <%= form_for @conn, "/sites/#{URI.encode_www_form(@site.domain)}/weekly-report/recipients", fn f -> %>
-        <div class="max-w-md mt-4">
-          <div class="mt-1 flex rounded-md shadow-sm">
-            <div class="relative flex items-stretch flex-grow focus-within:z-10">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  class="h-5 w-5 text-gray-400"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                </svg>
+    <.form
+      for={nil}
+      action={
+        (meta.report && Routes.site_path(@conn, meta.disable_route, @site.domain)) ||
+          Routes.site_path(@conn, meta.enable_route, @site.domain)
+      }
+      method="post"
+    >
+      <div>
+        <.toggle_submit set_to={meta.report}>
+          <%= meta.toggle %>
+        </.toggle_submit>
+      </div>
+    </.form>
+
+    <div :if={meta.report} class="mt-4">
+      <.table
+        :if={Enum.count(meta.report.recipients) > 0}
+        width="w-1/2"
+        rows={meta.report.recipients}
+      >
+        <:thead>
+          <.th>
+            Recipients
+          </.th>
+          <.th invisible>Actions</.th>
+        </:thead>
+
+        <:tbody :let={recipient}>
+          <.td>
+            <div class="flex items-center gap-x-2">
+              <Heroicons.envelope_open class="w-6 h-6 feather" />
+              <div>
+                <%= recipient %>
               </div>
-              <%= email_input(f, :recipient,
-                class:
-                  "focus:ring-indigo-500 dark:bg-gray-900 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300 dark:border-gray-500 dark:placeholder-gray-400 dark:text-gray-100",
-                placeholder: "recipient@example.com",
-                required: "true"
-              ) %>
             </div>
+          </.td>
+          <.td actions>
+            <.delete_button
+              method="delete"
+              href={
+                Routes.site_path(
+                  @conn,
+                  meta.remove_route,
+                  @site.domain,
+                  recipient
+                )
+              }
+            />
+          </.td>
+        </:tbody>
+      </.table>
 
-            <%= submit class: "-ml-px relative button rounded-l-none" do %>
-              <svg
-                class="w-5 h-5 mr-1"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z">
-                </path>
-              </svg>
-              <span>Add recipient</span>
-            <% end %>
-          </div>
+      <.form
+        :let={f}
+        class="mt-4"
+        for={@conn}
+        action={Routes.site_path(@conn, meta.add_route, @site.domain)}
+        method="post"
+      >
+        <div class="flex items-end gap-x-2">
+          <PlausibleWeb.Live.Components.Form.input
+            field={f[:recipient]}
+            type="email"
+            required
+            placeholder="e.g. joe@example.com"
+            mt?={false}
+          />
+          <.button type="submit" mt?={false}>
+            Add Recipient
+          </.button>
         </div>
-      <% end %>
+      </.form>
     </div>
-  <% end %>
-  <div class="my-8 border-b border-gray-300 dark:border-gray-500"></div>
-  <div class="my-8 flex items-center">
-    <%= if @monthly_report do %>
-      <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/disable", method: :post, class: "bg-indigo-600 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-        <span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200">
-        </span>
-      <% end %>
-    <% else %>
-      <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/enable", method: :post, class: "bg-gray-200 dark:bg-gray-700 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-        <span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200">
-        </span>
-      <% end %>
-    <% end %>
-    <span class="ml-2 dark:text-gray-100">Send a monthly email report on 1st of the month</span>
-  </div>
-  <%= if @monthly_report do %>
-    <div class="text-sm text-gray-700 dark:text-gray-300 mt-6">
-      <h4 class="font-bold my-2">Monthly report recipients</h4>
-      <%= for recipient <- @monthly_report.recipients do %>
-        <div class="p-2 pl-3 flex justify-between bg-gray-100 dark:bg-gray-900 rounded my-2 max-w-md">
-          <span>
-            <svg
-              class="h-5 w-5 text-gray-400 inline mr-3"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-            </svg>
-            <%= recipient %>
-          </span>
-          <%= button(to: "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/recipients/#{recipient}", method: :delete) do %>
-            <svg
-              class="w-4 h-4 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              >
-              </path>
-            </svg>
-          <% end %>
-        </div>
-      <% end %>
-      <%= form_for @conn, "/sites/#{URI.encode_www_form(@site.domain)}/monthly-report/recipients", fn f -> %>
-        <div class="max-w-md mt-4">
-          <div class="mt-1 flex rounded-md shadow-sm">
-            <div class="relative flex items-stretch flex-grow focus-within:z-10">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  class="h-5 w-5 text-gray-400"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                </svg>
+  </.tile>
+
+  <% change_notifications = [
+    spike: %{
+      notification: @spike_notification,
+      heading: "Traffic Spike Notifications",
+      subtitle: "Get notified when your site has unusually high number of current visitors",
+      threshold_text: "Current visitors threshold",
+      toggle: "Send notifications of traffic spikes"
+    },
+    drop: %{
+      notification: @drop_notification,
+      heading: "Traffic Drop Notifications",
+      subtitle:
+        "Get notified when your site has unusually low number of visitors within 12 hours",
+      threshold_text: "12 hours visitor threshold",
+      toggle: "Send notifications of traffic drops"
+    }
+  ] %>
+
+  <.tile :for={{type, meta} <- change_notifications} docs="traffic-spikes">
+    <:title>
+      <%= meta.heading %>
+    </:title>
+    <:subtitle>
+      <%= meta.subtitle %>
+    </:subtitle>
+
+    <.form
+      for={nil}
+      action={
+        (meta.notification &&
+           Routes.site_path(@conn, :disable_traffic_change_notification, @site.domain, type)) ||
+          Routes.site_path(@conn, :enable_traffic_change_notification, @site.domain, type)
+      }
+      method="post"
+    >
+      <.toggle_submit set_to={meta.notification}>
+        <%= meta.toggle %>
+      </.toggle_submit>
+    </.form>
+
+    <.form
+      :let={f}
+      :if={meta.notification}
+      class="mt-4"
+      for={Plausible.Site.TrafficChangeNotification.changeset(meta.notification, %{})}
+      action={Routes.site_path(@conn, :update_traffic_change_notification, @site.domain, type)}
+    >
+      <div class="flex items-end gap-x-4">
+        <PlausibleWeb.Live.Components.Form.input
+          field={f[:threshold]}
+          type="number"
+          required
+          label={meta.threshold_text}
+        />
+        <.button type="submit" mt?={false}>
+          Save Threshold
+        </.button>
+      </div>
+    </.form>
+
+    <div class="mt-4">
+      <.table
+        :if={meta.notification && Enum.count(meta.notification.recipients) > 0}
+        width="w-1/2"
+        rows={meta.notification.recipients}
+      >
+        <:thead>
+          <.th>
+            Recipients
+          </.th>
+          <.th invisible>Actions</.th>
+        </:thead>
+
+        <:tbody :let={recipient}>
+          <.td>
+            <div class="flex items-cetner gap-x-2">
+              <Heroicons.envelope_open class="w-6 h-6 feather" />
+              <div>
+                <%= recipient %>
               </div>
-              <%= email_input(f, :recipient,
-                class:
-                  "focus:ring-indigo-500 dark:bg-gray-900 focus:border-indigo-500 block w-full rounded-none rounded-l-md pl-10 sm:text-sm border-gray-300 dark:border-gray-500 dark:placeholder-gray-400 dark:text-gray-100",
-                placeholder: "recipient@example.com",
-                required: "true"
-              ) %>
             </div>
-
-            <%= submit class: "-ml-px relative button rounded-l-none" do %>
-              <svg
-                class="w-5 h-5 mr-1"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z">
-                </path>
-              </svg>
-              <span>Add recipient</span>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
+          </.td>
+          <.td actions>
+            <.delete_button
+              method="delete"
+              href={
+                Routes.site_path(
+                  @conn,
+                  :remove_traffic_change_notification_recipient,
+                  @site.domain,
+                  type,
+                  recipient
+                )
+              }
+            />
+          </.td>
+        </:tbody>
+      </.table>
     </div>
-  <% end %>
-</div>
 
-<%= render("traffic_change_form",
-  conn: @conn,
-  notification: @spike_notification,
-  site: @site,
-  heading: "Traffic Spike Notifications",
-  subtitle: "Get notified when your site has unusually high number of current visitors",
-  toggle_text: "Send notifications of traffic spikes",
-  threshold_label: "Current visitors threshold",
-  type: :spike
-) %>
-
-<%= render("traffic_change_form",
-  conn: @conn,
-  notification: @drop_notification,
-  site: @site,
-  heading: "Traffic Drop Notifications",
-  subtitle: "Get notified when your site has unusually low number of visitors within 12 hours",
-  toggle_text: "Send notifications of traffic drops",
-  threshold_label: "12 hours visitor threshold",
-  type: :drop
-) %>
+    <div :if={meta.notification}>
+      <.form
+        :let={f}
+        for={@conn}
+        class="mt-4"
+        action={
+          Routes.site_path(
+            @conn,
+            :add_traffic_change_notification_recipient,
+            @site.domain,
+            type
+          )
+        }
+      >
+        <div class="flex items-end gap-x-4">
+          <PlausibleWeb.Live.Components.Form.input
+            field={f[:recipient]}
+            type="email"
+            placeholder="e.g. joe@example.com"
+            mt?={false}
+            required
+          />
+          <.button type="submit" mt?={false}>
+            Add Recipient
+          </.button>
+        </div>
+      </.form>
+    </div>
+  </.tile>
+</.settings_tiles>

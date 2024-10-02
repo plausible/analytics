@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       assert resp =~ to_string(g2)
       assert resp =~ "Custom Event"
       assert resp =~ to_string(g3)
-      assert resp =~ "Revenue Goal"
+      assert resp =~ "Revenue Goal (EUR)"
     end
 
     @tag :ee_only

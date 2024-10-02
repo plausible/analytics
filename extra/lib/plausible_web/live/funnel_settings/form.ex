@@ -59,13 +59,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
             onkeydown="return event.key != 'Enter';"
             class="bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
           >
-            <h2 class="text-xl font-black dark:text-gray-100 mb-6">
+            <.title class="mb-6">
               <%= if @funnel, do: "Edit", else: "Add" %> Funnel
-            </h2>
-
-            <label for={f[:name].name} class="block mb-3 font-medium dark:text-gray-100">
-              Funnel Name
-            </label>
+            </.title>
 
             <.input
               field={f[:name]}
@@ -73,13 +69,13 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               autocomplete="off"
               placeholder="e.g. From Blog to Purchase"
               autofocus
-              class="w-full focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-7/12 rounded-md sm:text-sm border-gray-300 dark:border-gray-500 w-full p-2 mt-2"
+              label="Funnel Name"
             />
 
             <div id="steps-builder" class="mt-6">
-              <label class="font-medium dark:text-gray-100">
+              <.label>
                 Funnel Steps
-              </label>
+              </.label>
 
               <div :for={step_idx <- @step_ids} class="flex mb-3 mt-3">
                 <div class="w-2/5 flex-1">
@@ -123,27 +119,21 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                 <p id="funnel-eval" class="text-gray-500 dark:text-gray-400 text-sm mt-2 mb-2">
                   <%= if @evaluation_result do %>
                     Last month conversion rate: <strong><%= List.last(@evaluation_result.steps).conversion_rate %></strong>%
-                  <% else %>
-                    <span class="text-red-600 text-sm">
-                      Choose minimum <%= Funnel.min_steps() %> steps to evaluate funnel.
-                    </span>
                   <% end %>
                 </p>
               </div>
 
-              <div class="mt-6">
-                <PlausibleWeb.Components.Generic.button
-                  id="save"
-                  type="submit"
-                  class="w-full"
-                  disabled={
-                    has_steps_errors?(f) or map_size(@selections_made) < Funnel.min_steps() or
-                      length(@step_ids) > map_size(@selections_made)
-                  }
-                >
-                  <span><%= if @funnel, do: "Update", else: "Add" %> Funnel →</span>
-                </PlausibleWeb.Components.Generic.button>
-              </div>
+              <PlausibleWeb.Components.Generic.button
+                id="save"
+                type="submit"
+                class="w-full"
+                disabled={
+                  has_steps_errors?(f) or map_size(@selections_made) < Funnel.min_steps() or
+                    length(@step_ids) > map_size(@selections_made)
+                }
+              >
+                <span><%= if @funnel, do: "Update", else: "Add" %> Funnel</span>
+              </PlausibleWeb.Components.Generic.button>
             </div>
           </.form>
         </div>
@@ -200,7 +190,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
           class="border-dotted border-b border-gray-400 "
           tooltip="Sample calculation for last month"
         >
-          <span class="hidden md:inline">Entering Visitors: </span><strong><%= PlausibleWeb.StatsView.large_number_format(@result.entering_visitors) %></strong>
+          <span class="hidden md:inline">Visitors: </span><strong><%= PlausibleWeb.StatsView.large_number_format(@result.entering_visitors) %></strong>
         </span>
       </span>
       <span :if={step && @at > 0}>

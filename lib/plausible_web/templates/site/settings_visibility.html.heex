@@ -1,270 +1,147 @@
-<div class="px-4 py-6 bg-white shadow dark:bg-gray-800 sm:rounded-md sm:overflow-hidden sm:p-6">
-  <header class="relative">
-    <h2 class="text-lg font-medium text-gray-900 leading-6 dark:text-gray-100">
-      Public dashboard
-    </h2>
-    <p class="mt-1 text-sm text-gray-500 leading-5 dark:text-gray-200">
+<.settings_tiles>
+  <.tile docs="visibility">
+    <:title>
+      Public Dashboard
+    </:title>
+    <:subtitle>
       Share your stats publicly or keep them private
-    </p>
+    </:subtitle>
 
-    <PlausibleWeb.Components.Generic.docs_info slug="visibility" />
-  </header>
-
-  <%= if @site.public do %>
-    <div class="flex items-center mt-4 space-x-3">
-      <%= button(to: Routes.site_path(@conn, :make_private, @site.domain), method: "POST", class: "bg-indigo-600 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-        <span class="inline-block w-5 h-5 bg-white rounded-full shadow translate-x-5 dark:bg-gray-800 transform transition ease-in-out duration-200">
-        </span>
-      <% end %>
-      <span class="text-sm font-medium text-gray-900 leading-5 dark:text-gray-100">
-        Stats are publicly available on <%= link(PlausibleWeb.StatsView.pretty_stats_url(@site),
-          to: Routes.stats_path(@conn, :stats, @site.domain, []),
-          class: "text-indigo-500"
-        ) %>
-      </span>
-    </div>
-  <% else %>
-    <div class="flex items-center mt-4 space-x-3">
-      <%= button(to: Routes.site_path(@conn, :make_public, @site.domain), method: "POST", class: "bg-gray-200 dark:bg-gray-700 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-        <span class="inline-block w-5 h-5 bg-white rounded-full shadow translate-x-0 dark:bg-gray-800 transform transition ease-in-out duration-200">
-        </span>
-      <% end %>
-      <span class="text-sm font-medium text-gray-900 leading-5 dark:text-gray-100">
+    <.form
+      action={
+        (@site.public && Routes.site_path(@conn, :make_private, @site.domain)) ||
+          Routes.site_path(@conn, :make_public, @site.domain)
+      }
+      method="post"
+      for={nil}
+    >
+      <.toggle_submit set_to={@site.public}>
         Make stats publicly available on <%= link(PlausibleWeb.StatsView.pretty_stats_url(@site),
           to: Routes.stats_path(@conn, :stats, @site.domain, []),
           class: "text-indigo-500"
         ) %>
-      </span>
-    </div>
-  <% end %>
-</div>
+      </.toggle_submit>
+    </.form>
+  </.tile>
 
-<div class="px-4 py-6 bg-white shadow dark:bg-gray-800 sm:rounded-md sm:overflow-hidden sm:p-6">
-  <header class="relative">
-    <h2 class="text-lg font-medium text-gray-900 leading-6 dark:text-gray-100">Shared Links</h2>
-    <p class="mt-1 text-sm text-gray-500 leading-5 dark:text-gray-200">
+  <.tile docs="shared-links">
+    <:title>
+      Shared Links
+    </:title>
+    <:subtitle>
       You can share your stats privately by generating a shared link. The links are impossible to guess and you can add password protection for extra security.
+    </:subtitle>
+
+    <.filter_bar filtering_enabled?={false}>
+      <.button_link href={Routes.site_path(@conn, :new_shared_link, @site.domain)} mt?={false}>
+        Add Shared Link
+      </.button_link>
+    </.filter_bar>
+
+    <p :if={Enum.empty?(@shared_links)} class="mb-8 text-center text-sm">
+      No Shared Links configured for this site.
     </p>
 
-    <PlausibleWeb.Components.Generic.docs_info slug="shared-links" />
-  </header>
-
-  <div class="mt-6 flex flex-col divide-y divide-gray-200">
-    <%= for link <- @shared_links do %>
-      <div class="py-4">
-        <label
-          for={link.slug}
-          class="flex content-center text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+    <.table rows={@shared_links}>
+      <:thead>
+        <.th hide_on_mobile>Name</.th>
+        <.th>Link</.th>
+        <.th invisible>Actions</.th>
+      </:thead>
+      <:tbody :let={link}>
+        <.td truncate hide_on_mobile>
           <%= link.name %>
-          <%= if link.password_hash do %>
-            <svg
-              class="ml-1 w-4 h-4 mt-px"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                clip-rule="evenodd"
-              >
-              </path>
-            </svg>
-          <% else %>
-            <svg
-              class="ml-1 w-4 h-4 mt-px"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 015.905-.75 1 1 0 001.937-.5A5.002 5.002 0 0010 2z">
-              </path>
-            </svg>
-          <% end %>
-        </label>
-        <div class="relative flex w-full mt-2 text-sm">
-          <input
-            type="text"
+          <Heroicons.lock_closed :if={link.password_hash} class="w-6 h-6 feather ml-2" />
+          <Heroicons.lock_open :if={!link.password_hash} class="w-6 h-6 feather ml-2" />
+        </.td>
+        <.td>
+          <PlausibleWeb.Live.Components.Form.input_with_clipboard
+            name={link.slug}
             id={link.slug}
-            readonly="readonly"
             value={shared_link_dest(@site, link)}
-            class="w-full p-2 text-gray-700 bg-gray-100 border-none rounded rounded-r-none outline-none appearance-none transition dark:bg-gray-900 dark:text-gray-300 focus:outline-none focus:border-gray-300 dark:focus:border-gray-500"
           />
-          <button
-            onclick={"var input = document.getElementById('#{link.slug}'); input.focus(); input.select(); document.execCommand('copy');"}
-            href="javascript:void(0)"
-            class="px-4 py-2 inline-flex items-center text-indigo-800 bg-gray-200 border-r border-gray-300 rounded-none dark:bg-gray-850 dark:text-indigo-500 dark:border-gray-500 hover:bg-gray-300 dark:hover:bg-gray-825"
-          >
-            <svg
-              class="w-4 h-4"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path>
-              <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z">
-              </path>
-            </svg>
-            <span class="ml-1">Copy</span>
-          </button>
+        </.td>
+        <.td actions>
+          <.edit_button
+            class="mt-2"
+            href={Routes.site_path(@conn, :edit_shared_link, @site.domain, link.slug)}
+          />
+          <.delete_button
+            class="mt-2"
+            method="delete"
+            href={Routes.site_path(@conn, :delete_shared_link, @site.domain, link.slug)}
+            data-confirm="Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."
+          />
+        </.td>
+      </:tbody>
+    </.table>
+  </.tile>
 
-          <%= link(to: Routes.site_path(@conn, :edit_shared_link, @site.domain, link.slug), class: "px-4 py-2 inline-flex items-center text-indigo-800 bg-gray-200 border-r border-gray-300 rounded-none dark:bg-gray-850 dark:text-indigo-500 dark:border-gray-500 hover:bg-gray-300 dark:hover:bg-gray-825") do %>
-            <svg
-              class="w-4 h-4"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z">
-              </path>
-              <path
-                fill-rule="evenodd"
-                d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
-                clip-rule="evenodd"
-              >
-              </path>
-            </svg>
-          <% end %>
-          <%= button(to: Routes.site_path(@conn, :delete_shared_link, @site.domain, link.slug), method: :delete, class: "py-2 px-4 inline-flex items-center bg-gray-200 dark:bg-gray-850 text-red-600 dark:text-red-500 rounded-l-none hover:bg-gray-300 dark:hover:bg-gray-825", data: [confirm: "Are you sure you want to delete this shared link? The stats will not be accessible with this link anymore."]) do %>
-            <svg
-              class="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              >
-              </path>
-            </svg>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
-
-    <PlausibleWeb.Components.Generic.button_link
-      href={Routes.site_path(@conn, :new_shared_link, @site.domain)}
-      class="mt-4"
-    >
-      + New Link
-    </PlausibleWeb.Components.Generic.button_link>
-  </div>
-</div>
-
-<div class="px-4 py-6 bg-white shadow dark:bg-gray-800 sm:rounded-md sm:overflow-hidden sm:p-6">
-  <header class="relative">
-    <h2 class="text-lg font-medium text-gray-900 leading-6 dark:text-gray-100">
+  <.tile docs="embed-dashboard">
+    <:title>
       Embed Dashboard
-    </h2>
-    <p class="mt-1 text-sm text-gray-500 leading-5 dark:text-gray-200">
+    </:title>
+    <:subtitle>
       You can use shared links to embed your stats in any other webpage using an <code>iframe</code>. Copy & paste a shared link into the form below to generate the embed code.
-    </p>
+    </:subtitle>
 
-    <PlausibleWeb.Components.Generic.docs_info slug="embed-dashboard" />
-  </header>
+    <PlausibleWeb.Live.Components.Form.input
+      name="embed-link"
+      id="embed-link"
+      label="Enter Shared Link (only public shared links without password can be embedded)"
+      value=""
+      width="w-1/2"
+    />
 
-  <div class="max-w-xl mt-4">
-    <div>
-      <label for="embed-link" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Enter Shared Link
-      </label>
-      <p class="mt-1 text-xs text-gray-500 dark:text-gray-200">
-        Only public shared links without password protection can be embedded
-      </p>
-      <div class="mt-1">
-        <input
-          type="text"
-          name="embed-link"
-          id="embed-link"
-          onclick="this.select()"
-          class="block w-full border-gray-300 dark:border-gray-700 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-900 dark:text-gray-300"
-        />
-      </div>
-    </div>
+    <PlausibleWeb.Live.Components.Form.input
+      type="select"
+      name="theme"
+      id="theme"
+      label="Select Theme"
+      options={["Light", "Dark", "System"]}
+      value="Light"
+      width="w-1/2"
+    />
 
-    <div class="mt-4">
-      <label for="theme" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Select Theme
-      </label>
-      <select
-        id="theme"
-        name="theme"
-        class="block w-full py-2 pl-3 pr-10 mt-1 text-base border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300"
+    <PlausibleWeb.Live.Components.Form.input
+      name="background"
+      id="background"
+      label="Custom Background Colour (optional). Try using `transparent` background to blend the dashboard with your site."
+      value=""
+      placeholder="e.g. #F9FAFB"
+      width="w-1/2"
+    />
+
+    <PlausibleWeb.Live.Components.Form.input
+      name="base-url"
+      type="hidden"
+      id="base-url"
+      value={plausible_url()}
+    />
+    <PlausibleWeb.Components.Generic.button id="generate-embed" class="mt-4">
+      Generate Embed Code
+    </PlausibleWeb.Components.Generic.button>
+
+    <%= label(nil, "embed-code", "Embed Code",
+      class: "mt-8 mb-2 block font-medium dark:text-gray-100"
+    ) %>
+
+    <div class="relative mt-1">
+      <textarea
+        id="embed-code"
+        name="embed-code"
+        rows="6"
+        readonly="readonly"
+        onclick="this.select()"
+        class="block w-full border-gray-300 dark:border-gray-700 resize-none text-sm shadow-sm focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:bg-gray-900 dark:text-gray-300"
+      ></textarea>
+      <a
+        onclick="var textarea = document.getElementById('embed-code'); textarea.focus(); textarea.select(); document.execCommand('copy');"
+        href="javascript:void(0)"
+        class="text-sm text-indigo-500 no-underline hover:underline"
       >
-        <option selected>Light</option>
-        <option>Dark</option>
-        <option>System</option>
-      </select>
+        <Heroicons.document_duplicate class="h-5 w-5 absolute text-indigo-700 top-3 right-3" />
+      </a>
     </div>
-
-    <div class="mt-4">
-      <label for="background" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Custom Background Colour (optional)
-      </label>
-      <p class="mt-1 text-xs text-gray-500 dark:text-gray-200">
-        Hint: try using `transparent` background to blend the dashboard with your site background
-      </p>
-      <div class="mt-1">
-        <input
-          type="text"
-          name="background"
-          id="background"
-          class="block w-full border-gray-300 dark:border-gray-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300"
-          placeholder="#F9FAFB"
-        />
-      </div>
-    </div>
-  </div>
-
-  <input type="hidden" id="base-url" value={plausible_url()} />
-  <PlausibleWeb.Components.Generic.button id="generate-embed" class="mt-4">
-    Generate Embed Code 👇
-  </PlausibleWeb.Components.Generic.button>
-
-  <div class="mt-2">
-    <div class="max-w-xl">
-      <label for="embed-code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Embed Code
-      </label>
-
-      <div class="relative mt-1">
-        <textarea
-          id="embed-code"
-          name="embed-code"
-          rows="3"
-          readonly="readonly"
-          onclick="this.select()"
-          class="block w-full max-w-xl border-gray-300 dark:border-gray-700 resize-none shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300"
-        >
-        </textarea>
-        <a
-          onclick="var textarea = document.getElementById('embed-code'); textarea.focus(); textarea.select(); document.execCommand('copy');"
-          href="javascript:void(0)"
-          class="text-sm text-indigo-500 no-underline hover:underline"
-        >
-          <svg
-            class="absolute text-indigo-800"
-            style="top: 12px; right: 12px;"
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-          </svg>
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
+  </.tile>
+</.settings_tiles>

@@ -5,7 +5,6 @@ defmodule PlausibleWeb.Live.CSVExport do
   use PlausibleWeb, :live_view
   use Phoenix.HTML
 
-  alias PlausibleWeb.Components.Generic
   alias Plausible.Exports
 
   # :not_mounted_at_router ensures we have already done auth checks in the controller
@@ -117,10 +116,10 @@ defmodule PlausibleWeb.Live.CSVExport do
 
   defp prepare_download(assigns) do
     ~H"""
-    <Generic.button phx-click="export">Prepare download</Generic.button>
-    <p class="text-sm mt-4 text-gray-500">
-      Prepare your data for download by clicking the button above. When that's done, a Zip file that you can download will appear.
+    <p class="text-sm">
+      Prepare your data for download by clicking the button below. When that's done, a Zip file that you can download will appear.
     </p>
+    <.button phx-click="export">Prepare download</.button>
     """
   end
 
@@ -128,8 +127,8 @@ defmodule PlausibleWeb.Live.CSVExport do
     ~H"""
     <div class="flex items-center justify-between space-x-2">
       <div class="flex items-center">
-        <Generic.spinner />
-        <span class="ml-2">We are preparing your download ...</span>
+        <.spinner />
+        <span class="ml-2 text-sm">We are preparing your download ...</span>
       </div>
       <button
         phx-click="cancel"
@@ -139,7 +138,7 @@ defmodule PlausibleWeb.Live.CSVExport do
         Cancel
       </button>
     </div>
-    <p class="text-sm mt-4 text-gray-500">
+    <p class="text-sm">
       The preparation of your stats might take a while. Depending on the volume of your data, it might take up to 20 minutes. Feel free to leave the page and return later.
     </p>
     """
@@ -147,12 +146,9 @@ defmodule PlausibleWeb.Live.CSVExport do
 
   defp fetch_export_failed(assigns) do
     ~H"""
-    <div class="flex items-center">
-      <Heroicons.exclamation_circle class="w-4 h-4 text-red-500" />
-      <p class="ml-2 text-sm text-gray-500">
-        Something went wrong when fetching exports. Please try again later.
-      </p>
-    </div>
+    <.notice title="Something went wrong when fetching exports" theme={:red}>
+      Please try again later.
+    </.notice>
     """
   end
 
@@ -160,7 +156,7 @@ defmodule PlausibleWeb.Live.CSVExport do
     ~H"""
     <div class="flex items-center">
       <Heroicons.exclamation_circle class="w-4 h-4 text-red-500" />
-      <p class="ml-2 text-sm text-gray-500">
+      <p class="ml-2 text-sm">
         Something went wrong when preparing your download. Please
         <button phx-click="export" class="text-indigo-500">try again.</button>
       </p>
@@ -170,28 +166,34 @@ defmodule PlausibleWeb.Live.CSVExport do
 
   defp download(assigns) do
     ~H"""
-    <div class="flex items-center justify-between space-x-2">
-      <a href={@href} class="inline-flex items-center">
-        <Heroicons.document_text class="w-4 h-4" />
-        <span class="ml-1 text-indigo-500"><%= @export.name %></span>
-      </a>
-      <button
-        phx-click="delete"
-        class="text-red-500 font-semibold"
-        data-confirm="Are you sure you want to delete this export?"
-      >
-        <Heroicons.trash class="w-4 h-4" />
-      </button>
-    </div>
+    <.table rows={[@export]}>
+      <:thead>
+        <.th>Export</.th>
+        <.th invisible>Actions</.th>
+      </:thead>
+      <:tbody :let={export}>
+        <.td>
+          <.styled_link href={@href}>
+            <%= export.name %>
+          </.styled_link>
+        </.td>
+        <.td actions>
+          <.delete_button
+            phx-click="delete"
+            data-confirm="Are you sure you want to delete this export?"
+          />
+        </.td>
+      </:tbody>
+    </.table>
 
-    <p :if={@export.expires_at} class="text-sm mt-4 text-gray-500">
-      Note that this file will expire
+    <p :if={@export.expires_at} class="text-sm">
+      Note: this file will expire
       <.hint message={@export.expires_at}>
         <%= Timex.Format.DateTime.Formatters.Relative.format!(@export.expires_at, "{relative}") %>.
       </.hint>
     </p>
 
-    <p :if={@storage == "local"} class="text-sm mt-4 text-gray-500">
+    <p :if={@storage == "local"} class="text-sm">
       Located at
       <.hint message={@export.path}><%= format_path(@export.path) %></.hint>
       (<%= format_bytes(@export.size) %>)

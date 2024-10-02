@@ -11,6 +11,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
   alias Plausible.Shield
 
   import PlausibleWeb.ErrorHelpers
+  import PlausibleWeb.Components.Generic
 
   def update(assigns, socket) do
     socket =
@@ -33,162 +34,122 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
 
   def render(assigns) do
     ~H"""
-    <section class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden">
-      <div class="py-6 px-4 sm:p-6">
-        <header class="relative">
-          <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-            Pages Block List
-          </h2>
-          <p class="mt-1 mb-4 text-sm leading-5 text-gray-500 dark:text-gray-200">
-            Reject incoming traffic for specific pages
-          </p>
-
-          <PlausibleWeb.Components.Generic.docs_info slug="top-pages#block-traffic-from-specific-pages-or-sections" />
-        </header>
-        <div class="border-t border-gray-200 pt-4 grid">
-          <div
+    <div>
+      <.settings_tiles>
+        <.tile docs="top-pages#block-traffic-from-specific-pages-or-sections">
+          <:title>Pages Block List</:title>
+          <:subtitle>Reject incoming traffic for specific pages</:subtitle>
+          <.filter_bar
             :if={@page_rules_count < Shields.maximum_page_rules()}
-            class="mt-4 sm:ml-4 sm:mt-0 justify-self-end"
+            filtering_enabled?={false}
           >
-            <PlausibleWeb.Components.Generic.button
+            <.button
               id="add-page-rule"
               x-data
               x-on:click={Modal.JS.open("page-rule-form-modal")}
+              mt?={false}
             >
-              + Add Page
-            </PlausibleWeb.Components.Generic.button>
-          </div>
-          <PlausibleWeb.Components.Generic.notice
+              Add Page
+            </.button>
+          </.filter_bar>
+
+          <.notice
             :if={@page_rules_count >= Shields.maximum_page_rules()}
             class="mt-4"
             title="Maximum number of pages reached"
+            theme={:gray}
           >
             <p>
               You've reached the maximum number of pages you can block (<%= Shields.maximum_page_rules() %>). Please remove one before adding another.
             </p>
-          </PlausibleWeb.Components.Generic.notice>
-        </div>
+          </.notice>
 
-        <.live_component :let={modal_unique_id} module={Modal} id="page-rule-form-modal">
-          <.form
-            :let={f}
-            for={@form}
-            phx-submit="save-page-rule"
-            phx-target={@myself}
-            class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
-          >
-            <h2 class="text-xl font-black dark:text-gray-100 mb-8">Add Page to Block List</h2>
+          <p :if={Enum.empty?(@page_rules)} class="mt-12 mb-8 text-center text-sm">
+            No Page Rules configured for this site.
+          </p>
 
-            <.live_component
-              submit_name="page_rule[page_path]"
-              submit_value={f[:page_path].value}
-              display_value={f[:page_path].value || ""}
-              module={PlausibleWeb.Live.Components.ComboBox}
-              suggest_fun={fn input, options -> suggest_page_paths(input, options, @site) end}
-              id={"#{f[:page_path].id}-#{modal_unique_id}"}
-              creatable
-            />
-
-            <%= error_tag(f, :page_path) %>
-
-            <p class="text-sm mt-2 text-gray-500 dark:text-gray-200">
-              You can use a wildcard (<code>*</code>) to match multiple pages. For example,
-              <code>/blog/*</code>
-              will match <code>/blog/post</code>.
-              Once added, we will start rejecting traffic from this page within a few minutes.
-            </p>
-            <div class="py-4 mt-8">
-              <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-                Add Page →
-              </PlausibleWeb.Components.Generic.button>
-            </div>
-          </.form>
-        </.live_component>
-
-        <p
-          :if={Enum.empty?(@page_rules)}
-          class="text-sm text-gray-800 dark:text-gray-200 mt-12 mb-8 text-center"
-        >
-          No Page Rules configured for this Site.
-        </p>
-        <div
-          :if={not Enum.empty?(@page_rules)}
-          class="mt-8 overflow-visible border-b border-gray-200 shadow dark:border-gray-900 sm:rounded-lg"
-        >
-          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-900">
-            <thead class="bg-gray-50 dark:bg-gray-900">
-              <tr>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100"
+          <.table :if={not Enum.empty?(@page_rules)} rows={@page_rules}>
+            <:thead>
+              <.th>Page</.th>
+              <.th hide_on_mobile>Status</.th>
+              <.th invisible>Actions</.th>
+            </:thead>
+            <:tbody :let={rule}>
+              <.td max_width="max-w-40" truncate>
+                <span
+                  id={"page-#{rule.id}"}
+                  class="mr-4 cursor-help text-ellipsis truncate max-w-xs"
+                  title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
                 >
-                  page
-                </th>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100"
-                >
-                  Status
-                </th>
-                <th scope="col" class="px-6 py-3">
-                  <span class="sr-only">Remove</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <%= for rule <- @page_rules do %>
-                <tr class="text-gray-900 dark:text-gray-100">
-                  <td class="px-6 py-4 text-sm font-medium">
-                    <PlausibleWeb.Components.Generic.tooltip>
-                      <:tooltip_content>
-                        Added at <%= format_added_at(rule.inserted_at, @site.timezone) %> by <%= rule.added_by %>
-                      </:tooltip_content>
-                      <div
-                        id={"page-#{rule.id}"}
-                        class="mr-4 cursor-help text-ellipsis truncate max-w-xs"
-                      >
-                        <%= rule.page_path %>
-                      </div>
-                    </PlausibleWeb.Components.Generic.tooltip>
-                  </td>
-                  <td class="px-6 py-4 text-sm text-gray-500">
-                    <div class="flex items-center">
-                      <span :if={rule.action == :deny}>
-                        Blocked
-                      </span>
-                      <span :if={rule.action == :allow}>
-                        Allowed
-                      </span>
+                  <%= rule.page_path %>
+                </span>
+              </.td>
+              <.td hide_on_mobile>
+                <div class="flex items-center">
+                  <span :if={rule.action == :deny}>
+                    Blocked
+                  </span>
+                  <span :if={rule.action == :allow}>
+                    Allowed
+                  </span>
+                  <span
+                    :if={@redundant_rules[rule.id]}
+                    title={"This rule might be redundant because the following rules may match first:\n\n#{Enum.join(@redundant_rules[rule.id], "\n")}"}
+                    class="pl-4 cursor-help"
+                  >
+                    <Heroicons.exclamation_triangle class="h-5 w-5 text-red-800" />
+                  </span>
+                </div>
+              </.td>
+              <.td actions>
+                <.delete_button
+                  id={"remove-page-rule-#{rule.id}"}
+                  phx-target={@myself}
+                  phx-click="remove-page-rule"
+                  phx-value-rule-id={rule.id}
+                  data-confirm="Are you sure you want to revoke this rule?"
+                />
+              </.td>
+            </:tbody>
+          </.table>
 
-                      <span
-                        :if={@redundant_rules[rule.id]}
-                        title={"This rule might be redundant because the following rules may match first:\n\n#{Enum.join(@redundant_rules[rule.id], "\n")}"}
-                        class="pl-4"
-                      >
-                        <Heroicons.exclamation_triangle class="h-4 w-4 text-red-500" />
-                      </span>
-                    </div>
-                  </td>
+          <.live_component :let={modal_unique_id} module={Modal} id="page-rule-form-modal">
+            <.form
+              :let={f}
+              for={@form}
+              phx-submit="save-page-rule"
+              phx-target={@myself}
+              class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
+            >
+              <.title>Add Page to Block List</.title>
 
-                  <td class="px-6 py-4 text-sm font-medium text-right">
-                    <button
-                      id={"remove-page-rule-#{rule.id}"}
-                      phx-target={@myself}
-                      phx-click="remove-page-rule"
-                      phx-value-rule-id={rule.id}
-                      class="text-sm text-red-600"
-                      data-confirm="Are you sure you want to revoke this rule?"
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+              <.live_component
+                class="mt-4"
+                submit_name="page_rule[page_path]"
+                submit_value={f[:page_path].value}
+                display_value={f[:page_path].value || ""}
+                module={PlausibleWeb.Live.Components.ComboBox}
+                suggest_fun={fn input, options -> suggest_page_paths(input, options, @site) end}
+                id={"#{f[:page_path].id}-#{modal_unique_id}"}
+                creatable
+              />
+
+              <%= error_tag(f, :page_path) %>
+
+              <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                You can use a wildcard (<code>*</code>) to match multiple pages. For example,
+                <code>/blog/*</code>
+                will match <code>/blog/post</code>.
+                Once added, we will start rejecting traffic from this page within a few minutes.
+              </p>
+              <.button type="submit" class="w-full">
+                Add Page
+              </.button>
+            </.form>
+          </.live_component>
+        </.tile>
+      </.settings_tiles>
+    </div>
     """
   end
 

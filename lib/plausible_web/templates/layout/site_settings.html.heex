@@ -2,7 +2,7 @@
   <div class="container pt-6">
     <%= link("← Back to Stats",
       to: "/#{URI.encode_www_form(@site.domain)}",
-      class: "text-sm text-indigo-600 font-bold"
+      class: "text-indigo-600 font-bold text-sm"
     ) %>
     <div class="pb-5 border-b border-gray-200 dark:border-gray-500">
       <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate">
@@ -15,7 +15,7 @@
           <% options = flat_settings_options(@conn) %>
           <%= select(f, :tab, options,
             class:
-              "dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100",
+              "dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md dark:text-gray-100",
             onchange:
               "location.href = '/" <>
                 URI.encode_www_form(@site.domain) <> "/settings/' + event.target.value",
@@ -43,7 +43,7 @@
                 conn: @conn,
                 submenu?: false
               ) %>
-              <div class="ml-8">
+              <div class="ml-6">
                 <%= for %{key: key, value: val} <- value do %>
                   <%= render("_settings_tab.html",
                     icon: nil,

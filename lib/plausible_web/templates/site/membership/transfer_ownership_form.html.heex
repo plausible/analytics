@@ -43,8 +43,6 @@
       <%= error_tag(f, :email) %>
     </div>
 
-    <div class="mt-6">
-      <%= submit("Request transfer", class: "button w-full") %>
-    </div>
+    <.button type="submit" class="w-full" mt?={false}>Request transfer</.button>
   <% end %>
 </PlausibleWeb.Components.Generic.focus_box>
