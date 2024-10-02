@@ -85,39 +85,45 @@ defmodule PlausibleWeb.Email do
     |> render("two_factor_disabled_email.html", user: user)
   end
 
-  def trial_one_week_reminder(user) do
-    base_email()
-    |> to(user)
-    |> tag("trial-one-week-reminder")
-    |> subject("Your Plausible trial expires next week")
-    |> render("trial_one_week_reminder.html", user: user)
+  on_ee do
+    def trial_one_week_reminder(user) do
+      base_email()
+      |> to(user)
+      |> tag("trial-one-week-reminder")
+      |> subject("Your Plausible trial expires next week")
+      |> render("trial_one_week_reminder.html", user: user)
+    end
   end
 
-  def trial_upgrade_email(user, day, usage) do
-    suggested_plan = Plausible.Billing.Plans.suggest(user, usage.total)
+  on_ee do
+    def trial_upgrade_email(user, day, usage) do
+      suggested_plan = Plausible.Billing.Plans.suggest(user, usage.total)
 
-    base_email()
-    |> to(user)
-    |> tag("trial-upgrade-email")
-    |> subject("Your Plausible trial ends #{day}")
-    |> render("trial_upgrade_email.html",
-      user: user,
-      day: day,
-      custom_events: usage.custom_events,
-      usage: usage.total,
-      suggested_plan: suggested_plan
-    )
+      base_email()
+      |> to(user)
+      |> tag("trial-upgrade-email")
+      |> subject("Your Plausible trial ends #{day}")
+      |> render("trial_upgrade_email.html",
+        user: user,
+        day: day,
+        custom_events: usage.custom_events,
+        usage: usage.total,
+        suggested_plan: suggested_plan
+      )
+    end
   end
 
-  def trial_over_email(user) do
-    base_email()
-    |> to(user)
-    |> tag("trial-over-email")
-    |> subject("Your Plausible trial has ended")
-    |> render("trial_over_email.html",
-      user: user,
-      extra_offset: Plausible.Auth.User.trial_accept_traffic_until_offset_days()
-    )
+  on_ee do
+    def trial_over_email(user) do
+      base_email()
+      |> to(user)
+      |> tag("trial-over-email")
+      |> subject("Your Plausible trial has ended")
+      |> render("trial_over_email.html",
+        user: user,
+        extra_offset: Plausible.Auth.User.trial_accept_traffic_until_offset_days()
+      )
+    end
   end
 
   def stats_report(email, assigns) do
@@ -154,83 +160,95 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  def over_limit_email(user, usage, suggested_plan) do
-    priority_email()
-    |> to(user)
-    |> tag("over-limit")
-    |> subject("[Action required] You have outgrown your Plausible subscription tier")
-    |> render("over_limit.html", %{
-      user: user,
-      usage: usage,
-      suggested_plan: suggested_plan
-    })
+  on_ee do
+    def over_limit_email(user, usage, suggested_plan) do
+      priority_email()
+      |> to(user)
+      |> tag("over-limit")
+      |> subject("[Action required] You have outgrown your Plausible subscription tier")
+      |> render("over_limit.html", %{
+        user: user,
+        usage: usage,
+        suggested_plan: suggested_plan
+      })
+    end
   end
 
-  def enterprise_over_limit_internal_email(user, pageview_usage, site_usage, site_allowance) do
-    base_email(%{layout: nil})
-    |> to("enterprise@plausible.io")
-    |> tag("enterprise-over-limit")
-    |> subject("#{user.email} has outgrown their enterprise plan")
-    |> render("enterprise_over_limit_internal.html", %{
-      user: user,
-      pageview_usage: pageview_usage,
-      site_usage: site_usage,
-      site_allowance: site_allowance
-    })
+  on_ee do
+    def enterprise_over_limit_internal_email(user, pageview_usage, site_usage, site_allowance) do
+      base_email(%{layout: nil})
+      |> to("enterprise@plausible.io")
+      |> tag("enterprise-over-limit")
+      |> subject("#{user.email} has outgrown their enterprise plan")
+      |> render("enterprise_over_limit_internal.html", %{
+        user: user,
+        pageview_usage: pageview_usage,
+        site_usage: site_usage,
+        site_allowance: site_allowance
+      })
+    end
   end
 
-  def dashboard_locked(user, usage, suggested_plan) do
-    priority_email()
-    |> to(user)
-    |> tag("dashboard-locked")
-    |> subject("[Action required] Your Plausible dashboard is now locked")
-    |> render("dashboard_locked.html", %{
-      user: user,
-      usage: usage,
-      suggested_plan: suggested_plan
-    })
+  on_ee do
+    def dashboard_locked(user, usage, suggested_plan) do
+      priority_email()
+      |> to(user)
+      |> tag("dashboard-locked")
+      |> subject("[Action required] Your Plausible dashboard is now locked")
+      |> render("dashboard_locked.html", %{
+        user: user,
+        usage: usage,
+        suggested_plan: suggested_plan
+      })
+    end
   end
 
-  def yearly_renewal_notification(user) do
-    date = Calendar.strftime(user.subscription.next_bill_date, "%B %-d, %Y")
+  on_ee do
+    def yearly_renewal_notification(user) do
+      date = Calendar.strftime(user.subscription.next_bill_date, "%B %-d, %Y")
 
-    priority_email()
-    |> to(user)
-    |> tag("yearly-renewal")
-    |> subject("Your Plausible subscription is up for renewal")
-    |> render("yearly_renewal_notification.html", %{
-      user: user,
-      date: date,
-      next_bill_amount: user.subscription.next_bill_amount,
-      currency: user.subscription.currency_code
-    })
+      priority_email()
+      |> to(user)
+      |> tag("yearly-renewal")
+      |> subject("Your Plausible subscription is up for renewal")
+      |> render("yearly_renewal_notification.html", %{
+        user: user,
+        date: date,
+        next_bill_amount: user.subscription.next_bill_amount,
+        currency: user.subscription.currency_code
+      })
+    end
   end
 
-  def yearly_expiration_notification(user) do
-    next_bill_date = Calendar.strftime(user.subscription.next_bill_date, "%B %-d, %Y")
+  on_ee do
+    def yearly_expiration_notification(user) do
+      next_bill_date = Calendar.strftime(user.subscription.next_bill_date, "%B %-d, %Y")
 
-    accept_traffic_until =
-      user
-      |> Plausible.Users.accept_traffic_until()
-      |> Calendar.strftime("%B %-d, %Y")
+      accept_traffic_until =
+        user
+        |> Plausible.Users.accept_traffic_until()
+        |> Calendar.strftime("%B %-d, %Y")
 
-    priority_email()
-    |> to(user)
-    |> tag("yearly-expiration")
-    |> subject("Your Plausible subscription is about to expire")
-    |> render("yearly_expiration_notification.html", %{
-      user: user,
-      next_bill_date: next_bill_date,
-      accept_traffic_until: accept_traffic_until
-    })
+      priority_email()
+      |> to(user)
+      |> tag("yearly-expiration")
+      |> subject("Your Plausible subscription is about to expire")
+      |> render("yearly_expiration_notification.html", %{
+        user: user,
+        next_bill_date: next_bill_date,
+        accept_traffic_until: accept_traffic_until
+      })
+    end
   end
 
-  def cancellation_email(user) do
-    base_email()
-    |> to(user.email)
-    |> tag("cancelled-email")
-    |> subject("Mind sharing your thoughts on Plausible?")
-    |> render("cancellation_email.html", user: user)
+  on_ee do
+    def cancellation_email(user) do
+      base_email()
+      |> to(user.email)
+      |> tag("cancelled-email")
+      |> subject("Mind sharing your thoughts on Plausible?")
+      |> render("cancellation_email.html", user: user)
+    end
   end
 
   def new_user_invitation(invitation) do
@@ -414,26 +432,30 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  def approaching_accept_traffic_until(notification) do
-    base_email()
-    |> to(notification.email)
-    |> tag("drop-traffic-warning-first")
-    |> subject("We'll stop counting your stats")
-    |> render("approaching_accept_traffic_until.html",
-      time: "next week",
-      user: %{email: notification.email, name: notification.name}
-    )
+  on_ee do
+    def approaching_accept_traffic_until(notification) do
+      base_email()
+      |> to(notification.email)
+      |> tag("drop-traffic-warning-first")
+      |> subject("We'll stop counting your stats")
+      |> render("approaching_accept_traffic_until.html",
+        time: "next week",
+        user: %{email: notification.email, name: notification.name}
+      )
+    end
   end
 
-  def approaching_accept_traffic_until_tomorrow(notification) do
-    base_email()
-    |> to(notification.email)
-    |> tag("drop-traffic-warning-final")
-    |> subject("A reminder that we'll stop counting your stats tomorrow")
-    |> render("approaching_accept_traffic_until.html",
-      time: "tomorrow",
-      user: %{email: notification.email, name: notification.name}
-    )
+  on_ee do
+    def approaching_accept_traffic_until_tomorrow(notification) do
+      base_email()
+      |> to(notification.email)
+      |> tag("drop-traffic-warning-final")
+      |> subject("A reminder that we'll stop counting your stats tomorrow")
+      |> render("approaching_accept_traffic_until.html",
+        time: "tomorrow",
+        user: %{email: notification.email, name: notification.name}
+      )
+    end
   end
 
   @doc """

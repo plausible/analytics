@@ -1,4 +1,4 @@
-<%= if Plausible.Users.on_trial?(@user) do %>
+<%= if not Plausible.ce?() and Plausible.Users.on_trial?(@user) do %>
   You signed up for a free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool.
   <br /><br />
 <% end %>
@@ -8,4 +8,4 @@ This Plausible script is 45 times smaller than Google Analytics script so you’
 <br /><br />
 On WordPress? We have a <%= link("WordPress plugin", to: "https://plausible.io/wordpress-analytics-plugin") %> that makes the process simpler. We also have <%= link("integration guides", to: "https://plausible.io/docs/integration-guides") %> for different site builders to help you start counting stats in no time.
 <br /><br />
-Do reply back to this email if you have any questions or need some guidance.
+<%= unless Plausible.ce?() do %>Do reply back to this email if you have any questions or need some guidance.<% end %>
