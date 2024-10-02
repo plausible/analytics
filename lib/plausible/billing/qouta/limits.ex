@@ -45,6 +45,69 @@ defmodule Plausible.Billing.Quota.Limits do
         nil -> @team_member_limit_for_trials
       end
     end
+
+    @monthly_pageview_limit_for_free_10k 10_000
+    @monthly_pageview_limit_for_trials :unlimited
+
+    @spec monthly_pageview_limit(User.t() | Subscription.t()) ::
+            non_neg_integer() | :unlimited
+    def monthly_pageview_limit(%User{} = user) do
+      user = Users.with_subscription(user)
+      monthly_pageview_limit(user.subscription)
+    end
+
+    def monthly_pageview_limit(subscription) do
+      case Plans.get_subscription_plan(subscription) do
+        %EnterprisePlan{monthly_pageview_limit: limit} ->
+          limit
+
+        %Plan{monthly_pageview_limit: limit} ->
+          limit
+
+        :free_10k ->
+          @monthly_pageview_limit_for_free_10k
+
+        _any ->
+          if subscription do
+            Sentry.capture_message("Unknown monthly pageview limit for plan",
+              extra: %{paddle_plan_id: subscription.paddle_plan_id}
+            )
+          end
+
+          @monthly_pageview_limit_for_trials
+      end
+    end
+
+    def pageview_limit_with_margin(limit, margin \\ nil) do
+      margin = if margin, do: margin, else: @pageview_allowance_margin
+      ceil(limit * (1 + margin))
+    end
+
+    @doc """
+    Returns a list of features the user can use. Trial users have the
+    ability to use all features during their trial.
+    """
+    def allowed_features_for(user) do
+      user = Users.with_subscription(user)
+
+      case Plans.get_subscription_plan(user.subscription) do
+        %EnterprisePlan{features: features} ->
+          features
+
+        %Plan{features: features} ->
+          features
+
+        :free_10k ->
+          [Goals, Props, StatsAPI]
+
+        nil ->
+          if Users.on_trial?(user) do
+            Feature.list()
+          else
+            [Goals]
+          end
+      end
+    end
   else
     def site_limit(_) do
       :unlimited
@@ -53,68 +116,13 @@ defmodule Plausible.Billing.Quota.Limits do
     def team_member_limit(_) do
       :unlimited
     end
-  end
 
-  @monthly_pageview_limit_for_free_10k 10_000
-  @monthly_pageview_limit_for_trials :unlimited
-
-  @spec monthly_pageview_limit(User.t() | Subscription.t()) ::
-          non_neg_integer() | :unlimited
-  def monthly_pageview_limit(%User{} = user) do
-    user = Users.with_subscription(user)
-    monthly_pageview_limit(user.subscription)
-  end
-
-  def monthly_pageview_limit(subscription) do
-    case Plans.get_subscription_plan(subscription) do
-      %EnterprisePlan{monthly_pageview_limit: limit} ->
-        limit
-
-      %Plan{monthly_pageview_limit: limit} ->
-        limit
-
-      :free_10k ->
-        @monthly_pageview_limit_for_free_10k
-
-      _any ->
-        if subscription do
-          Sentry.capture_message("Unknown monthly pageview limit for plan",
-            extra: %{paddle_plan_id: subscription.paddle_plan_id}
-          )
-        end
-
-        @monthly_pageview_limit_for_trials
+    def monthly_pageview_limit(_) do
+      :unlimited
     end
-  end
 
-  def pageview_limit_with_margin(limit, margin \\ nil) do
-    margin = if margin, do: margin, else: @pageview_allowance_margin
-    ceil(limit * (1 + margin))
-  end
-
-  @doc """
-  Returns a list of features the user can use. Trial users have the
-  ability to use all features during their trial.
-  """
-  def allowed_features_for(user) do
-    user = Users.with_subscription(user)
-
-    case Plans.get_subscription_plan(user.subscription) do
-      %EnterprisePlan{features: features} ->
-        features
-
-      %Plan{features: features} ->
-        features
-
-      :free_10k ->
-        [Goals, Props, StatsAPI]
-
-      nil ->
-        if Users.on_trial?(user) do
-          Feature.list()
-        else
-          [Goals]
-        end
+    def allowed_features_for(_) do
+      Feature.list()
     end
   end
 end

@@ -20,7 +20,7 @@ defmodule Plausible.Users do
       not Plausible.Billing.Subscriptions.active?(user.subscription) && trial_days_left(user) >= 0
     end
   else
-    def on_trial?(_), do: true
+    def on_trial?(_), do: false
   end
 
   @spec trial_days_left(Auth.User.t()) :: integer()
