@@ -1,89 +1,52 @@
-<div class="shadow sm:rounded-md sm:overflow-hidden">
-  <div class="bg-white dark:bg-gray-800 py-6 px-4 space-y-6 sm:p-6">
-    <header class="relative">
-      <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Site Domain</h2>
-      <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-        Moving your site to a different domain? We got you!
-      </p>
+<.settings_tiles>
+  <.tile docs="change-domain-name">
+    <:title>
+      Site Domain
+    </:title>
+    <:subtitle>
+      Moving your site to a different domain? We got you!
+    </:subtitle>
+    <PlausibleWeb.Live.Components.Form.input
+      name="domain"
+      label="Domain"
+      value={@site.domain}
+      disabled
+      width="w-1/2"
+    />
 
-      <PlausibleWeb.Components.Generic.docs_info slug="change-domain-name" />
-    </header>
-    <div class="grid grid-cols-4 gap-6">
-      <div class="col-span-4 sm:col-span-2">
-        <%= label(nil, "Domain",
-          class: "block text-sm font-medium leading-5 text-gray-700 dark:text-gray-300"
-        ) %>
-        <%= text_input(nil, :domain,
-          value: @site.domain,
-          disabled: "disabled",
-          class:
-            "dark:bg-gray-900 w-full mt-1 block pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100 text-gray-500"
-        ) %>
-      </div>
-    </div>
-    <div>
-      <PlausibleWeb.Components.Generic.button_link href={
-        Routes.site_path(@conn, :change_domain, @site.domain)
-      }>
-        Change Domain
-      </PlausibleWeb.Components.Generic.button_link>
-    </div>
-  </div>
-</div>
+    <.button_link href={Routes.site_path(@conn, :change_domain, @site.domain)}>
+      Change Domain
+    </.button_link>
+  </.tile>
 
-<%= form_for @changeset, "/#{URI.encode_www_form(@site.domain)}/settings", fn f -> %>
-  <div class="shadow sm:rounded-md sm:overflow-hidden">
-    <div class="bg-white dark:bg-gray-800 py-6 px-4 space-y-6 sm:p-6">
-      <header class="relative">
-        <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-          Site Timezone
-        </h2>
-        <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-          Update your reporting timezone.
-        </p>
-
-        <PlausibleWeb.Components.Generic.docs_info slug="general" />
-      </header>
-      <div class="grid grid-cols-4 gap-6">
-        <div class="col-span-4 sm:col-span-2">
-          <%= label(f, :timezone, "Reporting Timezone",
-            class: "block text-sm font-medium leading-5 text-gray-700 dark:text-gray-300"
-          ) %>
-          <%= select(f, :timezone, Plausible.Timezones.options(),
-            class:
-              "dark:bg-gray-900 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100 cursor-pointer"
-          ) %>
-        </div>
-      </div>
-      <PlausibleWeb.Components.Generic.button type="submit">
-        Save
-      </PlausibleWeb.Components.Generic.button>
-    </div>
-  </div>
-<% end %>
-
-<div class="shadow sm:rounded-md sm:overflow-hidden">
-  <div class="bg-white dark:bg-gray-800 py-6 px-4 space-y-6 sm:p-6">
-    <header class="relative">
-      <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-        <a id="snippet">Site Installation</a>
-      </h2>
-      <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-        Control what data is collected and verify your installation.
-      </p>
-
-      <PlausibleWeb.Components.Generic.docs_info slug="plausible-script" />
-    </header>
-
-    <div class="my-4">
-      <PlausibleWeb.Components.Generic.button_link
-        class="mt-4"
-        href={
-          Routes.site_path(@conn, :installation, @site.domain, flow: PlausibleWeb.Flows.review())
-        }
-      >
-        Review Installation
-      </PlausibleWeb.Components.Generic.button_link>
-    </div>
-  </div>
-</div>
+  <.tile docs="general">
+    <:title>Site Timezone</:title>
+    <:subtitle>Update your reporting timezone</:subtitle>
+    <%= form_for @changeset, "/#{URI.encode_www_form(@site.domain)}/settings", fn f -> %>
+      <PlausibleWeb.Live.Components.Form.input
+        field={f[:timezone]}
+        label="Reporting Timezone"
+        type="select"
+        options={Plausible.Timezones.options()}
+        width="w-1/2"
+      />
+      <.button type="submit">
+        Save timezone
+      </.button>
+    <% end %>
+  </.tile>
+  <.tile docs="plausible-script">
+    <:title>Site Installation</:title>
+    <:subtitle>
+      Control what data is collected and verify your installation.
+    </:subtitle>
+    <.button_link
+      class="mt-4"
+      href={
+        Routes.site_path(@conn, :installation, @site.domain, flow: PlausibleWeb.Flows.review())
+      }
+    >
+      Review Installation
+    </.button_link>
+  </.tile>
+</.settings_tiles>

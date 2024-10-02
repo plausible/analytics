@@ -1,0 +1,26 @@
+<.focus_box>
+  <:title>New Shared Link</:title>
+  <:subtitle>
+    Password protection is optional. Please make sure you save it in a secure place. Once the link is created, we cannot reveal the password.
+  </:subtitle>
+  <%= form_for @changeset, "/sites/#{URI.encode_www_form(@site.domain)}/shared-links", [], fn f -> %>
+    <div class="flex flex-col gap-y-4">
+      <PlausibleWeb.Live.Components.Form.input
+        field={f[:name]}
+        label="Name"
+        required="required"
+        autocomplete="off"
+        mt?={false}
+      />
+      <PlausibleWeb.Live.Components.Form.input
+        field={f[:password]}
+        label="Password (optional)"
+        type="password"
+        autocomplete="new-password"
+        mt?={false}
+      />
+
+      <.button class="w-full mt-4" type="submit" mt?={false}>Create shared link</.button>
+    </div>
+  <% end %>
+</.focus_box>

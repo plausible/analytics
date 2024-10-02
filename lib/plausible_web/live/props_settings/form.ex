@@ -49,9 +49,9 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
           phx-submit="allow-prop"
           phx-click-away="cancel-allow-prop"
         >
-          <h2 class="text-xl font-black dark:text-gray-100">Add Property for <%= @domain %></h2>
+          <.title>Add Property for <%= @domain %></.title>
 
-          <div class="py-2">
+          <div class="mt-6">
             <.label for="prop_input">
               Property
             </.label>
@@ -91,16 +91,14 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
             </.error>
           </div>
 
-          <div class="py-4">
-            <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-              Add Property →
-            </PlausibleWeb.Components.Generic.button>
-          </div>
+          <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
+            Add Property →
+          </PlausibleWeb.Components.Generic.button>
 
           <button
             :if={@prop_key_options_count > 0}
             title="Use this to add any existing properties from your past events into your settings. This allows you to set up properties without having to manually enter each item."
-            class="mt-2 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
+            class="mt-4 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
             phx-click="allow-existing-props"
           >
             Already sending custom properties? Click to add <%= @prop_key_options_count %> existing properties we found.

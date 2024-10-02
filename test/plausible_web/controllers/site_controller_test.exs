@@ -701,7 +701,6 @@ defmodule PlausibleWeb.SiteControllerTest do
                "https://accounts.google.com/o/oauth2/"
 
       assert resp =~ "Import Data"
-      assert resp =~ "Existing Imports"
       assert resp =~ "There are no imports yet"
       assert resp =~ "Export Data"
     end
@@ -716,18 +715,18 @@ defmodule PlausibleWeb.SiteControllerTest do
       _site_import4 = insert(:site_import, site: site, status: SiteImport.failed())
 
       populate_stats(site, site_import3.id, [
-        build(:imported_visitors, pageviews: 77),
-        build(:imported_visitors, pageviews: 21)
+        build(:imported_visitors, pageviews: 7777),
+        build(:imported_visitors, pageviews: 2221)
       ])
 
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
       resp = html_response(conn, 200)
 
-      buttons = find(resp, ~s|button[data-method="delete"]|)
+      buttons = find(resp, ~s|a[data-method="delete"]|)
       assert length(buttons) == 4
 
       assert resp =~ "Google Analytics (123456)"
-      assert resp =~ "(98 page views)"
+      assert resp =~ "9.9k"
     end
 
     test "disables import buttons when imports are at maximum", %{conn: conn, site: site} do
@@ -747,13 +746,15 @@ defmodule PlausibleWeb.SiteControllerTest do
         insert(:site_import, site: site, legacy: true, status: SiteImport.completed())
 
       populate_stats(site, [
-        build(:imported_visitors, pageviews: 77),
-        build(:imported_visitors, pageviews: 21)
+        build(:imported_visitors, pageviews: 7777),
+        build(:imported_visitors, pageviews: 2221)
       ])
 
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
 
-      assert html_response(conn, 200) =~ "(98 page views)"
+      resp = html_response(conn, 200)
+
+      assert resp =~ "9.9k"
     end
 
     test "disables import buttons when there's import in progress", %{conn: conn, site: site} do
@@ -820,7 +821,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     @tag capture_log: true, ee_only: true
     test "displays error message", %{conn: conn, site: site} do
       assert conn |> get("/#{site.domain}/settings/imports-exports") |> html_response(200) =~
-               "Something went wrong when fetching exports. Please try again later."
+               "Something went wrong when fetching exports"
     end
   end
 
@@ -1401,7 +1402,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "shows form for new shared link", %{conn: conn, site: site} do
       conn = get(conn, "/sites/#{site.domain}/shared-links/new")
 
-      assert html_response(conn, 200) =~ "New shared link"
+      assert html_response(conn, 200) =~ "New Shared Link"
     end
   end
 

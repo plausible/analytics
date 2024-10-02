@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   use Plausible
 
   import PlausibleWeb.Live.Components.Form
+  import PlausibleWeb.Components.Generic
 
   alias PlausibleWeb.Live.Components.ComboBox
   alias Plausible.Repo
@@ -68,9 +69,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   def edit_form(assigns) do
     ~H"""
     <.form :let={f} for={@form} phx-submit="save-goal" phx-target={@myself}>
-      <h2 class="text-xl font-black dark:text-gray-100">
-        Edit Goal for <%= @domain %>
-      </h2>
+      <.title>Edit Goal for <%= @domain %></.title>
 
       <.custom_event_fields
         :if={@selected_tab == "custom_events"}
@@ -91,11 +90,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         site={@site}
       />
 
-      <div class="py-4">
-        <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-          Update Goal →
-        </PlausibleWeb.Components.Generic.button>
-      </div>
+      <.button type="submit" class="w-full">
+        Update Goal
+      </.button>
     </.form>
     """
   end
@@ -109,14 +106,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       phx-submit="save-goal"
       phx-target={@myself}
     >
-      <PlausibleWeb.Components.Generic.spinner
-        class="spinner block absolute right-9 top-8"
-        x-show="tabSelectionInProgress"
-      />
+      <.spinner class="spinner block absolute right-9 top-8" x-show="tabSelectionInProgress" />
 
-      <h2 class="text-xl font-black dark:text-gray-100">
-        Add Goal for <%= @domain %>
-      </h2>
+      <.title>Add Goal for <%= @domain %></.title>
 
       <.tabs selected_tab={@selected_tab} myself={@myself} />
 
@@ -141,16 +133,16 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         x-init="tabSelectionInProgress = false"
       />
 
-      <div class="py-4" x-show="!tabSelectionInProgress">
-        <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-          Add Goal →
-        </PlausibleWeb.Components.Generic.button>
+      <div x-show="!tabSelectionInProgress">
+        <.button type="submit" class="w-full">
+          Add Goal
+        </.button>
       </div>
 
       <button
         :if={@selected_tab == "custom_events" && @event_name_options_count > 0}
         x-show="!tabSelectionInProgress"
-        class="mt-2 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
+        class="mt-4 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
         phx-click="autoconfigure"
         phx-target={@myself}
       >
@@ -195,20 +187,14 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         <%= msg %>
       </.error>
 
-      <div class="mt-2">
-        <.label for="pageview_display_name_input">
-          Display Name
-        </.label>
-
-        <.input
-          id="pageview_display_name_input"
-          field={@f[:display_name]}
-          type="text"
-          x-data="{ firstFocus: true }"
-          x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
-          class="mt-2 dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
-        />
-      </div>
+      <.input
+        label="Display Name"
+        id="pageview_display_name_input"
+        field={@f[:display_name]}
+        type="text"
+        x-data="{ firstFocus: true }"
+        x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
+      />
     </div>
     """
   end
@@ -228,13 +214,11 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div id="custom-events-form" class="my-6" {@rest}>
       <div id="event-fields">
-        <div class="pb-6 text-xs text-gray-700 dark:text-gray-200 text-justify rounded-md">
-          Custom Events are not tracked by default - you have to configure them on your site to be sent to Plausible. See examples and learn more in <a
-            class="text-indigo-500 hover:underline"
-            target="_blank"
-            rel="noreferrer"
-            href="https://plausible.io/docs/custom-event-goals"
-          > our docs</a>.
+        <div class="text-sm pb-6 text-gray-500 dark:text-gray-400 text-justify rounded-md">
+          Custom Events are not tracked by default - you have to configure them on your site to be sent to Plausible. See examples and learn more in
+          <.styled_link href="https://plausible.io/docs/custom-event-goals" new_tab={true}>
+            our docs
+          </.styled_link>.
         </div>
 
         <div>
@@ -263,17 +247,13 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         </div>
 
         <div class="mt-2">
-          <.label for="custom_event_display_name_input">
-            Display Name
-          </.label>
-
           <.input
+            label="Display Name"
             id="custom_event_display_name_input"
             field={@f[:display_name]}
             type="text"
             x-data="{ firstFocus: true }"
             x-on:focus="if (firstFocus) { $el.select(); firstFocus = false; }"
-            class="mt-2 dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
           />
         </div>
 
@@ -306,7 +286,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         billable_user={@site.owner}
         current_user={@current_user}
         feature_mod={Plausible.Billing.Feature.RevenueGoals}
-        size={:xs}
         class="rounded-b-md"
       />
       <button
@@ -340,10 +319,10 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         </span>
         <span
           class={[
-            "ml-3 font-medium",
+            "ml-3 text-sm font-medium",
             if(@has_access_to_revenue_goals?,
               do: "text-gray-900  dark:text-gray-100",
-              else: "text-gray-500 dark:text-gray-300"
+              else: "text-gray-500 dark:text-gray-400"
             )
           ]}
           id="enable-revenue-tracking"
@@ -377,8 +356,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def tabs(assigns) do
     ~H"""
-    <div class="mt-6 font-medium dark:text-gray-100">Goal Trigger</div>
-    <div class="my-3 w-full flex rounded border border-gray-300 dark:border-gray-500">
+    <div class="text-sm mt-6 font-medium dark:text-gray-100">Goal Trigger</div>
+    <div class="my-2 text-sm w-full flex rounded border border-gray-300 dark:border-gray-500">
       <.custom_events_tab selected?={@selected_tab == "custom_events"} myself={@myself} />
       <.pageviews_tab selected?={@selected_tab == "pageviews"} myself={@myself} />
     </div>
@@ -389,9 +368,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <a
       class={[
-        "w-1/2 text-center py-2 border-r dark:border-gray-500",
+        "w-1/2 text-center py-2.5 border-r dark:border-gray-500",
         "cursor-pointer",
-        @selected? && "shadow-inner font-bold bg-indigo-600 text-white",
+        @selected? && "shadow-inner font-medium bg-indigo-600 text-white",
         !@selected? && "dark:text-gray-100 text-gray-800"
       ]}
       id="event-tab"
@@ -409,8 +388,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <a
       class={[
-        "w-1/2 text-center py-2 cursor-pointer",
-        @selected? && "shadow-inner font-bold bg-indigo-600 text-white",
+        "w-1/2 text-center py-2.5 cursor-pointer",
+        @selected? && "shadow-inner font-medium bg-indigo-600 text-white",
         !@selected? && "dark:text-gray-100 text-gray-800"
       ]}
       id="pageview-tab"

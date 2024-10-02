@@ -63,7 +63,6 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   attr(:current_user, User, required: true)
   attr(:feature_mod, :atom, required: true, values: Feature.list())
   attr(:grandfathered?, :boolean, default: false)
-  attr(:size, :atom, default: :sm)
   attr(:rest, :global)
 
   def premium_feature(assigns) do
@@ -71,7 +70,6 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     <.notice
       :if={@feature_mod.check_availability(@billable_user) !== :ok}
       class="rounded-t-md rounded-b-none"
-      size={@size}
       title="Notice"
       {@rest}
     >

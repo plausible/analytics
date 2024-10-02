@@ -6,7 +6,8 @@
   <:title>Change your website domain</:title>
 
   <:subtitle>
-    Once you change your domain, <b>you must update Plausible Installation on your site within 72 hours to guarantee continuous tracking</b>.
+    Once you change your domain, you <i>must</i>
+    update Plausible Installation on your site within 72 hours to guarantee continuous tracking.
     <br /><br />If you're using the API, please also make sure to update your API credentials. Visit our
     <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
       documentation
@@ -26,17 +27,15 @@
   </:footer>
 
   <%= form_for @changeset, Routes.site_path(@conn, :change_domain_submit, @site.domain, flow: PlausibleWeb.Flows.domain_change()), [], fn f -> %>
-    <h2 class="text-xl font-black dark:text-gray-100"></h2>
-
     <div class="my-6">
-      <%= label(f, :domain, class: "block font-medium dark:text-gray-300") %>
+      <%= label(f, :domain, class: "text-sm block font-medium dark:text-gray-300") %>
       <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">
         Just the naked domain or subdomain without 'www', 'https' etc.
       </p>
       <div class="mt-2 flex rounded-md shadow-sm">
         <%= text_input(f, :domain,
           class:
-            "focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 flex-1 block w-full px-3 py-2 rounded-none rounded-r-md border-gray-300 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300",
+            "text-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 flex-1 block w-full px-3 py-2 rounded-none rounded-r-md border-gray-300 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300",
           placeholder: "example.com"
         ) %>
       </div>

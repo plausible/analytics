@@ -66,128 +66,101 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       )
 
     ~H"""
-    <div class="mt-5 flex gap-x-4">
-      <.button_link
-        class="w-36 h-20"
-        theme="bright"
-        disabled={@import_in_progress? or @at_maximum?}
-        href={Plausible.Google.API.import_authorize_url(@site.id)}
-      >
-        <img src="/images/icon/google_analytics_logo.svg" alt="Google Analytics import" />
-      </.button_link>
+    <.notice :if={@import_warning} theme={:gray}>
+      <%= @import_warning %>
+    </.notice>
 
+    <div class="mt-4 flex justify-end gap-x-4">
       <.button_link
-        class="w-36 h-20"
         theme="bright"
+        href={Plausible.Google.API.import_authorize_url(@site.id)}
+        disabled={@import_in_progress? or @at_maximum?}
+      >
+        Import from
+        <img
+          src="/images/icon/google_analytics_logo.svg"
+          alt="Google Analytics import"
+          class="h-6 w-12"
+        />
+      </.button_link>
+      <.button_link
         disabled={@import_in_progress? or @at_maximum?}
         href={"/#{URI.encode_www_form(@site.domain)}/settings/import"}
       >
-        <img class="h-16" src="/images/icon/csv_logo.svg" alt="New CSV import" />
+        Import from CSV
       </.button_link>
     </div>
 
-    <p :if={@import_warning} class="mt-4 text-gray-400 text-sm italic">
-      <%= @import_warning %>
+    <p :if={Enum.empty?(@site_imports)} class="text-center text-sm mt-8 mb-12">
+      There are no imports yet for this site.
     </p>
 
-    <header class="relative border-b border-gray-200 pb-4">
-      <h3 class="mt-6 text-md leading-6 font-medium text-gray-900 dark:text-gray-100">
-        Existing Imports
-      </h3>
-      <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-        A maximum of <%= @max_imports %> imports at any time is allowed.
-      </p>
-    </header>
+    <div class="mt-8">
+      <.table :if={not Enum.empty?(@site_imports)} rows={@site_imports}>
+        <:thead>
+          <.th>Import</.th>
+          <.th hide_on_mobile>Date Range</.th>
+          <.th hide_on_mobile>
+            <div class="text-right">Pageviews</div>
+          </.th>
+          <.th invisible>Actions</.th>
+        </:thead>
 
-    <div
-      :if={Enum.empty?(@site_imports)}
-      class="text-gray-800 dark:text-gray-200 text-center mt-8 mb-12"
-    >
-      <p>There are no imports yet for this site.</p>
+        <:tbody :let={entry}>
+          <.td max_width="max-w-40">
+            <div class="flex items-center gap-x-2 truncate">
+              <div class="w-6" title={notice_message(entry.tooltip)}>
+                <Heroicons.clock
+                  :if={entry.live_status == SiteImport.pending()}
+                  class="block h-6 w-6 text-indigo-600 dark:text-green-600"
+                />
+                <.spinner
+                  :if={entry.live_status == SiteImport.importing()}
+                  class="block h-6 w-6 text-indigo-600 dark:text-green-600"
+                />
+                <Heroicons.check
+                  :if={entry.live_status == SiteImport.completed()}
+                  class="block h-6 w-6 text-indigo-600 dark:text-green-600"
+                />
+                <Heroicons.exclamation_triangle
+                  :if={entry.live_status == SiteImport.failed()}
+                  class="block h-6 w-6 text-red-700 dark:text-red-500"
+                />
+              </div>
+              <div
+                class="max-w-sm"
+                title={"#{Plausible.Imported.SiteImport.label(entry.site_import)} created at #{format_date(entry.site_import.inserted_at)}"}
+              >
+                <%= Plausible.Imported.SiteImport.label(entry.site_import) %>
+              </div>
+            </div>
+          </.td>
+
+          <.td hide_on_mobile>
+            <%= format_date(entry.site_import.start_date) %> - <%= format_date(
+              entry.site_import.end_date
+            ) %>
+          </.td>
+
+          <.td>
+            <div class="text-right">
+              <%= if entry.live_status == SiteImport.completed(),
+                do:
+                  PlausibleWeb.StatsView.large_number_format(
+                    pageview_count(entry.site_import, @pageview_counts)
+                  ) %>
+            </div>
+          </.td>
+          <.td actions>
+            <.delete_button
+              href={"/#{URI.encode_www_form(@site.domain)}/settings/forget-import/#{entry.site_import.id}"}
+              method="delete"
+              data-confirm="Are you sure you want to delete this import?"
+            />
+          </.td>
+        </:tbody>
+      </.table>
     </div>
-    <ul :if={not Enum.empty?(@site_imports)}>
-      <li :for={entry <- @site_imports} class="py-4 flex items-center justify-between space-x-4">
-        <.import_entry entry={entry} site={@site} pageview_counts={@pageview_counts} />
-      </li>
-    </ul>
-    """
-  end
-
-  defp import_entry(assigns) do
-    label_class =
-      if assigns.entry.live_status != SiteImport.failed() do
-        "ml-2"
-      end
-
-    assigns = assign(assigns, :label_class, label_class)
-
-    ~H"""
-    <div class="flex flex-col">
-      <div class="flex items-center text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">
-        <Heroicons.clock
-          :if={@entry.live_status == SiteImport.pending()}
-          class="block h-6 w-5 text-indigo-600 dark:text-green-600"
-        />
-        <.spinner
-          :if={@entry.live_status == SiteImport.importing()}
-          class="block h-6 w-5 text-indigo-600 dark:text-green-600"
-        />
-        <Heroicons.check
-          :if={@entry.live_status == SiteImport.completed()}
-          class="block h-6 w-5 text-indigo-600 dark:text-green-600"
-        />
-        <Heroicons.exclamation_triangle
-          :if={@entry.live_status == SiteImport.failed()}
-          class="block h-6 w-5 text-red-700 dark:text-red-700"
-        />
-        <div :if={@entry.live_status == SiteImport.failed()} class="ml-2 mr-1">
-          Import failed -
-        </div>
-        <.tooltip :if={@entry.tooltip}>
-          <%= Plausible.Imported.SiteImport.label(@entry.site_import) %>
-          <:tooltip_content>
-            <.notice_message message_label={@entry.tooltip} />
-          </:tooltip_content>
-        </.tooltip>
-        <div :if={!@entry.tooltip} class={[@label_class]}>
-          <%= Plausible.Imported.SiteImport.label(@entry.site_import) %>
-        </div>
-        <div :if={@entry.live_status == SiteImport.completed()} class="text-xs font-normal ml-1">
-          (<%= PlausibleWeb.StatsView.large_number_format(
-            pageview_count(@entry.site_import, @pageview_counts)
-          ) %> page views)
-        </div>
-      </div>
-      <div class="text-sm leading-5 text-gray-500 dark:text-gray-200">
-        From <%= format_date(@entry.site_import.start_date) %> to <%= format_date(
-          @entry.site_import.end_date
-        ) %>
-        <%= if @entry.live_status == SiteImport.completed() do %>
-          (imported
-        <% else %>
-          (started
-        <% end %>
-        on <%= format_date(@entry.site_import.inserted_at) %>)
-      </div>
-    </div>
-    <.button
-      data-to={"/#{URI.encode_www_form(@site.domain)}/settings/forget-import/#{@entry.site_import.id}"}
-      theme="danger"
-      data-method="delete"
-      data-csrf={Plug.CSRFProtection.get_csrf_token()}
-      class="sm:ml-3 sm:w-auto w-full"
-      data-confirm="Are you sure you want to delete this import?"
-    >
-      <span :if={@entry.live_status == SiteImport.completed()}>
-        Delete Import
-      </span>
-      <span :if={@entry.live_status == SiteImport.failed()}>
-        Discard
-      </span>
-      <span :if={@entry.live_status not in [SiteImport.completed(), SiteImport.failed()]}>
-        Cancel Import
-      </span>
-    </.button>
     """
   end
 
@@ -243,8 +216,8 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
     end
   end
 
-  defp notice_message(%{message_label: :slow_import} = assigns) do
-    ~H"""
+  defp notice_message(:slow_import) do
+    """
     The import process might be taking longer due to the amount of data
     and rate limiting enforced by Google Analytics.
     """

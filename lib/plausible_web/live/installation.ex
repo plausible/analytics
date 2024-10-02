@@ -105,10 +105,10 @@ defmodule PlausibleWeb.Live.Installation do
       <PlausibleWeb.Components.FirstDashboardLaunchBanner.set :if={@site_created?} site={@site} />
       <PlausibleWeb.Components.FlowProgress.render flow={@flow} current_step="Install Plausible" />
 
-      <PlausibleWeb.Components.Generic.focus_box>
+      <.focus_box>
         <:title :if={is_nil(@installation_type)}>
           <div class="flex w-full mx-auto justify-center">
-            <PlausibleWeb.Components.Generic.spinner class="spinner block text-center h-8 w-8" />
+            <.spinner class="spinner block text-center h-8 w-8" />
           </div>
         </:title>
         <:title :if={@installation_type == "WordPress"}>
@@ -233,7 +233,7 @@ defmodule PlausibleWeb.Live.Installation do
           </.styled_link>
           if you prefer manual installation method.
         </:footer>
-      </PlausibleWeb.Components.Generic.focus_box>
+      </.focus_box>
     </div>
     """
   end
@@ -283,7 +283,7 @@ defmodule PlausibleWeb.Live.Installation do
 
   defp script_extension_control(assigns) do
     ~H"""
-    <div class="mt-2 p-1">
+    <div class="mt-2 p-1 text-sm">
       <div class="flex items-center">
         <input
           type="checkbox"
@@ -322,7 +322,7 @@ defmodule PlausibleWeb.Live.Installation do
       <div class="relative">
         <textarea
           id="snippet"
-          class="w-full border-1 border-gray-300 rounded-md p-4 text-gray-700 0 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300"
+          class="w-full border-1 border-gray-300 rounded-md p-4 text-sm text-gray-700 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300"
           rows="5"
           readonly
         ><%= render_snippet(@installation_type, @domain, @script_config) %></textarea>
@@ -339,7 +339,7 @@ defmodule PlausibleWeb.Live.Installation do
         </a>
       </div>
 
-      <h3 class="text-normal mt-4 font-semibold">Enable optional measurements:</h3>
+      <.h2 class="mt-8 text-sm font-medium">Enable optional measurements:</.h2>
       <.script_extension_control
         config={@script_config}
         variant="outbound-links"

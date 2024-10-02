@@ -9,6 +9,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
   alias PlausibleWeb.Live.Components.Modal
   alias Plausible.Shields
   alias Plausible.Shield
+  import PlausibleWeb.Components.Generic
 
   def update(assigns, socket) do
     socket =
@@ -28,145 +29,112 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
 
   def render(assigns) do
     ~H"""
-    <section class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden">
-      <div class="py-6 px-4 sm:p-6">
-        <header class="relative">
-          <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-            Country Block List
-          </h2>
-          <p class="mt-1 mb-4 text-sm leading-5 text-gray-500 dark:text-gray-200">
-            Reject incoming traffic from specific countries
-          </p>
-
-          <PlausibleWeb.Components.Generic.docs_info slug="countries" />
-        </header>
-        <div class="border-t border-gray-200 pt-4 grid">
-          <div
+    <div>
+      <.settings_tiles>
+        <.tile docs="excluding">
+          <:title>Country Block List</:title>
+          <:subtitle>Reject incoming traffic from specific countries</:subtitle>
+          <.filter_bar
             :if={@country_rules_count < Shields.maximum_country_rules()}
-            class="mt-4 sm:ml-4 sm:mt-0 justify-self-end"
+            filtering_enabled?={false}
           >
-            <PlausibleWeb.Components.Generic.button
+            <.button
               id="add-country-rule"
               x-data
               x-on:click={Modal.JS.open("country-rule-form-modal")}
+              mt?={false}
             >
-              + Add Country
-            </PlausibleWeb.Components.Generic.button>
-          </div>
-          <PlausibleWeb.Components.Generic.notice
+              Add Country
+            </.button>
+          </.filter_bar>
+
+          <.notice
             :if={@country_rules_count >= Shields.maximum_country_rules()}
             class="mt-4"
             title="Maximum number of countries reached"
+            theme={:gray}
           >
             <p>
               You've reached the maximum number of countries you can block (<%= Shields.maximum_country_rules() %>). Please remove one before adding another.
             </p>
-          </PlausibleWeb.Components.Generic.notice>
-        </div>
+          </.notice>
 
-        <.live_component :let={modal_unique_id} module={Modal} id="country-rule-form-modal">
-          <.form
-            :let={f}
-            for={@form}
-            phx-submit="save-country-rule"
-            phx-target={@myself}
-            class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
-          >
-            <h2 class="text-xl font-black dark:text-gray-100 mb-8">Add Country to Block List</h2>
+          <p :if={Enum.empty?(@country_rules)} class="mt-12 mb-8 text-center text-sm">
+            No Country Rules configured for this site.
+          </p>
 
-            <.live_component
-              submit_name="country_rule[country_code]"
-              submit_value={f[:country_code].value}
-              display_value=""
-              module={PlausibleWeb.Live.Components.ComboBox}
-              suggest_fun={&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest/2}
-              id={"#{f[:country_code].id}-#{modal_unique_id}"}
-              suggestions_limit={300}
-              options={options(@country_rules)}
-            />
+          <.table :if={not Enum.empty?(@country_rules)} rows={@country_rules}>
+            <:thead>
+              <.th>Country</.th>
+              <.th hide_on_mobile>Status</.th>
+              <.th invisible>Actions</.th>
+            </:thead>
+            <:tbody :let={rule}>
+              <% country = Location.Country.get_country(rule.country_code) %>
+              <.td>
+                <div class="flex items-center">
+                  <span
+                    id={"country-#{rule.id}"}
+                    class="mr-4 cursor-help"
+                    title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
+                  >
+                    <%= country.flag %> <%= country.name %>
+                  </span>
+                </div>
+              </.td>
+              <.td hide_on_mobile>
+                <span :if={rule.action == :deny}>
+                  Blocked
+                </span>
+                <span :if={rule.action == :allow}>
+                  Allowed
+                </span>
+              </.td>
+              <.td actions>
+                <.delete_button
+                  id={"remove-country-rule-#{rule.id}"}
+                  phx-target={@myself}
+                  phx-click="remove-country-rule"
+                  phx-value-rule-id={rule.id}
+                  data-confirm="Are you sure you want to revoke this rule?"
+                />
+              </.td>
+            </:tbody>
+          </.table>
 
-            <p class="text-sm mt-2 text-gray-500 dark:text-gray-200">
-              Once added, we will start rejecting traffic from this country within a few minutes.
-            </p>
-            <div class="py-4 mt-8">
-              <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-                Add Country →
-              </PlausibleWeb.Components.Generic.button>
-            </div>
-          </.form>
-        </.live_component>
+          <.live_component :let={modal_unique_id} module={Modal} id="country-rule-form-modal">
+            <.form
+              :let={f}
+              for={@form}
+              phx-submit="save-country-rule"
+              phx-target={@myself}
+              class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
+            >
+              <.title>Add Country to Block List</.title>
 
-        <p
-          :if={Enum.empty?(@country_rules)}
-          class="text-sm text-gray-800 dark:text-gray-200 mt-12 mb-8 text-center"
-        >
-          No Country Rules configured for this Site.
-        </p>
-        <div
-          :if={not Enum.empty?(@country_rules)}
-          class="mt-8 overflow-visible border-b border-gray-200 shadow dark:border-gray-900 sm:rounded-lg"
-        >
-          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-900">
-            <thead class="bg-gray-50 dark:bg-gray-900">
-              <tr>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100"
-                >
-                  Country
-                </th>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100"
-                >
-                  Status
-                </th>
-                <th scope="col" class="px-6 py-3">
-                  <span class="sr-only">Remove</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <%= for rule <- @country_rules do %>
-                <% country = Location.Country.get_country(rule.country_code) %>
-                <tr class="text-gray-900 dark:text-gray-100">
-                  <td class="px-6 py-4 text-sm font-medium">
-                    <PlausibleWeb.Components.Generic.tooltip>
-                      <:tooltip_content>
-                        Added at <%= format_added_at(rule.inserted_at, @site.timezone) %> by <%= rule.added_by %>
-                      </:tooltip_content>
-                      <span id={"country-#{rule.id}"} class="mr-4 cursor-help">
-                        <%= country.flag %> <%= country.name %>
-                      </span>
-                    </PlausibleWeb.Components.Generic.tooltip>
-                  </td>
-                  <td class="px-6 py-4 text-sm text-gray-500">
-                    <span :if={rule.action == :deny}>
-                      Blocked
-                    </span>
-                    <span :if={rule.action == :allow}>
-                      Allowed
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 text-sm font-medium text-right">
-                    <button
-                      id={"remove-country-rule-#{rule.id}"}
-                      phx-target={@myself}
-                      phx-click="remove-country-rule"
-                      phx-value-rule-id={rule.id}
-                      class="text-sm text-red-600"
-                      data-confirm="Are you sure you want to revoke this rule?"
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+              <.live_component
+                class="mt-4"
+                submit_name="country_rule[country_code]"
+                submit_value={f[:country_code].value}
+                display_value=""
+                module={PlausibleWeb.Live.Components.ComboBox}
+                suggest_fun={&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest/2}
+                id={"#{f[:country_code].id}-#{modal_unique_id}"}
+                suggestions_limit={300}
+                options={options(@country_rules)}
+              />
+
+              <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                Once added, we will start rejecting traffic from this country within a few minutes.
+              </p>
+              <.button type="submit" class="w-full">
+                Add Country
+              </.button>
+            </.form>
+          </.live_component>
+        </.tile>
+      </.settings_tiles>
+    </div>
     """
   end
 

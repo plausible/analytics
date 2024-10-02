@@ -53,30 +53,30 @@ defmodule PlausibleWeb.Live.Components.Verification do
           <Heroicons.exclamation_triangle class="h-6 w-6 text-red-600 bg-red-100 dark:bg-red-200 dark:text-red-800" />
         </div>
 
-        <div class="mt-6">
-          <h3 class="font-semibold leading-6 text-xl">
+        <div class="mt-8">
+          <.title>
             <span :if={@finished? and @success?}>Success!</span>
             <span :if={not @finished?}>Verifying your installation</span>
 
             <span :if={@finished? and not @success? and @interpretation}>
               <%= List.first(@interpretation.errors) %>
             </span>
-          </h3>
-          <p :if={@finished? and @success?} id="progress" class="mt-2">
+          </.title>
+          <p :if={@finished? and @success?} id="progress" class="text-sm mt-4">
             Your installation is working and visitors are being counted accurately
           </p>
           <p
             :if={@finished? and @success? and @awaiting_first_pageview?}
             id="progress"
-            class="mt-2 animate-pulse"
+            class="text-sm mt-4 animate-pulse"
           >
             Awaiting your first pageview
           </p>
-          <p :if={not @finished?} class="mt-2 animate-pulse" id="progress"><%= @message %></p>
+          <p :if={not @finished?} class="text-sm mt-4 animate-pulse" id="progress"><%= @message %></p>
 
           <p
             :if={@finished? and not @success? and @interpretation}
-            class="mt-2 text-ellipsis overflow-hidden"
+            class="mt-4 text-sm text-ellipsis overflow-hidden"
             id="recommendation"
           >
             <span><%= List.first(@interpretation.recommendations).text %>.&nbsp;</span>
@@ -86,12 +86,13 @@ defmodule PlausibleWeb.Live.Components.Verification do
           </p>
         </div>
 
-        <div :if={@finished?} class="mt-8">
-          <.button_link :if={not @success?} href="#" phx-click="retry" class="w-full">
+        <div :if={@finished?} class="mt-6">
+          <.button_link :if={not @success?} mt?={false} href="#" phx-click="retry" class="w-full">
             Verify installation again
           </.button_link>
           <.button_link
             :if={@success?}
+            mt?={false}
             href={"/#{URI.encode_www_form(@domain)}?skip_to_dashboard=true"}
             class="w-full font-bold mb-4"
           >
@@ -127,11 +128,11 @@ defmodule PlausibleWeb.Live.Components.Verification do
           </.focus_list>
           <div
             :if={@verification_state && @super_admin? && @finished?}
-            class="flex flex-col dark:text-gray-200 border-t border-gray-300 dark:border-gray-700"
+            class="flex flex-col dark:text-gray-200 mt-4 pt-4 border-t border-gray-300 dark:border-gray-700"
             x-data="{ showDiagnostics: false }"
             id="super-admin-report"
           >
-            <p class="mt-4 text-sm">
+            <p class="text-sm">
               <a
                 href="#"
                 @click.prevent="showDiagnostics = !showDiagnostics"

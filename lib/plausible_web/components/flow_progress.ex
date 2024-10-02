@@ -21,9 +21,9 @@ defmodule PlausibleWeb.Components.FlowProgress do
 
     ~H"""
     <div :if={not Enum.empty?(@steps)} class="mt-6 hidden md:block" id="flow-progress">
-      <div class="flex items-center justify-between max-w-3xl mx-auto my-8">
+      <div class="flex items-center justify-between max-w-4xl mx-auto my-8">
         <%= for {step, idx} <- Enum.with_index(@steps) do %>
-          <div class="flex items-center text-xs">
+          <div class="flex items-center text-base">
             <div
               :if={idx < @current_step_idx}
               class="w-5 h-5 bg-green-500 dark:bg-green-600 text-white rounded-full flex items-center justify-center"

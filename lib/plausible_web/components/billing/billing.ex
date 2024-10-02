@@ -79,14 +79,12 @@ defmodule PlausibleWeb.Components.Billing do
         pad
         title="Pageviews"
         usage={@usage.pageviews}
-        class="font-normal text-gray-500 dark:text-gray-400"
       />
       <.usage_and_limits_row
         id={"custom_events_#{@period}"}
         pad
         title="Custom events"
         usage={@usage.custom_events}
-        class="font-normal text-gray-500 dark:text-gray-400"
       />
     </.usage_and_limits_table>
     """
@@ -169,10 +167,10 @@ defmodule PlausibleWeb.Components.Billing do
   def usage_and_limits_row(assigns) do
     ~H"""
     <tr {@rest}>
-      <td class={["py-4 pr-1 text-sm sm:whitespace-nowrap text-left", @pad && "pl-6"]}>
+      <td class={["text-sm py-4 pr-1 sm:whitespace-nowrap text-left", @pad && "pl-6"]}>
         <%= @title %>
       </td>
-      <td class="py-4 text-sm sm:whitespace-nowrap text-right">
+      <td class="text-sm py-4 sm:whitespace-nowrap text-right">
         <%= Cldr.Number.to_string!(@usage) %>
         <%= if is_number(@limit), do: "/ #{Cldr.Number.to_string!(@limit)}" %>
       </td>
@@ -184,8 +182,7 @@ defmodule PlausibleWeb.Components.Billing do
     ~H"""
     <div
       id="monthly-quota-box"
-      class="h-32 px-2 py-4 my-4 text-center bg-gray-100 rounded dark:bg-gray-900"
-      style="width: 11.75rem;"
+      class="w-1/3 h-32 px-2 py-4 my-4 text-center bg-gray-100 rounded dark:bg-gray-900 w-max-md"
     >
       <h4 class="font-black dark:text-gray-100">Monthly quota</h4>
       <div class="py-2 text-xl font-medium dark:text-gray-100">
@@ -245,7 +242,7 @@ defmodule PlausibleWeb.Components.Billing do
       id={@id}
       onclick={"if (#{@confirmed}) {Paddle.Checkout.open(#{Jason.encode!(%{product: @paddle_product_id, email: @user.email, disableLogout: true, passthrough: @user.id, success: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success), theme: "none"})})}"}
       class={[
-        "w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white",
+        "text-sm w-full mt-6 block rounded-md py-2 px-3 text-center font-semibold leading-6 text-white",
         !@checkout_disabled && "bg-indigo-600 hover:bg-indigo-500",
         @checkout_disabled && "pointer-events-none bg-gray-400 dark:bg-gray-600"
       ]}

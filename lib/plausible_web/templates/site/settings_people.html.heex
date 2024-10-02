@@ -1,242 +1,218 @@
-<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md py-6 px-4 sm:p-6">
-  <header class="relative">
-    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">People</h2>
-    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-      Invite your friends or coworkers
-    </p>
+<.settings_tiles>
+  <.tile docs="user-roles">
+    <:title>People</:title>
+    <:subtitle>Invite your friends or coworkers</:subtitle>
 
-    <PlausibleWeb.Components.Generic.docs_info slug="users-roles" />
-  </header>
-  <div class="flow-root mt-6">
-    <ul class="-my-5 divide-y divide-gray-200 dark:divide-gray-400">
-      <%= for membership <- @site.memberships do %>
-        <li class="py-4">
-          <div class="flex items-center space-x-4">
-            <div class="flex-shrink-0">
-              <%= img_tag(Plausible.Auth.User.profile_img_url(membership.user),
-                class: "h-8 w-8 rounded-full"
-              ) %>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
-                <%= membership.user.name %>
-                <PlausibleWeb.Components.Generic.styled_link
-                  :if={ee?() and Plausible.Auth.is_super_admin?(@current_user)}
-                  new_tab={true}
-                  href={PlausibleWeb.Endpoint.url() <> "/crm/auth/user/#{membership.user.id}"}
-                >
-                  CRM
-                </PlausibleWeb.Components.Generic.styled_link>
-              </p>
-              <p class="text-sm text-gray-400 truncate">
-                <%= membership.user.email %>
-              </p>
-            </div>
+    <.filter_bar filtering_enabled?={false}>
+      <.button_link
+        mt?={false}
+        href={Routes.membership_path(@conn, :invite_member_form, @site.domain)}
+      >
+        Invite new member
+      </.button_link>
+    </.filter_bar>
 
-            <div x-data="{open: false}" @click.away="open = false" x-cloak class="relative">
-              <button
-                @click="open = !open"
-                class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <%= membership.role |> Atom.to_string() |> String.capitalize() %>
-                <svg
-                  class="w-4 h-4 pt-px ml-1"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clip-rule="evenodd"
+    <div class="flow-root">
+      <ul class="divide-y divide-gray-200 dark:divide-gray-400">
+        <%= for membership <- @site.memberships do %>
+          <li class="py-4">
+            <div class="flex items-center space-x-4">
+              <div class="flex-shrink-0">
+                <%= img_tag(Plausible.Auth.User.profile_img_url(membership.user),
+                  class: "h-8 w-8 rounded-full"
+                ) %>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm truncate">
+                  <span class="font-medium text-gray-900 dark:text-gray-50">
+                    <%= membership.user.name %>
+                  </span>
+                  <br />
+                  <span class="text-gray-500 dark:text-gray-400">
+                    <%= membership.user.email %>
+                  </span>
+                  <.styled_link
+                    :if={ee?() and Plausible.Auth.is_super_admin?(@current_user)}
+                    new_tab={true}
+                    href={PlausibleWeb.Endpoint.url() <> "/crm/auth/user/#{membership.user.id}"}
                   >
-                  </path>
-                </svg>
-              </button>
-              <ul
-                x-show="open"
-                x-transition:leave="transition ease-in duration-100"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
-                class="origin-top-right absolute z-10 right-0 mt-2 w-72 rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-400 ring-1 ring-black ring-opacity-5 focus:outline-none"
-                tabindex="-1"
-                role="listbox"
-                aria-labelledby="listbox-label"
-                aria-activedescendant="listbox-option-0"
-              >
-                <%= if membership.role == :owner do %>
-                  <li class="p-4 text-sm cursor-default group flex justify-between" role="option">
-                    <div>
-                      <p class="text-base font-medium text-gray-900 dark:text-gray-100">Owner</p>
-                      <p class="mt-1 text-sm text-gray-500">
-                        Site owner cannot be assigned to any other role
-                      </p>
-                    </div>
+                    CRM
+                  </.styled_link>
+                </p>
+              </div>
 
-                    <span class="text-indigo-500">
-                      <svg
-                        class="h-5 w-5"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                    </span>
-                  </li>
-                  <%= if @conn.assigns[:current_user_role] == :owner do %>
-                    <li
-                      class="select-none hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
-                      role="option"
+              <div x-data="{open: false}" @click.away="open = false" x-cloak class="relative">
+                <button
+                  @click="open = !open"
+                  class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  <%= membership.role |> Atom.to_string() |> String.capitalize() %>
+                  <svg
+                    class="w-4 h-4 pt-px ml-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clip-rule="evenodd"
                     >
-                      <%= link("Transfer ownership →",
-                        to: Routes.membership_path(@conn, :transfer_ownership_form, @site.domain),
-                        class: "inline-block w-full p-4 text-sm text-red-600 font-medium"
-                      ) %>
+                    </path>
+                  </svg>
+                </button>
+                <ul
+                  x-show="open"
+                  x-transition:leave="transition ease-in duration-100"
+                  x-transition:leave-start="opacity-100"
+                  x-transition:leave-end="opacity-0"
+                  class="origin-top-right absolute z-50 right-0 mt-2 w-72 rounded-md shadow-lg overflow-hidden bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-400 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                  tabindex="-1"
+                  role="listbox"
+                  aria-labelledby="listbox-label"
+                  aria-activedescendant="listbox-option-0"
+                >
+                  <%= if membership.role == :owner do %>
+                    <li class="p-4 cursor-default group flex justify-between" role="option">
+                      <div>
+                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          Owner
+                        </p>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                          Site owner cannot be assigned to any other role
+                        </p>
+                      </div>
+
+                      <span class="text-indigo-500">
+                        <svg
+                          class="h-5 w-5"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path
+                            fill-rule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clip-rule="evenodd"
+                          />
+                        </svg>
+                      </span>
                     </li>
-                  <% end %>
-                <% else %>
-                  <%= link(to: Routes.membership_path(@conn, :update_role, @site.domain, membership.id, "admin"), method: :put, class: "p-4 flex justify-between text-sm group hover:bg-indigo-500") do %>
-                    <div>
-                      <p class="text-base font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
-                        Admin
-                      </p>
-                      <p class="mt-1 text-sm text-gray-500 dark:text-gray-300 group-hover:text-gray-100 dark:group-hover:text-white">
-                        View stats and edit site settings
-                      </p>
-                    </div>
-
-                    <%= if membership.role == :admin do %>
-                      <span class="text-indigo-500 group-hover:text-white">
-                        <svg
-                          class="h-5 w-5"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path
-                            fill-rule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clip-rule="evenodd"
-                          />
-                        </svg>
-                      </span>
-                    <% end %>
-                  <% end %>
-                  <%= link(to: Routes.membership_path(@conn, :update_role, @site.domain, membership.id, "viewer"), method: :put, class: "p-4 flex justify-between text-sm group hover:bg-indigo-500") do %>
-                    <div>
-                      <p class="text-base font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
-                        Viewer
-                      </p>
-                      <p class="mt-1 text-sm text-gray-500 dark:text-gray-300 group-hover:text-gray-100 dark:group-hover:text-white">
-                        View stats only
-                      </p>
-                    </div>
-
-                    <%= if membership.role == :viewer do %>
-                      <span class="text-indigo-500 group-hover:text-white">
-                        <svg
-                          class="h-5 w-5"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path
-                            fill-rule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clip-rule="evenodd"
-                          />
-                        </svg>
-                      </span>
-                    <% end %>
-                  <% end %>
-
-                  <%= link(to: Routes.membership_path(@conn, :remove_member, @site.domain, membership.id), method: :delete, class: "p-4 flex hover:bg-gray-100 hover:bg-gray-900 text-red-600") do %>
-                    <p class="text-sm text-red-600 font-medium">Remove member</p>
-                  <% end %>
-                <% end %>
-              </ul>
-            </div>
-          </div>
-        </li>
-      <% end %>
-    </ul>
-
-    <%= if Enum.count(@site.invitations) > 0 do %>
-      <header class="mt-12">
-        <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-          Pending invitations
-        </h2>
-      </header>
-      <div class="flex flex-col mt-4">
-        <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-            <div class="shadow overflow-hidden border-b border-gray-200 dark:border-gray-500 sm:rounded-lg">
-              <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-400">
-                <thead class="bg-gray-50 dark:bg-gray-900">
-                  <tr>
-                    <th
-                      scope="col"
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider"
-                    >
-                      Email
-                    </th>
-                    <th
-                      scope="col"
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-200 uppercase tracking-wider"
-                    >
-                      Role
-                    </th>
-                    <th scope="col" class="relative px-6 py-3">
-                      <span class="sr-only">Edit</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <%= for invitation <- @site.invitations do %>
-                    <tr class="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-850 dark:even:bg-gray-825">
-                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                        <%= invitation.email %>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-200">
-                        <%= invitation.role |> Atom.to_string() |> String.capitalize() %>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <%= link("Remove",
+                    <%= if @conn.assigns[:current_user_role] == :owner do %>
+                      <li
+                        class="select-none hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
+                        role="option"
+                      >
+                        <%= link("Transfer ownership →",
                           to:
-                            Routes.invitation_path(
+                            Routes.membership_path(
                               @conn,
-                              :remove_invitation,
-                              @site.domain,
-                              invitation.invitation_id
+                              :transfer_ownership_form,
+                              @site.domain
                             ),
-                          method: :delete,
-                          class: "text-red-600 hover:text-red-900"
+                          class: "inline-block w-full text-sm p-4 text-red-600 font-medium"
                         ) %>
-                      </td>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    <% end %>
-  </div>
+                      </li>
+                    <% end %>
+                  <% else %>
+                    <%= link(to: Routes.membership_path(@conn, :update_role, @site.domain, membership.id, "admin"), method: :put, class: "p-4 flex justify-between group hover:bg-indigo-500") do %>
+                      <div>
+                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
+                          Admin
+                        </p>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 group-hover:text-gray-100 dark:group-hover:text-white">
+                          View stats and edit site settings
+                        </p>
+                      </div>
 
-  <div class="mt-8">
-    <PlausibleWeb.Components.Generic.button_link href={
-      Routes.membership_path(@conn, :invite_member_form, @site.domain)
-    }>
-      <Heroicons.user_plus solid class="w-5 h-5" /> Invite
-    </PlausibleWeb.Components.Generic.button_link>
-  </div>
-</div>
+                      <%= if membership.role == :admin do %>
+                        <span class="text-indigo-500 group-hover:text-white">
+                          <svg
+                            class="h-5 w-5"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
+                            <path
+                              fill-rule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clip-rule="evenodd"
+                            />
+                          </svg>
+                        </span>
+                      <% end %>
+                    <% end %>
+                    <%= link(to: Routes.membership_path(@conn, :update_role, @site.domain, membership.id, "viewer"), method: :put, class: "p-4 flex justify-between group hover:bg-indigo-500") do %>
+                      <div>
+                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
+                          Viewer
+                        </p>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 group-hover:text-gray-100 dark:group-hover:text-white">
+                          View stats only
+                        </p>
+                      </div>
+
+                      <%= if membership.role == :viewer do %>
+                        <span class="text-indigo-500 group-hover:text-white">
+                          <svg
+                            class="h-5 w-5"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
+                            <path
+                              fill-rule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clip-rule="evenodd"
+                            />
+                          </svg>
+                        </span>
+                      <% end %>
+                    <% end %>
+
+                    <%= link(to: Routes.membership_path(@conn, :remove_member, @site.domain, membership.id), method: :delete, class: "p-4 flex hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600") do %>
+                      <p class="text-red-600 font-medium text-sm">Remove member</p>
+                    <% end %>
+                  <% end %>
+                </ul>
+              </div>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  </.tile>
+
+  <.tile :if={Enum.count(@site.invitations) > 0}>
+    <:title>Pending invitations</:title>
+    <:subtitle>Waiting for new members to accept their invitations</:subtitle>
+
+    <.table rows={@site.invitations}>
+      <:thead>
+        <.th>Email</.th>
+        <.th hide_on_mobile>Role</.th>
+        <.th invisible>Actions</.th>
+      </:thead>
+      <:tbody :let={invitation}>
+        <.td><%= invitation.email %></.td>
+        <.td hide_on_mobile><%= Phoenix.Naming.humanize(invitation.role) %></.td>
+        <.td actions>
+          <.delete_button
+            href={
+              Routes.invitation_path(
+                @conn,
+                :remove_invitation,
+                @site.domain,
+                invitation.invitation_id
+              )
+            }
+            method="delete"
+          />
+        </.td>
+      </:tbody>
+    </.table>
+  </.tile>
+</.settings_tiles>

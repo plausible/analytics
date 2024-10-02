@@ -1,26 +1,29 @@
-<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
-  <header class="relative">
-    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Goals</h2>
-    <p class="mt-2 text-sm leading-5 text-gray-500 dark:text-gray-200">
-      Define actions that you want your users to take, like visiting a certain page, submitting a form, etc.
-    </p>
-    <p :if={ee?()} class="text-sm leading-5 text-gray-500 dark:text-gray-200">
-      You can also <a
-        href={Routes.site_path(@conn, :settings_funnels, @site.domain)}
-        class="text-indigo-500 underline"
-      >compose Goals into Funnels</a>.
-    </p>
-
-    <PlausibleWeb.Components.Generic.docs_info slug="goal-conversions" />
-  </header>
-
-  <PlausibleWeb.Components.Site.Feature.toggle
+<.settings_tiles>
+  <.tile
+    docs="goal-conversions"
     feature_mod={Plausible.Billing.Feature.Goals}
     site={@site}
     conn={@conn}
   >
-    <%= live_render(@conn, PlausibleWeb.Live.GoalSettings,
-      session: %{"site_id" => @site.id, "domain" => @site.domain}
-    ) %>
-  </PlausibleWeb.Components.Site.Feature.toggle>
-</div>
+    <:title>
+      Goals
+    </:title>
+    <:subtitle>
+      <p>
+        Define actions that you want your users to take, like visiting a certain page, submitting a form, etc.
+      </p>
+      <p :if={ee?()}>
+        You can also
+        <.styled_link href={Routes.site_path(@conn, :settings_funnels, @site.domain)}>
+          compose Goals into Funnels
+        </.styled_link>
+      </p>
+    </:subtitle>
+
+    <div :if={Plausible.Billing.Feature.Goals.enabled?(@site)}>
+      <%= live_render(@conn, PlausibleWeb.Live.GoalSettings,
+        session: %{"site_id" => @site.id, "domain" => @site.domain}
+      ) %>
+    </div>
+  </.tile>
+</.settings_tiles>

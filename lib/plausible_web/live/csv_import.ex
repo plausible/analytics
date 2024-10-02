@@ -101,7 +101,7 @@ defmodule PlausibleWeb.Live.CSVImport do
       phx-drop-target={@upload.ref}
       class="block border-2 dark:border-gray-600 rounded-md p-4 hover:bg-gray-50 dark:hover:bg-gray-900 hover:border-indigo-500 dark:hover:border-indigo-600 transition cursor-pointer"
     >
-      <div class="flex items-center text-gray-500 dark:text-gray-500">
+      <div class="hidden md:flex items-center text-gray-500 dark:text-gray-500">
         <Heroicons.document_plus class="w-5 h-5 transition" />
         <span class="ml-1.5 text-sm">
           (or drag-and-drop your unzipped CSVs here)
@@ -109,7 +109,7 @@ defmodule PlausibleWeb.Live.CSVImport do
         <.live_file_input upload={@upload} class="hidden" />
       </div>
 
-      <ul id="imported-tables" class="mt-3.5 mb-0.5 space-y-1.5">
+      <ul id="imported-tables" class="truncate mt-3.5 mb-0.5 space-y-1.5">
         <.imported_table
           :for={{table, upload} <- @imported_tables}
           table={table}
@@ -123,20 +123,13 @@ defmodule PlausibleWeb.Live.CSVImport do
 
   defp confirm_button(assigns) do
     ~H"""
-    <button
-      type="submit"
-      disabled={not @can_confirm?}
-      class={[
-        "rounded-md w-full bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400 dark:disabled:text-gray-400 dark:disabled:bg-gray-700 mt-4",
-        unless(@can_confirm?, do: "cursor-not-allowed")
-      ]}
-    >
+    <.button type="submit" disabled={not @can_confirm?} class="w-full">
       <%= if @date_range do %>
         Confirm import <.dates range={@date_range} />
       <% else %>
         Confirm import
       <% end %>
-    </button>
+    </.button>
     """
   end
 

@@ -11,6 +11,7 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
   alias Plausible.Shield
 
   import PlausibleWeb.ErrorHelpers
+  import PlausibleWeb.Components.Generic
 
   def update(assigns, socket) do
     socket =
@@ -33,170 +34,132 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
 
   def render(assigns) do
     ~H"""
-    <section class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden">
-      <div class="py-6 px-4 sm:p-6">
-        <header class="relative">
-          <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-            Hostnames Allow List
-          </h2>
-          <p class="mt-1 mb-4 text-sm leading-5 text-gray-500 dark:text-gray-200">
-            Accept incoming traffic only from familiar hostnames.
-          </p>
-
-          <PlausibleWeb.Components.Generic.docs_info slug="excluding#exclude-visits-by-hostname" />
-        </header>
-        <div class="border-t border-gray-200 pt-4 grid">
-          <div
+    <div>
+      <.settings_tiles>
+        <.tile docs="excluding#exclude-visits-by-hostname">
+          <:title>Hostnames Allow List</:title>
+          <:subtitle>Accept incoming traffic only from familiar hostnames</:subtitle>
+          <.filter_bar
             :if={@hostname_rules_count < Shields.maximum_hostname_rules()}
-            class="mt-4 sm:ml-4 sm:mt-0 justify-self-end"
+            filtering_enabled?={false}
           >
-            <PlausibleWeb.Components.Generic.button
+            <.button
               id="add-hostname-rule"
               x-data
               x-on:click={Modal.JS.open("hostname-rule-form-modal")}
+              mt?={false}
             >
-              + Add Hostname
-            </PlausibleWeb.Components.Generic.button>
-          </div>
-          <PlausibleWeb.Components.Generic.notice
+              Add Hostname
+            </.button>
+          </.filter_bar>
+
+          <.notice
             :if={@hostname_rules_count >= Shields.maximum_hostname_rules()}
             class="mt-4"
             title="Maximum number of hostnames reached"
+            theme={:gray}
           >
             <p>
               You've reached the maximum number of hostnames you can block (<%= Shields.maximum_hostname_rules() %>). Please remove one before adding another.
             </p>
-          </PlausibleWeb.Components.Generic.notice>
-        </div>
+          </.notice>
 
-        <.live_component :let={modal_unique_id} module={Modal} id="hostname-rule-form-modal">
-          <.form
-            :let={f}
-            for={@form}
-            phx-submit="save-hostname-rule"
-            phx-target={@myself}
-            class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
-          >
-            <h2 class="text-xl font-black dark:text-gray-100 mb-8">Add Hostname to Allow List</h2>
+          <p :if={Enum.empty?(@hostname_rules)} class="mt-12 mb-8 text-center text-sm">
+            No Hostname Rules configured for this site.
+            <strong>
+              Traffic from all hostnames is currently accepted.
+            </strong>
+          </p>
 
-            <.live_component
-              submit_name="hostname_rule[hostname]"
-              submit_value={f[:hostname].value}
-              display_value={f[:hostname].value || ""}
-              module={PlausibleWeb.Live.Components.ComboBox}
-              suggest_fun={fn input, options -> suggest_hostnames(input, options, @site) end}
-              id={"#{f[:hostname].id}-#{modal_unique_id}"}
-              creatable
-            />
+          <.table :if={not Enum.empty?(@hostname_rules)} rows={@hostname_rules}>
+            <:thead>
+              <.th>Hostname</.th>
+              <.th hide_on_mobile>Status</.th>
+              <.th invisible>Actions</.th>
+            </:thead>
+            <:tbody :let={rule}>
+              <.td>
+                <div class="flex items-center">
+                  <span
+                    id={"hostname-#{rule.id}"}
+                    class="mr-4 cursor-help text-ellipsis truncate max-w-xs"
+                    title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
+                  >
+                    <%= rule.hostname %>
+                  </span>
+                </div>
+              </.td>
+              <.td hide_on_mobile>
+                <div class="flex items-center">
+                  <span :if={rule.action == :deny}>
+                    Blocked
+                  </span>
+                  <span :if={rule.action == :allow}>
+                    Allowed
+                  </span>
+                  <span
+                    :if={@redundant_rules[rule.id]}
+                    title={"This rule might be redundant because the following rules may match first:\n\n#{Enum.join(@redundant_rules[rule.id], "\n")}"}
+                    class="pl-4 cursor-help"
+                  >
+                    <Heroicons.exclamation_triangle class="h-5 w-5 text-red-800" />
+                  </span>
+                </div>
+              </.td>
+              <.td actions>
+                <.delete_button
+                  id={"remove-hostname-rule-#{rule.id}"}
+                  phx-target={@myself}
+                  phx-click="remove-hostname-rule"
+                  phx-value-rule-id={rule.id}
+                  data-confirm="Are you sure you want to revoke this rule?"
+                />
+              </.td>
+            </:tbody>
+          </.table>
 
-            <%= error_tag(f, :hostname) %>
+          <.live_component :let={modal_unique_id} module={Modal} id="hostname-rule-form-modal">
+            <.form
+              :let={f}
+              for={@form}
+              phx-submit="save-hostname-rule"
+              phx-target={@myself}
+              class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
+            >
+              <.title>Add Hostname to Allow List</.title>
 
-            <p class="text-sm mt-2 text-gray-500 dark:text-gray-200">
-              You can use a wildcard (<code>*</code>) to match multiple hostnames. For example,
-              <code>*<%= @site.domain %></code>
-              will only record traffic on your main domain and all of its subdomains.<br /><br />
+              <.live_component
+                class="mt-8"
+                submit_name="hostname_rule[hostname]"
+                submit_value={f[:hostname].value}
+                display_value={f[:hostname].value || ""}
+                module={PlausibleWeb.Live.Components.ComboBox}
+                suggest_fun={fn input, options -> suggest_hostnames(input, options, @site) end}
+                id={"#{f[:hostname].id}-#{modal_unique_id}"}
+                creatable
+              />
 
-              <%= if @hostname_rules_count >= 1 do %>
-                Once added, we will start accepting traffic from this hostname within a few minutes.
-              <% else %>
-                NB: Once added, we will start rejecting traffic from non-matching hostnames within a few minutes.
-              <% end %>
-            </p>
-            <div class="py-4 mt-8">
-              <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-                Add Hostname →
-              </PlausibleWeb.Components.Generic.button>
-            </div>
-          </.form>
-        </.live_component>
+              <%= error_tag(f, :hostname) %>
 
-        <p
-          :if={Enum.empty?(@hostname_rules)}
-          class="text-sm text-gray-800 dark:text-gray-200 mt-12 mb-8 text-center"
-        >
-          No Hostname Rules configured for this Site.<br /><br />
-          <strong>
-            Traffic from all hostnames is currently accepted.
-          </strong>
-        </p>
-        <div
-          :if={not Enum.empty?(@hostname_rules)}
-          class="mt-8 overflow-visible border-b border-gray-200 shadow dark:border-gray-900 sm:rounded-lg"
-        >
-          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-900">
-            <thead class="bg-gray-50 dark:bg-gray-900">
-              <tr>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100"
-                >
-                  hostname
-                </th>
-                <th
-                  scope="col"
-                  class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100"
-                >
-                  Status
-                </th>
-                <th scope="col" class="px-6 py-3">
-                  <span class="sr-only">Remove</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <%= for rule <- @hostname_rules do %>
-                <tr class="text-gray-900 dark:text-gray-100">
-                  <td class="px-6 py-4 text-sm font-medium">
-                    <PlausibleWeb.Components.Generic.tooltip>
-                      <:tooltip_content>
-                        Added at <%= format_added_at(rule.inserted_at, @site.timezone) %> by <%= rule.added_by %>
-                      </:tooltip_content>
-                      <div
-                        id={"hostname-#{rule.id}"}
-                        class="mr-4 cursor-help text-ellipsis truncate max-w-xs"
-                      >
-                        <%= rule.hostname %>
-                      </div>
-                    </PlausibleWeb.Components.Generic.tooltip>
-                  </td>
-                  <td class="px-6 py-4 text-sm text-gray-500">
-                    <div class="flex items-center">
-                      <span :if={rule.action == :deny}>
-                        Blocked
-                      </span>
-                      <span :if={rule.action == :allow} class="text-green-500">
-                        Allowed
-                      </span>
+              <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                You can use a wildcard (<code>*</code>) to match multiple hostnames. For example,
+                <code>*<%= @site.domain %></code>
+                will only record traffic on your main domain and all of its subdomains.<br /><br />
 
-                      <span
-                        :if={@redundant_rules[rule.id]}
-                        title={"This rule might be redundant because the following rules may match first:\n\n#{Enum.join(@redundant_rules[rule.id], "\n")}"}
-                        class="pl-4"
-                      >
-                        <Heroicons.exclamation_triangle class="h-4 w-4 text-red-500" />
-                      </span>
-                    </div>
-                  </td>
-
-                  <td class="px-6 py-4 text-sm font-medium text-right">
-                    <button
-                      id={"remove-hostname-rule-#{rule.id}"}
-                      phx-target={@myself}
-                      phx-click="remove-hostname-rule"
-                      phx-value-rule-id={rule.id}
-                      class="text-sm text-red-600"
-                      data-confirm="Are you sure you want to revoke this rule?"
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+                <%= if @hostname_rules_count >= 1 do %>
+                  Once added, we will start accepting traffic from this hostname within a few minutes.
+                <% else %>
+                  NB: Once added, we will start rejecting traffic from non-matching hostnames within a few minutes.
+                <% end %>
+              </p>
+              <.button type="submit" class="w-full">
+                Add Hostname
+              </.button>
+            </.form>
+          </.live_component>
+        </.tile>
+      </.settings_tiles>
+    </div>
     """
   end
 

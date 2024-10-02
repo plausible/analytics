@@ -1,36 +1,33 @@
-<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
-  <header class="relative border-b border-gray-200 pb-4">
-    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
+<.settings_tiles docs="google-analytics-import">
+  <.tile>
+    <:title>
       Import Data
-    </h2>
-    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
+    </:title>
+    <:subtitle>
       Import existing data from external sources.
-      Pick one of the options below to start a new import.
-    </p>
+      Pick one of the options below to start a new import. <br />
+      A maximum of <%= Plausible.Imported.max_complete_imports() %> imports at any time is allowed.
+    </:subtitle>
 
-    <PlausibleWeb.Components.Generic.docs_info slug="google-analytics-import" />
-  </header>
+    <%= live_render(@conn, PlausibleWeb.Live.ImportsExportsSettings,
+      session: %{"domain" => @site.domain}
+    ) %>
+  </.tile>
 
-  <%= live_render(@conn, PlausibleWeb.Live.ImportsExportsSettings,
-    session: %{"domain" => @site.domain}
-  ) %>
-</div>
-
-<div class="shadow bg-white dark:bg-gray-800 dark:text-gray-200 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
-  <header class="relative border-b border-gray-200 pb-4 mb-5">
-    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
+  <.tile>
+    <:title>
       Export Data
-    </h2>
-    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-      Export all your data into CSV format.
-    </p>
-  </header>
+    </:title>
+    <:subtitle>
+      Export all your data into CSV format
+    </:subtitle>
 
-  <%= live_render(@conn, PlausibleWeb.Live.CSVExport,
-    session: %{
-      "site_id" => @site.id,
-      "email_to" => @current_user.email,
-      "storage" => on_ee(do: "s3", else: "local")
-    }
-  ) %>
-</div>
+    <%= live_render(@conn, PlausibleWeb.Live.CSVExport,
+      session: %{
+        "site_id" => @site.id,
+        "email_to" => @current_user.email,
+        "storage" => on_ee(do: "s3", else: "local")
+      }
+    ) %>
+  </.tile>
+</.settings_tiles>
