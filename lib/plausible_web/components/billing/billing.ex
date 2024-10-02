@@ -111,7 +111,7 @@ defmodule PlausibleWeb.Components.Billing do
         </span>
         <div class={"flex items-center justify-between md:flex-col md:items-start py-2 pr-2 #{if @with_separator, do: "pl-2 md:pl-4", else: "pl-2"}"}>
           <span
-            class="dark:text-gray-100"
+            class="text-sm dark:text-gray-100"
             x-bind:class={"tab === '#{@tab}' ? 'text-indigo-600 dark:text-indigo-500 font-semibold' : 'font-medium'"}
           >
             <%= @name %>
@@ -167,10 +167,10 @@ defmodule PlausibleWeb.Components.Billing do
   def usage_and_limits_row(assigns) do
     ~H"""
     <tr {@rest}>
-      <td class={["py-4 pr-1 sm:whitespace-nowrap text-left", @pad && "pl-6"]}>
+      <td class={["text-sm py-4 pr-1 sm:whitespace-nowrap text-left", @pad && "pl-6"]}>
         <%= @title %>
       </td>
-      <td class="py-4 sm:whitespace-nowrap text-right">
+      <td class="text-sm py-4 sm:whitespace-nowrap text-right">
         <%= Cldr.Number.to_string!(@usage) %>
         <%= if is_number(@limit), do: "/ #{Cldr.Number.to_string!(@limit)}" %>
       </td>
@@ -242,7 +242,7 @@ defmodule PlausibleWeb.Components.Billing do
       id={@id}
       onclick={"if (#{@confirmed}) {Paddle.Checkout.open(#{Jason.encode!(%{product: @paddle_product_id, email: @user.email, disableLogout: true, passthrough: @user.id, success: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success), theme: "none"})})}"}
       class={[
-        "w-full mt-6 block rounded-md py-2 px-3 text-center font-semibold leading-6 text-white",
+        "text-sm w-full mt-6 block rounded-md py-2 px-3 text-center font-semibold leading-6 text-white",
         !@checkout_disabled && "bg-indigo-600 hover:bg-indigo-500",
         @checkout_disabled && "pointer-events-none bg-gray-400 dark:bg-gray-600"
       ]}

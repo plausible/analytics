@@ -86,7 +86,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           </:tbody>
         </.table>
       <% else %>
-        <p class="mt-12 mb-8 text-center">
+        <p class="mt-12 mb-8 text-center text-sm">
           <span :if={String.trim(@filter_text) != ""}>
             No goals found for this site. Please refine or
             <.styled_link phx-click="reset-filter-text" id="reset-filter-hint">
