@@ -103,6 +103,16 @@ defmodule PlausibleWeb.Live.Components.Form do
     """
   end
 
+  slot :inner_block, required: true
+
+  def field_group(assigns) do
+    ~H"""
+    <div class="flex flex-col gap-y-4">
+      <%= render_slot(@inner_block) %>
+    </div>
+    """
+  end
+
   attr(:rest, :global)
   attr(:id, :string, required: true)
   attr(:name, :string, required: true)
