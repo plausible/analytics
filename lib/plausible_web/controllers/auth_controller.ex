@@ -262,16 +262,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def user_settings(conn, _params) do
-    user = conn.assigns.current_user
-    settings_changeset = Auth.User.settings_changeset(user)
-    email_changeset = Auth.User.settings_changeset(user)
-    password_changeset = Auth.User.password_changeset(user)
-
-    render_settings(conn,
-      settings_changeset: settings_changeset,
-      email_changeset: email_changeset,
-      password_changeset: password_changeset
-    )
+    render_settings(conn, [])
   end
 
   def initiate_2fa_setup(conn, _params) do
@@ -456,12 +447,7 @@ defmodule PlausibleWeb.AuthController do
         |> redirect(to: Routes.auth_path(conn, :user_settings))
 
       {:error, changeset} ->
-        email_changeset = Auth.User.settings_changeset(user)
-
-        render_settings(conn,
-          settings_changeset: changeset,
-          email_changeset: email_changeset
-        )
+        render_settings(conn, settings_changeset: changeset)
     end
   end
 
@@ -479,26 +465,16 @@ defmodule PlausibleWeb.AuthController do
       end
     else
       {:error, %Ecto.Changeset{} = changeset} ->
-        settings_changeset = Auth.User.settings_changeset(user)
-
-        render_settings(conn,
-          settings_changeset: settings_changeset,
-          email_changeset: changeset
-        )
+        render_settings(conn, email_changeset: changeset)
 
       {:error, {:rate_limit, _}} ->
-        settings_changeset = Auth.User.settings_changeset(user)
-
-        {:error, changeset} =
+        changeset =
           user
           |> Auth.User.email_changeset(user_params)
           |> Ecto.Changeset.add_error(:email, "too many requests, try again in an hour")
-          |> Ecto.Changeset.apply_action(:validate)
+          |> Map.put(:action, :validate)
 
-        render_settings(conn,
-          settings_changeset: settings_changeset,
-          email_changeset: changeset
-        )
+        render_settings(conn, email_changeset: changeset)
     end
   end
 
@@ -515,31 +491,42 @@ defmodule PlausibleWeb.AuthController do
       |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-password")
     else
       {:error, %Ecto.Changeset{} = changeset} ->
-        settings_changeset = Auth.User.settings_changeset(user)
-        email_changeset = Auth.User.email_changeset(user)
-
-        render_settings(conn,
-          settings_changeset: settings_changeset,
-          email_changeset: email_changeset,
-          password_changeset: changeset
-        )
+        render_settings(conn, password_changeset: changeset)
 
       {:error, {:rate_limit, _}} ->
-        settings_changeset = Auth.User.settings_changeset(user)
-        email_changeset = Auth.User.email_changeset(user)
-
-        {:error, changeset} =
+        changeset =
           user
           |> Auth.User.password_changeset(params)
           |> Ecto.Changeset.add_error(:password, "too many attempts, try again in 20 minutes")
-          |> Ecto.Changeset.apply_action(:validate)
+          |> Map.put(:action, :validate)
 
-        render_settings(conn,
-          settings_changeset: settings_changeset,
-          email_changeset: email_changeset,
-          password_changeset: changeset
-        )
+        render_settings(conn, password_changeset: changeset)
     end
+  end
+
+  def cancel_update_email(conn, _params) do
+    changeset = Auth.User.cancel_email_changeset(conn.assigns.current_user)
+
+    case Repo.update(changeset) do
+      {:ok, user} ->
+        conn
+        |> put_flash(:success, "Email changed back to #{user.email}")
+        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-email-address")
+
+      {:error, _} ->
+        conn
+        |> put_flash(
+          :error,
+          "Could not cancel email update because previous email has already been taken"
+        )
+        |> redirect(to: Routes.auth_path(conn, :activate_form))
+    end
+  end
+
+  defp handle_email_updated(conn) do
+    conn
+    |> put_flash(:success, "Email updated successfully")
+    |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-email-address")
   end
 
   defp do_update_password(user, params) do
@@ -570,31 +557,6 @@ defmodule PlausibleWeb.AuthController do
           Repo.rollback(changeset)
       end
     end)
-  end
-
-  def cancel_update_email(conn, _params) do
-    changeset = Auth.User.cancel_email_changeset(conn.assigns.current_user)
-
-    case Repo.update(changeset) do
-      {:ok, user} ->
-        conn
-        |> put_flash(:success, "Email changed back to #{user.email}")
-        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-email-address")
-
-      {:error, _} ->
-        conn
-        |> put_flash(
-          :error,
-          "Could not cancel email update because previous email has already been taken"
-        )
-        |> redirect(to: Routes.auth_path(conn, :activate_form))
-    end
-  end
-
-  defp handle_email_updated(conn) do
-    conn
-    |> put_flash(:success, "Email updated successfully")
-    |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-email-address")
   end
 
   defp render_settings(conn, opts) do
