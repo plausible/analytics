@@ -275,6 +275,39 @@ defmodule PlausibleWeb.EmailTest do
     end
   end
 
+  describe "site_setup_help" do
+    setup do
+      trial_user =
+        build(:user,
+          id: -1,
+          subscription: nil,
+          trial_expiry_date: Date.add(Date.utc_today(), 100)
+        )
+
+      site = build(:site, members: [trial_user])
+      email = PlausibleWeb.Email.site_setup_help(trial_user, site)
+      {:ok, email: email}
+    end
+
+    @tag :ee_only
+    test "renders 'trial' and 'reply' blocks", %{email: email} do
+      assert email.html_body =~
+               "You signed up for a free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool."
+
+      assert email.html_body =~
+               "Do reply back to this email if you have any questions or need some guidance."
+    end
+
+    @tag :ce_build_only
+    test "does not render 'trial' and 'reply' blocks", %{email: email} do
+      refute email.html_body =~
+               "You signed up for a free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool."
+
+      refute email.html_body =~
+               "Do reply back to this email if you have any questions or need some guidance."
+    end
+  end
+
   describe "site_setup_success" do
     setup do
       trial_user =
