@@ -1100,6 +1100,27 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert html_response(conn, 200) =~ "Disable 2FA"
     end
+
+    test "renders active user sessions with an option to revoke them", %{conn: conn, user: user} do
+      now = NaiveDateTime.utc_now(:second)
+      seventy_minutes_ago = NaiveDateTime.shift(now, minute: -70)
+
+      another_session =
+        user
+        |> Auth.UserSession.new_session("Some Device", seventy_minutes_ago)
+        |> Repo.insert!()
+
+      conn = get(conn, "/settings")
+
+      assert html = html_response(conn, 200)
+
+      assert html =~ "Unknown"
+      assert html =~ "Current Session"
+      assert html =~ "Just recently"
+      assert html =~ "Some Device"
+      assert html =~ "1 hour ago"
+      assert html =~ Routes.auth_path(conn, :delete_session, another_session.id)
+    end
   end
 
   describe "PUT /settings" do
@@ -1448,6 +1469,38 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = delete(conn, "/settings/api-keys/#{api_key.id}")
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find API Key to delete"
       assert Repo.get(ApiKey, api_key.id)
+    end
+  end
+
+  describe "DELETE /settings/user-sessions/:id" do
+    setup [:create_user, :log_in]
+
+    test "deletes session", %{conn: conn, user: user} do
+      another_session =
+        user
+        |> Auth.UserSession.new_session("Some Device")
+        |> Repo.insert!()
+
+      conn = delete(conn, "/settings/user-sessions/#{another_session.id}")
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Session logged out successfully"
+
+      assert redirected_to(conn, 302) ==
+               Routes.auth_path(conn, :user_settings) <> "#user-sessions"
+
+      refute Repo.reload(another_session)
+    end
+
+    test "refuses deletion when not logged in" do
+      another_session =
+        insert(:user)
+        |> Auth.UserSession.new_session("Some Device")
+        |> Repo.insert!()
+
+      conn = delete(build_conn(), "/settings/user-sessions/#{another_session.id}")
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+      assert Repo.reload(another_session)
     end
   end
 

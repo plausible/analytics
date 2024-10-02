@@ -101,6 +101,46 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
+    test "does not count pageleave events towards the events metric in a simple aggregate query",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 234, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, user_id: 234, name: "pageleave", timestamp: ~N[2021-01-01 00:00:01])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["events"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"metrics" => [1], "dimensions" => []}
+             ]
+    end
+
+    test "pageleave events do not affect bounce rate and visit duration", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, user_id: 123, name: "pageleave", timestamp: ~N[2021-01-01 00:00:03])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["bounce_rate", "visit_duration"]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"metrics" => [100, 0], "dimensions" => []}
+             ]
+    end
+
     test "can filter by channel", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,

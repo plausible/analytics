@@ -3,6 +3,22 @@ defmodule Plausible.Session.CacheStoreTest do
 
   alias Plausible.Session.CacheStore
 
+  @session_params %{
+    referrer: "ref",
+    referrer_source: "refsource",
+    utm_medium: "medium",
+    utm_source: "source",
+    utm_campaign: "campaign",
+    utm_content: "content",
+    utm_term: "term",
+    browser: "browser",
+    browser_version: "55",
+    country_code: "EE",
+    screen_size: "Desktop",
+    operating_system: "Mac",
+    operating_system_version: "11"
+  }
+
   setup do
     current_pid = self()
 
@@ -40,23 +56,7 @@ defmodule Plausible.Session.CacheStoreTest do
     event2 = build(:event, name: "pageview", user_id: event1.user_id, site_id: event1.site_id)
     event3 = build(:event, name: "pageview", user_id: event1.user_id, site_id: event1.site_id)
 
-    session_params = %{
-      referrer: "ref",
-      referrer_source: "refsource",
-      utm_medium: "medium",
-      utm_source: "source",
-      utm_campaign: "campaign",
-      utm_content: "content",
-      utm_term: "term",
-      browser: "browser",
-      browser_version: "55",
-      country_code: "EE",
-      screen_size: "Desktop",
-      operating_system: "Mac",
-      operating_system_version: "11"
-    }
-
-    CacheStore.on_event(event1, session_params, nil, buffer)
+    CacheStore.on_event(event1, @session_params, nil, buffer)
 
     assert_receive({:buffer, :insert, [[session1]]})
     assert_receive({:telemetry_handled, duration})
@@ -65,7 +65,7 @@ defmodule Plausible.Session.CacheStoreTest do
     [event2, event3]
     |> Enum.map(fn e ->
       Task.async(fn ->
-        CacheStore.on_event(e, session_params, nil, slow_buffer)
+        CacheStore.on_event(e, @session_params, nil, slow_buffer)
       end)
     end)
     |> Task.await_many()
@@ -120,25 +120,9 @@ defmodule Plausible.Session.CacheStoreTest do
     event2 = build(:event, name: "pageview", user_id: event1.user_id, site_id: event1.site_id)
     event3 = build(:event, name: "pageview", user_id: event1.user_id, site_id: event1.site_id)
 
-    session_params = %{
-      referrer: "ref",
-      referrer_source: "refsource",
-      utm_medium: "medium",
-      utm_source: "source",
-      utm_campaign: "campaign",
-      utm_content: "content",
-      utm_term: "term",
-      browser: "browser",
-      browser_version: "55",
-      country_code: "EE",
-      screen_size: "Desktop",
-      operating_system: "Mac",
-      operating_system_version: "11"
-    }
-
     async1 =
       Task.async(fn ->
-        CacheStore.on_event(event1, session_params, nil, very_slow_buffer)
+        CacheStore.on_event(event1, @session_params, nil, very_slow_buffer)
       end)
 
     # Ensure next events are executed after processing event1 starts
@@ -146,12 +130,12 @@ defmodule Plausible.Session.CacheStoreTest do
 
     async2 =
       Task.async(fn ->
-        CacheStore.on_event(event2, session_params, nil, buffer)
+        CacheStore.on_event(event2, @session_params, nil, buffer)
       end)
 
     async3 =
       Task.async(fn ->
-        CacheStore.on_event(event3, session_params, nil, buffer)
+        CacheStore.on_event(event3, @session_params, nil, buffer)
       end)
 
     Task.await_many([async1, async2, async3])
@@ -174,25 +158,9 @@ defmodule Plausible.Session.CacheStoreTest do
     event2 = build(:event, name: "pageview")
     event3 = build(:event, name: "pageview", user_id: event2.user_id, site_id: event2.site_id)
 
-    session_params = %{
-      referrer: "ref",
-      referrer_source: "refsource",
-      utm_medium: "medium",
-      utm_source: "source",
-      utm_campaign: "campaign",
-      utm_content: "content",
-      utm_term: "term",
-      browser: "browser",
-      browser_version: "55",
-      country_code: "EE",
-      screen_size: "Desktop",
-      operating_system: "Mac",
-      operating_system_version: "11"
-    }
-
     async1 =
       Task.async(fn ->
-        CacheStore.on_event(event1, session_params, nil, very_slow_buffer)
+        CacheStore.on_event(event1, @session_params, nil, very_slow_buffer)
       end)
 
     # Ensure next events are executed after processing event1 starts
@@ -200,14 +168,14 @@ defmodule Plausible.Session.CacheStoreTest do
 
     async2 =
       Task.async(fn ->
-        CacheStore.on_event(event2, session_params, nil, buffer)
+        CacheStore.on_event(event2, @session_params, nil, buffer)
       end)
 
     Process.sleep(100)
 
     async3 =
       Task.async(fn ->
-        CacheStore.on_event(event3, session_params, nil, buffer)
+        CacheStore.on_event(event3, @session_params, nil, buffer)
       end)
 
     Task.await_many([async1, async2, async3])
@@ -229,24 +197,8 @@ defmodule Plausible.Session.CacheStoreTest do
 
     event = build(:event, name: "pageview")
 
-    session_params = %{
-      referrer: "ref",
-      referrer_source: "refsource",
-      utm_medium: "medium",
-      utm_source: "source",
-      utm_campaign: "campaign",
-      utm_term: "term",
-      utm_content: "content",
-      browser: "browser",
-      browser_version: "55",
-      country_code: "EE",
-      screen_size: "Desktop",
-      operating_system: "Mac",
-      operating_system_version: "11"
-    }
-
     assert_raise RuntimeError, "boom", fn ->
-      CacheStore.on_event(event, session_params, nil, crashing_buffer)
+      CacheStore.on_event(event, @session_params, nil, crashing_buffer)
     end
   end
 
@@ -258,23 +210,7 @@ defmodule Plausible.Session.CacheStoreTest do
         "meta.value": ["true", "false"]
       )
 
-    session_params = %{
-      referrer: "ref",
-      referrer_source: "refsource",
-      utm_medium: "medium",
-      utm_source: "source",
-      utm_campaign: "campaign",
-      utm_content: "content",
-      utm_term: "term",
-      browser: "browser",
-      browser_version: "55",
-      country_code: "EE",
-      screen_size: "Desktop",
-      operating_system: "Mac",
-      operating_system_version: "11"
-    }
-
-    CacheStore.on_event(event, session_params, nil, buffer)
+    CacheStore.on_event(event, @session_params, nil, buffer)
 
     assert_receive({:buffer, :insert, [sessions]})
     assert [session] = sessions
@@ -289,19 +225,19 @@ defmodule Plausible.Session.CacheStoreTest do
     assert session.duration == 0
     assert session.pageviews == 1
     assert session.events == 1
-    assert session.referrer == Map.get(session_params, :referrer)
-    assert session.referrer_source == Map.get(session_params, :referrer_source)
-    assert session.utm_medium == Map.get(session_params, :utm_medium)
-    assert session.utm_source == Map.get(session_params, :utm_source)
-    assert session.utm_campaign == Map.get(session_params, :utm_campaign)
-    assert session.utm_content == Map.get(session_params, :utm_content)
-    assert session.utm_term == Map.get(session_params, :utm_term)
-    assert session.country_code == Map.get(session_params, :country_code)
-    assert session.screen_size == Map.get(session_params, :screen_size)
-    assert session.operating_system == Map.get(session_params, :operating_system)
-    assert session.operating_system_version == Map.get(session_params, :operating_system_version)
-    assert session.browser == Map.get(session_params, :browser)
-    assert session.browser_version == Map.get(session_params, :browser_version)
+    assert session.referrer == Map.get(@session_params, :referrer)
+    assert session.referrer_source == Map.get(@session_params, :referrer_source)
+    assert session.utm_medium == Map.get(@session_params, :utm_medium)
+    assert session.utm_source == Map.get(@session_params, :utm_source)
+    assert session.utm_campaign == Map.get(@session_params, :utm_campaign)
+    assert session.utm_content == Map.get(@session_params, :utm_content)
+    assert session.utm_term == Map.get(@session_params, :utm_term)
+    assert session.country_code == Map.get(@session_params, :country_code)
+    assert session.screen_size == Map.get(@session_params, :screen_size)
+    assert session.operating_system == Map.get(@session_params, :operating_system)
+    assert session.operating_system_version == Map.get(@session_params, :operating_system_version)
+    assert session.browser == Map.get(@session_params, :browser)
+    assert session.browser_version == Map.get(@session_params, :browser_version)
     assert session.timestamp == event.timestamp
     assert session.start === event.timestamp
     # assert Map.get(session, :"entry.meta.key") == ["logged_in", "darkmode"]
@@ -324,6 +260,21 @@ defmodule Plausible.Session.CacheStoreTest do
     assert session.duration == 10
     assert session.pageviews == 2
     assert session.events == 2
+  end
+
+  test "does not update session counters on pageleave event", %{buffer: buffer} do
+    now = Timex.now()
+    pageview = build(:pageview, timestamp: Timex.shift(now, seconds: -10))
+    pageleave = %{pageview | name: "pageleave", timestamp: now}
+
+    CacheStore.on_event(pageview, %{}, nil, buffer)
+    CacheStore.on_event(pageleave, %{}, nil, buffer)
+    assert_receive({:buffer, :insert, [[session]]})
+
+    assert session.is_bounce == true
+    assert session.duration == 0
+    assert session.pageviews == 1
+    assert session.events == 1
   end
 
   describe "hostname-related attributes" do

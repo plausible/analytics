@@ -72,25 +72,43 @@ defmodule Plausible.Goal do
   end
 
   defp validate_event_name_and_page_path(changeset) do
-    if validate_page_path(changeset) || validate_event_name(changeset) do
-      changeset
-      |> update_change(:event_name, &String.trim/1)
-      |> update_change(:page_path, &String.trim/1)
-    else
-      changeset
-      |> add_error(:event_name, "this field is required and cannot be blank")
-      |> add_error(:page_path, "this field is required and must start with a /")
+    case {validate_page_path(changeset), validate_event_name(changeset)} do
+      {:ok, _} ->
+        update_change(changeset, :page_path, &String.trim/1)
+
+      {_, :ok} ->
+        update_change(changeset, :event_name, &String.trim/1)
+
+      {{:error, page_path_error}, {:error, event_name_error}} ->
+        changeset
+        |> add_error(:event_name, event_name_error)
+        |> add_error(:page_path, page_path_error)
     end
   end
 
   defp validate_page_path(changeset) do
     value = get_field(changeset, :page_path)
-    value && String.match?(value, ~r/^\/.*/)
+
+    if value && String.match?(value, ~r/^\/.*/) do
+      :ok
+    else
+      {:error, "this field is required and must start with a /"}
+    end
   end
 
   defp validate_event_name(changeset) do
     value = get_field(changeset, :event_name)
-    value && String.match?(value, ~r/^.+/)
+
+    cond do
+      value == "pageleave" ->
+        {:error, "The event name 'pageleave' is reserved and cannot be used as a goal"}
+
+      value && String.match?(value, ~r/^.+/) ->
+        :ok
+
+      true ->
+        {:error, "this field is required and cannot be blank"}
+    end
   end
 
   defp maybe_drop_currency(changeset) do

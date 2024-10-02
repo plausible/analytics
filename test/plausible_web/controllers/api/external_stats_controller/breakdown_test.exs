@@ -2604,6 +2604,35 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    test "pageleave events are ignored when querying time on page", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 1234, timestamp: ~N[2021-01-01 12:00:00], pathname: "/1"),
+        build(:pageview, user_id: 1234, timestamp: ~N[2021-01-01 12:00:05], pathname: "/2"),
+        build(:event,
+          name: "pageleave",
+          user_id: 1234,
+          timestamp: ~N[2021-01-01 12:01:00],
+          pathname: "/1"
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "event:page",
+          "metrics" => "time_on_page",
+          "period" => "day",
+          "date" => "2021-01-01"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"page" => "/1", "time_on_page" => 5},
+                 %{"page" => "/2", "time_on_page" => nil}
+               ]
+             }
+    end
+
     test "returns time_on_page as the only metric in an event:page breakdown", %{
       conn: conn,
       site: site

@@ -142,7 +142,7 @@ defmodule Plausible.MixProject do
       {:ex_aws_s3, "~> 2.5"},
       {:sweet_xml, "~> 0.7.4"},
       {:zstream, "~> 0.6.4"},
-      {:con_cache, "~> 1.1.0"},
+      {:con_cache, "~> 1.1.1"},
       {:req, "~> 0.5.0"},
       {:happy_tcp, github: "ruslandoga/happy_tcp", only: [:ce, :ce_dev, :ce_test]},
       {:ex_json_schema, "~> 0.10.2"},

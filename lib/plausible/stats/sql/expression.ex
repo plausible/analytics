@@ -197,8 +197,8 @@ defmodule Plausible.Stats.SQL.Expression do
   end
 
   def event_metric(:events) do
-    wrap_alias([], %{
-      events: fragment("toUInt64(round(count(*) * any(_sample_factor)))")
+    wrap_alias([e], %{
+      events: fragment("toUInt64(round(countIf(? != 'pageleave') * any(_sample_factor)))", e.name)
     })
   end
 
