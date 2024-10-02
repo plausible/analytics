@@ -639,6 +639,19 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   end
 
   describe "include.comparisons" do
+    test "not allowed in public API", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "include" => %{"comparisons" => %{"mode" => "previous_period"}}
+      }
+      |> check_error(
+        site,
+        "#/include/comparisons: Schema does not allow additional properties."
+      )
+    end
+
     test "mode=previous_period", %{site: site} do
       %{
         "site_id" => site.domain,
@@ -646,24 +659,28 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "date_range" => "all",
         "include" => %{"comparisons" => %{"mode" => "previous_period"}}
       }
-      |> check_success(site, %{
-        metrics: [:visitors],
-        utc_time_range: @date_range_day,
-        filters: [],
-        dimensions: [],
-        order_by: nil,
-        timezone: site.timezone,
-        include: %{
-          comparisons: %{
-            mode: "previous_period"
+      |> check_success(
+        site,
+        %{
+          metrics: [:visitors],
+          utc_time_range: @date_range_day,
+          filters: [],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{
+            comparisons: %{
+              mode: "previous_period"
+            },
+            imports: false,
+            time_labels: false,
+            total_rows: false
           },
-          imports: false,
-          time_labels: false,
-          total_rows: false
+          pagination: %{limit: 10_000, offset: 0},
+          preloaded_goals: []
         },
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
-      })
+        :internal
+      )
     end
 
     test "mode=year_over_year", %{site: site} do
@@ -673,24 +690,28 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "date_range" => "all",
         "include" => %{"comparisons" => %{"mode" => "year_over_year"}}
       }
-      |> check_success(site, %{
-        metrics: [:visitors],
-        utc_time_range: @date_range_day,
-        filters: [],
-        dimensions: [],
-        order_by: nil,
-        timezone: site.timezone,
-        include: %{
-          comparisons: %{
-            mode: "year_over_year"
+      |> check_success(
+        site,
+        %{
+          metrics: [:visitors],
+          utc_time_range: @date_range_day,
+          filters: [],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{
+            comparisons: %{
+              mode: "year_over_year"
+            },
+            imports: false,
+            time_labels: false,
+            total_rows: false
           },
-          imports: false,
-          time_labels: false,
-          total_rows: false
+          pagination: %{limit: 10_000, offset: 0},
+          preloaded_goals: []
         },
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
-      })
+        :internal
+      )
     end
 
     test "mode=custom", %{site: site} do
@@ -702,25 +723,29 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           "comparisons" => %{"mode" => "custom", "date_range" => ["2021-04-05", "2021-05-05"]}
         }
       }
-      |> check_success(site, %{
-        metrics: [:visitors],
-        utc_time_range: @date_range_day,
-        filters: [],
-        dimensions: [],
-        order_by: nil,
-        timezone: site.timezone,
-        include: %{
-          comparisons: %{
-            mode: "custom",
-            date_range: @date_range_30d
+      |> check_success(
+        site,
+        %{
+          metrics: [:visitors],
+          utc_time_range: @date_range_day,
+          filters: [],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{
+            comparisons: %{
+              mode: "custom",
+              date_range: @date_range_30d
+            },
+            imports: false,
+            time_labels: false,
+            total_rows: false
           },
-          imports: false,
-          time_labels: false,
-          total_rows: false
+          pagination: %{limit: 10_000, offset: 0},
+          preloaded_goals: []
         },
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
-      })
+        :internal
+      )
     end
 
     test "mode=custom without date_range is invalid", %{site: site} do
@@ -732,7 +757,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "#/include/comparisons: Expected the schema in the then branch to match but it did not."
+        "#/include/comparisons: Expected the schema in the then branch to match but it did not.",
+        :internal
       )
     end
 
@@ -750,7 +776,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "#/include/comparisons: Expected the schema in the else branch to match but it did not."
+        "#/include/comparisons: Expected the schema in the else branch to match but it did not.",
+        :internal
       )
     end
   end

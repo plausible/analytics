@@ -64,6 +64,7 @@
           "description": "If set, returns the total number of result rows rows before pagination under `meta.total_rows`"
         },
         "comparisons": {
+          "$comment": "only :internal",
           "type": "object",
           "properties": {
             "mode": {
