@@ -533,30 +533,32 @@ defmodule PlausibleWeb.AuthController do
     changes = Auth.User.password_changeset(user, params)
 
     Repo.transaction(fn ->
-      case Repo.update(changes) do
-        {:ok, user} ->
-          if Auth.TOTP.enabled?(user) do
-            case Auth.TOTP.validate_code(user, params["two_factor_code"]) do
-              {:ok, user} ->
-                user
-
-              {:error, :not_enabled} ->
-                user
-
-              {:error, _} ->
-                changes
-                |> Ecto.Changeset.add_error(:password, "invalid 2FA code")
-                |> Map.put(:action, :validate)
-                |> Repo.rollback()
-            end
-          else
-            user
-          end
+      with {:ok, user} <- Repo.update(changes),
+           {:ok, user} <- validate_2fa_code(user, params["two_factor_code"]) do
+        user
+      else
+        {:error, :invalid_2fa} ->
+          changes
+          |> Ecto.Changeset.add_error(:password, "invalid 2FA code")
+          |> Map.put(:action, :validate)
+          |> Repo.rollback()
 
         {:error, changeset} ->
           Repo.rollback(changeset)
       end
     end)
+  end
+
+  defp validate_2fa_code(user, code) do
+    if Auth.TOTP.enabled?(user) do
+      case Auth.TOTP.validate_code(user, code) do
+        {:ok, user} -> {:ok, user}
+        {:error, :not_enabled} -> {:ok, user}
+        {:error, _} -> {:error, :invalid_2fa}
+      end
+    else
+      {:ok, user}
+    end
   end
 
   defp render_settings(conn, opts) do
