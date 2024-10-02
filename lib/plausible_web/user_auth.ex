@@ -91,11 +91,12 @@ defmodule PlausibleWeb.UserAuth do
 
     delete_query = from us in Auth.UserSession, where: us.user_id == ^user.id, select: us.token
 
-    delete_query = if except do
-      where(delete_query, [us], us.id != ^except.id)
-    else
-      delete_query
-    end
+    delete_query =
+      if except do
+        where(delete_query, [us], us.id != ^except.id)
+      else
+        delete_query
+      end
 
     {_count, tokens} = Repo.delete_all(delete_query)
 

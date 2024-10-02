@@ -329,6 +329,7 @@ defmodule PlausibleWeb.Router do
     get "/settings", AuthController, :user_settings
     put "/settings", AuthController, :save_settings
     put "/settings/email", AuthController, :update_email
+    put "/settings/password", AuthController, :update_password
     post "/settings/email/cancel", AuthController, :cancel_update_email
     delete "/me", AuthController, :delete_me
     get "/settings/api-keys/new", AuthController, :new_api_key

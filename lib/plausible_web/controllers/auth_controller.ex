@@ -29,6 +29,7 @@ defmodule PlausibleWeb.AuthController do
            :user_settings,
            :save_settings,
            :update_email,
+           :update_password,
            :cancel_update_email,
            :new_api_key,
            :create_api_key,
@@ -264,10 +265,12 @@ defmodule PlausibleWeb.AuthController do
     user = conn.assigns.current_user
     settings_changeset = Auth.User.settings_changeset(user)
     email_changeset = Auth.User.settings_changeset(user)
+    password_changeset = Auth.User.password_changeset(user)
 
     render_settings(conn,
       settings_changeset: settings_changeset,
-      email_changeset: email_changeset
+      email_changeset: email_changeset,
+      password_changeset: password_changeset
     )
   end
 
@@ -499,6 +502,75 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
+  def update_password(conn, %{"user" => params}) do
+    user = conn.assigns.current_user
+    user_session = conn.assigns.current_user_session
+
+    with :ok <- Auth.rate_limit(:password_change_user, user),
+         {:ok, user} <- do_update_password(user, params) do
+      UserAuth.revoke_all_user_sessions(user, except: user_session)
+
+      conn
+      |> put_flash(:success, "Your password is now changed")
+      |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-password")
+    else
+      {:error, %Ecto.Changeset{} = changeset} ->
+        settings_changeset = Auth.User.settings_changeset(user)
+        email_changeset = Auth.User.email_changeset(user)
+
+        render_settings(conn,
+          settings_changeset: settings_changeset,
+          email_changeset: email_changeset,
+          password_changeset: changeset
+        )
+
+      {:error, {:rate_limit, _}} ->
+        settings_changeset = Auth.User.settings_changeset(user)
+        email_changeset = Auth.User.email_changeset(user)
+
+        {:error, changeset} =
+          user
+          |> Auth.User.password_changeset(params)
+          |> Ecto.Changeset.add_error(:password, "too many attempts, try again in 20 minutes")
+          |> Ecto.Changeset.apply_action(:validate)
+
+        render_settings(conn,
+          settings_changeset: settings_changeset,
+          email_changeset: email_changeset,
+          password_changeset: changeset
+        )
+    end
+  end
+
+  defp do_update_password(user, params) do
+    changes = Auth.User.password_changeset(user, params)
+
+    Repo.transaction(fn ->
+      case Repo.update(changes) do
+        {:ok, user} ->
+          if Auth.TOTP.enabled?(user) do
+            case Auth.TOTP.validate_code(user, params["two_factor_code"]) do
+              {:ok, user} ->
+                user
+
+              {:error, :not_enabled} ->
+                user
+
+              {:error, _} ->
+                changes
+                |> Ecto.Changeset.add_error(:password, "invalid 2FA code")
+                |> Repo.rollback()
+            end
+          else
+            user
+          end
+
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
+
   def cancel_update_email(conn, _params) do
     changeset = Auth.User.cancel_email_changeset(conn.assigns.current_user)
 
@@ -526,16 +598,23 @@ defmodule PlausibleWeb.AuthController do
 
   defp render_settings(conn, opts) do
     current_user = conn.assigns.current_user
-    settings_changeset = Keyword.fetch!(opts, :settings_changeset)
-    email_changeset = Keyword.fetch!(opts, :email_changeset)
     api_keys = Repo.preload(current_user, :api_keys).api_keys
     user_sessions = Auth.UserSessions.list_for_user(current_user)
+
+    settings_changeset =
+      Keyword.get(opts, :settings_changeset, Auth.User.settings_changeset(current_user))
+
+    email_changeset = Keyword.get(opts, :email_changeset, Auth.User.email_changeset(current_user))
+
+    password_changeset =
+      Keyword.get(opts, :password_changeset, Auth.User.password_changeset(current_user))
 
     render(conn, "user_settings.html",
       api_keys: api_keys,
       user_sessions: user_sessions,
       settings_changeset: settings_changeset,
       email_changeset: email_changeset,
+      password_changeset: password_changeset,
       subscription: current_user.subscription,
       invoices: Plausible.Billing.paddle_api().get_invoices(current_user.subscription),
       theme: current_user.theme || "system",
