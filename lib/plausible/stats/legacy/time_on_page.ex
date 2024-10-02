@@ -1,5 +1,5 @@
 defmodule Plausible.Stats.Legacy.TimeOnPage do
-  @doc """
+  @moduledoc """
   Calculation methods for legacy time_on_page metric. Note the metric
   has its own limitations and quirks.
 

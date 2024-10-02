@@ -1,5 +1,5 @@
 defmodule Plausible.Stats.QueryRunner do
-  @doc """
+  @moduledoc """
   This module is responsible for executing a Plausible.Stats.Query
   and gathering results.
 
