@@ -250,17 +250,20 @@
         </div>
       </div>
 
-      <div class="my-4" :if={Plausible.Auth.TOTP.enabled?(@current_user)}>
+      <div :if={Plausible.Auth.TOTP.enabled?(@current_user)} class="my-4">
         <%= label(f, :two_factor_code, "Verify with 2FA",
           class: "block text-sm font-medium text-gray-700 dark:text-gray-300"
         ) %>
         <div class="mt-1">
-          <PlausibleWeb.Components.TwoFactor.verify_2fa_input form={f} show_button?={false} field={:two_factor_code} />
+          <PlausibleWeb.Components.TwoFactor.verify_2fa_input
+            form={f}
+            show_button?={false}
+            field={:two_factor_code}
+          />
 
           <%= error_tag(f, :two_factor_code) %>
         </div>
       </div>
-
 
       <%= submit("Change my password",
         class:
