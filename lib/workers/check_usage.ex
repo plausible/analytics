@@ -40,18 +40,6 @@ defmodule Plausible.Workers.CheckUsage do
       from(s in Subscription,
         order_by: [desc: s.inserted_at],
         where: s.user_id == parent_as(:user).id,
-        where:
-          s.status in [
-            ^Subscription.Status.active(),
-            ^Subscription.Status.past_due(),
-            ^Subscription.Status.deleted()
-          ],
-        where: not is_nil(s.last_bill_date),
-        # Accounts for situations like last_bill_date==2021-01-31 AND today==2021-03-01. Since February never reaches the 31st day, the account is checked on 2021-03-01.
-        where: s.next_bill_date >= ^today,
-        where:
-          least(day_of_month(s.last_bill_date), day_of_month(last_day_of_month(^yesterday))) ==
-            day_of_month(^yesterday),
         limit: 1
       )
 
@@ -59,10 +47,24 @@ defmodule Plausible.Workers.CheckUsage do
       Repo.all(
         from(u in User,
           as: :user,
-          inner_lateral_join: s in subquery(last_subscription_query),
-          on: true,
+          inner_join: s in Plausible.Billing.Subscription,
+          on: s.user_id == u.id,
+          inner_lateral_join: ls in subquery(last_subscription_query),
+          on: ls.id == s.id,
           left_join: ep in Plausible.Billing.EnterprisePlan,
           on: ep.user_id == u.id,
+          where:
+            s.status in [
+              ^Subscription.Status.active(),
+              ^Subscription.Status.past_due(),
+              ^Subscription.Status.deleted()
+            ],
+          where: not is_nil(s.last_bill_date),
+          # Accounts for situations like last_bill_date==2021-01-31 AND today==2021-03-01. Since February never reaches the 31st day, the account is checked on 2021-03-01.
+          where: s.next_bill_date >= ^today,
+          where:
+            least(day_of_month(s.last_bill_date), day_of_month(last_day_of_month(^yesterday))) ==
+              day_of_month(^yesterday),
           order_by: u.id,
           preload: [subscription: s, enterprise_plan: ep]
         )
