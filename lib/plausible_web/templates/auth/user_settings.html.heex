@@ -220,7 +220,7 @@
             class:
               "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
           ) %>
-          <%= error_tag(f, :old_password) %>
+          <%= error_tag(f, :old_password, only_first?: true) %>
         </div>
       </div>
       <div class="my-4">
@@ -233,7 +233,7 @@
             class:
               "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
           ) %>
-          <%= error_tag(f, :password) %>
+          <%= error_tag(f, :password, only_first?: true) %>
         </div>
       </div>
       <div class="my-4">
@@ -246,7 +246,7 @@
             class:
               "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
           ) %>
-          <%= error_tag(f, :password_confirmation) %>
+          <%= error_tag(f, :password_confirmation, only_first?: true) %>
         </div>
       </div>
 
@@ -260,8 +260,6 @@
             show_button?={false}
             field={:two_factor_code}
           />
-
-          <%= error_tag(f, :two_factor_code) %>
         </div>
       </div>
 
