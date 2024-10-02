@@ -62,7 +62,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   def parse_date_range_pair(site, [from, to]) when is_binary(from) and is_binary(to) do
-    date_range_from_date_strings(site, from, to)
+    with {:ok, date_range} <- date_range_from_date_strings(site, from, to) do
+      {:ok, date_range |> DateTimeRange.to_timezone("Etc/UTC")}
+    end
   end
 
   def parse_date_range_pair(_site, unknown), do: {:error, "Invalid date_range '#{i(unknown)}'."}

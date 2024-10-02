@@ -655,7 +655,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         timezone: site.timezone,
         include: %{
           comparisons: %{
-            "mode" => "previous_period"
+            mode: "previous_period"
           },
           imports: false,
           time_labels: false,
@@ -682,7 +682,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         timezone: site.timezone,
         include: %{
           comparisons: %{
-            "mode" => "year_over_year"
+            mode: "year_over_year"
           },
           imports: false,
           time_labels: false,
@@ -699,7 +699,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "metrics" => ["visitors"],
         "date_range" => "all",
         "include" => %{
-          "comparisons" => %{"mode" => "custom", "date_range" => ["2024-01-01", "2024-01-31"]}
+          "comparisons" => %{"mode" => "custom", "date_range" => ["2021-04-05", "2021-05-05"]}
         }
       }
       |> check_success(site, %{
@@ -711,8 +711,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         timezone: site.timezone,
         include: %{
           comparisons: %{
-            "mode" => "custom",
-            "date_range" => ["2024-01-01", "2024-01-31"]
+            mode: "custom",
+            date_range: @date_range_30d
           },
           imports: false,
           time_labels: false,
@@ -750,7 +750,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "#/include/comparisons: Expected the schema in the then branch to match but it did not."
+        "#/include/comparisons: Expected the schema in the else branch to match but it did not."
       )
     end
   end

@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use PlausibleWeb.Plugs.ErrorHandler
 
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, DateTimeRange, Comparisons, Filters, Time, TableDecider}
+  alias Plausible.Stats.{Query, Comparisons, Filters, Time, TableDecider}
   alias Plausible.Stats.Filters.LegacyDashboardFilterParser
   alias PlausibleWeb.Api.Helpers, as: H
 
@@ -1557,7 +1557,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     %{
       mode: "custom",
-      date_range: date_range |> DateTimeRange.to_timezone("Etc/UTC"),
+      date_range: date_range,
       match_day_of_week: params["match_day_of_week"] == "true"
     }
   end
