@@ -559,6 +559,7 @@ defmodule PlausibleWeb.AuthController do
               {:error, _} ->
                 changes
                 |> Ecto.Changeset.add_error(:password, "invalid 2FA code")
+                |> Map.put(:action, :validate)
                 |> Repo.rollback()
             end
           else
