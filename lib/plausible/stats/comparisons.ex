@@ -31,12 +31,12 @@ defmodule Plausible.Stats.Comparisons do
 
     * `:date_range` - a ISO-8601 date string pair used when mode is `"custom"`.
 
-    * `:match_day_of_week?` - determines whether the comparison query should be
+    * `:match_day_of_week` - determines whether the comparison query should be
       adjusted to match the day of the week of the source query. When this option
       is set to true, the comparison query is shifted to start on the same day of
       the week as the source query, rather than on the exact same date. For
       example, if the source query starts on Sunday, January 1st, 2023 and the
-      `year_over_year` comparison query is configured to `match_day_of_week?`,
+      `year_over_year` comparison query is configured to `match_day_of_week`,
       it will be shifted to start on Sunday, January 2nd, 2022 instead of
       January 1st. Defaults to false.
 
@@ -89,7 +89,7 @@ defmodule Plausible.Stats.Comparisons do
   end
 
   defp maybe_match_day_of_week(comparison_date_range, source_date_range, options) do
-    if options[:match_day_of_week?] do
+    if options[:match_day_of_week] do
       day_to_match = Date.day_of_week(source_date_range.first)
 
       new_first =

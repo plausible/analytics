@@ -25,6 +25,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
         {DateTime.utc_now(:second), today(site)}
       end
 
+    preload_atoms()
+
     with :ok <- JSONSchema.validate(schema_type, params),
          {:ok, date} <- parse_date(site, Map.get(params, "date"), date),
          {:ok, raw_time_range} <-
@@ -34,7 +36,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
-         {:ok, include} <- parse_include(Map.get(params, "include", %{})),
+         {:ok, include} <- parse_include(site, Map.get(params, "include", %{})),
          {:ok, pagination} <- parse_pagination(Map.get(params, "pagination", %{})),
          preloaded_goals <- preload_goals_if_needed(site, filters, dimensions),
          query = %{
@@ -321,16 +323,37 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_order_direction([_, "desc"]), do: {:ok, :desc}
   defp parse_order_direction(entry), do: {:error, "Invalid order_by entry '#{i(entry)}'."}
 
-  defp parse_include(include) when is_map(include) do
-    {:ok, Map.merge(@default_include, atomize_keys(include))}
+  defp parse_include(site, include) when is_map(include) do
+    parsed =
+      include
+      |> atomize_keys()
+      |> update_comparisons_date_range(site)
+
+    with {:ok, include} <- parsed do
+      {:ok, Map.merge(@default_include, include)}
+    end
   end
+
+  defp update_comparisons_date_range(%{comparisons: %{date_range: date_range}} = include, site) do
+    with {:ok, parsed_date_range} <- parse_date_range_pair(site, date_range) do
+      {:ok, put_in(include, [:comparisons, :date_range], parsed_date_range)}
+    end
+  end
+
+  defp update_comparisons_date_range(include, _site), do: {:ok, include}
 
   defp parse_pagination(pagination) when is_map(pagination) do
     {:ok, Map.merge(@default_pagination, atomize_keys(pagination))}
   end
 
-  defp atomize_keys(map),
-    do: Map.new(map, fn {key, value} -> {String.to_existing_atom(key), value} end)
+  defp atomize_keys(map) when is_map(map) do
+    Map.new(map, fn {key, value} ->
+      key = String.to_existing_atom(key)
+      {key, atomize_keys(value)}
+    end)
+  end
+
+  defp atomize_keys(value), do: value
 
   defp parse_filter_key_string(filter_key, error_message \\ "") do
     case filter_key do
@@ -553,5 +576,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
         {:error, _} = error -> {:halt, error}
       end
     end)
+  end
+
+  # :KLUDGE: Some modules/atoms from other modules might not be loaded by time of parsing in tests so make sure they are loaded.
+  defp preload_atoms() do
+    [:mode, :match_day_of_week]
   end
 end

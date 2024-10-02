@@ -7,6 +7,8 @@ defmodule Plausible.Stats.QueryResult do
   produced by Jason.encode(query_result) is ordered.
   """
 
+  alias Plausible.Stats.DateTimeRange
+
   defstruct results: [],
             meta: %{},
             query: nil
@@ -32,7 +34,7 @@ defmodule Plausible.Stats.QueryResult do
           filters: query.filters,
           dimensions: query.dimensions,
           order_by: query.order_by |> Enum.map(&Tuple.to_list/1),
-          include: query.include |> Map.filter(fn {_key, val} -> val end),
+          include: include(query) |> Map.filter(fn {_key, val} -> val end),
           pagination: query.pagination
         )
     )
@@ -62,6 +64,20 @@ defmodule Plausible.Stats.QueryResult do
     }
     |> Enum.reject(fn {_, value} -> is_nil(value) end)
     |> Enum.into(%{})
+  end
+
+  defp include(query) do
+    case get_in(query.include, [:comparisons, :date_range]) do
+      %DateTimeRange{first: first, last: last} ->
+        query.include
+        |> put_in([:comparisons, :date_range], [
+          to_iso8601(first, query.timezone),
+          to_iso8601(last, query.timezone)
+        ])
+
+      nil ->
+        query.include
+    end
   end
 
   defp to_iso8601(datetime, timezone) do

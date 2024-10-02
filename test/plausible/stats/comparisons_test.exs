@@ -41,7 +41,7 @@ defmodule Plausible.Stats.ComparisonsTest do
         build_query(site, %{"period" => "month", "date" => "2023-03-02"}, ~N[2023-03-02 14:00:00])
 
       comparison_query =
-        Comparisons.compare(query, %{mode: "previous_period", match_day_of_week?: true})
+        Comparisons.compare(query, %{mode: "previous_period", match_day_of_week: true})
 
       assert comparison_query.utc_time_range.first == ~U[2023-02-22 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2023-02-23 23:59:59Z]
@@ -104,7 +104,7 @@ defmodule Plausible.Stats.ComparisonsTest do
         build_query(site, %{"period" => "month", "date" => "2023-02-01"}, ~N[2023-03-01 14:00:00])
 
       comparison_query =
-        Comparisons.compare(query, %{mode: "previous_period", match_day_of_week?: true})
+        Comparisons.compare(query, %{mode: "previous_period", match_day_of_week: true})
 
       assert comparison_query.utc_time_range.first == ~U[2023-01-04 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2023-01-31 23:59:59Z]
@@ -117,7 +117,7 @@ defmodule Plausible.Stats.ComparisonsTest do
         build_query(site, %{"period" => "month", "date" => "2023-01-01"}, ~N[2023-03-01 14:00:00])
 
       comparison_query =
-        Comparisons.compare(query, %{mode: "previous_period", match_day_of_week?: true})
+        Comparisons.compare(query, %{mode: "previous_period", match_day_of_week: true})
 
       assert comparison_query.utc_time_range.first == ~U[2022-12-04 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2023-01-03 23:59:59Z]
@@ -156,7 +156,7 @@ defmodule Plausible.Stats.ComparisonsTest do
         build_query(site, %{"period" => "year", "date" => "2023-03-01"}, ~N[2023-03-01 14:00:00])
 
       comparison_query =
-        Comparisons.compare(query, %{mode: "year_over_year", match_day_of_week?: true})
+        Comparisons.compare(query, %{mode: "year_over_year", match_day_of_week: true})
 
       assert comparison_query.utc_time_range.first == ~U[2022-01-02 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2022-03-02 23:59:59Z]

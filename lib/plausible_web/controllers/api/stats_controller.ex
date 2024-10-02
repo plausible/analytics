@@ -1544,7 +1544,7 @@ defmodule PlausibleWeb.Api.StatsController do
       when mode in ["previous_period", "year_over_year"] do
     %{
       mode: mode,
-      match_day_of_week?: params["match_day_of_week"] == "true"
+      match_day_of_week: params["match_day_of_week"] == "true"
     }
   end
 
@@ -1558,7 +1558,7 @@ defmodule PlausibleWeb.Api.StatsController do
     %{
       mode: "custom",
       date_range: date_range |> DateTimeRange.to_timezone("Etc/UTC"),
-      match_day_of_week?: params["match_day_of_week"] == "true"
+      match_day_of_week: params["match_day_of_week"] == "true"
     }
   end
 
