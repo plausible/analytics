@@ -81,6 +81,12 @@ defmodule Plausible.Auth.User do
     |> validate_required([:name])
   end
 
+  def theme_changeset(user, attrs \\ %{}) do
+    user
+    |> cast(attrs, [:theme])
+    |> validate_required([:theme])
+  end
+
   def settings_changeset(user, attrs \\ %{}) do
     user
     |> cast(attrs, [:email, :name, :theme])

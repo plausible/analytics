@@ -38,19 +38,37 @@ defmodule PlausibleWeb.SettingsController do
     changeset = Auth.User.name_changeset(conn.assigns.current_user, params)
 
     case Repo.update(changeset) do
-      {:ok, _user} -> 
+      {:ok, _user} ->
         conn
         |> put_flash(:success, "Name changed")
         |> redirect(to: Routes.settings_path(conn, :preferences))
+
       {:error, changeset} ->
         render_preferences(conn, name_changeset: changeset)
     end
   end
 
+  def update_theme(conn, %{"user" => params}) do
+    changeset = Auth.User.theme_changeset(conn.assigns.current_user, params)
+
+    case Repo.update(changeset) do
+      {:ok, _user} ->
+        conn
+        |> put_flash(:success, "Theme changed")
+        |> redirect(to: Routes.settings_path(conn, :preferences))
+
+      {:error, changeset} ->
+        render_preferences(conn, theme_changeset: changeset)
+    end
+  end
+
   defp render_preferences(conn, opts \\ []) do
-        render(conn, :preferences, 
-          name_changeset: Keyword.get(opts, :name_changeset, Auth.User.name_changeset(conn.assigns.current_user)),
-          layout: {PlausibleWeb.LayoutView, :settings}
-        )
+    render(conn, :preferences,
+      name_changeset:
+        Keyword.get(opts, :name_changeset, Auth.User.name_changeset(conn.assigns.current_user)),
+      theme_changeset:
+        Keyword.get(opts, :theme_changeset, Auth.User.theme_changeset(conn.assigns.current_user)),
+      layout: {PlausibleWeb.LayoutView, :settings}
+    )
   end
 end
