@@ -16,17 +16,17 @@
 
       <.input
         type="text"
-        readonly
         name="user[current_email]"
         value={f.data.email}
-        label="Current E-mail"
+        label="Current Email"
         width="w-1/2"
+        disabled
       />
 
       <.input type="text" field={f[:email]} label="New E-mail" width="w-1/2" />
 
       <.button type="submit">
-        Change E-mail
+        Change Email
       </.button>
     </.form>
   </.tile>
