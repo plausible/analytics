@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-594E5C20.js"></script>
+    <script src="dist/sidebar_items-0792DBAE.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -219,6 +219,14 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#password_changeset/2" translate="no">password_changeset(user, params \\ %{})</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#password_strength/1" translate="no">password_strength(changeset)</a>
 
       </div>
@@ -330,6 +338,7 @@ Pages
   last_seen: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   name: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   notes: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  old_password: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   password: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   password_confirmation: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   password_hash: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -443,7 +452,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">end_trial(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L171" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L182" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -465,7 +474,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">hash_password(changeset)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L151" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L162" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -489,7 +498,31 @@ Pages
     </a>
     <h1 class="signature" translate="no">new(attrs \\ %{})</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L64" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L65" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="password_changeset/2">
+
+    <span id="password_changeset/1"></span>
+
+  <div class="detail-header">
+    <a href="#password_changeset/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">password_changeset(user, params \\ %{})</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L150" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -511,7 +544,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">password_strength(changeset)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L175" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L186" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -533,7 +566,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">profile_img_url(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L205" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L216" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -555,7 +588,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">remove_trial_expiry(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L158" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L169" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -623,7 +656,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">start_trial(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L162" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L173" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -645,7 +678,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">subscription_accept_traffic_until_offset_days()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L218" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L229" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -667,7 +700,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">trial_accept_traffic_until_offset_days()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L216" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/user.ex#L227" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

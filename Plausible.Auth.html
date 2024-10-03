@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-594E5C20.js"></script>
+    <script src="dist/sidebar_items-0792DBAE.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -307,7 +307,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">rate_limit_type()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L31" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L36" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -319,7 +319,8 @@ Pages
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> rate_limit_type() :: :email_change_user | :login_user | :login_ip</pre>
+          <pre translate="no"><span class="attribute">@type</span> rate_limit_type() ::
+  :password_change_user | :email_change_user | :login_user | :login_ip</pre>
 
       </div>
 
@@ -347,7 +348,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">check_password(user, password)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L67" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L72" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -376,7 +377,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">create_api_key(user, name, key)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L141" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L146" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -406,7 +407,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">create_user(name, email, pwd)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L48" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L53" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -428,7 +429,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">delete_api_key(user, id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L150" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L155" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -456,7 +457,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">delete_user(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L91" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L96" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -478,7 +479,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">enterprise_configured?(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L131" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L136" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -500,7 +501,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">find_api_key(raw_key)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L160" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L165" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -529,7 +530,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">find_user_by(opts)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L54" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L59" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -557,7 +558,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">get_user_by(opts)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L59" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L64" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -588,7 +589,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">has_active_sites?(user, roles \\ [:owner, :admin, :viewer])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L75" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L80" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -610,7 +611,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">is_super_admin?(user_id)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L121" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L126" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -632,7 +633,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">rate_limit(limit_type, key)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L38" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L43" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -661,7 +662,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">rate_limits()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L34" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L39" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -689,7 +690,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">user_owns_sites?(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L109" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/auth.ex#L114" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
