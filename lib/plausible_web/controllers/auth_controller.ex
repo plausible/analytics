@@ -29,6 +29,7 @@ defmodule PlausibleWeb.AuthController do
            :user_settings,
            :save_settings,
            :update_email,
+           :update_password,
            :cancel_update_email,
            :new_api_key,
            :create_api_key,
@@ -261,14 +262,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def user_settings(conn, _params) do
-    user = conn.assigns.current_user
-    settings_changeset = Auth.User.settings_changeset(user)
-    email_changeset = Auth.User.settings_changeset(user)
-
-    render_settings(conn,
-      settings_changeset: settings_changeset,
-      email_changeset: email_changeset
-    )
+    render_settings(conn, [])
   end
 
   def initiate_2fa_setup(conn, _params) do
@@ -453,12 +447,7 @@ defmodule PlausibleWeb.AuthController do
         |> redirect(to: Routes.auth_path(conn, :user_settings))
 
       {:error, changeset} ->
-        email_changeset = Auth.User.settings_changeset(user)
-
-        render_settings(conn,
-          settings_changeset: changeset,
-          email_changeset: email_changeset
-        )
+        render_settings(conn, settings_changeset: changeset)
     end
   end
 
@@ -476,26 +465,42 @@ defmodule PlausibleWeb.AuthController do
       end
     else
       {:error, %Ecto.Changeset{} = changeset} ->
-        settings_changeset = Auth.User.settings_changeset(user)
-
-        render_settings(conn,
-          settings_changeset: settings_changeset,
-          email_changeset: changeset
-        )
+        render_settings(conn, email_changeset: changeset)
 
       {:error, {:rate_limit, _}} ->
-        settings_changeset = Auth.User.settings_changeset(user)
-
-        {:error, changeset} =
+        changeset =
           user
           |> Auth.User.email_changeset(user_params)
           |> Ecto.Changeset.add_error(:email, "too many requests, try again in an hour")
-          |> Ecto.Changeset.apply_action(:validate)
+          |> Map.put(:action, :validate)
 
-        render_settings(conn,
-          settings_changeset: settings_changeset,
-          email_changeset: changeset
-        )
+        render_settings(conn, email_changeset: changeset)
+    end
+  end
+
+  def update_password(conn, %{"user" => params}) do
+    user = conn.assigns.current_user
+    user_session = conn.assigns.current_user_session
+
+    with :ok <- Auth.rate_limit(:password_change_user, user),
+         {:ok, user} <- do_update_password(user, params) do
+      UserAuth.revoke_all_user_sessions(user, except: user_session)
+
+      conn
+      |> put_flash(:success, "Your password is now changed")
+      |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-password")
+    else
+      {:error, %Ecto.Changeset{} = changeset} ->
+        render_settings(conn, password_changeset: changeset)
+
+      {:error, {:rate_limit, _}} ->
+        changeset =
+          user
+          |> Auth.User.password_changeset(params)
+          |> Ecto.Changeset.add_error(:password, "too many attempts, try again in 20 minutes")
+          |> Map.put(:action, :validate)
+
+        render_settings(conn, password_changeset: changeset)
     end
   end
 
@@ -524,18 +529,57 @@ defmodule PlausibleWeb.AuthController do
     |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-email-address")
   end
 
+  defp do_update_password(user, params) do
+    changes = Auth.User.password_changeset(user, params)
+
+    Repo.transaction(fn ->
+      with {:ok, user} <- Repo.update(changes),
+           {:ok, user} <- validate_2fa_code(user, params["two_factor_code"]) do
+        user
+      else
+        {:error, :invalid_2fa} ->
+          changes
+          |> Ecto.Changeset.add_error(:password, "invalid 2FA code")
+          |> Map.put(:action, :validate)
+          |> Repo.rollback()
+
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
+  end
+
+  defp validate_2fa_code(user, code) do
+    if Auth.TOTP.enabled?(user) do
+      case Auth.TOTP.validate_code(user, code) do
+        {:ok, user} -> {:ok, user}
+        {:error, :not_enabled} -> {:ok, user}
+        {:error, _} -> {:error, :invalid_2fa}
+      end
+    else
+      {:ok, user}
+    end
+  end
+
   defp render_settings(conn, opts) do
     current_user = conn.assigns.current_user
-    settings_changeset = Keyword.fetch!(opts, :settings_changeset)
-    email_changeset = Keyword.fetch!(opts, :email_changeset)
     api_keys = Repo.preload(current_user, :api_keys).api_keys
     user_sessions = Auth.UserSessions.list_for_user(current_user)
+
+    settings_changeset =
+      Keyword.get(opts, :settings_changeset, Auth.User.settings_changeset(current_user))
+
+    email_changeset = Keyword.get(opts, :email_changeset, Auth.User.email_changeset(current_user))
+
+    password_changeset =
+      Keyword.get(opts, :password_changeset, Auth.User.password_changeset(current_user))
 
     render(conn, "user_settings.html",
       api_keys: api_keys,
       user_sessions: user_sessions,
       settings_changeset: settings_changeset,
       email_changeset: email_changeset,
+      password_changeset: password_changeset,
       subscription: current_user.subscription,
       invoices: Plausible.Billing.paddle_api().get_invoices(current_user.subscription),
       theme: current_user.theme || "system",

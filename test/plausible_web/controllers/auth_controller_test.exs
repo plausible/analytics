@@ -1158,6 +1158,173 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
+  describe "PUT /settings/password" do
+    setup [:create_user, :log_in]
+
+    test "updates the password and kills other sessions", %{conn: conn, user: user} do
+      password = "very-long-very-secret-123"
+      new_password = "super-long-super-secret-999"
+
+      another_session =
+        user
+        |> Auth.UserSession.new_session("Some Device")
+        |> Repo.insert!()
+
+      original =
+        user
+        |> User.set_password(password)
+        |> Repo.update!()
+
+      conn =
+        put(conn, "/settings/password", %{
+          "user" => %{
+            "password" => new_password,
+            "old_password" => password,
+            "password_confirmation" => new_password
+          }
+        })
+
+      assert redirected_to(conn, 302) ==
+               Routes.auth_path(conn, :user_settings) <> "#change-password"
+
+      current_hash = Repo.reload!(user).password_hash
+      assert current_hash != original.password_hash
+      assert Plausible.Auth.Password.match?(new_password, current_hash)
+
+      assert [remaining_session] = Repo.preload(user, :sessions).sessions
+      assert remaining_session.id != another_session.id
+    end
+
+    test "fails to update weak password", %{conn: conn} do
+      password = "very-long-very-secret-123"
+      new_password = "weak"
+
+      conn =
+        put(conn, "/settings/password", %{
+          "user" => %{
+            "password" => new_password,
+            "old_password" => password,
+            "password_confirmation" => new_password
+          }
+        })
+
+      assert html = html_response(conn, 200)
+      assert html =~ "is too weak"
+    end
+
+    test "fails to update confirmation mismatch", %{conn: conn} do
+      password = "very-long-very-secret-123"
+      new_password = "super-long-super-secret-999"
+
+      conn =
+        put(conn, "/settings/password", %{
+          "user" => %{
+            "password" => new_password,
+            "old_password" => password,
+            "password_confirmation" => new_password <> "mismatch"
+          }
+        })
+
+      assert html = html_response(conn, 200)
+      assert html =~ "does not match confirmation"
+    end
+
+    test "updates the password when 2FA is enabled", %{conn: conn, user: user} do
+      password = "very-long-very-secret-123"
+      new_password = "super-long-super-secret-999"
+
+      original =
+        user
+        |> User.set_password(password)
+        |> Repo.update!()
+
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      code = NimbleTOTP.verification_code(user.totp_secret)
+
+      conn =
+        put(conn, "/settings/password", %{
+          "user" => %{
+            "password" => new_password,
+            "old_password" => password,
+            "password_confirmation" => new_password,
+            "two_factor_code" => code
+          }
+        })
+
+      assert redirected_to(conn, 302) ==
+               Routes.auth_path(conn, :user_settings) <> "#change-password"
+
+      current_hash = Repo.reload!(user).password_hash
+      assert current_hash != original.password_hash
+      assert Plausible.Auth.Password.match?(new_password, current_hash)
+    end
+
+    test "fails to update with wrong 2fa code", %{conn: conn, user: user} do
+      password = "very-long-very-secret-123"
+
+      user =
+        user
+        |> User.set_password(password)
+        |> Repo.update!()
+
+      new_password = "super-long-super-secret-999"
+
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn =
+        put(conn, "/settings/password", %{
+          "user" => %{
+            "password" => new_password,
+            "old_password" => password,
+            "password_confirmation" => new_password,
+            "two_factor_code" => "111111"
+          }
+        })
+
+      assert html = html_response(conn, 200)
+      assert html =~ "invalid 2FA code"
+    end
+
+    test "fails to update with missing 2fa code", %{conn: conn, user: user} do
+      password = "very-long-very-secret-123"
+
+      user =
+        user
+        |> User.set_password(password)
+        |> Repo.update!()
+
+      new_password = "super-long-super-secret-999"
+
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn =
+        put(conn, "/settings/password", %{
+          "user" => %{
+            "password" => new_password,
+            "old_password" => password,
+            "password_confirmation" => new_password
+          }
+        })
+
+      assert html = html_response(conn, 200)
+      assert html =~ "invalid 2FA code"
+    end
+
+    test "fails to update with no input", %{conn: conn} do
+      conn =
+        put(conn, "/settings/password", %{
+          "user" => %{}
+        })
+
+      assert html = html_response(conn, 200)
+      assert text(html) =~ "can't be blank"
+    end
+  end
+
   describe "PUT /settings/email" do
     setup [:create_user, :log_in]
 

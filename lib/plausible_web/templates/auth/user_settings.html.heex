@@ -203,6 +203,73 @@
     <% end %>
   </div>
 
+  <div class="max-w-2xl px-8 pt-6 pb-8 mx-auto mt-16 bg-white border-t-2 border-red-600 rounded rounded-t-none shadow-md dark:bg-gray-800">
+    <h2 id="change-password" class="text-xl font-black dark:text-gray-100">
+      Change password
+    </h2>
+
+    <div class="my-4 border-b border-gray-300 dark:border-gray-500"></div>
+
+    <%= form_for @password_changeset, "/settings/password#change-password", [class: "max-w-sm"], fn f -> %>
+      <div class="my-4">
+        <%= label(f, :old_password, "Current password",
+          class: "block text-sm font-medium text-gray-700 dark:text-gray-300"
+        ) %>
+        <div class="mt-1">
+          <%= password_input(f, :old_password,
+            class:
+              "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+          ) %>
+          <%= error_tag(f, :old_password, only_first?: true) %>
+        </div>
+      </div>
+      <div class="my-4">
+        <%= label(f, :password, "New password",
+          class: "block text-sm font-medium text-gray-700 dark:text-gray-300"
+        ) %>
+        <div class="mt-1">
+          <%= password_input(f, :password,
+            autocomplete: "new-password",
+            class:
+              "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+          ) %>
+          <%= error_tag(f, :password, only_first?: true) %>
+        </div>
+      </div>
+      <div class="my-4">
+        <%= label(f, :password_confirmation, "Confirm new password",
+          class: "block text-sm font-medium text-gray-700 dark:text-gray-300"
+        ) %>
+        <div class="mt-1">
+          <%= password_input(f, :password_confirmation,
+            autocomplete: "new-password",
+            class:
+              "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+          ) %>
+          <%= error_tag(f, :password_confirmation, only_first?: true) %>
+        </div>
+      </div>
+
+      <div :if={Plausible.Auth.TOTP.enabled?(@current_user)} class="my-4">
+        <%= label(f, :two_factor_code, "Verify with 2FA",
+          class: "block text-sm font-medium text-gray-700 dark:text-gray-300"
+        ) %>
+        <div class="mt-1">
+          <PlausibleWeb.Components.TwoFactor.verify_2fa_input
+            form={f}
+            show_button?={false}
+            field={:two_factor_code}
+          />
+        </div>
+      </div>
+
+      <%= submit("Change my password",
+        class:
+          "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-600 dark:text-red-500 bg-white dark:bg-gray-800 hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150"
+      ) %>
+    <% end %>
+  </div>
+
   <div class="max-w-2xl px-8 pt-6 pb-8 mx-auto mt-16 bg-white border-t-2 border-green-500 rounded rounded-t-none shadow-md dark:bg-gray-800">
     <h2 id="setup-2fa" class="text-xl font-black dark:text-gray-100">
       Two-Factor Authentication (2FA)

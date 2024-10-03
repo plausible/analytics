@@ -23,6 +23,11 @@ defmodule Plausible.Auth do
       prefix: "email-change:user",
       limit: 2,
       interval: :timer.hours(1)
+    },
+    password_change_user: %{
+      prefix: "password-change:user",
+      limit: 5,
+      interval: :timer.minutes(20)
     }
   }
 
