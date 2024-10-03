@@ -118,7 +118,6 @@
 
       <div :if={not @totp_enabled?}>
         <.form
-          :let={f}
           action={Routes.auth_path(@conn, :initiate_2fa_setup)}
           for={@conn.params}
           method="post"
