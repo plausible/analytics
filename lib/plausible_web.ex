@@ -44,6 +44,7 @@ defmodule PlausibleWeb do
       import PlausibleWeb.ErrorHelpers
       import PlausibleWeb.FormHelpers
       import PlausibleWeb.Components.Generic
+      import PlausibleWeb.Live.Components.Form
       alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end

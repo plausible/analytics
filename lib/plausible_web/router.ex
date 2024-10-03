@@ -327,6 +327,9 @@ defmodule PlausibleWeb.Router do
 
     get "/", SettingsController, :index
     get "/preferences", SettingsController, :preferences
+
+    post "/preferences/name", SettingsController, :update_name
+
     get "/security", SettingsController, :security
     get "/billing/subscription", SettingsController, :subscription
     get "/billing/invoices", SettingsController, :invoices
