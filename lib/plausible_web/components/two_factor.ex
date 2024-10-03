@@ -46,9 +46,13 @@ defmodule PlausibleWeb.Components.TwoFactor do
         autocomplete: "off",
         class: @input_class,
         oninput:
-          "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 6) document.getElementById('verify-button').focus()",
+          if @show_button? do
+            "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 6) document.getElementById('#{@id}').focus()"
+          else
+            "this.value=this.value.replace(/[^0-9]/g, '');"
+          end,
         onclick: "this.select();",
-        oninvalid: "document.getElementById('verify-button').disabled = false",
+        oninvalid: @show_button? && "document.getElementById('#{@id}').disabled = false",
         maxlength: "6",
         placeholder: "••••••",
         value: "",
