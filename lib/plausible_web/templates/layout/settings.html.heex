@@ -1,0 +1,47 @@
+<%= render_layout "app.html", assigns do %>
+  <div class="container pt-6">
+    <%= link("← Back to Sites",
+      to: "/sites",
+      class: "text-indigo-600 font-bold text-sm"
+    ) %>
+    <div class="pb-5 border-b border-gray-200 dark:border-gray-500">
+      <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate">
+        Settings
+      </h2>
+    </div>
+    <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:mt-4">
+      <div class="py-4 g:py-0 lg:col-span-3">
+        <!-- TODO: implement mobile options -->
+        <div class="mb-4">
+          <h3 class="uppercase text-sm text-indigo-600 font-semibold">Account Settings</h3>
+          <p class="text-xs"><%= @current_user.email %></p>
+        </div>
+
+        <div class="hidden lg:block">
+          <%= for %{key: key, value: value, icon: icon} <- [
+
+      %{key: "Preferences", value: "preferences", icon: :cog_6_tooth},
+      %{key: "Security", value: "security", icon: :lock_closed},
+      %{key: "Subscription", value: "billing/subscription", icon: :circle_stack},
+      %{key: "Invoices", value: "billing/invoices", icon: :banknotes},
+      %{key: "API Keys", value: "api-keys", icon: :key},
+      %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle},
+
+          ]  do %>
+            <%= render("_settings_tab.html",
+              icon: icon,
+              this_tab: value,
+              text: key,
+              conn: @conn,
+              submenu?: false
+            ) %>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="space-y-6 lg:col-span-9 lg:mt-4">
+        <%= @inner_content %>
+      </div>
+    </div>
+  </div>
+<% end %>

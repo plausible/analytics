@@ -322,6 +322,18 @@ defmodule PlausibleWeb.Router do
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
   end
 
+  scope "/settings/v2", PlausibleWeb do
+    pipe_through [:browser, :csrf, PlausibleWeb.RequireAccountPlug]
+
+    get "/", SettingsController, :index
+    get "/preferences", SettingsController, :preferences
+    get "/security", SettingsController, :security
+    get "/billing/subscription", SettingsController, :subscription
+    get "/billing/invoices", SettingsController, :invoices
+    get "/api-keys", SettingsController, :api_keys
+    get "/danger-zone", SettingsController, :danger_zone
+  end
+
   scope "/", PlausibleWeb do
     pipe_through [:browser, :csrf]
 

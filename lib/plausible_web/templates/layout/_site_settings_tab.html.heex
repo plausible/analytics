@@ -1,5 +1,5 @@
 <a
-  href={@this_tab && "/settings/v2/" <> @this_tab}
+  href={@this_tab && "/" <> URI.encode_www_form(@site.domain) <> "/settings/" <> @this_tab}
   class={[
     "text-sm flex items-center px-2 py-2 leading-5 font-medium rounded-md outline-none focus:outline-none transition ease-in-out duration-150",
     is_current_tab(@conn, @this_tab) &&

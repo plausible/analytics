@@ -26,7 +26,7 @@
         <div class="hidden lg:block">
           <%= for %{key: key, value: value, icon: icon} <- settings_tabs(@conn) do %>
             <%= if is_binary(value) do %>
-              <%= render("_settings_tab.html",
+              <%= render("_site_settings_tab.html",
                 icon: icon,
                 this_tab: value,
                 text: key,
@@ -35,7 +35,7 @@
                 submenu?: false
               ) %>
             <% else %>
-              <%= render("_settings_tab.html",
+              <%= render("_site_settings_tab.html",
                 icon: icon,
                 this_tab: nil,
                 text: key,
@@ -45,7 +45,7 @@
               ) %>
               <div class="ml-6">
                 <%= for %{key: key, value: val} <- value do %>
-                  <%= render("_settings_tab.html",
+                  <%= render("_site_settings_tab.html",
                     icon: nil,
                     this_tab: val,
                     text: key,
