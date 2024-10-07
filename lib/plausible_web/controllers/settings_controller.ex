@@ -44,7 +44,12 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def api_keys(conn, _params) do
-    render(conn, :api_keys, layout: {PlausibleWeb.LayoutView, :settings})
+    current_user = conn.assigns.current_user
+
+    api_keys =
+      Repo.preload(current_user, :api_keys).api_keys
+
+    render(conn, :api_keys, layout: {PlausibleWeb.LayoutView, :settings}, api_keys: api_keys)
   end
 
   def danger_zone(conn, _params) do

@@ -1,1 +1,55 @@
-hello apikeys
+<.settings_tiles>
+  <.tile>
+    <:title>
+      <a id="api-keys">API Keys</a>
+    </:title>
+    <:subtitle>
+      Manage your Stats &amp; Sites API Keys
+    </:subtitle>
+
+    <PlausibleWeb.Components.Billing.Notice.premium_feature
+      billable_user={@current_user}
+      current_user={@current_user}
+      feature_mod={Plausible.Billing.Feature.StatsAPI}
+    />
+
+    <.filter_bar filtering_enabled?={false}>
+      <.button_link
+        :if={Plausible.Billing.Feature.StatsAPI.check_availability(@current_user) == :ok}
+        href={Routes.auth_path(@conn, :new_api_key)}
+      >
+        New API Key
+      </.button_link>
+    </.filter_bar>
+
+    <.table rows={@api_keys}>
+      <:thead>
+        <.th>
+          Name
+        </.th>
+        <.th>
+          Key
+        </.th>
+        <.th invisible>
+          Actions
+        </.th>
+      </:thead>
+
+      <:tbody :let={api_key}>
+        <.td>
+          <%= api_key.name %>
+        </.td>
+        <.td>
+          <%= api_key.key_prefix %>
+          <%= String.duplicate("*", 32 - 6) %>
+        </.td>
+        <.td actions>
+          <.delete_button
+            href={"/settings/api-keys/#{api_key.id}"}
+            data-confirm="Are you sure you want to revoke this key? This action cannot be reversed."
+          />
+        </.td>
+      </:tbody>
+    </.table>
+  </.tile>
+</.settings_tiles>

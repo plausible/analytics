@@ -8,6 +8,11 @@
     </:subtitle>
     <%= case @invoices do %>
       <% {:error, :no_invoices} -> %>
+        <p class="mt-12 mb-8 text-center text-sm">
+          <span>
+            No invoices issued yet
+          </span>
+        </p>
       <% {:error, :request_failed} -> %>
         <.notice theme={:gray} title="We couldn't retrieve your invoices">
           Please refresh the page or try again later

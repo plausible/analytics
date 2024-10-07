@@ -520,7 +520,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr :rest, :global
   attr :width, :string, default: "min-w-full"
   attr :rows, :list, default: []
-  attr :row_attrs, :any, default: &Function.identity/1
+  attr :row_attrs, :any, default: nil
   slot :thead, required: false
   slot :tbody, required: true
   slot :inner_block, required: false
@@ -534,7 +534,7 @@ defmodule PlausibleWeb.Components.Generic do
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-        <tr :for={item <- @rows} {@row_attrs.(item)}>
+        <tr :for={item <- @rows} {if @row_attrs, do: @row_attrs.(item), else: %{}}>
           <%= render_slot(@tbody, item) %>
         </tr>
         <%= render_slot(@inner_block) %>
