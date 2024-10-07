@@ -27,7 +27,7 @@
         <.th>
           Name
         </.th>
-        <.th>
+        <.th hide_on_mobile>
           Key
         </.th>
         <.th invisible>
@@ -36,10 +36,10 @@
       </:thead>
 
       <:tbody :let={api_key}>
-        <.td>
+        <.td truncate max_width="max-w-40">
           <%= api_key.name %>
         </.td>
-        <.td>
+        <.td hide_on_mobile>
           <%= api_key.key_prefix %>
           <%= String.duplicate("*", 32 - 6) %>
         </.td>
