@@ -1338,8 +1338,19 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
     @tag :ee_only
     test "returns average and total when filtering by a revenue goal", %{conn: conn, site: site} do
-      insert(:goal, site: site, event_name: "Payment", currency: "USD")
-      insert(:goal, site: site, event_name: "AddToCart", currency: "EUR")
+      insert(:goal,
+        site: site,
+        event_name: "Payment",
+        currency: "USD",
+        display_name: "PaymentUSD"
+      )
+
+      insert(:goal,
+        site: site,
+        event_name: "AddToCart",
+        currency: "EUR",
+        display_name: "AddToCartEUR"
+      )
 
       populate_stats(site, [
         build(:event,
@@ -1364,7 +1375,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
       ])
 
-      filters = Jason.encode!(%{goal: "Payment"})
+      filters = Jason.encode!(%{goal: "PaymentUSD"})
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
       assert %{"top_stats" => top_stats} = json_response(conn, 200)
 

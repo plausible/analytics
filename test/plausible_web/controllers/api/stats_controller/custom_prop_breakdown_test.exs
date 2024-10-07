@@ -775,9 +775,14 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
         )
       ])
 
-      insert(:goal, %{site: site, event_name: "Payment", currency: :EUR})
+      insert(:goal, %{
+        site: site,
+        event_name: "Payment",
+        currency: :EUR,
+        display_name: "PaymentEUR"
+      })
 
-      filters = Jason.encode!(%{goal: "Payment"})
+      filters = Jason.encode!(%{goal: "PaymentEUR"})
 
       conn =
         get(
