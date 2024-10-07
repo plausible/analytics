@@ -1,4 +1,13 @@
 <%= render_layout "app.html", assigns do %>
+  <% options = [
+    %{key: "Preferences", value: "preferences", icon: :cog_6_tooth},
+    %{key: "Security", value: "security", icon: :lock_closed},
+    %{key: "Subscription", value: "billing/subscription", icon: :circle_stack},
+    %{key: "Invoices", value: "billing/invoices", icon: :banknotes},
+    %{key: "API Keys", value: "api-keys", icon: :key},
+    %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
+  ] %>
+
   <div class="container pt-6">
     <%= link("← Back to Sites",
       to: "/sites",
@@ -11,23 +20,23 @@
     </div>
     <div class="lg:grid lg:grid-cols-12 lg:gap-x-5 lg:mt-4">
       <div class="py-4 g:py-0 lg:col-span-3">
-        <!-- TODO: implement mobile options -->
         <div class="mb-4">
           <h3 class="uppercase text-sm text-indigo-600 font-semibold">Account Settings</h3>
           <p class="text-xs"><%= @current_user.email %></p>
         </div>
 
+        <.form for={@conn} class="lg:hidden">
+          <.input
+            value={Enum.find_value(options, &(is_current_tab(@conn, &1.value) && &1.value))}
+            name="setting"
+            type="select"
+            options={Enum.map(options, fn opt -> {opt.key, opt.value} end)}
+            onchange="location.href = '/settings/' + event.target.value"
+          />
+        </.form>
+
         <div class="hidden lg:block">
-          <%= for %{key: key, value: value, icon: icon} <- [
-
-      %{key: "Preferences", value: "preferences", icon: :cog_6_tooth},
-      %{key: "Security", value: "security", icon: :lock_closed},
-      %{key: "Subscription", value: "billing/subscription", icon: :circle_stack},
-      %{key: "Invoices", value: "billing/invoices", icon: :banknotes},
-      %{key: "API Keys", value: "api-keys", icon: :key},
-      %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle},
-
-          ]  do %>
+          <%= for %{key: key, value: value, icon: icon} <- options  do %>
             <%= render("_settings_tab.html",
               icon: icon,
               this_tab: value,
