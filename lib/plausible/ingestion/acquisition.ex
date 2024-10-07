@@ -16,7 +16,7 @@ defmodule Plausible.Ingestion.Acquisition do
     {"producthunt", "SOURCE_CATEGORY_SOCIAL"},
     {"github", "SOURCE_CATEGORY_SOCIAL"},
     {"steamcommunity.com", "SOURCE_CATEGORY_SOCIAL"},
-    {"statics.teams.cdn.office.net", "SOURCE_CATEGORY_SOCIAL"},
+    {"statics.teams.cdn.office.net", "SOURCE_CATEGORY_SOCIAL"}, # codespell:ignore
     {"vkontakte", "SOURCE_CATEGORY_SOCIAL"},
     {"threads", "SOURCE_CATEGORY_SOCIAL"},
     {"ecosia", "SOURCE_CATEGORY_SEARCH"},
