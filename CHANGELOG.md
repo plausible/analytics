@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 ### Fixed
+- Revenue metrics are displayed correctly after goal has been renamed
 
 ## v2.1.3 - 2024-09-26
 
