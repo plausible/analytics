@@ -36,7 +36,7 @@ defmodule Plausible.Stats.Timeseries do
 
     comparison_query =
       if(query.include.comparisons,
-        do: Comparisons.compare(query, query.include.comparisons),
+        do: Comparisons.get_comparison_query(query, query.include.comparisons),
         else: nil
       )
 

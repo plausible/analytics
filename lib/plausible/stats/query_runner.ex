@@ -39,7 +39,7 @@ defmodule Plausible.Stats.QueryRunner do
   end
 
   defp add_comparison_query(%{query: query} = assigns) when is_map(query.include.comparisons) do
-    comparison_query = Comparisons.compare(query, query.include.comparisons)
+    comparison_query = Comparisons.get_comparison_query(query, query.include.comparisons)
     Map.put(assigns, :comparison_query, comparison_query)
   end
 

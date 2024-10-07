@@ -1533,7 +1533,7 @@ defmodule PlausibleWeb.Api.StatsController do
     options = parse_comparison_options(site, params)
 
     if options do
-      Comparisons.compare(query, options)
+      Comparisons.get_comparison_query(query, options)
     end
   end
 

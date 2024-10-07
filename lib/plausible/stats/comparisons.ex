@@ -10,7 +10,7 @@ defmodule Plausible.Stats.Comparisons do
   alias Plausible.Stats
   alias Plausible.Stats.{Query, DateTimeRange}
 
-  @spec compare(Stats.Query.t(), map()) :: Stats.Query.t()
+  @spec get_comparison_query(Stats.Query.t(), map()) :: Stats.Query.t()
   @doc """
   Generates a comparison query based on the source query and comparison mode.
 
@@ -41,7 +41,7 @@ defmodule Plausible.Stats.Comparisons do
       January 1st. Defaults to false.
 
   """
-  def compare(%Stats.Query{} = source_query, options) do
+  def get_comparison_query(%Stats.Query{} = source_query, options) do
     comparison_date_range = get_comparison_date_range(source_query, options)
 
     new_range =

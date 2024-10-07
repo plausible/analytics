@@ -26,7 +26,7 @@ defmodule Plausible.Stats.EmailReport do
   end
 
   defp with_comparisons(stats, site, query, metrics) do
-    comparison_query = Comparisons.compare(query, %{mode: "previous_period"})
+    comparison_query = Comparisons.get_comparison_query(query, %{mode: "previous_period"})
     prev_period_stats = Stats.aggregate(site, comparison_query, metrics)
 
     stats

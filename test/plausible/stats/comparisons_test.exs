@@ -16,7 +16,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query =
         build_query(site, %{"period" => "month", "date" => "2023-03-02"}, ~N[2023-03-02 14:00:00])
 
-      comparison_query = Comparisons.compare(query, %{mode: "previous_period"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "previous_period"})
 
       assert comparison_query.utc_time_range.first == ~U[2023-02-27 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2023-02-28 23:59:59Z]
@@ -28,7 +28,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query =
         build_query(site, %{"period" => "month", "date" => "2023-03-01"}, ~N[2023-03-01 14:00:00])
 
-      comparison_query = Comparisons.compare(query, %{mode: "previous_period"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "previous_period"})
 
       assert comparison_query.utc_time_range.first == ~U[2023-02-28 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2023-02-28 23:59:59Z]
@@ -41,7 +41,10 @@ defmodule Plausible.Stats.ComparisonsTest do
         build_query(site, %{"period" => "month", "date" => "2023-03-02"}, ~N[2023-03-02 14:00:00])
 
       comparison_query =
-        Comparisons.compare(query, %{mode: "previous_period", match_day_of_week: true})
+        Comparisons.get_comparison_query(query, %{
+          mode: "previous_period",
+          match_day_of_week: true
+        })
 
       assert comparison_query.utc_time_range.first == ~U[2023-02-22 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2023-02-23 23:59:59Z]
@@ -53,7 +56,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query =
         build_query(site, %{"period" => "month", "date" => "2023-03-02"}, ~N[2023-03-02 14:00:00])
 
-      comparison_query = Comparisons.compare(query, %{mode: "previous_period"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "previous_period"})
 
       assert comparison_query.utc_time_range.first == ~U[2023-02-27 05:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2023-03-01 04:59:59Z]
@@ -67,7 +70,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query =
         build_query(site, %{"period" => "month", "date" => "2023-02-01"}, ~N[2023-03-01 14:00:00])
 
-      comparison_query = Comparisons.compare(query, %{mode: "previous_period"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "previous_period"})
 
       assert comparison_query.utc_time_range.first == ~U[2023-01-04 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2023-01-31 23:59:59Z]
@@ -79,7 +82,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query =
         build_query(site, %{"period" => "month", "date" => "2023-02-01"}, ~N[2023-03-01 14:00:00])
 
-      comparison_query = Comparisons.compare(query, %{mode: "year_over_year"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "year_over_year"})
 
       assert comparison_query.utc_time_range.first == ~U[2022-02-01 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2022-02-28 23:59:59Z]
@@ -91,7 +94,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query =
         build_query(site, %{"period" => "month", "date" => "2020-02-01"}, ~N[2023-03-01 14:00:00])
 
-      comparison_query = Comparisons.compare(query, %{mode: "year_over_year"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "year_over_year"})
 
       assert comparison_query.utc_time_range.first == ~U[2019-02-01 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2019-03-01 23:59:59Z]
@@ -104,7 +107,10 @@ defmodule Plausible.Stats.ComparisonsTest do
         build_query(site, %{"period" => "month", "date" => "2023-02-01"}, ~N[2023-03-01 14:00:00])
 
       comparison_query =
-        Comparisons.compare(query, %{mode: "previous_period", match_day_of_week: true})
+        Comparisons.get_comparison_query(query, %{
+          mode: "previous_period",
+          match_day_of_week: true
+        })
 
       assert comparison_query.utc_time_range.first == ~U[2023-01-04 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2023-01-31 23:59:59Z]
@@ -117,7 +123,10 @@ defmodule Plausible.Stats.ComparisonsTest do
         build_query(site, %{"period" => "month", "date" => "2023-01-01"}, ~N[2023-03-01 14:00:00])
 
       comparison_query =
-        Comparisons.compare(query, %{mode: "previous_period", match_day_of_week: true})
+        Comparisons.get_comparison_query(query, %{
+          mode: "previous_period",
+          match_day_of_week: true
+        })
 
       assert comparison_query.utc_time_range.first == ~U[2022-12-04 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2023-01-03 23:59:59Z]
@@ -131,7 +140,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query =
         build_query(site, %{"period" => "year", "date" => "2023-03-01"}, ~N[2023-03-01 14:00:00])
 
-      comparison_query = Comparisons.compare(query, %{mode: "previous_period"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "previous_period"})
 
       assert comparison_query.utc_time_range.first == ~U[2022-11-02 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2022-12-31 23:59:59Z]
@@ -143,7 +152,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query =
         build_query(site, %{"period" => "year", "date" => "2023-03-01"}, ~N[2023-03-01 14:00:00])
 
-      comparison_query = Comparisons.compare(query, %{mode: "year_over_year"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "year_over_year"})
 
       assert comparison_query.utc_time_range.first == ~U[2022-01-01 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2022-03-01 23:59:59Z]
@@ -156,7 +165,7 @@ defmodule Plausible.Stats.ComparisonsTest do
         build_query(site, %{"period" => "year", "date" => "2023-03-01"}, ~N[2023-03-01 14:00:00])
 
       comparison_query =
-        Comparisons.compare(query, %{mode: "year_over_year", match_day_of_week: true})
+        Comparisons.get_comparison_query(query, %{mode: "year_over_year", match_day_of_week: true})
 
       assert comparison_query.utc_time_range.first == ~U[2022-01-02 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2022-03-02 23:59:59Z]
@@ -168,7 +177,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       site = insert(:site)
       query = Query.from(site, %{"period" => "year", "date" => "2022-03-02"})
 
-      comparison_query = Comparisons.compare(query, %{mode: "year_over_year"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "year_over_year"})
 
       assert comparison_query.utc_time_range.first == ~U[2021-01-01 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2021-12-31 23:59:59Z]
@@ -178,7 +187,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       site = insert(:site)
       query = Query.from(site, %{"period" => "year", "date" => "2022-03-02"})
 
-      comparison_query = Comparisons.compare(query, %{mode: "previous_period"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "previous_period"})
 
       assert comparison_query.utc_time_range.first == ~U[2021-01-01 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2021-12-31 23:59:59Z]
@@ -190,7 +199,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       site = insert(:site)
       query = Query.from(site, %{"period" => "custom", "date" => "2023-01-01,2023-01-07"})
 
-      comparison_query = Comparisons.compare(query, %{mode: "previous_period"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "previous_period"})
 
       assert comparison_query.utc_time_range.first == ~U[2022-12-25 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2022-12-31 23:59:59Z]
@@ -200,7 +209,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       site = insert(:site)
       query = Query.from(site, %{"period" => "custom", "date" => "2023-01-01,2023-01-07"})
 
-      comparison_query = Comparisons.compare(query, %{mode: "year_over_year"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "year_over_year"})
 
       assert comparison_query.utc_time_range.first == ~U[2022-01-01 00:00:00Z]
       assert comparison_query.utc_time_range.last == ~U[2022-01-07 23:59:59Z]
@@ -213,7 +222,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query = Query.from(site, %{"period" => "custom", "date" => "2023-01-01,2023-01-07"})
 
       comparison_query =
-        Comparisons.compare(query, %{
+        Comparisons.get_comparison_query(query, %{
           mode: "custom",
           date_range: DateTimeRange.new!(~U[2022-05-25 00:00:00Z], ~U[2022-05-30 23:59:59Z])
         })
@@ -230,7 +239,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query = Query.from(site, %{"period" => "day", "date" => "2023-01-01"})
       assert query.include_imported == false
 
-      comparison_query = Comparisons.compare(query, %{mode: "previous_period"})
+      comparison_query = Comparisons.get_comparison_query(query, %{mode: "previous_period"})
       assert comparison_query.include_imported == false
     end
   end
