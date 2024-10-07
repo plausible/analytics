@@ -13,6 +13,8 @@ defmodule Plausible.Stats.QueryOptimizer do
     1. Figures out what the right granularity to group by time is
     2. Adds a missing order_by clause to a query
     3. Updating "time" dimension in order_by to the right granularity
+    4. Updates event:hostname filters to also apply on visit level for sane results.
+    5. Removes revenue metrics from dashboard queries if not requested, present or unavailable for the site.
 
   """
   def optimize(query) do
