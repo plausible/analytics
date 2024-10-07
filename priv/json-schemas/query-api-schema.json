@@ -66,42 +66,51 @@
         "comparisons": {
           "$comment": "only :internal",
           "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "mode": {
-              "type": "string",
-              "enum": ["previous_period", "year_over_year", "custom"]
-            },
-            "match_day_of_week": {
-              "type": "boolean",
-              "default": false,
-              "description": "If set and using time:day dimensions, day-of-week of comparison query is matched"
-            },
-            "date_range": {
-              "type": "array",
-              "additionalItems": false,
-              "minItems": 2,
-              "maxItems": 2,
-              "items": {
+          "oneOf": [
+            {
+              "properties": {
+                "mode": {
                   "type": "string",
-                  "format": "date"
+                  "enum": ["previous_period", "year_over_year"]
+                },
+                "match_day_of_week": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "If set and using time:day dimensions, day-of-week of comparison query is matched"
+                }
               },
-              "description": "If custom period. A list of two ISO8601 dates or timestamps to compare against.",
-              "examples": [
-                ["2024-01-01", "2024-01-31"]
-              ]
+              "required": ["mode"],
+              "additionalProperties": false
+            },
+            {
+              "properties": {
+                "mode": {
+                  "const": "custom"
+                },
+                "match_day_of_week": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "If set and using time:day dimensions, day-of-week of comparison query is matched"
+                },
+                "date_range": {
+                  "type": "array",
+                  "additionalItems": false,
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                      "type": "string",
+                      "format": "date"
+                  },
+                  "description": "If custom period. A list of two ISO8601 dates or timestamps to compare against.",
+                  "examples": [
+                    ["2024-01-01", "2024-01-31"]
+                  ]
+                }
+              },
+              "required": ["mode", "date_range"],
+              "additionalProperties": false
             }
-          },
-          "required": ["mode"],
-          "if": {
-            "properties": { "mode": { "const": "custom" } }
-          },
-          "then": {
-            "required": ["date_range"]
-          },
-          "else": {
-            "not": {"required": ["date_range"]}
-          }
+          ]
         }
       }
     },

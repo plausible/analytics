@@ -757,7 +757,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "#/include/comparisons: Expected the schema in the then branch to match but it did not.",
+        "#/include/comparisons: Expected exactly one of the schemata to match, but none of them did.",
         :internal
       )
     end
@@ -776,7 +776,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       }
       |> check_error(
         site,
-        "#/include/comparisons: Expected the schema in the else branch to match but it did not.",
+        "#/include/comparisons: Expected exactly one of the schemata to match, but none of them did.",
         :internal
       )
     end
