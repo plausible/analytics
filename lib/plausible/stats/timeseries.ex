@@ -51,6 +51,8 @@ defmodule Plausible.Stats.Timeseries do
 
   defp time_dimension(query), do: Map.fetch!(@time_dimension, query.interval)
 
+  # Given a query result, build a legacy timeseries result
+  # Format is %{ date => %{ date: date_string, [metric] => value } } with a bunch of special cases for the UI
   defp build_result(query_result, %Query{} = query, currency, extract_entry) do
     query_result.results
     |> Enum.map(&extract_entry.(&1))
