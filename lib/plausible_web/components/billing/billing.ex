@@ -17,8 +17,8 @@ defmodule PlausibleWeb.Components.Billing do
   def render_monthly_pageview_usage(assigns) do
     ~H"""
     <article id="monthly_pageview_usage_container" x-data="{ tab: 'last_cycle' }" class="mt-8">
-      <h1 class="text-xl mb-6 font-bold dark:text-gray-100">Monthly pageviews usage</h1>
-      <div class="mb-3">
+      <.h2>Monthly pageviews usage</.h2>
+      <div class="mt-4 mb-4">
         <ol class="divide-y divide-gray-300 dark:divide-gray-600 rounded-md border dark:border-gray-600 md:flex md:flex-row-reverse md:divide-y-0 md:overflow-hidden">
           <.billing_cycle_tab
             name="Upcoming cycle"

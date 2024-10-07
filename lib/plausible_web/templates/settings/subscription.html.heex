@@ -7,8 +7,8 @@
       Manage your plan
     </:subtitle>
     <div class="flex flex-wrap justify-between">
-      <h2 class="text-xl font-black dark:text-gray-100 w-max mr-4 mt-2">Subscription Plan</h2>
-      <div class="gap-x-2 mt-2 inline-flex">
+      <.h2>Subscription Plan</.h2>
+      <div class="gap-x-2 inline-flex">
         <span
           :if={@subscription && Plausible.Billing.Plans.business_tier?(@subscription)}
           class={[
@@ -82,7 +82,7 @@
     />
 
     <article class="mt-8">
-      <h1 class="text-xl mb-3 font-bold dark:text-gray-100">Sites & team members usage</h1>
+      <.h2>Sites & team members usage</.h2>
       <PlausibleWeb.Components.Billing.usage_and_limits_table>
         <PlausibleWeb.Components.Billing.usage_and_limits_row
           id="site-usage-row"
