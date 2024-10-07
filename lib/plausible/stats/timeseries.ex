@@ -61,7 +61,7 @@ defmodule Plausible.Stats.Timeseries do
     |> add_labels(query)
   end
 
-  defp build_result(_, _, _, _), do: nil
+  defp build_result(_, _, _), do: nil
 
   defp add_labels(results_map, query) do
     query
