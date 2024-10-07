@@ -44,7 +44,7 @@ defmodule PlausibleWeb.BillingController do
         Subscription.Status.past_due(),
         Subscription.Status.paused()
       ]) ->
-        redirect(conn, to: Routes.auth_path(conn, :user_settings))
+        redirect(conn, to: Routes.settings_path(conn, :subscription))
 
       subscribed_to_latest? ->
         render(conn, "change_enterprise_plan_contact_us.html", skip_plausible_tracking: true)

@@ -322,7 +322,7 @@ defmodule PlausibleWeb.Router do
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
   end
 
-  scope "/settings/v2", PlausibleWeb do
+  scope "/settings", PlausibleWeb do
     pipe_through [:browser, :csrf, PlausibleWeb.RequireAccountPlug]
 
     get "/", SettingsController, :index
@@ -332,31 +332,29 @@ defmodule PlausibleWeb.Router do
     post "/preferences/theme", SettingsController, :update_theme
 
     get "/security", SettingsController, :security
+    delete "/security/user-sessions/:id", SettingsController, :delete_session
 
-    post "/security/email", SettingsController, :update_email
     post "/security/email/cancel", SettingsController, :cancel_update_email
+    post "/security/email", SettingsController, :update_email
     post "/security/password", SettingsController, :update_password
 
     get "/billing/subscription", SettingsController, :subscription
     get "/billing/invoices", SettingsController, :invoices
     get "/api-keys", SettingsController, :api_keys
+
+    get "/api-keys/new", SettingsController, :new_api_key
+    post "/api-keys", SettingsController, :create_api_key
+    delete "/api-keys/:id", SettingsController, :delete_api_key
+
     get "/danger-zone", SettingsController, :danger_zone
+
   end
 
   scope "/", PlausibleWeb do
     pipe_through [:browser, :csrf]
 
     get "/logout", AuthController, :logout
-    get "/settings", AuthController, :user_settings
-    put "/settings", AuthController, :save_settings
-    put "/settings/email", AuthController, :update_email
-    put "/settings/password", AuthController, :update_password
-    post "/settings/email/cancel", AuthController, :cancel_update_email
     delete "/me", AuthController, :delete_me
-    get "/settings/api-keys/new", AuthController, :new_api_key
-    post "/settings/api-keys", AuthController, :create_api_key
-    delete "/settings/api-keys/:id", AuthController, :delete_api_key
-    delete "/settings/user-sessions/:id", AuthController, :delete_session
 
     get "/auth/google/callback", AuthController, :google_auth_callback
 

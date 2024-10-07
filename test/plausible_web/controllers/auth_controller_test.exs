@@ -16,8 +16,6 @@ defmodule PlausibleWeb.AuthControllerTest do
   setup {PlausibleWeb.FirstLaunchPlug.Test, :skip}
   setup [:verify_on_exit!]
 
-  @configured_enterprise_plan_paddle_plan_id "123"
-
   describe "GET /register" do
     test "shows the register form", %{conn: conn} do
       conn = get(conn, "/register")
@@ -605,125 +603,6 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
-  describe "POST /settings/api-keys" do
-    setup [:create_user, :log_in]
-    import Ecto.Query
-
-    test "can create an API key", %{conn: conn, user: user} do
-      insert(:site, memberships: [build(:site_membership, user: user, role: "owner")])
-
-      conn =
-        post(conn, "/settings/api-keys", %{
-          "api_key" => %{
-            "user_id" => user.id,
-            "name" => "all your code are belong to us",
-            "key" => "swordfish"
-          }
-        })
-
-      key = Plausible.Auth.ApiKey |> where(user_id: ^user.id) |> Repo.one()
-      assert conn.status == 302
-      assert key.name == "all your code are belong to us"
-    end
-
-    test "cannot create a duplicate API key", %{conn: conn, user: user} do
-      insert(:site, memberships: [build(:site_membership, user: user, role: "owner")])
-
-      conn =
-        post(conn, "/settings/api-keys", %{
-          "api_key" => %{
-            "user_id" => user.id,
-            "name" => "all your code are belong to us",
-            "key" => "swordfish"
-          }
-        })
-
-      conn2 =
-        post(conn, "/settings/api-keys", %{
-          "api_key" => %{
-            "user_id" => user.id,
-            "name" => "all your code are belong to us",
-            "key" => "swordfish"
-          }
-        })
-
-      assert html_response(conn2, 200) =~ "has already been taken"
-    end
-
-    test "can't create api key into another site", %{conn: conn, user: me} do
-      _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: "owner")])
-
-      other_user = insert(:user)
-
-      _other_site =
-        insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
-
-      conn =
-        post(conn, "/settings/api-keys", %{
-          "api_key" => %{
-            "user_id" => other_user.id,
-            "name" => "all your code are belong to us",
-            "key" => "swordfish"
-          }
-        })
-
-      assert conn.status == 302
-
-      refute Plausible.Auth.ApiKey |> where(user_id: ^other_user.id) |> Repo.one()
-    end
-  end
-
-  describe "DELETE /settings/api-keys/:id" do
-    setup [:create_user, :log_in]
-    alias Plausible.Auth.ApiKey
-
-    test "can't delete api key that doesn't belong to me", %{conn: conn} do
-      other_user = insert(:user)
-      insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
-
-      assert {:ok, %ApiKey{} = api_key} =
-               %ApiKey{user_id: other_user.id}
-               |> ApiKey.changeset(%{"name" => "other user's key"})
-               |> Repo.insert()
-
-      conn = delete(conn, "/settings/api-keys/#{api_key.id}")
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find API Key to delete"
-      assert Repo.get(ApiKey, api_key.id)
-    end
-  end
-
-  describe "DELETE /settings/user-sessions/:id" do
-    setup [:create_user, :log_in]
-
-    test "deletes session", %{conn: conn, user: user} do
-      another_session =
-        user
-        |> Auth.UserSession.new_session("Some Device")
-        |> Repo.insert!()
-
-      conn = delete(conn, "/settings/user-sessions/#{another_session.id}")
-
-      assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Session logged out successfully"
-
-      assert redirected_to(conn, 302) ==
-               Routes.auth_path(conn, :user_settings) <> "#user-sessions"
-
-      refute Repo.reload(another_session)
-    end
-
-    test "refuses deletion when not logged in" do
-      another_session =
-        insert(:user)
-        |> Auth.UserSession.new_session("Some Device")
-        |> Repo.insert!()
-
-      conn = delete(build_conn(), "/settings/user-sessions/#{another_session.id}")
-
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
-      assert Repo.reload(another_session)
-    end
-  end
-
   describe "GET /auth/google/callback" do
     test "shows error and redirects back to settings when authentication fails", %{conn: conn} do
       site = insert(:site)
@@ -761,7 +640,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = post(conn, Routes.auth_path(conn, :initiate_2fa_setup))
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Two-Factor Authentication is already setup"
@@ -792,7 +671,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "redirects back to settings if 2FA not initiated", %{conn: conn} do
       conn = get(conn, Routes.auth_path(conn, :verify_2fa_setup))
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
     end
   end
 
@@ -830,7 +709,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "redirects to settings when 2FA is not initiated", %{conn: conn} do
       conn = post(conn, Routes.auth_path(conn, :verify_2fa_setup), %{code: "123123"})
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Please enable Two-Factor Authentication"
@@ -846,7 +725,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = post(conn, Routes.auth_path(conn, :disable_2fa), %{password: "password"})
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
                "Two-Factor Authentication is disabled"
@@ -860,7 +739,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = post(conn, Routes.auth_path(conn, :disable_2fa), %{password: "invalid"})
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Incorrect password provided"
     end
@@ -889,7 +768,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn =
         post(conn, Routes.auth_path(conn, :generate_2fa_recovery_codes), %{password: "invalid"})
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Incorrect password provided"
     end
@@ -898,7 +777,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn =
         post(conn, Routes.auth_path(conn, :generate_2fa_recovery_codes), %{password: "password"})
 
-      assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :security) <> "#update-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Please enable Two-Factor Authentication"
@@ -1377,15 +1256,6 @@ defmodule PlausibleWeb.AuthControllerTest do
            body: %{"success" => success}
          }}
       end
-    )
-  end
-
-  defp configure_enterprise_plan(user) do
-    insert(:enterprise_plan,
-      paddle_plan_id: @configured_enterprise_plan_paddle_plan_id,
-      user: user,
-      monthly_pageview_limit: 20_000_000,
-      billing_interval: :yearly
     )
   end
 

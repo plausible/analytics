@@ -264,13 +264,13 @@ defmodule PlausibleWeb.BillingControllerTest do
     test "redirects to /settings when past_due", %{conn: conn} = context do
       subscribe_enterprise(context, status: Subscription.Status.past_due())
       conn = get(conn, Routes.billing_path(conn, :upgrade_to_enterprise_plan))
-      assert redirected_to(conn) == "/settings"
+      assert redirected_to(conn) == Routes.settings_path(conn, :subscription)
     end
 
     test "redirects to /settings when paused", %{conn: conn} = context do
       subscribe_enterprise(context, status: Subscription.Status.paused())
       conn = get(conn, Routes.billing_path(conn, :upgrade_to_enterprise_plan))
-      assert redirected_to(conn) == "/settings"
+      assert redirected_to(conn) == Routes.settings_path(conn, :subscription)
     end
   end
 

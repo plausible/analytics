@@ -1,5 +1,5 @@
 <.settings_tiles>
-  <.tile>
+  <.tile docs="stats-api">
     <:title>
       <a id="api-keys">API Keys</a>
     </:title>
@@ -16,7 +16,7 @@
     <.filter_bar filtering_enabled?={false}>
       <.button_link
         :if={Plausible.Billing.Feature.StatsAPI.check_availability(@current_user) == :ok}
-        href={Routes.auth_path(@conn, :new_api_key)}
+        href={Routes.settings_path(@conn, :new_api_key)}
       >
         New API Key
       </.button_link>
@@ -45,7 +45,8 @@
         </.td>
         <.td actions>
           <.delete_button
-            href={"/settings/api-keys/#{api_key.id}"}
+          method="delete"
+            href={Routes.settings_path(@conn, :delete_api_key, api_key.id)}
             data-confirm="Are you sure you want to revoke this key? This action cannot be reversed."
           />
         </.td>

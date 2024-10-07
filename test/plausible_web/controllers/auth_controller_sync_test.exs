@@ -29,7 +29,7 @@ defmodule PlausibleWeb.AuthControllerSyncTest do
         })
 
       assert redirected_to(conn, 302) ==
-               Routes.auth_path(conn, :user_settings) <> "#change-email-address"
+               Routes.settings_path(conn, :security) <> "#update-email"
 
       updated_user = Repo.reload!(user)
 

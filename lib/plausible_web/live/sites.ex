@@ -450,7 +450,7 @@ defmodule PlausibleWeb.Live.Sites do
                 You can review your usage in the
                 <.styled_link
                   class="inline-block"
-                  href={Routes.auth_path(PlausibleWeb.Endpoint, :user_settings)}
+                  href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
                 >
                   account settings
                 </.styled_link>.

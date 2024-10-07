@@ -1,5 +1,5 @@
 <.settings_tiles>
-  <.tile>
+  <.tile docs="change-email">
     <:title>
       <a id="update-email">Email Address</a>
     </:title>
@@ -31,7 +31,7 @@
     </.form>
   </.tile>
 
-  <.tile>
+  <.tile docs="reset-password">
     <:title>
       <a id="update-password">Password</a>
     </:title>
@@ -86,12 +86,12 @@
     </.form>
   </.tile>
 
-  <.tile>
+  <.tile docs="2fa">
     <:title>
-      <a id="update-2fa">2FA</a>
+      <a id="update-2fa">Two-Factor Authentication (2FA)</a>
     </:title>
     <:subtitle>
-      Configure Two-Factor Authentication
+      Two-Factor Authentication protects your account by adding an extra security step when you log in.
     </:subtitle>
 
     <div x-data="{disable2FAOpen: false, regenerate2FAOpen: false}">
@@ -215,12 +215,12 @@
     </div>
   </.tile>
 
-  <.tile>
+  <.tile docs="login-management">
     <:title>
       <a id="user-sessions">Login Management</a>
     </:title>
     <:subtitle>
-      Review existing sessions
+      Log out of your account on other devices. Note that logged-in sessions automatically expire after 14 days of inactivity.
     </:subtitle>
 
     <.table rows={@user_sessions}>
@@ -235,7 +235,7 @@
         <.td :if={@current_user_session.id == session.id}>current session</.td>
         <.td :if={@current_user_session.id != session.id}>
           <.delete_button
-            href={"/settings/user-sessions/#{session.id}"}
+            href={Routes.settings_path(@conn, :delete_session, session.id)}
             method="delete"
             data-confirm="Are you sure you want to log out this session?"
           />

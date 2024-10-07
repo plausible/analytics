@@ -5,6 +5,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
   import Mox
   import Plausible.Test.Support.HTML
+  import Ecto.Query
 
   require Plausible.Billing.Subscription.Status
 
@@ -131,7 +132,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       doc =
         conn
-        |> get(Routes.auth_path(conn, :user_settings))
+        |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
 
       refute element_exists?(doc, "#upgrade-or-change-plan-link")
@@ -151,7 +152,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       doc =
         conn
-        |> get(Routes.auth_path(conn, :user_settings))
+        |> get(Routes.settings_path(conn, :subscription))
         |> html_response(200)
 
       refute element_exists?(doc, "#upgrade-or-change-plan-link")
@@ -272,8 +273,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
     end
 
     test "does not show invoice section for a user with no subscription", %{conn: conn} do
-      conn = get(conn, "/settings")
-      refute html_response(conn, 200) =~ "Invoices"
+      conn = get(conn, Routes.settings_path(conn, :invoices))
+      assert html_response(conn, 200) =~ "No invoices issued yet"
     end
 
     @tag :ee_only
@@ -366,7 +367,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
           last_bill_date: Timex.shift(Timex.now(), months: -6)
         )
 
-      get(conn, "/settings") |> html_response(200) |> assert_cycles_rendered.()
+      get(conn, Routes.settings_path(conn, :subscription)) |> html_response(200) |> assert_cycles_rendered.()
 
       # for a past_due subscription
       subscription =
@@ -638,9 +639,43 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert html =~ "Just recently"
       assert html =~ "Some Device"
       assert html =~ "1 hour ago"
-      assert html =~ Routes.auth_path(conn, :delete_session, another_session.id)
+      assert html =~ Routes.settings_path(conn, :delete_session, another_session.id)
     end
   end
+
+  describe "DELETE /security/user-sessions/:id" do
+    setup [:create_user, :log_in]
+
+    test "deletes session", %{conn: conn, user: user} do
+      another_session =
+        user
+        |> Auth.UserSession.new_session("Some Device")
+        |> Repo.insert!()
+
+      conn = delete(conn, Routes.settings_path(conn, :delete_session, another_session.id))
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Session logged out successfully"
+
+      assert redirected_to(conn, 302) ==
+        Routes.settings_path(conn, :security) <> "#user-sessions"
+
+      refute Repo.reload(another_session)
+    end
+
+    test "refuses deletion when not logged in" do
+      another_session =
+        insert(:user)
+        |> Auth.UserSession.new_session("Some Device")
+        |> Repo.insert!()
+
+      conn = build_conn()
+      conn = delete(conn, Routes.settings_path(conn, :delete_session, another_session.id))
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+      assert Repo.reload(another_session)
+    end
+  end
+
 
   describe "POST /preferences/name" do
     setup [:create_user, :log_in]
@@ -975,7 +1010,8 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
       _other_user = insert(:user, email: user.previous_email)
 
-      conn = post(conn, Routes.settings_path(conn, :cancel_update_email))
+      conn =
+        post(conn, Routes.settings_path(conn, :cancel_update_email))
 
       assert redirected_to(conn, 302) == Routes.auth_path(conn, :activate_form)
 
@@ -998,6 +1034,92 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert_raise RuntimeError, ~r/Previous email is empty for user/, fn ->
         post(conn, Routes.settings_path(conn, :cancel_update_email))
       end
+    end
+  end
+
+  describe "POST /settings/api-keys" do
+    setup [:create_user, :log_in]
+
+    test "can create an API key", %{conn: conn, user: user} do
+      insert(:site, memberships: [build(:site_membership, user: user, role: "owner")])
+
+      conn =
+        post(conn, Routes.settings_path(conn, :api_keys), %{
+          "api_key" => %{
+            "user_id" => user.id,
+            "name" => "all your code are belong to us",
+            "key" => "swordfish"
+          }
+        })
+
+      key = Plausible.Auth.ApiKey |> where(user_id: ^user.id) |> Repo.one()
+      assert conn.status == 302
+      assert key.name == "all your code are belong to us"
+    end
+
+    test "cannot create a duplicate API key", %{conn: conn, user: user} do
+      insert(:site, memberships: [build(:site_membership, user: user, role: "owner")])
+
+      conn =
+        post(conn, Routes.settings_path(conn, :api_keys), %{
+          "api_key" => %{
+            "user_id" => user.id,
+            "name" => "all your code are belong to us",
+            "key" => "swordfish"
+          }
+        })
+
+      conn2 =
+        post(conn, Routes.settings_path(conn, :api_keys), %{
+          "api_key" => %{
+            "user_id" => user.id,
+            "name" => "all your code are belong to us",
+            "key" => "swordfish"
+          }
+        })
+
+      assert html_response(conn2, 200) =~ "has already been taken"
+    end
+
+    test "can't create api key into another site", %{conn: conn, user: me} do
+      _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: "owner")])
+
+      other_user = insert(:user)
+
+      _other_site =
+        insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
+
+      conn =
+        post(conn, Routes.settings_path(conn, :api_keys), %{
+          "api_key" => %{
+            "user_id" => other_user.id,
+            "name" => "all your code are belong to us",
+            "key" => "swordfish"
+          }
+        })
+
+      assert conn.status == 302
+
+      refute Plausible.Auth.ApiKey |> where(user_id: ^other_user.id) |> Repo.one()
+    end
+  end
+
+  describe "DELETE /settings/api-keys/:id" do
+    setup [:create_user, :log_in]
+    alias Plausible.Auth.ApiKey
+
+    test "can't delete api key that doesn't belong to me", %{conn: conn} do
+      other_user = insert(:user)
+      insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
+
+      assert {:ok, %ApiKey{} = api_key} =
+               %ApiKey{user_id: other_user.id}
+               |> ApiKey.changeset(%{"name" => "other user's key"})
+               |> Repo.insert()
+
+      conn = delete(conn, Routes.settings_path(conn, :delete_api_key, api_key.id))
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find API Key to delete"
+      assert Repo.get(ApiKey, api_key.id)
     end
   end
 
