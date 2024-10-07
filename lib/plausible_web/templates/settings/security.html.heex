@@ -12,8 +12,6 @@
       for={@email_changeset}
       method="post"
     >
-      <.input type="password" field={f[:password]} label="Account Password" width="w-1/2" />
-
       <.input
         type="text"
         name="user[current_email]"
@@ -24,6 +22,8 @@
       />
 
       <.input type="text" field={f[:email]} label="New E-mail" width="w-1/2" />
+
+      <.input type="password" field={f[:password]} label="Account Password" width="w-1/2" />
 
       <.button type="submit">
         Change Email

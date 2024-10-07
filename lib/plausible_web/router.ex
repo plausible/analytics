@@ -334,6 +334,7 @@ defmodule PlausibleWeb.Router do
     get "/security", SettingsController, :security
 
     post "/security/email", SettingsController, :update_email
+    post "/security/email/cancel", SettingsController, :cancel_update_email
     post "/security/password", SettingsController, :update_password
 
     get "/billing/subscription", SettingsController, :subscription

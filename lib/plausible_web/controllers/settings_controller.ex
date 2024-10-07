@@ -31,7 +31,6 @@ defmodule PlausibleWeb.SettingsController do
       pageview_usage: Quota.Usage.monthly_pageview_usage(current_user),
       site_usage: Quota.Usage.site_usage(current_user),
       site_limit: Quota.Limits.site_limit(current_user),
-      # cc @zoldar 👀
       team_member_limit: Quota.Limits.team_member_limit(current_user),
       team_member_usage: Quota.Usage.team_member_usage(current_user)
     )
@@ -126,6 +125,26 @@ defmodule PlausibleWeb.SettingsController do
           |> Map.put(:action, :validate)
 
         render_security(conn, email_changeset: changeset)
+    end
+  end
+
+  def cancel_update_email(conn, _params) do
+    IO.inspect :HIT
+    changeset = Auth.User.cancel_email_changeset(conn.assigns.current_user)
+
+    case Repo.update(changeset) do
+      {:ok, user} ->
+        conn
+        |> put_flash(:success, "Email changed back to #{user.email}")
+        |> redirect(to: Routes.settings_path(conn, :security) <> "#update-email")
+
+      {:error, _} ->
+        conn
+        |> put_flash(
+          :error,
+          "Could not cancel email update because previous email has already been taken"
+        )
+        |> redirect(to: Routes.auth_path(conn, :activate_form))
     end
   end
 
