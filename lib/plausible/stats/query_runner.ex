@@ -9,6 +9,7 @@ defmodule Plausible.Stats.QueryRunner do
   3. Passing total_rows from clickhouse to QueryResult meta
   """
 
+  use Plausible
   use Plausible.ClickhouseRepo
 
   alias Plausible.Stats.{
@@ -141,7 +142,7 @@ defmodule Plausible.Stats.QueryRunner do
 
       %{
         dimensions: dimensions,
-        metrics: Enum.map(query.metrics, &get_metric(entry, &1, dimensions, time_on_page))
+        metrics: Enum.map(query.metrics, &get_metric(entry, &1, dimensions, query, time_on_page))
       }
     end)
   end
@@ -168,10 +169,20 @@ defmodule Plausible.Stats.QueryRunner do
     Map.get(entry, Util.shortname(query, dimension))
   end
 
-  defp get_metric(_entry, :time_on_page, dimensions, time_on_page),
+  # :TODO: Verify change calculations work with revenue metrics
+  on_ee do
+    defp get_metric(entry, metric, dimensions, query, _time_on_page)
+         when metric in [:average_revenue, :total_revenue] do
+      value = Map.get(entry, metric)
+
+      Plausible.Stats.Goal.Revenue.format_revenue_metric(value, query, dimensions)
+    end
+  end
+
+  defp get_metric(_entry, :time_on_page, dimensions, _query, time_on_page),
     do: Map.get(time_on_page, dimensions)
 
-  defp get_metric(entry, metric, _dimensions, _time_on_page), do: Map.get(entry, metric)
+  defp get_metric(entry, metric, _dimensions, _query, _time_on_page), do: Map.get(entry, metric)
 
   # Special case: If comparison and single time dimension, add 0 rows - otherwise
   # comparisons would not be shown for timeseries with 0 values.
