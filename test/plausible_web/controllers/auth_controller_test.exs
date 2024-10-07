@@ -345,11 +345,11 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn =
         conn
         |> init_session()
-        |> put_session(:login_dest, "/settings")
+        |> put_session(:login_dest, Routes.settings_path(conn, :index))
 
       conn = post(conn, "/login", email: user.email, password: "password")
 
-      assert redirected_to(conn, 302) == "/settings"
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :index)
     end
 
     test "valid email and password with 2FA enabled - sets 2FA session and redirects", %{
@@ -873,7 +873,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn =
         conn
         |> init_session()
-        |> put_session(:login_dest, "/settings")
+        |> put_session(:login_dest, Routes.settings_path(conn, :index))
 
       conn = login_with_cookie(conn, user.email, "password")
 
@@ -881,7 +881,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code})
 
-      assert redirected_to(conn, 302) == "/settings"
+      assert redirected_to(conn, 302) == Routes.settings_path(conn, :index)
     end
 
     test "sets remember cookie when device trusted", %{conn: conn} do

@@ -101,7 +101,7 @@ defmodule PlausibleWeb.BillingController do
       {:ok, _subscription} ->
         conn
         |> put_flash(:success, "Plan changed successfully")
-        |> redirect(to: "/settings")
+        |> redirect(to: Routes.settings_path(conn, :subscription))
 
       {:error, e} ->
         msg =
@@ -131,7 +131,7 @@ defmodule PlausibleWeb.BillingController do
 
         conn
         |> put_flash(:error, msg)
-        |> redirect(to: "/settings")
+        |> redirect(to: Routes.settings_path(conn, :subscription))
     end
   end
 
