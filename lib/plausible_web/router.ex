@@ -347,7 +347,6 @@ defmodule PlausibleWeb.Router do
     delete "/api-keys/:id", SettingsController, :delete_api_key
 
     get "/danger-zone", SettingsController, :danger_zone
-
   end
 
   scope "/", PlausibleWeb do

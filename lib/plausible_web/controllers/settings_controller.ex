@@ -83,8 +83,6 @@ defmodule PlausibleWeb.SettingsController do
     end
   end
 
-
-
   def danger_zone(conn, _params) do
     render(conn, :danger_zone, layout: {PlausibleWeb.LayoutView, :settings})
   end

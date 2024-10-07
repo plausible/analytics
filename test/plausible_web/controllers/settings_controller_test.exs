@@ -367,7 +367,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
           last_bill_date: Timex.shift(Timex.now(), months: -6)
         )
 
-      get(conn, Routes.settings_path(conn, :subscription)) |> html_response(200) |> assert_cycles_rendered.()
+      get(conn, Routes.settings_path(conn, :subscription))
+      |> html_response(200)
+      |> assert_cycles_rendered.()
 
       # for a past_due subscription
       subscription =
@@ -657,7 +659,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Session logged out successfully"
 
       assert redirected_to(conn, 302) ==
-        Routes.settings_path(conn, :security) <> "#user-sessions"
+               Routes.settings_path(conn, :security) <> "#user-sessions"
 
       refute Repo.reload(another_session)
     end
@@ -675,7 +677,6 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert Repo.reload(another_session)
     end
   end
-
 
   describe "POST /preferences/name" do
     setup [:create_user, :log_in]
