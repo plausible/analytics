@@ -47,7 +47,10 @@ defmodule Plausible.Stats.QueryOptimizer do
       &update_group_by_time/1,
       &add_missing_order_by/1,
       &update_time_in_order_by/1,
-      &extend_hostname_filters_to_visit/1
+      &extend_hostname_filters_to_visit/1,
+      on_ee do
+        &remove_revenue_metrics_if_unavailable/1
+      end
     ]
   end
 
@@ -171,5 +174,15 @@ defmodule Plausible.Stats.QueryOptimizer do
       include_imported: query.include_imported,
       pagination: nil
     )
+  end
+
+  on_ee do
+    defp remove_revenue_metrics_if_unavailable(query) do
+      if query.remove_unavailable_revenue_metrics and map_size(query.revenue_currencies) == 0 do
+        Query.set(query, metrics: query.metrics -- Plausible.Stats.Goal.Revenue.revenue_metrics())
+      else
+        query
+      end
+    end
   end
 end
