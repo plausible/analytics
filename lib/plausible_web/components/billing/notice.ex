@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           title="You have outgrown your Plausible subscription tier"
           class="shadow-md dark:shadow-none"
         >
-          To keep your stats running smoothly, it’s time to upgrade your subscription to match your growing usage. 
+          To keep your stats running smoothly, it’s time to upgrade your subscription to match your growing usage.
           <.link
             href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
             class="whitespace-nowrap font-semibold"
@@ -29,7 +29,10 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     else
       ~H"""
       <aside class="container">
-        <.notice title="You have outgrown your Plausible subscription tier" class="shadow-md dark:shadow-none">
+        <.notice
+          title="You have outgrown your Plausible subscription tier"
+          class="shadow-md dark:shadow-none"
+        >
           To keep your stats running smoothly, it’s time to upgrade your subscription to match your growing usage.
           <.link
             href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
