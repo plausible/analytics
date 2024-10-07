@@ -33,12 +33,14 @@ defmodule PlausibleWeb.SettingsController do
       site_limit: Quota.Limits.site_limit(current_user),
       # cc @zoldar 👀
       team_member_limit: Quota.Limits.team_member_limit(current_user),
-      team_member_usage: Quota.Usage.team_member_usage(current_user),
+      team_member_usage: Quota.Usage.team_member_usage(current_user)
     )
   end
 
   def invoices(conn, _params) do
-    render(conn, :invoices, layout: {PlausibleWeb.LayoutView, :settings})
+    current_user = conn.assigns.current_user
+    invoices = Plausible.Billing.paddle_api().get_invoices(current_user.subscription)
+    render(conn, :invoices, layout: {PlausibleWeb.LayoutView, :settings}, invoices: invoices)
   end
 
   def api_keys(conn, _params) do
