@@ -45,6 +45,9 @@ defmodule Plausible.Stats.Goal.Revenue do
     Plausible.Billing.Feature.RevenueGoals.check_availability(site.owner) == :ok
   end
 
+  # :NOTE: Legacy queries don't have metrics associated with them so work around the issue by assuming
+  #   revenue metric was requested.
+  defp requested?([]), do: true
   defp requested?(metrics), do: Enum.any?(metrics, &(&1 in @revenue_metrics))
 
   defp get_goal_dimension_revenue_currency(query, dimension_values) do
@@ -111,6 +114,9 @@ defmodule Plausible.Stats.Goal.Revenue do
   end
 
   def cast_revenue_metrics_to_money(results, _), do: results
+
+  # :TODO: Avoid double-casting while working on the feature.
+  def maybe_cast_metric_to_money(%Money{} = value, _, _), do: value
 
   def maybe_cast_metric_to_money(value, metric, currency) do
     if currency && metric in @revenue_metrics do
