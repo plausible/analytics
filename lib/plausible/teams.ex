@@ -17,14 +17,16 @@ defmodule Plausible.Teams do
   end
 
   @doc """
-  Get or create implicit user's team.
+  Get or create user's team.
 
   If the user has no non-guest membership yet, an implicit "My Team" team is
   created with them as an owner.
 
-  If the user already has an owner membership in an existing team, that team is returned.
+  If the user already has an owner membership in an existing team,
+  that team is returned.
 
-  If the user has any other non-guest membership, `no_team` error is returned.
+  If the user has a non-guest membership other than owner, `:no_team` error
+  is returned.
   """
   def get_or_create(user) do
     result =
