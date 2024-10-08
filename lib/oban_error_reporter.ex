@@ -67,8 +67,10 @@ defmodule ObanErrorReporter do
   # Logs the error and sends it to Sentry
   defp capture_error(meta, extra) do
     Logger.error(
+      # this message is ignored by Sentry
       "Background job (#{inspect(extra)}) failed:\n\n  " <>
         Exception.format(:error, meta.reason, meta.stacktrace),
+      # Sentry report is built entirely from crash_reason
       crash_reason: {meta.reason, meta.stacktrace},
       sentry: %{extra: extra}
     )
