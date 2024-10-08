@@ -72,10 +72,6 @@ defmodule Plausible.Repo.Migrations.AddTeamsTablesFields do
     create index(:guest_invitations, [:site_id])
     create index(:guest_invitations, [:team_invitation_id])
 
-    alter table(:sites) do
-      add :team_id, references(:teams, on_delete: :delete_all), null: true
-    end
-
     create table(:team_site_transfers) do
       add :transfer_id, :string, null: false
       add :email, :citext
@@ -92,6 +88,10 @@ defmodule Plausible.Repo.Migrations.AddTeamsTablesFields do
     create unique_index(:team_site_transfers, [:destination_team_id, :site_id])
     create unique_index(:team_site_transfers, [:email, :site_id])
 
+    alter table(:sites) do
+      add :team_id, references(:teams, on_delete: :delete_all), null: true
+    end
+
     create index(:sites, [:team_id])
 
     alter table(:subscriptions) do
@@ -105,11 +105,5 @@ defmodule Plausible.Repo.Migrations.AddTeamsTablesFields do
     end
 
     create index(:enterprise_plans, [:team_id])
-
-    alter table(:api_keys) do
-      add :team_id, references(:teams, on_delete: :delete_all), null: true
-    end
-
-    create index(:api_keys, [:team_id])
   end
 end
