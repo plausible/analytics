@@ -9,21 +9,27 @@ defmodule Plausible.Stats.Goal.Revenue do
     @revenue_metrics
   end
 
-  def preload_revenue_currencies(site, goals, metrics, goal_filters?) do
+  def preload_revenue_currencies(site, goals, metrics, dimensions) do
     if requested?(metrics) and length(goals) > 0 and available?(site) do
       goal_currency_map =
-        Map.new(goals, fn goal -> {Plausible.Goal.display_name(goal), goal.currency} end)
+        goals
+        |> Map.new(fn goal -> {Plausible.Goal.display_name(goal), goal.currency} end)
+        |> Map.reject(fn {_goal, currency} -> is_nil(currency) end)
 
       currencies = goal_currency_map |> Map.values() |> Enum.uniq()
+      goal_dimension? = "event:goal" in dimensions
 
-      default_currency =
-        if(goal_filters? and length(currencies) == 1, do: hd(currencies), else: nil)
-
-      Map.put(goal_currency_map, :default, default_currency)
+      case {currencies, goal_dimension?} do
+        {[currency], _} -> %{default: currency}
+        {_, true} -> goal_currency_map
+        _ -> %{}
+      end
     else
       %{}
     end
   end
+
+  def format_revenue_metric(nil, _, _), do: nil
 
   def format_revenue_metric(value, query, dimension_values) do
     currency =

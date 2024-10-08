@@ -422,7 +422,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
       {
         goals,
-        preload_revenue_currencies(site, goals, metrics, goal_filters?)
+        preload_revenue_currencies(site, goals, metrics, dimensions)
       }
     else
       {[], %{}}
@@ -430,10 +430,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   on_ee do
-    defdelegate preload_revenue_currencies(site, preloaded_goals, metrics, goal_filters?),
+    defdelegate preload_revenue_currencies(site, preloaded_goals, metrics, dimensions),
       to: Plausible.Stats.Goal.Revenue
   else
-    defp preload_revenue_currencies(site, preloaded_goals, metrics, goal_filters?), do: %{}
+    defp preload_revenue_currencies(site, preloaded_goals, metrics, dimensions), do: %{}
   end
 
   @only_toplevel ["event:goal", "event:hostname"]

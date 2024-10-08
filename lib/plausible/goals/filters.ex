@@ -40,7 +40,7 @@ defmodule Plausible.Goals.Filters do
         # Goal matches ANY clause
         goals
         |> Enum.filter(fn goal ->
-          Enum.any?(clauses, fn clause -> filter_preloaded([goal], operation, clause) end)
+          Enum.any?(clauses, fn clause -> matches?(goal, operation, clause) end)
         end)
 
       _filter, goals ->
@@ -49,15 +49,17 @@ defmodule Plausible.Goals.Filters do
   end
 
   def filter_preloaded(preloaded_goals, operation, clause) when operation in [:is, :contains] do
-    Enum.filter(preloaded_goals, fn goal ->
-      case operation do
-        :is ->
-          Plausible.Goal.display_name(goal) == clause
+    Enum.filter(preloaded_goals, fn goal -> matches?(goal, operation, clause) end)
+  end
 
-        :contains ->
-          String.contains?(Plausible.Goal.display_name(goal), clause)
-      end
-    end)
+  defp matches?(goal, operation, clause) do
+    case operation do
+      :is ->
+        Plausible.Goal.display_name(goal) == clause
+
+      :contains ->
+        String.contains?(Plausible.Goal.display_name(goal), clause)
+    end
   end
 
   defp build_condition(filtered_goals, imported?) do
