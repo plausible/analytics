@@ -1,0 +1,49 @@
+<.settings_tiles>
+  <.tile>
+    <:title>
+      <a id="update-name">Your Name</a>
+    </:title>
+    <:subtitle>
+      Change the name associated with your account
+    </:subtitle>
+    <.form
+      :let={f}
+      action={Routes.settings_path(@conn, :update_name)}
+      for={@name_changeset}
+      method="post"
+    >
+      <.input type="text" field={f[:name]} label="Name" width="w-1/2" />
+
+      <.button type="submit">
+        Change Name
+      </.button>
+    </.form>
+  </.tile>
+
+  <.tile docs="dashboard-appearance">
+    <:title>
+      <a id="update-theme">Dashboard Appearance</a>
+    </:title>
+    <:subtitle>
+      Set your visual preferences
+    </:subtitle>
+    <.form
+      :let={f}
+      action={Routes.settings_path(@conn, :update_theme)}
+      for={@theme_changeset}
+      method="post"
+    >
+      <.input
+        type="select"
+        field={f[:theme]}
+        options={Plausible.Themes.options()}
+        label="Theme"
+        width="w-1/2"
+      />
+
+      <.button type="submit">
+        Change Theme
+      </.button>
+    </.form>
+  </.tile>
+</.settings_tiles>

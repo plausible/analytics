@@ -50,6 +50,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   attr(:class, :any, default: @default_input_class)
 
   attr(:mt?, :boolean, default: true)
+  attr(:max_one_error, :boolean, default: false)
   slot(:inner_block)
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
@@ -82,6 +83,15 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
+    errors =
+      if assigns.max_one_error do
+        Enum.take(assigns.errors, 1)
+      else
+        assigns.errors
+      end
+
+    assigns = assign(assigns, :errors, errors)
+
     ~H"""
     <div phx-feedback-for={@name} class={@mt? && "mt-2"}>
       <.label :if={@label != nil and @label != ""} for={@id} class="mb-2">

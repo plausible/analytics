@@ -143,7 +143,7 @@ defmodule PlausibleWeb.Live.Sites do
             <p>
               To access the sites you own, you need to subscribe to a monthly or yearly payment plan. <%= link(
                 "Upgrade now →",
-                to: "/settings",
+                to: Routes.settings_path(PlausibleWeb.Endpoint, :subscription),
                 class: "text-sm font-medium text-yellow-800"
               ) %>
             </p>
@@ -450,7 +450,7 @@ defmodule PlausibleWeb.Live.Sites do
                 You can review your usage in the
                 <.styled_link
                   class="inline-block"
-                  href={Routes.auth_path(PlausibleWeb.Endpoint, :user_settings)}
+                  href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
                 >
                   account settings
                 </.styled_link>.

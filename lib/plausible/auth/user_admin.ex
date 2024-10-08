@@ -119,7 +119,8 @@ defmodule Plausible.Auth.UserAdmin do
   defp subscription_status(user) do
     cond do
       user.subscription ->
-        status_str = PlausibleWeb.AuthView.present_subscription_status(user.subscription.status)
+        status_str =
+          PlausibleWeb.SettingsView.present_subscription_status(user.subscription.status)
 
         if user.subscription.paddle_subscription_id do
           {:safe, ~s(<a href="#{manage_url(user.subscription)}">#{status_str}</a>)}

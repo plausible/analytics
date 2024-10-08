@@ -2,7 +2,7 @@ defmodule PlausibleWeb.RequireAccountPlug do
   import Plug.Conn
 
   @unverified_email_exceptions [
-    ["settings", "email", "cancel"],
+    ["settings", "security", "email", "cancel"],
     ["activate"],
     ["activate", "request-code"],
     ["me"]
