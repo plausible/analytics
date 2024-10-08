@@ -637,7 +637,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
       assert html = html_response(conn, 200)
 
       assert html =~ "Unknown"
-      assert html =~ "current session"
+      assert html =~ "Current session"
       assert html =~ "Just recently"
       assert html =~ "Some Device"
       assert html =~ "1 hour ago"

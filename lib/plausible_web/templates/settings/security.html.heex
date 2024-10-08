@@ -232,7 +232,7 @@
       <:tbody :let={session}>
         <.td truncate max_width="max-w-40"><%= session.device %></.td>
         <.td hide_on_mobile><%= Plausible.Auth.UserSessions.last_used_humanize(session) %></.td>
-        <.td :if={@current_user_session.id == session.id} actions>current session</.td>
+        <.td :if={@current_user_session.id == session.id} actions>Current session</.td>
         <.td :if={@current_user_session.id != session.id} actions>
           <.delete_button
             href={Routes.settings_path(@conn, :delete_session, session.id)}
