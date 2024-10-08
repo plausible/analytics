@@ -1,4 +1,5 @@
 defmodule ObanErrorReporter do
+  use Plausible
   require Logger
 
   def handle_event(name, measurements, metadata, _) do
@@ -22,17 +23,29 @@ defmodule ObanErrorReporter do
 
     on_job_exception(job)
 
+    on_ce do
+      log_ce_error(meta, extra)
+    end
+
     Sentry.capture_exception(meta.reason, stacktrace: meta.stacktrace, extra: extra)
   end
 
   defp handle_event([:oban, :notifier, :exception], _timing, meta) do
     extra = Map.take(meta, ~w(channel payload)a)
 
+    on_ce do
+      log_ce_error(meta, extra)
+    end
+
     Sentry.capture_exception(meta.reason, stacktrace: meta.stacktrace, extra: extra)
   end
 
   defp handle_event([:oban, :plugin, :exception], _timing, meta) do
     extra = Map.take(meta, ~w(plugin)a)
+
+    on_ce do
+      log_ce_error(meta, extra)
+    end
 
     Sentry.capture_exception(meta.reason, stacktrace: meta.stacktrace, extra: extra)
   end
@@ -65,4 +78,13 @@ defmodule ObanErrorReporter do
   end
 
   defp on_job_exception(_job), do: :ignore
+
+  on_ce do
+    defp log_ce_error(meta, extra) do
+      Logger.error(
+        "Background job (#{inspect(extra)}) failed:\n\n  " <>
+          Exception.format(:error, meta.reason, meta.stacktrace)
+      )
+    end
+  end
 end
