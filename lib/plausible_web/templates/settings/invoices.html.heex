@@ -41,7 +41,7 @@
                 <.styled_link href={invoice.url} new_tab={true}>View</.styled_link>
               </.td>
             </:tbody>
-            <tr>
+            <tr :if={length(invoice_list) > 12}>
               <td colspan="3" class="text-center pt-8 pb-4">
                 <.button_link href={} theme="bright" x-on:click="showAll = true" x-show="!showAll">
                   Show More
