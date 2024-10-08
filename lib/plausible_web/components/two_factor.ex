@@ -160,7 +160,7 @@ defmodule PlausibleWeb.Components.TwoFactor do
               <.button
                 type="button"
                 x-on:click={"#{@state_param} = false"}
-                class="mr-2"
+                class="w-full sm:w-auto mr-2"
                 theme="bright"
               >
                 Cancel
