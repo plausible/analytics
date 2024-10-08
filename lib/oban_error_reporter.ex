@@ -22,32 +22,17 @@ defmodule ObanErrorReporter do
       |> Map.merge(measure)
 
     on_job_exception(job)
-
-    on_ce do
-      log_ce_error(meta, extra)
-    end
-
-    Sentry.capture_exception(meta.reason, stacktrace: meta.stacktrace, extra: extra)
+    capture_error(meta, extra)
   end
 
   defp handle_event([:oban, :notifier, :exception], _timing, meta) do
     extra = Map.take(meta, ~w(channel payload)a)
-
-    on_ce do
-      log_ce_error(meta, extra)
-    end
-
-    Sentry.capture_exception(meta.reason, stacktrace: meta.stacktrace, extra: extra)
+    capture_error(meta, extra)
   end
 
   defp handle_event([:oban, :plugin, :exception], _timing, meta) do
     extra = Map.take(meta, ~w(plugin)a)
-
-    on_ce do
-      log_ce_error(meta, extra)
-    end
-
-    Sentry.capture_exception(meta.reason, stacktrace: meta.stacktrace, extra: extra)
+    capture_error(meta, extra)
   end
 
   defp on_job_exception(%Oban.Job{
@@ -79,12 +64,13 @@ defmodule ObanErrorReporter do
 
   defp on_job_exception(_job), do: :ignore
 
-  on_ce do
-    defp log_ce_error(meta, extra) do
-      Logger.error(
-        "Background job (#{inspect(extra)}) failed:\n\n  " <>
-          Exception.format(:error, meta.reason, meta.stacktrace)
-      )
-    end
+  # Logs the error and sends it to Sentry
+  defp capture_error(meta, extra) do
+    Logger.error(
+      "Background job (#{inspect(extra)}) failed:\n\n  " <>
+        Exception.format(:error, meta.reason, meta.stacktrace),
+      crash_reason: {meta.reason, meta.stacktrace},
+      sentry: %{extra: extra}
+    )
   end
 end
