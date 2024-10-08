@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-54F40A2A.js"></script>
+    <script src="dist/sidebar_items-D034020E.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -156,20 +156,6 @@ main graph with last month or with the same month from last year.</p>
       </a>
       <span class="text">Summary</span>
     </h1>
-<div class="summary-types summary">
-  <h2>
-    <a href="#types">Types</a>
-  </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:mode/0" translate="no">mode()</a>
-
-      </div>
-
-    </div>
-
-</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -177,7 +163,7 @@ main graph with last month or with the same month from last year.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#compare/4" translate="no">compare(site, source_query, mode, opts \\ [])</a>
+        <a href="#get_comparison_query/2" translate="no">get_comparison_query(source_query, options)</a>
 
       </div>
 
@@ -190,46 +176,6 @@ main graph with last month or with the same month from last year.</p>
   </section>
 
 
-  <section id="types" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#types">
-        <i class="ri-link-m" aria-hidden="true"></i>
-      </a>
-      <span class="text">Types</span>
-    </h1>
-    <div class="types-list">
-<section class="detail" id="t:mode/0">
-
-  <div class="detail-header">
-    <a href="#t:mode/0" class="detail-link" title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">mode()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L16" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> mode() :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil</pre>
-
-      </div>
-
-
-  </section>
-</section>
-
-    </div>
-  </section>
-
   <section id="functions" class="details-list">
     <h1 class="section-heading">
       <a class="hover-link" href="#functions">
@@ -238,18 +184,16 @@ main graph with last month or with the same month from last year.</p>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="compare/4">
-
-    <span id="compare/3"></span>
+<section class="detail" id="get_comparison_query/2">
 
   <div class="detail-header">
-    <a href="#compare/4" class="detail-link" title="Link to this function">
+    <a href="#get_comparison_query/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">compare(site, source_query, mode, opts \\ [])</h1>
+    <h1 class="signature" translate="no">get_comparison_query(source_query, options)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L61" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L44" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -261,32 +205,27 @@ main graph with last month or with the same month from last year.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> compare(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="Plausible.Stats.Query.html#t:t/0">Plausible.Stats.Query.t</a>(), <a href="#t:mode/0">mode</a>(), [option()]) ::
-  {:ok, <a href="Plausible.Stats.Query.html#t:t/0">Plausible.Stats.Query.t</a>()}
-  | {:error, :not_supported}
-  | {:error, :invalid_dates}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> get_comparison_query(<a href="Plausible.Stats.Query.html#t:t/0">Plausible.Stats.Query.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) ::
+  <a href="Plausible.Stats.Query.html#t:t/0">Plausible.Stats.Query.t</a>()</pre>
 
       </div>
 
 <p>Generates a comparison query based on the source query and comparison mode.</p><p>Currently only historical periods are supported for comparisons (not <code class="inline">realtime</code>
-and <code class="inline">30m</code> periods).</p><p>The mode parameter specifies the type of comparison and can be one of the
-following:</p><ul><li><p><code class="inline">&quot;previous_period&quot;</code> - shifts back the query by the same number of days the
-source query has.</p></li><li><p><code class="inline">&quot;year_over_year&quot;</code> - shifts back the query by 1 year.</p></li><li><p><code class="inline">&quot;custom&quot;</code> - compares the query using a custom date range. See options for
-more details.</p></li></ul><p>The comparison query returned by the function has its end date restricted to
-the current day. This can be overridden by the <code class="inline">now</code> option, described below.</p><h2 id="compare/4-options" class="section-heading">
-  <a href="#compare/4-options" class="hover-link">
+and <code class="inline">30m</code> periods).</p><h2 id="get_comparison_query/2-options" class="section-heading">
+  <a href="#get_comparison_query/2-options" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
   <span class="text">Options</span>
 </h2>
-<ul><li><p><code class="inline">:now</code> - a <a href="https://hexdocs.pm/elixir/NaiveDateTime.html"><code class="inline">NaiveDateTime</code></a> struct with the current date and time. This is
-optional and used for testing purposes.</p></li><li><p><code class="inline">:from</code> - a ISO-8601 date string used when mode is <code class="inline">&quot;custom&quot;</code>.</p></li><li><p><code class="inline">:to</code> - a ISO-8601 date string used when mode is <code class="inline">&quot;custom&quot;</code>. Must be
-after <code class="inline">from</code>.</p></li><li><p><code class="inline">:match_day_of_week?</code> - determines whether the comparison query should be
+<ul><li><p><code class="inline">mode</code> (required) - specifies the type of comparison and can be one of the
+following:</p><ul><li><p><code class="inline">&quot;previous_period&quot;</code> - shifts back the query by the same number of days the
+source query has.</p></li><li><p><code class="inline">&quot;year_over_year&quot;</code> - shifts back the query by 1 year.</p></li><li><p><code class="inline">&quot;custom&quot;</code> - compares the query using a custom date range. See <code class="inline">date_range</code> for
+more details.</p></li></ul></li><li><p><code class="inline">:date_range</code> - a ISO-8601 date string pair used when mode is <code class="inline">&quot;custom&quot;</code>.</p></li><li><p><code class="inline">:match_day_of_week</code> - determines whether the comparison query should be
 adjusted to match the day of the week of the source query. When this option
 is set to true, the comparison query is shifted to start on the same day of
 the week as the source query, rather than on the exact same date. For
 example, if the source query starts on Sunday, January 1st, 2023 and the
-<code class="inline">year_over_year</code> comparison query is configured to <code class="inline">match_day_of_week?</code>,
+<code class="inline">year_over_year</code> comparison query is configured to <code class="inline">match_day_of_week</code>,
 it will be shifted to start on Sunday, January 2nd, 2022 instead of
 January 1st. Defaults to false.</p></li></ul>
   </section>
