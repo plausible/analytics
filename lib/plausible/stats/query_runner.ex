@@ -169,7 +169,6 @@ defmodule Plausible.Stats.QueryRunner do
     Map.get(entry, Util.shortname(query, dimension))
   end
 
-  # :TODO: Verify change calculations work with revenue metrics
   on_ee do
     defp get_metric(entry, metric, dimensions, query, _time_on_page)
          when metric in [:average_revenue, :total_revenue] do
