@@ -50,9 +50,7 @@ defmodule Plausible.Stats.QueryOptimizer do
       &add_missing_order_by/1,
       &update_time_in_order_by/1,
       &extend_hostname_filters_to_visit/1,
-      on_ee do
-        &remove_revenue_metrics_if_unavailable/1
-      end
+      &remove_revenue_metrics_if_unavailable/1
     ]
   end
 
@@ -186,5 +184,7 @@ defmodule Plausible.Stats.QueryOptimizer do
         query
       end
     end
+  else
+    defp remove_revenue_metrics_if_unavailable(query), do: query
   end
 end
