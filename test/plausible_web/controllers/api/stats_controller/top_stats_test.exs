@@ -1451,6 +1451,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              } in top_stats
     end
 
+    @tag :ee_only
     test "does not return average and total when filtering by many revenue goals with different currencies",
          %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Payment", currency: "USD")
@@ -1488,6 +1489,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       refute "Total revenue" in metrics
     end
 
+    @tag :ee_only
     test "returns average and total revenue when filtering by many goals some which don't have currencies",
          %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Payment", currency: "USD")
@@ -1525,6 +1527,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              } in top_stats
     end
 
+    @tag :ee_only
     test "does not return average and total revenue when filtering non-currency goal",
          %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Payment", display_name: "PaymentWithoutCurrency")

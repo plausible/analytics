@@ -1472,6 +1472,8 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   end
 
   describe "revenue metrics" do
+    @describetag :ee_only
+
     setup %{user: user} do
       plan =
         insert(:enterprise_plan,
