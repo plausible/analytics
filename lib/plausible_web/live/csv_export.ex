@@ -132,13 +132,13 @@ defmodule PlausibleWeb.Live.CSVExport do
       </div>
       <button
         phx-click="cancel"
-        class="text-red-500 font-semibold"
+        class="text-red-500 font-semibold text-sm"
         data-confirm="Are you sure you want to cancel this export?"
       >
         Cancel
       </button>
     </div>
-    <p class="text-sm">
+    <p class="text-sm mt-4">
       The preparation of your stats might take a while. Depending on the volume of your data, it might take up to 20 minutes. Feel free to leave the page and return later.
     </p>
     """

@@ -88,7 +88,7 @@
 
     <.focus_list>
       <:item :if={@has_any_memberships?}>
-        <.styled_link method="post" href="/settings/email/cancel">
+        <.styled_link method="post" href={Routes.settings_path(@conn, :cancel_update_email)}>
           Change email back to
         </.styled_link>
         <%= @conn.assigns[:current_user].previous_email %>

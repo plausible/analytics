@@ -20,7 +20,7 @@
 
   <script>
     const PING_SUBSCRIPTION_API = "<%= Routes.billing_path(@conn, :ping_subscription) %>"
-    const REDIRECT_TO = "<%= Routes.auth_path(@conn, :user_settings) %>"
+    const REDIRECT_TO = "<%= Routes.settings_path(@conn, :subscription) %>"
     const PING_EVERY_MS = 2000
     const TIMEOUT_AFTER_MS = 15000
 

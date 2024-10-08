@@ -44,7 +44,7 @@
                 class="hidden mr-6 sm:block"
               >
                 <%= link(trial_notificaton(@conn.assigns[:current_user]),
-                  to: "/settings",
+                  to: Routes.settings_path(@conn, :subscription),
                   class:
                     "text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
                 ) %>
@@ -69,7 +69,9 @@
                       </p>
                     </div>
                     <div class="py-1.5" role="none">
-                      <.dropdown_link href="/settings">Account Settings</.dropdown_link>
+                      <.dropdown_link href={Routes.settings_path(@conn, :index)}>
+                        Account Settings
+                      </.dropdown_link>
                       <.dropdown_link new_tab href="https://plausible.io/docs">
                         Help Center
                       </.dropdown_link>

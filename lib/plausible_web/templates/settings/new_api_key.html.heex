@@ -1,7 +1,7 @@
 <PlausibleWeb.Components.Generic.focus_box>
   <:title>Create new API key</:title>
 
-  <%= form_for @changeset, "/settings/api-keys", fn f -> %>
+  <%= form_for @changeset, Routes.settings_path(@conn, :api_keys), fn f -> %>
     <div class="my-4">
       <%= label(f, :name, class: "block font-medium text-gray-700 dark:text-gray-300") %>
       <div class="mt-1">
