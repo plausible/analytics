@@ -9,6 +9,18 @@ defmodule Plausible.Stats.Goal.Revenue do
     @revenue_metrics
   end
 
+  @doc """
+  Preloads revenue currencies for a query.
+
+  Assumptions and business logic:
+  1. Goals are already filtered according to query filters and dimensions
+  2. If there's a single currency involved, return map containing the default
+  3. If there's a breakdown by event:goal we return all the relevant currencies as a map
+  4. If filtering by multiple different currencies without event:goal breakdown empty map is returned
+  5. If user has no access or preloading is not needed, empty map is returned
+
+  The resulting data structure is attached to a `Query` and used below in `format_revenue_metric/3`.
+  """
   def preload_revenue_currencies(site, goals, metrics, dimensions) do
     if requested?(metrics) and length(goals) > 0 and available?(site) do
       goal_currency_map =
