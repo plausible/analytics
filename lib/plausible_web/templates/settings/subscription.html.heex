@@ -6,7 +6,7 @@
     <:subtitle>
       Manage your plan
     </:subtitle>
-    <div class="text-right">
+    <div class="w-full inline-flex gap-x-4 justify-end items-center">
       <span
         :if={@subscription && Plausible.Billing.Plans.business_tier?(@subscription)}
         class={[
