@@ -231,6 +231,15 @@
     } else {
       page()
     }
+
+    {{#if pageleave}}
+    window.addEventListener('pageshow', function(event) {
+      if (event.persisted) {
+        // Page was restored from bfcache - trigger a pageview
+        page();
+      }
+    })
+    {{/if}}
   {{/unless}}
 
   {{#if (any outbound_links file_downloads tagged_events)}}
