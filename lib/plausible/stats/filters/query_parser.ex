@@ -487,9 +487,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
       end
     end
   else
-    defp preload_revenue_currencies(site, preloaded_goals, metrics, dimensions), do: %{}
+    defp preload_revenue_currencies(_site, _preloaded_goals, _metrics, _dimensions), do: %{}
 
-    defp validate_revenue_metrics_access(site, _query), do: :ok
+    defp validate_revenue_metrics_access(_site, _query), do: :ok
   end
 
   defp validate_goal_filter(clause, configured_goals) do
