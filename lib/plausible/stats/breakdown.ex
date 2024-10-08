@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
   use Plausible.Stats.SQL.Fragments
 
-  alias Plausible.Stats.{Query, QueryRunner}
+  alias Plausible.Stats.{Query, QueryRunner, QueryOptimizer}
 
   def breakdown(
         site,
@@ -21,8 +21,8 @@ defmodule Plausible.Stats.Breakdown do
     transformed_order_by = transform_order_by(order_by || [], dimension)
 
     query_with_metrics =
-      Query.set(
-        query,
+      query
+      |> Query.set(
         metrics: transformed_metrics,
         # Concat client requested order with default order, overriding only if client explicitly requests it
         order_by:
@@ -36,6 +36,7 @@ defmodule Plausible.Stats.Breakdown do
         legacy_breakdown: true,
         remove_unavailable_revenue_metrics: true
       )
+      |> QueryOptimizer.optimize()
 
     QueryRunner.run(site, query_with_metrics)
     |> build_breakdown_result(query_with_metrics, metrics)

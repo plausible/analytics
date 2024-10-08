@@ -35,10 +35,13 @@ defmodule Plausible.Goals.Filters do
   end
 
   def preload(goals, filters) do
-    filters
-    |> Enum.reduce(goals, fn
+    Enum.reduce(filters, goals, fn
       [operation, "event:goal", clauses], goals ->
-        Enum.reduce(clauses, goals, &filter_preloaded(&2, operation, &1))
+        # Goal matches ANY clause
+        goals
+        |> Enum.filter(fn goal ->
+          Enum.any?(clauses, fn clause -> filter_preloaded([goal], operation, clause) end)
+        end)
 
       _filter, goals ->
         goals
