@@ -23,11 +23,23 @@ defmodule Plausible.Stats.QueryRunner do
     Time
   }
 
+  defstruct [
+    :query,
+    :site,
+    :comparison_query,
+    :comparison_results,
+    :main_results_list,
+    :ch_results,
+    :meta_extra,
+    :time_lookup,
+    :results_list
+  ]
+
   def run(site, query) do
     optimized_query = QueryOptimizer.optimize(query)
 
-    assigns =
-      %{query: optimized_query, site: site}
+    run_results =
+      %__MODULE__{query: optimized_query, site: site}
       |> add_comparison_query()
       |> execute_comparison()
       |> execute_main_query()
@@ -35,70 +47,80 @@ defmodule Plausible.Stats.QueryRunner do
       |> add_time_lookup()
       |> build_results_list()
 
-    QueryResult.from(assigns.results_list, site, optimized_query, assigns.meta_extra)
+    QueryResult.from(run_results.results_list, site, optimized_query, run_results.meta_extra)
   end
 
-  defp add_comparison_query(%{query: query} = assigns) when is_map(query.include.comparisons) do
+  defp add_comparison_query(%__MODULE__{query: query} = run_results)
+       when is_map(query.include.comparisons) do
     comparison_query = Comparisons.get_comparison_query(query, query.include.comparisons)
-    Map.put(assigns, :comparison_query, comparison_query)
+    struct!(run_results, comparison_query: comparison_query)
   end
 
-  defp add_comparison_query(assigns), do: assigns
+  defp add_comparison_query(run_results), do: run_results
 
-  defp execute_comparison(%{comparison_query: comparison_query, site: site} = assigns) do
-    {ch_results, time_on_page} = execute_query(comparison_query, site)
+  defp execute_comparison(
+         %__MODULE__{comparison_query: comparison_query, site: site} = run_results
+       ) do
+    if comparison_query do
+      {ch_results, time_on_page} = execute_query(comparison_query, site)
 
-    comparison_results =
-      build_from_ch(
-        ch_results,
-        comparison_query,
-        time_on_page
-      )
+      comparison_results =
+        build_from_ch(
+          ch_results,
+          comparison_query,
+          time_on_page
+        )
 
-    Map.put(assigns, :comparison_results, comparison_results)
+      struct!(run_results, comparison_results: comparison_results)
+    else
+      run_results
+    end
   end
 
-  defp execute_comparison(assigns), do: assigns
-
-  defp add_time_lookup(assigns) do
+  defp add_time_lookup(run_results) do
     time_lookup =
-      if Time.time_dimension(assigns.query) && assigns[:comparison_query] do
+      if Time.time_dimension(run_results.query) && run_results.comparison_query do
         Enum.zip(
-          Time.time_labels(assigns.query),
-          Time.time_labels(assigns.comparison_query)
+          Time.time_labels(run_results.query),
+          Time.time_labels(run_results.comparison_query)
         )
         |> Map.new()
       else
         %{}
       end
 
-    Map.put(assigns, :time_lookup, time_lookup)
+    struct!(run_results, time_lookup: time_lookup)
   end
 
-  defp execute_main_query(%{query: query, site: site} = assigns) do
+  defp execute_main_query(%__MODULE__{query: query, site: site} = run_results) do
     {ch_results, time_on_page} = execute_query(query, site)
 
-    Map.merge(assigns, %{
+    struct!(
+      run_results,
       main_results_list: build_from_ch(ch_results, query, time_on_page),
       ch_results: ch_results
-    })
+    )
   end
 
-  defp add_meta_extra(%{query: query, ch_results: ch_results} = assigns) do
-    Map.put(assigns, :meta_extra, %{
-      total_rows: if(query.include.total_rows, do: total_rows(ch_results), else: nil)
-    })
+  defp add_meta_extra(%__MODULE__{query: query, ch_results: ch_results} = run_results) do
+    struct!(run_results,
+      meta_extra: %{
+        total_rows: if(query.include.total_rows, do: total_rows(ch_results), else: nil)
+      }
+    )
   end
 
-  defp build_results_list(%{query: query, main_results_list: main_results_list} = assigns) do
+  defp build_results_list(
+         %__MODULE__{query: query, main_results_list: main_results_list} = run_results
+       ) do
     results_list =
       case query.dimensions do
-        ["time:" <> _] -> main_results_list |> add_empty_timeseries_rows(assigns)
+        ["time:" <> _] -> main_results_list |> add_empty_timeseries_rows(run_results)
         _ -> main_results_list
       end
-      |> merge_with_comparison_results(assigns)
+      |> merge_with_comparison_results(run_results)
 
-    Map.put(assigns, :results_list, results_list)
+    struct!(run_results, results_list: results_list)
   end
 
   defp execute_query(query, site) do
@@ -153,7 +175,7 @@ defmodule Plausible.Stats.QueryRunner do
 
   # Special case: If comparison and single time dimension, add 0 rows - otherwise
   # comparisons would not be shown for timeseries with 0 values.
-  defp add_empty_timeseries_rows(results_list, %{query: query})
+  defp add_empty_timeseries_rows(results_list, %__MODULE__{query: query})
        when is_map(query.include.comparisons) do
     indexed_results = index_by_dimensions(results_list)
 
@@ -172,13 +194,13 @@ defmodule Plausible.Stats.QueryRunner do
 
   defp add_empty_timeseries_rows(results_list, _), do: results_list
 
-  defp merge_with_comparison_results(results_list, assigns) do
-    comparison_map = Map.get(assigns, :comparison_results, []) |> index_by_dimensions()
-    time_lookup = Map.get(assigns, :time_lookup, %{})
+  defp merge_with_comparison_results(results_list, run_results) do
+    comparison_map = (run_results.comparison_results || []) |> index_by_dimensions()
+    time_lookup = run_results.time_lookup || %{}
 
     Enum.map(
       results_list,
-      &add_comparison_results(&1, assigns.query, comparison_map, time_lookup)
+      &add_comparison_results(&1, run_results.query, comparison_map, time_lookup)
     )
   end
 
