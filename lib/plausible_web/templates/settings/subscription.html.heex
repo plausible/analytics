@@ -6,26 +6,24 @@
     <:subtitle>
       Manage your plan
     </:subtitle>
-    <div class="flex flex-wrap justify-between">
-      <div class="gap-x-2 inline-flex">
-        <span
-          :if={@subscription && Plausible.Billing.Plans.business_tier?(@subscription)}
-          class={[
-            "w-max px-2.5 py-0.5 rounded-md text-sm font-bold leading-5 text-indigo-600 bg-blue-100 dark:text-yellow-200 dark:border dark:bg-inherit dark:border-yellow-200"
-          ]}
-        >
-          Business
-        </span>
-        <span
-          :if={@subscription}
-          class={[
-            "w-max px-2.5 py-0.5 rounded-md text-sm font-bold leading-5",
-            subscription_colors(@subscription.status)
-          ]}
-        >
-          <%= present_subscription_status(@subscription.status) %>
-        </span>
-      </div>
+    <div class="text-right">
+      <span
+        :if={@subscription && Plausible.Billing.Plans.business_tier?(@subscription)}
+        class={[
+          "w-max px-2.5 py-0.5 rounded-md text-sm font-bold leading-5 text-indigo-600 bg-blue-100 dark:text-yellow-200 dark:border dark:bg-inherit dark:border-yellow-200"
+        ]}
+      >
+        Business
+      </span>
+      <span
+        :if={@subscription}
+        class={[
+          "w-max px-2.5 py-0.5 rounded-md text-sm font-bold leading-5",
+          subscription_colors(@subscription.status)
+        ]}
+      >
+        <%= present_subscription_status(@subscription.status) %>
+      </span>
     </div>
 
     <PlausibleWeb.Components.Billing.Notice.subscription_cancelled
