@@ -491,6 +491,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [
+          ["is", "segment", [200]],
           [
             "or",
             [
@@ -510,6 +511,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         metrics: [:visitors],
         utc_time_range: @date_range_day,
         filters: [
+          [:is, "segment", [200]],
           [
             :or,
             [

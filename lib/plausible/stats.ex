@@ -26,9 +26,9 @@ defmodule Plausible.Stats do
     |> QueryResult.from(site, optimized_query)
   end
 
-  def breakdown(site, query, metrics, pagination) do
+  def breakdown(site, query, metrics, pagination, opts \\ []) do
     include_sentry_replay_info()
-    Breakdown.breakdown(site, query, metrics, pagination)
+    Breakdown.breakdown(site, query, metrics, pagination, opts)
   end
 
   def aggregate(site, query, metrics) do

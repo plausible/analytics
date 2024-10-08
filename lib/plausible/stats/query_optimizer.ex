@@ -7,7 +7,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   alias Plausible.Stats.{DateTimeRange, Filters, Query, TableDecider, Util}
 
   @doc """
-    This module manipulates an existing query, updating it according to business logic.
+    This method manipulates an existing query, updating it according to business logic.
 
     For example, it:
     1. Figures out what the right granularity to group by time is
@@ -15,8 +15,8 @@ defmodule Plausible.Stats.QueryOptimizer do
     3. Updating "time" dimension in order_by to the right granularity
 
   """
-  def optimize(query) do
-    Enum.reduce(pipeline(), query, fn step, acc -> step.(acc) end)
+  def optimize(query, opts \\ []) do
+    Enum.reduce(pipeline(), query, fn step, acc -> step.(acc, opts) end)
   end
 
   @doc """
@@ -40,14 +40,15 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp pipeline() do
     [
-      &update_group_by_time/1,
-      &add_missing_order_by/1,
-      &update_time_in_order_by/1,
-      &extend_hostname_filters_to_visit/1
+      &expand_segments_to_filters/2,
+      &update_group_by_time/2,
+      &add_missing_order_by/2,
+      &update_time_in_order_by/2,
+      &extend_hostname_filters_to_visit/2
     ]
   end
 
-  defp add_missing_order_by(%Query{order_by: nil} = query) do
+  defp add_missing_order_by(%Query{order_by: nil} = query, _opts) do
     order_by =
       case time_dimension(query) do
         nil -> [{hd(query.metrics), :desc}]
@@ -57,12 +58,13 @@ defmodule Plausible.Stats.QueryOptimizer do
     %Query{query | order_by: order_by}
   end
 
-  defp add_missing_order_by(query), do: query
+  defp add_missing_order_by(query, _opts), do: query
 
   defp update_group_by_time(
          %Query{
            utc_time_range: %DateTimeRange{first: first, last: last}
-         } = query
+         } = query,
+         _opts
        ) do
     dimensions =
       query.dimensions
@@ -74,7 +76,7 @@ defmodule Plausible.Stats.QueryOptimizer do
     %Query{query | dimensions: dimensions}
   end
 
-  defp update_group_by_time(query), do: query
+  defp update_group_by_time(query, _opts), do: query
 
   defp resolve_time_dimension(first, last) do
     cond do
@@ -85,7 +87,7 @@ defmodule Plausible.Stats.QueryOptimizer do
     end
   end
 
-  defp update_time_in_order_by(query) do
+  defp update_time_in_order_by(query, _opts) do
     order_by =
       query.order_by
       |> Enum.map(fn
@@ -111,7 +113,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   # To avoid showing referrers across hostnames when event:hostname
   # filter is present for breakdowns, add entry/exit page hostname
   # filters
-  defp extend_hostname_filters_to_visit(query) do
+  defp extend_hostname_filters_to_visit(query, _opts) do
     # Note: Only works since event:hostname is only allowed as a top level filter
     hostname_filters =
       query.filters
@@ -166,5 +168,22 @@ defmodule Plausible.Stats.QueryOptimizer do
       dimensions: dimensions,
       include_imported: query.include_imported
     )
+  end
+
+  defp expand_segments_to_filters(query, opts) do
+    if Filters.Segments.has_segment_filters?(query.filters) do
+      get_available_segments = Keyword.fetch!(opts, :get_available_segments)
+      available_segments = get_available_segments.()
+
+      filters =
+        Filters.Segments.expand_segments_to_constituent_filters(
+          query.filters,
+          available_segments
+        )
+
+      %Query{query | filters: filters}
+    else
+      query
+    end
   end
 end

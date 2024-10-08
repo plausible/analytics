@@ -5,6 +5,7 @@ defmodule Plausible.Stats.Breakdown do
   Avoid adding new logic here - update QueryBuilder etc instead.
   """
 
+  use Plausible.Repo
   use Plausible.ClickhouseRepo
   use Plausible
   use Plausible.Stats.SQL.Fragments
@@ -20,6 +21,8 @@ defmodule Plausible.Stats.Breakdown do
         pagination,
         _opts \\ []
       ) do
+    get_available_segments = fn -> Repo.preload(site, :segments).segments end
+
     transformed_metrics = transform_metrics(metrics, dimension)
     transformed_order_by = transform_order_by(order_by || [], dimension)
 
@@ -37,7 +40,7 @@ defmodule Plausible.Stats.Breakdown do
         # Allow pageview and event metrics to be queried off of sessions table
         legacy_breakdown: true
       )
-      |> QueryOptimizer.optimize()
+      |> QueryOptimizer.optimize(get_available_segments: get_available_segments)
 
     q = SQL.QueryBuilder.build(query_with_metrics, site)
 
