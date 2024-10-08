@@ -25,8 +25,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
         {DateTime.utc_now(:second), today(site)}
       end
 
-    preload_atoms()
-
     with :ok <- JSONSchema.validate(schema_type, params),
          {:ok, date} <- parse_date(site, Map.get(params, "date"), date),
          {:ok, raw_time_range} <-
@@ -578,10 +576,5 @@ defmodule Plausible.Stats.Filters.QueryParser do
         {:error, _} = error -> {:halt, error}
       end
     end)
-  end
-
-  # :KLUDGE: Some modules/atoms from other modules might not be loaded by time of parsing in tests so make sure they are loaded.
-  defp preload_atoms() do
-    [:mode, :match_day_of_week]
   end
 end
