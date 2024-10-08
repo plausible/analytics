@@ -42,7 +42,7 @@ defmodule Plausible.Stats.Goal.Revenue do
       revenue_goals_currencies =
         Plausible.Repo.all(
           from rg in Ecto.assoc(site, :revenue_goals),
-            where: rg.event_name in ^goal_filters,
+            where: rg.display_name in ^goal_filters,
             select: rg.currency,
             distinct: true
         )
@@ -58,7 +58,7 @@ defmodule Plausible.Stats.Goal.Revenue do
   def cast_revenue_metrics_to_money([%{goal: _goal} | _rest] = results, revenue_goals)
       when is_list(revenue_goals) do
     for result <- results do
-      if matching_goal = Enum.find(revenue_goals, &(&1.event_name == result.goal)) do
+      if matching_goal = Enum.find(revenue_goals, &(&1.display_name == result.goal)) do
         cast_revenue_metrics_to_money(result, matching_goal.currency)
       else
         result
