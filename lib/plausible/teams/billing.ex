@@ -3,12 +3,58 @@ defmodule Plausible.Teams.Billing do
 
   import Ecto.Query
 
-  alias Plausible.Billing.Subscriptions
+  alias Plausible.Billing.EnterprisePlan
   alias Plausible.Billing.Plans
+  alias Plausible.Billing.Subscriptions
   alias Plausible.Repo
   alias Plausible.Teams
 
   @team_member_limit_for_trials 3
+  @limit_sites_since ~D[2021-05-05]
+  @site_limit_for_trials 10
+
+  def ensure_can_add_new_site(team) do
+    team = Teams.with_subscription(team)
+
+    case Plans.get_subscription_plan(team.subscription) do
+      %EnterprisePlan{} ->
+        :ok
+
+      _ ->
+        usage = site_usage(team)
+        limit = site_limit(team)
+
+        if Plausible.Billing.Quota.below_limit?(usage, limit) do
+          :ok
+        else
+          {:error, {:over_limit, limit}}
+        end
+    end
+  end
+
+  def site_limit(team) do
+    if Timex.before?(team.inserted_at, @limit_sites_since) do
+      :unlimited
+    else
+      get_site_limit_from_plan(team)
+    end
+  end
+
+  def site_usage(team) do
+    team
+    |> Teams.owned_sites()
+    |> length()
+  end
+
+  defp get_site_limit_from_plan(team) do
+    team = Teams.with_subscription(team)
+
+    case Plans.get_subscription_plan(team.subscription) do
+      %{site_limit: site_limit} -> site_limit
+      :free_10k -> 50
+      nil -> @site_limit_for_trials
+    end
+  end
 
   def team_member_limit(team) do
     team = Teams.with_subscription(team)
