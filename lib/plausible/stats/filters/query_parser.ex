@@ -47,17 +47,17 @@ defmodule Plausible.Stats.Filters.QueryParser do
            dimensions: dimensions,
            order_by: order_by,
            timezone: site.timezone,
-           preloaded_goals: preloaded_goals,
-           revenue_currencies: revenue_currencies,
            include: include,
-           pagination: pagination
+           pagination: pagination,
+           preloaded_goals: preloaded_goals,
+           revenue_currencies: revenue_currencies
          },
          :ok <- validate_order_by(query),
          :ok <- validate_custom_props_access(site, query),
          :ok <- validate_toplevel_only_filter_dimension(query),
          :ok <- validate_special_metrics_filters(query),
          :ok <- validate_filtered_goals_exist(query),
-         # :TODO: Validate revenue metrics available
+         :ok <- validate_revenue_metrics_access(site, query),
          :ok <- validate_metrics(query),
          :ok <- validate_include(query) do
       {:ok, query}
@@ -429,13 +429,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  on_ee do
-    defdelegate preload_revenue_currencies(site, preloaded_goals, metrics, dimensions),
-      to: Plausible.Stats.Goal.Revenue
-  else
-    defp preload_revenue_currencies(site, preloaded_goals, metrics, dimensions), do: %{}
-  end
-
   @only_toplevel ["event:goal", "event:hostname"]
   defp validate_toplevel_only_filter_dimension(query) do
     not_toplevel = Filters.dimensions_used_in_filters(query.filters, min_depth: 1)
@@ -478,6 +471,25 @@ defmodule Plausible.Stats.Filters.QueryParser do
     else
       :ok
     end
+  end
+
+  on_ee do
+    alias Plausible.Stats.Goal.Revenue
+
+    defdelegate preload_revenue_currencies(site, preloaded_goals, metrics, dimensions),
+      to: Plausible.Stats.Goal.Revenue
+
+    defp validate_revenue_metrics_access(site, query) do
+      if Revenue.requested?(query.metrics) and not Revenue.available?(site) do
+        {:error, "The owner of this site does not have access to the revenue metrics feature."}
+      else
+        :ok
+      end
+    end
+  else
+    defp preload_revenue_currencies(site, preloaded_goals, metrics, dimensions), do: %{}
+
+    defp validate_revenue_metrics_access(site, _query), do: :ok
   end
 
   defp validate_goal_filter(clause, configured_goals) do

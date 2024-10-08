@@ -43,15 +43,15 @@ defmodule Plausible.Stats.Goal.Revenue do
     end
   end
 
-  defp available?(site) do
+  def available?(site) do
     site = Plausible.Repo.preload(site, :owner)
     Plausible.Billing.Feature.RevenueGoals.check_availability(site.owner) == :ok
   end
 
   # :NOTE: Legacy queries don't have metrics associated with them so work around the issue by assuming
   #   revenue metric was requested.
-  defp requested?([]), do: true
-  defp requested?(metrics), do: Enum.any?(metrics, &(&1 in @revenue_metrics))
+  def requested?([]), do: true
+  def requested?(metrics), do: Enum.any?(metrics, &(&1 in @revenue_metrics))
 
   defp get_goal_dimension_revenue_currency(query, dimension_values) do
     Enum.zip(query.dimensions, dimension_values)
