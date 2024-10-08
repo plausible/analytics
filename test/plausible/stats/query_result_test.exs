@@ -34,7 +34,7 @@ defmodule Plausible.Stats.QueryResultTest do
     query = QueryOptimizer.optimize(query)
 
     query_result_json =
-      QueryResult.from([], site, query)
+      QueryResult.from([], site, query, %{})
       |> Jason.encode!(pretty: true)
       |> String.replace(site.domain, "dummy.site")
 

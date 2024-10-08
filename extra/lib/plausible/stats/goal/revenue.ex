@@ -68,13 +68,17 @@ defmodule Plausible.Stats.Goal.Revenue do
 
   def cast_revenue_metrics_to_money(results, currency) when is_map(results) do
     for {metric, value} <- results, into: %{} do
-      if metric in @revenue_metrics && currency do
-        {metric, Money.new!(value || 0, currency)}
-      else
-        {metric, value}
-      end
+      {metric, maybe_cast_metric_to_money(value, metric, currency)}
     end
   end
 
   def cast_revenue_metrics_to_money(results, _), do: results
+
+  def maybe_cast_metric_to_money(value, metric, currency) do
+    if currency && metric in @revenue_metrics do
+      Money.new!(value || 0, currency)
+    else
+      value
+    end
+  end
 end

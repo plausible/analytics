@@ -143,6 +143,28 @@ export interface QueryApiSchema {
      * If set, returns the total number of result rows rows before pagination under `meta.total_rows`
      */
     total_rows?: boolean;
+    comparisons?:
+      | {
+          mode: "previous_period" | "year_over_year";
+          /**
+           * If set and using time:day dimensions, day-of-week of comparison query is matched
+           */
+          match_day_of_week?: boolean;
+        }
+      | {
+          mode: "custom";
+          /**
+           * If set and using time:day dimensions, day-of-week of comparison query is matched
+           */
+          match_day_of_week?: boolean;
+          /**
+           * If custom period. A list of two ISO8601 dates or timestamps to compare against.
+           *
+           * @minItems 2
+           * @maxItems 2
+           */
+          date_range: [string, string];
+        };
   };
   pagination?: {
     /**

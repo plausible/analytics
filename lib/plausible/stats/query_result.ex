@@ -7,26 +7,22 @@ defmodule Plausible.Stats.QueryResult do
   produced by Jason.encode(query_result) is ordered.
   """
 
-  alias Plausible.Stats.{Util, Filters}
+  alias Plausible.Stats.DateTimeRange
 
   defstruct results: [],
             meta: %{},
             query: nil
 
-  def from(results, site, query) do
-    results_list =
-      results
-      |> Enum.map(fn entry ->
-        %{
-          dimensions: Enum.map(query.dimensions, &dimension_label(&1, entry, query)),
-          metrics: Enum.map(query.metrics, &Map.get(entry, &1))
-        }
-      end)
+  @doc """
+  Builds full JSON-serializable query response.
 
+  `results` should already-built by Plausible.Stats.QueryRunner
+  """
+  def from(results, site, query, meta_extra) do
     struct!(
       __MODULE__,
-      results: results_list,
-      meta: meta(query, results),
+      results: results,
+      meta: meta(query, meta_extra),
       query:
         Jason.OrderedObject.new(
           site_id: site.domain,
@@ -38,32 +34,10 @@ defmodule Plausible.Stats.QueryResult do
           filters: query.filters,
           dimensions: query.dimensions,
           order_by: query.order_by |> Enum.map(&Tuple.to_list/1),
-          include: query.include |> Map.filter(fn {_key, val} -> val end),
+          include: include(query) |> Map.filter(fn {_key, val} -> val end),
           pagination: query.pagination
         )
     )
-  end
-
-  defp dimension_label("event:goal", entry, query) do
-    {events, paths} = Filters.Utils.split_goals(query.preloaded_goals)
-
-    goal_index = Map.get(entry, Util.shortname(query, "event:goal"))
-
-    # Closely coupled logic with Plausible.Stats.SQL.Expression.event_goal_join/2
-    cond do
-      goal_index < 0 -> Enum.at(events, -goal_index - 1) |> Plausible.Goal.display_name()
-      goal_index > 0 -> Enum.at(paths, goal_index - 1) |> Plausible.Goal.display_name()
-    end
-  end
-
-  defp dimension_label("time:" <> _ = time_dimension, entry, query) do
-    datetime = Map.get(entry, Util.shortname(query, time_dimension))
-
-    Plausible.Stats.Time.format_datetime(datetime)
-  end
-
-  defp dimension_label(dimension, entry, query) do
-    Map.get(entry, Util.shortname(query, dimension))
   end
 
   @imports_unsupported_query_warning "Imported stats are not included in the results because query parameters are not supported. " <>
@@ -71,7 +45,7 @@ defmodule Plausible.Stats.QueryResult do
 
   @imports_unsupported_interval_warning "Imported stats are not included because the time dimension (i.e. the interval) is too short."
 
-  defp meta(query, results) do
+  defp meta(query, meta_extra) do
     %{
       imports_included: if(query.include.imports, do: query.include_imported, else: nil),
       imports_skip_reason:
@@ -86,14 +60,25 @@ defmodule Plausible.Stats.QueryResult do
         end,
       time_labels:
         if(query.include.time_labels, do: Plausible.Stats.Time.time_labels(query), else: nil),
-      total_rows: if(query.include.total_rows, do: total_rows(results), else: nil)
+      total_rows: if(query.include.total_rows, do: meta_extra.total_rows, else: nil)
     }
     |> Enum.reject(fn {_, value} -> is_nil(value) end)
     |> Enum.into(%{})
   end
 
-  defp total_rows([]), do: 0
-  defp total_rows([first_row | _rest]), do: first_row.total_rows
+  defp include(query) do
+    case get_in(query.include, [:comparisons, :date_range]) do
+      %DateTimeRange{first: first, last: last} ->
+        query.include
+        |> put_in([:comparisons, :date_range], [
+          to_iso8601(first, query.timezone),
+          to_iso8601(last, query.timezone)
+        ])
+
+      nil ->
+        query.include
+    end
+  end
 
   defp to_iso8601(datetime, timezone) do
     datetime
