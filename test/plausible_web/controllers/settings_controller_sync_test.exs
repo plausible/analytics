@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.AuthControllerSyncTest do
+defmodule PlausibleWeb.SettingsControllerSyncTest do
   use PlausibleWeb.ConnCase
   use Bamboo.Test
   use Plausible.Repo
@@ -24,7 +24,7 @@ defmodule PlausibleWeb.AuthControllerSyncTest do
       assert user.email_verified
 
       conn =
-        put(conn, "/settings/email", %{
+        post(conn, Routes.settings_path(conn, :update_email)), %{
           "user" => %{"email" => "new" <> user.email, "password" => password}
         })
 
