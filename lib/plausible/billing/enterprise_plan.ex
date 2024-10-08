@@ -13,6 +13,10 @@ defmodule Plausible.Billing.EnterprisePlan do
     :team_member_limit
   ]
 
+  @optional_fields [
+    :team_id
+  ]
+
   schema "enterprise_plans" do
     field :paddle_plan_id, :string
     field :billing_interval, Ecto.Enum, values: [:monthly, :yearly]
@@ -30,7 +34,7 @@ defmodule Plausible.Billing.EnterprisePlan do
 
   def changeset(model, attrs \\ %{}) do
     model
-    |> cast(attrs, @required_fields)
+    |> cast(attrs, @required_fields ++ @optional_fields)
     |> validate_required(@required_fields)
     |> unique_constraint(:user_id)
   end

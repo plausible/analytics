@@ -51,6 +51,16 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
 
   def create_changeset(schema, attrs) do
     attrs = sanitize_attrs(attrs)
+
+    team_id =
+      if user_id = attrs["user_id"] do
+        user = Repo.get!(Plausible.Auth.User, user_id)
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+        team.id
+      end
+
+    attrs = Map.put(attrs, "team_id", team_id)
+
     Plausible.Billing.EnterprisePlan.changeset(schema, attrs)
   end
 
