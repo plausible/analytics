@@ -226,14 +226,14 @@
     <.table rows={@user_sessions}>
       <:thead>
         <.th>Device</.th>
-        <.th>Last seen</.th>
+        <.th hide_on_mobile>Last seen</.th>
         <.th invisible>Actions</.th>
       </:thead>
       <:tbody :let={session}>
-        <.td><%= session.device %></.td>
-        <.td><%= Plausible.Auth.UserSessions.last_used_humanize(session) %></.td>
-        <.td :if={@current_user_session.id == session.id}>current session</.td>
-        <.td :if={@current_user_session.id != session.id}>
+        <.td truncate max_width="max-w-40"><%= session.device %></.td>
+        <.td hide_on_mobile><%= Plausible.Auth.UserSessions.last_used_humanize(session) %></.td>
+        <.td :if={@current_user_session.id == session.id} actions>current session</.td>
+        <.td :if={@current_user_session.id != session.id} actions>
           <.delete_button
             href={Routes.settings_path(@conn, :delete_session, session.id)}
             method="delete"
