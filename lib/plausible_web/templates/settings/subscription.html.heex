@@ -7,7 +7,6 @@
       Manage your plan
     </:subtitle>
     <div class="flex flex-wrap justify-between">
-      <.h2>Subscription Plan</.h2>
       <div class="gap-x-2 inline-flex">
         <span
           :if={@subscription && Plausible.Billing.Plans.business_tier?(@subscription)}
@@ -29,14 +28,12 @@
       </div>
     </div>
 
-    <div class="my-4 border-b border-gray-400"></div>
-
     <PlausibleWeb.Components.Billing.Notice.subscription_cancelled
       user={@current_user}
       dismissable={false}
     />
 
-    <div class="flex flex-col items-center justify-between mt-8 sm:flex-row sm:items-start">
+    <div class="flex flex-col items-center justify-between sm:flex-row sm:items-start">
       <PlausibleWeb.Components.Billing.monthly_quota_box
         user={@current_user}
         subscription={@subscription}
@@ -76,7 +73,7 @@
     />
 
     <article class="mt-8">
-      <.h2>Sites & team members usage</.h2>
+      <.title>Sites & team members usage</.title>
       <PlausibleWeb.Components.Billing.usage_and_limits_table>
         <PlausibleWeb.Components.Billing.usage_and_limits_row
           id="site-usage-row"
