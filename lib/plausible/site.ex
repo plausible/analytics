@@ -74,6 +74,12 @@ defmodule Plausible.Site do
     timestamps()
   end
 
+  def new_for_team(team, params) do
+    params
+    |> new()
+    |> put_assoc(:team, team)
+  end
+
   def new(params), do: changeset(%__MODULE__{}, params)
 
   @domain_unique_error """

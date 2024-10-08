@@ -8,6 +8,10 @@ defmodule Plausible.Teams.Team do
 
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
+  @trial_accept_traffic_until_offset_days 14
+
   schema "teams" do
     field :name, :string
     field :trial_expiry_date, :date
@@ -37,5 +41,22 @@ defmodule Plausible.Teams.Team do
     |> cast(%{name: name}, [:name])
     |> validate_required(:name)
     |> put_change(:trial_expiry_date, trial_expiry_date)
+  end
+
+  def start_trial(team) do
+    trial_expiry = trial_expiry()
+
+    change(team,
+      trial_expiry_date: trial_expiry,
+      accept_traffic_until: Date.add(trial_expiry, @trial_accept_traffic_until_offset_days)
+    )
+  end
+
+  defp trial_expiry() do
+    on_ee do
+      Date.utc_today() |> Date.shift(day: 30)
+    else
+      Date.utc_today() |> Date.shift(year: 100)
+    end
   end
 end

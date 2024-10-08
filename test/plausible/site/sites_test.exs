@@ -13,6 +13,16 @@ defmodule Plausible.SitesTest do
                Sites.create(user, params)
     end
 
+    test "creates a site (TEAM)" do
+      user = insert(:user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"}}} =
+               Plausible.Teams.Sites.create(team, params)
+    end
+
     test "fails on invalid timezone" do
       user = insert(:user)
 
@@ -20,6 +30,16 @@ defmodule Plausible.SitesTest do
 
       assert {:error, :site, %{errors: [timezone: {"is invalid", []}]}, %{}} =
                Sites.create(user, params)
+    end
+
+    test "fails on invalid timezone (TEAM)" do
+      user = insert(:user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      params = %{"domain" => "example.com", "timezone" => "blah"}
+
+      assert {:error, :site, %{errors: [timezone: {"is invalid", []}]}, %{}} =
+               Plausible.Teams.Sites.create(team, params)
     end
   end
 
