@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          {:ok, limit} <- validate_or_default_limit(params),
          :ok <- ensure_custom_props_access(site, query) do
       page = String.to_integer(Map.get(params, "page", "1"))
-      results = Plausible.Stats.breakdown(site, query, metrics, {limit, page})
+      {_, results, _} = Plausible.Stats.breakdown(site, query, metrics, {limit, page})
       payload = maybe_add_warning(%{results: results}, query)
 
       json(conn, payload)

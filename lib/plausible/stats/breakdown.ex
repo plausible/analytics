@@ -43,8 +43,21 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp build_breakdown_result(query_result, query, metrics) do
-    query_result.results
-    |> Enum.map(fn %{dimensions: dimensions, metrics: entry_metrics} ->
+    comparison_results =
+      if(query.include.comparisons,
+        do: query_result.results |> Enum.map(& &1.comparison),
+        else: nil
+      )
+
+    {
+      query,
+      query_result.results |> build_result_list(query, metrics),
+      comparison_results
+    }
+  end
+
+  defp build_result_list(query_results, query, metrics) do
+    Enum.map(query_results, fn %{dimensions: dimensions, metrics: entry_metrics} ->
       dimension_map =
         query.dimensions |> Enum.map(&result_key/1) |> Enum.zip(dimensions) |> Enum.into(%{})
 
