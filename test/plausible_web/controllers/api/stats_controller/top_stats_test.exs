@@ -1528,6 +1528,28 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
     end
 
     @tag :ee_only
+    test "returns average and total revenue when no conversions",
+         %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+
+      filters = Jason.encode!(%{goal: "Payment|Signup"})
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
+      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+
+      assert %{
+               "name" => "Average revenue",
+               "value" => %{"long" => "$0.00", "short" => "$0.0"},
+               "graph_metric" => "average_revenue"
+             } in top_stats
+
+      assert %{
+               "name" => "Total revenue",
+               "value" => %{"long" => "$0.00", "short" => "$0.0"},
+               "graph_metric" => "total_revenue"
+             } in top_stats
+    end
+
+    @tag :ee_only
     test "does not return average and total revenue when filtering non-currency goal",
          %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Payment", display_name: "PaymentWithoutCurrency")

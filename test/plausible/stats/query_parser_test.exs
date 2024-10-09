@@ -1669,7 +1669,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
       |> check_goals(
         preloaded_goals: ["Purchase", "Signup"],
-        revenue_currencies: %{default: :USD}
+        revenue_currencies: %{"Purchase" => :USD}
       )
     end
   end

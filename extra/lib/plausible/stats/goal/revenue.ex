@@ -32,7 +32,7 @@ defmodule Plausible.Stats.Goal.Revenue do
       goal_dimension? = "event:goal" in dimensions
 
       case {currencies, goal_dimension?} do
-        {[currency], _} -> %{default: currency}
+        {[currency], false} -> %{default: currency}
         {_, true} -> goal_currency_map
         _ -> %{}
       end
@@ -41,15 +41,13 @@ defmodule Plausible.Stats.Goal.Revenue do
     end
   end
 
-  def format_revenue_metric(nil, _, _), do: nil
-
   def format_revenue_metric(value, query, dimension_values) do
     currency =
       query.revenue_currencies[:default] ||
         get_goal_dimension_revenue_currency(query, dimension_values)
 
     if currency do
-      Money.new!(value, currency)
+      Money.new!(value || 0, currency)
     else
       value
     end
