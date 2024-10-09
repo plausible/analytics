@@ -1321,7 +1321,8 @@ CREATE TABLE public.users (
     totp_last_used_at timestamp(0) without time zone,
     allow_next_upgrade_override boolean DEFAULT false NOT NULL,
     totp_token character varying(255),
-    accept_traffic_until date
+    accept_traffic_until date,
+    notes text
 );
 
 
@@ -2734,3 +2735,4 @@ INSERT INTO public."schema_migrations" (version) VALUES (20240801052903);
 INSERT INTO public."schema_migrations" (version) VALUES (20240809100853);
 INSERT INTO public."schema_migrations" (version) VALUES (20240821033217);
 INSERT INTO public."schema_migrations" (version) VALUES (20240822095245);
+INSERT INTO public."schema_migrations" (version) VALUES (20240924085157);
