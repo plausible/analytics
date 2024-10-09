@@ -50,7 +50,7 @@ defmodule Plausible.Stats.Breakdown do
       comparison_map =
         if entry[:comparison] do
           comparison =
-            build_map(entry.comparison.metrics, metrics)
+            build_map(metrics, entry.comparison.metrics)
             |> Map.put(:change, build_map(metrics, entry.comparison.change))
 
           %{comparison: comparison}
