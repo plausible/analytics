@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D034020E.js"></script>
+    <script src="dist/sidebar_items-6CA46EE5.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -202,7 +202,7 @@ queried from a single table.</p></div>
     </a>
     <h1 class="signature" translate="no">optimize(query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query_optimizer.ex#L18" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query_optimizer.ex#L20" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -212,7 +212,7 @@ queried from a single table.</p></div>
 
   <section class="docstring">
 
-<p>  This module manipulates an existing query, updating it according to business logic.</p><p>  For example, it:</p><ol><li>Figures out what the right granularity to group by time is</li><li>Adds a missing order_by clause to a query</li><li>Updating &quot;time&quot; dimension in order_by to the right granularity</li></ol>
+<p>  This module manipulates an existing query, updating it according to business logic.</p><p>  For example, it:</p><ol><li>Figures out what the right granularity to group by time is</li><li>Adds a missing order_by clause to a query</li><li>Updating &quot;time&quot; dimension in order_by to the right granularity</li><li>Updates event:hostname filters to also apply on visit level for sane results.</li><li>Removes revenue metrics from dashboard queries if not requested, present or unavailable for the site.</li></ol>
   </section>
 </section>
 <section class="detail" id="split/1">
@@ -224,7 +224,7 @@ queried from a single table.</p></div>
     </a>
     <h1 class="signature" translate="no">split(query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query_optimizer.ex#L29" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/query_optimizer.ex#L31" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

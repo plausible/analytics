@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D034020E.js"></script>
+    <script src="dist/sidebar_items-6CA46EE5.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -161,7 +161,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#cast_revenue_metrics_to_money/2" translate="no">cast_revenue_metrics_to_money(results, revenue_goals)</a>
+        <a href="#available?/1" translate="no">available?(site)</a>
 
       </div>
 
@@ -169,19 +169,25 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get_revenue_tracking_currency/3" translate="no">get_revenue_tracking_currency(site, query, metrics)</a>
+        <a href="#format_revenue_metric/3" translate="no">format_revenue_metric(value, query, dimension_values)</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>Returns the common currency for the goal filters in a query. If there are no
-goal filters, multiple currencies or the site owner does not have access to
-revenue goals, <code class="inline">nil</code> is returned and revenue metrics are dropped.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#maybe_cast_metric_to_money/3" translate="no">maybe_cast_metric_to_money(value, metric, currency)</a>
+        <a href="#preload_revenue_currencies/4" translate="no">preload_revenue_currencies(site, goals, metrics, dimensions)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Preloads revenue currencies for a query.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#requested?/1" translate="no">requested?(metrics)</a>
 
       </div>
 
@@ -208,16 +214,16 @@ revenue goals, <code class="inline">nil</code> is returned and revenue metrics a
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="cast_revenue_metrics_to_money/2">
+<section class="detail" id="available?/1">
 
   <div class="detail-header">
-    <a href="#cast_revenue_metrics_to_money/2" class="detail-link" title="Link to this function">
+    <a href="#available?/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">cast_revenue_metrics_to_money(results, revenue_goals)</h1>
+    <h1 class="signature" translate="no">available?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L58" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L56" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -230,16 +236,16 @@ revenue goals, <code class="inline">nil</code> is returned and revenue metrics a
 
   </section>
 </section>
-<section class="detail" id="get_revenue_tracking_currency/3">
+<section class="detail" id="format_revenue_metric/3">
 
   <div class="detail-header">
-    <a href="#get_revenue_tracking_currency/3" class="detail-link" title="Link to this function">
+    <a href="#format_revenue_metric/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">get_revenue_tracking_currency(site, query, metrics)</h1>
+    <h1 class="signature" translate="no">format_revenue_metric(value, query, dimension_values)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L26" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L44" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -249,32 +255,41 @@ revenue goals, <code class="inline">nil</code> is returned and revenue metrics a
 
   <section class="docstring">
 
-      <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> get_revenue_tracking_currency(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="Plausible.Stats.Query.html#t:t/0">Plausible.Stats.Query.t</a>(), [
-  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()
-]) ::
-  {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | nil, [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()]}</pre>
-
-      </div>
-
-<p>Returns the common currency for the goal filters in a query. If there are no
-goal filters, multiple currencies or the site owner does not have access to
-revenue goals, <code class="inline">nil</code> is returned and revenue metrics are dropped.</p><p>Aggregating revenue data works only for same currency goals. If the query is
-filtered by goals with different currencies, for example, one USD and other
-EUR, revenue metrics are dropped.</p>
   </section>
 </section>
-<section class="detail" id="maybe_cast_metric_to_money/3">
+<section class="detail" id="preload_revenue_currencies/4">
 
   <div class="detail-header">
-    <a href="#maybe_cast_metric_to_money/3" class="detail-link" title="Link to this function">
+    <a href="#preload_revenue_currencies/4" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">maybe_cast_metric_to_money(value, metric, currency)</h1>
+    <h1 class="signature" translate="no">preload_revenue_currencies(site, goals, metrics, dimensions)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L77" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L24" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Preloads revenue currencies for a query.</p><p>Assumptions and business logic:</p><ol><li>Goals are already filtered according to query filters and dimensions</li><li>If there's a single currency involved, return map containing the default</li><li>If there's a breakdown by event:goal we return all the relevant currencies as a map</li><li>If filtering by multiple different currencies without event:goal breakdown empty map is returned</li><li>If user has no access or preloading is not needed, empty map is returned</li></ol><p>The resulting data structure is attached to a <code class="inline">Query</code> and used below in <a href="#format_revenue_metric/3"><code class="inline">format_revenue_metric/3</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="requested?/1">
+
+  <div class="detail-header">
+    <a href="#requested?/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">requested?(metrics)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L63" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -296,7 +311,7 @@ EUR, revenue metrics are dropped.</p>
     </a>
     <h1 class="signature" translate="no">revenue_metrics()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L11" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/goal/revenue.ex#L8" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
