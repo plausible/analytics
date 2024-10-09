@@ -105,7 +105,7 @@ export const createPercentage = (props) => {
 }
 
 export const createEvents = (props) => {
-  const renderValue = typeof props.renderValue === 'function' ? props.renderValue : renderNumberWithTooltip
+  const renderValue = renderNumberWithTooltip
   return new Metric({width: 'w-24', ...props, key: "events", renderValue: renderValue, sortable: true})
 }
 
