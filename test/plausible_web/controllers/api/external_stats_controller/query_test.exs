@@ -5,6 +5,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
 
   setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
 
+  test "invalid JSON returns 400", %{conn: conn} do
+    response =
+      assert_error_sent 400, fn ->
+        conn
+        |> put_req_header("content-type", "application/json")
+        |> post("/api/v2/query", "INVALID json,,,")
+      end
+
+    assert {400, _, "{\"message\":\"Bad Request\",\"status\":400}"} = response
+  end
+
   test "aggregates a single metric", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
