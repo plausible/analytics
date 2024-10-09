@@ -1,6 +1,7 @@
 import { hasGoalFilter } from "../../util/filters"
 import numberFormatter, { durationFormatter, percentageFormatter } from "../../util/number-formatter"
 import React from "react"
+import ChangeArrow from "./change-arrow"
 
 /*global BUILD_EXTRA*/
 /*global require*/
@@ -180,10 +181,13 @@ function withComparisonTooltip(formatter) {
   return (listItem, metricName) => {
     const props = valueRenderProps(listItem, metricName)
     let tooltip = formatter(props.value)
+    let extra = null
     if (props.hasOwnProperty("comparisonValue")) {
       tooltip = `Previous: ${formatter(props.comparisonValue)}, Change: ${props.change}%`
+
+      extra = <ChangeArrow change={props.change} metricName={metricName} />
     }
-    return <span tooltip={tooltip}>{formatter(props.value)}</span>
+    return <span tooltip={tooltip}>{formatter(props.value)}{extra}</span>
   }
 }
 
