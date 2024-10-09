@@ -66,15 +66,15 @@ export class Metric {
 // * `goalFilterLabel` - label when goal filter is applied
 export const createVisitors = (props) => {
   let renderValue
-  
+
   if (typeof props.renderValue === 'function') {
     renderValue = props.renderValue
   } else {
     renderValue = renderNumberWithTooltip
   }
-  
+
   let renderLabel
-  
+
   if (typeof props.renderLabel === 'function') {
     renderLabel = props.renderLabel
   } else {
@@ -93,13 +93,13 @@ export const createVisitors = (props) => {
 }
 
 export const createConversionRate = (props) => {
-  const renderValue = percentageFormatter
+  const renderValue = ({ value }) => percentageFormatter(value)
   const renderLabel = (_query) => "CR"
   return new Metric({width: 'w-16', ...props, key: "conversion_rate", renderLabel, renderValue, sortable: true})
 }
 
 export const createPercentage = (props) => {
-  const renderValue = (value) => value
+  const renderValue = ({ value }) => value
   const renderLabel = (_query) => "%"
   return new Metric({width: 'w-16', ...props, key: "percentage", renderLabel, renderValue, sortable: true})
 }
@@ -110,13 +110,13 @@ export const createEvents = (props) => {
 }
 
 export const createTotalRevenue = (props) => {
-  const renderValue = (value) => <Money formatted={value} />
+  const renderValue = ({ value }) => <Money formatted={value} />
   const renderLabel = (_query) => "Revenue"
   return new Metric({width: 'w-24', ...props, key: "total_revenue", renderValue, renderLabel, sortable: true})
 }
 
 export const createAverageRevenue = (props) => {
-  const renderValue = (value) => <Money formatted={value} />
+  const renderValue = ({ value }) => <Money formatted={value} />
   const renderLabel = (_query) => "Average"
   return new Metric({width: 'w-24', ...props, key: "average_revenue", renderValue, renderLabel, sortable: true})
 }
@@ -124,7 +124,7 @@ export const createAverageRevenue = (props) => {
 export const createTotalVisitors = (props) => {
   const renderValue = renderNumberWithTooltip
   const renderLabel = (_query) => "Total Visitors"
-  return new Metric({width: 'w-28', ...props, key: "total_visitors", renderValue, renderLabel, sortable: false}) 
+  return new Metric({width: 'w-28', ...props, key: "total_visitors", renderValue, renderLabel, sortable: false})
 }
 
 export const createVisits = (props) => {
@@ -162,6 +162,6 @@ export const createExitRate = (props) => {
   return new Metric({width: 'w-28', ...props, key: "exit_rate", renderValue, renderLabel, sortable: false})
 }
 
-export function renderNumberWithTooltip(value) {
+export function renderNumberWithTooltip({ value }) {
   return <span tooltip={value}>{numberFormatter(value)}</span>
 }

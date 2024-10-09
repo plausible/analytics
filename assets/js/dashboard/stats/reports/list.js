@@ -263,6 +263,20 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
     }
   }
 
+  function valueRenderProps(listItem, metric) {
+    const value = listItem[metric.key]
+
+    if (listItem.comparison) {
+      return {
+        value,
+        comparisonValue: listItem.comparison[metric.key],
+        change: listItem.comparison.change[metric.key]
+      }
+    }
+
+    return { value }
+  }
+
   function renderMetricValuesFor(listItem) {
     return getAvailableMetrics().map((metric) => {
       return (
@@ -272,7 +286,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
           style={{ width: colMinWidth, minWidth: colMinWidth }}
         >
           <span className="font-medium text-sm dark:text-gray-200 text-right">
-            {metric.renderValue(listItem[metric.key])}
+            {metric.renderValue(valueRenderProps(listItem, metric))}
           </span>
         </div>
       )
