@@ -6,10 +6,9 @@ defmodule Plausible.Stats.Breakdown do
   """
 
   use Plausible.ClickhouseRepo
-  use Plausible
   use Plausible.Stats.SQL.Fragments
 
-  alias Plausible.Stats.{Query, QueryOptimizer, QueryRunner}
+  alias Plausible.Stats.{Query, QueryRunner, QueryOptimizer}
 
   def breakdown(
         site,
@@ -22,8 +21,8 @@ defmodule Plausible.Stats.Breakdown do
     transformed_order_by = transform_order_by(order_by || [], dimension)
 
     query_with_metrics =
-      Query.set(
-        query,
+      query
+      |> Query.set(
         metrics: transformed_metrics,
         # Concat client requested order with default order, overriding only if client explicitly requests it
         order_by:
@@ -34,13 +33,13 @@ defmodule Plausible.Stats.Breakdown do
         pagination: %{limit: limit, offset: (page - 1) * limit},
         v2: true,
         # Allow pageview and event metrics to be queried off of sessions table
-        legacy_breakdown: true
+        legacy_breakdown: true,
+        remove_unavailable_revenue_metrics: true
       )
       |> QueryOptimizer.optimize()
 
     QueryRunner.run(site, query_with_metrics)
     |> build_breakdown_result(query_with_metrics, metrics)
-    |> update_currency_metrics(site, query_with_metrics)
   end
 
   defp build_breakdown_result(query_result, query, metrics) do
@@ -122,41 +121,4 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp dimension_filters(_), do: []
-
-  on_ee do
-    defp update_currency_metrics(results, site, %Query{dimensions: ["event:goal"]}) do
-      site = Plausible.Repo.preload(site, :goals)
-
-      {event_goals, _pageview_goals} = Enum.split_with(site.goals, & &1.event_name)
-      revenue_goals = Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
-
-      if length(revenue_goals) > 0 and Plausible.Billing.Feature.RevenueGoals.enabled?(site) do
-        Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
-      else
-        remove_revenue_metrics(results)
-      end
-    end
-
-    defp update_currency_metrics(results, site, query) do
-      {currency, _metrics} =
-        Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, query.metrics)
-
-      if currency do
-        results
-        |> Enum.map(&Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(&1, currency))
-      else
-        remove_revenue_metrics(results)
-      end
-    end
-  else
-    defp update_currency_metrics(results, _site, _query), do: remove_revenue_metrics(results)
-  end
-
-  defp remove_revenue_metrics(results) do
-    Enum.map(results, fn map ->
-      map
-      |> Map.delete(:total_revenue)
-      |> Map.delete(:average_revenue)
-    end)
-  end
 end

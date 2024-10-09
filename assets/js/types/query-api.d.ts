@@ -6,7 +6,6 @@
  */
 
 export type Metric =
-  | "time_on_page"
   | "visitors"
   | "visits"
   | "pageviews"
@@ -16,7 +15,10 @@ export type Metric =
   | "events"
   | "percentage"
   | "conversion_rate"
-  | "group_conversion_rate";
+  | "group_conversion_rate"
+  | "time_on_page"
+  | "total_revenue"
+  | "average_revenue";
 export type DateRangeShorthand = "30m" | "realtime" | "all" | "day" | "7d" | "30d" | "month" | "6mo" | "12mo" | "year";
 /**
  * @minItems 2

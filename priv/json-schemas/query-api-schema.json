@@ -219,10 +219,6 @@
     "metric": {
       "oneOf": [
         {
-          "const": "time_on_page",
-          "$comment": "only :internal"
-        },
-        {
           "const": "visitors",
           "description": "Metric counting the number of unique visitors"
         },
@@ -261,6 +257,18 @@
         {
           "const": "group_conversion_rate",
           "markdownDescription": "The percentage of visitors who completed the goal with the same dimension. Requires: dimension list passed, an `event:goal` filter or `event:goal` dimension"
+        },
+        {
+          "const": "time_on_page",
+          "$comment": "only :internal"
+        },
+        {
+          "const": "total_revenue",
+          "$comment": "only :internal"
+        },
+        {
+          "const": "average_revenue",
+          "$comment": "only :internal"
         }
       ]
     },

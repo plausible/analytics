@@ -34,16 +34,37 @@ defmodule Plausible.Goals.Filters do
     end)
   end
 
-  def filter_preloaded(preloaded_goals, operation, clause) when operation in [:is, :contains] do
-    Enum.filter(preloaded_goals, fn goal ->
-      case operation do
-        :is ->
-          Plausible.Goal.display_name(goal) == clause
+  def preload_needed_goals(site, filters) do
+    goals = Plausible.Goals.for_site(site)
 
-        :contains ->
-          String.contains?(Plausible.Goal.display_name(goal), clause)
-      end
+    Enum.reduce(filters, goals, fn
+      [operation, "event:goal", clauses], goals ->
+        goals_matching_any_clause(goals, operation, clauses)
+
+      _filter, goals ->
+        goals
     end)
+  end
+
+  def filter_preloaded(preloaded_goals, operation, clause) when operation in [:is, :contains] do
+    Enum.filter(preloaded_goals, fn goal -> matches?(goal, operation, clause) end)
+  end
+
+  defp goals_matching_any_clause(goals, operation, clauses) do
+    goals
+    |> Enum.filter(fn goal ->
+      Enum.any?(clauses, fn clause -> matches?(goal, operation, clause) end)
+    end)
+  end
+
+  defp matches?(goal, operation, clause) do
+    case operation do
+      :is ->
+        Plausible.Goal.display_name(goal) == clause
+
+      :contains ->
+        String.contains?(Plausible.Goal.display_name(goal), clause)
+    end
   end
 
   defp build_condition(filtered_goals, imported?) do
