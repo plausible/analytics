@@ -80,6 +80,9 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
          %Ecto.Changeset{} = changeset <- Invitation.new(attrs),
          {:ok, invitation} <- Plausible.Repo.insert(changeset) do
       send_invitation_email(invitation, invitee)
+
+      Plausible.Teams.Invitations.invite_sync(site, invitation)
+
       invitation
     else
       {:error, cause} -> Plausible.Repo.rollback(cause)
