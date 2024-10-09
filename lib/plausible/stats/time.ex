@@ -17,7 +17,7 @@ defmodule Plausible.Stats.Time do
   end
 
   defp beginning_of_time(candidate, native_stats_start_at) do
-    if Timex.after?(native_stats_start_at, candidate) do
+    if NaiveDateTime.after?(native_stats_start_at, candidate) do
       native_stats_start_at
     else
       candidate
