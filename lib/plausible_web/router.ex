@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
+    plug Sentry.PlugContext
     plug :fetch_session
     plug :fetch_live_flash
     plug :put_secure_browser_headers
@@ -16,30 +17,57 @@ defmodule PlausibleWeb.Router do
 
   pipeline :shared_link do
     plug :accepts, ["html"]
+    plug Sentry.PlugContext
     plug :put_secure_browser_headers
     plug PlausibleWeb.Plugs.NoRobots
   end
 
   pipeline :csrf do
     plug :protect_from_forgery
+    plug Sentry.PlugContext
   end
 
   pipeline :app_layout do
     plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
+    plug Sentry.PlugContext
   end
 
   pipeline :external_api do
     plug :accepts, ["json"]
+
+    plug(Plug.Parsers,
+      parsers: [:urlencoded, :multipart, :json],
+      pass: ["*/*"],
+      json_decoder: Phoenix.json_library()
+    )
+
+    plug Sentry.PlugContext
   end
 
   pipeline :api do
     plug :accepts, ["json"]
+
+    plug(Plug.Parsers,
+      parsers: [:urlencoded, :multipart, :json],
+      pass: ["*/*"],
+      json_decoder: Phoenix.json_library()
+    )
+
+    plug Sentry.PlugContext
     plug :fetch_session
     plug PlausibleWeb.AuthPlug
   end
 
   pipeline :internal_stats_api do
     plug :accepts, ["json"]
+
+    plug(Plug.Parsers,
+      parsers: [:urlencoded, :multipart, :json],
+      pass: ["*/*"],
+      json_decoder: Phoenix.json_library()
+    )
+
+    plug Sentry.PlugContext
     plug :fetch_session
     plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.Plugs.AuthorizeSiteAccess
@@ -48,6 +76,14 @@ defmodule PlausibleWeb.Router do
 
   pipeline :docs_stats_api do
     plug :accepts, ["json"]
+
+    plug(Plug.Parsers,
+      parsers: [:urlencoded, :multipart, :json],
+      pass: ["*/*"],
+      json_decoder: Phoenix.json_library()
+    )
+
+    plug Sentry.PlugContext
     plug :fetch_session
     plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.Plugs.AuthorizeSiteAccess, {[:admin, :super_admin, :owner], "site_id"}
@@ -56,11 +92,20 @@ defmodule PlausibleWeb.Router do
 
   pipeline :public_api do
     plug :accepts, ["json"]
+
+    plug(Plug.Parsers,
+      parsers: [:urlencoded, :multipart, :json],
+      pass: ["*/*"],
+      json_decoder: Phoenix.json_library()
+    )
+
+    plug Sentry.PlugContext
   end
 
   on_ee do
     pipeline :flags do
       plug :accepts, ["html"]
+      plug Sentry.PlugContext
       plug :put_secure_browser_headers
       plug PlausibleWeb.Plugs.NoRobots
       plug :fetch_session
@@ -122,10 +167,26 @@ defmodule PlausibleWeb.Router do
   scope path: "/api/plugins", as: :plugins_api do
     pipeline :plugins_api_auth do
       plug(PlausibleWeb.Plugs.AuthorizePluginsAPI)
+
+      plug(Plug.Parsers,
+        parsers: [:urlencoded, :multipart, :json],
+        pass: ["*/*"],
+        json_decoder: Phoenix.json_library()
+      )
+
+      plug Sentry.PlugContext
     end
 
     pipeline :plugins_api do
       plug(:accepts, ["json"])
+
+      plug(Plug.Parsers,
+        parsers: [:urlencoded, :multipart, :json],
+        pass: ["*/*"],
+        json_decoder: Phoenix.json_library()
+      )
+
+      plug Sentry.PlugContext
       plug(OpenApiSpex.Plug.PutApiSpec, module: PlausibleWeb.Plugins.API.Spec)
     end
 

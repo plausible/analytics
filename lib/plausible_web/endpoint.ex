@@ -81,14 +81,6 @@ defmodule PlausibleWeb.Endpoint do
   plug(PromEx.Plug, prom_ex_module: Plausible.PromEx)
   plug(Plug.Telemetry, event_prefix: [:phoenix, :endpoint], log: false)
 
-  plug(Plug.Parsers,
-    parsers: [:urlencoded, :multipart, :json],
-    pass: ["*/*"],
-    json_decoder: Phoenix.json_library()
-  )
-
-  plug(Sentry.PlugContext)
-
   plug(Plug.MethodOverride)
   plug(Plug.Head)
 
