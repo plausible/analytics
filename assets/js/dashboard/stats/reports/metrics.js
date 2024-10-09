@@ -93,13 +93,13 @@ export const createVisitors = (props) => {
 }
 
 export const createConversionRate = (props) => {
-  const renderValue = ({ value }) => percentageFormatter(value)
+  const renderValue = withComparisonTooltip(percentageFormatter)
   const renderLabel = (_query) => "CR"
   return new Metric({width: 'w-16', ...props, key: "conversion_rate", renderLabel, renderValue, sortable: true})
 }
 
 export const createPercentage = (props) => {
-  const renderValue = ({ value }) => value
+  const renderValue = withComparisonTooltip((value) => value)
   const renderLabel = (_query) => "%"
   return new Metric({width: 'w-16', ...props, key: "percentage", renderLabel, renderValue, sortable: true})
 }
@@ -110,13 +110,13 @@ export const createEvents = (props) => {
 }
 
 export const createTotalRevenue = (props) => {
-  const renderValue = ({ value }) => <Money formatted={value} />
+  const renderValue = withComparisonTooltip((value) => <Money formatted={value} />)
   const renderLabel = (_query) => "Revenue"
   return new Metric({width: 'w-24', ...props, key: "total_revenue", renderValue, renderLabel, sortable: true})
 }
 
 export const createAverageRevenue = (props) => {
-  const renderValue = ({ value }) => <Money formatted={value} />
+  const renderValue = withComparisonTooltip((value) => <Money formatted={value} />)
   const renderLabel = (_query) => "Average"
   return new Metric({width: 'w-24', ...props, key: "average_revenue", renderValue, renderLabel, sortable: true})
 }
@@ -133,13 +133,13 @@ export const createVisits = (props) => {
 }
 
 export const createVisitDuration = (props) => {
-  const renderValue = durationFormatter
+  const renderValue = withComparisonTooltip(durationFormatter)
   const renderLabel = (_query) => "Visit Duration"
   return new Metric({width: 'w-36', ...props, key: "visit_duration", renderValue, renderLabel, sortable: true})
 }
 
 export const createBounceRate = (props) => {
-  const renderValue = (value) => `${value}%`
+  const renderValue = withComparisonTooltip((value) => `${value}%`)
   const renderLabel = (_query) => "Bounce Rate"
   return new Metric({width: 'w-32', ...props, key: "bounce_rate", renderValue, renderLabel, sortable: true})
 }
@@ -151,7 +151,7 @@ export const createPageviews = (props) => {
 }
 
 export const createTimeOnPage = (props) => {
-  const renderValue = durationFormatter
+  const renderValue = withComparisonTooltip(durationFormatter)
   const renderLabel = (_query) => "Time on Page"
   return new Metric({width: 'w-32', ...props, key: "time_on_page", renderValue, renderLabel, sortable: false})
 }
@@ -162,6 +162,29 @@ export const createExitRate = (props) => {
   return new Metric({width: 'w-28', ...props, key: "exit_rate", renderValue, renderLabel, sortable: false})
 }
 
-export function renderNumberWithTooltip({ value }) {
-  return <span tooltip={value}>{numberFormatter(value)}</span>
+function valueRenderProps(listItem, metricName) {
+  const value = listItem[metricName]
+
+  if (listItem.comparison) {
+    return {
+      value,
+      comparisonValue: listItem.comparison[metricName],
+      change: listItem.comparison.change[metricName]
+    }
+  }
+
+  return { value }
 }
+
+function withComparisonTooltip(formatter) {
+  return (listItem, metricName) => {
+    const props = valueRenderProps(listItem, metricName)
+    let tooltip = formatter(props.value)
+    if (props.hasOwnProperty("comparisonValue")) {
+      tooltip = `Previous: ${formatter(props.comparisonValue)}, Change: ${props.change}%`
+    }
+    return <span tooltip={tooltip}>{formatter(props.value)}</span>
+  }
+}
+
+export const renderNumberWithTooltip = withComparisonTooltip(numberFormatter)
