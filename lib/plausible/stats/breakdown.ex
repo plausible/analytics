@@ -43,28 +43,29 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp build_breakdown_result(query_result, query, metrics) do
-    comparison_results =
-      if(query.include.comparisons,
-        do: query_result.results |> Enum.map(& &1.comparison),
-        else: nil
-      )
+    dimension_keys = query.dimensions |> Enum.map(&result_key/1)
 
-    {
-      query,
-      query_result.results |> build_result_list(query, metrics),
-      comparison_results
-    }
+    query_result.results
+    |> Enum.map(fn entry ->
+      comparison_map =
+        if entry[:comparison] do
+          comparison =
+            build_map(entry.comparison.metrics, metrics)
+            |> Map.put(:change, build_map(metrics, entry.comparison.change))
+
+          %{comparison: comparison}
+        else
+          %{}
+        end
+
+      build_map(dimension_keys, entry.dimensions)
+      |> Map.merge(build_map(metrics, entry.metrics))
+      |> Map.merge(comparison_map)
+    end)
   end
 
-  defp build_result_list(query_results, query, metrics) do
-    Enum.map(query_results, fn %{dimensions: dimensions, metrics: entry_metrics} ->
-      dimension_map =
-        query.dimensions |> Enum.map(&result_key/1) |> Enum.zip(dimensions) |> Enum.into(%{})
-
-      metrics_map = Enum.zip(metrics, entry_metrics) |> Enum.into(%{})
-
-      Map.merge(dimension_map, metrics_map)
-    end)
+  defp build_map(keys, values) do
+    Enum.zip(keys, values) |> Map.new()
   end
 
   defp result_key("event:props:" <> custom_property), do: custom_property
