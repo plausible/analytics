@@ -33,7 +33,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
 
   defp put_preloaded_goals(query, site) do
     {preloaded_goals, revenue_currencies} =
-      Plausible.Stats.Filters.QueryParser.preload_goals_if_needed(
+      Plausible.Stats.Filters.QueryParser.preload_needed_goals(
         site,
         query.metrics,
         query.filters,

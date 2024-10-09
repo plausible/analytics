@@ -34,7 +34,9 @@ defmodule Plausible.Goals.Filters do
     end)
   end
 
-  def preload(goals, filters) do
+  def preload_needed_goals(site, filters) do
+    goals = Plausible.Goals.for_site(site)
+
     Enum.reduce(filters, goals, fn
       [operation, "event:goal", clauses], goals ->
         goals_matching_any_clause(goals, operation, clauses)

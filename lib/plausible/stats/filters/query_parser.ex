@@ -39,7 +39,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
          {:ok, include} <- parse_include(site, Map.get(params, "include", %{})),
          {:ok, pagination} <- parse_pagination(Map.get(params, "pagination", %{})),
          {preloaded_goals, revenue_currencies} <-
-           preload_goals_if_needed(site, metrics, filters, dimensions),
+           preload_needed_goals(site, metrics, filters, dimensions),
          query = %{
            metrics: metrics,
            filters: filters,
@@ -410,15 +410,12 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  def preload_goals_if_needed(site, metrics, filters, dimensions) do
+  def preload_needed_goals(site, metrics, filters, dimensions) do
     goal_filters? =
       Enum.any?(filters, fn [_, filter_key | _rest] -> filter_key == "event:goal" end)
 
     if goal_filters? or Enum.member?(dimensions, "event:goal") do
-      goals =
-        site
-        |> Plausible.Goals.for_site()
-        |> Plausible.Goals.Filters.preload(filters)
+      goals = Plausible.Goals.Filters.preload_needed_goals(site, filters)
 
       {
         goals,
