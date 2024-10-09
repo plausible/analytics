@@ -23,4 +23,25 @@ defmodule Plausible.ConfigHelpers do
         end
     end
   end
+
+  def get_bool_from_path_or_env(config_dir, var_name, default \\ nil) do
+    case get_var_from_path_or_env(config_dir, var_name) do
+      nil -> default
+      var -> parse_bool(var)
+    end
+  end
+
+  defp parse_bool(var) do
+    case String.downcase(var) do
+      t when t in ["1", "t", "true", "y", "yes", "on"] ->
+        true
+
+      f when f in ["0", "f", "false", "n", "no", "off"] ->
+        false
+
+      _ ->
+        raise ArgumentError,
+              "Invalid boolean value: #{inspect(var)}. Expected one of: 1, 0, t, f, true, false, y, n, on, off"
+    end
+  end
 end
