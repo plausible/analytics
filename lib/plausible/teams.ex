@@ -29,28 +29,31 @@ defmodule Plausible.Teams do
   is returned.
   """
   def get_or_create(user) do
-    result =
-      Repo.transaction(fn ->
-        team =
-          "My Team"
-          |> Teams.Team.changeset()
-          |> Repo.insert!()
-
-        team_membership = Teams.Membership.changeset(team, user, :owner)
-
-        case Repo.insert(team_membership) do
-          {:ok, _} ->
-            team
-
-          {:error, %{errors: [user_id: {"has already been taken", _}]}} ->
-            Repo.rollback(:exists_already)
-        end
-      end)
-
-    case result do
-      {:ok, team} -> {:ok, team}
-      {:error, :exists_already} -> get_owned_by_user(user)
+    with {:error, :no_team} <- get_owned_by_user(user) do
+      case create_my_team(user) do
+        {:ok, team} -> {:ok, team}
+        {:error, :exists_already} -> get_owned_by_user(user)
+      end
     end
+  end
+
+  defp create_my_team(user) do
+    Repo.transaction(fn ->
+      team =
+        "My Team"
+        |> Teams.Team.changeset()
+        |> Repo.insert!()
+
+      team_membership = Teams.Membership.changeset(team, user, :owner)
+
+      case Repo.insert(team_membership) do
+        {:ok, _} ->
+          team
+
+        {:error, %{errors: [user_id: {"has already been taken", _}]}} ->
+          Repo.rollback(:exists_already)
+      end
+    end)
   end
 
   defp get_owned_by_user(user) do
