@@ -16,10 +16,13 @@
       for={nil}
     >
       <.toggle_submit set_to={@site.public}>
-        Make stats publicly available on <%= link(PlausibleWeb.StatsView.pretty_stats_url(@site),
-          to: Routes.stats_path(@conn, :stats, @site.domain, []),
-          class: "text-indigo-500"
-        ) %>
+        Make stats publicly available on
+        <.unstyled_link
+          class="text-indigo-500"
+          href={Routes.stats_path(@conn, :stats, @site.domain, [])}
+        >
+          <%= PlausibleWeb.StatsView.pretty_stats_url(@site) %>
+        </.unstyled_link>
       </.toggle_submit>
     </.form>
   </.tile>
