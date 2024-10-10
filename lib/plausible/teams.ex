@@ -38,22 +38,25 @@ defmodule Plausible.Teams do
   end
 
   defp create_my_team(user) do
-    Repo.transaction(fn ->
-      team =
-        "My Team"
-        |> Teams.Team.changeset()
-        |> Repo.insert!()
+    team =
+      "My Team"
+      |> Teams.Team.changeset()
+      |> Repo.insert!()
 
-      team_membership = Teams.Membership.changeset(team, user, :owner)
+    team_membership =
+      team
+      |> Teams.Membership.changeset(user, :owner)
+      |> Repo.insert!(
+        on_conflict: :nothing,
+        conflict_target: {:unsafe_fragment, "(user_id) WHERE role != 'guest'"}
+      )
 
-      case Repo.insert(team_membership) do
-        {:ok, _} ->
-          team
-
-        {:error, %{errors: [user_id: {"has already been taken", _}]}} ->
-          Repo.rollback(:exists_already)
-      end
-    end)
+    if team_membership.id do
+      {:ok, team}
+    else
+      Repo.delete!(team)
+      {:error, :exists_already}
+    end
   end
 
   defp get_owned_by_user(user) do
