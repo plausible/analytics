@@ -18,9 +18,10 @@
           <li class="py-4">
             <div class="flex items-center space-x-4">
               <div class="flex-shrink-0">
-                <%= img_tag(Plausible.Auth.User.profile_img_url(membership.user),
-                  class: "h-8 w-8 rounded-full"
-                ) %>
+                <img
+                  src={Plausible.Auth.User.profile_img_url(membership.user)}
+                  class="h-8 w-8 rounded-full"
+                />
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm truncate">

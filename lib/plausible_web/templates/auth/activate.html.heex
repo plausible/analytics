@@ -49,11 +49,9 @@
   <%= error_tag(assigns, :error) %>
 
   <div :if={!@has_email_code?}>
-    <%= button("Request activation code",
-      to: "/activate/request-code",
-      method: :post,
-      class: "w-full button"
-    ) %>
+    <.button_link method="post" class="w-full" href="/activate/request-code">
+      Request activation code
+    </.button_link>
   </div>
 
   <:footer :if={@has_email_code?}>

@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   attr(:rest, :global,
     include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
-         multiple pattern placeholder readonly required rows size step)
+         multiple pattern placeholder readonly required rows size step x-model)
   )
 
   attr(:class, :any, default: @default_input_class)

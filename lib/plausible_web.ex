@@ -58,8 +58,6 @@ defmodule PlausibleWeb do
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [view_module: 1]
 
-      # Use all HTML functionality (forms, tags, etc)
-      use Phoenix.HTML
       use Phoenix.Component
 
       import PlausibleWeb.ErrorHelpers

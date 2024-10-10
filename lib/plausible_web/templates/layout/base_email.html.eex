@@ -9,7 +9,6 @@ The Plausible Team 💌
 <br /><br /><% end %>
 
 --
-<br /><br />
-<%= link(plausible_url(), to: plausible_url()) %><br />
+<br /><br /><.unstyled_link href={plausible_url()}><%= plausible_url() %></.unstyled_link><br />
 
 <%= if ee?() do %>{{{ pm:unsubscribe }}}<% end %>
