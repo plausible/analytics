@@ -33,7 +33,12 @@ export default function MetricEntry({ listItem, metricName, formatter }: { listI
     <div ref={tooltipBoundary}>
       <Tooltip
         info={
-          comparison ? `Previous: ${formatter(comparison.value)}, Change: ${comparison.change}%` : formatter(value)
+          comparison ? (
+            <div className="whitespace-nowrap">
+              {formatter(value)} vs {formatter(comparison.value)}, Change: {comparison.change}%
+            </div>
+          )
+          : formatter(value)
         }
       >
         {formatter(value)}
