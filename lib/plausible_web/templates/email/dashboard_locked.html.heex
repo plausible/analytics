@@ -9,7 +9,9 @@ During the last billing cycle (<%= PlausibleWeb.TextHelpers.format_date_range(
 ) %>), the usage was <%= PlausibleWeb.AuthView.delimit_integer(@usage.penultimate_cycle.total) %> billable pageviews. Note that billable pageviews include both standard pageviews and custom events. In your
 <.unstyled_link href={
   PlausibleWeb.Router.Helpers.settings_url(PlausibleWeb.Endpoint, :subscription)
-}>account settings</.unstyled_link>, you'll find an overview of your usage and limits. <br /><br />
+}>
+  account settings
+</.unstyled_link>, you'll find an overview of your usage and limits. <br /><br />
 <%= if @suggested_plan == :enterprise do %>
   Your usage exceeds our standard plans, so please reply back to this email for a tailored quote.
 <% else %>

@@ -25,10 +25,7 @@ defmodule PlausibleWeb.Components.Site.Feature do
         for={nil}
         class={@class}
       >
-        <.toggle_submit
-          set_to={@current_setting}
-          disabled?={@disabled?}
-        >
+        <.toggle_submit set_to={@current_setting} disabled?={@disabled?}>
           Show <%= @feature_mod.display_name() %> in the Dashboard
         </.toggle_submit>
       </.form>
