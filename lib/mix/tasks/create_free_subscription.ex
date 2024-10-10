@@ -20,6 +20,8 @@ defmodule Mix.Tasks.CreateFreeSubscription do
     Subscription.free(%{user_id: user_id, team_id: team.id})
     |> Repo.insert!()
 
+    Plausible.Teams.sync_team(user)
+
     IO.puts("Created a free subscription for user: #{user.name}")
   end
 end

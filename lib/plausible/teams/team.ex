@@ -29,6 +29,15 @@ defmodule Plausible.Teams.Team do
     timestamps()
   end
 
+  def sync_changeset(team, user) do
+    team
+    |> change()
+    |> put_change(:trial_expiry_date, user.trial_expiry_date)
+    |> put_change(:accept_traffic_until, user.accept_traffic_until)
+    |> put_change(:allow_next_upgrade_override, user.allow_next_upgrade_override)
+    |> put_embed(:grace_period, user.grace_period)
+  end
+
   def changeset(name, today \\ Date.utc_today()) do
     trial_expiry_date =
       if ee?() do

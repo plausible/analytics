@@ -41,6 +41,7 @@ defmodule Mix.Tasks.PullSandboxSubscription do
           res = body["response"] |> List.first()
           user = Repo.get_by!(User, email: res["user_email"])
           {:ok, team} = Plausible.Teams.get_or_create(user)
+          Plausible.Teams.sync_team(user)
 
           subscription = %{
             paddle_subscription_id: res["subscription_id"] |> to_string(),
