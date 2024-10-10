@@ -99,6 +99,12 @@ defmodule Plausible.Users do
     Auth.EmailVerification.any?(user)
   end
 
+  def start_trial(%Auth.User{} = user) do
+    user
+    |> Auth.User.start_trial()
+    |> Repo.update!()
+  end
+
   def allow_next_upgrade_override(%Auth.User{} = user) do
     user
     |> Auth.User.changeset(%{allow_next_upgrade_override: true})
