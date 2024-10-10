@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Live.Shields.Hostnames do
   LiveView for Hostnames Shield
   """
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
 
   alias Plausible.Shields
   alias Plausible.Sites

@@ -3,7 +3,7 @@
   current_step="Activate account"
 />
 
-<PlausibleWeb.Components.Generic.focus_box>
+<.focus_box>
   <:title>
     <%= if @has_email_code? do %>
       <%= if @has_any_memberships? do %>
@@ -41,9 +41,9 @@
         style: "letter-spacing: 10px;",
         required: "required"
       ) %>
-      <PlausibleWeb.Components.Generic.button id="submit" type="submit" class="w-full mt-8">
+      <.button id="submit" type="submit" class="w-full mt-8">
         Activate
-      </PlausibleWeb.Components.Generic.button>
+      </.button>
     <% end %>
   </div>
 
@@ -106,4 +106,4 @@
       </:item>
     </.focus_list>
   </:footer>
-</PlausibleWeb.Components.Generic.focus_box>
+</.focus_box>

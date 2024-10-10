@@ -2,7 +2,7 @@
   flow={PlausibleWeb.Flows.domain_change()}
   current_step="Set up new domain"
 />
-<PlausibleWeb.Components.Generic.focus_box>
+<.focus_box>
   <:title>Change your website domain</:title>
 
   <:subtitle>
@@ -42,8 +42,8 @@
       <%= error_tag(f, :domain) %>
     </div>
 
-    <PlausibleWeb.Components.Generic.button type="submit" class="mt-4 w-full">
+    <.button type="submit" class="mt-4 w-full">
       Change Domain and add new Snippet
-    </PlausibleWeb.Components.Generic.button>
+    </.button>
   <% end %>
-</PlausibleWeb.Components.Generic.focus_box>
+</.focus_box>

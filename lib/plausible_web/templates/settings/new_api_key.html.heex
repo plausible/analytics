@@ -1,4 +1,4 @@
-<PlausibleWeb.Components.Generic.focus_box>
+<.focus_box>
   <:title>Create new API key</:title>
 
   <%= form_for @changeset, Routes.settings_path(@conn, :api_keys), fn f -> %>
@@ -49,4 +49,4 @@
     </div>
     <%= submit("Continue", class: "button mt-4 w-full") %>
   <% end %>
-</PlausibleWeb.Components.Generic.focus_box>
+</.focus_box>

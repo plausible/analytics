@@ -15,6 +15,27 @@ defmodule PlausibleWeb do
       alias Phoenix.LiveView.JS
 
       import PlausibleWeb.Components.Generic
+      import PlausibleWeb.Live.Components.Form
+    end
+  end
+
+  def live_component do
+    quote do
+      use Phoenix.LiveComponent, global_prefixes: ~w(x-)
+      import PlausibleWeb.Components.Generic
+      import PlausibleWeb.Live.Components.Form
+      alias Phoenix.LiveView.JS
+      alias PlausibleWeb.Router.Helpers, as: Routes
+    end
+  end
+
+  def component do
+    quote do
+      use Phoenix.Component, global_prefixes: ~w(x-)
+      import PlausibleWeb.Components.Generic
+      import PlausibleWeb.Live.Components.Form
+      alias Phoenix.LiveView.JS
+      alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end
 
