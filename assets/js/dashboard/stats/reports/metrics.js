@@ -1,7 +1,7 @@
 import { hasGoalFilter } from "../../util/filters"
 import numberFormatter, { durationFormatter, percentageFormatter } from "../../util/number-formatter"
 import React from "react"
-import ChangeArrow from "./change-arrow"
+import MetricEntry from "./metric-entry"
 
 /*global BUILD_EXTRA*/
 /*global require*/
@@ -163,31 +163,9 @@ export const createExitRate = (props) => {
   return new Metric({width: 'w-28', ...props, key: "exit_rate", renderValue, renderLabel, sortable: false})
 }
 
-function valueRenderProps(listItem, metricName) {
-  const value = listItem[metricName]
-
-  if (listItem.comparison) {
-    return {
-      value,
-      comparisonValue: listItem.comparison[metricName],
-      change: listItem.comparison.change[metricName]
-    }
-  }
-
-  return { value }
-}
-
 function withComparisonTooltip(formatter) {
   return (listItem, metricName) => {
-    const props = valueRenderProps(listItem, metricName)
-    let tooltip = formatter(props.value)
-    let extra = null
-    if (props.hasOwnProperty("comparisonValue")) {
-      tooltip = `Previous: ${formatter(props.comparisonValue)}, Change: ${props.change}%`
-
-      extra = <ChangeArrow change={props.change} metricName={metricName} />
-    }
-    return <span tooltip={tooltip}>{formatter(props.value)}{extra}</span>
+    return <MetricEntry listItem={listItem} metricName={metricName} formatter={formatter} />
   }
 }
 
