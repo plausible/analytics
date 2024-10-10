@@ -10,6 +10,8 @@ import * as metrics from '../reports/metrics';
 import { hasGoalFilter, getFiltersByKeyPrefix } from '../../util/filters';
 import ImportedQueryUnsupportedWarning from '../imported-query-unsupported-warning';
 import { citiesRoute, countriesRoute, regionsRoute } from '../../router';
+import { useQueryContext } from '../../query-context';
+import { useSiteContext } from '../../site-context';
 
 function Countries({ query, site, onClick, afterFetchData }) {
 	function fetchData() {
@@ -134,7 +136,7 @@ const labelFor = {
 	'cities': 'Cities',
 }
 
-export default class Locations extends React.Component {
+class Locations extends React.Component {
 	constructor(props) {
 		super(props)
 		this.onCountryFilter = this.onCountryFilter.bind(this)
@@ -249,3 +251,10 @@ export default class Locations extends React.Component {
 		)
 	}
 }
+
+function LocationsWithContext() {
+	const { query } = useQueryContext();
+	const site = useSiteContext();
+	return <Locations site={site} query={query} />
+}
+export default LocationsWithContext
