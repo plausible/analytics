@@ -190,7 +190,7 @@
       {{/unless}}
       
       {{#if pageleave}}
-      if (isSPANavigation) {
+      if (isSPANavigation && listeningPageLeave) {
         triggerPageLeave();
         currentURL = location.href;
       }
