@@ -232,10 +232,7 @@ defmodule Plausible.Workers.CheckUsageTest do
       end
 
       test "skips checking users who already have a grace period", %{user: user} do
-        %{grace_period: existing_grace_period} =
-          user
-          |> Plausible.Auth.GracePeriod.start_changeset()
-          |> Repo.update!()
+        %{grace_period: existing_grace_period} = Plausible.Users.start_grace_period(user)
 
         usage_stub =
           Plausible.Billing.Quota.Usage
@@ -326,9 +323,7 @@ defmodule Plausible.Workers.CheckUsageTest do
     describe "#{status} subscription, enterprise customers" do
       test "skips checking enterprise users who already have a grace period", %{user: user} do
         %{grace_period: existing_grace_period} =
-          user
-          |> Plausible.Auth.GracePeriod.start_manual_lock_changeset()
-          |> Repo.update!()
+          Plausible.Users.start_manual_lock_grace_period(user)
 
         usage_stub =
           Plausible.Billing.Quota.Usage

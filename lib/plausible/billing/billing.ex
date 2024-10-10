@@ -264,12 +264,6 @@ defmodule Plausible.Billing do
   defp present?(nil), do: false
   defp present?(_), do: true
 
-  defp remove_grace_period(%User{} = user) do
-    user
-    |> Plausible.Auth.GracePeriod.remove_changeset()
-    |> Repo.update!()
-  end
-
   @spec format_price(Money.t()) :: String.t()
   def format_price(money) do
     Money.to_string!(money, fractional_digits: 2, no_fraction_if_integer: true)
@@ -303,7 +297,7 @@ defmodule Plausible.Billing do
 
     user
     |> Plausible.Users.update_accept_traffic_until()
-    |> remove_grace_period()
+    |> Plausible.Users.remove_grace_period()
     |> Plausible.Users.maybe_reset_next_upgrade_override()
     |> tap(&Plausible.Billing.SiteLocker.update_sites_for/1)
     |> maybe_adjust_api_key_limits()
