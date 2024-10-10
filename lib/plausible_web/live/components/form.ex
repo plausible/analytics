@@ -73,6 +73,10 @@ defmodule PlausibleWeb.Live.Components.Form do
     ~H"""
     <div phx-feedback-for={@name} class={@mt? && "mt-2"}>
       <.label for={@id} class="mb-2"><%= @label %></.label>
+
+      <p :if={@help_text} class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
+        <%= @help_text %>
+      </p>
       <select id={@id} name={@name} multiple={@multiple} class={[@class, @width]} {@rest}>
         <option :if={@prompt} value=""><%= @prompt %></option>
         <%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
