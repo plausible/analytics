@@ -1,0 +1,25 @@
+Thanks for being a <%= Plausible.product_name() %> subscriber! <br /><br />
+This is a friendly reminder that your traffic has exceeded your subscription tier for two consecutive months. Congrats on all that traffic!
+<br /><br />
+To maintain uninterrupted access to your stats, we kindly ask you to upgrade your account to match your new traffic levels. Please note, if your account isn't upgraded within the next 7 days, access to your stats will be temporarily locked.
+<br /><br />
+During the last billing cycle (<%= PlausibleWeb.TextHelpers.format_date_range(
+  @usage.last_cycle.date_range
+) %>), your account recorded <%= PlausibleWeb.AuthView.delimit_integer(@usage.last_cycle.total) %> billable pageviews. In the billing cycle before that (<%= PlausibleWeb.TextHelpers.format_date_range(
+  @usage.penultimate_cycle.date_range
+) %>), your account used <%= PlausibleWeb.AuthView.delimit_integer(@usage.penultimate_cycle.total) %> billable pageviews. Note that billable pageviews include both standard pageviews and custom events. In your
+<.unstyled_link href={plausible_url() <> PlausibleWeb.Router.Helpers.settings_path(PlausibleWeb.Endpoint, :subscription)}>
+  account settings
+</.unstyled_link>, you'll find an overview of your usage and limits. <br /><br />
+<%= if @suggested_plan == :enterprise do %>
+  Your usage exceeds our standard plans, so please reply back to this email for a tailored quote.
+<% else %>
+  <.unstyled_link href={
+    PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan)
+  }>
+    Click here to upgrade your subscription
+  </.unstyled_link>. We recommend you upgrade to the <%= @suggested_plan.volume %>/mo plan. The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire.
+<% end %>
+<br /><br />
+Do you have questions or need help with anything? Just reply to this email. We're here to help!
+<br /><br /> Thanks again for using our product and for your support!

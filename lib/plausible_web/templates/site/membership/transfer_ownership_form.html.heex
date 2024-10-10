@@ -1,4 +1,4 @@
-<PlausibleWeb.Components.Generic.focus_box>
+<.focus_box>
   <:title>
     Transfer ownership of <%= @site.domain %>
   </:title>
@@ -12,37 +12,25 @@
     and any other
     member roles will stay the same.
   </:subtitle>
-  <%= form_for @conn, Routes.membership_path(@conn, :transfer_ownership, @site.domain), fn f -> %>
+  <.form
+    :let={f}
+    for={@conn}
+    action={Routes.membership_path(@conn, :transfer_ownership, @site.domain)}
+  >
     <%= if @conn.assigns[:error] do %>
       <div class="text-red-500 text-xs italic mt-4"><%= @conn.assigns[:error] %></div>
     <% end %>
 
     <div class="my-6">
-      <%= label(f, :email, "Email address",
-        class: "block font-medium text-gray-700 dark:text-gray-300"
-      ) %>
-      <div class="mt-1 relative rounded-md shadow-sm">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <svg
-            class="h-5 w-5 text-gray-400"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-          </svg>
-        </div>
-        <%= email_input(f, :email,
-          class:
-            "focus:ring-indigo-500 focus:border-indigo-500 block w-full rounded-md pl-10 border-gray-300",
-          placeholder: "john.doe@example.com",
-          required: "true"
-        ) %>
-      </div>
-      <%= error_tag(f, :email) %>
+      <.input
+        type="email"
+        field={f[:email]}
+        label="Email address"
+        placeholder="joe@example.com"
+        required="true"
+      />
     </div>
 
     <.button type="submit" class="w-full" mt?={false}>Request transfer</.button>
-  <% end %>
-</PlausibleWeb.Components.Generic.focus_box>
+  </.form>
+</.focus_box>

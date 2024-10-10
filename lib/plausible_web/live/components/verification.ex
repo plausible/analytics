@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
   def render(assigns) do
     ~H"""
     <div id="progress-indicator">
-      <PlausibleWeb.Components.Generic.focus_box>
+      <.focus_box>
         <div
           :if={not @finished?}
           class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-gray-700"
@@ -152,7 +152,7 @@ defmodule PlausibleWeb.Live.Components.Verification do
             </div>
           </div>
         </:footer>
-      </PlausibleWeb.Components.Generic.focus_box>
+      </.focus_box>
     </div>
     """
   end

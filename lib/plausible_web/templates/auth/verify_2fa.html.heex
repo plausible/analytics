@@ -1,4 +1,4 @@
-<PlausibleWeb.Components.Generic.focus_box>
+<.focus_box>
   <:title>
     Enter Your 2FA Code
   </:title>
@@ -24,21 +24,24 @@
     </.focus_list>
   </:footer>
 
-  <%= form_for @conn.params, Routes.auth_path(@conn, :verify_2fa), [
-      onsubmit: "document.getElementById('verify-button').disabled = true"
-    ], fn f -> %>
+  <.form
+    :let={f}
+    action={Routes.auth_path(@conn, :verify_2fa)}
+    for={@conn.params}
+    onsubmit="document.getElementById('verify-button').disabled = true"
+  >
     <div class="mt-2 text-gray-500 dark:text-gray-200 leading-tight">
       <PlausibleWeb.Components.TwoFactor.verify_2fa_input form={f} field={:code} class="mt-6" />
 
-      <div class="mt-4 flex flex-inline items-center sm:justify-start justify-center">
-        <%= checkbox(f, :remember_2fa,
-          class:
-            "block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
-        ) %>
-        <label class="block ml-2" for="remember_2fa">
-          Trust this device for <%= @remember_2fa_days %> days
-        </label>
+      <div>
+        <.input
+          type="checkbox"
+          field={f[:remember_2fa]}
+          value="true"
+          label={"Trust this device for #{@remember_2fa_days} days"}
+          class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+        />
       </div>
     </div>
-  <% end %>
-</PlausibleWeb.Components.Generic.focus_box>
+  </.form>
+</.focus_box>

@@ -3,14 +3,11 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
   LiveView allowing IP Rules management
   """
 
-  use Phoenix.LiveComponent, global_prefixes: ~w(x-)
-  use Phoenix.HTML
+  use PlausibleWeb, :live_component
 
   alias PlausibleWeb.Live.Components.Modal
   alias Plausible.Shields
   alias Plausible.Shield
-  import PlausibleWeb.Live.Components.Form
-  import PlausibleWeb.Components.Generic
 
   def update(assigns, socket) do
     socket =

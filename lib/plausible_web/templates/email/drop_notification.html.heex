@@ -1,0 +1,10 @@
+We've recorded <%= @current_visitors %> visitors on
+<.unstyled_link href={"https://" <> @site.domain}><%= @site.domain %></.unstyled_link>
+in the last 12 hours.
+<%= if @dashboard_link do %>
+  <br /><br /> View dashboard:
+  <.unstyled_link href={@dashboard_link}><%= @dashboard_link %></.unstyled_link>
+  <br /><br /> Something looks off? Please
+  <.unstyled_link href={@installation_link}>review your installation</.unstyled_link>
+  to verify that Plausible has been integrated correctly.
+<% end %>

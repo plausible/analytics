@@ -3,15 +3,13 @@ defmodule PlausibleWeb.Live.Shields.HostnameRules do
   LiveView allowing hostname Rules management
   """
 
-  use Phoenix.LiveComponent, global_prefixes: ~w(x-)
-  use Phoenix.HTML
+  use PlausibleWeb, :live_component
 
   alias PlausibleWeb.Live.Components.Modal
   alias Plausible.Shields
   alias Plausible.Shield
 
   import PlausibleWeb.ErrorHelpers
-  import PlausibleWeb.Components.Generic
 
   def update(assigns, socket) do
     socket =

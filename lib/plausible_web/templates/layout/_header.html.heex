@@ -3,24 +3,28 @@
     <nav class="relative flex items-center justify-between sm:h-10 md:justify-center">
       <div class="flex items-center flex-1 md:absolute md:inset-y-0 md:left-0">
         <a href={home_dest(@conn)}>
-          <%= img_tag(
-            PlausibleWeb.Router.Helpers.static_path(
-              @conn,
-              logo_path("logo_dark.svg")
-            ),
-            class: "w-44 -mt-2 hidden dark:inline",
-            alt: "Plausible logo",
-            loading: "lazy"
-          ) %>
-          <%= img_tag(
-            PlausibleWeb.Router.Helpers.static_path(
-              @conn,
-              logo_path("logo_light.svg")
-            ),
-            class: "w-44 -mt-2 inline dark:hidden",
-            alt: "Plausible logo",
-            loading: "lazy"
-          ) %>
+          <img
+            src={
+              PlausibleWeb.Router.Helpers.static_path(
+                @conn,
+                logo_path("logo_dark.svg")
+              )
+            }
+            class="w-44 -mt-2 hidden dark:inline"
+            alt="Plausible logo"
+            loading="lazy"
+          />
+          <img
+            src={
+              PlausibleWeb.Router.Helpers.static_path(
+                @conn,
+                logo_path("logo_light.svg")
+              )
+            }
+            class="w-44 -mt-2 inline dark:hidden"
+            alt="Plausible logo"
+            loading="lazy"
+          />
         </a>
       </div>
       <div class="absolute inset-y-0 right-0 flex items-center justify-end">
@@ -43,11 +47,12 @@
                 :if={ee?() and Plausible.Users.on_trial?(@conn.assigns[:current_user])}
                 class="hidden mr-6 sm:block"
               >
-                <%= link(trial_notificaton(@conn.assigns[:current_user]),
-                  to: Routes.settings_path(@conn, :subscription),
-                  class:
-                    "text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
-                ) %>
+                <.styled_link
+                  class="text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
+                  href={Routes.settings_path(@conn, :subscription)}
+                >
+                  <%= trial_notificaton(@conn.assigns[:current_user]) %>
+                </.styled_link>
               </li>
               <li class="w-full sm:w-auto">
                 <.dropdown>
@@ -55,9 +60,10 @@
                     <span class="font-medium truncate dark:text-gray-100 hidden md:block">
                       <%= @conn.assigns[:current_user].name %>
                     </span>
-                    <%= img_tag(Plausible.Auth.User.profile_img_url(@conn.assigns[:current_user]),
-                      class: "w-7 rounded-full"
-                    ) %>
+                    <img
+                      src={Plausible.Auth.User.profile_img_url(@conn.assigns[:current_user])}
+                      class="w-7 rounded-full"
+                    />
                   </:button>
                   <:panel class="absolute right-0 z-10 mt-2 w-60 origin-top-right divide-y divide-gray-100 dark:divide-gray-400 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                     <div class="px-3.5 py-3" role="none">

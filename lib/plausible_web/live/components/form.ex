@@ -23,6 +23,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   attr(:id, :any, default: nil)
   attr(:name, :any)
   attr(:label, :string, default: nil)
+  attr(:help_text, :string, default: nil)
   attr(:value, :any)
   attr(:width, :string, default: "w-full")
 
@@ -44,7 +45,7 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   attr(:rest, :global,
     include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
-         multiple pattern placeholder readonly required rows size step)
+         multiple pattern placeholder readonly required rows size step x-model)
   )
 
   attr(:class, :any, default: @default_input_class)
@@ -72,11 +73,33 @@ defmodule PlausibleWeb.Live.Components.Form do
     ~H"""
     <div phx-feedback-for={@name} class={@mt? && "mt-2"}>
       <.label for={@id} class="mb-2"><%= @label %></.label>
+
+      <p :if={@help_text} class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
+        <%= @help_text %>
+      </p>
       <select id={@id} name={@name} multiple={@multiple} class={[@class, @width]} {@rest}>
         <option :if={@prompt} value=""><%= @prompt %></option>
         <%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
       </select>
       <.error :for={msg <- @errors}><%= msg %></.error>
+    </div>
+    """
+  end
+
+  def input(%{type: "checkbox"} = assigns) do
+    ~H"""
+    <div
+      phx-feedback-for={@name}
+      class={["flex flex-inline items-center sm:justify-start justify-center gap-x-2", @mt? && "mt-2"]}
+    >
+      <input
+        type="checkbox"
+        value={@value || "true"}
+        id={@id}
+        name={@name}
+        class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+      />
+      <.label for={@id}><%= @label %></.label>
     </div>
     """
   end
@@ -97,6 +120,9 @@ defmodule PlausibleWeb.Live.Components.Form do
       <.label :if={@label != nil and @label != ""} for={@id} class="mb-2">
         <%= @label %>
       </.label>
+      <p :if={@help_text} class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
+        <%= @help_text %>
+      </p>
       <input
         type={@type}
         name={@name}

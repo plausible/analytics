@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   LiveView allowing listing, creating and deleting funnels.
   """
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
 
   use Plausible.Funnel
 
@@ -64,13 +63,15 @@ defmodule PlausibleWeb.Live.FunnelSettings do
       </div>
 
       <div :if={@goal_count < Funnel.min_steps()}>
-        <PlausibleWeb.Components.Generic.notice class="mt-4" title="Not enough goals">
-          You need to define at least two goals to create a funnel. Go ahead and <%= link(
-            "add goals",
-            to: PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain),
-            class: "text-indigo-500 w-full text-center"
-          ) %> to proceed.
-        </PlausibleWeb.Components.Generic.notice>
+        <.notice class="mt-4" title="Not enough goals">
+          You need to define at least two goals to create a funnel. Go ahead and
+          <.styled_link href={
+            PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain)
+          }>
+            add goals
+          </.styled_link>
+          to proceed.
+        </.notice>
       </div>
     </div>
     """

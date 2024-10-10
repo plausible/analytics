@@ -1,10 +1,9 @@
 defmodule PlausibleWeb.Components.Billing do
   @moduledoc false
 
-  use Phoenix.Component
-  import PlausibleWeb.Components.Generic
+  use PlausibleWeb, :component
+
   require Plausible.Billing.Subscription.Status
-  alias PlausibleWeb.Router.Helpers, as: Routes
   alias Plausible.Billing.{Subscription, Subscriptions}
 
   def render_monthly_pageview_usage(%{usage: usage} = assigns)
@@ -267,12 +266,9 @@ defmodule PlausibleWeb.Components.Billing do
 
   def upgrade_link(assigns) do
     ~H"""
-    <PlausibleWeb.Components.Generic.button_link
-      id="upgrade-link-2"
-      href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-    >
+    <.button_link id="upgrade-link-2" href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}>
       Upgrade
-    </PlausibleWeb.Components.Generic.button_link>
+    </.button_link>
     """
   end
 

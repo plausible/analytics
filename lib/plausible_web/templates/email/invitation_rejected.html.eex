@@ -1,2 +1,0 @@
-<%= @invitation.email %> has rejected your invitation to <%= @invitation.site.domain %>.
-<%= link("Click here", to: Routes.site_url(PlausibleWeb.Endpoint, :settings_general, @invitation.site.domain)) %> to view site settings.

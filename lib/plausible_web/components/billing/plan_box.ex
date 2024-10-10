@@ -1,11 +1,11 @@
 defmodule PlausibleWeb.Components.Billing.PlanBox do
   @moduledoc false
 
-  use Phoenix.Component
+  use PlausibleWeb, :component
+
   require Plausible.Billing.Subscription.Status
   alias PlausibleWeb.Components.Billing.{PlanBenefits, Notice}
   alias Plausible.Billing.{Plan, Quota, Subscription}
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   def standard(assigns) do
     highlight =
@@ -231,7 +231,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
         Upgrade
       </PlausibleWeb.Components.Billing.paddle_button>
     <% end %>
-    <PlausibleWeb.Components.Generic.tooltip :if={@exceeded_plan_limits != [] && @disabled_message}>
+    <.tooltip :if={@exceeded_plan_limits != [] && @disabled_message}>
       <div class="pt-2 text-sm w-full flex items-center text-red-700 dark:text-red-500 justify-center">
         <%= @disabled_message %>
         <Heroicons.information_circle class="hidden sm:block w-5 h-5 sm:ml-2" />
@@ -242,7 +242,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
           <%= Phoenix.Naming.humanize(limit) %><br />
         </p>
       </:tooltip_content>
-    </PlausibleWeb.Components.Generic.tooltip>
+    </.tooltip>
     <div
       :if={@disabled_message && @exceeded_plan_limits == []}
       class="pt-2 text-sm w-full text-red-700 dark:text-red-500 text-center"

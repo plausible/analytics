@@ -101,10 +101,9 @@ defmodule PlausibleWeb.Live.Components.Modal do
 
   """
 
-  use Phoenix.LiveComponent, global_prefixes: ~w(x-)
+  use PlausibleWeb, :live_component
 
   alias Phoenix.LiveView
-  alias Phoenix.LiveView.JS, as: LiveViewJS
 
   defmodule JS do
     @moduledoc false
@@ -120,14 +119,14 @@ defmodule PlausibleWeb.Live.Components.Modal do
     end
   end
 
-  @spec open(Phoenix.LiveView.Socket.t(), String.t()) :: Phoenix.LiveView.Socket.t()
+  @spec open(LiveView.Socket.t(), String.t()) :: LiveView.Socket.t()
   def open(socket, id) do
-    Phoenix.LiveView.push_event(socket, "open-modal", %{id: id})
+    LiveView.push_event(socket, "open-modal", %{id: id})
   end
 
-  @spec close(Phoenix.LiveView.Socket.t(), String.t()) :: Phoenix.LiveView.Socket.t()
+  @spec close(LiveView.Socket.t(), String.t()) :: LiveView.Socket.t()
   def close(socket, id) do
-    Phoenix.LiveView.push_event(socket, "close-modal", %{id: id})
+    LiveView.push_event(socket, "close-modal", %{id: id})
   end
 
   @impl true
@@ -232,7 +231,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
       >
         <div class="modal-pre-loading w-full self-center">
           <div class="text-center">
-            <PlausibleWeb.Components.Generic.spinner class="inline-block h-8 w-8" />
+            <.spinner class="inline-block h-8 w-8" />
           </div>
         </div>
       </div>
@@ -243,7 +242,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
         <Phoenix.Component.focus_wrap
           :if={@load_content?}
           phx-mounted={
-            LiveViewJS.show(
+            LiveView.JS.show(
               time: 300,
               transition:
                 {"ease-out duration-300", "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
@@ -265,7 +264,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
         </Phoenix.Component.focus_wrap>
         <div x-show="modalOpen" class="modal-loading hidden w-full self-center">
           <div class="text-center">
-            <PlausibleWeb.Components.Generic.spinner class="inline-block h-8 w-8" />
+            <.spinner class="inline-block h-8 w-8" />
           </div>
         </div>
       </div>

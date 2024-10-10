@@ -3,10 +3,7 @@ defmodule PlausibleWeb.Live.Installation do
   User assistance module around Plausible installation instructions/onboarding
   """
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
-
   alias Plausible.Verification.{Checks, State}
-  import PlausibleWeb.Components.Generic
 
   @script_extension_params [
     "outbound-links",

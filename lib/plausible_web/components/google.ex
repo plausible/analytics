@@ -2,15 +2,18 @@ defmodule PlausibleWeb.Components.Google do
   @moduledoc """
   Google-related components
   """
-  use Phoenix.Component
-  use Phoenix.HTML
+  use PlausibleWeb, :component
 
   attr(:to, :string, required: true)
   attr(:id, :string, required: true)
 
   def button(assigns) do
     ~H"""
-    <%= button(id: @id, to: @to, class: "inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50 dark:hover:bg-gray-700") do %>
+    <.unstyled_link
+      id={@id}
+      href={@to}
+      class="inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50 dark:hover:bg-gray-700"
+    >
       <.logo />
       <span
         style="font-family: Roboto, system-ui"
@@ -18,7 +21,7 @@ defmodule PlausibleWeb.Components.Google do
       >
         Continue with Google
       </span>
-    <% end %>
+    </.unstyled_link>
     """
   end
 

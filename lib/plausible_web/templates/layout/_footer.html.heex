@@ -3,15 +3,17 @@
     <div class="xl:grid xl:grid-cols-3 xl:gap-8">
       <div class="my-8 xl:my-0">
         <h4 class="font-semibold tracking-wider text-gray-300 leading-5">
-          <%= img_tag(
-            PlausibleWeb.Router.Helpers.static_path(
-              @conn,
-              logo_path("logo_dark.svg")
-            ),
-            class: "inline-block w-40 mr-1",
-            alt: "Plausible logo",
-            loading: "lazy"
-          ) %>
+          <img
+            src={
+              PlausibleWeb.Router.Helpers.static_path(
+                @conn,
+                logo_path("logo_dark.svg")
+              )
+            }
+            class="inline-block w-40 mr-1"
+            alt="Plausible logo"
+            loading="lazy"
+          />
         </h4>
         <p class="mt-4 text-base text-gray-400 leading-6">
           <%= if ee?() do %>

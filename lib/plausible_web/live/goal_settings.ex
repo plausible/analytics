@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Live.GoalSettings do
   LiveView allowing listing, creating and deleting goals.
   """
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
 
   alias Plausible.{Sites, Goals}
   alias PlausibleWeb.Live.Components.Modal

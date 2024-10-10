@@ -2,7 +2,7 @@
   flow={PlausibleWeb.Flows.domain_change()}
   current_step="Set up new domain"
 />
-<PlausibleWeb.Components.Generic.focus_box>
+<.focus_box>
   <:title>Change your website domain</:title>
 
   <:subtitle>
@@ -26,24 +26,25 @@
     </.focus_list>
   </:footer>
 
-  <%= form_for @changeset, Routes.site_path(@conn, :change_domain_submit, @site.domain, flow: PlausibleWeb.Flows.domain_change()), [], fn f -> %>
-    <div class="my-6">
-      <%= label(f, :domain, class: "text-sm block font-medium dark:text-gray-300") %>
-      <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">
-        Just the naked domain or subdomain without 'www', 'https' etc.
-      </p>
-      <div class="mt-2 flex rounded-md shadow-sm">
-        <%= text_input(f, :domain,
-          class:
-            "text-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 flex-1 block w-full px-3 py-2 rounded-none rounded-r-md border-gray-300 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300",
-          placeholder: "example.com"
-        ) %>
-      </div>
-      <%= error_tag(f, :domain) %>
-    </div>
+  <.form
+    :let={f}
+    for={@changeset}
+    action={
+      Routes.site_path(@conn, :change_domain_submit, @site.domain,
+        flow: PlausibleWeb.Flows.domain_change()
+      )
+    }
+  >
+    <.input
+      help_text="Just the naked domain or subdomain without 'www', 'https' etc."
+      type="text"
+      placeholder="example.com"
+      field={f[:domain]}
+      label="Domain"
+    />
 
-    <PlausibleWeb.Components.Generic.button type="submit" class="mt-4 w-full">
+    <.button type="submit" class="mt-4 w-full">
       Change Domain and add new Snippet
-    </PlausibleWeb.Components.Generic.button>
-  <% end %>
-</PlausibleWeb.Components.Generic.focus_box>
+    </.button>
+  </.form>
+</.focus_box>

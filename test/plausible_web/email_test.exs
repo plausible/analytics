@@ -2,6 +2,7 @@ defmodule PlausibleWeb.EmailTest do
   alias PlausibleWeb.Email
   use ExUnit.Case, async: true
   import Plausible.Factory
+  import Plausible.Test.Support.HTML
 
   describe "base_email layout" do
     test "greets user by first name if user in template assigns" do
@@ -141,12 +142,14 @@ defmodule PlausibleWeb.EmailTest do
       assert html_body =~
                "cycle before that (#{PlausibleWeb.TextHelpers.format_date_range(penultimate_cycle)}), your account used 12,300 billable pageviews"
 
-      assert html_body =~ "/billing/choose-plan\">Click here to upgrade your subscription</a>"
+      assert text_of_element(html_body, ~s|a[href$="/billing/choose-plan"]|) ==
+               "Click here to upgrade your subscription"
+
+      assert text_of_element(html_body, ~s|a[href$="/settings/billing/subscription"]|) ==
+               "account settings"
 
       assert html_body =~
                PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan)
-
-      assert html_body =~ "/settings/billing/subscription\">account settings</a>"
     end
 
     test "asks enterprise level usage to contact us" do
@@ -191,12 +194,14 @@ defmodule PlausibleWeb.EmailTest do
       assert html_body =~
                "cycle before that (#{PlausibleWeb.TextHelpers.format_date_range(penultimate_cycle)}), the usage was 12,300 billable pageviews"
 
-      assert html_body =~ "/billing/choose-plan\">Click here to upgrade your subscription</a>"
+      assert text_of_element(html_body, ~s|a[href$="/billing/choose-plan"]|) ==
+               "Click here to upgrade your subscription"
+
+      assert text_of_element(html_body, ~s|a[href$="/settings/billing/subscription"]|) ==
+               "account settings"
 
       assert html_body =~
                PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan)
-
-      assert html_body =~ "/settings/billing/subscription\">account settings</a>"
     end
 
     test "asks enterprise level usage to contact us" do

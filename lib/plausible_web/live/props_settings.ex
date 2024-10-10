@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Live.PropsSettings do
   """
 
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
 
   alias PlausibleWeb.Live.Components.ComboBox
 

@@ -2,11 +2,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   @moduledoc """
   Live view for the goal creation form
   """
-  use Phoenix.LiveComponent, global_prefixes: ~w(x-)
+  use PlausibleWeb, :live_component
   use Plausible
-
-  import PlausibleWeb.Live.Components.Form
-  import PlausibleWeb.Components.Generic
 
   alias PlausibleWeb.Live.Components.ComboBox
   alias Plausible.Repo

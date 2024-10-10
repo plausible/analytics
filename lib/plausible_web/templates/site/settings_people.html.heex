@@ -18,9 +18,10 @@
           <li class="py-4">
             <div class="flex items-center space-x-4">
               <div class="flex-shrink-0">
-                <%= img_tag(Plausible.Auth.User.profile_img_url(membership.user),
-                  class: "h-8 w-8 rounded-full"
-                ) %>
+                <img
+                  src={Plausible.Auth.User.profile_img_url(membership.user)}
+                  class="h-8 w-8 rounded-full"
+                />
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm truncate">
@@ -104,19 +105,34 @@
                         class="select-none hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
                         role="option"
                       >
-                        <%= link("Transfer ownership →",
-                          to:
+                        <.unstyled_link
+                          class="inline-block w-full text-sm p-4 text-red-600 font-medium"
+                          href={
                             Routes.membership_path(
                               @conn,
                               :transfer_ownership_form,
                               @site.domain
-                            ),
-                          class: "inline-block w-full text-sm p-4 text-red-600 font-medium"
-                        ) %>
+                            )
+                          }
+                        >
+                          Transfer ownership
+                        </.unstyled_link>
                       </li>
                     <% end %>
                   <% else %>
-                    <%= link(to: Routes.membership_path(@conn, :update_role, @site.domain, membership.id, "admin"), method: :put, class: "p-4 flex justify-between group hover:bg-indigo-500") do %>
+                    <.unstyled_link
+                      href={
+                        Routes.membership_path(
+                          @conn,
+                          :update_role,
+                          @site.domain,
+                          membership.id,
+                          "admin"
+                        )
+                      }
+                      method="put"
+                      class="p-4 flex justify-between group hover:bg-indigo-500"
+                    >
                       <div>
                         <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
                           Admin
@@ -143,8 +159,20 @@
                           </svg>
                         </span>
                       <% end %>
-                    <% end %>
-                    <%= link(to: Routes.membership_path(@conn, :update_role, @site.domain, membership.id, "viewer"), method: :put, class: "p-4 flex justify-between group hover:bg-indigo-500") do %>
+                    </.unstyled_link>
+                    <.unstyled_link
+                      href={
+                        Routes.membership_path(
+                          @conn,
+                          :update_role,
+                          @site.domain,
+                          membership.id,
+                          "viewer"
+                        )
+                      }
+                      method="put"
+                      class="p-4 flex justify-between group hover:bg-indigo-500"
+                    >
                       <div>
                         <p class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-white">
                           Viewer
@@ -171,11 +199,17 @@
                           </svg>
                         </span>
                       <% end %>
-                    <% end %>
+                    </.unstyled_link>
 
-                    <%= link(to: Routes.membership_path(@conn, :remove_member, @site.domain, membership.id), method: :delete, class: "p-4 flex hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600") do %>
+                    <.unstyled_link
+                      href={
+                        Routes.membership_path(@conn, :remove_member, @site.domain, membership.id)
+                      }
+                      method="delete"
+                      class="p-4 flex hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
+                    >
                       <p class="text-red-600 font-medium text-sm">Remove member</p>
-                    <% end %>
+                    </.unstyled_link>
                   <% end %>
                 </ul>
               </div>

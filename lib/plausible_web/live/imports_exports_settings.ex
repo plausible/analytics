@@ -3,9 +3,7 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
   LiveView allowing listing and deleting imports.
   """
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
 
-  import PlausibleWeb.Components.Generic
   import PlausibleWeb.TextHelpers
 
   alias Plausible.Imported

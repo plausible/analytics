@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Live.CSVExport do
   LiveView allowing scheduling, watching, downloading, and deleting S3 and local exports.
   """
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
 
   alias Plausible.Exports
 

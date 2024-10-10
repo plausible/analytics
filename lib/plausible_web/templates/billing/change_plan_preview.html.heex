@@ -1,4 +1,4 @@
-<PlausibleWeb.Components.Generic.focus_box>
+<.focus_box>
   <:title>
     Confirm new subscription plan
   </:title>
@@ -85,19 +85,17 @@
       </a>
     </span>
     <span class="flex space-betwee rounded-md shadow-sm">
-      <%= button("Confirm plan change",
-        to: Routes.billing_path(@conn, :change_plan, @preview_info["plan_id"]),
-        method: :post,
-        class:
-          "inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
-      ) %>
+      <.button_link
+        href={Routes.billing_path(@conn, :change_plan, @preview_info["plan_id"])}
+        method="post"
+      >
+        Confirm plan change
+      </.button_link>
     </span>
   </div>
 
   <div class="text-center mt-8 dark:text-gray-100">
-    Questions? <%= link("Contact us",
-      to: "https://plausible.io/contact",
-      class: "text-indigo-500"
-    ) %>
+    Questions?
+    <.styled_link href="https://plausible.io/contact">Contact us</.styled_link>
   </div>
-</PlausibleWeb.Components.Generic.focus_box>
+</.focus_box>

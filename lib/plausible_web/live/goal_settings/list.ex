@@ -2,11 +2,8 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   @moduledoc """
   Phoenix LiveComponent module that renders a list of goals
   """
-  use Phoenix.LiveComponent, global_prefixes: ~w(x-)
-  use Phoenix.HTML
-
+  use PlausibleWeb, :live_component
   alias PlausibleWeb.Live.Components.Modal
-  import PlausibleWeb.Components.Generic
 
   attr(:goals, :list, required: true)
   attr(:domain, :string, required: true)

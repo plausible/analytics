@@ -1,4 +1,4 @@
-<PlausibleWeb.Components.Generic.focus_box>
+<.focus_box>
   <:title>
     Import from Google Analytics
   </:title>
@@ -6,18 +6,29 @@
   <:subtitle>
     Choose the property in your Google Analytics account that will be imported to the <%= @site.domain %> dashboard.
   </:subtitle>
-  <%= form_for @conn, Routes.google_analytics_path(@conn, :property, @site.domain), [onsubmit: "continueButton.disabled = true; return true;"], fn f -> %>
-    <%= hidden_input(f, :access_token, value: @access_token) %>
-    <%= hidden_input(f, :refresh_token, value: @refresh_token) %>
-    <%= hidden_input(f, :expires_at, value: @expires_at) %>
+  <.form
+    :let={f}
+    for={@conn}
+    onsubmit="continueButton.disabled = true; return true;"
+    action={Routes.google_analytics_path(@conn, :property, @site.domain)}
+  >
+    <.input type="hidden" field={f[:access_token]} />
+    <.input type="hidden" field={f[:refresh_token]} />
+    <.input type="hidden" field={f[:expires_at]} />
 
     <div class="mt-3">
-      <%= styled_label(f, :property, "Google Analytics property") %>
-      <%= styled_select(f, :property, @properties,
-        prompt: "(Choose property)",
-        required: "true"
-      ) %>
-      <%= styled_error(@conn.assigns[:selected_property_error]) %>
+      <.input
+        type="select"
+        field={f[:property]}
+        prompt="(Choose property)"
+        options={@properties}
+        label="Google Analytics property"
+        required="true"
+      />
+
+      <p class="text-red-600 dark:text-red-700">
+        <%= @conn.assigns[:selected_property_error] %>
+      </p>
     </div>
 
     <div class="mt-6 flex flex-col-reverse sm:flex-row justify-between items-center">
@@ -30,16 +41,19 @@
         </a>
       </p>
 
-      <%= submit(name: "continueButton", class: "button sm:w-auto w-full [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block") do %>
+      <.button
+        type="submit"
+        name="continueButton"
+        class="button sm:w-auto w-full [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
+      >
         <span class="label-enabled pointer-events-none">
           Continue
         </span>
 
         <span class="label-disabled">
-          <PlausibleWeb.Components.Generic.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" />
-          Checking...
+          <.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" /> Checking...
         </span>
-      <% end %>
+      </.button>
     </div>
-  <% end %>
-</PlausibleWeb.Components.Generic.focus_box>
+  </.form>
+</.focus_box>
