@@ -859,11 +859,11 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/integrations")
       resp = html_response(conn, 200)
 
-      assert button = find(resp, "button#search-console-connect")
+      assert button = find(resp, "a#search-console-connect")
       assert text(button) == "Continue with Google"
-      assert text_of_attr(button, "data-to") =~ "https://accounts.google.com/o/oauth2/v2/auth?"
-      assert text_of_attr(button, "data-to") =~ "webmasters.readonly"
-      refute text_of_attr(button, "data-to") =~ "analytics.readonly"
+      assert text_of_attr(button, "href") =~ "https://accounts.google.com/o/oauth2/v2/auth?"
+      assert text_of_attr(button, "href") =~ "webmasters.readonly"
+      refute text_of_attr(button, "href") =~ "analytics.readonly"
     end
 
     test "displays appropriate error in case of google account `google_auth_error`", %{

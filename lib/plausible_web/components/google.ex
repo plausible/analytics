@@ -9,10 +9,10 @@ defmodule PlausibleWeb.Components.Google do
 
   def button(assigns) do
     ~H"""
-    <.button_link
+    <.unstyled_link
       id={@id}
       href={@to}
-      class="inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50 dark:hover:bg-gray-700"
+        class="inline-flex pr-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50 dark:hover:bg-gray-700"
     >
       <.logo />
       <span
@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Components.Google do
       >
         Continue with Google
       </span>
-    </.button_link>
+    </.unstyled_link>
     """
   end
 
