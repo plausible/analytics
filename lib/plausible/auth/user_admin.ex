@@ -62,6 +62,12 @@ defmodule Plausible.Auth.UserAdmin do
     ]
   end
 
+  def after_update(_conn, user) do
+    Plausible.Teams.sync_team(user)
+
+    {:ok, user}
+  end
+
   defp lock(user) do
     if user.grace_period do
       Plausible.Billing.SiteLocker.set_lock_status_for(user, true)
