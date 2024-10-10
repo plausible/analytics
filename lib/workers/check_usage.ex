@@ -103,9 +103,8 @@ defmodule Plausible.Workers.CheckUsage do
   def maybe_remove_grace_period(subscriber, usage_mod) do
     case check_pageview_usage_last_cycle(subscriber, usage_mod) do
       {:below_limit, _} ->
-        subscriber
-        |> Plausible.Auth.GracePeriod.remove_changeset()
-        |> Repo.update()
+        Plausible.Users.remove_grace_period(subscriber)
+        :ok
 
       _ ->
         :skip
@@ -121,9 +120,7 @@ defmodule Plausible.Workers.CheckUsage do
         PlausibleWeb.Email.over_limit_email(subscriber, pageview_usage, suggested_plan)
         |> Plausible.Mailer.send()
 
-        subscriber
-        |> Plausible.Auth.GracePeriod.start_changeset()
-        |> Repo.update()
+        Plausible.Users.start_grace_period(subscriber)
 
       _ ->
         nil
@@ -147,9 +144,7 @@ defmodule Plausible.Workers.CheckUsage do
         )
         |> Plausible.Mailer.send()
 
-        subscriber
-        |> Plausible.Auth.GracePeriod.start_manual_lock_changeset()
-        |> Repo.update()
+        Plausible.Users.start_manual_lock_grace_period(subscriber)
     end
   end
 

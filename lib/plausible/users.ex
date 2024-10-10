@@ -8,6 +8,7 @@ defmodule Plausible.Users do
   import Ecto.Query
 
   alias Plausible.Auth
+  alias Plausible.Auth.GracePeriod
   alias Plausible.Billing.Subscription
   alias Plausible.Repo
 
@@ -118,6 +119,30 @@ defmodule Plausible.Users do
     from(subscription in last_subscription_query(),
       where: subscription.user_id == parent_as(:user).id
     )
+  end
+
+  def start_grace_period(user) do
+    user
+    |> GracePeriod.start_changeset()
+    |> Repo.update!()
+  end
+
+  def start_manual_lock_grace_period(user) do
+    user
+    |> GracePeriod.start_manual_lock_changeset()
+    |> Repo.update!()
+  end
+
+  def end_grace_period(user) do
+    user
+    |> GracePeriod.end_changeset()
+    |> Repo.update!()
+  end
+
+  def remove_grace_period(user) do
+    user
+    |> GracePeriod.remove_changeset()
+    |> Repo.update!()
   end
 
   defp last_subscription_query() do
