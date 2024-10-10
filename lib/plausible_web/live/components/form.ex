@@ -23,6 +23,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   attr(:id, :any, default: nil)
   attr(:name, :any)
   attr(:label, :string, default: nil)
+  attr(:help_text, :string, default: nil)
   attr(:value, :any)
   attr(:width, :string, default: "w-full")
 
@@ -81,6 +82,24 @@ defmodule PlausibleWeb.Live.Components.Form do
     """
   end
 
+  def input(%{type: "checkbox"} = assigns) do
+    ~H"""
+    <div
+      phx-feedback-for={@name}
+      class={["flex flex-inline items-center sm:justify-start justify-center gap-x-2", @mt? && "mt-2"]}
+    >
+      <input
+        type="checkbox"
+        value={@value || "true"}
+        id={@id}
+        name={@name}
+        class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+      />
+      <.label for={@id}><%= @label %></.label>
+    </div>
+    """
+  end
+
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     errors =
@@ -97,6 +116,9 @@ defmodule PlausibleWeb.Live.Components.Form do
       <.label :if={@label != nil and @label != ""} for={@id} class="mb-2">
         <%= @label %>
       </.label>
+      <p :if={@help_text} class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
+        <%= @help_text %>
+      </p>
       <input
         type={@type}
         name={@name}

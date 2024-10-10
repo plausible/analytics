@@ -29,22 +29,21 @@
   </:subtitle>
 
   <div :if={@has_email_code?}>
-    <%= form_for @conn, @form_submit_url, [], fn f -> %>
-      <%= text_input(f, :code,
-        class:
-          "tracking-widest font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-36 px-8 border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-200 dark:bg-gray-900 text-center",
-        oninput:
-          "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 4) document.getElementById('submit').focus()",
-        onclick: "this.select();",
-        maxlength: "4",
-        placeholder: "••••",
-        style: "letter-spacing: 10px;",
-        required: "required"
-      ) %>
+    <.form :let={f} for={@conn} action={@form_submit_url}>
+      <.input
+        field={f[:code]}
+        class="tracking-widest font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-36 px-8 border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-200 dark:bg-gray-900 text-center"
+        oninput="this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 4) document.getElementById('submit').focus()"
+        onclick="this.select();"
+        maxlength="4"
+        placeholder="••••"
+        style="letter-spacing: 10px;"
+        required={true}
+      />
       <.button id="submit" type="submit" class="w-full mt-8">
         Activate
       </.button>
-    <% end %>
+    </.form>
   </div>
 
   <%= error_tag(assigns, :error) %>
