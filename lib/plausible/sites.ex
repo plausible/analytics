@@ -208,8 +208,9 @@ defmodule Plausible.Sites do
   defp maybe_start_trial(multi, user) do
     case user.trial_expiry_date do
       nil ->
-        changeset = Auth.User.start_trial(user)
-        Ecto.Multi.update(multi, :user, changeset)
+        Ecto.Multi.run(multi, :user, fn _, _ ->
+          {:ok, Plausible.Users.start_trial(user)}
+        end)
 
       _ ->
         multi
