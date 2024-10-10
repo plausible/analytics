@@ -54,6 +54,45 @@ defmodule Plausible.Teams.Memberships do
     end
   end
 
+  def update_role_sync(site_membership) do
+    site_id = site_membership.site_id
+    user_id = site_membership.user_id
+    role = site_membership.role
+
+    new_role =
+      case role do
+        :viewer -> :viewer
+        _ -> :editor
+      end
+
+    case get_guest_membership(site_id, user_id) do
+      {:ok, guest_membership} ->
+        guest_membership
+        |> Ecto.Changeset.change(role: new_role)
+        |> Repo.update!()
+
+      {:error, _} ->
+        :pass
+    end
+
+    :ok
+  end
+
+  def remove_sync(site_membership) do
+    site_id = site_membership.site_id
+    user_id = site_membership.user_id
+
+    case get_guest_membership(site_id, user_id) do
+      {:ok, guest_membership} ->
+        guest_membership = Repo.preload(guest_membership, team_membership: :team)
+        Repo.delete!(guest_membership)
+        prune_guests(guest_membership.team_membership.team)
+
+      {:error, _} ->
+        :pass
+    end
+  end
+
   def prune_guests(team, opts \\ []) do
     ignore_guest_ids = Keyword.get(opts, :ignore_guest_ids, [])
 
@@ -75,5 +114,19 @@ defmodule Plausible.Teams.Memberships do
     )
 
     :ok
+  end
+
+  defp get_guest_membership(site_id, user_id) do
+    query =
+      from(
+        gm in Teams.GuestMembership,
+        inner_join: tm in assoc(gm, :team_membership),
+        where: gm.site_id == ^site_id and tm.user_id == ^user_id
+      )
+
+    case Repo.one(query) do
+      nil -> {:error, :no_guest}
+      membership -> {:ok, membership}
+    end
   end
 end
