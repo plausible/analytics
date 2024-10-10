@@ -17,12 +17,12 @@ export function Tooltip({ children, info, className, onClick, boundary }) {
           offset: [0, 4],
         },
       },
-      boundary && {
-        name: 'preventOverflow',
-        options: {
-          boundary: boundary,
-        },
-      },
+      // boundary && {
+      //   name: 'preventOverflow',
+      //   options: {
+      //     boundary: boundary,
+      //   },
+      // },
     ],
   });
 

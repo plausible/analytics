@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Metric } from '../../../types/query-api'
+import { Tooltip } from '../../util/tooltip'
 
 type MetricValues = Record<Metric, number | null>
 
@@ -24,16 +25,22 @@ function valueRenderProps(listItem: ListItem, metricName: Metric) {
 }
 
 export default function MetricEntry({ listItem, metricName, formatter }: { listItem: ListItem, metricName: Metric, formatter: (value: number | null) => any}) {
-  const { value, comparison } = valueRenderProps(listItem, metricName)
-  let tooltip = formatter(value)
+  const { value, comparison } = useMemo(() => valueRenderProps(listItem, metricName), [listItem, metricName])
 
-  let arrow = null
-  if (comparison) {
-    tooltip = `Previous: ${formatter(comparison.value)}, Change: ${comparison.change}%`
+  const tooltipBoundary = React.useRef(null)
 
-    arrow = <ChangeArrow change={comparison.change} metricName={metricName} />
-  }
-  return <span tooltip={tooltip}>{formatter(value)}{arrow}</span>
+  return (
+    <div ref={tooltipBoundary}>
+      <Tooltip
+        info={
+          comparison ? `Previous: ${formatter(comparison.value)}, Change: ${comparison.change}%` : formatter(value)
+        }
+      >
+        {formatter(value)}
+        {comparison ? <ChangeArrow change={comparison.change} metricName={metricName} /> : null}
+      </Tooltip>
+    </div>
+  )
 }
 
 function ChangeArrow({ change, metricName }: { change: number | null, metricName: string }) {
