@@ -40,7 +40,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:class, :string, default: "")
   attr(:disabled, :boolean, default: false)
   attr(:mt?, :boolean, default: true)
-  attr(:rest, :global)
+  attr(:rest, :global, include: ~w(name))
 
   slot(:inner_block)
 

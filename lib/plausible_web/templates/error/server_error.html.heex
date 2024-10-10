@@ -44,10 +44,12 @@
       <%= if assigns[:trace_id] do %>
         <div class="my-6">
           <.form
-            for={:error}
+            :let={f}
+            for={%{}}
+            as={:error}
             action={Routes.error_report_path(PlausibleWeb.Endpoint, :submit_error_report)}
           >
-            <.input type="hidden" name="trace_id" id="trace_id" value={@trace_id} />
+            <.input type="hidden" field={f[:trace_id]} value={@trace_id} />
             <PlausibleWeb.Live.Components.Form.label for="user_feedback">
               What happened?
             </PlausibleWeb.Live.Components.Form.label>

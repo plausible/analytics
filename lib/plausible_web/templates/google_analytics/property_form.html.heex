@@ -25,6 +25,10 @@
         label="Google Analytics property"
         required="true"
       />
+
+      <p class="text-red-600 dark:text-red-700">
+        <%= @conn.assigns[:selected_property_error] %>
+      </p>
     </div>
 
     <div class="mt-6 flex flex-col-reverse sm:flex-row justify-between items-center">

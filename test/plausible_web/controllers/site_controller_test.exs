@@ -1441,7 +1441,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       link = insert(:shared_link, site: site)
       conn = get(conn, "/sites/#{site.domain}/shared-links/#{link.slug}/edit")
 
-      assert html_response(conn, 200) =~ "Edit shared link"
+      assert html_response(conn, 200) =~ "Edit Shared Link"
     end
   end
 
