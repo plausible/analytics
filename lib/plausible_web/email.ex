@@ -233,49 +233,52 @@ defmodule PlausibleWeb.Email do
     |> render("cancellation_email.html", user: user)
   end
 
-  def new_user_invitation(invitation) do
+  def new_user_invitation(email, invitation_id, site, inviter) do
     priority_email()
-    |> to(invitation.email)
+    |> to(email)
     |> tag("new-user-invitation")
-    |> subject("[#{Plausible.product_name()}] You've been invited to #{invitation.site.domain}")
+    |> subject("[#{Plausible.product_name()}] You've been invited to #{site.domain}")
     |> render("new_user_invitation.html",
-      invitation: invitation
+      invitation_id: invitation_id,
+      site: site,
+      inviter: inviter
     )
   end
 
-  def existing_user_invitation(invitation) do
+  def existing_user_invitation(email, site, inviter) do
     priority_email()
-    |> to(invitation.email)
+    |> to(email)
     |> tag("existing-user-invitation")
-    |> subject("[#{Plausible.product_name()}] You've been invited to #{invitation.site.domain}")
+    |> subject("[#{Plausible.product_name()}] You've been invited to #{site.domain}")
     |> render("existing_user_invitation.html",
-      invitation: invitation
+      site: site,
+      inviter: inviter
     )
   end
 
-  def ownership_transfer_request(invitation, new_owner_account) do
+  def ownership_transfer_request(email, invitation_id, site, inviter, new_owner_account) do
     priority_email()
-    |> to(invitation.email)
+    |> to(email)
     |> tag("ownership-transfer-request")
-    |> subject(
-      "[#{Plausible.product_name()}] Request to transfer ownership of #{invitation.site.domain}"
-    )
+    |> subject("[#{Plausible.product_name()}] Request to transfer ownership of #{site.domain}")
     |> render("ownership_transfer_request.html",
-      invitation: invitation,
+      invitation_id: invitation_id,
+      inviter: inviter,
+      site: site,
       new_owner_account: new_owner_account
     )
   end
 
-  def invitation_accepted(invitation) do
+  def invitation_accepted(inviter_email, invitee_email, site) do
     priority_email()
-    |> to(invitation.inviter.email)
+    |> to(inviter_email)
     |> tag("invitation-accepted")
     |> subject(
-      "[#{Plausible.product_name()}] #{invitation.email} accepted your invitation to #{invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{invitee_email} accepted your invitation to #{site.domain}"
     )
     |> render("invitation_accepted.html",
-      user: invitation.inviter,
-      invitation: invitation
+      invitee_email: invitee_email,
+      site: site
     )
   end
 
@@ -292,16 +295,16 @@ defmodule PlausibleWeb.Email do
     )
   end
 
-  def ownership_transfer_accepted(invitation) do
+  def ownership_transfer_accepted(new_owner_email, inviter_email, site) do
     priority_email()
-    |> to(invitation.inviter.email)
+    |> to(inviter_email)
     |> tag("ownership-transfer-accepted")
     |> subject(
-      "[#{Plausible.product_name()}] #{invitation.email} accepted the ownership transfer of #{invitation.site.domain}"
+      "[#{Plausible.product_name()}] #{new_owner_email} accepted the ownership transfer of #{site.domain}"
     )
     |> render("ownership_transfer_accepted.html",
-      user: invitation.inviter,
-      invitation: invitation
+      new_owner_email: new_owner_email,
+      site: site
     )
   end
 
