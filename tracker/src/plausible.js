@@ -2,7 +2,6 @@
   'use strict';
 
   var location = window.location
-  var currentURL = location.href
   var document = window.document
 
   {{#if compat}}
@@ -32,6 +31,11 @@
   {{#if pageleave}}
   // :NOTE: Tracking pageleave events is currently experimental.
 
+  // Keeps track of the URL to be sent in the pageleave event payload.
+  // Should get updated on pageviews triggered manually with a custom
+  // URL, and on SPA navigation.
+  var currentPageLeaveURL = location.href
+
   // Multiple pageviews might be sent by the same script when the page
   // uses client-side routing (e.g. hash or history-based). This flag
   // prevents registering multiple listeners in those cases.
@@ -52,7 +56,7 @@
     var payload = {
       n: 'pageleave',
       d: dataDomain,
-      u: currentURL,
+      u: currentPageLeaveURL,
     }
 
     {{#if hash}}
@@ -115,14 +119,19 @@
 
     var payload = {}
     payload.n = eventName
-    payload.u = currentURL
-    {{#if manual}}
-    if (options && options.u) {
-      payload.u = options.u
 
-      if (isPageview) {currentURL = options.u}
-    }
+    {{#if manual}}
+    var customURL = options && options.u
+
+    {{#if pageleave}}
+    isPageview && customURL && (currentPageLeaveURL = customURL)
     {{/if}}
+
+    payload.u = customURL ? customURL : location.href
+    {{else}}
+    payload.u = location.href
+    {{/if}}
+
     payload.d = dataDomain
     payload.r = document.referrer || null
     if (options && options.meta) {
@@ -192,7 +201,7 @@
       {{#if pageleave}}
       if (isSPANavigation && listeningPageLeave) {
         triggerPageLeave();
-        currentURL = location.href;
+        currentPageLeaveURL = location.href;
       }
       {{/if}}
 
