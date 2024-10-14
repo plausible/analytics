@@ -1,6 +1,8 @@
 defmodule Plausible.Stats.Filters.QueryParser do
   @moduledoc false
 
+  use Plausible
+
   alias Plausible.Stats.{TableDecider, Filters, Metrics, DateTimeRange, JSONSchema}
 
   @default_include %{
@@ -36,7 +38,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          {:ok, include} <- parse_include(site, Map.get(params, "include", %{})),
          {:ok, pagination} <- parse_pagination(Map.get(params, "pagination", %{})),
-         preloaded_goals <- preload_goals_if_needed(site, filters, dimensions),
+         {preloaded_goals, revenue_currencies} <-
+           preload_needed_goals(site, metrics, filters, dimensions),
          query = %{
            metrics: metrics,
            filters: filters,
@@ -44,15 +47,17 @@ defmodule Plausible.Stats.Filters.QueryParser do
            dimensions: dimensions,
            order_by: order_by,
            timezone: site.timezone,
-           preloaded_goals: preloaded_goals,
            include: include,
-           pagination: pagination
+           pagination: pagination,
+           preloaded_goals: preloaded_goals,
+           revenue_currencies: revenue_currencies
          },
          :ok <- validate_order_by(query),
          :ok <- validate_custom_props_access(site, query),
          :ok <- validate_toplevel_only_filter_dimension(query),
          :ok <- validate_special_metrics_filters(query),
          :ok <- validate_filtered_goals_exist(query),
+         :ok <- validate_revenue_metrics_access(site, query),
          :ok <- validate_metrics(query),
          :ok <- validate_include(query) do
       {:ok, query}
@@ -405,14 +410,19 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  def preload_goals_if_needed(site, filters, dimensions) do
+  def preload_needed_goals(site, metrics, filters, dimensions) do
     goal_filters? =
       Enum.any?(filters, fn [_, filter_key | _rest] -> filter_key == "event:goal" end)
 
     if goal_filters? or Enum.member?(dimensions, "event:goal") do
-      Plausible.Goals.for_site(site)
+      goals = Plausible.Goals.Filters.preload_needed_goals(site, filters)
+
+      {
+        goals,
+        preload_revenue_currencies(site, goals, metrics, dimensions)
+      }
     else
-      []
+      {[], %{}}
     end
   end
 
@@ -458,6 +468,25 @@ defmodule Plausible.Stats.Filters.QueryParser do
     else
       :ok
     end
+  end
+
+  on_ee do
+    alias Plausible.Stats.Goal.Revenue
+
+    defdelegate preload_revenue_currencies(site, preloaded_goals, metrics, dimensions),
+      to: Plausible.Stats.Goal.Revenue
+
+    defp validate_revenue_metrics_access(site, query) do
+      if Revenue.requested?(query.metrics) and not Revenue.available?(site) do
+        {:error, "The owner of this site does not have access to the revenue metrics feature."}
+      else
+        :ok
+      end
+    end
+  else
+    defp preload_revenue_currencies(_site, _preloaded_goals, _metrics, _dimensions), do: %{}
+
+    defp validate_revenue_metrics_access(_site, _query), do: :ok
   end
 
   defp validate_goal_filter(clause, configured_goals) do

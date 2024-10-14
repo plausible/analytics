@@ -4,20 +4,26 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+### Removed
+### Changed
+### Fixed
+
+## v2.1.4 - 2024-10-08
+
+### Added
 
 - Add ability to review and revoke particular logged in user sessions
 - Add ability to change password from user settings screen
 - Add error logs for background jobs plausible/analytics#4657
 
-### Removed
-
 ### Changed
 
 - Revised User Settings UI
+- Default to `invite_only` for registration plausible/analytics#4616
 
 ### Fixed
 
-- Revenue metrics are displayed correctly after goal has been renamed
+- Fix cross-device file move in CSV exports/imports plausible/analytics#4640
 
 ## v2.1.3 - 2024-09-26
 

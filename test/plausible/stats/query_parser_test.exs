@@ -47,7 +47,12 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
   def check_success(params, site, expected_result, schema_type \\ :public) do
     assert {:ok, result} = parse(site, schema_type, params, @now)
+
+    return_value = Map.take(result, [:preloaded_goals, :revenue_currencies])
+    result = Map.drop(result, [:preloaded_goals, :revenue_currencies])
     assert result == expected_result
+
+    return_value
   end
 
   def check_error(params, site, expected_error_message, schema_type \\ :public) do
@@ -69,11 +74,20 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: nil,
         timezone: site.timezone,
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
+        pagination: %{limit: 10_000, offset: 0}
       }
 
     check_success(params, site, expected_parsed, schema_type)
+  end
+
+  def check_goals(actual, opts) do
+    preloaded_goal_names =
+      actual[:preloaded_goals]
+      |> Enum.map(& &1.display_name)
+      |> Enum.sort()
+
+    assert preloaded_goal_names == Keyword.get(opts, :preloaded_goals)
+    assert actual[:revenue_currencies] == Keyword.get(opts, :revenue_currencies)
   end
 
   test "parsing empty map fails", %{site: site} do
@@ -92,8 +106,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: nil,
         timezone: site.timezone,
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
+        pagination: %{limit: 10_000, offset: 0}
       })
     end
 
@@ -134,8 +147,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           order_by: nil,
           timezone: site.timezone,
           include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-          pagination: %{limit: 10_000, offset: 0},
-          preloaded_goals: []
+          pagination: %{limit: 10_000, offset: 0}
         },
         :internal
       )
@@ -201,8 +213,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             order_by: nil,
             timezone: site.timezone,
             include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-            pagination: %{limit: 10_000, offset: 0},
-            preloaded_goals: []
+            pagination: %{limit: 10_000, offset: 0}
           },
           :internal
         )
@@ -327,8 +338,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: nil,
         timezone: site.timezone,
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
+        pagination: %{limit: 10_000, offset: 0}
       })
     end
 
@@ -353,8 +363,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             order_by: nil,
             timezone: site.timezone,
             include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-            pagination: %{limit: 10_000, offset: 0},
-            preloaded_goals: []
+            pagination: %{limit: 10_000, offset: 0}
           })
         end
       end
@@ -380,8 +389,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           order_by: nil,
           timezone: site.timezone,
           include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-          pagination: %{limit: 10_000, offset: 0},
-          preloaded_goals: []
+          pagination: %{limit: 10_000, offset: 0}
         })
       end
     end
@@ -447,8 +455,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: nil,
         timezone: site.timezone,
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
+        pagination: %{limit: 10_000, offset: 0}
       })
 
       %{
@@ -467,8 +474,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: nil,
         timezone: site.timezone,
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
+        pagination: %{limit: 10_000, offset: 0}
       })
     end
 
@@ -528,8 +534,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: nil,
         timezone: site.timezone,
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
+        pagination: %{limit: 10_000, offset: 0}
       })
     end
 
@@ -576,8 +581,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: nil,
         timezone: site.timezone,
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
+        pagination: %{limit: 10_000, offset: 0}
       })
     end
 
@@ -612,8 +616,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: nil,
         timezone: site.timezone,
         include: %{imports: true, time_labels: true, total_rows: true, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
+        pagination: %{limit: 10_000, offset: 0}
       })
     end
 
@@ -676,8 +679,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             time_labels: false,
             total_rows: false
           },
-          pagination: %{limit: 10_000, offset: 0},
-          preloaded_goals: []
+          pagination: %{limit: 10_000, offset: 0}
         },
         :internal
       )
@@ -707,8 +709,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             time_labels: false,
             total_rows: false
           },
-          pagination: %{limit: 10_000, offset: 0},
-          preloaded_goals: []
+          pagination: %{limit: 10_000, offset: 0}
         },
         :internal
       )
@@ -741,8 +742,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             time_labels: false,
             total_rows: false
           },
-          pagination: %{limit: 10_000, offset: 0},
-          preloaded_goals: []
+          pagination: %{limit: 10_000, offset: 0}
         },
         :internal
       )
@@ -799,8 +799,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: nil,
         timezone: site.timezone,
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 100, offset: 200},
-        preloaded_goals: []
+        pagination: %{limit: 100, offset: 200}
       })
     end
 
@@ -1125,8 +1124,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           order_by: nil,
           timezone: site.timezone,
           include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-          pagination: %{limit: 10_000, offset: 0},
-          preloaded_goals: []
+          pagination: %{limit: 10_000, offset: 0}
         })
       end
     end
@@ -1147,8 +1145,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           order_by: nil,
           timezone: site.timezone,
           include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-          pagination: %{limit: 10_000, offset: 0},
-          preloaded_goals: []
+          pagination: %{limit: 10_000, offset: 0}
         })
       end
     end
@@ -1168,8 +1165,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: nil,
         timezone: site.timezone,
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
+        pagination: %{limit: 10_000, offset: 0}
       })
     end
 
@@ -1230,8 +1226,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: [{:events, :desc}, {:visitors, :asc}],
         timezone: site.timezone,
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
+        pagination: %{limit: 10_000, offset: 0}
       })
     end
 
@@ -1251,8 +1246,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: [{"event:name", :desc}],
         timezone: site.timezone,
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
+        pagination: %{limit: 10_000, offset: 0}
       })
     end
 
@@ -1344,45 +1338,51 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
     end
 
-    # test "succeeds with event:goal filter", %{site: site} do
-    #   insert(:goal, %{site: site, event_name: "Signup"})
+    test "succeeds with event:goal filter", %{site: site} do
+      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, event_name: "Purchase", currency: "USD"})
 
-    #   %{
-    #     "metrics" => ["conversion_rate"],
-    #     "date_range" => "all",
-    #     "filters" => [["is", "event:goal", ["Signup"]]]
-    #   }
-    #   |> check_success(site, %{
-    #     metrics: [:conversion_rate],
-    #     utc_time_range: @date_range_day,
-    #     filters: [[:is, "event:goal", [event: "Signup"]]],
-    #     dimensions: [],
-    #     order_by: nil,
-    #     timezone: site.timezone,
-    #     include: %{imports: false, time_labels: false},
-    #     preloaded_goals: [event: "Signup"]
-    #   })
-    # end
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["conversion_rate"],
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Signup"]]]
+      }
+      |> check_success(site, %{
+        metrics: [:conversion_rate],
+        utc_time_range: @date_range_day,
+        filters: [[:is, "event:goal", ["Signup"]]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+      |> check_goals(preloaded_goals: ["Signup"], revenue_currencies: %{})
+    end
 
-    # test "succeeds with event:goal dimension", %{site: site} do
-    #   goal = insert(:goal, %{site: site, event_name: "Signup"})
+    test "succeeds with event:goal dimension", %{site: site} do
+      insert(:goal, %{site: site, event_name: "Purchase", currency: "USD"})
+      insert(:goal, %{site: site, event_name: "Signup"})
 
-    #   %{
-    #     "metrics" => ["conversion_rate"],
-    #     "date_range" => "all",
-    #     "dimensions" => ["event:goal"]
-    #   }
-    #   |> check_success(site, %{
-    #     metrics: [:conversion_rate],
-    #     utc_time_range: @date_range_day,
-    #     filters: [],
-    #     dimensions: ["event:goal"],
-    #     order_by: nil,
-    #     timezone: site.timezone,
-    #     include: %{imports: false, time_labels: false},
-    #     preloaded_goals: [goal]
-    #   })
-    # end
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["conversion_rate"],
+        "date_range" => "all",
+        "dimensions" => ["event:goal"]
+      }
+      |> check_success(site, %{
+        metrics: [:conversion_rate],
+        utc_time_range: @date_range_day,
+        filters: [],
+        dimensions: ["event:goal"],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+      |> check_goals(preloaded_goals: ["Purchase", "Signup"], revenue_currencies: %{})
+    end
 
     test "custom properties filter with special metric", %{site: site} do
       %{
@@ -1402,8 +1402,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: nil,
         timezone: site.timezone,
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
+        pagination: %{limit: 10_000, offset: 0}
       })
     end
 
@@ -1423,25 +1422,27 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
   end
 
   describe "views_per_visit metric" do
-    # test "succeeds with normal filters", %{site: site} do
-    #   insert(:goal, %{site: site, event_name: "Signup"})
+    test "succeeds with normal filters", %{site: site} do
+      insert(:goal, %{site: site, event_name: "Signup"})
 
-    #   %{
-    #     "metrics" => ["views_per_visit"],
-    #     "date_range" => "all",
-    #     "filters" => [["is", "event:goal", ["Signup"]]]
-    #   }
-    #   |> check_success(site, %{
-    #     metrics: [:views_per_visit],
-    #     utc_time_range: @date_range_day,
-    #     filters: [[:is, "event:goal", [event: "Signup"]]],
-    #     dimensions: [],
-    #     order_by: nil,
-    #     timezone: site.timezone,
-    #     include: %{imports: false, time_labels: false},
-    #     preloaded_goals: [event: "Signup"]
-    #   })
-    # end
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["views_per_visit"],
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Signup"]]]
+      }
+      |> check_success(site, %{
+        metrics: [:views_per_visit],
+        utc_time_range: @date_range_day,
+        filters: [[:is, "event:goal", ["Signup"]]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+      |> check_goals(preloaded_goals: ["Signup"], revenue_currencies: %{})
+    end
 
     test "fails validation if event:page filter specified", %{site: site} do
       %{
@@ -1470,6 +1471,209 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
   end
 
+  describe "revenue metrics" do
+    @describetag :ee_only
+
+    setup %{user: user} do
+      plan =
+        insert(:enterprise_plan,
+          features: [Plausible.Billing.Feature.RevenueGoals],
+          user_id: user.id
+        )
+
+      subscription = insert(:subscription, user: user, paddle_plan_id: plan.paddle_plan_id)
+
+      {:ok, subscription: subscription}
+    end
+
+    test "not valid in public schema", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["total_revenue", "average_revenue"],
+        "date_range" => "all"
+      }
+      |> check_error(
+        site,
+        "#/metrics/0: Invalid metric \"total_revenue\"\n#/metrics/1: Invalid metric \"average_revenue\""
+      )
+    end
+
+    test "can request in internal schema", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["total_revenue", "average_revenue"],
+        "date_range" => "all"
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:total_revenue, :average_revenue],
+          utc_time_range: @date_range_day,
+          filters: [],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
+    end
+
+    test "no access", %{site: site, user: user, subscription: subscription} do
+      Repo.delete!(subscription)
+
+      plan =
+        insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
+
+      insert(:subscription, user: user, paddle_plan_id: plan.paddle_plan_id)
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["total_revenue", "average_revenue"],
+        "date_range" => "all"
+      }
+      |> check_error(
+        site,
+        "The owner of this site does not have access to the revenue metrics feature.",
+        :internal
+      )
+    end
+
+    test "with event:goal filters with same currency", %{site: site} do
+      insert(:goal,
+        site: site,
+        event_name: "Purchase",
+        currency: "USD",
+        display_name: "PurchaseUSD"
+      )
+
+      insert(:goal, site: site, event_name: "Subscription", currency: "USD")
+      insert(:goal, site: site, event_name: "Signup")
+      insert(:goal, site: site, event_name: "Logout")
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["total_revenue", "average_revenue"],
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["PurchaseUSD", "Signup", "Subscription"]]]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:total_revenue, :average_revenue],
+          utc_time_range: @date_range_day,
+          filters: [[:is, "event:goal", ["PurchaseUSD", "Signup", "Subscription"]]],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
+      |> check_goals(
+        preloaded_goals: ["PurchaseUSD", "Signup", "Subscription"],
+        revenue_currencies: %{default: :USD}
+      )
+    end
+
+    test "with event:goal filters with different currencies", %{site: site} do
+      insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+      insert(:goal, site: site, event_name: "Subscription", currency: "EUR")
+      insert(:goal, site: site, event_name: "Signup")
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["total_revenue", "average_revenue"],
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Purchase", "Signup", "Subscription"]]]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:total_revenue, :average_revenue],
+          utc_time_range: @date_range_day,
+          filters: [[:is, "event:goal", ["Purchase", "Signup", "Subscription"]]],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
+      |> check_goals(
+        preloaded_goals: ["Purchase", "Signup", "Subscription"],
+        revenue_currencies: %{}
+      )
+    end
+
+    test "with event:goal dimension, different currencies", %{site: site} do
+      insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+      insert(:goal, site: site, event_name: "Donation", currency: "EUR")
+      insert(:goal, site: site, event_name: "Signup")
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["total_revenue", "average_revenue"],
+        "date_range" => "all",
+        "dimensions" => ["event:goal"]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:total_revenue, :average_revenue],
+          utc_time_range: @date_range_day,
+          filters: [],
+          dimensions: ["event:goal"],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
+      |> check_goals(
+        preloaded_goals: ["Donation", "Purchase", "Signup"],
+        revenue_currencies: %{"Donation" => :EUR, "Purchase" => :USD}
+      )
+    end
+
+    test "with event:goal dimension and filters", %{site: site} do
+      insert(:goal, site: site, event_name: "Purchase", currency: "USD")
+      insert(:goal, site: site, event_name: "Subscription", currency: "USD")
+      insert(:goal, site: site, event_name: "Signup")
+      insert(:goal, site: site, event_name: "Logout")
+
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["total_revenue", "average_revenue"],
+        "date_range" => "all",
+        "dimensions" => ["event:goal"],
+        "filters" => [["is", "event:goal", ["Purchase", "Signup"]]]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:total_revenue, :average_revenue],
+          utc_time_range: @date_range_day,
+          filters: [[:is, "event:goal", ["Purchase", "Signup"]]],
+          dimensions: ["event:goal"],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
+      |> check_goals(
+        preloaded_goals: ["Purchase", "Signup"],
+        revenue_currencies: %{"Purchase" => :USD}
+      )
+    end
+  end
+
   describe "session metrics" do
     test "single session metric succeeds", %{site: site} do
       %{
@@ -1486,8 +1690,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: nil,
         timezone: site.timezone,
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
+        pagination: %{limit: 10_000, offset: 0}
       })
     end
 
@@ -1519,8 +1722,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: nil,
         timezone: site.timezone,
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
+        pagination: %{limit: 10_000, offset: 0}
       })
     end
 
@@ -1539,8 +1741,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         order_by: nil,
         timezone: site.timezone,
         include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
-        pagination: %{limit: 10_000, offset: 0},
-        preloaded_goals: []
+        pagination: %{limit: 10_000, offset: 0}
       })
     end
   end
