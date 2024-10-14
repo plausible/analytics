@@ -1,0 +1,7 @@
+<%= @invitation.email %> has rejected your invitation to <%= @invitation.site.domain %>.
+<.unstyled_link href={
+  Routes.site_url(PlausibleWeb.Endpoint, :settings_general, @invitation.site.domain)
+}>
+  Click here
+</.unstyled_link>
+to view site settings.

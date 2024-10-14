@@ -1,9 +1,0 @@
-<div class="container flex flex-col items-center text-center mt-24">
-  <h1 class="text-5xl font-black dark:text-gray-100"><%= @status %></h1>
-  <div class="mt-4 text-xl dark:text-gray-100">Oops! There's nothing here</div>
-  <div class="text-xl dark:text-gray-100">Trying to access your dashboard? You may need to log in again to see it</div>
-  <div class="mt-6 flex">
-    <%= link("Login", to: Routes.auth_path(@conn, :login_form), class: "button") %>
-    <%= link("Go to homepage", to: PlausibleWeb.LayoutView.home_dest(@conn), class: "button button-outline ml-2") %>
-  </div>
-</div>
