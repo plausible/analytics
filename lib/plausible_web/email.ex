@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.Email do
   use Plausible
-  use Bamboo.Phoenix, view: PlausibleWeb.EmailView
+  import Bamboo.Email
   import Bamboo.PostmarkHelper
 
   def mailer_email_from do
@@ -460,7 +460,50 @@ defmodule PlausibleWeb.Email do
 
   defp maybe_put_layout(email, nil), do: email
 
-  defp maybe_put_layout(email, layout) do
-    put_html_layout(email, {PlausibleWeb.LayoutView, layout})
+  defp maybe_put_layout(%{assigns: assigns} = email, layout) do
+    %{email | assigns: Map.put(assigns, :layout, {PlausibleWeb.LayoutView, layout})}
+  end
+
+  @doc false
+  def render(email, template, assigns \\ []) do
+    assigns = Map.merge(email.assigns, Map.new(assigns))
+    html = Phoenix.View.render_to_string(PlausibleWeb.EmailView, template, assigns)
+
+    on_ee do
+      email |> html_body(html)
+    else
+      email |> html_body(html) |> text_body(textify(html))
+    end
+  end
+
+  on_ce do
+    defp textify(html) do
+      html
+      |> Floki.parse_document!()
+      |> Floki.traverse_and_update(&textify_link/1)
+      |> Floki.text()
+    end
+
+    defp textify_link(node) do
+      case node do
+        {"a", attrs, children} ->
+          {"href", href} = List.keyfind!(attrs, "href", 0)
+          text = Floki.text(children)
+
+          text_and_link =
+            if text == href do
+              # avoids rendering "http://localhost:8000 (http://localhost:8000)"
+              # e.g. in base_email footer
+              text
+            else
+              IO.iodata_to_binary([text, " (", href, ?)])
+            end
+
+          {"p", attrs, [text_and_link]}
+
+        _ ->
+          node
+      end
+    end
   end
 end

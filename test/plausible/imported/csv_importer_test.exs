@@ -541,6 +541,11 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert email.html_body =~
                ~s[Please click <a href="http://localhost:8000/#{URI.encode_www_form(exported_site.domain)}/download/export">here</a> to start the download process.]
 
+      if Plausible.ce?() do
+        assert email.text_body =~
+                 ~r[Please click here \(http://localhost:8000/#{URI.encode_www_form(exported_site.domain)}/download/export\) to start the download process.]
+      end
+
       # download archive
       on_ee do
         ExAws.request!(

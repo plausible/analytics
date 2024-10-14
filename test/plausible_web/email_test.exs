@@ -13,6 +13,10 @@ defmodule PlausibleWeb.EmailTest do
         })
 
       assert email.html_body =~ "Hey John,"
+
+      if Plausible.ce?() do
+        assert email.text_body =~ "Hey John,"
+      end
     end
 
     test "greets impersonally when user not in template assigns" do
@@ -21,6 +25,10 @@ defmodule PlausibleWeb.EmailTest do
         |> Email.render("welcome_email.html")
 
       assert email.html_body =~ "Hey,"
+
+      if Plausible.ce?() do
+        assert email.text_body =~ "Hey,"
+      end
     end
 
     test "renders plausible link" do
@@ -29,6 +37,10 @@ defmodule PlausibleWeb.EmailTest do
         |> Email.render("welcome_email.html")
 
       assert email.html_body =~ plausible_link()
+
+      if Plausible.ce?() do
+        assert email.text_body =~ plausible_url()
+      end
     end
 
     @tag :ee_only
@@ -49,6 +61,11 @@ defmodule PlausibleWeb.EmailTest do
 
       refute email.html_body =~ "Hey John,"
       refute email.html_body =~ plausible_link()
+
+      if Plausible.ce?() do
+        refute email.text_body =~ "Hey John,"
+        refute email.text_body =~ plausible_url()
+      end
     end
   end
 
@@ -73,6 +90,10 @@ defmodule PlausibleWeb.EmailTest do
         })
 
       assert email.html_body =~ "Hey John,"
+
+      if Plausible.ce?() do
+        assert email.text_body =~ "Hey John,"
+      end
     end
 
     test "greets impersonally when user not in template assigns" do
@@ -83,6 +104,10 @@ defmodule PlausibleWeb.EmailTest do
         })
 
       assert email.html_body =~ "Hey,"
+
+      if Plausible.ce?() do
+        assert email.text_body =~ "Hey,"
+      end
     end
 
     test "renders plausible link" do
@@ -93,6 +118,10 @@ defmodule PlausibleWeb.EmailTest do
         })
 
       assert email.html_body =~ plausible_link()
+
+      if Plausible.ce?() do
+        assert email.text_body =~ plausible_url()
+      end
     end
 
     test "does not render unsubscribe placeholder" do
@@ -114,6 +143,11 @@ defmodule PlausibleWeb.EmailTest do
 
       refute email.html_body =~ "Hey John,"
       refute email.html_body =~ plausible_link()
+
+      if Plausible.ce?() do
+        refute email.text_body =~ "Hey John,"
+        refute email.text_body =~ plausible_url()
+      end
     end
   end
 
@@ -308,8 +342,12 @@ defmodule PlausibleWeb.EmailTest do
     end
   end
 
+  def plausible_url do
+    PlausibleWeb.EmailView.plausible_url()
+  end
+
   def plausible_link() do
-    plausible_url = PlausibleWeb.EmailView.plausible_url()
+    plausible_url = plausible_url()
     "<a href=\"#{plausible_url}\">#{plausible_url}</a>"
   end
 end
