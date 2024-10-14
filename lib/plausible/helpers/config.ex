@@ -31,17 +31,23 @@ defmodule Plausible.ConfigHelpers do
     end
   end
 
+  @var_true ["1", "t", "true", "y", "yes", "on"]
+  @var_false ["0", "f", "false", "n", "no", "off"]
+  @var_bool_message Enum.zip_with(@var_true, @var_false, fn t, f -> [t, f] end)
+                    |> List.flatten()
+                    |> Enum.join(", ")
+
   defp parse_bool(var) do
     case String.downcase(var) do
-      t when t in ["1", "t", "true", "y", "yes", "on"] ->
+      t when t in @var_true ->
         true
 
-      f when f in ["0", "f", "false", "n", "no", "off"] ->
+      f when f in @var_false ->
         false
 
       _ ->
         raise ArgumentError,
-              "Invalid boolean value: #{inspect(var)}. Expected one of: 1, 0, t, f, true, false, y, n, on, off"
+              "Invalid boolean value: #{inspect(var)}. Expected one of: " <> @var_bool_message
     end
   end
 end
