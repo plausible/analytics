@@ -1,10 +1,9 @@
 defmodule PlausibleWeb.Components.Billing.Notice do
   @moduledoc false
 
-  use Phoenix.Component
+  use PlausibleWeb, :component
+
   require Plausible.Billing.Subscription.Status
-  import PlausibleWeb.Components.Generic
-  alias PlausibleWeb.Router.Helpers, as: Routes
   alias Plausible.Auth.User
   alias Plausible.Billing.{Subscription, Plans, Subscriptions, Feature}
 
