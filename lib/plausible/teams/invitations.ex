@@ -1,6 +1,8 @@
 defmodule Plausible.Teams.Invitations do
   @moduledoc false
 
+  import Ecto.Query
+
   alias Plausible.Auth
   alias Plausible.Billing
   alias Plausible.Repo
@@ -71,7 +73,12 @@ defmodule Plausible.Teams.Invitations do
     with :ok <- ensure_transfer_valid(site.team, new_owner),
          {:ok, team} <- Teams.get_or_create(new_owner),
          :ok <- ensure_can_take_ownership(site, team) do
-      site = Repo.preload(site, guest_memberships: [team_membership: :user])
+      site =
+        Repo.preload(site, [
+          :owner,
+          guest_memberships: [team_membership: :user],
+          guest_invitations: [team_invitation: :user]
+        ])
 
       {:ok, _} =
         Repo.transaction(fn ->
@@ -86,7 +93,13 @@ defmodule Plausible.Teams.Invitations do
 
   def transfer_site_sync(site, user) do
     {:ok, team} = Plausible.Teams.get_or_create(user)
-    site = Repo.preload(site, [:owner, guest_memberships: [team_membership: :user]])
+
+    site =
+      Repo.preload(site, [
+        :owner,
+        guest_memberships: [team_membership: :user],
+        guest_invitations: [team_invitation: :user]
+      ])
 
     {:ok, _} =
       Repo.transaction(fn ->
@@ -272,6 +285,24 @@ defmodule Plausible.Teams.Invitations do
     |> Ecto.Changeset.change(team_id: team.id)
     |> Repo.update!()
 
+    {_old_team_invitations, old_guest_invitations} =
+      site.guest_invitations
+      |> Enum.map(fn old_guest_invitation ->
+        old_team_invitation = old_guest_invitation.team_invitation
+
+        {:ok, new_team_invitation} =
+          create_team_invitation(team, old_team_invitation.email, now)
+
+        {:ok, _new_guest_invitation} =
+          create_guest_invitation(new_team_invitation, site, old_guest_invitation.role)
+
+        {old_team_invitation, old_guest_invitation}
+      end)
+      |> Enum.unzip()
+
+    old_guest_ids = Enum.map(old_guest_invitations, & &1.id)
+    :ok = prune_guest_invitations(prior_team, ignore_guest_ids: old_guest_ids)
+
     {_old_team_memberships, old_guest_memberships} =
       site.guest_memberships
       |> Enum.map(fn old_guest_membership ->
@@ -312,6 +343,29 @@ defmodule Plausible.Teams.Invitations do
     end
 
     # TODO: Update site lock status with SiteLocker
+
+    :ok
+  end
+
+  def prune_guest_invitations(team, opts \\ []) do
+    ignore_guest_ids = Keyword.get(opts, :ignore_guest_ids, [])
+
+    guest_query =
+      from(
+        gi in Teams.GuestInvitation,
+        where: gi.team_invitation_id == parent_as(:team_invitation).id,
+        where: gi.id not in ^ignore_guest_ids,
+        select: true
+      )
+
+    Repo.delete_all(
+      from(
+        ti in Teams.Invitation,
+        as: :team_invitation,
+        where: ti.team_id == ^team.id and ti.role == :guest,
+        where: not exists(guest_query)
+      )
+    )
 
     :ok
   end
