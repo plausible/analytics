@@ -169,9 +169,7 @@
     <%= if @login_link do %>
       <mj-section>
         <mj-column>
-          <mj-button href={
-            PlausibleWeb.Router.Helpers.auth_url(PlausibleWeb.Endpoint, :login_form)
-          }>
+        <mj-button href="<%= PlausibleWeb.Router.Helpers.auth_url(PlausibleWeb.Endpoint, :login_form) %>">
             Login to view your dashboard
           </mj-button>
         </mj-column>
@@ -186,7 +184,7 @@
     <mj-section padding="0">
       <mj-column>
         <mj-text mj-class="text-sm" padding="0 25px 25px 25px">
-          Don't want to receive these e-mails? <a href={@unsubscribe_link}>Click here</a>
+        Don't want to receive these e-mails? <a href="<%= @unsubscribe_link %>">Click here</a>
           to unsubscribe.
         </mj-text>
       </mj-column>
