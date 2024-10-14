@@ -4,9 +4,6 @@ defmodule PlausibleWeb.Live.RegisterForm do
   """
 
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
-  import PlausibleWeb.Live.Components.Form
-  import PlausibleWeb.Components.Generic
 
   alias Plausible.Auth
   alias Plausible.Repo
@@ -52,11 +49,9 @@ defmodule PlausibleWeb.Live.RegisterForm do
       <h2 class="text-xl font-black dark:text-gray-100">Invitation expired</h2>
 
       <p class="mt-4">
-        Your invitation has expired or been revoked. Please request fresh one or you can <%= link(
-          "sign up",
-          class: "text-indigo-600 hover:text-indigo-900",
-          to: Routes.auth_path(@socket, :register_form)
-        ) %> for a 30-day unlimited free trial without an invitation.
+        Your invitation has expired or been revoked. Please request fresh one or you can
+        <.styled_link href={Routes.auth_path(@socket, :register_form)}>sign up</.styled_link>
+        for a 30-day unlimited free trial without an invitation.
       </p>
     </div>
     """
@@ -88,7 +83,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
       current_step="Register"
     />
 
-    <PlausibleWeb.Components.Generic.focus_box>
+    <.focus_box>
       <:title>
         Enter your details
       </:title>
@@ -179,14 +174,9 @@ defmodule PlausibleWeb.Live.RegisterForm do
           else
             "Start my free trial"
           end %>
-        <PlausibleWeb.Components.Generic.button
-          id="register"
-          disabled={@disable_submit}
-          type="submit"
-          class="mt-4 w-full"
-        >
+        <.button id="register" disabled={@disable_submit} type="submit" class="mt-4 w-full">
           <%= submit_text %>
-        </PlausibleWeb.Components.Generic.button>
+        </.button>
 
         <p class="text-center text-gray-600 dark:text-gray-500  mt-4">
           Already have an account?
@@ -195,7 +185,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
           </.styled_link>
         </p>
       </.form>
-    </PlausibleWeb.Components.Generic.focus_box>
+    </.focus_box>
     """
   end
 

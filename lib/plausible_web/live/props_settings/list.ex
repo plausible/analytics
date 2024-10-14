@@ -2,9 +2,7 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
   @moduledoc """
   Phoenix LiveComponent module that renders a list of custom properties
   """
-  use Phoenix.LiveComponent
-  use Phoenix.HTML
-  import PlausibleWeb.Components.Generic
+  use PlausibleWeb, :live_component
 
   attr(:props, :list, required: true)
   attr(:domain, :string, required: true)
