@@ -17,11 +17,7 @@
   </div>
 
   <div class="mt-6">
-    <%= styled_label(
-      f,
-      :property,
-      "Google Analytics property"
-    ) %>
+    <.label for={f[:property].id}>Google Analytics property</.label>
     <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
       <%= @selected_property_name %>
     </span>
@@ -29,7 +25,7 @@
   </div>
   <div class="flex justify-between mt-3">
     <div class="w-36">
-      <%= styled_label(f, :start_date, "From") %>
+      <.label for={f[:start_date].id}>From</.label>
       <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
         <%= PlausibleWeb.EmailView.date_format(@start_date) %>
       </span>
@@ -37,7 +33,7 @@
     </div>
     <div class="align-middle pt-4 dark:text-gray-100">&rarr;</div>
     <div class="w-36">
-      <%= styled_label(f, :end_date, "To") %>
+      <.label for={f[:end_date].id}>To</.label>
       <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
         <%= PlausibleWeb.EmailView.date_format(@end_date) %>
       </span>
