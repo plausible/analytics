@@ -2,19 +2,7 @@ import { hasGoalFilter } from "../../util/filters"
 import numberFormatter, { durationFormatter, percentageFormatter } from "../../util/number-formatter"
 import React from "react"
 import MetricEntry from "./metric-entry"
-
-/*global BUILD_EXTRA*/
-/*global require*/
-function maybeRequire() {
-  if (BUILD_EXTRA) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require('../../extra/money')
-  } else {
-    return { default: null }
-  }
-}
-
-const Money = maybeRequire().default
+import { formatMoney  } from "../../util/money"
 
 // Class representation of a metric.
 
@@ -103,13 +91,13 @@ export const createEvents = (props) => {
 }
 
 export const createTotalRevenue = (props) => {
-  const renderValue = withComparisonTooltip((value) => <Money formatted={value} />)
+  const renderValue = withComparisonTooltip(formatMoney)
   const renderLabel = (_query) => "Revenue"
   return new Metric({width: 'w-24', ...props, key: "total_revenue", renderValue, renderLabel, sortable: true})
 }
 
 export const createAverageRevenue = (props) => {
-  const renderValue = withComparisonTooltip((value) => <Money formatted={value} />)
+  const renderValue = withComparisonTooltip(formatMoney)
   const renderLabel = (_query) => "Average"
   return new Metric({width: 'w-24', ...props, key: "average_revenue", renderValue, renderLabel, sortable: true})
 }
