@@ -111,7 +111,7 @@ defmodule Plausible.Goals do
   def list_revenue_goals(site) do
     from(g in Plausible.Goal,
       where: g.site_id == ^site.id and not is_nil(g.currency),
-      select: %{event_name: g.event_name, currency: g.currency}
+      select: %{display_name: g.display_name, currency: g.currency}
     )
     |> Plausible.Repo.all()
   end
