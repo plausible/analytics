@@ -199,7 +199,7 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site, params, debug_metadata(conn))
 
     {top_stats, sample_percent} = fetch_top_stats(site, query)
-    comparison_query = comparison_query(site, query)
+    comparison_query = comparison_query(query)
 
     json(conn, %{
       top_stats: top_stats,
@@ -1525,7 +1525,7 @@ defmodule PlausibleWeb.Api.StatsController do
     |> halt()
   end
 
-  def comparison_query(site, query) do
+  def comparison_query(query) do
     if query.include.comparisons do
       Comparisons.get_comparison_query(query, query.include.comparisons)
     end
