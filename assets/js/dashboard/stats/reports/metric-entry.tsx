@@ -43,7 +43,7 @@ export default function MetricEntry({ listItem, metric, formatter }: { listItem:
         }
       >
         {formatter(value)}
-        {comparison ? <ChangeArrow change={comparison.change} metric={metric} className="pl-2 text-xs text-gray-100" /> : null}
+        {comparison ? <ChangeArrow change={comparison.change} metric={metric} className="pl-2" hideNumber /> : null}
       </Tooltip>
     </div>
   )

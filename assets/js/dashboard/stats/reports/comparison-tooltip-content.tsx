@@ -14,26 +14,26 @@ export function ComparisonTooltipContent({
 }
 
 
-export function ChangeArrow({ change, metric, className }: { change: number, metric: Metric, className: string }) {
-  const formattedChange = numberFormatter(Math.abs(change))
+export function ChangeArrow({ change, metric, className, hideNumber }: { change: number, metric: Metric, className: string, hideNumber?: boolean }) {
+  const formattedChange = hideNumber ? null : ` ${numberFormatter(Math.abs(change))}%`
 
   if (change > 0) {
     const color = metric === 'bounce_rate' ? 'text-red-400' : 'text-green-500'
     return (
       <span className={className}>
-        <span className={color + ' font-bold'}>&uarr;</span>{' '}
-        {formattedChange}%
+        <span className={color + ' font-bold'}>&uarr;</span>
+        {formattedChange}
       </span>
     )
   } else if (change < 0) {
     const color = metric === 'bounce_rate' ? 'text-green-500' : 'text-red-400'
     return (
       <span className={className}>
-        <span className={color + ' font-bold'}>&darr;</span>{' '}
-        {formattedChange}%
+        <span className={color + ' font-bold'}>&darr;</span>
+        {formattedChange}
       </span>
     )
   } else if (change === 0) {
-    return <span className={className}>&#12336; 0%</span>
+    return <span className={className}>&#12336;{formattedChange}</span>
   }
 }
