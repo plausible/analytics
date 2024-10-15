@@ -86,7 +86,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
 
   function canMetricBeGraphed(stat) {
     const graphableMetrics = getGraphableMetrics(query, site)
-    return stat.graph_metric && graphableMetrics.includes(stat.graph_metric)
+    return graphableMetrics.includes(stat.graph_metric)
   }
 
   function maybeUpdateMetric(stat) {

@@ -375,21 +375,15 @@ defmodule PlausibleWeb.Api.StatsController do
 
     [
       top_stats_entry(results, "Unique visitors", :total_visitors),
-      top_stats_entry(results, "Unique conversions", :visitors, graphable?: true),
-      top_stats_entry(results, "Total conversions", :events, graphable?: true),
+      top_stats_entry(results, "Unique conversions", :visitors),
+      top_stats_entry(results, "Total conversions", :events),
       on_ee do
-        top_stats_entry(results, "Average revenue", :average_revenue,
-          formatter: &format_money/1,
-          graphable?: true
-        )
+        top_stats_entry(results, "Average revenue", :average_revenue, formatter: &format_money/1)
       end,
       on_ee do
-        top_stats_entry(results, "Total revenue", :total_revenue,
-          formatter: &format_money/1,
-          graphable?: true
-        )
+        top_stats_entry(results, "Total revenue", :total_revenue, formatter: &format_money/1)
       end,
-      top_stats_entry(results, "Conversion rate", :conversion_rate, graphable?: true)
+      top_stats_entry(results, "Conversion rate", :conversion_rate)
     ]
     |> Enum.reject(&is_nil/1)
     |> then(&{&1, 100})
@@ -411,12 +405,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
     stats =
       [
-        top_stats_entry(current_results, "Unique visitors", :visitors, graphable?: true),
-        top_stats_entry(current_results, "Total visits", :visits, graphable?: true),
-        top_stats_entry(current_results, "Total pageviews", :pageviews, graphable?: true),
-        top_stats_entry(current_results, "Views per visit", :views_per_visit, graphable?: true),
-        top_stats_entry(current_results, "Bounce rate", :bounce_rate, graphable?: true),
-        top_stats_entry(current_results, "Visit duration", :visit_duration, graphable?: true),
+        top_stats_entry(current_results, "Unique visitors", :visitors),
+        top_stats_entry(current_results, "Total visits", :visits),
+        top_stats_entry(current_results, "Total pageviews", :pageviews),
+        top_stats_entry(current_results, "Views per visit", :views_per_visit),
+        top_stats_entry(current_results, "Bounce rate", :bounce_rate),
+        top_stats_entry(current_results, "Visit duration", :visit_duration),
         top_stats_entry(current_results, "Time on page", :time_on_page,
           formatter: fn
             nil -> 0
@@ -434,17 +428,8 @@ defmodule PlausibleWeb.Api.StatsController do
       formatter = Keyword.get(opts, :formatter, & &1)
       value = get_in(current_results, [key, :value])
 
-      %{name: name, value: formatter.(value)}
-      |> maybe_put_graph_metric(opts, key)
+      %{name: name, value: formatter.(value), graph_metric: key}
       |> maybe_put_comparison(current_results, key, formatter)
-    end
-  end
-
-  defp maybe_put_graph_metric(entry, opts, key) do
-    if Keyword.get(opts, :graphable?) do
-      entry |> Map.put(:graph_metric, key)
-    else
-      entry
     end
   end
 
