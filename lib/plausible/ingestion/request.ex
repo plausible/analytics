@@ -295,6 +295,8 @@ defmodule Plausible.Ingestion.Request do
     sanitize_hostname(hostname)
   end
 
+  def sanitize_hostname("(none)"), do: "(none)"
+
   def sanitize_hostname(hostname) when is_binary(hostname) do
     hostname
     |> String.trim()
