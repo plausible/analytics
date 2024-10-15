@@ -43,7 +43,9 @@ export class Metric {
     this.width = props.width ?? 'w-24'
 
     this.formatter = props.formatter || MetricFormatter[this.key]
-    this.renderValue = withComparisonTooltip(this.formatter)
+    this.renderValue = (listItem, metric) => {
+      return <MetricEntry listItem={listItem} metric={metric} formatter={this.formatter} />
+    }
   }
 }
 
@@ -130,10 +132,4 @@ export const createTimeOnPage = (props) => {
 export const createExitRate = (props) => {
   const renderLabel = (_query) => "Exit Rate"
   return new Metric({width: 'w-28', ...props, key: "exit_rate", renderLabel, sortable: false})
-}
-
-function withComparisonTooltip(formatter) {
-  return (listItem, metric) => {
-    return <MetricEntry listItem={listItem} metric={metric} formatter={formatter} />
-  }
 }
