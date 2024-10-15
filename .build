@@ -295,7 +295,6 @@ PlausibleWeb.Favicon.html
 PlausibleWeb.FirstLaunchPlug.Test.html
 PlausibleWeb.FirstLaunchPlug.html
 PlausibleWeb.Flows.html
-PlausibleWeb.FormHelpers.html
 PlausibleWeb.GoogleAnalyticsController.html
 PlausibleWeb.GoogleAnalyticsView.html
 PlausibleWeb.HelpScoutController.html
@@ -445,8 +444,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-CBE782B3.js
-dist/sidebar_items-6CA46EE5.js
+dist/search_data-1DABBC79.js
+dist/sidebar_items-6AAA6143.js
 index.html
 readme.html
 search.html
