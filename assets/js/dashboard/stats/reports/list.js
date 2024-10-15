@@ -265,6 +265,8 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
 
   function renderMetricValuesFor(listItem) {
     return getAvailableMetrics().map((metric) => {
+      const metricLabel = metric.renderLabel(query)
+
       return (
         <div
           key={`${listItem.name}__${metric.key}`}
@@ -272,7 +274,7 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
           style={{ width: colMinWidth, minWidth: colMinWidth }}
         >
           <span className="font-medium text-sm dark:text-gray-200 text-right">
-            {metric.renderValue(listItem, metric.key)}
+            {metric.renderValue(listItem, metric.key, metricLabel)}
           </span>
         </div>
       )

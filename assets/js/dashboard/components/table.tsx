@@ -9,7 +9,7 @@ export type ColumnConfiguraton<T extends Record<string, unknown>> = {
   /** Unique column ID, used for sorting purposes and to get the value of the cell using rowItem[key] */
   key: keyof T
   /** Column title */
-  label: ReactNode
+  label: string
   /** If defined, the column is considered sortable. @see SortButton */
   onSort?: () => void
   sortDirection?: SortDirection
@@ -20,7 +20,7 @@ export type ColumnConfiguraton<T extends Record<string, unknown>> = {
   /**
    * Function used to transform the value found at item[key] for the cell. Superseded by renderItem if present. @example 1120 => "1.1k"
    */
-  renderValue?: (item: T, key: keyof T) => ReactNode
+  renderValue?: (item: T, key: keyof T, label: string) => ReactNode
   /** Function used to create richer cells */
   renderItem?: (item: T) => ReactNode
 }
@@ -76,7 +76,7 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
 }) => {
   return (
     <tr className="text-sm dark:text-gray-200">
-      {columns.map(({ key, width, align, renderValue, renderItem }) => (
+      {columns.map(({ key, width, align, label, renderValue, renderItem }) => (
         <TableCell
           key={`${(pageIndex ?? null) === null ? '' : `page_${pageIndex}_`}row_${rowIndex}_${String(key)}`}
           className={width}
@@ -85,7 +85,7 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
           {renderItem
             ? renderItem(item)
             : renderValue
-              ? renderValue(item, key)
+              ? renderValue(item, key, label)
               : (item[key] ?? '')}
         </TableCell>
       ))}

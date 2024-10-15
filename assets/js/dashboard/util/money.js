@@ -6,7 +6,7 @@ export function formatMoney(value) {
 
 export default function Money({ formatted }) {
   if (formatted) {
-    return <span tooltip={formatted.long}>{formatted.short}</span>
+    return <span>{formatted.short}</span>
   } else {
     return "-"
   }

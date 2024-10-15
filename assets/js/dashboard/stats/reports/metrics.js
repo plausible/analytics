@@ -19,7 +19,7 @@ import MetricFormatter from "./metric-formatter"
 //   and returns the "rendered" version of it. Can be JSX or a string.
 
 // * `renderLabel` - a function rendering a label for this metric given a
-//   query argument. Can return JSX or string.
+//   query argument. Returns string.
 
 // ### Optional props
 
@@ -43,8 +43,8 @@ export class Metric {
     this.width = props.width ?? 'w-24'
 
     this.formatter = props.formatter || MetricFormatter[this.key]
-    this.renderValue = (listItem, metric) => {
-      return <MetricEntry listItem={listItem} metric={metric} formatter={this.formatter} />
+    this.renderValue = (listItem, metric, metricLabel) => {
+      return <MetricEntry listItem={listItem} metric={metric} metricLabel={metricLabel} formatter={this.formatter} />
     }
   }
 }
