@@ -12,6 +12,7 @@ import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { useLastLoadContext } from '../../last-load-context'
 import { ChangeArrow } from '../reports/comparison-tooltip-content'
+import MetricFormatter from '../reports/metric-formatter'
 
 function Maybe({ condition, children }) {
   if (condition) {
@@ -35,18 +36,9 @@ function topStatNumberShort(name, value) {
   }
 }
 
-function topStatNumberLong(name, value) {
-  if (['visit duration', 'time on page'].includes(name.toLowerCase())) {
-    return durationFormatter(value)
-  } else if (['bounce rate', 'conversion rate'].includes(name.toLowerCase())) {
-    return value + '%'
-  } else if (
-    ['average revenue', 'total revenue'].includes(name.toLowerCase())
-  ) {
-    return value?.long
-  } else {
-    return (value || 0).toLocaleString()
-  }
+function topStatNumberLong(metric, value) {
+  const formatter = MetricFormatter[metric]
+  return formatter(value)
 }
 
 export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
@@ -62,15 +54,15 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
       <div>
         {query.comparison && (
           <div className="whitespace-nowrap">
-            {topStatNumberLong(stat.name, stat.value)} vs.{' '}
-            {topStatNumberLong(stat.name, stat.comparison_value)} {statName}
+            {topStatNumberLong(stat.graph_metric, stat.value)} vs.{' '}
+            {topStatNumberLong(stat.graph_metric, stat.comparison_value)} {statName}
             <ChangeArrow metric={stat.graph_metric} change={stat.change} className="pl-4 text-xs text-gray-100" />
           </div>
         )}
 
         {!query.comparison && (
           <div className="whitespace-nowrap">
-            {topStatNumberLong(stat.name, stat.value)} {statName}
+            {topStatNumberLong(stat.graph_metric, stat.value)} {statName}
           </div>
         )}
 
