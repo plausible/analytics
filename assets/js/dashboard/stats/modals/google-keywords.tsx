@@ -8,8 +8,7 @@ import { useSiteContext } from '../../site-context'
 import { usePaginatedGetAPI } from '../../hooks/api-client'
 import {
   createVisitors,
-  Metric,
-  renderNumberWithTooltip
+  Metric
 } from '../reports/metrics'
 import numberFormatter, {
   percentageFormatter
@@ -33,21 +32,21 @@ const metrics = [
     width: 'w-28',
     key: 'impressions',
     renderLabel: () => 'Impressions',
-    renderValue: renderNumberWithTooltip,
+    formatter: numberFormatter,
     sortable: false
   }),
   new Metric({
     width: 'w-16',
     key: 'ctr',
     renderLabel: () => 'CTR',
-    renderValue: percentageFormatter,
+    formatter: percentageFormatter,
     sortable: false
   }),
   new Metric({
     width: 'w-28',
     key: 'position',
     renderLabel: () => 'Position',
-    renderValue: numberFormatter,
+    formatter: numberFormatter,
     sortable: false
   })
 ]
