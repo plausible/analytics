@@ -1,3 +1,0 @@
-<%= @invitation.inviter.email %> has invited you to the <%= @invitation.site.domain %> site on <%= Plausible.product_name() %>.
-<%= link("Click here", to: Routes.site_url(PlausibleWeb.Endpoint, :index)) %> to view and respond to the invitation. The invitation
-will expire 48 hours after this email is sent.

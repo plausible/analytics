@@ -123,7 +123,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                 </p>
               </div>
 
-              <PlausibleWeb.Components.Generic.button
+              <.button
                 id="save"
                 type="submit"
                 class="w-full"
@@ -133,7 +133,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                 }
               >
                 <span><%= if @funnel, do: "Update", else: "Add" %> Funnel</span>
-              </PlausibleWeb.Components.Generic.button>
+              </.button>
             </div>
           </.form>
         </div>

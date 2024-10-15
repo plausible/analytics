@@ -36,8 +36,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   ComboBox own test suite, so there is no need for additional
   verification.
   """
-  use Phoenix.LiveComponent, global_prefixes: ~w(x-)
-  alias Phoenix.LiveView.JS
+  use PlausibleWeb, :live_component
 
   @default_suggestions_limit 15
 
@@ -115,11 +114,8 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
             required={@required}
           />
 
-          <PlausibleWeb.Components.Generic.spinner class="spinner hidden absolute inset-y-3 right-8" />
-          <PlausibleWeb.Components.Generic.spinner
-            x-show="selectionInProgress"
-            class="spinner absolute inset-y-3 right-8"
-          />
+          <.spinner class="spinner hidden absolute inset-y-3 right-8" />
+          <.spinner x-show="selectionInProgress" class="spinner absolute inset-y-3 right-8" />
 
           <.dropdown_anchor id={@id} />
 
@@ -133,7 +129,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
           />
         </div>
 
-        <.dropdown
+        <.combo_dropdown
           ref={@id}
           suggest_fun={@suggest_fun}
           suggestions={@suggestions}
@@ -176,7 +172,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:creatable, :boolean, required: true)
   attr(:display_value, :string, required: true)
 
-  def dropdown(assigns) do
+  def combo_dropdown(assigns) do
     ~H"""
     <ul
       tabindex="-1"

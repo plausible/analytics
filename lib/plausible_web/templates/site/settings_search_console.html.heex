@@ -9,7 +9,7 @@
   </:subtitle>
   <%= if Keyword.get(Application.get_env(:plausible, :google), :client_id) do %>
     <%= if @site.google_auth do %>
-      <PlausibleWeb.Live.Components.Form.input
+      <.input
         name="account"
         label="Linked Google account"
         value={@site.google_auth.email}
@@ -44,17 +44,24 @@
             </p>
           <% end %>
 
-          <%= form_for Plausible.Site.GoogleAuth.changeset(@site.google_auth), "/#{URI.encode_www_form(@site.domain)}/settings/google", [class: "max-w-xs"], fn f -> %>
+          <.form
+            :let={f}
+            for={Plausible.Site.GoogleAuth.changeset(@site.google_auth)}
+            class="max-w-xs"
+            action={"/#{URI.encode_www_form(@site.domain)}/settings/google"}
+          >
             <div class="inline-block relative w-full">
-              <%= select(f, :property, domains,
-                prompt: "(Choose property)",
-                class:
-                  "dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:rounded-md "
-              ) %>
+              <.input
+                options={domains}
+                type="select"
+                field={f[:property]}
+                prompt="(Choose property)"
+                class="dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:rounded-md"
+              />
             </div>
 
             <.button type="submit">Save</.button>
-          <% end %>
+          </.form>
         <% {:error, error} -> %>
           <.notice title="Integration Error" theme={:red} class="mt-8">
             <%= case error do %>
@@ -111,10 +118,10 @@
       </svg>
       <p>
         An extra step is needed to set up your <%= Plausible.product_name() %> for the Google Search Console integration.
-        Find instructions <%= link("here",
-          to: "https://github.com/plausible/community-edition/wiki/google-integration",
-          class: "text-indigo-500"
-        ) %>
+        Find instructions
+        <.styled_link href="https://github.com/plausible/community-edition/wiki/google-integration">
+          here
+        </.styled_link>
       </p>
     </div>
   <% end %>

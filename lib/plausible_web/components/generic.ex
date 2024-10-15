@@ -40,7 +40,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:class, :string, default: "")
   attr(:disabled, :boolean, default: false)
   attr(:mt?, :boolean, default: true)
-  attr(:rest, :global)
+  attr(:rest, :global, include: ~w(name))
 
   slot(:inner_block)
 
@@ -285,7 +285,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:href, :string, required: true)
   attr(:new_tab, :boolean, default: false)
-  attr(:class, :string, default: "")
+  attr(:class, :string, default: nil)
   attr(:rest, :global)
   attr(:method, :string, default: "get")
   slot(:inner_block)
@@ -325,9 +325,7 @@ defmodule PlausibleWeb.Components.Generic do
       """
     else
       ~H"""
-      <.link class={@class} href={@href} {@extra} {@rest}>
-        <%= render_slot(@inner_block) %>
-      </.link>
+      <.link class={@class} href={@href} {@extra} {@rest}><%= render_slot(@inner_block) %></.link>
       """
     end
   end
