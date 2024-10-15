@@ -3099,7 +3099,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
             "visit_duration"
           ],
           "date_range" => "all",
-          "dimensions" => ["event:page"]
+          "dimensions" => ["event:page"],
+          "order_by" => [["event:page", "desc"]]
         })
 
       %{"results" => results} = json_response(conn, 200)
