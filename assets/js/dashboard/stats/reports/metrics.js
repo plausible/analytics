@@ -66,14 +66,6 @@ export class Metric {
 // * `realtimeLabel` - label when realtime period
 // * `goalFilterLabel` - label when goal filter is applied
 export const createVisitors = (props) => {
-  let renderValue
-
-  if (typeof props.renderValue === 'function') {
-    renderValue = props.renderValue
-  } else {
-    renderValue = renderNumberWithTooltip
-  }
-
   let renderLabel
 
   if (typeof props.renderLabel === 'function') {
@@ -90,7 +82,7 @@ export const createVisitors = (props) => {
     }
   }
 
-  return new Metric({width: 'w-24', sortable: true, ...props, key: "visitors", renderValue, renderLabel})
+  return new Metric({width: 'w-24', sortable: true, ...props, key: "visitors", renderValue: renderNumberWithTooltip, renderLabel})
 }
 
 export const createConversionRate = (props) => {
