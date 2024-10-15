@@ -64,9 +64,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
           <div className="whitespace-nowrap">
             {topStatNumberLong(stat.name, stat.value)} vs.{' '}
             {topStatNumberLong(stat.name, stat.comparison_value)} {statName}
-            <span className="ml-2">
-              <ChangeArrow metric={stat.graph_metric} change={stat.change} className="pl-2 text-xs text-gray-100" />
-            </span>
+            <ChangeArrow metric={stat.graph_metric} change={stat.change} className="pl-4 text-xs text-gray-100" />
           </div>
         )}
 
