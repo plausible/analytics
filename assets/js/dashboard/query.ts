@@ -158,7 +158,7 @@ export function revenueAvailable(query: DashboardQuery, site: PlausibleSite) {
     const goalFilters: Filter[] = getFiltersByKeyPrefix(query, 'goal')
 
     return goalFilters.some(([_op, _key, clauses]) => {
-      return clauses.includes(rg.event_name)
+      return clauses.includes(rg.display_name)
     })
   })
 

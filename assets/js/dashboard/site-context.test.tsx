@@ -40,7 +40,7 @@ describe('parseSiteFromDataset', () => {
     propsOptedOut: false,
     funnelsAvailable: true,
     propsAvailable: true,
-    revenueGoals: [{ currency: 'USD', event_name: 'Purchase' }],
+    revenueGoals: [{ currency: 'USD', display_name: 'Purchase' }],
     funnels: [{ id: 1, name: 'From homepage to login', steps_count: 3 }],
     hasProps: true,
     statsBegin: '2021-09-07',
