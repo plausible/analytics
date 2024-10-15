@@ -194,11 +194,11 @@ defmodule Plausible.Ingestion.Request do
   defp put_hostname(changeset) do
     host =
       case Changeset.get_field(changeset, :uri) do
-        %{host: host} when is_binary(host) and host != "" -> host
+        %{host: host} when is_binary(host) and host != "" -> sanitize_hostname(host)
         _ -> "(none)"
       end
 
-    Changeset.put_change(changeset, :hostname, sanitize_hostname(host))
+    Changeset.put_change(changeset, :hostname, host)
   end
 
   @max_props 30
@@ -294,8 +294,6 @@ defmodule Plausible.Ingestion.Request do
   def sanitize_hostname(%URI{host: hostname}) do
     sanitize_hostname(hostname)
   end
-
-  def sanitize_hostname("(none)"), do: "(none)"
 
   def sanitize_hostname(hostname) when is_binary(hostname) do
     hostname
