@@ -137,5 +137,3 @@ function withComparisonTooltip(formatter) {
     return <MetricEntry listItem={listItem} metric={metric} formatter={formatter} />
   }
 }
-
-export const renderNumberWithTooltip = withComparisonTooltip(numberFormatter)
