@@ -129,9 +129,9 @@ defmodule Plausible.GoalsTest do
     revenue_goals = Goals.list_revenue_goals(site)
 
     assert length(revenue_goals) == 3
-    assert %{event_name: "One", currency: :EUR} in revenue_goals
-    assert %{event_name: "Two", currency: :EUR} in revenue_goals
-    assert %{event_name: "Three", currency: :USD} in revenue_goals
+    assert %{display_name: "One", currency: :EUR} in revenue_goals
+    assert %{display_name: "Two", currency: :EUR} in revenue_goals
+    assert %{display_name: "Three", currency: :USD} in revenue_goals
   end
 
   test "create/2 clears currency for pageview goals" do
