@@ -541,6 +541,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
+  defp get_root_domain("(none)"), do: "(none)"
   defp get_root_domain(nil), do: "(none)"
 
   defp get_root_domain(hostname) do
