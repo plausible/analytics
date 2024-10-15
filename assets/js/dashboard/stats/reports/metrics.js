@@ -164,8 +164,8 @@ export const createExitRate = (props) => {
 }
 
 function withComparisonTooltip(formatter) {
-  return (listItem, metricName) => {
-    return <MetricEntry listItem={listItem} metricName={metricName} formatter={formatter} />
+  return (listItem, metric) => {
+    return <MetricEntry listItem={listItem} metric={metric} formatter={formatter} />
   }
 }
 

@@ -1,31 +1,32 @@
 import React, { useMemo } from 'react'
 import { Metric } from '../../../types/query-api'
 import { Tooltip } from '../../util/tooltip'
+import { ChangeArrow } from './comparison-tooltip-content'
 
 type MetricValues = Record<Metric, number | null>
 
 type ListItem =
   MetricValues
   & {
-    comparison: MetricValues & { change: MetricValues }
+    comparison: MetricValues & { change: Record<Metric, number> }
   }
 
-function valueRenderProps(listItem: ListItem, metricName: Metric) {
-  const value = listItem[metricName]
+function valueRenderProps(listItem: ListItem, metric: Metric) {
+  const value = listItem[metric]
 
   let comparison = null
   if (listItem.comparison) {
     comparison = {
-      value: listItem.comparison[metricName],
-      change: listItem.comparison.change[metricName]
+      value: listItem.comparison[metric],
+      change: listItem.comparison.change[metric]
     }
   }
 
   return { value, comparison }
 }
 
-export default function MetricEntry({ listItem, metricName, formatter }: { listItem: ListItem, metricName: Metric, formatter: (value: number | null) => any}) {
-  const { value, comparison } = useMemo(() => valueRenderProps(listItem, metricName), [listItem, metricName])
+export default function MetricEntry({ listItem, metric, formatter }: { listItem: ListItem, metric: Metric, formatter: (value: number | null) => any }) {
+  const { value, comparison } = useMemo(() => valueRenderProps(listItem, metric), [listItem, metric])
 
   const tooltipBoundary = React.useRef(null)
 
@@ -38,34 +39,12 @@ export default function MetricEntry({ listItem, metricName, formatter }: { listI
               {formatter(value)} vs {formatter(comparison.value)}, Change: {comparison.change}%
             </div>
           )
-          : formatter(value)
+            : formatter(value)
         }
       >
         {formatter(value)}
-        {comparison ? <ChangeArrow change={comparison.change} metricName={metricName} /> : null}
+        {comparison ? <ChangeArrow change={comparison.change} metric={metric} className="pl-2 text-xs text-gray-100" /> : null}
       </Tooltip>
     </div>
   )
-}
-
-function ChangeArrow({ change, metricName }: { change: number | null, metricName: string }) {
-  if (change === null) {
-    return null
-  } else if (change > 0) {
-    const color = metricName === 'bounce_rate' ? 'text-red-400' : 'text-green-500'
-    return (
-      <span className="pl-2">
-        <span className={color + ' font-bold'}>&uarr;</span>{' '}
-      </span>
-    )
-  } else if (change < 0) {
-    const color = metricName === 'bounce_rate' ? 'text-green-500' : 'text-red-400'
-    return (
-      <span className="pl-2">
-        <span className={color + ' font-bold'}>&darr;</span>{' '}
-      </span>
-    )
-  } else if (change === 0) {
-    return <span className="pl-2">&#12336;</span>
-  }
 }

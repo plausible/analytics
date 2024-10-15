@@ -11,46 +11,11 @@ import { getGraphableMetrics } from './graph-util'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { useLastLoadContext } from '../../last-load-context'
+import { ChangeArrow } from '../reports/comparison-tooltip-content'
 
 function Maybe({ condition, children }) {
   if (condition) {
     return children
-  } else {
-    return null
-  }
-}
-
-function renderPercentageComparison(name, comparison, forceDarkBg = false) {
-  const formattedComparison = numberFormatter(Math.abs(comparison))
-
-  const defaultClassName = classNames({
-    'pl-2 text-xs dark:text-gray-100': !forceDarkBg,
-    'pl-2 text-xs text-gray-100': forceDarkBg
-  })
-
-  const noChangeClassName = classNames({
-    'pl-2 text-xs text-gray-700 dark:text-gray-300': !forceDarkBg,
-    'pl-2 text-xs text-gray-300': forceDarkBg
-  })
-
-  if (comparison > 0) {
-    const color = name === 'Bounce rate' ? 'text-red-400' : 'text-green-500'
-    return (
-      <span className={defaultClassName}>
-        <span className={color + ' font-bold'}>&uarr;</span>{' '}
-        {formattedComparison}%
-      </span>
-    )
-  } else if (comparison < 0) {
-    const color = name === 'Bounce rate' ? 'text-green-500' : 'text-red-400'
-    return (
-      <span className={defaultClassName}>
-        <span className={color + ' font-bold'}>&darr;</span>{' '}
-        {formattedComparison}%
-      </span>
-    )
-  } else if (comparison === 0) {
-    return <span className={noChangeClassName}>&#12336; 0%</span>
   } else {
     return null
   }
@@ -100,7 +65,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
             {topStatNumberLong(stat.name, stat.value)} vs.{' '}
             {topStatNumberLong(stat.name, stat.comparison_value)} {statName}
             <span className="ml-2">
-              {renderPercentageComparison(stat.name, stat.change, true)}
+              <ChangeArrow metric={stat.graph_metric} change={stat.change} className="pl-2 text-xs text-gray-100" />
             </span>
           </div>
         )}
@@ -202,8 +167,8 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
               >
                 {topStatNumberShort(stat.name, stat.value)}
               </p>
-              <Maybe condition={!query.comparison}>
-                {renderPercentageComparison(stat.name, stat.change)}
+              <Maybe condition={!query.comparison && stat.change != null}>
+                <ChangeArrow metric={stat.graph_metric} change={stat.change} className="pl-2 text-xs dark:text-gray-100" />
               </Maybe>
             </span>
             <Maybe condition={query.comparison}>
