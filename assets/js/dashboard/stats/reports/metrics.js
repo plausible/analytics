@@ -42,7 +42,7 @@ export class Metric {
   }
 
   renderValue(listItem) {
-    return <MetricEntry listItem={listItem} metric={this.key} renderLabel={this.renderLabel} formatter={this.formatter} />
+    return <MetricValue listItem={listItem} metric={this.key} renderLabel={this.renderLabel} formatter={this.formatter} />
   }
 }
 
