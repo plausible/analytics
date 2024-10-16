@@ -81,18 +81,18 @@ function ComparisonTooltipContent({
     return ` ${label}`
   }, [metricLabel])
 
-  if (!comparison) {
+  if (comparison) {
+    return (
+      <div className="whitespace-nowrap">
+        {longFormatter(value)} vs. {longFormatter(comparison.value)}{label}
+        <ChangeArrow metric={metric} change={comparison.change} className="pl-4 text-xs text-gray-100" />
+      </div>
+    )
+  } else {
     return (
       <div className="whitespace-nowrap">
         {longFormatter(value)}
       </div>
     )
   }
-
-  return (
-    <div className="whitespace-nowrap">
-      {longFormatter(value)} vs. {longFormatter(comparison.value)}{label}
-      <ChangeArrow metric={metric} change={comparison.change} className="pl-4 text-xs text-gray-100" />
-    </div>
-  )
 }
