@@ -20,6 +20,18 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     @repo.start(db_url)
 
+    @repo.transaction(
+      fn ->
+        backfill()
+
+        IO.puts("Rolling back")
+        @repo.rollback("Rolled back")
+      end,
+      timeout: :infinity
+    )
+  end
+
+  defp backfill() do
     sites_without_teams =
       from(
         s in Plausible.Site,
