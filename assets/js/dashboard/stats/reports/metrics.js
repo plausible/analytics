@@ -2,6 +2,7 @@ import { hasGoalFilter } from "../../util/filters"
 import React from "react"
 import MetricEntry from "./metric-entry"
 import { MetricFormatterShort } from "./metric-formatter"
+import { useQueryContext } from "../../query-context"
 
 // Class representation of a metric.
 
@@ -40,9 +41,11 @@ export class Metric {
     this.sortable = props.sortable
     this.width = props.width ?? 'w-24'
 
-    this.formatter = props.formatter || MetricFormatterShort[this.key]
-    this.renderValue = (listItem, metric, metricLabel) => {
-      return <MetricEntry listItem={listItem} metric={metric} metricLabel={metricLabel} formatter={this.formatter} />
+    this.formatter = props.formatter
+    this.renderValue = (listItem) => {
+      const { query } = useQueryContext()
+      const label = this.renderLabel(query)
+      return <MetricEntry listItem={listItem} metric={this.key} metricLabel={label} formatter={this.formatter} />
     }
   }
 }

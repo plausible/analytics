@@ -33,8 +33,8 @@ function ConversionsModal() {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ renderLabel: (_query) => "Uniques" }),
-      metrics.createEvents({ renderLabel: (_query) => "Total" }),
+      metrics.createVisitors({ renderLabel: () => "Uniques" }),
+      metrics.createEvents({ renderLabel: () => "Total" }),
       metrics.createConversionRate(),
       showRevenue && metrics.createAverageRevenue(),
       showRevenue && metrics.createTotalRevenue(),

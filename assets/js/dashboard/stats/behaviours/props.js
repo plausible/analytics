@@ -93,8 +93,8 @@ export default function Properties({ afterFetchData }) {
   /*global BUILD_EXTRA*/
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ renderLabel: (_query) => "Visitors", meta: { plot: true } }),
-      metrics.createEvents({ renderLabel: (_query) => "Events", meta: { hiddenOnMobile: true } }),
+      metrics.createVisitors({ renderLabel: () => "Visitors", meta: { plot: true } }),
+      metrics.createEvents({ renderLabel: () => "Events", meta: { hiddenOnMobile: true } }),
       hasGoalFilter(query) && metrics.createConversionRate(),
       !hasGoalFilter(query) && metrics.createPercentage(),
       BUILD_EXTRA && metrics.createTotalRevenue({ meta: { hiddenOnMobile: true } }),

@@ -5,20 +5,20 @@ export default function chooseMetrics(query) {
   if (hasGoalFilter(query)) {
     return [
       metrics.createTotalVisitors(),
-      metrics.createVisitors({ renderLabel: (_query) => 'Conversions', width: 'w-28' }),
+      metrics.createVisitors({ renderLabel: () => 'Conversions', width: 'w-28' }),
       metrics.createConversionRate()
     ]
   }
 
   if (isRealTimeDashboard(query)) {
     return [
-      metrics.createVisitors({ renderLabel: (_query) => 'Current visitors', width: 'w-36' }),
+      metrics.createVisitors({ renderLabel: () => 'Current visitors', width: 'w-36' }),
       metrics.createPercentage()
     ]
   }
 
   return [
-    metrics.createVisitors({ renderLabel: (_query) => "Visitors" }),
+    metrics.createVisitors({ renderLabel: () => "Visitors" }),
     metrics.createPercentage(),
     metrics.createBounceRate(),
     metrics.createVisitDuration()
