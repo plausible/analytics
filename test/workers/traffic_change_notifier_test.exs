@@ -239,7 +239,7 @@ defmodule Plausible.Workers.TrafficChangeNotifierTest do
 
       TrafficChangeNotifier.perform(nil, clickhouse_stub)
 
-      assert_email_delivered_with(html_body: ~r/View dashboard: <a href=\"http.+\/example.com/)
+      assert_email_delivered_with(html_body: ~r/View dashboard:\s+<a href=\"http.+\/example.com/)
     end
   end
 end

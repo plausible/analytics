@@ -1,4 +1,4 @@
-<PlausibleWeb.Components.Generic.focus_box>
+<.focus_box>
   <:title>
     Enter Recovery Code
   </:title>
@@ -9,34 +9,34 @@
 
   <:footer>
     Authenticator application working again?
-    <a href={Routes.auth_path(@conn, :verify_2fa)} class="underline text-indigo-600">
+    <.styled_link href={Routes.auth_path(@conn, :verify_2fa)}>
       Enter code
-    </a>
+    </.styled_link>
     <%= if ee?() do %>
       <br /> Lost your recovery codes?
-      <a href="https://plausible.io/contact" class="underline text-indigo-600">
+      <.styled_link href="https://plausible.io/contact">
         Contact us
-      </a>
+      </.styled_link>
     <% end %>
   </:footer>
 
-  <%= form_for @conn.params, 
-  Routes.auth_path(@conn, :verify_2fa_recovery_code), 
-  [
-    onsubmit: "document.getElementById('use-code-button').disabled = true"
-  ], fn f -> %>
+  <.form
+    :let={f}
+    for={@conn.params}
+    action={Routes.auth_path(@conn, :verify_2fa_recovery_code)}
+    onsubmit="document.getElementById('use-code-button').disabled = true"
+  >
     <div class="mt-6">
       <div>
-        <%= text_input(f, :recovery_code,
-          value: "",
-          autocomplete: "off",
-          class:
-            "font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-2 border-gray-300 dark:border-gray-500 dark:text-gray-200 dark:bg-gray-900 rounded-md",
-          maxlength: "10",
-          oninvalid: "document.getElementById('use-code-button').disabled = false",
-          placeholder: "Enter recovery code",
-          required: "required"
-        ) %>
+        <.input
+          type="text"
+          field={f[:recovery_code]}
+          autocomplete="off"
+          maxlength="10"
+          oninvalid="document.getElementById('use-code-button').disabled = false"
+          required="required"
+          placeholder="Enter recovery code"
+        />
       </div>
       <.button
         id="use-code-button"
@@ -48,10 +48,10 @@
         </span>
 
         <span class="label-disabled">
-          <PlausibleWeb.Components.Generic.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" />
+          <.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" />
           Verifying...
         </span>
       </.button>
     </div>
-  <% end %>
-</PlausibleWeb.Components.Generic.focus_box>
+  </.form>
+</.focus_box>

@@ -4,11 +4,9 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
   """
 
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
 
   alias Plausible.Sites
   alias Plausible.Plugins.API.Tokens
-  import PlausibleWeb.Components.Generic
 
   def mount(_params, %{"domain" => domain} = session, socket) do
     socket =

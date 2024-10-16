@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Live.CSVImport do
   """
 
   use PlausibleWeb, :live_view
-  alias PlausibleWeb.Components.Generic
 
   require Plausible.Imported.SiteImport
   alias Plausible.Imported.CSVImporter
@@ -136,15 +135,15 @@ defmodule PlausibleWeb.Live.CSVImport do
   defp maybe_date_range_warning(assigns) do
     ~H"""
     <%= if @clamped do %>
-      <Generic.notice :if={@clamped != @original} title="Dates Adjusted" theme={:yellow} class="mt-4">
+      <.notice :if={@clamped != @original} title="Dates Adjusted" theme={:yellow} class="mt-4">
         The dates <.dates range={@original} />
         overlap with previous imports, so we'll use the next best period, <.dates range={@clamped} />
-      </Generic.notice>
+      </.notice>
     <% else %>
-      <Generic.notice title="Dates Conflict" theme={:red} class="mt-4">
+      <.notice title="Dates Conflict" theme={:red} class="mt-4">
         The dates <.dates range={@original} />
         overlap with dates we've already imported and cannot be used for new imports.
-      </Generic.notice>
+      </.notice>
     <% end %>
     """
   end
@@ -173,7 +172,7 @@ defmodule PlausibleWeb.Live.CSVImport do
     <li id={@table} class="ml-0.5">
       <div class="flex items-center space-x-2 text-gray-600 dark:text-gray-500">
         <Heroicons.document_check :if={@status == :success} class="w-4 h-4" />
-        <Generic.spinner :if={@status == :in_progress} class="w-4 h-4" />
+        <.spinner :if={@status == :in_progress} class="w-4 h-4" />
         <Heroicons.document :if={@status == :empty} class="w-4 h-4 opacity-80" />
         <Heroicons.document :if={@status == :error} class="w-4 h-4 text-red-600 dark:text-red-700" />
 

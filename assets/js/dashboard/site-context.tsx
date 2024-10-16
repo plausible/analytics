@@ -36,7 +36,7 @@ const siteContextDefaultValue = {
   conversionsOptedOut: false,
   funnelsOptedOut: false,
   propsOptedOut: false,
-  revenueGoals: [] as { event_name: string; currency: 'USD' }[],
+  revenueGoals: [] as { display_name: string; currency: 'USD' }[],
   funnels: [] as { id: number; name: string; steps_count: number }[],
   /** date in YYYY-MM-DD, @example "2023-01-01" */
   statsBegin: '',

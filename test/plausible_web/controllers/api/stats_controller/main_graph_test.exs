@@ -1368,6 +1368,61 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                30.31
              ]
     end
+
+    test "plots total_revenue for a week compared to last week", %{conn: conn, site: site} do
+      insert(:goal,
+        site: site,
+        event_name: "Payment",
+        currency: "USD",
+        display_name: "PaymentUSD"
+      )
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("13.29"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("19.90"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-05 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("10.31"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-10 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("20.0"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-12 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("10.0"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-12 01:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "PaymentUSD"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-14&metric=total_revenue&filters=#{filters}&comparison=previous_period"
+        )
+
+      assert %{"plot" => plot, "comparison_plot" => prev} = json_response(conn, 200)
+
+      assert plot == [0.0, 0.0, 10.31, 0.0, 30.0, 0.0, 0.0]
+      assert prev == [13.29, 0.0, 0.0, 0.0, 19.9, 0.0, 0.0]
+    end
   end
 
   describe "GET /api/stats/main-graph - average_revenue plot" do
@@ -1453,6 +1508,61 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                0.0,
                15.155
              ]
+    end
+
+    test "plots average_revenue for a week compared to last week", %{conn: conn, site: site} do
+      insert(:goal,
+        site: site,
+        event_name: "Payment",
+        currency: "USD",
+        display_name: "PaymentUSD"
+      )
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("13.29"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("19.90"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-05 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("10.31"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-10 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("20.0"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-12 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("10.0"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-12 01:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "PaymentUSD"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-14&metric=average_revenue&filters=#{filters}&comparison=previous_period"
+        )
+
+      assert %{"plot" => plot, "comparison_plot" => prev} = json_response(conn, 200)
+
+      assert plot == [0.0, 0.0, 10.31, 0.0, 15.0, 0.0, 0.0]
+      assert prev == [13.29, 0.0, 0.0, 0.0, 19.9, 0.0, 0.0]
     end
   end
 

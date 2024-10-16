@@ -541,7 +541,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp get_root_domain(nil), do: "(none)"
+  defp get_root_domain("(none)"), do: "(none)"
 
   defp get_root_domain(hostname) do
     case :inet.parse_ipv4_address(String.to_charlist(hostname)) do

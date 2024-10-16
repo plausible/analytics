@@ -17,7 +17,7 @@ describe('parseSiteFromDataset', () => {
       data-props-opted-out="false"
       data-funnels-available="true"
       data-props-available="true"
-      data-revenue-goals='[{"currency":"USD","event_name":"Purchase"}]'
+      data-revenue-goals='[{"currency":"USD","display_name":"Purchase"}]'
       data-funnels='[{"id":1,"name":"From homepage to login","steps_count":3}]'
       data-has-props="true"
       data-logged-in="true"
@@ -40,7 +40,7 @@ describe('parseSiteFromDataset', () => {
     propsOptedOut: false,
     funnelsAvailable: true,
     propsAvailable: true,
-    revenueGoals: [{ currency: 'USD', event_name: 'Purchase' }],
+    revenueGoals: [{ currency: 'USD', display_name: 'Purchase' }],
     funnels: [{ id: 1, name: 'From homepage to login', steps_count: 3 }],
     hasProps: true,
     statsBegin: '2021-09-07',

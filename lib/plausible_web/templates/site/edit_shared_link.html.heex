@@ -1,0 +1,14 @@
+<.focus_box>
+  <:title>Edit Shared Link</:title>
+
+  <.form
+    :let={f}
+    for={@changeset}
+    action={"/sites/#{URI.encode_www_form(@site.domain)}/shared-links/#{@changeset.data.slug}"}
+    class=""
+  >
+    <.input type="text" field={f[:name]} label="Name" />
+
+    <.button class="w-full" type="submit">Update</.button>
+  </.form>
+</.focus_box>

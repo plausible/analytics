@@ -7,9 +7,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
   message before deleting the funnel from the UI. If there are no funnels
   configured for the site, a message is displayed indicating so.
   """
-  use Phoenix.LiveComponent
-  use Phoenix.HTML
-  import PlausibleWeb.Components.Generic
+  use PlausibleWeb, :live_component
 
   def render(assigns) do
     ~H"""
