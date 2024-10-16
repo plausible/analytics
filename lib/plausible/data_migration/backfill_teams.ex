@@ -363,11 +363,13 @@ defmodule Plausible.DataMigration.BackfillTeams do
     end)
     |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
     |> tap(fn grouped ->
-      IO.puts("Teams about to be created: #{map_size(grouped)}")
+      if grouped != %{} do
+        IO.puts("Teams about to be created: #{map_size(grouped)}")
 
-      IO.puts(
-        "Max sites: #{Enum.max_by(grouped, fn {_, sites} -> length(sites) end) |> elem(1) |> length()}"
-      )
+        IO.puts(
+          "Max sites: #{Enum.max_by(grouped, fn {_, sites} -> length(sites) end) |> elem(1) |> length()}"
+        )
+      end
     end)
     |> Enum.with_index()
     |> Task.async_stream(fn {{owner, site_ids}, idx} ->
