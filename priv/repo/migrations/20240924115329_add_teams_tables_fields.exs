@@ -89,19 +89,19 @@ defmodule Plausible.Repo.Migrations.AddTeamsTablesFields do
     create unique_index(:team_site_transfers, [:email, :site_id])
 
     alter table(:sites) do
-      add :team_id, references(:teams, on_delete: :delete_all), null: true
+      add :team_id, references(:teams, on_delete: :nilify_all), null: true
     end
 
     create index(:sites, [:team_id])
 
     alter table(:subscriptions) do
-      add :team_id, references(:teams, on_delete: :delete_all), null: true
+      add :team_id, references(:teams, on_delete: :nilify_all), null: true
     end
 
     create index(:subscriptions, [:team_id])
 
     alter table(:enterprise_plans) do
-      add :team_id, references(:teams, on_delete: :delete_all), null: true
+      add :team_id, references(:teams, on_delete: :nilify_all), null: true
     end
 
     create index(:enterprise_plans, [:team_id])
