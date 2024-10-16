@@ -18,7 +18,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         Application.get_env(:plausible, Plausible.Repo)[:url]
       )
 
-    @repo.start(db_url)
+    @repo.start(db_url, 10)
 
     @repo.transaction(
       fn ->
@@ -356,7 +356,15 @@ defmodule Plausible.DataMigration.BackfillTeams do
       {owner, site_id}
     end)
     |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
-    |> Enum.map(fn {owner, site_ids} ->
+    |> tap(fn grouped ->
+      IO.puts("Teams about to be created: #{map_size(grouped)}")
+
+      IO.puts(
+        "Max sites: #{Enum.max_by(grouped, fn {_, sites} -> length(sites) end) |> elem(1) |> length()}"
+      )
+    end)
+    |> Enum.with_index()
+    |> Task.async_stream(fn {{owner, site_ids}, idx} ->
       team =
         "My Team"
         |> Teams.Team.changeset()
@@ -376,7 +384,12 @@ defmodule Plausible.DataMigration.BackfillTeams do
       @repo.update_all(from(s in Plausible.Site, where: s.id in ^site_ids),
         set: [team_id: team.id]
       )
+
+      if rem(idx, 10) == 0 do
+        IO.write(".")
+      end
     end)
+    |> Enum.to_list()
     |> length()
   end
 
@@ -398,22 +411,34 @@ defmodule Plausible.DataMigration.BackfillTeams do
   end
 
   defp backfill_subscriptions(subscriptions) do
-    Enum.each(subscriptions, fn subscription ->
+    subscriptions
+    |> Enum.with_index()
+    |> Enum.each(fn {subscription, idx} ->
       [%{team: team, role: :owner}] = subscription.user.team_memberships
 
       subscription
       |> Ecto.Changeset.change(team_id: team.id)
       |> @repo.update!()
+
+      if rem(idx, 1000) == 0 do
+        IO.write(".")
+      end
     end)
   end
 
   defp backfill_enterprise_plans(enterprise_plans) do
-    Enum.each(enterprise_plans, fn enterprise_plan ->
+    enterprise_plans
+    |> Enum.with_index()
+    |> Enum.each(fn {enterprise_plan, idx} ->
       [%{team: team, role: :owner}] = enterprise_plan.user.team_memberships
 
       enterprise_plan
       |> Ecto.Changeset.change(team_id: team.id)
       |> @repo.update!()
+
+      if rem(idx, 1000) == 0 do
+        IO.write(".")
+      end
     end)
   end
 
@@ -438,7 +463,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     site_memberships
     |> Enum.group_by(&{&1.site.team, &1.user}, &{&1.site, &1.role})
-    |> Enum.each(fn {{team, user}, sites_and_roles} ->
+    |> Enum.with_index()
+    |> Enum.each(fn {{{team, user}, sites_and_roles}, idx} ->
       team_membership =
         team
         |> Teams.Membership.changeset(user, :guest)
@@ -452,14 +478,24 @@ defmodule Plausible.DataMigration.BackfillTeams do
         |> Teams.GuestMembership.changeset(site, translate_role(role))
         |> @repo.insert!()
       end)
+
+      if rem(idx, 1000) == 0 do
+        IO.write(".")
+      end
     end)
   end
 
   defp sync_guest_memberships(guest_memberships_and_roles) do
-    Enum.each(guest_memberships_and_roles, fn {guest_membership, role} ->
+    guest_memberships_and_roles
+    |> Enum.with_index()
+    |> Enum.each(fn {{guest_membership, role}, idx} ->
       guest_membership
       |> Ecto.Changeset.change(role: translate_role(role))
       |> @repo.update!()
+
+      if rem(idx, 1000) == 0 do
+        IO.write(".")
+      end
     end)
   end
 
@@ -482,7 +518,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
   defp backfill_guest_invitations(site_invitations) do
     site_invitations
     |> Enum.group_by(&{&1.site.team, &1.email}, &{&1.site, &1.role, &1.inviter})
-    |> Enum.each(fn {{team, email}, sites_and_roles} ->
+    |> Enum.with_index()
+    |> Enum.each(fn {{{team, email}, sites_and_roles}, idx} ->
       now = NaiveDateTime.utc_now(:second)
 
       {_, _, inviter} = List.first(sites_and_roles)
@@ -501,14 +538,24 @@ defmodule Plausible.DataMigration.BackfillTeams do
         |> Teams.GuestInvitation.changeset(site, translate_role(role))
         |> @repo.insert!()
       end)
+
+      if rem(idx, 1000) == 0 do
+        IO.write(".")
+      end
     end)
   end
 
   defp sync_guest_invitations(guest_invitations_and_roles) do
-    Enum.each(guest_invitations_and_roles, fn {guest_invitation, role} ->
+    guest_invitations_and_roles
+    |> Enum.with_index()
+    |> Enum.each(fn {{guest_invitation, role}, idx} ->
       guest_invitation
       |> Ecto.Changeset.change(role: translate_role(role))
       |> @repo.update!()
+
+      if rem(idx, 1000) == 0 do
+        IO.write(".")
+      end
     end)
   end
 
@@ -519,13 +566,19 @@ defmodule Plausible.DataMigration.BackfillTeams do
   end
 
   defp backfill_site_transfers(site_invitations) do
-    Enum.each(site_invitations, fn site_invitation ->
+    site_invitations
+    |> Enum.with_index()
+    |> Enum.each(fn {site_invitation, idx} ->
       site_invitation.site
       |> Teams.SiteTransfer.changeset(
         initiator: site_invitation.inviter,
         email: site_invitation.email
       )
       |> @repo.insert!()
+
+      if rem(idx, 1000) == 0 do
+        IO.write(".")
+      end
     end)
   end
 
