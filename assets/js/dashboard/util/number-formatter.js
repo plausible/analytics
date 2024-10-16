@@ -6,7 +6,7 @@ const BILLION = 1000000000
 const HUNDRED_BILLION = 100000000000
 const TRILLION = 1000000000000
 
-export default function numberFormatter(num) {
+export default function numberShortFormatter(num) {
   if (num >= THOUSAND && num < MILLION) {
     const thousands = num / THOUSAND
     if (thousands === Math.floor(thousands) || num >= HUNDRED_THOUSAND) {

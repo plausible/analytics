@@ -1,16 +1,16 @@
 import { Metric } from '../../../types/query-api'
 import { formatMoney } from '../../util/money'
-import numberFormatter, { durationFormatter, percentageFormatter } from "../../util/number-formatter"
+import numberShortFormatter, { durationFormatter, percentageFormatter } from "../../util/number-formatter"
 
 export type FormattableMetric = Metric | 'total_visitors' | 'exit_rate'
 
 const MetricFormatter: Record<FormattableMetric, (value: any) => any> = {
-  events: numberFormatter,
-  pageviews: numberFormatter,
-  total_visitors: numberFormatter,
-  views_per_visit: numberFormatter,
-  visitors: numberFormatter,
-  visits: numberFormatter,
+  events: numberShortFormatter,
+  pageviews: numberShortFormatter,
+  total_visitors: numberShortFormatter,
+  views_per_visit: numberShortFormatter,
+  visitors: numberShortFormatter,
+  visits: numberShortFormatter,
 
   time_on_page: durationFormatter,
   visit_duration: durationFormatter,

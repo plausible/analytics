@@ -10,7 +10,7 @@ import {
   createVisitors,
   Metric
 } from '../reports/metrics'
-import numberFormatter, {
+import numberShortFormatter, {
   percentageFormatter
 } from '../../util/number-formatter'
 import { apiPath } from '../../util/url'
@@ -32,7 +32,7 @@ const metrics = [
     width: 'w-28',
     key: 'impressions',
     renderLabel: () => 'Impressions',
-    formatter: numberFormatter,
+    formatter: numberShortFormatter,
     sortable: false
   }),
   new Metric({
@@ -46,7 +46,7 @@ const metrics = [
     width: 'w-28',
     key: 'position',
     renderLabel: () => 'Position',
-    formatter: numberFormatter,
+    formatter: numberShortFormatter,
     sortable: false
   })
 ]

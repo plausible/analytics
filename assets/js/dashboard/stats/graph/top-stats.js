@@ -4,7 +4,7 @@ import React from 'react'
 import { Tooltip } from '../../util/tooltip'
 import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from 'classnames'
-import numberFormatter, { durationFormatter } from '../../util/number-formatter'
+import numberShortFormatter, { durationFormatter } from '../../util/number-formatter'
 import * as storage from '../../util/storage'
 import { formatDateRange } from '../../util/date'
 import { getGraphableMetrics } from './graph-util'
@@ -32,7 +32,7 @@ function topStatNumberShort(name, value) {
   ) {
     return value?.short
   } else {
-    return numberFormatter(value)
+    return numberShortFormatter(value)
   }
 }
 

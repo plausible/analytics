@@ -1,5 +1,5 @@
 import { hasGoalFilter } from "../../util/filters"
-import numberFormatter, { durationFormatter, percentageFormatter } from "../../util/number-formatter"
+import numberShortFormatter, { durationFormatter, percentageFormatter } from "../../util/number-formatter"
 import React from "react"
 import MetricEntry from "./metric-entry"
 import { formatMoney  } from "../../util/money"

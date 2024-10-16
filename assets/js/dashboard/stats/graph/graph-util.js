@@ -1,4 +1,4 @@
-import numberFormatter, {durationFormatter} from '../../util/number-formatter'
+import numberShortFormatter, {durationFormatter} from '../../util/number-formatter'
 import { getFiltersByKeyPrefix, hasGoalFilter } from '../../util/filters'
 import { revenueAvailable } from '../../query'
 
@@ -37,17 +37,17 @@ export const METRIC_LABELS = {
 }
 
 export const METRIC_FORMATTER = {
-  'visitors': numberFormatter,
-  'pageviews': numberFormatter,
-  'events': numberFormatter,
-  'visits': numberFormatter,
+  'visitors': numberShortFormatter,
+  'pageviews': numberShortFormatter,
+  'events': numberShortFormatter,
+  'visits': numberShortFormatter,
   'views_per_visit': (number) => (number),
   'bounce_rate': (number) => (`${number}%`),
   'visit_duration': durationFormatter,
-  'conversions': numberFormatter,
+  'conversions': numberShortFormatter,
   'conversion_rate': (number) => (`${number}%`),
-  'total_revenue': numberFormatter,
-  'average_revenue': numberFormatter,
+  'total_revenue': numberShortFormatter,
+  'average_revenue': numberShortFormatter,
 }
 
 const buildComparisonDataset = function(comparisonPlot) {
