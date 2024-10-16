@@ -28,7 +28,7 @@ function valueRenderProps(listItem: ListItem, metric: Metric) {
   return { value, comparison }
 }
 
-export default function MetricEntry(props: {
+export default function MetricValue(props: {
   listItem: ListItem,
   metric: Metric,
   renderLabel: (query: DashboardQuery) => string,

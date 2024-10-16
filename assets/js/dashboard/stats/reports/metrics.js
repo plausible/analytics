@@ -1,5 +1,5 @@
 import React from "react"
-import MetricEntry from "./metric-entry"
+import MetricValue from "./metric-value"
 import { hasGoalFilter } from "../../util/filters"
 
 // Class representation of a metric.
