@@ -42,15 +42,17 @@ export default function MetricValue(props: {
   const shortFormatter = props.formatter ?? MetricFormatterShort[metric]
 
   if (value === null && (!comparison || comparison.value === null)) {
-    return <>{shortFormatter(value)}</>
+    return <span data-testid="metric-value">{shortFormatter(value)}</span>
   }
 
   return (
     <Tooltip
       info={<ComparisonTooltipContent value={value} comparison={comparison} metricLabel={metricLabel} {...props} />}
     >
-      {shortFormatter(value)}
-      {comparison ? <ChangeArrow change={comparison.change} metric={metric} className="pl-2" hideNumber /> : null}
+      <span data-testid="metric-value">
+        {shortFormatter(value)}
+        {comparison ? <ChangeArrow change={comparison.change} metric={metric} className="pl-2" hideNumber /> : null}
+      </span>
     </Tooltip>
   )
 }
@@ -75,10 +77,8 @@ function ComparisonTooltipContent({
     if (metricLabel.length < 3) {
       return ""
     }
-    let label = metricLabel.toLowerCase()
-    label = value === 1 ? label.slice(0, -1) : label
 
-    return ` ${label}`
+    return ` ${metricLabel.toLowerCase()}`
   }, [metricLabel])
 
   if (comparison) {
