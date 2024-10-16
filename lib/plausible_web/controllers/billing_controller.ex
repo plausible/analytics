@@ -44,7 +44,7 @@ defmodule PlausibleWeb.BillingController do
         Subscription.Status.past_due(),
         Subscription.Status.paused()
       ]) ->
-        redirect(conn, to: Routes.auth_path(conn, :user_settings))
+        redirect(conn, to: Routes.settings_path(conn, :subscription))
 
       subscribed_to_latest? ->
         render(conn, "change_enterprise_plan_contact_us.html", skip_plausible_tracking: true)
@@ -101,7 +101,7 @@ defmodule PlausibleWeb.BillingController do
       {:ok, _subscription} ->
         conn
         |> put_flash(:success, "Plan changed successfully")
-        |> redirect(to: "/settings")
+        |> redirect(to: Routes.settings_path(conn, :subscription))
 
       {:error, e} ->
         msg =
@@ -131,7 +131,7 @@ defmodule PlausibleWeb.BillingController do
 
         conn
         |> put_flash(:error, msg)
-        |> redirect(to: "/settings")
+        |> redirect(to: Routes.settings_path(conn, :subscription))
     end
   end
 

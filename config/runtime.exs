@@ -250,8 +250,13 @@ enable_email_verification =
 
 is_selfhost = get_bool_from_path_or_env(config_dir, "SELFHOST", true)
 
-# by default, registration is disabled in self-hosted setups
-disable_registration_default = to_string(is_selfhost)
+# by default, only registration from invites is enabled in CE
+disable_registration_default =
+  if config_env() == :ce do
+    "invite_only"
+  else
+    "false"
+  end
 
 disable_registration =
   config_dir

@@ -1,10 +1,9 @@
 defmodule PlausibleWeb.Components.Billing.Notice do
   @moduledoc false
 
-  use Phoenix.Component
+  use PlausibleWeb, :component
+
   require Plausible.Billing.Subscription.Status
-  import PlausibleWeb.Components.Generic
-  alias PlausibleWeb.Router.Helpers, as: Routes
   alias Plausible.Auth.User
   alias Plausible.Billing.{Subscription, Plans, Subscriptions, Feature}
 
@@ -16,7 +15,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           title="You have outgrown your Plausible subscription tier"
           class="shadow-md dark:shadow-none"
         >
-          In order to keep your stats running, we require you to upgrade your account to accommodate your new usage levels.
+          To keep your stats running smoothly, it’s time to upgrade your subscription to match your growing usage.
           <.link
             href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
             class="whitespace-nowrap font-semibold"
@@ -29,8 +28,11 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     else
       ~H"""
       <aside class="container">
-        <.notice title="Please upgrade your account" class="shadow-md dark:shadow-none">
-          In order to keep your stats running, we require you to upgrade your account. If you do not upgrade your account <%= @grace_period_end %>, we will lock your dashboard and it won't be accessible.
+        <.notice
+          title="You have outgrown your Plausible subscription tier"
+          class="shadow-md dark:shadow-none"
+        >
+          To keep your stats running smoothly, it’s time to upgrade your subscription to match your growing usage.
           <.link
             href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
             class="whitespace-nowrap font-semibold"
@@ -47,7 +49,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     ~H"""
     <aside class="container">
       <.notice title="Dashboard locked" class="shadow-md dark:shadow-none">
-        As you have outgrown your subscription tier, we kindly ask you to upgrade your subscription to accommodate your new traffic levels.
+        Since you’ve outgrown your current subscription tier, it’s time to upgrade to match your growing usage.
         <.link
           href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
           class="whitespace-nowrap font-semibold"
@@ -63,7 +65,6 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   attr(:current_user, User, required: true)
   attr(:feature_mod, :atom, required: true, values: Feature.list())
   attr(:grandfathered?, :boolean, default: false)
-  attr(:size, :atom, default: :sm)
   attr(:rest, :global)
 
   def premium_feature(assigns) do
@@ -71,7 +72,6 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     <.notice
       :if={@feature_mod.check_availability(@billable_user) !== :ok}
       class="rounded-t-md rounded-b-none"
-      size={@size}
       title="Notice"
       {@rest}
     >

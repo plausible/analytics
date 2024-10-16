@@ -4,9 +4,6 @@ defmodule PlausibleWeb.Live.Sites do
   """
 
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
-
-  import PlausibleWeb.Components.Generic
   import PlausibleWeb.Live.Components.Pagination
 
   alias Plausible.Auth
@@ -141,10 +138,10 @@ defmodule PlausibleWeb.Live.Sites do
           </h3>
           <div class="mt-2 text-sm text-yellow-700">
             <p>
-              To access the sites you own, you need to subscribe to a monthly or yearly payment plan. <%= link(
-                "Upgrade now →",
-                to: "/settings",
-                class: "text-sm font-medium text-yellow-800"
+              To access the sites you own, you need to subscribe to a monthly or yearly payment plan.
+              <.styled_link href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}>
+                Upgrade now →
+              </.styled_link>
               ) %>
             </p>
           </div>
@@ -450,7 +447,7 @@ defmodule PlausibleWeb.Live.Sites do
                 You can review your usage in the
                 <.styled_link
                   class="inline-block"
-                  href={Routes.auth_path(PlausibleWeb.Endpoint, :user_settings)}
+                  href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}
                 >
                   account settings
                 </.styled_link>.

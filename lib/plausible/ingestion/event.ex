@@ -34,6 +34,8 @@ defmodule Plausible.Ingestion.Event do
           | :site_page_blocklist
           | :site_hostname_allowlist
           | :verification_agent
+          | :lock_timeout
+          | :no_session_for_pageleave
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -376,6 +378,9 @@ defmodule Plausible.Ingestion.Event do
           | clickhouse_event: ClickhouseEventV2.merge_session(event.clickhouse_event, session)
         }
 
+      {:error, :no_session_for_pageleave} ->
+        drop(event, :no_session_for_pageleave)
+
       {:error, :timeout} ->
         drop(event, :lock_timeout)
     end
@@ -536,7 +541,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp get_root_domain(nil), do: "(none)"
+  defp get_root_domain("(none)"), do: "(none)"
 
   defp get_root_domain(hostname) do
     case :inet.parse_ipv4_address(String.to_charlist(hostname)) do

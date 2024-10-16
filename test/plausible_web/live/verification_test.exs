@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Live.VerificationTest do
   @retry_button ~s|a[phx-click="retry"]|
   # @go_to_dashboard_button ~s|a[href$="?skip_to_dashboard=true"]|
   @progress ~s|#progress-indicator p#progress|
-  @heading ~s|#progress-indicator h3|
+  @heading ~s|#progress-indicator h2|
 
   describe "GET /:domain" do
     @tag :ee_only
@@ -171,16 +171,6 @@ defmodule PlausibleWeb.Live.VerificationTest do
 
   defp kick_off_live_verification(conn, site) do
     {:ok, lv, _html} = conn |> no_slowdown() |> no_delay() |> live("/#{site.domain}/verification")
-
-    # {:ok, lv, _} =
-    #   live_isolated(conn, PlausibleWeb.Live.Verification,
-    #     session: %{
-    #       "domain" => site.domain,
-    #       "delay" => 0,
-    #       "slowdown" => 0
-    #     }
-    #   )
-    #
     {:ok, lv}
   end
 

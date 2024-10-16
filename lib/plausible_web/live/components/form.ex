@@ -17,10 +17,15 @@ defmodule PlausibleWeb.Live.Components.Form do
   <.input field={@form[:email]} type="email" />
   <.input name="my-input" errors={["oh no!"]} />
   """
+
+  @default_input_class "text-sm dark:bg-gray-900 block pl-3.5 py-2.5 border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
+
   attr(:id, :any, default: nil)
   attr(:name, :any)
   attr(:label, :string, default: nil)
+  attr(:help_text, :string, default: nil)
   attr(:value, :any)
+  attr(:width, :string, default: "w-full")
 
   attr(:type, :string,
     default: "text",
@@ -40,32 +45,90 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   attr(:rest, :global,
     include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
-         multiple pattern placeholder readonly required rows size step)
+         multiple pattern placeholder readonly required rows size step x-model)
   )
 
+  attr(:class, :any, default: @default_input_class)
+
+  attr(:mt?, :boolean, default: true)
+  attr(:max_one_error, :boolean, default: false)
   slot(:inner_block)
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     assigns
-    |> assign(field: nil, id: assigns.id || field.id)
+    |> assign(
+      field: nil,
+      id: assigns.id || field.id,
+      class: assigns.class,
+      mt?: assigns.mt?,
+      width: assigns.width
+    )
     |> assign(:errors, Enum.map(field.errors, &translate_error(&1)))
     |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
     |> assign_new(:value, fn -> field.value end)
     |> input()
   end
 
+  def input(%{type: "select"} = assigns) do
+    ~H"""
+    <div phx-feedback-for={@name} class={@mt? && "mt-2"}>
+      <.label for={@id} class="mb-2"><%= @label %></.label>
+
+      <p :if={@help_text} class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
+        <%= @help_text %>
+      </p>
+      <select id={@id} name={@name} multiple={@multiple} class={[@class, @width]} {@rest}>
+        <option :if={@prompt} value=""><%= @prompt %></option>
+        <%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
+      </select>
+      <.error :for={msg <- @errors}><%= msg %></.error>
+    </div>
+    """
+  end
+
+  def input(%{type: "checkbox"} = assigns) do
+    ~H"""
+    <div
+      phx-feedback-for={@name}
+      class={["flex flex-inline items-center sm:justify-start justify-center gap-x-2", @mt? && "mt-2"]}
+    >
+      <input
+        type="checkbox"
+        value={@value || "true"}
+        id={@id}
+        name={@name}
+        class="block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+      />
+      <.label for={@id}><%= @label %></.label>
+    </div>
+    """
+  end
+
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
+    errors =
+      if assigns.max_one_error do
+        Enum.take(assigns.errors, 1)
+      else
+        assigns.errors
+      end
+
+    assigns = assign(assigns, :errors, errors)
+
     ~H"""
-    <div phx-feedback-for={@name}>
-      <.label :if={@label != nil and @label != ""} for={@id}>
+    <div phx-feedback-for={@name} class={@mt? && "mt-2"}>
+      <.label :if={@label != nil and @label != ""} for={@id} class="mb-2">
         <%= @label %>
       </.label>
+      <p :if={@help_text} class="text-gray-500 dark:text-gray-400 mb-2 text-sm">
+        <%= @help_text %>
+      </p>
       <input
         type={@type}
         name={@name}
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+        class={[@class, @width, assigns[:rest][:disabled] && "text-gray-500 dark:text-gray-400"]}
         {@rest}
       />
       <%= render_slot(@inner_block) %>
@@ -78,33 +141,36 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   attr(:rest, :global)
   attr(:id, :string, required: true)
-  attr(:class, :string, default: "")
   attr(:name, :string, required: true)
-  attr(:label, :string, required: true)
+  attr(:label, :string, default: nil)
   attr(:value, :string, default: "")
 
   def input_with_clipboard(assigns) do
+    class = [@default_input_class, "pr-20 w-full"]
+    assigns = assign(assigns, class: class)
+
     ~H"""
-    <div class="my-4">
-      <div>
-        <.label for={@id}>
+    <div>
+      <div :if={@label}>
+        <.label for={@id} class="mb-2">
           <%= @label %>
         </.label>
       </div>
-      <div class="relative mt-1">
+      <div class="relative">
         <.input
+          mt?={false}
           id={@id}
           name={@name}
           value={@value}
           type="text"
           readonly="readonly"
-          class={[@class, "pr-20"]}
+          class={@class}
           {@rest}
         />
         <a
           onclick={"var input = document.getElementById('#{@id}'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"}
           href="javascript:void(0)"
-          class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline top-2 right-4"
+          class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline top-3 right-4"
         >
           <Heroicons.document_duplicate class="pr-1 text-indigo-600 dark:text-indigo-500 w-5 h-5" />
           <span>
@@ -257,12 +323,13 @@ defmodule PlausibleWeb.Live.Components.Form do
   @doc """
   Renders a label.
   """
-  attr(:for, :string, default: nil)
-  slot(:inner_block, required: true)
+  attr :for, :string, default: nil
+  slot :inner_block, required: true
+  attr :class, :string, default: ""
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="block font-medium dark:text-gray-100">
+    <label for={@for} class={["text-sm block font-medium dark:text-gray-100", @class]}>
       <%= render_slot(@inner_block) %>
     </label>
     """

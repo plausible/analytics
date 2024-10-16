@@ -1,4 +1,4 @@
-<PlausibleWeb.Components.Generic.focus_box>
+<.focus_box>
   <:title>
     <%= if @from_setup do %>
       Setup Two-Factor Authentication
@@ -40,9 +40,9 @@
     <button
       id="finish"
       class="button w-full mt-4"
-      onclick={"location.replace('#{Routes.auth_path(@conn, :user_settings) <> "#setup-2fa"}')"}
+      onclick={"location.replace('#{Routes.settings_path(@conn, :security) <> "#update-2fa"}')"}
     >
       Finish
     </button>
   </div>
-</PlausibleWeb.Components.Generic.focus_box>
+</.focus_box>

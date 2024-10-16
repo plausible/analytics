@@ -318,6 +318,22 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :lock_timeout
   end
 
+  test "drops pageleave event when no session found from cache" do
+    site = insert(:site)
+
+    payload = %{
+      name: "pageleave",
+      url: "https://#{site.domain}/123",
+      d: "#{site.domain}"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    assert {:ok, request} = Request.build(conn)
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+    assert dropped.drop_reason == :no_session_for_pageleave
+  end
+
   @tag :ee_only
   test "saves revenue amount" do
     site = insert(:site)
@@ -380,5 +396,21 @@ defmodule Plausible.Ingestion.EventTest do
 
     assert {:ok, %{buffered: [event]}} = Event.build_and_buffer(request)
     assert event.clickhouse_event.hostname == "foo.netlify.app"
+  end
+
+  test "hostname is (none) when no hostname can be derived from the url" do
+    site = insert(:site, domain: "foo.example.com")
+
+    payload = %{
+      domain: site.domain,
+      name: "pageview",
+      url: "/no/hostname"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [event]}} = Event.build_and_buffer(request)
+    assert event.clickhouse_event.hostname == "(none)"
   end
 end

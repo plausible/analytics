@@ -1,28 +1,26 @@
-<section class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden">
-  <PlausibleWeb.Components.Billing.Notice.premium_feature
-    billable_user={@site.owner}
-    current_user={@current_user}
+<.settings_tiles>
+  <.tile
+    docs="funnel-analysis"
     feature_mod={Plausible.Billing.Feature.Funnels}
-  />
+    site={@site}
+    conn={@conn}
+  >
+    <:title>
+      Funnels
+    </:title>
+    <:subtitle>
+      Compose Goals into Funnels
+    </:subtitle>
 
-  <div class="py-6 px-4 sm:p-6">
-    <header class="relative">
-      <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Funnels</h2>
-      <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-        Compose Goals into Funnels
-      </p>
-
-      <PlausibleWeb.Components.Generic.docs_info slug="funnel-analysis" />
-    </header>
-
-    <PlausibleWeb.Components.Site.Feature.toggle
-      feature_mod={Plausible.Billing.Feature.Funnels}
-      site={@site}
-      conn={@conn}
-    >
+    <div :if={Plausible.Billing.Feature.Funnels.enabled?(@site)}>
+      <PlausibleWeb.Components.Billing.Notice.premium_feature
+        billable_user={@site.owner}
+        current_user={@current_user}
+        feature_mod={Plausible.Billing.Feature.Funnels}
+      />
       <%= live_render(@conn, PlausibleWeb.Live.FunnelSettings,
         session: %{"site_id" => @site.id, "domain" => @site.domain}
       ) %>
-    </PlausibleWeb.Components.Site.Feature.toggle>
-  </div>
-</section>
+    </div>
+  </.tile>
+</.settings_tiles>

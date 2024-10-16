@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Components.TwoFactor do
   @moduledoc """
   Reusable components specific to 2FA
   """
-  use Phoenix.Component
+  use PlausibleWeb, :component
 
   attr :text, :string, required: true
   attr :scale, :integer, default: 4
@@ -24,26 +24,44 @@ defmodule PlausibleWeb.Components.TwoFactor do
   attr :form, :any, required: true
   attr :field, :any, required: true
   attr :class, :string, default: ""
+  attr :show_button?, :boolean, default: true
 
   def verify_2fa_input(assigns) do
+    input_class =
+      "font-mono tracking-[0.5em] w-36 pl-5 font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-500 dark:text-gray-200 dark:bg-gray-900 rounded-l-md"
+
+    input_class =
+      if assigns.show_button? do
+        input_class
+      else
+        [input_class, "rounded-r-md"]
+      end
+
+    assigns = assign(assigns, :input_class, input_class)
+
     ~H"""
-    <div class={[@class, "flex justify-center sm:justify-start"]}>
+    <div class={[@class, "flex items-center"]}>
       <%= Phoenix.HTML.Form.text_input(@form, @field,
         autocomplete: "off",
-        class:
-          "font-mono tracking-[0.5em] w-36 pl-5 font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-500 dark:text-gray-200 dark:bg-gray-900 rounded-l-md",
+        class: @input_class,
         oninput:
-          "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 6) document.getElementById('verify-button').focus()",
+          if @show_button? do
+            "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 6) document.getElementById('#{@id}').focus()"
+          else
+            "this.value=this.value.replace(/[^0-9]/g, '');"
+          end,
         onclick: "this.select();",
-        oninvalid: "document.getElementById('verify-button').disabled = false",
+        oninvalid: @show_button? && "document.getElementById('#{@id}').disabled = false",
         maxlength: "6",
         placeholder: "••••••",
         value: "",
         required: "required"
       ) %>
-      <PlausibleWeb.Components.Generic.button
+      <.button
+        :if={@show_button?}
         type="submit"
         id={@id}
+        mt?={false}
         class="rounded-l-none [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
       >
         <span class="label-enabled pointer-events-none">
@@ -51,10 +69,9 @@ defmodule PlausibleWeb.Components.TwoFactor do
         </span>
 
         <span class="label-disabled">
-          <PlausibleWeb.Components.Generic.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" />
-          Verifying...
+          <.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" /> Verifying...
         </span>
-      </PlausibleWeb.Components.Generic.button>
+      </.button>
     </div>
     """
   end
@@ -111,7 +128,7 @@ defmodule PlausibleWeb.Components.TwoFactor do
           x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           class="inline-block align-bottom bg-white dark:bg-gray-900 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
         >
-          <%= Phoenix.HTML.Form.form_for @form_data, @form_target, [onsubmit: @onsubmit], fn f -> %>
+          <.form :let={f} for={@form_data} action={@form_target} onsubmit={@onsubmit}>
             <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
               <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
                 <a
@@ -138,15 +155,16 @@ defmodule PlausibleWeb.Components.TwoFactor do
             </div>
             <div class="bg-gray-50 dark:bg-gray-850 px-4 py-3 sm:px-9 sm:flex sm:flex-row-reverse">
               <%= render_slot(@buttons) %>
-              <button
+              <.button
                 type="button"
-                class="sm:mr-2 mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                 x-on:click={"#{@state_param} = false"}
+                class="w-full sm:w-auto mr-2"
+                theme="bright"
               >
                 Cancel
-              </button>
+              </.button>
             </div>
-          <% end %>
+          </.form>
         </div>
       </div>
     </div>

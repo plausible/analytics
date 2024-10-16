@@ -25,6 +25,7 @@ defmodule Plausible.Auth.User do
   schema "users" do
     field :email, :string
     field :password_hash
+    field :old_password, :string, virtual: true
     field :password, :string, virtual: true
     field :password_confirmation, :string, virtual: true
     field :name, :string
@@ -65,14 +66,25 @@ defmodule Plausible.Auth.User do
     %Plausible.Auth.User{}
     |> cast(attrs, @required)
     |> validate_required(@required)
-    |> validate_length(:password, min: 12, message: "has to be at least 12 characters")
-    |> validate_length(:password, max: 128, message: "cannot be longer than 128 characters")
+    |> validate_password_length()
     |> validate_confirmation(:password, required: true)
     |> validate_password_strength()
     |> hash_password()
     |> start_trial()
     |> set_email_verification_status()
     |> unique_constraint(:email)
+  end
+
+  def name_changeset(user, attrs \\ %{}) do
+    user
+    |> cast(attrs, [:name])
+    |> validate_required([:name])
+  end
+
+  def theme_changeset(user, attrs \\ %{}) do
+    user
+    |> cast(attrs, [:theme])
+    |> validate_required([:theme])
   end
 
   def settings_changeset(user, attrs \\ %{}) do
@@ -142,9 +154,20 @@ defmodule Plausible.Auth.User do
     user
     |> cast(%{password: password}, [:password])
     |> validate_required([:password])
-    |> validate_length(:password, min: 12, message: "has to be at least 12 characters")
-    |> validate_length(:password, max: 128, message: "cannot be longer than 128 characters")
+    |> validate_password_length()
     |> validate_password_strength()
+    |> hash_password()
+  end
+
+  def password_changeset(user, params \\ %{}) do
+    user
+    |> cast(params, [:old_password, :password])
+    |> check_password(:old_password)
+    |> validate_required([:old_password, :password])
+    |> validate_password_length()
+    |> validate_confirmation(:password, required: true)
+    |> validate_password_strength()
+    |> validate_password_changed()
     |> hash_password()
   end
 
@@ -226,16 +249,33 @@ defmodule Plausible.Auth.User do
     end
   end
 
-  defp check_password(changeset) do
-    if password = get_change(changeset, :password) do
+  defp validate_password_changed(changeset) do
+    old_password = get_change(changeset, :old_password)
+    new_password = get_change(changeset, :password)
+
+    if old_password == new_password do
+      add_error(changeset, :password, "is too weak", validation: :different_password)
+    else
+      changeset
+    end
+  end
+
+  defp check_password(changeset, field \\ :password) do
+    if password = get_change(changeset, field) do
       if Plausible.Auth.Password.match?(password, changeset.data.password_hash) do
         changeset
       else
-        add_error(changeset, :password, "is invalid", validation: :check_password)
+        add_error(changeset, field, "is invalid", validation: :check_password)
       end
     else
       changeset
     end
+  end
+
+  defp validate_password_length(changeset) do
+    changeset
+    |> validate_length(:password, min: 12, message: "has to be at least 12 characters")
+    |> validate_length(:password, max: 128, message: "cannot be longer than 128 characters")
   end
 
   defp validate_password_strength(changeset) do

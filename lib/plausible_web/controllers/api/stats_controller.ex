@@ -105,20 +105,11 @@ defmodule PlausibleWeb.Api.StatsController do
          :ok <- validate_interval(params),
          :ok <- validate_interval_granularity(site, params, dates),
          params <- realtime_period_to_30m(params),
-         query = Query.from(site, params, debug_metadata(conn)),
+         query =
+           Query.from(site, params, debug_metadata(conn))
+           |> Query.set_include(:comparisons, parse_comparison_options(site, params)),
          {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
-      {timeseries_result, _meta} = Stats.timeseries(site, query, [metric])
-
-      comparison_opts = parse_comparison_opts(params)
-
-      comparison_result =
-        case Comparisons.compare(site, query, params["comparison"], comparison_opts) do
-          {:ok, comparison_query} ->
-            Stats.timeseries(site, comparison_query, [metric]) |> elem(0)
-
-          {:error, :not_supported} ->
-            nil
-        end
+      {timeseries_result, comparison_result, _meta} = Stats.timeseries(site, query, [metric])
 
       labels = label_timeseries(timeseries_result, comparison_result)
       present_index = present_index_for(site, query, labels)
@@ -207,17 +198,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
     params = realtime_period_to_30m(params)
 
-    query = Query.from(site, params, debug_metadata(conn))
+    query =
+      Query.from(site, params, debug_metadata(conn))
+      |> Query.set_include(:comparisons, parse_comparison_options(site, params))
 
-    comparison_opts = parse_comparison_opts(params)
-
-    comparison_query =
-      case Stats.Comparisons.compare(site, query, params["comparison"], comparison_opts) do
-        {:ok, query} -> query
-        {:error, _cause} -> nil
-      end
-
-    {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_query)
+    {top_stats, sample_percent} = fetch_top_stats(site, query)
+    comparison_query = comparison_query(site, query, params)
 
     json(conn, %{
       top_stats: top_stats,
@@ -311,25 +297,27 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp fetch_top_stats(site, query, comparison_query) do
+  defp fetch_top_stats(site, query) do
     goal_filter? = Filters.filtering_on_dimension?(query, "event:goal")
 
     cond do
       query.period == "30m" && goal_filter? ->
-        fetch_goal_realtime_top_stats(site, query, comparison_query)
+        fetch_goal_realtime_top_stats(site, query)
 
       query.period == "30m" ->
-        fetch_realtime_top_stats(site, query, comparison_query)
+        fetch_realtime_top_stats(site, query)
 
       goal_filter? ->
-        fetch_goal_top_stats(site, query, comparison_query)
+        fetch_goal_top_stats(site, query)
 
       true ->
-        fetch_other_top_stats(site, query, comparison_query)
+        fetch_other_top_stats(site, query)
     end
   end
 
-  defp fetch_goal_realtime_top_stats(site, query, _comparison_query) do
+  defp fetch_goal_realtime_top_stats(site, query) do
+    query = Query.set_include(query, :comparisons, nil)
+
     %{
       visitors: %{value: unique_conversions},
       events: %{value: total_conversions}
@@ -355,7 +343,9 @@ defmodule PlausibleWeb.Api.StatsController do
     {stats, 100}
   end
 
-  defp fetch_realtime_top_stats(site, query, _comparison_query) do
+  defp fetch_realtime_top_stats(site, query) do
+    query = Query.set_include(query, :comparisons, nil)
+
     %{
       visitors: %{value: visitors},
       pageviews: %{value: pageviews}
@@ -381,36 +371,35 @@ defmodule PlausibleWeb.Api.StatsController do
     {stats, 100}
   end
 
-  defp fetch_goal_top_stats(site, query, comparison_query) do
+  defp fetch_goal_top_stats(site, query) do
     metrics =
       [:total_visitors, :visitors, :events, :conversion_rate] ++ @revenue_metrics
 
     results = Stats.aggregate(site, query, metrics)
-    comparison = if comparison_query, do: Stats.aggregate(site, comparison_query, metrics)
 
     [
-      top_stats_entry(results, comparison, "Unique visitors", :total_visitors),
-      top_stats_entry(results, comparison, "Unique conversions", :visitors, graphable?: true),
-      top_stats_entry(results, comparison, "Total conversions", :events, graphable?: true),
+      top_stats_entry(results, "Unique visitors", :total_visitors),
+      top_stats_entry(results, "Unique conversions", :visitors, graphable?: true),
+      top_stats_entry(results, "Total conversions", :events, graphable?: true),
       on_ee do
-        top_stats_entry(results, comparison, "Average revenue", :average_revenue,
+        top_stats_entry(results, "Average revenue", :average_revenue,
           formatter: &format_money/1,
           graphable?: true
         )
       end,
       on_ee do
-        top_stats_entry(results, comparison, "Total revenue", :total_revenue,
+        top_stats_entry(results, "Total revenue", :total_revenue,
           formatter: &format_money/1,
           graphable?: true
         )
       end,
-      top_stats_entry(results, comparison, "Conversion rate", :conversion_rate, graphable?: true)
+      top_stats_entry(results, "Conversion rate", :conversion_rate, graphable?: true)
     ]
     |> Enum.reject(&is_nil/1)
     |> then(&{&1, 100})
   end
 
-  defp fetch_other_top_stats(site, query, comparison_query) do
+  defp fetch_other_top_stats(site, query) do
     page_filter? = Filters.filtering_on_dimension?(query, "event:page")
 
     metrics = [:visitors, :visits, :pageviews, :sample_percent]
@@ -423,27 +412,16 @@ defmodule PlausibleWeb.Api.StatsController do
       end
 
     current_results = Stats.aggregate(site, query, metrics)
-    prev_results = comparison_query && Stats.aggregate(site, comparison_query, metrics)
 
     stats =
       [
-        top_stats_entry(current_results, prev_results, "Unique visitors", :visitors,
-          graphable?: true
-        ),
-        top_stats_entry(current_results, prev_results, "Total visits", :visits, graphable?: true),
-        top_stats_entry(current_results, prev_results, "Total pageviews", :pageviews,
-          graphable?: true
-        ),
-        top_stats_entry(current_results, prev_results, "Views per visit", :views_per_visit,
-          graphable?: true
-        ),
-        top_stats_entry(current_results, prev_results, "Bounce rate", :bounce_rate,
-          graphable?: true
-        ),
-        top_stats_entry(current_results, prev_results, "Visit duration", :visit_duration,
-          graphable?: true
-        ),
-        top_stats_entry(current_results, prev_results, "Time on page", :time_on_page,
+        top_stats_entry(current_results, "Unique visitors", :visitors, graphable?: true),
+        top_stats_entry(current_results, "Total visits", :visits, graphable?: true),
+        top_stats_entry(current_results, "Total pageviews", :pageviews, graphable?: true),
+        top_stats_entry(current_results, "Views per visit", :views_per_visit, graphable?: true),
+        top_stats_entry(current_results, "Bounce rate", :bounce_rate, graphable?: true),
+        top_stats_entry(current_results, "Visit duration", :visit_duration, graphable?: true),
+        top_stats_entry(current_results, "Time on page", :time_on_page,
           formatter: fn
             nil -> 0
             value -> value
@@ -455,14 +433,14 @@ defmodule PlausibleWeb.Api.StatsController do
     {stats, current_results[:sample_percent][:value]}
   end
 
-  defp top_stats_entry(current_results, prev_results, name, key, opts \\ []) do
+  defp top_stats_entry(current_results, name, key, opts \\ []) do
     if current_results[key] do
       formatter = Keyword.get(opts, :formatter, & &1)
       value = get_in(current_results, [key, :value])
 
       %{name: name, value: formatter.(value)}
       |> maybe_put_graph_metric(opts, key)
-      |> maybe_put_comparison(prev_results, key, value, formatter)
+      |> maybe_put_comparison(current_results, key, formatter)
     end
   end
 
@@ -474,11 +452,11 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp maybe_put_comparison(entry, prev_results, key, value, formatter) do
-    if prev_results do
-      prev_value = get_in(prev_results, [key, :value])
-      change = Stats.Compare.calculate_change(key, prev_value, value)
+  defp maybe_put_comparison(entry, results, key, formatter) do
+    prev_value = get_in(results, [key, :comparison_value])
+    change = get_in(results, [key, :change])
 
+    if prev_value do
       entry
       |> Map.put(:comparison_value, formatter.(prev_value))
       |> Map.put(:change, change)
@@ -1551,13 +1529,40 @@ defmodule PlausibleWeb.Api.StatsController do
     |> halt()
   end
 
-  defp parse_comparison_opts(params) do
-    [
-      from: params["compare_from"],
-      to: params["compare_to"],
-      match_day_of_week?: params["match_day_of_week"] == "true"
-    ]
+  def comparison_query(site, query, params) do
+    options = parse_comparison_options(site, params)
+
+    if options do
+      Comparisons.get_comparison_query(query, options)
+    end
   end
+
+  def parse_comparison_options(_site, %{"period" => period}) when period in ~w(realtime all),
+    do: nil
+
+  def parse_comparison_options(_site, %{"comparison" => mode} = params)
+      when mode in ["previous_period", "year_over_year"] do
+    %{
+      mode: mode,
+      match_day_of_week: params["match_day_of_week"] == "true"
+    }
+  end
+
+  def parse_comparison_options(site, %{"comparison" => "custom"} = params) do
+    {:ok, date_range} =
+      Filters.QueryParser.parse_date_range_pair(site, [
+        params["compare_from"],
+        params["compare_to"]
+      ])
+
+    %{
+      mode: "custom",
+      date_range: date_range,
+      match_day_of_week: params["match_day_of_week"] == "true"
+    }
+  end
+
+  def parse_comparison_options(_site, _options), do: nil
 
   defp includes_imported?(source_query, comparison_query) do
     cond do

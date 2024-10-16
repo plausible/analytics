@@ -28,8 +28,8 @@ export function FilterLink({ path, filterInfo, onClick, children, extraClass }) 
     const newLabels = cleanLabels(newFilters, query.labels, filter[1], labels)
 
     return (
-      <AppNavigationLink 
-        title={`Add filter: ${plainFilterText(query, filter)}`}
+      <AppNavigationLink
+        title={`Add filter: ${plainFilterText({ ...query, labels: newLabels }, filter)}`}
         className={className}
         path={path}
         onClick={onClick}

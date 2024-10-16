@@ -1,21 +1,17 @@
-<PlausibleWeb.Components.Settings.settings_search_console
-  site={@site}
-  search_console_domains={@search_console_domains}
-/>
+<.settings_tiles>
+  <PlausibleWeb.Components.Settings.settings_search_console
+    conn={@conn}
+    site={@site}
+    search_console_domains={@search_console_domains}
+  />
 
-<section
-  :if={@has_plugins_tokens? || @conn.query_params["new_token"]}
-  class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden"
->
-  <div class="py-6 px-4 sm:p-6">
-    <header class="relative">
-      <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-        Plugin Tokens
-      </h2>
-      <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-        Control Plugin Access
-      </p>
-    </header>
+  <.tile :if={@has_plugins_tokens? || @conn.query_params["new_token"]}>
+    <:title>
+      Plugin Tokens
+    </:title>
+    <:subtitle>
+      Control Plugin Access
+    </:subtitle>
 
     <%= live_render(@conn, PlausibleWeb.Live.Plugins.API.Settings,
       session: %{
@@ -24,5 +20,5 @@
         "new_token" => @conn.query_params["new_token"]
       }
     ) %>
-  </div>
-</section>
+  </.tile>
+</.settings_tiles>

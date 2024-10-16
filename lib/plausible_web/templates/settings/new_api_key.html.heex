@@ -1,0 +1,24 @@
+<.focus_box>
+  <:title>Create new API key</:title>
+
+  <.form :let={f} for={@changeset} action={Routes.settings_path(@conn, :api_keys)}>
+    <.input type="text" field={f[:name]} label="Name" placeholder="Development" />
+
+    <div class="mt-4">
+      <.input_with_clipboard id="key-input" name="api_key[key]" label="Key" value={f[:key].value} />
+
+      <.error :for={
+        msg <- Enum.map(f[:key].errors, &PlausibleWeb.Live.Components.Form.translate_error/1)
+      }>
+        <%= msg %>
+      </.error>
+
+      <p class="mt-2 text-gray-500 dark:text-gray-200">
+        Make sure to store the key in a secure place. Once created, we will not be able to show it again.
+      </p>
+    </div>
+    <.button type="submit" class="w-full">
+      Continue
+    </.button>
+  </.form>
+</.focus_box>

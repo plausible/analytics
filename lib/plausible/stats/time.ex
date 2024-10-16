@@ -32,13 +32,13 @@ defmodule Plausible.Stats.Time do
   # Realtime graphs return numbers
   def format_datetime(other), do: other
 
-  @doc """
-  Returns list of time bucket labels for the given query.
-  """
   def time_dimension(query) do
     Enum.find(query.dimensions, &String.starts_with?(&1, "time"))
   end
 
+  @doc """
+  Returns list of time bucket labels for the given query.
+  """
   def time_labels(query) do
     time_labels_for_dimension(time_dimension(query), query)
   end

@@ -1,18 +1,23 @@
 defmodule Plausible.Stats.Filters.QueryParser do
   @moduledoc false
 
+  use Plausible
+
   alias Plausible.Stats.{TableDecider, Filters, Metrics, DateTimeRange, JSONSchema}
 
   @default_include %{
     imports: false,
     time_labels: false,
-    total_rows: false
+    total_rows: false,
+    comparisons: nil
   }
 
   @default_pagination %{
     limit: 10_000,
     offset: 0
   }
+
+  def default_include(), do: @default_include
 
   def parse(site, schema_type, params, now \\ nil) when is_map(params) do
     {now, date} =
@@ -31,9 +36,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
          {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
-         {:ok, include} <- parse_include(Map.get(params, "include", %{})),
+         {:ok, include} <- parse_include(site, Map.get(params, "include", %{})),
          {:ok, pagination} <- parse_pagination(Map.get(params, "pagination", %{})),
-         preloaded_goals <- preload_goals_if_needed(site, filters, dimensions),
+         {preloaded_goals, revenue_currencies} <-
+           preload_needed_goals(site, metrics, filters, dimensions),
          query = %{
            metrics: metrics,
            filters: filters,
@@ -41,20 +47,30 @@ defmodule Plausible.Stats.Filters.QueryParser do
            dimensions: dimensions,
            order_by: order_by,
            timezone: site.timezone,
-           preloaded_goals: preloaded_goals,
            include: include,
-           pagination: pagination
+           pagination: pagination,
+           preloaded_goals: preloaded_goals,
+           revenue_currencies: revenue_currencies
          },
          :ok <- validate_order_by(query),
          :ok <- validate_custom_props_access(site, query),
          :ok <- validate_toplevel_only_filter_dimension(query),
          :ok <- validate_special_metrics_filters(query),
          :ok <- validate_filtered_goals_exist(query),
+         :ok <- validate_revenue_metrics_access(site, query),
          :ok <- validate_metrics(query),
          :ok <- validate_include(query) do
       {:ok, query}
     end
   end
+
+  def parse_date_range_pair(site, [from, to]) when is_binary(from) and is_binary(to) do
+    with {:ok, date_range} <- date_range_from_date_strings(site, from, to) do
+      {:ok, date_range |> DateTimeRange.to_timezone("Etc/UTC")}
+    end
+  end
+
+  def parse_date_range_pair(_site, unknown), do: {:error, "Invalid date_range '#{i(unknown)}'."}
 
   defp parse_metrics(metrics) when is_list(metrics) do
     parse_list(metrics, &parse_metric/1)
@@ -228,8 +244,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     {:ok, DateTimeRange.new!(start_date, date, site.timezone)}
   end
 
-  defp parse_time_range(site, [from, to], _date, _now)
-       when is_binary(from) and is_binary(to) do
+  defp parse_time_range(site, [from, to], _date, _now) when is_binary(from) and is_binary(to) do
     case date_range_from_date_strings(site, from, to) do
       {:ok, date_range} -> {:ok, date_range}
       {:error, _} -> date_range_from_timestamps(from, to)
@@ -313,16 +328,37 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_order_direction([_, "desc"]), do: {:ok, :desc}
   defp parse_order_direction(entry), do: {:error, "Invalid order_by entry '#{i(entry)}'."}
 
-  defp parse_include(include) when is_map(include) do
-    {:ok, Map.merge(@default_include, atomize_keys(include))}
+  defp parse_include(site, include) when is_map(include) do
+    parsed =
+      include
+      |> atomize_keys()
+      |> update_comparisons_date_range(site)
+
+    with {:ok, include} <- parsed do
+      {:ok, Map.merge(@default_include, include)}
+    end
   end
+
+  defp update_comparisons_date_range(%{comparisons: %{date_range: date_range}} = include, site) do
+    with {:ok, parsed_date_range} <- parse_date_range_pair(site, date_range) do
+      {:ok, put_in(include, [:comparisons, :date_range], parsed_date_range)}
+    end
+  end
+
+  defp update_comparisons_date_range(include, _site), do: {:ok, include}
 
   defp parse_pagination(pagination) when is_map(pagination) do
     {:ok, Map.merge(@default_pagination, atomize_keys(pagination))}
   end
 
-  defp atomize_keys(map),
-    do: Map.new(map, fn {key, value} -> {String.to_existing_atom(key), value} end)
+  defp atomize_keys(map) when is_map(map) do
+    Map.new(map, fn {key, value} ->
+      key = String.to_existing_atom(key)
+      {key, atomize_keys(value)}
+    end)
+  end
+
+  defp atomize_keys(value), do: value
 
   defp parse_filter_key_string(filter_key, error_message \\ "") do
     case filter_key do
@@ -374,14 +410,19 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
-  def preload_goals_if_needed(site, filters, dimensions) do
+  def preload_needed_goals(site, metrics, filters, dimensions) do
     goal_filters? =
       Enum.any?(filters, fn [_, filter_key | _rest] -> filter_key == "event:goal" end)
 
     if goal_filters? or Enum.member?(dimensions, "event:goal") do
-      Plausible.Goals.for_site(site)
+      goals = Plausible.Goals.Filters.preload_needed_goals(site, filters)
+
+      {
+        goals,
+        preload_revenue_currencies(site, goals, metrics, dimensions)
+      }
     else
-      []
+      {[], %{}}
     end
   end
 
@@ -427,6 +468,25 @@ defmodule Plausible.Stats.Filters.QueryParser do
     else
       :ok
     end
+  end
+
+  on_ee do
+    alias Plausible.Stats.Goal.Revenue
+
+    defdelegate preload_revenue_currencies(site, preloaded_goals, metrics, dimensions),
+      to: Plausible.Stats.Goal.Revenue
+
+    defp validate_revenue_metrics_access(site, query) do
+      if Revenue.requested?(query.metrics) and not Revenue.available?(site) do
+        {:error, "The owner of this site does not have access to the revenue metrics feature."}
+      else
+        :ok
+      end
+    end
+  else
+    defp preload_revenue_currencies(_site, _preloaded_goals, _metrics, _dimensions), do: %{}
+
+    defp validate_revenue_metrics_access(_site, _query), do: :ok
   end
 
   defp validate_goal_filter(clause, configured_goals) do

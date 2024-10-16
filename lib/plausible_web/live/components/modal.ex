@@ -101,10 +101,9 @@ defmodule PlausibleWeb.Live.Components.Modal do
 
   """
 
-  use Phoenix.LiveComponent, global_prefixes: ~w(x-)
+  use PlausibleWeb, :live_component
 
   alias Phoenix.LiveView
-  alias Phoenix.LiveView.JS, as: LiveViewJS
 
   defmodule JS do
     @moduledoc false
@@ -120,14 +119,14 @@ defmodule PlausibleWeb.Live.Components.Modal do
     end
   end
 
-  @spec open(Phoenix.LiveView.Socket.t(), String.t()) :: Phoenix.LiveView.Socket.t()
+  @spec open(LiveView.Socket.t(), String.t()) :: LiveView.Socket.t()
   def open(socket, id) do
-    Phoenix.LiveView.push_event(socket, "open-modal", %{id: id})
+    LiveView.push_event(socket, "open-modal", %{id: id})
   end
 
-  @spec close(Phoenix.LiveView.Socket.t(), String.t()) :: Phoenix.LiveView.Socket.t()
+  @spec close(LiveView.Socket.t(), String.t()) :: LiveView.Socket.t()
   def close(socket, id) do
-    Phoenix.LiveView.push_event(socket, "close-modal", %{id: id})
+    LiveView.push_event(socket, "close-modal", %{id: id})
   end
 
   @impl true
@@ -171,7 +170,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
     ~H"""
     <div
       id={@id}
-      class="relative z-[49] [&[data-phx-ref]_div.modal-dialog]:hidden [&[data-phx-ref]_div.modal-loading]:block"
+      class="relative z-[2049] [&[data-phx-ref]_div.modal-dialog]:hidden [&[data-phx-ref]_div.modal-loading]:block"
       data-modal
       x-cloak
       x-data="{
@@ -223,27 +222,27 @@ defmodule PlausibleWeb.Live.Components.Modal do
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="bg-opacity-75"
         x-transition:leave-end="bg-opacity-0"
-        class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50"
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 z-[2050]"
       >
       </div>
       <div
         x-show="modalPreopen"
-        class="fixed flex inset-0 items-start z-50 overflow-y-auto overflow-x-hidden"
+        class="fixed flex inset-0 items-start z-[2050] overflow-y-auto overflow-x-hidden"
       >
         <div class="modal-pre-loading w-full self-center">
           <div class="text-center">
-            <PlausibleWeb.Components.Generic.spinner class="inline-block h-8 w-8" />
+            <.spinner class="inline-block h-8 w-8" />
           </div>
         </div>
       </div>
       <div
         x-show="modalOpen"
-        class="fixed flex inset-0 items-start z-50 overflow-y-auto overflow-x-hidden"
+        class="fixed flex inset-0 items-start z-[2050] overflow-y-auto overflow-x-hidden"
       >
         <Phoenix.Component.focus_wrap
           :if={@load_content?}
           phx-mounted={
-            LiveViewJS.show(
+            LiveView.JS.show(
               time: 300,
               transition:
                 {"ease-out duration-300", "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
@@ -265,7 +264,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
         </Phoenix.Component.focus_wrap>
         <div x-show="modalOpen" class="modal-loading hidden w-full self-center">
           <div class="text-center">
-            <PlausibleWeb.Components.Generic.spinner class="inline-block h-8 w-8" />
+            <.spinner class="inline-block h-8 w-8" />
           </div>
         </div>
       </div>

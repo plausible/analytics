@@ -3,7 +3,7 @@ defmodule PlausibleWeb.UserAuth do
   Functions for user session management.
   """
 
-  import Ecto.Query, only: [from: 2]
+  import Ecto.Query
 
   alias Plausible.Auth
   alias Plausible.Repo
@@ -65,12 +65,40 @@ defmodule PlausibleWeb.UserAuth do
     end
   end
 
-  @spec revoke_all_user_sessions(Auth.User.t()) :: :ok
-  def revoke_all_user_sessions(user) do
-    {_count, tokens} =
+  @spec revoke_user_session(Auth.User.t(), pos_integer()) :: :ok
+  def revoke_user_session(user, session_id) do
+    {_, tokens} =
       Repo.delete_all(
-        from us in Auth.UserSession, where: us.user_id == ^user.id, select: us.token
+        from us in Auth.UserSession,
+          where: us.user_id == ^user.id and us.id == ^session_id,
+          select: us.token
       )
+
+    case tokens do
+      [token] ->
+        PlausibleWeb.Endpoint.broadcast(live_socket_id(token), "disconnect", %{})
+
+      _ ->
+        :pass
+    end
+
+    :ok
+  end
+
+  @spec revoke_all_user_sessions(Auth.User.t(), Keyword.t()) :: :ok
+  def revoke_all_user_sessions(user, opts \\ []) do
+    except = Keyword.get(opts, :except)
+
+    delete_query = from us in Auth.UserSession, where: us.user_id == ^user.id, select: us.token
+
+    delete_query =
+      if except do
+        where(delete_query, [us], us.id != ^except.id)
+      else
+        delete_query
+      end
+
+    {_count, tokens} = Repo.delete_all(delete_query)
 
     Enum.each(tokens, fn token ->
       PlausibleWeb.Endpoint.broadcast(live_socket_id(token), "disconnect", %{})

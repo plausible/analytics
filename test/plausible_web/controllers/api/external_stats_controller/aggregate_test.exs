@@ -1625,6 +1625,32 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       assert json_response(conn, 200)["results"] == %{"time_on_page" => %{"value" => nil}}
     end
 
+    test "pageleave events are ignored when querying time on page", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 1234, timestamp: ~N[2021-01-01 12:00:00], pathname: "/1"),
+        build(:pageview, user_id: 1234, timestamp: ~N[2021-01-01 12:00:05], pathname: "/2"),
+        build(:event,
+          name: "pageleave",
+          user_id: 1234,
+          timestamp: ~N[2021-01-01 12:01:00],
+          pathname: "/1"
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "time_on_page",
+          "filters" => "event:page==/2",
+          "period" => "day",
+          "date" => "2021-01-01"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "time_on_page" => %{"value" => nil}
+             }
+    end
+
     test "conversion_rate when goal filter is applied", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event, name: "Signup"),

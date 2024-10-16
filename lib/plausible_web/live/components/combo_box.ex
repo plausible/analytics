@@ -36,8 +36,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   ComboBox own test suite, so there is no need for additional
   verification.
   """
-  use Phoenix.LiveComponent, global_prefixes: ~w(x-)
-  alias Phoenix.LiveView.JS
+  use PlausibleWeb, :live_component
 
   @default_suggestions_limit 15
 
@@ -110,16 +109,13 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
             phx-target={@myself}
             phx-debounce={200}
             value={@display_value}
-            class="[&.phx-change-loading+svg.spinner]:block border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm"
+            class="text-sm [&.phx-change-loading+svg.spinner]:block border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0"
             style="background-color: inherit;"
             required={@required}
           />
 
-          <PlausibleWeb.Components.Generic.spinner class="spinner hidden absolute inset-y-3 right-8" />
-          <PlausibleWeb.Components.Generic.spinner
-            x-show="selectionInProgress"
-            class="spinner absolute inset-y-3 right-8"
-          />
+          <.spinner class="spinner hidden absolute inset-y-3 right-8" />
+          <.spinner x-show="selectionInProgress" class="spinner absolute inset-y-3 right-8" />
 
           <.dropdown_anchor id={@id} />
 
@@ -133,7 +129,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
           />
         </div>
 
-        <.dropdown
+        <.combo_dropdown
           ref={@id}
           suggest_fun={@suggest_fun}
           suggestions={@suggestions}
@@ -176,14 +172,14 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:creatable, :boolean, required: true)
   attr(:display_value, :string, required: true)
 
-  def dropdown(assigns) do
+  def combo_dropdown(assigns) do
     ~H"""
     <ul
       tabindex="-1"
       id={"dropdown-#{@ref}"}
       x-show="isOpen"
       x-ref="suggestions"
-      class="w-full dropdown z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900"
+      class="text-sm w-full dropdown z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-900"
     >
       <.option
         :if={display_creatable_option?(assigns)}

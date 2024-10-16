@@ -723,6 +723,27 @@ defmodule Plausible.Billing.QuotaTest do
              } = Quota.Usage.monthly_pageview_usage(user)
     end
 
+    test "pageleave events are not counted towards monthly pageview usage" do
+      user = insert(:user) |> Plausible.Users.with_subscription()
+      site = insert(:site, members: [user])
+      now = NaiveDateTime.utc_now()
+
+      populate_stats(site, [
+        build(:event, timestamp: Timex.shift(now, days: -8), name: "custom"),
+        build(:pageview, user_id: 199, timestamp: Timex.shift(now, days: -5, minutes: -2)),
+        build(:event, user_id: 199, timestamp: Timex.shift(now, days: -5), name: "pageleave")
+      ])
+
+      assert %{
+               last_30_days: %{
+                 total: 2,
+                 custom_events: 1,
+                 pageviews: 1,
+                 date_range: %{}
+               }
+             } = Quota.Usage.monthly_pageview_usage(user)
+    end
+
     test "returns usage for user with subscription and a site" do
       today = Date.utc_today()
 

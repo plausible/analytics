@@ -13,6 +13,29 @@ defmodule PlausibleWeb do
 
       alias PlausibleWeb.Router.Helpers, as: Routes
       alias Phoenix.LiveView.JS
+
+      import PlausibleWeb.Components.Generic
+      import PlausibleWeb.Live.Components.Form
+    end
+  end
+
+  def live_component do
+    quote do
+      use Phoenix.LiveComponent, global_prefixes: ~w(x-)
+      import PlausibleWeb.Components.Generic
+      import PlausibleWeb.Live.Components.Form
+      alias Phoenix.LiveView.JS
+      alias PlausibleWeb.Router.Helpers, as: Routes
+    end
+  end
+
+  def component do
+    quote do
+      use Phoenix.Component, global_prefixes: ~w(x-)
+      import PlausibleWeb.Components.Generic
+      import PlausibleWeb.Live.Components.Form
+      alias Phoenix.LiveView.JS
+      alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end
 
@@ -35,13 +58,11 @@ defmodule PlausibleWeb do
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [view_module: 1]
 
-      # Use all HTML functionality (forms, tags, etc)
-      use Phoenix.HTML
       use Phoenix.Component
 
       import PlausibleWeb.ErrorHelpers
-      import PlausibleWeb.FormHelpers
       import PlausibleWeb.Components.Generic
+      import PlausibleWeb.Live.Components.Form
       alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end

@@ -1,0 +1,55 @@
+<.settings_tiles>
+  <.tile docs="download-invoices">
+    <:title>
+      <a id="invoices">Invoices</a>
+    </:title>
+    <:subtitle>
+      Download your invoices
+    </:subtitle>
+    <%= case @invoices do %>
+      <% {:error, :no_invoices} -> %>
+        <p class="mt-12 mb-8 text-center text-sm">
+          <span>
+            No invoices issued yet
+          </span>
+        </p>
+      <% {:error, :request_failed} -> %>
+        <.notice theme={:gray} title="We couldn't retrieve your invoices">
+          Please refresh the page or try again later
+        </.notice>
+      <% {:ok, invoice_list} when is_list(invoice_list) -> %>
+        <div x-data="{showAll: false}" x-cloak>
+          <.table
+            rows={Enum.with_index(format_invoices(invoice_list))}
+            row_attrs={
+              fn {_invoice, idx} ->
+                %{
+                  "x-show" => "showAll || #{idx} < 12"
+                }
+              end
+            }
+          >
+            <:thead>
+              <.th>Date</.th>
+              <.th>Amount</.th>
+              <.th>Invoice</.th>
+            </:thead>
+            <:tbody :let={{invoice, _idx}}>
+              <.td><%= invoice.date %></.td>
+              <.td><%= invoice.currency <> invoice.amount %></.td>
+              <.td>
+                <.styled_link href={invoice.url} new_tab={true}>View</.styled_link>
+              </.td>
+            </:tbody>
+            <tr :if={length(invoice_list) > 12}>
+              <td colspan="3" class="text-center pt-8 pb-4">
+                <.button_link href={} theme="bright" x-on:click="showAll = true" x-show="!showAll">
+                  Show More
+                </.button_link>
+              </td>
+            </tr>
+          </.table>
+        </div>
+    <% end %>
+  </.tile>
+</.settings_tiles>

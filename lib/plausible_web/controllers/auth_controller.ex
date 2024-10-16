@@ -3,7 +3,6 @@ defmodule PlausibleWeb.AuthController do
   use Plausible.Repo
 
   alias Plausible.Auth
-  alias Plausible.Billing.Quota
   alias PlausibleWeb.TwoFactor
   alias PlausibleWeb.UserAuth
 
@@ -26,13 +25,6 @@ defmodule PlausibleWeb.AuthController do
   plug(
     PlausibleWeb.RequireAccountPlug
     when action in [
-           :user_settings,
-           :save_settings,
-           :update_email,
-           :cancel_update_email,
-           :new_api_key,
-           :create_api_key,
-           :delete_api_key,
            :delete_me,
            :activate_form,
            :activate,
@@ -259,17 +251,6 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  def user_settings(conn, _params) do
-    user = conn.assigns.current_user
-    settings_changeset = Auth.User.settings_changeset(user)
-    email_changeset = Auth.User.settings_changeset(user)
-
-    render_settings(conn,
-      settings_changeset: settings_changeset,
-      email_changeset: email_changeset
-    )
-  end
-
   def initiate_2fa_setup(conn, _params) do
     case Auth.TOTP.initiate(conn.assigns.current_user) do
       {:ok, user, %{totp_uri: totp_uri, secret: secret}} ->
@@ -278,7 +259,7 @@ defmodule PlausibleWeb.AuthController do
       {:error, :already_setup} ->
         conn
         |> put_flash(:error, "Two-Factor Authentication is already setup for this account.")
-        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
+        |> redirect(to: Routes.settings_path(conn, :security) <> "#update-2fa")
     end
   end
 
@@ -286,7 +267,7 @@ defmodule PlausibleWeb.AuthController do
     if Auth.TOTP.initiated?(conn.assigns.current_user) do
       render(conn, "verify_2fa_setup.html")
     else
-      redirect(conn, to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
+      redirect(conn, to: Routes.settings_path(conn, :security) <> "#update-2fa")
     end
   end
 
@@ -305,7 +286,7 @@ defmodule PlausibleWeb.AuthController do
       {:error, :not_initiated} ->
         conn
         |> put_flash(:error, "Please enable Two-Factor Authentication for this account first.")
-        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
+        |> redirect(to: Routes.settings_path(conn, :security) <> "#update-2fa")
     end
   end
 
@@ -315,12 +296,12 @@ defmodule PlausibleWeb.AuthController do
         conn
         |> TwoFactor.Session.clear_remember_2fa()
         |> put_flash(:success, "Two-Factor Authentication is disabled")
-        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
+        |> redirect(to: Routes.settings_path(conn, :security) <> "#update-2fa")
 
       {:error, :invalid_password} ->
         conn
         |> put_flash(:error, "Incorrect password provided")
-        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
+        |> redirect(to: Routes.settings_path(conn, :security) <> "#update-2fa")
     end
   end
 
@@ -334,12 +315,12 @@ defmodule PlausibleWeb.AuthController do
       {:error, :invalid_password} ->
         conn
         |> put_flash(:error, "Incorrect password provided")
-        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
+        |> redirect(to: Routes.settings_path(conn, :security) <> "#update-2fa")
 
       {:error, :not_enabled} ->
         conn
         |> put_flash(:error, "Please enable Two-Factor Authentication for this account first.")
-        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
+        |> redirect(to: Routes.settings_path(conn, :security) <> "#update-2fa")
     end
   end
 
@@ -441,141 +422,10 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  def save_settings(conn, %{"user" => user_params}) do
-    user = conn.assigns.current_user
-    changes = Auth.User.settings_changeset(user, user_params)
-
-    case Repo.update(changes) do
-      {:ok, _user} ->
-        conn
-        |> put_flash(:success, "Account settings saved successfully")
-        |> redirect(to: Routes.auth_path(conn, :user_settings))
-
-      {:error, changeset} ->
-        email_changeset = Auth.User.settings_changeset(user)
-
-        render_settings(conn,
-          settings_changeset: changeset,
-          email_changeset: email_changeset
-        )
-    end
-  end
-
-  def update_email(conn, %{"user" => user_params}) do
-    user = conn.assigns.current_user
-
-    with :ok <- Auth.rate_limit(:email_change_user, user),
-         changes = Auth.User.email_changeset(user, user_params),
-         {:ok, user} <- Repo.update(changes) do
-      if user.email_verified do
-        handle_email_updated(conn)
-      else
-        Auth.EmailVerification.issue_code(user)
-        redirect(conn, to: Routes.auth_path(conn, :activate_form))
-      end
-    else
-      {:error, %Ecto.Changeset{} = changeset} ->
-        settings_changeset = Auth.User.settings_changeset(user)
-
-        render_settings(conn,
-          settings_changeset: settings_changeset,
-          email_changeset: changeset
-        )
-
-      {:error, {:rate_limit, _}} ->
-        settings_changeset = Auth.User.settings_changeset(user)
-
-        {:error, changeset} =
-          user
-          |> Auth.User.email_changeset(user_params)
-          |> Ecto.Changeset.add_error(:email, "too many requests, try again in an hour")
-          |> Ecto.Changeset.apply_action(:validate)
-
-        render_settings(conn,
-          settings_changeset: settings_changeset,
-          email_changeset: changeset
-        )
-    end
-  end
-
-  def cancel_update_email(conn, _params) do
-    changeset = Auth.User.cancel_email_changeset(conn.assigns.current_user)
-
-    case Repo.update(changeset) do
-      {:ok, user} ->
-        conn
-        |> put_flash(:success, "Email changed back to #{user.email}")
-        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-email-address")
-
-      {:error, _} ->
-        conn
-        |> put_flash(
-          :error,
-          "Could not cancel email update because previous email has already been taken"
-        )
-        |> redirect(to: Routes.auth_path(conn, :activate_form))
-    end
-  end
-
   defp handle_email_updated(conn) do
     conn
     |> put_flash(:success, "Email updated successfully")
-    |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-email-address")
-  end
-
-  defp render_settings(conn, opts) do
-    current_user = conn.assigns.current_user
-    settings_changeset = Keyword.fetch!(opts, :settings_changeset)
-    email_changeset = Keyword.fetch!(opts, :email_changeset)
-    api_keys = Repo.preload(current_user, :api_keys).api_keys
-
-    render(conn, "user_settings.html",
-      api_keys: api_keys,
-      settings_changeset: settings_changeset,
-      email_changeset: email_changeset,
-      subscription: current_user.subscription,
-      invoices: Plausible.Billing.paddle_api().get_invoices(current_user.subscription),
-      theme: current_user.theme || "system",
-      team_member_limit: Quota.Limits.team_member_limit(current_user),
-      team_member_usage: Quota.Usage.team_member_usage(current_user),
-      site_limit: Quota.Limits.site_limit(current_user),
-      site_usage: Quota.Usage.site_usage(current_user),
-      pageview_limit: Quota.Limits.monthly_pageview_limit(current_user),
-      pageview_usage: Quota.Usage.monthly_pageview_usage(current_user),
-      totp_enabled?: Auth.TOTP.enabled?(current_user)
-    )
-  end
-
-  def new_api_key(conn, _params) do
-    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{})
-
-    render(conn, "new_api_key.html", changeset: changeset)
-  end
-
-  def create_api_key(conn, %{"api_key" => %{"name" => name, "key" => key}}) do
-    case Auth.create_api_key(conn.assigns.current_user, name, key) do
-      {:ok, _api_key} ->
-        conn
-        |> put_flash(:success, "API key created successfully")
-        |> redirect(to: "/settings#api-keys")
-
-      {:error, changeset} ->
-        render(conn, "new_api_key.html", changeset: changeset)
-    end
-  end
-
-  def delete_api_key(conn, %{"id" => id}) do
-    case Auth.delete_api_key(conn.assigns.current_user, id) do
-      :ok ->
-        conn
-        |> put_flash(:success, "API key revoked successfully")
-        |> redirect(to: "/settings#api-keys")
-
-      {:error, :not_found} ->
-        conn
-        |> put_flash(:error, "Could not find API Key to delete")
-        |> redirect(to: "/settings#api-keys")
-    end
+    |> redirect(to: Routes.settings_path(conn, :security) <> "#update-email")
   end
 
   def delete_me(conn, params) do

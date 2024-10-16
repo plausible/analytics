@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Live.CSVImport do
   """
 
   use PlausibleWeb, :live_view
-  alias PlausibleWeb.Components.Generic
 
   require Plausible.Imported.SiteImport
   alias Plausible.Imported.CSVImporter
@@ -45,7 +44,7 @@ defmodule PlausibleWeb.Live.CSVImport do
 
           fn meta, entry ->
             local_path = Path.join(local_dir, Path.basename(meta.path))
-            File.rename!(meta.path, local_path)
+            Plausible.File.mv!(meta.path, local_path)
             {:ok, %{"local_path" => local_path, "filename" => entry.client_name}}
           end
       end
@@ -101,7 +100,7 @@ defmodule PlausibleWeb.Live.CSVImport do
       phx-drop-target={@upload.ref}
       class="block border-2 dark:border-gray-600 rounded-md p-4 hover:bg-gray-50 dark:hover:bg-gray-900 hover:border-indigo-500 dark:hover:border-indigo-600 transition cursor-pointer"
     >
-      <div class="flex items-center text-gray-500 dark:text-gray-500">
+      <div class="hidden md:flex items-center text-gray-500 dark:text-gray-500">
         <Heroicons.document_plus class="w-5 h-5 transition" />
         <span class="ml-1.5 text-sm">
           (or drag-and-drop your unzipped CSVs here)
@@ -109,7 +108,7 @@ defmodule PlausibleWeb.Live.CSVImport do
         <.live_file_input upload={@upload} class="hidden" />
       </div>
 
-      <ul id="imported-tables" class="mt-3.5 mb-0.5 space-y-1.5">
+      <ul id="imported-tables" class="truncate mt-3.5 mb-0.5 space-y-1.5">
         <.imported_table
           :for={{table, upload} <- @imported_tables}
           table={table}
@@ -123,35 +122,28 @@ defmodule PlausibleWeb.Live.CSVImport do
 
   defp confirm_button(assigns) do
     ~H"""
-    <button
-      type="submit"
-      disabled={not @can_confirm?}
-      class={[
-        "rounded-md w-full bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400 dark:disabled:text-gray-400 dark:disabled:bg-gray-700 mt-4",
-        unless(@can_confirm?, do: "cursor-not-allowed")
-      ]}
-    >
+    <.button type="submit" disabled={not @can_confirm?} class="w-full">
       <%= if @date_range do %>
         Confirm import <.dates range={@date_range} />
       <% else %>
         Confirm import
       <% end %>
-    </button>
+    </.button>
     """
   end
 
   defp maybe_date_range_warning(assigns) do
     ~H"""
     <%= if @clamped do %>
-      <Generic.notice :if={@clamped != @original} title="Dates Adjusted" theme={:yellow} class="mt-4">
+      <.notice :if={@clamped != @original} title="Dates Adjusted" theme={:yellow} class="mt-4">
         The dates <.dates range={@original} />
         overlap with previous imports, so we'll use the next best period, <.dates range={@clamped} />
-      </Generic.notice>
+      </.notice>
     <% else %>
-      <Generic.notice title="Dates Conflict" theme={:red} class="mt-4">
+      <.notice title="Dates Conflict" theme={:red} class="mt-4">
         The dates <.dates range={@original} />
         overlap with dates we've already imported and cannot be used for new imports.
-      </Generic.notice>
+      </.notice>
     <% end %>
     """
   end
@@ -180,7 +172,7 @@ defmodule PlausibleWeb.Live.CSVImport do
     <li id={@table} class="ml-0.5">
       <div class="flex items-center space-x-2 text-gray-600 dark:text-gray-500">
         <Heroicons.document_check :if={@status == :success} class="w-4 h-4" />
-        <Generic.spinner :if={@status == :in_progress} class="w-4 h-4" />
+        <.spinner :if={@status == :in_progress} class="w-4 h-4" />
         <Heroicons.document :if={@status == :empty} class="w-4 h-4 opacity-80" />
         <Heroicons.document :if={@status == :error} class="w-4 h-4 text-red-600 dark:text-red-700" />
 

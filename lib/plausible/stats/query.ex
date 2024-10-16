@@ -17,12 +17,10 @@ defmodule Plausible.Stats.Query do
             timezone: nil,
             v2: false,
             legacy_breakdown: false,
+            remove_unavailable_revenue_metrics: false,
             preloaded_goals: [],
-            include: %{
-              imports: false,
-              time_labels: false,
-              total_rows: false
-            },
+            revenue_currencies: %{},
+            include: Plausible.Stats.Filters.QueryParser.default_include(),
             debug_metadata: %{},
             pagination: nil
 
@@ -74,6 +72,10 @@ defmodule Plausible.Stats.Query do
     else
       refresh_imported_opts(new_query)
     end
+  end
+
+  def set_include(query, key, value) do
+    struct!(query, include: Map.put(query.include, key, value))
   end
 
   def add_filter(query, filter) do

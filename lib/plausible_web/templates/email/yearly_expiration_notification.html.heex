@@ -1,0 +1,12 @@
+Time flies! This is a reminder that your annual subscription for <%= Plausible.product_name() %> will expire on <%= @next_bill_date %>.
+<br /><br /> You need to
+<.unstyled_link href={
+  PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan)
+}>
+  renew your subscription
+</.unstyled_link>
+if you want to continue using Plausible to count your website stats in a privacy-friendly way.
+<br /><br />
+If you don't want to continue your subscription, there's no action required. You will lose access to your dashboard on <%= @next_bill_date %> and we'll stop accepting stats on <%= @accept_traffic_until %>.
+<br /><br />
+Have a question, feedback or need some guidance? Just reply to this email to get in touch!

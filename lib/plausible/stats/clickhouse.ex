@@ -56,6 +56,7 @@ defmodule Plausible.Stats.Clickhouse do
         ClickhouseRepo.one(
           from(e in "events_v2",
             where: e.site_id in ^site_ids,
+            where: e.name != "pageleave",
             where: fragment("toDate(?)", e.timestamp) >= ^date_range.first,
             where: fragment("toDate(?)", e.timestamp) <= ^date_range.last,
             select: {

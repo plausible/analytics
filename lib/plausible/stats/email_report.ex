@@ -26,8 +26,8 @@ defmodule Plausible.Stats.EmailReport do
   end
 
   defp with_comparisons(stats, site, query, metrics) do
-    {:ok, prev_query} = Comparisons.compare(site, query, "previous_period")
-    prev_period_stats = Stats.aggregate(site, prev_query, metrics)
+    comparison_query = Comparisons.get_comparison_query(query, %{mode: "previous_period"})
+    prev_period_stats = Stats.aggregate(site, comparison_query, metrics)
 
     stats
     |> Enum.map(fn {metric, %{value: value}} ->

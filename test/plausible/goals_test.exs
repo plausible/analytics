@@ -55,6 +55,14 @@ defmodule Plausible.GoalsTest do
     assert {"has already been taken", _} = changeset.errors[:event_name]
   end
 
+  test "create/2 fails to create a goal with 'pageleave' as event_name (reserved)" do
+    site = insert(:site)
+    assert {:error, changeset} = Goals.create(site, %{"event_name" => "pageleave"})
+
+    assert {"The event name 'pageleave' is reserved and cannot be used as a goal", _} =
+             changeset.errors[:event_name]
+  end
+
   @tag :ee_only
   test "create/2 sets site.updated_at for revenue goal" do
     site_1 = insert(:site, updated_at: DateTime.add(DateTime.utc_now(), -3600))
@@ -121,9 +129,9 @@ defmodule Plausible.GoalsTest do
     revenue_goals = Goals.list_revenue_goals(site)
 
     assert length(revenue_goals) == 3
-    assert %{event_name: "One", currency: :EUR} in revenue_goals
-    assert %{event_name: "Two", currency: :EUR} in revenue_goals
-    assert %{event_name: "Three", currency: :USD} in revenue_goals
+    assert %{display_name: "One", currency: :EUR} in revenue_goals
+    assert %{display_name: "Two", currency: :EUR} in revenue_goals
+    assert %{display_name: "Three", currency: :USD} in revenue_goals
   end
 
   test "create/2 clears currency for pageview goals" do
