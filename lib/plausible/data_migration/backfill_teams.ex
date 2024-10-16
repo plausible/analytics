@@ -471,8 +471,17 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     site_memberships
     |> Enum.group_by(&{&1.site.team, &1.user}, &{&1.site, &1.role})
+    |> tap(fn grouped ->
+      if grouped != %{} do
+        IO.puts("Team memberships to be created: #{map_size(grouped)}")
+
+        IO.puts(
+          "Max guest memberships: #{Enum.max_by(grouped, fn {_, gms} -> length(gms) end) |> elem(1) |> length()}"
+        )
+      end
+    end)
     |> Enum.with_index()
-    |> Enum.each(fn {{{team, user}, sites_and_roles}, idx} ->
+    |> Task.async_stream(fn {{{team, user}, sites_and_roles}, idx} ->
       team_membership =
         team
         |> Teams.Membership.changeset(user, :guest)
@@ -491,6 +500,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         IO.write(".")
       end
     end)
+    |> Stream.run()
   end
 
   defp sync_guest_memberships(guest_memberships_and_roles) do
