@@ -67,20 +67,27 @@ function ComparisonTooltipContent({
 }) {
   const longFormatter = formatter ?? MetricFormatterLong[metric]
 
-  let label = metricLabel.toLowerCase()
-  label = value === 1 ? label.slice(0, -1) : label
+  const label = useMemo(() => {
+    if (metricLabel.length < 3) {
+      return ""
+    }
+    let label = metricLabel.toLowerCase()
+    label = value === 1 ? label.slice(0, -1) : label
+
+    return ` ${label}`
+  }, [metricLabel])
 
   if (!comparison) {
     return (
       <div className="whitespace-nowrap">
-        {longFormatter(value)} {label}
+        {longFormatter(value)}{label}
       </div>
     )
   }
 
   return (
     <div className="whitespace-nowrap">
-      {longFormatter(value)} vs. {longFormatter(comparison.value)} {label}
+      {longFormatter(value)} vs. {longFormatter(comparison.value)}{label}
       <ChangeArrow metric={metric} change={comparison.change} className="pl-4 text-xs text-gray-100" />
     </div>
   )
