@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert %{"graph_metric" => "visit_duration"} = visit_duration
     end
 
-    test "returns graph_metric key for graphable top stats in realtime mode", %{
+    test "returns graph_metric key for top stats in realtime mode", %{
       conn: conn,
       site: site
     } do
@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         |> json_response(200)
         |> Map.get("top_stats")
 
-      refute Map.has_key?(current_visitors, "graph_metric")
+      assert %{"graph_metric" => "current_visitors"} = current_visitors
       assert %{"graph_metric" => "visitors"} = unique_visitors
       assert %{"graph_metric" => "pageviews"} = pageviews
     end
@@ -789,7 +789,10 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime")
 
       res = json_response(conn, 200)
-      assert %{"name" => "Current visitors", "value" => 2} in res["top_stats"]
+
+      assert %{"name" => "Current visitors", "value" => 2, "graph_metric" => "current_visitors"} in res[
+               "top_stats"
+             ]
     end
 
     test "shows unique visitors (last 30 minutes)", %{conn: conn, site: site} do
@@ -840,7 +843,10 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=realtime&filters=#{filters}")
 
       res = json_response(conn, 200)
-      assert %{"name" => "Current visitors", "value" => 3} in res["top_stats"]
+
+      assert %{"name" => "Current visitors", "value" => 3, "graph_metric" => "current_visitors"} in res[
+               "top_stats"
+             ]
     end
 
     test "shows unique/total conversions (last 30 min) with goal filter", %{
@@ -916,7 +922,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert %{"graph_metric" => "conversion_rate"} = cr
     end
 
-    test "returns graph_metric key for graphable top stats with a goal filter in realtime mode",
+    test "returns graph_metric key for top stats with a goal filter in realtime mode",
          %{conn: conn, site: site} do
       filters = Jason.encode!(%{goal: "Signup"})
 
@@ -926,7 +932,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         |> json_response(200)
         |> Map.get("top_stats")
 
-      refute Map.has_key?(current_visitors, "graph_metric")
+      assert %{"graph_metric" => "current_visitors"} = current_visitors
       assert %{"graph_metric" => "visitors"} = unique_conversions
       assert %{"graph_metric" => "events"} = total_conversions
     end

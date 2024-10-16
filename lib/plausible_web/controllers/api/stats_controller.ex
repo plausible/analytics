@@ -322,6 +322,7 @@ defmodule PlausibleWeb.Api.StatsController do
     stats = [
       %{
         name: "Current visitors",
+        graph_metric: :current_visitors,
         value: Stats.current_visitors(site)
       },
       %{
@@ -350,6 +351,7 @@ defmodule PlausibleWeb.Api.StatsController do
     stats = [
       %{
         name: "Current visitors",
+        graph_metric: :current_visitors,
         value: Stats.current_visitors(site)
       },
       %{

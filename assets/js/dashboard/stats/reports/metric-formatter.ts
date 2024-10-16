@@ -2,12 +2,13 @@ import { Metric } from '../../../types/query-api'
 import { formatMoneyShort, formatMoneyLong } from '../../util/money'
 import { numberShortFormatter, durationFormatter, percentageFormatter, numberLongFormatter } from "../../util/number-formatter"
 
-export type FormattableMetric = Metric | 'total_visitors' | 'exit_rate'
+export type FormattableMetric = Metric | 'total_visitors' | 'current_visitors' | 'exit_rate'
 
 export const MetricFormatterShort: Record<FormattableMetric, (value: any) => any> = {
   events: numberShortFormatter,
   pageviews: numberShortFormatter,
   total_visitors: numberShortFormatter,
+  current_visitors: numberShortFormatter,
   views_per_visit: numberShortFormatter,
   visitors: numberShortFormatter,
   visits: numberShortFormatter,
@@ -29,6 +30,7 @@ export const MetricFormatterLong: Record<FormattableMetric, (value: any) => any>
   events: numberLongFormatter,
   pageviews: numberLongFormatter,
   total_visitors: numberLongFormatter,
+  current_visitors: numberShortFormatter,
   views_per_visit: numberLongFormatter,
   visitors: numberLongFormatter,
   visits: numberLongFormatter,
