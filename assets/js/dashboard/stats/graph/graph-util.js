@@ -36,20 +36,6 @@ export const METRIC_LABELS = {
   'total_revenue': 'Total Revenue',
 }
 
-export const METRIC_FORMATTER = {
-  'visitors': numberShortFormatter,
-  'pageviews': numberShortFormatter,
-  'events': numberShortFormatter,
-  'visits': numberShortFormatter,
-  'views_per_visit': (number) => (number),
-  'bounce_rate': (number) => (`${number}%`),
-  'visit_duration': durationFormatter,
-  'conversions': numberShortFormatter,
-  'conversion_rate': (number) => (`${number}%`),
-  'total_revenue': numberShortFormatter,
-  'average_revenue': numberShortFormatter,
-}
-
 const buildComparisonDataset = function(comparisonPlot) {
   if (!comparisonPlot) return []
 

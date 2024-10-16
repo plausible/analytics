@@ -1,5 +1,6 @@
-import { METRIC_FORMATTER, METRIC_LABELS } from './graph-util'
 import dateFormatter from './date-formatter'
+import { METRIC_LABELS } from './graph-util'
+import { MetricFormatterShort } from '../reports/metric-formatter'
 
 const renderBucketLabel = function(query, graphData, label, comparison = false) {
   let isPeriodFull = graphData.full_intervals?.[label]
@@ -44,7 +45,7 @@ const buildTooltipData = function(query, graphData, metric, tooltipModel) {
   const comparisonValue = comparisonData?.raw || 0
   const comparisonDifference = label && comparisonLabel && calculatePercentageDifference(comparisonValue, value)
 
-  const metricFormatter = METRIC_FORMATTER[metric]
+  const metricFormatter = MetricFormatterShort[metric]
   const formattedValue = metricFormatter(value)
   const formattedComparisonValue = comparisonData && metricFormatter(comparisonValue)
 
