@@ -19,17 +19,20 @@ function detailsIcon() {
   )
 }
 
-export default function MoreLink({ linkProps, className, onClick }) {
-  return (
-    <div className={`w-full text-center ${className ? className : ''}`}>
-      <AppNavigationLink
-        {...linkProps}
-        className="leading-snug font-bold text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition tracking-wide"
-        onClick={onClick}
-      >
-        {detailsIcon()}
-        DETAILS
-      </AppNavigationLink>
-    </div>
-  )
+export default function MoreLink({ linkProps, list, className, onClick }) {
+  if (list.length > 0) {
+    return (
+      <div className={`w-full text-center ${className ? className : ''}`}>
+        <AppNavigationLink
+          {...linkProps}
+          className="leading-snug font-bold text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition tracking-wide"
+          onClick={onClick}
+        >
+          {detailsIcon()}
+          DETAILS
+        </AppNavigationLink>
+      </div>
+    )
+  }
+  return null
 }

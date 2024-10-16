@@ -299,8 +299,8 @@ export default function ListReport({ keyLabel, metrics, colMinWidth = COL_MIN_WI
     const moreResultsAvailable = state.list.length >= MAX_ITEMS
     const hideDetails = maybeHideDetails && !moreResultsAvailable
 
-    const showDetails = !!detailsLinkProps && !state.loading && !hideDetails && state.list.length > 0
-    return showDetails && <MoreLink className={'mt-2'} linkProps={detailsLinkProps} />
+    const showDetails = !!detailsLinkProps && !state.loading && !hideDetails
+    return showDetails && <MoreLink className={'mt-2'} linkProps={detailsLinkProps} list={state.list} />
   }
 
   return (
