@@ -4,7 +4,6 @@ import React from 'react'
 import { Tooltip } from '../../util/tooltip'
 import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from 'classnames'
-import { numberShortFormatter, durationFormatter } from '../../util/number-formatter'
 import * as storage from '../../util/storage'
 import { formatDateRange } from '../../util/date'
 import { getGraphableMetrics } from './graph-util'
@@ -12,7 +11,7 @@ import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { useLastLoadContext } from '../../last-load-context'
 import { ChangeArrow } from '../reports/comparison-tooltip-content'
-import MetricFormatter from '../reports/metric-formatter'
+import { MetricFormatterShort, MetricFormatterLong } from '../reports/metric-formatter'
 
 function Maybe({ condition, children }) {
   if (condition) {
@@ -22,22 +21,13 @@ function Maybe({ condition, children }) {
   }
 }
 
-function topStatNumberShort(name, value) {
-  if (['visit duration', 'time on page'].includes(name.toLowerCase())) {
-    return durationFormatter(value)
-  } else if (['bounce rate', 'conversion rate'].includes(name.toLowerCase())) {
-    return value + '%'
-  } else if (
-    ['average revenue', 'total revenue'].includes(name.toLowerCase())
-  ) {
-    return value?.short
-  } else {
-    return numberShortFormatter(value)
-  }
+function topStatNumberShort(metric, value) {
+  const formatter = MetricFormatterShort[metric]
+  return formatter(value)
 }
 
 function topStatNumberLong(metric, value) {
-  const formatter = MetricFormatter[metric]
+  const formatter = MetricFormatterLong[metric]
   return formatter(value)
 }
 
@@ -155,7 +145,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
                 className="font-bold text-xl dark:text-gray-100"
                 id={stat.graph_metric}
               >
-                {topStatNumberShort(stat.name, stat.value)}
+                {topStatNumberShort(stat.graph_metric, stat.value)}
               </p>
               <Maybe condition={!query.comparison && stat.change != null}>
                 <ChangeArrow metric={stat.graph_metric} change={stat.change} className="pl-2 text-xs dark:text-gray-100" />
@@ -171,7 +161,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
           <Maybe condition={query.comparison}>
             <div>
               <p className="font-bold text-xl text-gray-500 dark:text-gray-400">
-                {topStatNumberShort(stat.name, stat.comparison_value)}
+                {topStatNumberShort(stat.graph_metric, stat.comparison_value)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 {formatDateRange(site, data.comparing_from, data.comparing_to)}

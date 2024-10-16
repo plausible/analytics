@@ -1,7 +1,7 @@
 import { hasGoalFilter } from "../../util/filters"
 import React from "react"
 import MetricEntry from "./metric-entry"
-import MetricFormatter from "./metric-formatter"
+import { MetricFormatterShort } from "./metric-formatter"
 
 // Class representation of a metric.
 
@@ -40,7 +40,7 @@ export class Metric {
     this.sortable = props.sortable
     this.width = props.width ?? 'w-24'
 
-    this.formatter = props.formatter || MetricFormatter[this.key]
+    this.formatter = props.formatter || MetricFormatterShort[this.key]
     this.renderValue = (listItem, metric, metricLabel) => {
       return <MetricEntry listItem={listItem} metric={metric} metricLabel={metricLabel} formatter={this.formatter} />
     }

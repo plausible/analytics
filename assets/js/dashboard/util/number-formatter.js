@@ -33,6 +33,10 @@ export function numberShortFormatter(num) {
   }
 }
 
+export function numberLongFormatter(num) {
+  return num.toLocaleString()
+}
+
 function pad(num, size) {
   return ('000' + num).slice(size * -1);
 }
