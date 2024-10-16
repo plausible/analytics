@@ -1,5 +1,5 @@
 There are currently <%= @current_visitors %> visitors on
-<.unstyled_link href={"https://" <> @site.domain}><%= @site.domain %></.unstyled_link>.
+<a href={"https://" <> @site.domain}><%= @site.domain %></a>.
 <%= if Enum.count(@sources) > 0 do %>
   <br />
   <br /> The top sources for current visitors:<br />
@@ -9,7 +9,6 @@ There are currently <%= @current_visitors %> visitors on
 <% end %>
 
 <%= if @link do %>
-  <br /><br /> View dashboard:
-  <.unstyled_link href={@link}><%= @link %></.unstyled_link>
+  <br /><br /> View dashboard: <a href={@link}><%= @link %></a>
 <% end %>
 <br /><br /> Congrats on the spike in traffic!
