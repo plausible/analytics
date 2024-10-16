@@ -67,12 +67,16 @@ function ComparisonTooltipContent({
 }) {
   const longFormatter = formatter ?? MetricFormatterLong[metric]
 
-  if (!comparison) {
-    return <>{longFormatter(value)}</>
-  }
-
   let label = metricLabel.toLowerCase()
   label = value === 1 ? label.slice(0, -1) : label
+
+  if (!comparison) {
+    return (
+      <div className="whitespace-nowrap">
+        {longFormatter(value)} {label}
+      </div>
+    )
+  }
 
   return (
     <div className="whitespace-nowrap">
