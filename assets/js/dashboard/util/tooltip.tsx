@@ -1,8 +1,14 @@
-import React, { useState } from "react";
+import React, { ReactNode, useState } from "react";
 import { usePopper } from 'react-popper';
 import classNames from 'classnames'
 
-export function Tooltip({ children, info, className, onClick, boundary }) {
+export function Tooltip({ children, info, className, onClick, boundary }: {
+  info: ReactNode,
+  children: ReactNode
+  className?: string,
+  onClick?: () => void,
+  boundary?: any
+}) {
   const [visible, setVisible] = useState(false);
   const [referenceElement, setReferenceElement] = useState(null);
   const [popperElement, setPopperElement] = useState(null);
