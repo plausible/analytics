@@ -1,5 +1,45 @@
 defmodule Plausible.ConfigTest do
   use ExUnit.Case
+  import Plausible.ConfigHelpers
+
+  describe "get_bool_from_path_or_env/3" do
+    test "parses truthy vars" do
+      truthy = ["1", "t", "true", "y", "yes", "on"]
+
+      for var <- truthy do
+        env = [{"ENABLE_EMAIL_VERIFICATION", var}]
+        config = runtime_config(env)
+        assert get_in(config, [:plausible, :selfhost, :enable_email_verification]) == true
+      end
+    end
+
+    test "parses false vars" do
+      falsy = ["0", "f", "false", "n", "no", "off"]
+
+      for var <- falsy do
+        env = [{"ENABLE_EMAIL_VERIFICATION", var}]
+        config = runtime_config(env)
+        assert get_in(config, [:plausible, :selfhost, :enable_email_verification]) == false
+      end
+    end
+
+    test "supports defaults" do
+      put_system_env_undo([{"ENABLE_EMAIL_VERIFICATION", nil}])
+      config_dir = "/run/secrets"
+
+      assert get_bool_from_path_or_env(config_dir, "ENABLE_EMAIL_VERIFICATION") == nil
+      assert get_bool_from_path_or_env(config_dir, "ENABLE_EMAIL_VERIFICATION", true) == true
+      assert get_bool_from_path_or_env(config_dir, "ENABLE_EMAIL_VERIFICATION", false) == false
+    end
+
+    test "raises on invalid var" do
+      env = [{"ENABLE_EMAIL_VERIFICATION", "YOLO"}]
+
+      assert_raise ArgumentError,
+                   "Invalid boolean value: \"YOLO\". Expected one of: 1, 0, t, f, true, false, y, n, yes, no, on, off",
+                   fn -> runtime_config(env) end
+    end
+  end
 
   describe "mailer" do
     test "mailer email default" do
@@ -132,9 +172,9 @@ defmodule Plausible.ConfigTest do
                {:password, "one"},
                {:tls, :if_available},
                {:allowed_tls_versions, [:tlsv1, :"tlsv1.1", :"tlsv1.2"]},
-               {:ssl, "true"},
+               {:ssl, true},
                {:retries, "3"},
-               {:no_mx_lookups, "true"}
+               {:no_mx_lookups, true}
              ]
     end
 
