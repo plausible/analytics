@@ -38,14 +38,12 @@ export default function MetricEntry(props: {
 
   const {metric, listItem} = props
   const {value, comparison} = useMemo(() => valueRenderProps(listItem, metric), [listItem, metric])
-
   const metricLabel = useMemo(() => props.renderLabel(query), [query])
-
   const shortFormatter = props.formatter ?? MetricFormatterShort[metric]
 
   const tooltipBoundary = React.useRef(null)
 
-  if (value === null && !comparison) {
+  if (value === null && (!comparison || comparison.value === null)) {
     return <>{shortFormatter(value)}</>
   }
 
