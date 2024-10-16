@@ -41,21 +41,17 @@ export default function MetricEntry(props: {
   const metricLabel = useMemo(() => props.renderLabel(query), [query])
   const shortFormatter = props.formatter ?? MetricFormatterShort[metric]
 
-  const tooltipBoundary = React.useRef(null)
-
   if (value === null && (!comparison || comparison.value === null)) {
     return <>{shortFormatter(value)}</>
   }
 
   return (
-    <div ref={tooltipBoundary}>
-      <Tooltip
-        info={<ComparisonTooltipContent value={value} comparison={comparison} metricLabel={metricLabel} {...props} />}
-      >
-        {shortFormatter(value)}
-        {comparison ? <ChangeArrow change={comparison.change} metric={metric} className="pl-2" hideNumber /> : null}
-      </Tooltip>
-    </div>
+    <Tooltip
+      info={<ComparisonTooltipContent value={value} comparison={comparison} metricLabel={metricLabel} {...props} />}
+    >
+      {shortFormatter(value)}
+      {comparison ? <ChangeArrow change={comparison.change} metric={metric} className="pl-2" hideNumber /> : null}
+    </Tooltip>
   )
 }
 
