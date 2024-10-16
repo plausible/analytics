@@ -39,6 +39,10 @@ export default function MetricEntry(props: {
 
   const tooltipBoundary = React.useRef(null)
 
+  if (value === null && !comparison) {
+    return <>{shortFormatter(value)}</>
+  }
+
   return (
     <div ref={tooltipBoundary}>
       <Tooltip
@@ -80,7 +84,7 @@ function ComparisonTooltipContent({
   if (!comparison) {
     return (
       <div className="whitespace-nowrap">
-        {longFormatter(value)}{label}
+        {longFormatter(value)}
       </div>
     )
   }
