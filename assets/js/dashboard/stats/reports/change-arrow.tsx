@@ -1,18 +1,6 @@
-import React, { Fragment } from 'react'
+import React from 'react'
 import { Metric } from '../../../types/query-api'
 import { numberShortFormatter } from '../../util/number-formatter'
-
-export function ComparisonTooltipContent({
-}: {
-  metric: Metric
-  metricName: string,
-  value: any,
-  comparisonValue: any,
-  formatter: (value: any) => any
-}) {
-  return <Fragment />
-}
-
 
 export function ChangeArrow({ change, metric, className, hideNumber }: { change: number, metric: Metric, className: string, hideNumber?: boolean }) {
   const formattedChange = hideNumber ? null : ` ${numberShortFormatter(Math.abs(change))}%`

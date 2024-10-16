@@ -10,7 +10,7 @@ import { getGraphableMetrics } from './graph-util'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { useLastLoadContext } from '../../last-load-context'
-import { ChangeArrow } from '../reports/comparison-tooltip-content'
+import { ChangeArrow } from '../reports/change-arrow'
 import { MetricFormatterShort, MetricFormatterLong } from '../reports/metric-formatter'
 
 function Maybe({ condition, children }) {

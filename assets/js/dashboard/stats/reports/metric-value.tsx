@@ -1,7 +1,7 @@
 import React, { ReactNode, useMemo } from 'react'
 import { Metric } from '../../../types/query-api'
 import { Tooltip } from '../../util/tooltip'
-import { ChangeArrow } from './comparison-tooltip-content'
+import { ChangeArrow } from './change-arrow'
 import { MetricFormatterLong, MetricFormatterShort } from './metric-formatter'
 import { DashboardQuery } from '../../query'
 import { useQueryContext } from '../../query-context'
