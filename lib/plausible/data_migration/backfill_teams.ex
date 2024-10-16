@@ -59,7 +59,10 @@ defmodule Plausible.DataMigration.BackfillTeams do
           is_distinct(o.trial_expiry_date, t.trial_expiry_date) or
             is_distinct(o.accept_traffic_until, t.accept_traffic_until) or
             is_distinct(o.allow_next_upgrade_override, t.allow_next_upgrade_override) or
-            is_distinct(o.grace_period, t.grace_period),
+            is_distinct(o.grace_period["id"], t.grace_period["id"]) or
+            is_distinct(o.grace_period["is_over"], t.grace_period["is_over"]) or
+            is_distinct(o.grace_period["end_date"], t.grace_period["end_date"]) or
+            is_distinct(o.grace_period["manual_lock"], t.grace_period["manual_lock"]),
         preload: [team_memberships: {tm, user: o}]
       )
       |> @repo.all(timeout: :infinity)
@@ -364,31 +367,34 @@ defmodule Plausible.DataMigration.BackfillTeams do
       end
     end)
     |> Enum.with_index()
-    |> Task.async_stream(fn {{owner, site_ids}, idx} ->
-      team =
-        "My Team"
-        |> Teams.Team.changeset()
-        |> Ecto.Changeset.put_change(:trial_expiry_date, owner.trial_expiry_date)
-        |> Ecto.Changeset.put_change(:accept_traffic_until, owner.accept_traffic_until)
-        |> Ecto.Changeset.put_change(
-          :allow_next_upgrade_override,
-          owner.allow_next_upgrade_override
-        )
-        |> Ecto.Changeset.put_embed(:grace_period, owner.grace_period)
+    |> Task.async_stream(
+      fn {{owner, site_ids}, idx} ->
+        team =
+          "My Team"
+          |> Teams.Team.changeset()
+          |> Ecto.Changeset.put_change(:trial_expiry_date, owner.trial_expiry_date)
+          |> Ecto.Changeset.put_change(:accept_traffic_until, owner.accept_traffic_until)
+          |> Ecto.Changeset.put_change(
+            :allow_next_upgrade_override,
+            owner.allow_next_upgrade_override
+          )
+          |> Ecto.Changeset.put_embed(:grace_period, owner.grace_period)
+          |> @repo.insert!()
+
+        team
+        |> Teams.Membership.changeset(owner, :owner)
         |> @repo.insert!()
 
-      team
-      |> Teams.Membership.changeset(owner, :owner)
-      |> @repo.insert!()
+        @repo.update_all(from(s in Plausible.Site, where: s.id in ^site_ids),
+          set: [team_id: team.id]
+        )
 
-      @repo.update_all(from(s in Plausible.Site, where: s.id in ^site_ids),
-        set: [team_id: team.id]
-      )
-
-      if rem(idx, 10) == 0 do
-        IO.write(".")
-      end
-    end, timeout: :infinity)
+        if rem(idx, 10) == 0 do
+          IO.write(".")
+        end
+      end,
+      timeout: :infinity
+    )
     |> Enum.to_list()
     |> length()
   end
@@ -413,34 +419,40 @@ defmodule Plausible.DataMigration.BackfillTeams do
   defp backfill_subscriptions(subscriptions) do
     subscriptions
     |> Enum.with_index()
-    |> Task.async_stream(fn {subscription, idx} ->
-      [%{team: team, role: :owner}] = subscription.user.team_memberships
+    |> Task.async_stream(
+      fn {subscription, idx} ->
+        [%{team: team, role: :owner}] = subscription.user.team_memberships
 
-      subscription
-      |> Ecto.Changeset.change(team_id: team.id)
-      |> @repo.update!()
+        subscription
+        |> Ecto.Changeset.change(team_id: team.id)
+        |> @repo.update!()
 
-      if rem(idx, 1000) == 0 do
-        IO.write(".")
-      end
-    end, timeout: :infinity)
+        if rem(idx, 1000) == 0 do
+          IO.write(".")
+        end
+      end,
+      timeout: :infinity
+    )
     |> Stream.run()
   end
 
   defp backfill_enterprise_plans(enterprise_plans) do
     enterprise_plans
     |> Enum.with_index()
-    |> Task.async_stream(fn {enterprise_plan, idx} ->
-      [%{team: team, role: :owner}] = enterprise_plan.user.team_memberships
+    |> Task.async_stream(
+      fn {enterprise_plan, idx} ->
+        [%{team: team, role: :owner}] = enterprise_plan.user.team_memberships
 
-      enterprise_plan
-      |> Ecto.Changeset.change(team_id: team.id)
-      |> @repo.update!()
+        enterprise_plan
+        |> Ecto.Changeset.change(team_id: team.id)
+        |> @repo.update!()
 
-      if rem(idx, 1000) == 0 do
-        IO.write(".")
-      end
-    end, timeout: :infinity)
+        if rem(idx, 1000) == 0 do
+          IO.write(".")
+        end
+      end,
+      timeout: :infinity
+    )
     |> Stream.run()
   end
 
@@ -475,25 +487,28 @@ defmodule Plausible.DataMigration.BackfillTeams do
       end
     end)
     |> Enum.with_index()
-    |> Task.async_stream(fn {{{team, user}, sites_and_roles}, idx} ->
-      team_membership =
-        team
-        |> Teams.Membership.changeset(user, :guest)
-        |> @repo.insert!(
-          on_conflict: [set: [updated_at: now]],
-          conflict_target: [:team_id, :user_id]
-        )
+    |> Task.async_stream(
+      fn {{{team, user}, sites_and_roles}, idx} ->
+        team_membership =
+          team
+          |> Teams.Membership.changeset(user, :guest)
+          |> @repo.insert!(
+            on_conflict: [set: [updated_at: now]],
+            conflict_target: [:team_id, :user_id]
+          )
 
-      Enum.each(sites_and_roles, fn {site, role} ->
-        team_membership
-        |> Teams.GuestMembership.changeset(site, translate_role(role))
-        |> @repo.insert!()
-      end)
+        Enum.each(sites_and_roles, fn {site, role} ->
+          team_membership
+          |> Teams.GuestMembership.changeset(site, translate_role(role))
+          |> @repo.insert!()
+        end)
 
-      if rem(idx, 1000) == 0 do
-        IO.write(".")
-      end
-    end, timeout: :infinity)
+        if rem(idx, 1000) == 0 do
+          IO.write(".")
+        end
+      end,
+      timeout: :infinity
+    )
     |> Stream.run()
   end
 
