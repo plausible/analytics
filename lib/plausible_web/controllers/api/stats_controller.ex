@@ -131,7 +131,7 @@ defmodule PlausibleWeb.Api.StatsController do
     Enum.map(timeseries, fn row ->
       case row[metric] do
         nil -> 0
-        %Money{} = money -> Decimal.to_float(money.amount)
+        %{value: value} -> value
         value -> value
       end
     end)
@@ -378,10 +378,10 @@ defmodule PlausibleWeb.Api.StatsController do
       top_stats_entry(results, "Unique conversions", :visitors),
       top_stats_entry(results, "Total conversions", :events),
       on_ee do
-        top_stats_entry(results, "Average revenue", :average_revenue, formatter: &format_money/1)
+        top_stats_entry(results, "Average revenue", :average_revenue)
       end,
       on_ee do
-        top_stats_entry(results, "Total revenue", :total_revenue, formatter: &format_money/1)
+        top_stats_entry(results, "Total revenue", :total_revenue)
       end,
       top_stats_entry(results, "Conversion rate", :conversion_rate)
     ]
@@ -1255,11 +1255,6 @@ defmodule PlausibleWeb.Api.StatsController do
       site
       |> Stats.breakdown(query, metrics, pagination)
       |> transform_keys(%{goal: :name})
-      |> Enum.map(fn goal ->
-        goal
-        |> Enum.map(&format_revenue_metric/1)
-        |> Map.new()
-      end)
 
     if params["csv"] do
       to_csv(conversions, [:name, :visitors, :events], [
@@ -1342,10 +1337,6 @@ defmodule PlausibleWeb.Api.StatsController do
     props =
       Stats.breakdown(site, query, metrics, pagination)
       |> transform_keys(%{prop_key => :name})
-      |> Enum.map(fn entry ->
-        Enum.map(entry, &format_revenue_metric/1)
-        |> Map.new()
-      end)
 
     %{results: props, skip_imported_reason: query.skip_imported_reason}
   end
@@ -1521,15 +1512,6 @@ defmodule PlausibleWeb.Api.StatsController do
       source_query.include_imported -> true
       comparison_query && comparison_query.include_imported -> true
       true -> false
-    end
-  end
-
-  on_ee do
-    defdelegate format_revenue_metric(metric_value), to: PlausibleWeb.Controllers.API.Revenue
-    defdelegate format_money(money), to: PlausibleWeb.Controllers.API.Revenue
-  else
-    defp format_revenue_metric({metric, value}) do
-      {metric, value}
     end
   end
 

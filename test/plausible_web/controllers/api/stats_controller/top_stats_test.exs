@@ -1396,13 +1396,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{
                "name" => "Average revenue",
-               "value" => %{"long" => "$1,659.50", "short" => "$1.7K"},
+               "value" => %{"long" => "$1,659.50", "short" => "$1.7K", "value" => 1659.5},
                "graph_metric" => "average_revenue"
              } in top_stats
 
       assert %{
                "name" => "Total revenue",
-               "value" => %{"long" => "$3,319.00", "short" => "$3.3K"},
+               "value" => %{"long" => "$3,319.00", "short" => "$3.3K", "value" => 3319.0},
                "graph_metric" => "total_revenue"
              } in top_stats
     end
@@ -1455,13 +1455,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{
                "name" => "Average revenue",
-               "value" => %{"long" => "$1,659.50", "short" => "$1.7K"},
+               "value" => %{"long" => "$1,659.50", "short" => "$1.7K", "value" => 1659.5},
                "graph_metric" => "average_revenue"
              } in top_stats
 
       assert %{
                "name" => "Total revenue",
-               "value" => %{"long" => "$6,638.00", "short" => "$6.6K"},
+               "value" => %{"long" => "$6,638.00", "short" => "$6.6K", "value" => 6638.0},
                "graph_metric" => "total_revenue"
              } in top_stats
     end
@@ -1531,13 +1531,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{
                "name" => "Average revenue",
-               "value" => %{"long" => "$1,000.00", "short" => "$1.0K"},
+               "value" => %{"long" => "$1,000.00", "short" => "$1.0K", "value" => 1000.0},
                "graph_metric" => "average_revenue"
              } in top_stats
 
       assert %{
                "name" => "Total revenue",
-               "value" => %{"long" => "$2,000.00", "short" => "$2.0K"},
+               "value" => %{"long" => "$2,000.00", "short" => "$2.0K", "value" => 2000.0},
                "graph_metric" => "total_revenue"
              } in top_stats
     end
@@ -1553,13 +1553,13 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{
                "name" => "Average revenue",
-               "value" => %{"long" => "$0.00", "short" => "$0.0"},
+               "value" => %{"long" => "$0.00", "short" => "$0.0", "value" => 0.0},
                "graph_metric" => "average_revenue"
              } in top_stats
 
       assert %{
                "name" => "Total revenue",
-               "value" => %{"long" => "$0.00", "short" => "$0.0"},
+               "value" => %{"long" => "$0.00", "short" => "$0.0", "value" => 0.0},
                "graph_metric" => "total_revenue"
              } in top_stats
     end
