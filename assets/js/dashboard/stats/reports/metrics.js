@@ -39,6 +39,8 @@ export class Metric {
 
     this.formatter = props.formatter
     this.renderLabel = props.renderLabel
+
+    this.renderValue = this.renderValue.bind(this)
   }
 
   renderValue(listItem) {
@@ -103,7 +105,7 @@ export const createTotalVisitors = (props) => {
 }
 
 export const createVisits = (props) => {
-  return new Metric({width: 'w-24', sortable: true, ...props, key: "visits", renderValue })
+  return new Metric({width: 'w-24', sortable: true, ...props, key: "visits" })
 }
 
 export const createVisitDuration = (props) => {
