@@ -91,9 +91,9 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
             </.error>
           </div>
 
-          <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
+          <.button type="submit" class="w-full">
             Add Property →
-          </PlausibleWeb.Components.Generic.button>
+          </.button>
 
           <button
             :if={@prop_key_options_count > 0}

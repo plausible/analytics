@@ -1,0 +1,22 @@
+Congrats! We've recorded the first visitor on
+<.unstyled_link href={"https://#{@site.domain}"}><%= @site.domain %></.unstyled_link>. Your traffic is now being counted without compromising the user experience and privacy of your visitors.
+<br /><br /> Do check out your
+<.unstyled_link href={"#{plausible_url()}/#{URI.encode_www_form(@site.domain)}"}>
+  easy to use, fast-loading and privacy-friendly dashboard
+</.unstyled_link>. <br /><br /> Something looks off? Take a look at our
+<.unstyled_link href="https://plausible.io/docs/troubleshoot-integration">
+  installation troubleshooting guide
+</.unstyled_link>. <br /><br />
+<%= if not Plausible.ce?() and Plausible.Users.on_trial?(@user) do %>
+  You're on a 30-day free trial with no obligations so do take your time to explore Plausible. Here's how to get
+  <.unstyled_link href="https://plausible.io/docs/your-plausible-experience">
+    the most out of your Plausible experience
+  </.unstyled_link>. <br /><br />
+<% end %>
+PS: You can import your historical Google Analytics stats into your Plausible dashboard.
+<.unstyled_link href="https://plausible.io/docs/google-analytics-import">
+  Learn how our GA importer works
+</.unstyled_link>. <br /><br />
+<%= unless Plausible.ce?() do %>
+  Do reply back to this email if you have any questions. We're here to help.
+<% end %>

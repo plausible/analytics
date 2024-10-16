@@ -397,4 +397,20 @@ defmodule Plausible.Ingestion.EventTest do
     assert {:ok, %{buffered: [event]}} = Event.build_and_buffer(request)
     assert event.clickhouse_event.hostname == "foo.netlify.app"
   end
+
+  test "hostname is (none) when no hostname can be derived from the url" do
+    site = insert(:site, domain: "foo.example.com")
+
+    payload = %{
+      domain: site.domain,
+      name: "pageview",
+      url: "/no/hostname"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [event]}} = Event.build_and_buffer(request)
+    assert event.clickhouse_event.hostname == "(none)"
+  end
 end

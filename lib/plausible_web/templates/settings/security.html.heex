@@ -70,9 +70,9 @@
       />
 
       <div :if={@totp_enabled?} class="mt-2">
-        <PlausibleWeb.Live.Components.Form.label for={f[:two_factor_code].id} class="mb-2">
+        <.label for={f[:two_factor_code].id} class="mb-2">
           Verify with 2FA Code
-        </PlausibleWeb.Live.Components.Form.label>
+        </.label>
         <PlausibleWeb.Components.TwoFactor.verify_2fa_input
           form={f}
           show_button?={false}
@@ -129,7 +129,6 @@
       </div>
 
       <PlausibleWeb.Components.TwoFactor.modal
-        :let={f}
         id="disable-2fa-modal"
         state_param="disable2FAOpen"
         form_data={@conn.params}
@@ -154,18 +153,18 @@
         </div>
 
         <div class="mt-3">
-          <%= password_input(f, :password,
-            id: "disable_2fa_password",
-            placeholder: "Enter password",
-            "x-ref": "disable2FAPassword",
-            class:
-              "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
-          ) %>
+          <.input
+            type="password"
+            id="disable_2fa_password"
+            name="disable_2fa_password"
+            value=""
+            placeholder="Enter password"
+            x-ref="disable2FAPassword"
+          />
         </div>
       </PlausibleWeb.Components.TwoFactor.modal>
 
       <PlausibleWeb.Components.TwoFactor.modal
-        :let={f}
         id="regenerate-2fa-modal"
         state_param="regenerate2FAOpen"
         form_data={@conn.params}
@@ -203,13 +202,14 @@
         </div>
 
         <div class="mt-3 w-full">
-          <%= password_input(f, :password,
-            id: "regenerate_2fa_password",
-            placeholder: "Enter password",
-            "x-ref": "regenerate2FAPassword",
-            class:
-              "w-full shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
-          ) %>
+          <.input
+            type="password"
+            id="regenerate_2fa_password"
+            name="regenerate_2fa_password"
+            value=""
+            placeholder="Enter password"
+            x-ref="regenerate2FAPassword"
+          />
         </div>
       </PlausibleWeb.Components.TwoFactor.modal>
     </div>

@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Live.Shields.Pages do
   LiveView for IP Addresses Shield
   """
   use PlausibleWeb, :live_view
-  use Phoenix.HTML
 
   alias Plausible.Shields
   alias Plausible.Sites

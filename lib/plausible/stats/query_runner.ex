@@ -254,7 +254,18 @@ defmodule Plausible.Stats.QueryRunner do
     Map.get_lazy(comparison_map, dimensions, fn -> empty_metrics(query) end)
   end
 
-  defp empty_metrics(query), do: List.duplicate(0, length(query.metrics))
+  defp empty_metrics(query) do
+    query.metrics
+    |> Enum.map(fn metric -> empty_metric_value(metric) end)
+  end
+
+  on_ee do
+    defp empty_metric_value(metric)
+         when metric in [:total_revenue, :average_revenue],
+         do: nil
+  end
+
+  defp empty_metric_value(_), do: 0
 
   defp total_rows([]), do: 0
   defp total_rows([first_row | _rest]), do: first_row.total_rows
