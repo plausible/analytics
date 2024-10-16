@@ -1,4 +1,4 @@
-<%= if Plausible.Users.on_trial?(@user) do %>
+<%= if Plausible.ee?() and Plausible.Users.on_trial?(@user) do %>
   You signed up for a free 30-day trial of Plausible, a simple and privacy-friendly website analytics tool.
   <br /><br />
 <% end %>
@@ -16,5 +16,7 @@ that makes the process simpler. We also have
 <.unstyled_link href="https://plausible.io/docs/integration-guides">
   integration guides
 </.unstyled_link>
-for different site builders to help you start counting stats in no time. <br /><br />
-Do reply back to this email if you have any questions or need some guidance.
+for different site builders to help you start counting stats in no time.
+<%= if Plausible.ee?() do %>
+  <br /><br />Do reply back to this email if you have any questions or need some guidance.
+<% end %>
