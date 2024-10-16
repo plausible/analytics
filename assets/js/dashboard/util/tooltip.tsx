@@ -10,9 +10,10 @@ export function Tooltip({ children, info, className, onClick, boundary }: {
   boundary?: any
 }) {
   const [visible, setVisible] = useState(false);
-  const [referenceElement, setReferenceElement] = useState(null);
-  const [popperElement, setPopperElement] = useState(null);
-  const [arrowElement, setArrowElement] = useState(null);
+  const [referenceElement, setReferenceElement] = useState<HTMLDivElement | null>(null)
+  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(null)
+  const [arrowElement, setArrowElement] = useState<HTMLDivElement | null>(null)
+
   const { styles, attributes } = usePopper(referenceElement, popperElement, {
     placement: 'top',
     modifiers: [
