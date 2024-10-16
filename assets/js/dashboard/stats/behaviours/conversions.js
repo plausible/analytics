@@ -25,8 +25,8 @@ export default function Conversions({ afterFetchData, onGoalFilterClick }) {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ renderLabel: () => "Uniques", meta: { plot: true } }),
-      metrics.createEvents({ renderLabel: () => "Total", meta: { hiddenOnMobile: true } }),
+      metrics.createVisitors({ renderLabel: (_query) => "Uniques", meta: { plot: true } }),
+      metrics.createEvents({ renderLabel: (_query) => "Total", meta: { hiddenOnMobile: true } }),
       metrics.createConversionRate(),
       BUILD_EXTRA && metrics.createTotalRevenue({ meta: { hiddenOnMobile: true } }),
       BUILD_EXTRA && metrics.createAverageRevenue({ meta: { hiddenOnMobile: true } })

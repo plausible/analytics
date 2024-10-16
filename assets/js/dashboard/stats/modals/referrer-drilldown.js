@@ -39,19 +39,19 @@ function ReferrerDrilldownModal() {
     if (hasGoalFilter(query)) {
       return [
         metrics.createTotalVisitors(),
-        metrics.createVisitors({ renderLabel: () => 'Conversions', width: 'w-28' }),
+        metrics.createVisitors({ renderLabel: (_query) => 'Conversions', width: 'w-28' }),
         metrics.createConversionRate()
       ]
     }
 
     if (isRealTimeDashboard(query)) {
       return [
-        metrics.createVisitors({ renderLabel: () => 'Current visitors', width: 'w-36' })
+        metrics.createVisitors({ renderLabel: (_query) => 'Current visitors', width: 'w-36' })
       ]
     }
 
     return [
-      metrics.createVisitors({ renderLabel: () => "Visitors" }),
+      metrics.createVisitors({ renderLabel: (_query) => "Visitors" }),
       metrics.createBounceRate(),
       metrics.createVisitDuration()
     ]

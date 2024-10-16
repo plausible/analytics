@@ -41,8 +41,8 @@ function PropsModal() {
 
   function chooseMetrics() {
     return [
-      metrics.createVisitors({ renderLabel: () => "Visitors" }),
-      metrics.createEvents({ renderLabel: () => "Events" }),
+      metrics.createVisitors({ renderLabel: (_query) => "Visitors" }),
+      metrics.createEvents({ renderLabel: (_query) => "Events" }),
       hasGoalFilter(query) && metrics.createConversionRate(),
       !hasGoalFilter(query) && metrics.createPercentage(),
       showRevenueMetrics && metrics.createAverageRevenue(),

@@ -39,19 +39,19 @@ function LocationsModal({ currentView }) {
     if (hasGoalFilter(query)) {
       return [
         metrics.createTotalVisitors(),
-        metrics.createVisitors({ renderLabel: () => 'Conversions', width: 'w-28' }),
+        metrics.createVisitors({ renderLabel: (_query) => 'Conversions', width: 'w-28' }),
         metrics.createConversionRate()
       ]
     }
 
     if (query.period === 'realtime') {
       return [
-        metrics.createVisitors({ renderLabel: () => 'Current visitors', width: 'w-36' })
+        metrics.createVisitors({ renderLabel: (_query) => 'Current visitors', width: 'w-36' })
       ]
     }
 
     return [
-      metrics.createVisitors({ renderLabel: () => "Visitors" }),
+      metrics.createVisitors({ renderLabel: (_query) => "Visitors" }),
       currentView === 'countries' && metrics.createPercentage()
     ].filter(metric => !!metric)
   }
