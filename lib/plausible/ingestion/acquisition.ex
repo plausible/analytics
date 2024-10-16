@@ -1,5 +1,12 @@
 defmodule Plausible.Ingestion.Acquisition do
-  @moduledoc false
+  @moduledoc """
+  This module is responsible for figuring out aquisition channel from event referrer_source.
+  
+  Acquisition channel is the marketing channel where people come from and convert and help
+  users to understand and improve their marketing flow.
+  
+  Note it uses priv/ga4-source-categories.csv as a source, which comes from XXX.
+  """
   @external_resource "priv/ga4-source-categories.csv"
   @mapping_overrides [
     {"fb", "Facebook"},
