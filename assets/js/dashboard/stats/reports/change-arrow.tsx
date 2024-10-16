@@ -3,7 +3,7 @@ import { Metric } from '../../../types/query-api'
 import { numberShortFormatter } from '../../util/number-formatter'
 
 export function ChangeArrow({ change, metric, className, hideNumber }: { change: number, metric: Metric, className: string, hideNumber?: boolean }) {
-  const formattedChange = hideNumber ? null : `${numberShortFormatter(Math.abs(change))}%`
+  const formattedChange = hideNumber ? null : ` ${numberShortFormatter(Math.abs(change))}%`
 
   let content = null
 

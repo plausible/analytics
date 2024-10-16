@@ -9,7 +9,7 @@ it("renders green for positive change", () => {
 
   const arrowElement = screen.getByTestId('change-arrow')
 
-  expect(arrowElement).toHaveTextContent("↑1%")
+  expect(arrowElement).toHaveTextContent("↑ 1%")
   expect(arrowElement.children[0]).toHaveClass("text-green-500")
 })
 
@@ -18,7 +18,7 @@ it("renders red for positive change", () => {
 
   const arrowElement = screen.getByTestId('change-arrow')
 
-  expect(arrowElement).toHaveTextContent("↓10%")
+  expect(arrowElement).toHaveTextContent("↓ 10%")
   expect(arrowElement.children[0]).toHaveClass("text-red-400")
 })
 
@@ -27,7 +27,7 @@ it("renders red for no change", () => {
 
   const arrowElement = screen.getByTestId('change-arrow')
 
-  expect(arrowElement).toHaveTextContent("〰0%")
+  expect(arrowElement).toHaveTextContent("〰 0%")
 })
 
 it('inverts colors for positive bounce_rate change', () => {
@@ -35,7 +35,7 @@ it('inverts colors for positive bounce_rate change', () => {
 
   const arrowElement = screen.getByTestId('change-arrow')
 
-  expect(arrowElement).toHaveTextContent("↑15%")
+  expect(arrowElement).toHaveTextContent("↑ 15%")
   expect(arrowElement.children[0]).toHaveClass("text-red-400")
 })
 
@@ -44,7 +44,7 @@ it("renders red for positive change", () => {
 
   const arrowElement = screen.getByTestId('change-arrow')
 
-  expect(arrowElement).toHaveTextContent("↓3%")
+  expect(arrowElement).toHaveTextContent("↓ 3%")
   expect(arrowElement.children[0]).toHaveClass("text-green-500")
 })
 

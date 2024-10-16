@@ -68,21 +68,21 @@ describe("comparisons", () => {
     await renderWithTooltip(<MetricValue {...valueProps("visitors", 10, { value: 5, change: 100 })} />)
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent("10↑")
-    expect(screen.getByRole('tooltip')).toHaveTextContent("10 vs. 5 visitors↑100%")
+    expect(screen.getByRole('tooltip')).toHaveTextContent("10 vs. 5 visitors↑ 100%")
   })
 
   it("renders decreased metric", async () => {
     await renderWithTooltip(<MetricValue {...valueProps("visitors", 5, { value: 10, change: -50 })} />)
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent("5↓")
-    expect(screen.getByRole('tooltip')).toHaveTextContent("5 vs. 10 visitors↓50%")
+    expect(screen.getByRole('tooltip')).toHaveTextContent("5 vs. 10 visitors↓ 50%")
   })
 
   it("renders unchanged metric", async () => {
     await renderWithTooltip(<MetricValue {...valueProps("visitors", 10, { value: 10, change: 0 })} />)
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent("10〰")
-    expect(screen.getByRole('tooltip')).toHaveTextContent("10 vs. 10 visitors〰0%")
+    expect(screen.getByRole('tooltip')).toHaveTextContent("10 vs. 10 visitors〰 0%")
   })
 
   it("renders metric with custom label", async () => {
@@ -93,7 +93,7 @@ describe("comparisons", () => {
       />
     )
 
-    expect(screen.getByRole('tooltip')).toHaveTextContent("10 vs. 10 conversions〰0%")
+    expect(screen.getByRole('tooltip')).toHaveTextContent("10 vs. 10 conversions〰 0%")
   })
 
   it("does not render very short labels", async () => {
@@ -104,7 +104,7 @@ describe("comparisons", () => {
       />
     )
 
-    expect(screen.getByRole('tooltip')).toHaveTextContent("10% vs. 10%〰0%")
+    expect(screen.getByRole('tooltip')).toHaveTextContent("10% vs. 10%〰 0%")
   })
 
   it("renders with custom formatter", async () => {
@@ -116,14 +116,14 @@ describe("comparisons", () => {
     )
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent("10$↑")
-    expect(screen.getByRole('tooltip')).toHaveTextContent("10$ vs. 5$ test↑100%")
+    expect(screen.getByRole('tooltip')).toHaveTextContent("10$ vs. 5$ test↑ 100%")
   })
 
   it("renders revenue change", async () => {
     await renderWithTooltip(<MetricValue {...valueProps("average_revenue", REVENUE, { value: REVENUE, change: 0 })} />)
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent("$1.7K〰")
-    expect(screen.getByRole('tooltip')).toHaveTextContent("$1,659.50 vs. $1,659.50 average_revenue〰0%")
+    expect(screen.getByRole('tooltip')).toHaveTextContent("$1,659.50 vs. $1,659.50 average_revenue〰 0%")
   })
 
   it("renders without tooltip when revenue null", async () => {
