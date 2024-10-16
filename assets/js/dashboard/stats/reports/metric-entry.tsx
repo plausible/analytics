@@ -3,6 +3,8 @@ import { Metric } from '../../../types/query-api'
 import { Tooltip } from '../../util/tooltip'
 import { ChangeArrow } from './comparison-tooltip-content'
 import { MetricFormatterLong, MetricFormatterShort } from './metric-formatter'
+import { DashboardQuery } from '../../query'
+import { useQueryContext } from '../../query-context'
 
 type MetricValues = Record<Metric, any>
 
@@ -29,11 +31,15 @@ function valueRenderProps(listItem: ListItem, metric: Metric) {
 export default function MetricEntry(props: {
   listItem: ListItem,
   metric: Metric,
-  metricLabel: string,
+  renderLabel: (query: DashboardQuery) => string,
   formatter?: (value: any) => any
 }) {
+  const { query } = useQueryContext()
+
   const {metric, listItem} = props
   const {value, comparison} = useMemo(() => valueRenderProps(listItem, metric), [listItem, metric])
+
+  const metricLabel = useMemo(() => props.renderLabel(query), [query])
 
   const shortFormatter = props.formatter ?? MetricFormatterShort[metric]
 
@@ -46,7 +52,7 @@ export default function MetricEntry(props: {
   return (
     <div ref={tooltipBoundary}>
       <Tooltip
-        info={<ComparisonTooltipContent value={value} comparison={comparison} {...props} />}
+        info={<ComparisonTooltipContent value={value} comparison={comparison} metricLabel={metricLabel} {...props} />}
       >
         {shortFormatter(value)}
         {comparison ? <ChangeArrow change={comparison.change} metric={metric} className="pl-2" hideNumber /> : null}
