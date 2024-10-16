@@ -55,6 +55,7 @@ defmodule Plausible.Repo.Migrations.AddTeamsTablesFields do
       timestamps()
     end
 
+    create unique_index(:team_invitations, [:invitation_id])
     create unique_index(:team_invitations, [:team_id, :email])
     create index(:team_invitations, [:inviter_id])
     create index(:team_invitations, [:team_id])
@@ -84,7 +85,7 @@ defmodule Plausible.Repo.Migrations.AddTeamsTablesFields do
       timestamps()
     end
 
-    create index(:team_site_transfers, [:transfer_id])
+    create unique_index(:team_site_transfers, [:transfer_id])
     create unique_index(:team_site_transfers, [:destination_team_id, :site_id])
     create unique_index(:team_site_transfers, [:email, :site_id])
 
