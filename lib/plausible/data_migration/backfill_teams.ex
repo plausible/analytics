@@ -549,17 +549,18 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
   defp backfill_guest_invitations(site_invitations) do
     site_invitations
-    |> Enum.group_by(&{&1.site.team, &1.email}, &{&1.site, &1.role, &1.inviter})
+    |> Enum.group_by(&{&1.site.team, &1.email}, &{&1.site, &1.role, &1.inviter, &1.invitation_id})
     |> Enum.with_index()
     |> Enum.each(fn {{{team, email}, sites_and_roles}, idx} ->
       now = NaiveDateTime.utc_now(:second)
 
-      {_, _, inviter} = List.first(sites_and_roles)
+      {_, _, inviter, invitation_id} = List.first(sites_and_roles)
 
       team_invitation =
         team
-        # NOTE: we put first inviter matching team/email combination
+        # NOTE: we put first inviter and invitation ID matching team/email combination
         |> Teams.Invitation.changeset(email: email, role: :guest, inviter: inviter)
+        |> Ecto.Changeset.put_change(:invitation_id, invitation_id)
         |> @repo.insert!(
           on_conflict: [set: [updated_at: now]],
           conflict_target: [:team_id, :email]
@@ -606,6 +607,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         initiator: site_invitation.inviter,
         email: site_invitation.email
       )
+      |> Ecto.Changeset.put_change(:transfer_id, site_invitation.invitation_id)
       |> @repo.insert!()
 
       if rem(idx, 1000) == 0 do
