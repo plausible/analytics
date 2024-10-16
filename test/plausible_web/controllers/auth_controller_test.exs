@@ -585,11 +585,11 @@ defmodule PlausibleWeb.AuthControllerTest do
       insert(:subscription, user: user, status: Subscription.Status.deleted())
       insert(:subscription, user: user, status: Subscription.Status.active())
 
-        insert(:enterprise_plan,
-          user: user,
-          paddle_plan_id: "whatever",
-          site_limit: 1
-        )
+      insert(:enterprise_plan,
+        user: user,
+        paddle_plan_id: "whatever",
+        site_limit: 1
+      )
 
       conn = delete(conn, "/me")
       assert redirected_to(conn) == "/"
