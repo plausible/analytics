@@ -10,6 +10,12 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
   use Plausible.DataMigration, repo: Plausible.DataMigration.PostgresRepo, dir: false
 
+  defmacrop is_distinct(f1, f2) do
+    quote do
+      fragment("? IS DISTINCT FROM ?", unquote(f1), unquote(f2))
+    end
+  end
+
   def run() do
     # Teams backfill
     db_url =
@@ -58,10 +64,10 @@ defmodule Plausible.DataMigration.BackfillTeams do
         inner_join: o in assoc(tm, :user),
         where: tm.role == :owner,
         where:
-          o.trial_expiry_date != t.trial_expiry_date or
-            o.accept_traffic_until != t.accept_traffic_until or
-            o.allow_next_upgrade_override != t.allow_next_upgrade_override or
-            o.grace_period != t.grace_period,
+          is_distinct(o.trial_expiry_date, t.trial_expiry_date) or
+            is_distinct(o.accept_traffic_until, t.accept_traffic_until) or
+            is_distinct(o.allow_next_upgrade_override, t.allow_next_upgrade_override) or
+            is_distinct(o.grace_period, t.grace_period),
         preload: [team_memberships: {tm, user: o}]
       )
       |> @repo.all()
