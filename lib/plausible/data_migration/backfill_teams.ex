@@ -369,24 +369,29 @@ defmodule Plausible.DataMigration.BackfillTeams do
     |> Enum.with_index()
     |> Task.async_stream(
       fn {{owner, site_ids}, idx} ->
-        team =
-          "My Team"
-          |> Teams.Team.changeset()
-          |> Ecto.Changeset.put_change(:trial_expiry_date, owner.trial_expiry_date)
-          |> Ecto.Changeset.put_change(:accept_traffic_until, owner.accept_traffic_until)
-          |> Ecto.Changeset.put_change(
-            :allow_next_upgrade_override,
-            owner.allow_next_upgrade_override
-          )
-          |> Ecto.Changeset.put_embed(:grace_period, owner.grace_period)
-          |> @repo.insert!()
+        @repo.transaction(
+          fn ->
+            team =
+              "My Team"
+              |> Teams.Team.changeset()
+              |> Ecto.Changeset.put_change(:trial_expiry_date, owner.trial_expiry_date)
+              |> Ecto.Changeset.put_change(:accept_traffic_until, owner.accept_traffic_until)
+              |> Ecto.Changeset.put_change(
+                :allow_next_upgrade_override,
+                owner.allow_next_upgrade_override
+              )
+              |> Ecto.Changeset.put_embed(:grace_period, owner.grace_period)
+              |> @repo.insert!()
 
-        team
-        |> Teams.Membership.changeset(owner, :owner)
-        |> @repo.insert!()
+            team
+            |> Teams.Membership.changeset(owner, :owner)
+            |> @repo.insert!()
 
-        @repo.update_all(from(s in Plausible.Site, where: s.id in ^site_ids),
-          set: [team_id: team.id]
+            @repo.update_all(from(s in Plausible.Site, where: s.id in ^site_ids),
+              set: [team_id: team.id]
+            )
+          end,
+          timeout: :infinity
         )
 
         if rem(idx, 10) == 0 do
