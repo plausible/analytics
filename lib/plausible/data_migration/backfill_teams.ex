@@ -24,17 +24,9 @@ defmodule Plausible.DataMigration.BackfillTeams do
         Application.get_env(:plausible, Plausible.Repo)[:url]
       )
 
-    @repo.start(db_url, 10)
+    @repo.start(db_url, 16)
 
-    @repo.transaction(
-      fn ->
-        backfill()
-
-        IO.puts("Rolling back")
-        @repo.rollback("Rolled back")
-      end,
-      timeout: :infinity
-    )
+    backfill()
   end
 
   defp backfill() do
@@ -47,7 +39,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         where: is_nil(s.team_id),
         preload: [memberships: {m, user: o}]
       )
-      |> @repo.all()
+      |> @repo.all(timeout: :infinity)
 
     IO.puts("Found #{length(sites_without_teams)} sites without teams...")
 
@@ -70,7 +62,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
             is_distinct(o.grace_period, t.grace_period),
         preload: [team_memberships: {tm, user: o}]
       )
-      |> @repo.all()
+      |> @repo.all(timeout: :infinity)
 
     IO.puts("Found #{length(stale_teams)} teams which have fields out of sync...")
 
@@ -90,7 +82,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         where: is_nil(s.team_id),
         preload: [user: {u, team_memberships: {tm, team: t}}]
       )
-      |> @repo.all()
+      |> @repo.all(timeout: :infinity)
 
     IO.puts("Found #{length(subscriptions_without_teams)} subscriptions without team...")
 
@@ -110,7 +102,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         where: is_nil(ep.team_id),
         preload: [user: {u, team_memberships: {tm, team: t}}]
       )
-      |> @repo.all()
+      |> @repo.all(timeout: :infinity)
 
     IO.puts("Found #{length(enterprise_plans_without_teams)} enterprise plans without team...")
 
@@ -137,7 +129,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         as: :team_membership,
         where: not exists(site_memberships_query)
       )
-      |> @repo.all()
+      |> @repo.all(timeout: :infinity)
 
     IO.puts("Found #{length(guest_memberships_to_remove)} guest memberships to remove...")
 
@@ -146,7 +138,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
     IO.puts("Pruning guest team memberships for #{length(team_ids_to_prune)} teams...")
 
     from(t in Teams.Team, where: t.id in ^team_ids_to_prune)
-    |> @repo.all()
+    |> @repo.all(timeout: :infinity)
     |> Enum.each(fn team ->
       Plausible.Teams.Memberships.prune_guests(team)
     end)
@@ -175,7 +167,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         where: not exists(guest_memberships_query),
         preload: [user: u, site: {s, team: t}]
       )
-      |> @repo.all()
+      |> @repo.all(timeout: :infinity)
 
     IO.puts(
       "Found #{length(site_memberships_to_backfill)} site memberships without guest membership..."
@@ -200,7 +192,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
             (gm.role == :editor and sm.role == :viewer),
         select: {gm, sm.role}
       )
-      |> @repo.all()
+      |> @repo.all(timeout: :infinity)
 
     IO.puts("Found #{length(stale_guest_memberships)} guest memberships with role out of sync...")
 
@@ -228,7 +220,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         as: :team_invitation,
         where: not exists(site_invitations_query)
       )
-      |> @repo.all()
+      |> @repo.all(timeout: :infinity)
 
     IO.puts("Found #{length(guest_invitations_to_remove)} guest invitations to remove...")
 
@@ -237,7 +229,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
     IO.puts("Pruning guest team invitations for #{length(team_ids_to_prune)} teams...")
 
     from(t in Teams.Team, where: t.id in ^team_ids_to_prune)
-    |> @repo.all()
+    |> @repo.all(timeout: :infinity)
     |> Enum.each(fn team ->
       Plausible.Teams.Invitations.prune_guest_invitations(team)
     end)
@@ -266,7 +258,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         where: not exists(guest_invitations_query),
         preload: [site: {s, team: t}, inviter: inv]
       )
-      |> @repo.all()
+      |> @repo.all(timeout: :infinity)
 
     IO.puts(
       "Found #{length(site_invitations_to_backfill)} site invitations without guest invitation..."
@@ -291,7 +283,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
             (gi.role == :editor and si.role == :viewer),
         select: {gi, si.role}
       )
-      |> @repo.all()
+      |> @repo.all(timeout: :infinity)
 
     IO.puts("Found #{length(stale_guest_invitations)} guest invitations with role out of sync...")
 
@@ -315,7 +307,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         as: :site_transfer,
         where: not exists(site_invitations_query)
       )
-      |> @repo.all()
+      |> @repo.all(timeout: :infinity)
 
     IO.puts("Found #{length(site_transfers_to_remove)} site transfers to remove...")
 
@@ -343,7 +335,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         where: not exists(site_transfers_query),
         preload: [inviter: inv, site: s]
       )
-      |> @repo.all()
+      |> @repo.all(timeout: :infinity)
 
     IO.puts(
       "Found #{length(site_invitations_to_backfill)} ownership transfers without site transfer..."
@@ -396,7 +388,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
       if rem(idx, 10) == 0 do
         IO.write(".")
       end
-    end)
+    end, timeout: :infinity)
     |> Enum.to_list()
     |> length()
   end
@@ -421,7 +413,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
   defp backfill_subscriptions(subscriptions) do
     subscriptions
     |> Enum.with_index()
-    |> Enum.each(fn {subscription, idx} ->
+    |> Task.async_stream(fn {subscription, idx} ->
       [%{team: team, role: :owner}] = subscription.user.team_memberships
 
       subscription
@@ -431,13 +423,14 @@ defmodule Plausible.DataMigration.BackfillTeams do
       if rem(idx, 1000) == 0 do
         IO.write(".")
       end
-    end)
+    end, timeout: :infinity)
+    |> Stream.run()
   end
 
   defp backfill_enterprise_plans(enterprise_plans) do
     enterprise_plans
     |> Enum.with_index()
-    |> Enum.each(fn {enterprise_plan, idx} ->
+    |> Task.async_stream(fn {enterprise_plan, idx} ->
       [%{team: team, role: :owner}] = enterprise_plan.user.team_memberships
 
       enterprise_plan
@@ -447,7 +440,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
       if rem(idx, 1000) == 0 do
         IO.write(".")
       end
-    end)
+    end, timeout: :infinity)
+    |> Stream.run()
   end
 
   defp remove_guest_memberships(guest_memberships) do
@@ -499,7 +493,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
       if rem(idx, 1000) == 0 do
         IO.write(".")
       end
-    end)
+    end, timeout: :infinity)
     |> Stream.run()
   end
 
