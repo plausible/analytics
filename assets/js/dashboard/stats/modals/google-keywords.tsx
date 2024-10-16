@@ -10,7 +10,8 @@ import {
   createVisitors,
   Metric
 } from '../reports/metrics'
-import numberShortFormatter, {
+import {
+  numberShortFormatter,
   percentageFormatter
 } from '../../util/number-formatter'
 import { apiPath } from '../../util/url'

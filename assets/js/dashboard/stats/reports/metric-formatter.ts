@@ -1,6 +1,6 @@
 import { Metric } from '../../../types/query-api'
 import { formatMoney } from '../../util/money'
-import numberShortFormatter, { durationFormatter, percentageFormatter } from "../../util/number-formatter"
+import { numberShortFormatter, durationFormatter, percentageFormatter } from "../../util/number-formatter"
 
 export type FormattableMetric = Metric | 'total_visitors' | 'exit_rate'
 

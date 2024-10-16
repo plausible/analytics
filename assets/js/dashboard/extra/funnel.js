@@ -3,7 +3,7 @@ import FlipMove from 'react-flip-move';
 import Chart from 'chart.js/auto';
 import FunnelTooltip from './funnel-tooltip';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import numberShortFormatter from '../util/number-formatter';
+import { numberShortFormatter } from '../util/number-formatter';
 import Bar from '../stats/bar';
 
 import RocketIcon from '../stats/modals/rocket-icon';

@@ -2,7 +2,7 @@ import React from 'react';
 import FadeIn from '../../fade-in'
 import Bar from '../bar'
 import MoreLink from '../more-link'
-import numberShortFormatter from '../../util/number-formatter'
+import { numberShortFormatter } from '../../util/number-formatter'
 import RocketIcon from '../modals/rocket-icon'
 import * as api from '../../api'
 import LazyLoader from '../../components/lazy-loader'

@@ -1,4 +1,4 @@
-import numberShortFormatter, {durationFormatter} from '../../util/number-formatter'
+import { numberShortFormatter, durationFormatter } from '../../util/number-formatter'
 import { getFiltersByKeyPrefix, hasGoalFilter } from '../../util/filters'
 import { revenueAvailable } from '../../query'
 

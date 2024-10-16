@@ -1,8 +1,6 @@
 import { hasGoalFilter } from "../../util/filters"
-import numberShortFormatter, { durationFormatter, percentageFormatter } from "../../util/number-formatter"
 import React from "react"
 import MetricEntry from "./metric-entry"
-import { formatMoney  } from "../../util/money"
 import MetricFormatter from "./metric-formatter"
 
 // Class representation of a metric.

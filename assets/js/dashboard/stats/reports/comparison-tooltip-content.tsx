@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react'
 import { Metric } from '../../../types/query-api'
-import numberShortFormatter from '../../util/number-formatter'
+import { numberShortFormatter } from '../../util/number-formatter'
 
 export function ComparisonTooltipContent({
 }: {
