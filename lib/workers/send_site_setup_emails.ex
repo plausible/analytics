@@ -44,7 +44,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
     for site <- Repo.all(q) do
       owner = Plausible.Users.with_subscription(site.owner)
       setup_completed = Plausible.Sites.has_stats?(site)
-      hours_passed = Timex.diff(DateTime.utc_now(), site.inserted_at, :hours)
+      hours_passed = NaiveDateTime.diff(DateTime.utc_now(), site.inserted_at, :hour)
 
       if !setup_completed && hours_passed > 47 do
         send_setup_help_email(owner, site)
