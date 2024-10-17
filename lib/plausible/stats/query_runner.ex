@@ -15,7 +15,6 @@ defmodule Plausible.Stats.QueryRunner do
   alias Plausible.Stats.{
     Comparisons,
     Compare,
-    Query,
     QueryOptimizer,
     QueryResult,
     Legacy,
@@ -69,39 +68,12 @@ defmodule Plausible.Stats.QueryRunner do
     comparison_query =
       query
       |> Comparisons.get_comparison_query(query.include.comparisons)
-      |> add_comparison_filters(main_results_list)
+      |> Comparisons.add_comparison_filters(main_results_list)
 
     struct!(run_results, comparison_query: comparison_query)
   end
 
   defp add_comparison_query(run_results), do: run_results
-
-  # Filter comparison query by main results breakdown values
-  # This is needed when doing a breakdown and pagination could mean comparisons don't line up
-  defp add_comparison_filters(comparison_query, main_results_list) do
-    comparison_filters =
-      Enum.flat_map(main_results_list, &build_comparison_filter(&1, comparison_query))
-
-    if length(comparison_filters) > 0 do
-      Query.add_filter(comparison_query, [:or, comparison_filters])
-    else
-      comparison_query
-    end
-  end
-
-  defp build_comparison_filter(%{dimensions: dimension_labels}, query) do
-    query_filters =
-      query.dimensions
-      |> Enum.zip(dimension_labels)
-      |> Enum.reject(fn {dimension, _label} -> String.starts_with?(dimension, "time") end)
-      |> Enum.map(fn {dimension, label} -> [:is, dimension, [label]] end)
-
-    if length(query_filters) > 0 do
-      [[:ignore_in_totals_query, [:and, query_filters]]]
-    else
-      []
-    end
-  end
 
   defp execute_comparison(
          %__MODULE__{comparison_query: comparison_query, site: site} = run_results

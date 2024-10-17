@@ -224,4 +224,112 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison_query.include_imported == false
     end
   end
+
+  describe "add_comparison_filters" do
+    test "no results doesn't update filters", %{site: site} do
+      query = build_comparison_query(site, %{"dimensions" => ["visit:browser"]})
+
+      result_query = Comparisons.add_comparison_filters(query, [])
+
+      assert result_query.filters == []
+    end
+
+    test "no dimensions doesn't update filters", %{site: site} do
+      query = build_comparison_query(site, %{})
+
+      result_query =
+        Comparisons.add_comparison_filters(query, [%{dimensions: [], metrics: [123]}])
+
+      assert result_query.filters == []
+    end
+
+    test "no time dimension doesn't update filters", %{site: site} do
+      query = build_comparison_query(site, %{"dimensions" => ["time:day"]})
+
+      result_query =
+        Comparisons.add_comparison_filters(query, [%{dimensions: ["2024-01-01"], metrics: [123]}])
+
+      assert result_query.filters == []
+    end
+
+    test "updates filters in a single-row case", %{site: site} do
+      query =
+        build_comparison_query(site, %{
+          "dimensions" => ["visit:browser"]
+        })
+
+      result_query =
+        Comparisons.add_comparison_filters(query, [%{dimensions: ["Chrome"], metrics: [123]}])
+
+      assert result_query.filters == [
+               [:ignore_in_totals_query, [:is, "visit:browser", ["Chrome"]]]
+             ]
+    end
+
+    test "updates filters for a complex case", %{site: site} do
+      query =
+        build_comparison_query(site, %{
+          "dimensions" => ["visit:browser", "visit:browser_version", "time:day"],
+          "filters" => [["is", "visit:country_name", ["Estonia"]]]
+        })
+
+      result_query =
+        Comparisons.add_comparison_filters(query, [
+          %{
+            dimensions: ["Chrome", "99.9", "2024-01-01"],
+            metrics: [123]
+          },
+          %{
+            dimensions: ["Firefox", "12.0", "2024-01-01"],
+            metrics: [123]
+          }
+        ])
+
+      assert result_query.filters == [
+               [:is, "visit:country_name", ["Estonia"]],
+               [
+                 :ignore_in_totals_query,
+                 [
+                   :or,
+                   [
+                     [
+                       :and,
+                       [
+                         [:is, "visit:browser", ["Chrome"]],
+                         [:is, "visit:browser_version", ["99.9"]]
+                       ]
+                     ],
+                     [
+                       :and,
+                       [
+                         [:is, "visit:browser", ["Firefox"]],
+                         [:is, "visit:browser_version", ["12.0"]]
+                       ]
+                     ]
+                   ]
+                 ]
+               ]
+             ]
+    end
+  end
+
+  defp build_comparison_query(site, params) do
+    {:ok, query} =
+      Query.build(
+        site,
+        :internal,
+        Map.merge(
+          %{
+            "site_id" => site.domain,
+            "metrics" => ["pageviews"],
+            "date_range" => ["2024-01-01", "2024-02-01"],
+            "include" => %{"comparisons" => %{"mode" => "previous_period"}}
+          },
+          params
+        ),
+        %{}
+      )
+
+    query
+  end
 end
