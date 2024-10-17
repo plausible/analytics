@@ -191,6 +191,76 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                %{"name" => "(not set)", "visitors" => 2, "percentage" => 100.0}
              ]
     end
+
+    test "returns comparisons", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, browser: "Safari", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-07 00:00:00]),
+        build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-07 00:00:00]),
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-07 00:00:00])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/browsers?period=7d&date=2021-01-13&comparison=previous_period"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Chrome",
+                 "visitors" => 2,
+                 "percentage" => 66.7,
+                 "comparison" => %{
+                   "visitors" => 0,
+                   "percentage" => 0.0,
+                   "change" => %{"percentage" => 100, "visitors" => 100}
+                 }
+               },
+               %{
+                 "name" => "Firefox",
+                 "visitors" => 1,
+                 "percentage" => 33.3,
+                 "comparison" => %{
+                   "visitors" => 1,
+                   "percentage" => 100.0,
+                   "change" => %{"percentage" => -67, "visitors" => 0}
+                 }
+               }
+             ]
+    end
+
+    test "returns comparisons with limit", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-07 00:00:00]),
+        build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-07 00:00:00]),
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-07 00:00:00])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/browsers?period=7d&date=2021-01-13&comparison=previous_period&limit=1"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Chrome",
+                 "visitors" => 2,
+                 "percentage" => 66.7,
+                 "comparison" => %{
+                   "visitors" => 1,
+                   "percentage" => 100.0,
+                   "change" => %{"percentage" => -33, "visitors" => 100}
+                 }
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/browser-versions" do

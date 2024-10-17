@@ -15,6 +15,7 @@ defmodule Plausible.Stats.QueryRunner do
   alias Plausible.Stats.{
     Comparisons,
     Compare,
+    Query,
     QueryOptimizer,
     QueryResult,
     Legacy,
@@ -41,9 +42,9 @@ defmodule Plausible.Stats.QueryRunner do
 
     run_results =
       %__MODULE__{query: optimized_query, site: site}
+      |> execute_main_query()
       |> add_comparison_query()
       |> execute_comparison()
-      |> execute_main_query()
       |> add_meta_extra()
       |> add_time_lookup()
       |> build_results_list()
@@ -51,13 +52,56 @@ defmodule Plausible.Stats.QueryRunner do
     QueryResult.from(run_results.results_list, site, optimized_query, run_results.meta_extra)
   end
 
-  defp add_comparison_query(%__MODULE__{query: query} = run_results)
+  defp execute_main_query(%__MODULE__{query: query, site: site} = run_results) do
+    {ch_results, time_on_page} = execute_query(query, site)
+
+    struct!(
+      run_results,
+      main_results_list: build_from_ch(ch_results, query, time_on_page),
+      ch_results: ch_results
+    )
+  end
+
+  defp add_comparison_query(
+         %__MODULE__{query: query, main_results_list: main_results_list} = run_results
+       )
        when is_map(query.include.comparisons) do
-    comparison_query = Comparisons.get_comparison_query(query, query.include.comparisons)
+    comparison_query =
+      query
+      |> Comparisons.get_comparison_query(query.include.comparisons)
+      |> add_comparison_filters(main_results_list)
+
     struct!(run_results, comparison_query: comparison_query)
   end
 
   defp add_comparison_query(run_results), do: run_results
+
+  # Filter comparison query by main results breakdown values
+  # This is needed when doing a breakdown and pagination could mean comparisons don't line up
+  defp add_comparison_filters(comparison_query, main_results_list) do
+    comparison_filters =
+      Enum.flat_map(main_results_list, &build_comparison_filter(&1, comparison_query))
+
+    if length(comparison_filters) > 0 do
+      Query.add_filter(comparison_query, [:or, comparison_filters])
+    else
+      comparison_query
+    end
+  end
+
+  defp build_comparison_filter(%{dimensions: dimension_labels}, query) do
+    query_filters =
+      query.dimensions
+      |> Enum.zip(dimension_labels)
+      |> Enum.reject(fn {dimension, _label} -> String.starts_with?(dimension, "time") end)
+      |> Enum.map(fn {dimension, label} -> [:is, dimension, [label]] end)
+
+    if length(query_filters) > 0 do
+      [[:and, query_filters]]
+    else
+      []
+    end
+  end
 
   defp execute_comparison(
          %__MODULE__{comparison_query: comparison_query, site: site} = run_results
@@ -91,16 +135,6 @@ defmodule Plausible.Stats.QueryRunner do
       end
 
     struct!(run_results, time_lookup: time_lookup)
-  end
-
-  defp execute_main_query(%__MODULE__{query: query, site: site} = run_results) do
-    {ch_results, time_on_page} = execute_query(query, site)
-
-    struct!(
-      run_results,
-      main_results_list: build_from_ch(ch_results, query, time_on_page),
-      ch_results: ch_results
-    )
   end
 
   defp add_meta_extra(%__MODULE__{query: query, ch_results: ch_results} = run_results) do
