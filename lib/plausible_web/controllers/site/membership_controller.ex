@@ -172,7 +172,7 @@ defmodule PlausibleWeb.Site.MembershipController do
         |> Repo.update!()
 
       with_teams do
-      Plausible.Teams.Memberships.update_role_sync(membership)
+        Plausible.Teams.Memberships.update_role_sync(membership)
       end
 
       redirect_target =
@@ -220,9 +220,10 @@ defmodule PlausibleWeb.Site.MembershipController do
 
     if membership do
       Repo.delete!(membership)
+
       with_teams do
-      Plausible.Teams.Memberships.remove_sync(membership)
-    end
+        Plausible.Teams.Memberships.remove_sync(membership)
+      end
 
       membership
       |> PlausibleWeb.Email.site_member_removed()
