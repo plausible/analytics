@@ -1,20 +1,6 @@
-const { mockRequest } = require('./support/test-utils')
-const { expect, test } = require('@playwright/test');
+const { clickPageElementAndExpectEventRequest } = require('./support/test-utils')
+const { test } = require('@playwright/test');
 const { LOCAL_SERVER_ADDR } = require('./support/server');
-
-async function clickPageElementAndExpectEventRequest(page, buttonId, expectedBodyParams) {
-  const plausibleRequestMock = mockRequest(page, '/api/event')
-  await page.click(buttonId)
-  const plausibleRequest = await plausibleRequestMock;
-
-  expect(plausibleRequest.url()).toContain('/api/event')
-
-  const body = plausibleRequest.postDataJSON()
-
-  Object.keys(expectedBodyParams).forEach((key) => {
-    expect(body[key]).toEqual(expectedBodyParams[key])
-  })
-}
 
 test.describe('manual extension', () => {
   test('can trigger custom events with and without a custom URL if pageview was sent with the default URL', async ({ page }) => {

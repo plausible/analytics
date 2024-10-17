@@ -2,7 +2,7 @@ const { expect } = require("@playwright/test");
 
 // Mocks an HTTP request call with the given path. Returns a Promise that resolves to the request
 // data. If the request is not made, resolves to null after 10 seconds.
-exports.mockRequest = function (page, path) {
+const mockRequest = function (page, path) {
   return new Promise((resolve, _reject) => {
     const requestTimeoutTimer = setTimeout(() => resolve(null), 10000)
 
@@ -13,6 +13,8 @@ exports.mockRequest = function (page, path) {
     })
   })
 }
+
+exports.mockRequest = mockRequest
 
 exports.metaKey = function() {
   if (process.platform === 'darwin') {
@@ -48,4 +50,18 @@ exports.expectCustomEvent = function (request, eventName, eventProps) {
   for (const [key, value] of Object.entries(eventProps)) {
     expect(payload.p[key]).toEqual(value)
   }
+}
+
+exports.clickPageElementAndExpectEventRequest = async function (page, locatorToClick, expectedBodyParams) {
+  const plausibleRequestMock = mockRequest(page, '/api/event')
+  await page.click(locatorToClick)
+  const plausibleRequest = await plausibleRequestMock;
+
+  expect(plausibleRequest.url()).toContain('/api/event')
+
+  const body = plausibleRequest.postDataJSON()
+
+  Object.keys(expectedBodyParams).forEach((key) => {
+    expect(body[key]).toEqual(expectedBodyParams[key])
+  })
 }
