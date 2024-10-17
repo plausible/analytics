@@ -857,16 +857,16 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                  "name" => "true",
                  "events" => 2,
                  "conversion_rate" => 66.7,
-                 "total_revenue" => %{"long" => "€80.00", "short" => "€80.0"},
-                 "average_revenue" => %{"long" => "€40.00", "short" => "€40.0"}
+                 "total_revenue" => %{"long" => "€80.00", "short" => "€80.0", "value" => 80.0},
+                 "average_revenue" => %{"long" => "€40.00", "short" => "€40.0", "value" => 40.0}
                },
                %{
                  "visitors" => 1,
                  "name" => "false",
                  "events" => 1,
                  "conversion_rate" => 33.3,
-                 "total_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
-                 "average_revenue" => %{"long" => "€10.00", "short" => "€10.0"}
+                 "total_revenue" => %{"long" => "€10.00", "short" => "€10.0", "value" => 10.0},
+                 "average_revenue" => %{"long" => "€10.00", "short" => "€10.0", "value" => 10.0}
                }
              ]
     end
