@@ -181,6 +181,18 @@
         <mj-divider />
       </mj-column>
     </mj-section>
+    <%= if Plausible.ce?() do %>
+    <mj-section padding="0">
+      <mj-column>
+        <mj-text mj-class="text-sm" padding="0 25px 0 25px">
+          Enjoying these reports? If you know others who could benefit from privacy-first analytics,
+          please share our <a href="https://plausible.io">Cloud offering</a>. Your support helps us
+          keep Plausible CE thriving!
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-spacer height="20px" />
+    <% end %>
     <mj-section padding="0">
       <mj-column>
         <mj-text mj-class="text-sm" padding="0 25px 25px 25px">
