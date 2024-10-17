@@ -208,16 +208,22 @@ defmodule PlausibleWeb.Router do
     get "/timeseries", ExternalStatsController, :timeseries
   end
 
-  scope "/api/v2", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*"} do
+  scope "/api/v2", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*", schema_type: :public} do
     pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
     post "/query", ExternalQueryApiController, :query
+
+    if Mix.env() in [:test, :ce_test] do
+      scope assigns: %{schema_type: :internal} do
+        post "/query-internal", ExternalQueryApiController, :query
+      end
+    end
   end
 
   scope "/api/docs", PlausibleWeb.Api do
     get "/query/schema.json", ExternalQueryApiController, :schema
 
-    scope [] do
+    scope assigns: %{schema_type: :public} do
       pipe_through :docs_stats_api
 
       post "/query", ExternalQueryApiController, :query
