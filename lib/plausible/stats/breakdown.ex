@@ -43,15 +43,29 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp build_breakdown_result(query_result, query, metrics) do
+    dimension_keys = query.dimensions |> Enum.map(&result_key/1)
+
     query_result.results
-    |> Enum.map(fn %{dimensions: dimensions, metrics: entry_metrics} ->
-      dimension_map =
-        query.dimensions |> Enum.map(&result_key/1) |> Enum.zip(dimensions) |> Enum.into(%{})
+    |> Enum.map(fn entry ->
+      comparison_map =
+        if entry[:comparison] do
+          comparison =
+            build_map(metrics, entry.comparison.metrics)
+            |> Map.put(:change, build_map(metrics, entry.comparison.change))
 
-      metrics_map = Enum.zip(metrics, entry_metrics) |> Enum.into(%{})
+          %{comparison: comparison}
+        else
+          %{}
+        end
 
-      Map.merge(dimension_map, metrics_map)
+      build_map(dimension_keys, entry.dimensions)
+      |> Map.merge(build_map(metrics, entry.metrics))
+      |> Map.merge(comparison_map)
     end)
+  end
+
+  defp build_map(keys, values) do
+    Enum.zip(keys, values) |> Map.new()
   end
 
   defp result_key("event:props:" <> custom_property), do: custom_property

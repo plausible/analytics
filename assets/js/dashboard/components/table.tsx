@@ -9,7 +9,7 @@ export type ColumnConfiguraton<T extends Record<string, unknown>> = {
   /** Unique column ID, used for sorting purposes and to get the value of the cell using rowItem[key] */
   key: keyof T
   /** Column title */
-  label: ReactNode
+  label: string
   /** If defined, the column is considered sortable. @see SortButton */
   onSort?: () => void
   sortDirection?: SortDirection
@@ -20,7 +20,7 @@ export type ColumnConfiguraton<T extends Record<string, unknown>> = {
   /**
    * Function used to transform the value found at item[key] for the cell. Superseded by renderItem if present. @example 1120 => "1.1k"
    */
-  renderValue?: (value: unknown) => ReactNode
+  renderValue?: (item: T) => ReactNode
   /** Function used to create richer cells */
   renderItem?: (item: T) => ReactNode
 }
@@ -85,7 +85,7 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
           {renderItem
             ? renderItem(item)
             : renderValue
-              ? renderValue(item[key])
+              ? renderValue(item)
               : (item[key] ?? '')}
         </TableCell>
       ))}
