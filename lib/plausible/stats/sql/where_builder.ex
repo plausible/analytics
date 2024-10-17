@@ -75,6 +75,10 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
+  defp add_filter(table, query, [:ignore_in_totals_query, filter]) do
+    add_filter(table, query, filter)
+  end
+
   defp add_filter(table, query, [:not, filter]) do
     dynamic([e], not (^add_filter(table, query, filter)))
   end
