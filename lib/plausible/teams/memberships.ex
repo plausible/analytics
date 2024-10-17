@@ -69,6 +69,7 @@ defmodule Plausible.Teams.Memberships do
       {:ok, guest_membership} ->
         guest_membership
         |> Ecto.Changeset.change(role: new_role)
+        |> Ecto.Changeset.put_change(:updated_at, site_membership.updated_at)
         |> Repo.update!()
 
       {:error, _} ->

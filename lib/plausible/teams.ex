@@ -55,11 +55,15 @@ defmodule Plausible.Teams do
     team =
       "My Team"
       |> Teams.Team.changeset()
+      |> Ecto.Changeset.put_change(:inserted_at, user.inserted_at)
+      |> Ecto.Changeset.put_change(:updated_at, user.updated_at)
       |> Repo.insert!()
 
     team_membership =
       team
       |> Teams.Membership.changeset(user, :owner)
+      |> Ecto.Changeset.put_change(:inserted_at, user.inserted_at)
+      |> Ecto.Changeset.put_change(:updated_at, user.updated_at)
       |> Repo.insert!(
         on_conflict: :nothing,
         conflict_target: {:unsafe_fragment, "(user_id) WHERE role != 'guest'"}

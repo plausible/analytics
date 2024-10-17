@@ -65,6 +65,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         inner_join: u in assoc(s, :user),
         as: :user,
         where: not exists(owner_site_memberships_query),
+        where: is_nil(s.team_id),
         select: u,
         distinct: true
       )
@@ -412,10 +413,14 @@ defmodule Plausible.DataMigration.BackfillTeams do
                 owner.allow_next_upgrade_override
               )
               |> Ecto.Changeset.put_embed(:grace_period, owner.grace_period)
+              |> Ecto.Changeset.put_change(:inserted_at, owner.inserted_at)
+              |> Ecto.Changeset.put_change(:updated_at, owner.updated_at)
               |> @repo.insert!()
 
             team
             |> Teams.Membership.changeset(owner, :owner)
+            |> Ecto.Changeset.put_change(:inserted_at, owner.inserted_at)
+            |> Ecto.Changeset.put_change(:updated_at, owner.updated_at)
             |> @repo.insert!()
 
             @repo.update_all(from(s in Plausible.Site, where: s.id in ^site_ids),
@@ -452,10 +457,14 @@ defmodule Plausible.DataMigration.BackfillTeams do
                 owner.allow_next_upgrade_override
               )
               |> Ecto.Changeset.put_embed(:grace_period, owner.grace_period)
+              |> Ecto.Changeset.put_change(:inserted_at, owner.inserted_at)
+              |> Ecto.Changeset.put_change(:updated_at, owner.updated_at)
               |> @repo.insert!()
 
             team
             |> Teams.Membership.changeset(owner, :owner)
+            |> Ecto.Changeset.put_change(:inserted_at, owner.inserted_at)
+            |> Ecto.Changeset.put_change(:updated_at, owner.updated_at)
             |> @repo.insert!()
           end,
           timeout: :infinity
@@ -497,6 +506,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
         subscription
         |> Ecto.Changeset.change(team_id: team.id)
+        |> Ecto.Changeset.put_change(:updated_at, subscription.updated_at)
         |> @repo.update!()
 
         if rem(idx, 1000) == 0 do
@@ -517,6 +527,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
         enterprise_plan
         |> Ecto.Changeset.change(team_id: team.id)
+        |> Ecto.Changeset.put_change(:updated_at, enterprise_plan.updated_at)
         |> @repo.update!()
 
         if rem(idx, 1000) == 0 do
@@ -545,10 +556,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
   end
 
   defp backfill_guest_memberships(site_memberships) do
-    now = NaiveDateTime.utc_now(:second)
-
     site_memberships
-    |> Enum.group_by(&{&1.site.team, &1.user}, &{&1.site, &1.role})
+    |> Enum.group_by(&{&1.site.team, &1.user}, & &1)
     |> tap(fn grouped ->
       if grouped != %{} do
         log("Team memberships to be created: #{map_size(grouped)}")
@@ -560,18 +569,28 @@ defmodule Plausible.DataMigration.BackfillTeams do
     end)
     |> Enum.with_index()
     |> Task.async_stream(
-      fn {{{team, user}, sites_and_roles}, idx} ->
+      fn {{{team, user}, site_memberships}, idx} ->
+        first_site_membership =
+          Enum.min_by(site_memberships, & &1.inserted_at)
+
         team_membership =
           team
           |> Teams.Membership.changeset(user, :guest)
+          |> Ecto.Changeset.put_change(:inserted_at, first_site_membership.inserted_at)
+          |> Ecto.Changeset.put_change(:updated_at, first_site_membership.updated_at)
           |> @repo.insert!(
-            on_conflict: [set: [updated_at: now]],
+            on_conflict: [set: [updated_at: first_site_membership.updated_at]],
             conflict_target: [:team_id, :user_id]
           )
 
-        Enum.each(sites_and_roles, fn {site, role} ->
+        Enum.each(site_memberships, fn site_membership ->
           team_membership
-          |> Teams.GuestMembership.changeset(site, translate_role(role))
+          |> Teams.GuestMembership.changeset(
+            site_membership.site,
+            translate_role(site_membership.role)
+          )
+          |> Ecto.Changeset.put_change(:inserted_at, site_membership.inserted_at)
+          |> Ecto.Changeset.put_change(:updated_at, site_membership.updated_at)
           |> @repo.insert!()
         end)
 
@@ -590,6 +609,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
     |> Enum.each(fn {{guest_membership, role}, idx} ->
       guest_membership
       |> Ecto.Changeset.change(role: translate_role(role))
+      |> Ecto.Changeset.put_change(:updated_at, guest_membership.updated_at)
       |> @repo.update!()
 
       if rem(idx, 1000) == 0 do
@@ -616,26 +636,35 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
   defp backfill_guest_invitations(site_invitations) do
     site_invitations
-    |> Enum.group_by(&{&1.site.team, &1.email}, &{&1.site, &1.role, &1.inviter, &1.invitation_id})
+    |> Enum.group_by(&{&1.site.team, &1.email}, & &1)
     |> Enum.with_index()
-    |> Enum.each(fn {{{team, email}, sites_and_roles}, idx} ->
-      now = NaiveDateTime.utc_now(:second)
-
-      {_, _, inviter, invitation_id} = List.first(sites_and_roles)
+    |> Enum.each(fn {{{team, email}, site_invitations}, idx} ->
+      first_site_invitation = List.first(site_invitations)
 
       team_invitation =
         team
         # NOTE: we put first inviter and invitation ID matching team/email combination
-        |> Teams.Invitation.changeset(email: email, role: :guest, inviter: inviter)
-        |> Ecto.Changeset.put_change(:invitation_id, invitation_id)
+        |> Teams.Invitation.changeset(
+          email: email,
+          role: :guest,
+          inviter: first_site_invitation.inviter
+        )
+        |> Ecto.Changeset.put_change(:invitation_id, first_site_invitation.invitation_id)
+        |> Ecto.Changeset.put_change(:inserted_at, first_site_invitation.inserted_at)
+        |> Ecto.Changeset.put_change(:updated_at, first_site_invitation.updated_at)
         |> @repo.insert!(
-          on_conflict: [set: [updated_at: now]],
+          on_conflict: [set: [updated_at: first_site_invitation.updated_at]],
           conflict_target: [:team_id, :email]
         )
 
-      Enum.each(sites_and_roles, fn {site, role, _} ->
+      Enum.each(site_invitations, fn site_invitation ->
         team_invitation
-        |> Teams.GuestInvitation.changeset(site, translate_role(role))
+        |> Teams.GuestInvitation.changeset(
+          site_invitation.site,
+          translate_role(site_invitation.role)
+        )
+        |> Ecto.Changeset.put_change(:inserted_at, site_invitation.inserted_at)
+        |> Ecto.Changeset.put_change(:updated_at, site_invitation.updated_at)
         |> @repo.insert!()
       end)
 
@@ -651,6 +680,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
     |> Enum.each(fn {{guest_invitation, role}, idx} ->
       guest_invitation
       |> Ecto.Changeset.change(role: translate_role(role))
+      |> Ecto.Changeset.put_change(:updated_at, guest_invitation.updated_at)
       |> @repo.update!()
 
       if rem(idx, 1000) == 0 do
@@ -675,6 +705,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
         email: site_invitation.email
       )
       |> Ecto.Changeset.put_change(:transfer_id, site_invitation.invitation_id)
+      |> Ecto.Changeset.put_change(:inserted_at, site_invitation.inserted_at)
+      |> Ecto.Changeset.put_change(:updated_at, site_invitation.updated_at)
       |> @repo.insert!()
 
       if rem(idx, 1000) == 0 do

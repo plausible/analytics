@@ -36,6 +36,8 @@ defmodule Plausible.Teams.Team do
     |> put_change(:accept_traffic_until, user.accept_traffic_until)
     |> put_change(:allow_next_upgrade_override, user.allow_next_upgrade_override)
     |> put_embed(:grace_period, user.grace_period)
+    |> put_change(:inserted_at, user.inserted_at)
+    |> put_change(:updated_at, user.updated_at)
   end
 
   def changeset(name, today \\ Date.utc_today()) do
