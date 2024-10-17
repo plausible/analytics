@@ -1,6 +1,6 @@
 /* @format */
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { formatDateRange, formatISO } from './util/date'
+import { formatISO } from './util/date'
 import {
   shiftQueryPeriod,
   getDateForShiftedPeriod,
@@ -35,7 +35,8 @@ import {
   getDatePeriodGroups,
   LinkItem,
   COMPARISON_MATCH_MODE_LABELS,
-  ComparisonMatchMode
+  ComparisonMatchMode,
+  DisplayComparisonPeriod
 } from './query-time-periods'
 import { useOnClickOutside } from './util/use-on-click-outside'
 import {
@@ -380,13 +381,7 @@ export default function QueryPeriodPicker() {
           </div>
           <ToggleDropdownButton
             ref={compareDropdownRef}
-            currentOption={
-              query.comparison === ComparisonMode.custom &&
-              query.compare_from &&
-              query.compare_to
-                ? formatDateRange(site, query.compare_from, query.compare_to)
-                : COMPARISON_MODES[query.comparison]
-            }
+            currentOption={<DisplayComparisonPeriod />}
             onClick={toggleCompareMenu}
             dropdownContainerProps={{
               ['aria-controls']: 'compare-menu',
