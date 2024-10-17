@@ -3,6 +3,8 @@ defmodule Plausible.Stats.ComparisonsTest do
   alias Plausible.Stats.{DateTimeRange, Query, Comparisons}
   import Plausible.TestUtils
 
+  setup [:create_user, :create_new_site]
+
   def build_query(site, params, now) do
     query = Query.from(site, params)
 
@@ -10,9 +12,7 @@ defmodule Plausible.Stats.ComparisonsTest do
   end
 
   describe "with period set to this month" do
-    test "shifts back this month period when mode is previous_period" do
-      site = insert(:site)
-
+    test "shifts back this month period when mode is previous_period", %{site: site} do
       query =
         build_query(site, %{"period" => "month", "date" => "2023-03-02"}, ~N[2023-03-02 14:00:00])
 
@@ -22,9 +22,8 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison_query.utc_time_range.last == ~U[2023-02-28 23:59:59Z]
     end
 
-    test "shifts back this month period when it's the first day of the month and mode is previous_period" do
-      site = insert(:site)
-
+    test "shifts back this month period when it's the first day of the month and mode is previous_period",
+         %{site: site} do
       query =
         build_query(site, %{"period" => "month", "date" => "2023-03-01"}, ~N[2023-03-01 14:00:00])
 
@@ -34,9 +33,8 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison_query.utc_time_range.last == ~U[2023-02-28 23:59:59Z]
     end
 
-    test "matches the day of the week when nearest day is original query start date and mode is previous_period" do
-      site = insert(:site)
-
+    test "matches the day of the week when nearest day is original query start date and mode is previous_period",
+         %{site: site} do
       query =
         build_query(site, %{"period" => "month", "date" => "2023-03-02"}, ~N[2023-03-02 14:00:00])
 
@@ -64,9 +62,7 @@ defmodule Plausible.Stats.ComparisonsTest do
   end
 
   describe "with period set to previous month" do
-    test "shifts back using the same number of days when mode is previous_period" do
-      site = insert(:site)
-
+    test "shifts back using the same number of days when mode is previous_period", %{site: site} do
       query =
         build_query(site, %{"period" => "month", "date" => "2023-02-01"}, ~N[2023-03-01 14:00:00])
 
@@ -76,9 +72,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison_query.utc_time_range.last == ~U[2023-01-31 23:59:59Z]
     end
 
-    test "shifts back the full month when mode is year_over_year" do
-      site = insert(:site)
-
+    test "shifts back the full month when mode is year_over_year", %{site: site} do
       query =
         build_query(site, %{"period" => "month", "date" => "2023-02-01"}, ~N[2023-03-01 14:00:00])
 
@@ -88,9 +82,9 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison_query.utc_time_range.last == ~U[2022-02-28 23:59:59Z]
     end
 
-    test "shifts back whole month plus one day when mode is year_over_year and a leap year" do
-      site = insert(:site)
-
+    test "shifts back whole month plus one day when mode is year_over_year and a leap year", %{
+      site: site
+    } do
       query =
         build_query(site, %{"period" => "month", "date" => "2020-02-01"}, ~N[2023-03-01 14:00:00])
 
@@ -100,9 +94,9 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison_query.utc_time_range.last == ~U[2019-03-01 23:59:59Z]
     end
 
-    test "matches the day of the week when mode is previous_period keeping the same day" do
-      site = insert(:site)
-
+    test "matches the day of the week when mode is previous_period keeping the same day", %{
+      site: site
+    } do
       query =
         build_query(site, %{"period" => "month", "date" => "2023-02-01"}, ~N[2023-03-01 14:00:00])
 
@@ -116,9 +110,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison_query.utc_time_range.last == ~U[2023-01-31 23:59:59Z]
     end
 
-    test "matches the day of the week when mode is previous_period" do
-      site = insert(:site)
-
+    test "matches the day of the week when mode is previous_period", %{site: site} do
       query =
         build_query(site, %{"period" => "month", "date" => "2023-01-01"}, ~N[2023-03-01 14:00:00])
 
@@ -134,9 +126,7 @@ defmodule Plausible.Stats.ComparisonsTest do
   end
 
   describe "with period set to year to date" do
-    test "shifts back by the same number of days when mode is previous_period" do
-      site = insert(:site)
-
+    test "shifts back by the same number of days when mode is previous_period", %{site: site} do
       query =
         build_query(site, %{"period" => "year", "date" => "2023-03-01"}, ~N[2023-03-01 14:00:00])
 
@@ -146,9 +136,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison_query.utc_time_range.last == ~U[2022-12-31 23:59:59Z]
     end
 
-    test "shifts back by the same number of days when mode is year_over_year" do
-      site = insert(:site)
-
+    test "shifts back by the same number of days when mode is year_over_year", %{site: site} do
       query =
         build_query(site, %{"period" => "year", "date" => "2023-03-01"}, ~N[2023-03-01 14:00:00])
 
@@ -158,9 +146,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison_query.utc_time_range.last == ~U[2022-03-01 23:59:59Z]
     end
 
-    test "matches the day of the week when mode is year_over_year" do
-      site = insert(:site)
-
+    test "matches the day of the week when mode is year_over_year", %{site: site} do
       query =
         build_query(site, %{"period" => "year", "date" => "2023-03-01"}, ~N[2023-03-01 14:00:00])
 
@@ -173,8 +159,7 @@ defmodule Plausible.Stats.ComparisonsTest do
   end
 
   describe "with period set to previous year" do
-    test "shifts back a whole year when mode is year_over_year" do
-      site = insert(:site)
+    test "shifts back a whole year when mode is year_over_year", %{site: site} do
       query = Query.from(site, %{"period" => "year", "date" => "2022-03-02"})
 
       comparison_query = Comparisons.get_comparison_query(query, %{mode: "year_over_year"})
@@ -183,8 +168,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison_query.utc_time_range.last == ~U[2021-12-31 23:59:59Z]
     end
 
-    test "shifts back a whole year when mode is previous_period" do
-      site = insert(:site)
+    test "shifts back a whole year when mode is previous_period", %{site: site} do
       query = Query.from(site, %{"period" => "year", "date" => "2022-03-02"})
 
       comparison_query = Comparisons.get_comparison_query(query, %{mode: "previous_period"})
@@ -195,8 +179,7 @@ defmodule Plausible.Stats.ComparisonsTest do
   end
 
   describe "with period set to custom" do
-    test "shifts back by the same number of days when mode is previous_period" do
-      site = insert(:site)
+    test "shifts back by the same number of days when mode is previous_period", %{site: site} do
       query = Query.from(site, %{"period" => "custom", "date" => "2023-01-01,2023-01-07"})
 
       comparison_query = Comparisons.get_comparison_query(query, %{mode: "previous_period"})
@@ -205,8 +188,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison_query.utc_time_range.last == ~U[2022-12-31 23:59:59Z]
     end
 
-    test "shifts back to last year when mode is year_over_year" do
-      site = insert(:site)
+    test "shifts back to last year when mode is year_over_year", %{site: site} do
       query = Query.from(site, %{"period" => "custom", "date" => "2023-01-01,2023-01-07"})
 
       comparison_query = Comparisons.get_comparison_query(query, %{mode: "year_over_year"})
@@ -217,8 +199,7 @@ defmodule Plausible.Stats.ComparisonsTest do
   end
 
   describe "with mode set to custom" do
-    test "sets first and last dates" do
-      site = insert(:site)
+    test "sets first and last dates", %{site: site} do
       query = Query.from(site, %{"period" => "custom", "date" => "2023-01-01,2023-01-07"})
 
       comparison_query =
@@ -233,7 +214,7 @@ defmodule Plausible.Stats.ComparisonsTest do
   end
 
   describe "include_imported" do
-    setup [:create_user, :create_new_site, :create_site_import]
+    setup [:create_site_import]
 
     test "defaults to source_query.include_imported", %{site: site} do
       query = Query.from(site, %{"period" => "day", "date" => "2023-01-01"})
