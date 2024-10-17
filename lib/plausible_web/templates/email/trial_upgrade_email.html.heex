@@ -10,11 +10,9 @@ In the last month, your account has used <%= PlausibleWeb.AuthView.delimit_integ
   This is more than our standard plans, so please reply back to this email to get a quote for your volume.
 <% else %>
   Based on that we recommend you select a <%= @suggested_plan.volume %>/mo plan. <br /><br />
-  <.unstyled_link href={
-    PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan)
-  }>
+  <a href={PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan)}>
     Upgrade now
-  </.unstyled_link>
+  </a>
   <br /><br />
   Have a question, feedback or need some guidance? Just reply to this email to get in touch!
 <% end %>

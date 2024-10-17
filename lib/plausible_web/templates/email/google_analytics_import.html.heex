@@ -3,7 +3,7 @@
     @site_import.start_date
   ) %> to <%= date_format(@site_import.end_date) %>
   <br /><br />
-  <.styled_link href={@link}>Click here</.styled_link>
+  <a href={@link}>Click here</a>
   to view your dashboard.
 <% else %>
   Unfortunately, your Google Analytics import for <%= @site_import.site.domain %> did not complete successfully. Sorry about that!
