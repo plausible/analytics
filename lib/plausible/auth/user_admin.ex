@@ -62,10 +62,18 @@ defmodule Plausible.Auth.UserAdmin do
     ]
   end
 
+  with_teams do
+    def after_update(_conn, user) do
+      Plausible.Teams.sync_team(user)
+
+      {:ok, user}
+    end
+  end
+
   defp lock(user) do
     if user.grace_period do
       Plausible.Billing.SiteLocker.set_lock_status_for(user, true)
-      user |> Plausible.Auth.GracePeriod.end_changeset() |> Repo.update()
+      {:ok, Plausible.Users.end_grace_period(user)}
     else
       {:error, user, "No active grace period on this user"}
     end
@@ -73,7 +81,7 @@ defmodule Plausible.Auth.UserAdmin do
 
   defp unlock(user) do
     if user.grace_period do
-      Plausible.Auth.GracePeriod.remove_changeset(user) |> Repo.update()
+      Plausible.Users.remove_grace_period(user)
       Plausible.Billing.SiteLocker.set_lock_status_for(user, false)
       {:ok, user}
     else

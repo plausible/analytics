@@ -12,6 +12,7 @@ defmodule PlausibleWeb.Site.MembershipController do
 
   use PlausibleWeb, :controller
   use Plausible.Repo
+  use Plausible
   alias Plausible.Sites
   alias Plausible.Site.{Membership, Memberships}
 
@@ -170,6 +171,10 @@ defmodule PlausibleWeb.Site.MembershipController do
         |> Membership.set_role(new_role)
         |> Repo.update!()
 
+      with_teams do
+        Plausible.Teams.Memberships.update_role_sync(membership)
+      end
+
       redirect_target =
         if membership.user.id == current_user.id and new_role == :viewer do
           "/#{URI.encode_www_form(site.domain)}"
@@ -215,6 +220,10 @@ defmodule PlausibleWeb.Site.MembershipController do
 
     if membership do
       Repo.delete!(membership)
+
+      with_teams do
+        Plausible.Teams.Memberships.remove_sync(membership)
+      end
 
       membership
       |> PlausibleWeb.Email.site_member_removed()

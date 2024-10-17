@@ -8,6 +8,7 @@ defmodule Plausible.Users do
   import Ecto.Query
 
   alias Plausible.Auth
+  alias Plausible.Auth.GracePeriod
   alias Plausible.Billing.Subscription
   alias Plausible.Repo
 
@@ -30,9 +31,16 @@ defmodule Plausible.Users do
 
   @spec update_accept_traffic_until(Auth.User.t()) :: Auth.User.t()
   def update_accept_traffic_until(user) do
+    user =
+      user
+      |> Auth.User.changeset(%{accept_traffic_until: accept_traffic_until(user)})
+      |> Repo.update!()
+
+    with_teams do
+      Plausible.Teams.sync_team(user)
+    end
+
     user
-    |> Auth.User.changeset(%{accept_traffic_until: accept_traffic_until(user)})
-    |> Repo.update!()
   end
 
   @spec bump_last_seen(Auth.User.t() | pos_integer(), NaiveDateTime.t()) :: :ok
@@ -98,17 +106,44 @@ defmodule Plausible.Users do
     Auth.EmailVerification.any?(user)
   end
 
-  def allow_next_upgrade_override(%Auth.User{} = user) do
+  def start_trial(%Auth.User{} = user) do
+    user =
+      user
+      |> Auth.User.start_trial()
+      |> Repo.update!()
+
+    with_teams do
+      Plausible.Teams.sync_team(user)
+    end
+
     user
-    |> Auth.User.changeset(%{allow_next_upgrade_override: true})
-    |> Repo.update!()
+  end
+
+  def allow_next_upgrade_override(%Auth.User{} = user) do
+    user =
+      user
+      |> Auth.User.changeset(%{allow_next_upgrade_override: true})
+      |> Repo.update!()
+
+    with_teams do
+      Plausible.Teams.sync_team(user)
+    end
+
+    user
   end
 
   def maybe_reset_next_upgrade_override(%Auth.User{} = user) do
     if user.allow_next_upgrade_override do
+      user =
+        user
+        |> Auth.User.changeset(%{allow_next_upgrade_override: false})
+        |> Repo.update!()
+
+      with_teams do
+        Plausible.Teams.sync_team(user)
+      end
+
       user
-      |> Auth.User.changeset(%{allow_next_upgrade_override: false})
-      |> Repo.update!()
     else
       user
     end
@@ -118,6 +153,58 @@ defmodule Plausible.Users do
     from(subscription in last_subscription_query(),
       where: subscription.user_id == parent_as(:user).id
     )
+  end
+
+  def start_grace_period(user) do
+    user =
+      user
+      |> GracePeriod.start_changeset()
+      |> Repo.update!()
+
+    with_teams do
+      Plausible.Teams.sync_team(user)
+    end
+
+    user
+  end
+
+  def start_manual_lock_grace_period(user) do
+    user =
+      user
+      |> GracePeriod.start_manual_lock_changeset()
+      |> Repo.update!()
+
+    with_teams do
+      Plausible.Teams.sync_team(user)
+    end
+
+    user
+  end
+
+  def end_grace_period(user) do
+    user =
+      user
+      |> GracePeriod.end_changeset()
+      |> Repo.update!()
+
+    with_teams do
+      Plausible.Teams.sync_team(user)
+    end
+
+    user
+  end
+
+  def remove_grace_period(user) do
+    user =
+      user
+      |> GracePeriod.remove_changeset()
+      |> Repo.update!()
+
+    with_teams do
+      Plausible.Teams.sync_team(user)
+    end
+
+    user
   end
 
   defp last_subscription_query() do

@@ -6,7 +6,7 @@ defmodule Plausible.DataMigration do
 
   defmacro __using__(opts) do
     dir = Keyword.fetch!(opts, :dir)
-    repo = Keyword.get(opts, :repo, Plausible.DataMigration.Repo)
+    repo = Keyword.get(opts, :repo, Plausible.DataMigration.ClickhouseRepo)
 
     quote bind_quoted: [dir: dir, repo: repo] do
       @dir dir

@@ -1,4 +1,4 @@
-defmodule Plausible.DataMigration.Repo do
+defmodule Plausible.DataMigration.ClickhouseRepo do
   @moduledoc """
   Ecto.Repo for Clickhouse data migrations, to be started manually,
   outside of the main application supervision tree.

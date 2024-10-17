@@ -32,6 +32,11 @@ defmodule Plausible.Site do
     # NOTE: needed by `SiteImports` data migration script
     embeds_one :imported_data, Plausible.Site.ImportedData, on_replace: :update
 
+    # NOTE: new teams relations
+    belongs_to :team, Plausible.Teams.Team
+    has_many :guest_memberships, Plausible.Teams.GuestMembership
+    has_many :guest_invitations, Plausible.Teams.GuestInvitation
+
     embeds_one :installation_meta, Plausible.Site.InstallationMeta,
       on_replace: :update,
       defaults_to_struct: true
@@ -67,6 +72,12 @@ defmodule Plausible.Site do
     field :complete_import_ids, {:array, :integer}, default: [], virtual: true
 
     timestamps()
+  end
+
+  def new_for_team(team, params) do
+    params
+    |> new()
+    |> put_assoc(:team, team)
   end
 
   def new(params), do: changeset(%__MODULE__{}, params)
