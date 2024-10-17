@@ -514,6 +514,17 @@ export function getDashboardTimeSettings({
   }
 }
 
+export function DisplayComparisonPeriod() {
+  const { query } = useQueryContext()
+  const site = useSiteContext()
+
+  return query.comparison === ComparisonMode.custom &&
+    query.compare_from &&
+    query.compare_to
+    ? formatDateRange(site, query.compare_from, query.compare_to)
+    : COMPARISON_MODES[query.comparison as ComparisonMode]
+}
+
 export function DisplaySelectedPeriod() {
   const { query } = useQueryContext()
   const site = useSiteContext()

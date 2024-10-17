@@ -3,6 +3,11 @@
 import React from 'react'
 import { Metric } from '../../../types/query-api'
 import { numberShortFormatter } from '../../util/number-formatter'
+import {
+  ArrowTrendingDownIcon,
+  ArrowTrendingUpIcon
+} from '@heroicons/react/20/solid'
+import classNames from 'classnames'
 
 export function ChangeArrow({
   change,
@@ -15,35 +20,41 @@ export function ChangeArrow({
   className: string
   hideNumber?: boolean
 }) {
+  const magnitude = Math.abs(change)
   const formattedChange = hideNumber
     ? null
-    : ` ${numberShortFormatter(Math.abs(change))}%`
+    : ` ${numberShortFormatter(magnitude)}%`
 
-  let content = null
+  const colorPositive = 'text-green-500'
+  const colorNegative = 'text-red-400'
+  const shouldReverseColors = metric === 'bounce_rate'
+  const isBigChange = magnitude > 0.5
 
-  if (change > 0) {
-    const color = metric === 'bounce_rate' ? 'text-red-400' : 'text-green-500'
-    content = (
-      <>
-        <span className={color + ' font-bold'}>&uarr;</span>
-        {formattedChange}
-      </>
-    )
-  } else if (change < 0) {
-    const color = metric === 'bounce_rate' ? 'text-green-500' : 'text-red-400'
-    content = (
-      <>
-        <span className={color + ' font-bold'}>&darr;</span>
-        {formattedChange}
-      </>
-    )
-  } else if (change === 0) {
-    content = <>&#12336;{formattedChange}</>
-  }
+  const iconClass = classNames(
+    'inline-block h-3 w-3',
+    isBigChange && 'stroke-1 stroke-current'
+  )
 
   return (
     <span className={className} data-testid="change-arrow">
-      {content}
+      {change === 0 && <span className={iconClass}>&#12336;</span>}
+      {change > 0 && (
+        <ArrowTrendingUpIcon
+          className={classNames(
+            iconClass,
+            !shouldReverseColors ? colorPositive : colorNegative
+          )}
+        />
+      )}
+      {change < 0 && (
+        <ArrowTrendingDownIcon
+          className={classNames(
+            iconClass,
+            !shouldReverseColors ? colorNegative : colorPositive
+          )}
+        />
+      )}
+      {formattedChange}
     </span>
   )
 }
