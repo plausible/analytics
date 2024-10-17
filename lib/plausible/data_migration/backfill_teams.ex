@@ -389,14 +389,16 @@ defmodule Plausible.DataMigration.BackfillTeams do
       {owner, site_id}
     end)
     |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
-    |> tap(fn grouped ->
-      if grouped != %{} do
+    |> tap(fn
+      grouped when grouped != %{} ->
         log("Teams about to be created: #{map_size(grouped)}")
 
         log(
           "Max sites: #{Enum.max_by(grouped, fn {_, sites} -> length(sites) end) |> elem(1) |> length()}"
         )
-      end
+
+      _ ->
+        :pass
     end)
     |> Enum.with_index()
     |> Task.async_stream(
@@ -558,14 +560,16 @@ defmodule Plausible.DataMigration.BackfillTeams do
   defp backfill_guest_memberships(site_memberships) do
     site_memberships
     |> Enum.group_by(&{&1.site.team, &1.user}, & &1)
-    |> tap(fn grouped ->
-      if grouped != %{} do
+    |> tap(fn
+      grouped when grouped != %{} ->
         log("Team memberships to be created: #{map_size(grouped)}")
 
         log(
           "Max guest memberships: #{Enum.max_by(grouped, fn {_, gms} -> length(gms) end) |> elem(1) |> length()}"
         )
-      end
+
+      _ ->
+        :pass
     end)
     |> Enum.with_index()
     |> Task.async_stream(
