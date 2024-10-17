@@ -69,13 +69,16 @@ export default function MetricValue(props: {
         />
       }
     >
-      <span data-testid="metric-value">
+      <span className="cursor-default" data-testid="metric-value">
         {shortFormatter(value)}
-        {comparison ? (
+        {comparison && comparison.change === 0 ? (
+          <span className="inline-block w-4"></span>
+        ) : null}
+        {comparison && comparison.change !== 0 ? (
           <ChangeArrow
             change={comparison.change}
             metric={metric}
-            className="pl-2"
+            className="inline-block pl-2 w-4"
             hideNumber
           />
         ) : null}
@@ -109,17 +112,26 @@ function ComparisonTooltipContent({
 
   if (comparison) {
     return (
-      <div className="whitespace-nowrap">
-        {longFormatter(value)} vs. {longFormatter(comparison.value)}
-        {label}
-        <ChangeArrow
-          metric={metric}
-          change={comparison.change}
-          className="pl-4 text-xs text-gray-100"
-        />
+      <div className="text-left whitespace-nowrap py-1 space-y-2">
+        <div>
+          <div className="flex items-center">
+            <span className="font-bold text-base">{longFormatter(value)} {label}</span>
+            <ChangeArrow
+              metric={metric}
+              change={comparison.change}
+              className="pl-4 text-xs text-gray-100"
+            />
+          </div>
+          <div className="font-normal text-xs">17 Sept - 17 Oct</div>
+        </div>
+        <div>vs</div>
+        <div>
+          <div className="font-bold text-base">{longFormatter(comparison.value)} {label}</div>
+          <div className="font-normal text-xs">20 Aug - 19 Sept</div>
+        </div>
       </div>
     )
   } else {
-    return <div className="whitespace-nowrap">{longFormatter(value)}</div>
+    return <div className="whitespace-nowrap">{longFormatter(value)} {label}</div>
   }
 }
