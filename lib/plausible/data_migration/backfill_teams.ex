@@ -8,7 +8,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
   alias Plausible.Auth
   alias Plausible.Teams
 
-  use Plausible.DataMigration, repo: Plausible.DataMigration.PostgresRepo, dir: false
+  @repo Plausible.DataMigration.PostgresRepo
 
   defmacrop is_distinct(f1, f2) do
     quote do
