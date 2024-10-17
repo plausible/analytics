@@ -19,7 +19,11 @@ type ListItem = MetricValues & {
   comparison: MetricValues & { change: Record<Metric, number> }
 }
 
-function valueRenderProps(listItem: ListItem, metric: Metric, site: PlausibleSite) {
+function valueRenderProps(
+  listItem: ListItem,
+  metric: Metric,
+  site: PlausibleSite
+) {
   const value = listItem[metric]
 
   let comparison = null

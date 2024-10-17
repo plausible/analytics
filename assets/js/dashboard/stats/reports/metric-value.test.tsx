@@ -1,7 +1,12 @@
 /** @format */
 
 import React from 'react'
-import { render as libraryRender, screen, fireEvent, waitFor } from '@testing-library/react'
+import {
+  render as libraryRender,
+  screen,
+  fireEvent,
+  waitFor
+} from '@testing-library/react'
 import MetricValue from './metric-value'
 import SiteContextProvider, { PlausibleSite } from '../../site-context'
 
@@ -190,7 +195,9 @@ function valueProps<T>(
 }
 
 function render(ui: React.ReactNode) {
-  const site = { flags: { breakdown_comparisons_ui: true } } as unknown as PlausibleSite
+  const site = {
+    flags: { breakdown_comparisons_ui: true }
+  } as unknown as PlausibleSite
   libraryRender(<SiteContextProvider site={site}>{ui}</SiteContextProvider>)
 }
 
