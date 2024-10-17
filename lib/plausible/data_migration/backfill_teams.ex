@@ -45,11 +45,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
       )
       |> @repo.all(timeout: :infinity)
 
-    IO.puts("Found #{length(sites_without_teams)} sites without teams...")
+    log("Found #{length(sites_without_teams)} sites without teams...")
 
     teams_count = backfill_teams(sites_without_teams)
 
-    IO.puts("Backfilled #{teams_count} teams.")
+    log("Backfilled #{teams_count} teams.")
 
     owner_site_memberships_query =
       from(
@@ -70,13 +70,13 @@ defmodule Plausible.DataMigration.BackfillTeams do
       )
       |> @repo.all(timeout: :infinity)
 
-    IO.puts(
+    log(
       "Found #{length(users_with_subscriptions_without_sites)} users with subscriptions without sites..."
     )
 
     teams_count = backfill_teams_for_users(users_with_subscriptions_without_sites)
 
-    IO.puts("Backfilled #{teams_count} teams from users with subscriptions without sites.")
+    log("Backfilled #{teams_count} teams from users with subscriptions without sites.")
 
     # Stale teams sync
 
@@ -98,13 +98,13 @@ defmodule Plausible.DataMigration.BackfillTeams do
       )
       |> @repo.all(timeout: :infinity)
 
-    IO.puts("Found #{length(stale_teams)} teams which have fields out of sync...")
+    log("Found #{length(stale_teams)} teams which have fields out of sync...")
 
     sync_teams(stale_teams)
 
     # Subsciprtions backfill
 
-    IO.puts("Brought out of sync teams up to date.")
+    log("Brought out of sync teams up to date.")
 
     subscriptions_without_teams =
       from(
@@ -118,11 +118,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
       )
       |> @repo.all(timeout: :infinity)
 
-    IO.puts("Found #{length(subscriptions_without_teams)} subscriptions without team...")
+    log("Found #{length(subscriptions_without_teams)} subscriptions without team...")
 
     backfill_subscriptions(subscriptions_without_teams)
 
-    IO.puts("All subscriptions are linked to a team now.")
+    log("All subscriptions are linked to a team now.")
 
     # Enterprise plans backfill
 
@@ -138,11 +138,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
       )
       |> @repo.all(timeout: :infinity)
 
-    IO.puts("Found #{length(enterprise_plans_without_teams)} enterprise plans without team...")
+    log("Found #{length(enterprise_plans_without_teams)} enterprise plans without team...")
 
     backfill_enterprise_plans(enterprise_plans_without_teams)
 
-    IO.puts("All enterprise plans are linked to a team now.")
+    log("All enterprise plans are linked to a team now.")
 
     # Guest Memberships cleanup
 
@@ -165,11 +165,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
       )
       |> @repo.all(timeout: :infinity)
 
-    IO.puts("Found #{length(guest_memberships_to_remove)} guest memberships to remove...")
+    log("Found #{length(guest_memberships_to_remove)} guest memberships to remove...")
 
     team_ids_to_prune = remove_guest_memberships(guest_memberships_to_remove)
 
-    IO.puts("Pruning guest team memberships for #{length(team_ids_to_prune)} teams...")
+    log("Pruning guest team memberships for #{length(team_ids_to_prune)} teams...")
 
     from(t in Teams.Team, where: t.id in ^team_ids_to_prune)
     |> @repo.all(timeout: :infinity)
@@ -177,7 +177,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
       Plausible.Teams.Memberships.prune_guests(team)
     end)
 
-    IO.puts("Guest memberships cleared.")
+    log("Guest memberships cleared.")
 
     # Guest Memberships backfill
 
@@ -203,13 +203,13 @@ defmodule Plausible.DataMigration.BackfillTeams do
       )
       |> @repo.all(timeout: :infinity)
 
-    IO.puts(
+    log(
       "Found #{length(site_memberships_to_backfill)} site memberships without guest membership..."
     )
 
     backfill_guest_memberships(site_memberships_to_backfill)
 
-    IO.puts("Backfilled missing guest memberships.")
+    log("Backfilled missing guest memberships.")
 
     # Stale guest memberships sync
 
@@ -228,11 +228,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
       )
       |> @repo.all(timeout: :infinity)
 
-    IO.puts("Found #{length(stale_guest_memberships)} guest memberships with role out of sync...")
+    log("Found #{length(stale_guest_memberships)} guest memberships with role out of sync...")
 
     sync_guest_memberships(stale_guest_memberships)
 
-    IO.puts("All guest memberships are up to date now.")
+    log("All guest memberships are up to date now.")
 
     # Guest invitations cleanup
 
@@ -256,11 +256,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
       )
       |> @repo.all(timeout: :infinity)
 
-    IO.puts("Found #{length(guest_invitations_to_remove)} guest invitations to remove...")
+    log("Found #{length(guest_invitations_to_remove)} guest invitations to remove...")
 
     team_ids_to_prune = remove_guest_invitations(guest_invitations_to_remove)
 
-    IO.puts("Pruning guest team invitations for #{length(team_ids_to_prune)} teams...")
+    log("Pruning guest team invitations for #{length(team_ids_to_prune)} teams...")
 
     from(t in Teams.Team, where: t.id in ^team_ids_to_prune)
     |> @repo.all(timeout: :infinity)
@@ -268,7 +268,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
       Plausible.Teams.Invitations.prune_guest_invitations(team)
     end)
 
-    IO.puts("Guest invitations cleared.")
+    log("Guest invitations cleared.")
 
     # Guest invitations backfill
 
@@ -294,13 +294,13 @@ defmodule Plausible.DataMigration.BackfillTeams do
       )
       |> @repo.all(timeout: :infinity)
 
-    IO.puts(
+    log(
       "Found #{length(site_invitations_to_backfill)} site invitations without guest invitation..."
     )
 
     backfill_guest_invitations(site_invitations_to_backfill)
 
-    IO.puts("Backfilled missing guest invitations.")
+    log("Backfilled missing guest invitations.")
 
     # Stale guest invitations sync
 
@@ -319,11 +319,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
       )
       |> @repo.all(timeout: :infinity)
 
-    IO.puts("Found #{length(stale_guest_invitations)} guest invitations with role out of sync...")
+    log("Found #{length(stale_guest_invitations)} guest invitations with role out of sync...")
 
     sync_guest_invitations(stale_guest_invitations)
 
-    IO.puts("All guest invitations are up to date now.")
+    log("All guest invitations are up to date now.")
 
     # Site transfers cleanup
 
@@ -343,11 +343,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
       )
       |> @repo.all(timeout: :infinity)
 
-    IO.puts("Found #{length(site_transfers_to_remove)} site transfers to remove...")
+    log("Found #{length(site_transfers_to_remove)} site transfers to remove...")
 
     remove_site_transfers(site_transfers_to_remove)
 
-    IO.puts("Site transfers cleared.")
+    log("Site transfers cleared.")
 
     # Site transfers backfill
 
@@ -371,15 +371,15 @@ defmodule Plausible.DataMigration.BackfillTeams do
       )
       |> @repo.all(timeout: :infinity)
 
-    IO.puts(
+    log(
       "Found #{length(site_invitations_to_backfill)} ownership transfers without site transfer..."
     )
 
     backfill_site_transfers(site_invitations_to_backfill)
 
-    IO.puts("Backfilled missing site transfers.")
+    log("Backfilled missing site transfers.")
 
-    IO.puts("All data are up to date now!")
+    log("All data are up to date now!")
   end
 
   defp backfill_teams(sites) do
@@ -390,9 +390,9 @@ defmodule Plausible.DataMigration.BackfillTeams do
     |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
     |> tap(fn grouped ->
       if grouped != %{} do
-        IO.puts("Teams about to be created: #{map_size(grouped)}")
+        log("Teams about to be created: #{map_size(grouped)}")
 
-        IO.puts(
+        log(
           "Max sites: #{Enum.max_by(grouped, fn {_, sites} -> length(sites) end) |> elem(1) |> length()}"
         )
       end
@@ -551,9 +551,9 @@ defmodule Plausible.DataMigration.BackfillTeams do
     |> Enum.group_by(&{&1.site.team, &1.user}, &{&1.site, &1.role})
     |> tap(fn grouped ->
       if grouped != %{} do
-        IO.puts("Team memberships to be created: #{map_size(grouped)}")
+        log("Team memberships to be created: #{map_size(grouped)}")
 
-        IO.puts(
+        log(
           "Max guest memberships: #{Enum.max_by(grouped, fn {_, gms} -> length(gms) end) |> elem(1) |> length()}"
         )
       end
@@ -683,6 +683,10 @@ defmodule Plausible.DataMigration.BackfillTeams do
     end)
   end
 
-  def translate_role(:admin), do: :editor
-  def translate_role(:viewer), do: :viewer
+  defp translate_role(:admin), do: :editor
+  defp translate_role(:viewer), do: :viewer
+
+  defp log(msg) do
+    IO.puts("[#{NaiveDateTime.utc_now(:second)}] #{msg}")
+  end
 end
