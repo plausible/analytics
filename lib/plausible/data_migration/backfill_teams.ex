@@ -51,6 +51,33 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     IO.puts("Backfilled #{teams_count} teams.")
 
+    owner_site_memberships_query =
+      from(
+        tm in Plausible.Site.Membership,
+        where: tm.user_id == parent_as(:user).id,
+        where: tm.role == :owner,
+        select: 1
+      )
+
+    users_with_subscriptions_without_sites =
+      from(
+        s in Plausible.Billing.Subscription,
+        inner_join: u in assoc(s, :user),
+        as: :user,
+        where: not exists(owner_site_memberships_query),
+        select: u,
+        distinct: true
+      )
+      |> @repo.all(timeout: :infinity)
+
+    IO.puts(
+      "Found #{length(users_with_subscriptions_without_sites)} users with subscriptions without sites..."
+    )
+
+    teams_count = backfill_teams_for_users(users_with_subscriptions_without_sites)
+
+    IO.puts("Backfilled #{teams_count} teams from users with subscriptions without sites.")
+
     # Stale teams sync
 
     stale_teams =
@@ -394,6 +421,42 @@ defmodule Plausible.DataMigration.BackfillTeams do
             @repo.update_all(from(s in Plausible.Site, where: s.id in ^site_ids),
               set: [team_id: team.id]
             )
+          end,
+          timeout: :infinity
+        )
+
+        if rem(idx, 10) == 0 do
+          IO.write(".")
+        end
+      end,
+      timeout: :infinity
+    )
+    |> Enum.to_list()
+    |> length()
+  end
+
+  defp backfill_teams_for_users(users) do
+    users
+    |> Enum.with_index()
+    |> Task.async_stream(
+      fn {owner, idx} ->
+        @repo.transaction(
+          fn ->
+            team =
+              "My Team"
+              |> Teams.Team.changeset()
+              |> Ecto.Changeset.put_change(:trial_expiry_date, owner.trial_expiry_date)
+              |> Ecto.Changeset.put_change(:accept_traffic_until, owner.accept_traffic_until)
+              |> Ecto.Changeset.put_change(
+                :allow_next_upgrade_override,
+                owner.allow_next_upgrade_override
+              )
+              |> Ecto.Changeset.put_embed(:grace_period, owner.grace_period)
+              |> @repo.insert!()
+
+            team
+            |> Teams.Membership.changeset(owner, :owner)
+            |> @repo.insert!()
           end,
           timeout: :infinity
         )
