@@ -22,7 +22,7 @@ it("renders red for positive change", () => {
   expect(arrowElement.children[0]).toHaveClass("text-red-400")
 })
 
-it("renders red for no change", () => {
+it("renders tilde for no change", () => {
   render(<ChangeArrow change={0} className="text-xs" metric="visitors" />)
 
   const arrowElement = screen.getByTestId('change-arrow')
@@ -39,7 +39,7 @@ it('inverts colors for positive bounce_rate change', () => {
   expect(arrowElement.children[0]).toHaveClass("text-red-400")
 })
 
-it("renders red for positive change", () => {
+it("inverts colors for negative bounce_rate change", () => {
   render(<ChangeArrow change={-3} className="text-xs" metric="bounce_rate" />)
 
   const arrowElement = screen.getByTestId('change-arrow')

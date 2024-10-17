@@ -76,7 +76,7 @@ export const ItemRow = <T extends Record<string, string | number | ReactNode>>({
 }) => {
   return (
     <tr className="text-sm dark:text-gray-200">
-      {columns.map(({ key, width, align, label, renderValue, renderItem }) => (
+      {columns.map(({ key, width, align, renderValue, renderItem }) => (
         <TableCell
           key={`${(pageIndex ?? null) === null ? '' : `page_${pageIndex}_`}row_${rowIndex}_${String(key)}`}
           className={width}

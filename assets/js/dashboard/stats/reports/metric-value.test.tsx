@@ -135,7 +135,7 @@ describe("comparisons", () => {
   })
 })
 
-function valueProps<T>(metric: any, value: T, comparison?: { value: T, change: number }) {
+function valueProps<T>(metric: string, value: T, comparison?: { value: T, change: number }) {
   return {
     metric: metric,
     listItem: {
@@ -146,9 +146,9 @@ function valueProps<T>(metric: any, value: T, comparison?: { value: T, change: n
           [metric]: comparison.change
         }
       }
-    } as any,
-    renderLabel: (_query: any) => metric.toUpperCase()
-  }
+    },
+    renderLabel: (_query: unknown) => metric.toUpperCase()
+  } as any /* eslint-disable-line @typescript-eslint/no-explicit-any */
 }
 
 async function renderWithTooltip(ui: React.ReactNode) {

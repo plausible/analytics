@@ -1,12 +1,12 @@
-import React, { ReactNode, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { Metric } from '../../../types/query-api'
 import { Tooltip } from '../../util/tooltip'
 import { ChangeArrow } from './change-arrow'
-import { MetricFormatterLong, MetricFormatterShort } from './metric-formatter'
+import { MetricFormatterLong, MetricFormatterShort, ValueType } from './metric-formatter'
 import { DashboardQuery } from '../../query'
 import { useQueryContext } from '../../query-context'
 
-type MetricValues = Record<Metric, any>
+type MetricValues = Record<Metric, ValueType>
 
 type ListItem =
   MetricValues
@@ -32,13 +32,13 @@ export default function MetricValue(props: {
   listItem: ListItem,
   metric: Metric,
   renderLabel: (query: DashboardQuery) => string,
-  formatter?: (value: any) => any
+  formatter?: (value: ValueType) => string
 }) {
   const { query } = useQueryContext()
 
   const {metric, listItem} = props
   const {value, comparison} = useMemo(() => valueRenderProps(listItem, metric), [listItem, metric])
-  const metricLabel = useMemo(() => props.renderLabel(query), [query])
+  const metricLabel = useMemo(() => props.renderLabel(query), [query, props])
   const shortFormatter = props.formatter ?? MetricFormatterShort[metric]
 
   if (value === null && (!comparison || comparison.value === null)) {
@@ -65,11 +65,11 @@ function ComparisonTooltipContent({
   metricLabel,
   formatter
 }: {
-  value: any,
-  comparison: { value: any, change: number } | null,
+  value: ValueType,
+  comparison: { value: ValueType, change: number } | null,
   metric: Metric,
   metricLabel: string,
-  formatter?: (value: any) => any
+  formatter?: (value: ValueType) => string
 }) {
   const longFormatter = formatter ?? MetricFormatterLong[metric]
 

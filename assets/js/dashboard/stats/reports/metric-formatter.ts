@@ -4,7 +4,10 @@ import { numberShortFormatter, durationFormatter, percentageFormatter, numberLon
 
 export type FormattableMetric = Metric | 'total_visitors' | 'current_visitors' | 'exit_rate'
 
-export const MetricFormatterShort: Record<FormattableMetric, (value: any) => any> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ValueType = any
+
+export const MetricFormatterShort: Record<FormattableMetric, (value: ValueType) => string> = {
   events: numberShortFormatter,
   pageviews: numberShortFormatter,
   total_visitors: numberShortFormatter,
@@ -26,7 +29,7 @@ export const MetricFormatterShort: Record<FormattableMetric, (value: any) => any
   total_revenue: formatMoneyShort,
 }
 
-export const MetricFormatterLong: Record<FormattableMetric, (value: any) => any> = {
+export const MetricFormatterLong: Record<FormattableMetric, (value: ValueType) => string> = {
   events: numberLongFormatter,
   pageviews: numberLongFormatter,
   total_visitors: numberLongFormatter,

@@ -7,7 +7,7 @@ export function Tooltip({ children, info, className, onClick, boundary }: {
   children: ReactNode
   className?: string,
   onClick?: () => void,
-  boundary?: any
+  boundary?: HTMLElement
 }) {
   const [visible, setVisible] = useState(false);
   const [referenceElement, setReferenceElement] = useState<HTMLDivElement | null>(null)
