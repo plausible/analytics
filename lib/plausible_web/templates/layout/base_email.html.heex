@@ -1,15 +1,14 @@
-<%= PlausibleWeb.EmailView.greet_recipient(assigns) %>
-<br /><br />
+<p><%= PlausibleWeb.EmailView.greet_recipient(assigns) %></p>
 
 <%= @inner_content %>
-<br /><br />
 
-<%= if ee?() do %>
-  Regards,<br /> The Plausible Team 💌 <br /><br />
-<% end %>
--- <br /><br />
-<a href={plausible_url()}><%= plausible_url() %></a>
-<br />
+<p :if={Plausible.ee?()}>Regards,<br /> The Plausible Team 💌</p>
+
+<p>--</p>
+
+<p>
+  <a href={plausible_url()}><%= plausible_url() %></a>
+</p>
 
 <%= if ee?() do %>
   {{{ pm:unsubscribe }}}

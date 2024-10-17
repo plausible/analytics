@@ -1,14 +1,14 @@
-There are currently <%= @current_visitors %> visitors on
-<a href={"https://" <> @site.domain}><%= @site.domain %></a>.
-<%= if Enum.count(@sources) > 0 do %>
-  <br />
-  <br /> The top sources for current visitors:<br />
-  <%= for %{name: source, count: visitors} <- @sources do %>
-    <%= source %> - <%= visitors %> visitor<%= if visitors > 1, do: "s" %><br />
-  <% end %>
-<% end %>
+<p>
+  There are currently <%= @current_visitors %> visitors on <a href={"https://" <> @site.domain}><%= @site.domain %></a>.
+</p>
 
-<%= if @link do %>
-  <br /><br /> View dashboard: <a href={@link}><%= @link %></a>
-<% end %>
-<br /><br /> Congrats on the spike in traffic!
+<ul :if={not Enum.empty?(@sources)}>
+  The top sources for current visitors:
+  <%= for %{name: source, count: visitors} <- @sources do %>
+    <li><%= source %> - <%= visitors %> visitor<%= if visitors > 1, do: "s" %></li>
+  <% end %>
+</ul>
+
+<p :if={@link}>View dashboard: <a href={@link}><%= @link %></a></p>
+
+<p>Congrats on the spike in traffic!</p>
