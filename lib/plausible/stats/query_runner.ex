@@ -97,7 +97,7 @@ defmodule Plausible.Stats.QueryRunner do
       |> Enum.map(fn {dimension, label} -> [:is, dimension, [label]] end)
 
     if length(query_filters) > 0 do
-      [[:and, query_filters]]
+      [[:ignore_in_totals_query, [:and, query_filters]]]
     else
       []
     end

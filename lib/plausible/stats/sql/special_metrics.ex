@@ -6,7 +6,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
 
   use Plausible.Stats.SQL.Fragments
 
-  alias Plausible.Stats.{Base, Query, SQL}
+  alias Plausible.Stats.{Base, Query, SQL, Filters}
 
   import Ecto.Query
   import Plausible.Stats.Util
@@ -50,6 +50,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
       total_query =
         query
         |> Query.remove_top_level_filters(["event:goal", "event:props"])
+        |> remove_filters_ignored_in_totals_query()
         |> Query.set(
           dimensions: [],
           include_imported: query.include_imported
@@ -90,6 +91,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
       group_totals_query =
         query
         |> Query.remove_top_level_filters(["event:goal", "event:props"])
+        |> remove_filters_ignored_in_totals_query()
         |> Query.set(
           metrics: [:visitors],
           order_by: [],
@@ -117,13 +119,6 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     end
   end
 
-  defp total_visitors(site, query) do
-    Base.base_event_query(site, query)
-    |> select([e],
-      total_visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
-    )
-  end
-
   # `total_visitors_subquery` returns a subquery which selects `total_visitors` -
   # the number used as the denominator in the calculation of `conversion_rate` and
   # `percentage` metrics.
@@ -148,5 +143,22 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     wrap_alias([], %{
       total_visitors: subquery(total_visitors(site, query))
     })
+  end
+
+  defp remove_filters_ignored_in_totals_query(query) do
+    totals_query_filters =
+      Filters.transform_filters(query.filters, fn
+        [:ignore_in_totals_query, _] -> []
+        filter -> [filter]
+      end)
+
+    Query.set(query, filters: totals_query_filters)
+  end
+
+  defp total_visitors(site, query) do
+    Base.base_event_query(site, query)
+    |> select([e],
+      total_visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
+    )
   end
 end

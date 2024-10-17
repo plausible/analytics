@@ -224,8 +224,8 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                  "percentage" => 33.3,
                  "comparison" => %{
                    "visitors" => 1,
-                   "percentage" => 100.0,
-                   "change" => %{"percentage" => -67, "visitors" => 0}
+                   "percentage" => 50.0,
+                   "change" => %{"percentage" => -33, "visitors" => 0}
                  }
                }
              ]
@@ -255,8 +255,8 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                  "percentage" => 66.7,
                  "comparison" => %{
                    "visitors" => 1,
-                   "percentage" => 100.0,
-                   "change" => %{"percentage" => -33, "visitors" => 100}
+                   "percentage" => 25.0,
+                   "change" => %{"percentage" => 167, "visitors" => 100}
                  }
                }
              ]
