@@ -9,6 +9,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   alias Plausible.Site.Memberships.Invitations
   alias Plausible.Billing.Quota
   import Ecto.Query
+  use Plausible
 
   @type invite_error() ::
           Ecto.Changeset.t()
@@ -81,7 +82,9 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
          {:ok, invitation} <- Plausible.Repo.insert(changeset) do
       send_invitation_email(invitation, invitee)
 
-      Plausible.Teams.Invitations.invite_sync(site, invitation)
+      with_teams do
+        Plausible.Teams.Invitations.invite_sync(site, invitation)
+      end
 
       invitation
     else

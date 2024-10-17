@@ -41,12 +41,14 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
       case Repo.transaction(multi) do
         {:ok, changes} ->
-          sync_job =
-            Task.async(fn ->
-              Plausible.Teams.Invitations.transfer_site_sync(site, user)
-            end)
+          with_teams do
+            sync_job =
+              Task.async(fn ->
+                Plausible.Teams.Invitations.transfer_site_sync(site, user)
+              end)
 
-          Task.await(sync_job)
+            Task.await(sync_job)
+          end
 
           membership = Repo.preload(changes.membership, [:site, :user])
 
@@ -80,7 +82,9 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     site = Repo.preload(invitation.site, :owner)
 
     with :ok <- Invitations.ensure_can_take_ownership(site, user) do
-      Plausible.Teams.Invitations.accept_transfer_sync(invitation, user)
+      with_teams do
+        Plausible.Teams.Invitations.accept_transfer_sync(invitation, user)
+      end
 
       site
       |> add_and_transfer_ownership(membership, user)
@@ -90,7 +94,9 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   end
 
   defp do_accept_invitation(invitation, user) do
-    Plausible.Teams.Invitations.accept_invitation_sync(invitation, user)
+    with_teams do
+      Plausible.Teams.Invitations.accept_invitation_sync(invitation, user)
+    end
 
     membership = get_or_create_membership(invitation, user)
 

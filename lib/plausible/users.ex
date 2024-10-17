@@ -36,7 +36,9 @@ defmodule Plausible.Users do
       |> Auth.User.changeset(%{accept_traffic_until: accept_traffic_until(user)})
       |> Repo.update!()
 
-    Plausible.Teams.sync_team(user)
+    with_teams do
+      Plausible.Teams.sync_team(user)
+    end
 
     user
   end
@@ -110,7 +112,9 @@ defmodule Plausible.Users do
       |> Auth.User.start_trial()
       |> Repo.update!()
 
-    Plausible.Teams.sync_team(user)
+    with_teams do
+      Plausible.Teams.sync_team(user)
+    end
 
     user
   end
@@ -121,7 +125,9 @@ defmodule Plausible.Users do
       |> Auth.User.changeset(%{allow_next_upgrade_override: true})
       |> Repo.update!()
 
-    Plausible.Teams.sync_team(user)
+    with_teams do
+      Plausible.Teams.sync_team(user)
+    end
 
     user
   end
@@ -133,7 +139,9 @@ defmodule Plausible.Users do
         |> Auth.User.changeset(%{allow_next_upgrade_override: false})
         |> Repo.update!()
 
-      Plausible.Teams.sync_team(user)
+      with_teams do
+        Plausible.Teams.sync_team(user)
+      end
 
       user
     else
@@ -153,7 +161,9 @@ defmodule Plausible.Users do
       |> GracePeriod.start_changeset()
       |> Repo.update!()
 
-    Plausible.Teams.sync_team(user)
+    with_teams do
+      Plausible.Teams.sync_team(user)
+    end
 
     user
   end
@@ -164,7 +174,9 @@ defmodule Plausible.Users do
       |> GracePeriod.start_manual_lock_changeset()
       |> Repo.update!()
 
-    Plausible.Teams.sync_team(user)
+    with_teams do
+      Plausible.Teams.sync_team(user)
+    end
 
     user
   end
@@ -175,7 +187,9 @@ defmodule Plausible.Users do
       |> GracePeriod.end_changeset()
       |> Repo.update!()
 
-    Plausible.Teams.sync_team(user)
+    with_teams do
+      Plausible.Teams.sync_team(user)
+    end
 
     user
   end
@@ -186,7 +200,9 @@ defmodule Plausible.Users do
       |> GracePeriod.remove_changeset()
       |> Repo.update!()
 
-    Plausible.Teams.sync_team(user)
+    with_teams do
+      Plausible.Teams.sync_team(user)
+    end
 
     user
   end
