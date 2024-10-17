@@ -7,16 +7,16 @@ defmodule Plausible.DataMigration.PostgresRepo do
     otp_app: :plausible,
     adapter: Ecto.Adapters.Postgres
 
-  def start(url, pool_size \\ 1) when is_binary(url) do
+  def start(url, opts \\ []) when is_binary(url) do
     default_config = Plausible.Repo.config()
 
     start_link(
       url: url,
       queue_target: 500,
       queue_interval: 2000,
-      pool_size: pool_size,
-      ssl: default_config[:ssl],
-      ssl_opts: default_config[:ssl_opts]
+      pool_size: opts[:pool_size] || 1,
+      ssl: opts[:ssl] || default_config[:ssl],
+      ssl_opts: opts[:ssl_opts] || default_config[:ssl_opts]
     )
   end
 end

@@ -24,7 +24,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
         Application.get_env(:plausible, Plausible.Repo)[:url]
       )
 
-    @repo.start(db_url, 16)
+    @repo.start(db_url,
+      pool_size: System.schedulers_online() * 2,
+      ssl: true,
+      ssl_opts: [verify: :verify_none]
+    )
 
     backfill()
   end
