@@ -11,7 +11,10 @@ import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { useLastLoadContext } from '../../last-load-context'
 import { ChangeArrow } from '../reports/change-arrow'
-import { MetricFormatterShort, MetricFormatterLong } from '../reports/metric-formatter'
+import {
+  MetricFormatterShort,
+  MetricFormatterLong
+} from '../reports/metric-formatter'
 
 function Maybe({ condition, children }) {
   if (condition) {
@@ -45,8 +48,13 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
         {query.comparison && (
           <div className="whitespace-nowrap">
             {topStatNumberLong(stat.graph_metric, stat.value)} vs.{' '}
-            {topStatNumberLong(stat.graph_metric, stat.comparison_value)} {statName}
-            <ChangeArrow metric={stat.graph_metric} change={stat.change} className="pl-4 text-xs text-gray-100" />
+            {topStatNumberLong(stat.graph_metric, stat.comparison_value)}{' '}
+            {statName}
+            <ChangeArrow
+              metric={stat.graph_metric}
+              change={stat.change}
+              className="pl-4 text-xs text-gray-100"
+            />
           </div>
         )}
 
@@ -148,7 +156,11 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
                 {topStatNumberShort(stat.graph_metric, stat.value)}
               </p>
               <Maybe condition={!query.comparison && stat.change != null}>
-                <ChangeArrow metric={stat.graph_metric} change={stat.change} className="pl-2 text-xs dark:text-gray-100" />
+                <ChangeArrow
+                  metric={stat.graph_metric}
+                  change={stat.change}
+                  className="pl-2 text-xs dark:text-gray-100"
+                />
               </Maybe>
             </span>
             <Maybe condition={query.comparison}>

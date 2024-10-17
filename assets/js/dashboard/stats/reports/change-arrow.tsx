@@ -1,9 +1,23 @@
+/** @format */
+
 import React from 'react'
 import { Metric } from '../../../types/query-api'
 import { numberShortFormatter } from '../../util/number-formatter'
 
-export function ChangeArrow({ change, metric, className, hideNumber }: { change: number, metric: Metric, className: string, hideNumber?: boolean }) {
-  const formattedChange = hideNumber ? null : ` ${numberShortFormatter(Math.abs(change))}%`
+export function ChangeArrow({
+  change,
+  metric,
+  className,
+  hideNumber
+}: {
+  change: number
+  metric: Metric
+  className: string
+  hideNumber?: boolean
+}) {
+  const formattedChange = hideNumber
+    ? null
+    : ` ${numberShortFormatter(Math.abs(change))}%`
 
   let content = null
 
@@ -27,5 +41,9 @@ export function ChangeArrow({ change, metric, className, hideNumber }: { change:
     content = <>&#12336;{formattedChange}</>
   }
 
-  return <span className={className} data-testid="change-arrow">{content}</span>
+  return (
+    <span className={className} data-testid="change-arrow">
+      {content}
+    </span>
+  )
 }

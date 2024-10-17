@@ -1,18 +1,22 @@
+/** @format */
+
 import React, { useMemo } from 'react'
 import { Metric } from '../../../types/query-api'
 import { Tooltip } from '../../util/tooltip'
 import { ChangeArrow } from './change-arrow'
-import { MetricFormatterLong, MetricFormatterShort, ValueType } from './metric-formatter'
+import {
+  MetricFormatterLong,
+  MetricFormatterShort,
+  ValueType
+} from './metric-formatter'
 import { DashboardQuery } from '../../query'
 import { useQueryContext } from '../../query-context'
 
 type MetricValues = Record<Metric, ValueType>
 
-type ListItem =
-  MetricValues
-  & {
-    comparison: MetricValues & { change: Record<Metric, number> }
-  }
+type ListItem = MetricValues & {
+  comparison: MetricValues & { change: Record<Metric, number> }
+}
 
 function valueRenderProps(listItem: ListItem, metric: Metric) {
   const value = listItem[metric]
@@ -29,15 +33,18 @@ function valueRenderProps(listItem: ListItem, metric: Metric) {
 }
 
 export default function MetricValue(props: {
-  listItem: ListItem,
-  metric: Metric,
-  renderLabel: (query: DashboardQuery) => string,
+  listItem: ListItem
+  metric: Metric
+  renderLabel: (query: DashboardQuery) => string
   formatter?: (value: ValueType) => string
 }) {
   const { query } = useQueryContext()
 
-  const {metric, listItem} = props
-  const {value, comparison} = useMemo(() => valueRenderProps(listItem, metric), [listItem, metric])
+  const { metric, listItem } = props
+  const { value, comparison } = useMemo(
+    () => valueRenderProps(listItem, metric),
+    [listItem, metric]
+  )
   const metricLabel = useMemo(() => props.renderLabel(query), [query, props])
   const shortFormatter = props.formatter ?? MetricFormatterShort[metric]
 
@@ -47,16 +54,29 @@ export default function MetricValue(props: {
 
   return (
     <Tooltip
-      info={<ComparisonTooltipContent value={value} comparison={comparison} metricLabel={metricLabel} {...props} />}
+      info={
+        <ComparisonTooltipContent
+          value={value}
+          comparison={comparison}
+          metricLabel={metricLabel}
+          {...props}
+        />
+      }
     >
       <span data-testid="metric-value">
         {shortFormatter(value)}
-        {comparison ? <ChangeArrow change={comparison.change} metric={metric} className="pl-2" hideNumber /> : null}
+        {comparison ? (
+          <ChangeArrow
+            change={comparison.change}
+            metric={metric}
+            className="pl-2"
+            hideNumber
+          />
+        ) : null}
       </span>
     </Tooltip>
   )
 }
-
 
 function ComparisonTooltipContent({
   value,
@@ -65,17 +85,17 @@ function ComparisonTooltipContent({
   metricLabel,
   formatter
 }: {
-  value: ValueType,
-  comparison: { value: ValueType, change: number } | null,
-  metric: Metric,
-  metricLabel: string,
+  value: ValueType
+  comparison: { value: ValueType; change: number } | null
+  metric: Metric
+  metricLabel: string
   formatter?: (value: ValueType) => string
 }) {
   const longFormatter = formatter ?? MetricFormatterLong[metric]
 
   const label = useMemo(() => {
     if (metricLabel.length < 3) {
-      return ""
+      return ''
     }
 
     return ` ${metricLabel.toLowerCase()}`
@@ -84,15 +104,16 @@ function ComparisonTooltipContent({
   if (comparison) {
     return (
       <div className="whitespace-nowrap">
-        {longFormatter(value)} vs. {longFormatter(comparison.value)}{label}
-        <ChangeArrow metric={metric} change={comparison.change} className="pl-4 text-xs text-gray-100" />
+        {longFormatter(value)} vs. {longFormatter(comparison.value)}
+        {label}
+        <ChangeArrow
+          metric={metric}
+          change={comparison.change}
+          className="pl-4 text-xs text-gray-100"
+        />
       </div>
     )
   } else {
-    return (
-      <div className="whitespace-nowrap">
-        {longFormatter(value)}
-      </div>
-    )
+    return <div className="whitespace-nowrap">{longFormatter(value)}</div>
   }
 }

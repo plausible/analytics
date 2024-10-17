@@ -6,10 +6,7 @@ import Modal from './modal'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { usePaginatedGetAPI } from '../../hooks/api-client'
-import {
-  createVisitors,
-  Metric
-} from '../reports/metrics'
+import { createVisitors, Metric } from '../reports/metrics'
 import {
   numberShortFormatter,
   percentageFormatter

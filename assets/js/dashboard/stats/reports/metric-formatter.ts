@@ -1,13 +1,27 @@
+/** @format */
+
 import { Metric } from '../../../types/query-api'
 import { formatMoneyShort, formatMoneyLong } from '../../util/money'
-import { numberShortFormatter, durationFormatter, percentageFormatter, numberLongFormatter } from "../../util/number-formatter"
+import {
+  numberShortFormatter,
+  durationFormatter,
+  percentageFormatter,
+  numberLongFormatter
+} from '../../util/number-formatter'
 
-export type FormattableMetric = Metric | 'total_visitors' | 'current_visitors' | 'exit_rate'
+export type FormattableMetric =
+  | Metric
+  | 'total_visitors'
+  | 'current_visitors'
+  | 'exit_rate'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ValueType = any
 
-export const MetricFormatterShort: Record<FormattableMetric, (value: ValueType) => string> = {
+export const MetricFormatterShort: Record<
+  FormattableMetric,
+  (value: ValueType) => string
+> = {
   events: numberShortFormatter,
   pageviews: numberShortFormatter,
   total_visitors: numberShortFormatter,
@@ -26,10 +40,13 @@ export const MetricFormatterShort: Record<FormattableMetric, (value: ValueType) 
   percentage: percentageFormatter,
 
   average_revenue: formatMoneyShort,
-  total_revenue: formatMoneyShort,
+  total_revenue: formatMoneyShort
 }
 
-export const MetricFormatterLong: Record<FormattableMetric, (value: ValueType) => string> = {
+export const MetricFormatterLong: Record<
+  FormattableMetric,
+  (value: ValueType) => string
+> = {
   events: numberLongFormatter,
   pageviews: numberLongFormatter,
   total_visitors: numberLongFormatter,
@@ -48,5 +65,5 @@ export const MetricFormatterLong: Record<FormattableMetric, (value: ValueType) =
   percentage: percentageFormatter,
 
   average_revenue: formatMoneyLong,
-  total_revenue: formatMoneyLong,
+  total_revenue: formatMoneyLong
 }
