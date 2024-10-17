@@ -4,8 +4,8 @@ import React from 'react'
 import { Metric } from '../../../types/query-api'
 import { numberShortFormatter } from '../../util/number-formatter'
 import {
-  ArrowTrendingDownIcon,
-  ArrowTrendingUpIcon
+  ArrowDownRightIcon,
+  ArrowUpRightIcon
 } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 
@@ -28,18 +28,19 @@ export function ChangeArrow({
   const colorPositive = 'text-green-500'
   const colorNegative = 'text-red-400'
   const shouldReverseColors = metric === 'bounce_rate'
-  const isBigChange = magnitude > 0.5
 
   const iconClass = classNames(
     'inline-block h-3 w-3',
-    isBigChange && 'stroke-1 stroke-current'
+    // would be cool to have the magnitudes sensitive to the particular query response: 20% change is huge relative to other 0.5% changes
+    magnitude > 33 && magnitude <= 66 && 'stroke-1 stroke-current',
+    magnitude > 66 && 'stroke-2 stroke-current'
   )
 
   return (
     <span className={className} data-testid="change-arrow">
       {change === 0 && <span className={iconClass}>&#12336;</span>}
       {change > 0 && (
-        <ArrowTrendingUpIcon
+        <ArrowUpRightIcon
           className={classNames(
             iconClass,
             !shouldReverseColors ? colorPositive : colorNegative
@@ -47,7 +48,7 @@ export function ChangeArrow({
         />
       )}
       {change < 0 && (
-        <ArrowTrendingDownIcon
+        <ArrowDownRightIcon
           className={classNames(
             iconClass,
             !shouldReverseColors ? colorNegative : colorPositive

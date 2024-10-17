@@ -97,7 +97,7 @@ export const createVisitors = (props) => {
 export const createConversionRate = (props) => {
   const renderLabel = (_query) => 'CR'
   return new Metric({
-    width: 'w-16',
+    width: 'w-20',
     ...props,
     key: 'conversion_rate',
     renderLabel,
