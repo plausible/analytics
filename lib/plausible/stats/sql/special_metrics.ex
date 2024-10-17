@@ -21,7 +21,9 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
   defp maybe_add_percentage_metric(q, site, query) do
     if :percentage in query.metrics do
       total_query =
-        Query.set(query,
+        query
+        |> remove_filters_ignored_in_totals_query()
+        |> Query.set(
           dimensions: [],
           include_imported: query.include_imported
         )
