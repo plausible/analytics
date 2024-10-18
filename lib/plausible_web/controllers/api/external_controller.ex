@@ -450,43 +450,56 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   @decorate trace("ingest.geolocation")
   defp visitor_location_details(conn) do
-    result =
-      PlausibleWeb.RemoteIp.get(conn)
-      |> Geolix.lookup()
+    ip = PlausibleWeb.RemoteIp.get(conn)
 
-    country_code =
-      get_in(result, [:geolocation, :country, :iso_code])
-      |> ignore_unknown_country
+    case :locus.lookup(:geolocation, ip) do
+      {:ok, result} -> get_location_details(result)
+      _ -> get_location_details(%{})
+    end
+  end
 
-    city_geoname_id = get_in(result, [:geolocation, :city, :geoname_id])
-
-    subdivision1_code =
-      case result do
-        %{geolocation: %{subdivisions: [%{iso_code: iso_code} | _rest]}} ->
-          country_code <> "-" <> iso_code
-
-        _ ->
-          ""
-      end
-
-    subdivision2_code =
-      case result do
-        %{geolocation: %{subdivisions: [_first, %{iso_code: iso_code} | _rest]}} ->
-          country_code <> "-" <> iso_code
-
-        _ ->
-          ""
-      end
-
+  defp get_location_details(geo_data) do
     %{
-      country_code: country_code,
-      subdivision1_code: subdivision1_code,
-      subdivision2_code: subdivision2_code,
-      city_geoname_id: Map.get(@city_overrides, city_geoname_id, city_geoname_id)
+      country_code: get_country_code(geo_data),
+      subdivision1_code: get_subdivision_code(geo_data, 0),
+      subdivision2_code: get_subdivision_code(geo_data, 1),
+      city_geoname_id: get_city_geoname_id(geo_data)
     }
   end
 
-  defp ignore_unknown_country("ZZ"), do: nil
+  defp get_country_code(%{}), do: ""
+
+  defp get_country_code(geo_data) do
+    geo_data
+    |> Map.get("country", %{})
+    |> Map.get("iso_code")
+    |> ignore_unknown_country()
+  end
+
+  defp get_city_geoname_id(%{}), do: ""
+
+  defp get_city_geoname_id(geo_data) do
+    city =
+      geo_data
+      |> Map.get("city", %{})
+      |> Map.get("geoname_id", "")
+
+    Map.get(@city_overrides, city, city)
+  end
+
+  defp get_subdivision_code(%{}, _), do: ""
+
+  defp get_subdivision_code(geo_data, n) do
+    subdivisions = Map.get(geo_data, "subdivision", [])
+    country_code = get_country_code(geo_data)
+
+    case Enum.at(subdivisions, n) do
+      %{"iso_code" => iso_code} -> country_code <> "-" <> iso_code
+      _ -> ""
+    end
+  end
+
+  defp ignore_unknown_country("ZZ"), do: ""
   defp ignore_unknown_country(country), do: country
 
   @decorate trace("ingest.parse_referrer")
