@@ -1,7 +1,7 @@
 defmodule Plausible.Ingestion.EventTest do
   use Plausible.DataCase
 
-  setup_all _context do
+  setup_all do
     Plausible.DataMigration.AquisitionChannel.run(quiet: true)
   end
 
@@ -69,35 +69,38 @@ defmodule Plausible.Ingestion.EventTest do
   for {test_data, index} <- Enum.with_index(@static_tests, 1) do
     @tag test_data: test_data
     test "static test #{index} - #{Jason.encode!(test_data)}", %{test_data: test_data} do
-      request = %{
-        query_params: %{
-          "utm_medium" => test_data[:utm_medium],
-          "utm_campaign" => test_data[:utm_campaign],
-          "utm_source" => test_data[:utm_source],
-          "gclid" => if(test_data[:click_id_source] == "Google", do: "123", else: nil),
-          "msclkid" => if(test_data[:click_id_source] == "Bing", do: "123", else: nil)
-        }
+      assert reference_channel(test_data) == test_data.expected
+      assert clickhouse_channel(test_data) == test_data.expected
+    end
+  end
+
+  def reference_channel(test_data) do
+    request = %{
+      query_params: %{
+        "utm_medium" => test_data[:utm_medium],
+        "utm_campaign" => test_data[:utm_campaign],
+        "utm_source" => test_data[:utm_source],
+        "gclid" => if(test_data[:click_id_source] == "Google", do: "123", else: nil),
+        "msclkid" => if(test_data[:click_id_source] == "Bing", do: "123", else: nil)
       }
+    }
 
-      channel = Plausible.Ingestion.Acquisition.get_channel(request, test_data[:referrer_source])
-      assert channel == test_data.expected
-    end
+    Plausible.Ingestion.Acquisition.get_channel(request, test_data[:referrer_source])
+  end
 
-    @tag test_data: test_data
-    test "clickhouse test #{index} - #{Jason.encode!(test_data)}", %{test_data: test_data} do
-      %{rows: [[channel]]} =
-        Plausible.IngestRepo.query!(
-          "SELECT acquisition_channel({$0:String}, {$1:String}, {$2:String}, {$3:String}, {$4:String})",
-          [
-            test_data[:referrer_source] || "",
-            test_data[:utm_medium] || "",
-            test_data[:utm_campaign] || "",
-            test_data[:utm_source] || "",
-            test_data[:click_id_source] || ""
-          ]
-        )
+  def clickhouse_channel(test_data) do
+    %{rows: [[channel]]} =
+      Plausible.IngestRepo.query!(
+        "SELECT acquisition_channel({$0:String}, {$1:String}, {$2:String}, {$3:String}, {$4:String})",
+        [
+          test_data[:referrer_source] || "",
+          test_data[:utm_medium] || "",
+          test_data[:utm_campaign] || "",
+          test_data[:utm_source] || "",
+          test_data[:click_id_source] || ""
+        ]
+      )
 
-      assert channel == test_data.expected
-    end
+    channel
   end
 end
