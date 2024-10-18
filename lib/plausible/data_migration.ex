@@ -52,7 +52,7 @@ defmodule Plausible.DataMigration do
         end
       end
 
-      defp unwrap(name, assigns) do
+      def unwrap(name, assigns \\ []) do
         :plausible
         |> :code.priv_dir()
         |> Path.join("data_migrations")
@@ -67,11 +67,19 @@ defmodule Plausible.DataMigration do
         do_run(name, query, options)
       end
 
-      defp do_run(name, query, options \\ []) do
-        case @repo.query(query, [], [timeout: :infinity] ++ options) do
+      def do_run(name, query, options \\ []) do
+        {params, options} = Keyword.pop(options, :params, [])
+
+        case @repo.query(query, params, [timeout: :infinity] ++ options) do
           {:ok, res} ->
-            IO.puts("    #{IO.ANSI.yellow()}#{name} #{IO.ANSI.green()}Done!#{IO.ANSI.reset()}\n")
-            IO.puts(String.duplicate("-", 78))
+            if not Keyword.get(options, :quiet) do
+              IO.puts(
+                "    #{IO.ANSI.yellow()}#{name} #{IO.ANSI.green()}Done!#{IO.ANSI.reset()}\n"
+              )
+
+              IO.puts(String.duplicate("-", 78))
+            end
+
             {:ok, res}
 
           result ->
