@@ -86,6 +86,7 @@ defmodule Plausible.MixProject do
       {:siphash, "~> 3.2"},
       {:oban, "~> 2.12.0"},
       {:geolix, "~> 1.0"},
+      {:locus, "~> 2.3.10"},
       {:clickhouse_ecto, git: "https://github.com/Recruitee/clickhouse_ecto.git", ref: "ed45cd0"},
       {:location, git: "https://github.com/plausible/location.git"},
       {:geolix_adapter_mmdb2, "~> 0.5.0"},
