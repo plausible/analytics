@@ -148,7 +148,8 @@ defmodule Plausible.MixProject do
       {:ex_json_schema, "~> 0.10.2"},
       {:odgn_json_pointer, "~> 3.0.1"},
       {:phoenix_bakery, "~> 0.1.2", only: [:ce, :ce_dev, :ce_test]},
-      {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test]}
+      {:site_encrypt, github: "sasa1977/site_encrypt", only: [:ce, :ce_dev, :ce_test]},
+      {:stream_data, "~> 1.1.2", only: [:test, :ce_test]}
     ]
   end
 
