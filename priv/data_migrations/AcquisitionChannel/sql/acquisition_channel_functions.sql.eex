@@ -58,7 +58,8 @@ CREATE OR REPLACE FUNCTION acquisition_channel_referral AS (utm_medium, referrer
     not empty(referrer_source);
 
 CREATE OR REPLACE FUNCTION acquisition_channel AS
-(referrer_source, utm_medium, utm_campaign, utm_source, click_id_source) -> multiIf(
+(referrer_source, utm_medium, utm_campaign, utm_source, click_id_source) ->
+multiIf(
       acquisition_channel_cross_network(utm_campaign), 'Cross-network',
       acquisition_channel_paid_shopping(referrer_source, utm_medium, utm_campaign), 'Paid Shopping',
       acquisition_channel_paid_search(referrer_source, utm_medium, click_id_source), 'Paid Search',

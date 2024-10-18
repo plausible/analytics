@@ -1,10 +1,10 @@
-defmodule Plausible.DataMigration.AquisitionChannel do
+defmodule Plausible.DataMigration.AcquisitionChannel do
   @moduledoc """
-  Creates functions to calculate aquisition channel in ClickHouse
+  Creates functions to calculate acquisition channel in ClickHouse
 
-  SQL files available at: priv/data_migrations/AquisitionChannel/sql
+  SQL files available at: priv/data_migrations/AcquisitionChannel/sql
   """
-  use Plausible.DataMigration, dir: "AquisitionChannel", repo: Plausible.IngestRepo
+  use Plausible.DataMigration, dir: "AcquisitionChannel", repo: Plausible.IngestRepo
 
   @source_categories Application.app_dir(:plausible, "priv/ga4-source-categories.csv")
                      |> File.read!()

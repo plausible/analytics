@@ -1,10 +1,10 @@
-defmodule Plausible.Ingestion.EventTest do
+defmodule Plausible.Ingestion.AcquisitionTest do
   use Plausible.DataCase
   use ExUnitProperties
   import StreamData
 
   setup_all do
-    Plausible.DataMigration.AquisitionChannel.run(quiet: true)
+    Plausible.DataMigration.AcquisitionChannel.run(quiet: true)
   end
 
   @static_tests [

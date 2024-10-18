@@ -72,7 +72,7 @@ defmodule Plausible.DataMigration do
 
         case @repo.query(query, params, [timeout: :infinity] ++ options) do
           {:ok, res} ->
-            if not Keyword.get(options, :quiet) do
+            if not Keyword.get(options, :quiet, false) do
               IO.puts(
                 "    #{IO.ANSI.yellow()}#{name} #{IO.ANSI.green()}Done!#{IO.ANSI.reset()}\n"
               )
