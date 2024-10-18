@@ -48,3 +48,6 @@ config :plausible, Plausible.HelpScout,
   req_opts: [
     plug: {Req.Test, Plausible.HelpScout}
   ]
+
+config :stream_data,
+  max_runs: if(System.get_env("CI"), do: 1_000, else: 500)
