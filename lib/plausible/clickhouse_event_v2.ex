@@ -72,6 +72,7 @@ defmodule Plausible.ClickhouseEventV2 do
     :referrer,
     :referrer_source,
     :channel,
+    :click_id_source,
     :utm_medium,
     :utm_source,
     :utm_campaign,

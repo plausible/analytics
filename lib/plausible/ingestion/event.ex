@@ -253,11 +253,13 @@ defmodule Plausible.Ingestion.Event do
   defp put_referrer(%__MODULE__{} = event, _context) do
     ref = parse_referrer(event.request.uri, event.request.referrer)
     source = get_referrer_source(event.request, ref)
+    click_souce_id = get_click_id_source(source, event.request)
     channel = Plausible.Ingestion.Acquisition.get_channel(event.request, source)
 
     update_session_attrs(event, %{
       channel: channel,
       referrer_source: source,
+      click_id_source: click_souce_id,
       referrer: clean_referrer(ref)
     })
   end
@@ -425,6 +427,14 @@ defmodule Plausible.Ingestion.Event do
       PlausibleWeb.RefInspector.format_referrer(uri)
     end
   end
+
+  defp get_click_id_source("Google", request) when is_map_key(request.query_params, "gclid"),
+    do: "Google"
+
+  defp get_click_id_source("Bing", request) when is_map_key(request.query_params, "msclkid"),
+    do: "Bing"
+
+  defp get_click_id_source(_referrer_source, _request), do: nil
 
   defp parse_user_agent(%Request{user_agent: user_agent}) when is_binary(user_agent) do
     Plausible.Cache.Adapter.get(:user_agents, user_agent, fn ->
