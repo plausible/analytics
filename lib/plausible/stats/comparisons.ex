@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Comparisons do
   """
 
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, DateTimeRange}
+  alias Plausible.Stats.{Query, DateTimeRange, Time}
 
   @spec get_comparison_query(Stats.Query.t(), map()) :: Stats.Query.t()
   @doc """
@@ -86,7 +86,7 @@ defmodule Plausible.Stats.Comparisons do
     query_filters =
       query.dimensions
       |> Enum.zip(dimension_labels)
-      |> Enum.reject(fn {dimension, _label} -> String.starts_with?(dimension, "time") end)
+      |> Enum.reject(fn {dimension, _label} -> Time.time_dimension?(dimension) end)
       |> Enum.map(fn {dimension, label} -> [:is, dimension, [label]] end)
 
     case query_filters do
