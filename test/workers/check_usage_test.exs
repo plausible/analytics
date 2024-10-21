@@ -467,6 +467,34 @@ defmodule Plausible.Workers.CheckUsageTest do
         CheckUsage.perform(nil, usage_stub)
         assert user |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
       end
+
+      @tag :teams
+      test "manual lock grace period is synced with teams", %{user: user} do
+        usage_stub =
+          Plausible.Billing.Quota.Usage
+          |> stub(:monthly_pageview_usage, fn _user ->
+            %{
+              penultimate_cycle: %{date_range: @date_range, total: 1_100_000},
+              last_cycle: %{date_range: @date_range, total: 1_100_000}
+            }
+          end)
+
+        enterprise_plan = insert(:enterprise_plan, user: user, monthly_pageview_limit: 1_000_000)
+
+        insert(:subscription,
+          user: user,
+          paddle_plan_id: enterprise_plan.paddle_plan_id,
+          last_bill_date: Timex.shift(Timex.today(), days: -1),
+          status: unquote(status)
+        )
+
+        CheckUsage.perform(nil, usage_stub)
+
+        assert user = Repo.reload!(user)
+        team = assert_team_exists(user)
+        assert team.grace_period.manual_lock == user.grace_period.manual_lock
+        assert team.grace_period.manual_lock == true
+      end
     end
   end
 
