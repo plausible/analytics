@@ -13,6 +13,16 @@ defmodule Plausible.SitesTest do
                Sites.create(user, params)
     end
 
+    test "creates a site (TEAM)" do
+      user = insert(:user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"}}} =
+               Plausible.Teams.Sites.create(team, params)
+    end
+
     test "fails on invalid timezone" do
       user = insert(:user)
 
@@ -20,6 +30,16 @@ defmodule Plausible.SitesTest do
 
       assert {:error, :site, %{errors: [timezone: {"is invalid", []}]}, %{}} =
                Sites.create(user, params)
+    end
+
+    test "fails on invalid timezone (TEAM)" do
+      user = insert(:user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      params = %{"domain" => "example.com", "timezone" => "blah"}
+
+      assert {:error, :site, %{errors: [timezone: {"is invalid", []}]}, %{}} =
+               Plausible.Teams.Sites.create(team, params)
     end
   end
 
@@ -148,82 +168,194 @@ defmodule Plausible.SitesTest do
                page_number: 1,
                total_entries: 0,
                total_pages: 1
+             } = Plausible.Teams.Sites.list(user, %{})
+
+      assert %{
+               entries: [],
+               page_size: 24,
+               page_number: 1,
+               total_entries: 0,
+               total_pages: 1
              } = Sites.list_with_invitations(user, %{})
+
+      assert %{
+               entries: [],
+               page_size: 24,
+               page_number: 1,
+               total_entries: 0,
+               total_pages: 1
+             } = Plausible.Teams.Sites.list_with_invitations(user, %{})
     end
 
     test "pinned site doesn't matter with membership revoked (no active invitations)" do
       user1 = insert(:user, email: "user1@example.com")
       user2 = insert(:user, email: "user2@example.com")
 
-      insert(:site, members: [user1], domain: "one.example.com")
+      team1 = insert(:team)
+      insert(:site, team: team1, members: [user1], domain: "one.example.com")
+      insert(:team_membership, team: team1, user: user1, role: :owner)
+
+      team2 = insert(:team)
 
       site2 =
         insert(:site,
+          team: team2,
           members: [user2],
           domain: "two.example.com"
         )
 
+      insert(:team_membership, team: team2, user: user2, role: :owner)
+
       membership = insert(:site_membership, user: user1, role: :viewer, site: site2)
+      team_membership = insert(:team_membership, team: team2, user: user1, role: :guest)
+      insert(:guest_membership, team_membership: team_membership, site: site2, role: :viewer)
 
       {:ok, _} = Sites.toggle_pin(user1, site2)
 
       Repo.delete!(membership)
+      Repo.delete!(team_membership)
 
       assert %{entries: [%{domain: "one.example.com"}]} = Sites.list(user1, %{})
       assert %{entries: [%{domain: "one.example.com"}]} = Sites.list_with_invitations(user1, %{})
+
+      assert %{entries: [%{domain: "one.example.com"}]} = Plausible.Teams.Sites.list(user1, %{})
+
+      assert %{entries: [%{domain: "one.example.com"}]} =
+               Plausible.Teams.Sites.list_with_invitations(user1, %{})
     end
 
     test "pinned site doesn't matter with membership revoked (with active invitation)" do
       user1 = insert(:user, email: "user1@example.com")
       user2 = insert(:user, email: "user2@example.com")
 
-      insert(:site, members: [user1], domain: "one.example.com")
+      team1 = insert(:team)
+      insert(:site, team: team1, members: [user1], domain: "one.example.com")
+      insert(:team_membership, team: team1, user: user1, role: :owner)
+
+      team2 = insert(:team)
 
       site2 =
         insert(:site,
+          team: team2,
           members: [user2],
           domain: "two.example.com"
         )
 
+      insert(:team_membership, team: team2, user: user2, role: :owner)
+
       membership = insert(:site_membership, user: user1, role: :viewer, site: site2)
+      team_membership = insert(:team_membership, team: team2, user: user1, role: :guest)
+      insert(:guest_membership, team_membership: team_membership, site: site2, role: :viewer)
+
       insert(:invitation, email: user1.email, inviter: user2, role: :owner, site: site2)
+
+      team_invitation =
+        insert(:team_invitation, team: team2, email: user1.email, inviter: user2, role: :guest)
+
+      insert(:guest_invitation, team_invitation: team_invitation, site: site2, role: :editor)
 
       {:ok, _} = Sites.toggle_pin(user1, site2)
 
       Repo.delete!(membership)
+      Repo.delete!(team_membership)
 
       assert %{entries: [%{domain: "one.example.com"}]} = Sites.list(user1, %{})
 
       assert %{entries: [%{domain: "two.example.com"}, %{domain: "one.example.com"}]} =
                Sites.list_with_invitations(user1, %{})
+
+      assert %{entries: [%{domain: "one.example.com"}]} = Plausible.Teams.Sites.list(user1, %{})
+
+      assert %{entries: [%{domain: "two.example.com"}, %{domain: "one.example.com"}]} =
+               Plausible.Teams.Sites.list_with_invitations(user1, %{})
     end
 
     test "puts invitations first, pinned sites second, sites last" do
       user = insert(:user, email: "hello@example.com")
 
-      site1 = %{id: site_id1} = insert(:site, members: [user], domain: "one.example.com")
-      site2 = %{id: site_id2} = insert(:site, members: [user], domain: "two.example.com")
-      %{id: site_id4} = insert(:site, members: [user], domain: "four.example.com")
+      team1 = insert(:team)
 
-      _rogue_site = insert(:site, domain: "rogue.example.com")
+      site1 =
+        %{id: site_id1} = insert(:site, team: team1, members: [user], domain: "one.example.com")
 
-      insert(:invitation, email: user.email, inviter: build(:user), role: :owner, site: site1)
+      insert(:team_membership, team: team1, user: user, role: :owner)
+      team2 = insert(:team)
 
-      %{id: site_id3} =
-        insert(:site,
-          domain: "three.example.com",
-          invitations: [
-            build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
-          ]
+      site2 =
+        %{id: site_id2} = insert(:site, team: team2, members: [user], domain: "two.example.com")
+
+      insert(:team_membership, team: team2, user: build(:user), role: :owner)
+      team_membership2 = insert(:team_membership, team: team2, user: user, role: :guest)
+      insert(:guest_membership, team_membership: team_membership2, site: site2, role: :editor)
+
+      team4 = insert(:team)
+
+      site4 =
+        %{id: site_id4} = insert(:site, team: team4, members: [user], domain: "four.example.com")
+
+      insert(:team_membership, team: team4, user: build(:user), role: :owner)
+      team_membership4 = insert(:team_membership, team: team4, user: user, role: :guest)
+      insert(:guest_membership, team_membership: team_membership4, site: site4, role: :viewer)
+
+      _rogue_site = insert(:site, team: build(:team), domain: "rogue.example.com")
+
+      ## Having owner invite on owned site does not make much sense?
+      ## Maybe that was a repro of real-life example?
+      # insert(:invitation, email: user.email, inviter: build(:user), role: :owner, site: site1)
+
+      # team_invitation1 =
+      #   insert(:team_invitation,
+      #     team: team1,
+      #     email: user.email,
+      #     inviter: build(:user),
+      #     role: :guest
+      #   )
+
+      # insert(:guest_invitation, team_invitation: team_invitation1, site: site1, role: :editor)
+
+      team3 = insert(:team)
+
+      site3 = %{id: site_id3} = insert(:site, team: team3, domain: "three.example.com")
+
+      insert(:invitation, email: user.email, inviter: build(:user), role: :viewer, site: site3)
+
+      team_invitation2 =
+        insert(:team_invitation,
+          team: team3,
+          email: user.email,
+          inviter: build(:user),
+          role: :guest
         )
 
+      insert(:guest_invitation, team_invitation: team_invitation2, site: site3, role: :viewer)
+
       insert(:invitation, email: "friend@example.com", inviter: user, role: :viewer, site: site1)
+
+      team_invitation3 =
+        insert(:team_invitation,
+          team: team1,
+          email: "friend@example.com",
+          inviter: user,
+          role: :guest
+        )
+
+      insert(:guest_invitation, team_invitation: team_invitation3, site: site1, role: :viewer)
 
       insert(:invitation,
         site: site1,
         inviter: user,
         email: "another@example.com"
       )
+
+      team_invitation4 =
+        insert(:team_invitation,
+          team: team1,
+          email: "another@example.com",
+          inviter: user,
+          role: :guest
+        )
+
+      insert(:guest_invitation, team_invitation: team_invitation4, site: site1, role: :editor)
 
       {:ok, _} = Sites.toggle_pin(user, site2)
 
@@ -237,12 +369,29 @@ defmodule Plausible.SitesTest do
 
       assert %{
                entries: [
-                 %{id: ^site_id1, entry_type: "invitation"},
                  %{id: ^site_id3, entry_type: "invitation"},
                  %{id: ^site_id2, entry_type: "pinned_site"},
-                 %{id: ^site_id4, entry_type: "site"}
+                 %{id: ^site_id4, entry_type: "site"},
+                 %{id: ^site_id1, entry_type: "site"}
                ]
              } = Sites.list_with_invitations(user, %{})
+
+      assert %{
+               entries: [
+                 %{id: ^site_id2, entry_type: "pinned_site"},
+                 %{id: ^site_id4, entry_type: "site"},
+                 %{id: ^site_id1, entry_type: "site"}
+               ]
+             } = Plausible.Teams.Sites.list(user, %{})
+
+      assert %{
+               entries: [
+                 %{id: ^site_id3, entry_type: "invitation"},
+                 %{id: ^site_id2, entry_type: "pinned_site"},
+                 %{id: ^site_id4, entry_type: "site"},
+                 %{id: ^site_id1, entry_type: "site"}
+               ]
+             } = Plausible.Teams.Sites.list_with_invitations(user, %{})
     end
 
     test "pinned sites are ordered according to the time they were pinned at" do

@@ -77,7 +77,7 @@ defmodule Plausible.BillingTest do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
       insert(:subscription, user: user, next_bill_date: Timex.today())
 
-      user = user |> Plausible.Auth.GracePeriod.end_changeset() |> Repo.update!()
+      user = Plausible.Users.end_grace_period(user)
 
       assert Billing.check_needs_to_upgrade(user) == {:needs_to_upgrade, :grace_period_ended}
     end

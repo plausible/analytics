@@ -129,10 +129,13 @@ defmodule PlausibleWeb.UserAuth do
       from(us in Auth.UserSession,
         inner_join: u in assoc(us, :user),
         as: :user,
+        left_join: tm in assoc(u, :team_memberships),
+        on: tm.role != :guest,
+        left_join: t in assoc(tm, :team),
         left_lateral_join: s in subquery(last_subscription_query),
         on: true,
         where: us.token == ^token and us.timeout_at > ^now,
-        preload: [user: {u, subscription: s}]
+        preload: [user: {u, subscription: s, team_memberships: {tm, team: t}}]
       )
 
     case Repo.one(token_query) do

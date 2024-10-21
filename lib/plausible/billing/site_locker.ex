@@ -21,9 +21,7 @@ defmodule Plausible.Billing.SiteLocker do
         set_lock_status_for(user, true)
 
         if user.grace_period.is_over != true do
-          user
-          |> Plausible.Auth.GracePeriod.end_changeset()
-          |> Repo.update!()
+          Plausible.Users.end_grace_period(user)
 
           if send_email? do
             send_grace_period_end_email(user)
