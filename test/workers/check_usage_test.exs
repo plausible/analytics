@@ -348,6 +348,42 @@ defmodule Plausible.Workers.CheckUsageTest do
         CheckUsage.perform(nil, usage_stub)
         refute user |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
       end
+
+      @tag :teams
+      test "syncs clearing grace period with teams", %{user: user} do
+        usage_stub =
+          Plausible.Billing.Quota.Usage
+          |> stub(:monthly_pageview_usage, fn _user ->
+            %{
+              penultimate_cycle: %{date_range: @date_range, total: 11_000},
+              last_cycle: %{date_range: @date_range, total: 11_000}
+            }
+          end)
+
+        insert(:subscription,
+          user: user,
+          paddle_plan_id: @paddle_id_10k,
+          last_bill_date: Timex.shift(Timex.today(), days: -1),
+          status: unquote(status)
+        )
+
+        CheckUsage.perform(nil, usage_stub)
+        assert user |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
+        team = assert_team_exists(user)
+        assert Plausible.Auth.GracePeriod.active?(team)
+
+        usage_stub =
+          Plausible.Billing.Quota.Usage
+          |> stub(:monthly_pageview_usage, fn _user ->
+            %{
+              penultimate_cycle: %{date_range: @date_range, total: 11_000},
+              last_cycle: %{date_range: @date_range, total: 9_000}
+            }
+          end)
+
+        CheckUsage.perform(nil, usage_stub)
+        refute team |> Repo.reload!() |> Plausible.Auth.GracePeriod.active?()
+      end
     end
   end
 
