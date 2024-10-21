@@ -144,18 +144,20 @@ defmodule Plausible.Teams.Invitations do
         :admin -> :editor
       end
 
-    guest_invitation =
+    {:ok, guest_invitation} =
       create_invitation(
         site_invitation.site,
-        site_invitation.invitee_email,
+        site_invitation.email,
         role,
         site_invitation.inviter
       )
 
+    team_invitation =
+      guest_invitation.team_invitation
+      |> Repo.preload([:team, :inviter, guest_invitations: :site])
+
     {:ok, _} =
-      do_accept(guest_invitation.team_invitation, user, NaiveDateTime.utc_now(:second),
-        send_email?: false
-      )
+      do_accept(team_invitation, user, NaiveDateTime.utc_now(:second), send_email?: false)
   catch
     _, thrown ->
       Sentry.capture_message(
@@ -170,9 +172,15 @@ defmodule Plausible.Teams.Invitations do
     {:ok, team} = Teams.get_or_create(user)
 
     site =
-      Repo.preload(site_invitation.site, [:owner, guest_memberships: [team_membership: :user]])
+      Repo.preload(site_invitation.site, [
+        :team,
+        :owner,
+        guest_memberships: [team_membership: :user],
+        guest_invitations: [team_invitation: :user]
+      ])
 
-    site_transfer = create_site_transfer(site, site_invitation.inviter, site_invitation.email)
+    {:ok, site_transfer} =
+      create_site_transfer(site, site_invitation.inviter, site_invitation.email)
 
     {:ok, _} =
       Repo.transaction(fn ->
@@ -539,7 +547,7 @@ defmodule Plausible.Teams.Invitations do
         team_membership
         |> Teams.GuestMembership.changeset(guest_invitation.site, guest_invitation.role)
         |> Repo.insert(
-          on_conflict: [set: [updated_at: now, role: guest_invitation.role]],
+          on_conflict: [set: [updated_at: now]],
           conflict_target: [:team_membership_id, :site_id]
         )
 
