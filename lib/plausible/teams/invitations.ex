@@ -92,7 +92,7 @@ defmodule Plausible.Teams.Invitations do
   end
 
   def transfer_site_sync(site, user) do
-    {:ok, team} = Plausible.Teams.get_or_create(user)
+    {:ok, team} = Teams.get_or_create(user)
 
     site =
       Repo.preload(site, [
