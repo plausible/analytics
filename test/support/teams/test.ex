@@ -64,4 +64,19 @@ defmodule Plausible.Teams.Test do
              role: role
            )
   end
+
+  def assert_guest_membership(team, site, user, role) do
+    assert team_membership =
+             Repo.get_by(Plausible.Teams.Membership,
+               user_id: user.id,
+               team_id: team.id,
+               role: :guest
+             )
+
+    assert Repo.get_by(Plausible.Teams.GuestMembership,
+             team_membership_id: team_membership.id,
+             site_id: site.id,
+             role: role
+           )
+  end
 end
