@@ -1,4 +1,9 @@
 defmodule PlausibleWeb.RefInspector do
+  @external_resource "priv/custom_sources.json"
+  @custom_sources Application.app_dir(:plausible, "priv/custom_sources.json")
+                  |> File.read!()
+                  |> Jason.decode!()
+
   def parse(nil), do: nil
 
   def parse(ref) do
@@ -8,6 +13,7 @@ defmodule PlausibleWeb.RefInspector do
 
         if right_uri?(uri) do
           format_referrer_host(uri)
+          |> maybe_map_to_custom_source()
         end
 
       source ->
@@ -33,5 +39,9 @@ defmodule PlausibleWeb.RefInspector do
     host = String.replace_prefix(uri.host, "www.", "")
 
     protocol <> host
+  end
+
+  defp maybe_map_to_custom_source(source) do
+    Map.get(@custom_sources, source, source)
   end
 end
