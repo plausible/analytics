@@ -1,6 +1,7 @@
 defmodule Plausible.Billing.SiteLockerTest do
   use Plausible.DataCase
   use Bamboo.Test, shared: true
+  use Plausible.Teams.Test
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{SiteLocker, Subscription}
 
@@ -125,6 +126,27 @@ defmodule Plausible.Billing.SiteLockerTest do
       assert SiteLocker.update_sites_for(user) == {:locked, :grace_period_ended_now}
 
       assert Repo.reload!(site).locked
+    end
+
+    @tag :teams
+    test "syncs grace period end with teams" do
+      grace_period = %Plausible.Auth.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
+      user = insert(:user, grace_period: grace_period)
+
+      insert(:subscription, status: Subscription.Status.active(), user: user)
+
+      insert(:site,
+        memberships: [
+          build(:site_membership, user: user, role: :owner)
+        ]
+      )
+
+      assert SiteLocker.update_sites_for(user) == {:locked, :grace_period_ended_now}
+
+      assert user = Repo.reload!(user)
+      team = assert_team_exists(user)
+      assert user.grace_period.is_over
+      assert team.grace_period.is_over
     end
 
     test "sends email if grace period has ended" do

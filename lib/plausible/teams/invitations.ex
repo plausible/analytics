@@ -39,7 +39,7 @@ defmodule Plausible.Teams.Invitations do
   end
 
   def invite_sync(site, site_invitation) do
-    site = Repo.preload(site, :team)
+    site = Teams.load_for_site(site)
     site_invitation = Repo.preload(site_invitation, :inviter)
     role = translate_role(site_invitation.role)
 
@@ -92,7 +92,7 @@ defmodule Plausible.Teams.Invitations do
   end
 
   def transfer_site_sync(site, user) do
-    {:ok, team} = Plausible.Teams.get_or_create(user)
+    {:ok, team} = Teams.get_or_create(user)
 
     site =
       Repo.preload(site, [
@@ -134,6 +134,9 @@ defmodule Plausible.Teams.Invitations do
         site_invitation,
         site: :team
       )
+
+    site = Teams.load_for_site(site_invitation.site)
+    site_invitation = %{site_invitation | site: site}
 
     role =
       case site_invitation.role do

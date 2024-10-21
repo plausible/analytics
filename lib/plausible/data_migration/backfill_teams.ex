@@ -402,9 +402,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
       fn {{owner, site_ids}, idx} ->
         @repo.transaction(
           fn ->
+            {:ok, team} = Teams.get_or_create(owner)
+
             team =
-              "My Team"
-              |> Teams.Team.changeset()
+              team
+              |> Ecto.Changeset.change()
               |> Ecto.Changeset.put_change(:trial_expiry_date, owner.trial_expiry_date)
               |> Ecto.Changeset.put_change(:accept_traffic_until, owner.accept_traffic_until)
               |> Ecto.Changeset.put_change(
@@ -412,15 +414,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
                 owner.allow_next_upgrade_override
               )
               |> Ecto.Changeset.put_embed(:grace_period, owner.grace_period)
-              |> Ecto.Changeset.put_change(:inserted_at, owner.inserted_at)
-              |> Ecto.Changeset.put_change(:updated_at, owner.updated_at)
-              |> @repo.insert!()
-
-            team
-            |> Teams.Membership.changeset(owner, :owner)
-            |> Ecto.Changeset.put_change(:inserted_at, owner.inserted_at)
-            |> Ecto.Changeset.put_change(:updated_at, owner.updated_at)
-            |> @repo.insert!()
+              |> Ecto.Changeset.force_change(:updated_at, owner.updated_at)
+              |> @repo.update!()
 
             @repo.update_all(from(s in Plausible.Site, where: s.id in ^site_ids),
               set: [team_id: team.id]

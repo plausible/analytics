@@ -17,6 +17,27 @@ defmodule Plausible.Teams do
   end
 
   @doc """
+  Create (when necessary) and load team relation for provided site.
+
+  Used for sync logic to work smoothly during transitional period.
+  """
+  def load_for_site(site) do
+    site = Repo.preload(site, [:team, :owner])
+
+    if site.team do
+      site
+    else
+      {:ok, team} = get_or_create(site.owner)
+
+      site
+      |> Ecto.Changeset.change()
+      |> Ecto.Changeset.put_assoc(:team, team)
+      |> Ecto.Changeset.force_change(:updated_at, site.updated_at)
+      |> Repo.update!()
+    end
+  end
+
+  @doc """
   Get or create user's team.
 
   If the user has no non-guest membership yet, an implicit "My Team" team is
@@ -38,17 +59,11 @@ defmodule Plausible.Teams do
   end
 
   def sync_team(user) do
-    case get_owned_by_user(user) do
-      {:ok, team} ->
-        team
-        |> Teams.Team.sync_changeset(user)
-        |> Repo.update!()
+    {:ok, team} = get_or_create(user)
 
-      _ ->
-        :skip
-    end
-
-    :ok
+    team
+    |> Teams.Team.sync_changeset(user)
+    |> Repo.update!()
   end
 
   defp create_my_team(user) do

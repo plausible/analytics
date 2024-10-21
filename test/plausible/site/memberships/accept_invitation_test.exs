@@ -34,6 +34,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert_no_emails_delivered()
     end
 
+    @tag :teams
     test "transfers ownership successfully (TEAM)" do
       site = insert(:site, memberships: [])
       existing_owner = insert(:user)
@@ -278,6 +279,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       )
     end
 
+    @tag :teams
     test "converts an invitation into a membership (TEAMS)" do
       inviter = insert(:user)
       invitee = insert(:user)
