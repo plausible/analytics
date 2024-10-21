@@ -215,7 +215,7 @@ defmodule PlausibleWeb.Router do
 
     if Mix.env() in [:test, :ce_test] do
       scope assigns: %{schema_type: :internal} do
-        post "/query-internal", ExternalQueryApiController, :query
+        post "/query-internal-test", ExternalQueryApiController, :query
       end
     end
   end

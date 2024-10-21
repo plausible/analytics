@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
     ])
 
     conn =
-      post(conn, "/api/v2/query-internal", %{
+      post(conn, "/api/v2/query-internal-test", %{
         "site_id" => site.domain,
         "metrics" => ["pageviews"],
         "date_range" => ["2021-01-07", "2021-01-13"],
@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
     ])
 
     conn =
-      post(conn, "/api/v2/query-internal", %{
+      post(conn, "/api/v2/query-internal-test", %{
         "site_id" => site.domain,
         "metrics" => ["pageviews"],
         "date_range" => ["2021-01-07", "2021-01-13"],
@@ -129,7 +129,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
     ])
 
     conn =
-      post(conn, "/api/v2/query-internal", %{
+      post(conn, "/api/v2/query-internal-test", %{
         "site_id" => site.domain,
         "metrics" => ["visitors", "percentage"],
         "date_range" => ["2021-01-07", "2021-01-13"],
@@ -194,7 +194,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
     ])
 
     conn =
-      post(conn, "/api/v2/query-internal", %{
+      post(conn, "/api/v2/query-internal-test", %{
         "site_id" => site.domain,
         "metrics" => ["visitors", "percentage"],
         "date_range" => ["2021-01-07", "2021-01-13"],
