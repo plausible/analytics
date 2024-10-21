@@ -61,7 +61,7 @@ defmodule Plausible do
   end
 
   defmacro with_teams(do: do_block) do
-    if Mix.env() in @public_builds do
+    if Mix.env() not in @public_builds do
       quote do
         unquote(do_block)
       end
