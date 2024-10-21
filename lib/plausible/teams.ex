@@ -17,6 +17,23 @@ defmodule Plausible.Teams do
   end
 
   @doc """
+  Create (when necessary) and load team relation for provided site.
+
+  Used for sync logic to work smoothly during transitional period.
+  """
+  def load_for_site(site) do
+    site = Repo.preload(site, [:team, :owner])
+
+    if site.team do
+      site
+    else
+      {:ok, team} = get_or_create(site.owner)
+
+      %{site | team: team, team_id: team.id}
+    end
+  end
+
+  @doc """
   Get or create user's team.
 
   If the user has no non-guest membership yet, an implicit "My Team" team is
