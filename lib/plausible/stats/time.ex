@@ -33,7 +33,7 @@ defmodule Plausible.Stats.Time do
   def format_datetime(other), do: other
 
   def time_dimension(query) do
-    Enum.find(query.dimensions, &time_dimension/1)
+    Enum.find(query.dimensions, &time_dimension?/1)
   end
 
   def time_dimension?("time" <> _rest), do: true
