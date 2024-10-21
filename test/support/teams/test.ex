@@ -1,4 +1,7 @@
 defmodule Plausible.Teams.Test do
+  @moduledoc """
+  Convenience assertions for teams schema transition
+  """
   alias Plausible.Repo
 
   use ExUnit.CaseTemplate
