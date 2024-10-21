@@ -1,9 +1,10 @@
-const { devices } = require('@playwright/test');
+// @ts-check
+const { defineConfig, devices } = require('@playwright/test');
 
 /**
  * @see https://playwright.dev/docs/test-configuration
  */
-module.exports = {
+module.exports = defineConfig({
   testDir: './test',
   timeout: 60 * 1000,
   fullyParallel: true,
@@ -34,4 +35,5 @@ module.exports = {
     command: 'npm run start',
     port: 3000,
   },
-}
+});
+
