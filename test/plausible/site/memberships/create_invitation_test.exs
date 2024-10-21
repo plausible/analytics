@@ -27,6 +27,119 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                Plausible.Teams.Invitations.invite(site, inviter, invitee.email, :viewer)
     end
 
+    @tag :teams
+    test "[TEAMS] syncs a created invitation" do
+      inviter = insert(:user)
+      invitee = insert(:user)
+
+      site =
+        insert(:site,
+          team: nil,
+          memberships: [build(:site_membership, user: inviter, role: :owner)]
+        )
+
+      assert {:ok, %Plausible.Auth.Invitation{}} =
+               CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
+
+      assert %{team: team} = site |> Repo.reload!() |> Repo.preload(:team)
+      assert team.id
+
+      assert Repo.get_by(Plausible.Teams.Membership,
+               team_id: team.id,
+               user_id: inviter.id,
+               role: :owner
+             )
+
+      assert team_invitation =
+               Repo.get_by(Plausible.Teams.Invitation,
+                 email: invitee.email,
+                 team_id: team.id,
+                 role: :guest
+               )
+
+      assert Repo.get_by(Plausible.Teams.GuestInvitation,
+               team_invitation_id: team_invitation.id,
+               site_id: site.id,
+               role: :viewer
+             )
+    end
+
+    @tag :teams
+    test "[TEAMS] sync a created invitation with team already setup but site not assigned yet" do
+      inviter = insert(:user)
+      invitee = insert(:user)
+
+      {:ok, %{id: team_id} = team} = Plausible.Teams.get_or_create(inviter)
+
+      site =
+        insert(:site,
+          team: nil,
+          memberships: [build(:site_membership, user: inviter, role: :owner)]
+        )
+
+      assert {:ok, %Plausible.Auth.Invitation{}} =
+               CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
+
+      assert %{team: %{id: ^team_id}} = site |> Repo.reload!() |> Repo.preload(:team)
+
+      assert Repo.get_by(Plausible.Teams.Membership,
+               team_id: team.id,
+               user_id: inviter.id,
+               role: :owner
+             )
+
+      assert team_invitation =
+               Repo.get_by(Plausible.Teams.Invitation,
+                 email: invitee.email,
+                 team_id: team.id,
+                 role: :guest
+               )
+
+      assert Repo.get_by(Plausible.Teams.GuestInvitation,
+               team_invitation_id: team_invitation.id,
+               site_id: site.id,
+               role: :viewer
+             )
+    end
+
+    @tag :teams
+    test "[TEAMS] sync a created invitation with team fully setup" do
+      inviter = insert(:user)
+      invitee = insert(:user)
+
+      {:ok, %{id: team_id} = team} = Plausible.Teams.get_or_create(inviter)
+
+      site =
+        insert(:site,
+          team: team,
+          memberships: [build(:site_membership, user: inviter, role: :owner)]
+        )
+
+      assert {:ok, %Plausible.Auth.Invitation{}} =
+               CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
+
+      assert %{team: %{id: ^team_id}} = site |> Repo.reload!() |> Repo.preload(:team)
+
+      assert Repo.get_by(Plausible.Teams.Membership,
+               team_id: team.id,
+               user_id: inviter.id,
+               role: :owner
+             )
+
+      assert team_invitation =
+               Repo.get_by(Plausible.Teams.Invitation,
+                 email: invitee.email,
+                 team_id: team.id,
+                 role: :guest
+               )
+
+      assert Repo.get_by(Plausible.Teams.GuestInvitation,
+               team_invitation_id: team_invitation.id,
+               site_id: site.id,
+               role: :viewer
+             )
+    end
+
     test "returns validation errors" do
       inviter = insert(:user)
       team = insert(:team)
