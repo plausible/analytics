@@ -3,7 +3,7 @@ import FlipMove from 'react-flip-move';
 import Chart from 'chart.js/auto';
 import FunnelTooltip from './funnel-tooltip';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import numberFormatter from '../util/number-formatter';
+import { numberShortFormatter } from '../util/number-formatter';
 import Bar from '../stats/bar';
 
 import RocketIcon from '../stats/modals/rocket-icon';
@@ -103,7 +103,7 @@ export default function Funnel({ funnelName, tabs }) {
   const formatDataLabel = (visitors, ctx) => {
     if (ctx.dataset.label === 'Visitors') {
       const conversionRate = funnel.steps[ctx.dataIndex].conversion_rate
-      return `${conversionRate}% \n(${numberFormatter(visitors)} Visitors)`
+      return `${conversionRate}% \n(${numberShortFormatter(visitors)} Visitors)`
     } else {
       return null
     }
@@ -330,7 +330,7 @@ export default function Funnel({ funnelName, tabs }) {
           </Bar>
 
           <span className="font-medium dark:text-gray-200 w-20 text-right" tooltip={step.visitors.toLocaleString()}>
-            {numberFormatter(step.visitors)}
+            {numberShortFormatter(step.visitors)}
           </span>
         </div>
       </>

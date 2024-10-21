@@ -1,12 +1,19 @@
-import React, { useState } from "react";
+import React, { ReactNode, useState } from "react";
 import { usePopper } from 'react-popper';
 import classNames from 'classnames'
 
-export function Tooltip({ children, info, className, onClick, boundary }) {
+export function Tooltip({ children, info, className, onClick, boundary }: {
+  info: ReactNode,
+  children: ReactNode
+  className?: string,
+  onClick?: () => void,
+  boundary?: HTMLElement
+}) {
   const [visible, setVisible] = useState(false);
-  const [referenceElement, setReferenceElement] = useState(null);
-  const [popperElement, setPopperElement] = useState(null);
-  const [arrowElement, setArrowElement] = useState(null);
+  const [referenceElement, setReferenceElement] = useState<HTMLDivElement | null>(null)
+  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(null)
+  const [arrowElement, setArrowElement] = useState<HTMLDivElement | null>(null)
+
   const { styles, attributes } = usePopper(referenceElement, popperElement, {
     placement: 'top',
     modifiers: [
@@ -23,7 +30,7 @@ export function Tooltip({ children, info, className, onClick, boundary }) {
           boundary: boundary,
         },
       },
-    ],
+    ].filter((x) => !!x),
   });
 
   return (

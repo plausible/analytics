@@ -6,12 +6,9 @@ import Modal from './modal'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { usePaginatedGetAPI } from '../../hooks/api-client'
+import { createVisitors, Metric } from '../reports/metrics'
 import {
-  createVisitors,
-  Metric,
-  renderNumberWithTooltip
-} from '../reports/metrics'
-import numberFormatter, {
+  numberShortFormatter,
   percentageFormatter
 } from '../../util/number-formatter'
 import { apiPath } from '../../util/url'
@@ -33,21 +30,21 @@ const metrics = [
     width: 'w-28',
     key: 'impressions',
     renderLabel: () => 'Impressions',
-    renderValue: renderNumberWithTooltip,
+    formatter: numberShortFormatter,
     sortable: false
   }),
   new Metric({
     width: 'w-16',
     key: 'ctr',
     renderLabel: () => 'CTR',
-    renderValue: percentageFormatter,
+    formatter: percentageFormatter,
     sortable: false
   }),
   new Metric({
     width: 'w-28',
     key: 'position',
     renderLabel: () => 'Position',
-    renderValue: numberFormatter,
+    formatter: numberShortFormatter,
     sortable: false
   })
 ]
