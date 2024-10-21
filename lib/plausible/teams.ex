@@ -29,7 +29,11 @@ defmodule Plausible.Teams do
     else
       {:ok, team} = get_or_create(site.owner)
 
-      %{site | team: team, team_id: team.id}
+      site
+      |> Ecto.Changeset.change()
+      |> Ecto.Changeset.put_assoc(:team, team)
+      |> Ecto.Changeset.force_change(:updated_at, site.updated_at)
+      |> Repo.update!()
     end
   end
 
