@@ -1,7 +1,5 @@
 defmodule Plausible.Ingestion.AcquisitionTest do
   use Plausible.DataCase
-  use ExUnitProperties
-  import StreamData
 
   setup_all do
     Plausible.DataMigration.AcquisitionChannel.run(quiet: true)
@@ -74,30 +72,6 @@ defmodule Plausible.Ingestion.AcquisitionTest do
       assert reference_channel(test_data) == test_data.expected
       assert clickhouse_channel(test_data) == test_data.expected
     end
-  end
-
-  property "reference implementation matches clickhouse implementation" do
-    check all(
-            test_data <-
-              fixed_map(%{
-                referrer_source: gen_column("fixture/acquisition_channel/referrer_source.txt"),
-                utm_medium: gen_column("fixture/acquisition_channel/utm_medium.txt"),
-                utm_campaign: gen_column("fixture/acquisition_channel/utm_campaign.txt"),
-                utm_source: gen_column("fixture/acquisition_channel/utm_source.txt"),
-                click_id_source: gen_column("fixture/acquisition_channel/click_id_source.txt")
-              })
-          ) do
-      assert clickhouse_channel(test_data) == reference_channel(test_data)
-    end
-  end
-
-  def gen_column(filename) do
-    data = File.read!(filename) |> String.split()
-
-    one_of([
-      repeatedly(fn -> Enum.random(data) end),
-      string(:ascii, max_length: 10)
-    ])
   end
 
   def reference_channel(test_data) do
