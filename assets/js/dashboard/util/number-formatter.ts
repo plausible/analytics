@@ -6,7 +6,7 @@ const BILLION = 1000000000
 const HUNDRED_BILLION = 100000000000
 const TRILLION = 1000000000000
 
-export function numberShortFormatter(num) {
+export function numberShortFormatter(num: number) {
   if (num >= THOUSAND && num < MILLION) {
     const thousands = num / THOUSAND
     if (thousands === Math.floor(thousands) || num >= HUNDRED_THOUSAND) {
@@ -33,15 +33,15 @@ export function numberShortFormatter(num) {
   }
 }
 
-export function numberLongFormatter(num) {
+export function numberLongFormatter(num: number) {
   return num.toLocaleString()
 }
 
-function pad(num, size) {
+function pad(num: number, size: number) {
   return ('000' + num).slice(size * -1);
 }
 
-export function durationFormatter(duration) {
+export function durationFormatter(duration: number) {
   const hours = Math.floor(duration / 60 / 60)
   const minutes = Math.floor(duration / 60) % 60
   const seconds = Math.floor(duration - (minutes * 60) - (hours * 60 * 60))
@@ -54,7 +54,7 @@ export function durationFormatter(duration) {
   }
 }
 
-export function percentageFormatter(number) {
+export function percentageFormatter(number: number | null) {
   if (typeof (number) === 'number') {
     return number + '%'
   } else {
