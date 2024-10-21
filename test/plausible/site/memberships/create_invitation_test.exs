@@ -3,6 +3,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
   use Plausible
   use Plausible.DataCase
   use Bamboo.Test
+  use Plausible.Teams.Test
 
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
@@ -41,27 +42,8 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       assert {:ok, %Plausible.Auth.Invitation{}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
 
-      assert %{team: team} = site |> Repo.reload!() |> Repo.preload(:team)
-      assert team.id
-
-      assert Repo.get_by(Plausible.Teams.Membership,
-               team_id: team.id,
-               user_id: inviter.id,
-               role: :owner
-             )
-
-      assert team_invitation =
-               Repo.get_by(Plausible.Teams.Invitation,
-                 email: invitee.email,
-                 team_id: team.id,
-                 role: :guest
-               )
-
-      assert Repo.get_by(Plausible.Teams.GuestInvitation,
-               team_invitation_id: team_invitation.id,
-               site_id: site.id,
-               role: :viewer
-             )
+      team = assert_team_attached(site)
+      assert_guest_invitation(team, site, invitee.email, :viewer)
     end
 
     @tag :teams
@@ -69,7 +51,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       inviter = insert(:user)
       invitee = insert(:user)
 
-      {:ok, %{id: team_id} = team} = Plausible.Teams.get_or_create(inviter)
+      {:ok, %{id: team_id}} = Plausible.Teams.get_or_create(inviter)
 
       site =
         insert(:site,
@@ -80,26 +62,8 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       assert {:ok, %Plausible.Auth.Invitation{}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
 
-      assert %{team: %{id: ^team_id}} = site |> Repo.reload!() |> Repo.preload(:team)
-
-      assert Repo.get_by(Plausible.Teams.Membership,
-               team_id: team.id,
-               user_id: inviter.id,
-               role: :owner
-             )
-
-      assert team_invitation =
-               Repo.get_by(Plausible.Teams.Invitation,
-                 email: invitee.email,
-                 team_id: team.id,
-                 role: :guest
-               )
-
-      assert Repo.get_by(Plausible.Teams.GuestInvitation,
-               team_invitation_id: team_invitation.id,
-               site_id: site.id,
-               role: :viewer
-             )
+      team = assert_team_attached(site, team_id)
+      assert_guest_invitation(team, site, invitee.email, :viewer)
     end
 
     @tag :teams
@@ -118,26 +82,8 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       assert {:ok, %Plausible.Auth.Invitation{}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
 
-      assert %{team: %{id: ^team_id}} = site |> Repo.reload!() |> Repo.preload(:team)
-
-      assert Repo.get_by(Plausible.Teams.Membership,
-               team_id: team.id,
-               user_id: inviter.id,
-               role: :owner
-             )
-
-      assert team_invitation =
-               Repo.get_by(Plausible.Teams.Invitation,
-                 email: invitee.email,
-                 team_id: team.id,
-                 role: :guest
-               )
-
-      assert Repo.get_by(Plausible.Teams.GuestInvitation,
-               team_invitation_id: team_invitation.id,
-               site_id: site.id,
-               role: :viewer
-             )
+      team = assert_team_attached(site, team_id)
+      assert_guest_invitation(team, site, invitee.email, :viewer)
     end
 
     test "returns validation errors" do
