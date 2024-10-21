@@ -256,6 +256,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Facebook"
+      assert session.click_id_source == ""
     end
 
     test "strips trailing slash from referrer", %{conn: conn, site: site} do
@@ -1340,6 +1341,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.channel == "Paid Search"
+      assert session.click_id_source == "Google"
     end
 
     test "is not paid search when gclid is present on non-google referrer", %{
@@ -1362,6 +1364,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.channel == "Organic Search"
+      assert session.click_id_source == ""
     end
 
     test "parses paid search channel based on msclkid", %{conn: conn, site: site} do
@@ -1381,6 +1384,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.channel == "Paid Search"
+      assert session.click_id_source == "Bing"
     end
 
     test "is not paid search when msclkid is present on non-bing referrer", %{
@@ -1403,6 +1407,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.channel == "Organic Search"
+      assert session.click_id_source == ""
     end
 
     test "parses paid search channel based on utm_source and medium", %{conn: conn, site: site} do
@@ -1421,6 +1426,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.channel == "Paid Search"
+      assert session.click_id_source == ""
     end
 
     test "parses paid social channel based on referrer and medium", %{conn: conn, site: site} do
