@@ -9,6 +9,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
   alias Plausible.Teams
 
   @repo Plausible.DataMigration.PostgresRepo
+  @max_concurrency 12
 
   defmacrop is_distinct(f1, f2) do
     quote do
@@ -24,7 +25,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         Application.get_env(:plausible, Plausible.Repo)[:url]
       )
 
-    @repo.start(db_url, pool_size: System.schedulers_online() * 2)
+    @repo.start(db_url, pool_size: 2 * @max_concurrency)
 
     backfill()
   end
@@ -425,7 +426,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
               set: [team_id: team.id]
             )
           end,
-          timeout: :infinity
+          timeout: :infinity,
+          max_concurrency: @max_concurrency
         )
 
         if rem(idx, 10) == 0 do
@@ -465,7 +467,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
             |> Ecto.Changeset.put_change(:updated_at, owner.updated_at)
             |> @repo.insert!()
           end,
-          timeout: :infinity
+          timeout: :infinity,
+          max_concurrency: @max_concurrency
         )
 
         if rem(idx, 10) == 0 do
@@ -511,7 +514,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
           IO.write(".")
         end
       end,
-      timeout: :infinity
+      timeout: :infinity,
+      max_concurrency: @max_concurrency
     )
     |> Stream.run()
   end
@@ -532,7 +536,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
           IO.write(".")
         end
       end,
-      timeout: :infinity
+      timeout: :infinity,
+      max_concurrency: @max_concurrency
     )
     |> Stream.run()
   end
@@ -598,7 +603,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
           IO.write(".")
         end
       end,
-      timeout: :infinity
+      timeout: :infinity,
+      max_concurrency: @max_concurrency
     )
     |> Stream.run()
   end
