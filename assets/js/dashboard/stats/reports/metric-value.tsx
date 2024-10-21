@@ -49,7 +49,7 @@ export default function MetricValue(props: {
   const { metric, listItem } = props
   const { value, comparison } = useMemo(
     () => valueRenderProps(listItem, metric, site),
-    [listItem, metric]
+    [listItem, metric, site]
   )
   const metricLabel = useMemo(() => props.renderLabel(query), [query, props])
   const shortFormatter = props.formatter ?? MetricFormatterShort[metric]
