@@ -4,7 +4,7 @@ const { devices } = require('@playwright/test');
  * @see https://playwright.dev/docs/test-configuration
  */
 module.exports = {
-  testDir: '../',
+  testDir: './test',
   timeout: 60 * 1000,
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

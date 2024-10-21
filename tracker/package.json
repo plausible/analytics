@@ -1,7 +1,7 @@
 {
   "scripts": {
     "deploy": "node compile.js",
-    "test": "npm run deploy && npx playwright test --config=./test/support/playwright.config.js",
+    "test": "npm run deploy && npx playwright test",
     "start": "node test/support/server.js"
   },
   "license": "MIT",
