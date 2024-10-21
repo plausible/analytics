@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   use Plausible
 
-  alias Plausible.Stats.{TableDecider, Filters, Metrics, DateTimeRange, JSONSchema}
+  alias Plausible.Stats.{TableDecider, Filters, Metrics, DateTimeRange, JSONSchema, Time}
 
   @default_include %{
     imports: false,
@@ -578,7 +578,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp validate_include(query) do
-    time_dimension? = Enum.any?(query.dimensions, &String.starts_with?(&1, "time"))
+    time_dimension? = Enum.any?(query.dimensions, &Time.time_dimension?/1)
 
     if query.include.time_labels and not time_dimension? do
       {:error, "Invalid include.time_labels: requires a time dimension."}
