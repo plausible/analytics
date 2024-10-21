@@ -20,9 +20,11 @@ defmodule Plausible.Teams.Test do
              )
 
     assert membership.team_id == team.id
+
     if team_id do
       assert team.id == team_id
     end
+
     team
   end
 
