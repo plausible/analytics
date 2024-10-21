@@ -1,6 +1,7 @@
 defmodule Plausible.Workers.CheckUsageTest do
   use Plausible.DataCase, async: true
   use Bamboo.Test
+  use Plausible.Teams.Test
   import Double
 
   alias Plausible.Workers.CheckUsage
@@ -202,6 +203,37 @@ defmodule Plausible.Workers.CheckUsageTest do
         )
 
         assert Repo.reload(user).grace_period.end_date == Timex.shift(Timex.today(), days: 7)
+      end
+
+      @tag :teams
+      test "syncs grace period start with teams",
+           %{
+             user: user
+           } do
+        usage_stub =
+          Plausible.Billing.Quota.Usage
+          |> stub(:monthly_pageview_usage, fn _user ->
+            %{
+              penultimate_cycle: %{date_range: @date_range, total: 11_000},
+              last_cycle: %{date_range: @date_range, total: 11_000}
+            }
+          end)
+
+        insert(:subscription,
+          user: user,
+          paddle_plan_id: @paddle_id_10k,
+          last_bill_date: Timex.shift(Timex.today(), days: -1),
+          status: unquote(status)
+        )
+
+        CheckUsage.perform(nil, usage_stub)
+
+        assert user = Repo.reload!(user)
+        assert user.grace_period.end_date == Timex.shift(Timex.today(), days: 7)
+        team = assert_team_exists(user)
+        assert team.grace_period.end_date == user.grace_period.end_date
+
+        assert team.grace_period.id == user.grace_period.id
       end
 
       test "sends an email suggesting enterprise plan when usage is greater than 10M ", %{

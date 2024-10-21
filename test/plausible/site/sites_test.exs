@@ -18,6 +18,21 @@ defmodule Plausible.SitesTest do
     end
 
     @tag :teams
+    test "creates a site and syncs the team properties" do
+      user = insert(:user, trial_expiry_date: nil)
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"} = site}} =
+               Sites.create(user, params)
+
+      team = assert_team_attached(site)
+      user = Repo.reload!(user)
+      assert not is_nil(user.trial_expiry_date)
+      assert user.trial_expiry_date == team.trial_expiry_date
+    end
+
+    @tag :teams
     test "creates a site (TEAM)" do
       user = insert(:user)
       {:ok, team} = Plausible.Teams.get_or_create(user)
