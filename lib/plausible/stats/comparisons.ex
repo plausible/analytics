@@ -58,7 +58,7 @@ defmodule Plausible.Stats.Comparisons do
   end
 
   @doc """
-  Builds comparison query after executing `main` query.
+  Builds comparison query that specifically filters for values appearing in the main query results.
 
   When querying for comparisons with dimensions and pagination, extra
   filters are added to ensure comparison query returns same set of results
