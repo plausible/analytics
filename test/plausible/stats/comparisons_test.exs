@@ -273,17 +273,18 @@ defmodule Plausible.Stats.ComparisonsTest do
           "filters" => [["is", "visit:country_name", ["Estonia"]]]
         })
 
-      result_query =
-        Comparisons.add_comparison_filters(query, [
-          %{
-            dimensions: ["Chrome", "99.9", "2024-01-01"],
-            metrics: [123]
-          },
-          %{
-            dimensions: ["Firefox", "12.0", "2024-01-01"],
-            metrics: [123]
-          }
-        ])
+      main_query_results = [
+        %{
+          dimensions: ["Chrome", "99.9", "2024-01-01"],
+          metrics: [123]
+        },
+        %{
+          dimensions: ["Firefox", "12.0", "2024-01-01"],
+          metrics: [123]
+        }
+      ]
+
+      result_query = Comparisons.add_comparison_filters(query, main_query_results)
 
       assert result_query.filters == [
                [:is, "visit:country_name", ["Estonia"]],
