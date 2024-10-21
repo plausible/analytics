@@ -1,5 +1,6 @@
 defmodule Plausible.BillingTest do
   use Plausible.DataCase
+  use Plausible.Teams.Test
   use Bamboo.Test, shared: true
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing
@@ -131,6 +132,27 @@ defmodule Plausible.BillingTest do
       assert subscription.currency_code == "EUR"
     end
 
+    @tag :teams
+    test "creates a team on create subscription" do
+      user = insert(:user)
+
+      %{@subscription_created_params | "passthrough" => user.id}
+      |> Billing.subscription_created()
+
+      assert_team_exists(user)
+    end
+
+    @tag :teams
+    test "doesn't create additional teams on create subscription" do
+      user = insert(:user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      %{@subscription_created_params | "passthrough" => user.id}
+      |> Billing.subscription_created()
+
+      assert_team_exists(user, team.id)
+    end
+
     test "create with email address" do
       user = insert(:user)
 
@@ -210,6 +232,45 @@ defmodule Plausible.BillingTest do
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
       assert subscription.paddle_plan_id == @plan_id_10k
       assert subscription.next_bill_amount == "12.00"
+    end
+
+    @tag :teams
+    test "creates a team on subscription update" do
+      user = insert(:user)
+      subscription = insert(:subscription, user: user)
+
+      @subscription_updated_params
+      |> Map.merge(%{
+        "subscription_id" => subscription.paddle_subscription_id,
+        "passthrough" => user.id
+      })
+      |> Billing.subscription_updated()
+
+      assert_team_exists(user)
+    end
+
+    @tag :teams
+    test "syncs team properties with user on subscription update" do
+      user =
+        insert(:user, accept_traffic_until: ~D[2001-01-01], allow_next_upgrade_override: true)
+
+      user = Plausible.Users.start_grace_period(user)
+
+      subscription = insert(:subscription, user: user)
+
+      @subscription_updated_params
+      |> Map.merge(%{
+        "subscription_id" => subscription.paddle_subscription_id,
+        "passthrough" => user.id
+      })
+      |> Billing.subscription_updated()
+
+      team = assert_team_exists(user)
+      user = Repo.reload!(user)
+      assert team.grace_period == user.grace_period
+      assert team.trial_expiry_date == user.trial_expiry_date
+      assert team.accept_traffic_until == user.accept_traffic_until
+      assert team.allow_next_upgrade_override == user.allow_next_upgrade_override
     end
 
     test "status update from 'paused' to 'past_due' is ignored" do

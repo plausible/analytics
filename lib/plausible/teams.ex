@@ -59,17 +59,11 @@ defmodule Plausible.Teams do
   end
 
   def sync_team(user) do
-    case get_owned_by_user(user) do
-      {:ok, team} ->
-        team
-        |> Teams.Team.sync_changeset(user)
-        |> Repo.update!()
+    {:ok, team} = get_or_create(user)
 
-      _ ->
-        :skip
-    end
-
-    :ok
+    team
+    |> Teams.Team.sync_changeset(user)
+    |> Repo.update!()
   end
 
   defp create_my_team(user) do

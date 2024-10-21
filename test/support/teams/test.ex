@@ -9,6 +9,25 @@ defmodule Plausible.Teams.Test do
     end
   end
 
+  def assert_team_exists(user, team_id \\ nil) do
+    assert %{team_memberships: memberships} = Repo.preload(user, team_memberships: :team)
+
+    tm =
+      case memberships do
+        [tm] -> tm
+        _ -> raise "Team doesn't exist for user #{user.id}"
+      end
+
+    assert tm.role == :owner
+    assert tm.team.id
+
+    if team_id do
+      assert tm.team.id == team_id
+    end
+
+    tm.team
+  end
+
   def assert_team_attached(site, team_id \\ nil) do
     assert site = %{team: team} = site |> Repo.reload!() |> Repo.preload([:team, :owner])
 
