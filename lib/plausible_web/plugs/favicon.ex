@@ -34,7 +34,8 @@ defmodule PlausibleWeb.Favicon do
   @custom_icons %{
     "Brave" => "search.brave.com",
     "Telegram" => "telegram.org",
-    "Sogou" => "sogou.com"
+    "Sogou" => "sogou.com",
+    "Wikipedia" => "en.wikipedia.org"
   }
 
   def init(_) do

@@ -2087,6 +2087,29 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.channel == "Organic Social"
     end
 
+    test "wikipedia domain is resolved as Wikipedia", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com",
+        referrer: "https://en.wikipedia.org",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Wikipedia"
+      assert session.channel == "Referral"
+    end
+
     test "ntp.msn.com is Bing", %{
       conn: conn,
       site: site
