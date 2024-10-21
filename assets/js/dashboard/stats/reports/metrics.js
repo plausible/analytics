@@ -108,7 +108,7 @@ export const createConversionRate = (props) => {
 export const createPercentage = (props) => {
   const renderLabel = (_query) => '%'
   return new Metric({
-    width: 'w-24',
+    width: 'w-16',
     ...props,
     key: 'percentage',
     renderLabel,
