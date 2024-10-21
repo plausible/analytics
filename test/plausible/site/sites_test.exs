@@ -1,18 +1,23 @@
 defmodule Plausible.SitesTest do
   use Plausible.DataCase
+  use Plausible.Teams.Test
 
   alias Plausible.Sites
 
   describe "create a site" do
+    @tag :teams
     test "creates a site" do
       user = insert(:user)
 
       params = %{"domain" => "example.com", "timezone" => "Europe/London"}
 
-      assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"}}} =
+      assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"} = site}} =
                Sites.create(user, params)
+
+      assert_team_attached(site)
     end
 
+    @tag :teams
     test "creates a site (TEAM)" do
       user = insert(:user)
       {:ok, team} = Plausible.Teams.get_or_create(user)
@@ -32,6 +37,7 @@ defmodule Plausible.SitesTest do
                Sites.create(user, params)
     end
 
+    @tag :teams
     test "fails on invalid timezone (TEAM)" do
       user = insert(:user)
       {:ok, team} = Plausible.Teams.get_or_create(user)
