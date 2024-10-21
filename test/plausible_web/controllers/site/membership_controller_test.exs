@@ -308,6 +308,33 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert membership.role == :viewer
     end
 
+    @tag :teams
+    test "syncs role update to team", %{conn: conn, user: user} do
+      admin = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner),
+            build(:site_membership, user: admin, role: :admin)
+          ]
+        )
+
+      insert(:team_membership, user: user, team: site.team, role: :owner)
+
+      team_membership =
+        insert(:team_membership, user: admin, team: site.team, role: :guest)
+
+      guest_membership =
+        insert(:guest_membership, team_membership: team_membership, site: site, role: :editor)
+
+      membership = Repo.get_by(Plausible.Site.Membership, user_id: admin.id)
+
+      put(conn, "/sites/#{site.domain}/memberships/#{membership.id}/role/viewer")
+
+      assert Repo.reload!(guest_membership).role == :viewer
+    end
+
     test "can downgrade yourself from admin to viewer, redirects to stats instead", %{
       conn: conn,
       user: user
@@ -434,6 +461,84 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "has been removed"
 
       refute Repo.exists?(from sm in Plausible.Site.Membership, where: sm.user_id == ^admin.id)
+    end
+
+    @tag :teams
+    test "syncs member removal to team", %{conn: conn, user: user} do
+      admin = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner),
+            build(:site_membership, user: admin, role: :admin)
+          ]
+        )
+
+      insert(:team_membership, user: user, team: site.team, role: :owner)
+
+      team_membership =
+        insert(:team_membership, user: admin, team: site.team, role: :guest)
+
+      guest_membership =
+        insert(:guest_membership, team_membership: team_membership, site: site, role: :editor)
+
+      membership = Enum.find(site.memberships, &(&1.role == :admin))
+
+      conn = delete(conn, "/sites/#{site.domain}/memberships/#{membership.id}")
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "has been removed"
+
+      refute Repo.reload(guest_membership)
+      refute Repo.reload(team_membership)
+    end
+
+    @tag :teams
+    test "sync retains team guest membership when there's another guest membership on it", %{
+      conn: conn,
+      user: user
+    } do
+      admin = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner),
+            build(:site_membership, user: admin, role: :admin)
+          ]
+        )
+
+      another_site =
+        insert(:site,
+          team: site.team,
+          memberships: [
+            build(:site_membership, user: user, role: :owner),
+            build(:site_membership, user: admin, role: :admin)
+          ]
+        )
+
+      insert(:team_membership, user: user, team: site.team, role: :owner)
+
+      team_membership =
+        insert(:team_membership, user: admin, team: site.team, role: :guest)
+
+      guest_membership =
+        insert(:guest_membership, team_membership: team_membership, site: site, role: :editor)
+
+      another_guest_membership =
+        insert(:guest_membership,
+          team_membership: team_membership,
+          site: another_site,
+          role: :editor
+        )
+
+      membership = Enum.find(site.memberships, &(&1.role == :admin))
+
+      conn = delete(conn, "/sites/#{site.domain}/memberships/#{membership.id}")
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "has been removed"
+
+      refute Repo.reload(guest_membership)
+      assert Repo.reload(another_guest_membership)
+      assert Repo.reload(team_membership)
     end
 
     test "fails to remove a member from a foreign site", %{conn: conn, user: user} do
