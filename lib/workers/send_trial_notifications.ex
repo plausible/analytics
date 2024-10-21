@@ -20,7 +20,7 @@ defmodule Plausible.Workers.SendTrialNotifications do
       )
 
     for user <- users do
-      case Timex.diff(user.trial_expiry_date, Date.utc_today(), :days) do
+      case Date.diff(user.trial_expiry_date, Date.utc_today()) do
         7 ->
           if Plausible.Auth.has_active_sites?(user, [:owner]) do
             send_one_week_reminder(user)

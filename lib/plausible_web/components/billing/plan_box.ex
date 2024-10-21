@@ -274,7 +274,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
     trial_active_or_ended_recently? =
       not invited_user? &&
-        Timex.diff(Date.utc_today(), current_user.trial_expiry_date, :days) <= 10
+        Date.diff(Date.utc_today(), current_user.trial_expiry_date) <= 10
 
     limit_checking_opts =
       cond do
