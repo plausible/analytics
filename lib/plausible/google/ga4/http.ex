@@ -72,7 +72,7 @@ defmodule Plausible.Google.GA4.HTTP do
       {:error, %{reason: %{status: status, body: body}} = error} ->
         log_ce_error("retrieving report for #{report_request.dataset}", error)
 
-        Logger.debug(
+        Logger.warning(
           "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset} with code #{status}: #{inspect(body)}"
         )
 
@@ -82,10 +82,11 @@ defmodule Plausible.Google.GA4.HTTP do
       {:error, reason} ->
         log_ce_error("retrieving report for #{report_request.dataset}", reason)
 
-        Logger.debug(
+        Logger.warning(
           "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset}: #{inspect(reason)}"
         )
 
+        Sentry.Context.set_extra_context(%{ga_response: %{body: inspect(reason), status: 0}})
         {:error, :request_failed}
     end
   end
