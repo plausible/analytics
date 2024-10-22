@@ -158,6 +158,10 @@ defmodule Plausible.Stats.Breakdown do
     |> string_format_date_range()
   end
 
+  defp string_format_date_range(%Date.Range{first: first, last: last}) when first == last do
+    Calendar.strftime(first, "%d %b")
+  end
+
   defp string_format_date_range(%Date.Range{first: first, last: last})
        when first.year == last.year do
     "#{Calendar.strftime(first, "%d %b")} - #{Calendar.strftime(last, "%d %b")}"
