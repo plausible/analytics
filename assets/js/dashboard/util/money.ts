@@ -1,15 +1,21 @@
+import { numberLongFormatter, numberShortFormatter } from "./number-formatter"
+
 type Money = { long: string, short: string }
 
-export function formatMoneyShort(value: Money | null) {
-  if (value) {
+export function formatMoneyShort(value: Money | number | null) {
+  if (typeof value == 'number') {
+    return numberShortFormatter(value)
+  } else if (value) {
     return value.short
   } else {
     return "-"
   }
 }
 
-export function formatMoneyLong(value: Money | null) {
-  if (value) {
+export function formatMoneyLong(value: Money | number | null) {
+  if (typeof value == 'number') {
+    return numberLongFormatter(value)
+  } else if (value) {
     return value.long
   } else {
     return "-"
