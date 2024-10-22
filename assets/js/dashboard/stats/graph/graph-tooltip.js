@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import dateFormatter from './date-formatter'
 import { METRIC_LABELS } from './graph-util'
 import { MetricFormatterShort } from '../reports/metric-formatter'
+import { ChangeArrow } from '../reports/change-arrow'
 
 const renderBucketLabel = function(query, graphData, label, comparison = false) {
   let isPeriodFull = graphData.full_intervals?.[label]
@@ -93,9 +94,7 @@ export default function GraphTooltip(graphData, metric, query) {
             <span className="font-semibold mr-4 text-lg">{METRIC_LABELS[metric]}</span>
             {tooltipData.comparisonDifference ? (
             <div className="inline-flex items-center space-x-1">
-              {tooltipData.comparisonDifference > 0 ? (<><span className="font-semibold text-sm text-green-500">&uarr;</span><span>{tooltipData.comparisonDifference}%</span></>) : null}
-              {tooltipData.comparisonDifference < 0 ? (<><span className="font-semibold text-sm text-red-400">&darr;</span><span>{tooltipData.comparisonDifference * -1}%</span></>) : null}
-              {tooltipData.comparisonDifference == 0 ? (<span className="font-semibold text-sm">〰 0%</span>) : null}
+              <ChangeArrow metric={metric} change={tooltipData.comparisonDifference} />
             </div>) : null}
           </div>
 
