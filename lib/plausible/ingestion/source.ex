@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.RefInspector do
+defmodule Plausible.Ingestion.Source do
   @external_resource "priv/custom_sources.json"
   @custom_sources Application.app_dir(:plausible, "priv/custom_sources.json")
                   |> File.read!()

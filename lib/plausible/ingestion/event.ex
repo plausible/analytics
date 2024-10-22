@@ -410,9 +410,9 @@ defmodule Plausible.Ingestion.Event do
         request.query_params["ref"]
 
     if tagged_source do
-      PlausibleWeb.RefInspector.find_mapping(tagged_source)
+      Plausible.Ingestion.Source.find_mapping(tagged_source)
     else
-      PlausibleWeb.RefInspector.parse(ref)
+      Plausible.Ingestion.Source.parse(ref)
     end
   end
 
@@ -421,8 +421,8 @@ defmodule Plausible.Ingestion.Event do
   defp clean_referrer(ref) do
     uri = URI.parse(ref.referer)
 
-    if PlausibleWeb.RefInspector.right_uri?(uri) do
-      PlausibleWeb.RefInspector.format_referrer(uri)
+    if Plausible.Ingestion.Source.right_uri?(uri) do
+      Plausible.Ingestion.Source.format_referrer(uri)
     end
   end
 

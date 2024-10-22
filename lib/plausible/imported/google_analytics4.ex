@@ -348,6 +348,6 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
 
   defp parse_referrer(ref) do
     RefInspector.parse("https://" <> ref)
-    |> PlausibleWeb.RefInspector.parse()
+    |> Plausible.Ingestion.Source.parse()
   end
 end

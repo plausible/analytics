@@ -108,7 +108,7 @@ defmodule Plausible.Application do
 
     setup_geolocation()
     Location.load_all()
-    PlausibleWeb.RefInspector.init()
+    Plausible.Ingestion.Source.init()
     Plausible.Geo.await_loader()
 
     Supervisor.start_link(List.flatten(children), opts)
