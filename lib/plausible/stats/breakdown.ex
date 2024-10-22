@@ -43,17 +43,22 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   def formatted_date_ranges(query) do
-    comparison_date_range =
-      if query.include.comparisons do
-        Comparisons.get_comparison_query(query, query.include.comparisons).utc_time_range
-      else
-        nil
-      end
-
-    %{
-      date_range: format_date_range(query.utc_time_range, query.timezone),
-      comparison_date_range: format_date_range(comparison_date_range, query.timezone)
+    formatted = %{
+      date_range_label: format_date_range(query.utc_time_range, query.timezone)
     }
+
+    if query.include.comparisons do
+      comparison_date_range =
+        Comparisons.get_comparison_query(query, query.include.comparisons).utc_time_range
+
+      Map.put(
+        formatted,
+        :comparison_date_range_label,
+        format_date_range(comparison_date_range, query.timezone)
+      )
+    else
+      formatted
+    end
   end
 
   defp build_breakdown_result(query_result, query, metrics) do

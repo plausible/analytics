@@ -229,6 +229,11 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                  }
                }
              ]
+
+      assert json_response(conn, 200)["meta"] == %{
+               "date_range_label" => "07 Jan - 13 Jan",
+               "comparison_date_range_label" => "31 Dec 2020 - 06 Jan 2021"
+             }
     end
 
     test "returns comparisons with limit", %{conn: conn, site: site} do
@@ -260,6 +265,11 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
                  }
                }
              ]
+
+      assert json_response(conn, 200)["meta"] == %{
+               "date_range_label" => "07 Jan - 13 Jan",
+               "comparison_date_range_label" => "31 Dec 2020 - 06 Jan 2021"
+             }
     end
   end
 

@@ -56,8 +56,8 @@ export const queryDefaultValue = {
 export type DashboardQuery = typeof queryDefaultValue
 
 export type BreakdownResultMeta = {
-  date_range: string,
-  comparison_date_range: string | null
+  date_range_label: string,
+  comparison_date_range_label?: string
 }
 
 export function addFilter(
