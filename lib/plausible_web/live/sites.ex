@@ -142,7 +142,6 @@ defmodule PlausibleWeb.Live.Sites do
               <.styled_link href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}>
                 Upgrade now →
               </.styled_link>
-              ) %>
             </p>
           </div>
         </div>
