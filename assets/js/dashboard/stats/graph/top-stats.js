@@ -25,13 +25,21 @@ function Maybe({ condition, children }) {
 }
 
 function topStatNumberShort(metric, value) {
-  const formatter = MetricFormatterShort[metric]
-  return formatter(value)
+  if (typeof value == 'number') {
+    const formatter = MetricFormatterShort[metric]
+    return formatter(value)
+  } else {
+    return null
+  }
 }
 
 function topStatNumberLong(metric, value) {
-  const formatter = MetricFormatterLong[metric]
-  return formatter(value)
+  if (typeof value == 'number') {
+    const formatter = MetricFormatterLong[metric]
+    return formatter(value)
+  } else {
+    return null
+  }
 }
 
 export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
