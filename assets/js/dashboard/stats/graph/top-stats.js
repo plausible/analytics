@@ -16,30 +16,14 @@ import {
   MetricFormatterLong
 } from '../reports/metric-formatter'
 
-function Maybe({ condition, children }) {
-  if (condition) {
-    return children
-  } else {
-    return null
-  }
-}
-
 function topStatNumberShort(metric, value) {
-  if (typeof value == 'number') {
-    const formatter = MetricFormatterShort[metric]
-    return formatter(value)
-  } else {
-    return null
-  }
+  const formatter = MetricFormatterShort[metric]
+  return formatter(value)
 }
 
 function topStatNumberLong(metric, value) {
-  if (typeof value == 'number') {
-    const formatter = MetricFormatterLong[metric]
-    return formatter(value)
-  } else {
-    return null
-  }
+  const formatter = MetricFormatterLong[metric]
+  return formatter(value)
 }
 
 export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
@@ -163,22 +147,22 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
               >
                 {topStatNumberShort(stat.graph_metric, stat.value)}
               </p>
-              <Maybe condition={!query.comparison && stat.change != null}>
+              {query.comparison && stat.change != null && (
                 <ChangeArrow
                   metric={stat.graph_metric}
                   change={stat.change}
                   className="pl-2 text-xs dark:text-gray-100"
                 />
-              </Maybe>
+              )}
             </span>
-            <Maybe condition={query.comparison}>
+            {query.comparison && (
               <p className="text-xs dark:text-gray-100">
                 {formatDateRange(site, data.from, data.to)}
               </p>
-            </Maybe>
+            )}
           </div>
 
-          <Maybe condition={query.comparison}>
+          {query.comparison && (
             <div>
               <p className="font-bold text-xl text-gray-500 dark:text-gray-400">
                 {topStatNumberShort(stat.graph_metric, stat.comparison_value)}
@@ -187,7 +171,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
                 {formatDateRange(site, data.comparing_from, data.comparing_to)}
               </p>
             </div>
-          </Maybe>
+          )}
         </div>
       </Tooltip>
     )
