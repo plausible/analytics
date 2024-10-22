@@ -424,7 +424,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
              ]
     end
 
-    test "returns suggestions found in time frame", %{
+    test "returns prop key suggestions found in time frame", %{
       conn: conn,
       site: site
     } do
@@ -442,11 +442,39 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       ])
 
       conn =
-        get(conn, "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01")
+        get(conn, "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01&q=")
 
       assert json_response(conn, 200) == [
                %{"label" => "author", "value" => "author"},
                %{"label" => "logged_in", "value" => "logged_in"}
+             ]
+    end
+
+    test "returns prop key suggestions by a search string", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author", "logged_in"],
+          "meta.value": ["Uku Taht", "false"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["dark_mode"],
+          "meta.value": ["true"],
+          timestamp: ~N[2022-01-02 00:00:00]
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01&q=aut"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"label" => "author", "value" => "author"}
              ]
     end
 
@@ -573,12 +601,49 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/custom-prop-values/author?period=day&date=2022-01-01&filters=#{filters}"
+          "/api/stats/#{site.domain}/suggestions/custom-prop-values/author?period=day&date=2022-01-01&filters=#{filters}&q="
         )
 
       assert json_response(conn, 200) == [
                %{"label" => "(none)", "value" => "(none)"},
                %{"label" => "Uku Taht", "value" => "Uku Taht"},
+               %{"label" => "Marko Saric", "value" => "Marko Saric"}
+             ]
+    end
+
+    test "returns (none) value as the first suggestion even when a search string is provided",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Marko Saric"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Marko Saric"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          timestamp: ~N[2022-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{author: "!(none)"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/custom-prop-values/author?period=day&date=2022-01-01&filters=#{filters}&q=Mar"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"label" => "(none)", "value" => "(none)"},
                %{"label" => "Marko Saric", "value" => "Marko Saric"}
              ]
     end
