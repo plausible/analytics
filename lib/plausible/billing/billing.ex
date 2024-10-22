@@ -120,25 +120,7 @@ defmodule Plausible.Billing do
   defp handle_subscription_created(params) do
     params =
       if present?(params["passthrough"]) do
-        case String.split(to_string(params["passthrough"]), ";") do
-          [user_id] ->
-            user = Repo.get!(User, user_id)
-            {:ok, team} = Plausible.Teams.get_or_create(user)
-            Map.put(params, "team_id", team.id)
-
-          [user_id, ""] ->
-            user = Repo.get!(User, user_id)
-            {:ok, team} = Plausible.Teams.get_or_create(user)
-
-            params
-            |> Map.put("passthrough", user_id)
-            |> Map.put("team_id", team.id)
-
-          [user_id, team_id] ->
-            params
-            |> Map.put("passthrough", user_id)
-            |> Map.put("team_id", team_id)
-        end
+        format_params(params)
       else
         user = Repo.get_by!(User, email: params["email"])
         {:ok, team} = Plausible.Teams.get_or_create(user)
@@ -175,8 +157,13 @@ defmodule Plausible.Billing do
     irrelevant? = params["old_status"] == "paused" && params["status"] == "past_due"
 
     if subscription && not irrelevant? do
+      params =
+        params
+        |> format_params()
+        |> format_subscription()
+
       subscription
-      |> Subscription.changeset(format_subscription(params))
+      |> Subscription.changeset(params)
       |> Repo.update!()
       |> after_subscription_update()
     end
@@ -228,6 +215,32 @@ defmodule Plausible.Billing do
 
       subscription
     end
+  end
+
+  defp format_params(%{"passthrough" => passthrough} = params) when byte_size(passthrough) > 0 do
+    case String.split(to_string(passthrough), ";") do
+      [user_id] ->
+        user = Repo.get!(User, user_id)
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+        Map.put(params, "team_id", team.id)
+
+      [user_id, ""] ->
+        user = Repo.get!(User, user_id)
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+
+        params
+        |> Map.put("passthrough", user_id)
+        |> Map.put("team_id", team.id)
+
+      [user_id, team_id] ->
+        params
+        |> Map.put("passthrough", user_id)
+        |> Map.put("team_id", team_id)
+    end
+  end
+
+  defp format_params(params) do
+    params
   end
 
   defp format_subscription(params) do
