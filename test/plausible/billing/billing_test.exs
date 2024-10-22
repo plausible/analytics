@@ -133,13 +133,27 @@ defmodule Plausible.BillingTest do
     end
 
     @tag :teams
+    test "creates a subscription with teams passthrough" do
+      user = insert(:user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      assert_team_exists(user)
+
+      %{@subscription_created_params | "passthrough" => "user:#{user.id};team:#{team.id}"}
+      |> Billing.subscription_created()
+
+      assert Repo.get_by(Plausible.Billing.Subscription, user_id: user.id, team_id: team.id)
+    end
+
+    @tag :teams
     test "creates a team on create subscription" do
       user = insert(:user)
 
       %{@subscription_created_params | "passthrough" => user.id}
       |> Billing.subscription_created()
 
-      assert_team_exists(user)
+      team = assert_team_exists(user)
+      assert Repo.get_by(Plausible.Billing.Subscription, user_id: user.id, team_id: team.id)
     end
 
     @tag :teams
@@ -150,7 +164,8 @@ defmodule Plausible.BillingTest do
       %{@subscription_created_params | "passthrough" => user.id}
       |> Billing.subscription_created()
 
-      assert_team_exists(user, team.id)
+      team = assert_team_exists(user, team.id)
+      assert Repo.get_by(Plausible.Billing.Subscription, user_id: user.id, team_id: team.id)
     end
 
     test "create with email address" do
@@ -246,7 +261,25 @@ defmodule Plausible.BillingTest do
       })
       |> Billing.subscription_updated()
 
-      assert_team_exists(user)
+      team = assert_team_exists(user)
+      assert Repo.get_by(Plausible.Billing.Subscription, user_id: user.id, team_id: team.id)
+    end
+
+    @tag :teams
+    test "updates subscription with user/team passthrough" do
+      user = insert(:user)
+      subscription = insert(:subscription, user: user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+
+      @subscription_updated_params
+      |> Map.merge(%{
+        "subscription_id" => subscription.paddle_subscription_id,
+        "passthrough" => "user:#{user.id};team:#{team.id}"
+      })
+      |> Billing.subscription_updated()
+
+      team = assert_team_exists(user)
+      assert Repo.get_by(Plausible.Billing.Subscription, user_id: user.id, team_id: team.id)
     end
 
     @tag :teams
