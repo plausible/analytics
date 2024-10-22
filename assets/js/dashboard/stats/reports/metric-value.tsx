@@ -79,7 +79,7 @@ export default function MetricValue(props: {
           <ChangeArrow
             change={comparison.change}
             metric={metric}
-            className="inline-block pl-2 w-4"
+            className="inline-block pl-1 w-4"
             hideNumber
           />
         ) : null}

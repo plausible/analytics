@@ -3,6 +3,11 @@
 import React from 'react'
 import { Metric } from '../../../types/query-api'
 import { numberShortFormatter } from '../../util/number-formatter'
+import {
+  ArrowDownRightIcon,
+  ArrowUpRightIcon
+} from '@heroicons/react/20/solid'
+import classNames from 'classnames'
 
 export function ChangeArrow({
   change,
@@ -25,7 +30,7 @@ export function ChangeArrow({
     const color = metric === 'bounce_rate' ? 'text-red-400' : 'text-green-500'
     content = (
       <>
-        <span className={color + ' font-bold'}>&uarr;</span>
+        <ArrowUpRightIcon className={classNames(color, "inline-block h-3 w-3 stroke-[1.5px] stroke-current")} />
         {formattedChange}
       </>
     )
@@ -33,7 +38,7 @@ export function ChangeArrow({
     const color = metric === 'bounce_rate' ? 'text-green-500' : 'text-red-400'
     content = (
       <>
-        <span className={color + ' font-bold'}>&darr;</span>
+        <ArrowDownRightIcon className={classNames(color, "inline-block h-3 w-3 stroke-[1.5px] stroke-current")} />
         {formattedChange}
       </>
     )
