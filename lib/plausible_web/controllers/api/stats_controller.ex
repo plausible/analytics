@@ -474,6 +474,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -496,6 +497,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     json(conn, %{
       results: res,
+      meta: Stats.Breakdown.formatted_date_ranges(query),
       skip_imported_reason: query.skip_imported_reason
     })
   end
@@ -576,6 +578,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -603,6 +606,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -630,6 +634,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -657,6 +662,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -684,6 +690,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -711,6 +718,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -794,6 +802,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     json(conn, %{
       results: referrers,
+      meta: Stats.Breakdown.formatted_date_ranges(query),
       skip_imported_reason: query.skip_imported_reason
     })
   end
@@ -826,6 +835,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: pages,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -860,6 +870,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: entry_pages,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -895,6 +906,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: exit_pages,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -981,6 +993,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
       json(conn, %{
         results: countries,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1019,6 +1032,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: regions,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1062,6 +1076,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: cities,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1093,6 +1108,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: browsers,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1133,6 +1149,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
       json(conn, %{
         results: results,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1164,6 +1181,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: systems,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1204,6 +1222,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
       json(conn, %{
         results: results,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1235,6 +1254,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: sizes,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1267,6 +1287,7 @@ defmodule PlausibleWeb.Api.StatsController do
     else
       json(conn, %{
         results: conversions,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
         skip_imported_reason: query.skip_imported_reason
       })
     end
@@ -1340,7 +1361,11 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, metrics, pagination)
       |> transform_keys(%{prop_key => :name})
 
-    %{results: props, skip_imported_reason: query.skip_imported_reason}
+    %{
+      results: props,
+      meta: Stats.Breakdown.formatted_date_ranges(query),
+      skip_imported_reason: query.skip_imported_reason
+    }
   end
 
   def current_visitors(conn, _) do

@@ -45,12 +45,13 @@ export class Metric {
     this.renderValue = this.renderValue.bind(this)
   }
 
-  renderValue(listItem) {
+  renderValue(listItem, meta) {
     return (
       <MetricValue
         listItem={listItem}
         metric={this.key}
         renderLabel={this.renderLabel}
+        meta={meta}
         formatter={this.formatter}
       />
     )
@@ -108,7 +109,7 @@ export const createConversionRate = (props) => {
 export const createPercentage = (props) => {
   const renderLabel = (_query) => '%'
   return new Metric({
-    width: 'w-16',
+    width: 'w-24',
     ...props,
     key: 'percentage',
     renderLabel,
