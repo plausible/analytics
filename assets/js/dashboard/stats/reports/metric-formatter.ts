@@ -14,6 +14,7 @@ export type FormattableMetric =
   | 'total_visitors'
   | 'current_visitors'
   | 'exit_rate'
+  | 'conversions'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ValueType = any
@@ -29,6 +30,8 @@ export const MetricFormatterShort: Record<
   views_per_visit: numberShortFormatter,
   visitors: numberShortFormatter,
   visits: numberShortFormatter,
+
+  conversions: numberShortFormatter,
 
   time_on_page: durationFormatter,
   visit_duration: durationFormatter,
@@ -54,6 +57,8 @@ export const MetricFormatterLong: Record<
   views_per_visit: numberLongFormatter,
   visitors: numberLongFormatter,
   visits: numberLongFormatter,
+
+  conversions: numberLongFormatter,
 
   time_on_page: durationFormatter,
   visit_duration: durationFormatter,
