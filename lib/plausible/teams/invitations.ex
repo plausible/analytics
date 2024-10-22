@@ -75,6 +75,7 @@ defmodule Plausible.Teams.Invitations do
          :ok <- ensure_can_take_ownership(site, team) do
       site =
         Repo.preload(site, [
+          :team,
           :owner,
           guest_memberships: [team_membership: :user],
           guest_invitations: [team_invitation: :user]
@@ -96,6 +97,7 @@ defmodule Plausible.Teams.Invitations do
 
     site =
       Repo.preload(site, [
+        :team,
         :owner,
         guest_memberships: [team_membership: :user],
         guest_invitations: [team_invitation: :user]
@@ -105,14 +107,14 @@ defmodule Plausible.Teams.Invitations do
       Repo.transaction(fn ->
         :ok = transfer_site_ownership(site, team, NaiveDateTime.utc_now(:second))
       end)
-  catch
-    _, thrown ->
-      Sentry.capture_message(
-        "Failed to sync transfer site for site ##{site.id} and user ##{user.id}",
-        extra: %{
-          error: inspect(thrown)
-        }
-      )
+  # catch
+  #   _, thrown ->
+  #     Sentry.capture_message(
+  #       "Failed to sync transfer site for site ##{site.id} and user ##{user.id}",
+  #       extra: %{
+  #         error: inspect(thrown)
+  #       }
+  #     )
   end
 
   def accept(invitation_id, user, now \\ NaiveDateTime.utc_now(:second)) do
@@ -339,6 +341,7 @@ defmodule Plausible.Teams.Invitations do
     old_guest_ids = Enum.map(old_guest_memberships, & &1.id)
     :ok = Teams.Memberships.prune_guests(prior_team, ignore_guest_ids: old_guest_ids)
 
+    IO.inspect prior_team, label: :PRIOR_TEAM
     {:ok, prior_owner} = Teams.Sites.get_owner(prior_team)
 
     {:ok, prior_owner_team_membership} = create_team_membership(team, :guest, prior_owner, now)

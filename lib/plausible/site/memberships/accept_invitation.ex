@@ -42,12 +42,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
       case Repo.transaction(multi) do
         {:ok, changes} ->
           with_teams do
-            sync_job =
-              Task.async(fn ->
-                Plausible.Teams.Invitations.transfer_site_sync(site, user)
-              end)
-
-            Task.await(sync_job)
+            Plausible.Teams.Invitations.transfer_site_sync(site, user)
           end
 
           membership = Repo.preload(changes.membership, [:site, :user])
