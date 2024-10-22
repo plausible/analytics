@@ -2088,6 +2088,29 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.channel == "Paid Social"
     end
 
+    test "fbad is Facebook", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=fbad",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Facebook"
+      assert session.utm_source == "fbad"
+      assert session.channel == "Paid Social"
+    end
+
     test "facebook-ads is Facebook", %{
       conn: conn,
       site: site

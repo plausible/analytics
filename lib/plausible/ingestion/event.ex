@@ -410,7 +410,7 @@ defmodule Plausible.Ingestion.Event do
         request.query_params["ref"]
 
     if tagged_source do
-      Plausible.Ingestion.Acquisition.find_mapping(tagged_source)
+      PlausibleWeb.RefInspector.find_mapping(tagged_source)
     else
       PlausibleWeb.RefInspector.parse(ref)
     end

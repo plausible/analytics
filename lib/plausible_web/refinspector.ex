@@ -4,6 +4,54 @@ defmodule PlausibleWeb.RefInspector do
                   |> File.read!()
                   |> Jason.decode!()
 
+  @mapping_overrides [
+    {"fb", "Facebook"},
+    {"fb-ads", "Facebook"},
+    {"fbads", "Facebook"},
+    {"fbad", "Facebook"},
+    {"facebook-ads", "Facebook"},
+    {"facebook_ads", "Facebook"},
+    {"fcb", "Facebook"},
+    {"facebook_ad", "Facebook"},
+    {"facebook_feed_ad", "Facebook"},
+    {"ig", "Instagram"},
+    {"yt", "Youtube"},
+    {"yt-ads", "Youtube"},
+    {"reddit-ads", "Reddit"},
+    {"google_ads", "Google"},
+    {"google-ads", "Google"},
+    {"googleads", "Google"},
+    {"gads", "Google"},
+    {"google ads", "Google"},
+    {"adwords", "Google"},
+    {"twitter-ads", "Twitter"},
+    {"tiktokads", "TikTok"},
+    {"tik.tok", "TikTok"},
+    {"perplexity", "Perplexity"},
+    {"linktree", "Linktree"}
+  ]
+
+  def init() do
+    :ets.new(__MODULE__, [
+      :named_table,
+      :set,
+      :public,
+      {:read_concurrency, true}
+    ])
+
+    [{"referers.yml", map}] = RefInspector.Database.list(:default)
+
+    Enum.each(map, fn {_, entries} ->
+      Enum.each(entries, fn {_, _, _, _, _, _, name} ->
+        :ets.insert(__MODULE__, {String.downcase(name), name})
+      end)
+    end)
+
+    Enum.each(@mapping_overrides, fn override ->
+      :ets.insert(__MODULE__, override)
+    end)
+  end
+
   def parse(nil), do: nil
 
   def parse(ref) do
@@ -18,6 +66,13 @@ defmodule PlausibleWeb.RefInspector do
 
       source ->
         source
+    end
+  end
+
+  def find_mapping(source) do
+    case :ets.lookup(__MODULE__, String.downcase(source)) do
+      [{_, name}] -> name
+      _ -> source
     end
   end
 

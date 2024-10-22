@@ -16,21 +16,6 @@ defmodule Plausible.Ingestion.Acquisition do
   """
 
   @external_resource "priv/ga4-source-categories.csv"
-  @mapping_overrides [
-    {"fb", "Facebook"},
-    {"ig", "Instagram"},
-    {"yt", "Youtube"},
-    {"perplexity", "Perplexity"},
-    {"linktree", "Linktree"},
-    {"facebook-ads", "Facebook"},
-    {"fb-ads", "Facebook"},
-    {"reddit-ads", "Reddit"},
-    {"google_ads", "Google"},
-    {"google-ads", "Google"},
-    {"yt-ads", "Youtube"},
-    {"twitter-ads", "Twitter"},
-    {"adwords", "Google"}
-  ]
   @custom_source_categories [
     {"hacker news", "SOURCE_CATEGORY_SOCIAL"},
     {"yahoo!", "SOURCE_CATEGORY_SEARCH"},
@@ -59,34 +44,6 @@ defmodule Plausible.Ingestion.Acquisition do
                      |> Enum.map(fn [source, category] -> {source, category} end)
                      |> then(&(@custom_source_categories ++ &1))
                      |> Enum.into(%{})
-
-  def init() do
-    :ets.new(__MODULE__, [
-      :named_table,
-      :set,
-      :public,
-      {:read_concurrency, true}
-    ])
-
-    [{"referers.yml", map}] = RefInspector.Database.list(:default)
-
-    Enum.each(map, fn {_, entries} ->
-      Enum.each(entries, fn {_, _, _, _, _, _, name} ->
-        :ets.insert(__MODULE__, {String.downcase(name), name})
-      end)
-    end)
-
-    Enum.each(@mapping_overrides, fn override ->
-      :ets.insert(__MODULE__, override)
-    end)
-  end
-
-  def find_mapping(source) do
-    case :ets.lookup(__MODULE__, String.downcase(source)) do
-      [{_, name}] -> name
-      _ -> source
-    end
-  end
 
   def get_channel(request, source) do
     source = source && String.downcase(source)
