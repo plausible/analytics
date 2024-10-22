@@ -4,13 +4,17 @@ import React from 'react'
 import { Tooltip } from '../../util/tooltip'
 import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from 'classnames'
-import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import * as storage from '../../util/storage'
 import { formatDateRange } from '../../util/date'
 import { getGraphableMetrics } from './graph-util'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
 import { useLastLoadContext } from '../../last-load-context'
+import { ChangeArrow } from '../reports/change-arrow'
+import {
+  MetricFormatterShort,
+  MetricFormatterLong
+} from '../reports/metric-formatter'
 
 function Maybe({ condition, children }) {
   if (condition) {
@@ -20,67 +24,21 @@ function Maybe({ condition, children }) {
   }
 }
 
-function renderPercentageComparison(name, comparison, forceDarkBg = false) {
-  const formattedComparison = numberFormatter(Math.abs(comparison))
-
-  const defaultClassName = classNames({
-    'pl-2 text-xs dark:text-gray-100': !forceDarkBg,
-    'pl-2 text-xs text-gray-100': forceDarkBg
-  })
-
-  const noChangeClassName = classNames({
-    'pl-2 text-xs text-gray-700 dark:text-gray-300': !forceDarkBg,
-    'pl-2 text-xs text-gray-300': forceDarkBg
-  })
-
-  if (comparison > 0) {
-    const color = name === 'Bounce rate' ? 'text-red-400' : 'text-green-500'
-    return (
-      <span className={defaultClassName}>
-        <span className={color + ' font-bold'}>&uarr;</span>{' '}
-        {formattedComparison}%
-      </span>
-    )
-  } else if (comparison < 0) {
-    const color = name === 'Bounce rate' ? 'text-green-500' : 'text-red-400'
-    return (
-      <span className={defaultClassName}>
-        <span className={color + ' font-bold'}>&darr;</span>{' '}
-        {formattedComparison}%
-      </span>
-    )
-  } else if (comparison === 0) {
-    return <span className={noChangeClassName}>&#12336; 0%</span>
+function topStatNumberShort(metric, value) {
+  if (typeof value == 'number') {
+    const formatter = MetricFormatterShort[metric]
+    return formatter(value)
   } else {
     return null
   }
 }
 
-function topStatNumberShort(name, value) {
-  if (['visit duration', 'time on page'].includes(name.toLowerCase())) {
-    return durationFormatter(value)
-  } else if (['bounce rate', 'conversion rate'].includes(name.toLowerCase())) {
-    return value + '%'
-  } else if (
-    ['average revenue', 'total revenue'].includes(name.toLowerCase())
-  ) {
-    return value?.short
+function topStatNumberLong(metric, value) {
+  if (typeof value == 'number') {
+    const formatter = MetricFormatterLong[metric]
+    return formatter(value)
   } else {
-    return numberFormatter(value)
-  }
-}
-
-function topStatNumberLong(name, value) {
-  if (['visit duration', 'time on page'].includes(name.toLowerCase())) {
-    return durationFormatter(value)
-  } else if (['bounce rate', 'conversion rate'].includes(name.toLowerCase())) {
-    return value + '%'
-  } else if (
-    ['average revenue', 'total revenue'].includes(name.toLowerCase())
-  ) {
-    return value?.long
-  } else {
-    return (value || 0).toLocaleString()
+    return null
   }
 }
 
@@ -97,17 +55,20 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
       <div>
         {query.comparison && (
           <div className="whitespace-nowrap">
-            {topStatNumberLong(stat.name, stat.value)} vs.{' '}
-            {topStatNumberLong(stat.name, stat.comparison_value)} {statName}
-            <span className="ml-2">
-              {renderPercentageComparison(stat.name, stat.change, true)}
-            </span>
+            {topStatNumberLong(stat.graph_metric, stat.value)} vs.{' '}
+            {topStatNumberLong(stat.graph_metric, stat.comparison_value)}{' '}
+            {statName}
+            <ChangeArrow
+              metric={stat.graph_metric}
+              change={stat.change}
+              className="pl-4 text-xs text-gray-100"
+            />
           </div>
         )}
 
         {!query.comparison && (
           <div className="whitespace-nowrap">
-            {topStatNumberLong(stat.name, stat.value)} {statName}
+            {topStatNumberLong(stat.graph_metric, stat.value)} {statName}
           </div>
         )}
 
@@ -123,7 +84,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
 
   function canMetricBeGraphed(stat) {
     const graphableMetrics = getGraphableMetrics(query, site)
-    return stat.graph_metric && graphableMetrics.includes(stat.graph_metric)
+    return graphableMetrics.includes(stat.graph_metric)
   }
 
   function maybeUpdateMetric(stat) {
@@ -200,10 +161,14 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
                 className="font-bold text-xl dark:text-gray-100"
                 id={stat.graph_metric}
               >
-                {topStatNumberShort(stat.name, stat.value)}
+                {topStatNumberShort(stat.graph_metric, stat.value)}
               </p>
-              <Maybe condition={!query.comparison}>
-                {renderPercentageComparison(stat.name, stat.change)}
+              <Maybe condition={!query.comparison && stat.change != null}>
+                <ChangeArrow
+                  metric={stat.graph_metric}
+                  change={stat.change}
+                  className="pl-2 text-xs dark:text-gray-100"
+                />
               </Maybe>
             </span>
             <Maybe condition={query.comparison}>
@@ -216,7 +181,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
           <Maybe condition={query.comparison}>
             <div>
               <p className="font-bold text-xl text-gray-500 dark:text-gray-400">
-                {topStatNumberShort(stat.name, stat.comparison_value)}
+                {topStatNumberShort(stat.graph_metric, stat.comparison_value)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 {formatDateRange(site, data.comparing_from, data.comparing_to)}
