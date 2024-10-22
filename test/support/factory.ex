@@ -75,10 +75,12 @@ defmodule Plausible.Factory do
         Map.has_key?(attrs, :members) ||
         Map.has_key?(attrs, :owner)
 
-    attrs = if defined_memberships?, do: attrs, else: Map.put_new(attrs, :members, [build(:user)])
+    attrs =
+      if defined_memberships?,
+        do: attrs,
+        else: Map.put_new(attrs, :members, [build(:user)])
 
     site = %Plausible.Site{
-      team: build(:team),
       native_stats_start_at: ~N[2000-01-01 00:00:00],
       domain: domain,
       timezone: "UTC"

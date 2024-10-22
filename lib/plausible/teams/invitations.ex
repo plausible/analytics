@@ -57,14 +57,6 @@ defmodule Plausible.Teams.Invitations do
         site_invitation.inviter
       )
     end
-  catch
-    _, thrown ->
-      Sentry.capture_message(
-        "Failed to sync invitation for site ##{site.id} and email ##{site_invitation.email}",
-        extra: %{
-          error: inspect(thrown)
-        }
-      )
   end
 
   def transfer_site(site, new_owner, now \\ NaiveDateTime.utc_now(:second)) do
@@ -94,6 +86,7 @@ defmodule Plausible.Teams.Invitations do
 
   def transfer_site_sync(site, user) do
     {:ok, team} = Teams.get_or_create(user)
+    site = Teams.load_for_site(site)
 
     site =
       Repo.preload(site, [
@@ -107,14 +100,6 @@ defmodule Plausible.Teams.Invitations do
       Repo.transaction(fn ->
         :ok = transfer_site_ownership(site, team, NaiveDateTime.utc_now(:second))
       end)
-  # catch
-  #   _, thrown ->
-  #     Sentry.capture_message(
-  #       "Failed to sync transfer site for site ##{site.id} and user ##{user.id}",
-  #       extra: %{
-  #         error: inspect(thrown)
-  #       }
-  #     )
   end
 
   def accept(invitation_id, user, now \\ NaiveDateTime.utc_now(:second)) do
@@ -160,21 +145,15 @@ defmodule Plausible.Teams.Invitations do
 
     {:ok, _} =
       do_accept(team_invitation, user, NaiveDateTime.utc_now(:second), send_email?: false)
-  catch
-    _, thrown ->
-      Sentry.capture_message(
-        "Failed to sync accept invitation for site ##{site_invitation.site_id} and user ##{user.id}",
-        extra: %{
-          error: inspect(thrown)
-        }
-      )
   end
 
   def accept_transfer_sync(site_invitation, user) do
     {:ok, team} = Teams.get_or_create(user)
 
     site =
-      Repo.preload(site_invitation.site, [
+      site_invitation.site
+      |> Teams.load_for_site()
+      |> Repo.preload([
         :team,
         :owner,
         guest_memberships: [team_membership: :user],
@@ -189,14 +168,6 @@ defmodule Plausible.Teams.Invitations do
         :ok = transfer_site_ownership(site, team, NaiveDateTime.utc_now(:second))
         Repo.delete!(site_transfer)
       end)
-  catch
-    _, thrown ->
-      Sentry.capture_message(
-        "Failed to sync accept transfer for site ##{site_invitation.site_id} and user ##{user.id}",
-        extra: %{
-          error: inspect(thrown)
-        }
-      )
   end
 
   defp check_transfer_permissions(_team, _initiator, false = _check_permissions?) do
@@ -341,7 +312,6 @@ defmodule Plausible.Teams.Invitations do
     old_guest_ids = Enum.map(old_guest_memberships, & &1.id)
     :ok = Teams.Memberships.prune_guests(prior_team, ignore_guest_ids: old_guest_ids)
 
-    IO.inspect prior_team, label: :PRIOR_TEAM
     {:ok, prior_owner} = Teams.Sites.get_owner(prior_team)
 
     {:ok, prior_owner_team_membership} = create_team_membership(team, :guest, prior_owner, now)

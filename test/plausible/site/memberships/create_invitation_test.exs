@@ -270,8 +270,8 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
             build(:site_membership, user: invitee, role: :viewer)
           ]
         )
+        |> Plausible.Teams.load_for_site()
 
-      insert(:team_membership, team: site.team, user: inviter, role: :owner)
       insert(:team_membership, team: site.team, user: invitee, role: :viewer)
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
@@ -291,7 +291,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
           ]
         )
 
-      insert(:team_membership, team: site.team, user: inviter, role: :owner)
+      site = Plausible.Teams.load_for_site(site)
 
       assert {:error, :transfer_to_self} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :owner)
@@ -328,8 +328,8 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
             build(:site_membership, user: inviter, role: :viewer)
           ]
         )
+        |> Plausible.Teams.load_for_site()
 
-      insert(:team_membership, team: site.team, user: owner, role: :owner)
       insert(:team_membership, team: site.team, user: inviter, role: :viewer)
 
       assert {:error, :forbidden} =

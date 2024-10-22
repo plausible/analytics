@@ -42,6 +42,7 @@ defmodule Plausible.Site do
       defaults_to_struct: true
 
     many_to_many :members, User, join_through: Plausible.Site.Membership
+    many_to_many :team_members, User, join_through: Plausible.Teams.Membership
     has_many :memberships, Plausible.Site.Membership
     has_many :invitations, Plausible.Auth.Invitation
     has_many :goals, Plausible.Goal, preload_order: [desc: :id]

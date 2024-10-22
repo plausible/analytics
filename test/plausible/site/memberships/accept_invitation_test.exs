@@ -12,6 +12,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
   describe "transfer_ownership/3" do
     test "transfers ownership successfully" do
       site = insert(:site, memberships: [])
+
       existing_owner = insert(:user)
 
       existing_membership =
@@ -43,10 +44,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       _existing_membership =
         insert(:site_membership, user: existing_owner, site: site, role: :owner)
 
-      old_team = site.team
-
-      _existing_team_membership =
-        insert(:team_membership, user: existing_owner, team: old_team, role: :owner)
+      {:ok, old_team} = Plausible.Teams.get_or_create(existing_owner)
 
       another_user = insert(:user)
 
@@ -88,10 +86,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       _existing_membership =
         insert(:site_membership, user: existing_owner, site: site, role: :owner)
 
+      site = Plausible.Teams.load_for_site(site)
       old_team = site.team
-
-      existing_team_membership =
-        insert(:team_membership, user: existing_owner, team: old_team, role: :owner)
 
       another_user = insert(:user)
 
@@ -117,10 +113,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert new_team_membership.user_id == new_owner.id
       assert new_team_membership.role == :owner
 
-      existing_team_membership = Repo.reload!(existing_team_membership)
-      assert existing_team_membership.user_id == existing_owner.id
-      assert existing_team_membership.team_id == old_team.id
-      assert existing_team_membership.role == :owner
+      assert_team_membership(existing_owner, old_team)
 
       refute Repo.reload(another_team_membership)
       refute Repo.reload(another_guest_membership)
@@ -329,7 +322,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
     test "sync newly converted membership with team" do
       inviter = insert(:user)
       invitee = insert(:user)
-      site = insert(:site, team: nil, members: [inviter])
+      site = insert(:site, members: [inviter])
 
       invitation =
         insert(:invitation,
@@ -504,13 +497,12 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       site = insert(:site, memberships: [])
       existing_owner = insert(:user)
 
-      old_team = site.team
-
       _existing_membership =
         insert(:site_membership, user: existing_owner, site: site, role: :owner)
 
-      _existing_team_membership =
-        insert(:team_membership, user: existing_owner, team: old_team, role: :owner)
+      site = Plausible.Teams.load_for_site(site)
+      old_team = site.team
+      # site = Repo.reload!(site)
 
       new_owner = insert(:user)
       insert(:growth_subscription, user: new_owner)

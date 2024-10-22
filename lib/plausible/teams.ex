@@ -52,8 +52,11 @@ defmodule Plausible.Teams do
   def get_or_create(user) do
     with {:error, :no_team} <- get_owned_by_user(user) do
       case create_my_team(user) do
-        {:ok, team} -> {:ok, team}
-        {:error, :exists_already} -> get_owned_by_user(user)
+        {:ok, team} ->
+          {:ok, team}
+
+        {:error, :exists_already} ->
+          get_owned_by_user(user)
       end
     end
   end
@@ -103,8 +106,11 @@ defmodule Plausible.Teams do
       |> Repo.one()
 
     case result do
-      nil -> {:error, :no_team}
-      team -> {:ok, team}
+      nil ->
+        {:error, :no_team}
+
+      team ->
+        {:ok, team}
     end
   end
 

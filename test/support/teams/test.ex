@@ -31,15 +31,21 @@ defmodule Plausible.Teams.Test do
     tm.team
   end
 
-  def assert_team_attached(site, team_id \\ nil) do
-    assert site = %{team: team} = site |> Repo.reload!() |> Repo.preload([:team, :owner])
-
+  def assert_team_membership(user, team, role \\ :owner) do
     assert membership =
              Repo.get_by(Plausible.Teams.Membership,
                team_id: team.id,
-               user_id: site.owner.id,
-               role: :owner
+               user_id: user.id,
+               role: role
              )
+
+    membership
+  end
+
+  def assert_team_attached(site, team_id \\ nil) do
+    assert site = %{team: team} = site |> Repo.reload!() |> Repo.preload([:team, :owner])
+
+    assert membership = assert_team_membership(site.owner, team)
 
     assert membership.team_id == team.id
 

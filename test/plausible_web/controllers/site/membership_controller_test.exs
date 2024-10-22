@@ -319,8 +319,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
             build(:site_membership, user: admin, role: :admin)
           ]
         )
-
-      insert(:team_membership, user: user, team: site.team, role: :owner)
+        |> Plausible.Teams.load_for_site()
 
       team_membership =
         insert(:team_membership, user: admin, team: site.team, role: :guest)
@@ -474,8 +473,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
             build(:site_membership, user: admin, role: :admin)
           ]
         )
-
-      insert(:team_membership, user: user, team: site.team, role: :owner)
+        |> Plausible.Teams.load_for_site()
 
       team_membership =
         insert(:team_membership, user: admin, team: site.team, role: :guest)
@@ -506,6 +504,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
             build(:site_membership, user: admin, role: :admin)
           ]
         )
+        |> Plausible.Teams.load_for_site()
 
       another_site =
         insert(:site,
@@ -515,8 +514,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
             build(:site_membership, user: admin, role: :admin)
           ]
         )
-
-      insert(:team_membership, user: user, team: site.team, role: :owner)
+        |> Plausible.Teams.load_for_site()
 
       team_membership =
         insert(:team_membership, user: admin, team: site.team, role: :guest)
