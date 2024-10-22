@@ -5,14 +5,31 @@ defmodule Plausible.Ingestion.Acquisition do
   Acquisition channel is the marketing channel where people come from and convert and help
   users to understand and improve their marketing flow.
 
-  Note it uses priv/ga4-source-categories.csv as a source, which comes from XXX.
+  Note it uses priv/ga4-source-categories.csv as a source, which comes from https://support.google.com/analytics/answer/9756891?hl=en.
+
+  Notable differences from GA4 that have been implemented just for Plausible:
+  1. The @custom_source_categories module attribute contains a list of custom source categories that we have manually
+  added based on our own judgement and user feedback. For example we treat AI tools (ChatGPT, Perplexity) as search engines.
+  2. Google is in a priviledged position to analyze paid traffic from within their own network. The biggest use-case is auto-tagged adwords campaigns.
+  We do our best by categorizing as paid search when source is Google and the url has `gclid` parameter. Same for source Bing and `msclkid` url parameter.
+  3. When utm_source ends with "ads", we will categorize it as paid traffic regardless of medium. (googleads, fb-ads, Reddit_ads, twitter ads, etc.)
   """
+
   @external_resource "priv/ga4-source-categories.csv"
   @mapping_overrides [
     {"fb", "Facebook"},
     {"ig", "Instagram"},
+    {"yt", "Youtube"},
     {"perplexity", "Perplexity"},
-    {"linktree", "Linktree"}
+    {"linktree", "Linktree"},
+    {"facebook-ads", "Facebook"},
+    {"fb-ads", "Facebook"},
+    {"reddit-ads", "Reddit"},
+    {"google_ads", "Google"},
+    {"google-ads", "Google"},
+    {"yt-ads", "Youtube"},
+    {"twitter-ads", "Twitter"},
+    {"adwords", "Google"}
   ]
   @custom_source_categories [
     {"hacker news", "SOURCE_CATEGORY_SOCIAL"},
@@ -65,7 +82,7 @@ defmodule Plausible.Ingestion.Acquisition do
   end
 
   def find_mapping(source) do
-    case :ets.lookup(__MODULE__, source) do
+    case :ets.lookup(__MODULE__, String.downcase(source)) do
       [{_, name}] -> name
       _ -> source
     end
@@ -106,16 +123,19 @@ defmodule Plausible.Ingestion.Acquisition do
 
   defp paid_search?(request, source) do
     (search_source?(source) and paid_medium?(request)) or
+      (search_source?(source) and paid_source?(request)) or
       (source == "google" and !!request.query_params["gclid"]) or
       (source == "bing" and !!request.query_params["msclkid"])
   end
 
   defp paid_social?(request, source) do
-    social_source?(source) and paid_medium?(request)
+    (social_source?(source) and paid_medium?(request)) or
+      (social_source?(source) and paid_source?(request))
   end
 
   defp paid_video?(request, source) do
-    video_source?(source) and paid_medium?(request)
+    (video_source?(source) and paid_medium?(request)) or
+      (video_source?(source) and paid_source?(request))
   end
 
   defp display?(request) do
@@ -224,6 +244,14 @@ defmodule Plausible.Ingestion.Acquisition do
   defp paid_medium?(request) do
     medium = query_param(request, "utm_medium")
     Regex.match?(~r/^(.*cp.*|ppc|retargeting|paid.*)$/, medium)
+  end
+
+  defp paid_source?(request) do
+    case query_param(request, "utm_source") do
+      "adwords" -> true
+      "threads" -> false
+      utm_source -> String.ends_with?(utm_source, "ads")
+    end
   end
 
   defp query_param(request, name) do

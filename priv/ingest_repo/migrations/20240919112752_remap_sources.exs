@@ -2,6 +2,22 @@ defmodule Plausible.IngestRepo.Migrations.RemapSources do
   use Ecto.Migration
 
   @mappings %{
+    # UTM sources
+    "fb" => "Facebook",
+    "ig" => "Instagram",
+    "yt" => "Youtube",
+    "perplexity" => "Perplexity",
+    "linktree" => "Linktree",
+    "facebook-ads" => "Facebook",
+    "fb-ads" => "Facebook",
+    "reddit-ads" => "Reddit",
+    "google_ads" => "Google",
+    "google-ads" => "Google",
+    "yt-ads" => "Youtube",
+    "twitter-ads" => "Twitter",
+    "adwords" => "Google",
+
+    # Referrers
     "android-app://com.reddit.frontpage" => "Reddit",
     "perplexity.ai" => "Perplexity",
     "search.brave.com" => "Brave",
@@ -190,11 +206,7 @@ defmodule Plausible.IngestRepo.Migrations.RemapSources do
     "yi.m.wikipedia.org" => "Wikipedia",
     "vec.wikipedia.org" => "Wikipedia",
     "be-tarask.m.wikipedia.org" => "Wikipedia",
-    "crh.wikipedia.org" => "Wikipedia",
-    "fb" => "Facebook",
-    "ig" => "Instagram",
-    "perplexity" => "Perplexity",
-    "linktree" => "Linktree"
+    "crh.wikipedia.org" => "Wikipedia"
   }
 
   def up do

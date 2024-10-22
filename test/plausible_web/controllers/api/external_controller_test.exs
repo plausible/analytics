@@ -1950,6 +1950,29 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       {:ok, site: site}
     end
 
+    test "threads is Threads", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=threads",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Threads"
+      assert session.utm_source == "threads"
+      assert session.channel == "Organic Social"
+    end
+
     test "ig is Instagram", %{
       conn: conn,
       site: site
@@ -1973,6 +1996,52 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.channel == "Organic Social"
     end
 
+    test "yt is Youtube", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=yt",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Youtube"
+      assert session.utm_source == "yt"
+      assert session.channel == "Organic Video"
+    end
+
+    test "yt-ads is Youtube paid", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=yt-ads",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Youtube"
+      assert session.utm_source == "yt-ads"
+      assert session.channel == "Paid Video"
+    end
+
     test "fb is Facebook", %{
       conn: conn,
       site: site
@@ -1994,6 +2063,167 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.referrer_source == "Facebook"
       assert session.utm_source == "fb"
       assert session.channel == "Organic Social"
+    end
+
+    test "fb-ads is Facebook", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=fb-ads",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Facebook"
+      assert session.utm_source == "fb-ads"
+      assert session.channel == "Paid Social"
+    end
+
+    test "facebook-ads is Facebook", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=facebook-ads",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Facebook"
+      assert session.utm_source == "facebook-ads"
+      assert session.channel == "Paid Social"
+    end
+
+    test "Reddit-ads is Reddit", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=Reddit-ads",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Reddit"
+      assert session.utm_source == "Reddit-ads"
+      assert session.channel == "Paid Social"
+    end
+
+    test "google_ads is Google", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=google_ads",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Google"
+      assert session.utm_source == "google_ads"
+      assert session.channel == "Paid Search"
+    end
+
+    test "Google-ads is Google", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=Google-ads",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Google"
+      assert session.utm_source == "Google-ads"
+      assert session.channel == "Paid Search"
+    end
+
+    test "utm_source=Adwords is Google paid search", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=Adwords",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Google"
+      assert session.utm_source == "Adwords"
+      assert session.channel == "Paid Search"
+    end
+
+    test "twitter-ads is Twitter", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_source=twitter-ads",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.referrer_source == "Twitter"
+      assert session.utm_source == "twitter-ads"
+      assert session.channel == "Paid Social"
     end
 
     test "android-app://com.reddit.frontpage is Reddit", %{
