@@ -69,6 +69,17 @@ defmodule Plausible.Google.GA4.HTTP do
         {:error,
          {:rate_limit_exceeded, dataset: report_request.dataset, offset: report_request.offset}}
 
+      {:error, %{reason: %{status: status, body: body}} = error} when status >= 500 ->
+        log_ce_error("retrieving report for #{report_request.dataset}", error)
+
+        Logger.warning(
+          "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset} with code #{status}: #{inspect(body)}"
+        )
+
+        Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: status}})
+
+        {:error, {:server_failed, dataset: report_request.dataset, offset: report_request.offset}}
+
       {:error, %{reason: %{status: status, body: body}} = error} ->
         log_ce_error("retrieving report for #{report_request.dataset}", error)
 
@@ -77,6 +88,7 @@ defmodule Plausible.Google.GA4.HTTP do
         )
 
         Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: status}})
+
         {:error, :request_failed}
 
       {:error, reason} ->
@@ -87,7 +99,8 @@ defmodule Plausible.Google.GA4.HTTP do
         )
 
         Sentry.Context.set_extra_context(%{ga_response: %{body: inspect(reason), status: 0}})
-        {:error, :request_failed}
+
+        {:error, {:socket_failed, dataset: report_request.dataset, offset: report_request.offset}}
     end
   end
 
