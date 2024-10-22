@@ -29,6 +29,10 @@ defmodule Plausible.Stats.Imported.SQL.WhereBuilder do
     |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
   end
 
+  defp add_filter(query, [:ignore_in_totals_query, filter]) do
+    add_filter(query, filter)
+  end
+
   defp add_filter(query, [:not, filter]) do
     dynamic([i], not (^add_filter(query, filter)))
   end
