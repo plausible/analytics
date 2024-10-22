@@ -42,7 +42,7 @@ export default function MetricValue(props: {
   metric: Metric
   renderLabel: (query: DashboardQuery) => string
   formatter?: (value: ValueType) => string,
-  meta?: BreakdownResultMeta
+  meta: BreakdownResultMeta
 }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
@@ -101,7 +101,7 @@ function ComparisonTooltipContent({
   metric: Metric
   metricLabel: string
   formatter?: (value: ValueType) => string,
-  meta?: BreakdownResultMeta
+  meta: BreakdownResultMeta
 }) {
   const longFormatter = formatter ?? MetricFormatterLong[metric]
 
@@ -125,12 +125,12 @@ function ComparisonTooltipContent({
               className="pl-4 text-xs text-gray-100"
             />
           </div>
-          <div className="font-normal text-xs">{meta?.date_range}</div>
+          <div className="font-normal text-xs">{meta.date_range_label}</div>
         </div>
         <div>vs</div>
         <div>
           <div className="font-bold text-base">{longFormatter(comparison.value)} {label}</div>
-          <div className="font-normal text-xs">{meta?.comparison_date_range}</div>
+          <div className="font-normal text-xs">{meta.comparison_date_range_label}</div>
         </div>
       </div>
     )
