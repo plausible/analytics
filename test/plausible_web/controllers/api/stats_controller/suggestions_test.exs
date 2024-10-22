@@ -573,7 +573,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/prop_value?period=day&date=2022-01-01&filters=#{filters}"
+          "/api/stats/#{site.domain}/suggestions/custom-prop-values/author?period=day&date=2022-01-01&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -610,12 +610,48 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/prop_value?period=day&date=2022-01-01&filters=#{filters}"
+          "/api/stats/#{site.domain}/suggestions/custom-prop-values/author?period=day&date=2022-01-01&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
                %{"label" => "Uku Taht", "value" => "Uku Taht"},
                %{"label" => "Marko Saric", "value" => "Marko Saric"}
+             ]
+    end
+
+    test "returns prop value suggestions with multiple custom property filters in query", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author", "browser_language"],
+          "meta.value": ["Uku Taht", "en-US"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author", "browser_language"],
+          "meta.value": ["Uku Taht", "en-US"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author", "browser_language"],
+          "meta.value": ["Marko Saric", "de-DE"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview, timestamp: ~N[2022-01-01 00:00:00])
+      ])
+
+      filters = Jason.encode!(%{props: %{browser_language: "!(none)", author: "Uku Taht"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/custom-prop-values/browser_language?period=day&date=2022-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"label" => "en-US", "value" => "en-US"}
              ]
     end
 
@@ -644,7 +680,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/prop_value?period=all&date=CLEVER_SECURITY_RESEARCH&filters=#{filters}"
+          "/api/stats/#{site.domain}/suggestions/custom-prop-values/author?period=all&date=CLEVER_SECURITY_RESEARCH&filters=#{filters}"
         )
 
       assert json_response(conn, 400) == %{
@@ -1008,7 +1044,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       value_conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/suggestions/prop_value?period=day&date=2022-01-01&with_imported=true&filters=#{filters}"
+          "/api/stats/#{site.domain}/suggestions/custom-prop-values/url?period=day&date=2022-01-01&with_imported=true&filters=#{filters}"
         )
 
       assert json_response(value_conn, 200) == [
