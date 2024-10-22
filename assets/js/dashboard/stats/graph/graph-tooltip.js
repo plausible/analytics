@@ -1,3 +1,5 @@
+import React from 'react'
+import { createRoot } from 'react-dom/client'
 import dateFormatter from './date-formatter'
 import { METRIC_LABELS } from './graph-util'
 import { MetricFormatterShort } from '../reports/metric-formatter'
@@ -52,6 +54,9 @@ const buildTooltipData = function(query, graphData, metric, tooltipModel) {
   return { label, formattedValue, comparisonLabel, formattedComparisonValue, comparisonDifference }
 }
 
+
+let tooltipRoot
+
 export default function GraphTooltip(graphData, metric, query) {
   return (context) => {
     const tooltipModel = context.tooltip
@@ -64,6 +69,7 @@ export default function GraphTooltip(graphData, metric, query) {
       tooltipEl.style.display = 'none'
       tooltipEl.style.opacity = 0
       document.body.appendChild(tooltipEl)
+      tooltipRoot = createRoot(tooltipEl)
     }
 
     if (tooltipEl && offset && window.innerWidth < 768) {
@@ -81,42 +87,43 @@ export default function GraphTooltip(graphData, metric, query) {
     if (tooltipModel.body) {
       const tooltipData = buildTooltipData(query, graphData, metric, tooltipModel)
 
-      tooltipEl.innerHTML = `
-        <aside class="text-gray-100 flex flex-col">
-          <div class="flex justify-between items-center">
-            <span class="font-semibold mr-4 text-lg">${METRIC_LABELS[metric]}</span>
-            ${tooltipData.comparisonDifference ?
-            `<div class="inline-flex items-center space-x-1">
-              ${tooltipData.comparisonDifference > 0 ? `<span class="font-semibold text-sm text-green-500">&uarr;</span><span>${tooltipData.comparisonDifference}%</span>` : ""}
-              ${tooltipData.comparisonDifference < 0 ? `<span class="font-semibold text-sm text-red-400">&darr;</span><span>${tooltipData.comparisonDifference * -1}%</span>` : ""}
-              ${tooltipData.comparisonDifference == 0 ? `<span class="font-semibold text-sm">〰 0%</span>` : ""}
-            </div>` : ''}
+      tooltipRoot.render(
+        <aside className="text-gray-100 flex flex-col">
+          <div className="flex justify-between items-center">
+            <span className="font-semibold mr-4 text-lg">{METRIC_LABELS[metric]}</span>
+            {tooltipData.comparisonDifference ? (
+            <div className="inline-flex items-center space-x-1">
+              {tooltipData.comparisonDifference > 0 ? (<><span className="font-semibold text-sm text-green-500">&uarr;</span><span>{tooltipData.comparisonDifference}%</span></>) : null}
+              {tooltipData.comparisonDifference < 0 ? (<><span className="font-semibold text-sm text-red-400">&darr;</span><span>{tooltipData.comparisonDifference * -1}%</span></>) : null}
+              {tooltipData.comparisonDifference == 0 ? (<span className="font-semibold text-sm">〰 0%</span>) : null}
+            </div>) : null}
           </div>
 
-          ${tooltipData.label ?
-          `<div class="flex flex-col">
-            <div class="flex flex-row justify-between items-center">
-              <span class="flex items-center mr-4">
-                <div class="w-3 h-3 mr-1 rounded-full" style="background-color: rgba(101,116,205)"></div>
-                <span>${tooltipData.label}</span>
+          {tooltipData.label ? (
+          <div className="flex flex-col">
+            <div className="flex flex-row justify-between items-center">
+              <span className="flex items-center mr-4">
+                <div className="w-3 h-3 mr-1 rounded-full" style={{ backgroundColor: "rgba(101,116,205)" }}></div>
+                <span>{tooltipData.label}</span>
               </span>
-              <span class="text-base font-bold">${tooltipData.formattedValue}</span>
-            </div>` : ''}
+              <span className="text-base font-bold">{tooltipData.formattedValue}</span>
+            </div>
 
-            ${tooltipData.comparisonLabel ?
-            `<div class="flex flex-row justify-between items-center">
-              <span class="flex items-center mr-4">
-                <div class="w-3 h-3 mr-1 rounded-full bg-gray-500"></div>
-                <span>${tooltipData.comparisonLabel}</span>
+            {tooltipData.comparisonLabel ? (
+            <div className="flex flex-row justify-between items-center">
+              <span className="flex items-center mr-4">
+                <div className="w-3 h-3 mr-1 rounded-full bg-gray-500"></div>
+                <span>{tooltipData.comparisonLabel}</span>
               </span>
-              <span class="text-base font-bold">${tooltipData.formattedComparisonValue}</span>
-            </div>` : ""}
+              <span className="text-base font-bold">{tooltipData.formattedComparisonValue}</span>
+            </div>) : null}
           </div>
+          ) : null}
 
-          ${graphData.interval === "month" ? `<span class="font-semibold italic">Click to view month</span>` : ""}
-          ${graphData.interval === "day" ? `<span class="font-semibold italic">Click to view day</span>` : ""}
+          {graphData.interval === "month" ? (<span className="font-semibold italic">Click to view month</span>) : null}
+          {graphData.interval === "day" ? (<span className="font-semibold italic">Click to view day</span>) : null}
         </aside>
-      `
+      )
     }
     tooltipEl.style.display = null
   }
