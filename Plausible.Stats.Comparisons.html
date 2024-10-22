@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-CE219FC9.js"></script>
+    <script src="dist/sidebar_items-DB1D9FDD.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -163,6 +163,16 @@ main graph with last month or with the same month from last year.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#add_comparison_filters/2" translate="no">add_comparison_filters(comparison_query, main_results_list)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Builds comparison query that specifically filters for values appearing in the main query results.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#get_comparison_query/2" translate="no">get_comparison_query(source_query, options)</a>
 
       </div>
@@ -184,6 +194,30 @@ main graph with last month or with the same month from last year.</p>
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="add_comparison_filters/2">
+
+  <div class="detail-header">
+    <a href="#add_comparison_filters/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">add_comparison_filters(comparison_query, main_results_list)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/comparisons.ex#L67" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Builds comparison query that specifically filters for values appearing in the main query results.</p><p>When querying for comparisons with dimensions and pagination, extra
+filters are added to ensure comparison query returns same set of results
+as main query.</p>
+  </section>
+</section>
 <section class="detail" id="get_comparison_query/2">
 
   <div class="detail-header">
