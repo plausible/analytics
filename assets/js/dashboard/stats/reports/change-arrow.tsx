@@ -24,33 +24,29 @@ export function ChangeArrow({
     ? null
     : ` ${numberShortFormatter(Math.abs(change))}%`
 
-  let content = null
+  let icon = null
+  const arrowClassName = classNames(color(change, metric), strokeClass(change), "inline-block h-3 w-3 stroke-current")
 
   if (change > 0) {
-    const color = metric === 'bounce_rate' ? 'text-red-400' : 'text-green-500'
-    content = (
-      <>
-        <ArrowUpRightIcon className={classNames(color, "inline-block h-3 w-3 stroke-current", strokeClass(change))} />
-        {formattedChange}
-      </>
-    )
+    icon = (<ArrowUpRightIcon className={arrowClassName} />)
   } else if (change < 0) {
-    const color = metric === 'bounce_rate' ? 'text-green-500' : 'text-red-400'
-    content = (
-      <>
-        <ArrowDownRightIcon className={classNames(color, "inline-block h-3 w-3 stroke-current", strokeClass(change))} />
-        {formattedChange}
-      </>
-    )
+    icon = (<ArrowDownRightIcon className={arrowClassName} />)
   } else if (change === 0 && !hideNumber) {
-    content = <>&#12336;{formattedChange}</>
+    icon = (<>&#12336;</>)
   }
 
   return (
     <span className={className} data-testid="change-arrow">
-      {content}
+      {icon}
+      {formattedChange}
     </span>
   )
+}
+
+function color(change: number, metric: Metric) {
+  const invert = metric === 'bounce_rate'
+
+  return (change > 0) != invert ? 'text-green-500' : 'text-red-400'
 }
 
 function strokeClass(change: number) {
