@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
   use Plausible.Stats.SQL.Fragments
 
-  alias Plausible.Stats.{Query, QueryRunner, QueryOptimizer, DateTimeRange, Comparisons}
+  alias Plausible.Stats.{Query, QueryRunner, QueryOptimizer, Comparisons}
 
   def breakdown(
         site,
@@ -44,17 +44,19 @@ defmodule Plausible.Stats.Breakdown do
 
   def formatted_date_ranges(query) do
     formatted = %{
-      date_range_label: format_date_range(query.utc_time_range, query.timezone)
+      date_range_label: format_date_range(query)
     }
 
     if query.include.comparisons do
-      comparison_date_range =
-        Comparisons.get_comparison_query(query, query.include.comparisons).utc_time_range
+      comparison_date_range_label =
+        query
+        |> Comparisons.get_comparison_query(query.include.comparisons)
+        |> format_date_range()
 
       Map.put(
         formatted,
         :comparison_date_range_label,
-        format_date_range(comparison_date_range, query.timezone)
+        comparison_date_range_label
       )
     else
       formatted
@@ -155,11 +157,9 @@ defmodule Plausible.Stats.Breakdown do
 
   defp dimension_filters(_), do: []
 
-  defp format_date_range(nil, _timezone), do: nil
-
-  defp format_date_range(%DateTimeRange{} = utc_date_range, timezone) do
-    utc_date_range
-    |> DateTimeRange.to_date_range(timezone)
+  defp format_date_range(%Query{} = query) do
+    query
+    |> Query.date_range(trim_trailing: true)
     |> string_format_date_range()
   end
 
