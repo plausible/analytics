@@ -82,9 +82,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
          {:ok, invitation} <- Plausible.Repo.insert(changeset) do
       send_invitation_email(invitation, invitee)
 
-      with_teams do
-        Plausible.Teams.Invitations.invite_sync(site, invitation)
-      end
+      Plausible.Teams.Invitations.invite_sync(site, invitation)
 
       invitation
     else

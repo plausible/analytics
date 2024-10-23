@@ -74,18 +74,18 @@ defmodule Plausible.Auth.GracePeriod do
     Ecto.Changeset.change(user, grace_period: nil)
   end
 
-  @spec active?(User.t()) :: boolean()
+  @spec active?(Plausible.Teams.Team.t() | User.t()) :: boolean()
   @doc """
   Returns whether the grace period is still active for a User. Defaults to
   false if the user is nil or there is no grace period.
   """
-  def active?(user)
+  def active?(user_or_team)
 
-  def active?(%User{grace_period: %__MODULE__{end_date: %Date{} = end_date}}) do
+  def active?(%{grace_period: %__MODULE__{end_date: %Date{} = end_date}}) do
     Timex.diff(end_date, Date.utc_today(), :days) >= 0
   end
 
-  def active?(%User{grace_period: %__MODULE__{manual_lock: true}}) do
+  def active?(%{grace_period: %__MODULE__{manual_lock: true}}) do
     true
   end
 

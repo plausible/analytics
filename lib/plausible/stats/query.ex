@@ -93,7 +93,7 @@ defmodule Plausible.Stats.Query do
   def remove_top_level_filters(query, prefixes) do
     new_filters =
       Enum.reject(query.filters, fn [_, filter_key | _rest] ->
-        Enum.any?(prefixes, &String.starts_with?(filter_key, &1))
+        is_binary(filter_key) and Enum.any?(prefixes, &String.starts_with?(filter_key, &1))
       end)
 
     query

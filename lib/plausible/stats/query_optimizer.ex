@@ -4,7 +4,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   """
 
   use Plausible
-  alias Plausible.Stats.{DateTimeRange, Filters, Query, TableDecider, Util}
+  alias Plausible.Stats.{DateTimeRange, Filters, Query, TableDecider, Util, Time}
 
   @doc """
     This module manipulates an existing query, updating it according to business logic.
@@ -147,7 +147,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   end
 
   defp time_dimension(query) do
-    Enum.find(query.dimensions, &String.starts_with?(&1, "time"))
+    Enum.find(query.dimensions, &Time.time_dimension?/1)
   end
 
   defp split_sessions_query(query, session_metrics) do

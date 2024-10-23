@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Comparisons do
   """
 
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, DateTimeRange}
+  alias Plausible.Stats.{Query, DateTimeRange, Time}
 
   @spec get_comparison_query(Stats.Query.t(), map()) :: Stats.Query.t()
   @doc """
@@ -55,6 +55,45 @@ defmodule Plausible.Stats.Comparisons do
     source_query
     |> Query.set(utc_time_range: new_range)
     |> maybe_include_imported(source_query)
+  end
+
+  @doc """
+  Builds comparison query that specifically filters for values appearing in the main query results.
+
+  When querying for comparisons with dimensions and pagination, extra
+  filters are added to ensure comparison query returns same set of results
+  as main query.
+  """
+  def add_comparison_filters(comparison_query, main_results_list) do
+    comparison_filters =
+      Enum.flat_map(main_results_list, &build_comparison_filter(&1, comparison_query))
+
+    comparison_query
+    |> add_query_filters(comparison_filters)
+  end
+
+  defp add_query_filters(query, []), do: query
+
+  defp add_query_filters(query, [filter]) do
+    Query.add_filter(query, [:ignore_in_totals_query, filter])
+  end
+
+  defp add_query_filters(query, filters) do
+    Query.add_filter(query, [:ignore_in_totals_query, [:or, filters]])
+  end
+
+  defp build_comparison_filter(%{dimensions: dimension_labels}, query) do
+    query_filters =
+      query.dimensions
+      |> Enum.zip(dimension_labels)
+      |> Enum.reject(fn {dimension, _label} -> Time.time_dimension?(dimension) end)
+      |> Enum.map(fn {dimension, label} -> [:is, dimension, [label]] end)
+
+    case query_filters do
+      [] -> []
+      [filter] -> [filter]
+      filters -> [[:and, filters]]
+    end
   end
 
   defp get_comparison_date_range(source_query, %{mode: "year_over_year"} = options) do

@@ -39,7 +39,7 @@ defmodule Plausible.Teams.Invitations do
   end
 
   def invite_sync(site, site_invitation) do
-    site = Repo.preload(site, :team)
+    site = Teams.load_for_site(site)
     site_invitation = Repo.preload(site_invitation, :inviter)
     role = translate_role(site_invitation.role)
 
@@ -57,14 +57,6 @@ defmodule Plausible.Teams.Invitations do
         site_invitation.inviter
       )
     end
-  catch
-    _, thrown ->
-      Sentry.capture_message(
-        "Failed to sync invitation for site ##{site.id} and email ##{site_invitation.email}",
-        extra: %{
-          error: inspect(thrown)
-        }
-      )
   end
 
   def transfer_site(site, new_owner, now \\ NaiveDateTime.utc_now(:second)) do
@@ -75,6 +67,7 @@ defmodule Plausible.Teams.Invitations do
          :ok <- ensure_can_take_ownership(site, team) do
       site =
         Repo.preload(site, [
+          :team,
           :owner,
           guest_memberships: [team_membership: :user],
           guest_invitations: [team_invitation: :user]
@@ -92,10 +85,12 @@ defmodule Plausible.Teams.Invitations do
   end
 
   def transfer_site_sync(site, user) do
-    {:ok, team} = Plausible.Teams.get_or_create(user)
+    {:ok, team} = Teams.get_or_create(user)
+    site = Teams.load_for_site(site)
 
     site =
       Repo.preload(site, [
+        :team,
         :owner,
         guest_memberships: [team_membership: :user],
         guest_invitations: [team_invitation: :user]
@@ -105,14 +100,6 @@ defmodule Plausible.Teams.Invitations do
       Repo.transaction(fn ->
         :ok = transfer_site_ownership(site, team, NaiveDateTime.utc_now(:second))
       end)
-  catch
-    _, thrown ->
-      Sentry.capture_message(
-        "Failed to sync transfer site for site ##{site.id} and user ##{user.id}",
-        extra: %{
-          error: inspect(thrown)
-        }
-      )
   end
 
   def accept(invitation_id, user, now \\ NaiveDateTime.utc_now(:second)) do
@@ -135,55 +122,52 @@ defmodule Plausible.Teams.Invitations do
         site: :team
       )
 
+    site = Teams.load_for_site(site_invitation.site)
+    site_invitation = %{site_invitation | site: site}
+
     role =
       case site_invitation.role do
         :viewer -> :viewer
         :admin -> :editor
       end
 
-    guest_invitation =
+    {:ok, guest_invitation} =
       create_invitation(
         site_invitation.site,
-        site_invitation.invitee_email,
+        site_invitation.email,
         role,
         site_invitation.inviter
       )
 
+    team_invitation =
+      guest_invitation.team_invitation
+      |> Repo.preload([:team, :inviter, guest_invitations: :site])
+
     {:ok, _} =
-      do_accept(guest_invitation.team_invitation, user, NaiveDateTime.utc_now(:second),
-        send_email?: false
-      )
-  catch
-    _, thrown ->
-      Sentry.capture_message(
-        "Failed to sync accept invitation for site ##{site_invitation.site_id} and user ##{user.id}",
-        extra: %{
-          error: inspect(thrown)
-        }
-      )
+      do_accept(team_invitation, user, NaiveDateTime.utc_now(:second), send_email?: false)
   end
 
   def accept_transfer_sync(site_invitation, user) do
     {:ok, team} = Teams.get_or_create(user)
 
     site =
-      Repo.preload(site_invitation.site, [:owner, guest_memberships: [team_membership: :user]])
+      site_invitation.site
+      |> Teams.load_for_site()
+      |> Repo.preload([
+        :team,
+        :owner,
+        guest_memberships: [team_membership: :user],
+        guest_invitations: [team_invitation: :user]
+      ])
 
-    site_transfer = create_site_transfer(site, site_invitation.inviter, site_invitation.email)
+    {:ok, site_transfer} =
+      create_site_transfer(site, site_invitation.inviter, site_invitation.email)
 
     {:ok, _} =
       Repo.transaction(fn ->
         :ok = transfer_site_ownership(site, team, NaiveDateTime.utc_now(:second))
         Repo.delete!(site_transfer)
       end)
-  catch
-    _, thrown ->
-      Sentry.capture_message(
-        "Failed to sync accept transfer for site ##{site_invitation.site_id} and user ##{user.id}",
-        extra: %{
-          error: inspect(thrown)
-        }
-      )
   end
 
   defp check_transfer_permissions(_team, _initiator, false = _check_permissions?) do
@@ -536,7 +520,7 @@ defmodule Plausible.Teams.Invitations do
         team_membership
         |> Teams.GuestMembership.changeset(guest_invitation.site, guest_invitation.role)
         |> Repo.insert(
-          on_conflict: [set: [updated_at: now, role: guest_invitation.role]],
+          on_conflict: [set: [updated_at: now]],
           conflict_target: [:team_membership_id, :site_id]
         )
 

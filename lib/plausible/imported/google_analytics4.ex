@@ -8,6 +8,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
   alias Plausible.Imported
   alias Plausible.Repo
 
+  @recoverable_errors [:rate_limit_exceeded, :socket_failed, :server_failed]
   @missing_values ["(none)", "(not set)", "(not provided)", "(other)"]
 
   @impl true
@@ -86,16 +87,18 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
     end
 
     resume_opts = Keyword.take(opts, [:dataset, :offset])
+    fetch_opts = Keyword.get(opts, :fetch_opts, [])
 
     try do
       result =
         Plausible.Google.GA4.API.import_analytics(date_range, property, auth,
           persist_fn: persist_fn,
+          fetch_opts: fetch_opts,
           resume_opts: resume_opts
         )
 
       case result do
-        {:error, {:rate_limit_exceeded, details}} ->
+        {:error, {error, details}} when error in @recoverable_errors ->
           site_import = Repo.preload(site_import, [:site, :imported_by])
           dataset = Keyword.fetch!(details, :dataset)
           offset = Keyword.fetch!(details, :offset)
@@ -121,7 +124,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
             resume_import_opts
           )
 
-          {:error, :rate_limit_exceeded, skip_purge?: true, skip_mark_failed?: true}
+          {:error, error, skip_purge?: true, skip_mark_failed?: true}
 
         other ->
           other

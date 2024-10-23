@@ -171,9 +171,7 @@ defmodule PlausibleWeb.Site.MembershipController do
         |> Membership.set_role(new_role)
         |> Repo.update!()
 
-      with_teams do
-        Plausible.Teams.Memberships.update_role_sync(membership)
-      end
+      Plausible.Teams.Memberships.update_role_sync(membership)
 
       redirect_target =
         if membership.user.id == current_user.id and new_role == :viewer do
@@ -221,9 +219,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     if membership do
       Repo.delete!(membership)
 
-      with_teams do
-        Plausible.Teams.Memberships.remove_sync(membership)
-      end
+      Plausible.Teams.Memberships.remove_sync(membership)
 
       membership
       |> PlausibleWeb.Email.site_member_removed()
