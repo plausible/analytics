@@ -335,7 +335,7 @@ defmodule PlausibleWeb.Live.Sites do
         xmlns="http://www.w3.org/2000/svg"
         fill="currentColor"
         viewBox="0 0 24 24"
-        class="text-green-500 h-3 w-3 inline-block stroke-[1.5px] stroke-current"
+        class="text-green-500 h-3 w-3 inline-block stroke-[1px] stroke-current"
       >
         <path
           fill-rule="evenodd"
@@ -349,7 +349,7 @@ defmodule PlausibleWeb.Live.Sites do
         xmlns="http://www.w3.org/2000/svg"
         fill="currentColor"
         viewBox="0 0 24 24"
-        class="text-red-400 h-3 w-3 inline-block stroke-[1.5px] stroke-current"
+        class="text-red-400 h-3 w-3 inline-block stroke-[1px] stroke-current"
       >
         <path
           fill-rule="evenodd"

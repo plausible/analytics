@@ -50,9 +50,9 @@ function color(change: number, metric: Metric) {
 }
 
 function strokeClass(change: number) {
-  if (Math.abs(change) < 20) {
+  if (Math.abs(change) < 5) {
     return "stroke-[0.5px]"
-  } else if (Math.abs(change) < 50) {
+  } else if (Math.abs(change) < 25) {
     return "stroke-[1px]"
   } else {
     return "stroke-[2px]"
