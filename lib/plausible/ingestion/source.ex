@@ -6,6 +6,11 @@ defmodule Plausible.Ingestion.Source do
                   |> File.read!()
                   |> Jason.decode!()
 
+  @paid_sources Map.keys(@custom_sources)
+                |> Enum.filter(&String.ends_with?(&1, ["ads", "ad"]))
+                |> then(&["adwords" | &1])
+                |> MapSet.new()
+
   def init() do
     :ets.new(__MODULE__, [
       :named_table,
@@ -25,6 +30,10 @@ defmodule Plausible.Ingestion.Source do
     Enum.each(@custom_sources, fn entry ->
       :ets.insert(__MODULE__, entry)
     end)
+  end
+
+  def paid_source?(source) do
+    MapSet.member?(@paid_sources, source)
   end
 
   def resolve(request) do

@@ -12,7 +12,8 @@ defmodule Plausible.Ingestion.Acquisition do
   added based on our own judgement and user feedback. For example we treat AI tools (ChatGPT, Perplexity) as search engines.
   2. Google is in a priviledged position to analyze paid traffic from within their own network. The biggest use-case is auto-tagged adwords campaigns.
   We do our best by categorizing as paid search when source is Google and the url has `gclid` parameter. Same for source Bing and `msclkid` url parameter.
-  3. When utm_source ends with "ads", we will categorize it as paid traffic regardless of medium. (googleads, fb-ads, Reddit_ads, twitter ads, etc.)
+  3. The @paid_sources module attribute in Plausible.Ingestion.Source contains a list of utm_sources that we will automatically categorize as paid traffic
+  regardless of the medium. Examples are `yt-ads`, `facebook_ad`, `adwords`, etc. See also: Plausible.Ingestion.Source.paid_source?/1
   """
 
   @external_resource "priv/ga4-source-categories.csv"
@@ -204,11 +205,8 @@ defmodule Plausible.Ingestion.Acquisition do
   end
 
   defp paid_source?(request) do
-    case query_param(request, "utm_source") do
-      "adwords" -> true
-      "threads" -> false
-      utm_source -> String.ends_with?(utm_source, "ads")
-    end
+    query_param(request, "utm_source")
+    |> Plausible.Ingestion.Source.paid_source?()
   end
 
   defp query_param(request, name) do
