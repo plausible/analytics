@@ -1361,6 +1361,17 @@ defmodule PlausibleWeb.Api.StatsController do
     )
   end
 
+  def custom_prop_value_filter_suggestions(conn, %{"prop_key" => prop_key} = params) do
+    site = conn.assigns[:site]
+
+    query = Query.from(site, params, debug_metadata(conn))
+
+    json(
+      conn,
+      Stats.custom_prop_value_filter_suggestions(site, query, prop_key, params["q"])
+    )
+  end
+
   defp transform_keys(result, keys_to_replace) when is_map(result) do
     for {key, val} <- result, do: {Map.get(keys_to_replace, key, key), val}, into: %{}
   end

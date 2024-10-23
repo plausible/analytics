@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
+- Fix returning filter suggestions for multiple custom property values in the dashboard Filter modal
+
 ## v2.1.4 - 2024-10-08
 
 ### Added
