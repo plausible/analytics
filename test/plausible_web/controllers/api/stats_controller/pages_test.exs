@@ -1383,6 +1383,74 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                }
              ]
     end
+
+    test "can compare with previous period", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/page1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page1",
+          timestamp: ~N[2021-01-02 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page2",
+          timestamp: ~N[2021-01-02 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/page2",
+          timestamp: ~N[2021-01-02 00:00:00]
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2021-01-02&comparison=previous_period&detailed=true"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "bounce_rate" => 100,
+                 "comparison" => %{
+                   "bounce_rate" => 0,
+                   "pageviews" => 0,
+                   "time_on_page" => 0,
+                   "visitors" => 0,
+                   "change" => %{
+                     "bounce_rate" => nil,
+                     "pageviews" => 100,
+                     "time_on_page" => nil,
+                     "visitors" => 100
+                   }
+                 },
+                 "name" => "/page2",
+                 "pageviews" => 2,
+                 "time_on_page" => nil,
+                 "visitors" => 2
+               },
+               %{
+                 "bounce_rate" => 100,
+                 "name" => "/page1",
+                 "pageviews" => 1,
+                 "time_on_page" => nil,
+                 "visitors" => 1,
+                 "comparison" => %{
+                   "bounce_rate" => 100,
+                   "pageviews" => 1,
+                   "time_on_page" => nil,
+                   "visitors" => 1,
+                   "change" => %{
+                     "bounce_rate" => 0,
+                     "pageviews" => 0,
+                     "time_on_page" => nil,
+                     "visitors" => 0
+                   }
+                 }
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/entry-pages" do
