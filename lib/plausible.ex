@@ -4,7 +4,6 @@ defmodule Plausible do
   """
 
   @ce_builds [:ce, :ce_test, :ce_dev]
-  @public_builds [:ce, :prod]
 
   defmacro __using__(_) do
     quote do
@@ -57,14 +56,6 @@ defmodule Plausible do
   else
     def product_name do
       "Plausible Analytics"
-    end
-  end
-
-  defmacro with_teams(do: do_block) do
-    if Mix.env() not in @public_builds do
-      quote do
-        unquote(do_block)
-      end
     end
   end
 end

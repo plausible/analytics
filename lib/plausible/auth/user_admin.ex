@@ -62,12 +62,10 @@ defmodule Plausible.Auth.UserAdmin do
     ]
   end
 
-  with_teams do
-    def after_update(_conn, user) do
-      Plausible.Teams.sync_team(user)
+  def after_update(_conn, user) do
+    Plausible.Teams.sync_team(user)
 
-      {:ok, user}
-    end
+    {:ok, user}
   end
 
   defp lock(user) do
