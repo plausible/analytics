@@ -5,10 +5,12 @@ import { render, screen } from '@testing-library/react'
 import { ChangeArrow } from './change-arrow'
 
 jest.mock('@heroicons/react/24/solid', () => ({
-  ArrowUpRightIcon: ({ className }: { className: string }) =>
-    <span className={className}>↑</span>,
-  ArrowDownRightIcon: ({ className }: { className: string }) =>
-    <span className={className}>↓</span>,
+  ArrowUpRightIcon: ({ className }: { className: string }) => (
+    <span className={className}>↑</span>
+  ),
+  ArrowDownRightIcon: ({ className }: { className: string }) => (
+    <span className={className}>↓</span>
+  )
 }))
 
 it('renders green for positive change', () => {
@@ -72,5 +74,5 @@ it('renders no content with text hidden and 0 change', () => {
   )
 
   const arrowElement = screen.getByTestId('change-arrow')
-  expect(arrowElement).toHaveTextContent("")
+  expect(arrowElement).toHaveTextContent('')
 })

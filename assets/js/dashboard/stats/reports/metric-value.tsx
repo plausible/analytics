@@ -41,7 +41,7 @@ export default function MetricValue(props: {
   listItem: ListItem
   metric: Metric
   renderLabel: (query: DashboardQuery) => string
-  formatter?: (value: ValueType) => string,
+  formatter?: (value: ValueType) => string
   meta: BreakdownResultMeta
 }) {
   const { query } = useQueryContext()
@@ -97,7 +97,7 @@ function ComparisonTooltipContent({
   comparison: { value: ValueType; change: number } | null
   metric: Metric
   metricLabel: string
-  formatter?: (value: ValueType) => string,
+  formatter?: (value: ValueType) => string
   meta: BreakdownResultMeta
 }) {
   const longFormatter = formatter ?? MetricFormatterLong[metric]
@@ -115,7 +115,9 @@ function ComparisonTooltipContent({
       <div className="text-left whitespace-nowrap py-1 space-y-2">
         <div>
           <div className="flex items-center">
-            <span className="font-bold text-base">{longFormatter(value)} {label}</span>
+            <span className="font-bold text-base">
+              {longFormatter(value)} {label}
+            </span>
             <ChangeArrow
               metric={metric}
               change={comparison.change}
@@ -126,12 +128,20 @@ function ComparisonTooltipContent({
         </div>
         <div>vs</div>
         <div>
-          <div className="font-bold text-base">{longFormatter(comparison.value)} {label}</div>
-          <div className="font-normal text-xs">{meta.comparison_date_range_label}</div>
+          <div className="font-bold text-base">
+            {longFormatter(comparison.value)} {label}
+          </div>
+          <div className="font-normal text-xs">
+            {meta.comparison_date_range_label}
+          </div>
         </div>
       </div>
     )
   } else {
-    return <div className="whitespace-nowrap">{longFormatter(value)} {label}</div>
+    return (
+      <div className="whitespace-nowrap">
+        {longFormatter(value)} {label}
+      </div>
+    )
   }
 }
