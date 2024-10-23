@@ -1,6 +1,6 @@
 defmodule Plausible.Ingestion.Acquisition do
   @moduledoc """
-  This module is responsible for figuring out aquisition channel from event referrer_source.
+  This module is responsible for figuring out acquisition channel from event referrer_source.
 
   Acquisition channel is the marketing channel where people come from and convert and help
   users to understand and improve their marketing flow.
@@ -10,7 +10,7 @@ defmodule Plausible.Ingestion.Acquisition do
   Notable differences from GA4 that have been implemented just for Plausible:
   1. The @custom_source_categories module attribute contains a list of custom source categories that we have manually
   added based on our own judgement and user feedback. For example we treat AI tools (ChatGPT, Perplexity) as search engines.
-  2. Google is in a priviledged position to analyze paid traffic from within their own network. The biggest use-case is auto-tagged adwords campaigns.
+  2. Google is in a privileged position to analyze paid traffic from within their own network. The biggest use-case is auto-tagged adwords campaigns.
   We do our best by categorizing as paid search when source is Google and the url has `gclid` parameter. Same for source Bing and `msclkid` url parameter.
   3. The @paid_sources module attribute in Plausible.Ingestion.Source contains a list of utm_sources that we will automatically categorize as paid traffic
   regardless of the medium. Examples are `yt-ads`, `facebook_ad`, `adwords`, etc. See also: Plausible.Ingestion.Source.paid_source?/1
@@ -26,7 +26,6 @@ defmodule Plausible.Ingestion.Acquisition do
     {"producthunt", "SOURCE_CATEGORY_SOCIAL"},
     {"github", "SOURCE_CATEGORY_SOCIAL"},
     {"steamcommunity.com", "SOURCE_CATEGORY_SOCIAL"},
-    # codespell:ignore
     {"statics.teams.cdn.office.net", "SOURCE_CATEGORY_SOCIAL"},
     {"vkontakte", "SOURCE_CATEGORY_SOCIAL"},
     {"threads", "SOURCE_CATEGORY_SOCIAL"},
