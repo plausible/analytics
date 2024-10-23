@@ -115,7 +115,7 @@ defmodule Plausible.Stats.Filters do
   """
   def get_toplevel_filter(query, prefix) do
     Enum.find(query.filters, fn [_op, dimension | _rest] ->
-      String.starts_with?(dimension, prefix)
+      is_binary(dimension) and String.starts_with?(dimension, prefix)
     end)
   end
 
