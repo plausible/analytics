@@ -1,35 +1,10 @@
 defmodule Plausible.Ingestion.Source do
+  alias Plausible.Ingestion.Request
+
   @external_resource "priv/custom_sources.json"
   @custom_sources Application.app_dir(:plausible, "priv/custom_sources.json")
                   |> File.read!()
                   |> Jason.decode!()
-
-  @mapping_overrides [
-    {"fb", "Facebook"},
-    {"fb-ads", "Facebook"},
-    {"fbads", "Facebook"},
-    {"fbad", "Facebook"},
-    {"facebook-ads", "Facebook"},
-    {"facebook_ads", "Facebook"},
-    {"fcb", "Facebook"},
-    {"facebook_ad", "Facebook"},
-    {"facebook_feed_ad", "Facebook"},
-    {"ig", "Instagram"},
-    {"yt", "Youtube"},
-    {"yt-ads", "Youtube"},
-    {"reddit-ads", "Reddit"},
-    {"google_ads", "Google"},
-    {"google-ads", "Google"},
-    {"googleads", "Google"},
-    {"gads", "Google"},
-    {"google ads", "Google"},
-    {"adwords", "Google"},
-    {"twitter-ads", "Twitter"},
-    {"tiktokads", "TikTok"},
-    {"tik.tok", "TikTok"},
-    {"perplexity", "Perplexity"},
-    {"linktree", "Linktree"}
-  ]
 
   def init() do
     :ets.new(__MODULE__, [
@@ -47,27 +22,42 @@ defmodule Plausible.Ingestion.Source do
       end)
     end)
 
-    Enum.each(@mapping_overrides, fn override ->
-      :ets.insert(__MODULE__, override)
+    Enum.each(@custom_sources, fn entry ->
+      :ets.insert(__MODULE__, entry)
     end)
   end
 
-  def parse(nil), do: nil
+  def resolve(request) do
+    tagged_source =
+      request.query_params["utm_source"] ||
+        request.query_params["source"] ||
+        request.query_params["ref"]
+
+    source =
+      cond do
+        tagged_source -> tagged_source
+        has_referral?(request) -> parse(request.referrer)
+        true -> nil
+      end
+
+    find_mapping(source)
+  end
 
   def parse(ref) do
-    case ref.source do
+    case RefInspector.parse(ref).source do
       :unknown ->
-        uri = URI.parse(String.trim(ref.referer))
+        uri = URI.parse(String.trim(ref))
 
-        if right_uri?(uri) do
+        if valid_referrer?(uri) do
           format_referrer_host(uri)
-          |> maybe_map_to_custom_source()
         end
 
       source ->
         source
     end
   end
+
+  def find_mapping(nil), do: nil
 
   def find_mapping(source) do
     case :ets.lookup(__MODULE__, String.downcase(source)) do
@@ -76,27 +66,36 @@ defmodule Plausible.Ingestion.Source do
     end
   end
 
-  def format_referrer(uri) do
-    path = String.trim_trailing(uri.path || "", "/")
-    format_referrer_host(uri) <> path
+  def format_referrer(nil), do: nil
+
+  def format_referrer(referrer) do
+    referrer_uri = URI.parse(referrer)
+
+    if valid_referrer?(referrer_uri) do
+      path = String.trim_trailing(referrer_uri.path || "", "/")
+      format_referrer_host(referrer_uri) <> path
+    end
   end
 
-  def right_uri?(%URI{host: nil}), do: false
+  defp valid_referrer?(%URI{host: host, scheme: scheme})
+       when scheme in ["http", "https", "android-app"] and byte_size(host) > 0,
+       do: true
 
-  def right_uri?(%URI{host: host, scheme: scheme})
-      when scheme in ["http", "https", "android-app"] and byte_size(host) > 0,
-      do: true
+  defp valid_referrer?(_), do: false
 
-  def right_uri?(_), do: false
+  defp has_referral?(%Request{referrer: nil}), do: nil
+
+  defp has_referral?(%Request{referrer: referrer, uri: uri}) do
+    referrer_uri = URI.parse(referrer)
+
+    Request.sanitize_hostname(referrer_uri.host) !== Request.sanitize_hostname(uri.host) and
+      referrer_uri.host !== "localhost"
+  end
 
   defp format_referrer_host(uri) do
     protocol = if uri.scheme == "android-app", do: "android-app://", else: ""
     host = String.replace_prefix(uri.host, "www.", "")
 
     protocol <> host
-  end
-
-  defp maybe_map_to_custom_source(source) do
-    Map.get(@custom_sources, source, source)
   end
 end
