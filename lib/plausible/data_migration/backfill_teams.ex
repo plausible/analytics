@@ -442,25 +442,19 @@ defmodule Plausible.DataMigration.BackfillTeams do
       fn {owner, idx} ->
         @repo.transaction(
           fn ->
-            team =
-              "My Team"
-              |> Teams.Team.changeset()
-              |> Ecto.Changeset.put_change(:trial_expiry_date, owner.trial_expiry_date)
-              |> Ecto.Changeset.put_change(:accept_traffic_until, owner.accept_traffic_until)
-              |> Ecto.Changeset.put_change(
-                :allow_next_upgrade_override,
-                owner.allow_next_upgrade_override
-              )
-              |> Ecto.Changeset.put_embed(:grace_period, owner.grace_period)
-              |> Ecto.Changeset.put_change(:inserted_at, owner.inserted_at)
-              |> Ecto.Changeset.put_change(:updated_at, owner.updated_at)
-              |> @repo.insert!()
+            {:ok, team} = Teams.get_or_create(owner)
 
             team
-            |> Teams.Membership.changeset(owner, :owner)
-            |> Ecto.Changeset.put_change(:inserted_at, owner.inserted_at)
-            |> Ecto.Changeset.put_change(:updated_at, owner.updated_at)
-            |> @repo.insert!()
+            |> Ecto.Changeset.change()
+            |> Ecto.Changeset.put_change(:trial_expiry_date, owner.trial_expiry_date)
+            |> Ecto.Changeset.put_change(:accept_traffic_until, owner.accept_traffic_until)
+            |> Ecto.Changeset.put_change(
+              :allow_next_upgrade_override,
+              owner.allow_next_upgrade_override
+            )
+            |> Ecto.Changeset.put_embed(:grace_period, owner.grace_period)
+            |> Ecto.Changeset.force_change(:updated_at, owner.updated_at)
+            |> @repo.update!()
           end,
           timeout: :infinity,
           max_concurrency: @max_concurrency
