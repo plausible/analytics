@@ -10,6 +10,11 @@ import {
 import MetricValue from './metric-value'
 import SiteContextProvider, { PlausibleSite } from '../../site-context'
 
+jest.mock('@heroicons/react/24/solid', () => ({
+  ArrowUpRightIcon: () => <>↑</>,
+  ArrowDownRightIcon: () => <>↓</>,
+}))
+
 const REVENUE = { long: '$1,659.50', short: '$1.7K' }
 
 describe('single value', () => {
@@ -81,7 +86,7 @@ describe('comparisons', () => {
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent('10↑')
     expect(screen.getByRole('tooltip')).toHaveTextContent(
-      '10 vs. 5 visitors↑ 100%'
+      '10 visitors↑ 100%01 Aug - 31 Augvs5 visitors01 July - 31 July'
     )
   })
 
@@ -92,7 +97,7 @@ describe('comparisons', () => {
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent('5↓')
     expect(screen.getByRole('tooltip')).toHaveTextContent(
-      '5 vs. 10 visitors↓ 50%'
+      '5 visitors↓ 50%01 Aug - 31 Augvs10 visitors01 July - 31 July'
     )
   })
 
@@ -101,9 +106,9 @@ describe('comparisons', () => {
       <MetricValue {...valueProps('visitors', 10, { value: 10, change: 0 })} />
     )
 
-    expect(screen.getByTestId('metric-value')).toHaveTextContent('10〰')
+    expect(screen.getByTestId('metric-value')).toHaveTextContent('10')
     expect(screen.getByRole('tooltip')).toHaveTextContent(
-      '10 vs. 10 visitors〰 0%'
+      '10 visitors〰 0%01 Aug - 31 Augvs10 visitors01 July - 31 July'
     )
   })
 
@@ -116,7 +121,7 @@ describe('comparisons', () => {
     )
 
     expect(screen.getByRole('tooltip')).toHaveTextContent(
-      '10 vs. 10 conversions〰 0%'
+      '10 conversions〰 0%01 Aug - 31 Augvs10 conversions01 July - 31 July'
     )
   })
 
@@ -128,7 +133,7 @@ describe('comparisons', () => {
       />
     )
 
-    expect(screen.getByRole('tooltip')).toHaveTextContent('10% vs. 10%〰 0%')
+    expect(screen.getByRole('tooltip')).toHaveTextContent('10% 〰 0%01 Aug - 31 Augvs10% 01 July - 31 July')
   })
 
   it('renders with custom formatter', async () => {
@@ -141,7 +146,7 @@ describe('comparisons', () => {
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent('10$↑')
     expect(screen.getByRole('tooltip')).toHaveTextContent(
-      '10$ vs. 5$ test↑ 100%'
+      '10$ test↑ 100%01 Aug - 31 Augvs5$ test01 July - 31 July'
     )
   })
 
@@ -155,9 +160,9 @@ describe('comparisons', () => {
       />
     )
 
-    expect(screen.getByTestId('metric-value')).toHaveTextContent('$1.7K〰')
+    expect(screen.getByTestId('metric-value')).toHaveTextContent('$1.7K')
     expect(screen.getByRole('tooltip')).toHaveTextContent(
-      '$1,659.50 vs. $1,659.50 average_revenue〰 0%'
+      '$1,659.50 average_revenue〰 0%01 Aug - 31 Augvs$1,659.50 average_revenue01 July - 31 July'
     )
   })
 
@@ -189,6 +194,10 @@ function valueProps<T>(
           [metric]: comparison.change
         }
       }
+    },
+    meta: {
+      date_range_label: "01 Aug - 31 Aug",
+      comparison_date_range_label: "01 July - 31 July",
     },
     renderLabel: (_query: unknown) => metric.toUpperCase()
   } as any /* eslint-disable-line @typescript-eslint/no-explicit-any */
