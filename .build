@@ -224,6 +224,7 @@ Plausible.Teams.Invitation.html
 Plausible.Teams.Membership.html
 Plausible.Teams.SiteTransfer.html
 Plausible.Teams.Team.html
+Plausible.Teams.Test.html
 Plausible.Teams.html
 Plausible.Test.Support.HTML.html
 Plausible.Test.Support.HTTPMocker.html
@@ -453,8 +454,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-61AD143B.js
-dist/sidebar_items-DB1D9FDD.js
+dist/search_data-6BF379F0.js
+dist/sidebar_items-11CF2B42.js
 index.html
 readme.html
 search.html
