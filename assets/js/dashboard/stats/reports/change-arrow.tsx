@@ -30,7 +30,7 @@ export function ChangeArrow({
     const color = metric === 'bounce_rate' ? 'text-red-400' : 'text-green-500'
     content = (
       <>
-        <ArrowUpRightIcon className={classNames(color, "inline-block h-3 w-3 stroke-[1.5px] stroke-current")} />
+        <ArrowUpRightIcon className={classNames(color, "inline-block h-3 w-3 stroke-current", strokeClass(change))} />
         {formattedChange}
       </>
     )
@@ -38,7 +38,7 @@ export function ChangeArrow({
     const color = metric === 'bounce_rate' ? 'text-green-500' : 'text-red-400'
     content = (
       <>
-        <ArrowDownRightIcon className={classNames(color, "inline-block h-3 w-3 stroke-[1.5px] stroke-current")} />
+        <ArrowDownRightIcon className={classNames(color, "inline-block h-3 w-3 stroke-current", strokeClass(change))} />
         {formattedChange}
       </>
     )
@@ -51,4 +51,14 @@ export function ChangeArrow({
       {content}
     </span>
   )
+}
+
+function strokeClass(change: number) {
+  if (Math.abs(change) < 20) {
+    return "stroke-[0.5px]"
+  } else if (Math.abs(change) < 50) {
+    return "stroke-[1px]"
+  } else {
+    return "stroke-[2px]"
+  }
 }
