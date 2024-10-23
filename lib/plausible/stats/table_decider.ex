@@ -81,11 +81,9 @@ defmodule Plausible.Stats.TableDecider do
   defp metric_partitioner(_, :views_per_visit), do: :session
 
   # Metrics which used to only be queried from one table but can be calculated from either
-  defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :visits), do: :either
-  defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :visitors), do: :either
+  defp metric_partitioner(_, :visits), do: :either
+  defp metric_partitioner(_, :visitors), do: :either
 
-  defp metric_partitioner(_, :visits), do: :session
-  defp metric_partitioner(_, :visitors), do: :event
   # Calculated metrics - handled on callsite separately from other metrics.
   defp metric_partitioner(_, :time_on_page), do: :other
   defp metric_partitioner(_, :total_visitors), do: :other
@@ -93,11 +91,9 @@ defmodule Plausible.Stats.TableDecider do
   # Sample percentage is included in both tables if queried.
   defp metric_partitioner(_, :sample_percent), do: :sample_percent
 
-  defp metric_partitioner(%Query{experimental_reduced_joins?: false}, unknown) do
-    raise ArgumentError, "Metric #{unknown} not supported without experimental_reduced_joins?"
+  defp metric_partitioner(_, unknown) do
+    raise ArgumentError, "Metric #{unknown} not supported"
   end
-
-  defp metric_partitioner(_, _), do: :either
 
   defp filters_partitioner(_, "event:" <> _), do: :event
   defp filters_partitioner(_, "visit:entry_page"), do: :session
@@ -105,14 +101,10 @@ defmodule Plausible.Stats.TableDecider do
   defp filters_partitioner(_, "visit:exit_page"), do: :session
   defp filters_partitioner(_, "visit:exit_page_hostname"), do: :session
 
-  defp filters_partitioner(%Query{experimental_reduced_joins?: true}, "visit:" <> _),
-    do: :either
+  defp filters_partitioner(_, "visit:" <> _), do: :either
 
-  defp filters_partitioner(_, "visit:" <> _),
-    do: :session
-
-  defp filters_partitioner(%Query{experimental_reduced_joins?: false}, {unknown, _}) do
-    raise ArgumentError, "Filter #{unknown} not supported without experimental_reduced_joins?"
+  defp filters_partitioner(_, {unknown, _}) do
+    raise ArgumentError, "Filter #{unknown} not supported"
   end
 
   defp filters_partitioner(_, _), do: :either

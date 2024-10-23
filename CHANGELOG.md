@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 ### Removed
 ### Changed
+- `experimental_reduced_joins` flag is now released. This results in fewer joins being needed for some queries.
+
 ### Fixed
 
 ## v2.1.4 - 2024-10-08

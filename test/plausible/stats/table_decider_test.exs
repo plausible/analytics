@@ -5,15 +5,7 @@ defmodule Plausible.Stats.TableDeciderTest do
   import Plausible.Stats.TableDecider
 
   describe "events_join_sessions?" do
-    test "with experimental_reduced_joins disabled" do
-      assert not events_join_sessions?(make_query(false, []))
-      assert not events_join_sessions?(make_query(false, ["event:name"]))
-      assert events_join_sessions?(make_query(false, ["visit:source"]))
-      assert events_join_sessions?(make_query(false, ["visit:entry_page"]))
-      assert events_join_sessions?(make_query(false, ["visit:exit_page"]))
-    end
-
-    test "with experimental_reduced_joins enabled" do
+    test "basics" do
       assert not events_join_sessions?(make_query(true, []))
       assert not events_join_sessions?(make_query(true, ["event:name"]))
       assert not events_join_sessions?(make_query(true, ["visit:source"]))
