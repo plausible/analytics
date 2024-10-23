@@ -12,7 +12,7 @@ import SiteContextProvider, { PlausibleSite } from '../../site-context'
 
 jest.mock('@heroicons/react/24/solid', () => ({
   ArrowUpRightIcon: () => <>↑</>,
-  ArrowDownRightIcon: () => <>↓</>,
+  ArrowDownRightIcon: () => <>↓</>
 }))
 
 const REVENUE = { long: '$1,659.50', short: '$1.7K' }
@@ -133,7 +133,9 @@ describe('comparisons', () => {
       />
     )
 
-    expect(screen.getByRole('tooltip')).toHaveTextContent('10% 〰 0%01 Aug - 31 Augvs10% 01 July - 31 July')
+    expect(screen.getByRole('tooltip')).toHaveTextContent(
+      '10% 〰 0%01 Aug - 31 Augvs10% 01 July - 31 July'
+    )
   })
 
   it('renders with custom formatter', async () => {
@@ -196,8 +198,8 @@ function valueProps<T>(
       }
     },
     meta: {
-      date_range_label: "01 Aug - 31 Aug",
-      comparison_date_range_label: "01 July - 31 July",
+      date_range_label: '01 Aug - 31 Aug',
+      comparison_date_range_label: '01 July - 31 July'
     },
     renderLabel: (_query: unknown) => metric.toUpperCase()
   } as any /* eslint-disable-line @typescript-eslint/no-explicit-any */

@@ -98,7 +98,7 @@ export default function BreakdownModal<TListItem extends { name: string }>({
     reportInfo
   })
   const apiState = usePaginatedGetAPI<
-    { results: Array<TListItem>, meta: BreakdownResultMeta },
+    { results: Array<TListItem>; meta: BreakdownResultMeta },
     [string, { query: DashboardQuery; search: string; orderBy: OrderBy }]
   >({
     key: [reportInfo.endpoint, { query, search, orderBy }],
