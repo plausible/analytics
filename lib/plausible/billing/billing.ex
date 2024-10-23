@@ -120,25 +120,7 @@ defmodule Plausible.Billing do
   defp handle_subscription_created(params) do
     params =
       if present?(params["passthrough"]) do
-        case String.split(to_string(params["passthrough"]), ";") do
-          [user_id] ->
-            user = Repo.get!(User, user_id)
-            {:ok, team} = Plausible.Teams.get_or_create(user)
-            Map.put(params, "team_id", team.id)
-
-          [user_id, ""] ->
-            user = Repo.get!(User, user_id)
-            {:ok, team} = Plausible.Teams.get_or_create(user)
-
-            params
-            |> Map.put("passthrough", user_id)
-            |> Map.put("team_id", team.id)
-
-          [user_id, team_id] ->
-            params
-            |> Map.put("passthrough", user_id)
-            |> Map.put("team_id", team_id)
-        end
+        format_params(params)
       else
         user = Repo.get_by!(User, email: params["email"])
         {:ok, team} = Plausible.Teams.get_or_create(user)
@@ -148,7 +130,10 @@ defmodule Plausible.Billing do
         |> Map.put("team_id", team.id)
       end
 
-    subscription_params = format_subscription(params) |> add_last_bill_date(params)
+    subscription_params =
+      params
+      |> format_subscription()
+      |> add_last_bill_date(params)
 
     %Subscription{}
     |> Subscription.changeset(subscription_params)
@@ -175,8 +160,13 @@ defmodule Plausible.Billing do
     irrelevant? = params["old_status"] == "paused" && params["status"] == "past_due"
 
     if subscription && not irrelevant? do
+      params =
+        params
+        |> format_params()
+        |> format_subscription()
+
       subscription
-      |> Subscription.changeset(format_subscription(params))
+      |> Subscription.changeset(params)
       |> Repo.update!()
       |> after_subscription_update()
     end
@@ -230,8 +220,26 @@ defmodule Plausible.Billing do
     end
   end
 
+  defp format_params(%{"passthrough" => passthrough} = params) do
+    case String.split(to_string(passthrough), ";") do
+      [user_id] ->
+        user = Repo.get!(User, user_id)
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+        Map.put(params, "team_id", team.id)
+
+      ["user:" <> user_id, "team:" <> team_id] ->
+        params
+        |> Map.put("passthrough", user_id)
+        |> Map.put("team_id", team_id)
+    end
+  end
+
+  defp format_params(params) do
+    params
+  end
+
   defp format_subscription(params) do
-    params = %{
+    subscription_params = %{
       paddle_subscription_id: params["subscription_id"],
       paddle_plan_id: params["subscription_plan_id"],
       cancel_url: params["cancel_url"],
@@ -244,9 +252,9 @@ defmodule Plausible.Billing do
     }
 
     if team_id = params["team_id"] do
-      Map.put(params, :team_id, team_id)
+      Map.put(subscription_params, :team_id, team_id)
     else
-      params
+      subscription_params
     end
   end
 
