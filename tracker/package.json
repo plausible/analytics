@@ -2,6 +2,7 @@
   "scripts": {
     "deploy": "node compile.js",
     "test": "npm run deploy && npx playwright test",
+    "local_test": "NODE_ENV=dev npm run deploy && npx playwright test",
     "start": "node test/support/server.js"
   },
   "license": "MIT",

@@ -41,6 +41,10 @@ npm-debug.log
 /tracker/blob-report/
 /tracker/playwright/.cache/
 
+# Stored copies of source tracker files used in development environment
+# to detect changes in /tracker/src and avoid unnecessary compilation.
+/tracker/dev-compile/src-copies/
+
 # test coverage directory
 /assets/coverage
 
