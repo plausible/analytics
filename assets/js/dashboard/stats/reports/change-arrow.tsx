@@ -42,7 +42,7 @@ export function ChangeArrow({
         {formattedChange}
       </>
     )
-  } else if (change === 0) {
+  } else if (change === 0 && !hideNumber) {
     content = <>&#12336;{formattedChange}</>
   }
 

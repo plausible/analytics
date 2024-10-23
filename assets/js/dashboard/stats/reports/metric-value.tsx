@@ -72,10 +72,7 @@ export default function MetricValue(props: {
     >
       <span className="cursor-default" data-testid="metric-value">
         {shortFormatter(value)}
-        {comparison && comparison.change === 0 ? (
-          <span className="inline-block w-4"></span>
-        ) : null}
-        {comparison && comparison.change !== 0 ? (
+        {comparison ? (
           <ChangeArrow
             change={comparison.change}
             metric={metric}
