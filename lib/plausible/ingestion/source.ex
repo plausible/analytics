@@ -1,4 +1,7 @@
 defmodule Plausible.Ingestion.Source do
+  @moduledoc """
+  Resolves the `source` dimension from a combination of `referrer` header and either `utm_source`, `source`, or `ref` query parameter.
+  """
   alias Plausible.Ingestion.Request
 
   @external_resource "priv/custom_sources.json"
