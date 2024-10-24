@@ -31,6 +31,24 @@ defmodule Plausible.DataMigration.BackfillTeams do
   end
 
   defp backfill() do
+    orphaned_teams =
+      from(
+        t in Plausible.Teams.Team,
+        left_join: tm in assoc(t, :team_memberships),
+        where: is_nil(tm.id),
+        left_join: sub in assoc(t, :subscription),
+        where: is_nil(sub.id),
+        left_join: s in assoc(t, :sites),
+        where: is_nil(s.id)
+      )
+      |> @repo.all(timeout: :infinity)
+
+    log("Found #{length(orphaned_teams)} orphaned teams...")
+
+    delete_orphaned_teams(orphaned_teams)
+
+    log("Deleted orphaned teams")
+
     sites_without_teams =
       from(
         s in Plausible.Site,
@@ -385,6 +403,10 @@ defmodule Plausible.DataMigration.BackfillTeams do
     log("Backfilled missing site transfers.")
 
     log("All data are up to date now!")
+  end
+
+  def delete_orphaned_teams(teams) do
+    Enum.each(teams, &@repo.delete!(&1))
   end
 
   defp backfill_teams(sites) do
