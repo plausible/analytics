@@ -353,7 +353,8 @@ export default function QueryPeriodPicker() {
         onClick={toggleDateMenu}
         dropdownContainerProps={{
           ['aria-controls']: 'datemenu',
-          ['aria-expanded']: menuVisible === 'datemenu'
+          ['aria-expanded']: menuVisible === 'datemenu',
+          ['data-testid']: 'date-menu-button'
         }}
       >
         {menuVisible === 'datemenu' && (
