@@ -1,8 +1,9 @@
 import React from "react";
 import { createPortal } from "react-dom";
-import { NavigateKeybind } from '../../keybinding'
+import { Keybind } from '../../keybinding'
 import { rootRoute } from "../../router";
 import { useAppNavigate } from "../../navigation/use-app-navigate";
+import classNames from "classnames";
 
 // This corresponds to the 'md' breakpoint on TailwindCSS.
 const MD_WIDTH = 768;
@@ -41,18 +42,11 @@ class Modal extends React.Component {
       return;
     }
 
-    this.close()
+    this.props.close()
   }
 
   handleResize() {
     this.setState({ viewport: window.innerWidth });
-  }
-
-  close() {
-    this.props.navigate({
-      path: rootRoute.path,
-      search: (search) => search,
-    })
   }
 
   /**
@@ -76,22 +70,18 @@ class Modal extends React.Component {
 
   render() {
     return createPortal(
-      <>
-        <NavigateKeybind keyboardKey="Escape" type="keyup" navigateProps={{ path: rootRoute.path, search: (search) => search }} />
-        <div className="modal is-open" onClick={this.props.onClick}>
-          <div className="modal__overlay">
-            <button className="modal__close"></button>
-            <div
-              ref={this.node}
-              className="modal__container dark:bg-gray-800"
-              style={this.getStyle()}
-            >
-              {this.props.children}
-            </div>
+      <div className="modal is-open" onClick={this.props.onClick}>
+        <div className="modal__overlay">
+          <button className="modal__close"></button>
+          <div
+            ref={this.node}
+            className={classNames("modal__container dark:bg-gray-800", this.props.className)}
+            style={this.getStyle()}
+          >
+            {this.props.children}
           </div>
         </div>
-      </>
-,
+      </div>,
       document.getElementById("modal_root"),
     );
   }
@@ -99,5 +89,18 @@ class Modal extends React.Component {
 
 export default function ModalWithRouting(props) {
   const navigate = useAppNavigate()
-  return <Modal {...props} navigate={navigate} />
+  const defaultCloseHandler = () =>
+    navigate({ path: rootRoute.path, search: (s) => s })
+  const closeHandler = props.close ?? defaultCloseHandler
+  return (
+    <>
+      <Keybind keyboardKey="Escape" type="keyup" handler={closeHandler} />
+      <Modal
+        close={() =>
+          navigate({ path: rootRoute.path, search: (search) => search })
+        }
+        {...props}
+      />
+    </>
+  )
 }

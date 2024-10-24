@@ -19,6 +19,7 @@ defmodule Plausible.Stats.Query do
             legacy_breakdown: false,
             remove_unavailable_revenue_metrics: false,
             preloaded_goals: [],
+            preloaded_segments: [],
             revenue_currencies: %{},
             include: Plausible.Stats.Filters.QueryParser.default_include(),
             debug_metadata: %{},

@@ -183,7 +183,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp csv_graph_metrics(query) do
     {metrics, column_headers} =
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if Filters.filtering_on_dimension?(query.filters, "event:goal") do
         {
           [:visitors, :events, :conversion_rate],
           [:date, :unique_conversions, :total_conversions, :conversion_rate]

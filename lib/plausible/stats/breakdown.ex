@@ -5,6 +5,7 @@ defmodule Plausible.Stats.Breakdown do
   Avoid adding new logic here - update QueryBuilder etc instead.
   """
 
+  use Plausible.Repo
   use Plausible.ClickhouseRepo
   use Plausible.Stats.SQL.Fragments
 
