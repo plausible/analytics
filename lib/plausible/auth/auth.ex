@@ -107,6 +107,8 @@ defmodule Plausible.Auth do
         end
       end
 
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      Repo.delete!(team)
       Repo.delete!(user)
     end)
   end
