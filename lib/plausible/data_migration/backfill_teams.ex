@@ -31,10 +31,10 @@ defmodule Plausible.DataMigration.BackfillTeams do
   end
 
   defp backfill() do
-    orphaned_teams =  
+    orphaned_teams =
       from(
-        t  in Plausible.Teams.Team,
-        left_join: tm in assoc(t, :team_memberships), 
+        t in Plausible.Teams.Team,
+        left_join: tm in assoc(t, :team_memberships),
         where: is_nil(tm.id),
         left_join: sub in assoc(t, :subscription),
         where: is_nil(sub.id),
@@ -399,7 +399,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
   end
 
   def delete_orphaned_teams(teams) do
-    Enum.each(teams, & @repo.delete!(&1))
+    Enum.each(teams, &@repo.delete!(&1))
   end
 
   defp backfill_teams(sites) do
