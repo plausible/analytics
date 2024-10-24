@@ -113,7 +113,7 @@ defmodule Plausible.Ingestion.Acquisition do
 
   defp referral?(request, source) do
     request.query_params["utm_medium"] in ["referral", "app", "link"] or
-      !!source
+      (source || "") != ""
   end
 
   @email_tags ["email", "e-mail", "e_mail", "e mail"]
