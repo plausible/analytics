@@ -10,6 +10,15 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
+case System.get_env("RANDOM_SEED") do
+  seed_string when is_binary(seed_string) ->
+    {seed, _} = Integer.parse(seed_string)
+    :rand.seed(:exsss, seed)
+
+  _ ->
+    nil
+end
+
 words =
   for i <- 0..(:erlang.system_info(:atom_count) - 1),
       do: :erlang.binary_to_term(<<131, 75, i::24>>)
