@@ -149,7 +149,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
               >
                 {topStatNumberShort(stat.graph_metric, stat.value)}
               </p>
-              {isComparison && stat.change != null ? (
+              {!isComparison && stat.change != null ? (
                 <ChangeArrow
                   metric={stat.graph_metric}
                   change={stat.change}
