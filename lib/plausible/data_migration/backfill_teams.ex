@@ -489,9 +489,15 @@ defmodule Plausible.DataMigration.BackfillTeams do
         :allow_next_upgrade_override,
         owner.allow_next_upgrade_override
       )
-      |> Ecto.Changeset.put_embed(:grace_period, owner.grace_period)
+      |> Ecto.Changeset.put_embed(:grace_period, embed_params(owner.grace_period))
       |> @repo.update!()
     end)
+  end
+
+  defp embed_params(nil), do: nil
+
+  defp embed_params(grace_period) do
+    Map.from_struct(grace_period)
   end
 
   defp backfill_subscriptions(subscriptions) do

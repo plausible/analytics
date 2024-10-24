@@ -35,7 +35,7 @@ defmodule Plausible.Teams.Team do
     |> put_change(:trial_expiry_date, user.trial_expiry_date)
     |> put_change(:accept_traffic_until, user.accept_traffic_until)
     |> put_change(:allow_next_upgrade_override, user.allow_next_upgrade_override)
-    |> put_embed(:grace_period, user.grace_period)
+    |> put_embed(:grace_period, embed_params(user.grace_period))
     |> put_change(:inserted_at, user.inserted_at)
     |> put_change(:updated_at, user.updated_at)
   end
@@ -61,6 +61,12 @@ defmodule Plausible.Teams.Team do
       trial_expiry_date: trial_expiry,
       accept_traffic_until: Date.add(trial_expiry, @trial_accept_traffic_until_offset_days)
     )
+  end
+
+  defp embed_params(nil), do: nil
+
+  defp embed_params(grace_period) do
+    Map.from_struct(grace_period)
   end
 
   defp trial_expiry() do
