@@ -228,6 +228,104 @@ defmodule Plausible.DataMigration.TeamsConsitencyCheck do
       |> @repo.aggregate(:count, timeout: :infinity)
 
     log("#{out_of_sync_site_transfers_count} out of sync site transfers")
+
+    # Guest memberships out of sync
+
+    respective_site_memberships_query =
+      from(
+        sm in Plausible.Site.Membership,
+        where: sm.site_id == parent_as(:guest_membership).site_id,
+        where: sm.user_id == parent_as(:team_membership).user_id,
+        where:
+          (sm.role == :viewer and parent_as(:guest_membership).role == :viewer) or
+            (sm.role == :admin and parent_as(:guest_membership).role == :editor),
+        select: 1
+      )
+
+    out_of_sync_guest_memberships_count =
+      from(
+        gm in Plausible.Teams.GuestMembership,
+        as: :guest_membership,
+        inner_join: tm in assoc(gm, :team_membership),
+        as: :team_membership,
+        where: tm.role != :owner,
+        where: not exists(respective_site_memberships_query)
+      )
+      |> @repo.aggregate(:count, timeout: :infinity)
+
+    log("#{out_of_sync_guest_memberships_count} out of sync guest memberships")
+
+    # Owner memberships out of sync
+
+    respective_site_memberships_query =
+      from(
+        sm in Plausible.Site.Membership,
+        where: sm.site_id == parent_as(:site).id,
+        where: sm.user_id == parent_as(:team_membership).user_id,
+        where: sm.role == :owner,
+        select: 1
+      )
+
+    out_of_sync_owner_memberships_count =
+      from(
+        tm in Plausible.Teams.Membership,
+        as: :team_membership,
+        inner_join: t in assoc(tm, :team),
+        inner_join: s in assoc(t, :sites),
+        as: :site,
+        where: tm.role == :owner,
+        where: not exists(respective_site_memberships_query)
+      )
+      |> @repo.aggregate(:count, timeout: :infinity)
+
+    log("#{out_of_sync_owner_memberships_count} out of sync owner team memberships")
+
+    # Guest invitations out of sync
+
+    respective_site_invitations_query =
+      from(
+        i in Plausible.Auth.Invitation,
+        where: i.site_id == parent_as(:guest_invitation).site_id,
+        where: i.email == parent_as(:team_invitation).email,
+        where:
+          (i.role == :viewer and parent_as(:guest_invitation).role == :viewer) or
+            (i.role == :admin and parent_as(:guest_invitation).role == :editor),
+        select: 1
+      )
+
+    out_of_sync_guest_invitations_count =
+      from(
+        gi in Plausible.Teams.GuestInvitation,
+        as: :guest_invitation,
+        inner_join: ti in assoc(gi, :team_invitation),
+        as: :team_invitation,
+        where: ti.role != :owner,
+        where: not exists(respective_site_invitations_query)
+      )
+      |> @repo.aggregate(:count, timeout: :infinity)
+
+    log("#{out_of_sync_guest_invitations_count} out of sync guest invitations")
+
+    # Team site transfers out of sync
+
+    respective_site_transfers_query =
+      from(
+        i in Plausible.Auth.Invitation,
+        where: i.site_id == parent_as(:site_transfer).site_id,
+        where: i.email == parent_as(:site_transfer).email,
+        where: i.role == :owner,
+        select: 1
+      )
+
+    out_of_sync_site_transfers_count =
+      from(
+        st in Plausible.Teams.SiteTransfer,
+        as: :site_transfer,
+        where: not exists(respective_site_transfers_query)
+      )
+      |> @repo.aggregate(:count, timeout: :infinity)
+
+    log("#{out_of_sync_site_transfers_count} out of sync team site transfers")
   end
 
   defp log(msg) do
