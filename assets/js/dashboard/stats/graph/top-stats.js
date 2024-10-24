@@ -31,13 +31,15 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
   const lastLoadTimestamp = useLastLoadContext()
   const site = useSiteContext()
 
+  const isComparison = query.comparison && data && data.comparing_from
+
   function tooltip(stat) {
     let statName = stat.name.toLowerCase()
     statName = stat.value === 1 ? statName.slice(0, -1) : statName
 
     return (
       <div>
-        {query.comparison && (
+        {isComparison && (
           <div className="whitespace-nowrap">
             {topStatNumberLong(stat.graph_metric, stat.value)} vs.{' '}
             {topStatNumberLong(stat.graph_metric, stat.comparison_value)}{' '}
@@ -50,7 +52,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
           </div>
         )}
 
-        {!query.comparison && (
+        {!isComparison && (
           <div className="whitespace-nowrap">
             {topStatNumberLong(stat.graph_metric, stat.value)} {statName}
           </div>
@@ -147,7 +149,7 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
               >
                 {topStatNumberShort(stat.graph_metric, stat.value)}
               </p>
-              {query.comparison && stat.change != null ? (
+              {!isComparison && stat.change != null ? (
                 <ChangeArrow
                   metric={stat.graph_metric}
                   change={stat.change}
@@ -155,14 +157,14 @@ export default function TopStats({ data, onMetricUpdate, tooltipBoundary }) {
                 />
               ) : null}
             </span>
-            {query.comparison ? (
+            {isComparison ? (
               <p className="text-xs dark:text-gray-100">
                 {formatDateRange(site, data.from, data.to)}
               </p>
             ) : null}
           </div>
 
-          {query.comparison ? (
+          {isComparison ? (
             <div>
               <p className="font-bold text-xl text-gray-500 dark:text-gray-400">
                 {topStatNumberShort(stat.graph_metric, stat.comparison_value)}
