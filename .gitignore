@@ -48,6 +48,12 @@ npm-debug.log
 # test coverage directory
 /assets/coverage
 
+# Playwright assets
+/assets/playwright-tests/.auth
+/assets/test-results/
+/assets/playwright-report/
+/assets/blob-report/
+
 # Since we are building assets from assets/,
 # we ignore priv/static. You may want to comment
 # this depending on your deployment strategy.

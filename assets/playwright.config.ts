@@ -1,4 +1,5 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test'
+import path from 'path'
 
 /**
  * Read environment variables from file.
@@ -26,26 +27,33 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    // baseURL: 'http://127.0.0.1:3000',
+    baseURL: 'http://localhost:8000',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    ...devices['Desktop Chrome']
   },
 
   /* Configure projects for major browsers */
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'setup',
+      testMatch: /global\.setup\.ts/,
     },
-    // },
+    {
+      name: 'chromium',
+      dependencies: ['setup'],
+      use: {
+        storageState: 'playwright-tests/.auth/user.json',
+      }
+    },
   ],
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'mix run phx.server',
+    command: 'mix phx.server',
     url: 'http://localhost:8000',
-    cwd: "..",
+    cwd: path.resolve(__dirname, '..'),
     reuseExistingServer: !process.env.CI,
   },
 });
