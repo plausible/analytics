@@ -85,7 +85,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
     test "add goal button is rendered", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/goals")
       resp = html_response(conn, 200)
-      assert element_exists?(resp, ~s/button#add-goal-button[phx-click="add-goal"]/)
+      assert element_exists?(resp, ~s/button#add-goal-button/)
     end
 
     test "search goals input is rendered", %{conn: conn, site: site} do

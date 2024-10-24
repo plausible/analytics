@@ -18,12 +18,16 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
     <div>
       <.filter_bar filter_text={@filter_text} placeholder="Search Goals">
         <.button
+          :if={connected?(@socket)}
           id="add-goal-button"
           phx-click="add-goal"
           mt?={false}
           x-data
           x-on:click={Modal.JS.preopen("goals-form-modal")}
         >
+          Add Goal
+        </.button>
+        <.button :if={not connected?(@socket)} id="add-goal-button" mt?={false}>
           Add Goal
         </.button>
       </.filter_bar>
