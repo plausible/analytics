@@ -74,6 +74,7 @@ Plausible.DataMigration.NumericIDs.html
 Plausible.DataMigration.PopulateEventSessionColumns.html
 Plausible.DataMigration.PostgresRepo.html
 Plausible.DataMigration.SiteImports.html
+Plausible.DataMigration.TeamsConsitencyCheck.html
 Plausible.DataMigration.VersionedSessions.html
 Plausible.DataMigration.html
 Plausible.DebugReplayInfo.html
@@ -454,8 +455,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-F9C2BBD2.js
-dist/sidebar_items-51B3C1CD.js
+dist/search_data-77945272.js
+dist/sidebar_items-094E9AFF.js
 index.html
 readme.html
 search.html
