@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './playwright'
 
-test('has site card', async ({ page }) => {
+test('site card', async ({ page }) => {
   await page.goto('/sites')
 
   const siteCard = page.locator("li[data-domain='dummy.site']")
@@ -9,4 +9,6 @@ test('has site card', async ({ page }) => {
   await siteCard.click()
 
   await page.waitForURL("/dummy.site")
+
+  await expect(page.locator("body")).toHaveText(/\d+\s+current visitors/)
 })
