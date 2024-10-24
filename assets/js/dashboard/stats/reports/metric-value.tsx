@@ -9,7 +9,7 @@ import {
   MetricFormatterShort,
   ValueType
 } from './metric-formatter'
-import { DashboardQuery } from '../../query'
+import { BreakdownResultMeta, DashboardQuery } from '../../query'
 import { useQueryContext } from '../../query-context'
 import { PlausibleSite, useSiteContext } from '../../site-context'
 
@@ -42,6 +42,7 @@ export default function MetricValue(props: {
   metric: Metric
   renderLabel: (query: DashboardQuery) => string
   formatter?: (value: ValueType) => string
+  meta: BreakdownResultMeta
 }) {
   const { query } = useQueryContext()
   const site = useSiteContext()
@@ -69,13 +70,13 @@ export default function MetricValue(props: {
         />
       }
     >
-      <span data-testid="metric-value">
+      <span className="cursor-default" data-testid="metric-value">
         {shortFormatter(value)}
         {comparison ? (
           <ChangeArrow
             change={comparison.change}
             metric={metric}
-            className="pl-2"
+            className="inline-block pl-1 w-4"
             hideNumber
           />
         ) : null}
@@ -89,13 +90,15 @@ function ComparisonTooltipContent({
   comparison,
   metric,
   metricLabel,
-  formatter
+  formatter,
+  meta
 }: {
   value: ValueType
   comparison: { value: ValueType; change: number } | null
   metric: Metric
   metricLabel: string
   formatter?: (value: ValueType) => string
+  meta: BreakdownResultMeta
 }) {
   const longFormatter = formatter ?? MetricFormatterLong[metric]
 
@@ -109,17 +112,36 @@ function ComparisonTooltipContent({
 
   if (comparison) {
     return (
-      <div className="whitespace-nowrap">
-        {longFormatter(value)} vs. {longFormatter(comparison.value)}
-        {label}
-        <ChangeArrow
-          metric={metric}
-          change={comparison.change}
-          className="pl-4 text-xs text-gray-100"
-        />
+      <div className="text-left whitespace-nowrap py-1 space-y-2">
+        <div>
+          <div className="flex items-center">
+            <span className="font-bold text-base">
+              {longFormatter(value)} {label}
+            </span>
+            <ChangeArrow
+              metric={metric}
+              change={comparison.change}
+              className="pl-4 text-xs text-gray-100"
+            />
+          </div>
+          <div className="font-normal text-xs">{meta.date_range_label}</div>
+        </div>
+        <div>vs</div>
+        <div>
+          <div className="font-bold text-base">
+            {longFormatter(comparison.value)} {label}
+          </div>
+          <div className="font-normal text-xs">
+            {meta.comparison_date_range_label}
+          </div>
+        </div>
       </div>
     )
   } else {
-    return <div className="whitespace-nowrap">{longFormatter(value)}</div>
+    return (
+      <div className="whitespace-nowrap">
+        {longFormatter(value)} {label}
+      </div>
+    )
   }
 }

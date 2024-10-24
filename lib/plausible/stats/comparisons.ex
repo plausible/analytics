@@ -97,19 +97,19 @@ defmodule Plausible.Stats.Comparisons do
   end
 
   defp get_comparison_date_range(source_query, %{mode: "year_over_year"} = options) do
-    source_date_range = Query.date_range(source_query)
+    source_date_range = Query.date_range(source_query, trim_trailing: true)
 
     start_date = Date.add(source_date_range.first, -365)
-    end_date = earliest(source_date_range.last, source_query.now) |> Date.add(-365)
+    end_date = source_date_range.last |> Date.add(-365)
 
     Date.range(start_date, end_date)
     |> maybe_match_day_of_week(source_date_range, options)
   end
 
   defp get_comparison_date_range(source_query, %{mode: "previous_period"} = options) do
-    source_date_range = Query.date_range(source_query)
+    source_date_range = Query.date_range(source_query, trim_trailing: true)
 
-    last = earliest(source_date_range.last, source_query.now)
+    last = source_date_range.last
     diff_in_days = Date.diff(source_date_range.first, last) - 1
 
     new_first = Date.add(source_date_range.first, diff_in_days)
@@ -121,10 +121,6 @@ defmodule Plausible.Stats.Comparisons do
 
   defp get_comparison_date_range(source_query, %{mode: "custom"} = options) do
     DateTimeRange.to_date_range(options.date_range, source_query.timezone)
-  end
-
-  defp earliest(a, b) do
-    if Date.compare(a, b) in [:eq, :lt], do: a, else: b
   end
 
   defp maybe_match_day_of_week(comparison_date_range, source_date_range, options) do

@@ -8,7 +8,7 @@ defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
   use Plausible.Stats.SQL.Fragments
 
-  alias Plausible.Stats.{Query, QueryRunner, QueryOptimizer}
+  alias Plausible.Stats.{Query, QueryRunner, QueryOptimizer, Comparisons}
 
   def breakdown(
         site,
@@ -40,6 +40,27 @@ defmodule Plausible.Stats.Breakdown do
 
     QueryRunner.run(site, query_with_metrics)
     |> build_breakdown_result(query_with_metrics, metrics)
+  end
+
+  def formatted_date_ranges(query) do
+    formatted = %{
+      date_range_label: format_date_range(query)
+    }
+
+    if query.include.comparisons do
+      comparison_date_range_label =
+        query
+        |> Comparisons.get_comparison_query(query.include.comparisons)
+        |> format_date_range()
+
+      Map.put(
+        formatted,
+        :comparison_date_range_label,
+        comparison_date_range_label
+      )
+    else
+      formatted
+    end
   end
 
   defp build_breakdown_result(query_result, query, metrics) do
@@ -135,4 +156,23 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp dimension_filters(_), do: []
+
+  defp format_date_range(%Query{} = query) do
+    query
+    |> Query.date_range(trim_trailing: true)
+    |> string_format_date_range()
+  end
+
+  defp string_format_date_range(%Date.Range{first: first, last: last}) when first == last do
+    Calendar.strftime(first, "%d %b")
+  end
+
+  defp string_format_date_range(%Date.Range{first: first, last: last})
+       when first.year == last.year do
+    "#{Calendar.strftime(first, "%d %b")} - #{Calendar.strftime(last, "%d %b")}"
+  end
+
+  defp string_format_date_range(%Date.Range{first: first, last: last}) do
+    "#{Calendar.strftime(first, "%d %b %Y")} - #{Calendar.strftime(last, "%d %b %Y")}"
+  end
 end

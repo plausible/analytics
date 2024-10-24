@@ -163,7 +163,7 @@ export default function ListReport({
         afterFetchData(response)
       }
 
-      setState({ loading: false, list: response.results })
+      setState({ loading: false, list: response.results, meta: response.meta })
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyLabel, query])
@@ -316,7 +316,7 @@ export default function ListReport({
           style={{ width: colMinWidth, minWidth: colMinWidth }}
         >
           <span className="font-medium text-sm dark:text-gray-200 text-right">
-            {metric.renderValue(listItem)}
+            {metric.renderValue(listItem, state.meta)}
           </span>
         </div>
       )
