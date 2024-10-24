@@ -88,10 +88,17 @@ defmodule Plausible.DataMigration.BackfillTeams do
           is_distinct(o.trial_expiry_date, t.trial_expiry_date) or
             is_distinct(o.accept_traffic_until, t.accept_traffic_until) or
             is_distinct(o.allow_next_upgrade_override, t.allow_next_upgrade_override) or
-            is_distinct(o.grace_period["id"], t.grace_period["id"]) or
-            is_distinct(o.grace_period["is_over"], t.grace_period["is_over"]) or
-            is_distinct(o.grace_period["end_date"], t.grace_period["end_date"]) or
-            is_distinct(o.grace_period["manual_lock"], t.grace_period["manual_lock"]),
+            (is_distinct(o.grace_period, t.grace_period) and
+               (is_distinct(o.grace_period["id"], t.grace_period["id"]) or
+                  (is_nil(o.grace_period["is_over"]) and t.grace_period["is_over"] == true) or
+                  (o.grace_period["is_over"] == true and t.grace_period["is_over"] == false) or
+                  (o.grace_period["is_over"] == false and t.grace_period["is_over"] == true) or
+                  is_distinct(o.grace_period["end_date"], t.grace_period["end_date"]) or
+                  (is_nil(o.grace_period["manual_lock"]) and t.grace_period["manual_lock"] == true) or
+                  (o.grace_period["manual_lock"] == true and
+                     t.grace_period["manual_lock"] == false) or
+                  (o.grace_period["manual_lock"] == false and
+                     t.grace_period["manual_lock"] == true))),
         preload: [team_memberships: {tm, user: o}]
       )
       |> @repo.all(timeout: :infinity)
