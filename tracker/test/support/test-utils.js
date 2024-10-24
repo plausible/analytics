@@ -31,7 +31,7 @@ exports.mockManyRequests = function(page, path, numberOfRequests) {
     let requestList = []
     const requestTimeoutTimer = setTimeout(() => resolve(requestList), 10000)
 
-    page.route('/api/event', (route, request) => {
+    page.route(path, (route, request) => {
       requestList.push(request)
       if (requestList.length === numberOfRequests) {
         clearTimeout(requestTimeoutTimer)
