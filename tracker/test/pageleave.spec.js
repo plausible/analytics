@@ -38,4 +38,16 @@ test.describe('pageleave extension', () => {
       {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/another-page`}
     ])
   });
+
+  test('sends pageleave with the manually overridden URL', async ({ page }) => {
+    await page.goto('/pageleave-manual.html');
+
+    await clickPageElementAndExpectEventRequests(page, '#pageview-trigger-custom-url', [
+      {n: 'pageview', u: 'https://example.com/custom/location'}
+    ])
+
+    await clickPageElementAndExpectEventRequests(page, '#navigate-away', [
+      {n: 'pageleave', u: 'https://example.com/custom/location'}
+    ])
+  });
 });
