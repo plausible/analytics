@@ -26,7 +26,7 @@ exports.metaKey = function() {
 
 // Mocks a specified number of HTTP requests with given path. Returns a promise that resolves to a
 // list of requests as soon as the specified number of requests is made, or 10 seconds has passed.
-exports.mockManyRequests = function(page, path, numberOfRequests) {
+const mockManyRequests = function(page, path, numberOfRequests) {
   return new Promise((resolve, _reject) => {
     let requestList = []
     const requestTimeoutTimer = setTimeout(() => resolve(requestList), 10000)
@@ -42,6 +42,8 @@ exports.mockManyRequests = function(page, path, numberOfRequests) {
   })
 }
 
+exports.mockManyRequests = mockManyRequests
+
 exports.expectCustomEvent = function (request, eventName, eventProps) {
   const payload = request.postDataJSON()
 
@@ -52,16 +54,26 @@ exports.expectCustomEvent = function (request, eventName, eventProps) {
   }
 }
 
-exports.clickPageElementAndExpectEventRequest = async function (page, locatorToClick, expectedBodyParams) {
-  const plausibleRequestMock = mockRequest(page, '/api/event')
+exports.clickPageElementAndExpectEventRequests = async function (page, locatorToClick, expectedBodySubsets) {
+  const numberOfRequests = expectedBodySubsets.length
+
+  const plausibleRequestMockList = mockManyRequests(page, '/api/event', numberOfRequests)
   await page.click(locatorToClick)
-  const plausibleRequest = await plausibleRequestMock;
+  const requests = await plausibleRequestMockList
 
-  expect(plausibleRequest.url()).toContain('/api/event')
+  expect(requests.length).toBe(numberOfRequests)
 
-  const body = plausibleRequest.postDataJSON()
+  expectedBodySubsets.forEach((bodySubset) => {
+    expect(requests.some((request) => {
+      return hasExpectedBodyParams(request, bodySubset)
+    })).toBe(true)
+  })
+}
 
-  Object.keys(expectedBodyParams).forEach((key) => {
-    expect(body[key]).toEqual(expectedBodyParams[key])
+function hasExpectedBodyParams(request, expectedBodyParams) {
+  const body = request.postDataJSON()
+
+  return Object.keys(expectedBodyParams).every((key) => {
+    return body[key] === expectedBodyParams[key]
   })
 }
