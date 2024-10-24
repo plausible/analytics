@@ -237,17 +237,17 @@ export default class SiteSwitcher extends React.Component {
       <div className="relative inline-block text-left mr-2 sm:mr-4">
         <button
           ref={this.siteSwitcherButton}
-          className={`inline-flex items-center md:text-lg w-full rounded-md py-2 leading-5 font-bold text-gray-700 dark:text-gray-300 focus:outline-none transition ease-in-out duration-150 ${hoverClass}`}
+          className={`inline-flex items-center rounded-md h-9 leading-5 font-bold text-gray-700 dark:text-gray-300 focus:outline-none transition ease-in-out duration-150 ${hoverClass}`}
         >
           <Favicon
             domain={this.props.site.domain}
-            className="w-4 mr-1 md:mr-2 align-middle w-4 mr-2 align-middle"
-          ></Favicon>
+            className="w-4 mr-2 align-middle w-4"
+          />
           <span className="hidden sm:inline-block">
             {this.props.site.domain}
           </span>
           {this.props.loggedIn && (
-            <ChevronDownIcon className="-mr-1 ml-1 md:ml-2 h-5 w-5" />
+            <ChevronDownIcon className="ml-2 h-4 w-4 shrink-0" />
           )}
         </button>
 
@@ -261,7 +261,7 @@ export default class SiteSwitcher extends React.Component {
           leaveTo="opacity-0 scale-95"
         >
           <div
-            className="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg"
+            className="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg z-10"
             ref={(node) => (this.dropDownNode = node)}
           >
             <div className="rounded-md bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5">

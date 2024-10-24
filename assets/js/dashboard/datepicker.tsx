@@ -175,7 +175,11 @@ function ComparisonMenu({
   const { query } = useQueryContext()
 
   return (
-    <DropdownMenuWrapper id="compare-menu" data-testid="compare-menu">
+    <DropdownMenuWrapper
+      id="compare-menu"
+      data-testid="compare-menu"
+      className="md:left-auto md:w-56"
+    >
       <DropdownLinkGroup>
         {[
           ComparisonMode.off,
@@ -236,6 +240,7 @@ function QueryPeriodsMenu({
       id="datemenu"
       data-testid="datemenu"
       innerContainerClassName="date-options"
+      className="md:left-auto md:w-56"
     >
       {groups.map((group, index) => (
         <DropdownLinkGroup key={index} className="date-options-group">
@@ -348,6 +353,8 @@ export default function QueryPeriodPicker() {
     <div className="flex ml-auto pl-2">
       <MovePeriodArrows />
       <ToggleDropdownButton
+        withDropdownIndicator
+        className="min-w-36 md:relative lg:w-48"
         currentOption={<DisplaySelectedPeriod />}
         ref={dropdownRef}
         onClick={toggleDateMenu}
@@ -379,6 +386,8 @@ export default function QueryPeriodPicker() {
             <span className="hidden md:inline px-1">vs.</span>
           </div>
           <ToggleDropdownButton
+            withDropdownIndicator
+            className="min-w-36 md:relative lg:w-48"
             ref={compareDropdownRef}
             currentOption={
               query.comparison === ComparisonMode.custom &&
