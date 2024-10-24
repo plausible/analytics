@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
         >
           Add Goal
         </.button>
-        <.button :if={connected?(@socket)} id="add-goal-button" mt?={false}>
+        <.button :if={not connected?(@socket)} id="add-goal-button" mt?={false}>
           Add Goal
         </.button>
       </.filter_bar>
