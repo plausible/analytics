@@ -11,6 +11,14 @@
 
 <body>
   <a id="navigate-away" href="/manual.html">Navigate away</a>
+
+  <button id="history-nav">Navigate with history</button>
+
+  <script>
+    document.getElementById('history-nav').addEventListener('click', () => {
+      history.pushState({ page: 2 }, 'Another Page', '/another-page');
+    });
+  </script>
 </body>
 
 </html>
