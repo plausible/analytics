@@ -1,7 +1,7 @@
 /* eslint-disable playwright/expect-expect */
 /* eslint-disable playwright/no-skipped-test */
 const { clickPageElementAndExpectEventRequests, mockRequest } = require('./support/test-utils')
-const { test } = require('@playwright/test');
+const { test, expect } = require('@playwright/test');
 const { LOCAL_SERVER_ADDR } = require('./support/server');
 
 test.describe('pageleave extension', () => {
@@ -49,5 +49,15 @@ test.describe('pageleave extension', () => {
     await clickPageElementAndExpectEventRequests(page, '#navigate-away', [
       {n: 'pageleave', u: 'https://example.com/custom/location'}
     ])
+  });
+
+  test('does not send pageleave when pageview was not sent in manual mode', async ({ page }) => {
+    await page.goto('/pageleave-manual.html');
+
+    const pageleaveRequestMock = mockRequest(page, '/api/event')
+
+    await page.click('#navigate-away');
+
+    expect(await pageleaveRequestMock, "should not have sent event").toBeNull()
   });
 });
