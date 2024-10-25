@@ -45,6 +45,7 @@ export default defineConfig({
       dependencies: ['setup'],
       use: {
         storageState: 'playwright-tests/.auth/user.json',
+        viewport: { width: 1280, height: 2200 },
       }
     },
   ],
