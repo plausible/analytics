@@ -193,7 +193,7 @@ export default function Pages() {
   }
 
   return (
-    <div>
+    <div data-testid="section::pages">
       {/* Header Container */}
       <div className="w-full flex justify-between">
         <div className="flex gap-x-1">

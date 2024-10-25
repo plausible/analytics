@@ -238,7 +238,7 @@ export default function SourceList() {
   }
 
   return (
-    <div>
+    <div data-testid="section::sources">
       {/* Header Container */}
       <div className="w-full flex justify-between">
         <div className="flex gap-x-1">

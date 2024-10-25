@@ -366,7 +366,7 @@ export default function Devices() {
   }
 
   return (
-    <div>
+    <div data-testid="section::devices">
       <div className="flex justify-between w-full">
         <div className="flex gap-x-1">
           <h3 className="font-bold dark:text-gray-100">Devices</h3>
