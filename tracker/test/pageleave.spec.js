@@ -58,4 +58,38 @@ test.describe('pageleave extension', () => {
       {n: 'pageleave'}
     ])
   });
+
+  test('script.exclusions.hash.pageleave.js sends pageleave only from URLs where a pageview was sent', async ({ page }) => {
+    const pageBaseURL = `${LOCAL_SERVER_ADDR}/pageleave-hash-exclusions.html`
+    
+    const pageviewRequestMock = mockRequest(page, '/api/event')
+    await page.goto('/pageleave-hash-exclusions.html');
+    await pageviewRequestMock;
+
+    // After the initial pageview is sent, navigate to ignored page ->
+    // pageleave event is sent from the initial page URL
+    await clickPageElementAndExpectEventRequests(page, '#ignored-hash-link', [
+      {n: 'pageleave', u: pageBaseURL, h: 1}
+    ])
+
+    // Navigate from ignored page to a tracked page ->
+    // no pageleave from the current page, pageview on the next page
+    await clickPageElementAndExpectEventRequests(
+      page,
+      '#hash-link-1',
+      [{n: 'pageview', u: `${pageBaseURL}#hash1`, h: 1}],
+      [{n: 'pageleave'}]
+    )
+
+    // Navigate from a tracked page to another tracked page ->
+    // pageleave with the last page URL, pageview with the new URL
+    await clickPageElementAndExpectEventRequests(
+      page,
+      '#hash-link-2',
+      [
+        {n: 'pageleave', u: `${pageBaseURL}#hash1`, h: 1},
+        {n: 'pageview', u: `${pageBaseURL}#hash2`, h: 1}
+      ],
+    )
+  });
 });
