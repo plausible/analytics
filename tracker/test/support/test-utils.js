@@ -54,18 +54,25 @@ exports.expectCustomEvent = function (request, eventName, eventProps) {
   }
 }
 
-exports.clickPageElementAndExpectEventRequests = async function (page, locatorToClick, expectedBodySubsets) {
-  const numberOfRequests = expectedBodySubsets.length
-
-  const plausibleRequestMockList = mockManyRequests(page, '/api/event', numberOfRequests)
+exports.clickPageElementAndExpectEventRequests = async function (page, locatorToClick, expectedBodySubsets, refutedBodySubsets = []) {
+  const requestsToExpect = expectedBodySubsets.length
+  const requestsToAwait = requestsToExpect + refutedBodySubsets.length
+  
+  const plausibleRequestMockList = mockManyRequests(page, '/api/event', requestsToAwait)
   await page.click(locatorToClick)
   const requests = await plausibleRequestMockList
 
-  expect(requests.length).toBe(numberOfRequests)
+  expect(requests.length).toBe(requestsToExpect)
 
   expectedBodySubsets.forEach((bodySubset) => {
     expect(requests.some((request) => {
       return hasExpectedBodyParams(request, bodySubset)
+    })).toBe(true)
+  })
+
+  refutedBodySubsets.forEach((bodySubset) => {
+    expect(requests.every((request) => {
+      return !hasExpectedBodyParams(request, bodySubset)
     })).toBe(true)
   })
 }

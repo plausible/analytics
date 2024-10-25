@@ -54,10 +54,8 @@ test.describe('pageleave extension', () => {
   test('does not send pageleave when pageview was not sent in manual mode', async ({ page }) => {
     await page.goto('/pageleave-manual.html');
 
-    const pageleaveRequestMock = mockRequest(page, '/api/event')
-
-    await page.click('#navigate-away');
-
-    expect(await pageleaveRequestMock, "should not have sent event").toBeNull()
+    await clickPageElementAndExpectEventRequests(page, '#navigate-away', [], [
+      {n: 'pageleave'}
+    ])
   });
 });
