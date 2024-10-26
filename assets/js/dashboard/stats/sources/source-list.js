@@ -179,7 +179,7 @@ export default function SourceList() {
 
         <Menu as="div" className="relative inline-block text-left">
           <div>
-            <Menu.Button className="inline-flex justify-between focus:outline-none">
+            <Menu.Button className="inline-flex justify-between focus:outline-none" data-testid="campaign-menu">
               <span className={currentTab.startsWith('utm_') ? activeClass : defaultClass}>{buttonText}</span>
               <ChevronDownIcon className="-mr-1 ml-1 h-4 w-4" aria-hidden="true" />
             </Menu.Button>
@@ -198,7 +198,7 @@ export default function SourceList() {
               <div className="py-1">
                 {dropdownOptions.map((option) => {
                   return (
-                    <Menu.Item key={option}>
+                    <Menu.Item key={option} name={UTM_TAGS[option].label}>
                       {({ active }) => (
                         <span
                           onClick={setTab(option)}

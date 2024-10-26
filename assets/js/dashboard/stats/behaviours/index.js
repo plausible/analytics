@@ -168,9 +168,9 @@ export default function Behaviours({ importedDataInView }) {
     }
 
     return (
-      <div className={className} onClick={setTab}>
+      <button className={className} onClick={setTab}>
         {displayName}
-      </div>
+      </button>
     )
   }
 

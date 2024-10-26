@@ -1,5 +1,22 @@
 import { test, expect, Page } from './playwright'
 
+const MODALS = [
+  { key: 'UTM Medium', sectionSelector: 'section::sources' },
+  { key: 'UTM Source', sectionSelector: 'section::sources' },
+  { key: 'UTM Campaign', sectionSelector: 'section::sources' },
+  { key: 'Top Pages', sectionSelector: 'section::pages' },
+  { key: 'Entry Pages', sectionSelector: 'section::pages' },
+  { key: 'Exit Pages', sectionSelector: 'section::pages' },
+  { key: 'Map', sectionSelector: 'section::locations' },
+  { key: 'Countries', sectionSelector: 'section::locations' },
+  { key: 'Regions', sectionSelector: 'section::locations' },
+  { key: 'Cities', sectionSelector: 'section::locations' },
+  { key: 'Browser', sectionSelector: 'section::devices' },
+  { key: 'OS', sectionSelector: 'section::devices' },
+  { key: 'Size', sectionSelector: 'section::devices' },
+  { key: 'Goals', sectionSelector: 'section::behaviors' },
+]
+
 test.beforeEach(async ({page}) => {
   await page.goto('/dummy.site')
   await waitForData(page)
@@ -27,12 +44,17 @@ test('can navigate the dashboard via keyboard shortcuts', async ({ page }) => {
 
 // test('adding filters')
 
-test('can open all modals', async ({ page }) => {
-  await checkBreakdownModal(page, 'section::sources')
-  await checkBreakdownModal(page, 'section::pages')
-  await checkBreakdownModal(page, 'section::locations')
-  await checkBreakdownModal(page, 'section::devices')
-  await checkBreakdownModal(page, 'section::behaviors')
+MODALS.forEach(({ key, sectionSelector }) => {
+  test(`can open ${key} modal`, async ({ page }) => {
+    if (sectionSelector === 'section::sources') {
+      await page.getByTestId("campaign-menu").click()
+      await page.getByRole('menuitem', { name: key }).click()
+    } else {
+      await page.getByRole('button', { name: key }).click()
+    }
+
+    await checkBreakdownModal(page, sectionSelector)
+  })
 })
 
 test('with revenue goal filter applied sees revenue metrics in top stats', async ({ page }) => {
