@@ -69,9 +69,11 @@ test('with revenue goal filter applied sees revenue metrics in top stats', async
   await expect(page.getByTestId("section::top-stats")).toHaveText(/Average revenue/)
 })
 
-// test('dashboard comparison with previous period')
-// test('realtime dashboard')
-
+test('dashboard comparison with previous period', async ({ page }) => {
+  await page.getByTestId('date-menu-button').click()
+  await page.getByTestId('datemenu').getByRole('link', { name: /Compare/ }).click()
+  await waitForData(page)
+})
 
 async function waitForData(page: Page) {
   const loading = page.locator(".loading")
