@@ -317,6 +317,8 @@ native_stats_range
 end)
 |> Plausible.TestUtils.populate_stats()
 
+Plausible.Props.allow(site, ["url", "logged_in", "is_customer", "amount"])
+
 site_import =
   site
   |> Plausible.Imported.SiteImport.create_changeset(user, %{

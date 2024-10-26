@@ -15,6 +15,7 @@ const MODALS = [
   { key: 'OS', sectionSelector: 'section::devices' },
   { key: 'Size', sectionSelector: 'section::devices' },
   { key: 'Goals', sectionSelector: 'section::behaviors' },
+  { key: 'Properties', sectionSelector: 'section::behaviors' },
 ]
 
 test.beforeEach(async ({page}) => {
