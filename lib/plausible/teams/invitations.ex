@@ -195,7 +195,8 @@ defmodule Plausible.Teams.Invitations do
     |> Teams.SiteTransfer.changeset(initiator: initiator, email: invitee_email)
     |> Repo.insert(
       on_conflict: [set: [updated_at: now]],
-      conflict_target: [:email, :site_id]
+      conflict_target: [:email, :site_id],
+      returning: true
     )
   end
 
@@ -301,7 +302,8 @@ defmodule Plausible.Teams.Invitations do
             |> Teams.GuestMembership.changeset(site, old_guest_membership.role)
             |> Repo.insert(
               on_conflict: [set: [updated_at: now, role: old_guest_membership.role]],
-              conflict_target: [:team_membership_id, :site_id]
+              conflict_target: [:team_membership_id, :site_id],
+              returning: true
             )
         end
 
@@ -322,7 +324,8 @@ defmodule Plausible.Teams.Invitations do
         |> Teams.GuestMembership.changeset(site, :editor)
         |> Repo.insert(
           on_conflict: [set: [updated_at: now, role: :editor]],
-          conflict_target: [:team_membership_id, :site_id]
+          conflict_target: [:team_membership_id, :site_id],
+          returning: true
         )
     end
 
@@ -460,7 +463,11 @@ defmodule Plausible.Teams.Invitations do
 
     team
     |> Teams.Invitation.changeset(email: invitee_email, role: :guest, inviter: inviter)
-    |> Repo.insert(on_conflict: [set: [updated_at: now]], conflict_target: [:team_id, :email])
+    |> Repo.insert(
+      on_conflict: [set: [updated_at: now]],
+      conflict_target: [:team_id, :email],
+      returning: true
+    )
   end
 
   defp create_guest_invitation(team_invitation, site, role) do
@@ -470,7 +477,8 @@ defmodule Plausible.Teams.Invitations do
     |> Teams.GuestInvitation.changeset(site, role)
     |> Repo.insert(
       on_conflict: [set: [updated_at: now]],
-      conflict_target: [:team_invitation_id, :site_id]
+      conflict_target: [:team_invitation_id, :site_id],
+      returning: true
     )
   end
 
@@ -501,7 +509,8 @@ defmodule Plausible.Teams.Invitations do
     |> Teams.Membership.changeset(user, role)
     |> Repo.insert(
       on_conflict: [set: [updated_at: now]],
-      conflict_target: [:team_id, :user_id]
+      conflict_target: [:team_id, :user_id],
+      returning: true
     )
   end
 
