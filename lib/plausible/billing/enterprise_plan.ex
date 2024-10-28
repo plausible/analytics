@@ -2,6 +2,8 @@ defmodule Plausible.Billing.EnterprisePlan do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   @required_fields [
     :user_id,
     :paddle_plan_id,
