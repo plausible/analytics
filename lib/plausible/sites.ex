@@ -10,6 +10,7 @@ defmodule Plausible.Sites do
   alias Plausible.Repo
   alias Plausible.Site
   alias Plausible.Site.SharedLink
+  alias Plausible.Teams
 
   require Plausible.Site.UserPreference
 
@@ -75,6 +76,181 @@ defmodule Plausible.Sites do
   def list(user, pagination_params, opts \\ []) do
     domain_filter = Keyword.get(opts, :filter_by_domain)
 
+    team_membership_query =
+      from tm in Teams.Membership,
+        inner_join: t in assoc(tm, :team),
+        inner_join: s in assoc(t, :sites),
+        where: tm.user_id == ^user.id and tm.role != :guest,
+        select: %{site_id: s.id, entry_type: "site"}
+
+    guest_membership_query =
+      from tm in Teams.Membership,
+        inner_join: gm in assoc(tm, :guest_memberships),
+        inner_join: s in assoc(gm, :site),
+        where: tm.user_id == ^user.id and tm.role == :guest,
+        select: %{site_id: s.id, entry_type: "site"}
+
+    union_query =
+      from s in team_membership_query,
+        union_all: ^guest_membership_query
+
+    from(u in subquery(union_query),
+      inner_join: s in Plausible.Site,
+      on: u.site_id == s.id,
+      left_join: up in Site.UserPreference,
+      on: up.site_id == s.id,
+      select: %{
+        s
+        | entry_type:
+            selected_as(
+              fragment(
+                """
+                CASE
+                  WHEN ? IS NOT NULL THEN 'pinned_site'
+                  ELSE ?
+                END
+                """,
+                up.pinned_at,
+                u.entry_type
+              ),
+              :entry_type
+            ),
+          pinned_at: selected_as(up.pinned_at, :pinned_at)
+      },
+      order_by: [
+        asc: selected_as(:entry_type),
+        desc: selected_as(:pinned_at),
+        asc: s.domain
+      ]
+    )
+    |> maybe_filter_by_domain(domain_filter)
+    |> Repo.paginate(pagination_params)
+  end
+
+  @role_type Plausible.Auth.Invitation.__schema__(:type, :role)
+
+  @spec list_with_invitations(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
+  def list_with_invitations(user, pagination_params, opts \\ []) do
+    domain_filter = Keyword.get(opts, :filter_by_domain)
+
+    team_membership_query =
+      from tm in Teams.Membership,
+        inner_join: t in assoc(tm, :team),
+        inner_join: s in assoc(t, :sites),
+        where: tm.user_id == ^user.id and tm.role != :guest,
+        select: %{
+          site_id: s.id,
+          entry_type: "site",
+          invitation_id: 0,
+          invitation_role: nil,
+          transfer_id: 0
+        }
+
+    guest_membership_query =
+      from(tm in Teams.Membership,
+        inner_join: gm in assoc(tm, :guest_memberships),
+        inner_join: s in assoc(gm, :site),
+        where: tm.user_id == ^user.id and tm.role == :guest,
+        select: %{
+          site_id: s.id,
+          entry_type: "site",
+          invitation_id: 0,
+          invitation_role: nil,
+          transfer_id: 0
+        }
+      )
+
+    guest_invitation_query =
+      from ti in Teams.Invitation,
+        inner_join: gi in assoc(ti, :guest_invitations),
+        inner_join: s in assoc(gi, :site),
+        where: ti.email == ^user.email and ti.role == :guest,
+        select: %{
+          site_id: s.id,
+          entry_type: "invitation",
+          invitation_id: ti.id,
+          invitation_role:
+            fragment(
+              """
+              CASE
+                WHEN ? = 'editor' THEN 'admin'
+                ELSE ?
+              END
+              """,
+              gi.role,
+              gi.role
+            ),
+          transfer_id: 0
+        }
+
+    site_transfer_query =
+      from st in Teams.SiteTransfer,
+        inner_join: s in assoc(st, :site),
+        where: st.email == ^user.email,
+        select: %{
+          site_id: s.id,
+          entry_type: "invitation",
+          invitation_id: 0,
+          invitation_role: "owner",
+          transfer_id: st.id
+        }
+
+    union_query =
+      from s in team_membership_query,
+        union_all: ^guest_membership_query,
+        union_all: ^guest_invitation_query,
+        union_all: ^site_transfer_query
+
+    from(u in subquery(union_query),
+      inner_join: s in Plausible.Site,
+      on: u.site_id == s.id,
+      left_join: up in Site.UserPreference,
+      on: up.site_id == s.id,
+      left_join: ti in Teams.Invitation,
+      on: ti.id == u.invitation_id,
+      left_join: st in Teams.SiteTransfer,
+      on: st.id == u.transfer_id,
+      select: %{
+        s
+        | entry_type:
+            selected_as(
+              fragment(
+                """
+                CASE
+                  WHEN ? IS NOT NULL THEN 'pinned_site'
+                  ELSE ?
+                END
+                """,
+                up.pinned_at,
+                u.entry_type
+              ),
+              :entry_type
+            ),
+          pinned_at: selected_as(up.pinned_at, :pinned_at),
+          invitations: [
+            %Plausible.Auth.Invitation{
+              invitation_id: coalesce(ti.invitation_id, st.transfer_id),
+              email: coalesce(ti.email, st.email),
+              role: type(coalesce(u.invitation_role, "owner"), ^@role_type),
+              site_id: s.id,
+              site: s
+            }
+          ]
+      },
+      order_by: [
+        asc: selected_as(:entry_type),
+        desc: selected_as(:pinned_at),
+        asc: s.domain
+      ]
+    )
+    |> maybe_filter_by_domain(domain_filter)
+    |> Repo.paginate(pagination_params)
+  end
+
+  @spec old_list(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
+  def old_list(user, pagination_params, opts \\ []) do
+    domain_filter = Keyword.get(opts, :filter_by_domain)
+
     from(s in Site,
       left_join: up in Site.UserPreference,
       on: up.site_id == s.id and up.user_id == ^user.id,
@@ -104,8 +280,8 @@ defmodule Plausible.Sites do
     |> Repo.paginate(pagination_params)
   end
 
-  @spec list_with_invitations(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
-  def list_with_invitations(user, pagination_params, opts \\ []) do
+  @spec old_list_with_invitations(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
+  def old_list_with_invitations(user, pagination_params, opts \\ []) do
     domain_filter = Keyword.get(opts, :filter_by_domain)
 
     result =

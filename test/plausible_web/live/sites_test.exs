@@ -30,6 +30,8 @@ defmodule PlausibleWeb.Live.SitesTest do
           role: :owner
         )
 
+      Plausible.Teams.Invitations.invite_sync(site, invitation)
+
       {:ok, _lv, html} = live(conn, "/sites")
 
       invitation_data = get_invitation_data(html)
