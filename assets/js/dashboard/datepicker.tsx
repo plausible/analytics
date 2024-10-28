@@ -365,6 +365,7 @@ export default function QueryPeriodPicker() {
               navigate({ search: getSearchToApplyCustomDates(selection) })
             }
             minDate={site.statsBegin}
+            maxDate={new Date().toISOString()}
             defaultDates={
               query.to && query.from
                 ? [formatISO(query.from), formatISO(query.to)]
@@ -406,6 +407,7 @@ export default function QueryPeriodPicker() {
                   })
                 }
                 minDate={site.statsBegin}
+                maxDate={new Date().toISOString()}
                 defaultDates={
                   query.compare_from && query.compare_to
                     ? [
