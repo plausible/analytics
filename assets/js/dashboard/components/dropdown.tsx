@@ -1,7 +1,6 @@
 /** @format */
 
 import React, {
-  AriaAttributes,
   DetailedHTMLProps,
   forwardRef,
   HTMLAttributes,
@@ -18,32 +17,60 @@ import {
 export const ToggleDropdownButton = forwardRef<
   HTMLDivElement,
   {
+    variant?: 'ghost' | 'button'
+    withDropdownIndicator?: boolean
+    className?: string
     currentOption: ReactNode
     children: ReactNode
     onClick: () => void
-    dropdownContainerProps: AriaAttributes
+    dropdownContainerProps: DetailedHTMLProps<
+      HTMLAttributes<HTMLButtonElement>,
+      HTMLButtonElement
+    >
   }
->(({ currentOption, children, onClick, dropdownContainerProps }, ref) => {
-  return (
-    <div className="min-w-32 md:w-48 md:relative" ref={ref}>
-      <button
-        onClick={onClick}
-        className="w-full flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-2 md:px-3
-      py-2 leading-tight cursor-pointer text-xs md:text-sm text-gray-800
-      dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900"
-        tabIndex={0}
-        aria-haspopup="true"
-        {...dropdownContainerProps}
-      >
-        <span className="truncate mr-1 md:mr-2">
-          <span className="font-medium">{currentOption}</span>
-        </span>
-        <ChevronDownIcon className="hidden sm:inline-block h-4 w-4 md:h-5 md:w-5 text-gray-500" />
-      </button>
-      {children}
-    </div>
-  )
-})
+>(
+  (
+    {
+      className,
+      currentOption,
+      withDropdownIndicator,
+      children,
+      onClick,
+      dropdownContainerProps,
+      ...props
+    },
+    ref
+  ) => {
+    const { variant } = { variant: 'button', ...props }
+    const sharedButtonClass =
+      'flex items-center rounded text-sm leading-tight px-2 py-2 h-9'
+
+    const buttonClass = {
+      ghost:
+        'text-gray-500 hover:text-gray-800 hover:bg-gray-200 dark:hover:text-gray-200 dark:hover:bg-gray-900',
+      button:
+        'w-full justify-between bg-white dark:bg-gray-800 shadow text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900'
+    }[variant]
+
+    return (
+      <div className={className} ref={ref}>
+        <button
+          onClick={onClick}
+          className={classNames(sharedButtonClass, buttonClass)}
+          tabIndex={0}
+          aria-haspopup="true"
+          {...dropdownContainerProps}
+        >
+          <span className="truncate block font-medium">{currentOption}</span>
+          {!!withDropdownIndicator && (
+            <ChevronDownIcon className="hidden lg:inline-block h-4 w-4 md:h-5 md:w-5 ml-1 md:ml-2 text-gray-500" />
+          )}
+        </button>
+        {children}
+      </div>
+    )
+  }
+)
 
 export const DropdownMenuWrapper = forwardRef<
   HTMLDivElement,
@@ -57,7 +84,7 @@ export const DropdownMenuWrapper = forwardRef<
       ref={ref}
       {...props}
       className={classNames(
-        'absolute w-full left-0 right-0 md:w-56 md:top-auto md:left-auto md:right-0 mt-2 origin-top-right z-10',
+        'absolute left-0 right-0 mt-2 origin-top-right z-10',
         className
       )}
     >
