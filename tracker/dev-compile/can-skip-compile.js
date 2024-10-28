@@ -11,7 +11,7 @@ const COMPILE_DEPENDENCIES = [
   path.join(__dirname, '../src/customEvents.js')
 ]
 
-async function currentHash() {
+function currentHash() {
   const combinedHash = crypto.createHash('sha256');
 
   for (const filePath of COMPILE_DEPENDENCIES) {
@@ -39,8 +39,8 @@ function lastHash() {
  * will be updated. Compilation can be skipped if the hash hasn't changed since
  * the last execution.
  */
-exports.canSkipCompile = async function() {
-  const current = await currentHash()
+exports.canSkipCompile = function() {
+  const current = currentHash()
   const last = lastHash()
 
   if (current === last) {
