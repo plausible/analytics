@@ -302,11 +302,12 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   defp upgrade_call_to_action(assigns) do
     billable_user = Plausible.Users.with_subscription(assigns.billable_user)
 
-    upgrade_assistance_required? = case Plans.get_subscription_plan(billable_user.subscription) do
-      %Plausible.Billing.Plan{kind: :business} -> true
-      %Plausible.Billing.EnterprisePlan{} -> true
-      _ -> false
-    end
+    upgrade_assistance_required? =
+      case Plans.get_subscription_plan(billable_user.subscription) do
+        %Plausible.Billing.Plan{kind: :business} -> true
+        %Plausible.Billing.EnterprisePlan{} -> true
+        _ -> false
+      end
 
     cond do
       assigns.billable_user.id !== assigns.current_user.id ->
