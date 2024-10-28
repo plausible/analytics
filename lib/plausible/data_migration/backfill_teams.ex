@@ -17,7 +17,9 @@ defmodule Plausible.DataMigration.BackfillTeams do
     end
   end
 
-  def run() do
+  def run(opts \\ []) do
+    dry_run? = Keyword.get(opts, :dry_run?, true)
+
     # Teams backfill
     db_url =
       System.get_env(
@@ -27,10 +29,10 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     @repo.start(db_url, pool_size: 2 * @max_concurrency)
 
-    backfill()
+    backfill(dry_run?)
   end
 
-  defp backfill() do
+  defp backfill(dry_run?) do
     orphaned_teams =
       from(
         t in Plausible.Teams.Team,
@@ -45,9 +47,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     log("Found #{length(orphaned_teams)} orphaned teams...")
 
-    delete_orphaned_teams(orphaned_teams)
+    if not dry_run? do
+      delete_orphaned_teams(orphaned_teams)
 
-    log("Deleted orphaned teams")
+      log("Deleted orphaned teams")
+    end
 
     sites_without_teams =
       from(
@@ -62,9 +66,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     log("Found #{length(sites_without_teams)} sites without teams...")
 
-    teams_count = backfill_teams(sites_without_teams)
+    if not dry_run? do
+      teams_count = backfill_teams(sites_without_teams)
 
-    log("Backfilled #{teams_count} teams.")
+      log("Backfilled #{teams_count} teams.")
+    end
 
     owner_site_memberships_query =
       from(
@@ -90,9 +96,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
       "Found #{length(users_with_subscriptions_without_sites)} users with subscriptions without sites..."
     )
 
-    teams_count = backfill_teams_for_users(users_with_subscriptions_without_sites)
+    if not dry_run? do
+      teams_count = backfill_teams_for_users(users_with_subscriptions_without_sites)
 
-    log("Backfilled #{teams_count} teams from users with subscriptions without sites.")
+      log("Backfilled #{teams_count} teams from users with subscriptions without sites.")
+    end
 
     # Stale teams sync
 
@@ -123,11 +131,13 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     log("Found #{length(stale_teams)} teams which have fields out of sync...")
 
-    sync_teams(stale_teams)
+    if not dry_run? do
+      sync_teams(stale_teams)
+
+      log("Brought out of sync teams up to date.")
+    end
 
     # Subsciprtions backfill
-
-    log("Brought out of sync teams up to date.")
 
     subscriptions_without_teams =
       from(
@@ -143,9 +153,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     log("Found #{length(subscriptions_without_teams)} subscriptions without team...")
 
-    backfill_subscriptions(subscriptions_without_teams)
+    if not dry_run? do
+      backfill_subscriptions(subscriptions_without_teams)
 
-    log("All subscriptions are linked to a team now.")
+      log("All subscriptions are linked to a team now.")
+    end
 
     # Enterprise plans backfill
 
@@ -163,9 +175,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     log("Found #{length(enterprise_plans_without_teams)} enterprise plans without team...")
 
-    backfill_enterprise_plans(enterprise_plans_without_teams)
+    if not dry_run? do
+      backfill_enterprise_plans(enterprise_plans_without_teams)
 
-    log("All enterprise plans are linked to a team now.")
+      log("All enterprise plans are linked to a team now.")
+    end
 
     # Guest Memberships cleanup
 
@@ -190,17 +204,19 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     log("Found #{length(guest_memberships_to_remove)} guest memberships to remove...")
 
-    team_ids_to_prune = remove_guest_memberships(guest_memberships_to_remove)
+    if not dry_run? do
+      team_ids_to_prune = remove_guest_memberships(guest_memberships_to_remove)
 
-    log("Pruning guest team memberships for #{length(team_ids_to_prune)} teams...")
+      log("Pruning guest team memberships for #{length(team_ids_to_prune)} teams...")
 
-    from(t in Teams.Team, where: t.id in ^team_ids_to_prune)
-    |> @repo.all(timeout: :infinity)
-    |> Enum.each(fn team ->
-      Plausible.Teams.Memberships.prune_guests(team)
-    end)
+      from(t in Teams.Team, where: t.id in ^team_ids_to_prune)
+      |> @repo.all(timeout: :infinity)
+      |> Enum.each(fn team ->
+        Plausible.Teams.Memberships.prune_guests(team)
+      end)
 
-    log("Guest memberships cleared.")
+      log("Guest memberships cleared.")
+    end
 
     # Guest Memberships backfill
 
@@ -230,9 +246,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
       "Found #{length(site_memberships_to_backfill)} site memberships without guest membership..."
     )
 
-    backfill_guest_memberships(site_memberships_to_backfill)
+    if not dry_run? do
+      backfill_guest_memberships(site_memberships_to_backfill)
 
-    log("Backfilled missing guest memberships.")
+      log("Backfilled missing guest memberships.")
+    end
 
     # Stale guest memberships sync
 
@@ -253,9 +271,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     log("Found #{length(stale_guest_memberships)} guest memberships with role out of sync...")
 
-    sync_guest_memberships(stale_guest_memberships)
+    if not dry_run? do
+      sync_guest_memberships(stale_guest_memberships)
 
-    log("All guest memberships are up to date now.")
+      log("All guest memberships are up to date now.")
+    end
 
     # Guest invitations cleanup
 
@@ -281,17 +301,19 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     log("Found #{length(guest_invitations_to_remove)} guest invitations to remove...")
 
-    team_ids_to_prune = remove_guest_invitations(guest_invitations_to_remove)
+    if not dry_run? do
+      team_ids_to_prune = remove_guest_invitations(guest_invitations_to_remove)
 
-    log("Pruning guest team invitations for #{length(team_ids_to_prune)} teams...")
+      log("Pruning guest team invitations for #{length(team_ids_to_prune)} teams...")
 
-    from(t in Teams.Team, where: t.id in ^team_ids_to_prune)
-    |> @repo.all(timeout: :infinity)
-    |> Enum.each(fn team ->
-      Plausible.Teams.Invitations.prune_guest_invitations(team)
-    end)
+      from(t in Teams.Team, where: t.id in ^team_ids_to_prune)
+      |> @repo.all(timeout: :infinity)
+      |> Enum.each(fn team ->
+        Plausible.Teams.Invitations.prune_guest_invitations(team)
+      end)
 
-    log("Guest invitations cleared.")
+      log("Guest invitations cleared.")
+    end
 
     # Guest invitations backfill
 
@@ -321,9 +343,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
       "Found #{length(site_invitations_to_backfill)} site invitations without guest invitation..."
     )
 
-    backfill_guest_invitations(site_invitations_to_backfill)
+    if not dry_run? do
+      backfill_guest_invitations(site_invitations_to_backfill)
 
-    log("Backfilled missing guest invitations.")
+      log("Backfilled missing guest invitations.")
+    end
 
     # Stale guest invitations sync
 
@@ -344,9 +368,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     log("Found #{length(stale_guest_invitations)} guest invitations with role out of sync...")
 
-    sync_guest_invitations(stale_guest_invitations)
+    if not dry_run? do
+      sync_guest_invitations(stale_guest_invitations)
 
-    log("All guest invitations are up to date now.")
+      log("All guest invitations are up to date now.")
+    end
 
     # Site transfers cleanup
 
@@ -368,9 +394,11 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
     log("Found #{length(site_transfers_to_remove)} site transfers to remove...")
 
-    remove_site_transfers(site_transfers_to_remove)
+    if not dry_run? do
+      remove_site_transfers(site_transfers_to_remove)
 
-    log("Site transfers cleared.")
+      log("Site transfers cleared.")
+    end
 
     # Site transfers backfill
 
@@ -398,11 +426,13 @@ defmodule Plausible.DataMigration.BackfillTeams do
       "Found #{length(site_invitations_to_backfill)} ownership transfers without site transfer..."
     )
 
-    backfill_site_transfers(site_invitations_to_backfill)
+    if not dry_run? do
+      backfill_site_transfers(site_invitations_to_backfill)
 
-    log("Backfilled missing site transfers.")
+      log("Backfilled missing site transfers.")
 
-    log("All data are up to date now!")
+      log("All data are up to date now!")
+    end
   end
 
   def delete_orphaned_teams(teams) do
