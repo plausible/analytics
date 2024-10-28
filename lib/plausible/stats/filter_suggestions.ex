@@ -8,7 +8,6 @@ defmodule Plausible.Stats.FilterSuggestions do
 
   alias Plausible.Stats.Query
   alias Plausible.Stats.Imported
-  alias Plausible.Stats.Filters
 
   def filter_suggestions(site, query, "country", filter_search) do
     matches = Location.search_country(filter_search)
