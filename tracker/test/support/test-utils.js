@@ -1,10 +1,10 @@
 const { expect } = require("@playwright/test");
 
 // Mocks an HTTP request call with the given path. Returns a Promise that resolves to the request
-// data. If the request is not made, resolves to null after 10 seconds.
+// data. If the request is not made, resolves to null after 3 seconds.
 const mockRequest = function (page, path) {
   return new Promise((resolve, _reject) => {
-    const requestTimeoutTimer = setTimeout(() => resolve(null), 10000)
+    const requestTimeoutTimer = setTimeout(() => resolve(null), 3000)
 
     page.route(path, (route, request) => {
       clearTimeout(requestTimeoutTimer)
@@ -25,11 +25,11 @@ exports.metaKey = function() {
 }
 
 // Mocks a specified number of HTTP requests with given path. Returns a promise that resolves to a
-// list of requests as soon as the specified number of requests is made, or 10 seconds has passed.
+// list of requests as soon as the specified number of requests is made, or 3 seconds has passed.
 const mockManyRequests = function(page, path, numberOfRequests) {
   return new Promise((resolve, _reject) => {
     let requestList = []
-    const requestTimeoutTimer = setTimeout(() => resolve(requestList), 10000)
+    const requestTimeoutTimer = setTimeout(() => resolve(requestList), 3000)
 
     page.route(path, (route, request) => {
       requestList.push(request)
