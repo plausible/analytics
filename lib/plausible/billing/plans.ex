@@ -105,6 +105,8 @@ defmodule Plausible.Billing.Plans do
     end)
   end
 
+  @spec get_subscription_plan(nil | Subscription.t()) ::
+          nil | :free_10k | %Plan{} | %EnterprisePlan{}
   def get_subscription_plan(nil), do: nil
 
   def get_subscription_plan(subscription) do

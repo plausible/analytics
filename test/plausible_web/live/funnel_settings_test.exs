@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       setup [:create_user, :log_in, :create_site]
 
       @tag :ee_only
-      test "upgrade notice renders", %{conn: conn, site: site, user: user} do
+      test "premium feature notice renders", %{conn: conn, site: site, user: user} do
         user
         |> Plausible.Auth.User.end_trial()
         |> Plausible.Repo.update!()
@@ -19,8 +19,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         conn = get(conn, "/#{site.domain}/settings/funnels")
         resp = conn |> html_response(200) |> text()
 
-        assert resp =~
-                 "Your account does not have access to Funnels. To get access to this feature, please contact hello@plausible.io"
+        assert resp =~ "please upgrade your subscription"
       end
 
       test "lists funnels for the site and renders help link", %{conn: conn, site: site} do
@@ -32,6 +31,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         assert resp =~ "From blog to signup"
         assert resp =~ "From signup to blog"
         refute resp =~ "Your account does not have access"
+        refute resp =~ "please upgrade your subscription"
         assert element_exists?(resp, "a[href=\"https://plausible.io/docs/funnel-analysis\"]")
       end
 

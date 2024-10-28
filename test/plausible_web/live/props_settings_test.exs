@@ -15,8 +15,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
       conn = get(conn, "/#{site.domain}/settings/properties")
       resp = conn |> html_response(200) |> text()
 
-      assert resp =~
-               "Your account does not have access to Custom Properties. To get access to this feature, please contact hello@plausible.io"
+      assert resp =~ "please upgrade your subscription"
     end
 
     test "lists props for the site and renders links", %{conn: conn, site: site} do
@@ -34,6 +33,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
       assert resp =~ "amount"
       assert resp =~ "logged_in"
       assert resp =~ "is_customer"
+      refute resp =~ "please upgrade your subscription"
     end
 
     test "lists props with disallow actions", %{conn: conn, site: site} do

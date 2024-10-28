@@ -302,17 +302,23 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   defp upgrade_call_to_action(assigns) do
     billable_user = Plausible.Users.with_subscription(assigns.billable_user)
 
-    plan =
-      Plans.get_regular_plan(billable_user.subscription, only_non_expired: true)
-
-    trial? = Plausible.Users.on_trial?(assigns.billable_user)
-    growth? = plan && plan.kind == :growth
+    upgrade_assistance_required? = case Plans.get_subscription_plan(billable_user.subscription) do
+      %Plausible.Billing.Plan{kind: :business} -> true
+      %Plausible.Billing.EnterprisePlan{} -> true
+      _ -> false
+    end
 
     cond do
       assigns.billable_user.id !== assigns.current_user.id ->
         ~H"please reach out to the site owner to upgrade their subscription"
 
-      growth? || trial? ->
+      upgrade_assistance_required? ->
+        ~H"""
+        please contact <a href="mailto:hello@plausible.io" class="underline">hello@plausible.io</a>
+        to upgrade your subscription
+        """
+
+      true ->
         ~H"""
         please
         <.link
@@ -321,12 +327,6 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         >
           upgrade your subscription
         </.link>
-        """
-
-      true ->
-        ~H"""
-        please contact <a href="mailto:hello@plausible.io" class="underline">hello@plausible.io</a>
-        to upgrade your subscription
         """
     end
   end
