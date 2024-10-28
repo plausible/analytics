@@ -1,36 +1,52 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
-const SRC_DIR = path.join(__dirname, '../src');
-const COPY_DIR = path.join(__dirname, 'src-copies');
+const LAST_HASH_FILEPATH = path.join(__dirname, './last-hash.txt')
 
 // Re-compilation is only required if any of these files have been changed. 
-const SRC_FILES = ['customEvents.js', 'plausible.js'];
+const COMPILE_DEPENDENCIES = [
+  path.join(__dirname, '../compile.js'),
+  path.join(__dirname, '../src/plausible.js'),
+  path.join(__dirname, '../src/customEvents.js')
+]
+
+async function currentHash() {
+  const combinedHash = crypto.createHash('sha256');
+
+  for (const filePath of COMPILE_DEPENDENCIES) {
+    try {
+      const fileContent = fs.readFileSync(filePath);
+      const fileHash = crypto.createHash('sha256').update(fileContent).digest();
+      combinedHash.update(fileHash);
+    } catch (error) {
+      throw new Error(`Failed to read or hash ${filePath}: ${error.message}`);
+    }
+  }
+
+  return combinedHash.digest('hex');
+}
+
+function lastHash() {
+  if (fs.existsSync(LAST_HASH_FILEPATH)) {
+    return fs.readFileSync(LAST_HASH_FILEPATH).toString()
+  }
+}
 
 /**
  * Returns a boolean indicating whether the tracker compilation can be skipped.
- * This is verified by storing copies of source files and comparing them with
- * the current contents of those files every time `compile.js` gets executed.
+ * Every time this function gets executed, the hash of the tracker dependencies
+ * will be updated. Compilation can be skipped if the hash hasn't changed since
+ * the last execution.
  */
-exports.canSkipCompile = function() {
-  let canSkip = true
+exports.canSkipCompile = async function() {
+  const current = await currentHash()
+  const last = lastHash()
 
-  SRC_FILES.forEach((file) => {
-    const originalPath = path.join(SRC_DIR, file)
-    const copyPath = path.join(COPY_DIR, file)
-
-    const original = fs.readFileSync(originalPath).toString()
-    const copyExists = fs.existsSync(copyPath)
-
-    if (!copyExists) {
-      canSkip = false
-      !fs.existsSync(COPY_DIR) && fs.mkdirSync(COPY_DIR)
-      fs.writeFileSync(copyPath, original)
-    } else if (original !== fs.readFileSync(copyPath).toString()) {
-      canSkip = false
-      fs.writeFileSync(copyPath, original)
-    }
-  })
-
-  return canSkip
+  if (current === last) {
+    return true
+  } else {
+    fs.writeFileSync(LAST_HASH_FILEPATH, current)
+    return false
+  }
 }
