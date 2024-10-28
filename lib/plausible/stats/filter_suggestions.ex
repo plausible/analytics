@@ -180,42 +180,6 @@ defmodule Plausible.Stats.FilterSuggestions do
     |> wrap_suggestions()
   end
 
-  # Deprecated (buggy) and will be replaced with a new endpoint (see
-  # custom_prop_value_filter_suggestion/4). Will only be kept around
-  # for some time until the dashboards get updated to query the new
-  # endpoint. Tests have already been adjusted to the new endpoint.
-  def filter_suggestions(site, query, "prop_value", filter_search) do
-    filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
-
-    [_op, "event:props:" <> key | _rest] = Filters.get_toplevel_filter(query, "event:props")
-
-    none_q =
-      from(e in base_event_query(site, Query.remove_top_level_filters(query, ["event:props"])),
-        select: "(none)",
-        where: not has_key(e, :meta, ^key),
-        limit: 1
-      )
-
-    search_q =
-      from(e in base_event_query(site, query),
-        select: get_by_key(e, :meta, ^key),
-        where:
-          has_key(e, :meta, ^key) and
-            fragment(
-              "? ilike ?",
-              get_by_key(e, :meta, ^key),
-              ^filter_query
-            ),
-        group_by: get_by_key(e, :meta, ^key),
-        order_by: [desc: fragment("count(*)")],
-        limit: 25
-      )
-
-    ClickhouseRepo.all(none_q)
-    |> Kernel.++(ClickhouseRepo.all(search_q))
-    |> wrap_suggestions()
-  end
-
   def filter_suggestions(site, query, filter_name, filter_search) do
     filter_search = if filter_search == nil, do: "", else: filter_search
 
