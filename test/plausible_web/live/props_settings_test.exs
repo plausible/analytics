@@ -6,6 +6,19 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
   describe "GET /:domain/settings/properties" do
     setup [:create_user, :log_in, :create_site]
 
+    @tag :ee_only
+    test "premium feature notice renders", %{conn: conn, site: site, user: user} do
+      user
+      |> Plausible.Auth.User.end_trial()
+      |> Plausible.Repo.update!()
+
+      conn = get(conn, "/#{site.domain}/settings/properties")
+      resp = conn |> html_response(200) |> text()
+
+      assert resp =~
+               "Your account does not have access to Custom Properties. To get access to this feature, please contact hello@plausible.io"
+    end
+
     test "lists props for the site and renders links", %{conn: conn, site: site} do
       {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in", "is_customer"])
       conn = get(conn, "/#{site.domain}/settings/properties")
