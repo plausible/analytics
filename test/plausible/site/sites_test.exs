@@ -417,30 +417,54 @@ defmodule Plausible.SitesTest do
 
     test "pinned sites are ordered according to the time they were pinned at" do
       user = insert(:user, email: "hello@example.com")
+      {:ok, team} = Plausible.Teams.get_or_create(user)
 
-      site1 = %{id: site_id1} = insert(:site, members: [user], domain: "one.example.com")
-      site2 = %{id: site_id2} = insert(:site, members: [user], domain: "two.example.com")
-      site4 = %{id: site_id4} = insert(:site, members: [user], domain: "four.example.com")
+      site1 =
+        %{id: site_id1} = insert(:site, team: team, members: [user], domain: "one.example.com")
+
+      site2 =
+        %{id: site_id2} = insert(:site, team: team, members: [user], domain: "two.example.com")
+
+      site4 =
+        %{id: site_id4} = insert(:site, team: team, members: [user], domain: "four.example.com")
 
       _rogue_site = insert(:site, domain: "rogue.example.com")
 
-      insert(:invitation, email: user.email, inviter: build(:user), role: :owner, site: site1)
+      site1_invitation =
+        insert(:invitation, email: user.email, inviter: build(:user), role: :owner, site: site1)
 
-      %{id: site_id3} =
+      Plausible.Teams.Invitations.invite_sync(site1, site1_invitation)
+
+      site3 =
+        %{id: site_id3} =
         insert(:site,
           domain: "three.example.com",
-          invitations: [
-            build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
-          ]
+          invitations: []
         )
 
-      insert(:invitation, email: "friend@example.com", inviter: user, role: :viewer, site: site1)
+      site3_invitation1 =
+        insert(:invitation, site: site3, email: user.email, inviter: build(:user), role: :viewer)
 
-      insert(:invitation,
-        site: site1,
-        inviter: user,
-        email: "another@example.com"
-      )
+      Plausible.Teams.Invitations.invite_sync(site3, site3_invitation1)
+
+      site1_invitation2 =
+        insert(:invitation,
+          email: "friend@example.com",
+          inviter: user,
+          role: :viewer,
+          site: site1
+        )
+
+      Plausible.Teams.Invitations.invite_sync(site1, site1_invitation2)
+
+      site1_invitation3 =
+        insert(:invitation,
+          site: site1,
+          inviter: user,
+          email: "another@example.com"
+        )
+
+      Plausible.Teams.Invitations.invite_sync(site1, site1_invitation3)
 
       Sites.set_option(user, site2, :pinned_at, ~N[2023-10-22 12:00:00])
       {:ok, _} = Sites.toggle_pin(user, site4)

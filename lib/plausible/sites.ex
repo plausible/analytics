@@ -162,9 +162,14 @@ defmodule Plausible.Sites do
 
     guest_invitation_query =
       from ti in Teams.Invitation,
+        as: :team_invitation,
         inner_join: gi in assoc(ti, :guest_invitations),
         inner_join: s in assoc(gi, :site),
         where: ti.email == ^user.email and ti.role == :guest,
+        where:
+          not exists(
+            from tm in Teams.Membership, where: tm.team_id == parent_as(:team_invitation).team_id
+          ),
         select: %{
           site_id: s.id,
           entry_type: "invitation",
@@ -186,7 +191,14 @@ defmodule Plausible.Sites do
     site_transfer_query =
       from st in Teams.SiteTransfer,
         inner_join: s in assoc(st, :site),
+        as: :site,
         where: st.email == ^user.email,
+        where:
+          not exists(
+            from tm in Teams.Membership,
+              where: tm.team_id == parent_as(:site).team_id,
+              where: tm.role == :owner
+          ),
         select: %{
           site_id: s.id,
           entry_type: "invitation",
