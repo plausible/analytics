@@ -85,4 +85,7 @@ jobs:
       - run: mix do ecto.reset
       - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
 
-      - run: npm run playwright --prefix assets
+      - name: Run Playwright tests
+        run: |
+          sudo apt install faketime
+          faketime -f "@2024-10-01 00:00:00" npm run playwright --prefix assets
