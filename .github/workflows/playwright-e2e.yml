@@ -96,13 +96,6 @@ jobs:
         run: |
           faketime -f "@2024-10-01 00:00:00" npm run playwright --prefix assets
 
-      - name: Commit updated snapshots
-        uses: EndBug/add-and-commit@v9
-        if: ${{ success() && github.event_name == 'pull_request' }}
-        with:
-          add: 'assets/playwright-tests/snapshots'
-          message: 'Update snapshots'
-
       - name: Lost Pixel
         uses: lost-pixel/lost-pixel@v3.21.0
         env:
