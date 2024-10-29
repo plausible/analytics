@@ -58,7 +58,7 @@ if (triggers.length > 0) {
 
 const changelogNotification = document.getElementById('changelog-notification')
 
-if (changelogNotification) {
+if (changelogNotification && false) {
   showChangelogNotification(changelogNotification)
 
   fetch('https://plausible.io/changes.txt', { headers: { 'Content-Type': 'text/plain' } })

@@ -58,6 +58,8 @@ jobs:
         with:
           node-version: ${{ steps.versions.outputs.nodejs }}
 
+      - run: sudo apt install faketime
+
       - uses: actions/cache@v4
         id: cache
         with:
@@ -82,12 +84,14 @@ jobs:
         run: npm run playwright:install --prefix assets
 
       - run: mix deps.get
-      - run: mix do ecto.reset
+
+      - name: Setup and seed database
+        run: faketime -f "@2024-10-01 00:00:00" mix do ecto.reset
+
       - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
 
       - name: Run Playwright tests
         run: |
-          sudo apt install faketime
           faketime -f "@2024-10-01 00:00:00" npm run playwright --prefix assets
 
       - name: Commit new snapshots
