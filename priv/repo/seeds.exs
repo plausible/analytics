@@ -15,7 +15,7 @@ case System.get_env("RANDOM_SEED") do
     {seed, _} = Integer.parse(seed_string)
 
     IO.puts("Using random seed #{seed}")
-    :rand.seed(:exsss, seed)
+    :rand.seed(:exsplus, {seed, seed, seed})
 
   _ ->
     nil
