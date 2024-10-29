@@ -14,7 +14,6 @@ case System.get_env("RANDOM_SEED") do
   seed_string when is_binary(seed_string) ->
     {seed, _} = Integer.parse(seed_string)
 
-    IO.puts("Using random seed #{seed}")
     :rand.seed(:exsplus, {seed, seed, seed})
 
   _ ->
@@ -55,8 +54,6 @@ long_random_paths =
 
     "/#{path}.html"
   end
-
-IO.inspect(long_random_paths: long_random_paths)
 
 long_random_urls =
   for path <- long_random_paths do
