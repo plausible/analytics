@@ -30,6 +30,7 @@ test('can navigate the dashboard via keyboard shortcuts', async ({ page }) => {
     page.keyboard.down(key)
     await waitForData(page)
     await expect(dateMenuButton).toHaveText(pattern)
+    await expect(page).toHaveScreenshot()
   }
 
   await testShortcut("D", "Today")
@@ -68,12 +69,16 @@ test('with revenue goal filter applied sees revenue metrics in top stats', async
 
   await expect(page.getByTestId("section::top-stats")).toHaveText(/Total revenue/)
   await expect(page.getByTestId("section::top-stats")).toHaveText(/Average revenue/)
+
+  await expect(page.getByTestId("section::top-stats")).toHaveScreenshot()
 })
 
 test('dashboard comparison with previous period', async ({ page }) => {
   await page.getByTestId('date-menu-button').click()
   await page.getByTestId('datemenu').getByRole('link', { name: /Compare/ }).click()
   await waitForData(page)
+
+  await expect(page).toHaveScreenshot()
 })
 
 async function waitForData(page: Page) {
@@ -96,6 +101,7 @@ async function clickOpenBreakdownModal(page: Page, sectionSelector: string, key:
 async function checkBreakdownModal(page: Page, listTestId: string) {
   await page.getByTestId(listTestId).getByTestId('details-link').click()
   await waitForData(page)
+  await expect(page.locator(".modal__container")).toHaveScreenshot()
 
   await page.getByRole('button', { name: '✕' }).click()
 }

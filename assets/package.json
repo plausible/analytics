@@ -11,8 +11,8 @@
     "lint": "npm run eslint && npm run stylelint",
     "typecheck": "tsc --noEmit --pretty",
     "generate-types": "json2ts ../priv/json-schemas/query-api-schema.json ../assets/js/types/query-api.d.ts",
-    "playwright": "playwright test",
-    "playwright:ui": "playwright test --ui",
+    "playwright": "playwright test --update-snapshots",
+    "playwright:ui": "playwright test --ui --update-snapshots",
     "playwright:install": "playwright install chromium --with-deps"
   },
   "dependencies": {
