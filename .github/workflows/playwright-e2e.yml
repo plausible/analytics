@@ -13,6 +13,7 @@ env:
   CI: "true"
   MIX_ENV: dev
   IP_GEOLOCATION_DB: test/priv/GeoLite2-City-Test.mmdb
+  RANDOM_SEED: "0"
 
 jobs:
   e2e:
