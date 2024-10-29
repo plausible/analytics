@@ -72,7 +72,9 @@ defmodule Plausible.Sites do
   end
 
   defdelegate list(user, pagination_params, opts \\ []), to: Plausible.Teams.Sites
-  defdelegate list_with_invitations(user, pagination_params, opts \\ []), to: Plausible.Teams.Sites
+
+  defdelegate list_with_invitations(user, pagination_params, opts \\ []),
+    to: Plausible.Teams.Sites
 
   @spec old_list(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
   def old_list(user, pagination_params, opts \\ []) do

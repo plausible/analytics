@@ -165,6 +165,7 @@ defmodule Plausible.Teams.Sites do
               inner_join: u in assoc(tm, :user),
               left_join: gm in assoc(tm, :guest_memberships),
               on: gm.site_id == parent_as(:site).id,
+              where: tm.team_id == parent_as(:team_invitation).team_id,
               where: u.email == parent_as(:team_invitation).email,
               where: not is_nil(gm.id) or tm.role != :guest,
               select: 1
@@ -190,8 +191,18 @@ defmodule Plausible.Teams.Sites do
 
     site_transfer_query =
       from st in Teams.SiteTransfer,
+        as: :site_transfer,
         inner_join: s in assoc(st, :site),
+        as: :site,
         where: st.email == ^user.email,
+        where:
+          not exists(
+            from tm in Teams.Membership,
+              inner_join: u in assoc(tm, :user),
+              where: tm.team_id == parent_as(:site).team_id,
+              where: u.email == parent_as(:site_transfer).email,
+              select: 1
+          ),
         select: %{
           site_id: s.id,
           entry_type: "invitation",
@@ -250,10 +261,7 @@ defmodule Plausible.Teams.Sites do
       ]
     )
     |> maybe_filter_by_domain(domain_filter)
-    |> tap(fn _ -> Logger.configure(level: :debug) end)
     |> Repo.paginate(pagination_params)
-    |> tap(fn _ -> Logger.configure(level: :error) end)
-
   end
 
   defp maybe_filter_by_domain(query, domain)
