@@ -15,6 +15,19 @@ case System.get_env("RANDOM_SEED") do
     {seed, _} = Integer.parse(seed_string)
 
     :rand.seed(:exsplus, {seed, seed, seed})
+    :random.seed({seed, seed, seed})
+
+    use Plausible
+    use Plausible.Repo
+
+    {:ok, _} = Application.ensure_all_started(:ex_machina)
+
+    [
+      Plausible.Repo,
+      Plausible.ClickhouseRepo,
+      Plausible.IngestRepo
+    ]
+    |> Supervisor.start_link(strategy: :one_for_one, name: Plausible.Supervisor)
 
   _ ->
     nil

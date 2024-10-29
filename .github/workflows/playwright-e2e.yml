@@ -92,7 +92,10 @@ jobs:
       - run: mix deps.get
 
       - name: Setup and seed database
-        run: faketime -f "@2024-10-01 00:00:00" mix do ecto.reset
+        run: |
+          mix ecto.create
+          mix ecto.migrate
+          faketime -f "@2024-10-01 00:00:00" mix run priv/repo/seeds.exs --no-start
 
       - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
 
