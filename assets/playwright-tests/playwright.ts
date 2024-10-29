@@ -15,13 +15,20 @@ export const test = playwrightTest.extend<{ page: void }>({
   page: async ({ page }: { page: any }, use: any) => {
     const errors: Array<Error> = []
 
+    // Track errors
+    const errors: Array<Error> = []
     page.addListener("pageerror", (error: any) => {
       errors.push(error)
     })
 
-    // run the test
+    // Run the test
     await use(page)
 
+    // Check no errors
     expect(errors).toHaveLength(0)
   },
+})
+
+test.beforeEach(async ({ context }) => {
+  await context.route(/changes.txt/, route => route.fulfill({ status: 200, body: '2020-01-01' }))
 })
