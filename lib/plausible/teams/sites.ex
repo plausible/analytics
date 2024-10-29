@@ -262,6 +262,11 @@ defmodule Plausible.Teams.Sites do
     )
     |> maybe_filter_by_domain(domain_filter)
     |> Repo.paginate(pagination_params)
+    |> Map.update!(:entries, fn entries ->
+      # temporary prosthetic, when switching to the new model eventually,
+      # we'll have to preload memberships from new schemas
+      Repo.preload(entries, :memberships)
+    end)
   end
 
   defp maybe_filter_by_domain(query, domain)

@@ -63,31 +63,36 @@ defmodule Plausible.Teams.Test do
     inviter = Keyword.fetch!(args, :inviter)
     team = Repo.preload(site, :team).team
 
-    insert(:invitation,
-      email: invitee.email,
-      inviter: inviter,
-      role: translate_role_to_old_model(role),
-      site: site
-    )
+    old_model_invitation =
+      insert(:invitation,
+        email: invitee.email,
+        inviter: inviter,
+        role: translate_role_to_old_model(role),
+        site: site
+      )
 
     team_invitation =
       insert(:team_invitation, team: team, email: invitee.email, inviter: inviter, role: :guest)
 
     insert(:guest_invitation, team_invitation: team_invitation, site: site, role: role)
+
+    old_model_invitation
   end
 
   def invite_transfer(site, invitee, args \\ []) do
     inviter = Keyword.fetch!(args, :inviter)
 
-    invitation =
+    old_model_invitation =
       insert(:invitation, email: invitee.email, inviter: inviter, role: :owner, site: site)
 
     insert(:site_transfer,
-      transfer_id: invitation.invitation_id,
+      transfer_id: old_model_invitation.invitation_id,
       email: invitee.email,
       site: site,
       initiator: inviter
     )
+
+    old_model_invitation
   end
 
   def revoke_membership(site, user) do
