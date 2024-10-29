@@ -11,7 +11,8 @@
     "lint": "npm run eslint && npm run stylelint",
     "typecheck": "tsc --noEmit --pretty",
     "generate-types": "json2ts ../priv/json-schemas/query-api-schema.json ../assets/js/types/query-api.d.ts",
-    "playwright": "playwright test"
+    "playwright": "playwright test",
+    "playwright:ui": "playwright test --ui"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.10",
