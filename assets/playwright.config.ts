@@ -17,6 +17,10 @@ export default defineConfig({
 
   /* Location where snapshots and screenshots are stored */
   snapshotPathTemplate: '{testDir}/snapshots/{testFileName}-{testName}-{arg}{ext}',
+
+  updateSnapshots: 'all',
+
+
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -59,5 +63,6 @@ export default defineConfig({
     url: 'http://localhost:8000',
     cwd: path.resolve(__dirname, '..'),
     reuseExistingServer: !process.env.CI,
+    stderr: 'ignore'
   },
 });
