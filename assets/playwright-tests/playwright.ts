@@ -13,8 +13,6 @@ export { expect, Page } from '@playwright/test'
 // Idea from https://www.checklyhq.com/blog/track-frontend-javascript-exceptions-with-playwright/
 export const test = playwrightTest.extend<{ page: void }>({
   page: async ({ page }: { page: any }, use: any) => {
-    const errors: Array<Error> = []
-
     // Track errors
     const errors: Array<Error> = []
     page.addListener("pageerror", (error: any) => {
