@@ -479,12 +479,14 @@ defmodule Plausible.SitesTest do
 
       assert %{
                entries: [
-                 %{id: ^site_id1, entry_type: "invitation"},
                  %{id: ^site_id3, entry_type: "invitation"},
                  %{id: ^site_id4, entry_type: "pinned_site"},
-                 %{id: ^site_id2, entry_type: "pinned_site"}
+                 %{id: ^site_id2, entry_type: "pinned_site"},
+                 %{id: ^site_id1, entry_type: "site"}
                ]
-             } = Sites.list_with_invitations(user, %{})
+             } = Sites.list_with_invitations(user, %{}) |> tap(fn page ->
+              Enum.each(page.entries, &IO.inspect({&1.id, &1.domain, &1.entry_type}))
+            end)
     end
 
     test "filters by domain" do
