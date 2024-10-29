@@ -58,21 +58,27 @@ defmodule Plausible.Teams.Test do
     user |> Repo.preload([:site_memberships, :team_memberships])
   end
 
-  def invite_guest(site, invitee, args \\ []) do
+  def invite_guest(site, invitee_or_email, args \\ []) when not is_nil(invitee_or_email) do
     role = Keyword.fetch!(args, :role)
     inviter = Keyword.fetch!(args, :inviter)
     team = Repo.preload(site, :team).team
 
+    email =
+      case invitee_or_email do
+        %{email: email} -> email
+        email when is_binary(email) -> email
+      end
+
     old_model_invitation =
       insert(:invitation,
-        email: invitee.email,
+        email: email,
         inviter: inviter,
         role: translate_role_to_old_model(role),
         site: site
       )
 
     team_invitation =
-      insert(:team_invitation, team: team, email: invitee.email, inviter: inviter, role: :guest)
+      insert(:team_invitation, team: team, email: email, inviter: inviter, role: :guest)
 
     insert(:guest_invitation, team_invitation: team_invitation, site: site, role: role)
 

@@ -265,7 +265,8 @@ defmodule Plausible.Teams.Sites do
     |> Map.update!(:entries, fn entries ->
       # temporary prosthetic, when switching to the new model eventually,
       # we'll have to preload memberships from new schemas
-      Repo.preload(entries, :memberships)
+      membership_query = from sm in Site.Membership, where: sm.user_id == ^user.id
+      Repo.preload(entries, memberships: membership_query)
     end)
   end
 
