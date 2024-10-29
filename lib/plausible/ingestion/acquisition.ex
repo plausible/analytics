@@ -162,7 +162,6 @@ defmodule Plausible.Ingestion.Acquisition do
       source == "firebase"
   end
 
-  # # Helper functions for source and medium checks
   defp shopping_source?(nil), do: false
 
   defp shopping_source?(source) do
@@ -195,7 +194,7 @@ defmodule Plausible.Ingestion.Acquisition do
 
   defp shopping_campaign?(request) do
     campaign_name = query_param(request, "utm_campaign")
-    Regex.match?(~r/^(.*(([^a-df-z]|^)shop|shopping).*)$/, campaign_name || "")
+    Regex.match?(~r/^(.*(([^a-df-z]|^)shop|shopping).*)$/, campaign_name)
   end
 
   defp paid_medium?(request) do
