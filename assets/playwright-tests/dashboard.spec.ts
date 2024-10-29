@@ -43,17 +43,18 @@ test('can navigate the dashboard via keyboard shortcuts', async ({ page }) => {
   await testShortcut("A", "All time")
 })
 
-// test('adding filters')
-
 MODALS.forEach(({ key, sectionSelector }) => {
   test(`can open ${key} modal`, async ({ page }) => {
-    if (sectionSelector === 'section::sources') {
-      await page.getByTestId("campaign-menu").click()
-      await page.getByRole('menuitem', { name: key }).click()
-    } else {
-      await page.getByRole('button', { name: key }).click()
-    }
+    await clickOpenBreakdownModal(page, sectionSelector, key)
 
+    await checkBreakdownModal(page, sectionSelector)
+  })
+
+  test(`can open ${key} modal in comparison mode`, async ({ page }) => {
+    page.keyboard.down("X")
+    await waitForData(page)
+
+    await clickOpenBreakdownModal(page, sectionSelector, key)
     await checkBreakdownModal(page, sectionSelector)
   })
 })
@@ -81,6 +82,15 @@ async function waitForData(page: Page) {
   await page.waitForSelector("#main-graph-canvas")
   await loading.waitFor({ state: "visible", timeout: 50 }).catch(() => {})
   await expect(loading).toHaveCount(0)
+}
+
+async function clickOpenBreakdownModal(page: Page, sectionSelector: string, key: string) {
+  if (sectionSelector === 'section::sources') {
+    await page.getByTestId("campaign-menu").click()
+    await page.getByRole('menuitem', { name: key }).click()
+  } else {
+    await page.getByRole('button', { name: key }).click()
+  }
 }
 
 async function checkBreakdownModal(page: Page, listTestId: string) {
