@@ -6,6 +6,9 @@ on:
     branches: [master, stable]
   merge_group:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   CACHE_VERSION: v1
