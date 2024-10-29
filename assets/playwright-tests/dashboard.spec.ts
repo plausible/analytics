@@ -1,4 +1,4 @@
-import { test, expect, Page } from './playwright'
+import { test, expect, Page, screenshot, TestInfo } from './playwright'
 
 const MODALS = [
   { key: 'UTM Medium', sectionSelector: 'section::sources' },
@@ -23,14 +23,14 @@ test.beforeEach(async ({page}) => {
   await waitForData(page)
 })
 
-test('can navigate the dashboard via keyboard shortcuts', async ({ page }) => {
+test('can navigate the dashboard via keyboard shortcuts', async ({ page }, testInfo) => {
   const dateMenuButton = page.getByTestId('date-menu-button')
 
   async function testShortcut(key: string, pattern: string | RegExp) {
     page.keyboard.down(key)
     await waitForData(page)
     await expect(dateMenuButton).toHaveText(pattern)
-    await expect(page).toHaveScreenshot()
+    await screenshot(page, testInfo)
   }
 
   await testShortcut("D", "Today")
@@ -45,22 +45,22 @@ test('can navigate the dashboard via keyboard shortcuts', async ({ page }) => {
 })
 
 MODALS.forEach(({ key, sectionSelector }) => {
-  test(`can open ${key} modal`, async ({ page }) => {
+  test(`can open ${key} modal`, async ({ page }, testInfo) => {
     await clickOpenBreakdownModal(page, sectionSelector, key)
 
-    await checkBreakdownModal(page, sectionSelector)
+    await checkBreakdownModal(page, sectionSelector, testInfo)
   })
 
-  test(`can open ${key} modal in comparison mode`, async ({ page }) => {
+  test(`can open ${key} modal in comparison mode`, async ({ page }, testInfo) => {
     page.keyboard.down("X")
     await waitForData(page)
 
     await clickOpenBreakdownModal(page, sectionSelector, key)
-    await checkBreakdownModal(page, sectionSelector)
+    await checkBreakdownModal(page, sectionSelector, testInfo)
   })
 })
 
-test('with revenue goal filter applied sees revenue metrics in top stats', async ({ page }) => {
+test('with revenue goal filter applied sees revenue metrics in top stats', async ({ page }, testInfo) => {
   await expect(page.getByTestId("section::top-stats")).not.toHaveText(/Total revenue/)
   await expect(page.getByTestId("section::top-stats")).not.toHaveText(/Average revenue/)
 
@@ -70,15 +70,15 @@ test('with revenue goal filter applied sees revenue metrics in top stats', async
   await expect(page.getByTestId("section::top-stats")).toHaveText(/Total revenue/)
   await expect(page.getByTestId("section::top-stats")).toHaveText(/Average revenue/)
 
-  await expect(page.getByTestId("section::top-stats")).toHaveScreenshot()
+  await screenshot(page.getByTestId("section::top-stats"), testInfo)
 })
 
-test('dashboard comparison with previous period', async ({ page }) => {
+test('dashboard comparison with previous period', async ({ page }, testInfo) => {
   await page.getByTestId('date-menu-button').click()
   await page.getByTestId('datemenu').getByRole('link', { name: /Compare/ }).click()
   await waitForData(page)
 
-  await expect(page).toHaveScreenshot()
+  await screenshot(page, testInfo)
 })
 
 async function waitForData(page: Page) {
@@ -98,10 +98,10 @@ async function clickOpenBreakdownModal(page: Page, sectionSelector: string, key:
   }
 }
 
-async function checkBreakdownModal(page: Page, listTestId: string) {
+async function checkBreakdownModal(page: Page, listTestId: string, testInfo: TestInfo) {
   await page.getByTestId(listTestId).getByTestId('details-link').click()
   await waitForData(page)
-  // await expect(page.locator(".modal__container")).toHaveScreenshot()
+  await screenshot(page.locator(".modal__container"), testInfo)
 
   await page.getByRole('button', { name: '✕' }).click()
 }
