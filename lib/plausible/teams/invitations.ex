@@ -44,18 +44,28 @@ defmodule Plausible.Teams.Invitations do
     role = translate_role(site_invitation.role)
 
     if site_invitation.role == :owner do
-      create_site_transfer(
-        site,
-        site_invitation.inviter,
-        site_invitation.email
-      )
+      {:ok, site_transfer} =
+        create_site_transfer(
+          site,
+          site_invitation.inviter,
+          site_invitation.email
+        )
+
+      site_transfer
+      |> Ecto.Changeset.change(transfer_id: site_invitation.invitation_id)
+      |> Repo.update!()
     else
-      create_invitation(
-        site,
-        site_invitation.email,
-        role,
-        site_invitation.inviter
-      )
+      {:ok, guest_invitation} =
+        create_invitation(
+          site,
+          site_invitation.email,
+          role,
+          site_invitation.inviter
+        )
+
+      guest_invitation.team_invitation
+      |> Ecto.Changeset.change(invitation_id: site_invitation.invitation_id)
+      |> Repo.update!()
     end
   end
 
