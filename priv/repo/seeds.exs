@@ -14,25 +14,6 @@ case System.get_env("RANDOM_SEED") do
   seed_string when is_binary(seed_string) ->
     {seed, _} = Integer.parse(seed_string)
 
-    use Plausible
-
-    {:ok, _} = Application.ensure_all_started(:ex_machina)
-    {:ok, _} = Application.ensure_all_started(:con_cache)
-
-    [
-      Plausible.Repo,
-      Plausible.ClickhouseRepo,
-      Plausible.IngestRepo,
-      Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
-      Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
-      Plausible.Cache.Adapter.child_spec(:sessions, :cache_sessions,
-        ttl_check_interval: :timer.seconds(1),
-        global_ttl: :timer.minutes(30)
-      )
-    ]
-    |> List.flatten()
-    |> Supervisor.start_link(strategy: :one_for_one, name: Plausible.Supervisor)
-
     :rand.seed(:exsplus, {seed, seed, seed})
     :random.seed({seed, seed, seed})
 
@@ -40,9 +21,7 @@ case System.get_env("RANDOM_SEED") do
     nil
 end
 
-words =
-  for i <- 0..(:erlang.system_info(:atom_count) - 1),
-      do: :erlang.binary_to_term(<<131, 75, i::24>>)
+words = File.read!("priv/repo/seeds_words.txt") |> String.split("\n", trim: true)
 
 user = Plausible.Factory.insert(:user, email: "user@plausible.test", password: "plausible")
 
