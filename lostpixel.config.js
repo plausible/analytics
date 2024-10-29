@@ -1,5 +1,5 @@
 export const config = {
- customShots: {
+  customShots: {
     currentShotsPath: "./assets/playwright-tests/snapshots",
   },
 
