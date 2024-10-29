@@ -10,7 +10,7 @@ if config_env() == :ce_dev do
   Envy.load(["config/.env.dev"])
 end
 
-if config_env() in [:ce_test, :playwright_test] do
+if config_env() == :ce_test do
   Envy.load(["config/.env.test"])
 end
 
