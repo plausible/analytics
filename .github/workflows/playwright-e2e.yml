@@ -1,0 +1,88 @@
+name: Playwright CI
+
+on:
+  pull_request:
+  push:
+    branches: [master, stable]
+  merge_group:
+
+
+env:
+  CACHE_VERSION: v1
+  PERSISTENT_CACHE_DIR: cached
+  CI: "true"
+  MIX_ENV: dev
+  IP_GEOLOCATION_DB: test/priv/GeoLite2-City-Test.mmdb
+
+jobs:
+  e2e:
+    name: E2E playwright tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: postgres
+          options: >-
+            --health-cmd pg_isready
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+      clickhouse:
+        image: clickhouse/clickhouse-server:24.8.5.115-alpine
+        ports:
+          - 8123:8123
+        env:
+          options: >-
+            --health-cmd nc -zw3 localhost 8124
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: marocchino/tool-versions-action@v1
+        id: versions
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ steps.versions.outputs.elixir }}
+          otp-version: ${{ steps.versions.outputs.erlang }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.versions.outputs.nodejs }}
+
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: |
+            deps
+            _build
+            tracker/node_modules
+            priv/tracker/js
+            assets/node_modules
+            ~/.cache/ms-playwright
+            ${{ env.PERSISTENT_CACHE_DIR }}
+          key: playwright-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            playwright-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
+            playwright-${{ env.CACHE_VERSION }}-refs/heads/master-
+            playwright-${{ env.CACHE_VERSION }}-
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix assets
+      - name: Install Playwright Browsers
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm run playwright:install --prefix assets
+
+      - run: mix deps.get
+      - run: mix do ecto.reset
+      - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
+
+      - run: npm run playwright --prefix assets
