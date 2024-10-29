@@ -20,6 +20,11 @@ defmodule Plausible.Workers.CleanInvitations do
         where: ti.inserted_at < ^cutoff_time
     )
 
+    Repo.delete_all(
+      from ti in Plausible.Teams.SiteTransfer,
+        where: ti.inserted_at < ^cutoff_time
+    )
+
     :ok
   end
 end

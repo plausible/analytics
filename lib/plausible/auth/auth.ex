@@ -95,18 +95,23 @@ defmodule Plausible.Auth do
 
   def delete_user(user) do
     Repo.transaction(fn ->
-      user =
-        user
-        |> Repo.preload(site_memberships: :site)
+      user = Repo.preload(user, site_memberships: :site)
 
       for membership <- user.site_memberships do
-        Repo.delete!(membership)
-
         if membership.role == :owner do
-          Plausible.Site.Removal.run(membership.site.domain)
+          Plausible.Site.Removal.run(membership.site)
         end
+
+        Repo.delete_all(
+          from(
+            sm in Plausible.Site.Membership,
+            where: sm.id == ^membership.id
+          )
+        )
       end
 
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      Repo.delete!(team)
       Repo.delete!(user)
     end)
   end

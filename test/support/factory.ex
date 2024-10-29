@@ -38,6 +38,13 @@ defmodule Plausible.Factory do
     }
   end
 
+  def site_transfer_factory do
+    %Plausible.Teams.SiteTransfer{
+      transfer_id: Nanoid.generate(),
+      email: sequence(:email, &"email-#{&1}@example.com")
+    }
+  end
+
   def user_factory(attrs) do
     pw = Map.get(attrs, :password, "password")
 

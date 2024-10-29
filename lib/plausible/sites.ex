@@ -206,6 +206,10 @@ defmodule Plausible.Sites do
         Site.Membership.new(site, user)
       end)
       |> maybe_start_trial(user)
+      |> Ecto.Multi.run(:sync_team, fn _repo, %{user: user} ->
+        Plausible.Teams.sync_team(user)
+        {:ok, nil}
+      end)
       |> Repo.transaction()
     end
   end
@@ -218,7 +222,7 @@ defmodule Plausible.Sites do
         end)
 
       _ ->
-        multi
+        Ecto.Multi.put(multi, :user, user)
     end
   end
 
