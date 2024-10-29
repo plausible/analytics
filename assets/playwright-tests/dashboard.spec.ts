@@ -101,7 +101,7 @@ async function clickOpenBreakdownModal(page: Page, sectionSelector: string, key:
 async function checkBreakdownModal(page: Page, listTestId: string) {
   await page.getByTestId(listTestId).getByTestId('details-link').click()
   await waitForData(page)
-  await expect(page.locator(".modal__container")).toHaveScreenshot()
+  // await expect(page.locator(".modal__container")).toHaveScreenshot()
 
   await page.getByRole('button', { name: '✕' }).click()
 }

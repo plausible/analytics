@@ -17,7 +17,6 @@ export default defineConfig({
 
   /* Location where snapshots and screenshots are stored */
   snapshotPathTemplate: '{testDir}/snapshots/{testFileName}-{testName}-{arg}{ext}',
-
   updateSnapshots: 'all',
 
 
