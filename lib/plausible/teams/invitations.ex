@@ -59,6 +59,34 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
+  def remove_invitation_sync(site_invitation) do
+    site = Repo.preload(site_invitation, :site).site
+    site = Teams.load_for_site(site)
+
+    if site_invitation.role == :owner do
+      Repo.delete_all(
+        from(
+          st in Teams.SiteTransfer,
+          where: st.email == ^site_invitation.email,
+          where: st.team_id == ^site.team.id
+        )
+      )
+    else
+      Repo.delete_all(
+        from(
+          gi in Teams.GuestInvitation,
+          inner_join: ti in assoc(gi, :team_invitation),
+          where: ti.email == ^site_invitation.email,
+          where: gi.site_id == ^site.id
+        )
+      )
+
+      prune_guest_invitations(site.team)
+    end
+
+    :ok
+  end
+
   def transfer_site(site, new_owner, now \\ NaiveDateTime.utc_now(:second)) do
     site = Repo.preload(site, :team)
 
