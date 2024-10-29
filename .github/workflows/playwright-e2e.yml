@@ -44,6 +44,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
       - uses: marocchino/tool-versions-action@v1
@@ -94,11 +96,9 @@ jobs:
         run: |
           faketime -f "@2024-10-01 00:00:00" npm run playwright --prefix assets
 
-      - name: Commit new snapshots
+      - name: Commit updated snapshots
         uses: EndBug/add-and-commit@v9
         if: ${{ success() && github.event_name == 'pull_request' }}
         with:
           add: 'assets/playwright-tests/snapshots'
-          default_author: github_actions
           message: 'Update snapshots'
-          push: origin ${{ github.head_ref }}
