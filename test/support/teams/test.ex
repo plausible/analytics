@@ -3,8 +3,106 @@ defmodule Plausible.Teams.Test do
   Convenience assertions for teams schema transition
   """
   alias Plausible.Repo
+  alias Plausible.Teams
+
+  import Ecto.Query
 
   use ExUnit.CaseTemplate
+
+  import Plausible.Factory
+
+  def new_site(args \\ []) do
+    args =
+      if user = args[:owner] do
+        {:ok, team} = Teams.get_or_create(user)
+
+        args
+        |> Keyword.put(:team, team)
+        |> Keyword.put(:members, [user])
+      else
+        user = new_user()
+        {:ok, team} = Teams.get_or_create(user)
+
+        args
+        |> Keyword.put(:team, team)
+        |> Keyword.put(:members, [user])
+      end
+
+    :site
+    |> insert(args)
+    |> Repo.preload(:memberships)
+  end
+
+  def new_team() do
+    new_user()
+    |> Map.fetch!(:team_memberships)
+    |> List.first()
+  end
+
+  def new_user(args \\ []) do
+    user = insert(:user, args)
+    {:ok, _team} = Teams.get_or_create(user)
+    Repo.preload(user, :team_memberships)
+  end
+
+  def add_guest(site, args \\ []) do
+    user = Keyword.get(args, :user, new_user())
+    role = Keyword.fetch!(args, :role)
+    team = Repo.preload(site, :team).team
+
+    insert(:site_membership, user: user, role: translate_role_to_old_model(role), site: site)
+
+    team_membership = insert(:team_membership, team: team, user: user, role: :guest)
+    insert(:guest_membership, team_membership: team_membership, site: site, role: role)
+
+    user |> Repo.preload([:site_memberships, :team_memberships])
+  end
+
+  def invite_guest(site, invitee, args \\ []) do
+    role = Keyword.fetch!(args, :role)
+    inviter = Keyword.fetch!(args, :inviter)
+    team = Repo.preload(site, :team).team
+
+    insert(:invitation,
+      email: invitee.email,
+      inviter: inviter,
+      role: translate_role_to_old_model(role),
+      site: site
+    )
+
+    team_invitation =
+      insert(:team_invitation, team: team, email: invitee.email, inviter: inviter, role: :guest)
+
+    insert(:guest_invitation, team_invitation: team_invitation, site: site, role: role)
+  end
+
+  def invite_transfer(site, invitee, args \\ []) do
+    inviter = Keyword.fetch!(args, :inviter)
+
+    invitation =
+      insert(:invitation, email: invitee.email, inviter: inviter, role: :owner, site: site)
+
+    insert(:site_transfer,
+      transfer_id: invitation.invitation_id,
+      email: invitee.email,
+      site: site,
+      initiator: inviter
+    )
+  end
+
+  def revoke_membership(site, user) do
+    Repo.delete_all(
+      from sm in Plausible.Site.Membership,
+        where: sm.user_id == ^user.id and sm.site_id == ^site.id
+    )
+
+    Repo.delete_all(
+      from tm in Plausible.Teams.Membership,
+        where: tm.user_id == ^user.id and tm.team_id == ^site.team.id
+    )
+
+    user |> Repo.preload([:site_memberships, :team_memberships])
+  end
 
   defmacro __using__(_) do
     quote do
@@ -85,4 +183,7 @@ defmodule Plausible.Teams.Test do
              role: role
            )
   end
+
+  defp translate_role_to_old_model(:editor), do: :admin
+  defp translate_role_to_old_model(role), do: role
 end

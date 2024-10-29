@@ -172,8 +172,8 @@ defmodule Plausible.SitesTest do
 
   describe "list/3 and list_with_invitations/3" do
     test "returns empty when there are no sites" do
-      user = insert(:user)
-      _rogue_site = insert(:site)
+      user = new_user()
+      _rogue_site = new_site()
 
       assert %{
                entries: [],
@@ -209,32 +209,17 @@ defmodule Plausible.SitesTest do
     end
 
     test "pinned site doesn't matter with membership revoked (no active invitations)" do
-      user1 = insert(:user, email: "user1@example.com")
-      user2 = insert(:user, email: "user2@example.com")
+      user1 = new_user(email: "user1@example.com")
+      _user2 = new_user(email: "user2@example.com")
 
-      team1 = insert(:team)
-      insert(:site, team: team1, members: [user1], domain: "one.example.com")
-      insert(:team_membership, team: team1, user: user1, role: :owner)
+      new_site(owner: user1, domain: "one.example.com")
+      site2 = new_site(domain: "two.example.com")
 
-      team2 = insert(:team)
-
-      site2 =
-        insert(:site,
-          team: team2,
-          members: [user2],
-          domain: "two.example.com"
-        )
-
-      insert(:team_membership, team: team2, user: user2, role: :owner)
-
-      membership = insert(:site_membership, user: user1, role: :viewer, site: site2)
-      team_membership = insert(:team_membership, team: team2, user: user1, role: :guest)
-      insert(:guest_membership, team_membership: team_membership, site: site2, role: :viewer)
+      user1 = site2 |> add_guest(user: user1, role: :viewer)
 
       {:ok, _} = Sites.toggle_pin(user1, site2)
 
-      Repo.delete!(membership)
-      Repo.delete!(team_membership)
+      revoke_membership(site2, user1)
 
       assert %{entries: [%{domain: "one.example.com"}]} = Sites.list(user1, %{})
       assert %{entries: [%{domain: "one.example.com"}]} = Sites.list_with_invitations(user1, %{})
@@ -245,40 +230,16 @@ defmodule Plausible.SitesTest do
                Plausible.Teams.Sites.list_with_invitations(user1, %{})
     end
 
-    test "pinned site doesn't matter with membership revoked (with active invitation)" do
-      user1 = insert(:user, email: "user1@example.com")
-      user2 = insert(:user, email: "user2@example.com")
+    test "pinned site with active invitation" do
+      user1 = new_user(email: "user1@example.com")
+      user2 = new_user(email: "user2@example.com")
 
-      team1 = insert(:team)
-      insert(:site, team: team1, members: [user1], domain: "one.example.com")
-      insert(:team_membership, team: team1, user: user1, role: :owner)
+      site1 = new_site(domain: "one.example.com", owner: user1)
+      site2 = new_site(domain: "two.example.com")
 
-      team2 = insert(:team)
+      invite_guest(site2, user1, role: :editor, inviter: user2)
 
-      site2 =
-        insert(:site,
-          team: team2,
-          members: [user2],
-          domain: "two.example.com"
-        )
-
-      insert(:team_membership, team: team2, user: user2, role: :owner)
-
-      membership = insert(:site_membership, user: user1, role: :viewer, site: site2)
-      team_membership = insert(:team_membership, team: team2, user: user1, role: :guest)
-      insert(:guest_membership, team_membership: team_membership, site: site2, role: :viewer)
-
-      insert(:invitation, email: user1.email, inviter: user2, role: :owner, site: site2)
-
-      team_invitation =
-        insert(:team_invitation, team: team2, email: user1.email, inviter: user2, role: :guest)
-
-      insert(:guest_invitation, team_invitation: team_invitation, site: site2, role: :editor)
-
-      {:ok, _} = Sites.toggle_pin(user1, site2)
-
-      Repo.delete!(membership)
-      Repo.delete!(team_membership)
+      {:ok, _} = Sites.toggle_pin(user1, site1)
 
       assert %{entries: [%{domain: "one.example.com"}]} = Sites.list(user1, %{})
 
@@ -292,447 +253,202 @@ defmodule Plausible.SitesTest do
     end
 
     test "puts invitations first, pinned sites second, sites last" do
-      user = insert(:user, email: "hello@example.com")
+      user1 = new_user()
+      user2 = new_user()
+      user3 = new_user()
 
-      team1 = insert(:team)
+      site1 = new_site(owner: user1, domain: "one.example.com")
+      site2 = new_site(owner: user2, domain: "two.example.com")
+      site3 = new_site(domain: "three.example.com")
+      site4 = new_site(domain: "four.example.com")
+      site5 = new_site(owner: user3, domain: "five.example.com")
 
-      site1 =
-        %{id: site_id1} = insert(:site, team: team1, members: [user], domain: "one.example.com")
+      invite_guest(site2, user1, role: :editor, inviter: user2)
+      add_guest(site3, user: user1, role: :viewer)
+      add_guest(site4, user: user1, role: :editor)
 
-      insert(:team_membership, team: team1, user: user, role: :owner)
-      team2 = insert(:team)
+      invite_transfer(site5, user1, inviter: user3)
 
-      site2 =
-        %{id: site_id2} = insert(:site, team: team2, members: [user], domain: "two.example.com")
+      {:ok, _} = Sites.toggle_pin(user1, site3)
 
-      insert(:team_membership, team: team2, user: build(:user), role: :owner)
-      team_membership2 = insert(:team_membership, team: team2, user: user, role: :guest)
-      insert(:guest_membership, team_membership: team_membership2, site: site2, role: :editor)
-
-      team4 = insert(:team)
-
-      site4 =
-        %{id: site_id4} = insert(:site, team: team4, members: [user], domain: "four.example.com")
-
-      insert(:team_membership, team: team4, user: build(:user), role: :owner)
-      team_membership4 = insert(:team_membership, team: team4, user: user, role: :guest)
-      insert(:guest_membership, team_membership: team_membership4, site: site4, role: :viewer)
-
-      _rogue_site = insert(:site, team: build(:team), domain: "rogue.example.com")
-
-      ## Having owner invite on owned site does not make much sense?
-      ## Maybe that was a repro of real-life example?
-      # insert(:invitation, email: user.email, inviter: build(:user), role: :owner, site: site1)
-
-      # team_invitation1 =
-      #   insert(:team_invitation,
-      #     team: team1,
-      #     email: user.email,
-      #     inviter: build(:user),
-      #     role: :guest
-      #   )
-
-      # insert(:guest_invitation, team_invitation: team_invitation1, site: site1, role: :editor)
-
-      team3 = insert(:team)
-
-      site3 = %{id: site_id3} = insert(:site, team: team3, domain: "three.example.com")
-
-      insert(:invitation, email: user.email, inviter: build(:user), role: :viewer, site: site3)
-
-      team_invitation2 =
-        insert(:team_invitation,
-          team: team3,
-          email: user.email,
-          inviter: build(:user),
-          role: :guest
-        )
-
-      insert(:guest_invitation, team_invitation: team_invitation2, site: site3, role: :viewer)
-
-      insert(:invitation, email: "friend@example.com", inviter: user, role: :viewer, site: site1)
-
-      team_invitation3 =
-        insert(:team_invitation,
-          team: team1,
-          email: "friend@example.com",
-          inviter: user,
-          role: :guest
-        )
-
-      insert(:guest_invitation, team_invitation: team_invitation3, site: site1, role: :viewer)
-
-      insert(:invitation,
-        site: site1,
-        inviter: user,
-        email: "another@example.com"
-      )
-
-      team_invitation4 =
-        insert(:team_invitation,
-          team: team1,
-          email: "another@example.com",
-          inviter: user,
-          role: :guest
-        )
-
-      insert(:guest_invitation, team_invitation: team_invitation4, site: site1, role: :editor)
-
-      {:ok, _} = Sites.toggle_pin(user, site2)
+      site1_id = site1.id
+      site2_id = site2.id
+      site3_id = site3.id
+      site4_id = site4.id
+      site5_id = site5.id
 
       assert %{
                entries: [
-                 %{id: ^site_id2, entry_type: "pinned_site"},
-                 %{id: ^site_id4, entry_type: "site"},
-                 %{id: ^site_id1, entry_type: "site"}
+                 %{id: ^site3_id, entry_type: "pinned_site"},
+                 %{id: ^site4_id, entry_type: "site"},
+                 %{id: ^site1_id, entry_type: "site"}
                ]
-             } = Sites.list(user, %{})
+             } = Sites.list(user1, %{})
 
       assert %{
                entries: [
-                 %{id: ^site_id3, entry_type: "invitation"},
-                 %{id: ^site_id2, entry_type: "pinned_site"},
-                 %{id: ^site_id4, entry_type: "site"},
-                 %{id: ^site_id1, entry_type: "site"}
+                 %{id: ^site5_id, entry_type: "invitation"},
+                 %{id: ^site2_id, entry_type: "invitation"},
+                 %{id: ^site3_id, entry_type: "pinned_site"},
+                 %{id: ^site4_id, entry_type: "site"},
+                 %{id: ^site1_id, entry_type: "site"}
                ]
-             } = Sites.list_with_invitations(user, %{})
-
-      assert %{
-               entries: [
-                 %{id: ^site_id2, entry_type: "pinned_site"},
-                 %{id: ^site_id4, entry_type: "site"},
-                 %{id: ^site_id1, entry_type: "site"}
-               ]
-             } = Plausible.Teams.Sites.list(user, %{})
-
-      assert %{
-               entries: [
-                 %{id: ^site_id3, entry_type: "invitation"},
-                 %{id: ^site_id2, entry_type: "pinned_site"},
-                 %{id: ^site_id4, entry_type: "site"},
-                 %{id: ^site_id1, entry_type: "site"}
-               ]
-             } = Plausible.Teams.Sites.list_with_invitations(user, %{})
+             } = Sites.list_with_invitations(user1, %{})
     end
 
     test "pinned sites are ordered according to the time they were pinned at" do
-      user = insert(:user, email: "hello@example.com")
-      {:ok, team} = Plausible.Teams.get_or_create(user)
+      user1 = new_user()
+      user2 = new_user()
+      user3 = new_user()
 
-      site1 =
-        %{id: site_id1} = insert(:site, team: team, members: [user], domain: "one.example.com")
+      site1 = new_site(owner: user1, domain: "one.example.com")
+      site2 = new_site(owner: user2, domain: "two.example.com")
+      site3 = new_site(domain: "three.example.com")
+      site4 = new_site(domain: "four.example.com")
+      site5 = new_site(owner: user3, domain: "five.example.com")
 
-      site2 =
-        %{id: site_id2} = insert(:site, team: team, members: [user], domain: "two.example.com")
+      invite_guest(site2, user1, role: :editor, inviter: user2)
+      add_guest(site3, user: user1, role: :viewer)
+      add_guest(site4, user: user1, role: :editor)
 
-      site4 =
-        %{id: site_id4} = insert(:site, team: team, members: [user], domain: "four.example.com")
+      invite_transfer(site5, user1, inviter: user3)
 
-      _rogue_site = insert(:site, domain: "rogue.example.com")
+      {:ok, _} = Sites.toggle_pin(user1, site3)
 
-      site1_invitation =
-        insert(:invitation, email: user.email, inviter: build(:user), role: :owner, site: site1)
+      site1_id = site1.id
+      site2_id = site2.id
+      site3_id = site3.id
+      site4_id = site4.id
+      site5_id = site5.id
 
-      Plausible.Teams.Invitations.invite_sync(site1, site1_invitation)
-
-      site3 =
-        %{id: site_id3} =
-        insert(:site,
-          domain: "three.example.com",
-          invitations: []
-        )
-
-      site3_invitation1 =
-        insert(:invitation, site: site3, email: user.email, inviter: build(:user), role: :viewer)
-
-      Plausible.Teams.Invitations.invite_sync(site3, site3_invitation1)
-
-      site1_invitation2 =
-        insert(:invitation,
-          email: "friend@example.com",
-          inviter: user,
-          role: :viewer,
-          site: site1
-        )
-
-      Plausible.Teams.Invitations.invite_sync(site1, site1_invitation2)
-
-      site1_invitation3 =
-        insert(:invitation,
-          site: site1,
-          inviter: user,
-          email: "another@example.com"
-        )
-
-      Plausible.Teams.Invitations.invite_sync(site1, site1_invitation3)
-
-      Sites.set_option(user, site2, :pinned_at, ~N[2023-10-22 12:00:00])
-      {:ok, _} = Sites.toggle_pin(user, site4)
+      Sites.set_option(user1, site1, :pinned_at, ~N[2023-10-22 12:00:00])
+      {:ok, _} = Sites.toggle_pin(user1, site3)
 
       assert %{
                entries: [
-                 %{id: ^site_id4, entry_type: "pinned_site"},
-                 %{id: ^site_id2, entry_type: "pinned_site"},
-                 %{id: ^site_id1, entry_type: "site"}
+                 %{id: ^site3_id, entry_type: "pinned_site"},
+                 %{id: ^site1_id, entry_type: "pinned_site"},
+                 %{id: ^site4_id, entry_type: "site"}
                ]
-             } = Sites.list(user, %{})
+             } = Sites.list(user1, %{})
 
       assert %{
                entries: [
-                 %{id: ^site_id3, entry_type: "invitation"},
-                 %{id: ^site_id4, entry_type: "pinned_site"},
-                 %{id: ^site_id2, entry_type: "pinned_site"},
-                 %{id: ^site_id1, entry_type: "site"}
+                 %{id: ^site5_id, entry_type: "invitation"},
+                 %{id: ^site2_id, entry_type: "invitation"},
+                 %{id: ^site3_id, entry_type: "pinned_site"},
+                 %{id: ^site1_id, entry_type: "pinned_site"},
+                 %{id: ^site4_id, entry_type: "site"}
                ]
-             } = Sites.list_with_invitations(user, %{})
+             } = Sites.list_with_invitations(user1, %{})
     end
 
     test "filters by domain" do
-      user = insert(:user)
-      {:ok, team} = Plausible.Teams.get_or_create(user)
+      user1 = new_user()
+      user2 = new_user()
+      user3 = new_user()
 
-      %{id: site_id1} = insert(:site, domain: "first.example.com", team: team, members: [user])
-      %{id: _site_id2} = insert(:site, domain: "second.example.com", team: team, members: [user])
-      _rogue_site = insert(:site)
+      site1 = new_site(owner: user1, domain: "first.example.com")
+      site2 = new_site(owner: user2, domain: "first-transfer.example.com")
+      site3 = new_site(owner: user3, domain: "first-invitation.example.com")
+      _site4 = new_site(owner: user1, domain: "another.example.com")
 
-      site3 = %{id: site_id3} = insert(:site, domain: "first-another.example.com")
+      invite_guest(site3, user1, role: :viewer, inviter: user3)
+      invite_transfer(site2, user1, inviter: user2)
 
-      site3_invitation =
-        insert(:invitation, site: site3, email: user.email, inviter: build(:user), role: :viewer)
-
-      Plausible.Teams.Invitations.invite_sync(site3, site3_invitation)
-
-      assert %{
-               entries: [
-                 %{id: ^site_id1}
-               ]
-             } = Sites.list(user, %{}, filter_by_domain: "first")
+      site1_id = site1.id
+      site2_id = site2.id
+      site3_id = site3.id
 
       assert %{
                entries: [
-                 %{id: ^site_id3},
-                 %{id: ^site_id1}
+                 %{id: ^site1_id}
                ]
-             } = Sites.list_with_invitations(user, %{}, filter_by_domain: "first")
-    end
-  end
-
-  describe "list/3" do
-    test "returns sites only, no invitations" do
-      user = insert(:user, email: "hello@example.com")
-      {:ok, team} = Plausible.Teams.get_or_create(user)
-
-      site1 =
-        %{id: site_id1} = insert(:site, members: [user], team: team, domain: "one.example.com")
-
-      %{id: site_id2} = insert(:site, members: [user], team: team, domain: "two.example.com")
-      %{id: site_id4} = insert(:site, members: [user], team: team, domain: "four.example.com")
-
-      _rogue_site = insert(:site, domain: "rogue.example.com")
-
-      site1_invitation =
-        insert(:invitation, email: user.email, inviter: build(:user), role: :owner, site: site1)
-
-      Plausible.Teams.Invitations.invite_sync(site1, site1_invitation)
-
-      site3 = insert(:site, domain: "three.example.com")
-
-      site3_invitation =
-        insert(:invitation, site: site3, email: user.email, inviter: build(:user), role: :viewer)
-
-      Plausible.Teams.Invitations.invite_sync(site3, site3_invitation)
-
-      site1_invitation2 =
-        insert(:invitation,
-          email: "friend@example.com",
-          inviter: user,
-          role: :viewer,
-          site: site1
-        )
-
-      Plausible.Teams.Invitations.invite_sync(site1, site1_invitation2)
-
-      site1_invitation3 =
-        insert(:invitation,
-          site: site1,
-          inviter: user,
-          email: "another@example.com"
-        )
-
-      Plausible.Teams.Invitations.invite_sync(site1, site1_invitation3)
+             } = Sites.list(user1, %{}, filter_by_domain: "first")
 
       assert %{
                entries: [
-                 %{id: ^site_id4, entry_type: "site"},
-                 %{id: ^site_id1, entry_type: "site"},
-                 %{id: ^site_id2, entry_type: "site"}
+                 %{id: ^site3_id},
+                 %{id: ^site2_id},
+                 %{id: ^site1_id}
                ]
-             } = Sites.list(user, %{})
+             } = Sites.list_with_invitations(user1, %{}, filter_by_domain: "first")
     end
 
     test "handles pagination correctly" do
-      user = insert(:user)
-      {:ok, team} = Plausible.Teams.get_or_create(user)
+      user1 = new_user()
+      user2 = new_user()
+      user3 = new_user()
 
-      %{id: site_id1} = insert(:site, members: [user], team: team)
-      %{id: site_id2} = insert(:site, members: [user], team: team)
-      _rogue_site = insert(:site)
+      site1 = new_site(owner: user1, domain: "one.example.com")
+      site2 = new_site(owner: user2, domain: "two.example.com")
+      site3 = new_site(domain: "three.example.com")
+      site4 = new_site(domain: "four.example.com")
+      site5 = new_site(owner: user3, domain: "five.example.com")
 
-      ignored_site = insert(:site)
+      invite_guest(site2, user1, role: :editor, inviter: user2)
+      add_guest(site3, user: user1, role: :viewer)
+      add_guest(site4, user: user1, role: :editor)
 
-      ignored_invitation =
-        insert(:invitation,
-          site: ignored_site,
-          email: user.email,
-          inviter: build(:user),
-          role: :viewer
-        )
+      invite_transfer(site5, user1, inviter: user3)
 
-      Plausible.Teams.Invitations.invite_sync(ignored_site, ignored_invitation)
+      {:ok, _} = Sites.toggle_pin(user1, site3)
 
-      site4 = %{id: site_id4} = insert(:site, members: [user], team: team)
-
-      {:ok, _} = Sites.toggle_pin(user, site4)
+      site1_id = site1.id
+      site2_id = site2.id
+      site3_id = site3.id
+      site4_id = site4.id
+      site5_id = site5.id
 
       assert %{
-               entries: [
-                 %{id: ^site_id4},
-                 %{id: ^site_id1}
-               ],
+               entries: [%{id: ^site3_id}, %{id: ^site4_id}],
                page_number: 1,
                page_size: 2,
                total_entries: 3,
                total_pages: 2
-             } = Sites.list(user, %{"page_size" => 2})
+             } = Sites.list(user1, %{"page_size" => 2})
 
       assert %{
-               entries: [
-                 %{id: ^site_id2}
-               ],
+               entries: [%{id: ^site1_id}],
                page_number: 2,
                page_size: 2,
                total_entries: 3,
                total_pages: 2
-             } = Sites.list(user, %{"page" => 2, "page_size" => 2})
+             } = Sites.list(user1, %{"page_size" => 2, "page" => 2})
 
       assert %{
-               entries: [
-                 %{id: ^site_id4},
-                 %{id: ^site_id1}
-               ],
+               entries: [%{id: ^site3_id}, %{id: ^site4_id}, %{id: ^site1_id}],
+               page_number: 1,
+               page_size: 3,
+               total_entries: 3,
+               total_pages: 1
+             } = Sites.list(user1, %{"page_size" => 3})
+
+      # list_with_invitations
+      #
+      assert %{
+               entries: [%{id: ^site5_id}, %{id: ^site2_id}],
                page_number: 1,
                page_size: 2,
-               total_entries: 3,
-               total_pages: 2
-             } = Sites.list(user, %{"page" => 1, "page_size" => 2})
-    end
-  end
-
-  describe "list_with_invitations/3" do
-    test "returns invitations and sites" do
-      user = insert(:user, email: "hello@example.com")
-      {:ok, team} = Plausible.Teams.get_or_create(user)
-
-      site1 =
-        %{id: site_id1} = insert(:site, members: [user], team: team, domain: "one.example.com")
-
-      %{id: site_id2} = insert(:site, members: [user], team: team, domain: "two.example.com")
-      %{id: site_id4} = insert(:site, members: [user], team: team, domain: "four.example.com")
-
-      _rogue_site = insert(:site, domain: "rogue.example.com")
-
-      site1_invitation =
-        insert(:invitation, email: user.email, inviter: build(:user), role: :owner, site: site1)
-
-      Plausible.Teams.Invitations.invite_sync(site1, site1_invitation)
-
-      site3 =
-        %{id: site_id3} =
-        insert(:site,
-          domain: "three.example.com",
-          invitations: []
-        )
-
-      site3_invitation =
-        insert(:invitation, site: site3, email: user.email, inviter: build(:user), role: :viewer)
-
-      Plausible.Teams.Invitations.invite_sync(site3, site3_invitation)
-
-      site1_invitation2 =
-        insert(:invitation,
-          email: "friend@example.com",
-          inviter: user,
-          role: :viewer,
-          site: site1
-        )
-
-      Plausible.Teams.Invitations.invite_sync(site1, site1_invitation2)
-
-      site1_invitation3 =
-        insert(:invitation,
-          site: site1,
-          inviter: user,
-          email: "another@example.com"
-        )
-
-      Plausible.Teams.Invitations.invite_sync(site1, site1_invitation3)
+               total_entries: 5,
+               total_pages: 3
+             } = Sites.list_with_invitations(user1, %{"page_size" => 2})
 
       assert %{
-               entries: [
-                 %{id: ^site_id3, entry_type: "invitation"},
-                 %{id: ^site_id4, entry_type: "site"},
-                 %{id: ^site_id1, entry_type: "site"},
-                 %{id: ^site_id2, entry_type: "site"}
-               ]
-             } = Sites.list_with_invitations(user, %{})
-    end
-
-    test "handles pagination correctly" do
-      user = insert(:user)
-      {:ok, team} = Plausible.Teams.get_or_create(user)
-
-      %{id: site_id1} = insert(:site, members: [user], team: team)
-      %{id: site_id2} = insert(:site, members: [user], team: team)
-      _rogue_site = insert(:site)
-
-      site3 = %{id: site_id3} = insert(:site)
-
-      site3_invitation =
-        insert(:invitation, site: site3, email: user.email, inviter: build(:user), role: :viewer)
-
-      Plausible.Teams.Invitations.invite_sync(site3, site3_invitation)
-
-      assert %{
-               entries: [
-                 %{id: ^site_id3},
-                 %{id: ^site_id1}
-               ],
-               page_number: 1,
-               page_size: 2,
-               total_entries: 3,
-               total_pages: 2
-             } = Sites.list_with_invitations(user, %{"page_size" => 2})
-
-      assert %{
-               entries: [
-                 %{id: ^site_id2}
-               ],
+               entries: [%{id: ^site3_id}, %{id: ^site4_id}],
                page_number: 2,
                page_size: 2,
-               total_entries: 3,
-               total_pages: 2
-             } = Sites.list_with_invitations(user, %{"page" => 2, "page_size" => 2})
+               total_entries: 5,
+               total_pages: 3
+             } = Sites.list_with_invitations(user1, %{"page_size" => 2, "page" => 2})
 
       assert %{
-               entries: [
-                 %{id: ^site_id3},
-                 %{id: ^site_id1}
-               ],
-               page_number: 1,
+               entries: [%{id: ^site1_id}],
+               page_number: 3,
                page_size: 2,
-               total_entries: 3,
-               total_pages: 2
-             } = Sites.list_with_invitations(user, %{"page" => 1, "page_size" => 2})
+               total_entries: 5,
+               total_pages: 3
+             } = Sites.list_with_invitations(user1, %{"page_size" => 2, "page" => 3})
     end
   end
 
