@@ -71,10 +71,21 @@ defmodule Plausible.Sites do
     )
   end
 
-  defdelegate list(user, pagination_params, opts \\ []), to: Plausible.Teams.Sites
+  def list(user, pagination_params, opts \\ []) do
+    if Plausible.Teams.read_team_schemas?(user) do
+      Plausible.Teams.Sites.list(user, pagination_params, opts)
+    else
+      old_list(user, pagination_params, opts)
+    end
+  end
 
-  defdelegate list_with_invitations(user, pagination_params, opts \\ []),
-    to: Plausible.Teams.Sites
+  def list_with_invitations(user, pagination_params, opts \\ []) do
+    if Plausible.Teams.read_team_schemas?(user) do
+      Plausible.Teams.Sites.list_with_invitations(user, pagination_params, opts)
+    else
+      old_list_with_invitations(user, pagination_params, opts)
+    end
+  end
 
   @spec old_list(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
   def old_list(user, pagination_params, opts \\ []) do
