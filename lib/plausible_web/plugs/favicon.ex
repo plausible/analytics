@@ -35,7 +35,10 @@ defmodule PlausibleWeb.Favicon do
     "Brave" => "search.brave.com",
     "Telegram" => "telegram.org",
     "Sogou" => "sogou.com",
-    "Wikipedia" => "en.wikipedia.org"
+    "Wikipedia" => "en.wikipedia.org",
+    "Discord" => "discord.com",
+    "Perplexity" => "perplexity.ai",
+    "Microsoft Teams" => "microsoft.com"
   }
 
   def init(_) do
