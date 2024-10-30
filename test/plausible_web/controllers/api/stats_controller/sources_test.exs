@@ -89,7 +89,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
 
       assert json_response(conn, 200)["meta"] == %{
-               "date_range_label" => "01 Jan"
+               "date_range_label" => "1 Jan 2021"
              }
     end
 
@@ -669,8 +669,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              ]
 
       assert json_response(conn, 200)["meta"] == %{
-               "date_range_label" => "02 Jan",
-               "comparison_date_range_label" => "01 Jan"
+               "date_range_label" => "2 Jan 2021",
+               "comparison_date_range_label" => "1 Jan 2021"
              }
     end
   end

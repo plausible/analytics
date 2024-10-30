@@ -158,21 +158,26 @@ defmodule Plausible.Stats.Breakdown do
   defp dimension_filters(_), do: []
 
   defp format_date_range(%Query{} = query) do
-    query
-    |> Query.date_range(trim_trailing: true)
-    |> string_format_date_range()
+    year = query.now.year
+    %Date.Range{first: first, last: last} = Query.date_range(query, trim_trailing: true)
+
+    cond do
+      first == last ->
+        strfdate(first, first.year != year)
+
+      first.year == last.year ->
+        "#{strfdate(first, false)} - #{strfdate(last, year != last.year)}"
+
+      true ->
+        "#{strfdate(first, true)} - #{strfdate(last, true)}"
+    end
   end
 
-  defp string_format_date_range(%Date.Range{first: first, last: last}) when first == last do
-    Calendar.strftime(first, "%d %b")
+  defp strfdate(date, true = _include_year) do
+    Calendar.strftime(date, "%-d %b %Y")
   end
 
-  defp string_format_date_range(%Date.Range{first: first, last: last})
-       when first.year == last.year do
-    "#{Calendar.strftime(first, "%d %b")} - #{Calendar.strftime(last, "%d %b")}"
-  end
-
-  defp string_format_date_range(%Date.Range{first: first, last: last}) do
-    "#{Calendar.strftime(first, "%d %b %Y")} - #{Calendar.strftime(last, "%d %b %Y")}"
+  defp strfdate(date, false = _include_year) do
+    Calendar.strftime(date, "%-d %b")
   end
 end
