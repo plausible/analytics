@@ -85,14 +85,16 @@ describe('comparisons', () => {
     )
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent('10↑')
-    expect(screen.getByRole('tooltip')).toHaveTextContent([
-      '10 visitors',
-      '↑ 100%',
-      '01 Aug - 31 Aug',
-      'vs',
-      '5 visitors',
-      '01 July - 31 July'
-    ].join(''))
+    expect(screen.getByRole('tooltip')).toHaveTextContent(
+      [
+        '10 visitors',
+        '↑ 100%',
+        '01 Aug - 31 Aug',
+        'vs',
+        '5 visitors',
+        '01 July - 31 July'
+      ].join('')
+    )
   })
 
   it('renders decreased metric', async () => {
@@ -101,14 +103,16 @@ describe('comparisons', () => {
     )
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent('5↓')
-    expect(screen.getByRole('tooltip')).toHaveTextContent([
-      '5 visitors',
-      '↓ 50%',
-      '01 Aug - 31 Aug',
-      'vs',
-      '10 visitors',
-      '01 July - 31 July'
-    ].join(''))
+    expect(screen.getByRole('tooltip')).toHaveTextContent(
+      [
+        '5 visitors',
+        '↓ 50%',
+        '01 Aug - 31 Aug',
+        'vs',
+        '10 visitors',
+        '01 July - 31 July'
+      ].join('')
+    )
   })
 
   it('renders unchanged metric', async () => {
@@ -117,14 +121,16 @@ describe('comparisons', () => {
     )
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent('10')
-    expect(screen.getByRole('tooltip')).toHaveTextContent([
-      '10 visitors',
-      '〰 0%',
-      '01 Aug - 31 Aug',
-      'vs',
-      '10 visitors',
-      '01 July - 31 July'
-    ].join(''))
+    expect(screen.getByRole('tooltip')).toHaveTextContent(
+      [
+        '10 visitors',
+        '〰 0%',
+        '01 Aug - 31 Aug',
+        'vs',
+        '10 visitors',
+        '01 July - 31 July'
+      ].join('')
+    )
   })
 
   it('renders metric with custom label', async () => {
@@ -135,14 +141,16 @@ describe('comparisons', () => {
       />
     )
 
-    expect(screen.getByRole('tooltip')).toHaveTextContent([
-      '10 conversions',
-      '〰 0%',
-      '01 Aug - 31 Aug',
-      'vs',
-      '10 conversions',
-      '01 July - 31 July'
-    ].join(''))
+    expect(screen.getByRole('tooltip')).toHaveTextContent(
+      [
+        '10 conversions',
+        '〰 0%',
+        '01 Aug - 31 Aug',
+        'vs',
+        '10 conversions',
+        '01 July - 31 July'
+      ].join('')
+    )
   })
 
   it('does not render very short labels', async () => {
@@ -153,14 +161,16 @@ describe('comparisons', () => {
       />
     )
 
-    expect(screen.getByRole('tooltip')).toHaveTextContent([
-      '10% ',
-      '〰 0%',
-      '01 Aug - 31 Aug',
-      'vs',
-      '10% ',
-      '01 July - 31 July'
-    ].join(''))
+    expect(screen.getByRole('tooltip')).toHaveTextContent(
+      [
+        '10% ',
+        '〰 0%',
+        '01 Aug - 31 Aug',
+        'vs',
+        '10% ',
+        '01 July - 31 July'
+      ].join('')
+    )
   })
 
   it('renders with custom formatter', async () => {
@@ -172,14 +182,16 @@ describe('comparisons', () => {
     )
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent('10$↑')
-    expect(screen.getByRole('tooltip')).toHaveTextContent([
-      '10$ test',
-      '↑ 100%',
-      '01 Aug - 31 Aug',
-      'vs',
-      '5$ test',
-      '01 July - 31 July'
-    ].join(''))
+    expect(screen.getByRole('tooltip')).toHaveTextContent(
+      [
+        '10$ test',
+        '↑ 100%',
+        '01 Aug - 31 Aug',
+        'vs',
+        '5$ test',
+        '01 July - 31 July'
+      ].join('')
+    )
   })
 
   it('renders revenue change', async () => {
@@ -193,14 +205,16 @@ describe('comparisons', () => {
     )
 
     expect(screen.getByTestId('metric-value')).toHaveTextContent('$1.7K')
-    expect(screen.getByRole('tooltip')).toHaveTextContent([
-      '$1,659.50 average_revenue',
-      '〰 0%',
-      '01 Aug - 31 Aug',
-      'vs',
-      '$1,659.50 average_revenue',
-      '01 July - 31 July'
-    ].join(''))
+    expect(screen.getByRole('tooltip')).toHaveTextContent(
+      [
+        '$1,659.50 average_revenue',
+        '〰 0%',
+        '01 Aug - 31 Aug',
+        'vs',
+        '$1,659.50 average_revenue',
+        '01 July - 31 July'
+      ].join('')
+    )
   })
 
   it('renders without tooltip when revenue null', async () => {
