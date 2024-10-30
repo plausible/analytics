@@ -36,7 +36,7 @@ export async function screenshot(locator: Page | Locator, testInfo: TestInfo): P
 
   const path = testInfo.snapshotPath(`${snapshotIndex}.png`)
 
-  await locator.screenshot({ path })
+  await locator.screenshot({ path, animations: "disabled", fullPage: true })
 }
 
 test.beforeEach(async ({ context }) => {
