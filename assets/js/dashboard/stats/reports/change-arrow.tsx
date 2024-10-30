@@ -3,6 +3,8 @@
 import React from 'react'
 import { Metric } from '../../../types/query-api'
 import { numberShortFormatter } from '../../util/number-formatter'
+import { ArrowDownRightIcon, ArrowUpRightIcon } from '@heroicons/react/24/solid'
+import classNames from 'classnames'
 
 export function ChangeArrow({
   change,
@@ -19,31 +21,30 @@ export function ChangeArrow({
     ? null
     : ` ${numberShortFormatter(Math.abs(change))}%`
 
-  let content = null
+  let icon = null
+  const arrowClassName = classNames(
+    color(change, metric),
+    'inline-block h-3 w-3 stroke-[1px] stroke-current'
+  )
 
   if (change > 0) {
-    const color = metric === 'bounce_rate' ? 'text-red-400' : 'text-green-500'
-    content = (
-      <>
-        <span className={color + ' font-bold'}>&uarr;</span>
-        {formattedChange}
-      </>
-    )
+    icon = <ArrowUpRightIcon className={arrowClassName} />
   } else if (change < 0) {
-    const color = metric === 'bounce_rate' ? 'text-green-500' : 'text-red-400'
-    content = (
-      <>
-        <span className={color + ' font-bold'}>&darr;</span>
-        {formattedChange}
-      </>
-    )
-  } else if (change === 0) {
-    content = <>&#12336;{formattedChange}</>
+    icon = <ArrowDownRightIcon className={arrowClassName} />
+  } else if (change === 0 && !hideNumber) {
+    icon = <>&#12336;</>
   }
 
   return (
     <span className={className} data-testid="change-arrow">
-      {content}
+      {icon}
+      {formattedChange}
     </span>
   )
+}
+
+function color(change: number, metric: Metric) {
+  const invert = metric === 'bounce_rate'
+
+  return change > 0 != invert ? 'text-green-500' : 'text-red-400'
 }

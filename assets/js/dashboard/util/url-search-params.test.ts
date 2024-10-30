@@ -11,6 +11,11 @@ import {
   stringifySearchEntry
 } from './url'
 
+beforeEach(() => {
+  // Silence logs in tests
+  jest.spyOn(console, 'error').mockImplementation(jest.fn())
+})
+
 describe('using json URL parsing with URLSearchParams intermediate', () => {
   it.each([['#'], ['&'], ['=']])('throws on special symbol %p', (s) => {
     const searchString = `?param=${encodeURIComponent(s)}`
