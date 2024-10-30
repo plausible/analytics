@@ -33,7 +33,6 @@ defmodule PlausibleWeb.Favicon do
   @placeholder_icon File.read!(@placeholder_icon_location)
   @custom_icons %{
     "Brave" => "search.brave.com",
-    "Telegram" => "telegram.org",
     "Sogou" => "sogou.com",
     "Wikipedia" => "en.wikipedia.org",
     "Discord" => "discord.com",
