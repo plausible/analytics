@@ -179,10 +179,19 @@ defmodule Plausible.Teams.Invitations do
 
     team_invitation =
       guest_invitation.team_invitation
-      |> Repo.preload([:team, :inviter, guest_invitations: :site])
+      |> Repo.preload([
+        :team,
+        :inviter,
+        guest_invitations: :site
+      ])
 
     {:ok, _} =
-      do_accept(team_invitation, user, NaiveDateTime.utc_now(:second), send_email?: false)
+      do_accept(team_invitation, user, NaiveDateTime.utc_now(:second),
+        send_email?: false,
+        guest_invitations: [guest_invitation]
+      )
+
+    prune_guest_invitations(team_invitation.team)
   end
 
   def accept_transfer_sync(site_invitation, user) do
@@ -253,7 +262,7 @@ defmodule Plausible.Teams.Invitations do
 
   defp do_accept(team_invitation, user, now, opts \\ []) do
     send_email? = Keyword.get(opts, :send_email?, true)
-    guest_invitations = team_invitation.guest_invitations
+    guest_invitations = Keyword.get(opts, :guest_invitations, team_invitation.guest_invitations)
 
     Repo.transaction(fn ->
       with {:ok, team_membership} <-
