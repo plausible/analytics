@@ -87,6 +87,10 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                %{"name" => "Google", "visitors" => 2},
                %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
+
+      assert json_response(conn, 200)["meta"] == %{
+               "date_range_label" => "1 Jan 2021"
+             }
     end
 
     test "returns top sources with :is_not filter on custom pageview props", %{
@@ -663,6 +667,11 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  }
                }
              ]
+
+      assert json_response(conn, 200)["meta"] == %{
+               "date_range_label" => "2 Jan 2021",
+               "comparison_date_range_label" => "1 Jan 2021"
+             }
     end
   end
 
