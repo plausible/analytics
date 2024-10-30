@@ -174,7 +174,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
       site_id: site_id,
       import_id: import_id,
       date: get_date(row),
-      source: row.dimensions |> Map.fetch!("sessionSource") |> parse_referrer(),
+      source: row.dimensions |> Map.fetch!("sessionSource") |> parse_source(),
       referrer: nil,
       # Only `source` exists in GA4 API
       utm_source: nil,
@@ -343,14 +343,13 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
   defp default_if_missing(value, default) when value in @missing_values, do: default
   defp default_if_missing(value, _default), do: value
 
-  defp parse_referrer(nil), do: nil
-  defp parse_referrer("(direct)"), do: nil
-  defp parse_referrer("google"), do: "Google"
-  defp parse_referrer("bing"), do: "Bing"
-  defp parse_referrer("duckduckgo"), do: "DuckDuckGo"
+  defp parse_source(nil), do: nil
+  defp parse_source("(direct)"), do: nil
+  defp parse_source("google"), do: "Google"
+  defp parse_source("bing"), do: "Bing"
+  defp parse_source("duckduckgo"), do: "DuckDuckGo"
 
-  defp parse_referrer(ref) do
-    RefInspector.parse("https://" <> ref)
-    |> PlausibleWeb.RefInspector.parse()
+  defp parse_source(ref) do
+    Plausible.Ingestion.Source.parse("https://" <> ref)
   end
 end
