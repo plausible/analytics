@@ -48,7 +48,7 @@ defmodule Plausible.Google.GA4.HTTP do
         url,
         [{"Authorization", "Bearer #{report_request.access_token}"}],
         params,
-        receive_timeout: 60_000
+        receive_timeout: 80_000
       )
 
     with {:ok, %{body: body}} <- response,
