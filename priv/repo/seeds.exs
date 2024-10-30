@@ -15,7 +15,6 @@ case System.get_env("RANDOM_SEED") do
     {seed, _} = Integer.parse(seed_string)
 
     :rand.seed(:exsplus, {seed, seed, seed})
-    :random.seed({seed, seed, seed})
 
   _ ->
     nil
@@ -116,21 +115,6 @@ if Plausible.ee?() do
 end
 
 put_random_time = fn
-  date, 0 ->
-    current_hour = Time.utc_now().hour
-    current_minute = Time.utc_now().minute
-
-    random_time =
-      Time.new!(
-        Enum.random(0..current_hour),
-        Enum.random(0..current_minute),
-        0
-      )
-
-    date
-    |> NaiveDateTime.new!(random_time)
-    |> NaiveDateTime.truncate(:second)
-
   date, _ ->
     random_time = Time.new!(:rand.uniform(23), :rand.uniform(59), 0)
 
