@@ -270,6 +270,7 @@ defmodule Plausible.SitesTest do
       invite_transfer(site5, user1, inviter: user3)
 
       {:ok, _} = Sites.toggle_pin(user1, site3)
+      {:ok, _pin_to_ignore} = Sites.toggle_pin(user2, site2)
 
       site1_id = site1.id
       site2_id = site2.id

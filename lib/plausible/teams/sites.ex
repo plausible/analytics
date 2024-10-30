@@ -91,7 +91,7 @@ defmodule Plausible.Teams.Sites do
       on: u.site_id == s.id,
       as: :site,
       left_join: up in Site.UserPreference,
-      on: up.site_id == s.id,
+      on: up.site_id == s.id and up.user_id == ^user.id,
       select: %{
         s
         | entry_type:
@@ -222,7 +222,7 @@ defmodule Plausible.Teams.Sites do
       on: u.site_id == s.id,
       as: :site,
       left_join: up in Site.UserPreference,
-      on: up.site_id == s.id,
+      on: up.site_id == s.id and up.user_id == ^user.id,
       left_join: ti in Teams.Invitation,
       on: ti.id == u.invitation_id,
       left_join: st in Teams.SiteTransfer,
