@@ -246,7 +246,8 @@ defmodule Plausible.Ingestion.Event do
       timestamp: event.request.timestamp,
       name: event.request.event_name,
       hostname: event.request.hostname,
-      pathname: event.request.pathname
+      pathname: event.request.pathname,
+      scroll_depth: event.request.scroll_depth
     })
   end
 
