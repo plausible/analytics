@@ -186,12 +186,14 @@ defmodule Plausible.Teams.Invitations do
       ])
 
     {:ok, _} =
+      result =
       do_accept(team_invitation, user, NaiveDateTime.utc_now(:second),
         send_email?: false,
         guest_invitations: [guest_invitation]
       )
 
     prune_guest_invitations(team_invitation.team)
+    result
   end
 
   def accept_transfer_sync(site_invitation, user) do
