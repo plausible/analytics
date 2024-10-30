@@ -8,13 +8,13 @@
     <meta name="project" content="Plausible v0.0.1">
 
 
-    <title>PlausibleWeb.RefInspector — Plausible v0.0.1</title>
+    <title>Plausible.Ingestion.Source — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D86E47DE.js"></script>
+    <script src="dist/sidebar_items-7365CBCE.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -131,16 +131,20 @@ Pages
 
 <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/refinspector.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">PlausibleWeb.RefInspector</span> 
+  <span translate="no">Plausible.Ingestion.Source</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
+
+  <section id="moduledoc">
+<p>Resolves the <code class="inline">source</code> dimension from a combination of <code class="inline">referer</code> header and either <code class="inline">utm_source</code>, <code class="inline">source</code>, or <code class="inline">ref</code> query parameter.</p>
+  </section>
 
 
   <section id="summary" class="details-list">
@@ -157,7 +161,31 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#format_referrer/1" translate="no">format_referrer(uri)</a>
+        <a href="#find_mapping/1" translate="no">find_mapping(source)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#format_referrer/1" translate="no">format_referrer(referrer)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#init/0" translate="no">init()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#paid_source?/1" translate="no">paid_source?(source)</a>
 
       </div>
 
@@ -173,9 +201,11 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#right_uri?/1" translate="no">right_uri?(arg1)</a>
+        <a href="#resolve/1" translate="no">resolve(request)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Resolves the source of a session based on query params and the <code class="inline">Referer</code> header.</p></div>
 
     </div>
 
@@ -192,6 +222,28 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="find_mapping/1">
+
+  <div class="detail-header">
+    <a href="#find_mapping/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">find_mapping(source)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L106" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
 <section class="detail" id="format_referrer/1">
 
   <div class="detail-header">
@@ -199,9 +251,53 @@ Pages
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">format_referrer(uri)</h1>
+    <h1 class="signature" translate="no">format_referrer(referrer)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/refinspector.ex#L18" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L115" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="init/0">
+
+  <div class="detail-header">
+    <a href="#init/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">init()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L18" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="paid_source?/1">
+
+  <div class="detail-header">
+    <a href="#paid_source?/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">paid_source?(source)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L40" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -223,7 +319,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">parse(ref)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/refinspector.ex#L2" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L92" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -236,16 +332,16 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="right_uri?/1">
+<section class="detail" id="resolve/1">
 
   <div class="detail-header">
-    <a href="#right_uri?/1" class="detail-link" title="Link to this function">
+    <a href="#resolve/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">right_uri?(arg1)</h1>
+    <h1 class="signature" translate="no">resolve(request)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/refinspector.ex#L23" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/source.ex#L76" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -255,7 +351,32 @@ Pages
 
   <section class="docstring">
 
-
+<p>Resolves the source of a session based on query params and the <code class="inline">Referer</code> header.</p><p>When a query parameter like <code class="inline">utm_source</code> is present, it will be prioritized over the <code class="inline">Referer</code> header. When the URL does not contain a source tag, we fall
+back to using <code class="inline">Referer</code> to determine the source. This module also takes care of certain transformations to make the data more useful for the user:</p><ol><li>The RefInspector library is used to categorize referrers into &quot;known&quot; sources. For example, when the referrer is google.com or google.co.uk,
+it will always be stored as &quot;Google&quot; which is more useful for marketers.</li><li>On top of the standard RefInspector behaviour, we also keep a list of <code class="inline">custom_sources.json</code> which extends it with referrers that we have seen in the wild.
+For example, Wikipedia has many domains that need to be combined into a single known source. These could all in theory be <a href="https://github.com/snowplow-referer-parser/referer-parser">upstreamed</a>.</li><li>When a known source is supplied in utm_source (or source, ref) query parameter, we merge it with our known sources in a case-insensitive manner.</li><li>Our list of <code class="inline">custom_sources.json</code> also contains some commonly used utm_source shorthands for certain sources. URL tagging is a mess, and we can never do it
+perfectly, but at least we're making an effort for the most commonly used ones. For example, <code class="inline">ig -&gt; Instagram</code> and <code class="inline">adwords -&gt; Google</code>.</li></ol><h3 id="resolve/1-examples" class="section-heading">
+  <a href="#resolve/1-examples" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Examples:</span>
+</h3>
+<p>  iex&gt; alias Plausible.Ingestion.{Source, Request}
+  iex&gt; base_request = %Request{uri: URI.parse(&quot;<a href="https://plausible.io%22)%7D">https://plausible.io&quot;)}</a>
+  iex&gt; Source.resolve(%{base_request | referrer: &quot;<a href="https://google.com%22%7D">https://google.com&quot;}</a>) # Known referrer from RefInspector
+  &quot;Google&quot;
+  iex&gt; Source.resolve(%{base_request | query_params: %{&quot;utm_source&quot; =&gt; &quot;google&quot;}}) # Known source from RefInspector supplied as downcased utm_source by user
+  &quot;Google&quot;
+  iex&gt; Source.resolve(%{base_request | query_params: %{&quot;utm_source&quot; =&gt; &quot;GOOGLE&quot;}}) # Known source from RefInspector supplied as uppercased utm_source by user
+  &quot;Google&quot;
+  iex&gt; Source.resolve(%{base_request | referrer: &quot;<a href="https://en.m.wikipedia.org%22%7D">https://en.m.wikipedia.org&quot;}</a>) # Known referrer from custom_sources.json
+  &quot;Wikipedia&quot;
+  iex&gt; Source.resolve(%{base_request | query_params: %{&quot;utm_source&quot; =&gt; &quot;wikipedia&quot;}}) # Known source from custom_sources.json supplied as downcased utm_source by user
+  &quot;Wikipedia&quot;
+  iex&gt; Source.resolve(%{base_request | query_params: %{&quot;utm_source&quot; =&gt; &quot;ig&quot;}}) # Known utm_source from custom_sources.json
+  &quot;Instagram&quot;
+  iex&gt; Source.resolve(%{base_request | referrer: &quot;<a href="https://www.markosaric.com%22%7D">https://www.markosaric.com&quot;}</a>) # Unknown source, it is just stored as the domain name
+  &quot;markosaric.com&quot;</p>
   </section>
 </section>
 

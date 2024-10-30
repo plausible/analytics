@@ -114,6 +114,7 @@ Plausible.Imported.SiteImport.html
 Plausible.Imported.UniversalAnalytics.html
 Plausible.Imported.html
 Plausible.IngestRepo.html
+Plausible.Ingestion.Acquisition.html
 Plausible.Ingestion.Counters.Buffer.html
 Plausible.Ingestion.Counters.Record.html
 Plausible.Ingestion.Counters.TelemetryHandler.html
@@ -122,6 +123,7 @@ Plausible.Ingestion.Event.Revenue.html
 Plausible.Ingestion.Event.html
 Plausible.Ingestion.Request.Revenue.html
 Plausible.Ingestion.Request.html
+Plausible.Ingestion.Source.html
 Plausible.License.html
 Plausible.LiveViewTest.html
 Plausible.Mailer.html
@@ -405,7 +407,6 @@ PlausibleWeb.Plugs.ErrorHandler.html
 PlausibleWeb.Plugs.MaybeDisableRegistration.html
 PlausibleWeb.Plugs.NoRobots.html
 PlausibleWeb.Plugs.UserSessionTouch.html
-PlausibleWeb.RefInspector.html
 PlausibleWeb.RemoteIP.html
 PlausibleWeb.RequireAccountPlug.html
 PlausibleWeb.RequireLoggedOutPlug.html
@@ -455,8 +456,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-3BDB95D6.js
-dist/sidebar_items-D86E47DE.js
+dist/search_data-EC08977F.js
+dist/sidebar_items-7365CBCE.js
 index.html
 readme.html
 search.html

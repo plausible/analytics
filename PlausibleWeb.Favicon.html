@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-D86E47DE.js"></script>
+    <script src="dist/sidebar_items-7365CBCE.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -147,7 +147,7 @@ Pages
 to the Plausible frontend.</p><p>The proxying is there so we can reduce the number of third-party domains that
 the browser clients need to connect to. Our goal is to have 0 third-party domain
 connections on the website for privacy reasons.</p><p>This module also maps between categorized sources and their respective URLs for favicons.
-What does that mean exactly? During ingestion we use <a href="PlausibleWeb.RefInspector.html#parse/1"><code class="inline">PlausibleWeb.RefInspector.parse/1</code></a> to
+What does that mean exactly? During ingestion we use <code class="inline">PlausibleWeb.RefInspector.parse/1</code> to
 categorize our referrer sources like so:</p><p>google.com -&gt; Google
 google.co.uk -&gt; Google
 google.com.au -&gt; Google</p><p>So when we show Google as a source in the dashboard, the request to this plug will come as:
@@ -211,7 +211,7 @@ headers that should not be forwarded as defined in <a href="https://www.rfc-edit
     </a>
     <h1 class="signature" translate="no">call(conn, list)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/favicon.ex#L82" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/favicon.ex#L91" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -257,7 +257,7 @@ use <code class="inline">&lt;img src=&quot;https://plausible.io/favicon/sources/
     </a>
     <h1 class="signature" translate="no">init(_)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/favicon.ex#L35" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/favicon.ex#L43" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
