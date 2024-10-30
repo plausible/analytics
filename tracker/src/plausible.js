@@ -48,6 +48,38 @@
   // flag prevents sending multiple pageleaves in those cases.
   var pageLeaveSending = false
 
+  var bodyEl = document.body
+  var docEl = document.documentElement
+
+  function getDocumentHeight() {
+    return Math.max(
+      bodyEl.scrollHeight || 0,
+      bodyEl.offsetHeight || 0,
+      bodyEl.clientHeight || 0,
+      docEl.scrollHeight || 0,
+      docEl.offsetHeight || 0,
+      docEl.clientHeight || 0
+    )
+  }
+
+  function getCurrentScrollDepthPx() {
+    var viewportHeight = window.innerHeight || docEl.clientHeight || 0
+    var scrollTop = window.scrollY || docEl.scrollTop || bodyEl.scrollTop || 0
+
+    return currentDocumentHeight <= viewportHeight ? currentDocumentHeight : scrollTop + viewportHeight
+  }
+
+  var currentDocumentHeight = getDocumentHeight()
+  var maxScrollDepthPx = getCurrentScrollDepthPx()
+
+  document.addEventListener('scroll', function() {
+    var currentScrollDepthPx = getCurrentScrollDepthPx()
+
+    if (currentScrollDepthPx > maxScrollDepthPx) {
+      maxScrollDepthPx = currentScrollDepthPx
+    }
+  })
+
   function triggerPageLeave() {
     if (pageLeaveSending) {return}
     pageLeaveSending = true
@@ -55,6 +87,7 @@
 
     var payload = {
       n: 'pageleave',
+      sd: Math.round((maxScrollDepthPx / currentDocumentHeight) * 100),
       d: dataDomain,
       u: currentPageLeaveURL,
     }
@@ -202,6 +235,8 @@
       if (isSPANavigation && listeningPageLeave) {
         triggerPageLeave();
         currentPageLeaveURL = location.href;
+        currentDocumentHeight = getDocumentHeight()
+        maxScrollDepthPx = getCurrentScrollDepthPx()
       }
       {{/if}}
 
