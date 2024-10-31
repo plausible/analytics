@@ -48,7 +48,7 @@ test('can navigate the dashboard via keyboard shortcuts', async ({ page }, testI
 
 MODALS.forEach(({ key, sectionSelector }) => {
   test(`can open ${key} modal`, async ({ page }, testInfo) => {
-    await clickOpenBreakdownModal(page, sectionSelector, key)
+    await selectTabSection(page, sectionSelector, key)
 
     await checkBreakdownModal(page, sectionSelector, testInfo)
   })
@@ -57,7 +57,7 @@ MODALS.forEach(({ key, sectionSelector }) => {
     page.keyboard.down("X")
     await waitForData(page)
 
-    await clickOpenBreakdownModal(page, sectionSelector, key)
+    await selectTabSection(page, sectionSelector, key)
     await checkBreakdownModal(page, sectionSelector, testInfo)
   })
 })
@@ -91,7 +91,7 @@ async function waitForData(page: Page) {
   await expect(loading).toHaveCount(0)
 }
 
-async function clickOpenBreakdownModal(page: Page, sectionSelector: string, key: string) {
+async function selectTabSection(page: Page, sectionSelector: string, key: string) {
   if (sectionSelector === 'section::sources') {
     await page.getByTestId("campaign-menu").click()
     await page.getByRole('menuitem', { name: key }).click()
