@@ -50,6 +50,7 @@ npm-debug.log
 
 # Playwright assets
 /assets/playwright-tests/.auth
+/assets/playwright-tests/snapshots
 /assets/test-results/
 /assets/playwright-report/
 /assets/blob-report/
