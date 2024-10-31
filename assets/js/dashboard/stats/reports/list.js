@@ -367,7 +367,11 @@ export default function ListReport({
 
   return (
     <LazyLoader onVisible={onVisible}>
-      <div className="w-full" style={{ minHeight: `${MIN_HEIGHT}px` }} data-testid={`list-report::${keyLabel}`}>
+      <div
+        className="w-full"
+        style={{ minHeight: `${MIN_HEIGHT}px` }}
+        data-testid={`list-report::${keyLabel}`}
+      >
         {state.loading && renderLoading()}
         {!state.loading && (
           <FadeIn show={!state.loading} className="h-full">
