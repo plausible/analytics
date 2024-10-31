@@ -62,7 +62,7 @@ jobs:
         with:
           node-version: ${{ steps.versions.outputs.nodejs }}
 
-      - run: sudo apt install faketime
+      - run: sudo apt-get install faketime
 
       - uses: actions/cache@v4
         id: cache
