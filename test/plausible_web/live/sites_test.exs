@@ -16,6 +16,22 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert text(html) =~ "You don't have any sites yet"
     end
 
+    test "renders metadata for invitation", %{
+      conn: conn,
+      user: user
+    } do
+      inviter = new_user()
+      site = new_site(owner: inviter)
+
+      invitation = invite_guest(site, user, inviter: inviter, role: :viewer)
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      invitation_data = get_invitation_data(html)
+
+      assert get_in(invitation_data, ["invitations", invitation.invitation_id, "invitation"])
+    end
+
     @tag :ee_only
     test "renders ownership transfer invitation for a case with no plan", %{
       conn: conn,
