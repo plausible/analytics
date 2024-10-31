@@ -3,7 +3,6 @@ defmodule PlausibleWeb.SiteControllerTest do
   use Plausible.Repo
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
-  use Plausible.Teams.Test
 
   import ExUnit.CaptureLog
   import Mox
@@ -66,7 +65,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      site = new_site(owner: user)
+      site = insert(:site, members: [user])
 
       # will be skipped
       populate_stats(site, [build(:pageview)])
@@ -81,18 +80,21 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "shows invitations for user by email address", %{conn: conn, user: user} do
-      inviter = new_user()
-      site = new_site(owner: inviter)
-      invite_guest(site, user, inviter: inviter, role: :editor)
+      site = insert(:site)
+      insert(:invitation, email: user.email, site_id: site.id, inviter: build(:user))
       conn = get(conn, "/sites")
 
       assert html_response(conn, 200) =~ site.domain
     end
 
     test "invitations are case insensitive", %{conn: conn, user: user} do
-      inviter = new_user()
-      site = new_site(owner: inviter)
-      invite_guest(site, String.upcase(user.email), inviter: inviter, role: :editor)
+      site = insert(:site)
+
+      insert(:invitation,
+        email: String.upcase(user.email),
+        site_id: site.id,
+        inviter: build(:user)
+      )
 
       conn = get(conn, "/sites")
 
@@ -101,8 +103,8 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     test "paginates sites", %{conn: initial_conn, user: user} do
       for i <- 1..25 do
-        new_site(
-          owner: user,
+        insert(:site,
+          members: [user],
           domain: "paginated-site#{String.pad_leading("#{i}", 2, "0")}.example.com"
         )
       end
@@ -145,7 +147,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: initial_conn,
       user: user
     } do
-      new_site(owner: user)
+      insert(:site, members: [user])
 
       conn = get(initial_conn, "/sites")
       resp = html_response(conn, 200)
@@ -166,14 +168,17 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "filters by domain", %{conn: conn, user: user} do
-      _site1 = new_site(domain: "first.example.com", owner: user)
-      _site2 = new_site(domain: "second.example.com", owner: user)
-      _rogue_site = new_site()
+      _site1 = insert(:site, domain: "first.example.com", members: [user])
+      _site2 = insert(:site, domain: "second.example.com", members: [user])
+      _rogue_site = insert(:site)
 
-      inviter = new_user()
-
-      new_site(owner: inviter, domain: "first-another.example.com")
-      |> invite_guest(user, inviter: inviter, role: :viewer)
+      _site3 =
+        insert(:site,
+          domain: "first-another.example.com",
+          invitations: [
+            build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
+          ]
+        )
 
       conn = get(conn, "/sites", filter_text: "first")
       resp = html_response(conn, 200)
@@ -187,7 +192,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      _site1 = new_site(domain: "example.com", owner: user)
+      _site1 = insert(:site, domain: "example.com", members: [user])
 
       conn = get(conn, "/sites", filter_text: "none")
       resp = html_response(conn, 200)
@@ -201,7 +206,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      site = new_site(domain: "example.com", owner: user)
+      site = insert(:site, domain: "example.com", members: [user])
       conn = get(conn, "/sites")
       resp = html_response(conn, 200)
 
@@ -212,8 +217,11 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      site = new_site(domain: "example.com")
-      add_guest(site, user: user, role: :viewer)
+      site =
+        insert(:site,
+          domain: "example.com",
+          memberships: [build(:site_membership, user: user, role: :viewer)]
+        )
 
       conn = get(conn, "/sites")
       resp = html_response(conn, 200)

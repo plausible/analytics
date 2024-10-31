@@ -13,8 +13,6 @@ else
   FunWithFlags.disable(:experimental_reduced_joins)
 end
 
-FunWithFlags.enable(:read_team_schemas)
-
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
 
 # warn about minio if it's included in tests but not running
