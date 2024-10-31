@@ -35,7 +35,8 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign_new(:needs_to_upgrade, fn %{current_user: current_user, sites: sites} ->
         user_owns_sites =
           Enum.any?(sites.entries, fn site ->
-            length(site.invitations) > 0 && List.first(site.invitations).role == :owner
+            # length(site.invitations) > 0 && List.first(site.invitations).role == :owner
+            List.first(site.invitations).role == :owner
           end) ||
             Auth.user_owns_sites?(current_user)
 
