@@ -166,7 +166,8 @@ export default function BreakdownModal<TListItem extends { name: string }>({
       orderByDictionary,
       toggleSortByMetric,
       renderIcon,
-      getExternalLinkURL
+      getExternalLinkURL,
+      meta
     ]
   )
 
