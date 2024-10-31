@@ -78,7 +78,13 @@ defmodule Plausible.Teams.Test do
       )
 
     team_invitation =
-      insert(:team_invitation, team: team, email: email, inviter: inviter, role: :guest)
+      insert(:team_invitation,
+        invitation_id: old_model_invitation.invitation_id,
+        team: team,
+        email: email,
+        inviter: inviter,
+        role: :guest
+      )
 
     insert(:guest_invitation, team_invitation: team_invitation, site: site, role: role)
 
