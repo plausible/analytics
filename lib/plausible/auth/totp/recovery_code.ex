@@ -70,7 +70,7 @@ defmodule Plausible.Auth.TOTP.RecoveryCode do
   end
 
   defp generate_code() do
-    Base.encode32(:crypto.strong_rand_bytes(6), padding: false)
+    Plausible.Random.binary(6) |> Base.encode32(padding: false)
   end
 
   defp hash(code) when byte_size(code) == @code_length do

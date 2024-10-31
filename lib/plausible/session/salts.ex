@@ -42,7 +42,7 @@ defmodule Plausible.Session.Salts do
   end
 
   defp generate_and_persist_new_salt() do
-    salt = :crypto.strong_rand_bytes(16)
+    salt = Plausible.Random.binary(16)
 
     Repo.insert_all("salts", [%{salt: salt, inserted_at: DateTime.utc_now()}])
     salt
