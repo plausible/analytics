@@ -1,7 +1,7 @@
 name: Elixir CI
 
 on:
-  pull_request:
+  # pull_request:
   push:
     branches: [master, stable]
   merge_group:

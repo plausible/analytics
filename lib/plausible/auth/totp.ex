@@ -349,8 +349,7 @@ defmodule Plausible.Auth.TOTP do
   end
 
   defp generate_token() do
-    20
-    |> :crypto.strong_rand_bytes()
+    Plausible.Random.binary(20)
     |> Base.encode64(padding: false)
   end
 end

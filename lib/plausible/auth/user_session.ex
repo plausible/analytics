@@ -46,7 +46,7 @@ defmodule Plausible.Auth.UserSession do
   end
 
   defp generate_token(changeset) do
-    token = :crypto.strong_rand_bytes(@rand_size)
+    token = Plausible.Random.binary(@rand_size)
     put_change(changeset, :token, token)
   end
 end

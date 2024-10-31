@@ -21,7 +21,7 @@ export const ToggleDropdownButton = forwardRef<
     currentOption: ReactNode
     children: ReactNode
     onClick: () => void
-    dropdownContainerProps: AriaAttributes
+    dropdownContainerProps: AriaAttributes & { 'data-testid'?: string }
   }
 >(({ currentOption, children, onClick, dropdownContainerProps }, ref) => {
   return (

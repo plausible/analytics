@@ -101,6 +101,6 @@ defmodule Plausible.Plugins.API.Token do
   end
 
   defp random_bytes() do
-    30 |> :crypto.strong_rand_bytes() |> Base.encode64()
+    Plausible.Random.binary(30) |> Base.encode64()
   end
 end

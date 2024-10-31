@@ -27,6 +27,7 @@ export default function MoreLink({ linkProps, list, className, onClick }) {
           {...linkProps}
           className="leading-snug font-bold text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition tracking-wide"
           onClick={onClick}
+          data-testid="details-link"
         >
           {detailsIcon()}
           DETAILS

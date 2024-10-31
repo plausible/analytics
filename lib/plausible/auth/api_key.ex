@@ -57,7 +57,7 @@ defmodule Plausible.Auth.ApiKey do
     if get_change(changeset, :key) do
       changeset
     else
-      key = :crypto.strong_rand_bytes(64) |> Base.url_encode64() |> binary_part(0, 64)
+      key = Plausible.Random.binary(64) |> Base.url_encode64() |> binary_part(0, 64)
       put_change(changeset, :key, key)
     end
   end

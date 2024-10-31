@@ -59,7 +59,7 @@ export default function Referrers({ source }) {
   }
 
   return (
-    <div className="flex flex-col flex-grow">
+    <div className="flex flex-col flex-grow" data-testid="section::sources">
       <div className="flex gap-x-1">
         <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
         <ImportedQueryUnsupportedWarning loading={loading} skipImportedReason={skipImportedReason} />

@@ -10,9 +10,17 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
-words =
-  for i <- 0..(:erlang.system_info(:atom_count) - 1),
-      do: :erlang.binary_to_term(<<131, 75, i::24>>)
+case System.get_env("RANDOM_SEED") do
+  seed_string when is_binary(seed_string) ->
+    seed = String.to_integer(seed_string)
+
+    :rand.seed(:exsplus, {seed, seed, seed})
+
+  _ ->
+    nil
+end
+
+words = File.read!("priv/repo/seeds_words.txt") |> String.split("\n", trim: true)
 
 user = Plausible.Factory.insert(:user, email: "user@plausible.test", password: "plausible")
 
@@ -107,21 +115,6 @@ if Plausible.ee?() do
 end
 
 put_random_time = fn
-  date, 0 ->
-    current_hour = Time.utc_now().hour
-    current_minute = Time.utc_now().minute
-
-    random_time =
-      Time.new!(
-        Enum.random(0..current_hour),
-        Enum.random(0..current_minute),
-        0
-      )
-
-    date
-    |> NaiveDateTime.new!(random_time)
-    |> NaiveDateTime.truncate(:second)
-
   date, _ ->
     random_time = Time.new!(:rand.uniform(23), :rand.uniform(59), 0)
 
@@ -307,6 +300,8 @@ native_stats_range
   end)
 end)
 |> Plausible.TestUtils.populate_stats()
+
+Plausible.Props.allow(site, ["url", "logged_in", "is_customer", "amount"])
 
 site_import =
   site

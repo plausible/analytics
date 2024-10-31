@@ -157,7 +157,7 @@ export default function VisitorGraph({ updateImportedDataInView }) {
     <div className={"relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825"}>
       {(topStatsLoading || graphLoading) && renderLoader()}
       <FadeIn show={!(topStatsLoading || graphLoading)}>
-        <div id="top-stats-container" className="flex flex-wrap" ref={topStatsBoundary} style={{ height: getTopStatsHeight() }}>
+        <div id="top-stats-container" className="flex flex-wrap" ref={topStatsBoundary} style={{ height: getTopStatsHeight() }} data-testid="section::top-stats">
           <TopStats
             data={topStatData}
             onMetricUpdate={onMetricUpdate}

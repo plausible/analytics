@@ -231,7 +231,7 @@ class Locations extends React.Component {
 
 	render() {
 		return (
-			<div>
+			<div data-testid="section::locations">
 				<div className="w-full flex justify-between">
 					<div className="flex gap-x-1">
 						<h3 className="font-bold dark:text-gray-100">

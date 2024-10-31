@@ -76,6 +76,6 @@ defmodule Plausible.ClickhouseSessionV2 do
   end
 
   def random_uint64() do
-    :crypto.strong_rand_bytes(8) |> :binary.decode_unsigned()
+    Plausible.Random.byte_int(8)
   end
 end

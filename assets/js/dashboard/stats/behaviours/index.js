@@ -168,7 +168,7 @@ export default function Behaviours({ importedDataInView }) {
     }
 
     return (
-      <div className={className} onClick={setTab}>
+      <div className={className} onClick={setTab} role="button" tabIndex={0}>
         {displayName}
       </div>
     )
@@ -353,7 +353,7 @@ export default function Behaviours({ importedDataInView }) {
 
   if (mode) {
     return (
-      <div className="items-start justify-between block w-full mt-6 md:flex">
+      <div className="items-start justify-between block w-full mt-6 md:flex" data-testid="section::behaviors">
         <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
           <div className="flex justify-between w-full">
             <div className="flex gap-x-1">
