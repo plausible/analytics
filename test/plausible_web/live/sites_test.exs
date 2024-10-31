@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Live.SitesTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible.Teams.Test
 
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
@@ -21,10 +20,15 @@ defmodule PlausibleWeb.Live.SitesTest do
       conn: conn,
       user: user
     } do
-      inviter = new_user()
-      site = new_site(owner: inviter)
+      site = insert(:site)
 
-      invitation = invite_transfer(site, user, inviter: inviter)
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: build(:user),
+          email: user.email,
+          role: :owner
+        )
 
       {:ok, _lv, html} = live(conn, "/sites")
 
@@ -38,14 +42,20 @@ defmodule PlausibleWeb.Live.SitesTest do
       conn: conn,
       user: user
     } do
-      inviter = new_user()
-      site = new_site(owner: inviter)
+      site = insert(:site)
 
-      invitation = invite_transfer(site, user, inviter: inviter)
+      insert(:growth_subscription, user: user)
 
       # fill site quota
-      insert(:growth_subscription, user: user)
-      for _ <- 1..10, do: new_site(owner: user)
+      insert_list(10, :site, members: [user])
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: build(:user),
+          email: user.email,
+          role: :owner
+        )
 
       {:ok, _lv, html} = live(conn, "/sites")
 
@@ -60,11 +70,17 @@ defmodule PlausibleWeb.Live.SitesTest do
       conn: conn,
       user: user
     } do
-      inviter = new_user()
-      site = new_site(owner: inviter, allowed_event_props: ["dummy"])
+      site = insert(:site, allowed_event_props: ["dummy"])
 
-      invitation = invite_transfer(site, user, inviter: inviter)
       insert(:growth_subscription, user: user)
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: build(:user),
+          email: user.email,
+          role: :owner
+        )
 
       {:ok, _lv, html} = live(conn, "/sites")
 
@@ -75,7 +91,7 @@ defmodule PlausibleWeb.Live.SitesTest do
     end
 
     test "renders 24h visitors correctly", %{conn: conn, user: user} do
-      site = new_site(owner: user)
+      site = insert(:site, members: [user])
 
       populate_stats(site, [build(:pageview), build(:pageview), build(:pageview)])
 
@@ -87,9 +103,9 @@ defmodule PlausibleWeb.Live.SitesTest do
     end
 
     test "filters by domain", %{conn: conn, user: user} do
-      _site1 = new_site(domain: "first.example.com", owner: user)
-      _site2 = new_site(domain: "second.example.com", owner: user)
-      _site3 = new_site(domain: "first-another.example.com", owner: user)
+      _site1 = insert(:site, domain: "first.example.com", members: [user])
+      _site2 = insert(:site, domain: "second.example.com", members: [user])
+      _site3 = insert(:site, domain: "first-another.example.com", members: [user])
 
       {:ok, lv, _html} = live(conn, "/sites")
 
@@ -102,9 +118,9 @@ defmodule PlausibleWeb.Live.SitesTest do
     end
 
     test "filtering plays well with pagination", %{conn: conn, user: user} do
-      _site1 = new_site(domain: "first.another.example.com", owner: user)
-      _site2 = new_site(domain: "second.example.com", owner: user)
-      _site3 = new_site(domain: "third.another.example.com", owner: user)
+      _site1 = insert(:site, domain: "first.another.example.com", members: [user])
+      _site2 = insert(:site, domain: "second.example.com", members: [user])
+      _site3 = insert(:site, domain: "third.another.example.com", members: [user])
 
       {:ok, lv, html} = live(conn, "/sites?page_size=2")
 
@@ -127,7 +143,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
   describe "pinning" do
     test "renders pin site option when site not pinned", %{conn: conn, user: user} do
-      site = new_site(owner: user)
+      site = insert(:site, members: [user])
 
       {:ok, _lv, html} = live(conn, "/sites")
 
@@ -138,7 +154,7 @@ defmodule PlausibleWeb.Live.SitesTest do
     end
 
     test "site state changes when pin toggled", %{conn: conn, user: user} do
-      site = new_site(owner: user)
+      site = insert(:site, members: [user])
 
       {:ok, lv, _html} = live(conn, "/sites")
 
@@ -165,11 +181,11 @@ defmodule PlausibleWeb.Live.SitesTest do
 
     test "shows error when pins limit hit", %{conn: conn, user: user} do
       for _ <- 1..9 do
-        site = new_site(owner: user)
+        site = insert(:site, members: [user])
         assert {:ok, _} = Plausible.Sites.toggle_pin(user, site)
       end
 
-      site = new_site(owner: user)
+      site = insert(:site, members: [user])
 
       {:ok, lv, _html} = live(conn, "/sites")
 
@@ -184,7 +200,7 @@ defmodule PlausibleWeb.Live.SitesTest do
     end
 
     test "does not allow pinning site user doesn't have access to", %{conn: conn, user: user} do
-      site = new_site()
+      site = insert(:site)
 
       {:ok, lv, _html} = live(conn, "/sites")
 

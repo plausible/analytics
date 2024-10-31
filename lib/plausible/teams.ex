@@ -8,10 +8,6 @@ defmodule Plausible.Teams do
   alias __MODULE__
   alias Plausible.Repo
 
-  def read_team_schemas?(user) do
-    FunWithFlags.enabled?(:read_team_schemas, for: user)
-  end
-
   def with_subscription(team) do
     Repo.preload(team, subscription: last_subscription_query())
   end
