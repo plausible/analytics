@@ -246,7 +246,7 @@ defmodule Plausible.Factory do
   end
 
   def api_key_factory do
-    key = :crypto.strong_rand_bytes(64) |> Base.url_encode64() |> binary_part(0, 64)
+    key = Plausible.Random.binary(64) |> Base.url_encode64() |> binary_part(0, 64)
 
     %Plausible.Auth.ApiKey{
       name: "api-key-name",
