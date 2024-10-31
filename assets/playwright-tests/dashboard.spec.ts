@@ -26,22 +26,24 @@ test.beforeEach(async ({page}) => {
 test('can navigate the dashboard via keyboard shortcuts', async ({ page }, testInfo) => {
   const dateMenuButton = page.getByTestId('date-menu-button')
 
-  async function testShortcut(key: string, pattern: string | RegExp) {
+  async function testShortcut(key: string, pattern: string | RegExp, options = { screenshot: true }) {
     page.keyboard.down(key)
     await waitForData(page)
     await expect(dateMenuButton).toHaveText(pattern)
-    await screenshot(page, testInfo)
+    if (options.screenshot) {
+      await screenshot(page, testInfo)
+    }
   }
 
   await testShortcut("D", "Today")
   await testShortcut("E", /(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/)
-  await testShortcut("R", "Realtime")
   await testShortcut("W", "Last 7 days")
   await testShortcut("T", "Last 30 days")
   await testShortcut("M", "Month to Date")
   await testShortcut("Y", "Year to Date")
   await testShortcut("L", "Last 12 months")
   await testShortcut("A", "All time")
+  await testShortcut("R", "Realtime", { screenshot: false })
 })
 
 MODALS.forEach(({ key, sectionSelector }) => {
