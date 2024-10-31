@@ -3,6 +3,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
   require Plausible.Billing.Subscription.Status
   use Plausible.DataCase, async: true
   use Bamboo.Test
+  use Plausible.Teams.Test
 
   alias Plausible.Site.Memberships.AcceptInvitation
 
@@ -11,6 +12,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
   describe "transfer_ownership/3" do
     test "transfers ownership successfully" do
       site = insert(:site, memberships: [])
+
       existing_owner = insert(:user)
 
       existing_membership =
@@ -30,6 +32,106 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert existing_membership.user_id == existing_owner.id
       assert existing_membership.site_id == site.id
       assert existing_membership.role == :admin
+
+      assert_no_emails_delivered()
+    end
+
+    @tag :teams
+    test "syncs ownership transfers provided memberships exist already" do
+      site = insert(:site, memberships: [])
+      existing_owner = insert(:user)
+
+      _existing_membership =
+        insert(:site_membership, user: existing_owner, site: site, role: :owner)
+
+      {:ok, old_team} = Plausible.Teams.get_or_create(existing_owner)
+
+      another_user = insert(:user)
+
+      insert(:site_membership, user: another_user, site: site, role: :viewer)
+
+      another_team_membership =
+        insert(:team_membership, user: another_user, team: old_team, role: :guest)
+
+      _another_guest_membership =
+        insert(:guest_membership,
+          team_membership: another_team_membership,
+          site: site,
+          role: :viewer
+        )
+
+      new_owner = insert(:user)
+      insert(:growth_subscription, user: new_owner)
+
+      assert {:ok, new_membership} =
+               AcceptInvitation.transfer_ownership(site, new_owner)
+
+      assert new_membership.site_id == site.id
+      assert new_membership.user_id == new_owner.id
+      assert new_membership.role == :owner
+
+      team = assert_team_exists(new_owner)
+      assert team.id != old_team.id
+      assert_team_attached(site, team.id)
+
+      assert_guest_membership(team, site, another_user, :viewer)
+      assert_guest_membership(team, site, existing_owner, :editor)
+    end
+
+    @tag :teams
+    test "transfers ownership successfully (TEAM)" do
+      site = insert(:site, memberships: [])
+      existing_owner = insert(:user)
+
+      _existing_membership =
+        insert(:site_membership, user: existing_owner, site: site, role: :owner)
+
+      site = Plausible.Teams.load_for_site(site)
+      old_team = site.team
+
+      another_user = insert(:user)
+
+      another_team_membership =
+        insert(:team_membership, user: another_user, team: old_team, role: :guest)
+
+      another_guest_membership =
+        insert(:guest_membership,
+          team_membership: another_team_membership,
+          site: site,
+          role: :viewer
+        )
+
+      new_owner = insert(:user)
+      new_team = insert(:team)
+      insert(:team_membership, user: new_owner, team: new_team, role: :owner)
+      insert(:growth_subscription, user: new_owner, team: new_team)
+
+      assert {:ok, new_team_membership} =
+               Plausible.Teams.Invitations.transfer_site(site, new_owner)
+
+      assert new_team_membership.team_id == new_team.id
+      assert new_team_membership.user_id == new_owner.id
+      assert new_team_membership.role == :owner
+
+      assert_team_membership(existing_owner, old_team)
+
+      refute Repo.reload(another_team_membership)
+      refute Repo.reload(another_guest_membership)
+
+      assert new_another_team_membership =
+               Plausible.Teams.Membership
+               |> Repo.get_by(
+                 team_id: new_team.id,
+                 user_id: another_user.id
+               )
+               |> Repo.preload(:guest_memberships)
+
+      assert another_team_membership.id != new_another_team_membership.id
+      assert [new_another_guest_membership] = new_another_team_membership.guest_memberships
+      assert new_another_guest_membership.site_id == site.id
+      assert new_another_guest_membership.role == another_guest_membership.role
+
+      assert new_another_team_membership.role == :guest
 
       assert_no_emails_delivered()
     end
@@ -216,6 +318,102 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       )
     end
 
+    @tag :teams
+    test "does not create redundant guest membership when owner team membership exists" do
+      user = insert(:user)
+      {:ok, team} = Plausible.Teams.get_or_create(user)
+      site = insert(:site, team: team, members: [user])
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: insert(:user),
+          email: user.email,
+          role: :admin
+        )
+
+      {:ok, team_membership} =
+        Plausible.Teams.Invitations.accept_invitation_sync(invitation, user)
+
+      team_membership = team_membership |> Repo.reload!() |> Repo.preload(:guest_memberships)
+
+      assert team_membership.role == :owner
+      assert team_membership.guest_memberships == []
+    end
+
+    @tag :teams
+    test "sync newly converted membership with team" do
+      inviter = insert(:user)
+      invitee = insert(:user)
+      site = insert(:site, members: [inviter])
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: inviter,
+          email: invitee.email,
+          role: :admin
+        )
+
+      assert {:ok, membership} =
+               AcceptInvitation.accept_invitation(invitation.invitation_id, invitee)
+
+      assert membership.site_id == site.id
+      assert membership.user_id == invitee.id
+      assert membership.role == :admin
+
+      team = assert_team_exists(inviter)
+      assert_team_attached(site, team.id)
+
+      assert_guest_membership(team, site, invitee, :editor)
+    end
+
+    @tag :teams
+    test "converts an invitation into a membership (TEAMS)" do
+      inviter = insert(:user)
+      invitee = insert(:user)
+      team = insert(:team)
+      site = insert(:site, team: team, members: [inviter])
+      insert(:team_membership, team: team, user: inviter, role: :owner)
+
+      _invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: inviter,
+          email: invitee.email,
+          role: :admin
+        )
+
+      team_invitation =
+        insert(:team_invitation,
+          team: team,
+          inviter: inviter,
+          email: invitee.email,
+          role: :guest
+        )
+
+      insert(:guest_invitation, team_invitation: team_invitation, site: site, role: :editor)
+
+      assert {:ok, team_membership} =
+               Plausible.Teams.Invitations.accept(team_invitation.invitation_id, invitee)
+
+      assert [guest_membership] =
+               Repo.preload(team_membership, :guest_memberships).guest_memberships
+
+      assert guest_membership.site_id == site.id
+      assert team_membership.user_id == invitee.id
+      assert guest_membership.role == :editor
+      assert team_membership.role == :guest
+      assert team_membership.team_id == team.id
+
+      refute Repo.reload(team_invitation)
+
+      assert_email_delivered_with(
+        to: [nil: inviter.email],
+        subject: @subject_prefix <> "#{invitee.email} accepted your invitation to #{site.domain}"
+      )
+    end
+
     test "does not degrade role when trying to invite self as an owner" do
       user = insert(:user)
 
@@ -315,6 +513,42 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
           @subject_prefix <>
             "#{new_owner.email} accepted the ownership transfer of #{site.domain}"
       )
+    end
+
+    @tag :teams
+    test "syncs accepted ownership transfer to teams" do
+      site = insert(:site, memberships: [])
+      existing_owner = insert(:user)
+
+      _existing_membership =
+        insert(:site_membership, user: existing_owner, site: site, role: :owner)
+
+      site = Plausible.Teams.load_for_site(site)
+      old_team = site.team
+      # site = Repo.reload!(site)
+
+      new_owner = insert(:user)
+      insert(:growth_subscription, user: new_owner)
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: existing_owner,
+          email: new_owner.email,
+          role: :owner
+        )
+
+      assert {:ok, _new_membership} =
+               AcceptInvitation.accept_invitation(
+                 invitation.invitation_id,
+                 new_owner
+               )
+
+      team = assert_team_exists(new_owner)
+      assert team.id != old_team.id
+      assert_team_attached(site, team.id)
+
+      assert_guest_membership(team, site, existing_owner, :editor)
     end
 
     @tag :ee_only

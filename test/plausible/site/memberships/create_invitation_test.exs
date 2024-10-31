@@ -3,6 +3,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
   use Plausible
   use Plausible.DataCase
   use Bamboo.Test
+  use Plausible.Teams.Test
 
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
 
@@ -10,17 +11,97 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
     test "creates an invitation" do
       inviter = insert(:user)
       invitee = insert(:user)
-      site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
+      team = insert(:team)
+
+      site =
+        insert(:site,
+          team: team,
+          memberships: [build(:site_membership, user: inviter, role: :owner)]
+        )
+
+      insert(:team_membership, team: team, user: inviter, role: :owner)
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
+
+      assert {:ok, %Plausible.Teams.GuestInvitation{}} =
+               Plausible.Teams.Invitations.invite(site, inviter, invitee.email, :viewer)
+    end
+
+    @tag :teams
+    test "[TEAMS] syncs a created invitation" do
+      inviter = insert(:user)
+      invitee = insert(:user)
+
+      site =
+        insert(:site,
+          team: nil,
+          memberships: [build(:site_membership, user: inviter, role: :owner)]
+        )
+
+      assert {:ok, %Plausible.Auth.Invitation{}} =
+               CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
+
+      team = assert_team_attached(site)
+      assert_guest_invitation(team, site, invitee.email, :viewer)
+    end
+
+    @tag :teams
+    test "[TEAMS] sync a created invitation with team already setup but site not assigned yet" do
+      inviter = insert(:user)
+      invitee = insert(:user)
+
+      {:ok, %{id: team_id}} = Plausible.Teams.get_or_create(inviter)
+
+      site =
+        insert(:site,
+          team: nil,
+          memberships: [build(:site_membership, user: inviter, role: :owner)]
+        )
+
+      assert {:ok, %Plausible.Auth.Invitation{}} =
+               CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
+
+      team = assert_team_attached(site, team_id)
+      assert_guest_invitation(team, site, invitee.email, :viewer)
+    end
+
+    @tag :teams
+    test "[TEAMS] sync a created invitation with team fully setup" do
+      inviter = insert(:user)
+      invitee = insert(:user)
+
+      {:ok, %{id: team_id} = team} = Plausible.Teams.get_or_create(inviter)
+
+      site =
+        insert(:site,
+          team: team,
+          memberships: [build(:site_membership, user: inviter, role: :owner)]
+        )
+
+      assert {:ok, %Plausible.Auth.Invitation{}} =
+               CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
+
+      team = assert_team_attached(site, team_id)
+      assert_guest_invitation(team, site, invitee.email, :viewer)
     end
 
     test "returns validation errors" do
       inviter = insert(:user)
-      site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
+      team = insert(:team)
+
+      site =
+        insert(:site,
+          team: team,
+          memberships: [build(:site_membership, user: inviter, role: :owner)]
+        )
+
+      insert(:team_membership, team: team, user: inviter, role: :owner)
 
       assert {:error, changeset} = CreateInvitation.create_invitation(site, inviter, "", :viewer)
+      assert {"can't be blank", _} = changeset.errors[:email]
+
+      assert {:error, changeset} = Plausible.Teams.Invitations.invite(site, inviter, "", :viewer)
       assert {"can't be blank", _} = changeset.errors[:email]
     end
 
@@ -28,19 +109,32 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       inviter = insert(:user)
       invitee = insert(:user)
 
+      team = insert(:team)
+
       site =
         insert(:site,
+          team: team,
           memberships: [
             build(:site_membership, user: inviter, role: :owner),
             build(:site_membership, user: invitee, role: :viewer)
           ]
         )
 
+      insert(:team_membership, team: team, user: inviter, role: :owner)
+      team_membership = insert(:team_membership, team: team, user: invitee, role: :guest)
+      insert(:guest_membership, team_membership: team_membership, site: site, role: :viewer)
+
       assert {:error, :already_a_member} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
 
       assert {:error, :already_a_member} =
+               Plausible.Teams.Invitations.invite(site, inviter, invitee.email, :viewer)
+
+      assert {:error, :already_a_member} =
                CreateInvitation.create_invitation(site, inviter, inviter.email, :viewer)
+
+      assert {:error, :already_a_member} =
+               Plausible.Teams.Invitations.invite(site, inviter, inviter.email, :viewer)
     end
 
     test "sends invitation email for existing users" do
@@ -176,9 +270,15 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
             build(:site_membership, user: invitee, role: :viewer)
           ]
         )
+        |> Plausible.Teams.load_for_site()
+
+      insert(:team_membership, team: site.team, user: invitee, role: :viewer)
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :owner)
+
+      assert {:ok, %Plausible.Teams.SiteTransfer{}} =
+               Plausible.Teams.Invitations.invite(site, inviter, invitee.email, :owner)
     end
 
     test "does not allow transferring ownership to existing owner" do
@@ -191,8 +291,13 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
           ]
         )
 
+      site = Plausible.Teams.load_for_site(site)
+
       assert {:error, :transfer_to_self} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :owner)
+
+      assert {:error, :transfer_to_self} =
+               Plausible.Teams.Invitations.invite(site, inviter, "vini@plausible.test", :owner)
     end
 
     test "allows creating an ownership transfer even when at team member limit" do
@@ -214,17 +319,24 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
     test "does not allow viewers to invite users" do
       inviter = insert(:user)
+      owner = insert(:user)
 
       site =
         insert(:site,
           memberships: [
-            build(:site_membership, user: build(:user), role: :owner),
+            build(:site_membership, user: owner, role: :owner),
             build(:site_membership, user: inviter, role: :viewer)
           ]
         )
+        |> Plausible.Teams.load_for_site()
+
+      insert(:team_membership, team: site.team, user: inviter, role: :viewer)
 
       assert {:error, :forbidden} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :viewer)
+
+      assert {:error, :forbidden} =
+               Plausible.Teams.Invitations.invite(site, inviter, "vini@plausible.test", :viewer)
     end
 
     test "allows admins to invite other admins" do

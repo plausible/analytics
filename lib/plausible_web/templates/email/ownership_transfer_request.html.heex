@@ -1,15 +1,11 @@
-<%= @invitation.inviter.email %> has requested to transfer the ownership of <%= @invitation.site.domain %> site on <%= Plausible.product_name() %> to you.
+<%= @inviter.email %> has requested to transfer the ownership of <%= @site.domain %> site on <%= Plausible.product_name() %> to you.
 <%= if @new_owner_account do %>
   <a href={Routes.site_url(PlausibleWeb.Endpoint, :index)}>Click here</a>
   to view and respond to the invitation.
 <% else %>
   <a
     phx-no-format
-    href={
-      Routes.auth_url(PlausibleWeb.Endpoint, :register_form,
-        invitation: @invitation.invitation_id
-      )
-    }
+    href={Routes.auth_url(PlausibleWeb.Endpoint, :register_form, invitation: @invitation_id)}
   >Click here</a> to create your account. <br /><br />
   Plausible is a lightweight and open-source website analytics tool. We hope you like our simple and ethical approach to tracking website visitors.
 <% end %>

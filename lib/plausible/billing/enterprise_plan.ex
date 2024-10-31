@@ -2,6 +2,8 @@ defmodule Plausible.Billing.EnterprisePlan do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   @required_fields [
     :user_id,
     :paddle_plan_id,
@@ -11,6 +13,10 @@ defmodule Plausible.Billing.EnterprisePlan do
     :site_limit,
     :features,
     :team_member_limit
+  ]
+
+  @optional_fields [
+    :team_id
   ]
 
   schema "enterprise_plans" do
@@ -23,13 +29,14 @@ defmodule Plausible.Billing.EnterprisePlan do
     field :hourly_api_request_limit, :integer
 
     belongs_to :user, Plausible.Auth.User
+    belongs_to :team, Plausible.Teams.Team
 
     timestamps()
   end
 
   def changeset(model, attrs \\ %{}) do
     model
-    |> cast(attrs, @required_fields)
+    |> cast(attrs, @required_fields ++ @optional_fields)
     |> validate_required(@required_fields)
     |> unique_constraint(:user_id)
   end

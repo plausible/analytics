@@ -367,7 +367,10 @@ defmodule PlausibleWeb.StatsController do
   defp get_flags(user, site),
     do: %{
       channels:
-        FunWithFlags.enabled?(:channels, for: user) || FunWithFlags.enabled?(:channels, for: site)
+        FunWithFlags.enabled?(:channels, for: user) || FunWithFlags.enabled?(:channels, for: site),
+      breakdown_comparisons_ui:
+        FunWithFlags.enabled?(:breakdown_comparisons_ui, for: user) ||
+          FunWithFlags.enabled?(:breakdown_comparisons_ui, for: site)
     }
 
   defp is_dbip() do

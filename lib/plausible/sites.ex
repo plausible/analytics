@@ -71,8 +71,24 @@ defmodule Plausible.Sites do
     )
   end
 
-  @spec list(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
   def list(user, pagination_params, opts \\ []) do
+    if Plausible.Teams.read_team_schemas?(user) do
+      Plausible.Teams.Sites.list(user, pagination_params, opts)
+    else
+      old_list(user, pagination_params, opts)
+    end
+  end
+
+  def list_with_invitations(user, pagination_params, opts \\ []) do
+    if Plausible.Teams.read_team_schemas?(user) do
+      Plausible.Teams.Sites.list_with_invitations(user, pagination_params, opts)
+    else
+      old_list_with_invitations(user, pagination_params, opts)
+    end
+  end
+
+  @spec old_list(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
+  def old_list(user, pagination_params, opts \\ []) do
     domain_filter = Keyword.get(opts, :filter_by_domain)
 
     from(s in Site,
@@ -104,8 +120,8 @@ defmodule Plausible.Sites do
     |> Repo.paginate(pagination_params)
   end
 
-  @spec list_with_invitations(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
-  def list_with_invitations(user, pagination_params, opts \\ []) do
+  @spec old_list_with_invitations(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
+  def old_list_with_invitations(user, pagination_params, opts \\ []) do
     domain_filter = Keyword.get(opts, :filter_by_domain)
 
     result =
@@ -179,6 +195,9 @@ defmodule Plausible.Sites do
     with :ok <- Quota.ensure_can_add_new_site(user) do
       Ecto.Multi.new()
       |> Ecto.Multi.put(:site_changeset, Site.new(params))
+      |> Ecto.Multi.run(:create_team, fn _repo, _context ->
+        Plausible.Teams.get_or_create(user)
+      end)
       |> Ecto.Multi.run(:clear_changed_from, fn
         _repo, %{site_changeset: %{changes: %{domain: domain}}} ->
           case get_for_user(user.id, domain, [:owner]) do
@@ -196,11 +215,17 @@ defmodule Plausible.Sites do
         _repo, _context ->
           {:ok, :ignore}
       end)
-      |> Ecto.Multi.insert(:site, fn %{site_changeset: site} -> site end)
+      |> Ecto.Multi.insert(:site, fn %{site_changeset: site, create_team: team} ->
+        Ecto.Changeset.put_assoc(site, :team, team)
+      end)
       |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
         Site.Membership.new(site, user)
       end)
       |> maybe_start_trial(user)
+      |> Ecto.Multi.run(:sync_team, fn _repo, %{user: user} ->
+        Plausible.Teams.sync_team(user)
+        {:ok, nil}
+      end)
       |> Repo.transaction()
     end
   end
@@ -208,11 +233,12 @@ defmodule Plausible.Sites do
   defp maybe_start_trial(multi, user) do
     case user.trial_expiry_date do
       nil ->
-        changeset = Auth.User.start_trial(user)
-        Ecto.Multi.update(multi, :user, changeset)
+        Ecto.Multi.run(multi, :user, fn _, _ ->
+          {:ok, Plausible.Users.start_trial(user)}
+        end)
 
       _ ->
-        multi
+        Ecto.Multi.put(multi, :user, user)
     end
   end
 

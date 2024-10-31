@@ -227,7 +227,11 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     <%= if @owned_plan && Plausible.Billing.Subscriptions.resumable?(@current_user.subscription) do %>
       <.change_plan_link {assigns} />
     <% else %>
-      <PlausibleWeb.Components.Billing.paddle_button user={@current_user} {assigns}>
+      <PlausibleWeb.Components.Billing.paddle_button
+        user={@current_user}
+        team={@current_team}
+        {assigns}
+      >
         Upgrade
       </PlausibleWeb.Components.Billing.paddle_button>
     <% end %>

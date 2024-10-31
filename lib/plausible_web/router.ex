@@ -197,6 +197,10 @@ defmodule PlausibleWeb.Router do
     get "/:domain/conversions", StatsController, :conversions
     get "/:domain/custom-prop-values/:prop_key", StatsController, :custom_prop_values
     get "/:domain/suggestions/:filter_name", StatsController, :filter_suggestions
+
+    get "/:domain/suggestions/custom-prop-values/:prop_key",
+        StatsController,
+        :custom_prop_value_filter_suggestions
   end
 
   scope "/api/v1/stats", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*"} do
@@ -208,16 +212,22 @@ defmodule PlausibleWeb.Router do
     get "/timeseries", ExternalStatsController, :timeseries
   end
 
-  scope "/api/v2", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*"} do
+  scope "/api/v2", PlausibleWeb.Api, assigns: %{api_scope: "stats:read:*", schema_type: :public} do
     pipe_through [:public_api, PlausibleWeb.Plugs.AuthorizePublicAPI]
 
     post "/query", ExternalQueryApiController, :query
+
+    if Mix.env() in [:test, :ce_test] do
+      scope assigns: %{schema_type: :internal} do
+        post "/query-internal-test", ExternalQueryApiController, :query
+      end
+    end
   end
 
   scope "/api/docs", PlausibleWeb.Api do
     get "/query/schema.json", ExternalQueryApiController, :schema
 
-    scope [] do
+    scope assigns: %{schema_type: :public} do
       pipe_through :docs_stats_api
 
       post "/query", ExternalQueryApiController, :query

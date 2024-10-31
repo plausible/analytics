@@ -50,4 +50,9 @@ defmodule Plausible.Stats do
     include_sentry_replay_info()
     FilterSuggestions.filter_suggestions(site, query, filter_name, filter_search)
   end
+
+  def custom_prop_value_filter_suggestions(site, query, prop_key, filter_search) do
+    include_sentry_replay_info()
+    FilterSuggestions.custom_prop_value_filter_suggestions(site, query, prop_key, filter_search)
+  end
 end

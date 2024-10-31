@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   def delete_site(conn, %{"site_id" => site_id}) do
     case get_site(conn.assigns.current_user, site_id, [:owner]) do
       {:ok, site} ->
-        {:ok, _} = Plausible.Site.Removal.run(site.domain)
+        {:ok, _} = Plausible.Site.Removal.run(site)
         json(conn, %{"deleted" => true})
 
       {:error, :site_not_found} ->

@@ -53,6 +53,7 @@ defmodule Plausible.Auth.User do
 
     has_many :sessions, Plausible.Auth.UserSession
     has_many :site_memberships, Plausible.Site.Membership
+    has_many :team_memberships, Plausible.Teams.Membership
     has_many :sites, through: [:site_memberships, :site]
     has_many :api_keys, Plausible.Auth.ApiKey
     has_one :google_auth, Plausible.Site.GoogleAuth

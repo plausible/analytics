@@ -45,7 +45,7 @@ const siteContextDefaultValue = {
   embedded: false,
   background: undefined as string | undefined,
   isDbip: false,
-  flags: {},
+  flags: {} as { breakdown_comparisons_ui?: boolean },
   validIntervalsByPeriod: {} as Record<string, Array<string>>,
   shared: false
 }

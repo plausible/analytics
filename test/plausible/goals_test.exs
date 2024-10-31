@@ -167,7 +167,7 @@ defmodule Plausible.GoalsTest do
     insert(:goal, %{site: site, event_name: " Signup "})
     insert(:goal, %{site: site, page_path: " /Signup "})
 
-    Plausible.Site.Removal.run(site.domain)
+    Plausible.Site.Removal.run(site)
 
     assert [] = Goals.for_site(site)
   end
