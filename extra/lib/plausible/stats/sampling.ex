@@ -18,8 +18,7 @@ defmodule Plausible.Stats.Sampling do
   end
 
   @spec add_query_hint(Ecto.Query.t(), pos_integer() | float()) :: Ecto.Query.t()
-  def add_query_hint(%Ecto.Query{} = query, threshold)
-      when is_integer(threshold) or is_float(threshold) do
+  def add_query_hint(%Ecto.Query{} = query, threshold) when is_number(threshold) do
     from(x in query, hints: unsafe_fragment(^"SAMPLE #{threshold}"))
   end
 
