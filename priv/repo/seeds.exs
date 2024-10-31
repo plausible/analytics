@@ -12,7 +12,7 @@
 
 case System.get_env("RANDOM_SEED") do
   seed_string when is_binary(seed_string) ->
-    {seed, _} = Integer.parse(seed_string)
+    seed = String.to_integer(seed_string)
 
     :rand.seed(:exsplus, {seed, seed, seed})
 
