@@ -37,6 +37,10 @@ defmodule Plausible.Stats.Query do
         |> put_experimental_reduced_joins(site, params)
         |> struct!(v2: true, now: DateTime.utc_now(:second), debug_metadata: debug_metadata)
 
+      on_ee do
+        query = Plausible.Stats.Sampling.put_threshold(query, site, params)
+      end
+
       {:ok, query}
     end
   end

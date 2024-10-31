@@ -26,7 +26,7 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> Query.put_imported_opts(site, params)
 
     on_ee do
-      query = Plausible.Stats.Sampling.put_threshold(query, params)
+      query = Plausible.Stats.Sampling.put_threshold(query, site, params)
     end
 
     query
