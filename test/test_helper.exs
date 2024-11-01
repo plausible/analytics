@@ -6,14 +6,15 @@ end
 Mox.defmock(Plausible.HTTPClient.Mock, for: Plausible.HTTPClient.Interface)
 Application.ensure_all_started(:double)
 
-# Temporary flag to test `experimental_reduced_joins` flag on all tests.
-if System.get_env("TEST_EXPERIMENTAL_REDUCED_JOINS") == "1" do
+# Temporary flag to test `read_team_schemas` and `experimental_reduced_joins`
+# flags on all tests.
+if System.get_env("TEST_READ_TEAM_SCHEMAS_AND_EXPERIMENTAL_REDUCED_JOINS") == "1" do
+  FunWithFlags.enable(:read_team_schemas)
   FunWithFlags.enable(:experimental_reduced_joins)
 else
+  FunWithFlags.disable(:read_team_schemas)
   FunWithFlags.disable(:experimental_reduced_joins)
 end
-
-FunWithFlags.enable(:read_team_schemas)
 
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
 
