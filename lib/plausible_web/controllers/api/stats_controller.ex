@@ -495,11 +495,21 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, metrics, pagination)
       |> transform_keys(%{channel: :name})
 
-    json(conn, %{
-      results: res,
-      meta: Stats.Breakdown.formatted_date_ranges(query),
-      skip_imported_reason: query.skip_imported_reason
-    })
+    if params["csv"] do
+      if Filters.filtering_on_dimension?(query, "event:goal") do
+        res
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
+      else
+        res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
+      end
+    else
+      json(conn, %{
+        results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
+        skip_imported_reason: query.skip_imported_reason
+      })
+    end
   end
 
   on_ee do
