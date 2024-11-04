@@ -26,7 +26,7 @@ defmodule Plausible.Users do
 
   @spec trial_days_left(Auth.User.t()) :: integer()
   def trial_days_left(user) do
-    Timex.diff(user.trial_expiry_date, Date.utc_today(), :days)
+    Date.diff(user.trial_expiry_date, Date.utc_today())
   end
 
   @spec update_accept_traffic_until(Auth.User.t()) :: Auth.User.t()
