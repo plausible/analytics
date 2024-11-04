@@ -81,7 +81,7 @@ defmodule Plausible.Plugins.API.Token do
     diff =
       if token.last_used_at do
         now = NaiveDateTime.utc_now()
-        Timex.diff(now, token.last_used_at, :minutes)
+        NaiveDateTime.diff(now, token.last_used_at, :minute)
       end
 
     cond do
