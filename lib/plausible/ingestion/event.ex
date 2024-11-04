@@ -253,13 +253,12 @@ defmodule Plausible.Ingestion.Event do
   defp put_referrer(%__MODULE__{} = event, _context) do
     ref = parse_referrer(event.request.uri, event.request.referrer)
     source = get_referrer_source(event.request, ref)
-    click_souce_id = get_click_id_source(source, event.request)
     channel = Plausible.Ingestion.Acquisition.get_channel(event.request, source)
 
     update_session_attrs(event, %{
       channel: channel,
       referrer_source: source,
-      click_id_source: click_souce_id,
+      click_id_param: get_click_id_param(event.request.query_params),
       referrer: clean_referrer(ref)
     })
   end
@@ -428,13 +427,14 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp get_click_id_source("Google", request) when is_map_key(request.query_params, "gclid"),
-    do: "Google"
+  @click_id_params ["gclid", "gbraid", "wbraid", "msclkid", "fbclid", "twclid"]
 
-  defp get_click_id_source("Bing", request) when is_map_key(request.query_params, "msclkid"),
-    do: "Bing"
+  defp get_click_id_param(nil), do: nil
 
-  defp get_click_id_source(_referrer_source, _request), do: nil
+  defp get_click_id_param(query_params) do
+    @click_id_params
+    |> Enum.find(fn param_name -> Map.has_key?(query_params, param_name) end)
+  end
 
   defp parse_user_agent(%Request{user_agent: user_agent}) when is_binary(user_agent) do
     Plausible.Cache.Adapter.get(:user_agents, user_agent, fn ->
