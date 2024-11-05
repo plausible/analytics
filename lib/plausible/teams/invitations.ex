@@ -271,7 +271,10 @@ defmodule Plausible.Teams.Invitations do
              create_team_membership(team_invitation.team, team_invitation.role, user, now),
            {:ok, _guest_memberships} <-
              create_guest_memberships(team_membership, guest_invitations, now) do
-        Repo.delete!(team_invitation)
+        # Clean up guest invitations after accepting
+        guest_invitation_ids = Enum.map(guest_invitations, & &1.id)
+        Repo.delete_all(from gi in Teams.GuestInvitation, where: gi.id in ^guest_invitation_ids)
+        prune_guest_invitations(team_invitation.team)
 
         if send_email? do
           send_invitation_accepted_email(team_invitation, guest_invitations)
