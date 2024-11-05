@@ -257,7 +257,8 @@ defmodule Plausible.Ingestion.Event do
     update_session_attrs(event, %{
       channel: channel,
       referrer_source: source,
-      referrer: Plausible.Ingestion.Source.format_referrer(event.request.referrer)
+      referrer: Plausible.Ingestion.Source.format_referrer(event.request.referrer),
+      click_id_param: get_click_id_param(event.request.query_params)
     })
   end
 
@@ -389,6 +390,15 @@ defmodule Plausible.Ingestion.Event do
     {:ok, _} = Plausible.Event.WriteBuffer.insert(clickhouse_event)
     emit_telemetry_buffered(event)
     event
+  end
+
+  @click_id_params ["gclid", "gbraid", "wbraid", "msclkid", "fbclid", "twclid"]
+
+  defp get_click_id_param(nil), do: nil
+
+  defp get_click_id_param(query_params) do
+    @click_id_params
+    |> Enum.find(fn param_name -> Map.has_key?(query_params, param_name) end)
   end
 
   defp parse_user_agent(%Request{user_agent: user_agent}) when is_binary(user_agent) do
