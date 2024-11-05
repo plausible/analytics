@@ -68,9 +68,10 @@ defmodule Plausible.DataMigration do
       end
 
       def do_run(name, query, options \\ []) do
-        {params, options} = Keyword.pop(options, :params, [])
+        params = Keyword.get(options, :params, [])
+        query_options = Keyword.get(options, :query_options)
 
-        case @repo.query(query, params, [timeout: :infinity] ++ options) do
+        case @repo.query(query, params, [timeout: :infinity] ++ query_options) do
           {:ok, res} ->
             if not Keyword.get(options, :quiet, false) do
               IO.puts(
