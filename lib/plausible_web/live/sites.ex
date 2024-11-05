@@ -10,6 +10,7 @@ defmodule PlausibleWeb.Live.Sites do
   alias Plausible.Site
   alias Plausible.Sites
   alias Plausible.Site.Memberships.Invitations
+  alias Plausible.Teams
 
   def mount(params, _session, socket) do
     uri =
@@ -30,7 +31,7 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:params, params)
       |> load_sites()
       |> assign_new(:has_sites?, fn %{current_user: current_user} ->
-        Site.Memberships.any_or_pending?(current_user)
+        has_sites?(current_user)
       end)
       |> assign_new(:needs_to_upgrade, fn %{current_user: current_user, sites: sites} ->
         owns_sites?(current_user, sites) && Plausible.Billing.check_needs_to_upgrade(current_user)
@@ -643,9 +644,17 @@ defmodule PlausibleWeb.Live.Sites do
     {:noreply, socket}
   end
 
+  defp has_sites?(user) do
+    if Teams.read_team_schemas?(user) do
+      Teams.Users.has_sites?(user, include_pending?: true)
+    else
+      Site.Memberships.any_or_pending?(user)
+    end
+  end
+
   defp owns_sites?(user, sites) do
-    if Plausible.Teams.read_team_schemas?(user) do
-      Plausible.Teams.Users.owns_sites?(user, include_pending?: true)
+    if Teams.read_team_schemas?(user) do
+      Teams.Users.owns_sites?(user, include_pending?: true)
     else
       Enum.any?(sites.entries, fn site ->
         length(site.invitations) > 0 && List.first(site.invitations).role == :owner
