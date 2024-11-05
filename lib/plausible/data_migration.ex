@@ -12,13 +12,10 @@ defmodule Plausible.DataMigration do
       @dir dir
       @repo repo
 
-      def run_sql_confirm(name, options \\ []) do
-        {prompt_options, assigns} =
-          Keyword.split(options, [:prompt_message, :prompt_default_choice])
-
+      def run_sql_confirm(name, assigns \\ [], options \\ []) do
         query = unwrap_with_io(name, assigns)
-        message = prompt_options[:prompt_message] || "Execute?"
-        default_choice = Keyword.get(prompt_options, :prompt_default_choice, :yes)
+        message = Keyword.get(options, :prompt_message, "Execute?")
+        default_choice = Keyword.get(options, :prompt_default_choice, :yes)
         confirm(message, fn -> do_run(name, query) end, default_choice)
       end
 
@@ -62,14 +59,45 @@ defmodule Plausible.DataMigration do
         |> EEx.eval_file(assigns: assigns)
       end
 
+      @doc """
+      Runs a single SQL query in a file.
+
+      Valid options:
+      - `quiet` - reduces output from running the SQL
+      - `params` - List of query parameters.
+      - `named_params` - List of query parameters. Each should be a tuple of {name, value, database_type}
+      - `query_options` - passed to Repo.query
+      """
       def run_sql(name, assigns \\ [], options \\ []) do
+        {assigns, options} = substitute_named_params(assigns, options)
         query = unwrap(name, assigns)
+
         do_run(name, query, options)
+      end
+
+      @doc """
+      Runs multiple SQL queries from a single file.
+
+      Note that each query must be separated by semicolons.
+      """
+      def run_sql_multi(name, assigns \\ [], options \\ []) do
+        {assigns, options} = substitute_named_params(assigns, options)
+
+        unwrap(name, assigns)
+        |> String.trim()
+        |> String.split(";", trim: true)
+        |> Enum.with_index(1)
+        |> Enum.reduce_while(:ok, fn {query, index}, _ ->
+          case do_run("name-#{index}", query, options) do
+            {:ok, _} -> {:cont, :ok}
+            error -> {:halt, error}
+          end
+        end)
       end
 
       def do_run(name, query, options \\ []) do
         params = Keyword.get(options, :params, [])
-        query_options = Keyword.get(options, :query_options)
+        query_options = Keyword.get(options, :query_options, [])
 
         case @repo.query(query, params, [timeout: :infinity] ++ query_options) do
           {:ok, res} ->
@@ -97,6 +125,30 @@ defmodule Plausible.DataMigration do
         """)
 
         query
+      end
+
+      defp substitute_named_params(assigns, options) do
+        named_params = Keyword.get(options, :named_params, [])
+
+        named_param_assigns =
+          named_params
+          |> Enum.with_index()
+          |> Enum.map(fn {{name, _value, clickhouse_type}, index} ->
+            {name, "{$#{index}:#{clickhouse_type}}"}
+          end)
+
+        if length(named_param_assigns) > 0 do
+          params =
+            named_params
+            |> Enum.map(fn {_name, value, _type} -> value end)
+
+          {
+            assigns ++ named_param_assigns,
+            Keyword.put(options, :params, params)
+          }
+        else
+          {assigns, options}
+        end
       end
     end
   end

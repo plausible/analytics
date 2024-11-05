@@ -70,9 +70,9 @@ defmodule Plausible.DataMigration.NumericIDs do
 
     run_sql_fn =
       if interactive? do
-        &run_sql_confirm/2
+        &run_sql_confirm/3
       else
-        &run_sql/2
+        &run_sql/3
       end
 
     confirm_fn =
@@ -101,10 +101,10 @@ defmodule Plausible.DataMigration.NumericIDs do
     end
 
     {:ok, _} =
-      run_sql_fn.("drop-events-v2", [cluster?: cluster?] ++ drop_v2_extra_opts.("events_v2"))
+      run_sql_fn.("drop-events-v2", [cluster?: cluster?], drop_v2_extra_opts.("events_v2"))
 
     {:ok, _} =
-      run_sql_fn.("drop-sessions-v2", [cluster?: cluster?] ++ drop_v2_extra_opts.("sessions_v2"))
+      run_sql_fn.("drop-sessions-v2", [cluster?: cluster?], drop_v2_extra_opts.("sessions_v2"))
 
     {:ok, _} = run_sql_fn.("drop-tmp-events-v2", [])
     {:ok, _} = run_sql_fn.("drop-tmp-sessions-v2", [])

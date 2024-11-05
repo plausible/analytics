@@ -13,40 +13,22 @@ defmodule Plausible.DataMigration.AcquisitionChannel do
 
     on_cluster_statement = Plausible.MigrationUtils.on_cluster_statement("sessions_v2")
 
-    unwrap("acquisition_channel_functions")
-    |> String.trim()
-    |> String.split(";", trim: true)
-    |> Enum.each(&create_function(&1, on_cluster_statement, source_categories, opts))
-  end
-
-  defp create_function(sql, on_cluster_statement, source_categories, opts) do
-    sql =
-      sql
-      |> String.replace(" AS ", " #{on_cluster_statement} AS ")
-      |> String.replace("$SOURCE_CATEGORY_SEARCH", "{$0:Array(String)}")
-      |> String.replace("$SOURCE_CATEGORY_SHOPPING", "{$1:Array(String)}")
-      |> String.replace("$SOURCE_CATEGORY_SOCIAL", "{$2:Array(String)}")
-      |> String.replace("$SOURCE_CATEGORY_VIDEO", "{$3:Array(String)}")
-      |> String.replace("$SOURCE_CATEGORY_EMAIL", "{$4:Array(String)}")
-      |> String.replace("$PAID_SOURCES", "{$5:Array(String)}")
-
-    name =
-      sql
-      |> String.split()
-      |> Enum.at(4)
-
-    {:ok, _} =
-      do_run(name, sql,
-        params: [
-          source_categories["SOURCE_CATEGORY_SEARCH"],
-          source_categories["SOURCE_CATEGORY_SHOPPING"],
-          source_categories["SOURCE_CATEGORY_SOCIAL"],
-          source_categories["SOURCE_CATEGORY_VIDEO"],
-          source_categories["SOURCE_CATEGORY_EMAIL"],
-          Plausible.Ingestion.Source.paid_sources()
-        ],
-        quiet: Keyword.get(opts, :quiet, false)
-      )
+    run_sql_multi(
+      "acquisition_channel_functions",
+      [
+        on_cluster_statement: on_cluster_statement
+      ],
+      named_params: [
+        {:source_category_search, source_categories["SOURCE_CATEGORY_SEARCH"], "Array(String)"},
+        {:source_category_shopping, source_categories["SOURCE_CATEGORY_SHOPPING"],
+         "Array(String)"},
+        {:source_category_social, source_categories["SOURCE_CATEGORY_SOCIAL"], "Array(String)"},
+        {:source_category_video, source_categories["SOURCE_CATEGORY_VIDEO"], "Array(String)"},
+        {:source_category_email, source_categories["SOURCE_CATEGORY_EMAIL"], "Array(String)"},
+        {:paid_sources, Plausible.Ingestion.Source.paid_sources(), "Array(String)"}
+      ],
+      quiet: Keyword.get(opts, :quiet, false)
+    )
   end
 
   defp invert_map(source_categories) do
