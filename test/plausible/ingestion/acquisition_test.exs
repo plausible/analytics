@@ -63,7 +63,47 @@ defmodule Plausible.Ingestion.AcquisitionTest do
     %{utm_medium: "sms", expected: "SMS"},
     %{utm_medium: "app-push", expected: "Mobile Push Notifications"},
     %{utm_medium: "example-mobile", expected: "Mobile Push Notifications"},
-    %{referrer_source: "othersite.com", expected: "Referral"}
+    %{referrer_source: "othersite.com", expected: "Referral"},
+    %{referrer_source: "Threads", utm_source: "threads", expected: "Organic Social"},
+    %{referrer_source: "Instagram", utm_source: "ig", expected: "Organic Social"},
+    %{referrer_source: "Youtube", utm_source: "yt", expected: "Organic Video"},
+    %{referrer_source: "Youtube", utm_source: "yt-ads", expected: "Paid Video"},
+    %{referrer_source: "Facebook", utm_source: "fb", expected: "Organic Social"},
+    %{referrer_source: "Facebook", utm_source: "fb-ads", expected: "Paid Social"},
+    %{referrer_source: "Facebook", utm_source: "fbad", expected: "Paid Social"},
+    %{referrer_source: "Facebook", utm_source: "facebook-ads", expected: "Paid Social"},
+    %{referrer_source: "Reddit", utm_source: "Reddit-ads", expected: "Paid Social"},
+    %{referrer_source: "Google", utm_source: "google_ads", expected: "Paid Search"},
+    %{referrer_source: "Google", utm_source: "Google-ads", expected: "Paid Search"},
+    %{referrer_source: "Google", utm_source: "Adwords", expected: "Paid Search"},
+    %{referrer_source: "Twitter", utm_source: "twitter-ads", expected: "Paid Social"},
+    %{referrer_source: "Reddit", expected: "Organic Social"},
+    %{referrer_source: "Perplexity", expected: "Organic Search"},
+    %{referrer_source: "Microsoft Teams", expected: "Organic Social"},
+    %{referrer_source: "Wikipedia", expected: "Referral"},
+    %{referrer_source: "Bing", expected: "Organic Search"},
+    %{referrer_source: "Brave", expected: "Organic Search"},
+    %{referrer_source: "Yandex", expected: "Organic Search"},
+    %{referrer_source: "Discord", expected: "Organic Social"},
+    %{referrer_source: "Baidu", expected: "Organic Search"},
+    %{referrer_source: "Telegram", expected: "Organic Social"},
+    %{referrer_source: "Sogou", expected: "Organic Search"},
+    %{referrer_source: "Linktree", expected: "Referral"},
+    %{referrer_source: "Linktree", utm_source: "linktree", expected: "Referral"},
+    %{referrer_source: "Hacker News", expected: "Organic Social"},
+    %{referrer_source: "Yahoo!", expected: "Organic Search"},
+    %{referrer_source: "Gmail", expected: "Email"},
+    %{referrer_source: "Newsletter-UK", utm_source: "Newsletter-UK", expected: "Email"},
+    %{referrer_source: "temu.com", expected: "Organic Shopping"},
+    %{referrer_source: "Telegram", utm_source: "Telegram", expected: "Organic Social"},
+    %{referrer_source: "chatgpt.com", expected: "Organic Search"},
+    %{referrer_source: "Slack", expected: "Organic Social"},
+    %{referrer_source: "producthunt", expected: "Organic Social"},
+    %{referrer_source: "GitHub", expected: "Organic Social"},
+    %{referrer_source: "steamcommunity.com", expected: "Organic Social"},
+    %{referrer_source: "Vkontakte", expected: "Organic Social"},
+    %{referrer_source: "Threads", expected: "Organic Social"},
+    %{referrer_source: "Ecosia", expected: "Organic Search"}
   ]
 
   for {test_data, index} <- Enum.with_index(@static_tests, 1) do
@@ -80,8 +120,7 @@ defmodule Plausible.Ingestion.AcquisitionTest do
         "utm_medium" => test_data[:utm_medium],
         "utm_campaign" => test_data[:utm_campaign],
         "utm_source" => test_data[:utm_source],
-        "gclid" => if(test_data[:click_id_source] == "Google", do: "123", else: nil),
-        "msclkid" => if(test_data[:click_id_source] == "Bing", do: "123", else: nil)
+        test_data[:click_id_param] => "123"
       }
     }
 

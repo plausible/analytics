@@ -18,7 +18,7 @@ CREATE OR REPLACE FUNCTION acquisition_channel_has_category_email AS
 (referrer_source) ->
     has($SOURCE_CATEGORY_EMAIL, referrer_source);
 
-CREATE OR REPLACE FUNCTION acquisition_channel_paid_source AS
+CREATE OR REPLACE FUNCTION acquisition_channel_paid_utm_source AS
 (referrer_source) ->
     has($PAID_SOURCES, referrer_source);
 
@@ -40,7 +40,7 @@ CREATE OR REPLACE FUNCTION acquisition_channel_paid_search AS
         acquisition_channel_has_category_search(referrer_source)
         AND (
             acquisition_channel_paid_medium(utm_medium)
-            OR acquisition_channel_paid_source(utm_source)
+            OR acquisition_channel_paid_utm_source(utm_source)
         )
     ) OR (
         referrer_source == 'google'
@@ -51,14 +51,20 @@ CREATE OR REPLACE FUNCTION acquisition_channel_paid_search AS
     );
 
 CREATE OR REPLACE FUNCTION acquisition_channel_paid_social AS
-(referrer_source, utm_medium) ->
+(referrer_source, utm_medium, utm_source) ->
     acquisition_channel_has_category_social(referrer_source)
-    AND acquisition_channel_paid_medium(utm_medium);
+    AND (
+        acquisition_channel_paid_medium(utm_medium)
+        OR acquisition_channel_paid_utm_source(utm_source)
+    );
 
 CREATE OR REPLACE FUNCTION acquisition_channel_paid_video AS
-(referrer_source, utm_medium) ->
+(referrer_source, utm_medium, utm_source) ->
     acquisition_channel_has_category_video(referrer_source)
-    AND acquisition_channel_paid_medium(utm_medium);
+    AND (
+        acquisition_channel_paid_medium(utm_medium)
+        OR acquisition_channel_paid_utm_source(utm_source)
+    );
 
 CREATE OR REPLACE FUNCTION acquisition_channel_display AS
 (utm_medium) ->
@@ -142,8 +148,8 @@ CREATE OR REPLACE FUNCTION acquisition_channel_lowered AS
         acquisition_channel_cross_network(utm_campaign), 'Cross-network',
         acquisition_channel_paid_shopping(referrer_source, utm_medium, utm_campaign), 'Paid Shopping',
         acquisition_channel_paid_search(referrer_source, utm_medium, utm_source, click_id_param), 'Paid Search',
-        acquisition_channel_paid_social(referrer_source, utm_medium), 'Paid Social',
-        acquisition_channel_paid_video(referrer_source, utm_medium), 'Paid Video',
+        acquisition_channel_paid_social(referrer_source, utm_medium, utm_source), 'Paid Social',
+        acquisition_channel_paid_video(referrer_source, utm_medium, utm_source), 'Paid Video',
         acquisition_channel_display(utm_medium), 'Display',
         acquisition_channel_paid_medium(utm_medium), 'Paid Other',
         acquisition_channel_organic_shopping(referrer_source, utm_campaign), 'Organic Shopping',
