@@ -20,12 +20,22 @@ defmodule PlausibleWeb.AuthPlug do
       {:ok, user_session} ->
         user = user_session.user
 
+        team =
+          case user.team_memberships do
+            [%{team: team}] ->
+              team
+
+            [] ->
+              nil
+          end
+
         Plausible.OpenTelemetry.add_user_attributes(user)
         Sentry.Context.set_user_context(%{id: user.id, name: user.name, email: user.email})
 
         conn
         |> assign(:current_user, user)
         |> assign(:current_user_session, user_session)
+        |> assign(:current_team, team)
 
       _ ->
         conn

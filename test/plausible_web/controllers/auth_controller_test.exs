@@ -591,11 +591,14 @@ defmodule PlausibleWeb.AuthControllerTest do
         site_limit: 1
       )
 
+      {:ok, _team} = Plausible.Teams.get_or_create(user)
+
       conn = delete(conn, "/me")
       assert redirected_to(conn) == "/"
       assert Repo.reload(site) == nil
       assert Repo.reload(user) == nil
       assert Repo.all(Plausible.Billing.Subscription) == []
+      assert Repo.all(Plausible.Teams.Team) == []
     end
 
     test "deletes sites that the user owns", %{conn: conn, user: user, site: owner_site} do

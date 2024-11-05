@@ -251,15 +251,14 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_referrer(%__MODULE__{} = event, _context) do
-    ref = parse_referrer(event.request.uri, event.request.referrer)
-    source = get_referrer_source(event.request, ref)
+    source = Plausible.Ingestion.Source.resolve(event.request)
     channel = Plausible.Ingestion.Acquisition.get_channel(event.request, source)
 
     update_session_attrs(event, %{
       channel: channel,
       referrer_source: source,
-      click_id_param: get_click_id_param(event.request.query_params),
-      referrer: clean_referrer(ref)
+      referrer: Plausible.Ingestion.Source.format_referrer(event.request.referrer),
+      click_id_param: get_click_id_param(event.request.query_params)
     })
   end
 
@@ -391,40 +390,6 @@ defmodule Plausible.Ingestion.Event do
     {:ok, _} = Plausible.Event.WriteBuffer.insert(clickhouse_event)
     emit_telemetry_buffered(event)
     event
-  end
-
-  defp parse_referrer(_uri, _referrer_str = nil), do: nil
-
-  defp parse_referrer(uri, referrer_str) do
-    referrer_uri = URI.parse(referrer_str)
-
-    if Request.sanitize_hostname(referrer_uri.host) !== Request.sanitize_hostname(uri.host) &&
-         referrer_uri.host !== "localhost" do
-      RefInspector.parse(referrer_str)
-    end
-  end
-
-  defp get_referrer_source(request, ref) do
-    tagged_source =
-      request.query_params["utm_source"] ||
-        request.query_params["source"] ||
-        request.query_params["ref"]
-
-    if tagged_source do
-      Plausible.Ingestion.Acquisition.find_mapping(tagged_source)
-    else
-      PlausibleWeb.RefInspector.parse(ref)
-    end
-  end
-
-  defp clean_referrer(nil), do: nil
-
-  defp clean_referrer(ref) do
-    uri = URI.parse(ref.referer)
-
-    if PlausibleWeb.RefInspector.right_uri?(uri) do
-      PlausibleWeb.RefInspector.format_referrer(uri)
-    end
   end
 
   @click_id_params ["gclid", "gbraid", "wbraid", "msclkid", "fbclid", "twclid"]

@@ -20,7 +20,7 @@ defmodule Plausible.Billing.Subscription do
     :currency_code
   ]
 
-  @optional_fields [:last_bill_date]
+  @optional_fields [:last_bill_date, :team_id]
 
   schema "subscriptions" do
     field :paddle_subscription_id, :string
@@ -34,6 +34,7 @@ defmodule Plausible.Billing.Subscription do
     field :currency_code, :string
 
     belongs_to :user, Plausible.Auth.User
+    belongs_to :team, Plausible.Teams.Team
 
     timestamps()
   end
@@ -52,7 +53,7 @@ defmodule Plausible.Billing.Subscription do
       next_bill_amount: "0",
       currency_code: "EUR"
     }
-    |> cast(attrs, @required_fields)
+    |> cast(attrs, @required_fields ++ @optional_fields)
     |> validate_required([:user_id])
     |> unique_constraint(:paddle_subscription_id)
   end

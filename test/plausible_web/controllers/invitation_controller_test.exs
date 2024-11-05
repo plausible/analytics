@@ -30,6 +30,56 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert membership.role == :admin
     end
 
+    @tag :team
+    test "multiple invites per same team sync regression", %{conn: conn, user: user} do
+      inviter = insert(:user)
+      {:ok, team} = Plausible.Teams.get_or_create(inviter)
+      site1 = insert(:site, team: team, members: [inviter])
+      site2 = insert(:site, team: team, members: [inviter])
+
+      invitation1 =
+        insert(:invitation,
+          site_id: site1.id,
+          inviter: inviter,
+          email: user.email,
+          role: :viewer
+        )
+
+      invitation2 =
+        insert(:invitation,
+          site_id: site2.id,
+          inviter: inviter,
+          email: user.email,
+          role: :viewer
+        )
+
+      Plausible.Teams.Invitations.invite_sync(site1, invitation1)
+      Plausible.Teams.Invitations.invite_sync(site2, invitation2)
+
+      resp = post(conn, "/sites/invitations/#{invitation1.invitation_id}/accept")
+      assert redirected_to(resp, 302)
+
+      assert Repo.get_by(Plausible.Site.Membership, site_id: site1.id, user_id: user.id)
+      refute Repo.get_by(Plausible.Site.Membership, site_id: site2.id, user_id: user.id)
+
+      assert tm =
+               Repo.get_by(Plausible.Teams.Membership,
+                 team_id: team.id,
+                 user_id: user.id,
+                 role: :guest
+               )
+
+      assert Repo.get_by(Plausible.Teams.GuestMembership,
+               team_membership_id: tm.id,
+               site_id: site1.id
+             )
+
+      refute Repo.get_by(Plausible.Teams.GuestMembership,
+               team_membership_id: tm.id,
+               site_id: site2.id
+             )
+    end
+
     test "does not crash if clicked for the 2nd time in another tab", %{conn: conn, user: user} do
       site = insert(:site)
 
@@ -154,7 +204,11 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
   describe "DELETE /sites/:domain/invitations/:invitation_id" do
     test "removes the invitation", %{conn: conn, user: user} do
-      site = insert(:site, memberships: [build(:site_membership, user: user, role: :admin)])
+      site =
+        insert(:site,
+          members: [build(:user)],
+          memberships: [build(:site_membership, user: user, role: :admin)]
+        )
 
       invitation =
         insert(:invitation,

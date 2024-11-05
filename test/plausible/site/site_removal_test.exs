@@ -7,13 +7,34 @@ defmodule Plausible.Site.SiteRemovalTest do
 
   test "site from postgres is immediately deleted" do
     site = insert(:site)
-    assert {:ok, context} = Removal.run(site.domain)
+    assert {:ok, context} = Removal.run(site)
     assert context.delete_all == {1, nil}
     refute Sites.get_by_domain(site.domain)
   end
 
-  test "deletion is idempotent" do
-    assert {:ok, context} = Removal.run("some.example.com")
-    assert context.delete_all == {0, nil}
+  @tag :teams
+  test "site deletion prunes team guest memberships" do
+    site = insert(:site) |> Plausible.Teams.load_for_site() |> Repo.preload(:owner)
+
+    team_membership =
+      insert(:team_membership, user: build(:user), team: site.team, role: :guest)
+
+    insert(:guest_membership, team_membership: team_membership, site: site, role: :viewer)
+
+    team_invitation =
+      insert(:team_invitation,
+        email: "sitedeletion@example.test",
+        team: site.team,
+        inviter: site.owner,
+        role: :guest
+      )
+
+    insert(:guest_invitation, team_invitation: team_invitation, site: site, role: :viewer)
+
+    assert {:ok, context} = Removal.run(site)
+    assert context.delete_all == {1, nil}
+
+    refute Repo.reload(team_membership)
+    refute Repo.reload(team_invitation)
   end
 end

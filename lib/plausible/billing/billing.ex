@@ -120,13 +120,20 @@ defmodule Plausible.Billing do
   defp handle_subscription_created(params) do
     params =
       if present?(params["passthrough"]) do
-        params
+        format_params(params)
       else
-        user = Repo.get_by(User, email: params["email"])
-        Map.put(params, "passthrough", user && user.id)
+        user = Repo.get_by!(User, email: params["email"])
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+
+        params
+        |> Map.put("passthrough", user.id)
+        |> Map.put("team_id", team.id)
       end
 
-    subscription_params = format_subscription(params) |> add_last_bill_date(params)
+    subscription_params =
+      params
+      |> format_subscription()
+      |> add_last_bill_date(params)
 
     %Subscription{}
     |> Subscription.changeset(subscription_params)
@@ -153,8 +160,13 @@ defmodule Plausible.Billing do
     irrelevant? = params["old_status"] == "paused" && params["status"] == "past_due"
 
     if subscription && not irrelevant? do
+      params =
+        params
+        |> format_params()
+        |> format_subscription()
+
       subscription
-      |> Subscription.changeset(format_subscription(params))
+      |> Subscription.changeset(params)
       |> Repo.update!()
       |> after_subscription_update()
     end
@@ -208,8 +220,26 @@ defmodule Plausible.Billing do
     end
   end
 
+  defp format_params(%{"passthrough" => passthrough} = params) do
+    case String.split(to_string(passthrough), ";") do
+      [user_id] ->
+        user = Repo.get!(User, user_id)
+        {:ok, team} = Plausible.Teams.get_or_create(user)
+        Map.put(params, "team_id", team.id)
+
+      ["user:" <> user_id, "team:" <> team_id] ->
+        params
+        |> Map.put("passthrough", user_id)
+        |> Map.put("team_id", team_id)
+    end
+  end
+
+  defp format_params(params) do
+    params
+  end
+
   defp format_subscription(params) do
-    %{
+    subscription_params = %{
       paddle_subscription_id: params["subscription_id"],
       paddle_plan_id: params["subscription_plan_id"],
       cancel_url: params["cancel_url"],
@@ -220,6 +250,12 @@ defmodule Plausible.Billing do
       next_bill_amount: params["unit_price"] || params["new_unit_price"],
       currency_code: params["currency"]
     }
+
+    if team_id = params["team_id"] do
+      Map.put(subscription_params, :team_id, team_id)
+    else
+      subscription_params
+    end
   end
 
   defp add_last_bill_date(subscription_params, paddle_params) do
@@ -235,12 +271,6 @@ defmodule Plausible.Billing do
   defp present?(""), do: false
   defp present?(nil), do: false
   defp present?(_), do: true
-
-  defp remove_grace_period(%User{} = user) do
-    user
-    |> Plausible.Auth.GracePeriod.remove_changeset()
-    |> Repo.update!()
-  end
 
   @spec format_price(Money.t()) :: String.t()
   def format_price(money) do
@@ -275,7 +305,7 @@ defmodule Plausible.Billing do
 
     user
     |> Plausible.Users.update_accept_traffic_until()
-    |> remove_grace_period()
+    |> Plausible.Users.remove_grace_period()
     |> Plausible.Users.maybe_reset_next_upgrade_override()
     |> tap(&Plausible.Billing.SiteLocker.update_sites_for/1)
     |> maybe_adjust_api_key_limits()

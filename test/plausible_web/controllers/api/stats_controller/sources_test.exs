@@ -87,6 +87,10 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                %{"name" => "Google", "visitors" => 2},
                %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
+
+      assert json_response(conn, 200)["meta"] == %{
+               "date_range_label" => "1 Jan 2021"
+             }
     end
 
     test "returns top sources with :is_not filter on custom pageview props", %{
@@ -605,6 +609,69 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                %{"name" => "A", "visitors" => 2, "bounce_rate" => 100, "visit_duration" => 0},
                %{"name" => "Z", "visitors" => 1, "bounce_rate" => 100, "visit_duration" => 0}
              ]
+    end
+
+    test "can compare with previous period", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com",
+          timestamp: ~N[2021-01-02 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          timestamp: ~N[2021-01-02 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          timestamp: ~N[2021-01-02 00:00:00]
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/sources?period=day&date=2021-01-02&comparison=previous_period&detailed=true"
+        )
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "name" => "Google",
+                 "visitors" => 2,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0,
+                 "comparison" => %{
+                   "visitors" => 0,
+                   "bounce_rate" => 0,
+                   "visit_duration" => 0,
+                   "change" => %{"visitors" => 100, "bounce_rate" => nil, "visit_duration" => 0}
+                 }
+               },
+               %{
+                 "name" => "DuckDuckGo",
+                 "visitors" => 1,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0,
+                 "comparison" => %{
+                   "visitors" => 1,
+                   "bounce_rate" => 100,
+                   "visit_duration" => 0,
+                   "change" => %{"visitors" => 0, "bounce_rate" => 0, "visit_duration" => 0}
+                 }
+               }
+             ]
+
+      assert json_response(conn, 200)["meta"] == %{
+               "date_range_label" => "2 Jan 2021",
+               "comparison_date_range_label" => "1 Jan 2021"
+             }
     end
   end
 

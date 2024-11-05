@@ -4,7 +4,7 @@ defmodule Plausible.Billing.Plan do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @type t() :: %__MODULE__{} | :enterprise
+  @type t() :: %__MODULE__{}
 
   embedded_schema do
     # Due to grandfathering, we sometimes need to check the "generation" (e.g.

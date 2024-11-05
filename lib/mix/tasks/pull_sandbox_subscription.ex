@@ -40,6 +40,8 @@ defmodule Mix.Tasks.PullSandboxSubscription do
         if body["success"] do
           res = body["response"] |> List.first()
           user = Repo.get_by!(User, email: res["user_email"])
+          {:ok, team} = Plausible.Teams.get_or_create(user)
+          Plausible.Teams.sync_team(user)
 
           subscription = %{
             paddle_subscription_id: res["subscription_id"] |> to_string(),
@@ -47,6 +49,7 @@ defmodule Mix.Tasks.PullSandboxSubscription do
             cancel_url: res["cancel_url"],
             update_url: res["update_url"],
             user_id: user.id,
+            team_id: team.id,
             status: res["state"],
             last_bill_date: res["last_payment"]["date"],
             next_bill_date: res["next_payment"]["date"],

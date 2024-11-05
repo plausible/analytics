@@ -1,10 +1,11 @@
-const { devices } = require('@playwright/test');
+// @ts-check
+const { defineConfig, devices } = require('@playwright/test');
 
 /**
  * @see https://playwright.dev/docs/test-configuration
  */
-module.exports = {
-  testDir: '../',
+module.exports = defineConfig({
+  testDir: './test',
   timeout: 60 * 1000,
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -33,5 +34,7 @@ module.exports = {
   webServer: {
     command: 'npm run start',
     port: 3000,
+    reuseExistingServer: !process.env.CI
   },
-}
+});
+
