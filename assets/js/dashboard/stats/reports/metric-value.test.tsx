@@ -1,14 +1,8 @@
 /** @format */
 
 import React from 'react'
-import {
-  render as libraryRender,
-  screen,
-  fireEvent,
-  waitFor
-} from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import MetricValue from './metric-value'
-import SiteContextProvider, { PlausibleSite } from '../../site-context'
 
 jest.mock('@heroicons/react/24/solid', () => ({
   ArrowUpRightIcon: () => <>↑</>,
@@ -252,13 +246,6 @@ function valueProps<T>(
     },
     renderLabel: (_query: unknown) => metric.toUpperCase()
   } as any /* eslint-disable-line @typescript-eslint/no-explicit-any */
-}
-
-function render(ui: React.ReactNode) {
-  const site = {
-    flags: { breakdown_comparisons_ui: true }
-  } as unknown as PlausibleSite
-  libraryRender(<SiteContextProvider site={site}>{ui}</SiteContextProvider>)
 }
 
 async function renderWithTooltip(ui: React.ReactNode) {
