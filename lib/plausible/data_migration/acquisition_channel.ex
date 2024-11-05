@@ -35,17 +35,18 @@ defmodule Plausible.DataMigration.AcquisitionChannel do
       |> String.split()
       |> Enum.at(4)
 
-    do_run(name, sql,
-      params: [
-        source_categories["SOURCE_CATEGORY_SEARCH"],
-        source_categories["SOURCE_CATEGORY_SHOPPING"],
-        source_categories["SOURCE_CATEGORY_SOCIAL"],
-        source_categories["SOURCE_CATEGORY_VIDEO"],
-        source_categories["SOURCE_CATEGORY_EMAIL"],
-        Plausible.Ingestion.Source.paid_sources()
-      ],
-      quiet: Keyword.get(opts, :quiet, false)
-    )
+    {:ok, _} =
+      do_run(name, sql,
+        params: [
+          source_categories["SOURCE_CATEGORY_SEARCH"],
+          source_categories["SOURCE_CATEGORY_SHOPPING"],
+          source_categories["SOURCE_CATEGORY_SOCIAL"],
+          source_categories["SOURCE_CATEGORY_VIDEO"],
+          source_categories["SOURCE_CATEGORY_EMAIL"],
+          Plausible.Ingestion.Source.paid_sources()
+        ],
+        quiet: Keyword.get(opts, :quiet, false)
+      )
   end
 
   defp invert_map(source_categories) do
