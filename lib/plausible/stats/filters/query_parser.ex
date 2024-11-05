@@ -541,6 +541,17 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
+  defp validate_metric(:scroll_depth = metric, query) do
+    page_dimension? = Enum.member?(query.dimensions, "event:page")
+    toplevel_page_filter? = not is_nil(Filters.get_toplevel_filter(query, "event:page"))
+
+    if page_dimension? or toplevel_page_filter? do
+      :ok
+    else
+      {:error, "Metric `#{metric}` can only be queried with event:page filters or dimensions."}
+    end
+  end
+
   defp validate_metric(:views_per_visit = metric, query) do
     cond do
       Filters.filtering_on_dimension?(query, "event:page") ->

@@ -269,6 +269,10 @@
         {
           "const": "average_revenue",
           "$comment": "only :internal"
+        },
+        {
+          "const": "scroll_depth",
+          "markdownDescription": "The percentage of page content (y-axis) that was visible to an average visitor. Requires: an `event:page` filter or dimension"
         }
       ]
     },

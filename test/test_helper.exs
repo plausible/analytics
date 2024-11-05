@@ -13,6 +13,8 @@ else
   FunWithFlags.disable(:read_team_schemas)
 end
 
+FunWithFlags.enable(:scroll_depth)
+
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
 
 # warn about minio if it's included in tests but not running

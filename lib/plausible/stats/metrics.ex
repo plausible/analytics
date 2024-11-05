@@ -18,7 +18,8 @@ defmodule Plausible.Stats.Metrics do
                  :conversion_rate,
                  :group_conversion_rate,
                  :time_on_page,
-                 :percentage
+                 :percentage,
+                 :scroll_depth
                ] ++ on_ee(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
   @metric_mappings Enum.into(@all_metrics, %{}, fn metric -> {to_string(metric), metric} end)
