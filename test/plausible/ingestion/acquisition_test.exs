@@ -17,10 +17,10 @@ defmodule Plausible.Ingestion.AcquisitionTest do
       expected: "Paid Shopping"
     },
     %{referrer_source: "DuckDuckGo", utm_medium: "paid", expected: "Paid Search"},
-    %{referrer_source: "Google", click_id_source: "Google", expected: "Paid Search"},
-    %{referrer_source: "DuckDuckGo", click_id_source: "Google", expected: "Organic Search"},
-    %{referrer_source: "Bing", click_id_source: "Bing", expected: "Paid Search"},
-    %{referrer_source: "DuckDuckGo", click_id_source: "Bing", expected: "Organic Search"},
+    %{referrer_source: "Google", click_id_param: "gclid", expected: "Paid Search"},
+    %{referrer_source: "DuckDuckGo", click_id_param: "gclid", expected: "Organic Search"},
+    %{referrer_source: "Bing", click_id_param: "msclkid", expected: "Paid Search"},
+    %{referrer_source: "DuckDuckGo", click_id_param: "msclkid", expected: "Organic Search"},
     %{
       referrer_source: "google",
       utm_source: "google",
@@ -82,7 +82,7 @@ defmodule Plausible.Ingestion.AcquisitionTest do
           test_data[:utm_medium] || "",
           test_data[:utm_campaign] || "",
           test_data[:utm_source] || "",
-          test_data[:click_id_source] || ""
+          test_data[:click_id_param] || ""
         ]
       )
 

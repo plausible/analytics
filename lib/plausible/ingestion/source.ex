@@ -37,6 +37,10 @@ defmodule Plausible.Ingestion.Source do
     end)
   end
 
+  def paid_sources() do
+    @paid_sources |> MapSet.to_list()
+  end
+
   def paid_source?(source) do
     MapSet.member?(@paid_sources, source)
   end
