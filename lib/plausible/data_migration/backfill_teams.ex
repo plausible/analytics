@@ -188,7 +188,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
         gm in Teams.GuestMembership,
         inner_join: tm in assoc(gm, :team_membership),
         inner_join: s in assoc(gm, :site),
-        where: tm.team_id != s.id
+        where: tm.team_id != s.team_id
       )
       |> @repo.all()
 
