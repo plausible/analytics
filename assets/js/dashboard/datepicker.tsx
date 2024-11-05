@@ -1,6 +1,6 @@
 /* @format */
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { formatDateRange, formatISO } from './util/date'
+import { formatDateRange, formatISO, nowForSite } from './util/date'
 import {
   shiftQueryPeriod,
   getDateForShiftedPeriod,
@@ -175,7 +175,11 @@ function ComparisonMenu({
   const { query } = useQueryContext()
 
   return (
-    <DropdownMenuWrapper id="compare-menu" data-testid="compare-menu">
+    <DropdownMenuWrapper
+      id="compare-menu"
+      data-testid="compare-menu"
+      className="md:left-auto md:w-56"
+    >
       <DropdownLinkGroup>
         {[
           ComparisonMode.off,
@@ -236,6 +240,7 @@ function QueryPeriodsMenu({
       id="datemenu"
       data-testid="datemenu"
       innerContainerClassName="date-options"
+      className="md:left-auto md:w-56"
     >
       {groups.map((group, index) => (
         <DropdownLinkGroup key={index} className="date-options-group">
@@ -317,14 +322,16 @@ export default function QueryPeriodPicker() {
     () => getCompareLinkItem({ site, query }),
     [site, query]
   )
-  const groups = useMemo(() => {
+
+  const datePeriodGroups = useMemo(() => {
     const groups = getDatePeriodGroups(site)
     // add Custom Range link to the last group
     groups[groups.length - 1].push(customRangeLink)
+
     if (COMPARISON_DISABLED_PERIODS.includes(query.period)) {
       return groups
     }
-    // maybe ass Compare link as another group to the very end
+    // maybe add Compare link as another group to the very end
     return groups.concat([[compareLink]])
   }, [site, query, customRangeLink, compareLink])
 
@@ -348,6 +355,8 @@ export default function QueryPeriodPicker() {
     <div className="flex ml-auto pl-2">
       <MovePeriodArrows />
       <ToggleDropdownButton
+        withDropdownIndicator
+        className="min-w-36 md:relative lg:w-48"
         currentOption={<DisplaySelectedPeriod />}
         ref={dropdownRef}
         onClick={toggleDateMenu}
@@ -357,7 +366,7 @@ export default function QueryPeriodPicker() {
         }}
       >
         {menuVisible === 'datemenu' && (
-          <QueryPeriodsMenu groups={groups} closeMenu={closeMenu} />
+          <QueryPeriodsMenu groups={datePeriodGroups} closeMenu={closeMenu} />
         )}
         {menuVisible === 'datemenu-calendar' && (
           <DateRangeCalendar
@@ -365,6 +374,7 @@ export default function QueryPeriodPicker() {
               navigate({ search: getSearchToApplyCustomDates(selection) })
             }
             minDate={site.statsBegin}
+            maxDate={formatISO(nowForSite(site))}
             defaultDates={
               query.to && query.from
                 ? [formatISO(query.from), formatISO(query.to)]
@@ -379,6 +389,8 @@ export default function QueryPeriodPicker() {
             <span className="hidden md:inline px-1">vs.</span>
           </div>
           <ToggleDropdownButton
+            withDropdownIndicator
+            className="min-w-36 md:relative lg:w-48"
             ref={compareDropdownRef}
             currentOption={
               query.comparison === ComparisonMode.custom &&
@@ -406,6 +418,7 @@ export default function QueryPeriodPicker() {
                   })
                 }
                 minDate={site.statsBegin}
+                maxDate={formatISO(nowForSite(site))}
                 defaultDates={
                   query.compare_from && query.compare_to
                     ? [
@@ -423,7 +436,7 @@ export default function QueryPeriodPicker() {
         <>
           <ArrowKeybind keyboardKey="ArrowLeft" />
           <ArrowKeybind keyboardKey="ArrowRight" />
-          {groups
+          {datePeriodGroups
             .concat([[last6MonthsLinkItem]])
             .flatMap((group) =>
               group
