@@ -129,7 +129,7 @@ defmodule Plausible.Ingestion.Source do
 
   defp valid_referrer?(_), do: false
 
-  defp has_referral?(%Request{referrer: nil}), do: nil
+  defp has_referral?(%Request{referrer: nil}), do: false
 
   defp has_referral?(%Request{referrer: referrer, uri: uri}) do
     referrer_uri = URI.parse(referrer)
