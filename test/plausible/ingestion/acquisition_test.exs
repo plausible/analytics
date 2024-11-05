@@ -69,8 +69,23 @@ defmodule Plausible.Ingestion.AcquisitionTest do
   for {test_data, index} <- Enum.with_index(@static_tests, 1) do
     @tag test_data: test_data
     test "static test #{index} - #{Jason.encode!(test_data)}", %{test_data: test_data} do
+      assert reference_channel(test_data) == test_data.expected
       assert clickhouse_channel(test_data) == test_data.expected
     end
+  end
+
+  def reference_channel(test_data) do
+    request = %{
+      query_params: %{
+        "utm_medium" => test_data[:utm_medium],
+        "utm_campaign" => test_data[:utm_campaign],
+        "utm_source" => test_data[:utm_source],
+        "gclid" => if(test_data[:click_id_source] == "Google", do: "123", else: nil),
+        "msclkid" => if(test_data[:click_id_source] == "Bing", do: "123", else: nil)
+      }
+    }
+
+    Plausible.Ingestion.Acquisition.get_channel(request, test_data[:referrer_source])
   end
 
   def clickhouse_channel(test_data) do
