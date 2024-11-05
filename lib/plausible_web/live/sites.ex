@@ -33,13 +33,7 @@ defmodule PlausibleWeb.Live.Sites do
         Site.Memberships.any_or_pending?(current_user)
       end)
       |> assign_new(:needs_to_upgrade, fn %{current_user: current_user, sites: sites} ->
-        user_owns_sites =
-          Enum.any?(sites.entries, fn site ->
-            length(site.invitations) > 0 && List.first(site.invitations).role == :owner
-          end) ||
-            Auth.user_owns_sites?(current_user)
-
-        user_owns_sites && Plausible.Billing.check_needs_to_upgrade(current_user)
+        owns_sites?(current_user, sites) && Plausible.Billing.check_needs_to_upgrade(current_user)
       end)
 
     {:noreply, socket}
@@ -647,6 +641,17 @@ defmodule PlausibleWeb.Live.Sites do
       |> set_filter_text("")
 
     {:noreply, socket}
+  end
+
+  defp owns_sites?(user, sites) do
+    if Plausible.Teams.read_team_schemas?(user) do
+      Plausible.Teams.Users.owns_sites?(user, include_pending?: true)
+    else
+      Enum.any?(sites.entries, fn site ->
+        length(site.invitations) > 0 && List.first(site.invitations).role == :owner
+      end) ||
+        Auth.user_owns_sites?(user)
+    end
   end
 
   defp load_sites(%{assigns: assigns} = socket) do
