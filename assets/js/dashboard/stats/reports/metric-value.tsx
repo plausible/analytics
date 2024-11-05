@@ -11,7 +11,6 @@ import {
 } from './metric-formatter'
 import { BreakdownResultMeta, DashboardQuery } from '../../query'
 import { useQueryContext } from '../../query-context'
-import { PlausibleSite, useSiteContext } from '../../site-context'
 
 type MetricValues = Record<Metric, ValueType>
 
@@ -19,15 +18,11 @@ type ListItem = MetricValues & {
   comparison: MetricValues & { change: Record<Metric, number> }
 }
 
-function valueRenderProps(
-  listItem: ListItem,
-  metric: Metric,
-  site: PlausibleSite
-) {
+function valueRenderProps(listItem: ListItem, metric: Metric) {
   const value = listItem[metric]
 
   let comparison = null
-  if (site.flags.breakdown_comparisons_ui && listItem.comparison) {
+  if (listItem.comparison) {
     comparison = {
       value: listItem.comparison[metric],
       change: listItem.comparison.change[metric]
@@ -45,12 +40,11 @@ export default function MetricValue(props: {
   meta: BreakdownResultMeta
 }) {
   const { query } = useQueryContext()
-  const site = useSiteContext()
 
   const { metric, listItem } = props
   const { value, comparison } = useMemo(
-    () => valueRenderProps(listItem, metric, site),
-    [listItem, metric, site]
+    () => valueRenderProps(listItem, metric),
+    [listItem, metric]
   )
   const metricLabel = useMemo(() => props.renderLabel(query), [query, props])
   const shortFormatter = props.formatter ?? MetricFormatterShort[metric]
