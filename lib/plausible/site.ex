@@ -3,6 +3,7 @@ defmodule Plausible.Site do
   Site schema
   """
   use Ecto.Schema
+  use Plausible
   import Ecto.Changeset
   alias Plausible.Auth.User
   alias Plausible.Site.GoogleAuth
@@ -71,9 +72,15 @@ defmodule Plausible.Site do
 
   def new(params), do: changeset(%__MODULE__{}, params)
 
-  @domain_unique_error """
-  This domain cannot be registered. Perhaps one of your colleagues registered it? If that's not the case, please contact support@plausible.io
-  """
+  on_ee do
+    @domain_unique_error """
+    This domain cannot be registered. Perhaps one of your colleagues registered it? If that's not the case, please contact support@plausible.io
+    """
+  else
+    @domain_unique_error """
+    This domain cannot be registered. Perhaps one of your colleagues registered it?
+    """
+  end
 
   def changeset(site, attrs \\ %{}) do
     site
