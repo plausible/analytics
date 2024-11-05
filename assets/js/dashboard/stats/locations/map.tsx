@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import * as api from '../../api'
 import { replaceFilterByPrefix, cleanLabels } from '../../util/filters'
 import { useAppNavigate } from '../../navigation/use-app-navigate'
-import numberFormatter from '../../util/number-formatter'
+import { numberShortFormatter } from '../../util/number-formatter'
 import * as topojson from 'topojson-client'
 import { useQuery } from '@tanstack/react-query'
 import { useSiteContext } from '../../site-context'
@@ -165,7 +165,7 @@ const WorldMap = ({
             x={tooltip.x}
             y={tooltip.y}
             name={hoveredCountryData.name}
-            value={numberFormatter(hoveredCountryData.visitors)}
+            value={numberShortFormatter(hoveredCountryData.visitors)}
             label={
               labels[hoveredCountryData.visitors === 1 ? 'singular' : 'plural']
             }

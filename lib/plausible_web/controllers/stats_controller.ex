@@ -365,10 +365,12 @@ defmodule PlausibleWeb.StatsController do
   defp shared_link_cookie_name(slug), do: "shared-link-" <> slug
 
   defp get_flags(user, site),
-    do: %{
-      channels:
-        FunWithFlags.enabled?(:channels, for: user) || FunWithFlags.enabled?(:channels, for: site)
-    }
+    do:
+      [:channels, :breakdown_comparisons_ui, :saved_segments]
+      |> Enum.map(fn flag ->
+        {flag, FunWithFlags.enabled?(flag, for: user) || FunWithFlags.enabled?(flag, for: site)}
+      end)
+      |> Map.new()
 
   defp is_dbip() do
     on_ee do

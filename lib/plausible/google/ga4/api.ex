@@ -14,7 +14,7 @@ defmodule Plausible.Google.GA4.API do
           expires_at :: String.t()
         }
 
-  @per_page 250_000
+  @per_page 200_000
   @backoff_factor :timer.seconds(10)
   @max_attempts 5
 
@@ -73,6 +73,7 @@ defmodule Plausible.Google.GA4.API do
 
   def import_analytics(date_range, property, auth, opts) do
     persist_fn = Keyword.fetch!(opts, :persist_fn)
+    fetch_opts = Keyword.get(opts, :fetch_opts, [])
     resume_opts = Keyword.get(opts, :resume_opts, [])
 
     Logger.debug(
@@ -80,11 +81,18 @@ defmodule Plausible.Google.GA4.API do
     )
 
     with {:ok, access_token} <- Google.API.maybe_refresh_token(auth) do
-      do_import_analytics(date_range, property, access_token, persist_fn, resume_opts)
+      do_import_analytics(date_range, property, access_token, persist_fn, fetch_opts, resume_opts)
     end
   end
 
-  defp do_import_analytics(date_range, property, access_token, persist_fn, [] = _resume_opts) do
+  defp do_import_analytics(
+         date_range,
+         property,
+         access_token,
+         persist_fn,
+         fetch_opts,
+         [] = _resume_opts
+       ) do
     Enum.reduce_while(GA4.ReportRequest.full_report(), :ok, fn report_request, :ok ->
       Logger.debug(
         "[#{inspect(__MODULE__)}:#{property}] Starting to import #{report_request.dataset}"
@@ -92,14 +100,21 @@ defmodule Plausible.Google.GA4.API do
 
       report_request = prepare_request(report_request, date_range, property, access_token)
 
-      case fetch_and_persist(report_request, persist_fn: persist_fn) do
+      case fetch_and_persist(report_request, persist_fn: persist_fn, fetch_opts: fetch_opts) do
         :ok -> {:cont, :ok}
         {:error, _} = error -> {:halt, error}
       end
     end)
   end
 
-  defp do_import_analytics(date_range, property, access_token, persist_fn, resume_opts) do
+  defp do_import_analytics(
+         date_range,
+         property,
+         access_token,
+         persist_fn,
+         fetch_opts,
+         resume_opts
+       ) do
     dataset = Keyword.fetch!(resume_opts, :dataset)
     offset = Keyword.fetch!(resume_opts, :offset)
 
@@ -122,7 +137,7 @@ defmodule Plausible.Google.GA4.API do
         |> prepare_request(date_range, property, access_token)
         |> Map.put(:offset, request_offset)
 
-      case fetch_and_persist(report_request, persist_fn: persist_fn) do
+      case fetch_and_persist(report_request, persist_fn: persist_fn, fetch_opts: fetch_opts) do
         :ok -> {:cont, :ok}
         {:error, _} = error -> {:halt, error}
       end
@@ -134,7 +149,9 @@ defmodule Plausible.Google.GA4.API do
   def fetch_and_persist(%GA4.ReportRequest{} = report_request, opts \\ []) do
     persist_fn = Keyword.fetch!(opts, :persist_fn)
     attempt = Keyword.get(opts, :attempt, 1)
-    sleep_time = Keyword.get(opts, :sleep_time, @backoff_factor)
+    fetch_opts = Keyword.get(opts, :fetch_opts, [])
+    max_attempts = Keyword.get(fetch_opts, :max_attempts, @max_attempts)
+    sleep_time = Keyword.get(fetch_opts, :sleep_time, @backoff_factor)
 
     case GA4.HTTP.get_report(report_request) do
       {:ok, {_, 0}} ->
@@ -168,7 +185,7 @@ defmodule Plausible.Google.GA4.API do
         {:error, {:rate_limit_exceeded, details}}
 
       {:error, cause} ->
-        if attempt >= @max_attempts do
+        if attempt >= max_attempts do
           Logger.debug(
             "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset}. Terminating."
           )

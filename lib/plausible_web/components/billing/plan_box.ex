@@ -227,7 +227,11 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     <%= if @owned_plan && Plausible.Billing.Subscriptions.resumable?(@current_user.subscription) do %>
       <.change_plan_link {assigns} />
     <% else %>
-      <PlausibleWeb.Components.Billing.paddle_button user={@current_user} {assigns}>
+      <PlausibleWeb.Components.Billing.paddle_button
+        user={@current_user}
+        team={@current_team}
+        {assigns}
+      >
         Upgrade
       </PlausibleWeb.Components.Billing.paddle_button>
     <% end %>
@@ -270,7 +274,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
     trial_active_or_ended_recently? =
       not invited_user? &&
-        Timex.diff(Date.utc_today(), current_user.trial_expiry_date, :days) <= 10
+        Date.diff(Date.utc_today(), current_user.trial_expiry_date) <= 10
 
     limit_checking_opts =
       cond do

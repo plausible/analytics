@@ -304,8 +304,16 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "visitors" => 5,
                  "events" => 5,
                  "conversion_rate" => 100.0,
-                 "average_revenue" => %{"short" => "€166.7M", "long" => "€166,733,566.75"},
-                 "total_revenue" => %{"short" => "€500.2M", "long" => "€500,200,700.25"}
+                 "average_revenue" => %{
+                   "short" => "€166.7M",
+                   "long" => "€166,733,566.75",
+                   "value" => 166_733_566.748
+                 },
+                 "total_revenue" => %{
+                   "short" => "€500.2M",
+                   "long" => "€500,200,700.25",
+                   "value" => 500_200_700.246
+                 }
                }
              ]
     end
@@ -380,11 +388,11 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       assert [
                %{
-                 "average_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
+                 "average_revenue" => %{"long" => "€10.00", "short" => "€10.0", "value" => 10.0},
                  "conversion_rate" => 16.7,
                  "name" => "Payment",
                  "events" => 1,
-                 "total_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
+                 "total_revenue" => %{"long" => "€10.00", "short" => "€10.0", "value" => 10.0},
                  "visitors" => 1
                },
                %{

@@ -1,10 +1,10 @@
 const { expect } = require("@playwright/test");
 
 // Mocks an HTTP request call with the given path. Returns a Promise that resolves to the request
-// data. If the request is not made, resolves to null after 10 seconds.
-exports.mockRequest = function (page, path) {
+// data. If the request is not made, resolves to null after 3 seconds.
+const mockRequest = function (page, path) {
   return new Promise((resolve, _reject) => {
-    const requestTimeoutTimer = setTimeout(() => resolve(null), 10000)
+    const requestTimeoutTimer = setTimeout(() => resolve(null), 3000)
 
     page.route(path, (route, request) => {
       clearTimeout(requestTimeoutTimer)
@@ -13,6 +13,8 @@ exports.mockRequest = function (page, path) {
     })
   })
 }
+
+exports.mockRequest = mockRequest
 
 exports.metaKey = function() {
   if (process.platform === 'darwin') {
@@ -23,13 +25,13 @@ exports.metaKey = function() {
 }
 
 // Mocks a specified number of HTTP requests with given path. Returns a promise that resolves to a
-// list of requests as soon as the specified number of requests is made, or 10 seconds has passed.
-exports.mockManyRequests = function(page, path, numberOfRequests) {
+// list of requests as soon as the specified number of requests is made, or 3 seconds has passed.
+const mockManyRequests = function(page, path, numberOfRequests) {
   return new Promise((resolve, _reject) => {
     let requestList = []
-    const requestTimeoutTimer = setTimeout(() => resolve(requestList), 10000)
+    const requestTimeoutTimer = setTimeout(() => resolve(requestList), 3000)
 
-    page.route('/api/event', (route, request) => {
+    page.route(path, (route, request) => {
       requestList.push(request)
       if (requestList.length === numberOfRequests) {
         clearTimeout(requestTimeoutTimer)
@@ -40,6 +42,8 @@ exports.mockManyRequests = function(page, path, numberOfRequests) {
   })
 }
 
+exports.mockManyRequests = mockManyRequests
+
 exports.expectCustomEvent = function (request, eventName, eventProps) {
   const payload = request.postDataJSON()
 
@@ -48,4 +52,35 @@ exports.expectCustomEvent = function (request, eventName, eventProps) {
   for (const [key, value] of Object.entries(eventProps)) {
     expect(payload.p[key]).toEqual(value)
   }
+}
+
+exports.clickPageElementAndExpectEventRequests = async function (page, locatorToClick, expectedBodySubsets, refutedBodySubsets = []) {
+  const requestsToExpect = expectedBodySubsets.length
+  const requestsToAwait = requestsToExpect + refutedBodySubsets.length
+  
+  const plausibleRequestMockList = mockManyRequests(page, '/api/event', requestsToAwait)
+  await page.click(locatorToClick)
+  const requests = await plausibleRequestMockList
+
+  expect(requests.length).toBe(requestsToExpect)
+
+  expectedBodySubsets.forEach((bodySubset) => {
+    expect(requests.some((request) => {
+      return hasExpectedBodyParams(request, bodySubset)
+    })).toBe(true)
+  })
+
+  refutedBodySubsets.forEach((bodySubset) => {
+    expect(requests.every((request) => {
+      return !hasExpectedBodyParams(request, bodySubset)
+    })).toBe(true)
+  })
+}
+
+function hasExpectedBodyParams(request, expectedBodyParams) {
+  const body = request.postDataJSON()
+
+  return Object.keys(expectedBodyParams).every((key) => {
+    return body[key] === expectedBodyParams[key]
+  })
 }

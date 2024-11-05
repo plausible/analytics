@@ -47,7 +47,13 @@ defmodule Plausible.Stats.Goal.Revenue do
         get_goal_dimension_revenue_currency(query, dimension_values)
 
     if currency do
-      Money.new!(value || 0, currency)
+      money = Money.new!(value || 0, currency)
+
+      %{
+        short: Money.to_string!(money, format: :short, fractional_digits: 1),
+        long: Money.to_string!(money),
+        value: Decimal.to_float(money.amount)
+      }
     else
       value
     end

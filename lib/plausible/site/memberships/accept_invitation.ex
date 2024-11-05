@@ -36,10 +36,13 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     with :ok <- Invitations.ensure_transfer_valid(site, user, :owner),
          :ok <- Invitations.ensure_can_take_ownership(site, user) do
       membership = get_or_create_owner_membership(site, user)
+
       multi = add_and_transfer_ownership(site, membership, user)
 
       case Repo.transaction(multi) do
         {:ok, changes} ->
+          Plausible.Teams.Invitations.transfer_site_sync(site, user)
+
           membership = Repo.preload(changes.membership, [:site, :user])
 
           {:ok, membership}
@@ -75,6 +78,10 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
       site
       |> add_and_transfer_ownership(membership, user)
       |> Multi.delete(:invitation, invitation)
+      |> Multi.run(:sync_transfer, fn _repo, _context ->
+        Plausible.Teams.Invitations.accept_transfer_sync(invitation, user)
+        {:ok, nil}
+      end)
       |> finalize_invitation(invitation)
     end
   end
@@ -84,6 +91,10 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
     invitation
     |> add(membership, user)
+    |> Multi.run(:sync_invitation, fn _repo, _context ->
+      Plausible.Teams.Invitations.accept_invitation_sync(invitation, user)
+      {:ok, nil}
+    end)
     |> finalize_invitation(invitation)
   end
 
@@ -182,12 +193,17 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   end
 
   defp notify_invitation_accepted(%Auth.Invitation{role: :owner} = invitation) do
-    PlausibleWeb.Email.ownership_transfer_accepted(invitation)
+    PlausibleWeb.Email.ownership_transfer_accepted(
+      invitation.email,
+      invitation.inviter.email,
+      invitation.site
+    )
     |> Plausible.Mailer.send()
   end
 
   defp notify_invitation_accepted(invitation) do
-    PlausibleWeb.Email.invitation_accepted(invitation)
+    invitation.inviter.email
+    |> PlausibleWeb.Email.invitation_accepted(invitation.email, invitation.site)
     |> Plausible.Mailer.send()
   end
 end

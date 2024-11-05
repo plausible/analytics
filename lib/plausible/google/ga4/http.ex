@@ -48,7 +48,7 @@ defmodule Plausible.Google.GA4.HTTP do
         url,
         [{"Authorization", "Bearer #{report_request.access_token}"}],
         params,
-        receive_timeout: 60_000
+        receive_timeout: 80_000
       )
 
     with {:ok, %{body: body}} <- response,
@@ -69,24 +69,38 @@ defmodule Plausible.Google.GA4.HTTP do
         {:error,
          {:rate_limit_exceeded, dataset: report_request.dataset, offset: report_request.offset}}
 
-      {:error, %{reason: %{status: status, body: body}} = error} ->
+      {:error, %{reason: %{status: status, body: body}} = error} when status >= 500 ->
         log_ce_error("retrieving report for #{report_request.dataset}", error)
 
-        Logger.debug(
+        Logger.warning(
           "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset} with code #{status}: #{inspect(body)}"
         )
 
         Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: status}})
+
+        {:error, {:server_failed, dataset: report_request.dataset, offset: report_request.offset}}
+
+      {:error, %{reason: %{status: status, body: body}} = error} ->
+        log_ce_error("retrieving report for #{report_request.dataset}", error)
+
+        Logger.warning(
+          "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset} with code #{status}: #{inspect(body)}"
+        )
+
+        Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: status}})
+
         {:error, :request_failed}
 
       {:error, reason} ->
         log_ce_error("retrieving report for #{report_request.dataset}", reason)
 
-        Logger.debug(
+        Logger.warning(
           "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset}: #{inspect(reason)}"
         )
 
-        {:error, :request_failed}
+        Sentry.Context.set_extra_context(%{ga_response: %{body: inspect(reason), status: 0}})
+
+        {:error, {:socket_failed, dataset: report_request.dataset, offset: report_request.offset}}
     end
   end
 

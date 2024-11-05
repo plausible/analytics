@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign_new(:needs_to_upgrade, fn %{current_user: current_user, sites: sites} ->
         user_owns_sites =
           Enum.any?(sites.entries, fn site ->
-            List.first(site.memberships ++ site.invitations).role == :owner
+            length(site.invitations) > 0 && List.first(site.invitations).role == :owner
           end) ||
             Auth.user_owns_sites?(current_user)
 
@@ -142,7 +142,6 @@ defmodule PlausibleWeb.Live.Sites do
               <.styled_link href={Routes.settings_path(PlausibleWeb.Endpoint, :subscription)}>
                 Upgrade now →
               </.styled_link>
-              ) %>
             </p>
           </div>
         </div>
@@ -326,12 +325,40 @@ defmodule PlausibleWeb.Live.Sites do
 
   attr :change, :integer, required: true
 
+  # Related React component: <ChangeArrow />
   def percentage_change(assigns) do
     ~H"""
     <p class="dark:text-gray-100">
       <span :if={@change == 0} class="font-semibold">〰</span>
-      <span :if={@change > 0} class="font-semibold text-green-500">↑</span>
-      <span :if={@change < 0} class="font-semibold text-red-400">↓</span>
+      <svg
+        :if={@change > 0}
+        xmlns="http://www.w3.org/2000/svg"
+        fill="currentColor"
+        viewBox="0 0 24 24"
+        class="text-green-500 h-3 w-3 inline-block stroke-[1px] stroke-current"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M8.25 3.75H19.5a.75.75 0 01.75.75v11.25a.75.75 0 01-1.5 0V6.31L5.03 20.03a.75.75 0 01-1.06-1.06L17.69 5.25H8.25a.75.75 0 010-1.5z"
+          clip-rule="evenodd"
+        >
+        </path>
+      </svg>
+      <svg
+        :if={@change < 0}
+        xmlns="http://www.w3.org/2000/svg"
+        fill="currentColor"
+        viewBox="0 0 24 24"
+        class="text-red-400 h-3 w-3 inline-block stroke-[1px] stroke-current"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M3.97 3.97a.75.75 0 011.06 0l13.72 13.72V8.25a.75.75 0 011.5 0V19.5a.75.75 0 01-.75.75H8.25a.75.75 0 010-1.5h9.44L3.97 5.03a.75.75 0 010-1.06z"
+          clip-rule="evenodd"
+        >
+        </path>
+      </svg>
+
       <%= abs(@change) %>%
     </p>
     """
