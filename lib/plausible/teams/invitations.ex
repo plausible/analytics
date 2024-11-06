@@ -409,16 +409,9 @@ defmodule Plausible.Teams.Invitations do
     :ok
   end
 
-  defp send_transfer_accepted_email(site_transfer) do
-    PlausibleWeb.Email.ownership_transfer_accepted(
-      site_transfer.email,
-      site_transfer.initiator.email,
-      site_transfer.site
-    )
-    |> Plausible.Mailer.send()
-  end
+  def ensure_can_take_ownership(_site, nil), do: {:error, :no_plan}
 
-  defp ensure_can_take_ownership(site, team) do
+  def ensure_can_take_ownership(site, team) do
     team = Teams.with_subscription(team)
     plan = Billing.Plans.get_subscription_plan(team.subscription)
     active_subscription? = Billing.Subscriptions.active?(team.subscription)
@@ -430,6 +423,15 @@ defmodule Plausible.Teams.Invitations do
     else
       {:error, :no_plan}
     end
+  end
+
+  defp send_transfer_accepted_email(site_transfer) do
+    PlausibleWeb.Email.ownership_transfer_accepted(
+      site_transfer.email,
+      site_transfer.initiator.email,
+      site_transfer.site
+    )
+    |> Plausible.Mailer.send()
   end
 
   defp find_for_user(invitation_id, user) do

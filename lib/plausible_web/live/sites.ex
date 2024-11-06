@@ -711,7 +711,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp check_limits(%{role: :owner, site: site} = invitation, user) do
-    case Invitations.ensure_can_take_ownership(site, user) do
+    case ensure_can_take_ownership(site, user) do
       :ok ->
         check_features(invitation, user)
 
@@ -725,6 +725,20 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp check_limits(invitation, _), do: %{invitation: invitation}
+
+  defp ensure_can_take_ownership(site, user) do
+    if Teams.read_team_schemas?(user) do
+      team =
+        case Teams.get_by_owner(user) do
+          {:ok, team} -> team
+          {:error, _} -> nil
+        end
+
+      Teams.Invitations.ensure_can_take_ownership(site, team)
+    else
+      Invitations.ensure_can_take_ownership(site, user)
+    end
+  end
 
   defp check_features(%{role: :owner, site: site} = invitation, user) do
     case Invitations.check_feature_access(site, user, ce?()) do

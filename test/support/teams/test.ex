@@ -125,6 +125,12 @@ defmodule Plausible.Teams.Test do
     user |> Repo.preload([:site_memberships, :team_memberships])
   end
 
+  def subscribe_to_growth_plan(user) do
+    {:ok, team} = Teams.get_or_create(user)
+
+    insert(:growth_subscription, user: user, team: team)
+  end
+
   defmacro __using__(_) do
     quote do
       import Plausible.Teams.Test
