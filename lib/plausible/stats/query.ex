@@ -10,7 +10,6 @@ defmodule Plausible.Stats.Query do
             include_imported: false,
             skip_imported_reason: nil,
             now: nil,
-            experimental_reduced_joins?: false,
             latest_import_end_date: nil,
             metrics: [],
             order_by: nil,
@@ -33,7 +32,6 @@ defmodule Plausible.Stats.Query do
       query =
         struct!(__MODULE__, Map.to_list(query_data))
         |> put_imported_opts(site, %{})
-        |> put_experimental_reduced_joins(site, params)
         |> struct!(now: DateTime.utc_now(:second), debug_metadata: debug_metadata)
 
       on_ee do
@@ -49,18 +47,6 @@ defmodule Plausible.Stats.Query do
   """
   def from(site, params, debug_metadata \\ %{}, now \\ nil) do
     Legacy.QueryBuilder.from(site, params, debug_metadata, now)
-  end
-
-  def put_experimental_reduced_joins(query, site, params) do
-    if Map.has_key?(params, "experimental_reduced_joins") do
-      struct!(query,
-        experimental_reduced_joins?: Map.get(params, "experimental_reduced_joins") == "true"
-      )
-    else
-      struct!(query,
-        experimental_reduced_joins?: FunWithFlags.enabled?(:experimental_reduced_joins, for: site)
-      )
-    end
   end
 
   def date_range(query, options \\ []) do

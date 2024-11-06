@@ -7,8 +7,6 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   import Plausible.Stats.Time, only: [utc_boundaries: 2]
   import Plausible.Stats.Filters.Utils, only: [page_regex: 1]
 
-  alias Plausible.Stats.Query
-
   use Plausible.Stats.SQL.Fragments
 
   require Logger
@@ -121,10 +119,10 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
   defp add_filter(
          :events,
-         %Query{experimental_reduced_joins?: true},
+         _query,
          [_, "visit:" <> key | _rest] = filter
        ) do
-    # Filter events query if experimental_reduced_joins? is true
+    # Filter events query with visit dimension if possible
     field_name = String.to_existing_atom(key)
 
     if Enum.member?(@sessions_only_visit_fields, field_name) do
@@ -132,10 +130,6 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     else
       filter_field(field_name, filter)
     end
-  end
-
-  defp add_filter(:events, _query, [_, "visit:" <> _key | _rest]) do
-    true
   end
 
   defp add_filter(:sessions, _query, [_, "visit:entry_props:" <> prop_name | _rest] = filter) do
