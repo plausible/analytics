@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Dashboard shows comparisons for all reports
+
 ### Removed
 ### Changed
 ### Fixed

@@ -181,6 +181,35 @@ defmodule Plausible.DataMigration.BackfillTeams do
       log("All enterprise plans are linked to a team now.")
     end
 
+    # Guest memberships with mismatched team site
+
+    mismatched_guest_memberships_to_remove =
+      from(
+        gm in Teams.GuestMembership,
+        inner_join: tm in assoc(gm, :team_membership),
+        inner_join: s in assoc(gm, :site),
+        where: tm.team_id != s.team_id
+      )
+      |> @repo.all()
+
+    log(
+      "Found #{length(mismatched_guest_memberships_to_remove)} guest memberships with mismatched team to remove..."
+    )
+
+    if not dry_run? do
+      team_ids_to_prune = remove_guest_memberships(mismatched_guest_memberships_to_remove)
+
+      log("Pruning guest team memberships for #{length(team_ids_to_prune)} teams...")
+
+      from(t in Teams.Team, where: t.id in ^team_ids_to_prune)
+      |> @repo.all(timeout: :infinity)
+      |> Enum.each(fn team ->
+        Plausible.Teams.Memberships.prune_guests(team)
+      end)
+
+      log("Guest memberships with mismatched team cleared.")
+    end
+
     # Guest Memberships cleanup
 
     site_memberships_query =

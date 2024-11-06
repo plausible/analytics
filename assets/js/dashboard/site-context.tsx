@@ -27,7 +27,6 @@ export function parseSiteFromDataset(dataset: DOMStringMap): PlausibleSite {
 
 type FeatureFlags = {
   channels?: boolean
-  breakdown_comparisons_ui?: boolean
   saved_segments?: boolean
 }
 

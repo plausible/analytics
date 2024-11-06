@@ -135,7 +135,7 @@ defmodule Plausible.Teams.Sites do
           site_id: s.id,
           entry_type: "site",
           invitation_id: 0,
-          invitation_role: nil,
+          role: tm.role,
           transfer_id: 0
         }
 
@@ -148,7 +148,17 @@ defmodule Plausible.Teams.Sites do
           site_id: s.id,
           entry_type: "site",
           invitation_id: 0,
-          invitation_role: nil,
+          role:
+            fragment(
+              """
+              CASE
+                WHEN ? = 'editor' THEN 'admin'
+                ELSE ?
+              END
+              """,
+              gm.role,
+              gm.role
+            ),
           transfer_id: 0
         }
       )
@@ -175,7 +185,7 @@ defmodule Plausible.Teams.Sites do
           site_id: s.id,
           entry_type: "invitation",
           invitation_id: ti.id,
-          invitation_role:
+          role:
             fragment(
               """
               CASE
@@ -207,7 +217,7 @@ defmodule Plausible.Teams.Sites do
           site_id: s.id,
           entry_type: "invitation",
           invitation_id: 0,
-          invitation_role: "owner",
+          role: "owner",
           transfer_id: st.id
         }
 
@@ -244,11 +254,18 @@ defmodule Plausible.Teams.Sites do
               :entry_type
             ),
           pinned_at: selected_as(up.pinned_at, :pinned_at),
+          memberships: [
+            %Plausible.Site.Membership{
+              role: type(u.role, ^@role_type),
+              site_id: s.id,
+              site: s
+            }
+          ],
           invitations: [
             %Plausible.Auth.Invitation{
               invitation_id: coalesce(ti.invitation_id, st.transfer_id),
               email: coalesce(ti.email, st.email),
-              role: type(coalesce(u.invitation_role, "owner"), ^@role_type),
+              role: type(u.role, ^@role_type),
               site_id: s.id,
               site: s
             }
@@ -263,10 +280,13 @@ defmodule Plausible.Teams.Sites do
     |> maybe_filter_by_domain(domain_filter)
     |> Repo.paginate(pagination_params)
     |> Map.update!(:entries, fn entries ->
-      # temporary prosthetic, when switching to the new model eventually,
-      # we'll have to preload memberships from new schemas
-      membership_query = from sm in Site.Membership, where: sm.user_id == ^user.id
-      Repo.preload(entries, memberships: membership_query)
+      Enum.map(entries, fn
+        %{invitation: [%{invitation_id: nil}]} = entry ->
+          %{entry | invitations: []}
+
+        entry ->
+          entry
+      end)
     end)
   end
 
