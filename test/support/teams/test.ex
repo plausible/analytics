@@ -41,7 +41,11 @@ defmodule Plausible.Teams.Test do
 
   def new_user(args \\ []) do
     user = insert(:user, args)
-    {:ok, _team} = Teams.get_or_create(user)
+
+    if user.trial_expiry_date do
+      {:ok, _team} = Teams.get_or_create(user)
+    end
+
     Repo.preload(user, :team_memberships)
   end
 
