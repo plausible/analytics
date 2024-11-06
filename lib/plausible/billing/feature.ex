@@ -66,7 +66,7 @@ defmodule Plausible.Billing.Feature do
   @doc """
   Checks whether the site owner or the user plan includes the given feature.
   """
-  @callback check_availability(Plausible.Auth.User.t()) ::
+  @callback check_availability(Plausible.Auth.User.t() | Plausible.Teams.Team.t() | nil) ::
               :ok | {:error, :upgrade_required} | {:error, :not_implemented}
 
   @features [
@@ -133,6 +133,14 @@ defmodule Plausible.Billing.Feature do
         cond do
           free?() -> :ok
           __MODULE__ in Quota.Limits.allowed_features_for(user) -> :ok
+          true -> {:error, :upgrade_required}
+        end
+      end
+
+      def check_availability(team_or_nil) do
+        cond do
+          free?() -> :ok
+          __MODULE__ in Plausible.Teams.Billing.allowed_features_for(team_or_nil) -> :ok
           true -> {:error, :upgrade_required}
         end
       end

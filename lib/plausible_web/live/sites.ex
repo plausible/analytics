@@ -741,7 +741,17 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp check_features(%{role: :owner, site: site} = invitation, user) do
-    case Invitations.check_feature_access(site, user, ce?()) do
+    user_or_team =
+      if Teams.read_team_schemas?(user) do
+        case Teams.get_by_owner(user) do
+          {:ok, team} -> team
+          {:error, _} -> nil
+        end
+      else
+        user
+      end
+
+    case check_feature_access(site, user_or_team) do
       :ok ->
         %{invitation: invitation}
 
@@ -752,6 +762,24 @@ defmodule PlausibleWeb.Live.Sites do
           |> PlausibleWeb.TextHelpers.pretty_list()
 
         %{invitation: invitation, missing_features: feature_names}
+    end
+  end
+
+  if ce?() do
+    defp check_feature_access(_site, _new_owner) do
+      :ok
+    end
+  else
+    defp check_feature_access(site, new_owner) do
+      missing_features =
+        Plausible.Billing.Quota.Usage.features_usage(nil, [site.id])
+        |> Enum.filter(&(&1.check_availability(new_owner) != :ok))
+
+      if missing_features == [] do
+        :ok
+      else
+        {:error, {:missing_features, missing_features}}
+      end
     end
   end
 

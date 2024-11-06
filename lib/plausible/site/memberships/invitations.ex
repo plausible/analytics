@@ -8,7 +8,6 @@ defmodule Plausible.Site.Memberships.Invitations do
   alias Plausible.Site
   alias Plausible.Auth
   alias Plausible.Repo
-  alias Plausible.Billing.Quota
   alias Plausible.Billing.Feature
 
   @type missing_features_error() :: {:missing_features, [Feature.t()]}
@@ -65,6 +64,8 @@ defmodule Plausible.Site.Memberships.Invitations do
   end
 
   on_ee do
+    alias Plausible.Billing.Quota
+
     @spec ensure_can_take_ownership(Site.t(), Auth.User.t()) ::
             :ok | {:error, Quota.Limits.over_limits_error() | :no_plan}
     def ensure_can_take_ownership(site, new_owner) do
@@ -86,24 +87,6 @@ defmodule Plausible.Site.Memberships.Invitations do
     @spec ensure_can_take_ownership(Site.t(), Auth.User.t()) :: :ok
     def ensure_can_take_ownership(_site, _new_owner) do
       :ok
-    end
-  end
-
-  @spec check_feature_access(Site.t(), Auth.User.t(), boolean()) ::
-          :ok | {:error, missing_features_error()}
-  def check_feature_access(_site, _new_owner, true = _selfhost?) do
-    :ok
-  end
-
-  def check_feature_access(site, new_owner, false = _selfhost?) do
-    missing_features =
-      Quota.Usage.features_usage(nil, [site.id])
-      |> Enum.filter(&(&1.check_availability(new_owner) != :ok))
-
-    if missing_features == [] do
-      :ok
-    else
-      {:error, {:missing_features, missing_features}}
     end
   end
 end

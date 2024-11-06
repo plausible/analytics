@@ -9,6 +9,9 @@ defmodule Plausible.Teams.Billing do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  alias Plausible.Billing.{Plan, Plans, EnterprisePlan, Feature}
+  alias Plausible.Billing.Feature.{Goals, Props, StatsAPI}
+
   @team_member_limit_for_trials 3
   @limit_sites_since ~D[2021-05-05]
   @site_limit_for_trials 10
@@ -257,5 +260,31 @@ defmodule Plausible.Teams.Billing do
     |> union(^pending_invitations_q)
     |> union(^team_memberships_q)
     |> union(^team_invitations_q)
+  end
+
+  def allowed_features_for(nil) do
+    [Goals]
+  end
+
+  def allowed_features_for(team) do
+    team = Teams.with_subscription(team)
+
+    case Plans.get_subscription_plan(team.subscription) do
+      %EnterprisePlan{features: features} ->
+        features
+
+      %Plan{features: features} ->
+        features
+
+      :free_10k ->
+        [Goals, Props, StatsAPI]
+
+      nil ->
+        if Teams.on_trial?(team) do
+          Feature.list()
+        else
+          [Goals]
+        end
+    end
   end
 end

@@ -7,6 +7,24 @@ defmodule Plausible.Teams do
 
   alias __MODULE__
   alias Plausible.Repo
+  use Plausible
+
+  @spec on_trial?(Teams.Team.t()) :: boolean()
+  on_ee do
+    def on_trial?(%Teams.Team{trial_expiry_date: nil}), do: false
+
+    def on_trial?(team) do
+      team = with_subscription(team)
+      not Plausible.Billing.Subscriptions.active?(team.subscription) && trial_days_left(team) >= 0
+    end
+  else
+    def on_trial?(_), do: true
+  end
+
+  @spec trial_days_left(Teams.Team.t()) :: integer()
+  def trial_days_left(team) do
+    Date.diff(team.trial_expiry_date, Date.utc_today())
+  end
 
   def read_team_schemas?(user) do
     FunWithFlags.enabled?(:read_team_schemas, for: user)
