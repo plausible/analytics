@@ -166,31 +166,21 @@ defmodule Plausible.Ingestion.Acquisition do
       source == "firebase"
   end
 
-  defp shopping_source?(nil), do: false
-
   defp shopping_source?(source) do
     @source_categories[source] == "SOURCE_CATEGORY_SHOPPING"
   end
-
-  defp search_source?(nil), do: false
 
   defp search_source?(source) do
     @source_categories[source] == "SOURCE_CATEGORY_SEARCH"
   end
 
-  defp social_source?(nil), do: false
-
   defp social_source?(source) do
     @source_categories[source] == "SOURCE_CATEGORY_SOCIAL"
   end
 
-  defp video_source?(nil), do: false
-
   defp video_source?(source) do
     @source_categories[source] == "SOURCE_CATEGORY_VIDEO"
   end
-
-  defp email_source?(nil), do: false
 
   defp email_source?(source) do
     @source_categories[source] == "SOURCE_CATEGORY_EMAIL"
