@@ -1,0 +1,167 @@
+CREATE OR REPLACE FUNCTION acquisition_channel_has_category_shopping <%= @on_cluster_statement %> AS
+(referrer_source) ->
+    has({source_category_shopping:Array(String)}, referrer_source);
+
+CREATE OR REPLACE FUNCTION acquisition_channel_has_category_social <%= @on_cluster_statement %> AS
+(referrer_source) ->
+    has({source_category_social:Array(String)}, referrer_source);
+
+CREATE OR REPLACE FUNCTION acquisition_channel_has_category_video <%= @on_cluster_statement %> AS
+(referrer_source) ->
+    has({source_category_video:Array(String)}, referrer_source);
+
+CREATE OR REPLACE FUNCTION acquisition_channel_has_category_search <%= @on_cluster_statement %> AS
+(referrer_source) ->
+    has({source_category_search:Array(String)}, referrer_source);
+
+CREATE OR REPLACE FUNCTION acquisition_channel_has_category_email <%= @on_cluster_statement %> AS
+(referrer_source) ->
+    has({source_category_email:Array(String)}, referrer_source);
+
+CREATE OR REPLACE FUNCTION acquisition_channel_paid_utm_source <%= @on_cluster_statement %> AS
+(referrer_source) ->
+    has({paid_sources:Array(String)}, referrer_source);
+
+CREATE OR REPLACE FUNCTION acquisition_channel_cross_network <%= @on_cluster_statement %> AS
+(utm_campaign) ->
+    position(utm_campaign, 'cross-network') > 0;
+
+CREATE OR REPLACE FUNCTION acquisition_channel_paid_shopping <%= @on_cluster_statement %> AS
+(referrer_source, utm_medium, utm_campaign) ->
+    acquisition_channel_paid_medium(utm_medium) AND
+    (
+        acquisition_channel_has_category_shopping(referrer_source)
+        OR acquisition_channel_shopping_campaign(utm_campaign)
+    );
+
+CREATE OR REPLACE FUNCTION acquisition_channel_paid_search <%= @on_cluster_statement %> AS
+(referrer_source, utm_medium, utm_source, click_id_param) ->
+    (
+        acquisition_channel_has_category_search(referrer_source)
+        AND (
+            acquisition_channel_paid_medium(utm_medium)
+            OR acquisition_channel_paid_utm_source(utm_source)
+        )
+    ) OR (
+        referrer_source == 'google'
+        AND click_id_param == 'gclid'
+    ) OR (
+        referrer_source == 'bing'
+        AND click_id_param == 'msclkid'
+    );
+
+CREATE OR REPLACE FUNCTION acquisition_channel_paid_social <%= @on_cluster_statement %> AS
+(referrer_source, utm_medium, utm_source) ->
+    acquisition_channel_has_category_social(referrer_source)
+    AND (
+        acquisition_channel_paid_medium(utm_medium)
+        OR acquisition_channel_paid_utm_source(utm_source)
+    );
+
+CREATE OR REPLACE FUNCTION acquisition_channel_paid_video <%= @on_cluster_statement %> AS
+(referrer_source, utm_medium, utm_source) ->
+    acquisition_channel_has_category_video(referrer_source)
+    AND (
+        acquisition_channel_paid_medium(utm_medium)
+        OR acquisition_channel_paid_utm_source(utm_source)
+    );
+
+CREATE OR REPLACE FUNCTION acquisition_channel_display <%= @on_cluster_statement %> AS
+(utm_medium) ->
+    utm_medium IN ('display', 'banner', 'expandable', 'interstitial', 'cpm');
+
+CREATE OR REPLACE FUNCTION acquisition_channel_paid_medium <%= @on_cluster_statement %> AS
+(utm_medium) ->
+    match(utm_medium, '^(.*cp.*|ppc|retargeting|paid.*)$');
+
+CREATE OR REPLACE FUNCTION acquisition_channel_shopping_campaign <%= @on_cluster_statement %> AS
+(utm_campaign) ->
+    match(utm_campaign, '^(.*(([^a-df-z]|^)shop|shopping).*)$');
+
+CREATE OR REPLACE FUNCTION acquisition_channel_organic_shopping <%= @on_cluster_statement %> AS
+(referrer_source, utm_campaign) ->
+    acquisition_channel_has_category_shopping(referrer_source)
+    OR acquisition_channel_shopping_campaign(utm_campaign);
+
+CREATE OR REPLACE FUNCTION acquisition_channel_organic_social <%= @on_cluster_statement %> AS
+(referrer_source, utm_medium) ->
+    acquisition_channel_has_category_social(referrer_source)
+    OR utm_medium IN (
+        'social',
+        'social-network',
+        'social-media',
+        'sm',
+        'social network',
+        'social media'
+    );
+
+CREATE OR REPLACE FUNCTION acquisition_channel_organic_video <%= @on_cluster_statement %> AS
+(referrer_source, utm_medium) ->
+    acquisition_channel_has_category_video(referrer_source) OR position(utm_medium, 'video') > 0;
+
+CREATE OR REPLACE FUNCTION acquisition_channel_email <%= @on_cluster_statement %> AS
+(referrer_source, utm_source, utm_medium) ->
+   acquisition_channel_has_category_email(referrer_source)
+   OR acquisition_channel_contains_email(utm_source)
+   OR acquisition_channel_contains_email(utm_medium);
+
+CREATE OR REPLACE FUNCTION acquisition_channel_affiliates <%= @on_cluster_statement %> AS
+(utm_medium) ->
+    utm_medium == 'affiliate';
+
+CREATE OR REPLACE FUNCTION acquisition_channel_audio <%= @on_cluster_statement %> AS
+(utm_medium) ->
+    utm_medium == 'audio';
+
+CREATE OR REPLACE FUNCTION acquisition_channel_sms <%= @on_cluster_statement %> AS
+(column) ->
+    column == 'sms';
+
+CREATE OR REPLACE FUNCTION acquisition_channel_mobile_push_notifications <%= @on_cluster_statement %> AS
+(utm_medium, referrer_source) ->
+    endsWith(utm_medium, 'push') OR
+    multiSearchAny(utm_medium, ['mobile', 'notification']) OR
+    referrer_source == 'firebase';
+
+CREATE OR REPLACE FUNCTION acquisition_channel_referral <%= @on_cluster_statement %> AS
+(utm_medium, referrer_source) ->
+    utm_medium IN ('referral', 'app', 'link') OR
+    not empty(referrer_source);
+
+CREATE OR REPLACE FUNCTION acquisition_channel_contains_email <%= @on_cluster_statement %> AS
+(column) ->
+    match(column, 'e[-_ ]?mail|newsletter');
+
+CREATE OR REPLACE FUNCTION acquisition_channel <%= @on_cluster_statement %> AS
+(referrer_source, utm_medium, utm_campaign, utm_source, click_id_param) ->
+    acquisition_channel_lowered(
+        lower(referrer_source),
+        lower(utm_medium),
+        lower(utm_campaign),
+        lower(utm_source),
+        click_id_param
+    );
+
+CREATE OR REPLACE FUNCTION acquisition_channel_lowered <%= @on_cluster_statement %> AS
+(referrer_source, utm_medium, utm_campaign, utm_source, click_id_param) ->
+    multiIf(
+        acquisition_channel_cross_network(utm_campaign), 'Cross-network',
+        acquisition_channel_paid_shopping(referrer_source, utm_medium, utm_campaign), 'Paid Shopping',
+        acquisition_channel_paid_search(referrer_source, utm_medium, utm_source, click_id_param), 'Paid Search',
+        acquisition_channel_paid_social(referrer_source, utm_medium, utm_source), 'Paid Social',
+        acquisition_channel_paid_video(referrer_source, utm_medium, utm_source), 'Paid Video',
+        acquisition_channel_display(utm_medium), 'Display',
+        acquisition_channel_paid_medium(utm_medium), 'Paid Other',
+        acquisition_channel_organic_shopping(referrer_source, utm_campaign), 'Organic Shopping',
+        acquisition_channel_organic_social(referrer_source, utm_medium), 'Organic Social',
+        acquisition_channel_organic_video(referrer_source, utm_medium), 'Organic Video',
+        acquisition_channel_has_category_search(referrer_source), 'Organic Search',
+        acquisition_channel_email(referrer_source, utm_source, utm_medium), 'Email',
+        acquisition_channel_affiliates(utm_medium), 'Affiliates',
+        acquisition_channel_audio(utm_medium), 'Audio',
+        acquisition_channel_sms(utm_source), 'SMS',
+        acquisition_channel_sms(utm_medium), 'SMS',
+        acquisition_channel_mobile_push_notifications(utm_medium, referrer_source), 'Mobile Push Notifications',
+        acquisition_channel_referral(utm_medium, referrer_source), 'Referral',
+        'Direct'
+    );

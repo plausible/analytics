@@ -37,6 +37,10 @@ defmodule Plausible.Ingestion.Source do
     end)
   end
 
+  def paid_sources() do
+    @paid_sources |> MapSet.to_list()
+  end
+
   def paid_source?(source) do
     MapSet.member?(@paid_sources, source)
   end
@@ -129,7 +133,7 @@ defmodule Plausible.Ingestion.Source do
 
   defp valid_referrer?(_), do: false
 
-  defp has_referral?(%Request{referrer: nil}), do: nil
+  defp has_referral?(%Request{referrer: nil}), do: false
 
   defp has_referral?(%Request{referrer: referrer, uri: uri}) do
     referrer_uri = URI.parse(referrer)

@@ -45,6 +45,8 @@ defmodule Plausible.Ingestion.Acquisition do
                      |> then(&(@custom_source_categories ++ &1))
                      |> Enum.into(%{})
 
+  def source_categories(), do: @source_categories
+
   def get_channel(source, utm_medium, utm_campaign, utm_source, click_id_param) do
     get_channel_lowered(
       String.downcase(source || ""),
