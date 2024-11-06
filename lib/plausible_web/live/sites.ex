@@ -10,6 +10,7 @@ defmodule PlausibleWeb.Live.Sites do
   alias Plausible.Site
   alias Plausible.Sites
   alias Plausible.Site.Memberships.Invitations
+  alias Plausible.Teams
 
   def mount(params, _session, socket) do
     uri =
@@ -30,16 +31,10 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign(:params, params)
       |> load_sites()
       |> assign_new(:has_sites?, fn %{current_user: current_user} ->
-        Site.Memberships.any_or_pending?(current_user)
+        has_sites?(current_user)
       end)
       |> assign_new(:needs_to_upgrade, fn %{current_user: current_user, sites: sites} ->
-        user_owns_sites =
-          Enum.any?(sites.entries, fn site ->
-            length(site.invitations) > 0 && List.first(site.invitations).role == :owner
-          end) ||
-            Auth.user_owns_sites?(current_user)
-
-        user_owns_sites && Plausible.Billing.check_needs_to_upgrade(current_user)
+        owns_sites?(current_user, sites) && check_needs_to_upgrade(current_user)
       end)
 
     {:noreply, socket}
@@ -649,6 +644,39 @@ defmodule PlausibleWeb.Live.Sites do
     {:noreply, socket}
   end
 
+  defp has_sites?(user) do
+    if Teams.read_team_schemas?(user) do
+      Teams.Users.has_sites?(user, include_pending?: true)
+    else
+      Site.Memberships.any_or_pending?(user)
+    end
+  end
+
+  defp owns_sites?(user, sites) do
+    if Teams.read_team_schemas?(user) do
+      Teams.Users.owns_sites?(user, include_pending?: true)
+    else
+      Enum.any?(sites.entries, fn site ->
+        length(site.invitations) > 0 && List.first(site.invitations).role == :owner
+      end) ||
+        Auth.user_owns_sites?(user)
+    end
+  end
+
+  defp check_needs_to_upgrade(user) do
+    if Teams.read_team_schemas?(user) do
+      team =
+        case Teams.get_by_owner(user) do
+          {:ok, team} -> team
+          {:error, _} -> nil
+        end
+
+      Teams.Billing.check_needs_to_upgrade(team)
+    else
+      Plausible.Billing.check_needs_to_upgrade(user)
+    end
+  end
+
   defp load_sites(%{assigns: assigns} = socket) do
     sites =
       Sites.list_with_invitations(assigns.current_user, assigns.params,
@@ -683,7 +711,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp check_limits(%{role: :owner, site: site} = invitation, user) do
-    case Invitations.ensure_can_take_ownership(site, user) do
+    case ensure_can_take_ownership(site, user) do
       :ok ->
         check_features(invitation, user)
 
@@ -698,8 +726,32 @@ defmodule PlausibleWeb.Live.Sites do
 
   defp check_limits(invitation, _), do: %{invitation: invitation}
 
+  defp ensure_can_take_ownership(site, user) do
+    if Teams.read_team_schemas?(user) do
+      team =
+        case Teams.get_by_owner(user) do
+          {:ok, team} -> team
+          {:error, _} -> nil
+        end
+
+      Teams.Invitations.ensure_can_take_ownership(site, team)
+    else
+      Invitations.ensure_can_take_ownership(site, user)
+    end
+  end
+
   defp check_features(%{role: :owner, site: site} = invitation, user) do
-    case Invitations.check_feature_access(site, user, ce?()) do
+    user_or_team =
+      if Teams.read_team_schemas?(user) do
+        case Teams.get_by_owner(user) do
+          {:ok, team} -> team
+          {:error, _} -> nil
+        end
+      else
+        user
+      end
+
+    case check_feature_access(site, user_or_team) do
       :ok ->
         %{invitation: invitation}
 
@@ -710,6 +762,24 @@ defmodule PlausibleWeb.Live.Sites do
           |> PlausibleWeb.TextHelpers.pretty_list()
 
         %{invitation: invitation, missing_features: feature_names}
+    end
+  end
+
+  if ce?() do
+    defp check_feature_access(_site, _new_owner) do
+      :ok
+    end
+  else
+    defp check_feature_access(site, new_owner) do
+      missing_features =
+        Plausible.Billing.Quota.Usage.features_usage(nil, [site.id])
+        |> Enum.filter(&(&1.check_availability(new_owner) != :ok))
+
+      if missing_features == [] do
+        :ok
+      else
+        {:error, {:missing_features, missing_features}}
+      end
     end
   end
 

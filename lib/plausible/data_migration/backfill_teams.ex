@@ -33,6 +33,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
   end
 
   defp backfill(dry_run?) do
+    # Orphaned teams
+
     orphaned_teams =
       from(
         t in Plausible.Teams.Team,
@@ -52,6 +54,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
 
       log("Deleted orphaned teams")
     end
+
+    # Sites without teams
 
     sites_without_teams =
       from(
@@ -80,6 +84,8 @@ defmodule Plausible.DataMigration.BackfillTeams do
         select: 1
       )
 
+    # Users with subscriptions without sites
+
     users_with_subscriptions_without_sites =
       from(
         s in Plausible.Billing.Subscription,
@@ -100,6 +106,32 @@ defmodule Plausible.DataMigration.BackfillTeams do
       teams_count = backfill_teams_for_users(users_with_subscriptions_without_sites)
 
       log("Backfilled #{teams_count} teams from users with subscriptions without sites.")
+    end
+
+    # Users on trial without team
+
+    users_on_trial_without_team =
+      from(
+        u in Plausible.Auth.User,
+        as: :user,
+        where: not is_nil(u.trial_expiry_date),
+        where:
+          not exists(
+            from tm in Teams.Membership,
+              where: tm.role == :owner,
+              where: tm.user_id == parent_as(:user).id
+          )
+      )
+      |> @repo.all(timeout: :infinity)
+
+    log("Found #{length(users_on_trial_without_team)} users on trial without team...")
+
+    if not dry_run? do
+      Enum.each(users_on_trial_without_team, fn user ->
+        {:ok, _} = Teams.get_or_create(user)
+      end)
+
+      log("Created teams for all users on trial without a team.")
     end
 
     # Stale teams sync

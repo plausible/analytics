@@ -9,9 +9,38 @@ defmodule Plausible.Teams.Billing do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  alias Plausible.Billing.{Plan, Plans, EnterprisePlan, Feature}
+  alias Plausible.Billing.Feature.{Goals, Props, StatsAPI}
+
   @team_member_limit_for_trials 3
   @limit_sites_since ~D[2021-05-05]
   @site_limit_for_trials 10
+
+  def check_needs_to_upgrade(nil), do: {:needs_to_upgrade, :no_trial}
+
+  def check_needs_to_upgrade(team) do
+    team = Teams.with_subscription(team)
+
+    trial_over? =
+      not is_nil(team.trial_expiry_date) and
+        Date.before?(team.trial_expiry_date, Date.utc_today())
+
+    subscription_active? = Subscriptions.active?(team.subscription)
+
+    cond do
+      is_nil(team.trial_expiry_date) and not subscription_active? ->
+        {:needs_to_upgrade, :no_trial}
+
+      trial_over? and not subscription_active? ->
+        {:needs_to_upgrade, :no_active_subscription}
+
+      Plausible.Auth.GracePeriod.expired?(team) ->
+        {:needs_to_upgrade, :grace_period_ended}
+
+      true ->
+        :no_upgrade_needed
+    end
+  end
 
   def ensure_can_add_new_site(team) do
     team = Teams.with_subscription(team)
@@ -231,5 +260,31 @@ defmodule Plausible.Teams.Billing do
     |> union(^pending_invitations_q)
     |> union(^team_memberships_q)
     |> union(^team_invitations_q)
+  end
+
+  def allowed_features_for(nil) do
+    [Goals]
+  end
+
+  def allowed_features_for(team) do
+    team = Teams.with_subscription(team)
+
+    case Plans.get_subscription_plan(team.subscription) do
+      %EnterprisePlan{features: features} ->
+        features
+
+      %Plan{features: features} ->
+        features
+
+      :free_10k ->
+        [Goals, Props, StatsAPI]
+
+      nil ->
+        if Teams.on_trial?(team) do
+          Feature.list()
+        else
+          [Goals]
+        end
+    end
   end
 end

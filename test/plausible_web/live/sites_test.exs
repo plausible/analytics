@@ -60,7 +60,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       invitation = invite_transfer(site, user, inviter: inviter)
 
       # fill site quota
-      insert(:growth_subscription, user: user)
+      subscribe_to_growth_plan(user)
       for _ <- 1..10, do: new_site(owner: user)
 
       {:ok, _lv, html} = live(conn, "/sites")
@@ -80,7 +80,8 @@ defmodule PlausibleWeb.Live.SitesTest do
       site = new_site(owner: inviter, allowed_event_props: ["dummy"])
 
       invitation = invite_transfer(site, user, inviter: inviter)
-      insert(:growth_subscription, user: user)
+
+      subscribe_to_growth_plan(user)
 
       {:ok, _lv, html} = live(conn, "/sites")
 
