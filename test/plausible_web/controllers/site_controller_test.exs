@@ -158,6 +158,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       user
       |> Plausible.Auth.User.end_trial()
       |> Repo.update!()
+      |> Plausible.Teams.sync_team()
 
       conn = get(initial_conn, "/sites")
       resp = html_response(conn, 200)

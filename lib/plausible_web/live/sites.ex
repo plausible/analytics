@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Live.Sites do
         has_sites?(current_user)
       end)
       |> assign_new(:needs_to_upgrade, fn %{current_user: current_user, sites: sites} ->
-        owns_sites?(current_user, sites) && Plausible.Billing.check_needs_to_upgrade(current_user)
+        owns_sites?(current_user, sites) && check_needs_to_upgrade(current_user)
       end)
 
     {:noreply, socket}
@@ -660,6 +660,20 @@ defmodule PlausibleWeb.Live.Sites do
         length(site.invitations) > 0 && List.first(site.invitations).role == :owner
       end) ||
         Auth.user_owns_sites?(user)
+    end
+  end
+
+  defp check_needs_to_upgrade(user) do
+    if Teams.read_team_schemas?(user) do
+      team =
+        case Teams.get_by_owner(user) do
+          {:ok, team} -> team
+          {:error, _} -> nil
+        end
+
+      Teams.Billing.check_needs_to_upgrade(team)
+    else
+      Plausible.Billing.check_needs_to_upgrade(user)
     end
   end
 

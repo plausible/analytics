@@ -54,13 +54,13 @@ defmodule Plausible.Teams do
   is returned.
   """
   def get_or_create(user) do
-    with {:error, :no_team} <- get_owned_by_user(user) do
+    with {:error, :no_team} <- get_by_owner(user) do
       case create_my_team(user) do
         {:ok, team} ->
           {:ok, team}
 
         {:error, :exists_already} ->
-          get_owned_by_user(user)
+          get_by_owner(user)
       end
     end
   end
@@ -71,6 +71,25 @@ defmodule Plausible.Teams do
     team
     |> Teams.Team.sync_changeset(user)
     |> Repo.update!()
+  end
+
+  def get_by_owner(user) do
+    result =
+      from(tm in Teams.Membership,
+        inner_join: t in assoc(tm, :team),
+        where: tm.user_id == ^user.id and tm.role == :owner,
+        select: t,
+        order_by: t.id
+      )
+      |> Repo.one()
+
+    case result do
+      nil ->
+        {:error, :no_team}
+
+      team ->
+        {:ok, team}
+    end
   end
 
   defp create_my_team(user) do
@@ -96,25 +115,6 @@ defmodule Plausible.Teams do
     else
       Repo.delete!(team)
       {:error, :exists_already}
-    end
-  end
-
-  defp get_owned_by_user(user) do
-    result =
-      from(tm in Teams.Membership,
-        inner_join: t in assoc(tm, :team),
-        where: tm.user_id == ^user.id and tm.role == :owner,
-        select: t,
-        order_by: t.id
-      )
-      |> Repo.one()
-
-    case result do
-      nil ->
-        {:error, :no_team}
-
-      team ->
-        {:ok, team}
     end
   end
 

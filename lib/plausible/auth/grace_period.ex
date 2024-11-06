@@ -74,7 +74,7 @@ defmodule Plausible.Auth.GracePeriod do
     Ecto.Changeset.change(user, grace_period: nil)
   end
 
-  @spec active?(Plausible.Teams.Team.t() | User.t()) :: boolean()
+  @spec active?(User.t() | Plausible.Teams.Team.t()) :: boolean()
   @doc """
   Returns whether the grace period is still active for a User. Defaults to
   false if the user is nil or there is no grace period.
@@ -91,12 +91,12 @@ defmodule Plausible.Auth.GracePeriod do
 
   def active?(_user), do: false
 
-  @spec expired?(User.t()) :: boolean()
+  @spec expired?(User.t() | Plausible.Teams.Team.t() | nil) :: boolean()
   @doc """
   Returns whether the grace period has already expired for a User. Defaults to
   false if the user is nil or there is no grace period.
   """
-  def expired?(user) do
-    if user && user.grace_period, do: !active?(user), else: false
+  def expired?(user_or_team) do
+    if user_or_team && user_or_team.grace_period, do: !active?(user_or_team), else: false
   end
 end
