@@ -18,15 +18,14 @@ defmodule Plausible.DataMigration.AcquisitionChannel do
       [
         on_cluster_statement: on_cluster_statement
       ],
-      named_params: [
-        {:source_category_search, source_categories["SOURCE_CATEGORY_SEARCH"], "Array(String)"},
-        {:source_category_shopping, source_categories["SOURCE_CATEGORY_SHOPPING"],
-         "Array(String)"},
-        {:source_category_social, source_categories["SOURCE_CATEGORY_SOCIAL"], "Array(String)"},
-        {:source_category_video, source_categories["SOURCE_CATEGORY_VIDEO"], "Array(String)"},
-        {:source_category_email, source_categories["SOURCE_CATEGORY_EMAIL"], "Array(String)"},
-        {:paid_sources, Plausible.Ingestion.Source.paid_sources(), "Array(String)"}
-      ],
+      params: %{
+        "source_category_shopping" => source_categories["SOURCE_CATEGORY_SHOPPING"],
+        "source_category_social" => source_categories["SOURCE_CATEGORY_SOCIAL"],
+        "source_category_video" => source_categories["SOURCE_CATEGORY_VIDEO"],
+        "source_category_search" => source_categories["SOURCE_CATEGORY_SEARCH"],
+        "source_category_email" => source_categories["SOURCE_CATEGORY_EMAIL"],
+        "paid_sources" => Plausible.Ingestion.Source.paid_sources()
+      },
       quiet: Keyword.get(opts, :quiet, false)
     )
   end

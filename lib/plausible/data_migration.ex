@@ -65,11 +65,9 @@ defmodule Plausible.DataMigration do
       Valid options:
       - `quiet` - reduces output from running the SQL
       - `params` - List of query parameters.
-      - `named_params` - List of query parameters. Each should be a tuple of {name, value, database_type}
       - `query_options` - passed to Repo.query
       """
       def run_sql(name, assigns \\ [], options \\ []) do
-        {assigns, options} = substitute_named_params(assigns, options)
         query = unwrap(name, assigns)
 
         do_run(name, query, options)
@@ -81,8 +79,6 @@ defmodule Plausible.DataMigration do
       Note that each query must be separated by semicolons.
       """
       def run_sql_multi(name, assigns \\ [], options \\ []) do
-        {assigns, options} = substitute_named_params(assigns, options)
-
         unwrap(name, assigns)
         |> String.trim()
         |> String.split(";", trim: true)
@@ -125,30 +121,6 @@ defmodule Plausible.DataMigration do
         """)
 
         query
-      end
-
-      defp substitute_named_params(assigns, options) do
-        named_params = Keyword.get(options, :named_params, [])
-
-        named_param_assigns =
-          named_params
-          |> Enum.with_index()
-          |> Enum.map(fn {{name, _value, clickhouse_type}, index} ->
-            {name, "{$#{index}:#{clickhouse_type}}"}
-          end)
-
-        if length(named_param_assigns) > 0 do
-          params =
-            named_params
-            |> Enum.map(fn {_name, value, _type} -> value end)
-
-          {
-            assigns ++ named_param_assigns,
-            Keyword.put(options, :params, params)
-          }
-        else
-          {assigns, options}
-        end
       end
     end
   end

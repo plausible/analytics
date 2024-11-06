@@ -1,26 +1,26 @@
 CREATE OR REPLACE FUNCTION acquisition_channel_has_category_shopping <%= @on_cluster_statement %> AS
 (referrer_source) ->
-    has(<%= @source_category_shopping %>, referrer_source);
+    has({source_category_shopping:Array(String)}, referrer_source);
 
 CREATE OR REPLACE FUNCTION acquisition_channel_has_category_social <%= @on_cluster_statement %> AS
 (referrer_source) ->
-    has(<%= @source_category_social %>, referrer_source);
+    has({source_category_social:Array(String)}, referrer_source);
 
 CREATE OR REPLACE FUNCTION acquisition_channel_has_category_video <%= @on_cluster_statement %> AS
 (referrer_source) ->
-    has(<%= @source_category_video %>, referrer_source);
+    has({source_category_video:Array(String)}, referrer_source);
 
 CREATE OR REPLACE FUNCTION acquisition_channel_has_category_search <%= @on_cluster_statement %> AS
 (referrer_source) ->
-    has(<%= @source_category_search %>, referrer_source);
+    has({source_category_search:Array(String)}, referrer_source);
 
 CREATE OR REPLACE FUNCTION acquisition_channel_has_category_email <%= @on_cluster_statement %> AS
 (referrer_source) ->
-    has(<%= @source_category_email %>, referrer_source);
+    has({source_category_email:Array(String)}, referrer_source);
 
 CREATE OR REPLACE FUNCTION acquisition_channel_paid_utm_source <%= @on_cluster_statement %> AS
 (referrer_source) ->
-    has(<%= @paid_sources %>, referrer_source);
+    has({paid_sources:Array(String)}, referrer_source);
 
 CREATE OR REPLACE FUNCTION acquisition_channel_cross_network <%= @on_cluster_statement %> AS
 (utm_campaign) ->
