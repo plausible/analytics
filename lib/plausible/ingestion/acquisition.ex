@@ -45,58 +45,66 @@ defmodule Plausible.Ingestion.Acquisition do
                      |> then(&(@custom_source_categories ++ &1))
                      |> Enum.into(%{})
 
-  def get_channel(request, source) do
-    source = source && String.downcase(source)
+  def get_channel(source, utm_medium, utm_campaign, utm_source, click_id_param) do
+    get_channel_lowered(
+      String.downcase(source || ""),
+      String.downcase(utm_medium || ""),
+      String.downcase(utm_campaign || ""),
+      String.downcase(utm_source || ""),
+      click_id_param
+    )
+  end
 
+  defp get_channel_lowered(source, utm_medium, utm_campaign, utm_source, click_id_param) do
     cond do
-      cross_network?(request) -> "Cross-network"
-      paid_shopping?(request, source) -> "Paid Shopping"
-      paid_search?(request, source) -> "Paid Search"
-      paid_social?(request, source) -> "Paid Social"
-      paid_video?(request, source) -> "Paid Video"
-      display?(request) -> "Display"
-      paid_other?(request) -> "Paid Other"
-      organic_shopping?(request, source) -> "Organic Shopping"
-      organic_social?(request, source) -> "Organic Social"
-      organic_video?(request, source) -> "Organic Video"
+      cross_network?(utm_campaign) -> "Cross-network"
+      paid_shopping?(source, utm_campaign, utm_medium) -> "Paid Shopping"
+      paid_search?(source, utm_medium, utm_source, click_id_param) -> "Paid Search"
+      paid_social?(source, utm_medium, utm_source) -> "Paid Social"
+      paid_video?(source, utm_medium, utm_source) -> "Paid Video"
+      display?(utm_medium) -> "Display"
+      paid_other?(utm_medium) -> "Paid Other"
+      organic_shopping?(source, utm_campaign) -> "Organic Shopping"
+      organic_social?(source, utm_medium) -> "Organic Social"
+      organic_video?(source, utm_medium) -> "Organic Video"
       search_source?(source) -> "Organic Search"
-      email?(request, source) -> "Email"
-      affiliates?(request) -> "Affiliates"
-      audio?(request) -> "Audio"
-      sms?(request) -> "SMS"
-      mobile_push_notifications?(request, source) -> "Mobile Push Notifications"
-      referral?(request, source) -> "Referral"
+      email?(source, utm_source, utm_medium) -> "Email"
+      affiliates?(utm_medium) -> "Affiliates"
+      audio?(utm_medium) -> "Audio"
+      sms?(utm_source, utm_medium) -> "SMS"
+      mobile_push_notifications?(source, utm_medium) -> "Mobile Push Notifications"
+      referral?(source, utm_medium) -> "Referral"
       true -> "Direct"
     end
   end
 
-  defp cross_network?(request) do
-    String.contains?(query_param(request, "utm_campaign"), "cross-network")
+  defp cross_network?(utm_campaign) do
+    String.contains?(utm_campaign, "cross-network")
   end
 
-  defp paid_shopping?(request, source) do
-    (shopping_source?(source) or shopping_campaign?(request)) and paid_medium?(request)
+  defp paid_shopping?(source, utm_campaign, utm_medium) do
+    (shopping_source?(source) or shopping_campaign?(utm_campaign)) and paid_medium?(utm_medium)
   end
 
-  defp paid_search?(request, source) do
-    (search_source?(source) and paid_medium?(request)) or
-      (search_source?(source) and paid_source?(request)) or
-      (source == "google" and !!request.query_params["gclid"]) or
-      (source == "bing" and !!request.query_params["msclkid"])
+  defp paid_search?(source, utm_medium, utm_source, click_id_param) do
+    (search_source?(source) and paid_medium?(utm_medium)) or
+      (search_source?(source) and paid_source?(utm_source)) or
+      (source == "google" and click_id_param == "gclid") or
+      (source == "bing" and click_id_param == "msclkid")
   end
 
-  defp paid_social?(request, source) do
-    (social_source?(source) and paid_medium?(request)) or
-      (social_source?(source) and paid_source?(request))
+  defp paid_social?(source, utm_medium, utm_source) do
+    (social_source?(source) and paid_medium?(utm_medium)) or
+      (social_source?(source) and paid_source?(utm_source))
   end
 
-  defp paid_video?(request, source) do
-    (video_source?(source) and paid_medium?(request)) or
-      (video_source?(source) and paid_source?(request))
+  defp paid_video?(source, utm_medium, utm_source) do
+    (video_source?(source) and paid_medium?(utm_medium)) or
+      (video_source?(source) and paid_source?(utm_source))
   end
 
-  defp display?(request) do
-    query_param(request, "utm_medium") in [
+  defp display?(utm_medium) do
+    utm_medium in [
       "display",
       "banner",
       "expandable",
@@ -105,17 +113,17 @@ defmodule Plausible.Ingestion.Acquisition do
     ]
   end
 
-  defp paid_other?(request) do
-    paid_medium?(request)
+  defp paid_other?(utm_medium) do
+    paid_medium?(utm_medium)
   end
 
-  defp organic_shopping?(request, source) do
-    shopping_source?(source) or shopping_campaign?(request)
+  defp organic_shopping?(source, utm_campaign) do
+    shopping_source?(source) or shopping_campaign?(utm_campaign)
   end
 
-  defp organic_social?(request, source) do
+  defp organic_social?(source, utm_medium) do
     social_source?(source) or
-      query_param(request, "utm_medium") in [
+      utm_medium in [
         "social",
         "social-network",
         "social-media",
@@ -125,40 +133,36 @@ defmodule Plausible.Ingestion.Acquisition do
       ]
   end
 
-  defp organic_video?(request, source) do
-    video_source?(source) or String.contains?(query_param(request, "utm_medium"), "video")
+  defp organic_video?(source, utm_medium) do
+    video_source?(source) or String.contains?(utm_medium, "video")
   end
 
-  defp referral?(request, source) do
-    query_param(request, "utm_medium") in ["referral", "app", "link"] or
-      !!source
+  defp referral?(source, utm_medium) do
+    utm_medium in ["referral", "app", "link"] or source !== ""
   end
 
   @email_tags ["email", "e-mail", "e_mail", "e mail", "newsletter"]
-  defp email?(request, source) do
+  defp email?(source, utm_source, utm_medium) do
     email_source?(source) or
-      String.contains?(query_param(request, "utm_source"), @email_tags) or
-      String.contains?(query_param(request, "utm_medium"), @email_tags)
+      String.contains?(utm_source, @email_tags) or
+      String.contains?(utm_medium, @email_tags)
   end
 
-  defp affiliates?(request) do
-    query_param(request, "utm_medium") == "affiliate"
+  defp affiliates?(utm_medium) do
+    utm_medium == "affiliate"
   end
 
-  defp audio?(request) do
-    query_param(request, "utm_medium") == "audio"
+  defp audio?(utm_medium) do
+    utm_medium == "audio"
   end
 
-  defp sms?(request) do
-    query_param(request, "utm_source") == "sms" or
-      query_param(request, "utm_medium") == "sms"
+  defp sms?(utm_source, utm_medium) do
+    utm_source == "sms" or utm_medium == "sms"
   end
 
-  defp mobile_push_notifications?(request, source) do
-    medium = query_param(request, "utm_medium")
-
-    String.ends_with?(medium, "push") or
-      String.contains?(medium, ["mobile", "notification"]) or
+  defp mobile_push_notifications?(source, utm_medium) do
+    String.ends_with?(utm_medium, "push") or
+      String.contains?(utm_medium, ["mobile", "notification"]) or
       source == "firebase"
   end
 
@@ -192,22 +196,15 @@ defmodule Plausible.Ingestion.Acquisition do
     @source_categories[source] == "SOURCE_CATEGORY_EMAIL"
   end
 
-  defp shopping_campaign?(request) do
-    campaign_name = query_param(request, "utm_campaign")
-    Regex.match?(~r/^(.*(([^a-df-z]|^)shop|shopping).*)$/, campaign_name)
+  defp shopping_campaign?(utm_campaign) do
+    Regex.match?(~r/^(.*(([^a-df-z]|^)shop|shopping).*)$/, utm_campaign)
   end
 
-  defp paid_medium?(request) do
-    medium = query_param(request, "utm_medium")
-    Regex.match?(~r/^(.*cp.*|ppc|retargeting|paid.*)$/, medium)
+  defp paid_medium?(utm_medium) do
+    Regex.match?(~r/^(.*cp.*|ppc|retargeting|paid.*)$/, utm_medium)
   end
 
-  defp paid_source?(request) do
-    query_param(request, "utm_source")
-    |> Plausible.Ingestion.Source.paid_source?()
-  end
-
-  defp query_param(request, name) do
-    String.downcase(request.query_params[name] || "")
+  defp paid_source?(utm_source) do
+    Plausible.Ingestion.Source.paid_source?(utm_source)
   end
 end
