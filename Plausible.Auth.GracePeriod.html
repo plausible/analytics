@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-8945AE32.js"></script>
+    <script src="dist/sidebar_items-8F191F86.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -202,7 +202,7 @@ This means the grace period has expired.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#expired?/1" translate="no">expired?(user)</a>
+        <a href="#expired?/1" translate="no">expired?(user_or_team)</a>
 
       </div>
 
@@ -322,7 +322,7 @@ CRM.</p></div>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> active?(<a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>() | <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> active?(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>() | <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
 
       </div>
 
@@ -366,7 +366,7 @@ This means the grace period has expired.</p>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">expired?(user)</h1>
+    <h1 class="signature" translate="no">expired?(user_or_team)</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L99" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -380,7 +380,7 @@ This means the grace period has expired.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> expired?(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> expired?(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>() | <a href="Plausible.Teams.Team.html#t:t/0">Plausible.Teams.Team.t</a>() | nil) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
 
       </div>
 
