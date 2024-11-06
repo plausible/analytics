@@ -62,16 +62,15 @@ defmodule Plausible.Stats.TableDecider do
     end
   end
 
-  defp metric_partitioner(%Query{v2: true}, :conversion_rate), do: :either
-  defp metric_partitioner(%Query{v2: true}, :group_conversion_rate), do: :either
-  defp metric_partitioner(%Query{v2: true}, :visitors), do: :either
-  defp metric_partitioner(%Query{v2: true}, :visits), do: :either
   # Note: This is inaccurate when filtering but required for old backwards compatibility
   defp metric_partitioner(%Query{legacy_breakdown: true}, :pageviews), do: :either
   defp metric_partitioner(%Query{legacy_breakdown: true}, :events), do: :either
 
-  defp metric_partitioner(_, :conversion_rate), do: :event
-  defp metric_partitioner(_, :group_conversion_rate), do: :event
+  defp metric_partitioner(_, :conversion_rate), do: :either
+  defp metric_partitioner(_, :group_conversion_rate), do: :either
+  defp metric_partitioner(_, :visitors), do: :either
+  defp metric_partitioner(_, :visits), do: :either
+
   defp metric_partitioner(_, :average_revenue), do: :event
   defp metric_partitioner(_, :total_revenue), do: :event
   defp metric_partitioner(_, :pageviews), do: :event
@@ -84,8 +83,6 @@ defmodule Plausible.Stats.TableDecider do
   defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :visits), do: :either
   defp metric_partitioner(%Query{experimental_reduced_joins?: true}, :visitors), do: :either
 
-  defp metric_partitioner(_, :visits), do: :session
-  defp metric_partitioner(_, :visitors), do: :event
   # Calculated metrics - handled on callsite separately from other metrics.
   defp metric_partitioner(_, :time_on_page), do: :other
   defp metric_partitioner(_, :total_visitors), do: :other

@@ -15,7 +15,6 @@ defmodule Plausible.Stats.Query do
             metrics: [],
             order_by: nil,
             timezone: nil,
-            v2: false,
             legacy_breakdown: false,
             remove_unavailable_revenue_metrics: false,
             preloaded_goals: [],
@@ -35,7 +34,7 @@ defmodule Plausible.Stats.Query do
         struct!(__MODULE__, Map.to_list(query_data))
         |> put_imported_opts(site, %{})
         |> put_experimental_reduced_joins(site, params)
-        |> struct!(v2: true, now: DateTime.utc_now(:second), debug_metadata: debug_metadata)
+        |> struct!(now: DateTime.utc_now(:second), debug_metadata: debug_metadata)
 
       on_ee do
         query = Plausible.Stats.Sampling.put_threshold(query, site, params)

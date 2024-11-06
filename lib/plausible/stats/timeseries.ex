@@ -23,7 +23,6 @@ defmodule Plausible.Stats.Timeseries do
         metrics: transform_metrics(metrics, %{conversion_rate: :group_conversion_rate}),
         dimensions: [time_dimension(query)],
         order_by: [{time_dimension(query), :asc}],
-        v2: true,
         remove_unavailable_revenue_metrics: true
       )
       |> QueryOptimizer.optimize()
