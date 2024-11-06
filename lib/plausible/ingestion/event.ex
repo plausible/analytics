@@ -118,8 +118,8 @@ defmodule Plausible.Ingestion.Event do
       drop_shield_rule_country: &drop_shield_rule_country/2,
       put_user_agent: &put_user_agent/2,
       put_basic_info: &put_basic_info/2,
-      put_referrer: &put_referrer/2,
-      put_utm_tags: &put_utm_tags/2,
+      put_source_info: &put_source_info/2,
+      put_channel: &put_channel/2,
       put_props: &put_props/2,
       put_revenue: &put_revenue/2,
       put_salts: &put_salts/2,
@@ -250,28 +250,39 @@ defmodule Plausible.Ingestion.Event do
     })
   end
 
-  defp put_referrer(%__MODULE__{} = event, _context) do
-    source = Plausible.Ingestion.Source.resolve(event.request)
-    channel = Plausible.Ingestion.Acquisition.get_channel(event.request, source)
-
-    update_session_attrs(event, %{
-      channel: channel,
-      referrer_source: source,
-      referrer: Plausible.Ingestion.Source.format_referrer(event.request.referrer),
-      click_id_param: get_click_id_param(event.request.query_params)
-    })
-  end
-
-  defp put_utm_tags(%__MODULE__{} = event, _context) do
+  defp put_source_info(%__MODULE__{} = event, _context) do
     query_params = event.request.query_params
 
+    tagged_source =
+      query_params["utm_source"] ||
+        query_params["source"] ||
+        query_params["ref"]
+
     update_session_attrs(event, %{
+      referrer_source: Plausible.Ingestion.Source.resolve(event.request),
+      referrer: Plausible.Ingestion.Source.format_referrer(event.request.referrer),
+      click_id_param: get_click_id_param(event.request.query_params),
+      utm_source: tagged_source,
       utm_medium: query_params["utm_medium"],
-      utm_source: query_params["utm_source"],
       utm_campaign: query_params["utm_campaign"],
       utm_content: query_params["utm_content"],
       utm_term: query_params["utm_term"]
     })
+  end
+
+  defp put_channel(%__MODULE__{} = event, _context) do
+    session = event.clickhouse_session_attrs
+
+    channel =
+      Plausible.Ingestion.Acquisition.get_channel(
+        session[:referrer_source],
+        session[:utm_medium],
+        session[:utm_campaign],
+        session[:utm_source],
+        session[:click_id_param]
+      )
+
+    update_session_attrs(event, %{channel: channel})
   end
 
   defp put_geolocation(%__MODULE__{} = event, _context) do

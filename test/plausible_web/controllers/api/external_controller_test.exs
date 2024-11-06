@@ -406,6 +406,39 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert session.referrer_source == "betalist"
+      assert session.utm_source == "betalist"
+    end
+
+    test "?ref param behaves like ?utm_source", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://www.example.com/?ref=betalist",
+        domain: site.domain
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert session.referrer_source == "betalist"
+      assert session.utm_source == "betalist"
+    end
+
+    test "?source param behaves like ?utm_source", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://www.example.com/?source=betalist",
+        domain: site.domain
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert session.referrer_source == "betalist"
+      assert session.utm_source == "betalist"
     end
 
     test "if utm_source matches a capitalized form from ref_inspector, the capitalized form is recorded",
@@ -2192,7 +2225,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     } do
       params = %{
         name: "pageview",
-        url: "http://example.com?utm_source=Google-ads",
+        url: "http://example.com?source=Google-ads",
         domain: site.domain
       }
 
