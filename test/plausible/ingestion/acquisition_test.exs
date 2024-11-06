@@ -115,16 +115,13 @@ defmodule Plausible.Ingestion.AcquisitionTest do
   end
 
   def reference_channel(test_data) do
-    request = %{
-      query_params: %{
-        "utm_medium" => test_data[:utm_medium],
-        "utm_campaign" => test_data[:utm_campaign],
-        "utm_source" => test_data[:utm_source],
-        test_data[:click_id_param] => "123"
-      }
-    }
-
-    Plausible.Ingestion.Acquisition.get_channel(request, test_data[:referrer_source])
+    Plausible.Ingestion.Acquisition.get_channel(
+      test_data[:referrer_source],
+      test_data[:utm_medium],
+      test_data[:utm_campaign],
+      test_data[:utm_source],
+      test_data[:click_id_param]
+    )
   end
 
   def clickhouse_channel(test_data) do
