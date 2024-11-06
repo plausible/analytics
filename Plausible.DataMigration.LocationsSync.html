@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-0F9FCE2E.js"></script>
+    <script src="dist/sidebar_items-83C86733.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -170,6 +170,14 @@ result as if run once.</p><p>SQL files available at: priv/data_migrations/Locati
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#do_run/3" translate="no">do_run(name, query, options \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#out_of_date?/0" translate="no">out_of_date?()</a>
 
       </div>
@@ -190,11 +198,31 @@ result as if run once.</p><p>SQL files available at: priv/data_migrations/Locati
 
       </div>
 
+        <div class="summary-synopsis"><p>Runs a single SQL query in a file.</p></div>
+
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#run_sql_confirm/2" translate="no">run_sql_confirm(name, options \\ [])</a>
+        <a href="#run_sql_confirm/3" translate="no">run_sql_confirm(name, assigns \\ [], options \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#run_sql_multi/3" translate="no">run_sql_multi(name, assigns \\ [], options \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Runs multiple SQL queries from a single file.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#unwrap/2" translate="no">unwrap(name, assigns \\ [])</a>
 
       </div>
 
@@ -223,6 +251,30 @@ result as if run once.</p><p>SQL files available at: priv/data_migrations/Locati
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">confirm(message, func, default_choice \\ :yes)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/locations_sync.ex#L24" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="do_run/3">
+
+    <span id="do_run/2"></span>
+
+  <div class="detail-header">
+    <a href="#do_run/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">do_run(name, query, options \\ [])</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/locations_sync.ex#L24" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -304,19 +356,71 @@ result as if run once.</p><p>SQL files available at: priv/data_migrations/Locati
 
   <section class="docstring">
 
-
+<p>Runs a single SQL query in a file.</p><p>Valid options:</p><ul><li><code class="inline">quiet</code> - reduces output from running the SQL</li><li><code class="inline">params</code> - List of query parameters.</li><li><code class="inline">query_options</code> - passed to Repo.query</li></ul>
   </section>
 </section>
-<section class="detail" id="run_sql_confirm/2">
+<section class="detail" id="run_sql_confirm/3">
 
     <span id="run_sql_confirm/1"></span>
 
+    <span id="run_sql_confirm/2"></span>
+
   <div class="detail-header">
-    <a href="#run_sql_confirm/2" class="detail-link" title="Link to this function">
+    <a href="#run_sql_confirm/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">run_sql_confirm(name, options \\ [])</h1>
+    <h1 class="signature" translate="no">run_sql_confirm(name, assigns \\ [], options \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/locations_sync.ex#L24" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="run_sql_multi/3">
+
+    <span id="run_sql_multi/1"></span>
+
+    <span id="run_sql_multi/2"></span>
+
+  <div class="detail-header">
+    <a href="#run_sql_multi/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">run_sql_multi(name, assigns \\ [], options \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/locations_sync.ex#L24" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Runs multiple SQL queries from a single file.</p><p>Note that each query must be separated by semicolons.</p>
+  </section>
+</section>
+<section class="detail" id="unwrap/2">
+
+    <span id="unwrap/1"></span>
+
+  <div class="detail-header">
+    <a href="#unwrap/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">unwrap(name, assigns \\ [])</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/locations_sync.ex#L24" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
