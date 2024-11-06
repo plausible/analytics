@@ -22,7 +22,6 @@ defmodule Plausible.Stats.Legacy.QueryBuilder do
       |> put_preloaded_goals(site)
       |> put_order_by(params)
       |> put_include_comparisons(site, params)
-      |> Query.put_experimental_reduced_joins(site, params)
       |> Query.put_imported_opts(site, params)
 
     on_ee do
