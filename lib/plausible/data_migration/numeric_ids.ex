@@ -106,19 +106,20 @@ defmodule Plausible.DataMigration.NumericIDs do
     {:ok, _} =
       run_sql_fn.("drop-sessions-v2", [cluster?: cluster?], drop_v2_extra_opts.("sessions_v2"))
 
-    {:ok, _} = run_sql_fn.("drop-tmp-events-v2", [])
-    {:ok, _} = run_sql_fn.("drop-tmp-sessions-v2", [])
-    {:ok, _} = run_sql_fn.("drop-domains-lookup", [])
-
-    {:ok, _} = run_sql_fn.("create-events-v2", table_settings: table_settings, cluster?: cluster?)
+    {:ok, _} = run_sql_fn.("drop-tmp-events-v2", [], [])
+    {:ok, _} = run_sql_fn.("drop-tmp-sessions-v2", [], [])
+    {:ok, _} = run_sql_fn.("drop-domains-lookup", [], [])
 
     {:ok, _} =
-      run_sql_fn.("create-sessions-v2", table_settings: table_settings, cluster?: cluster?)
+      run_sql_fn.("create-events-v2", [table_settings: table_settings, cluster?: cluster?], [])
 
-    {:ok, _} = run_sql_fn.("create-tmp-events-v2", table_settings: table_settings)
-    {:ok, _} = run_sql_fn.("create-tmp-sessions-v2", table_settings: table_settings)
+    {:ok, _} =
+      run_sql_fn.("create-sessions-v2", [table_settings: table_settings, cluster?: cluster?], [])
 
-    case run_sql_fn.("create-domains-lookup", table_settings: table_settings) do
+    {:ok, _} = run_sql_fn.("create-tmp-events-v2", [table_settings: table_settings], [])
+    {:ok, _} = run_sql_fn.("create-tmp-sessions-v2", [table_settings: table_settings], [])
+
+    case run_sql_fn.("create-domains-lookup", [table_settings: table_settings], []) do
       {:ok, _} ->
         confirm_fn.("Populate domains-lookup with postgres sites", fn ->
           mappings =
