@@ -139,6 +139,10 @@ defmodule Plausible.Factory do
     Map.put(event_factory(), :name, "pageview")
   end
 
+  def pageleave_factory do
+    Map.put(event_factory(), :name, "pageleave")
+  end
+
   def event_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 

@@ -126,7 +126,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> Enum.reduce(%{}, &Map.merge/2)
   end
 
-  defp build_group_by(q, table, query) do
+  def build_group_by(q, table, query) do
     Enum.reduce(query.dimensions, q, &dimension_group_by(&2, table, query, &1))
   end
 

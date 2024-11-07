@@ -16,6 +16,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     |> maybe_add_percentage_metric(site, query)
     |> maybe_add_global_conversion_rate(site, query)
     |> maybe_add_group_conversion_rate(site, query)
+    |> maybe_add_scroll_depth(site, query)
   end
 
   defp maybe_add_percentage_metric(q, site, query) do
@@ -119,6 +120,71 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
     else
       q
     end
+  end
+
+  def maybe_add_scroll_depth(q, site, query) do
+    cond do
+      :scroll_depth not in query.metrics -> q
+      query.dimensions == [] -> add_aggregate_scroll_depth(q, site, query)
+      true -> add_group_scroll_depth(q, site, query)
+    end
+  end
+
+  defp add_aggregate_scroll_depth(q, site, query) do
+    max_per_visitor_q =
+      Base.base_event_query(site, query)
+      |> where([e], e.name == "pageleave")
+      |> select([e], %{
+        user_id: e.user_id,
+        max_scroll_depth: max(e.scroll_depth)
+      })
+      |> group_by([e], e.user_id)
+
+    scroll_depth_q =
+      subquery(max_per_visitor_q)
+      |> select([p], fragment("toUInt8(round(ifNotFinite(avg(?), 0)))", p.max_scroll_depth))
+
+    select_merge_as(q, [e], %{scroll_depth: subquery(scroll_depth_q)})
+  end
+
+  defp add_group_scroll_depth(q, site, query) do
+    max_per_visitor_q =
+      Base.base_event_query(site, query)
+      |> where([e], e.name == "pageleave")
+      |> select([e], %{
+        user_id: e.user_id,
+        max_scroll_depth: max(e.scroll_depth)
+      })
+      |> SQL.QueryBuilder.build_group_by(:events, query)
+      |> group_by([e], e.user_id)
+
+    dim_shortnames = Enum.map(query.dimensions, fn dim -> shortname(query, dim) end)
+
+    dim_select =
+      dim_shortnames
+      |> Enum.map(fn dim -> {dim, dynamic([p], field(p, ^dim))} end)
+      |> Map.new()
+
+    dim_group_by =
+      dim_shortnames
+      |> Enum.map(fn dim -> dynamic([p], field(p, ^dim)) end)
+
+    scroll_depth_q =
+      subquery(max_per_visitor_q)
+      |> select([p], %{
+        scroll_depth: fragment("toUInt8(round(ifNotFinite(avg(?), 0)))", p.max_scroll_depth)
+      })
+      |> select_merge(^dim_select)
+      |> group_by(^dim_group_by)
+
+    join_on_dim_condition =
+      dim_shortnames
+      |> Enum.map(fn dim -> dynamic([_e, ..., s], selected_as(^dim) == field(s, ^dim)) end)
+      |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
+
+    q
+    |> join(:left, [e], s in subquery(scroll_depth_q), on: ^join_on_dim_condition)
+    |> select_merge_as([_e, ..., s], %{scroll_depth: fragment("any(?)", s.scroll_depth)})
   end
 
   # `total_visitors_subquery` returns a subquery which selects `total_visitors` -
