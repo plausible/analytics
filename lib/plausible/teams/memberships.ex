@@ -94,14 +94,11 @@ defmodule Plausible.Teams.Memberships do
     end
   end
 
-  def prune_guests(team, opts \\ []) do
-    ignore_guest_ids = Keyword.get(opts, :ignore_guest_ids, [])
-
+  def prune_guests(team) do
     guest_query =
       from(
         gm in Teams.GuestMembership,
         where: gm.team_membership_id == parent_as(:team_membership).id,
-        where: gm.id not in ^ignore_guest_ids,
         select: true
       )
 
