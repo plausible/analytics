@@ -5,6 +5,7 @@ defmodule Plausible.Teams.Adapter.Read.Sites do
   import Ecto.Query
   alias Plausible.Repo
   alias Plausible.Site
+  alias Plausible.Auth
 
   def list(user, pagination_params, opts \\ []) do
     if Plausible.Teams.read_team_schemas?(user) do
