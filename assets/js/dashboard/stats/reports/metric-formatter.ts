@@ -38,6 +38,7 @@ export const MetricFormatterShort: Record<
 
   bounce_rate: percentageFormatter,
   conversion_rate: percentageFormatter,
+  scroll_depth: percentageFormatter,
   exit_rate: percentageFormatter,
   group_conversion_rate: percentageFormatter,
   percentage: percentageFormatter,
@@ -65,6 +66,7 @@ export const MetricFormatterLong: Record<
 
   bounce_rate: percentageFormatter,
   conversion_rate: percentageFormatter,
+  scroll_depth: percentageFormatter,
   exit_rate: percentageFormatter,
   group_conversion_rate: percentageFormatter,
   percentage: percentageFormatter,
