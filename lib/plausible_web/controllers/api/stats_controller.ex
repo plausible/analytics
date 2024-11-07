@@ -399,7 +399,7 @@ defmodule PlausibleWeb.Api.StatsController do
     metrics =
       cond do
         page_filter? && query.include_imported -> metrics
-        page_filter? -> metrics ++ [:bounce_rate, :time_on_page]
+        page_filter? -> metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
         true -> metrics ++ [:views_per_visit, :bounce_rate, :visit_duration]
       end
 
@@ -418,7 +418,8 @@ defmodule PlausibleWeb.Api.StatsController do
             nil -> 0
             value -> value
           end
-        )
+        ),
+        top_stats_entry(current_results, "Scroll depth", :scroll_depth, graphable?: true)
       ]
       |> Enum.filter(& &1)
 
@@ -1522,11 +1523,20 @@ defmodule PlausibleWeb.Api.StatsController do
       end
 
     requires_goal_filter? = metric in [:conversion_rate, :events]
+    has_goal_filter? = Filters.filtering_on_dimension?(query, "event:goal")
 
-    if requires_goal_filter? and !Filters.filtering_on_dimension?(query, "event:goal") do
-      {:error, "Metric `#{metric}` can only be queried with a goal filter"}
-    else
-      {:ok, metric}
+    requires_page_filter? = metric == :scroll_depth
+    has_page_filter? = Filters.filtering_on_dimension?(query, "event:page")
+
+    cond do
+      requires_goal_filter? and not has_goal_filter? ->
+        {:error, "Metric `#{metric}` can only be queried with a goal filter"}
+
+      requires_page_filter? and not has_page_filter? ->
+        {:error, "Metric `#{metric}` can only be queried with a page filter"}
+
+      true ->
+        {:ok, metric}
     end
   end
 
