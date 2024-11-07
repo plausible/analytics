@@ -1,11 +1,8 @@
-CREATE TABLE IF NOT EXISTS acquisition_channel_source_category(referrer_source String, category LowCardinality(String))
+CREATE OR REPLACE TABLE acquisition_channel_source_category(referrer_source String, category LowCardinality(String))
 <%= @on_cluster_statement %>
 Engine = MergeTree()
-ORDER BY referrer_source;
-
-TRUNCATE TABLE acquisition_channel_source_category;
-
-INSERT INTO acquisition_channel_source_category
+ORDER BY referrer_source
+AS
 SELECT t.1 AS referrer_source, t.2 AS category
 FROM (
     SELECT arrayJoin({source_categories:Array(Tuple(String, String))}) AS t
@@ -22,14 +19,11 @@ SOURCE(CLICKHOUSE(TABLE acquisition_channel_source_category <%= @dictionary_conn
 LIFETIME(0)
 LAYOUT(hashed());
 
-CREATE TABLE IF NOT EXISTS acquisition_channel_paid_sources(referrer_source String)
+CREATE OR REPLACE TABLE acquisition_channel_paid_sources(referrer_source String)
 <%= @on_cluster_statement %>
 Engine = MergeTree()
-ORDER BY referrer_source;
-
-TRUNCATE TABLE acquisition_channel_paid_sources;
-
-INSERT INTO acquisition_channel_paid_sources
+ORDER BY referrer_source
+AS
 SELECT arrayJoin({paid_sources:Array(String)}) AS referrer_source;
 
 CREATE OR REPLACE DICTIONARY acquisition_channel_paid_sources_dict
