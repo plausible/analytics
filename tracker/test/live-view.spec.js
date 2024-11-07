@@ -10,8 +10,21 @@ test.describe('script.live-view.js events', () => {
     });
 
     test('Sends phx-event', async ({ page }) => {
+        await page.evaluate(() => window.dispatchEvent(new CustomEvent("phx:page-loading-start", { })))
+        expectCustomEvent(await plausibleRequestMock, 'phx-event', {  })
+    });
+
+    test('Sends phx-push', async ({ page }) => {
         await page.evaluate(() => window.liveSocket.socket.logger('push', '_message', { a: 1 }))
         expectCustomEvent(await plausibleRequestMock, 'phx-push', { a: 1 })
+    });
+
+    test('Sends analyticsParams', async ({ page }) => {
+        await page.evaluate(() => {
+            window.analyticsParams = { b: 2 };
+            window.liveSocket.socket.logger('push', '_message', { a: 1 });
+        })
+        expectCustomEvent(await plausibleRequestMock, 'phx-push', { a: 1, b: 2 })
     });
 
     test('Sends submit event', async ({ page }) => {
