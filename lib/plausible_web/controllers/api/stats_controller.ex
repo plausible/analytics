@@ -814,9 +814,16 @@ defmodule PlausibleWeb.Api.StatsController do
     query = Query.from(site, params, debug_metadata(conn))
 
     extra_metrics =
-      if params["detailed"],
-        do: [:pageviews, :bounce_rate, :time_on_page],
-        else: []
+      cond do
+        params["detailed"] && !query.include_imported ->
+          [:pageviews, :bounce_rate, :time_on_page, :scroll_depth]
+
+        params["detailed"] ->
+          [:pageviews, :bounce_rate, :time_on_page]
+
+        true ->
+          []
+      end
 
     metrics = breakdown_metrics(query, extra_metrics)
     pagination = parse_pagination(params)
