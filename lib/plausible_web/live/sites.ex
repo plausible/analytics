@@ -6,11 +6,7 @@ defmodule PlausibleWeb.Live.Sites do
   use PlausibleWeb, :live_view
   import PlausibleWeb.Live.Components.Pagination
 
-  alias Plausible.Auth
-  alias Plausible.Site
   alias Plausible.Sites
-  alias Plausible.Site.Memberships.Invitations
-  alias Plausible.Teams
 
   def mount(params, _session, socket) do
     uri =
@@ -644,38 +640,11 @@ defmodule PlausibleWeb.Live.Sites do
     {:noreply, socket}
   end
 
-  defp has_sites?(user) do
-    if Teams.read_team_schemas?(user) do
-      Teams.Users.has_sites?(user, include_pending?: true)
-    else
-      Site.Memberships.any_or_pending?(user)
-    end
-  end
+  defdelegate has_sites?(user), to: Plausible.Teams.Adapter.Read.Ownership
 
-  defp owns_sites?(user, sites) do
-    if Teams.read_team_schemas?(user) do
-      Teams.Users.owns_sites?(user, include_pending?: true)
-    else
-      Enum.any?(sites.entries, fn site ->
-        length(site.invitations) > 0 && List.first(site.invitations).role == :owner
-      end) ||
-        Auth.user_owns_sites?(user)
-    end
-  end
+  defdelegate owns_sites?(user, sites), to: Plausible.Teams.Adapter.Read.Ownership
 
-  defp check_needs_to_upgrade(user) do
-    if Teams.read_team_schemas?(user) do
-      team =
-        case Teams.get_by_owner(user) do
-          {:ok, team} -> team
-          {:error, _} -> nil
-        end
-
-      Teams.Billing.check_needs_to_upgrade(team)
-    else
-      Plausible.Billing.check_needs_to_upgrade(user)
-    end
-  end
+  defdelegate check_needs_to_upgrade(user), to: Plausible.Teams.Adapter.Read.Billing
 
   defp load_sites(%{assigns: assigns} = socket) do
     sites =
@@ -726,32 +695,12 @@ defmodule PlausibleWeb.Live.Sites do
 
   defp check_limits(invitation, _), do: %{invitation: invitation}
 
-  defp ensure_can_take_ownership(site, user) do
-    if Teams.read_team_schemas?(user) do
-      team =
-        case Teams.get_by_owner(user) do
-          {:ok, team} -> team
-          {:error, _} -> nil
-        end
+  defdelegate ensure_can_take_ownership(site, user), to: Plausible.Teams.Adapter.Read.Ownership
 
-      Teams.Invitations.ensure_can_take_ownership(site, team)
-    else
-      Invitations.ensure_can_take_ownership(site, user)
-    end
-  end
+  defdelegate check_feature_access(site, user), to: Plausible.Teams.Adapter.Read.Ownership
 
-  defp check_features(%{role: :owner, site: site} = invitation, user) do
-    user_or_team =
-      if Teams.read_team_schemas?(user) do
-        case Teams.get_by_owner(user) do
-          {:ok, team} -> team
-          {:error, _} -> nil
-        end
-      else
-        user
-      end
-
-    case check_feature_access(site, user_or_team) do
+  def check_features(%{role: :owner, site: site} = invitation, user) do
+    case check_feature_access(site, user) do
       :ok ->
         %{invitation: invitation}
 
@@ -762,24 +711,6 @@ defmodule PlausibleWeb.Live.Sites do
           |> PlausibleWeb.TextHelpers.pretty_list()
 
         %{invitation: invitation, missing_features: feature_names}
-    end
-  end
-
-  if ce?() do
-    defp check_feature_access(_site, _new_owner) do
-      :ok
-    end
-  else
-    defp check_feature_access(site, new_owner) do
-      missing_features =
-        Plausible.Billing.Quota.Usage.features_usage(nil, [site.id])
-        |> Enum.filter(&(&1.check_availability(new_owner) != :ok))
-
-      if missing_features == [] do
-        :ok
-      else
-        {:error, {:missing_features, missing_features}}
-      end
     end
   end
 
