@@ -108,7 +108,7 @@ defmodule Plausible.Teams.Invitations do
           :team,
           :owner,
           guest_memberships: [team_membership: :user],
-          guest_invitations: [team_invitation: :user]
+          guest_invitations: :team_invitation
         ])
 
       {:ok, _} =
@@ -131,7 +131,7 @@ defmodule Plausible.Teams.Invitations do
         :team,
         :owner,
         guest_memberships: [team_membership: :user],
-        guest_invitations: [team_invitation: :user]
+        guest_invitations: :team_invitation
       ])
 
     {:ok, _} =
@@ -206,7 +206,7 @@ defmodule Plausible.Teams.Invitations do
         :team,
         :owner,
         guest_memberships: [team_membership: :user],
-        guest_invitations: [team_invitation: :user]
+        guest_invitations: :team_invitation
       ])
 
     {:ok, site_transfer} =
