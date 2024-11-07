@@ -41,21 +41,14 @@ defmodule Plausible.Teams.Team do
   end
 
   def changeset(name, today \\ Date.utc_today()) do
-    trial_expiry_date =
-      if ee?() do
-        Date.shift(today, day: 30)
-      else
-        Date.shift(today, year: 100)
-      end
-
     %__MODULE__{}
     |> cast(%{name: name}, [:name])
     |> validate_required(:name)
-    |> put_change(:trial_expiry_date, trial_expiry_date)
+    |> start_trial(today)
   end
 
-  def start_trial(team) do
-    trial_expiry = trial_expiry()
+  def start_trial(team, today \\ Date.utc_today()) do
+    trial_expiry = trial_expiry(today)
 
     change(team,
       trial_expiry_date: trial_expiry,
@@ -69,11 +62,11 @@ defmodule Plausible.Teams.Team do
     Map.from_struct(grace_period)
   end
 
-  defp trial_expiry() do
+  defp trial_expiry(today) do
     on_ee do
-      Date.utc_today() |> Date.shift(day: 30)
+      Date.shift(today, day: 30)
     else
-      Date.utc_today() |> Date.shift(year: 100)
+      Date.shift(today, year: 100)
     end
   end
 end

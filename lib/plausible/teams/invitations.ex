@@ -338,7 +338,8 @@ defmodule Plausible.Teams.Invitations do
       |> Enum.unzip()
 
     old_guest_ids = Enum.map(old_guest_invitations, & &1.id)
-    :ok = prune_guest_invitations(prior_team, ignore_guest_ids: old_guest_ids)
+    Repo.delete_all(from gi in Teams.GuestInvitation, where: gi.id in ^old_guest_ids)
+    :ok = prune_guest_invitations(prior_team)
 
     {_old_team_memberships, old_guest_memberships} =
       site.guest_memberships
@@ -364,7 +365,8 @@ defmodule Plausible.Teams.Invitations do
       |> Enum.unzip()
 
     old_guest_ids = Enum.map(old_guest_memberships, & &1.id)
-    :ok = Teams.Memberships.prune_guests(prior_team, ignore_guest_ids: old_guest_ids)
+    Repo.delete_all(from gm in Teams.GuestMembership, where: gm.id in ^old_guest_ids)
+    :ok = Teams.Memberships.prune_guests(prior_team)
 
     {:ok, prior_owner} = Teams.Sites.get_owner(prior_team)
 
@@ -386,14 +388,11 @@ defmodule Plausible.Teams.Invitations do
     :ok
   end
 
-  def prune_guest_invitations(team, opts \\ []) do
-    ignore_guest_ids = Keyword.get(opts, :ignore_guest_ids, [])
-
+  def prune_guest_invitations(team) do
     guest_query =
       from(
         gi in Teams.GuestInvitation,
         where: gi.team_invitation_id == parent_as(:team_invitation).id,
-        where: gi.id not in ^ignore_guest_ids,
         select: true
       )
 
