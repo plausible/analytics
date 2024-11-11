@@ -208,6 +208,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert ~c"pages.csv" in zip
       assert ~c"regions.csv" in zip
       assert ~c"sources.csv" in zip
+      assert ~c"channels.csv" in zip
       assert ~c"utm_campaigns.csv" in zip
       assert ~c"utm_contents.csv" in zip
       assert ~c"utm_mediums.csv" in zip
@@ -423,6 +424,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       expected_filenames = [
         "visitors.csv",
         "sources.csv",
+        "channels.csv",
         "utm_mediums.csv",
         "utm_sources.csv",
         "utm_campaigns.csv",
@@ -468,6 +470,13 @@ defmodule PlausibleWeb.StatsControllerTest do
           assert parse_csv(data) == [
                    ["name", "visitors", "bounce_rate", "visit_duration"],
                    ["Google", "1", "0.0", "10.0"],
+                   [""]
+                 ]
+
+        # Dummy - imported data is not actually included in exported CSVs yet
+        {~c"channels.csv", data} ->
+          assert parse_csv(data) == [
+                   ["name", "visitors", "bounce_rate", "visit_duration"],
                    [""]
                  ]
 
@@ -685,7 +694,8 @@ defmodule PlausibleWeb.StatsControllerTest do
         country_code: "EE",
         subdivision1_code: "EE-37",
         city_geoname_id: 588_409,
-        referrer_source: "Google"
+        referrer_source: "Google",
+        channel: "Organic Search"
       ),
       build(:pageview,
         user_id: 123,
@@ -695,7 +705,8 @@ defmodule PlausibleWeb.StatsControllerTest do
         country_code: "EE",
         subdivision1_code: "EE-37",
         city_geoname_id: 588_409,
-        referrer_source: "Google"
+        referrer_source: "Google",
+        channel: "Organic Search"
       ),
       build(:pageview,
         pathname: "/",
@@ -706,6 +717,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         utm_source: "google",
         utm_content: "content",
         utm_term: "term",
+        channel: "Paid Search",
         browser: "Firefox",
         browser_version: "120",
         operating_system: "Mac",
@@ -726,6 +738,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         utm_campaign: "ads",
         country_code: "EE",
         referrer_source: "Google",
+        channel: "Paid Search",
         browser: "FirefoxNoVersion",
         operating_system: "MacNoVersion"
       ),

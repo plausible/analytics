@@ -144,6 +144,15 @@ defmodule PlausibleWeb.StatsController do
         ~c"custom_props.csv" => fn -> Api.StatsController.all_custom_prop_values(conn, params) end
       }
 
+      # credo:disable-for-lines:7
+      csvs =
+        if FunWithFlags.enabled?(:channels, for: site) ||
+             FunWithFlags.enabled?(:channels, for: conn.assigns[:current_user]) do
+          Map.put(csvs, ~c"channels.csv", fn -> Api.StatsController.channels(conn, params) end)
+        else
+          csvs
+        end
+
       csv_values =
         Map.values(csvs)
         |> Plausible.ClickhouseRepo.parallel_tasks()
