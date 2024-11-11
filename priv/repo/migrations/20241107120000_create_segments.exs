@@ -7,6 +7,7 @@ defmodule Plausible.Repo.Migrations.CreateSegments do
       add :personal, :boolean, default: true, null: false
       add :segment_data, :map, null: false
       add :site_id, references(:sites, on_delete: :delete_all), null: false
+
       # owner_id is null (aka segment is dangling) when the original owner is deassociated from the site
       # the segment is dangling until another user edits it: the editor becomes the new owner
       add :owner_id, references(:users, on_delete: :nothing), null: true
