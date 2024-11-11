@@ -14,7 +14,6 @@ defmodule Plausible.Repo.Migrations.CreateSegments do
       timestamps()
     end
 
-    create index(:segments, [:segment_data], using: :gin)
     create index(:segments, [:site_id])
   end
 end
