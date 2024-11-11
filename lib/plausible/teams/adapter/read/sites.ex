@@ -1,11 +1,14 @@
 defmodule Plausible.Teams.Adapter.Read.Sites do
   @moduledoc """
-  Transition adapter for new schema reads 
+  Transition adapter for new schema reads
   """
+
   import Ecto.Query
+
+  alias Plausible.Auth
   alias Plausible.Repo
   alias Plausible.Site
-  alias Plausible.Auth
+  alias Plausible.Teams
 
   def list(user, pagination_params, opts \\ []) do
     if Plausible.Teams.read_team_schemas?(user) do
@@ -110,6 +113,66 @@ defmodule Plausible.Teams.Adapter.Read.Sites do
       end)
 
     %{result | entries: entries}
+  end
+
+  def list_people(site, user) do
+    if Plausible.Teams.read_team_schemas?(user) do
+      owner_membership =
+        from(
+          tm in Teams.Membership,
+          where: tm.team_id == ^site.team_id,
+          where: tm.role == :owner,
+          select: %Plausible.Site.Membership{
+            user_id: tm.user_id,
+            role: tm.role
+          }
+        )
+        |> Repo.one!()
+
+      memberships =
+        from(
+          gm in Teams.GuestMembership,
+          inner_join: tm in assoc(gm, :team_membership),
+          where: gm.site_id == ^site.id,
+          select: %Plausible.Site.Membership{
+            user_id: tm.user_id,
+            role: tm.role
+          }
+        )
+        |> Repo.all()
+
+      memberships = Repo.preload([owner_membership | memberships], :user)
+
+      invitations =
+        from(
+          gi in Teams.GuestInvitation,
+          inner_join: ti in assoc(gi, :team_invitation),
+          # TODO: This is necessary so that a particular guest invitation
+          # is accepted - otherwise, only the last invitation within a team
+          # is considered. We will get rid of it once we switch writes
+          # and behavior changes to accepting all invites within a team,
+          # implicitly.
+          #
+          # NOTE: Raise the matter of this final behavior and whether it's
+          # acceptable. It might turn out we must support accepting
+          # invites for singular sites after all.
+          inner_join: i in Plausible.Auth.Invitation,
+          on: i.site_id == gi.site_id and i.email == ti.email,
+          where: gi.site_id == ^site.id,
+          select: %Plausible.Auth.Invitation{
+            invitation_id: i.invitation_id,
+            email: ti.email,
+            role: gi.role
+          }
+        )
+        |> Repo.all()
+
+      %{memberships: memberships, invitations: invitations}
+    else
+      site
+      |> Repo.preload([:invitations, memberships: :user])
+      |> Map.take([:memberships, :invitations])
+    end
   end
 
   defp maybe_filter_by_domain(query, domain)
