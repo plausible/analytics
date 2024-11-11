@@ -84,7 +84,7 @@ defmodule Plausible.DataMigration do
         |> String.split(";", trim: true)
         |> Enum.with_index(1)
         |> Enum.reduce_while(:ok, fn {query, index}, _ ->
-          case do_run("name-#{index}", query, options) do
+          case do_run("#{name}-#{index}", query, options) do
             {:ok, _} -> {:cont, :ok}
             error -> {:halt, error}
           end
