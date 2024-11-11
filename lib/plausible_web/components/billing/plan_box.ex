@@ -357,7 +357,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       |> Enum.map(fn feature_mod -> feature_mod.display_name() end)
       |> PlausibleWeb.TextHelpers.pretty_join()
 
-    "This plan does not support #{features_list_str}, which you are currently using. Please note that by subscribing to this plan you will lose access to #{if length(features) == 1, do: "this feature", else: "these features"}."
+    "This plan does not support #{features_list_str}, which you have been using. By subscribing to this plan, you will not have access to #{if length(features) == 1, do: "this feature", else: "these features"}."
   end
 
   defp contact_button(assigns) do
