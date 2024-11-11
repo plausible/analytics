@@ -122,13 +122,17 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_people(conn, _params) do
-    site =
-      conn.assigns[:site]
-      |> Repo.preload(memberships: :user, invitations: [])
+    current_user = conn.assigns.current_user
+    site = conn.assigns.site
+
+    %{memberships: memberships, invitations: invitations} =
+      Plausible.Teams.Adapter.Read.Sites.list_people(site, current_user)
 
     conn
     |> render("settings_people.html",
       site: site,
+      memberships: memberships,
+      invitations: invitations,
       dogfood_page_path: "/:dashboard/settings/people",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )

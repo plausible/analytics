@@ -14,7 +14,7 @@
 
     <div class="flow-root">
       <ul class="divide-y divide-gray-200 dark:divide-gray-400">
-        <%= for membership <- @site.memberships do %>
+        <%= for membership <- @memberships do %>
           <li class="py-4">
             <div class="flex items-center space-x-4">
               <div class="flex-shrink-0">
@@ -124,9 +124,9 @@
                       href={
                         Routes.membership_path(
                           @conn,
-                          :update_role,
+                          :update_role_by_user,
                           @site.domain,
-                          membership.id,
+                          membership.user.id,
                           "admin"
                         )
                       }
@@ -164,9 +164,9 @@
                       href={
                         Routes.membership_path(
                           @conn,
-                          :update_role,
+                          :update_role_by_user,
                           @site.domain,
-                          membership.id,
+                          membership.user.id,
                           "viewer"
                         )
                       }
@@ -203,7 +203,12 @@
 
                     <.unstyled_link
                       href={
-                        Routes.membership_path(@conn, :remove_member, @site.domain, membership.id)
+                        Routes.membership_path(
+                          @conn,
+                          :remove_member_by_user,
+                          @site.domain,
+                          membership.user.id
+                        )
                       }
                       method="delete"
                       class="p-4 flex hover:bg-gray-100 dark:hover:bg-gray-900 text-red-600"
@@ -220,11 +225,11 @@
     </div>
   </.tile>
 
-  <.tile :if={Enum.count(@site.invitations) > 0}>
+  <.tile :if={Enum.count(@invitations) > 0}>
     <:title>Pending invitations</:title>
     <:subtitle>Waiting for new members to accept their invitations</:subtitle>
 
-    <.table rows={@site.invitations}>
+    <.table rows={@invitations}>
       <:thead>
         <.th>Email</.th>
         <.th hide_on_mobile>Role</.th>
