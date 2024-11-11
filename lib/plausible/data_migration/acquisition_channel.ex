@@ -38,35 +38,53 @@ defmodule Plausible.DataMigration.AcquisitionChannel do
 
     cond do
       Keyword.get(opts, :add_column) ->
-        alter_data_tables("acquisition_channel_add_materialized_column", on_cluster_statement)
+        alter_data_tables(
+          "acquisition_channel_add_materialized_column",
+          on_cluster_statement,
+          opts
+        )
 
       Keyword.get(opts, :update_column, true) ->
-        alter_data_tables("acquisition_channel_update_materialized_column", on_cluster_statement)
+        alter_data_tables(
+          "acquisition_channel_update_materialized_column",
+          on_cluster_statement,
+          opts
+        )
 
       true ->
         nil
     end
 
     if Keyword.get(opts, :backfill) do
-      alter_data_tables("acquisition_channel_backfill_materialized_column", on_cluster_statement)
+      alter_data_tables(
+        "acquisition_channel_backfill_materialized_column",
+        on_cluster_statement,
+        opts
+      )
     end
 
     :ok
   end
 
-  defp alter_data_tables(sql_name, on_cluster_statement) do
+  defp alter_data_tables(sql_name, on_cluster_statement, opts) do
     {:ok, _} =
       run_sql(
         sql_name,
-        on_cluster_statement: on_cluster_statement,
-        table: "events_v2"
+        [
+          table: "events_v2",
+          on_cluster_statement: on_cluster_statement
+        ],
+        quiet: Keyword.get(opts, :quiet, false)
       )
 
     {:ok, _} =
       run_sql(
         sql_name,
-        on_cluster_statement: on_cluster_statement,
-        table: "sessions_v2"
+        [
+          table: "sessions_v2",
+          on_cluster_statement: on_cluster_statement
+        ],
+        quiet: Keyword.get(opts, :quiet, false)
       )
   end
 end
