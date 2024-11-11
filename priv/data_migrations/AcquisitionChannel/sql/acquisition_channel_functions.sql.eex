@@ -11,7 +11,7 @@ ENGINE = MergeTree()
 <% end %>
 ORDER BY referrer_source;
 
-TRUNCATE TABLE acquisition_channel_source_category SETTINGS alter_sync=2;
+TRUNCATE TABLE acquisition_channel_source_category <%= @on_cluster_statement %>;
 
 INSERT INTO acquisition_channel_source_category(referrer_source, category)
 SELECT t.1 AS referrer_source, t.2 AS category
@@ -43,7 +43,7 @@ ENGINE = MergeTree()
 <% end %>
 ORDER BY referrer_source;
 
-TRUNCATE TABLE acquisition_channel_paid_sources SETTINGS alter_sync=2;
+TRUNCATE TABLE acquisition_channel_paid_sources <%= @on_cluster_statement %>;
 
 INSERT INTO acquisition_channel_paid_sources(referrer_source)
 SELECT arrayJoin({paid_sources:Array(String)}) AS referrer_source
