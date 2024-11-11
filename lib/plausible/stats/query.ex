@@ -53,9 +53,11 @@ defmodule Plausible.Stats.Query do
     date_range = Plausible.Stats.DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
 
     if Keyword.get(options, :trim_trailing) do
+      today = query.now |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
+
       Date.range(
         date_range.first,
-        earliest(date_range.last, query.now)
+        earliest(date_range.last, today)
       )
     else
       date_range
