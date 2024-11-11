@@ -35,14 +35,11 @@ defmodule Plausible.TestUtils do
   end
 
   def create_user(_) do
-    {:ok, user: Factory.insert(:user)}
+    {:ok, user: Plausible.Teams.Test.new_user()}
   end
 
   def create_site(%{user: user}) do
-    site =
-      Factory.insert(:site,
-        members: [user]
-      )
+    site = Plausible.Teams.Test.new_site(owner: user)
 
     {:ok, site: site}
   end
