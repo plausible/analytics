@@ -8,12 +8,15 @@ defmodule Plausible.DataMigration.AcquisitionChannel do
 
   def run(opts \\ []) do
     on_cluster_statement = Plausible.MigrationUtils.on_cluster_statement("sessions_v2")
+    # In distributed environments, wait for insert to all temporary tables.
+    insert_quorum = Plausible.IngestRepo.replica_count("sessions_v2")
 
     run_sql_multi(
       "acquisition_channel_functions",
       [
         on_cluster_statement: on_cluster_statement,
-        dictionary_connection_params: Plausible.MigrationUtils.dictionary_connection_params()
+        dictionary_connection_params: Plausible.MigrationUtils.dictionary_connection_params(),
+        insert_quorum: insert_quorum
       ],
       params: %{
         "source_categories" =>
