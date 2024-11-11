@@ -147,20 +147,9 @@ defmodule Plausible.Teams.Adapter.Read.Sites do
         from(
           gi in Teams.GuestInvitation,
           inner_join: ti in assoc(gi, :team_invitation),
-          # TODO: This is necessary so that a particular guest invitation
-          # is accepted - otherwise, only the last invitation within a team
-          # is considered. We will get rid of it once we switch writes
-          # and behavior changes to accepting all invites within a team,
-          # implicitly.
-          #
-          # NOTE: Raise the matter of this final behavior and whether it's
-          # acceptable. It might turn out we must support accepting
-          # invites for singular sites after all.
-          inner_join: i in Plausible.Auth.Invitation,
-          on: i.site_id == gi.site_id and i.email == ti.email,
           where: gi.site_id == ^site.id,
           select: %Plausible.Auth.Invitation{
-            invitation_id: i.invitation_id,
+            invitation_id: gi.invitation_id,
             email: ti.email,
             role: gi.role
           }
