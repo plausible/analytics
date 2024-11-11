@@ -8,6 +8,7 @@ defmodule Plausible.Teams.GuestInvitation do
   import Ecto.Changeset
 
   schema "guest_invitations" do
+    field :invitation_id, :string
     field :role, Ecto.Enum, values: [:viewer, :editor]
 
     belongs_to :site, Plausible.Site
@@ -17,7 +18,7 @@ defmodule Plausible.Teams.GuestInvitation do
   end
 
   def changeset(team_invitation, site, role) do
-    %__MODULE__{}
+    %__MODULE__{invitation_id: Nanoid.generate()}
     |> cast(%{role: role}, [:role])
     |> validate_required(:role)
     |> put_assoc(:team_invitation, team_invitation)
