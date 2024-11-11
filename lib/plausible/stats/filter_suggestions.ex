@@ -192,7 +192,7 @@ defmodule Plausible.Stats.FilterSuggestions do
         "page" -> :pathname
         "entry_page" -> :entry_page
         "source" -> :referrer_source
-        "channel" -> :channel
+        "channel" -> :acquisition_channel
         "os" -> :operating_system
         "os_version" -> :operating_system_version
         "screen" -> :screen_size

@@ -119,7 +119,6 @@ defmodule Plausible.Ingestion.Event do
       put_user_agent: &put_user_agent/2,
       put_basic_info: &put_basic_info/2,
       put_source_info: &put_source_info/2,
-      put_channel: &put_channel/2,
       put_props: &put_props/2,
       put_revenue: &put_revenue/2,
       put_salts: &put_salts/2,
@@ -268,21 +267,6 @@ defmodule Plausible.Ingestion.Event do
       utm_content: query_params["utm_content"],
       utm_term: query_params["utm_term"]
     })
-  end
-
-  defp put_channel(%__MODULE__{} = event, _context) do
-    session = event.clickhouse_session_attrs
-
-    channel =
-      Plausible.Ingestion.Acquisition.get_channel(
-        session[:referrer_source],
-        session[:utm_medium],
-        session[:utm_campaign],
-        session[:utm_source],
-        session[:click_id_param]
-      )
-
-    update_session_attrs(event, %{channel: channel})
   end
 
   defp put_geolocation(%__MODULE__{} = event, _context) do

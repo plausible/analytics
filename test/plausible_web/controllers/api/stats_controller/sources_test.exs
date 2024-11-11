@@ -727,21 +727,23 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "returns top channels by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          channel: "Organic Search",
+          referrer_source: "Bing",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          channel: "Organic Search",
+          referrer_source: "Bing",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview,
-          channel: "Paid Social",
+          referrer_source: "Facebook",
+          utm_source: "fb-ads",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          channel: "Paid Social",
+          referrer_source: "Facebook",
+          utm_source: "fb-ads",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])

@@ -76,11 +76,11 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
     test "returns suggestions for channels", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], channel: "Organic Search"),
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], channel: "Organic Search"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),
         build(:pageview,
           timestamp: ~N[2019-01-01 23:00:00],
-          channel: "Video"
+          referrer_source: "Youtube"
         )
       ])
 
@@ -89,7 +89,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
       assert json_response(conn, 200) == [
                %{"label" => "Organic Search", "value" => "Organic Search"},
-               %{"label" => "Video", "value" => "Video"}
+               %{"label" => "Organic Video", "value" => "Organic Video"}
              ]
     end
 
