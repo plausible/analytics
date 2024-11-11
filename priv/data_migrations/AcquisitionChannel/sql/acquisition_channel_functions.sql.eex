@@ -1,12 +1,20 @@
-CREATE OR REPLACE TABLE acquisition_channel_source_category(referrer_source String, category LowCardinality(String))
+CREATE TABLE IF NOT EXISTS acquisition_channel_source_category
 <%= @on_cluster_statement %>
+(
+    referrer_source String,
+    category LowCardinality(String)
+)
 Engine = MergeTree()
-ORDER BY referrer_source
-AS
+ORDER BY referrer_source;
+
+TRUNCATE TABLE acquisition_channel_source_category SETTINGS alter_sync=2;
+
+INSERT INTO acquisition_channel_source_category(referrer_source, category)
 SELECT t.1 AS referrer_source, t.2 AS category
 FROM (
     SELECT arrayJoin({source_categories:Array(Tuple(String, String))}) AS t
-);
+)
+SETTINGS insert_quorum = <%= @insert_quorum %>;
 
 CREATE OR REPLACE DICTIONARY acquisition_channel_source_category_dict
 <%= @on_cluster_statement %>
@@ -19,12 +27,19 @@ SOURCE(CLICKHOUSE(TABLE acquisition_channel_source_category <%= @dictionary_conn
 LIFETIME(0)
 LAYOUT(hashed());
 
-CREATE OR REPLACE TABLE acquisition_channel_paid_sources(referrer_source String)
+CREATE TABLE IF NOT EXISTS acquisition_channel_paid_sources
 <%= @on_cluster_statement %>
+(
+    referrer_source String
+)
 Engine = MergeTree()
-ORDER BY referrer_source
-AS
-SELECT arrayJoin({paid_sources:Array(String)}) AS referrer_source;
+ORDER BY referrer_source;
+
+TRUNCATE TABLE acquisition_channel_paid_sources SETTINGS alter_sync=2;
+
+INSERT INTO acquisition_channel_paid_sources(referrer_source)
+SELECT arrayJoin({paid_sources:Array(String)}) AS referrer_source
+SETTINGS insert_quorum = <%= @insert_quorum %>;
 
 CREATE OR REPLACE DICTIONARY acquisition_channel_paid_sources_dict
 <%= @on_cluster_statement %>
