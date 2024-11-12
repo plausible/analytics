@@ -11,6 +11,12 @@ defmodule Plausible.Teams.Test do
 
   import Plausible.Factory
 
+  defmacro __using__(_) do
+    quote do
+      import Plausible.Teams.Test
+    end
+  end
+
   def new_site(args \\ []) do
     args =
       if user = args[:owner] do
@@ -135,12 +141,6 @@ defmodule Plausible.Teams.Test do
     insert(:growth_subscription, user: user, team: team)
   end
 
-  defmacro __using__(_) do
-    quote do
-      import Plausible.Teams.Test
-    end
-  end
-
   def assert_team_exists(user, team_id \\ nil) do
     assert %{team_memberships: memberships} = Repo.preload(user, team_memberships: :team)
 
@@ -161,14 +161,31 @@ defmodule Plausible.Teams.Test do
   end
 
   def assert_team_membership(user, team, role \\ :owner) do
-    assert membership =
-             Repo.get_by(Plausible.Teams.Membership,
-               team_id: team.id,
-               user_id: user.id,
-               role: role
-             )
+    if role == :owner do
+      assert membership =
+               Repo.get_by(Teams.Membership,
+                 team_id: team.id,
+                 user_id: user.id,
+                 role: role
+               )
 
-    membership
+      membership
+    else
+      assert team_membership =
+               Repo.get_by(Teams.Membership,
+                 team_id: team.id,
+                 user_id: user.id,
+                 role: :guest
+               )
+
+      assert membership =
+               Repo.get_by(Teams.GuestMembership,
+                 team_membership_id: team_membership.id,
+                 role: role
+               )
+
+      membership
+    end
   end
 
   def assert_team_attached(site, team_id \\ nil) do

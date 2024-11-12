@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
   use Plausible.Repo
   use Bamboo.Test
 
+  use Plausible.Teams.Test
   import Plausible.Test.Support.HTML
 
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
@@ -308,6 +309,19 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert membership.role == :viewer
     end
 
+    test "updates a site member's role by user id", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      collaborator = add_guest(site, role: :editor)
+      assert_team_membership(collaborator, site.team, :editor)
+
+      put(conn, "/sites/#{site.domain}/memberships/u/#{collaborator.id}/role/viewer")
+
+      assert_team_membership(collaborator, site.team, :viewer)
+
+      old_model_membership = Repo.get_by(Plausible.Site.Membership, user_id: collaborator.id)
+      assert old_model_membership.role == :viewer
+    end
+
     @tag :teams
     test "syncs role update to team", %{conn: conn, user: user} do
       admin = insert(:user)
@@ -457,6 +471,16 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       membership = Enum.find(site.memberships, &(&1.role == :admin))
 
       conn = delete(conn, "/sites/#{site.domain}/memberships/#{membership.id}")
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "has been removed"
+
+      refute Repo.exists?(from sm in Plausible.Site.Membership, where: sm.user_id == ^admin.id)
+    end
+
+    test "removes a member from a site by user id", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      admin = add_guest(site, role: :editor)
+
+      conn = delete(conn, "/sites/#{site.domain}/memberships/u/#{admin.id}")
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "has been removed"
 
       refute Repo.exists?(from sm in Plausible.Site.Membership, where: sm.user_id == ^admin.id)
