@@ -141,7 +141,7 @@ defmodule Plausible.Factory do
 
   def event_factory(attrs) do
     if Map.get(attrs, :acquisition_channel) do
-      raise "Acquistion channel cannot be written directly since it's a materialized column."
+      raise "Acquisition channel cannot be written directly since it's a materialized column."
     end
 
     hostname = sequence(:domain, &"example-#{&1}.com")
