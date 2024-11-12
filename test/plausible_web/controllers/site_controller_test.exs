@@ -517,6 +517,18 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       refute resp =~ "/crm/auth/user/#{user.id}"
     end
+
+    test "lists pending invitations", %{conn: conn, user: user, site: site} do
+      i1 = invite_guest(site, "admin@example.com", role: :editor, inviter: user)
+      i2 = invite_guest(site, "viewer@example.com", role: :viewer, inviter: user)
+      conn = get(conn, "/#{site.domain}/settings/people")
+      resp = html_response(conn, 200)
+
+      assert text_of_element(resp, "#invitation-#{i1.invitation_id}") == "admin@example.com Admin"
+
+      assert text_of_element(resp, "#invitation-#{i2.invitation_id}") ==
+               "viewer@example.com Viewer"
+    end
   end
 
   describe "GET /:domain/settings/goals" do

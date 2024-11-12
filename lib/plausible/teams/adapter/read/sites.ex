@@ -136,7 +136,17 @@ defmodule Plausible.Teams.Adapter.Read.Sites do
           where: gm.site_id == ^site.id,
           select: %Plausible.Site.Membership{
             user_id: tm.user_id,
-            role: tm.role
+            role:
+              fragment(
+                """
+                CASE
+                WHEN ? = 'editor' THEN 'admin'
+                ELSE ?
+                END
+                """,
+                tm.role,
+                tm.role
+              )
           }
         )
         |> Repo.all()
@@ -151,7 +161,16 @@ defmodule Plausible.Teams.Adapter.Read.Sites do
           select: %Plausible.Auth.Invitation{
             invitation_id: gi.invitation_id,
             email: ti.email,
-            role: gi.role
+              role: fragment(
+                """
+                CASE
+                WHEN ? = 'editor' THEN 'admin'
+                ELSE ?
+                END
+                """,
+                gi.role,
+                gi.role
+              )
           }
         )
         |> Repo.all()

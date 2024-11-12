@@ -229,7 +229,10 @@
     <:title>Pending invitations</:title>
     <:subtitle>Waiting for new members to accept their invitations</:subtitle>
 
-    <.table rows={@invitations}>
+    <.table
+      rows={@invitations}
+      row_attrs={fn invitation -> %{id: "invitation-#{invitation.invitation_id}"} end}
+    >
       <:thead>
         <.th>Email</.th>
         <.th hide_on_mobile>Role</.th>
