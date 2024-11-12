@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Dashboard shows comparisons for all reports
-- Support for `icontains` and `icontains_not` operators in Stats API filters
+- Support for `icontains` and `icontains_not` operators in Stats API filters for case-insensitive searches.
+  Those are enabled by default in "Details" search inputs on the dashboard.
 
 ### Removed
 ### Changed
