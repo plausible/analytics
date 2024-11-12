@@ -143,7 +143,9 @@ Pages
 
 
   <section id="moduledoc">
-<p>Creates dictionaries and functions to calculate acquisition channel in ClickHouse</p><p>SQL files available at: priv/data_migrations/AcquisitionChannel/sql</p>
+<p>Creates dictionaries and functions to calculate acquisition channel in ClickHouse</p><p>Creates <code class="inline">acquisition_channel</code> columns in <code class="inline">events_v2</code> and <code class="inline">sessions_v2</code> tables.
+Run via <code class="inline">Plausible.DataMigration.AcquisitionChannel.run(options)</code></p><p>Options:</p><ul><li><code class="inline">add_column</code> - creates the materialized column. Already done in a migration</li><li><code class="inline">update_column</code> - Updates the column definition to use new function definitions. Defaults to true.
+  Note that historical data is only updated if <code class="inline">backfill</code> is set to true or if it was never materialized.</li><li><code class="inline">backfill</code> - backfills the data for the column. Speeds up calculations on historical data.</li></ul><p>SQL files available at: priv/data_migrations/AcquisitionChannel/sql</p>
   </section>
 
 
@@ -243,7 +245,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">confirm(message, func, default_choice \\ :yes)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/acquisition_channel.ex#L7" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/acquisition_channel.ex#L16" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -267,7 +269,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">do_run(name, query, options \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/acquisition_channel.ex#L7" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/acquisition_channel.ex#L16" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -291,7 +293,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">run(opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/acquisition_channel.ex#L9" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/acquisition_channel.ex#L18" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -317,7 +319,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">run_sql(name, assigns \\ [], options \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/acquisition_channel.ex#L7" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/acquisition_channel.ex#L16" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -343,7 +345,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">run_sql_confirm(name, assigns \\ [], options \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/acquisition_channel.ex#L7" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/acquisition_channel.ex#L16" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -369,7 +371,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">run_sql_multi(name, assigns \\ [], options \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/acquisition_channel.ex#L7" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/acquisition_channel.ex#L16" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -393,7 +395,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">unwrap(name, assigns \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/acquisition_channel.ex#L7" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/acquisition_channel.ex#L16" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
