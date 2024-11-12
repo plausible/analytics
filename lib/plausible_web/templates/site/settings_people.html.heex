@@ -15,7 +15,7 @@
     <div class="flow-root">
       <ul class="divide-y divide-gray-200 dark:divide-gray-400">
         <%= for membership <- @memberships do %>
-          <li class="py-4">
+          <li class="py-4" id={"membership-#{membership.user_id}"}>
             <div class="flex items-center space-x-4">
               <div class="flex-shrink-0">
                 <img
@@ -47,7 +47,7 @@
                   @click="open = !open"
                   class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
-                  <%= membership.role |> Atom.to_string() |> String.capitalize() %>
+                  <%= membership.role |> to_string() |> String.capitalize() %>
                   <svg
                     class="w-4 h-4 pt-px ml-1"
                     fill="currentColor"
