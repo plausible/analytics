@@ -164,7 +164,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210101",
                 "sessionGoogleAdsKeyword" => "",
                 "sessionMedium" => "organic",
-                "sessionSource" => "duckduckgo.com"
+                "sessionSource" => "duckduckgo.com",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "0",
@@ -181,7 +182,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210131",
                 "sessionGoogleAdsKeyword" => "",
                 "sessionMedium" => "organic",
-                "sessionSource" => "google.com"
+                "sessionSource" => "google.com",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "1",
@@ -198,7 +200,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210101",
                 "sessionGoogleAdsKeyword" => "",
                 "sessionMedium" => "paid",
-                "sessionSource" => "google.com"
+                "sessionSource" => "google.com",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "1",
@@ -215,7 +218,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210101",
                 "sessionGoogleAdsKeyword" => "",
                 "sessionMedium" => "social",
-                "sessionSource" => "Twitter"
+                "sessionSource" => "Twitter",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "1",
@@ -232,7 +236,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210131",
                 "sessionGoogleAdsKeyword" => "",
                 "sessionMedium" => "email",
-                "sessionSource" => "A Nice Newsletter"
+                "sessionSource" => "A Nice Newsletter",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "1",
@@ -249,7 +254,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210101",
                 "sessionGoogleAdsKeyword" => "",
                 "sessionMedium" => "(none)",
-                "sessionSource" => "(direct)"
+                "sessionSource" => "(direct)",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "1",
@@ -283,6 +289,121 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                ]
       end
 
+      test "Channels are imported", %{conn: conn, site: site, import_id: import_id} do
+        populate_stats(site, [
+          # Organic Search
+          build(:pageview,
+            referrer_source: "Bing",
+            timestamp: ~N[2021-01-01 00:00:00]
+          ),
+          # Paid Search
+          build(:pageview,
+            referrer_source: "Google",
+            utm_medium: "paid",
+            timestamp: ~N[2021-01-01 00:00:00]
+          ),
+          # Direct
+          build(:pageview,
+            timestamp: ~N[2021-01-01 00:00:00]
+          )
+        ])
+
+        import_data(
+          [
+            %{
+              dimensions: %{
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "organic",
+                "sessionSource" => "duckduckgo.com",
+                "sessionDefaultChannelGroup" => "Organic Search"
+              },
+              metrics: %{
+                "bounces" => "0",
+                "userEngagementDuration" => "60",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
+              }
+            },
+            %{
+              dimensions: %{
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "",
+                "date" => "20210131",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "organic",
+                "sessionSource" => "google.com",
+                "sessionDefaultChannelGroup" => "Organic Search"
+              },
+              metrics: %{
+                "bounces" => "1",
+                "userEngagementDuration" => "60",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
+              }
+            },
+            %{
+              dimensions: %{
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "paid",
+                "sessionSource" => "google.com",
+                "sessionDefaultChannelGroup" => "Paid Search"
+              },
+              metrics: %{
+                "bounces" => "1",
+                "userEngagementDuration" => "60",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
+              }
+            },
+            %{
+              dimensions: %{
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "(none)",
+                "sessionSource" => "(direct)",
+                "sessionDefaultChannelGroup" => "Direct"
+              },
+              metrics: %{
+                "bounces" => "1",
+                "userEngagementDuration" => "60",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
+              }
+            }
+          ],
+          site.id,
+          import_id,
+          "imported_sources"
+        )
+
+        results =
+          conn
+          |> get(
+            "/api/stats/#{site.domain}/channels?period=month&date=2021-01-01&with_imported=true"
+          )
+          |> json_response(200)
+          |> Map.get("results")
+          |> Enum.sort()
+
+        assert results == [
+                 %{"name" => "Direct", "visitors" => 2},
+                 %{"name" => "Organic Search", "visitors" => 3},
+                 %{"name" => "Paid Search", "visitors" => 2}
+               ]
+      end
+
       test "UTM mediums data imported from Google Analytics", %{
         conn: conn,
         site: site,
@@ -308,7 +429,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210101",
                 "sessionGoogleAdsKeyword" => "",
                 "sessionMedium" => "social",
-                "sessionSource" => "Twitter"
+                "sessionSource" => "Twitter",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "1",
@@ -325,7 +447,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210101",
                 "sessionGoogleAdsKeyword" => "",
                 "sessionMedium" => "(none)",
-                "sessionSource" => "(direct)"
+                "sessionSource" => "(direct)",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "1",
@@ -376,7 +499,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210101",
                 "sessionGoogleAdsKeyword" => "",
                 "sessionMedium" => "social",
-                "sessionSource" => "Twitter"
+                "sessionSource" => "Twitter",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "1",
@@ -393,7 +517,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210101",
                 "sessionGoogleAdsKeyword" => "",
                 "sessionMedium" => "email",
-                "sessionSource" => "Gmail"
+                "sessionSource" => "Gmail",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "0",
@@ -410,7 +535,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210101",
                 "sessionGoogleAdsKeyword" => "",
                 "sessionMedium" => "email",
-                "sessionSource" => "Gmail"
+                "sessionSource" => "Gmail",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "0",
@@ -468,7 +594,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210101",
                 "sessionGoogleAdsKeyword" => "oat milk",
                 "sessionMedium" => "paid",
-                "sessionSource" => "Google"
+                "sessionSource" => "Google",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "1",
@@ -485,7 +612,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210101",
                 "sessionGoogleAdsKeyword" => "Sweden",
                 "sessionMedium" => "paid",
-                "sessionSource" => "Google"
+                "sessionSource" => "Google",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "0",
@@ -502,7 +630,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210101",
                 "sessionGoogleAdsKeyword" => "(not set)",
                 "sessionMedium" => "paid",
-                "sessionSource" => "Google"
+                "sessionSource" => "Google",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "0",
@@ -559,7 +688,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210101",
                 "sessionGoogleAdsKeyword" => "",
                 "sessionMedium" => "paid",
-                "sessionSource" => "Google"
+                "sessionSource" => "Google",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "1",
@@ -576,7 +706,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210101",
                 "sessionGoogleAdsKeyword" => "",
                 "sessionMedium" => "paid",
-                "sessionSource" => "Google"
+                "sessionSource" => "Google",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "0",
@@ -593,7 +724,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "date" => "20210101",
                 "sessionGoogleAdsKeyword" => "",
                 "sessionMedium" => "paid",
-                "sessionSource" => "Google"
+                "sessionSource" => "Google",
+                "sessionDefaultChannelGroup" => ""
               },
               metrics: %{
                 "bounces" => "0",

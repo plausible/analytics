@@ -398,6 +398,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         build(:imported_pages, page: "/test", pageviews: 1),
         build(:imported_sources,
           source: "Google",
+          channel: "Paid Search",
           utm_medium: "search",
           utm_campaign: "ads",
           utm_source: "google",
@@ -473,10 +474,10 @@ defmodule PlausibleWeb.StatsControllerTest do
                    [""]
                  ]
 
-        # Dummy - imported data is not actually included in exported CSVs yet
         {~c"channels.csv", data} ->
           assert parse_csv(data) == [
                    ["name", "visitors", "bounce_rate", "visit_duration"],
+                   ["Paid Search", "1", "0.0", "10.0"],
                    [""]
                  ]
 

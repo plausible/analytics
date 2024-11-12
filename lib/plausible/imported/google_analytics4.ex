@@ -175,6 +175,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
       import_id: import_id,
       date: get_date(row),
       source: row.dimensions |> Map.fetch!("sessionSource") |> parse_source(),
+      channel: row.dimensions |> Map.fetch!("sessionDefaultChannelGroup") |> parse_source(),
       referrer: nil,
       # Only `source` exists in GA4 API
       utm_source: nil,
