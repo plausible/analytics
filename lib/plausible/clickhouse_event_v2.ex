@@ -27,7 +27,6 @@ defmodule Plausible.ClickhouseEventV2 do
     field :referrer, :string
     field :referrer_source, :string
     field :click_id_param, Ch, type: "LowCardinality(String)"
-    field :channel, Ch, type: "LowCardinality(String)"
     field :utm_medium, :string
     field :utm_source, :string
     field :utm_campaign, :string
@@ -44,6 +43,8 @@ defmodule Plausible.ClickhouseEventV2 do
     field :operating_system_version, Ch, type: "LowCardinality(String)"
     field :browser, Ch, type: "LowCardinality(String)"
     field :browser_version, Ch, type: "LowCardinality(String)"
+
+    field :acquisition_channel, Ch, type: "LowCardinality(String)", writable: :never
   end
 
   def new(attrs) do
@@ -72,7 +73,6 @@ defmodule Plausible.ClickhouseEventV2 do
     :session_id,
     :referrer,
     :referrer_source,
-    :channel,
     :click_id_param,
     :utm_medium,
     :utm_source,

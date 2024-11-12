@@ -115,7 +115,6 @@ defmodule Plausible.Session.CacheStore do
       pageviews: if(event.name == "pageview", do: 1, else: 0),
       events: 1,
       referrer: Map.get(session_attributes, :referrer),
-      channel: Map.get(session_attributes, :channel),
       click_id_param: Map.get(session_attributes, :click_id_param),
       referrer_source: Map.get(session_attributes, :referrer_source),
       utm_medium: Map.get(session_attributes, :utm_medium),

@@ -1274,7 +1274,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Cross-network"
+      assert session.acquisition_channel == "Cross-network"
     end
 
     test "parses paid shopping channel based on campaign/medium", %{conn: conn, site: site} do
@@ -1292,7 +1292,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Paid Shopping"
+      assert session.acquisition_channel == "Paid Shopping"
     end
 
     test "parses paid shopping channel based on referrer source and medium", %{
@@ -1314,7 +1314,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Paid Shopping"
+      assert session.acquisition_channel == "Paid Shopping"
     end
 
     test "parses paid shopping channel based on referrer utm_source and medium", %{
@@ -1335,7 +1335,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Paid Shopping"
+      assert session.acquisition_channel == "Paid Shopping"
     end
 
     test "parses paid search channel based on referrer and medium", %{conn: conn, site: site} do
@@ -1354,7 +1354,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Paid Search"
+      assert session.acquisition_channel == "Paid Search"
     end
 
     test "parses paid search channel based on gclid", %{conn: conn, site: site} do
@@ -1373,7 +1373,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Paid Search"
+      assert session.acquisition_channel == "Paid Search"
       assert session.click_id_param == "gclid"
     end
 
@@ -1396,7 +1396,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
       assert session.click_id_param == "gclid"
     end
 
@@ -1416,7 +1416,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Paid Search"
+      assert session.acquisition_channel == "Paid Search"
       assert session.click_id_param == "msclkid"
     end
 
@@ -1439,7 +1439,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
       assert session.click_id_param == "msclkid"
     end
 
@@ -1458,7 +1458,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Paid Search"
+      assert session.acquisition_channel == "Paid Search"
       assert session.click_id_param == ""
     end
 
@@ -1478,7 +1478,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Paid Social"
+      assert session.acquisition_channel == "Paid Social"
     end
 
     test "parses paid social channel based on utm_source and medium", %{conn: conn, site: site} do
@@ -1496,7 +1496,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Paid Social"
+      assert session.acquisition_channel == "Paid Social"
     end
 
     test "parses paid video channel based on referrer and medium", %{conn: conn, site: site} do
@@ -1515,7 +1515,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Paid Video"
+      assert session.acquisition_channel == "Paid Video"
     end
 
     test "parses paid video channel based on utm_source and medium", %{conn: conn, site: site} do
@@ -1533,7 +1533,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Paid Video"
+      assert session.acquisition_channel == "Paid Video"
     end
 
     test "parses display channel", %{conn: conn, site: site} do
@@ -1551,7 +1551,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Display"
+      assert session.acquisition_channel == "Display"
     end
 
     test "parses paid other channel", %{conn: conn, site: site} do
@@ -1569,7 +1569,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Paid Other"
+      assert session.acquisition_channel == "Paid Other"
     end
 
     test "parses organic shopping channel from referrer", %{conn: conn, site: site} do
@@ -1588,7 +1588,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Organic Shopping"
+      assert session.acquisition_channel == "Organic Shopping"
     end
 
     test "parses organic shopping channel from utm_source", %{conn: conn, site: site} do
@@ -1606,7 +1606,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Organic Shopping"
+      assert session.acquisition_channel == "Organic Shopping"
     end
 
     test "parses organic shopping channel from utm_campaign", %{conn: conn, site: site} do
@@ -1624,7 +1624,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Organic Shopping"
+      assert session.acquisition_channel == "Organic Shopping"
     end
 
     test "parses organic social channel from referrer", %{conn: conn, site: site} do
@@ -1643,7 +1643,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "parses organic social channel from utm_source", %{conn: conn, site: site} do
@@ -1661,7 +1661,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "parses organic social channel from utm_medium", %{conn: conn, site: site} do
@@ -1679,7 +1679,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "parses organic video channel from referrer", %{conn: conn, site: site} do
@@ -1698,7 +1698,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Organic Video"
+      assert session.acquisition_channel == "Organic Video"
     end
 
     test "parses organic video channel from utm_source", %{conn: conn, site: site} do
@@ -1716,7 +1716,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Organic Video"
+      assert session.acquisition_channel == "Organic Video"
     end
 
     test "parses organic video channel from utm_medium", %{conn: conn, site: site} do
@@ -1734,7 +1734,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Organic Video"
+      assert session.acquisition_channel == "Organic Video"
     end
 
     test "parses organic search channel from referrer", %{conn: conn, site: site} do
@@ -1753,7 +1753,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "parses organic search channel from utm_source", %{conn: conn, site: site} do
@@ -1771,7 +1771,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "parses referral channel from utm_medium", %{conn: conn, site: site} do
@@ -1789,7 +1789,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Referral"
+      assert session.acquisition_channel == "Referral"
     end
 
     test "parses email channel from utm_source", %{conn: conn, site: site} do
@@ -1807,7 +1807,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Email"
+      assert session.acquisition_channel == "Email"
     end
 
     test "parses email channel from utm_medium", %{conn: conn, site: site} do
@@ -1825,7 +1825,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Email"
+      assert session.acquisition_channel == "Email"
     end
 
     test "parses affiliates channel from utm_medium", %{conn: conn, site: site} do
@@ -1843,7 +1843,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Affiliates"
+      assert session.acquisition_channel == "Affiliates"
     end
 
     test "parses audio channel from utm_medium", %{conn: conn, site: site} do
@@ -1861,7 +1861,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Audio"
+      assert session.acquisition_channel == "Audio"
     end
 
     test "parses sms channel from utm_source", %{conn: conn, site: site} do
@@ -1879,7 +1879,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "SMS"
+      assert session.acquisition_channel == "SMS"
     end
 
     test "parses sms channel from utm_medium", %{conn: conn, site: site} do
@@ -1897,7 +1897,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "SMS"
+      assert session.acquisition_channel == "SMS"
     end
 
     test "parses mobile push notifications channel from utm_medium with push", %{
@@ -1918,7 +1918,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Mobile Push Notifications"
+      assert session.acquisition_channel == "Mobile Push Notifications"
     end
 
     test "parses mobile push notifications channel from utm_medium", %{conn: conn, site: site} do
@@ -1936,7 +1936,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Mobile Push Notifications"
+      assert session.acquisition_channel == "Mobile Push Notifications"
     end
 
     test "parses referral channel if session starts with a simple referral", %{
@@ -1958,7 +1958,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Referral"
+      assert session.acquisition_channel == "Referral"
     end
 
     test "parses direct channel if session starts without referrer or utm tags", %{
@@ -1979,7 +1979,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.channel == "Direct"
+      assert session.acquisition_channel == "Direct"
     end
   end
 
@@ -2009,7 +2009,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Threads"
       assert session.utm_source == "threads"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "ig is Instagram", %{
@@ -2032,7 +2032,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Instagram"
       assert session.utm_source == "ig"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "yt is Youtube", %{
@@ -2055,7 +2055,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Youtube"
       assert session.utm_source == "yt"
-      assert session.channel == "Organic Video"
+      assert session.acquisition_channel == "Organic Video"
     end
 
     test "yt-ads is Youtube paid", %{
@@ -2078,7 +2078,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Youtube"
       assert session.utm_source == "yt-ads"
-      assert session.channel == "Paid Video"
+      assert session.acquisition_channel == "Paid Video"
     end
 
     test "fb is Facebook", %{
@@ -2101,7 +2101,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Facebook"
       assert session.utm_source == "fb"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "fb-ads is Facebook", %{
@@ -2124,7 +2124,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Facebook"
       assert session.utm_source == "fb-ads"
-      assert session.channel == "Paid Social"
+      assert session.acquisition_channel == "Paid Social"
     end
 
     test "fbad is Facebook", %{
@@ -2147,7 +2147,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Facebook"
       assert session.utm_source == "fbad"
-      assert session.channel == "Paid Social"
+      assert session.acquisition_channel == "Paid Social"
     end
 
     test "facebook-ads is Facebook", %{
@@ -2170,7 +2170,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Facebook"
       assert session.utm_source == "facebook-ads"
-      assert session.channel == "Paid Social"
+      assert session.acquisition_channel == "Paid Social"
     end
 
     test "Reddit-ads is Reddit", %{
@@ -2193,7 +2193,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Reddit"
       assert session.utm_source == "Reddit-ads"
-      assert session.channel == "Paid Social"
+      assert session.acquisition_channel == "Paid Social"
     end
 
     test "google_ads is Google", %{
@@ -2216,7 +2216,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Google"
       assert session.utm_source == "google_ads"
-      assert session.channel == "Paid Search"
+      assert session.acquisition_channel == "Paid Search"
     end
 
     test "Google-ads is Google", %{
@@ -2239,7 +2239,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Google"
       assert session.utm_source == "Google-ads"
-      assert session.channel == "Paid Search"
+      assert session.acquisition_channel == "Paid Search"
     end
 
     test "utm_source=Adwords is Google paid search", %{
@@ -2262,7 +2262,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Google"
       assert session.utm_source == "Adwords"
-      assert session.channel == "Paid Search"
+      assert session.acquisition_channel == "Paid Search"
     end
 
     test "twitter-ads is Twitter", %{
@@ -2285,7 +2285,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Twitter"
       assert session.utm_source == "twitter-ads"
-      assert session.channel == "Paid Social"
+      assert session.acquisition_channel == "Paid Social"
     end
 
     test "android-app://com.reddit.frontpage is Reddit", %{
@@ -2308,7 +2308,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Reddit"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "perplexity.ai is Perplexity", %{
@@ -2331,7 +2331,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Perplexity"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "utm_source=perplexity is Perplexity", %{
@@ -2353,7 +2353,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Perplexity"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "statics.teams.cdn.office.net is Microsoft Teams", %{
@@ -2376,7 +2376,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Microsoft Teams"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "wikipedia domain is resolved as Wikipedia", %{
@@ -2399,7 +2399,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Wikipedia"
-      assert session.channel == "Referral"
+      assert session.acquisition_channel == "Referral"
     end
 
     test "ntp.msn.com is Bing", %{
@@ -2422,7 +2422,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Bing"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "search.brave.com is Brave", %{
@@ -2445,7 +2445,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Brave"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "yandex.com.tr is Yandex", %{
@@ -2468,7 +2468,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yandex"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "yandex.kz is Yandex", %{
@@ -2491,7 +2491,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yandex"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "ya.ru is Yandex", %{
@@ -2514,7 +2514,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yandex"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "yandex.uz is Yandex", %{
@@ -2537,7 +2537,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yandex"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "yandex.fr is Yandex", %{
@@ -2560,7 +2560,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yandex"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "yandex.eu is Yandex", %{
@@ -2583,7 +2583,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yandex"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "yandex.tm is Yandex", %{
@@ -2606,7 +2606,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yandex"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "discord.com is Discord", %{
@@ -2629,7 +2629,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Discord"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "discordapp.com is Discord", %{
@@ -2652,7 +2652,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Discord"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "canary.discord.com is Discord", %{
@@ -2675,7 +2675,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Discord"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "ptb.discord.com is Discord", %{
@@ -2698,7 +2698,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Discord"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "www.baidu.com is Baidu", %{conn: conn, site: site} do
@@ -2718,7 +2718,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Baidu"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "t.me is Telegram", %{conn: conn, site: site} do
@@ -2738,7 +2738,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Telegram"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "webk.telegram.org is Telegram", %{conn: conn, site: site} do
@@ -2758,7 +2758,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Telegram"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "sogou.com is Sogou", %{conn: conn, site: site} do
@@ -2778,7 +2778,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Sogou"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "m.sogou.com is Sogou", %{conn: conn, site: site} do
@@ -2798,7 +2798,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Sogou"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "wap.sogou.com is Sogou", %{conn: conn, site: site} do
@@ -2818,7 +2818,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Sogou"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "linktr.ee is Linktree", %{conn: conn, site: site} do
@@ -2838,7 +2838,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Linktree"
-      assert session.channel == "Referral"
+      assert session.acquisition_channel == "Referral"
     end
 
     test "linktree is Linktree", %{conn: conn, site: site} do
@@ -2857,7 +2857,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Linktree"
-      assert session.channel == "Referral"
+      assert session.acquisition_channel == "Referral"
     end
   end
 
@@ -2887,7 +2887,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Hacker News"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "yahoo is organic search", %{
@@ -2910,7 +2910,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Yahoo!"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "gmail is email channel", %{
@@ -2933,7 +2933,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Gmail"
-      assert session.channel == "Email"
+      assert session.acquisition_channel == "Email"
     end
 
     test "utm_source=newsletter is email channel", %{
@@ -2955,7 +2955,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Newsletter-UK"
-      assert session.channel == "Email"
+      assert session.acquisition_channel == "Email"
     end
 
     test "temu.com is shopping channel", %{
@@ -2978,7 +2978,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "temu.com"
-      assert session.channel == "Organic Shopping"
+      assert session.acquisition_channel == "Organic Shopping"
     end
 
     test "utm_source=Telegram is social channel", %{
@@ -3000,7 +3000,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Telegram"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "chatgpt.com is search channel", %{
@@ -3023,7 +3023,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "chatgpt.com"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
 
     test "Slack is social channel", %{
@@ -3046,7 +3046,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Slack"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "producthunt is social", %{
@@ -3068,7 +3068,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "producthunt"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "github is social", %{
@@ -3091,7 +3091,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "GitHub"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "steamcommunity.com is social", %{
@@ -3114,7 +3114,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "steamcommunity.com"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "Vkontakte is social", %{
@@ -3137,7 +3137,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Vkontakte"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "Threads is social", %{
@@ -3160,7 +3160,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Threads"
-      assert session.channel == "Organic Social"
+      assert session.acquisition_channel == "Organic Social"
     end
 
     test "Ecosia is search", %{
@@ -3183,7 +3183,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.referrer_source == "Ecosia"
-      assert session.channel == "Organic Search"
+      assert session.acquisition_channel == "Organic Search"
     end
   end
 

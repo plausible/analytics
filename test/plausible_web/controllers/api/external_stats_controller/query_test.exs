@@ -145,7 +145,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       populate_stats(site, [
         build(:pageview,
           referrer_source: "Google",
-          channel: "Organic Search",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -1445,15 +1444,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   test "breakdown by visit:channel", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview,
-        channel: "Organic Search",
+        referrer_source: "Google",
         timestamp: ~N[2021-01-01 00:00:00]
       ),
       build(:pageview,
-        channel: "Organic Search",
+        referrer_source: "Google",
         timestamp: ~N[2021-01-01 00:25:00]
       ),
       build(:pageview,
-        channel: "",
         timestamp: ~N[2021-01-01 00:00:00]
       )
     ])
