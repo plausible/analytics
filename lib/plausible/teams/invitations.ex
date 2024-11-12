@@ -78,7 +78,7 @@ defmodule Plausible.Teams.Invitations do
         from(
           st in Teams.SiteTransfer,
           where: st.email == ^site_invitation.email,
-          where: st.team_id == ^site.team.id
+          where: st.site_id == ^site.id
         )
       )
     else
