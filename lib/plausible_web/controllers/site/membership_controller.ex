@@ -158,7 +158,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     update_role(conn, params)
   end
 
-  def update_role(conn, %{"id" => id, "new_role" => new_role_str}) do
+  defp update_role(conn, %{"id" => id, "new_role" => new_role_str}) do
     %{site: site, current_user: current_user, current_user_role: current_user_role} = conn.assigns
 
     membership = Repo.get!(Membership, id) |> Repo.preload(:user)
@@ -209,30 +209,13 @@ defmodule PlausibleWeb.Site.MembershipController do
   defp can_grant_role_to_other?(:admin, :viewer), do: true
   defp can_grant_role_to_other?(_, _), do: false
 
-  def remove_member_by_user(conn, %{"id" => user_id} = params) do
+  def remove_member_by_user(conn, %{"id" => user_id} = _params) do
     site = conn.assigns.site
-    membership = Repo.get_by(Membership, user_id: user_id, site_id: site.id)
-
-    if membership do
-      params = Map.put(params, "id", membership.id)
-      remove_member(conn, params)
-    else
-      conn
-      |> put_flash(
-        :error,
-        "Failed to find membership to remove"
-      )
-      |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
-    end
-  end
-
-  def remove_member(conn, %{"id" => id}) do
-    site = conn.assigns[:site]
     site_id = site.id
 
     membership_q =
       from m in Membership,
-        where: m.id == ^id,
+        where: m.user_id == ^user_id,
         where: m.site_id == ^site_id,
         inner_join: user in assoc(m, :user),
         inner_join: site in assoc(m, :site),
