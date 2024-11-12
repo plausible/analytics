@@ -1,6 +1,7 @@
 /* @format */
 import JsonURL from '@jsonurl/jsonurl'
 import { PlausibleSite } from '../site-context'
+import { Filter } from '../query'
 
 export function apiPath(
   site: Pick<PlausibleSite, 'domain'>,
@@ -95,7 +96,7 @@ export function isSearchEntryDefined(
 export function stringifySearch(
   searchRecord: Record<string, unknown>
 ): '' | string {
-  const { filters, ...rest } = searchRecord || {}
+  const { filters, labels, ...rest } = searchRecord || {}
   const definedSearchEntries = Object.entries(rest)
     .map(stringifySearchEntry)
     .filter(isSearchEntryDefined)
@@ -103,17 +104,36 @@ export function stringifySearch(
   const encodedSearchEntries = definedSearchEntries.map(encodeSearchParamEntry)
 
   if (Array.isArray(filters) && filters.length) {
-    return `?${filters
-      .map((f) => {
-        const [operator, dimension, ...clauses] = f
-        const serializedFilter = [operator, dimension, ...clauses.map(encodeURIComponentPermissive)].join(',')
-        return ['f', '=', serializedFilter].join('')
-      })
-      .concat(encodedSearchEntries)
-      .join('&')}`
+    const serializedFilters = filters.map((f) => `f=${serializeFilter(f)}`)
+    const serializedLabels = Object.entries(labels ?? {}).map(
+      (entry) => `l=${serializeLabelsEntry(entry)}`
+    )
+    return `?${serializedFilters.concat(serializedLabels).concat(encodedSearchEntries).join('&')}`
   }
 
   return encodedSearchEntries.length ? `?${encodedSearchEntries.join('&')}` : ''
+}
+function serializeLabelsEntry([k, v]: [string, string]) {
+  return `${encodeURIComponentPermissive(k)},${encodeURIComponentPermissive(v)}`
+}
+
+function parseLabelsEntry(labelString: string) {
+  return labelString.split(',').map(parseSearchFragment) as string[]
+}
+
+function serializeFilter(f: Filter) {
+  const [operator, dimension, clauses] = f
+  const serializedFilter = [
+    operator,
+    dimension,
+    ...clauses.map((c) => encodeURIComponentPermissive(c.toString()))
+  ].join(',')
+  return serializedFilter
+}
+
+function parseFilter(filterString: string) {
+  const [operator, dimension, ...unparsedClauses] = filterString.split(',')
+  return [operator, dimension, unparsedClauses.map(parseSearchFragment)]
 }
 
 export function stringifySearchEntry([key, value]: [string, unknown]): [
@@ -161,18 +181,24 @@ export function parseSearch(searchString: string): Record<string, unknown> {
   const urlSearchParams = new URLSearchParams(searchString)
   const searchRecord: Record<string, unknown> = {}
   const filters: unknown[] = []
+  const labels: Record<string, string> = {}
   urlSearchParams.forEach((v, k) => {
-    if (k !== 'f') {
-      searchRecord[k] = parseSearchFragment(v)
+    if (k === 'f') {
+      filters.push(parseFilter(v))
       return
     }
-    const parsedFilter = v.split(',').map(parseSearchFragment)
-    const [operator, dimension, ...clauses] = parsedFilter as Array<unknown>
-    filters.push([operator, dimension, clauses])
+    if (k === 'l') {
+      const parsedLabel = parseLabelsEntry(v)
+      labels[parsedLabel[0]] = parsedLabel[1]
+      return
+    }
+
+    searchRecord[k] = parseSearchFragment(v)
   })
   if (filters.length) {
     return {
       ...searchRecord,
+      labels,
       filters
     }
   }
