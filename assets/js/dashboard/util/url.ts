@@ -95,11 +95,23 @@ export function isSearchEntryDefined(
 export function stringifySearch(
   searchRecord: Record<string, unknown>
 ): '' | string {
-  const definedSearchEntries = Object.entries(searchRecord || {})
+  const { filters, ...rest } = searchRecord || {}
+  const definedSearchEntries = Object.entries(rest)
     .map(stringifySearchEntry)
     .filter(isSearchEntryDefined)
 
   const encodedSearchEntries = definedSearchEntries.map(encodeSearchParamEntry)
+
+  if (Array.isArray(filters) && filters.length) {
+    return `?${filters
+      .map((f) => {
+        const [operator, dimension, ...clauses] = f
+        const serializedFilter = [operator, dimension, ...clauses.map(encodeURIComponentPermissive)].join(',')
+        return ['f', '=', serializedFilter].join('')
+      })
+      .concat(encodedSearchEntries)
+      .join('&')}`
+  }
 
   return encodedSearchEntries.length ? `?${encodedSearchEntries.join('&')}` : ''
 }
@@ -148,6 +160,21 @@ export function parseSearchFragment(
 export function parseSearch(searchString: string): Record<string, unknown> {
   const urlSearchParams = new URLSearchParams(searchString)
   const searchRecord: Record<string, unknown> = {}
-  urlSearchParams.forEach((v, k) => (searchRecord[k] = parseSearchFragment(v)))
+  const filters: unknown[] = []
+  urlSearchParams.forEach((v, k) => {
+    if (k !== 'f') {
+      searchRecord[k] = parseSearchFragment(v)
+      return
+    }
+    const parsedFilter = v.split(',').map(parseSearchFragment)
+    const [operator, dimension, ...clauses] = parsedFilter as Array<unknown>
+    filters.push([operator, dimension, clauses])
+  })
+  if (filters.length) {
+    return {
+      ...searchRecord,
+      filters
+    }
+  }
   return searchRecord
 }

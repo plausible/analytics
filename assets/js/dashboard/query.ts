@@ -154,6 +154,25 @@ export function filtersBackwardsCompatibilityRedirect(
   }
 }
 
+// Called once when dashboard is loaded load. Checks whether old filter style is used and if so,
+// updates the filters and updates location
+export function filtersBackwardsCompatibilityRedirect2(
+  windowLocation: Location,
+  windowHistory: History
+) {
+  const searchRecord = parseSearch(windowLocation.search)
+  const getValue = (k: string) => searchRecord[k]
+
+  if (getValue('filters')) {
+    windowHistory.pushState(
+      {},
+      '',
+      `${windowLocation.pathname}${stringifySearch(searchRecord)}`
+    )
+  }
+}
+
+
 // Returns a boolean indicating whether the given query includes a
 // non-empty goal filterset containing a single, or multiple revenue
 // goals with the same currency. Used to decide whether to render
