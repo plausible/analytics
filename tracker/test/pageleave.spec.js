@@ -1,7 +1,7 @@
 /* eslint-disable playwright/expect-expect */
 /* eslint-disable playwright/no-skipped-test */
 const { clickPageElementAndExpectEventRequests, mockRequest } = require('./support/test-utils')
-const { test, expect } = require('@playwright/test');
+const { test } = require('@playwright/test');
 const { LOCAL_SERVER_ADDR } = require('./support/server');
 
 test.describe('pageleave extension', () => {
