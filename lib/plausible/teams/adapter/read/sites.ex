@@ -161,7 +161,8 @@ defmodule Plausible.Teams.Adapter.Read.Sites do
           select: %Plausible.Auth.Invitation{
             invitation_id: gi.invitation_id,
             email: ti.email,
-              role: fragment(
+            role:
+              fragment(
                 """
                 CASE
                 WHEN ? = 'editor' THEN 'admin'
