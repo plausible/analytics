@@ -1,1 +1,1 @@
-TRUNCATE TABLE IF EXISTS location_data <%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+TRUNCATE TABLE IF EXISTS location_data SETTINGS alter_sync=2
