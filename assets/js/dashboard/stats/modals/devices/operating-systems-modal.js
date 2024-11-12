@@ -29,7 +29,7 @@ function OperatingSystemsModal() {
   }, [reportInfo.dimension])
 
   const addSearchFilter = useCallback((query, searchString) => {
-    return addFilter(query, ['contains', reportInfo.dimension, [searchString]])
+    return addFilter(query, ['icontains', reportInfo.dimension, [searchString]])
   }, [reportInfo.dimension])
 
   const renderIcon = useCallback((listItem) => osIconFor(listItem.name), [])
