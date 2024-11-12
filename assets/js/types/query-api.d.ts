@@ -76,7 +76,7 @@ export type FilterWithoutGoals = [
 /**
  * filter operation
  */
-export type FilterOperationWithoutGoals = "is_not" | "contains_not" | "matches" | "matches_not";
+export type FilterOperationWithoutGoals = "is_not" | "contains_not" | "icontains_not" | "matches" | "matches_not";
 export type Clauses = (string | number)[];
 /**
  * @minItems 3
@@ -90,7 +90,7 @@ export type FilterWithGoals = [
 /**
  * filter operation
  */
-export type FilterOperationWithGoals = "is" | "contains";
+export type FilterOperationWithGoals = "is" | "contains" | "icontains";
 /**
  * @minItems 2
  * @maxItems 2
