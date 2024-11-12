@@ -16,13 +16,17 @@ jobs:
       id: changes
       with:
         list-files: json
+        predicate-quantifier: 'every'
         filters: |
           lib:
             - 'lib/**'
+            - '!lib/plausible/data_migration/**'
+          extra:
             - 'extra/**'
+          config:
             - 'config/**'
 
-    - if: steps.changes.outputs.lib == 'true'
+    - if: steps.changes.outputs.lib == 'true' || steps.changes.outputs.extra == 'true' || steps.changes.outputs.config == 'true'
       run: |
         echo "::error file=${{ fromJSON(steps.changes.outputs.lib_files)[0] }}::Code and migrations shouldn't be changed at the same time"
         exit 1
