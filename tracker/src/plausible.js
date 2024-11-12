@@ -48,23 +48,20 @@
   // flag prevents sending multiple pageleaves in those cases.
   var pageLeaveSending = false
 
-  var bodyEl = document.body
-  var docEl = document.documentElement
-
   function getDocumentHeight() {
     return Math.max(
-      bodyEl.scrollHeight || 0,
-      bodyEl.offsetHeight || 0,
-      bodyEl.clientHeight || 0,
-      docEl.scrollHeight || 0,
-      docEl.offsetHeight || 0,
-      docEl.clientHeight || 0
+      document.body.scrollHeight || 0,
+      document.body.offsetHeight || 0,
+      document.body.clientHeight || 0,
+      document.documentElement.scrollHeight || 0,
+      document.documentElement.offsetHeight || 0,
+      document.documentElement.clientHeight || 0
     )
   }
 
   function getCurrentScrollDepthPx() {
-    var viewportHeight = window.innerHeight || docEl.clientHeight || 0
-    var scrollTop = window.scrollY || docEl.scrollTop || bodyEl.scrollTop || 0
+    var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0
+    var scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
 
     return currentDocumentHeight <= viewportHeight ? currentDocumentHeight : scrollTop + viewportHeight
   }
