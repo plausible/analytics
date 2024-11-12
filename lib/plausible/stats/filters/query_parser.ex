@@ -105,6 +105,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_operator(["matches_wildcard_not" | _rest]), do: {:ok, :matches_wildcard_not}
   defp parse_operator(["contains" | _rest]), do: {:ok, :contains}
   defp parse_operator(["contains_not" | _rest]), do: {:ok, :contains_not}
+  defp parse_operator(["icontains" | _rest]), do: {:ok, :icontains}
+  defp parse_operator(["icontains_not" | _rest]), do: {:ok, :icontains_not}
   defp parse_operator(["not" | _rest]), do: {:ok, :not}
   defp parse_operator(["and" | _rest]), do: {:ok, :and}
   defp parse_operator(["or" | _rest]), do: {:ok, :or}
@@ -132,7 +134,9 @@ defmodule Plausible.Stats.Filters.QueryParser do
               :matches_wildcard,
               :matches_wildcard_not,
               :contains,
-              :contains_not
+              :contains_not,
+              :icontains,
+              :icontains_not
             ],
        do: parse_clauses_list(filter)
 

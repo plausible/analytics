@@ -339,12 +339,12 @@
     },
     "filter_operation_without_goals": {
       "type": "string",
-      "enum": ["is_not", "contains_not", "matches", "matches_not"],
+      "enum": ["is_not", "contains_not", "icontains_not", "matches", "matches_not"],
       "description": "filter operation"
     },
     "filter_operation_with_goals": {
       "type": "string",
-      "enum": ["is", "contains"],
+      "enum": ["is", "contains", "icontains"],
       "description": "filter operation"
     },
     "filter_without_goals": {

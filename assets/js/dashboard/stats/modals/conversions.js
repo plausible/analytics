@@ -28,7 +28,7 @@ function ConversionsModal() {
   }, [reportInfo.dimension])
 
   const addSearchFilter = useCallback((query, searchString) => {
-    return addFilter(query, ['contains', reportInfo.dimension, [searchString]])
+    return addFilter(query, ['icontains', reportInfo.dimension, [searchString]])
   }, [reportInfo.dimension])
 
   function chooseMetrics() {

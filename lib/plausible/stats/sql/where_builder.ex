@@ -226,12 +226,36 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
+  defp filter_custom_prop(prop_name, column_name, [:icontains, _dimension, clauses]) do
+    dynamic(
+      [t],
+      has_key(t, column_name, ^prop_name) and
+        fragment(
+          "multiSearchAnyCaseInsensitive(?, ?)",
+          get_by_key(t, column_name, ^prop_name),
+          ^clauses
+        )
+    )
+  end
+
   defp filter_custom_prop(prop_name, column_name, [:contains_not, _dimension, clauses]) do
     dynamic(
       [t],
       has_key(t, column_name, ^prop_name) and
         fragment(
           "not(multiSearchAny(?, ?))",
+          get_by_key(t, column_name, ^prop_name),
+          ^clauses
+        )
+    )
+  end
+
+  defp filter_custom_prop(prop_name, column_name, [:icontains_not, _dimension, clauses]) do
+    dynamic(
+      [t],
+      has_key(t, column_name, ^prop_name) and
+        fragment(
+          "not(multiSearchAnyCaseInsensitive(?, ?))",
           get_by_key(t, column_name, ^prop_name),
           ^clauses
         )
@@ -252,11 +276,33 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   end
 
   defp filter_field(db_field, [:contains, _dimension, values]) do
-    dynamic([x], fragment("multiSearchAny(?, ?)", type(field(x, ^db_field), :string), ^values))
+    dynamic(
+      [x],
+      fragment(
+        "multiSearchAny(?, ?)",
+        type(field(x, ^db_field), :string),
+        ^values
+      )
+    )
+  end
+
+  defp filter_field(db_field, [:icontains, _dimension, values]) do
+    dynamic(
+      [x],
+      fragment(
+        "multiSearchAnyCaseInsensitive(?, ?)",
+        type(field(x, ^db_field), :string),
+        ^values
+      )
+    )
   end
 
   defp filter_field(db_field, [:contains_not, dimension, clauses]) do
     dynamic([], not (^filter_field(db_field, [:contains, dimension, clauses])))
+  end
+
+  defp filter_field(db_field, [:icontains_not, dimension, clauses]) do
+    dynamic([], not (^filter_field(db_field, [:icontains, dimension, clauses])))
   end
 
   defp filter_field(db_field, [:matches, _dimension, clauses]) do

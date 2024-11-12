@@ -32,7 +32,7 @@ function LocationsModal({ currentView }) {
   }, [reportInfo.dimension])
 
   const addSearchFilter = useCallback((query, searchString) => {
-    return addFilter(query, ['contains', `${reportInfo.dimension}_name`, [searchString]])
+    return addFilter(query, ['icontains', `${reportInfo.dimension}_name`, [searchString]])
   }, [reportInfo.dimension])
 
   function chooseMetrics() {
