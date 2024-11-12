@@ -88,7 +88,7 @@ defmodule Plausible.TestUtils do
 
         Factory.build(:pageview, pageview)
         |> Map.from_struct()
-        |> Map.delete(:__meta__)
+        |> Map.drop([:__meta__, :acquisition_channel])
         |> update_in([:timestamp], &to_naive_truncate/1)
       end)
 

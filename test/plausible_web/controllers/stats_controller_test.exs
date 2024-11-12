@@ -694,8 +694,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         country_code: "EE",
         subdivision1_code: "EE-37",
         city_geoname_id: 588_409,
-        referrer_source: "Google",
-        channel: "Organic Search"
+        referrer_source: "Google"
       ),
       build(:pageview,
         user_id: 123,
@@ -705,8 +704,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         country_code: "EE",
         subdivision1_code: "EE-37",
         city_geoname_id: 588_409,
-        referrer_source: "Google",
-        channel: "Organic Search"
+        referrer_source: "Google"
       ),
       build(:pageview,
         pathname: "/",
@@ -717,7 +715,6 @@ defmodule PlausibleWeb.StatsControllerTest do
         utm_source: "google",
         utm_content: "content",
         utm_term: "term",
-        channel: "Paid Search",
         browser: "Firefox",
         browser_version: "120",
         operating_system: "Mac",
@@ -738,7 +735,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         utm_campaign: "ads",
         country_code: "EE",
         referrer_source: "Google",
-        channel: "Paid Search",
+        click_id_param: "gclid",
         browser: "FirefoxNoVersion",
         operating_system: "MacNoVersion"
       ),

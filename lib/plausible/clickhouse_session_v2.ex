@@ -58,7 +58,6 @@ defmodule Plausible.ClickhouseSessionV2 do
     field :utm_term, :string
     field :referrer, :string
     field :referrer_source, :string
-    field :channel, Ch, type: "LowCardinality(String)"
     field :click_id_param, Ch, type: "LowCardinality(String)"
 
     field :country_code, Ch, type: "LowCardinality(FixedString(2))"
@@ -74,6 +73,8 @@ defmodule Plausible.ClickhouseSessionV2 do
     field :timestamp, :naive_datetime
 
     field :transferred_from, :string
+
+    field :acquisition_channel, Ch, type: "LowCardinality(String)", writable: :never
   end
 
   def random_uint64() do

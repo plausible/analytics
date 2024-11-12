@@ -728,7 +728,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     test "can filter by channel", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          channel: "Organic Search",
+          referrer_source: "Bing",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
