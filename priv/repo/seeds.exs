@@ -169,55 +169,62 @@ geolocations = [
   []
 ]
 
-sources = ["", "Facebook", "Twitter", "DuckDuckGo", "Google"]
+sources = [
+  "",
+  "Facebook",
+  "Twitter",
+  "DuckDuckGo",
+  "Google",
+  "opensource.com",
+  "indiehackers.com"
+]
 
 utm_medium = %{
   "" => ["email", ""],
-  "Facebook" => ["social"],
+  "Google" => ["cpc", ""],
+  "Facebook" => ["social", "cpc"],
   "Twitter" => ["social"]
 }
+
+random_path = fn ->
+  Enum.random(long_random_paths)
+end
+
+random_event_data = fn date, index ->
+  geolocation = Enum.random(geolocations)
+  referrer_source = Enum.random(sources)
+
+  [
+    site_id: site.id,
+    hostname: Enum.random(["en.dummy.site", "es.dummy.site", "dummy.site"]),
+    timestamp: put_random_time.(date, index),
+    referrer_source: referrer_source,
+    browser: Enum.random(["Microsoft Edge", "Chrome", "curl", "Safari", "Firefox", "Vivaldi"]),
+    browser_version: to_string(Enum.random(0..50)),
+    screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
+    operating_system: Enum.random(["Windows", "Mac", "GNU/Linux"]),
+    operating_system_version: to_string(Enum.random(0..15)),
+    utm_medium: Enum.random(Map.get(utm_medium, referrer_source, [""])),
+    utm_source: String.downcase(referrer_source),
+    utm_campaign: Enum.random(["", "Referral", "Advertisement", "Email"]),
+    pathname: random_path.(),
+    user_id: Enum.random(1..1200),
+    "meta.key": ["url", "logged_in", "is_customer", "amount"],
+    "meta.value": [
+      Enum.random(long_random_urls),
+      Enum.random(["true", "false"]),
+      Enum.random(["true", "false"]),
+      to_string(Enum.random(1..9000))
+    ]
+  ]
+  |> Keyword.merge(geolocation)
+end
 
 native_stats_range
 |> Enum.with_index()
 |> Enum.flat_map(fn {date, index} ->
   Enum.map(0..Enum.random(1..500), fn _ ->
-    geolocation = Enum.random(geolocations)
-
-    referrer_source = Enum.random(sources)
-
-    [
-      site_id: site.id,
-      hostname: Enum.random(["en.dummy.site", "es.dummy.site", "dummy.site"]),
-      timestamp: put_random_time.(date, index),
-      referrer_source: referrer_source,
-      browser: Enum.random(["Microsoft Edge", "Chrome", "curl", "Safari", "Firefox", "Vivaldi"]),
-      browser_version: to_string(Enum.random(0..50)),
-      screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
-      operating_system: Enum.random(["Windows", "Mac", "GNU/Linux"]),
-      operating_system_version: to_string(Enum.random(0..15)),
-      utm_medium: Enum.random(Map.get(utm_medium, referrer_source, [""])),
-      utm_source: String.downcase(referrer_source),
-      utm_campaign: Enum.random(["", "Referral", "Advertisement", "Email"]),
-      pathname:
-        Enum.random([
-          "/",
-          "/login",
-          "/settings",
-          "/register",
-          "/docs",
-          "/docs/1",
-          "/docs/2" | long_random_paths
-        ]),
-      user_id: Enum.random(1..1200),
-      "meta.key": ["url", "logged_in", "is_customer", "amount"],
-      "meta.value": [
-        Enum.random(long_random_urls),
-        Enum.random(["true", "false"]),
-        Enum.random(["true", "false"]),
-        to_string(Enum.random(1..9000))
-      ]
-    ]
-    |> Keyword.merge(geolocation)
+    random_event_data.(date, index)
     |> then(&Plausible.Factory.build(:pageview, &1))
   end)
 end)
@@ -228,7 +235,6 @@ native_stats_range
 |> Enum.flat_map(fn {date, index} ->
   Enum.map(0..Enum.random(1..50), fn _ ->
     geolocation = Enum.random(geolocations)
-
     referrer_source = Enum.random(sources)
 
     [
@@ -236,7 +242,7 @@ native_stats_range
       site_id: site.id,
       hostname: Enum.random(["en.dummy.site", "es.dummy.site", "dummy.site"]),
       timestamp: put_random_time.(date, index),
-      referrer_source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
+      referrer_source: referrer_source,
       browser: Enum.random(["Microsoft Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
       browser_version: to_string(Enum.random(0..50)),
       screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
@@ -276,7 +282,6 @@ native_stats_range
 |> Enum.flat_map(fn {date, index} ->
   Enum.map(0..Enum.random(1..50), fn _ ->
     geolocation = Enum.random(geolocations)
-
     referrer_source = Enum.random(sources)
 
     [
@@ -320,29 +325,32 @@ site_import =
 
 imported_stats_range
 |> Enum.flat_map(fn date ->
-  Enum.flat_map(0..Enum.random(1..500), fn _ ->
+  Enum.flat_map(0..Enum.random(1..50), fn _ ->
     [
       Plausible.Factory.build(:imported_visitors,
         date: date,
-        pageviews: Enum.random(1..20),
-        visitors: Enum.random(1..20),
-        bounces: Enum.random(1..20),
-        visits: Enum.random(1..200),
+        pageviews: Enum.random(1..50),
+        visitors: Enum.random(1..10),
+        bounces: Enum.random(1..6),
+        visits: Enum.random(1..15),
         visit_duration: Enum.random(1000..10000)
       ),
       Plausible.Factory.build(:imported_sources,
         date: date,
         source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
-        visitors: Enum.random(1..20),
-        visits: Enum.random(1..200),
-        bounces: Enum.random(1..20),
+        pageviews: Enum.random(1..50),
+        visitors: Enum.random(1..10),
+        bounces: Enum.random(1..6),
+        visits: Enum.random(1..15),
         visit_duration: Enum.random(1000..10000)
       ),
       Plausible.Factory.build(:imported_pages,
         date: date,
-        visitors: Enum.random(1..20),
-        pageviews: Enum.random(1..20),
-        exits: Enum.random(1..20),
+        page: random_path.(),
+        visitors: Enum.random(1..10),
+        visits: Enum.random(1..15),
+        pageviews: Enum.random(1..50),
+        exits: Enum.random(1..10),
         time_on_page: Enum.random(1000..10000)
       )
     ]
