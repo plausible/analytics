@@ -381,6 +381,24 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
                 "totalUsers" => "1",
                 "screenPageViews" => "1"
               }
+            },
+            %{
+              dimensions: %{
+                "sessionManualAdContent" => "",
+                "sessionCampaignName" => "",
+                "date" => "20210101",
+                "sessionGoogleAdsKeyword" => "",
+                "sessionMedium" => "(none)",
+                "sessionSource" => "(direct)",
+                "sessionDefaultChannelGroup" => ""
+              },
+              metrics: %{
+                "bounces" => "1",
+                "userEngagementDuration" => "60",
+                "sessions" => "1",
+                "totalUsers" => "1",
+                "screenPageViews" => "1"
+              }
             }
           ],
           site.id,
@@ -398,6 +416,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
           |> Enum.sort()
 
         assert results == [
+                 %{"name" => "(not set)", "visitors" => 1},
                  %{"name" => "Direct", "visitors" => 2},
                  %{"name" => "Organic Search", "visitors" => 3},
                  %{"name" => "Paid Search", "visitors" => 2}
