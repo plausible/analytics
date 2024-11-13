@@ -207,11 +207,11 @@ CREATE OR REPLACE FUNCTION acquisition_channel_lowered <%= @on_cluster_statement
 (referrer_source, utm_medium, utm_campaign, utm_source, click_id_param) ->
     multiIf(
         acquisition_channel_cross_network(utm_campaign), 'Cross-network',
+        acquisition_channel_display(utm_medium), 'Display',
         acquisition_channel_paid_shopping(referrer_source, utm_medium, utm_campaign), 'Paid Shopping',
         acquisition_channel_paid_search(referrer_source, utm_medium, utm_source, click_id_param), 'Paid Search',
         acquisition_channel_paid_social(referrer_source, utm_medium, utm_source), 'Paid Social',
         acquisition_channel_paid_video(referrer_source, utm_medium, utm_source), 'Paid Video',
-        acquisition_channel_display(utm_medium), 'Display',
         acquisition_channel_paid_medium(utm_medium), 'Paid Other',
         acquisition_channel_organic_shopping(referrer_source, utm_campaign), 'Organic Shopping',
         acquisition_channel_organic_social(referrer_source, utm_medium), 'Organic Social',
