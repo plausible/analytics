@@ -60,25 +60,12 @@ defmodule Plausible.Teams.Test do
     role = Keyword.fetch!(args, :role)
     team = Repo.preload(site, :team).team
 
-    site_membership =
-      insert(:site_membership, user: user, role: translate_role_to_old_model(role), site: site)
+    insert(:site_membership, user: user, role: translate_role_to_old_model(role), site: site)
 
     team_membership = insert(:team_membership, team: team, user: user, role: :guest)
+    insert(:guest_membership, team_membership: team_membership, site: site, role: role)
 
-    guest_membership =
-      insert(:guest_membership, team_membership: team_membership, site: site, role: role)
-
-    user =
-      user
-      |> Repo.reload!()
-      |> Repo.preload([:site_memberships, team_memberships: :guest_memberships])
-
-    %{
-      user: user,
-      site_membership: site_membership,
-      guest_membership: guest_membership,
-      team_membership: team_membership
-    }
+    user |> Repo.preload([:site_memberships, :team_memberships])
   end
 
   def invite_guest(site, invitee_or_email, args \\ []) when not is_nil(invitee_or_email) do

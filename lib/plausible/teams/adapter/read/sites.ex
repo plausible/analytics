@@ -123,7 +123,6 @@ defmodule Plausible.Teams.Adapter.Read.Sites do
           where: tm.team_id == ^site.team_id,
           where: tm.role == :owner,
           select: %Plausible.Site.Membership{
-            id: 0,
             user_id: tm.user_id,
             role: tm.role
           }
@@ -136,7 +135,6 @@ defmodule Plausible.Teams.Adapter.Read.Sites do
           inner_join: tm in assoc(gm, :team_membership),
           where: gm.site_id == ^site.id,
           select: %Plausible.Site.Membership{
-            id: gm.id,
             user_id: tm.user_id,
             role:
               fragment(

@@ -289,21 +289,16 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
   end
 
   describe "PUT /sites/memberships/:id/role/:new_role" do
-    test "updates a site member's role", %{conn: conn, user: user} do
+    test "updates a site member's role by user id", %{conn: conn, user: user} do
       site = new_site(owner: user)
       collaborator = add_guest(site, role: :editor)
-      %{site_membership: %{id: sm_id}, guest_membership: %{id: gm_id}} = collaborator
-      assert_team_membership(collaborator.user, site.team, :editor)
+      assert_team_membership(collaborator, site.team, :editor)
 
-      if Plausible.Teams.read_team_schemas?(user) do
-        put(conn, "/sites/#{site.domain}/memberships/#{gm_id}/role/viewer")
-      else
-        put(conn, "/sites/#{site.domain}/memberships/#{sm_id}/role/viewer")
-      end
+      put(conn, "/sites/#{site.domain}/memberships/u/#{collaborator.id}/role/viewer")
 
-      assert_team_membership(collaborator.user, site.team, :viewer)
+      assert_team_membership(collaborator, site.team, :viewer)
 
-      old_model_membership = Repo.get_by(Plausible.Site.Membership, user_id: collaborator.user.id)
+      old_model_membership = Repo.get_by(Plausible.Site.Membership, user_id: collaborator.id)
       assert old_model_membership.role == :viewer
     end
 
@@ -326,14 +321,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       guest_membership =
         insert(:guest_membership, team_membership: team_membership, site: site, role: :editor)
 
-      if Plausible.Teams.read_team_schemas?(user) do
-        put(conn, "/sites/#{site.domain}/memberships/#{guest_membership.id}/role/viewer")
-      else
-        put(
-          conn,
-          "/sites/#{site.domain}/memberships/#{Enum.at(site.memberships, 1).id}/role/viewer"
-        )
-      end
+      put(conn, "/sites/#{site.domain}/memberships/u/#{admin.id}/role/viewer")
 
       assert Repo.reload!(guest_membership).role == :viewer
     end
@@ -342,18 +330,13 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       conn: conn,
       user: user
     } do
-      site = new_site()
-      collaborator = add_guest(site, role: :editor, user: user)
-      %{site_membership: %{id: sm_id}, guest_membership: %{id: gm_id}} = collaborator
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :admin)])
 
-      conn =
-        if Plausible.Teams.read_team_schemas?(user) do
-          put(conn, "/sites/#{site.domain}/memberships/#{gm_id}/role/viewer")
-        else
-          put(conn, "/sites/#{site.domain}/memberships/#{sm_id}/role/viewer")
-        end
+      conn = put(conn, "/sites/#{site.domain}/memberships/u/#{user.id}/role/viewer")
 
-      assert_team_membership(collaborator.user, site.team, :viewer)
+      membership = Repo.get_by(Plausible.Site.Membership, user_id: user.id)
+
+      assert membership.role == :viewer
       assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}"
     end
 
@@ -363,14 +346,8 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     } do
       site = new_site()
       admin = add_guest(site, user: user, role: :editor)
-      %{site_membership: %{id: sm_id}, guest_membership: %{id: gm_id}} = admin
 
-      conn =
-        if Plausible.Teams.read_team_schemas?(user) do
-          put(conn, "/sites/#{site.domain}/memberships/#{gm_id}/role/owner")
-        else
-          put(conn, "/sites/#{site.domain}/memberships/#{sm_id}/role/owner")
-        end
+      conn = put(conn, "/sites/#{site.domain}/memberships/u/#{admin.id}/role/owner")
 
       assert_team_membership(user, site.team, :editor)
 
@@ -382,24 +359,16 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       conn: conn,
       user: user
     } do
-      # In normal circumstances, there is no guest_membership for the owner,
-      # so the user won't be able to downgrade themselves
-      if not Plausible.Teams.read_team_schemas?(user) do
-        site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
 
-        conn =
-          put(
-            conn,
-            "/sites/#{site.domain}/memberships/#{List.first(site.memberships).id}/role/admin"
-          )
+      conn = put(conn, "/sites/#{site.domain}/memberships/u/#{user.id}/role/admin")
 
-        membership = Repo.get_by(Plausible.Site.Membership, user_id: user.id)
+      membership = Repo.get_by(Plausible.Site.Membership, user_id: user.id)
 
-        assert membership.role == :owner
+      assert membership.role == :owner
 
-        assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
-                 "You are not allowed to grant the admin role"
-      end
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "You are not allowed to grant the admin role"
     end
 
     test "admin can make another user admin", %{
@@ -410,30 +379,18 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       add_guest(site, user: user, role: :editor)
       viewer = add_guest(site, user: new_user(), role: :viewer)
-      %{site_membership: %{id: sm_id}, guest_membership: %{id: gm_id}} = viewer
 
-      conn =
-        if Plausible.Teams.read_team_schemas?(user) do
-          put(conn, "/sites/#{site.domain}/memberships/#{gm_id}/role/admin")
-        else
-          put(conn, "/sites/#{site.domain}/memberships/#{sm_id}/role/admin")
-        end
+      conn = put(conn, "/sites/#{site.domain}/memberships/u/#{viewer.id}/role/admin")
 
-      assert_team_membership(viewer.user, site.team, :editor)
+      assert_team_membership(viewer, site.team, :editor)
       assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}/settings/people"
     end
 
     test "admin can't make themselves an owner", %{conn: conn, user: user} do
       site = new_site()
-      admin = add_guest(site, user: user, role: :editor)
-      %{site_membership: %{id: sm_id}, guest_membership: %{id: gm_id}} = admin
+      add_guest(site, user: user, role: :editor)
 
-      conn =
-        if Plausible.Teams.read_team_schemas?(user) do
-          put(conn, "/sites/#{site.domain}/memberships/#{gm_id}/role/owner")
-        else
-          put(conn, "/sites/#{site.domain}/memberships/#{sm_id}/role/owner")
-        end
+      conn = put(conn, "/sites/#{site.domain}/memberships/u/#{user.id}/role/owner")
 
       assert_team_membership(user, site.team, :editor)
 
@@ -443,41 +400,40 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
   end
 
   describe "DELETE /sites/:domain/memberships/:id" do
-    test "removes a member from a site", %{conn: conn, user: user} do
+    test "removes a member from a site by user id", %{conn: conn, user: user} do
       site = new_site(owner: user)
       admin = add_guest(site, role: :editor)
-      %{site_membership: %{id: sm_id}, guest_membership: %{id: gm_id}} = admin
 
-      conn =
-        if Plausible.Teams.read_team_schemas?(user) do
-          delete(conn, "/sites/#{site.domain}/memberships/#{gm_id}")
-        else
-          delete(conn, "/sites/#{site.domain}/memberships/#{sm_id}")
-        end
-
+      conn = delete(conn, "/sites/#{site.domain}/memberships/u/#{admin.id}")
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "has been removed"
 
-      refute Repo.reload(admin.site_membership)
-      refute Repo.reload(admin.guest_membership)
-      refute Repo.reload(admin.team_membership)
+      refute Repo.exists?(from sm in Plausible.Site.Membership, where: sm.user_id == ^admin.id)
     end
 
     @tag :teams
     test "syncs member removal to team", %{conn: conn, user: user} do
-      site = new_site(owner: user)
-      admin = add_guest(site, role: :editor)
+      admin = insert(:user)
 
-      conn =
-        if Plausible.Teams.read_team_schemas?(user) do
-          delete(conn, "/sites/#{site.domain}/memberships/#{admin.guest_membership.id}")
-        else
-          delete(conn, "/sites/#{site.domain}/memberships/#{admin.site_membership.id}")
-        end
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner),
+            build(:site_membership, user: admin, role: :admin)
+          ]
+        )
+        |> Plausible.Teams.load_for_site()
 
+      team_membership =
+        insert(:team_membership, user: admin, team: site.team, role: :guest)
+
+      guest_membership =
+        insert(:guest_membership, team_membership: team_membership, site: site, role: :editor)
+
+      conn = delete(conn, "/sites/#{site.domain}/memberships/u/#{admin.id}")
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "has been removed"
 
-      refute Repo.reload(admin.guest_membership)
-      refute Repo.reload(admin.team_membership)
+      refute Repo.reload(guest_membership)
+      refute Repo.reload(team_membership)
     end
 
     @tag :teams
@@ -485,85 +441,84 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       conn: conn,
       user: user
     } do
-      if not Plausible.Teams.read_team_schemas?(user) do
-        admin = insert(:user)
+      admin = insert(:user)
 
-        site =
-          insert(:site,
-            memberships: [
-              build(:site_membership, user: user, role: :owner),
-              build(:site_membership, user: admin, role: :admin)
-            ]
-          )
-          |> Plausible.Teams.load_for_site()
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner),
+            build(:site_membership, user: admin, role: :admin)
+          ]
+        )
+        |> Plausible.Teams.load_for_site()
 
-        another_site =
-          insert(:site,
-            team: site.team,
-            memberships: [
-              build(:site_membership, user: user, role: :owner),
-              build(:site_membership, user: admin, role: :admin)
-            ]
-          )
-          |> Plausible.Teams.load_for_site()
+      another_site =
+        insert(:site,
+          team: site.team,
+          memberships: [
+            build(:site_membership, user: user, role: :owner),
+            build(:site_membership, user: admin, role: :admin)
+          ]
+        )
+        |> Plausible.Teams.load_for_site()
 
-        team_membership =
-          insert(:team_membership, user: admin, team: site.team, role: :guest)
+      team_membership =
+        insert(:team_membership, user: admin, team: site.team, role: :guest)
 
-        guest_membership =
-          insert(:guest_membership, team_membership: team_membership, site: site, role: :editor)
+      guest_membership =
+        insert(:guest_membership, team_membership: team_membership, site: site, role: :editor)
 
-        another_guest_membership =
-          insert(:guest_membership,
-            team_membership: team_membership,
-            site: another_site,
-            role: :editor
-          )
+      another_guest_membership =
+        insert(:guest_membership,
+          team_membership: team_membership,
+          site: another_site,
+          role: :editor
+        )
 
-        conn =
-          delete(conn, "/sites/#{site.domain}/memberships/#{Enum.at(site.memberships, 1).id}")
+      conn = delete(conn, "/sites/#{site.domain}/memberships/u/#{admin.id}")
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "has been removed"
 
-        assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "has been removed"
-
-        refute Repo.reload(guest_membership)
-        assert Repo.reload(another_guest_membership)
-        assert Repo.reload(team_membership)
-      end
+      refute Repo.reload(guest_membership)
+      assert Repo.reload(another_guest_membership)
+      assert Repo.reload(team_membership)
     end
 
     test "fails to remove a member from a foreign site", %{conn: conn, user: user} do
-      foreign_site = new_site()
-      foreign_admin = add_guest(foreign_site, role: :editor)
+      foreign_site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: build(:user), role: :admin)
+          ]
+        )
 
-      site = new_site(owner: user)
+      [foreign_membership] = foreign_site.memberships
 
-      conn =
-        if Plausible.Teams.read_team_schemas?(user) do
-          delete(conn, "/sites/#{site.domain}/memberships/#{foreign_admin.guest_membership.id}")
-        else
-          delete(conn, "/sites/#{site.domain}/memberships/#{foreign_admin.site_membership.id}")
-        end
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :owner)
+          ]
+        )
+
+      conn = delete(conn, "/sites/#{site.domain}/memberships/u/#{foreign_membership.user_id}")
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
                "Failed to find membership to remove"
 
-      assert Repo.reload(foreign_admin.site_membership)
-      assert Repo.reload(foreign_admin.guest_membership)
+      assert Repo.exists?(
+               from sm in Plausible.Site.Membership,
+                 where: sm.user_id == ^foreign_membership.user.id
+             )
     end
 
     test "notifies the user who has been removed via email", %{conn: conn, user: user} do
       site = new_site()
       admin = add_guest(site, user: user, role: :editor)
-      %{site_membership: %{id: sm_id}, guest_membership: %{id: gm_id}} = admin
 
-      if Plausible.Teams.read_team_schemas?(user) do
-        delete(conn, "/sites/#{site.domain}/memberships/#{gm_id}")
-      else
-        delete(conn, "/sites/#{site.domain}/memberships/#{sm_id}")
-      end
+      delete(conn, "/sites/#{site.domain}/memberships/u/#{admin.id}")
 
       assert_email_delivered_with(
-        to: [nil: admin.user.email],
+        to: [nil: admin.email],
         subject: @subject_prefix <> "Your access to #{site.domain} has been revoked"
       )
     end

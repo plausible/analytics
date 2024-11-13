@@ -15,7 +15,7 @@
     <div class="flow-root">
       <ul class="divide-y divide-gray-200 dark:divide-gray-400">
         <%= for membership <- @memberships do %>
-          <li class="py-4" id={"membership-#{membership.id}"}>
+          <li class="py-4" id={"membership-#{membership.user_id}"}>
             <div class="flex items-center space-x-4">
               <div class="flex-shrink-0">
                 <img
@@ -124,9 +124,9 @@
                       href={
                         Routes.membership_path(
                           @conn,
-                          :update_role,
+                          :update_role_by_user,
                           @site.domain,
-                          membership.id,
+                          membership.user.id,
                           "admin"
                         )
                       }
@@ -164,9 +164,9 @@
                       href={
                         Routes.membership_path(
                           @conn,
-                          :update_role,
+                          :update_role_by_user,
                           @site.domain,
-                          membership.id,
+                          membership.user.id,
                           "viewer"
                         )
                       }
@@ -205,9 +205,9 @@
                       href={
                         Routes.membership_path(
                           @conn,
-                          :remove_member,
+                          :remove_member_by_user,
                           @site.domain,
-                          membership.id
+                          membership.user.id
                         )
                       }
                       method="delete"
