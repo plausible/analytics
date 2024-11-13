@@ -1142,6 +1142,31 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
                  %{"value" => "Bing", "label" => "Bing"}
                ]
       end
+
+      test "merges channel suggestions from native and imported data #{label}", %{
+        conn: conn,
+        site: site,
+        site_import: site_import
+      } do
+        populate_stats(site, site_import.id, [
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], referrer_source: "Bing"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:30:01], referrer_source: "Bing"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:40:01], referrer_source: "Bing"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], referrer_source: "Google"),
+          build(:imported_sources, date: ~D[2019-01-01], channel: "Organic Social", pageviews: 3)
+        ])
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/suggestions/channel?period=month&date=2019-01-01&q=#{unquote(q)}&with_imported=true"
+          )
+
+        assert json_response(conn, 200) == [
+                 %{"value" => "Organic Search", "label" => "Organic Search"},
+                 %{"value" => "Organic Social", "label" => "Organic Social"}
+               ]
+      end
     end
 
     for {q, label} <- [{"", "without filter"}, {"o", "with filter"}] do
