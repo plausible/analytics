@@ -451,11 +451,11 @@ defmodule PlausibleWeb.Router do
     get "/sites/:domain/transfer-ownership", Site.MembershipController, :transfer_ownership_form
     post "/sites/:domain/transfer-ownership", Site.MembershipController, :transfer_ownership
 
-    put "/sites/:domain/memberships/u/:id/role/:new_role",
+    put "/sites/:domain/memberships/:membership_id/role/:new_role",
         Site.MembershipController,
-        :update_role_by_user
+        :update_role
 
-    delete "/sites/:domain/memberships/u/:id", Site.MembershipController, :remove_member_by_user
+    delete "/sites/:domain/memberships/:membership_id", Site.MembershipController, :remove_member
 
     get "/sites/:domain/weekly-report/unsubscribe", UnsubscribeController, :weekly_report
     get "/sites/:domain/monthly-report/unsubscribe", UnsubscribeController, :monthly_report

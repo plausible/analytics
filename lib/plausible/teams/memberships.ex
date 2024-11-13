@@ -114,6 +114,16 @@ defmodule Plausible.Teams.Memberships do
     :ok
   end
 
+  def get_guest_membership(id) do
+    query =
+      from gm in Teams.GuestMembership,
+        inner_join: tm in assoc(gm, :team_membership),
+        where: gm.id == ^id,
+        preload: [team_membership: tm]
+
+    Repo.one(query)
+  end
+
   defp get_guest_membership(site_id, user_id) do
     query =
       from(

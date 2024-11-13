@@ -526,19 +526,34 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/people")
       resp = html_response(conn, 200)
 
-      owner_row =
-        text_of_element(resp, "#membership-#{user.id}")
+      {owner_row, editor_row, viewer_row} =
+        if Plausible.Teams.read_team_schemas?(user) do
+          {
+            text_of_element(resp, "#membership-0"),
+            text_of_element(resp, "#membership-#{editor.guest_membership.id}"),
+            text_of_element(resp, "#membership-#{viewer.guest_membership.id}")
+          }
+        else
+          owner_membership =
+            user
+            |> Repo.preload(:site_memberships)
+            |> Map.fetch!(:site_memberships)
+            |> Enum.at(1)
 
-      editor_row = text_of_element(resp, "#membership-#{editor.id}")
-      viewer_row = text_of_element(resp, "#membership-#{viewer.id}")
+          {
+            text_of_element(resp, "#membership-#{owner_membership.id}"),
+            text_of_element(resp, "#membership-#{editor.site_membership.id}"),
+            text_of_element(resp, "#membership-#{viewer.site_membership.id}")
+          }
+        end
 
       assert owner_row =~ user.email
       assert owner_row =~ "Owner"
 
-      assert editor_row =~ editor.email
+      assert editor_row =~ editor.user.email
       refute editor_row =~ "Owner"
 
-      assert viewer_row =~ viewer.email
+      assert viewer_row =~ viewer.user.email
       refute viewer_row =~ "Owner"
     end
 

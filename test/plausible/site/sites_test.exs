@@ -215,7 +215,7 @@ defmodule Plausible.SitesTest do
       new_site(owner: user1, domain: "one.example.com")
       site2 = new_site(domain: "two.example.com")
 
-      user1 = site2 |> add_guest(user: user1, role: :viewer)
+      user1 = add_guest(site2, user: user1, role: :viewer).user
 
       {:ok, _} = Sites.toggle_pin(user1, site2)
 
