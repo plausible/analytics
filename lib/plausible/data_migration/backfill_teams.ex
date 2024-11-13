@@ -422,8 +422,9 @@ defmodule Plausible.DataMigration.BackfillTeams do
         where: ti.role == :guest,
         where:
           (gi.role == :viewer and si.role == :admin) or
-            (gi.role == :editor and si.role == :viewer),
-        select: {gi, si.role}
+            (gi.role == :editor and si.role == :viewer) or
+            is_distinct(gi.invitation_id, si.invitation_id),
+        select: {gi, si}
       )
       |> @repo.all(timeout: :infinity)
 
@@ -770,7 +771,6 @@ defmodule Plausible.DataMigration.BackfillTeams do
           role: :guest,
           inviter: first_site_invitation.inviter
         )
-        |> Ecto.Changeset.put_change(:invitation_id, first_site_invitation.invitation_id)
         |> Ecto.Changeset.put_change(:inserted_at, first_site_invitation.inserted_at)
         |> Ecto.Changeset.put_change(:updated_at, first_site_invitation.updated_at)
         |> @repo.insert!(
@@ -784,6 +784,7 @@ defmodule Plausible.DataMigration.BackfillTeams do
           site_invitation.site,
           translate_role(site_invitation.role)
         )
+        |> Ecto.Changeset.put_change(:invitation_id, site_invitation.invitation_id)
         |> Ecto.Changeset.put_change(:inserted_at, site_invitation.inserted_at)
         |> Ecto.Changeset.put_change(:updated_at, site_invitation.updated_at)
         |> @repo.insert!()
@@ -795,12 +796,14 @@ defmodule Plausible.DataMigration.BackfillTeams do
     end)
   end
 
-  defp sync_guest_invitations(guest_invitations_and_roles) do
-    guest_invitations_and_roles
+  defp sync_guest_invitations(guest_and_site_invitations) do
+    guest_and_site_invitations
     |> Enum.with_index()
-    |> Enum.each(fn {{guest_invitation, role}, idx} ->
+    |> Enum.each(fn {{guest_invitation, site_invitation}, idx} ->
       guest_invitation
-      |> Ecto.Changeset.change(role: translate_role(role))
+      |> Ecto.Changeset.change()
+      |> Ecto.Changeset.put_change(:role, translate_role(site_invitation.role))
+      |> Ecto.Changeset.put_change(:invitation_id, site_invitation.invitation_id)
       |> Ecto.Changeset.put_change(:updated_at, guest_invitation.updated_at)
       |> @repo.update!()
 

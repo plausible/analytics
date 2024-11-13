@@ -1,11 +1,14 @@
 defmodule Plausible.Teams.Adapter.Read.Sites do
   @moduledoc """
-  Transition adapter for new schema reads 
+  Transition adapter for new schema reads
   """
+
   import Ecto.Query
+
+  alias Plausible.Auth
   alias Plausible.Repo
   alias Plausible.Site
-  alias Plausible.Auth
+  alias Plausible.Teams
 
   def list(user, pagination_params, opts \\ []) do
     if Plausible.Teams.read_team_schemas?(user) do
@@ -110,6 +113,75 @@ defmodule Plausible.Teams.Adapter.Read.Sites do
       end)
 
     %{result | entries: entries}
+  end
+
+  def list_people(site, user) do
+    if Plausible.Teams.read_team_schemas?(user) do
+      owner_membership =
+        from(
+          tm in Teams.Membership,
+          where: tm.team_id == ^site.team_id,
+          where: tm.role == :owner,
+          select: %Plausible.Site.Membership{
+            user_id: tm.user_id,
+            role: tm.role
+          }
+        )
+        |> Repo.one!()
+
+      memberships =
+        from(
+          gm in Teams.GuestMembership,
+          inner_join: tm in assoc(gm, :team_membership),
+          where: gm.site_id == ^site.id,
+          select: %Plausible.Site.Membership{
+            user_id: tm.user_id,
+            role:
+              fragment(
+                """
+                CASE
+                WHEN ? = 'editor' THEN 'admin'
+                ELSE ?
+                END
+                """,
+                gm.role,
+                gm.role
+              )
+          }
+        )
+        |> Repo.all()
+
+      memberships = Repo.preload([owner_membership | memberships], :user)
+
+      invitations =
+        from(
+          gi in Teams.GuestInvitation,
+          inner_join: ti in assoc(gi, :team_invitation),
+          where: gi.site_id == ^site.id,
+          select: %Plausible.Auth.Invitation{
+            invitation_id: gi.invitation_id,
+            email: ti.email,
+            role:
+              fragment(
+                """
+                CASE
+                WHEN ? = 'editor' THEN 'admin'
+                ELSE ?
+                END
+                """,
+                gi.role,
+                gi.role
+              )
+          }
+        )
+        |> Repo.all()
+
+      %{memberships: memberships, invitations: invitations}
+    else
+      site
+      |> Repo.preload([:invitations, memberships: :user])
+      |> Map.take([:memberships, :invitations])
+    end
   end
 
   defp maybe_filter_by_domain(query, domain)
