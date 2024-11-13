@@ -3,9 +3,10 @@ import React, { Fragment, useEffect, useState } from 'react';
 import * as storage from '../../util/storage';
 import * as url from '../../util/url';
 import * as api from '../../api';
+import usePrevious from '../../hooks/use-previous';
 import ListReport from '../reports/list';
 import * as metrics from '../reports/metrics';
-import { hasGoalFilter } from "../../util/filters";
+import { getFiltersByKeyPrefix, hasGoalFilter } from "../../util/filters";
 import { Menu, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import classNames from 'classnames';
@@ -67,7 +68,7 @@ function AllSources({ afterFetchData }) {
   )
 }
 
-function Channels({ afterFetchData }) {
+function Channels({ onClick, afterFetchData }) {
   const { query } = useQueryContext();
   const site = useSiteContext();
 
@@ -95,6 +96,7 @@ function Channels({ afterFetchData }) {
       afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Channel"
+      onClick={onClick}
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: channelsRoute.path, search: (search) => search }}
       color="bg-blue-50"
@@ -154,8 +156,22 @@ export default function SourceList() {
   const [currentTab, setCurrentTab] = useState(storedTab || 'all')
   const [loading, setLoading] = useState(true)
   const [skipImportedReason, setSkipImportedReason] = useState(null)
+  const previousQuery = usePrevious(query);
 
   useEffect(() => setLoading(true), [query, currentTab])
+
+  useEffect(() => {
+    const isRemovingFilter = (filterName) => {
+      if (!previousQuery) return false
+
+      return getFiltersByKeyPrefix(previousQuery, filterName).length > 0 &&
+        getFiltersByKeyPrefix(query, filterName).length == 0
+    }
+
+    if (currentTab == 'all' && isRemovingFilter('channel')) {
+      setTab('channels')()
+    }
+  }, [query])
 
   function setTab(tab) {
     return () => {
@@ -172,10 +188,10 @@ export default function SourceList() {
 
     return (
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-        <div className={currentTab === 'all' ? activeClass : defaultClass} onClick={setTab('all')}>All</div>
         {site.flags.channels &&
           <div className={currentTab === 'channels' ? activeClass : defaultClass} onClick={setTab('channels')}>Channels</div>
         }
+        <div className={currentTab === 'all' ? activeClass : defaultClass} onClick={setTab('all')}>Sources</div>
 
         <Menu as="div" className="relative inline-block text-left">
           <div>
@@ -222,11 +238,15 @@ export default function SourceList() {
     )
   }
 
+  function onChannelClick() {
+    setTab('all')()
+  }
+
   function renderContent() {
     if (currentTab === 'all') {
       return <AllSources afterFetchData={afterFetchData} />
     } else if (currentTab == 'channels') {
-      return <Channels afterFetchData={afterFetchData} />
+      return <Channels onClick={onChannelClick} afterFetchData={afterFetchData} />
     } else {
       return <UTMSources tab={currentTab} afterFetchData={afterFetchData} />
     }
