@@ -197,12 +197,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       set_slider(lv, "200k")
       doc = element(lv, @yearly_interval_button) |> render_click()
 
-      {:ok, team} = Plausible.Teams.get_by_owner(user)
-
       assert %{
                "disableLogout" => true,
                "email" => user.email,
-               "passthrough" => "user:#{user.id};team:#{team.id}",
+               "passthrough" => user.id,
                "product" => @v4_growth_200k_yearly_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
@@ -1071,12 +1069,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       set_slider(lv, "200k")
       doc = element(lv, @yearly_interval_button) |> render_click()
 
-      {:ok, team} = Plausible.Teams.get_by_owner(user)
-
       assert %{
                "disableLogout" => true,
                "email" => user.email,
-               "passthrough" => "user:#{user.id};team:#{team.id}",
+               "passthrough" => user.id,
                "product" => @v4_growth_200k_yearly_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"

@@ -150,12 +150,10 @@ defmodule PlausibleWeb.BillingControllerTest do
         |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
         |> html_response(200)
 
-      {:ok, team} = Plausible.Teams.get_by_owner(user)
-
       assert %{
                "disableLogout" => true,
                "email" => user.email,
-               "passthrough" => "user:#{user.id};team:#{team.id}",
+               "passthrough" => user.id,
                "product" => @configured_enterprise_plan_paddle_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
@@ -323,12 +321,10 @@ defmodule PlausibleWeb.BillingControllerTest do
         |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
         |> html_response(200)
 
-      {:ok, team} = Plausible.Teams.get_by_owner(user)
-
       assert %{
                "disableLogout" => true,
                "email" => user.email,
-               "passthrough" => "user:#{user.id};team:#{team.id}",
+               "passthrough" => user.id,
                "product" => @configured_enterprise_plan_paddle_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
