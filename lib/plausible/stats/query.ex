@@ -57,15 +57,19 @@ defmodule Plausible.Stats.Query do
 
       Date.range(
         date_range.first,
-        earliest(date_range.last, today)
+        clamp(today, date_range.first, date_range.last)
       )
     else
       date_range
     end
   end
 
-  defp earliest(a, b) do
-    if Date.compare(a, b) in [:eq, :lt], do: a, else: b
+  defp clamp(date, lower_bound, upper_bound) do
+    cond do
+      Date.compare(date, lower_bound) == :lt -> lower_bound
+      Date.compare(date, upper_bound) == :gt -> upper_bound
+      true -> date
+    end
   end
 
   def set(query, keywords) do
