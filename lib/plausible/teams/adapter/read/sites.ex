@@ -144,8 +144,8 @@ defmodule Plausible.Teams.Adapter.Read.Sites do
                 ELSE ?
                 END
                 """,
-                tm.role,
-                tm.role
+                gm.role,
+                gm.role
               )
           }
         )

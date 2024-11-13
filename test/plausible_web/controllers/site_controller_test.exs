@@ -530,15 +530,19 @@ defmodule PlausibleWeb.SiteControllerTest do
         text_of_element(resp, "#membership-#{user.id}")
 
       editor_row = text_of_element(resp, "#membership-#{editor.id}")
+      editor_row_button = text_of_element(resp, "#membership-#{editor.id} button")
       viewer_row = text_of_element(resp, "#membership-#{viewer.id}")
+      viewer_row_button = text_of_element(resp, "#membership-#{viewer.id} button")
 
       assert owner_row =~ user.email
       assert owner_row =~ "Owner"
 
       assert editor_row =~ editor.email
+      assert editor_row_button == "Admin"
       refute editor_row =~ "Owner"
 
       assert viewer_row =~ viewer.email
+      assert viewer_row_button == "Viewer"
       refute viewer_row =~ "Owner"
     end
 
