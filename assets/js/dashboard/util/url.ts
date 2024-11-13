@@ -118,7 +118,7 @@ function serializeLabelsEntry([k, v]: [string, string]) {
 }
 
 function parseLabelsEntry(labelString: string) {
-  return labelString.split(',').map(parseSearchFragment) as string[]
+  return labelString.split(',').map(decodeURIComponent) as string[]
 }
 
 function serializeFilter(f: Filter) {
@@ -133,7 +133,7 @@ function serializeFilter(f: Filter) {
 
 function parseFilter(filterString: string) {
   const [operator, dimension, ...unparsedClauses] = filterString.split(',')
-  return [operator, dimension, unparsedClauses.map(parseSearchFragment)]
+  return [operator, dimension, unparsedClauses.map(decodeURIComponent)]
 }
 
 export function stringifySearchEntry([key, value]: [string, unknown]): [
