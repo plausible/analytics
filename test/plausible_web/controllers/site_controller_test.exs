@@ -500,9 +500,9 @@ defmodule PlausibleWeb.SiteControllerTest do
     @tag :ee_only
     test "shows members page with links to CRM for super admin", %{
       conn: conn,
-      user: user,
-      site: site
+      user: user
     } do
+      site = new_site(owner: user)
       patch_env(:super_admin_user_ids, [user.id])
 
       conn = get(conn, "/#{site.domain}/settings/people")
@@ -511,14 +511,16 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "/crm/auth/user/#{user.id}"
     end
 
-    test "does not show CRM links to non-super admin user", %{conn: conn, user: user, site: site} do
+    test "does not show CRM links to non-super admin user", %{conn: conn, user: user} do
+      site = new_site(owner: user)
       conn = get(conn, "/#{site.domain}/settings/people")
       resp = html_response(conn, 200)
 
       refute resp =~ "/crm/auth/user/#{user.id}"
     end
 
-    test "lists current members", %{conn: conn, user: user, site: site} do
+    test "lists current members", %{conn: conn, user: user} do
+      site = new_site(owner: user)
       editor = add_guest(site, role: :editor)
       viewer = add_guest(site, role: :viewer)
       conn = get(conn, "/#{site.domain}/settings/people")
@@ -540,7 +542,8 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute viewer_row =~ "Owner"
     end
 
-    test "lists pending invitations", %{conn: conn, user: user, site: site} do
+    test "lists pending invitations", %{conn: conn, user: user} do
+      site = new_site(owner: user)
       i1 = invite_guest(site, "admin@example.com", role: :editor, inviter: user)
       i2 = invite_guest(site, "viewer@example.com", role: :viewer, inviter: user)
       conn = get(conn, "/#{site.domain}/settings/people")
