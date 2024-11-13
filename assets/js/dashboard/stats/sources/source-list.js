@@ -16,11 +16,11 @@ import { useSiteContext } from '../../site-context';
 import { sourcesRoute, channelsRoute, utmCampaignsRoute, utmContentsRoute, utmMediumsRoute, utmSourcesRoute, utmTermsRoute } from '../../router';
 
 const UTM_TAGS = {
-  utm_medium: { label: 'UTM Medium', shortLabel: 'UTM Medium', endpoint: '/utm_mediums' },
-  utm_source: { label: 'UTM Source', shortLabel: 'UTM Source', endpoint: '/utm_sources' },
-  utm_campaign: { label: 'UTM Campaign', shortLabel: 'UTM Campai', endpoint: '/utm_campaigns' },
-  utm_content: { label: 'UTM Content', shortLabel: 'UTM Conten', endpoint: '/utm_contents' },
-  utm_term: { label: 'UTM Term', shortLabel: 'UTM Term', endpoint: '/utm_terms' },
+  utm_medium: { title: 'UTM Mediums', label: 'Medium', endpoint: '/utm_mediums' },
+  utm_source: { title: 'UTM Sources', label: 'Source', endpoint: '/utm_sources' },
+  utm_campaign: { title: 'UTM Campaigns', label: 'Campaign', endpoint: '/utm_campaigns' },
+  utm_content: { title: 'UTM Contents', label: 'Content', endpoint: '/utm_contents' },
+  utm_term: { title: 'UTM Terms', label: 'Term', endpoint: '/utm_terms' },
 }
 
 function AllSources({ afterFetchData }) {
@@ -148,6 +148,15 @@ function UTMSources({ tab, afterFetchData }) {
   )
 }
 
+const labelFor = {
+  'channels': 'Top Channels',
+  'all': 'Top Sources'
+}
+
+for (const [key, utm_tag] of Object.entries(UTM_TAGS)) {
+  labelFor[key] = utm_tag.title
+}
+
 export default function SourceList() {
   const site = useSiteContext();
   const { query } = useQueryContext();
@@ -184,7 +193,7 @@ export default function SourceList() {
     const activeClass = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
     const defaultClass = 'hover:text-indigo-600 cursor-pointer truncate text-left'
     const dropdownOptions = Object.keys(UTM_TAGS)
-    let buttonText = UTM_TAGS[currentTab] ? UTM_TAGS[currentTab].label : 'Campaigns'
+    let buttonText = UTM_TAGS[currentTab] ? UTM_TAGS[currentTab].title : 'Campaigns'
 
     return (
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
@@ -224,7 +233,7 @@ export default function SourceList() {
                             currentTab === option ? 'font-bold' : ''
                           )}
                         >
-                          {UTM_TAGS[option].label}
+                          {UTM_TAGS[option].title}
                         </span>
                       )}
                     </Menu.Item>
@@ -263,7 +272,7 @@ export default function SourceList() {
       <div className="w-full flex justify-between">
         <div className="flex gap-x-1">
           <h3 className="font-bold dark:text-gray-100">
-            Top Sources
+            {labelFor[currentTab]}
           </h3>
           <ImportedQueryUnsupportedWarning loading={loading} skipImportedReason={skipImportedReason} />
         </div>
