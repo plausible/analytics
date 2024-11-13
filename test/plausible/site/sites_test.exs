@@ -243,12 +243,44 @@ defmodule Plausible.SitesTest do
 
       assert %{entries: [%{domain: "one.example.com"}]} = Sites.list(user1, %{})
 
-      assert %{entries: [%{domain: "two.example.com"}, %{domain: "one.example.com"}]} =
+      assert %{
+               entries: [
+                 %{domain: "two.example.com", entry_type: "invitation"},
+                 %{domain: "one.example.com", entry_type: "pinned_site"}
+               ]
+             } =
                Sites.list_with_invitations(user1, %{})
 
       assert %{entries: [%{domain: "one.example.com"}]} = Plausible.Teams.Sites.list(user1, %{})
 
       assert %{entries: [%{domain: "two.example.com"}, %{domain: "one.example.com"}]} =
+               Plausible.Teams.Sites.list_with_invitations(user1, %{})
+    end
+
+    test "pinned site on active invitation" do
+      user1 = new_user(email: "user1@example.com")
+      user2 = new_user(email: "user2@example.com")
+
+      site1 = new_site(domain: "one.example.com", owner: user2)
+
+      add_guest(site1, user: user1, role: :editor)
+      {:ok, _} = Sites.toggle_pin(user1, site1)
+      revoke_membership(site1, user1)
+
+      invite_guest(site1, user1, role: :editor, inviter: user2)
+
+      assert %{entries: []} = Sites.list(user1, %{})
+
+      assert %{
+               entries: [
+                 %{domain: "one.example.com", entry_type: "invitation"}
+               ]
+             } =
+               Sites.list_with_invitations(user1, %{})
+
+      assert %{entries: []} = Plausible.Teams.Sites.list(user1, %{})
+
+      assert %{entries: [%{domain: "one.example.com", entry_type: "invitation"}]} =
                Plausible.Teams.Sites.list_with_invitations(user1, %{})
     end
 

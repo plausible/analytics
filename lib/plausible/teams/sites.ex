@@ -134,7 +134,8 @@ defmodule Plausible.Teams.Sites do
         select: %{
           site_id: s.id,
           entry_type: "site",
-          invitation_id: 0,
+          guest_invitation_id: 0,
+          team_invitation_id: 0,
           role: tm.role,
           transfer_id: 0
         }
@@ -147,7 +148,8 @@ defmodule Plausible.Teams.Sites do
         select: %{
           site_id: s.id,
           entry_type: "site",
-          invitation_id: 0,
+          guest_invitation_id: 0,
+          team_invitation_id: 0,
           role:
             fragment(
               """
@@ -184,7 +186,8 @@ defmodule Plausible.Teams.Sites do
         select: %{
           site_id: s.id,
           entry_type: "invitation",
-          invitation_id: ti.id,
+          guest_invitation_id: gi.id,
+          team_invitation_id: ti.id,
           role:
             fragment(
               """
@@ -216,7 +219,8 @@ defmodule Plausible.Teams.Sites do
         select: %{
           site_id: s.id,
           entry_type: "invitation",
-          invitation_id: 0,
+          guest_invitation_id: 0,
+          team_invitation_id: 0,
           role: "owner",
           transfer_id: st.id
         }
@@ -234,7 +238,9 @@ defmodule Plausible.Teams.Sites do
       left_join: up in Site.UserPreference,
       on: up.site_id == s.id and up.user_id == ^user.id,
       left_join: ti in Teams.Invitation,
-      on: ti.id == u.invitation_id,
+      on: ti.id == u.team_invitation_id,
+      left_join: gi in Teams.GuestInvitation,
+      on: gi.id == u.guest_invitation_id,
       left_join: st in Teams.SiteTransfer,
       on: st.id == u.transfer_id,
       select: %{
@@ -244,10 +250,12 @@ defmodule Plausible.Teams.Sites do
               fragment(
                 """
                 CASE
+                  WHEN ? IS NOT NULL THEN 'invitation'
                   WHEN ? IS NOT NULL THEN 'pinned_site'
                   ELSE ?
                 END
                 """,
+                gi.id,
                 up.pinned_at,
                 u.entry_type
               ),
@@ -263,7 +271,7 @@ defmodule Plausible.Teams.Sites do
           ],
           invitations: [
             %Plausible.Auth.Invitation{
-              invitation_id: coalesce(ti.invitation_id, st.transfer_id),
+              invitation_id: coalesce(gi.invitation_id, st.transfer_id),
               email: coalesce(ti.email, st.email),
               role: type(u.role, ^@role_type),
               site_id: s.id,

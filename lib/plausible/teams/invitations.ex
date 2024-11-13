@@ -63,7 +63,7 @@ defmodule Plausible.Teams.Invitations do
           site_invitation.inviter
         )
 
-      guest_invitation.team_invitation
+      guest_invitation
       |> Ecto.Changeset.change(invitation_id: site_invitation.invitation_id)
       |> Repo.update!()
     end
