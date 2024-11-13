@@ -250,10 +250,12 @@ defmodule Plausible.Teams.Sites do
               fragment(
                 """
                 CASE
+                  WHEN ? IS NOT NULL THEN 'invitation'
                   WHEN ? IS NOT NULL THEN 'pinned_site'
                   ELSE ?
                 END
                 """,
+                gi.id,
                 up.pinned_at,
                 u.entry_type
               ),
