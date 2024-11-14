@@ -180,7 +180,7 @@ export default function SourceList() {
     if (currentTab == 'all' && isRemovingFilter('channel')) {
       setTab('channels')()
     }
-  }, [query])
+  }, [query, currentTab])
 
   function setTab(tab) {
     return () => {
