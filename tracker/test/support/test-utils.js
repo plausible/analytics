@@ -54,33 +54,56 @@ exports.expectCustomEvent = function (request, eventName, eventProps) {
   }
 }
 
+
+/**
+ * A powerful utility function that makes it easy to assert on the event
+ * requests that should or should not have been made after clicking a page
+ * element. 
+ * 
+ * This function accepts subsets of request bodies (the JSON payloads) as
+ * arguments, and compares them with the bodies of the requests that were
+ * actually made. For a body subset to match a request, all the key-value
+ * pairs present in the subset should also appear in the request body.
+ */
 exports.clickPageElementAndExpectEventRequests = async function (page, locatorToClick, expectedBodySubsets, refutedBodySubsets = []) {
   const requestsToExpect = expectedBodySubsets.length
   const requestsToAwait = requestsToExpect + refutedBodySubsets.length
   
   const plausibleRequestMockList = mockManyRequests(page, '/api/event', requestsToAwait)
   await page.click(locatorToClick)
-  const requests = await plausibleRequestMockList
+  const requestBodies = (await plausibleRequestMockList).map(r => r.postDataJSON())
 
-  expect(requests.length).toBe(requestsToExpect)
+  const expectedButNotFoundBodySubsets = []
 
   expectedBodySubsets.forEach((bodySubset) => {
-    expect(requests.some((request) => {
-      return hasExpectedBodyParams(request, bodySubset)
-    })).toBe(true)
+    const wasFound = requestBodies.some((requestBody) => {
+      return includesSubset(requestBody, bodySubset)
+    })
+
+    if (!wasFound) {expectedButNotFoundBodySubsets.push(bodySubset)}
   })
+
+  const refutedButFoundRequestBodies = []
 
   refutedBodySubsets.forEach((bodySubset) => {
-    expect(requests.every((request) => {
-      return !hasExpectedBodyParams(request, bodySubset)
-    })).toBe(true)
+    const found = requestBodies.find((requestBody) => {
+      return includesSubset(requestBody, bodySubset)
+    })
+
+    if (found) {refutedButFoundRequestBodies.push(found)}
   })
+
+  const expectedBodySubsetsErrorMessage = `The following body subsets were not found from the requests that were made:\n\n${JSON.stringify(expectedButNotFoundBodySubsets, null, 4)}\n\nReceived requests with the following bodies:\n\n${JSON.stringify(requestBodies, null, 4)}`
+  expect(expectedButNotFoundBodySubsets, expectedBodySubsetsErrorMessage).toHaveLength(0)
+
+  const refutedBodySubsetsErrorMessage = `The following requests were made, but were not expected:\n\n${JSON.stringify(refutedButFoundRequestBodies, null, 4)}`
+  expect(refutedButFoundRequestBodies, refutedBodySubsetsErrorMessage).toHaveLength(0)
+  
+  expect(requestBodies.length).toBe(requestsToExpect)
 }
 
-function hasExpectedBodyParams(request, expectedBodyParams) {
-  const body = request.postDataJSON()
-
-  return Object.keys(expectedBodyParams).every((key) => {
-    return body[key] === expectedBodyParams[key]
+function includesSubset(body, subset) {
+  return Object.keys(subset).every((key) => {
+    return body[key] === subset[key]
   })
 }
