@@ -15,6 +15,10 @@ import {
 import { apiPath } from '../../util/url'
 import { useQueryContext } from '../../query-context'
 import { useSiteContext } from '../../site-context'
+import {
+  formatSegmentIdAsLabelKey,
+  isSegmentFilter
+} from '../../segments/segments'
 
 export default function FilterModalRow({ filter, labels, onUpdate }) {
   const { query } = useQueryContext()
@@ -27,16 +31,19 @@ export default function FilterModalRow({ filter, labels, onUpdate }) {
         value,
         label: getLabel(labels, filterKey, value)
       })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filter, labels]
+    [clauses, labels, filterKey]
   )
 
   function onComboboxSelect(selection) {
     const newClauses = selection.map(({ value }) => value)
     const newLabels = Object.fromEntries(
-      selection.map(({ label, value }) => [value, label])
+      selection.map(({ label, value }) => {
+        if (isSegmentFilter(filter)) {
+          return [formatSegmentIdAsLabelKey(value), label]
+        }
+        return [value, label]
+      })
     )
-
     onUpdate([operation, filterKey, newClauses], newLabels)
   }
 

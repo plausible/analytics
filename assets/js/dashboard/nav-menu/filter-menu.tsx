@@ -15,6 +15,7 @@ import {
 import { PlausibleSite, useSiteContext } from '../site-context'
 import { filterRoute } from '../router'
 import { useOnClickOutside } from '../util/use-on-click-outside'
+import { SegmentsList } from '../segments/segments-dropdown'
 
 export function getFilterListItems({
   propsAvailable
@@ -26,7 +27,7 @@ export function getFilterListItems({
     keyof typeof FILTER_MODAL_TO_FILTER_GROUP
   >
   const keysToOmit: Array<keyof typeof FILTER_MODAL_TO_FILTER_GROUP> =
-    propsAvailable ? [] : ['props']
+    propsAvailable ? ['segment'] : ['segment', 'props']
   return allKeys
     .filter((k) => !keysToOmit.includes(k))
     .map((modalKey) => ({ modalKey, label: formatFilterGroup(modalKey) }))
@@ -63,9 +64,11 @@ export const FilterMenu = () => {
     >
       {opened && (
         <DropdownMenuWrapper id="filter-menu" className="md:left-auto md:w-56">
+          <SegmentsList closeList={() => setOpened(false)} />
           <DropdownLinkGroup>
             {filterListItems.map(({ modalKey, label }) => (
               <DropdownNavigationLink
+                onLinkClick={() => setOpened(false)}
                 active={false}
                 key={modalKey}
                 path={filterRoute.path}

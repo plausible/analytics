@@ -201,7 +201,7 @@ function ComparisonMenu({
         <DropdownNavigationLink
           active={query.comparison === ComparisonMode.custom}
           search={(s) => s}
-          onClick={toggleCompareMenuCalendar}
+          onLinkClick={toggleCompareMenuCalendar}
         >
           {COMPARISON_MODES[ComparisonMode.custom]}
         </DropdownNavigationLink>
@@ -250,7 +250,7 @@ function QueryPeriodsMenu({
                 key={label}
                 active={isActive({ site, query })}
                 search={search}
-                onClick={onClick || closeMenu}
+                onLinkClick={onClick || closeMenu}
               >
                 {label}
                 {!!keyboardKey && <KeybindHint>{keyboardKey}</KeybindHint>}

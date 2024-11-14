@@ -73,6 +73,7 @@ defmodule PlausibleWeb.StatsController do
           title: title(conn, site),
           demo: demo,
           flags: get_flags(conn.assigns[:current_user], site),
+          members: get_members(conn.assigns[:current_user], site),
           is_dbip: is_dbip(),
           dogfood_page_path: dogfood_page_path,
           load_dashboard_js: true
@@ -192,7 +193,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp csv_graph_metrics(query) do
     {metrics, column_headers} =
-      if Filters.filtering_on_dimension?(query, "event:goal") do
+      if Filters.filtering_on_dimension?(query.filters, "event:goal") do
         {
           [:visitors, :events, :conversion_rate],
           [:date, :unique_conversions, :total_conversions, :conversion_rate]
@@ -356,6 +357,7 @@ defmodule PlausibleWeb.StatsController do
           background: conn.params["background"],
           theme: conn.params["theme"],
           flags: get_flags(conn.assigns[:current_user], shared_link.site),
+          members: get_members(conn.assigns[:current_user], shared_link.site),
           is_dbip: is_dbip(),
           load_dashboard_js: true
         )
@@ -380,6 +382,15 @@ defmodule PlausibleWeb.StatsController do
         {flag, FunWithFlags.enabled?(flag, for: user) || FunWithFlags.enabled?(flag, for: site)}
       end)
       |> Map.new()
+
+  defp get_members(nil, _site) do
+    nil
+  end
+
+  defp get_members(_user, site) do
+    s = Plausible.Repo.preload(site, :members)
+    s.members |> Enum.map(fn member -> {member.id, member.name} end) |> Map.new()
+  end
 
   defp is_dbip() do
     on_ee do

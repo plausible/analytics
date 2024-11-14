@@ -160,6 +160,12 @@ defmodule Plausible.Stats.FilterSuggestions do
     |> wrap_suggestions()
   end
 
+  def filter_suggestions(site, _query, "segment", _filter_search) do
+    Enum.map(Repo.preload(site, :segments).segments, fn segment ->
+      %{value: segment.id, label: segment.name}
+    end)
+  end
+
   def filter_suggestions(site, query, "prop_key", filter_search) do
     filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
 

@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Filters do
   A module for parsing filters used in stat queries.
   """
 
-  alias Plausible.Stats.Filters.QueryParser
+  alias Plausible.Stats.Filters.{FiltersParser}
   alias Plausible.Stats.Filters.{LegacyDashboardFilterParser, StatsAPIFilterParser}
 
   @visit_props [
@@ -81,7 +81,7 @@ defmodule Plausible.Stats.Filters do
     do: LegacyDashboardFilterParser.parse_and_prefix(filters)
 
   def parse(filters) when is_list(filters) do
-    {:ok, parsed_filters} = QueryParser.parse_filters(filters)
+    {:ok, parsed_filters} = FiltersParser.parse_filters(filters)
     parsed_filters
   end
 
@@ -103,8 +103,8 @@ defmodule Plausible.Stats.Filters do
     |> Enum.map(fn {[_operator, dimension | _rest], _depth} -> dimension end)
   end
 
-  def filtering_on_dimension?(query, dimension) do
-    dimension in dimensions_used_in_filters(query.filters)
+  def filtering_on_dimension?(filters, dimension) do
+    dimension in dimensions_used_in_filters(filters)
   end
 
   @doc """

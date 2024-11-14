@@ -13,6 +13,7 @@ import {
   AppNavigationLink,
   AppNavigationTarget
 } from '../navigation/use-app-navigate'
+import { NavigateOptions } from 'react-router-dom'
 
 export const ToggleDropdownButton = forwardRef<
   HTMLDivElement,
@@ -129,22 +130,43 @@ export const DropdownNavigationLink = ({
   children,
   active,
   className,
+  actions,
+  path,
+  params,
+  search,
+  navigateOptions,
+  onLinkClick,
   ...props
 }: AppNavigationTarget & {
-  active?: boolean
-  children: ReactNode
-  className?: string
-  onClick?: () => void
-}) => (
-  <AppNavigationLink
-    {...props}
+  navigateOptions?: NavigateOptions
+} & DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement> & {
+    active?: boolean
+    onLinkClick?: () => void
+    actions?: ReactNode
+  }) => (
+  <div
     className={classNames(
-      className,
       { 'font-bold': !!active },
       'flex items-center justify-between',
-      `px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-gray-100`
+      'text-sm leading-tight hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-gray-100',
+      !!actions && 'pr-4',
+      className
     )}
+    {...props}
   >
-    {children}
-  </AppNavigationLink>
+    <AppNavigationLink
+      className={classNames(
+        'flex items-center justify-between w-full py-2',
+        actions ? 'pl-4' : 'px-4'
+      )}
+      path={path}
+      params={params}
+      search={search}
+      onClick={onLinkClick}
+      {...navigateOptions}
+    >
+      {children}
+    </AppNavigationLink>
+    {!!actions && actions}
+  </div>
 )

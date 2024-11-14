@@ -7,7 +7,7 @@ defmodule Plausible.Stats.QueryOptimizer do
   alias Plausible.Stats.{DateTimeRange, Filters, Query, TableDecider, Util, Time}
 
   @doc """
-    This module manipulates an existing query, updating it according to business logic.
+    This method manipulates an existing query, updating it according to business logic.
 
     For example, it:
     1. Figures out what the right granularity to group by time is
@@ -46,6 +46,7 @@ defmodule Plausible.Stats.QueryOptimizer do
 
   defp pipeline() do
     [
+      &expand_segments_to_filters/1,
       &update_group_by_time/1,
       &add_missing_order_by/1,
       &update_time_in_order_by/1,
@@ -174,6 +175,20 @@ defmodule Plausible.Stats.QueryOptimizer do
       include_imported: query.include_imported,
       pagination: nil
     )
+  end
+
+  defp expand_segments_to_filters(query) do
+    if length(query.preloaded_segments) > 0 do
+      filters =
+        Filters.Segments.expand_segments_to_constituent_filters(
+          query.filters,
+          query.preloaded_segments
+        )
+
+      %Query{query | filters: filters}
+    else
+      query
+    end
   end
 
   on_ee do

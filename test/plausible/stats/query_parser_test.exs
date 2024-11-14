@@ -50,7 +50,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     assert {:ok, result} = parse(site, schema_type, params, @now)
 
     return_value = Map.take(result, [:preloaded_goals, :revenue_currencies])
-    result = Map.drop(result, [:preloaded_goals, :revenue_currencies])
+    result = Map.drop(result, [:preloaded_goals, :preloaded_segments, :revenue_currencies])
     assert result == expected_result
 
     return_value
@@ -498,6 +498,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         "metrics" => ["visitors"],
         "date_range" => "all",
         "filters" => [
+          ["is", "segment", [200]],
           [
             "or",
             [
@@ -517,6 +518,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         metrics: [:visitors],
         utc_time_range: @date_range_day,
         filters: [
+          [:is, "segment", [200]],
           [
             :or,
             [

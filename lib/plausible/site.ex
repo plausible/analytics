@@ -47,6 +47,7 @@ defmodule Plausible.Site do
     has_many :invitations, Plausible.Auth.Invitation
     has_many :goals, Plausible.Goal, preload_order: [desc: :id]
     has_many :revenue_goals, Plausible.Goal, where: [currency: {:not, nil}]
+    has_many :segments, Plausible.Segment, preload_order: [asc: :name]
     has_one :google_auth, GoogleAuth
     has_one :weekly_report, Plausible.Site.WeeklyReport
     has_one :monthly_report, Plausible.Site.MonthlyReport

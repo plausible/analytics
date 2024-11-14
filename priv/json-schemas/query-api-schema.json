@@ -351,6 +351,11 @@
       "enum": ["is", "contains"],
       "description": "filter operation"
     },
+    "filter_operation_for_segments": {
+      "type": "string",
+      "enum": ["is"],
+      "description": "filter operation"
+    },
     "filter_without_goals": {
       "type": "array",
       "additionalItems": false,
@@ -396,10 +401,29 @@
         }
       ]
     },
+    "filter_for_segment": {
+      "type": "array",
+      "additionalItems": false,
+      "minItems": 3,
+      "maxItems": 3,
+      "items": [
+        {
+          "$ref": "#/definitions/filter_operation_for_segments"
+        },
+        {
+          "type": "string",
+          "const": "segment"
+        },
+        {
+          "$ref": "#/definitions/clauses"
+        }
+      ]
+    },
     "filter_entry": {
       "oneOf": [
         { "$ref": "#/definitions/filter_without_goals" },
-        { "$ref": "#/definitions/filter_with_goals" }
+        { "$ref": "#/definitions/filter_with_goals" },
+        { "$ref": "#/definitions/filter_for_segment" }
       ]
     },
     "filter_tree": {

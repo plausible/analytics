@@ -4,6 +4,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
   use Plausible
 
   alias Plausible.Stats.{TableDecider, Filters, Metrics, DateTimeRange, JSONSchema, Time}
+  alias Plausible.Stats.Filters.FiltersParser
+  alias Plausible.Helpers.ListTraverse
 
   @default_include %{
     imports: false,
@@ -33,13 +35,14 @@ defmodule Plausible.Stats.Filters.QueryParser do
            parse_time_range(site, Map.get(params, "date_range"), date, now),
          utc_time_range = raw_time_range |> DateTimeRange.to_timezone("Etc/UTC"),
          {:ok, metrics} <- parse_metrics(Map.get(params, "metrics", [])),
-         {:ok, filters} <- parse_filters(Map.get(params, "filters", [])),
+         {:ok, filters} <- FiltersParser.parse_filters(Map.get(params, "filters", [])),
          {:ok, dimensions} <- parse_dimensions(Map.get(params, "dimensions", [])),
          {:ok, order_by} <- parse_order_by(Map.get(params, "order_by")),
          {:ok, include} <- parse_include(site, Map.get(params, "include", %{})),
          {:ok, pagination} <- parse_pagination(Map.get(params, "pagination", %{})),
          {preloaded_goals, revenue_currencies} <-
            preload_needed_goals(site, metrics, filters, dimensions),
+         preloaded_segments = preload_needed_segments(site, filters),
          query = %{
            metrics: metrics,
            filters: filters,
@@ -50,13 +53,15 @@ defmodule Plausible.Stats.Filters.QueryParser do
            include: include,
            pagination: pagination,
            preloaded_goals: preloaded_goals,
-           revenue_currencies: revenue_currencies
+           revenue_currencies: revenue_currencies,
+           preloaded_segments: preloaded_segments
          },
          :ok <- validate_order_by(query),
          :ok <- validate_custom_props_access(site, query),
          :ok <- validate_toplevel_only_filter_dimension(query),
          :ok <- validate_special_metrics_filters(query),
          :ok <- validate_filtered_goals_exist(query),
+         :ok <- validate_segments_allowed(site, query, %{}),
          :ok <- validate_revenue_metrics_access(site, query),
          :ok <- validate_metrics(query),
          :ok <- validate_include(query) do
@@ -73,7 +78,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   def parse_date_range_pair(_site, unknown), do: {:error, "Invalid date_range '#{i(unknown)}'."}
 
   defp parse_metrics(metrics) when is_list(metrics) do
-    parse_list(metrics, &parse_metric/1)
+    ListTraverse.parse_list(metrics, &parse_metric/1)
   end
 
   defp parse_metric(metric_str) do
@@ -82,89 +87,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
       _ -> {:error, "Unknown metric '#{i(metric_str)}'."}
     end
   end
-
-  def parse_filters(filters) when is_list(filters) do
-    parse_list(filters, &parse_filter/1)
-  end
-
-  def parse_filters(_invalid_metrics), do: {:error, "Invalid filters passed."}
-
-  defp parse_filter(filter) do
-    with {:ok, operator} <- parse_operator(filter),
-         {:ok, second} <- parse_filter_second(operator, filter),
-         {:ok, rest} <- parse_filter_rest(operator, filter) do
-      {:ok, [operator, second | rest]}
-    end
-  end
-
-  defp parse_operator(["is" | _rest]), do: {:ok, :is}
-  defp parse_operator(["is_not" | _rest]), do: {:ok, :is_not}
-  defp parse_operator(["matches" | _rest]), do: {:ok, :matches}
-  defp parse_operator(["matches_not" | _rest]), do: {:ok, :matches_not}
-  defp parse_operator(["matches_wildcard" | _rest]), do: {:ok, :matches_wildcard}
-  defp parse_operator(["matches_wildcard_not" | _rest]), do: {:ok, :matches_wildcard_not}
-  defp parse_operator(["contains" | _rest]), do: {:ok, :contains}
-  defp parse_operator(["contains_not" | _rest]), do: {:ok, :contains_not}
-  defp parse_operator(["not" | _rest]), do: {:ok, :not}
-  defp parse_operator(["and" | _rest]), do: {:ok, :and}
-  defp parse_operator(["or" | _rest]), do: {:ok, :or}
-  defp parse_operator(filter), do: {:error, "Unknown operator for filter '#{i(filter)}'."}
-
-  def parse_filter_second(:not, [_, filter | _rest]), do: parse_filter(filter)
-
-  def parse_filter_second(operator, [_, filters | _rest]) when operator in [:and, :or],
-    do: parse_filters(filters)
-
-  def parse_filter_second(_operator, filter), do: parse_filter_key(filter)
-
-  defp parse_filter_key([_operator, filter_key | _rest] = filter) do
-    parse_filter_key_string(filter_key, "Invalid filter '#{i(filter)}")
-  end
-
-  defp parse_filter_key(filter), do: {:error, "Invalid filter '#{i(filter)}'."}
-
-  defp parse_filter_rest(operator, filter)
-       when operator in [
-              :is,
-              :is_not,
-              :matches,
-              :matches_not,
-              :matches_wildcard,
-              :matches_wildcard_not,
-              :contains,
-              :contains_not
-            ],
-       do: parse_clauses_list(filter)
-
-  defp parse_filter_rest(operator, _filter)
-       when operator in [:not, :and, :or],
-       do: {:ok, []}
-
-  defp parse_clauses_list([operation, filter_key, list] = filter) when is_list(list) do
-    all_strings? = Enum.all?(list, &is_binary/1)
-    all_integers? = Enum.all?(list, &is_integer/1)
-
-    case {filter_key, all_strings?} do
-      {"visit:city", false} when all_integers? ->
-        {:ok, [list]}
-
-      {"visit:country", true} when operation in ["is", "is_not"] ->
-        if Enum.all?(list, &(String.length(&1) == 2)) do
-          {:ok, [list]}
-        else
-          {:error,
-           "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code."}
-        end
-
-      {_, true} ->
-        {:ok, [list]}
-
-      _ ->
-        {:error, "Invalid filter '#{i(filter)}'."}
-    end
-  end
-
-  defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{i(filter)}'"}
 
   defp parse_date(_site, date_string, _date) when is_binary(date_string) do
     case Date.from_iso8601(date_string) do
@@ -273,14 +195,14 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp today(site), do: DateTime.now!(site.timezone) |> DateTime.to_date()
 
   defp parse_dimensions(dimensions) when is_list(dimensions) do
-    parse_list(
+    ListTraverse.parse_list(
       dimensions,
       &parse_dimension_entry(&1, "Invalid dimensions '#{i(dimensions)}'")
     )
   end
 
   defp parse_order_by(order_by) when is_list(order_by) do
-    parse_list(order_by, &parse_order_by_entry/1)
+    ListTraverse.parse_list(order_by, &parse_order_by_entry/1)
   end
 
   defp parse_order_by(nil), do: {:ok, nil}
@@ -296,7 +218,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
   defp parse_dimension_entry(key, error_message) do
     case {
       parse_time(key),
-      parse_filter_key_string(key)
+      FiltersParser.parse_filter_key_string(key)
     } do
       {{:ok, time}, _} -> {:ok, time}
       {_, {:ok, filter_key}} -> {:ok, filter_key}
@@ -308,7 +230,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     case {
       parse_time(value),
       parse_metric(value),
-      parse_filter_key_string(value)
+      FiltersParser.parse_filter_key_string(value)
     } do
       {{:ok, time}, _, _} -> {:ok, time}
       {_, {:ok, metric}, _} -> {:ok, metric}
@@ -360,34 +282,6 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp atomize_keys(value), do: value
 
-  defp parse_filter_key_string(filter_key, error_message \\ "") do
-    case filter_key do
-      "event:props:" <> property_name ->
-        if String.length(property_name) > 0 do
-          {:ok, filter_key}
-        else
-          {:error, error_message}
-        end
-
-      "event:" <> key ->
-        if key in Filters.event_props() do
-          {:ok, filter_key}
-        else
-          {:error, error_message}
-        end
-
-      "visit:" <> key ->
-        if key in Filters.visit_props() do
-          {:ok, filter_key}
-        else
-          {:error, error_message}
-        end
-
-      _ ->
-        {:error, error_message}
-    end
-  end
-
   defp validate_order_by(query) do
     if query.order_by do
       valid_values = query.metrics ++ query.dimensions
@@ -407,6 +301,14 @@ defmodule Plausible.Stats.Filters.QueryParser do
       end
     else
       :ok
+    end
+  end
+
+  def preload_needed_segments(site, filters) do
+    if Plausible.Stats.Filters.Segments.has_segment_filters?(filters) do
+      Plausible.Repo.preload(site, :segments).segments
+    else
+      []
     end
   end
 
@@ -455,6 +357,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
     end
   end
 
+  defp validate_segments_allowed(_site, _query, _available_segments) do
+    :ok
+  end
+
   defp validate_filtered_goals_exist(query) do
     # Note: Only works since event:goal is allowed as a top level filter
     goal_filter_clauses =
@@ -464,7 +370,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
       end)
 
     if length(goal_filter_clauses) > 0 do
-      validate_list(goal_filter_clauses, &validate_goal_filter(&1, query.preloaded_goals))
+      ListTraverse.validate_list(
+        goal_filter_clauses,
+        &validate_goal_filter(&1, query.preloaded_goals)
+      )
     else
       :ok
     end
@@ -527,14 +436,14 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp validate_metrics(query) do
-    with :ok <- validate_list(query.metrics, &validate_metric(&1, query)) do
+    with :ok <- ListTraverse.validate_list(query.metrics, &validate_metric(&1, query)) do
       validate_no_metrics_filters_conflict(query)
     end
   end
 
   defp validate_metric(metric, query) when metric in [:conversion_rate, :group_conversion_rate] do
     if Enum.member?(query.dimensions, "event:goal") or
-         Filters.filtering_on_dimension?(query, "event:goal") do
+         Filters.filtering_on_dimension?(query.filters, "event:goal") do
       :ok
     else
       {:error, "Metric `#{metric}` can only be queried with event:goal filters or dimensions."}
@@ -554,7 +463,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp validate_metric(:views_per_visit = metric, query) do
     cond do
-      Filters.filtering_on_dimension?(query, "event:page") ->
+      Filters.filtering_on_dimension?(query.filters, "event:page") ->
         {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`."}
 
       length(query.dimensions) > 0 ->
@@ -599,22 +508,4 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp i(value), do: inspect(value, charlists: :as_lists)
-
-  defp parse_list(list, parser_function) do
-    Enum.reduce_while(list, {:ok, []}, fn value, {:ok, results} ->
-      case parser_function.(value) do
-        {:ok, result} -> {:cont, {:ok, results ++ [result]}}
-        {:error, _} = error -> {:halt, error}
-      end
-    end)
-  end
-
-  defp validate_list(list, parser_function) do
-    Enum.reduce_while(list, :ok, fn value, :ok ->
-      case parser_function.(value) do
-        :ok -> {:cont, :ok}
-        {:error, _} = error -> {:halt, error}
-      end
-    end)
-  end
 end
