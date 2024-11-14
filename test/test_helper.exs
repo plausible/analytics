@@ -9,6 +9,7 @@ Application.ensure_all_started(:double)
 FunWithFlags.enable(:channels)
 # Temporary flag to test `read_team_schemas` flag on all tests.
 if System.get_env("TEST_READ_TEAM_SCHEMAS") == "1" do
+  IO.puts("READS TEAM SCHEMAS")
   FunWithFlags.enable(:read_team_schemas)
 else
   FunWithFlags.disable(:read_team_schemas)
