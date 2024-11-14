@@ -8,6 +8,7 @@ defmodule Plausible.Imported.Source do
     field :import_id, Ch, type: "UInt64"
     field :date, :date
     field :source, :string
+    field :channel, Ch, type: "LowCardinality(String)"
     field :referrer, :string
     field :utm_source, :string
     field :utm_medium, :string

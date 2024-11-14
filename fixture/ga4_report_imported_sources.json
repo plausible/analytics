@@ -10,6 +10,9 @@
           "name": "sessionSource"
         },
         {
+          "name": "sessionDefaultChannelGroup"
+        },
+        {
           "name": "sessionMedium"
         },
         {
@@ -60,6 +63,9 @@
               "value": "google"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -97,6 +103,9 @@
             },
             {
               "value": "(direct)"
+            },
+            {
+              "value": "Direct"
             },
             {
               "value": "(none)"
@@ -138,6 +147,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -175,6 +187,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -216,6 +231,9 @@
               "value": "lm.facebook.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -253,6 +271,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -294,6 +315,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -331,6 +355,9 @@
             },
             {
               "value": "pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -372,6 +399,9 @@
               "value": "lm.facebook.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -409,6 +439,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -450,6 +483,9 @@
               "value": "pinterest.de"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -487,6 +523,9 @@
             },
             {
               "value": "kuhinjica-mignone.blogspot.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -528,6 +567,9 @@
               "value": "m.facebook.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -565,6 +607,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -606,6 +651,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -643,6 +691,9 @@
             },
             {
               "value": "pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -684,6 +735,9 @@
               "value": "bing"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -723,6 +777,9 @@
               "value": "m.facebook.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -760,6 +817,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -801,6 +861,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -838,6 +901,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -879,6 +945,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -916,6 +985,9 @@
             },
             {
               "value": "m.facebook.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -957,6 +1029,9 @@
               "value": "pinterest.com.au"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -994,6 +1069,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -1035,6 +1113,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -1072,6 +1153,9 @@
             },
             {
               "value": "pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -1113,6 +1197,9 @@
               "value": "vikendkuvarica.blogspot.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -1152,6 +1239,9 @@
               "value": "bing"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -1189,6 +1279,9 @@
             },
             {
               "value": "m.facebook.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -1230,6 +1323,9 @@
               "value": "yahoo"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -1267,6 +1363,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -1308,6 +1407,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -1347,6 +1449,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -1384,6 +1489,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -1425,6 +1533,9 @@
               "value": "(not set)"
             },
             {
+              "value": "Unassigned"
+            },
+            {
               "value": "(not set)"
             },
             {
@@ -1462,6 +1573,9 @@
             },
             {
               "value": "abaiak.com"
+            },
+            {
+              "value": "Referral"
             },
             {
               "value": "referral"
@@ -1503,6 +1617,9 @@
               "value": "m.facebook.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -1540,6 +1657,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -1581,6 +1701,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -1620,6 +1743,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -1657,6 +1783,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -1698,6 +1827,9 @@
               "value": "pinterest.it"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -1737,6 +1869,9 @@
               "value": "parfe-dunja.blogspot.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -1774,6 +1909,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -1815,6 +1953,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -1852,6 +1993,9 @@
             },
             {
               "value": "vikendkuvarica.blogspot.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -1893,6 +2037,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -1930,6 +2077,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -1971,6 +2121,9 @@
               "value": "lm.facebook.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -2008,6 +2161,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -2049,6 +2205,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -2086,6 +2245,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -2127,6 +2289,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -2164,6 +2329,9 @@
             },
             {
               "value": "pinterest.se"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -2205,6 +2373,9 @@
               "value": "pinterest.com.au"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -2242,6 +2413,9 @@
             },
             {
               "value": "pinterest.de"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -2283,6 +2457,9 @@
               "value": "links.google.wdsystem.cn"
             },
             {
+              "value": "Referral"
+            },
+            {
               "value": "referral"
             },
             {
@@ -2322,6 +2499,9 @@
               "value": "nely-bluehortensia.blogspot.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -2359,6 +2539,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -2400,6 +2583,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -2437,6 +2623,9 @@
             },
             {
               "value": "pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -2478,6 +2667,9 @@
               "value": "pinterest.de"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -2515,6 +2707,9 @@
             },
             {
               "value": "links.google.wdsystem.cn"
+            },
+            {
+              "value": "Referral"
             },
             {
               "value": "referral"
@@ -2556,6 +2751,9 @@
               "value": "pinterest.ca"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -2593,6 +2791,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -2634,6 +2835,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -2671,6 +2875,9 @@
             },
             {
               "value": "pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -2712,6 +2919,9 @@
               "value": "bing"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -2749,6 +2959,9 @@
             },
             {
               "value": "m.facebook.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -2790,6 +3003,9 @@
               "value": "nl.pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -2827,6 +3043,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -2868,6 +3087,9 @@
               "value": "lm.facebook.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -2905,6 +3127,9 @@
             },
             {
               "value": "(direct)"
+            },
+            {
+              "value": "Direct"
             },
             {
               "value": "(none)"
@@ -2946,6 +3171,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -2985,6 +3213,9 @@
               "value": "bing"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -3022,6 +3253,9 @@
             },
             {
               "value": "m.facebook.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -3063,6 +3297,9 @@
               "value": "pinterest.ca"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -3102,6 +3339,9 @@
               "value": "pinterest.de"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -3139,6 +3379,9 @@
             },
             {
               "value": "(not set)"
+            },
+            {
+              "value": "Unassigned"
             },
             {
               "value": "(not set)"
@@ -3180,6 +3423,9 @@
               "value": "google"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -3217,6 +3463,9 @@
             },
             {
               "value": "(direct)"
+            },
+            {
+              "value": "Direct"
             },
             {
               "value": "(none)"
@@ -3258,6 +3507,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -3295,6 +3547,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -3336,6 +3591,9 @@
               "value": "duckduckgo"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -3375,6 +3633,9 @@
               "value": "hitree.shop"
             },
             {
+              "value": "Referral"
+            },
+            {
               "value": "referral"
             },
             {
@@ -3412,6 +3673,9 @@
             },
             {
               "value": "m.facebook.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -3453,6 +3717,9 @@
               "value": "pinterest.se"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -3490,6 +3757,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -3531,6 +3801,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -3568,6 +3841,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -3609,6 +3885,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -3646,6 +3925,9 @@
             },
             {
               "value": "lm.facebook.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -3687,6 +3969,9 @@
               "value": "(not set)"
             },
             {
+              "value": "Unassigned"
+            },
+            {
               "value": "(not set)"
             },
             {
@@ -3724,6 +4009,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -3765,6 +4053,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -3802,6 +4093,9 @@
             },
             {
               "value": "pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -3843,6 +4137,9 @@
               "value": "bing"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -3880,6 +4177,9 @@
             },
             {
               "value": "l.facebook.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -3921,6 +4221,9 @@
               "value": "thursdaycooking.com.hr"
             },
             {
+              "value": "Referral"
+            },
+            {
               "value": "referral"
             },
             {
@@ -3958,6 +4261,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -3999,6 +4305,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -4038,6 +4347,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -4075,6 +4387,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -4116,6 +4431,9 @@
               "value": "pinterest.at"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -4155,6 +4473,9 @@
               "value": "mojaslatkakuhinja.wordpress.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -4192,6 +4513,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -4233,6 +4557,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -4270,6 +4597,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -4311,6 +4641,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -4348,6 +4681,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -4389,6 +4725,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -4426,6 +4765,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -4467,6 +4809,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -4506,6 +4851,9 @@
               "value": "baidu"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -4543,6 +4891,9 @@
             },
             {
               "value": "duckduckgo"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -4584,6 +4935,9 @@
               "value": "pinterest.it"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -4621,6 +4975,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -4662,6 +5019,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -4701,6 +5061,9 @@
               "value": "baidu"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -4738,6 +5101,9 @@
             },
             {
               "value": "pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -4779,6 +5145,9 @@
               "value": "alohafind.com"
             },
             {
+              "value": "Referral"
+            },
+            {
               "value": "referral"
             },
             {
@@ -4816,6 +5185,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -4857,6 +5229,9 @@
               "value": "pinterest.de"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -4894,6 +5269,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -4935,6 +5313,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -4972,6 +5353,9 @@
             },
             {
               "value": "pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -5013,6 +5397,9 @@
               "value": "bing"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -5050,6 +5437,9 @@
             },
             {
               "value": "pinterest.de"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -5091,6 +5481,9 @@
               "value": "duckduckgo"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -5128,6 +5521,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -5169,6 +5565,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -5206,6 +5605,9 @@
             },
             {
               "value": "mojaslatkakuhinja.wordpress.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -5247,6 +5649,9 @@
               "value": "baidu"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -5284,6 +5689,9 @@
             },
             {
               "value": "pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -5325,6 +5733,9 @@
               "value": "bing"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -5362,6 +5773,9 @@
             },
             {
               "value": "pinterest.de"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -5403,6 +5817,9 @@
               "value": "thursdaycooking.com.hr"
             },
             {
+              "value": "Referral"
+            },
+            {
               "value": "referral"
             },
             {
@@ -5440,6 +5857,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -5481,6 +5901,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -5518,6 +5941,9 @@
             },
             {
               "value": "pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -5559,6 +5985,9 @@
               "value": "bing"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -5596,6 +6025,9 @@
             },
             {
               "value": "de.search.yahoo.com"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "referral"
@@ -5637,6 +6069,9 @@
               "value": "m.facebook.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -5674,6 +6109,9 @@
             },
             {
               "value": "gagasrce.blogspot.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -5715,6 +6153,9 @@
               "value": "petalsearch.com"
             },
             {
+              "value": "Referral"
+            },
+            {
               "value": "referral"
             },
             {
@@ -5752,6 +6193,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -5793,6 +6237,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -5830,6 +6277,9 @@
             },
             {
               "value": "kadjakuvam.blogspot.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -5871,6 +6321,9 @@
               "value": "bing"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -5908,6 +6361,9 @@
             },
             {
               "value": "pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -5949,6 +6405,9 @@
               "value": "baidu"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -5988,6 +6447,9 @@
               "value": "mojaslatkakuhinja.wordpress.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -6025,6 +6487,9 @@
             },
             {
               "value": "pinterest.ch"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -6066,6 +6531,9 @@
               "value": "google"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -6103,6 +6571,9 @@
             },
             {
               "value": "(direct)"
+            },
+            {
+              "value": "Direct"
             },
             {
               "value": "(none)"
@@ -6144,6 +6615,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -6183,6 +6657,9 @@
               "value": "baidu"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -6220,6 +6697,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -6261,6 +6741,9 @@
               "value": "ecosia.org"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -6298,6 +6781,9 @@
             },
             {
               "value": "kuhinjica-mignone.blogspot.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -6339,6 +6825,9 @@
               "value": "pinterest.ch"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -6376,6 +6865,9 @@
             },
             {
               "value": "tr.pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -6417,6 +6909,9 @@
               "value": "google"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -6454,6 +6949,9 @@
             },
             {
               "value": "(direct)"
+            },
+            {
+              "value": "Direct"
             },
             {
               "value": "(none)"
@@ -6495,6 +6993,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -6532,6 +7033,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -6573,6 +7077,9 @@
               "value": "lm.facebook.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -6612,6 +7119,9 @@
               "value": "pinterest.com.au"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -6649,6 +7159,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -6690,6 +7203,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -6727,6 +7243,9 @@
             },
             {
               "value": "pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -6768,6 +7287,9 @@
               "value": "bing"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -6805,6 +7327,9 @@
             },
             {
               "value": "pinterest.es"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -6846,6 +7371,9 @@
               "value": "l.facebook.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -6883,6 +7411,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -6924,6 +7455,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -6961,6 +7495,9 @@
             },
             {
               "value": "pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -7002,6 +7539,9 @@
               "value": "bing"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -7039,6 +7579,9 @@
             },
             {
               "value": "mojaslatkakuhinja.wordpress.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -7080,6 +7623,9 @@
               "value": "pinterest.de"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -7117,6 +7663,9 @@
             },
             {
               "value": "nely-bluehortensia.blogspot.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -7158,6 +7707,9 @@
               "value": "google"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -7195,6 +7747,9 @@
             },
             {
               "value": "(direct)"
+            },
+            {
+              "value": "Direct"
             },
             {
               "value": "(none)"
@@ -7236,6 +7791,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -7275,6 +7833,9 @@
               "value": "baidu"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -7312,6 +7873,9 @@
             },
             {
               "value": "bing"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -7353,6 +7917,9 @@
               "value": "m.facebook.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -7390,6 +7957,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -7431,6 +8001,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -7468,6 +8041,9 @@
             },
             {
               "value": "pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -7509,6 +8085,9 @@
               "value": "bing"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -7546,6 +8125,9 @@
             },
             {
               "value": "kadjakuvam.blogspot.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -7587,6 +8169,9 @@
               "value": "kuhinjica-mignone.blogspot.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -7624,6 +8209,9 @@
             },
             {
               "value": "google"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -7665,6 +8253,9 @@
               "value": "(direct)"
             },
             {
+              "value": "Direct"
+            },
+            {
               "value": "(none)"
             },
             {
@@ -7702,6 +8293,9 @@
             },
             {
               "value": "kuhinjica-mignone.blogspot.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -7743,6 +8337,9 @@
               "value": "mojaslatkakuhinja.wordpress.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -7780,6 +8377,9 @@
             },
             {
               "value": "pinterest.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
@@ -7821,6 +8421,9 @@
               "value": "bing"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -7858,6 +8461,9 @@
             },
             {
               "value": "emea.search.yahoo.com"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "referral"
@@ -7899,6 +8505,9 @@
               "value": "pinterest.de"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -7936,6 +8545,9 @@
             },
             {
               "value": "startraffic.online"
+            },
+            {
+              "value": "Referral"
             },
             {
               "value": "referral"
@@ -7977,6 +8589,9 @@
               "value": "google"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -8014,6 +8629,9 @@
             },
             {
               "value": "(direct)"
+            },
+            {
+              "value": "Direct"
             },
             {
               "value": "(none)"
@@ -8055,6 +8673,9 @@
               "value": "pinterest.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -8092,6 +8713,9 @@
             },
             {
               "value": "baidu"
+            },
+            {
+              "value": "Organic Search"
             },
             {
               "value": "organic"
@@ -8133,6 +8757,9 @@
               "value": "bing"
             },
             {
+              "value": "Organic Search"
+            },
+            {
               "value": "organic"
             },
             {
@@ -8172,6 +8799,9 @@
               "value": "mojaslatkakuhinja.wordpress.com"
             },
             {
+              "value": "Organic Social"
+            },
+            {
               "value": "referral"
             },
             {
@@ -8209,6 +8839,9 @@
             },
             {
               "value": "vrtaljica.blogspot.com"
+            },
+            {
+              "value": "Organic Social"
             },
             {
               "value": "referral"
