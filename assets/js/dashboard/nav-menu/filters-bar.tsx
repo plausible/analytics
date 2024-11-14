@@ -11,6 +11,10 @@ import {
 } from '../components/dropdown'
 import { FilterPillsList, PILL_X_GAP } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
+import { SaveSegmentAction } from '../segments/segment-actions'
+import { EditingSegmentState, isSegmentFilter } from '../segments/segments'
+import { useLocation } from 'react-router-dom'
+import { useUserContext } from '../user-context'
 
 const SEE_MORE_GAP_PX = 16
 const SEE_MORE_WIDTH_PX = 36
@@ -91,12 +95,34 @@ type VisibilityState = {
 }
 
 export const FiltersBar = () => {
+  const user = useUserContext();
   const containerRef = useRef<HTMLDivElement>(null)
   const pillsRef = useRef<HTMLDivElement>(null)
   const actionsRef = useRef<HTMLDivElement>(null)
   const seeMoreRef = useRef<HTMLDivElement>(null)
   const [visibility, setVisibility] = useState<null | VisibilityState>(null)
   const { query } = useQueryContext()
+  const { state: locationState } = useLocation() as {
+    state?: EditingSegmentState
+  }
+  const [editingSegment, setEditingSegment] = useState<
+    null | EditingSegmentState['editingSegment']
+  >(null)
+
+  useLayoutEffect(() => {
+    if (locationState?.editingSegment) {
+      setEditingSegment(locationState?.editingSegment)
+    }
+    if (locationState?.editingSegment === null) {
+      setEditingSegment(null)
+    }
+  }, [locationState?.editingSegment])
+
+  useLayoutEffect(() => {
+    if (!query.filters.length) {
+      setEditingSegment(null)
+    }
+  }, [query.filters.length])
 
   const [opened, setOpened] = useState(false)
 
@@ -146,7 +172,7 @@ export const FiltersBar = () => {
   return (
     <div
       className={classNames(
-        'flex w-full mt-4',
+        'flex w-full mt-3',
         visibility === null && 'invisible' // hide until we've calculated the positions
       )}
       ref={containerRef}
@@ -198,6 +224,27 @@ export const FiltersBar = () => {
             </ToggleDropdownButton>
           )}
         <ClearAction />
+        {user.loggedIn && editingSegment === null &&
+          !query.filters.some((f) => isSegmentFilter(f)) && (
+            <>
+              <VerticalSeparator />
+              <SaveSegmentAction options={[{ type: 'create segment' }]} />
+            </>
+          )}
+        {user.loggedIn && editingSegment !== null && (
+          <>
+            <VerticalSeparator />
+            <SaveSegmentAction
+              options={[
+                {
+                  type: 'update segment',
+                  segment: editingSegment
+                },
+                { type: 'create segment' }
+              ]}
+            />
+          </>
+        )}
       </div>
     </div>
   )
@@ -206,7 +253,7 @@ export const FiltersBar = () => {
 export const ClearAction = () => (
   <AppNavigationLink
     title="Clear all filters"
-    className="w-9 text-gray-500 hover:text-indigo-700 dark:hover:text-indigo-500 flex items-center justify-center"
+    className="px-1 text-gray-500 hover:text-indigo-700 dark:hover:text-indigo-500 flex items-center justify-center"
     search={(search) => ({
       ...search,
       filters: null,
@@ -216,3 +263,9 @@ export const ClearAction = () => (
     <XMarkIcon className="w-4 h-4" />
   </AppNavigationLink>
 )
+
+const VerticalSeparator = () => {
+  return (
+    <div className="border-gray-300 dark:border-gray-500 border-1 border-l h-9"></div>
+  )
+}

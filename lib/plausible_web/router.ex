@@ -165,6 +165,17 @@ defmodule PlausibleWeb.Router do
     end
   end
 
+  # This scope indicates routes changeable without notice.
+  scope "/internal-api", PlausibleWeb.Api.Internal do
+    pipe_through [:internal_stats_api]
+
+    get "/:domain/segments", SegmentsController, :get_all_segments
+    get "/:domain/segments/:segment_id", SegmentsController, :get_segment
+    post "/:domain/segments", SegmentsController, :create_segment
+    patch "/:domain/segments/:segment_id", SegmentsController, :update_segment
+    delete "/:domain/segments/:segment_id", SegmentsController, :delete_segment
+  end
+
   scope "/api/stats", PlausibleWeb.Api do
     pipe_through :internal_stats_api
 

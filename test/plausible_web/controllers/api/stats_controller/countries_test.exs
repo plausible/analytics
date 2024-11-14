@@ -342,5 +342,73 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
                }
              ]
     end
+
+    test "handles multiple segment filters", %{conn: conn, site: site, user: user} do
+      %{id: segment_alfa} =
+        insert(:segment,
+          site_id: site.id,
+          owner_id: user.id,
+          name: "Ireland and Britain (excl London)",
+          type: :site,
+          segment_data: %{
+            "filters" => [
+              ["is", "visit:country", ["IE", "GB"]],
+              ["is_not", "visit:city", [2_643_743]]
+            ]
+          }
+        )
+
+      %{id: segment_beta} =
+        insert(:segment,
+          site_id: site.id,
+          owner_id: user.id,
+          name: "Entered on root or Blog",
+          type: :personal,
+          segment_data: %{
+            "filters" => [
+              ["is", "visit:entry_page", ["/", "/blog"]]
+            ]
+          }
+        )
+
+      populate_stats(site, [
+        build(:pageview, country_code: "EE"),
+        build(:pageview,
+          country_code: "GB",
+          # London
+          city_geoname_id: 2_643_743
+        ),
+        build(:pageview,
+          country_code: "GB",
+          # London
+          city_geoname_id: 2_643_743
+        ),
+        build(:pageview, country_code: "GB"),
+        build(:pageview, country_code: "IE", pathname: "/other"),
+        build(:pageview, country_code: "IE")
+      ])
+
+      filters = Jason.encode!([["is", "segment", [segment_alfa, segment_beta]]])
+      conn = get(conn, "/api/stats/#{site.domain}/countries?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200)["results"] == [
+               %{
+                 "code" => "GB",
+                 "alpha_3" => "GBR",
+                 "name" => "United Kingdom",
+                 "flag" => "🇬🇧",
+                 "visitors" => 1,
+                 "percentage" => 50
+               },
+               %{
+                 "code" => "IE",
+                 "alpha_3" => "IRL",
+                 "name" => "Ireland",
+                 "flag" => "🇮🇪",
+                 "visitors" => 1,
+                 "percentage" => 50
+               }
+             ]
+    end
   end
 end

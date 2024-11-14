@@ -76,17 +76,18 @@ export const FilterPillsList = React.forwardRef<
           }
           plainText={plainFilterText(query, filter)}
           key={index}
-          onRemoveClick={() =>
+          onRemoveClick={() => {
+            const newFilters = query.filters.filter(
+              (_, i) => i !== index + indexAdjustment
+            )
             navigate({
               search: (search) => ({
                 ...search,
-                filters: query.filters.filter(
-                  (_, i) => i !== index + indexAdjustment
-                ),
-                labels: cleanLabels(query.filters, query.labels)
+                filters: newFilters,
+                labels: cleanLabels(newFilters, query.labels)
               })
             })
-          }
+          }}
         >
           {styledFilterText(query, filter)}
         </FilterPill>

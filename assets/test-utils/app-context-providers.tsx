@@ -40,7 +40,8 @@ export const TestContextProviders = ({
     isDbip: false,
     flags: {},
     validIntervalsByPeriod: {},
-    shared: false
+    shared: false,
+    members: {1: "Test User"}
   }
 
   const site = { ...defaultSite, ...siteOptions }
@@ -58,7 +59,7 @@ export const TestContextProviders = ({
   return (
     // <ThemeContextProvider> not interactive component, default value is suitable
     <SiteContextProvider site={site}>
-      <UserContextProvider role={Role.admin} loggedIn={true}>
+      <UserContextProvider user={{ role: Role.admin, loggedIn: true, id: 1 }}>
         <MemoryRouter
           basename={getRouterBasepath(site)}
           initialEntries={defaultInitialEntries}

@@ -3,6 +3,10 @@
 import React, { useMemo } from 'react'
 import * as api from '../api'
 import { useQueryContext } from '../query-context'
+import {
+  formatSegmentIdAsLabelKey,
+  isSegmentFilter
+} from '../segments/segments'
 
 export const FILTER_MODAL_TO_FILTER_GROUP = {
   page: ['page', 'entry_page', 'exit_page'],
@@ -14,7 +18,8 @@ export const FILTER_MODAL_TO_FILTER_GROUP = {
   utm: ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
   goal: ['goal'],
   props: ['props'],
-  hostname: ['hostname']
+  hostname: ['hostname'],
+  segment: ['segment']
 }
 
 export const FILTER_GROUP_TO_MODAL_TYPE = Object.fromEntries(
@@ -76,9 +81,13 @@ const ESCAPED_PIPE = '\\|'
 export function getLabel(labels, filterKey, value) {
   if (['country', 'region', 'city'].includes(filterKey)) {
     return labels[value]
-  } else {
-    return value
   }
+
+  if (isSegmentFilter(['is', filterKey, []])) {
+    return labels[formatSegmentIdAsLabelKey(value)]
+  }
+
+  return value
 }
 
 export function getPropertyKeyFromFilterKey(filterKey) {
@@ -201,11 +210,18 @@ export function formatFilterGroup(filterGroup) {
 export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
   const filteredBy = Object.fromEntries(
     filters
-      .flatMap(([_operation, filterKey, clauses]) =>
-        ['country', 'region', 'city'].includes(filterKey) ? clauses : []
-      )
+      .flatMap(([_operation, filterKey, clauses]) => {
+        if (filterKey === 'segment') {
+          return clauses.map(formatSegmentIdAsLabelKey)
+        }
+        if (['country', 'region', 'city'].includes(filterKey)) {
+          return clauses
+        }
+        return []
+      })
       .map((value) => [value, true])
   )
+
   let result = { ...labels }
   for (const value in labels) {
     if (!filteredBy[value]) {
@@ -215,7 +231,7 @@ export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
 
   if (
     mergedFilterKey &&
-    ['country', 'region', 'city'].includes(mergedFilterKey)
+    ['country', 'region', 'city', 'segment'].includes(mergedFilterKey)
   ) {
     result = {
       ...result,
@@ -226,21 +242,55 @@ export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
   return result
 }
 
+const NO_PREFIX_KEYS = new Set(['segment'])
 const EVENT_FILTER_KEYS = new Set(['name', 'page', 'goal', 'hostname'])
+const EVENT_PREFIX = 'event:'
+const VISIT_PREFIX = 'visit:'
+
+function remapFilterKey(filterKey) {
+  if (NO_PREFIX_KEYS.has(filterKey)) {
+    return filterKey
+  }
+  if (EVENT_FILTER_KEYS.has(filterKey)) {
+    return `${EVENT_PREFIX}${filterKey}`
+  }
+  return `${VISIT_PREFIX}${filterKey}`
+}
+
+function remapApiFilterKey(apiFilterKey) {
+  const isNoPrefixKey = NO_PREFIX_KEYS.has(apiFilterKey)
+
+  if (isNoPrefixKey) {
+    return apiFilterKey
+  }
+
+  const isEventKey = apiFilterKey.startsWith(EVENT_PREFIX)
+  const isVisitKey = apiFilterKey.startsWith(VISIT_PREFIX)
+
+  if (isEventKey) {
+    return apiFilterKey.substring(EVENT_PREFIX.length)
+  }
+  if (isVisitKey) {
+    return apiFilterKey.substring(VISIT_PREFIX.length)
+  }
+
+  return apiFilterKey // maybe throw?
+}
+
+export function remapToApiFilters(filters) {
+  return filters.map(([operation, filterKey, clauses]) => {
+    return [operation, remapFilterKey(filterKey), clauses]
+  })
+}
+
+export function remapFromApiFilters(apiFilters) {
+  return apiFilters.map(([operation, apiFilterKey, clauses]) => {
+    return [operation, remapApiFilterKey(apiFilterKey), clauses]
+  })
+}
 
 export function serializeApiFilters(filters) {
-  const apiFilters = filters.map(([operation, filterKey, clauses]) => {
-    let apiFilterKey = `visit:${filterKey}`
-    if (
-      filterKey.startsWith(EVENT_PROPS_PREFIX) ||
-      EVENT_FILTER_KEYS.has(filterKey)
-    ) {
-      apiFilterKey = `event:${filterKey}`
-    }
-    return [operation, apiFilterKey, clauses]
-  })
-
-  return JSON.stringify(apiFilters)
+  return JSON.stringify(remapToApiFilters(filters))
 }
 
 export function fetchSuggestions(apiPath, query, input, additionalFilter) {
@@ -291,7 +341,8 @@ export const formattedFilters = {
   page: 'Page',
   hostname: 'Hostname',
   entry_page: 'Entry Page',
-  exit_page: 'Exit Page'
+  exit_page: 'Exit Page',
+  segment: 'Segment'
 }
 
 export function parseLegacyFilter(filterKey, rawValue) {

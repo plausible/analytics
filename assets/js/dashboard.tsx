@@ -57,8 +57,15 @@ if (container && container.dataset) {
         <ThemeContextProvider>
           <SiteContextProvider site={site}>
             <UserContextProvider
-              role={container.dataset.currentUserRole as Role}
-              loggedIn={container.dataset.loggedIn === 'true'}
+              user={
+                container.dataset.loggedIn === 'true'
+                  ? {
+                      loggedIn: true,
+                      role: container.dataset.currentUserRole! as Role,
+                      id: parseInt(container.dataset.currentUserId!, 10)
+                    }
+                  : { loggedIn: false, role: null, id: null }
+              }
             >
               <RouterProvider router={router} />
             </UserContextProvider>
