@@ -5,30 +5,29 @@ defmodule Plausible.Teams.Adapter.Read.Sites do
 
   import Ecto.Query
 
-  alias Plausible.Auth
   alias Plausible.Repo
   alias Plausible.Site
-  alias Plausible.Teams
+  use Plausible.Teams.Adapter
 
   def list(user, pagination_params, opts \\ []) do
-    if Plausible.Teams.read_team_schemas?(user) do
-      Plausible.Teams.Sites.list(user, pagination_params, opts)
-    else
-      old_list(user, pagination_params, opts)
-    end
+    switch(
+      user,
+      team_fn: fn _ -> Plausible.Teams.Sites.list(user, pagination_params, opts) end,
+      user_fn: fn _ -> old_list(user, pagination_params, opts) end
+    )
   end
 
   def list_with_invitations(user, pagination_params, opts \\ []) do
-    if Plausible.Teams.read_team_schemas?(user) do
-      Plausible.Teams.Sites.list_with_invitations(user, pagination_params, opts)
-    else
-      old_list_with_invitations(user, pagination_params, opts)
-    end
+    switch(
+      user,
+      team_fn: fn _ ->
+        Plausible.Teams.Sites.list_with_invitations(user, pagination_params, opts)
+      end,
+      user_fn: fn _ -> old_list_with_invitations(user, pagination_params, opts) end
+    )
   end
 
-  @type list_opt() :: {:filter_by_domain, String.t()}
-  @spec old_list(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
-  def old_list(user, pagination_params, opts \\ []) do
+  defp old_list(user, pagination_params, opts) do
     domain_filter = Keyword.get(opts, :filter_by_domain)
 
     from(s in Site,
@@ -60,8 +59,7 @@ defmodule Plausible.Teams.Adapter.Read.Sites do
     |> Repo.paginate(pagination_params)
   end
 
-  @spec old_list_with_invitations(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
-  def old_list_with_invitations(user, pagination_params, opts \\ []) do
+  defp old_list_with_invitations(user, pagination_params, opts) do
     domain_filter = Keyword.get(opts, :filter_by_domain)
 
     result =

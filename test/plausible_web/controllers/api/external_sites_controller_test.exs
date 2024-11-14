@@ -2,6 +2,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   use Plausible
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
+  use Plausible.Teams.Test
 
   on_ee do
     setup :create_user
@@ -77,7 +78,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       end
 
       test "does not allow creating more sites than the limit", %{conn: conn, user: user} do
-        insert_list(50, :site, members: [user])
+        for _ <- 1..10, do: new_site(owner: user)
 
         conn =
           post(conn, "/api/v1/sites", %{

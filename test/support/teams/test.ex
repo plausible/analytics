@@ -139,6 +139,32 @@ defmodule Plausible.Teams.Test do
     {:ok, team} = Teams.get_or_create(user)
 
     insert(:growth_subscription, user: user, team: team)
+    user
+  end
+
+  def subscribe_to_plan(user, paddle_plan_id) do
+    {:ok, team} = Teams.get_or_create(user)
+
+    insert(:subscription, user: user, team: team, paddle_plan_id: paddle_plan_id)
+    user
+  end
+
+  def subscribe_to_enterprise_plan(user, attrs) do
+    {:ok, team} = Teams.get_or_create(user)
+
+    {subscription?, attrs} = Keyword.pop(attrs, :subscription?, true)
+
+    enterprise_plan = insert(:enterprise_plan, Keyword.merge([user: user, team: team], attrs))
+
+    if subscription? do
+      insert(:subscription,
+        team: team,
+        user: user,
+        paddle_plan_id: enterprise_plan.paddle_plan_id
+      )
+    end
+
+    user
   end
 
   def assert_team_exists(user, team_id \\ nil) do
