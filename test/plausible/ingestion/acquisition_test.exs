@@ -103,7 +103,13 @@ defmodule Plausible.Ingestion.AcquisitionTest do
     %{referrer_source: "steamcommunity.com", expected: "Organic Social"},
     %{referrer_source: "Vkontakte", expected: "Organic Social"},
     %{referrer_source: "Threads", expected: "Organic Social"},
-    %{referrer_source: "Ecosia", expected: "Organic Search"}
+    %{referrer_source: "Ecosia", expected: "Organic Search"},
+    %{
+      referrer_source: "Google",
+      utm_medium: "display",
+      click_id_param: "123identifier",
+      expected: "Display"
+    }
   ]
 
   for {test_data, index} <- Enum.with_index(@static_tests, 1) do
