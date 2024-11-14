@@ -142,6 +142,13 @@ defmodule Plausible.Teams.Test do
     user
   end
 
+  def subscribe_to_business_plan(user) do
+    {:ok, team} = Teams.get_or_create(user)
+
+    insert(:business_subscription, user: user, team: team)
+    user
+  end
+
   def subscribe_to_plan(user, paddle_plan_id) do
     {:ok, team} = Teams.get_or_create(user)
 
@@ -149,7 +156,7 @@ defmodule Plausible.Teams.Test do
     user
   end
 
-  def subscribe_to_enterprise_plan(user, attrs) do
+  def subscribe_to_enterprise_plan(user, attrs \\ []) do
     {:ok, team} = Teams.get_or_create(user)
 
     {subscription?, attrs} = Keyword.pop(attrs, :subscription?, true)

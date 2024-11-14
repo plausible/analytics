@@ -35,16 +35,11 @@ defmodule Plausible.TestUtils do
   end
 
   def create_user(_) do
-    {:ok, user: Factory.insert(:user)}
+    {:ok, user: Plausible.Teams.Test.new_user()}
   end
 
   def create_site(%{user: user}) do
-    site =
-      Factory.insert(:site,
-        members: [user]
-      )
-
-    {:ok, site: site}
+    {:ok, site: Plausible.Teams.Test.new_site(owner: user)}
   end
 
   def create_legacy_site_import(%{site: site}) do
@@ -62,11 +57,6 @@ defmodule Plausible.TestUtils do
       )
 
     {:ok, site_import: site_import}
-  end
-
-  def create_new_site(%{user: user}) do
-    site = Factory.insert(:site, members: [user])
-    {:ok, site: site}
   end
 
   def create_api_key(%{user: user}) do

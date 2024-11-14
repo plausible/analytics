@@ -81,7 +81,7 @@ defmodule PlausibleWeb.SiteController do
     feature_mod =
       Enum.find(Plausible.Billing.Feature.list(), &(&1.toggle_field() == toggle_field))
 
-    case feature_mod.toggle(site, override: value == "true") do
+    case feature_mod.toggle(site, conn.assigns.current_user, override: value == "true") do
       {:ok, updated_site} ->
         message =
           if Map.fetch!(updated_site, toggle_field) do

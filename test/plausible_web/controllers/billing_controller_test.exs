@@ -145,6 +145,8 @@ defmodule PlausibleWeb.BillingControllerTest do
 
     test "data-product attribute on the checkout link is the paddle_plan_id of the enterprise plan",
          %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_by_owner(user)
+
       doc =
         conn
         |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
@@ -153,7 +155,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert %{
                "disableLogout" => true,
                "email" => user.email,
-               "passthrough" => user.id,
+               "passthrough" => "user:#{user.id};team:#{team.id}",
                "product" => @configured_enterprise_plan_paddle_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
@@ -316,6 +318,8 @@ defmodule PlausibleWeb.BillingControllerTest do
 
     test "renders paddle button with the correct checkout params",
          %{conn: conn, user: user} do
+      {:ok, team} = Plausible.Teams.get_by_owner(user)
+
       doc =
         conn
         |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
@@ -324,7 +328,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert %{
                "disableLogout" => true,
                "email" => user.email,
-               "passthrough" => user.id,
+               "passthrough" => "user:#{user.id};team:#{team.id}",
                "product" => @configured_enterprise_plan_paddle_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
