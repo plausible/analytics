@@ -301,7 +301,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      insert_list(10, :site, members: [user])
+      for _ <- 1..10, do: new_site(owner: user)
 
       conn =
         post(conn, "/sites", %{
