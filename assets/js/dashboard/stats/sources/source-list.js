@@ -3,9 +3,10 @@ import React, { Fragment, useEffect, useState } from 'react';
 import * as storage from '../../util/storage';
 import * as url from '../../util/url';
 import * as api from '../../api';
+import usePrevious from '../../hooks/use-previous';
 import ListReport from '../reports/list';
 import * as metrics from '../reports/metrics';
-import { hasGoalFilter } from "../../util/filters";
+import { getFiltersByKeyPrefix, hasGoalFilter } from "../../util/filters";
 import { Menu, Transition } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import classNames from 'classnames';
@@ -15,11 +16,11 @@ import { useSiteContext } from '../../site-context';
 import { sourcesRoute, channelsRoute, utmCampaignsRoute, utmContentsRoute, utmMediumsRoute, utmSourcesRoute, utmTermsRoute } from '../../router';
 
 const UTM_TAGS = {
-  utm_medium: { label: 'UTM Medium', shortLabel: 'UTM Medium', endpoint: '/utm_mediums' },
-  utm_source: { label: 'UTM Source', shortLabel: 'UTM Source', endpoint: '/utm_sources' },
-  utm_campaign: { label: 'UTM Campaign', shortLabel: 'UTM Campai', endpoint: '/utm_campaigns' },
-  utm_content: { label: 'UTM Content', shortLabel: 'UTM Conten', endpoint: '/utm_contents' },
-  utm_term: { label: 'UTM Term', shortLabel: 'UTM Term', endpoint: '/utm_terms' },
+  utm_medium: { title: 'UTM Mediums', label: 'Medium', endpoint: '/utm_mediums' },
+  utm_source: { title: 'UTM Sources', label: 'Source', endpoint: '/utm_sources' },
+  utm_campaign: { title: 'UTM Campaigns', label: 'Campaign', endpoint: '/utm_campaigns' },
+  utm_content: { title: 'UTM Contents', label: 'Content', endpoint: '/utm_contents' },
+  utm_term: { title: 'UTM Terms', label: 'Term', endpoint: '/utm_terms' },
 }
 
 function AllSources({ afterFetchData }) {
@@ -67,7 +68,7 @@ function AllSources({ afterFetchData }) {
   )
 }
 
-function Channels({ afterFetchData }) {
+function Channels({ onClick, afterFetchData }) {
   const { query } = useQueryContext();
   const site = useSiteContext();
 
@@ -95,6 +96,7 @@ function Channels({ afterFetchData }) {
       afterFetchData={afterFetchData}
       getFilterFor={getFilterFor}
       keyLabel="Channel"
+      onClick={onClick}
       metrics={chooseMetrics()}
       detailsLinkProps={{ path: channelsRoute.path, search: (search) => search }}
       color="bg-blue-50"
@@ -146,6 +148,15 @@ function UTMSources({ tab, afterFetchData }) {
   )
 }
 
+const labelFor = {
+  'channels': 'Top Channels',
+  'all': 'Top Sources'
+}
+
+for (const [key, utm_tag] of Object.entries(UTM_TAGS)) {
+  labelFor[key] = utm_tag.title
+}
+
 export default function SourceList() {
   const site = useSiteContext();
   const { query } = useQueryContext();
@@ -154,8 +165,22 @@ export default function SourceList() {
   const [currentTab, setCurrentTab] = useState(storedTab || 'all')
   const [loading, setLoading] = useState(true)
   const [skipImportedReason, setSkipImportedReason] = useState(null)
+  const previousQuery = usePrevious(query);
 
   useEffect(() => setLoading(true), [query, currentTab])
+
+  useEffect(() => {
+    const isRemovingFilter = (filterName) => {
+      if (!previousQuery) return false
+
+      return getFiltersByKeyPrefix(previousQuery, filterName).length > 0 &&
+        getFiltersByKeyPrefix(query, filterName).length == 0
+    }
+
+    if (currentTab == 'all' && isRemovingFilter('channel')) {
+      setTab('channels')()
+    }
+  }, [query, currentTab])
 
   function setTab(tab) {
     return () => {
@@ -168,14 +193,14 @@ export default function SourceList() {
     const activeClass = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
     const defaultClass = 'hover:text-indigo-600 cursor-pointer truncate text-left'
     const dropdownOptions = Object.keys(UTM_TAGS)
-    let buttonText = UTM_TAGS[currentTab] ? UTM_TAGS[currentTab].label : 'Campaigns'
+    let buttonText = UTM_TAGS[currentTab] ? UTM_TAGS[currentTab].title : 'Campaigns'
 
     return (
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-        <div className={currentTab === 'all' ? activeClass : defaultClass} onClick={setTab('all')}>All</div>
         {site.flags.channels &&
           <div className={currentTab === 'channels' ? activeClass : defaultClass} onClick={setTab('channels')}>Channels</div>
         }
+        <div className={currentTab === 'all' ? activeClass : defaultClass} onClick={setTab('all')}>Sources</div>
 
         <Menu as="div" className="relative inline-block text-left">
           <div>
@@ -208,7 +233,7 @@ export default function SourceList() {
                             currentTab === option ? 'font-bold' : ''
                           )}
                         >
-                          {UTM_TAGS[option].label}
+                          {UTM_TAGS[option].title}
                         </span>
                       )}
                     </Menu.Item>
@@ -222,11 +247,15 @@ export default function SourceList() {
     )
   }
 
+  function onChannelClick() {
+    setTab('all')()
+  }
+
   function renderContent() {
     if (currentTab === 'all') {
       return <AllSources afterFetchData={afterFetchData} />
     } else if (currentTab == 'channels') {
-      return <Channels afterFetchData={afterFetchData} />
+      return <Channels onClick={onChannelClick} afterFetchData={afterFetchData} />
     } else {
       return <UTMSources tab={currentTab} afterFetchData={afterFetchData} />
     }
@@ -243,7 +272,7 @@ export default function SourceList() {
       <div className="w-full flex justify-between">
         <div className="flex gap-x-1">
           <h3 className="font-bold dark:text-gray-100">
-            Top Sources
+            {labelFor[currentTab]}
           </h3>
           <ImportedQueryUnsupportedWarning loading={loading} skipImportedReason={skipImportedReason} />
         </div>
