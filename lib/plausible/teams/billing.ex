@@ -42,6 +42,10 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
+  def ensure_can_add_new_site(nil) do
+    :ok
+  end
+
   def ensure_can_add_new_site(team) do
     team = Teams.with_subscription(team)
 
@@ -61,6 +65,10 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
+  def site_limit(nil) do
+    @site_limit_for_trials
+  end
+
   def site_limit(team) do
     if Timex.before?(team.inserted_at, @limit_sites_since) do
       :unlimited
@@ -69,6 +77,8 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
+  def site_usage(nil), do: 0
+
   def site_usage(team) do
     team
     |> Teams.owned_sites()
@@ -76,7 +86,8 @@ defmodule Plausible.Teams.Billing do
   end
 
   defp get_site_limit_from_plan(team) do
-    team = Teams.with_subscription(team)
+    team =
+      Teams.with_subscription(team)
 
     case Plans.get_subscription_plan(team.subscription) do
       %{site_limit: site_limit} -> site_limit

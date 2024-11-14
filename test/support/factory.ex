@@ -33,6 +33,7 @@ defmodule Plausible.Factory do
 
   def guest_invitation_factory do
     %Plausible.Teams.GuestInvitation{
+      invitation_id: Nanoid.generate(),
       role: :editor,
       team_invitation: build(:team_invitation, role: :guest)
     }

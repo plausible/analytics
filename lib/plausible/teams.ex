@@ -138,7 +138,7 @@ defmodule Plausible.Teams do
 
   defp last_subscription_query() do
     from(subscription in Plausible.Billing.Subscription,
-      order_by: [desc: subscription.inserted_at],
+      order_by: [desc: subscription.inserted_at, desc: subscription.id],
       limit: 1
     )
   end
