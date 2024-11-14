@@ -1554,6 +1554,24 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.acquisition_channel == "Display"
     end
 
+    test "display channel with gclid", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?utm_medium=display&utm_source=google&gclid=123identifier",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.acquisition_channel == "Display"
+    end
+
     test "parses paid other channel", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
