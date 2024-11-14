@@ -4,7 +4,6 @@ defmodule PlausibleWeb.SiteController do
   use Plausible
 
   alias Plausible.Sites
-  alias Plausible.Billing.Quota
 
   plug(PlausibleWeb.RequireAccountPlug)
 
@@ -19,8 +18,9 @@ defmodule PlausibleWeb.SiteController do
 
     render(conn, "new.html",
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
-      site_limit: Quota.Limits.site_limit(current_user),
-      site_limit_exceeded?: Quota.ensure_can_add_new_site(current_user) != :ok,
+      site_limit: Plausible.Teams.Adapter.Read.Billing.site_limit(current_user),
+      site_limit_exceeded?:
+        Plausible.Teams.Adapter.Read.Billing.ensure_can_add_new_site(current_user) != :ok,
       form_submit_url: "/sites?flow=#{flow}",
       flow: flow
     )
@@ -28,7 +28,7 @@ defmodule PlausibleWeb.SiteController do
 
   def create_site(conn, %{"site" => site_params}) do
     user = conn.assigns[:current_user]
-    first_site? = Quota.Usage.site_usage(user) == 0
+    first_site? = Plausible.Teams.Adapter.Read.Billing.site_usage(user) == 0
     flow = conn.params["flow"]
 
     case Sites.create(user, site_params) do
@@ -60,7 +60,7 @@ defmodule PlausibleWeb.SiteController do
         render(conn, "new.html",
           changeset: changeset,
           first_site?: first_site?,
-          site_limit: Quota.Limits.site_limit(user),
+          site_limit: Plausible.Teams.Adapter.Read.Billing.site_limit(user),
           site_limit_exceeded?: false,
           flow: flow,
           form_submit_url: "/sites?flow=#{flow}"

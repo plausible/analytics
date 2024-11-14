@@ -84,7 +84,7 @@ defmodule Plausible.Sites do
   end
 
   def create(user, params) do
-    with :ok <- Quota.ensure_can_add_new_site(user) do
+    with :ok <- Plausible.Teams.Adapter.Read.Billing.ensure_can_add_new_site(user) do
       Ecto.Multi.new()
       |> Ecto.Multi.put(:site_changeset, Site.new(params))
       |> Ecto.Multi.run(:create_team, fn _repo, _context ->

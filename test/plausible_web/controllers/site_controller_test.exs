@@ -284,7 +284,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:site, members: [user])
+      new_site(owner: user)
 
       post(conn, "/sites", %{
         "site" => %{
