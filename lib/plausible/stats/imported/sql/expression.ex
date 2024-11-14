@@ -231,24 +231,12 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
     })
   end
 
-  defp select_group_fields(q, "visit:channel", key, _query) do
-    select_merge_as(q, [i], %{
-      key =>
-        fragment(
-          "if(empty(?), ?, ?)",
-          i.channel,
-          @not_set,
-          i.channel
-        )
-    })
-  end
-
   defp select_group_fields(q, "event:page", key, _query) do
     select_merge_as(q, [i], %{key => i.page, time_on_page: sum(i.time_on_page)})
   end
 
   defp select_group_fields(q, dimension, key, _query)
-       when dimension in ["visit:device", "visit:browser"] do
+       when dimension in ["visit:device", "visit:browser", "visit:channel"] do
     select_merge_as(q, [i], %{
       key =>
         fragment(
