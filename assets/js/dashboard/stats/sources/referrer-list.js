@@ -9,6 +9,8 @@ import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
 import { referrersDrilldownRoute } from '../../router';
 
+const NO_REFERRER = 'Direct / None'
+
 export default function Referrers({ source }) {
   const { query } = useQueryContext();
   const site = useSiteContext()
@@ -27,12 +29,12 @@ export default function Referrers({ source }) {
   }
 
   function externalLinkDest(referrer) {
-    if (referrer.name === 'Direct / None') { return null }
+    if (referrer.name === NO_REFERRER) { return null }
     return `https://${referrer.name}`
   }
 
   function getFilterFor(referrer) {
-    if (referrer.name === 'Direct / None') { return null }
+    if (referrer.name === NO_REFERRER) { return null }
 
     return {
       prefix: 'referrer',
@@ -70,7 +72,7 @@ export default function Referrers({ source }) {
         getFilterFor={getFilterFor}
         keyLabel="Referrer"
         metrics={chooseMetrics()}
-        detailsLinkProps={{ path: referrersDrilldownRoute.path, params: {referrer: source}, search: (search) => search }}
+        detailsLinkProps={{ path: referrersDrilldownRoute.path, params: {referrer: url.maybeEncodeRouteParam(source)}, search: (search) => search }}
         externalLinkDest={externalLinkDest}
         renderIcon={renderIcon}
         color="bg-blue-50"

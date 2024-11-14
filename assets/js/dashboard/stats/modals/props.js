@@ -23,7 +23,7 @@ function PropsModal() {
   const reportInfo = {
     title: specialTitleWhenGoalFilter(query, 'Custom Property Breakdown'),
     dimension: propKey,
-    endpoint: url.apiPath(site, `/custom-prop-values/${propKey}`),
+    endpoint: url.apiPath(site, `/custom-prop-values/${url.maybeEncodeRouteParam(propKey)}`),
     dimensionLabel: propKey,
     defaultOrder: ["visitors", SortDirection.desc]
   }
