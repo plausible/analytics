@@ -6,7 +6,6 @@ defmodule Plausible.Sites do
   import Ecto.Query
 
   alias Plausible.Auth
-  alias Plausible.Billing.Quota
   alias Plausible.Repo
   alias Plausible.Site
   alias Plausible.Site.SharedLink
