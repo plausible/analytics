@@ -73,18 +73,22 @@ export function trimURL(url: string, maxLength: number): string {
   }
 }
 
-export function encodeURIComponentPermissive(input: string): string {
-  return (
-    encodeURIComponent(input)
-      /* @ts-expect-error API supposedly not present in compilation target */
-      .replaceAll('%2C', ',')
-      .replaceAll('%3A', ':')
-      .replaceAll('%2F', '/')
-  )
+export function encodeURIComponentPermissive(
+  input: string,
+  permittedCharacters: string
+): string {
+  return Array.from(permittedCharacters)
+    .map((character) => [encodeURIComponent(character), character])
+    .reduce(
+      (acc, [encodedCharacter, character]) =>
+        /* @ts-expect-error API supposedly not present in compilation target, but works in major browsers */
+        acc.replaceAll(encodedCharacter, character),
+      encodeURIComponent(input)
+    )
 }
 
 export function encodeSearchParamEntry([k, v]: [string, string]): string {
-  return `${encodeURIComponentPermissive(k)}=${encodeURIComponentPermissive(v)}`
+  return `${encodeURIComponentPermissive(k, ',:/')}=${encodeURIComponentPermissive(v, ',:/')}`
 }
 
 export function isSearchEntryDefined(
@@ -114,7 +118,7 @@ export function stringifySearch(
   return encodedSearchEntries.length ? `?${encodedSearchEntries.join('&')}` : ''
 }
 function serializeLabelsEntry([k, v]: [string, string]) {
-  return `${encodeURIComponentPermissive(k)},${encodeURIComponentPermissive(v)}`
+  return `${encodeURIComponentPermissive(k, ':/')},${encodeURIComponentPermissive(v, ':/')}`
 }
 
 function parseLabelsEntry(labelString: string) {
@@ -126,7 +130,7 @@ function serializeFilter(f: Filter) {
   const serializedFilter = [
     operator,
     dimension,
-    ...clauses.map((c) => encodeURIComponentPermissive(c.toString()))
+    ...clauses.map((c) => encodeURIComponentPermissive(c.toString(), ':/'))
   ].join(',')
   return serializedFilter
 }
