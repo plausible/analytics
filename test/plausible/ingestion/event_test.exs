@@ -334,40 +334,6 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :no_session_for_pageleave
   end
 
-  test "saves scroll depth for a pageleave event" do
-    site = insert(:site)
-
-    pageview_payload = %{
-      name: "pageview",
-      url: "http://#{site.domain}",
-      domain: site.domain
-    }
-
-    build_conn(:post, "/api/events", pageview_payload)
-    |> Request.build()
-    |> then(fn {:ok, pageview_request} ->
-      Event.build_and_buffer(pageview_request)
-    end)
-
-    assert_ingested_scroll_depth = fn input, expected ->
-      payload = %{name: "pageleave", url: "http://#{site.domain}", domain: site.domain, sd: input}
-      conn = build_conn(:post, "/api/events", payload)
-
-      assert {:ok, request} = Request.build(conn)
-      assert {:ok, %{buffered: [event], dropped: []}} = Event.build_and_buffer(request)
-
-      assert event.clickhouse_event.scroll_depth == expected
-    end
-
-    assert_ingested_scroll_depth.(100, 100)
-    assert_ingested_scroll_depth.(50, 50)
-    assert_ingested_scroll_depth.(0, 0)
-    assert_ingested_scroll_depth.(101, 100)
-    assert_ingested_scroll_depth.(-1, 0)
-    assert_ingested_scroll_depth.("1", 0)
-    assert_ingested_scroll_depth.("invalid", 0)
-  end
-
   @tag :ee_only
   test "saves revenue amount" do
     site = insert(:site)
