@@ -43,4 +43,20 @@ test.describe('scroll depth', () => {
       {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html#home`}
     ])
   });
+
+  test('document height gets reevaluated after window load', async ({ page }) => {
+    const pageviewRequestMock = mockRequest(page, '/api/event')
+    await page.goto('/scroll-depth-slow-window-load.html');
+    await pageviewRequestMock;
+
+    // Wait for the image to be loaded
+    await page.waitForFunction(() => {
+      // eslint-disable-next-line no-undef
+      return document.getElementById('slow-image').complete
+    });
+
+    await clickPageElementAndExpectEventRequests(page, '#navigate-away', [
+      {n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-slow-window-load.html`, sd: 24}
+    ])
+  });
 });

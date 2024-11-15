@@ -68,6 +68,10 @@
 
   var currentDocumentHeight = getDocumentHeight()
   var maxScrollDepthPx = getCurrentScrollDepthPx()
+  
+  window.addEventListener('load', function () {
+    currentDocumentHeight = getDocumentHeight()
+  })
 
   document.addEventListener('scroll', function() {
     var currentScrollDepthPx = getCurrentScrollDepthPx()
