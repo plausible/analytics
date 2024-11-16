@@ -140,6 +140,10 @@ defmodule Plausible.Factory do
     Map.put(event_factory(attrs), :name, "pageview")
   end
 
+  def pageleave_factory(attrs) do
+    Map.put(event_factory(attrs), :name, "pageleave")
+  end
+
   def event_factory(attrs) do
     if Map.get(attrs, :acquisition_channel) do
       raise "Acquisition channel cannot be written directly since it's a materialized column."
