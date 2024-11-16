@@ -269,6 +269,10 @@
         {
           "const": "average_revenue",
           "$comment": "only :internal"
+        },
+        {
+          "const": "scroll_depth",
+          "$comment": "only :internal"
         }
       ]
     },
