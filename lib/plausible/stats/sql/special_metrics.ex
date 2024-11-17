@@ -159,6 +159,7 @@ defmodule Plausible.Stats.SQL.SpecialMetrics do
         else
           dim_shortnames
           |> Enum.map(fn dim -> dynamic([_e, ..., s], selected_as(^dim) == field(s, ^dim)) end)
+          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
           |> Enum.reduce(fn condition, acc -> dynamic([], ^acc and ^condition) end)
         end
 
