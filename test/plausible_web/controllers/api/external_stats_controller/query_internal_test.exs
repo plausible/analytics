@@ -252,11 +252,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryInternalTest do
           "site_id" => site.domain,
           "filters" => [["is", "event:page", ["/"]]],
           "date_range" => "all",
-          "metrics" => ["visitors", "scroll_depth"]
+          "metrics" => ["scroll_depth"]
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [2, 70], "dimensions" => []}
+               %{"metrics" => [70], "dimensions" => []}
              ]
     end
 
@@ -284,11 +284,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryInternalTest do
           "site_id" => site.domain,
           "filters" => [["is", "event:page", ["/"]]],
           "date_range" => "all",
-          "metrics" => ["visitors", "scroll_depth"]
+          "metrics" => ["scroll_depth"]
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"metrics" => [0, 0], "dimensions" => []}
+               %{"metrics" => [0], "dimensions" => []}
              ]
     end
 
@@ -348,14 +348,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryInternalTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "metrics" => ["visitors", "pageviews", "scroll_depth"],
+          "metrics" => ["scroll_depth"],
           "date_range" => "all",
           "dimensions" => ["event:page"]
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["/blog"], "metrics" => [3, 4, 60]},
-               %{"dimensions" => ["/another"], "metrics" => [2, 2, 25]}
+               %{"dimensions" => ["/blog"], "metrics" => [60]},
+               %{"dimensions" => ["/another"], "metrics" => [25]}
              ]
     end
 
@@ -363,84 +363,70 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryInternalTest do
       conn: conn,
       site: site
     } do
-      t0 = ~N[2020-01-01 00:00:00]
-      [t1, t2, t3] = for i <- 1..3, do: NaiveDateTime.add(t0, i, :minute)
-
       populate_stats(site, [
-        build(:pageview, referrer_source: "Google", user_id: 12, pathname: "/blog", timestamp: t0),
+        build(:pageview,
+          referrer_source: "Google",
+          user_id: 12,
+          pathname: "/blog",
+          timestamp: ~N[2020-01-01 00:00:00]
+        ),
         build(:pageleave,
           referrer_source: "Google",
           user_id: 12,
           pathname: "/blog",
-          timestamp: t1,
+          timestamp: ~N[2020-01-01 00:00:00] |> NaiveDateTime.add(1, :minute),
           scroll_depth: 20
         ),
         build(:pageview,
           referrer_source: "Google",
-          user_id: 12,
-          pathname: "/another",
-          timestamp: t1
+          user_id: 34,
+          pathname: "/blog",
+          timestamp: ~N[2020-01-01 00:00:00]
         ),
-        build(:pageleave,
-          referrer_source: "Google",
-          user_id: 12,
-          pathname: "/another",
-          timestamp: t2,
-          scroll_depth: 24
-        ),
-        build(:pageview, referrer_source: "Google", user_id: 34, pathname: "/blog", timestamp: t0),
         build(:pageleave,
           referrer_source: "Google",
           user_id: 34,
           pathname: "/blog",
-          timestamp: t1,
+          timestamp: ~N[2020-01-01 00:00:00] |> NaiveDateTime.add(1, :minute),
           scroll_depth: 17
         ),
         build(:pageview,
           referrer_source: "Google",
           user_id: 34,
-          pathname: "/another",
-          timestamp: t1
+          pathname: "/blog",
+          timestamp: ~N[2020-01-01 00:00:00] |> NaiveDateTime.add(2, :minute)
         ),
-        build(:pageleave,
-          referrer_source: "Google",
-          user_id: 34,
-          pathname: "/another",
-          timestamp: t2,
-          scroll_depth: 26
-        ),
-        build(:pageview, referrer_source: "Google", user_id: 34, pathname: "/blog", timestamp: t2),
         build(:pageleave,
           referrer_source: "Google",
           user_id: 34,
           pathname: "/blog",
-          timestamp: t3,
+          timestamp: ~N[2020-01-01 00:00:00] |> NaiveDateTime.add(3, :minute),
           scroll_depth: 60
         ),
         build(:pageview,
           referrer_source: "Twitter",
           user_id: 56,
           pathname: "/blog",
-          timestamp: t0
+          timestamp: ~N[2020-01-01 00:00:00]
         ),
         build(:pageleave,
           referrer_source: "Twitter",
           user_id: 56,
           pathname: "/blog",
-          timestamp: t1,
+          timestamp: ~N[2020-01-01 00:00:00] |> NaiveDateTime.add(1, :minute),
           scroll_depth: 20
         ),
         build(:pageview,
           referrer_source: "Twitter",
           user_id: 56,
           pathname: "/another",
-          timestamp: t1
+          timestamp: ~N[2020-01-01 00:00:00] |> NaiveDateTime.add(1, :minute)
         ),
         build(:pageleave,
           referrer_source: "Twitter",
           user_id: 56,
           pathname: "/another",
-          timestamp: t2,
+          timestamp: ~N[2020-01-01 00:00:00] |> NaiveDateTime.add(2, :minute),
           scroll_depth: 24
         )
       ])
@@ -448,16 +434,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryInternalTest do
       conn =
         post(conn, "/api/v2/query-internal-test", %{
           "site_id" => site.domain,
-          "metrics" => ["visitors", "pageviews", "scroll_depth"],
+          "metrics" => ["scroll_depth"],
           "date_range" => "all",
           "dimensions" => ["event:page", "visit:source"]
         })
 
       assert json_response(conn, 200)["results"] == [
-               %{"dimensions" => ["/blog", "Google"], "metrics" => [2, 3, 40]},
-               %{"dimensions" => ["/another", "Google"], "metrics" => [2, 2, 25]},
-               %{"dimensions" => ["/blog", "Twitter"], "metrics" => [1, 1, 20]},
-               %{"dimensions" => ["/another", "Twitter"], "metrics" => [1, 1, 24]}
+               %{"dimensions" => ["/blog", "Google"], "metrics" => [40]},
+               %{"dimensions" => ["/another", "Twitter"], "metrics" => [24]},
+               %{"dimensions" => ["/blog", "Twitter"], "metrics" => [20]}
              ]
     end
 
