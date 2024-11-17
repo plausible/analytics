@@ -51,7 +51,8 @@ function PagesModal() {
       metrics.createVisitors({renderLabel: (_query) => "Visitors" }),
       metrics.createPageviews(),
       metrics.createBounceRate(),
-      metrics.createTimeOnPage()
+      metrics.createTimeOnPage(),
+      metrics.createScrollDepth()
     ]
   }
 

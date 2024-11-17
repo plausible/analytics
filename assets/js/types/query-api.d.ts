@@ -15,6 +15,7 @@ export type Metric =
   | "events"
   | "percentage"
   | "conversion_rate"
+  | "scroll_depth"
   | "group_conversion_rate"
   | "time_on_page"
   | "total_revenue"
