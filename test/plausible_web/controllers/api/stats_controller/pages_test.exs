@@ -629,13 +629,13 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "scroll_depth" => 60
                },
                %{
-                "name" => "/another",
-                "visitors" => 2,
-                "pageviews" => 2,
-                "bounce_rate" => 0,
-                "time_on_page" => 60,
-                "scroll_depth" => 25
-              }
+                 "name" => "/another",
+                 "visitors" => 2,
+                 "pageviews" => 2,
+                 "bounce_rate" => 0,
+                 "time_on_page" => 60,
+                 "scroll_depth" => 25
+               }
              ]
     end
 
