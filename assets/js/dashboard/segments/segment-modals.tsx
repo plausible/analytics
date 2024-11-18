@@ -102,6 +102,42 @@ export const CreateSegmentModal = ({
   )
 }
 
+export const DeleteSegmentModal = ({
+  close,
+  onSave,
+  segment
+}: {
+  close: () => void
+  onSave: (input: Pick<SavedSegment, 'id'>) => void
+  segment: SavedSegment
+}) => {
+  return (
+    <ModalWithRouting maxWidth="460px" className="p-6 min-h-fit" close={close}>
+      <h1 className="text-xl font-extrabold	dark:text-gray-100">
+        {
+          { personal: 'Delete personal segment', site: 'Delete site segment' }[
+            segment.type
+          ]
+        }
+        {` "${segment.name}"?`}
+      </h1>
+      <div className="mt-8 flex gap-x-2 items-center justify-end">
+        <button className={buttonClass} onClick={close}>
+          Cancel
+        </button>
+        <button
+          className={buttonClass}
+          onClick={() => {
+            onSave({ id: segment.id })
+          }}
+        >
+          Delete
+        </button>
+      </div>
+    </ModalWithRouting>
+  )
+}
+
 export const UpdateSegmentModal = ({
   close,
   onSave,

@@ -90,7 +90,7 @@ describe(`${handleVisibility.name}`, () => {
     const setVisibility = jest.fn()
     const input = {
       setVisibility,
-      topBarWidth: 1000,
+      leftoverWidth: 1000,
       actionsWidth: 100,
       seeMorePresent: false,
       seeMoreWidth: 50,
@@ -115,7 +115,7 @@ describe(`${handleVisibility.name}`, () => {
       visibleCount: 4
     })
 
-    handleVisibility({ ...input, topBarWidth: 999 })
+    handleVisibility({ ...input, leftoverWidth: 999 })
     expect(setVisibility).toHaveBeenCalledTimes(3)
     expect(setVisibility).toHaveBeenLastCalledWith({
       width: 675,
@@ -127,7 +127,7 @@ describe(`${handleVisibility.name}`, () => {
     const setVisibility = jest.fn()
     const input = {
       setVisibility,
-      topBarWidth: 300,
+      leftoverWidth: 300,
       actionsWidth: 100,
       seeMorePresent: true,
       seeMoreWidth: 50,

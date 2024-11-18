@@ -352,7 +352,7 @@ export default function QueryPeriodPicker() {
   }, [closeMenu, query])
 
   return (
-    <div className="flex ml-auto pl-2">
+    <div className="flex pl-2 shrink-0">
       <MovePeriodArrows />
       <ToggleDropdownButton
         withDropdownIndicator

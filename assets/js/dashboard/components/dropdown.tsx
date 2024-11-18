@@ -148,7 +148,9 @@ export const DropdownNavigationLink = ({
     className={classNames(
       { 'font-bold': !!active },
       'flex items-center justify-between',
-      'text-sm leading-tight hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-gray-100',
+      'text-sm leading-tight',
+      {'hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-gray-100': !props['aria-disabled']},
+      {'cursor-not-allowed text-gray-500': props['aria-disabled']},
       !!actions && 'pr-4',
       className
     )}
@@ -157,7 +159,8 @@ export const DropdownNavigationLink = ({
     <AppNavigationLink
       className={classNames(
         'flex items-center justify-between w-full py-2',
-        actions ? 'pl-4' : 'px-4'
+        actions ? 'pl-4' : 'px-4',
+        {'cursor-not-allowed': props['aria-disabled']},
       )}
       path={path}
       params={params}

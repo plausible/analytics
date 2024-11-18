@@ -234,7 +234,7 @@ export default class SiteSwitcher extends React.Component {
       : 'cursor-default'
 
     return (
-      <div className="relative inline-block text-left mr-2 sm:mr-4">
+      <div className="relative inline-block text-left shrink-0">
         <button
           ref={this.siteSwitcherButton}
           className={`inline-flex items-center rounded-md h-9 leading-5 font-bold text-gray-700 dark:text-gray-300 focus:outline-none transition ease-in-out duration-150 ${hoverClass}`}

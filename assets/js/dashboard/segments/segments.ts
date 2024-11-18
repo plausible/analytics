@@ -1,7 +1,7 @@
 /** @format */
 
-import { Filter } from '../query'
-import { remapFromApiFilters } from '../util/filters'
+import { DashboardQuery, Filter } from '../query'
+import { plainFilterText, remapFromApiFilters } from '../util/filters'
 
 export enum SegmentType {
   personal = 'personal',
@@ -20,12 +20,16 @@ export type SegmentData = {
   labels: Record<string, string>
 }
 
-export type EditingSegmentState = {
-  /** null means to definitively close the edit mode */
-  editingSegment: SavedSegment | null
-}
-
 const SEGMENT_LABEL_KEY_PREFIX = 'segment-'
+
+export const getSegmentNamePlaceholder = (query: DashboardQuery) =>
+  query.filters.reduce(
+    (combinedName, filter) =>
+      combinedName.length > 100
+        ? combinedName
+        : `${combinedName}${combinedName.length ? ' and ' : ''}${plainFilterText(query, filter)}`,
+    ''
+  )
 
 export function isSegmentIdLabelKey(labelKey: string): boolean {
   return labelKey.startsWith(SEGMENT_LABEL_KEY_PREFIX)

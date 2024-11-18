@@ -10,6 +10,7 @@ import Filters from '../filters'
 import classNames from 'classnames'
 import { useInView } from 'react-intersection-observer'
 import { FilterMenu } from './filter-menu'
+import SegmentExpandedContextProvider from '../segments/segment-expanded-context'
 
 interface TopBarProps {
   showCurrentVisitors: boolean
@@ -28,27 +29,36 @@ export function TopBar({ showCurrentVisitors, extraBar }: TopBarProps) {
       <div id="stats-container-top" ref={ref} />
       <div
         className={classNames(
-          'relative top-0 py-2 sm:py-3 z-10',
+          'relative top-0 py-1 sm:py-2 z-10',
           !site.embedded &&
             !inView &&
             'sticky fullwidth-shadow bg-gray-50 dark:bg-gray-850'
         )}
       >
         <div className="flex items-center w-full">
-          <div className="flex items-center w-full" ref={tooltipBoundary}>
+          <div
+            className="flex items-center w-full gap-x-2"
+            ref={tooltipBoundary}
+          >
             <SiteSwitcher
               site={site}
               loggedIn={user.loggedIn}
               currentUserRole={user.role}
             />
-            {showCurrentVisitors && (
+            {saved_segments && !extraBar && showCurrentVisitors && (
               <CurrentVisitors tooltipBoundary={tooltipBoundary.current} />
             )}
-            {saved_segments ? <FilterMenu /> : <Filters />}
+            {saved_segments && !!extraBar && extraBar}
+            {saved_segments ? (
+              <SegmentExpandedContextProvider>
+                <FilterMenu />
+              </SegmentExpandedContextProvider>
+            ) : (
+              <Filters />
+            )}
           </div>
           <QueryPeriodPicker />
         </div>
-        {!!saved_segments && !!extraBar && extraBar}
       </div>
     </>
   )
