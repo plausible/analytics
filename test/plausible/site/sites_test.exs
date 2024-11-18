@@ -162,11 +162,11 @@ defmodule Plausible.SitesTest do
       patch_env(:super_admin_user_ids, [user2.id])
 
       %{id: site_id, domain: domain} = insert(:site, members: [user1])
-      assert %{id: ^site_id} = Sites.get_for_user(user1.id, domain)
-      assert %{id: ^site_id} = Sites.get_for_user(user1.id, domain, [:owner])
+      assert %{id: ^site_id} = Sites.get_for_user(user1, domain)
+      assert %{id: ^site_id} = Sites.get_for_user(user1, domain, [:owner])
 
-      assert is_nil(Sites.get_for_user(user2.id, domain))
-      assert %{id: ^site_id} = Sites.get_for_user(user2.id, domain, [:super_admin])
+      assert is_nil(Sites.get_for_user(user2, domain))
+      assert %{id: ^site_id} = Sites.get_for_user(user2, domain, [:super_admin])
     end
   end
 
