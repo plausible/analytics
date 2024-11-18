@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script defer src="/tracker/js/plausible.local.pageleave.js"></script>
+</head>
+<body>
+  <br>
+  <div id="content"></div>
+  <script>
+    setTimeout(() => {
+      document.getElementById('content').innerHTML =
+        `
+        <div style="height: 5000px; background-color: gray;">
+          <a id="navigate-away" href="/manual.html">
+            Navigate away
+          </a>
+        </div>
+        `
+    }, 500)
+  </script>
+</body>
+</html>

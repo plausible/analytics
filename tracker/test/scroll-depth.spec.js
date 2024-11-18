@@ -59,4 +59,15 @@ test.describe('scroll depth', () => {
       {n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-slow-window-load.html`, sd: 24}
     ])
   });
+
+  test('dynamically loaded content affects documentHeight', async ({ page }) => {
+    const pageviewRequestMock = mockRequest(page, '/api/event')
+    await page.goto('/scroll-depth-dynamic-content-load.html');
+    await pageviewRequestMock;
+
+    // The link appears dynamically after 500ms.
+    await clickPageElementAndExpectEventRequests(page, '#navigate-away', [
+      {n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-dynamic-content-load.html`, sd: 14}
+    ])
+  });
 });

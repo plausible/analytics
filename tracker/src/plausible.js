@@ -68,9 +68,18 @@
 
   var currentDocumentHeight = getDocumentHeight()
   var maxScrollDepthPx = getCurrentScrollDepthPx()
-  
+
   window.addEventListener('load', function () {
     currentDocumentHeight = getDocumentHeight()
+
+    // Update the scroll state again after every 200ms during the
+    // next 3 seconds. This makes sure dynamically loaded content
+    // is also accounted for.
+    var count = 0
+    var interval = setInterval(function () {
+      currentDocumentHeight = getDocumentHeight()
+      if (++count === 15) {clearInterval(interval)}
+    }, 200)
   })
 
   document.addEventListener('scroll', function() {
