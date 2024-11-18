@@ -12,9 +12,7 @@ test.describe('scroll depth', () => {
     await page.goto('/scroll-depth.html')
     await pageviewRequestMock
 
-    // eslint-disable-next-line no-undef
     await page.evaluate(() => window.scrollBy(0, 300))
-    // eslint-disable-next-line no-undef
     await page.evaluate(() => window.scrollBy(0, 0))
 
     await clickPageElementAndExpectEventRequests(page, '#navigate-away', [
@@ -51,7 +49,6 @@ test.describe('scroll depth', () => {
 
     // Wait for the image to be loaded
     await page.waitForFunction(() => {
-      // eslint-disable-next-line no-undef
       return document.getElementById('slow-image').complete
     })
 
