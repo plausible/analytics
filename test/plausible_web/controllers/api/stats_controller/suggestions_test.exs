@@ -50,9 +50,26 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for goals", %{conn: conn, site: site} do
-      conn = get(conn, "/api/stats/#{site.domain}/suggestions/goal?period=month&date=2019-01-01")
+      conn =
+        get(conn, "/api/stats/#{site.domain}/suggestions/goal?period=month&date=2019-01-01&q=")
 
       assert json_response(conn, 200) == []
+    end
+
+    test "returns suggestions for configured site goals but not all event names", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:event, name: "Signup", timestamp: ~N[2019-01-01 00:00:00]),
+        build(:event, name: "another", timestamp: ~N[2019-01-01 00:00:00])
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/suggestions/goal?period=day&date=2019-01-01&q=")
+
+      assert json_response(conn, 200) == [%{"label" => "Signup", "value" => "Signup"}]
     end
 
     test "returns suggestions for sources", %{conn: conn, site: site} do
