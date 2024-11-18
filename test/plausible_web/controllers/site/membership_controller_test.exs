@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
   describe "GET /sites/:domain/memberships/invite" do
     test "shows invite form", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
+      site = new_site(owner: user)
 
       html =
         conn
@@ -27,11 +27,11 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
     @tag :ee_only
     test "display a notice when is over limit", %{conn: conn, user: user} do
-      memberships = [
-        build(:site_membership, user: user, role: :owner) | build_list(5, :site_membership)
-      ]
+      site = new_site(owner: user)
 
-      site = insert(:site, memberships: memberships)
+      for _ <- 1..5 do
+        add_guest(site, role: :viewer)
+      end
 
       html =
         conn
@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
   describe "POST /sites/:domain/memberships/invite" do
     test "creates invitation", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
+      site = new_site(owner: user)
 
       conn =
         post(conn, "/sites/#{site.domain}/memberships/invite", %{
@@ -60,11 +60,11 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
     @tag :ee_only
     test "fails to create invitation when is over limit", %{conn: conn, user: user} do
-      memberships = [
-        build(:site_membership, user: user, role: :owner) | build_list(5, :site_membership)
-      ]
+      site = new_site(owner: user)
 
-      site = insert(:site, memberships: memberships)
+      for _ <- 1..5 do
+        add_guest(site, role: :viewer)
+      end
 
       conn =
         post(conn, "/sites/#{site.domain}/memberships/invite", %{
@@ -110,7 +110,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
 
     test "sends invitation email for new user", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
+      site = new_site(owner: user)
 
       post(conn, "/sites/#{site.domain}/memberships/invite", %{
         email: "john.doe@example.com",
@@ -125,7 +125,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
     test "sends invitation email for existing user", %{conn: conn, user: user} do
       existing_user = insert(:user)
-      site = insert(:site, members: [user])
+      site = new_site(owner: user)
 
       post(conn, "/sites/#{site.domain}/memberships/invite", %{
         email: existing_user.email,
@@ -139,14 +139,10 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
 
     test "renders form with error if the invitee is already a member", %{conn: conn, user: user} do
-      second_member = insert(:user)
+      site = new_site(owner: user)
 
-      memberships = [
-        build(:site_membership, user: user, role: :owner),
-        build(:site_membership, user: second_member)
-      ]
-
-      site = insert(:site, memberships: memberships)
+      second_member = new_user()
+      add_guest(site, user: second_member, role: :viewer)
 
       conn =
         post(conn, "/sites/#{site.domain}/memberships/invite", %{
@@ -162,7 +158,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       conn: conn,
       user: user
     } do
-      site = insert(:site, members: [user])
+      site = new_site(owner: user)
 
       _req1 =
         post(conn, "/sites/#{site.domain}/memberships/invite", %{
@@ -202,7 +198,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
   describe "GET /sites/:domain/transfer-ownership" do
     test "shows ownership transfer form", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
+      site = new_site(owner: user)
 
       conn = get(conn, "/sites/#{site.domain}/transfer-ownership")
 
@@ -212,7 +208,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
   describe "POST /sites/:domain/transfer-ownership" do
     test "creates invitation with :owner role", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
+      site = new_site(owner: user)
 
       conn =
         post(conn, "/sites/#{site.domain}/transfer-ownership", %{email: "john.doe@example.com"})
@@ -224,7 +220,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
 
     test "sends ownership transfer email for new user", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
+      site = new_site(owner: user)
 
       post(conn, "/sites/#{site.domain}/transfer-ownership", %{email: "john.doe@example.com"})
 
@@ -236,7 +232,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
     test "sends invitation email for existing user", %{conn: conn, user: user} do
       existing_user = insert(:user)
-      site = insert(:site, members: [user])
+      site = new_site(owner: user)
 
       post(conn, "/sites/#{site.domain}/transfer-ownership", %{email: existing_user.email})
 
@@ -262,7 +258,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
     test "fails to transfer ownership to invited user with proper error message", ctx do
       %{conn: conn, user: user} = ctx
-      site = insert(:site, members: [user])
+      site = new_site(owner: user)
       invited = "john.doe@example.com"
 
       # invite a user but don't join
