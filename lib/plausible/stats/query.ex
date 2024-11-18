@@ -57,18 +57,18 @@ defmodule Plausible.Stats.Query do
 
       Date.range(
         date_range.first,
-        clamp(today, date_range.first, date_range.last)
+        clamp(today, date_range)
       )
     else
       date_range
     end
   end
 
-  defp clamp(date, lower_bound, upper_bound) do
+  defp clamp(date, date_range) do
     cond do
-      Date.compare(date, lower_bound) == :lt -> lower_bound
-      Date.compare(date, upper_bound) == :gt -> upper_bound
-      true -> date
+      date in date_range -> date
+      Date.before?(date, date_range.first) -> date_range.first
+      Date.after?(date, date_range.last) -> date_range.last
     end
   end
 
