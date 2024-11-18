@@ -110,7 +110,7 @@ defmodule Plausible.Teams.Billing do
     team = Teams.with_subscription(team)
     with_features? = Keyword.get(opts, :with_features, false)
     pending_site_ids = Keyword.get(opts, :pending_ownership_site_ids, [])
-    team_site_ids = team |> Teams.owned_sites() |> Enum.map(& &1.id)
+    team_site_ids = Teams.owned_sites_ids(team)
     all_site_ids = pending_site_ids ++ team_site_ids
 
     monthly_pageviews = monthly_pageview_usage(team, all_site_ids)
@@ -127,6 +127,42 @@ defmodule Plausible.Teams.Billing do
     else
       basic_usage
     end
+  end
+
+  @monthly_pageview_limit_for_free_10k 10_000
+  @monthly_pageview_limit_for_trials :unlimited
+
+  def monthly_pageview_limit(%Teams.Team{} = team) do
+    team = Teams.with_subscription(team)
+    monthly_pageview_limit(team.subscription)
+  end
+
+  def monthly_pageview_limit(subscription) do
+    case Plans.get_subscription_plan(subscription) do
+      %EnterprisePlan{monthly_pageview_limit: limit} ->
+        limit
+
+      %Plan{monthly_pageview_limit: limit} ->
+        limit
+
+      :free_10k ->
+        @monthly_pageview_limit_for_free_10k
+
+      _any ->
+        if subscription do
+          Sentry.capture_message("Unknown monthly pageview limit for plan",
+            extra: %{paddle_plan_id: subscription.paddle_plan_id}
+          )
+        end
+
+        @monthly_pageview_limit_for_trials
+    end
+  end
+
+  def monthly_pageview_usage(team, site_ids \\ nil)
+
+  def monthly_pageview_usage(team, nil) do
+    monthly_pageview_usage(team, Teams.owned_sites_ids(team))
   end
 
   def monthly_pageview_usage(team, site_ids) do

@@ -38,6 +38,12 @@ defmodule Plausible.Teams do
     Repo.preload(team, :sites).sites
   end
 
+  def owned_sites_ids(team) do
+    team
+    |> owned_sites()
+    |> Enum.map(& &1.id)
+  end
+
   @doc """
   Create (when necessary) and load team relation for provided site.
 

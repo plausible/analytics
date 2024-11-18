@@ -4,6 +4,35 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
   """
   use Plausible.Teams.Adapter
 
+  def team_member_limit(user) do
+    switch(user,
+      team_fn: &Teams.Billing.team_member_limit/1,
+      user_fn: &Plausible.Billing.Quota.Limits.team_member_limit/1
+    )
+  end
+
+  def team_member_usage(user, opts \\ []) do
+    switch(user,
+      team_fn: &Teams.Billing.team_member_usage(&1, opts),
+      user_fn: &Plausible.Billing.Quota.Usage.team_member_usage(&1, opts)
+    )
+  end
+
+  def monthly_pageview_limit(user) do
+    switch(user,
+      team_fn: &Teams.Billing.monthly_pageview_limit/1,
+      user_fn: &Plausible.Billing.Quota.Limits.monthly_pageview_limit/1
+    )
+  end
+
+  def monthly_pageview_usage(user, site_ids \\ nil) do
+    switch(
+      user,
+      team_fn: &Teams.Billing.monthly_pageview_usage(&1, site_ids),
+      user_fn: &Plausible.Billing.Quota.Usage.monthly_pageview_usage(&1, site_ids)
+    )
+  end
+
   def check_needs_to_upgrade(user) do
     switch(
       user,
