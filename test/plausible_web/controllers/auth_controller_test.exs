@@ -542,7 +542,7 @@ defmodule PlausibleWeb.AuthControllerTest do
   end
 
   describe "DELETE /me" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
     use Plausible.Repo
 
     test "deletes the user", %{conn: conn, user: user, site: site} do

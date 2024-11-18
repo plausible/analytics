@@ -1,5 +1,6 @@
 defmodule Plausible.AuthTest do
   use Plausible.DataCase, async: true
+  use Plausible.Teams.Test
   alias Plausible.Auth
 
   describe "user_completed_setup?" do
@@ -52,14 +53,14 @@ defmodule Plausible.AuthTest do
 
   describe "create_api_key/3" do
     test "creates a new api key" do
-      user = insert(:user)
+      user = new_user()
       key = Ecto.UUID.generate()
       assert {:ok, %Auth.ApiKey{}} = Auth.create_api_key(user, "my new key", key)
     end
 
     @tag :ee_only
     test "defaults to 600 requests per hour limit in EE" do
-      user = insert(:user)
+      user = new_user()
 
       {:ok, %Auth.ApiKey{hourly_request_limit: hourly_request_limit}} =
         Auth.create_api_key(user, "my new EE key", Ecto.UUID.generate())
@@ -78,8 +79,8 @@ defmodule Plausible.AuthTest do
     end
 
     test "errors when key already exists" do
-      u1 = insert(:user)
-      u2 = insert(:user)
+      u1 = new_user()
+      u2 = new_user()
       key = Ecto.UUID.generate()
       assert {:ok, %Auth.ApiKey{}} = Auth.create_api_key(u1, "my new key", key)
       assert {:error, changeset} = Auth.create_api_key(u2, "my other key", key)
@@ -100,16 +101,16 @@ defmodule Plausible.AuthTest do
 
   describe "delete_api_key/2" do
     test "deletes the record" do
-      user = insert(:user)
+      user = new_user()
       assert {:ok, api_key} = Auth.create_api_key(user, "my new key", Ecto.UUID.generate())
       assert :ok = Auth.delete_api_key(user, api_key.id)
       refute Plausible.Repo.reload(api_key)
     end
 
     test "returns error when api key does not exist or does not belong to user" do
-      me = insert(:user)
+      me = new_user()
 
-      other_user = insert(:user)
+      other_user = new_user()
       {:ok, other_api_key} = Auth.create_api_key(other_user, "my new key", Ecto.UUID.generate())
 
       assert {:error, :not_found} = Auth.delete_api_key(me, other_api_key.id)

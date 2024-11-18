@@ -11,14 +11,6 @@ defmodule Plausible.Teams.Adapter do
     end
   end
 
-  def team_or_user(user) do
-    switch(
-      user,
-      team_fn: &Function.identity/1,
-      user_fn: &Function.identity/1
-    )
-  end
-
   def switch(user, opts \\ []) do
     team_fn = Keyword.fetch!(opts, :team_fn)
     user_fn = Keyword.fetch!(opts, :user_fn)

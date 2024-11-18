@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
   use PlausibleWeb.PluginsAPICase, async: true
+  use Plausible.Teams.Test
   alias PlausibleWeb.Plugins.API.Schemas
 
   describe "examples" do
@@ -42,7 +43,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
       conn: conn
     } do
       site = Plausible.Repo.preload(site, :owner)
-      insert(:growth_subscription, user: site.owner)
+      subscribe_to_growth_plan(site.owner)
 
       url = Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :enable)
 
@@ -66,7 +67,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
       conn: conn
     } do
       site = Plausible.Repo.preload(site, :owner)
-      insert(:growth_subscription, user: site.owner)
+      subscribe_to_growth_plan(site.owner)
 
       url = Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :enable)
 

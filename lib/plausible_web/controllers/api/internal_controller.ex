@@ -25,11 +25,11 @@ defmodule PlausibleWeb.Api.InternalController do
     "conversions" => Plausible.Billing.Feature.Goals
   }
   def disable_feature(conn, %{"domain" => domain, "feature" => feature}) do
-    with %User{id: user_id} <- conn.assigns[:current_user],
+    with %User{id: user_id} = user <- conn.assigns[:current_user],
          site <- Sites.get_by_domain(domain),
          true <- Sites.has_admin_access?(user_id, site) || Auth.is_super_admin?(user_id),
          {:ok, mod} <- Map.fetch(@features, feature),
-         {:ok, _site} <- mod.toggle(site, override: false) do
+         {:ok, _site} <- mod.toggle(site, user, override: false) do
       json(conn, "ok")
     else
       {:error, :upgrade_required} ->

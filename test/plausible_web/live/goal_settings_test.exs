@@ -33,6 +33,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       user
       |> Plausible.Auth.User.end_trial()
       |> Plausible.Repo.update!()
+      |> Plausible.Teams.sync_team()
 
       conn = get(conn, "/#{site.domain}/settings/goals")
 
