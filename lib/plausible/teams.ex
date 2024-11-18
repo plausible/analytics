@@ -110,6 +110,19 @@ defmodule Plausible.Teams do
     end
   end
 
+  def last_subscription_join_query() do
+    from(subscription in last_subscription_query(),
+      where: subscription.team_id == parent_as(:team).id
+    )
+  end
+
+  def last_subscription_query() do
+    from(subscription in Plausible.Billing.Subscription,
+      order_by: [desc: subscription.inserted_at, desc: subscription.id],
+      limit: 1
+    )
+  end
+
   defp create_my_team(user) do
     team =
       "My Team"
@@ -134,12 +147,5 @@ defmodule Plausible.Teams do
       Repo.delete!(team)
       {:error, :exists_already}
     end
-  end
-
-  defp last_subscription_query() do
-    from(subscription in Plausible.Billing.Subscription,
-      order_by: [desc: subscription.inserted_at, desc: subscription.id],
-      limit: 1
-    )
   end
 end

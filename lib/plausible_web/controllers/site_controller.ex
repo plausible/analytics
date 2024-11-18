@@ -152,13 +152,8 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_goals(conn, _params) do
-    site = Repo.preload(conn.assigns[:site], [:owner])
-    owner = Plausible.Users.with_subscription(site.owner)
-    site = Map.put(site, :owner, owner)
-
     conn
     |> render("settings_goals.html",
-      site: site,
       dogfood_page_path: "/:dashboard/settings/goals",
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
