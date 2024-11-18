@@ -161,13 +161,8 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_funnels(conn, _params) do
-    site = Repo.preload(conn.assigns[:site], [:owner])
-    owner = Plausible.Users.with_subscription(site.owner)
-    site = Map.put(site, :owner, owner)
-
     conn
     |> render("settings_funnels.html",
-      site: site,
       dogfood_page_path: "/:dashboard/settings/funnels",
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
@@ -175,13 +170,8 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_props(conn, _params) do
-    site = Repo.preload(conn.assigns[:site], [:owner])
-    owner = Plausible.Users.with_subscription(site.owner)
-    site = Map.put(site, :owner, owner)
-
     conn
     |> render("settings_props.html",
-      site: site,
       dogfood_page_path: "/:dashboard/settings/properties",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"},
       connect_live_socket: true
