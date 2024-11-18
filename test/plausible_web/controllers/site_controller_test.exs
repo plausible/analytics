@@ -1532,7 +1532,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   end
 
   describe "DELETE /:domain/settings/:forget_import/:import_id" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "removes site import, associated data and cancels oban job for a particular import", %{
       conn: conn,
@@ -1610,7 +1610,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   end
 
   describe "DELETE /:domain/settings/forget_imported" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "removes actual imported data from Clickhouse", %{conn: conn, user: user, site: site} do
       Plausible.Imported.NoopImporter.new_import(

@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
   use PlausibleWeb.ConnCase
+  use Plausible.Teams.Test
 
   setup [:create_user, :create_api_key]
 
@@ -156,8 +157,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
     user: user,
     api_key: api_key
   } do
-    insert(:growth_subscription, user: user)
-    site = insert(:site, members: [user])
+    subscribe_to_growth_plan(user)
+    site = new_site(owner: user)
 
     conn
     |> with_api_key(api_key)

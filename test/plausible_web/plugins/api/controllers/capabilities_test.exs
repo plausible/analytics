@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
   use PlausibleWeb.PluginsAPICase, async: true
+  use Plausible.Teams.Test
   alias PlausibleWeb.Plugins.API.Schemas
 
   describe "examples" do
@@ -88,7 +89,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
     @tag :ee_only
     test "growth", %{conn: conn, site: site, token: token} do
       site = Plausible.Repo.preload(site, :owner)
-      insert(:growth_subscription, user: site.owner)
+      subscribe_to_growth_plan(site.owner)
 
       resp =
         conn

@@ -1374,6 +1374,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Search"
+      assert session.utm_medium == "(gclid)"
       assert session.click_id_param == "gclid"
     end
 
@@ -1397,6 +1398,31 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Organic Search"
+      assert session.utm_medium == ""
+      assert session.click_id_param == "gclid"
+    end
+
+    test "does not override utm_medium with (gclid) if link is already tagged", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?gclid=123identifier&utm_medium=paidads",
+        referrer: "https://google.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.acquisition_channel == "Paid Search"
+      assert session.utm_medium == "paidads"
       assert session.click_id_param == "gclid"
     end
 
@@ -1417,6 +1443,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Search"
+      assert session.utm_medium == "(msclkid)"
       assert session.click_id_param == "msclkid"
     end
 
@@ -1426,8 +1453,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     } do
       params = %{
         name: "pageview",
-        url: "http://example.com?msclkid=123identifier",
-        referrer: "https://duckduckgo.com",
+        url: "http://example.com?msclkid=123identifier&utm_medium=cpc",
+        referrer: "https://bing.com",
         domain: site.domain
       }
 
@@ -1439,8 +1466,33 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.acquisition_channel == "Organic Search"
+      assert session.acquisition_channel == "Paid Search"
+      assert session.utm_medium == "cpc"
       assert session.click_id_param == "msclkid"
+    end
+
+    test "does not override utm_medium with (msclkid) if link is already tagged", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?gclid=123identifier&utm_medium=paidads",
+        referrer: "https://google.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.acquisition_channel == "Paid Search"
+      assert session.utm_medium == "paidads"
+      assert session.click_id_param == "gclid"
     end
 
     test "parses paid search channel based on utm_source and medium", %{conn: conn, site: site} do

@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.QueryComparisonsTest do
   use PlausibleWeb.ConnCase
 
-  setup [:create_user, :create_new_site, :create_api_key, :use_api_key, :create_site_import]
+  setup [:create_user, :create_site, :create_api_key, :use_api_key, :create_site_import]
 
   test "aggregates a single metric", %{conn: conn, site: site} do
     populate_stats(site, [

@@ -136,14 +136,18 @@ defmodule Plausible.Factory do
     }
   end
 
-  def pageview_factory do
-    Map.put(event_factory(), :name, "pageview")
+  def pageview_factory(attrs) do
+    Map.put(event_factory(attrs), :name, "pageview")
   end
 
-  def event_factory do
+  def event_factory(attrs) do
+    if Map.get(attrs, :acquisition_channel) do
+      raise "Acquisition channel cannot be written directly since it's a materialized column."
+    end
+
     hostname = sequence(:domain, &"example-#{&1}.com")
 
-    %Plausible.ClickhouseEventV2{
+    event = %Plausible.ClickhouseEventV2{
       hostname: hostname,
       site_id: Enum.random(1000..10_000),
       pathname: "/",
@@ -151,6 +155,10 @@ defmodule Plausible.Factory do
       user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
       session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate())
     }
+
+    event
+    |> merge_attributes(attrs)
+    |> evaluate_lazy_attributes()
   end
 
   def goal_factory(attrs) do
