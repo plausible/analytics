@@ -10,7 +10,7 @@ test.describe('tagged-events extension', () => {
         const plausibleRequestMock = mockRequest(page, '/api/event')
         await page.click('#link')
         expectCustomEvent(await plausibleRequestMock, 'Payment Complete', { amount: '100', method: "Credit Card", url: linkURL })
-    });
+    })
 
     test('tracks a tagged form submit with custom props when submitting by pressing enter', async ({ page }) => {
         await page.goto('/tagged-event.html')
@@ -21,7 +21,7 @@ test.describe('tagged-events extension', () => {
         await inputLocator.press('Enter')
 
         expectCustomEvent(await plausibleRequestMock, 'Signup', { type: "Newsletter" })
-    });
+    })
 
     test('tracks submit on a form with a tagged parent when submit button is clicked', async ({ page }) => {
         await page.goto('/tagged-event.html')
@@ -34,7 +34,7 @@ test.describe('tagged-events extension', () => {
 
         expect(requests.length).toBe(1)
         expectCustomEvent(requests[0], "Form Submit", {})
-    });
+    })
 
     test('tracks click and auxclick on any tagged HTML element', async ({ page }) => {
         await page.goto('/tagged-event.html')
@@ -48,7 +48,7 @@ test.describe('tagged-events extension', () => {
         const requests = await plausibleRequestMockList
         expect(requests.length).toBe(3)
         requests.forEach(request => expectCustomEvent(request, 'Custom Event', { foo: "bar" }))
-    });
+    })
 
     test('does not track elements without plausible-event-name class + link elements navigate', async ({ page }) => {
         await page.goto('/tagged-event.html')
@@ -65,7 +65,7 @@ test.describe('tagged-events extension', () => {
 
         expect(await plausibleRequestMock, "should not have made Plausible request").toBeNull()
         expect((await navigationRequestMock).url()).toContain(linkURL)
-    });
+    })
 
     test('tracks tagged HTML elements when their child element is clicked', async ({ page }) => {
         await page.goto('/tagged-event.html')
@@ -78,7 +78,7 @@ test.describe('tagged-events extension', () => {
         const requests = await plausibleRequestMockList
         expect(requests.length).toBe(2)
         requests.forEach(request => expectCustomEvent(request, 'Custom Event', { foo: "bar" }))
-    });
+    })
 
     test('tracks tagged element that is dynamically added to the DOM', async ({ page }) => {
         await page.goto('/tagged-event.html')
@@ -92,7 +92,7 @@ test.describe('tagged-events extension', () => {
         await buttonLocator.click()
 
         expectCustomEvent(await plausibleRequestMock, 'Custom Event', {})
-    });
+    })
 
     test('does not track clicks inside a tagged form, except submit click', async ({ page }) => {
         await page.goto('/tagged-event.html')
@@ -104,5 +104,5 @@ test.describe('tagged-events extension', () => {
         await page.click('#form-div')
 
         expect(await plausibleRequestMock, "should not have made Plausible request").toBeNull()
-    });
-});
+    })
+})

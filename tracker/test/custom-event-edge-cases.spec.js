@@ -1,6 +1,6 @@
-const { mockRequest, mockManyRequests, expectCustomEvent } = require('./support/test-utils');
-const { expect, test } = require('@playwright/test');
-const { LOCAL_SERVER_ADDR } = require('./support/server');
+const { mockRequest, mockManyRequests, expectCustomEvent } = require('./support/test-utils')
+const { expect, test } = require('@playwright/test')
+const { LOCAL_SERVER_ADDR } = require('./support/server')
 
 
 test.describe('script.file-downloads.outbound-links.tagged-events.js', () => {
@@ -14,7 +14,7 @@ test.describe('script.file-downloads.outbound-links.tagged-events.js', () => {
         const requests = await plausibleRequestMockList
         expect(requests.length).toBe(1)
         expectCustomEvent(requests[0], 'Outbound Link: Click', {url: downloadURL})
-    });
+    })
 
     test('sends file download event when local download link clicked', async ({ page }) => {
         await page.goto('/custom-event-edge-case.html')
@@ -24,7 +24,7 @@ test.describe('script.file-downloads.outbound-links.tagged-events.js', () => {
         await page.click('#local-download')
 
         expectCustomEvent(await plausibleRequestMock, 'File Download', {url: downloadURL})
-    });
+    })
 
     test('sends only tagged event when clicked link is tagged + outbound + download', async ({ page }) => {
         await page.goto('/custom-event-edge-case.html')
@@ -35,5 +35,5 @@ test.describe('script.file-downloads.outbound-links.tagged-events.js', () => {
         const requests = await plausibleRequestMockList
         expect(requests.length).toBe(1)
         expectCustomEvent(requests[0], 'Foo', {})
-    });
-});
+    })
+})

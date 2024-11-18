@@ -9,5 +9,13 @@
     "no-unused-vars": [2, { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }],
     "no-prototype-builtins": [0],
     "playwright/no-conditional-in-test": [0]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["*.spec.js"],
+      "rules": {
+        "semi": ["warn", "never"]
+      }
+    }
+  ]
 }
