@@ -106,6 +106,7 @@ export const FilterMenu = () => {
         }))
     },
     onSuccess: async (d) => {
+      queryClient.invalidateQueries({ queryKey: ['segments'] })
       navigate({
         search: (search) => {
           const filters = [['is', 'segment', [d.id]]]
@@ -123,7 +124,7 @@ export const FilterMenu = () => {
           modal: null
         } as SegmentExpandedLocationState
       })
-      queryClient.invalidateQueries({ queryKey: ['segments'] })
+      setOpened(false)
     }
   })
 
@@ -164,6 +165,7 @@ export const FilterMenu = () => {
     onSuccess: async (d) => {
       navigate({
         search: (search) => {
+          queryClient.invalidateQueries({ queryKey: ['segments'] })
           const filters = [['is', 'segment', [d.id]]]
           const labels = cleanLabels(filters, {}, 'segment', {
             [formatSegmentIdAsLabelKey(d.id)]: d.name
@@ -179,7 +181,7 @@ export const FilterMenu = () => {
           modal: null
         } as SegmentExpandedLocationState
       })
-      queryClient.invalidateQueries({ queryKey: ['segments'] })
+      setOpened(false)
     }
   })
   const deleteSegment = useMutation({
@@ -197,6 +199,7 @@ export const FilterMenu = () => {
         }))
     },
     onSuccess: (_d): void => {
+      queryClient.invalidateQueries({ queryKey: ['segments'] })
       navigate({
         search: (s) => {
           return {
@@ -210,7 +213,7 @@ export const FilterMenu = () => {
           modal: null
         } as SegmentExpandedLocationState
       })
-      queryClient.invalidateQueries({ queryKey: ['segments'] })
+      setOpened(false)
     }
   })
 
@@ -326,6 +329,7 @@ export const FilterMenu = () => {
               <DropdownLinkGroup>
                 <DropdownNavigationLink
                   search={(s) => ({ ...s, filters: null, labels: null })}
+                  onLinkClick={() => setOpened(false)}
                 >
                   Clear all filters
                 </DropdownNavigationLink>
