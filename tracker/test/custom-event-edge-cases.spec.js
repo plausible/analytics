@@ -2,7 +2,6 @@ const { mockRequest, mockManyRequests, expectCustomEvent } = require('./support/
 const { expect, test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
 
-
 test.describe('script.file-downloads.outbound-links.tagged-events.js', () => {
     test('sends only outbound link event when clicked link is both download and outbound', async ({ page }) => {
         await page.goto('/custom-event-edge-case.html')

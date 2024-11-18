@@ -1,4 +1,3 @@
-/* eslint-disable playwright/expect-expect */
 /* eslint-disable playwright/no-skipped-test */
 const { clickPageElementAndExpectEventRequests, mockRequest } = require('./support/test-utils')
 const { test } = require('@playwright/test')
@@ -30,10 +29,7 @@ test.describe('scroll depth', () => {
       {n: 'pageview', u: `${LOCAL_SERVER_ADDR}/scroll-depth-hash.html#about`}
     ])
 
-    // Wait 600ms before navigating again, because
-    // pageleave events are throttled to 500ms.
-
-    // eslint-disable-next-line playwright/no-wait-for-timeout
+    // Wait 600ms before navigating again because pageleave events are throttled to 500ms.
     await page.waitForTimeout(600)
 
     await clickPageElementAndExpectEventRequests(page, '#home-link', [

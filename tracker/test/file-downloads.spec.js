@@ -2,7 +2,6 @@ const { mockRequest, expectCustomEvent, mockManyRequests, metaKey } = require('.
 const { expect, test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
 
-
 test.describe('file-downloads extension', () => {
   test('sends event and does not start download when link opens in new tab', async ({ page }) => {
     await page.goto('/file-download.html')

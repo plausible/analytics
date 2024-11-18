@@ -1,4 +1,3 @@
-/* eslint-disable playwright/expect-expect */
 /* eslint-disable playwright/no-skipped-test */
 const { clickPageElementAndExpectEventRequests, mockRequest } = require('./support/test-utils')
 const { test } = require('@playwright/test')

@@ -12,7 +12,18 @@
     "no-unused-expressions": [1, { "allowShortCircuit": true }],
     "no-unused-vars": [2, { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }],
     "no-prototype-builtins": [0],
-    "playwright/no-conditional-in-test": [0]
+    "playwright/no-conditional-in-test": [0],
+    "playwright/no-wait-for-timeout": "off",
+    "playwright/expect-expect": [
+      "error",
+      {
+        "assertFunctionNames": [
+          "expect",
+          "clickPageElementAndExpectEventRequests",
+          "expectCustomEvent"
+        ]
+      }
+    ]
   },
   "overrides": [
     {

@@ -1,4 +1,3 @@
-/* eslint-disable playwright/expect-expect */
 const { clickPageElementAndExpectEventRequests } = require('./support/test-utils')
 const { test } = require('@playwright/test')
 const { LOCAL_SERVER_ADDR } = require('./support/server')
