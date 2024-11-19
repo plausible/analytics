@@ -81,7 +81,7 @@ defmodule PlausibleWeb.SiteController do
     feature_mod =
       Enum.find(Plausible.Billing.Feature.list(), &(&1.toggle_field() == toggle_field))
 
-    case feature_mod.toggle(site, override: value == "true") do
+    case feature_mod.toggle(site, conn.assigns.current_user, override: value == "true") do
       {:ok, updated_site} ->
         message =
           if Map.fetch!(updated_site, toggle_field) do
@@ -152,13 +152,8 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_goals(conn, _params) do
-    site = Repo.preload(conn.assigns[:site], [:owner])
-    owner = Plausible.Users.with_subscription(site.owner)
-    site = Map.put(site, :owner, owner)
-
     conn
     |> render("settings_goals.html",
-      site: site,
       dogfood_page_path: "/:dashboard/settings/goals",
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
@@ -166,13 +161,8 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_funnels(conn, _params) do
-    site = Repo.preload(conn.assigns[:site], [:owner])
-    owner = Plausible.Users.with_subscription(site.owner)
-    site = Map.put(site, :owner, owner)
-
     conn
     |> render("settings_funnels.html",
-      site: site,
       dogfood_page_path: "/:dashboard/settings/funnels",
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
@@ -180,13 +170,8 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_props(conn, _params) do
-    site = Repo.preload(conn.assigns[:site], [:owner])
-    owner = Plausible.Users.with_subscription(site.owner)
-    site = Map.put(site, :owner, owner)
-
     conn
     |> render("settings_props.html",
-      site: site,
       dogfood_page_path: "/:dashboard/settings/properties",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"},
       connect_live_socket: true

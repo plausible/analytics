@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.QuerySpecialMetricsTest do
   use PlausibleWeb.ConnCase
 
-  setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
+  setup [:create_user, :create_site, :create_api_key, :use_api_key]
 
   test "returns conversion_rate in a goal filtered custom prop breakdown", %{
     conn: conn,

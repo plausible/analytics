@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible
+  use Plausible.Teams.Test
   @moduletag :ee_only
 
   on_ee do
@@ -15,7 +16,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
     ]
 
     describe "GET /api/stats/funnel - default" do
-      setup [:create_user, :log_in, :create_new_site]
+      setup [:create_user, :log_in, :create_site]
 
       test "computes funnel for a day", %{conn: conn, site: site} do
         {:ok, funnel} = setup_funnel(site, @build_funnel_with)
@@ -229,7 +230,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
         site: site
       } do
         {:ok, funnel} = setup_funnel(site, @build_funnel_with)
-        insert(:growth_subscription, user: user)
+        subscribe_to_growth_plan(user)
 
         resp =
           conn
@@ -244,7 +245,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
     end
 
     describe "GET /api/stats/funnel - disallowed filters" do
-      setup [:create_user, :log_in, :create_new_site]
+      setup [:create_user, :log_in, :create_site]
 
       test "event:page", %{conn: conn, site: site} do
         {:ok, funnel} = setup_funnel(site, @build_funnel_with)

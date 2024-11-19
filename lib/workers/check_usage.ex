@@ -150,7 +150,7 @@ defmodule Plausible.Workers.CheckUsage do
 
   defp check_pageview_usage_two_cycles(subscriber, usage_mod) do
     usage = usage_mod.monthly_pageview_usage(subscriber)
-    limit = Quota.Limits.monthly_pageview_limit(subscriber)
+    limit = Quota.Limits.monthly_pageview_limit(subscriber.subscription)
 
     if Quota.exceeds_last_two_usage_cycles?(usage, limit) do
       {:over_limit, usage}
@@ -161,7 +161,7 @@ defmodule Plausible.Workers.CheckUsage do
 
   defp check_pageview_usage_last_cycle(subscriber, usage_mod) do
     usage = usage_mod.monthly_pageview_usage(subscriber)
-    limit = Quota.Limits.monthly_pageview_limit(subscriber)
+    limit = Quota.Limits.monthly_pageview_limit(subscriber.subscription)
 
     if :last_cycle in Quota.exceeded_cycles(usage, limit) do
       {:over_limit, usage}

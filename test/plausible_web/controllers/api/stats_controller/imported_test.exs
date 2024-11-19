@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
 
   for import_type <- [:new_and_legacy, :new] do
     describe "Parse and import third party data fetched from Google Analytics as #{import_type} import" do
-      setup [:create_user, :log_in, :create_new_site]
+      setup [:create_user, :log_in, :create_site]
 
       setup %{user: user, site: site} do
         import_params =

@@ -1,8 +1,10 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
   use PlausibleWeb.ConnCase
+  use Plausible.Teams.Test
+
   alias Plausible.Billing.Feature
 
-  setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
+  setup [:create_user, :create_site, :create_api_key, :use_api_key]
 
   describe "feature access" do
     test "cannot break down by a custom prop without access to the props feature", %{
@@ -10,8 +12,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
       user: user,
       site: site
     } do
-      ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Feature.StatsAPI])
 
       conn =
         post(conn, "/api/v2/query", %{
@@ -30,8 +31,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
       user: user,
       site: site
     } do
-      ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Feature.StatsAPI])
 
       conn =
         post(conn, "/api/v2/query", %{
@@ -49,10 +49,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
       user: user,
       site: site
     } do
-      ep =
-        insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
-
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Feature.StatsAPI])
 
       conn =
         post(conn, "/api/v2/query", %{
@@ -72,8 +69,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryValidationsTest do
       user: user,
       site: site
     } do
-      ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Feature.StatsAPI])
 
       conn =
         post(conn, "/api/v2/query", %{
