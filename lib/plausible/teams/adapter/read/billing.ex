@@ -5,6 +5,7 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
   use Plausible.Teams.Adapter
 
   def enterprise_configured?(nil), do: false
+
   def enterprise_configured?(user) do
     switch(user,
       team_fn: &Plausible.Teams.Billing.enterprise_configured?/1,
