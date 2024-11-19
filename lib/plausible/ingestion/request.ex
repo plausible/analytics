@@ -41,6 +41,7 @@ defmodule Plausible.Ingestion.Request do
     field :hash_mode, :integer
     field :pathname, :string
     field :props, :map
+    field :scroll_depth, :integer
 
     on_ee do
       field :revenue_source, :map
@@ -77,6 +78,7 @@ defmodule Plausible.Ingestion.Request do
         |> put_request_params(request_body)
         |> put_referrer(request_body)
         |> put_props(request_body)
+        |> put_scroll_depth(request_body)
         |> put_pathname()
         |> put_query_params()
         |> put_revenue_source(request_body)
@@ -242,6 +244,21 @@ defmodule Plausible.Ingestion.Request do
           _, changeset ->
             {:cont, changeset}
         end)
+    end
+  end
+
+  defp put_scroll_depth(changeset, %{} = request_body) do
+    if Changeset.get_field(changeset, :event_name) == "pageleave" do
+      scroll_depth =
+        case request_body["sd"] do
+          sd when is_integer(sd) and sd >= 0 and sd <= 100 -> sd
+          sd when is_integer(sd) and sd > 100 -> 100
+          _ -> 0
+        end
+
+      Changeset.put_change(changeset, :scroll_depth, scroll_depth)
+    else
+      changeset
     end
   end
 
