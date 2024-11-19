@@ -232,15 +232,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
       test "returns 404 when api key owner does not have permissions to create a shared link", %{
         conn: conn,
-        site: site,
         user: user
       } do
-        Repo.update_all(
-          from(sm in Plausible.Site.Membership,
-            where: sm.site_id == ^site.id and sm.user_id == ^user.id
-          ),
-          set: [role: :viewer]
-        )
+        site = new_site()
+
+        add_guest(site, user: user, role: :viewer)
 
         conn =
           put(conn, "/api/v1/sites/shared-links", %{
@@ -383,15 +379,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
       test "returns 404 when api key owner does not have permissions to create a goal", %{
         conn: conn,
-        site: site,
         user: user
       } do
-        Repo.update_all(
-          from(sm in Plausible.Site.Membership,
-            where: sm.site_id == ^site.id and sm.user_id == ^user.id
-          ),
-          set: [role: :viewer]
-        )
+        site = new_site()
+
+        add_guest(site, user: user, role: :viewer)
 
         conn =
           put(conn, "/api/v1/sites/goals", %{

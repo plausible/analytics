@@ -444,13 +444,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      :site
-      |> insert(
-        domain: "example.com",
-        memberships: [
-          build(:site_membership, user: user, role: :owner)
-        ]
-      )
+      new_site(domain: "example.com", owner: user)
       |> Plausible.Site.Domain.change("new.example.com")
 
       conn =

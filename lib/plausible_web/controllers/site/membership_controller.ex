@@ -13,7 +13,6 @@ defmodule PlausibleWeb.Site.MembershipController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use Plausible
-  alias Plausible.Sites
   alias Plausible.Site.{Membership, Memberships}
 
   @only_owner_is_allowed_to [:transfer_ownership_form, :transfer_ownership]
@@ -26,8 +25,8 @@ defmodule PlausibleWeb.Site.MembershipController do
 
   def invite_member_form(conn, _params) do
     site =
-      conn.assigns.current_user.id
-      |> Sites.get_for_user!(conn.assigns.site.domain)
+      conn.assigns.current_user
+      |> Plausible.Teams.Adapter.Read.Sites.get_for_user!(conn.assigns.site.domain)
       |> Plausible.Repo.preload(:owner)
 
     limit = Plausible.Billing.Quota.Limits.team_member_limit(site.owner)
@@ -45,10 +44,10 @@ defmodule PlausibleWeb.Site.MembershipController do
   end
 
   def invite_member(conn, %{"email" => email, "role" => role}) do
-    site_domain = conn.assigns[:site].domain
+    site_domain = conn.assigns.site.domain
 
     site =
-      Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
+      Plausible.Teams.Adapter.Read.Sites.get_for_user!(conn.assigns.current_user, site_domain)
       |> Plausible.Repo.preload(:owner)
 
     case Memberships.create_invitation(site, conn.assigns.current_user, email, role) do
@@ -94,8 +93,10 @@ defmodule PlausibleWeb.Site.MembershipController do
   end
 
   def transfer_ownership_form(conn, _params) do
-    site_domain = conn.assigns[:site].domain
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
+    site_domain = conn.assigns.site.domain
+
+    site =
+      Plausible.Teams.Adapter.Read.Sites.get_for_user!(conn.assigns.current_user, site_domain)
 
     render(
       conn,
@@ -106,8 +107,10 @@ defmodule PlausibleWeb.Site.MembershipController do
   end
 
   def transfer_ownership(conn, %{"email" => email}) do
-    site_domain = conn.assigns[:site].domain
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
+    site_domain = conn.assigns.site.domain
+
+    site =
+      Plausible.Teams.Adapter.Read.Sites.get_for_user!(conn.assigns.current_user, site_domain)
 
     case Memberships.create_invitation(site, conn.assigns.current_user, email, :owner) do
       {:ok, _invitation} ->
