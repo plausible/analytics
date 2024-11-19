@@ -10,15 +10,25 @@ import {
   SegmentType
 } from './segments'
 import { ColumnConfiguraton, Table } from '../components/table'
-import { useSegmentsListQuery } from './segments-dropdown'
+import { useSegmentPrefetch, useSegmentsListQuery } from './segments-dropdown'
 import { SearchInput } from '../components/search-input'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { cleanLabels } from '../util/filters'
 import { rootRoute } from '../router'
+import { ArrowsPointingOutIcon } from '@heroicons/react/24/solid'
 
 const buttonClass =
   'h-12 text-md font-medium py-2 px-3 rounded border dark:border-gray-100 dark:text-gray-100'
+
+export const ExpandSegmentButton = ({ id }: Pick<SavedSegment, 'id'>) => {
+  const { prefetchSegment, expandSegment } = useSegmentPrefetch({ id })
+  return (
+    <button className="block" onMouseEnter={prefetchSegment} onClick={expandSegment}>
+      <ArrowsPointingOutIcon className="w-4 h-4 shrink-0" />
+    </button>
+  )
+}
 
 export const CreateSegmentModal = ({
   segment,
@@ -256,11 +266,13 @@ export const AllSegmentsModal = () => {
         {
           key: 'name',
           label: 'Segment',
-          width: 'w-80',
+          width: 'w-full',
           align: 'left',
           renderItem: ({ id, name, selected }) => (
             <button
-              className={classNames('w-full text-left', { 'font-extrabold': selected })}
+              className={classNames('w-full text-left', {
+                'font-extrabold': selected
+              })}
               onClick={() =>
                 setSelectedSegmentIds((current) =>
                   current.includes(id)
@@ -277,10 +289,17 @@ export const AllSegmentsModal = () => {
         {
           key: 'type',
           label: 'Type',
-          width: 'w-16',
+          width: 'w-20',
           align: 'right',
           renderValue: ({ type }) =>
             ({ personal: 'Personal', site: 'Site' })[type]
+        },
+        {
+          key: 'owner_id',
+          width: 'w-10',
+          align: 'right',
+          label: '',
+          renderItem: ExpandSegmentButton
         }
       ],
       []

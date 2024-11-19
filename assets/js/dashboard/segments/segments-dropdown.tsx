@@ -1,6 +1,6 @@
 /** @format */
 
-import React from 'react'
+import React, { useCallback, useMemo } from 'react'
 import {
   DropdownLinkGroup,
   DropdownNavigationLink
@@ -31,7 +31,7 @@ import {
   SegmentExpandedLocationState,
   useSegmentExpandedContext
 } from './segment-expanded-context'
-import { filterRoute } from '../router'
+import { filterRoute, rootRoute } from '../router'
 
 export const useSegmentsListQuery = () => {
   const site = useSiteContext()
@@ -200,49 +200,35 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
   )
 }
 
-const SegmentLink = ({
-  id,
-  name,
-  // type,
-  // owner_id,
-  appliedSegmentIds
-  // closeList
-}: SavedSegment & { appliedSegmentIds: number[]; closeList: () => void }) => {
-  const user = useUserContext()
-  const canSeeActions = user.loggedIn
-  // const canDeleteSegment =
-  //   user.loggedIn &&
-  //   ((owner_id === user.id && type === SegmentType.personal) ||
-  //     (type === SegmentType.site &&
-  //       ['admin', 'owner', 'super_admin'].includes(user.role)))
+export const useSegmentPrefetch = ({ id }: Pick<SavedSegment, 'id'>) => {
   const site = useSiteContext()
-  const { query } = useQueryContext()
   const queryClient = useQueryClient()
-
-  const queryKey = ['segments', id] as const
+  const queryKey = useMemo(() => ['segments', id] as const, [id])
+  const navigate = useAppNavigate()
 
   const getSegmentFn: QueryFunction<
     { segment_data: SegmentData } & SavedSegment,
     typeof queryKey
-  > = async ({ queryKey: [_, id] }) => {
-    const res = await fetch(
-      `/internal-api/${encodeURIComponent(site.domain)}/segments/${id}`,
-      {
-        method: 'GET',
-        headers: {
-          'content-type': 'application/json',
-          accept: 'application/json'
+  > = useCallback(
+    async ({ queryKey: [_, id] }) => {
+      const res = await fetch(
+        `/internal-api/${encodeURIComponent(site.domain)}/segments/${id}`,
+        {
+          method: 'GET',
+          headers: {
+            'content-type': 'application/json',
+            accept: 'application/json'
+          }
         }
+      )
+      const d = await res.json()
+      return {
+        ...d,
+        segment_data: parseApiSegmentData(d.segment_data)
       }
-    )
-    const d = await res.json()
-    return {
-      ...d,
-      segment_data: parseApiSegmentData(d.segment_data)
-    }
-  }
-
-  const navigate = useAppNavigate()
+    },
+    [site]
+  )
 
   const getSegment = useQuery({
     enabled: false,
@@ -250,23 +236,30 @@ const SegmentLink = ({
     queryFn: getSegmentFn
   })
 
-  const prefetchSegment = () =>
-    queryClient.prefetchQuery({
-      queryKey,
-      queryFn: getSegmentFn,
-      staleTime: 120_000
-    })
+  const prefetchSegment = useCallback(
+    () =>
+      queryClient.prefetchQuery({
+        queryKey,
+        queryFn: getSegmentFn,
+        staleTime: 120_000
+      }),
+    [queryClient, getSegmentFn, queryKey]
+  )
 
-  const fetchSegment = () =>
-    queryClient.fetchQuery({
-      queryKey,
-      queryFn: getSegmentFn
-    })
+  const fetchSegment = useCallback(
+    () =>
+      queryClient.fetchQuery({
+        queryKey,
+        queryFn: getSegmentFn
+      }),
+    [queryClient, getSegmentFn, queryKey]
+  )
 
-  const editSegment = async () => {
+  const expandSegment = useCallback(async () => {
     try {
       const data = getSegment.data ?? (await fetchSegment())
       navigate({
+        path: rootRoute.path,
         search: (search) => ({
           ...search,
           filters: data.segment_data.filters,
@@ -284,7 +277,28 @@ const SegmentLink = ({
     } catch (_error) {
       return
     }
-  }
+  }, [fetchSegment, getSegment.data, navigate])
+
+  return { prefetchSegment, expandSegment }
+}
+
+const SegmentLink = ({
+  id,
+  name,
+  // type,
+  // owner_id,
+  appliedSegmentIds
+  // closeList
+}: SavedSegment & { appliedSegmentIds: number[]; closeList: () => void }) => {
+  const user = useUserContext()
+  const canSeeActions = user.loggedIn
+  // const canDeleteSegment =
+  //   user.loggedIn &&
+  //   ((owner_id === user.id && type === SegmentType.personal) ||
+  //     (type === SegmentType.site &&
+  //       ['admin', 'owner', 'super_admin'].includes(user.role)))
+  const { query } = useQueryContext()
+  const { prefetchSegment, expandSegment } = useSegmentPrefetch({ id })
 
   return (
     <DropdownNavigationLink
@@ -324,7 +338,7 @@ const SegmentLink = ({
       actions={
         !canSeeActions ? null : (
           <>
-            <ExpandSegment className="ml-2 shrink-0" onClick={editSegment} />
+            <ExpandSegment className="ml-2 shrink-0" onClick={expandSegment} />
           </>
         )
       }
