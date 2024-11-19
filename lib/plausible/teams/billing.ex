@@ -88,6 +88,7 @@ defmodule Plausible.Teams.Billing do
   defp get_site_limit_from_plan(nil) do
     @site_limit_for_trials
   end
+
   defp get_site_limit_from_plan(team) do
     team =
       Teams.with_subscription(team)
@@ -102,6 +103,7 @@ defmodule Plausible.Teams.Billing do
   def team_member_limit(nil) do
     @team_member_limit_for_trials
   end
+
   def team_member_limit(team) do
     team = Teams.with_subscription(team)
 
