@@ -2,6 +2,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
   use Plausible.DataCase
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
+  use Plausible.Teams.Test
   alias Plausible.Workers.SendTrialNotifications
 
   test "does not send a notification if user didn't create a site" do
@@ -220,10 +221,9 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     end
 
     test "does not suggest a plan when user is switching to an enterprise plan" do
-      user = insert(:user)
+      user = new_user()
       usage = %{total: 10_000, custom_events: 0}
-
-      insert(:enterprise_plan, user: user, paddle_plan_id: "enterprise-plan-id")
+      subscribe_to_enterprise_plan(user, paddle_plan_id: "enterprise-plan-id")
 
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
       assert email.html_body =~ "please reply back to this email to get a quote for your volume"

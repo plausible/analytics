@@ -145,4 +145,9 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
       end
     )
   end
+
+  def suggest_by_usage(user, usage_during_cycle) do
+    subscription = get_subscription(user)
+    Plausible.Billing.Plans.suggest_by_usage(subscription, usage_during_cycle)
+  end
 end

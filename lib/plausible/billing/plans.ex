@@ -218,18 +218,16 @@ defmodule Plausible.Billing.Plans do
   def suggest(user, usage_during_cycle) do
     cond do
       usage_during_cycle > @enterprise_level_usage -> :enterprise
-      Plausible.Auth.enterprise_configured?(user) -> :enterprise
-      true -> suggest_by_usage(user, usage_during_cycle)
+      Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(user) -> :enterprise
+      true -> Plausible.Teams.Adapter.Read.Billing.suggest_by_usage(user, usage_during_cycle)
     end
   end
 
-  defp suggest_by_usage(user, usage_during_cycle) do
-    user = Plausible.Users.with_subscription(user)
-
+  def suggest_by_usage(subscription, usage_during_cycle) do
     available_plans =
-      if business_tier?(user.subscription),
-        do: business_plans_for(user.subscription),
-        else: growth_plans_for(user.subscription)
+      if business_tier?(subscription),
+        do: business_plans_for(subscription),
+        else: growth_plans_for(subscription)
 
     Enum.find(available_plans, &(usage_during_cycle < &1.monthly_pageview_limit))
   end
