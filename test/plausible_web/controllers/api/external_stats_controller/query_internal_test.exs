@@ -447,40 +447,54 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryInternalTest do
     end
 
     test "breakdown by event:page + time:day with scroll_depth metric", %{conn: conn, site: site} do
-      t0 = ~N[2020-01-01 00:00:00]
-      [t1, t2, t3] = for i <- 1..3, do: NaiveDateTime.add(t0, i, :minute)
-
       populate_stats(site, [
-        build(:pageview, user_id: 12, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 12, pathname: "/blog", timestamp: t1, scroll_depth: 20),
-        build(:pageview, user_id: 12, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 12, pathname: "/another", timestamp: t2, scroll_depth: 24),
-        build(:pageview, user_id: 34, pathname: "/blog", timestamp: t0),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t1, scroll_depth: 17),
-        build(:pageview, user_id: 34, pathname: "/another", timestamp: t1),
-        build(:pageleave, user_id: 34, pathname: "/another", timestamp: t2, scroll_depth: 26),
-        build(:pageview, user_id: 34, pathname: "/blog", timestamp: t2),
-        build(:pageleave, user_id: 34, pathname: "/blog", timestamp: t3, scroll_depth: 60),
-        build(:pageview,
-          user_id: 56,
-          pathname: "/blog",
-          timestamp: NaiveDateTime.add(t0, 1, :day)
-        ),
+        build(:pageview, user_id: 12, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
         build(:pageleave,
-          user_id: 56,
+          user_id: 12,
           pathname: "/blog",
-          timestamp: NaiveDateTime.add(t1, 1, :day),
+          timestamp: ~N[2020-01-01 00:01:00],
           scroll_depth: 20
         ),
-        build(:pageview,
-          user_id: 56,
+        build(:pageview, user_id: 12, pathname: "/another", timestamp: ~N[2020-01-01 00:01:00]),
+        build(:pageleave,
+          user_id: 12,
           pathname: "/another",
-          timestamp: NaiveDateTime.add(t1, 1, :day)
+          timestamp: ~N[2020-01-01 00:02:00],
+          scroll_depth: 24
         ),
+        build(:pageview, user_id: 34, pathname: "/blog", timestamp: ~N[2020-01-01 00:00:00]),
+        build(:pageleave,
+          user_id: 34,
+          pathname: "/blog",
+          timestamp: ~N[2020-01-01 00:01:00],
+          scroll_depth: 17
+        ),
+        build(:pageview, user_id: 34, pathname: "/another", timestamp: ~N[2020-01-01 00:01:00]),
+        build(:pageleave,
+          user_id: 34,
+          pathname: "/another",
+          timestamp: ~N[2020-01-01 00:02:00],
+          scroll_depth: 26
+        ),
+        build(:pageview, user_id: 34, pathname: "/blog", timestamp: ~N[2020-01-01 00:02:00]),
+        build(:pageleave,
+          user_id: 34,
+          pathname: "/blog",
+          timestamp: ~N[2020-01-01 00:03:00],
+          scroll_depth: 60
+        ),
+        build(:pageview, user_id: 56, pathname: "/blog", timestamp: ~N[2020-01-02 00:00:00]),
+        build(:pageleave,
+          user_id: 56,
+          pathname: "/blog",
+          timestamp: ~N[2020-01-02 00:01:00],
+          scroll_depth: 20
+        ),
+        build(:pageview, user_id: 56, pathname: "/another", timestamp: ~N[2020-01-02 00:01:00]),
         build(:pageleave,
           user_id: 56,
           pathname: "/another",
-          timestamp: NaiveDateTime.add(t2, 1, :day),
+          timestamp: ~N[2020-01-02 00:02:00],
           scroll_depth: 24
         )
       ])
