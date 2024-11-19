@@ -19,9 +19,9 @@ defmodule Plausible.IngestRepo.Migrations.BackfillUtmMediumClickIdParam do
     UPDATE utm_medium = multiIf(
       referrer_source = 'Google' AND click_id_param = 'gclid', '(gclid)',
       referrer_source = 'Bing' AND click_id_param = 'msclkid', '(msclkid)',
-      ''
+      utm_medium
     )
-    WHERE utm_medium = ''
+    WHERE empty(utm_medium) AND NOT empty(click_id_param)
     """
   end
 end
