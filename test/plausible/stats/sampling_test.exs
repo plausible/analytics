@@ -31,7 +31,7 @@ defmodule Plausible.Stats.SamplingTest do
       end
 
       test "short durations" do
-        assert fractional_sample_rate(30_000_000, query(1, :hour)) == :no_sampling
+        assert fractional_sample_rate(300_000_000_000, query(1, :hour)) == :no_sampling
       end
 
       test "very low sampling rate" do
