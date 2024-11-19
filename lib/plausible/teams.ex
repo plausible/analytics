@@ -39,9 +39,12 @@ defmodule Plausible.Teams do
   end
 
   def owned_sites_ids(team) do
-    team
-    |> owned_sites()
-    |> Enum.map(& &1.id)
+    Repo.all(
+      from s in Plausible.Site,
+        where: s.team_id == ^team.id,
+        select: s.id,
+        order_by: [desc: s.id]
+    )
   end
 
   @doc """
