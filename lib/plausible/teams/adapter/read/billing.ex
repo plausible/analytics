@@ -4,6 +4,13 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
   """
   use Plausible.Teams.Adapter
 
+  def get_subscription(user) do
+    case user_or_team(user) do
+      %{subscription: subscription} -> subscription
+      _ -> nil
+    end
+  end
+
   def team_member_limit(user) do
     switch(user,
       team_fn: &Teams.Billing.team_member_limit/1,

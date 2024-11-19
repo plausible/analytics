@@ -9,8 +9,9 @@ defmodule Plausible.Teams do
   alias Plausible.Repo
   use Plausible
 
-  @spec on_trial?(Teams.Team.t()) :: boolean()
+  @spec on_trial?(Teams.Team.t() | nil) :: boolean()
   on_ee do
+    def on_trial?(nil), do: false
     def on_trial?(%Teams.Team{trial_expiry_date: nil}), do: false
 
     def on_trial?(team) do
@@ -36,6 +37,10 @@ defmodule Plausible.Teams do
 
   def owned_sites(team) do
     Repo.preload(team, :sites).sites
+  end
+
+  def owned_sites_ids(nil) do
+    []
   end
 
   def owned_sites_ids(team) do

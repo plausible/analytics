@@ -85,6 +85,9 @@ defmodule Plausible.Teams.Billing do
     |> length()
   end
 
+  defp get_site_limit_from_plan(nil) do
+    @site_limit_for_trials
+  end
   defp get_site_limit_from_plan(team) do
     team =
       Teams.with_subscription(team)
@@ -96,6 +99,9 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
+  def team_member_limit(nil) do
+    @team_member_limit_for_trials
+  end
   def team_member_limit(team) do
     team = Teams.with_subscription(team)
 
@@ -132,6 +138,10 @@ defmodule Plausible.Teams.Billing do
   @monthly_pageview_limit_for_free_10k 10_000
   @monthly_pageview_limit_for_trials :unlimited
 
+  def monthly_pageview_limit(nil) do
+    @monthly_pageview_limit_for_trials
+  end
+
   def monthly_pageview_limit(%Teams.Team{} = team) do
     team = Teams.with_subscription(team)
     monthly_pageview_limit(team.subscription)
@@ -163,6 +173,10 @@ defmodule Plausible.Teams.Billing do
 
   def monthly_pageview_usage(team, nil) do
     monthly_pageview_usage(team, Teams.owned_sites_ids(team))
+  end
+
+  def monthly_pageview_usage(nil, _site_ids) do
+    %{last_30_days: usage_cycle(nil, :last_30_days, [])}
   end
 
   def monthly_pageview_usage(team, site_ids) do

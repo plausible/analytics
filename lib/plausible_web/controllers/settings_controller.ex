@@ -21,9 +21,7 @@ defmodule PlausibleWeb.SettingsController do
 
   def subscription(conn, _params) do
     current_user = conn.assigns.current_user
-
-    subscription =
-      current_user |> Plausible.Teams.Adapter.user_or_team() |> Map.get(:subscription)
+    subscription = Plausible.Teams.Adapter.Read.Billing.get_subscription(current_user)
 
     render(conn, :subscription,
       layout: {PlausibleWeb.LayoutView, :settings},
@@ -39,9 +37,7 @@ defmodule PlausibleWeb.SettingsController do
 
   def invoices(conn, _params) do
     subscription =
-      conn.assigns.current_user
-      |> Plausible.Teams.Adapter.user_or_team()
-      |> Map.get(:subscription)
+      Plausible.Teams.Adapter.Read.Billing.get_subscription(conn.assigns.current_user)
 
     invoices = Plausible.Billing.paddle_api().get_invoices(subscription)
     render(conn, :invoices, layout: {PlausibleWeb.LayoutView, :settings}, invoices: invoices)
