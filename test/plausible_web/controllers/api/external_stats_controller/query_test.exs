@@ -105,7 +105,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
          %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 234, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:event, user_id: 234, name: "pageleave", timestamp: ~N[2021-01-01 00:00:01])
+        build(:pageleave, user_id: 234, timestamp: ~N[2021-01-01 00:00:01])
       ])
 
       conn =
@@ -126,7 +126,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
     } do
       populate_stats(site, [
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:event, user_id: 123, name: "pageleave", timestamp: ~N[2021-01-01 00:00:03])
+        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:03])
       ])
 
       conn =

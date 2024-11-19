@@ -1642,12 +1642,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       populate_stats(site, [
         build(:pageview, user_id: 1234, timestamp: ~N[2021-01-01 12:00:00], pathname: "/1"),
         build(:pageview, user_id: 1234, timestamp: ~N[2021-01-01 12:00:05], pathname: "/2"),
-        build(:event,
-          name: "pageleave",
-          user_id: 1234,
-          timestamp: ~N[2021-01-01 12:01:00],
-          pathname: "/1"
-        )
+        build(:pageleave, user_id: 1234, timestamp: ~N[2021-01-01 12:01:00], pathname: "/1")
       ])
 
       conn =

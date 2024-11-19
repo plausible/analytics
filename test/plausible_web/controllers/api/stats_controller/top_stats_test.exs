@@ -964,26 +964,11 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
     test "returns scroll_depth with a page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:event,
-          user_id: 123,
-          name: "pageleave",
-          timestamp: ~N[2021-01-01 00:00:10],
-          scroll_depth: 40
-        ),
+        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
         build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:10]),
-        build(:event,
-          user_id: 123,
-          name: "pageleave",
-          timestamp: ~N[2021-01-01 00:00:20],
-          scroll_depth: 60
-        ),
+        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:20], scroll_depth: 60),
         build(:pageview, user_id: 456, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:event,
-          user_id: 456,
-          name: "pageleave",
-          timestamp: ~N[2021-01-01 00:00:10],
-          scroll_depth: 80
-        )
+        build(:pageleave, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
       ])
 
       filters = Jason.encode!(%{page: "/"})
