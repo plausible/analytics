@@ -3428,7 +3428,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
   end
 
   describe "scroll_depth" do
-    setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
+    setup [:create_user, :create_site, :create_api_key, :use_api_key]
 
     test "scroll depth is (not yet) available in public API", %{conn: conn, site: site} do
       conn =

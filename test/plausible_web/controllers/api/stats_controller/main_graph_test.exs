@@ -585,7 +585,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
   end
 
   describe "GET /api/stats/main-graph - scroll_depth plot" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns 400 when scroll_depth is queried without a page filter", %{
       conn: conn,
