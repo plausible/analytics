@@ -4,6 +4,20 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
   """
   use Plausible.Teams.Adapter
 
+  def enterprise_configured?(user) do
+    switch(user,
+      team_fn: &Plausible.Teams.Billing.enterprise_configured?/1,
+      user_fn: &Plausible.Auth.enterprise_configured?/1
+    )
+  end
+
+  def has_active_subscription?(user) do
+    switch(user,
+      team_fn: &Plausible.Teams.Billing.has_active_subscription?/1,
+      user_fn: &Plausible.Billing.has_active_subscription?/1
+    )
+  end
+
   def get_subscription(user) do
     case user_or_team(user) do
       %{subscription: subscription} -> subscription

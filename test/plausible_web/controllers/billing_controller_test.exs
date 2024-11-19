@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.BillingControllerTest do
   use PlausibleWeb.ConnCase, async: true
+  use Plausible.Teams.Test
   import Plausible.Test.Support.HTML
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
@@ -12,7 +13,8 @@ defmodule PlausibleWeb.BillingControllerTest do
 
     test "redirects to enterprise upgrade page if user has an enterprise plan configured",
          %{conn: conn, user: user} do
-      insert(:enterprise_plan, user: user, paddle_plan_id: "123")
+      subscribe_to_enterprise_plan(user, paddle_plan_id: "123")
+
       conn = get(conn, Routes.billing_path(conn, :choose_plan))
       assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
     end

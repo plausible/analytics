@@ -8,6 +8,13 @@ defmodule Plausible.Teams.Adapter.Read.Ownership do
   alias Plausible.Auth
   alias Plausible.Site.Memberships.Invitations
 
+  def all_pending_site_transfers(email, user) do
+    switch(user,
+      team_fn: fn _ -> Plausible.Teams.Memberships.all_pending_site_transfers(email) end,
+      user_fn: fn _ -> Plausible.Site.Memberships.all_pending_ownerships(email) end
+    )
+  end
+
   def get_owner(site, user) do
     switch(user,
       team_fn: fn team ->
