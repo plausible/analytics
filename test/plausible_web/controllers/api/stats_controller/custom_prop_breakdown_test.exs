@@ -1,8 +1,9 @@
 defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
   use PlausibleWeb.ConnCase
+  use Plausible.Teams.Test
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "returns breakdown by a custom property", %{conn: conn, site: site} do
       prop_key = "parim_s6ber"
@@ -151,7 +152,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
   end
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key - with goal filter" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns property breakdown for goal", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -906,7 +907,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
   end
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key - other filters" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns prop-breakdown with a page filter", %{conn: conn, site: site} do
       prop_key = "parim_s6ber"
@@ -1104,10 +1105,10 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
   end
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key - for a Growth subscription" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     setup %{user: user, site: site} do
-      insert(:growth_subscription, user: user)
+      subscribe_to_growth_plan(user)
 
       populate_stats(site, [
         build(:pageview,
@@ -1144,7 +1145,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
   end
 
   describe "with imported data" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "gracefully ignores unsupported WP Search Queries goal for imported data", %{
       conn: conn,

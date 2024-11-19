@@ -266,6 +266,13 @@ defmodule Plausible.Stats.QueryTest do
                ~U[2024-05-07 07:00:00Z],
                trim_trailing: true
              ) == Date.range(~D[2024-05-05], ~D[2024-05-06])
+
+      assert date_range(
+               {~U[2024-05-05 12:00:00Z], ~U[2024-05-08 11:59:59Z]},
+               "Etc/GMT+12",
+               ~U[2024-05-03 07:00:00Z],
+               trim_trailing: true
+             ) == Date.range(~D[2024-05-05], ~D[2024-05-05])
     end
   end
 

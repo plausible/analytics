@@ -1,9 +1,10 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   use PlausibleWeb.ConnCase
+  use Plausible.Teams.Test
   import Plausible.TestUtils
   alias Plausible.Billing.Feature
 
-  setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
+  setup [:create_user, :create_site, :create_api_key, :use_api_key]
   @user_id Enum.random(1000..9999)
 
   describe "feature access" do
@@ -12,8 +13,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       user: user,
       site: site
     } do
-      ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Feature.StatsAPI])
 
       conn =
         get(conn, "/api/v1/stats/aggregate", %{
@@ -30,8 +30,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       user: user,
       site: site
     } do
-      ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Feature.StatsAPI])
 
       conn =
         get(conn, "/api/v1/stats/aggregate", %{

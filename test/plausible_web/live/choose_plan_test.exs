@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Live.ChoosePlanTest do
   use PlausibleWeb.ConnCase, async: true
+  use Plausible.Teams.Test
   @moduletag :ee_only
 
   import Phoenix.LiveViewTest
@@ -193,6 +194,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       user: user
     } do
       {:ok, lv, _doc} = get_liveview(conn)
+      {:ok, team} = Plausible.Teams.get_by_owner(user)
 
       set_slider(lv, "200k")
       doc = element(lv, @yearly_interval_button) |> render_click()
@@ -200,7 +202,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert %{
                "disableLogout" => true,
                "email" => user.email,
-               "passthrough" => user.id,
+               "passthrough" => "user:#{user.id};team:#{team.id}",
                "product" => @v4_growth_200k_yearly_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
@@ -500,8 +502,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
            conn: conn,
            user: user
          } do
-      another_user = insert(:user)
-      pending_site = insert(:site, members: [another_user])
+      another_user = new_user()
+      pending_site = new_site(owner: another_user)
 
       Plausible.Props.allow(pending_site, ["author"])
 
@@ -1065,6 +1067,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "renders Paddle upgrade buttons", %{conn: conn, user: user} do
       {:ok, lv, _doc} = get_liveview(conn)
+      {:ok, team} = Plausible.Teams.get_by_owner(user)
 
       set_slider(lv, "200k")
       doc = element(lv, @yearly_interval_button) |> render_click()
@@ -1072,7 +1075,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert %{
                "disableLogout" => true,
                "email" => user.email,
-               "passthrough" => user.id,
+               "passthrough" => "user:#{user.id};team:#{team.id}",
                "product" => @v4_growth_200k_yearly_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"

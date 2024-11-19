@@ -191,7 +191,7 @@ defmodule Plausible.Users do
     user
   end
 
-  defp last_subscription_query() do
+  def last_subscription_query() do
     from(subscription in Subscription,
       order_by: [desc: subscription.inserted_at],
       limit: 1

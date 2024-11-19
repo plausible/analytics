@@ -33,7 +33,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
   setup :verify_on_exit!
 
   describe "parse_args/1 and import_data/2" do
-    setup [:create_user, :create_new_site]
+    setup [:create_user, :create_site]
 
     test "imports data returned from GA4 Data API", %{conn: conn, user: user, site: site} do
       past = DateTime.add(DateTime.utc_now(), -3600, :second)

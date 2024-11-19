@@ -11,9 +11,8 @@ defmodule Plausible.Teams.Adapter do
     end
   end
 
-  def team_or_user(user) do
-    switch(
-      user,
+  def user_or_team(user) do
+    switch(user,
       team_fn: &Function.identity/1,
       user_fn: &Function.identity/1
     )
@@ -30,8 +29,11 @@ defmodule Plausible.Teams.Adapter do
           {:error, _} -> nil
         end
 
+      team = Plausible.Teams.with_subscription(team)
+
       team_fn.(team)
     else
+      user = Plausible.Users.with_subscription(user)
       user_fn.(user)
     end
   end

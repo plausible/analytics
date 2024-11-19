@@ -9,7 +9,7 @@ defmodule Plausible.Google.APITest do
   import Mox
   setup :verify_on_exit!
 
-  setup [:create_user, :create_new_site]
+  setup [:create_user, :create_site]
 
   describe "fetch_stats/3 errors" do
     setup %{user: user, site: site} do

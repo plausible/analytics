@@ -1,11 +1,12 @@
 defmodule Plausible.Stats.Filters.QueryParserTest do
   use Plausible.DataCase
+  use Plausible.Teams.Test
 
   alias Plausible.Stats.DateTimeRange
   alias Plausible.Stats.Filters
   import Plausible.Stats.Filters.QueryParser
 
-  setup [:create_user, :create_new_site]
+  setup [:create_user, :create_site]
 
   @now DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
   @date_range_realtime %DateTimeRange{
@@ -1289,10 +1290,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
   describe "custom props access" do
     test "filters - no access", %{site: site, user: user} do
-      ep =
-        insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
-
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.StatsAPI])
 
       %{
         "site_id" => site.domain,
@@ -1307,10 +1305,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
 
     test "dimensions - no access", %{site: site, user: user} do
-      ep =
-        insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
-
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.StatsAPI])
 
       %{
         "site_id" => site.domain,
@@ -1598,10 +1593,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     test "no access", %{site: site, user: user, subscription: subscription} do
       Repo.delete!(subscription)
 
-      plan =
-        insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
-
-      insert(:subscription, user: user, paddle_plan_id: plan.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.StatsAPI])
 
       %{
         "site_id" => site.domain,
