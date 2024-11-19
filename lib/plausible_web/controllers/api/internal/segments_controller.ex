@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Api.Internal.SegmentsController do
       select: ^fields_in_index,
       where: segment.site_id == ^site_id,
       where: segment.type == :site or segment.owner_id == ^user_id,
-      order_by: [asc: segment.name]
+      order_by: [desc: segment.updated_at]
     )
   end
 

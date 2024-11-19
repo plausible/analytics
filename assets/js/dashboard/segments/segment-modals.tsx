@@ -1,9 +1,21 @@
 /** @format */
 
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import ModalWithRouting from '../stats/modals/modal'
 import classNames from 'classnames'
-import { SavedSegment, SegmentType } from './segments'
+import {
+  formatSegmentIdAsLabelKey,
+  isSegmentFilter,
+  SavedSegment,
+  SegmentType
+} from './segments'
+import { ColumnConfiguraton, Table } from '../components/table'
+import { useSegmentsListQuery } from './segments-dropdown'
+import { SearchInput } from '../components/search-input'
+import { useQueryContext } from '../query-context'
+import { AppNavigationLink } from '../navigation/use-app-navigate'
+import { cleanLabels } from '../util/filters'
+import { rootRoute } from '../router'
 
 const buttonClass =
   'h-12 text-md font-medium py-2 px-3 rounded border dark:border-gray-100 dark:text-gray-100'
@@ -224,6 +236,125 @@ export const UpdateSegmentModal = ({
         >
           Save
         </button>
+      </div>
+    </ModalWithRouting>
+  )
+}
+
+export const AllSegmentsModal = () => {
+  const { query } = useQueryContext()
+  const querySegmentIds: number[] =
+    (query.filters.find(isSegmentFilter)?.[2] as number[]) ?? []
+  const { data } = useSegmentsListQuery()
+  const [search, setSearch] = useState<string>()
+  const [selectedSegmentIds, setSelectedSegmentIds] =
+    useState<number[]>(querySegmentIds)
+
+  const columns: ColumnConfiguraton<SavedSegment & { selected?: boolean }>[] =
+    useMemo(
+      () => [
+        {
+          key: 'name',
+          label: 'Segment',
+          width: 'w-80',
+          align: 'left',
+          renderItem: ({ id, name, selected }) => (
+            <button
+              className={classNames('w-full text-left', { 'font-extrabold': selected })}
+              onClick={() =>
+                setSelectedSegmentIds((current) =>
+                  current.includes(id)
+                    ? current.filter((selectedId) => selectedId !== id)
+                    : current.concat([id])
+                )
+              }
+            >
+              {name}
+              {!!selected && ' ✓'}
+            </button>
+          )
+        },
+        {
+          key: 'type',
+          label: 'Type',
+          width: 'w-16',
+          align: 'right',
+          renderValue: ({ type }) =>
+            ({ personal: 'Personal', site: 'Site' })[type]
+        }
+      ],
+      []
+    )
+
+  return (
+    <ModalWithRouting maxWidth="460px" className="p-6 min-h-fit">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-x-2">
+          <h1 className="text-xl font-bold dark:text-gray-100">Segments</h1>
+        </div>
+        <SearchInput onSearch={(v) => setSearch(v)} />
+      </div>
+      <div className="my-4 border-b border-gray-300"></div>
+      <div>
+        <Table
+          columns={columns}
+          data={
+            data
+              ?.map((i) => ({
+                ...i,
+                selected: selectedSegmentIds.includes(i.id)
+              }))
+              .filter((i) =>
+                search?.trim().length
+                  ? i.name.toLowerCase().includes(search.trim().toLowerCase())
+                  : true
+              ) ?? []
+          }
+        />
+        <div className="mt-6 flex items-center justify-start">
+          <AppNavigationLink
+            className="button"
+            path={rootRoute.path}
+            search={(s) => {
+              const nonSegmentFilters = query.filters.filter(
+                (f) => !isSegmentFilter(f)
+              )
+              if (!selectedSegmentIds.length) {
+                return {
+                  ...s,
+                  filters: nonSegmentFilters,
+                  labels: cleanLabels(
+                    nonSegmentFilters,
+                    query.labels,
+                    'segment',
+                    {}
+                  )
+                }
+              }
+              const filters = nonSegmentFilters.concat([
+                ['is', 'segment', selectedSegmentIds]
+              ])
+              const labels = cleanLabels(
+                filters,
+                query.labels,
+                'segment',
+                Object.fromEntries(
+                  selectedSegmentIds.map((id) => [
+                    formatSegmentIdAsLabelKey(id),
+                    data?.find((i) => i.id === id)?.name ?? ''
+                  ])
+                )
+              )
+              return {
+                ...s,
+                filters,
+                labels
+              }
+            }}
+          >
+            Apply Segments
+          </AppNavigationLink>
+        </div>
       </div>
     </ModalWithRouting>
   )

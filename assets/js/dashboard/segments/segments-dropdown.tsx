@@ -24,19 +24,18 @@ import { formatDayShort, parseUTCDate } from '../util/date'
 import { useUserContext } from '../user-context'
 import {
   ArrowsPointingInIcon,
-  ArrowsPointingOutIcon
+  ArrowsPointingOutIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/solid'
 import {
   SegmentExpandedLocationState,
   useSegmentExpandedContext
 } from './segment-expanded-context'
+import { filterRoute } from '../router'
 
-export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
-  const { expandedSegment } = useSegmentExpandedContext()
-  const { query } = useQueryContext()
+export const useSegmentsListQuery = () => {
   const site = useSiteContext()
-
-  const { data } = useQuery({
+  return useQuery({
     queryKey: ['segments'],
     placeholderData: (previousData) => previousData,
     queryFn: async () => {
@@ -63,6 +62,14 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
       return response
     }
   })
+}
+
+export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
+  const { expandedSegment } = useSegmentExpandedContext()
+  const { query } = useQueryContext()
+  const site = useSiteContext()
+
+  const { data } = useSegmentsListQuery()
 
   const segmentFilter = query.filters.find(isSegmentFilter)
   const appliedSegmentIds = (segmentFilter ? segmentFilter[2] : []) as number[]
@@ -81,8 +88,8 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
               } as SegmentExpandedLocationState
             }}
           >
-            {expandedSegment.name}
-            <ArrowsPointingInIcon className="w-4 h-4" />
+            <div className="truncate">{expandedSegment.name}</div>
+            <ArrowsPointingInIcon className="w-4 h-4 shrink-0" />
           </DropdownNavigationLink>
           <DropdownNavigationLink
             search={(s) => s}
@@ -126,7 +133,7 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
     <>
       {!!data?.length && (
         <DropdownLinkGroup>
-          {data.map((s) => {
+          {data.slice(0, 4).map((s) => {
             const authorLabel = (() => {
               if (!site.members) {
                 return ''
@@ -179,6 +186,14 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
               </Tooltip>
             )
           })}
+          <DropdownNavigationLink
+            path={filterRoute.path}
+            params={{ field: 'segment' }}
+            search={(s) => s}
+            onLinkClick={closeList}
+          >
+            View all <ChevronRightIcon className="h-4 w-4" />
+          </DropdownNavigationLink>
         </DropdownLinkGroup>
       )}
     </>
@@ -309,12 +324,12 @@ const SegmentLink = ({
       actions={
         !canSeeActions ? null : (
           <>
-            <ExpandSegment className="ml-2" onClick={editSegment} />
+            <ExpandSegment className="ml-2 shrink-0" onClick={editSegment} />
           </>
         )
       }
     >
-      {name}
+      <div className="truncate">{name}</div>
     </DropdownNavigationLink>
   )
 }

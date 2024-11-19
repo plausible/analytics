@@ -158,7 +158,7 @@ export const DropdownNavigationLink = ({
   >
     <AppNavigationLink
       className={classNames(
-        'flex items-center justify-between w-full py-2',
+        'flex items-center justify-between w-full py-2 truncate',
         actions ? 'pl-4' : 'px-4',
         {'cursor-not-allowed': props['aria-disabled']},
       )}

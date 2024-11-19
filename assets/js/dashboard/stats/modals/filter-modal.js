@@ -9,6 +9,7 @@ import { isModifierPressed, isTyping } from '../../keybinding';
 import FilterModalGroup from "./filter-modal-group";
 import { rootRoute } from '../../router';
 import { useAppNavigate } from '../../navigation/use-app-navigate';
+import { AllSegmentsModal } from '../../segments/segment-modals';
 
 function partitionFilters(modalType, filters) {
   const otherFilters = []
@@ -199,6 +200,9 @@ export default function FilterModalWithRouter(props) {
   const { field } = useParams()
   const { query } = useQueryContext()
   const site = useSiteContext()
+  if (field === 'segment') {
+    return <AllSegmentsModal />
+  }
   return (
     <FilterModal
       {...props}
