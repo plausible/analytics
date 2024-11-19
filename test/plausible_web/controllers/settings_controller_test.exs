@@ -551,11 +551,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     @tag :ee_only
     test "shows invoices for subscribed user", %{conn: conn, user: user} do
-      insert(:subscription,
-        paddle_plan_id: "558018",
-        paddle_subscription_id: "redundant",
-        user: user
-      )
+      subscribe_to_plan(user, "558018")
 
       html =
         conn
@@ -570,11 +566,7 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     @tag :ee_only
     test "shows message on failed invoice request'", %{conn: conn, user: user} do
-      insert(:subscription,
-        paddle_plan_id: "558018",
-        paddle_subscription_id: "invalid_subscription_id",
-        user: user
-      )
+      subscribe_to_plan(user, "558018", paddle_subscription_id: "invalid_subscription_id")
 
       html =
         conn

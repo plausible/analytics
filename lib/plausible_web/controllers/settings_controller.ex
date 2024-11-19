@@ -38,8 +38,12 @@ defmodule PlausibleWeb.SettingsController do
   end
 
   def invoices(conn, _params) do
-    current_user = conn.assigns.current_user
-    invoices = Plausible.Billing.paddle_api().get_invoices(current_user.subscription)
+    subscription =
+      conn.assigns.current_user
+      |> Plausible.Teams.Adapter.user_or_team()
+      |> Map.get(:subscription)
+
+    invoices = Plausible.Billing.paddle_api().get_invoices(subscription)
     render(conn, :invoices, layout: {PlausibleWeb.LayoutView, :settings}, invoices: invoices)
   end
 
