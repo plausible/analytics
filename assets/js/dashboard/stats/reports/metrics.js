@@ -214,11 +214,11 @@ export const createExitRate = (props) => {
 }
 
 export const createScrollDepth = (props) => {
-  const renderLabel = (_query) => "Scroll Depth"
+  const renderLabel = (_query) => 'Scroll Depth'
   return new Metric({
-    width: 'w-28', 
+    width: 'w-28',
     ...props,
-    key: "scroll_depth",
+    key: 'scroll_depth',
     renderLabel,
     sortable: false
   })
