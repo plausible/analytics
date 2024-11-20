@@ -9,137 +9,38 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
   describe "create_invitation/4" do
     test "creates an invitation" do
-      inviter = insert(:user)
-      invitee = insert(:user)
-      team = insert(:team)
-
-      site =
-        insert(:site,
-          team: team,
-          memberships: [build(:site_membership, user: inviter, role: :owner)]
-        )
-
-      insert(:team_membership, team: team, user: inviter, role: :owner)
+      inviter = new_user()
+      invitee = new_user()
+      site = new_site(owner: inviter)
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
-
-      assert {:ok, %Plausible.Teams.GuestInvitation{}} =
-               Plausible.Teams.Invitations.invite(site, inviter, invitee.email, :viewer)
-    end
-
-    @tag :teams
-    test "[TEAMS] syncs a created invitation" do
-      inviter = insert(:user)
-      invitee = insert(:user)
-
-      site =
-        insert(:site,
-          team: nil,
-          memberships: [build(:site_membership, user: inviter, role: :owner)]
-        )
-
-      assert {:ok, %Plausible.Auth.Invitation{}} =
-               CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
-
-      team = assert_team_attached(site)
-      assert_guest_invitation(team, site, invitee.email, :viewer)
-    end
-
-    @tag :teams
-    test "[TEAMS] sync a created invitation with team already setup but site not assigned yet" do
-      inviter = insert(:user)
-      invitee = insert(:user)
-
-      {:ok, %{id: team_id}} = Plausible.Teams.get_or_create(inviter)
-
-      site =
-        insert(:site,
-          team: nil,
-          memberships: [build(:site_membership, user: inviter, role: :owner)]
-        )
-
-      assert {:ok, %Plausible.Auth.Invitation{}} =
-               CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
-
-      team = assert_team_attached(site, team_id)
-      assert_guest_invitation(team, site, invitee.email, :viewer)
-    end
-
-    @tag :teams
-    test "[TEAMS] sync a created invitation with team fully setup" do
-      inviter = insert(:user)
-      invitee = insert(:user)
-
-      {:ok, %{id: team_id} = team} = Plausible.Teams.get_or_create(inviter)
-
-      site =
-        insert(:site,
-          team: team,
-          memberships: [build(:site_membership, user: inviter, role: :owner)]
-        )
-
-      assert {:ok, %Plausible.Auth.Invitation{}} =
-               CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
-
-      team = assert_team_attached(site, team_id)
-      assert_guest_invitation(team, site, invitee.email, :viewer)
     end
 
     test "returns validation errors" do
-      inviter = insert(:user)
-      team = insert(:team)
-
-      site =
-        insert(:site,
-          team: team,
-          memberships: [build(:site_membership, user: inviter, role: :owner)]
-        )
-
-      insert(:team_membership, team: team, user: inviter, role: :owner)
+      inviter = new_user()
+      site = new_site(owner: inviter)
 
       assert {:error, changeset} = CreateInvitation.create_invitation(site, inviter, "", :viewer)
-      assert {"can't be blank", _} = changeset.errors[:email]
-
-      assert {:error, changeset} = Plausible.Teams.Invitations.invite(site, inviter, "", :viewer)
       assert {"can't be blank", _} = changeset.errors[:email]
     end
 
     test "returns error when user is already a member" do
-      inviter = insert(:user)
-      invitee = insert(:user)
-
-      team = insert(:team)
-
-      site =
-        insert(:site,
-          team: team,
-          memberships: [
-            build(:site_membership, user: inviter, role: :owner),
-            build(:site_membership, user: invitee, role: :viewer)
-          ]
-        )
-
-      insert(:team_membership, team: team, user: inviter, role: :owner)
-      team_membership = insert(:team_membership, team: team, user: invitee, role: :guest)
-      insert(:guest_membership, team_membership: team_membership, site: site, role: :viewer)
+      inviter = new_user()
+      invitee = new_user()
+      site = new_site(owner: inviter)
+      add_guest(site, user: invitee, role: :viewer)
 
       assert {:error, :already_a_member} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
 
       assert {:error, :already_a_member} =
-               Plausible.Teams.Invitations.invite(site, inviter, invitee.email, :viewer)
-
-      assert {:error, :already_a_member} =
                CreateInvitation.create_invitation(site, inviter, inviter.email, :viewer)
-
-      assert {:error, :already_a_member} =
-               Plausible.Teams.Invitations.invite(site, inviter, inviter.email, :viewer)
     end
 
     test "sends invitation email for existing users" do
-      [inviter, invitee] = insert_list(2, :user)
-      site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
+      [inviter, invitee] = for _ <- 1..2, do: new_user()
+      site = new_site(owner: inviter)
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
@@ -151,8 +52,8 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
     end
 
     test "sends invitation email for new users" do
-      inviter = insert(:user)
-      site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
+      inviter = new_user()
+      site = new_site(owner: inviter)
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :viewer)
@@ -165,15 +66,11 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
     @tag :ee_only
     test "returns error when owner is over their team member limit" do
-      [owner, inviter, invitee] = insert_list(3, :user)
+      [owner, inviter, invitee] = for _ <- 1..3, do: new_user()
 
-      memberships =
-        [
-          build(:site_membership, user: owner, role: :owner),
-          build(:site_membership, user: inviter, role: :admin)
-        ] ++ build_list(4, :site_membership)
-
-      site = insert(:site, memberships: memberships)
+      site = new_site(owner: owner)
+      inviter = add_guest(site, user: inviter, role: :editor)
+      for _ <- 1..4, do: add_guest(site, role: :viewer)
 
       assert {:error, {:over_limit, 3}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
@@ -181,14 +78,8 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
     @tag :ee_only
     test "allows inviting users who were already invited to other sites, within the limit" do
-      owner = insert(:user)
-
-      memberships =
-        [
-          build(:site_membership, user: owner, role: :owner)
-        ]
-
-      site = insert(:site, memberships: memberships)
+      owner = new_user()
+      site = new_site(owner: owner)
 
       invite = fn site, email ->
         CreateInvitation.create_invitation(site, owner, email, :viewer)
@@ -199,28 +90,22 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       assert {:ok, _} = invite.(site, "i3@example.com")
       assert {:error, {:over_limit, 3}} = invite.(site, "i4@example.com")
 
-      site2 = insert(:site, memberships: memberships)
+      site2 = new_site(owner: owner)
 
       assert {:ok, _} = invite.(site2, "i3@example.com")
     end
 
     @tag :ee_only
     test "allows inviting users who are already members of other sites, within the limit" do
-      [u1, u2, u3, u4] = insert_list(4, :user)
+      [u1, u2, u3, u4] = for _ <- 1..4, do: new_user()
+      site = new_site(owner: u1)
+      add_guest(site, user: u2, role: :viewer)
+      add_guest(site, user: u3, role: :viewer)
+      add_guest(site, user: u4, role: :viewer)
 
-      memberships =
-        [
-          build(:site_membership, user: u1, role: :owner),
-          build(:site_membership, user: u2, role: :viewer),
-          build(:site_membership, user: u3, role: :viewer)
-        ]
-
-      site =
-        insert(:site,
-          memberships: memberships ++ [build(:site_membership, user: u4, role: :viewer)]
-        )
-
-      site2 = insert(:site, memberships: memberships)
+      site2 = new_site(owner: u1)
+      add_guest(site2, user: u2, role: :viewer)
+      add_guest(site2, user: u3, role: :viewer)
 
       invite = fn site, email ->
         CreateInvitation.create_invitation(site, u1, email, :viewer)
