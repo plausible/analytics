@@ -4,6 +4,13 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
   """
   use Plausible.Teams.Adapter
 
+  def change_plan(user, new_plan_id) do
+    switch(user,
+      team_fn: &Plausible.Teams.Billing.change_plan(&1, new_plan_id),
+      user_fn: &Plausible.Billing.change_plan(&1, new_plan_id)
+    )
+  end
+
   def enterprise_configured?(nil), do: false
 
   def enterprise_configured?(user) do
@@ -13,10 +20,24 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
     )
   end
 
+  def latest_enterprise_plan_with_prices(user, customer_ip) do
+    switch(user,
+      team_fn: &Plausible.Teams.Billing.latest_enterprise_plan_with_price(&1, customer_ip),
+      user_fn: &Plausible.Billing.Plans.latest_enterprise_plan_with_price(&1, customer_ip)
+    )
+  end
+
   def has_active_subscription?(user) do
     switch(user,
       team_fn: &Plausible.Teams.Billing.has_active_subscription?/1,
       user_fn: &Plausible.Billing.has_active_subscription?/1
+    )
+  end
+
+  def active_subscription_for(user) do
+    switch(user,
+      team_fn: &Plausible.Teams.Billing.active_subscription_for/1,
+      user_fn: &Plausible.Billing.active_subscription_for/1
     )
   end
 
