@@ -57,6 +57,7 @@ defmodule Plausible.Stats.SamplingCacheTest do
 
         start_test_cache(test)
 
+        assert SamplingCache.count_all() == 1
         assert SamplingCache.get(1, force?: true, cache_name: test) == nil
         assert SamplingCache.get(2, force?: true, cache_name: test) == 22_000_000
         assert SamplingCache.get(3, force?: true, cache_name: test) == nil
@@ -72,6 +73,8 @@ defmodule Plausible.Stats.SamplingCacheTest do
         ])
 
         :ok = SamplingCache.refresh_all(cache_name: test)
+
+        assert SamplingCache.count_all() == 2
         assert SamplingCache.get(1, force?: true, cache_name: test) == 22_000_000
         assert SamplingCache.get(2, force?: true, cache_name: test) == 22_000_000
       end
