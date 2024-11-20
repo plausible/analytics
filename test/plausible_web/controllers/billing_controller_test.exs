@@ -24,17 +24,13 @@ defmodule PlausibleWeb.BillingControllerTest do
     setup [:create_user, :log_in]
 
     test "errors if usage exceeds team member limit on the new plan", %{conn: conn, user: user} do
-      insert(:subscription, user: user, paddle_plan_id: "123123")
+      subscribe_to_plan(user, "123123")
 
-      insert(:site,
-        memberships: [
-          build(:site_membership, user: user, role: :owner),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user))
-        ]
-      )
+      site = new_site(owner: user)
+
+      for _ <- 1..4 do
+        add_guest(site, role: :viewer)
+      end
 
       conn = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
 
@@ -46,9 +42,9 @@ defmodule PlausibleWeb.BillingControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:subscription, user: user, paddle_plan_id: "123123")
+      subscribe_to_plan(user, "123123")
 
-      for _ <- 1..11, do: insert(:site, members: [user])
+      for _ <- 1..11, do: new_site(owner: user)
 
       Plausible.Users.allow_next_upgrade_override(user)
 
@@ -64,8 +60,8 @@ defmodule PlausibleWeb.BillingControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:subscription, user: user, paddle_plan_id: "123123")
-      site = insert(:site, members: [user])
+      subscribe_to_plan(user, "123123")
+      site = new_site(owner: user)
       now = NaiveDateTime.utc_now()
 
       generate_usage_for(site, 11_000, Timex.shift(now, days: -5))
@@ -91,7 +87,7 @@ defmodule PlausibleWeb.BillingControllerTest do
     end
 
     test "calls Paddle API to update subscription", %{conn: conn, user: user} do
-      insert(:subscription, user: user)
+      subscribe_to_plan(user, "321321")
 
       post(conn, Routes.billing_path(conn, :change_plan, "123123"))
 

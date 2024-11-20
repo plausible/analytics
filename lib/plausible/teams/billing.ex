@@ -18,6 +18,24 @@ defmodule Plausible.Teams.Billing do
   @limit_sites_since ~D[2021-05-05]
   @site_limit_for_trials 10
 
+  def change_plan(team, new_plan_id) do
+    subscription = active_subscription_for(team)
+    plan = Plausible.Billing.Plans.find(new_plan_id)
+
+    limit_checking_opts =
+      if team.allow_next_upgrade_override do
+        [ignore_pageview_limit: true]
+      else
+        []
+      end
+
+    usage = quota_usage(team)
+
+    with :ok <-
+           Plausible.Billing.Quota.ensure_within_plan_limits(usage, plan, limit_checking_opts),
+         do: Plausible.Billing.do_change_plan(subscription, new_plan_id)
+  end
+
   def enterprise_configured?(nil), do: false
 
   def enterprise_configured?(%Teams.Team{} = team) do
@@ -151,7 +169,7 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
-  def quota_usage(team, opts) do
+  def quota_usage(team, opts \\ []) do
     team = Teams.with_subscription(team)
     with_features? = Keyword.get(opts, :with_features, false)
     pending_site_ids = Keyword.get(opts, :pending_ownership_site_ids, [])

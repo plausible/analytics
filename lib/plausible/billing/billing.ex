@@ -55,7 +55,8 @@ defmodule Plausible.Billing do
          do: do_change_plan(subscription, new_plan_id)
   end
 
-  defp do_change_plan(subscription, new_plan_id) do
+  @doc false
+  def do_change_plan(subscription, new_plan_id) do
     res =
       paddle_api().update_subscription(subscription.paddle_subscription_id, %{
         plan_id: new_plan_id

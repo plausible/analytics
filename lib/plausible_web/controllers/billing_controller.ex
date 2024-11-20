@@ -101,7 +101,7 @@ defmodule PlausibleWeb.BillingController do
   def change_plan(conn, %{"new_plan_id" => new_plan_id}) do
     current_user = conn.assigns.current_user
 
-    case Billing.change_plan(current_user, new_plan_id) do
+    case Plausible.Teams.Adapter.Read.Billing.change_plan(current_user, new_plan_id) do
       {:ok, _subscription} ->
         conn
         |> put_flash(:success, "Plan changed successfully")
