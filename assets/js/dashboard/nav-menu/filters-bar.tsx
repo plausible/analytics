@@ -179,7 +179,7 @@ export const FiltersBar = () => {
         className="p-1 overflow-hidden"
         style={{ width: visibility?.width ?? '100%' }}
       />
-      <div className="flex items-center gap-x-4 p-1" ref={actionsRef}>
+      <div className="flex items-center gap-x-4 py-1" ref={actionsRef}>
         {visibility !== null &&
           visibility.visibleCount !== query.filters.length && (
             <ToggleDropdownButton

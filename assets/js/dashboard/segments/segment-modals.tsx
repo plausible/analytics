@@ -266,7 +266,7 @@ export const AllSegmentsModal = () => {
         {
           key: 'name',
           label: 'Segment',
-          width: 'w-full',
+          width: 'w-60',
           align: 'left',
           renderItem: ({ id, name, selected }) => (
             <button

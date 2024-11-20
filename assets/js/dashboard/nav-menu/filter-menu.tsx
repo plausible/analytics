@@ -5,6 +5,7 @@ import {
   DropdownLinkGroup,
   DropdownMenuWrapper,
   DropdownNavigationLink,
+  DropdownSubtitle,
   ToggleDropdownButton
 } from '../components/dropdown'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
@@ -32,7 +33,6 @@ import { useUserContext } from '../user-context'
 import {
   formatSegmentIdAsLabelKey,
   getSegmentNamePlaceholder,
-  isSegmentFilter,
   parseApiSegmentData,
   SavedSegment
 } from '../segments/segments'
@@ -42,18 +42,34 @@ import { DashboardQuery } from '../query'
 
 export function getFilterListItems({
   propsAvailable
-}: Pick<PlausibleSite, 'propsAvailable'>): {
-  modalKey: string
-  label: string
-}[] {
-  const allKeys = Object.keys(FILTER_MODAL_TO_FILTER_GROUP) as Array<
-    keyof typeof FILTER_MODAL_TO_FILTER_GROUP
-  >
-  const keysToOmit: Array<keyof typeof FILTER_MODAL_TO_FILTER_GROUP> =
-    propsAvailable ? ['segment'] : ['segment', 'props']
-  return allKeys
-    .filter((k) => !keysToOmit.includes(k))
-    .map((modalKey) => ({ modalKey, label: formatFilterGroup(modalKey) }))
+}: Pick<PlausibleSite, 'propsAvailable'>): Array<
+  Array<{
+    title: string
+    modals: Array<false | keyof typeof FILTER_MODAL_TO_FILTER_GROUP>
+  }>
+> {
+  return [
+    [
+      {
+        title: 'URL',
+        modals: ['page', 'hostname']
+      },
+      {
+        title: 'Acquisition',
+        modals: ['source', 'utm']
+      }
+    ],
+    [
+      {
+        title: 'Device',
+        modals: ['screen', 'browser', 'os']
+      },
+      {
+        title: 'Behaviour',
+        modals: ['goal', !!propsAvailable && 'props']
+      }
+    ]
+  ]
 }
 
 export const FilterMenu = () => {
@@ -61,7 +77,7 @@ export const FilterMenu = () => {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [opened, setOpened] = useState(false)
   const site = useSiteContext()
-  const filterListItems = useMemo(() => getFilterListItems(site), [site])
+  const columns = useMemo(() => getFilterListItems(site), [site])
   const { query } = useQueryContext()
   const { expandedSegment, modal } = useSegmentExpandedContext()
   const queryClient = useQueryClient()
@@ -308,47 +324,37 @@ export const FilterMenu = () => {
         {opened && (
           <DropdownMenuWrapper
             id="filter-menu"
-            className="md:left-auto md:w-56"
+            className="md:left-auto md:w-80"
           >
             <SegmentsList closeList={() => setOpened(false)} />
-            <DropdownLinkGroup>
-              {filterListItems.map(({ modalKey, label }) => (
-                <DropdownNavigationLink
-                  onLinkClick={() => setOpened(false)}
-                  active={false}
-                  key={modalKey}
-                  path={filterRoute.path}
-                  params={{ field: modalKey }}
-                  search={(search) => search}
-                >
-                  {label}
-                </DropdownNavigationLink>
+            <DropdownLinkGroup className="flex flex-row">
+              {columns.map((filterGroups, index) => (
+                <div key={index} className="flex flex-col w-1/2">
+                  {filterGroups.map(({ title, modals }) => (
+                    <div key={title}>
+                      <DropdownSubtitle className="pb-1">
+                        {title}
+                      </DropdownSubtitle>
+                      {modals
+                        .filter((m) => !!m)
+                        .map((modalKey) => (
+                          <DropdownNavigationLink
+                            className="text-xs"
+                            onLinkClick={() => setOpened(false)}
+                            active={false}
+                            key={modalKey}
+                            path={filterRoute.path}
+                            params={{ field: modalKey }}
+                            search={(search) => search}
+                          >
+                            {formatFilterGroup(modalKey)}
+                          </DropdownNavigationLink>
+                        ))}
+                    </div>
+                  ))}
+                </div>
               ))}
             </DropdownLinkGroup>
-            {!!query.filters.length && (
-              <DropdownLinkGroup>
-                <DropdownNavigationLink
-                  search={(s) => ({ ...s, filters: null, labels: null })}
-                  onLinkClick={() => setOpened(false)}
-                >
-                  Clear all filters
-                </DropdownNavigationLink>
-                {expandedSegment === null && (
-                  <DropdownNavigationLink
-                  search={(s) => s}
-                  navigateOptions={{
-                    state: {
-                      modal: 'create',
-                      expandedSegment: null
-                    } as SegmentExpandedLocationState
-                  }}
-                  {...query.filters.some(isSegmentFilter) && {"aria-disabled": true, navigateOptions: undefined }}
-                  >
-                    Save as segment
-                  </DropdownNavigationLink>
-                )}
-              </DropdownLinkGroup>
-            )}
           </DropdownMenuWrapper>
         )}
       </ToggleDropdownButton>

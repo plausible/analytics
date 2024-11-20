@@ -3,7 +3,8 @@
 import React, { useCallback, useMemo } from 'react'
 import {
   DropdownLinkGroup,
-  DropdownNavigationLink
+  DropdownNavigationLink,
+  DropdownSubtitle
 } from '../components/dropdown'
 import { useQueryContext } from '../query-context'
 import { useSiteContext } from '../site-context'
@@ -17,14 +18,16 @@ import {
 } from './segments'
 import { QueryFunction, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cleanLabels } from '../util/filters'
-import { useAppNavigate } from '../navigation/use-app-navigate'
+import {
+  AppNavigationLink,
+  useAppNavigate
+} from '../navigation/use-app-navigate'
 import classNames from 'classnames'
 import { Tooltip } from '../util/tooltip'
 import { formatDayShort, parseUTCDate } from '../util/date'
 import { useUserContext } from '../user-context'
 import {
-  ArrowsPointingInIcon,
-  ArrowsPointingOutIcon,
+  ChevronLeftIcon,
   ChevronRightIcon
 } from '@heroicons/react/24/solid'
 import {
@@ -64,6 +67,8 @@ export const useSegmentsListQuery = () => {
   })
 }
 
+const linkClass = 'text-xs'
+
 export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
   const { expandedSegment } = useSegmentExpandedContext()
   const { query } = useQueryContext()
@@ -77,21 +82,23 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
   if (expandedSegment) {
     return (
       <>
+        <AppNavigationLink
+          className="flex text-xs px-4 py-2 gap-1 bg-gray-50 dark:bg-gray-900 rounded-t-md"
+          search={(s) => ({ ...s, filters: null, labels: null })}
+          state={
+            {
+              expandedSegment: null,
+              modal: null
+            } as SegmentExpandedLocationState
+          }
+        >
+          <ChevronLeftIcon className="block h-4 w-4"></ChevronLeftIcon>
+          <div>Back</div>
+        </AppNavigationLink>
         <DropdownLinkGroup>
+          <DropdownSubtitle>{expandedSegment.name}</DropdownSubtitle>
           <DropdownNavigationLink
-            search={(s) => ({ ...s, filters: null, labels: null })}
-            active={true}
-            navigateOptions={{
-              state: {
-                expandedSegment: null,
-                modal: null
-              } as SegmentExpandedLocationState
-            }}
-          >
-            <div className="truncate">{expandedSegment.name}</div>
-            <ArrowsPointingInIcon className="w-4 h-4 shrink-0" />
-          </DropdownNavigationLink>
-          <DropdownNavigationLink
+            className={linkClass}
             search={(s) => s}
             navigateOptions={{
               state: {
@@ -103,6 +110,7 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
             Update segment
           </DropdownNavigationLink>
           <DropdownNavigationLink
+            className={linkClass}
             search={(s) => s}
             navigateOptions={{
               state: {
@@ -114,6 +122,7 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
             Save as a new segment
           </DropdownNavigationLink>
           <DropdownNavigationLink
+            className={linkClass}
             search={(s) => s}
             navigateOptions={{
               state: {
@@ -133,6 +142,8 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
     <>
       {!!data?.length && (
         <DropdownLinkGroup>
+          <DropdownSubtitle>Saved segments</DropdownSubtitle>
+
           {data.slice(0, 4).map((s) => {
             const authorLabel = (() => {
               if (!site.members) {
@@ -186,16 +197,39 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
               </Tooltip>
             )
           })}
-          <DropdownNavigationLink
-            path={filterRoute.path}
-            params={{ field: 'segment' }}
-            search={(s) => s}
-            onLinkClick={closeList}
-          >
-            View all <ChevronRightIcon className="h-4 w-4" />
-          </DropdownNavigationLink>
         </DropdownLinkGroup>
       )}
+
+      <DropdownLinkGroup>
+        <DropdownNavigationLink
+          className={linkClass}
+          path={filterRoute.path}
+          params={{ field: 'segment' }}
+          search={(s) => s}
+          onLinkClick={closeList}
+        >
+          View all
+        </DropdownNavigationLink>
+        <DropdownNavigationLink
+          className={linkClass}
+          search={(s) => s}
+          navigateOptions={{
+            state: {
+              modal: 'create',
+              expandedSegment: null
+            } as SegmentExpandedLocationState
+          }}
+          onLinkClick={closeList}
+          {...((query.filters.some(isSegmentFilter) ||
+            !query.filters.length) && {
+            'aria-disabled': true,
+            navigateOptions: undefined,
+            onLinkClick: undefined
+          })}
+        >
+          Save selection as segment
+        </DropdownNavigationLink>
+      </DropdownLinkGroup>
     </>
   )
 }
@@ -302,6 +336,7 @@ const SegmentLink = ({
 
   return (
     <DropdownNavigationLink
+      className={linkClass}
       key={id}
       active={appliedSegmentIds.includes(id)}
       onMouseEnter={prefetchSegment}
@@ -363,7 +398,14 @@ const ExpandSegment = ({
       )}
       onClick={onClick}
     >
-      <ArrowsPointingOutIcon />
+      <ChevronRightIcon className="w-4 h-4"></ChevronRightIcon>
+      {/* <EditSegmentIcon /> */}
     </button>
   )
 }
+
+// const EditSegmentIcon = () => (
+//   <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+//     <path d="M14.2075 4.58572L11.4144 1.79322C11.3215 1.70034 11.2113 1.62666 11.0899 1.57639C10.9686 1.52612 10.8385 1.50024 10.7072 1.50024C10.5759 1.50024 10.4458 1.52612 10.3245 1.57639C10.2031 1.62666 10.0929 1.70034 10 1.79322L2.29313 9.50009C2.19987 9.59262 2.12593 9.70275 2.0756 9.82411C2.02528 9.94546 1.99959 10.0756 2.00001 10.207V13.0001C2.00001 13.2653 2.10536 13.5197 2.2929 13.7072C2.48043 13.8947 2.73479 14.0001 3 14.0001H13.5C13.6326 14.0001 13.7598 13.9474 13.8536 13.8536C13.9473 13.7599 14 13.6327 14 13.5001C14 13.3675 13.9473 13.2403 13.8536 13.1465C13.7598 13.0528 13.6326 13.0001 13.5 13.0001H7.2075L14.2075 6.00009C14.3004 5.90723 14.3741 5.79698 14.4243 5.67564C14.4746 5.5543 14.5005 5.42425 14.5005 5.29291C14.5005 5.16156 14.4746 5.03151 14.4243 4.91017C14.3741 4.78883 14.3004 4.67858 14.2075 4.58572ZM5.79313 13.0001H3V10.207L8.5 4.70697L11.2931 7.50009L5.79313 13.0001ZM12 6.79322L9.20751 4.00009L10.7075 2.50009L13.5 5.29322L12 6.79322Z" />
+//   </svg>
+// )
