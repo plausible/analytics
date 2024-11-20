@@ -339,29 +339,30 @@ defmodule PlausibleWeb.BillingControllerTest do
   end
 
   defp configure_enterprise_plan(%{user: user}) do
-    insert(:enterprise_plan,
-      user_id: user.id,
+    subscribe_to_enterprise_plan(user,
       paddle_plan_id: "123",
       billing_interval: :yearly,
       monthly_pageview_limit: 50_000_000,
       site_limit: 20_000,
       hourly_api_request_limit: 5000,
-      inserted_at: Timex.now() |> Timex.shift(hours: 1)
+      inserted_at: NaiveDateTime.utc_now() |> NaiveDateTime.shift(hour: 1),
+      subscription?: false
     )
 
     :ok
   end
 
   defp subscribe_enterprise(%{user: user}, opts \\ []) do
+    {paddle_plan_id, opts} = Keyword.pop(opts, :paddle_plan_id, "321")
+
     opts =
       opts
       |> Keyword.put(:user, user)
-      |> Keyword.put_new(:paddle_plan_id, "321")
       |> Keyword.put_new(:status, Subscription.Status.active())
 
-    insert(:subscription, opts)
+    user = subscribe_to_plan(user, paddle_plan_id, opts)
 
-    {:ok, user: Plausible.Users.with_subscription(user)}
+    {:ok, user: user}
   end
 
   defp get_paddle_checkout_params(element) do

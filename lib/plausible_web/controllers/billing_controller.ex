@@ -30,19 +30,20 @@ defmodule PlausibleWeb.BillingController do
 
   def upgrade_to_enterprise_plan(conn, _params) do
     current_user = conn.assigns.current_user
+    subscription = Plausible.Teams.Adapter.Read.Billing.get_subscription(current_user)
 
     {latest_enterprise_plan, price} =
       Plans.latest_enterprise_plan_with_price(current_user, PlausibleWeb.RemoteIP.get(conn))
 
     subscription_resumable? =
-      Plausible.Billing.Subscriptions.resumable?(current_user.subscription)
+      Plausible.Billing.Subscriptions.resumable?(subscription)
 
     subscribed_to_latest? =
       subscription_resumable? &&
-        current_user.subscription.paddle_plan_id == latest_enterprise_plan.paddle_plan_id
+        subscription.paddle_plan_id == latest_enterprise_plan.paddle_plan_id
 
     cond do
-      Subscription.Status.in?(current_user.subscription, [
+      Subscription.Status.in?(subscription, [
         Subscription.Status.past_due(),
         Subscription.Status.paused()
       ]) ->

@@ -13,6 +13,13 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
     )
   end
 
+  def latest_enterprise_plan_with_prices(user, customer_ip) do
+    switch(user,
+      team_fn: &Plausible.Teams.Billing.latest_enterprise_plan_with_price(&1, customer_ip),
+      user_fn: &Plausible.Billing.Plans.latest_enterprise_plan_with_price(&1, customer_ip)
+    )
+  end
+
   def has_active_subscription?(user) do
     switch(user,
       team_fn: &Plausible.Teams.Billing.has_active_subscription?/1,
