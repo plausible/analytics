@@ -12,43 +12,68 @@ defmodule Plausible.Stats.SamplingCacheTest do
 
         Plausible.IngestRepo.insert_all(Plausible.Ingestion.Counters.Record, [
           %{
-            site_id: 2,
+            site_id: 1,
+            domain: "1.com",
             value: 11_000_000,
             event_timebucket: add(now, -1, :day),
             metric: "buffered"
           },
           %{
             site_id: 2,
+            domain: "2.com",
+            value: 11_000_000,
+            event_timebucket: add(now, -1, :day),
+            metric: "buffered"
+          },
+          %{
+            site_id: 2,
+            domain: "2.com",
             value: 11_000_000,
             event_timebucket: add(now, -5, :day),
             metric: "buffered"
           },
           %{
             site_id: 2,
+            domain: "2.com",
             value: 11_000_000,
             event_timebucket: add(now, -35, :day),
             metric: "buffered"
           },
           %{
             site_id: 3,
+            domain: "3.com",
             value: 44_000_000,
             event_timebucket: add(now, -35, :day),
             metric: "buffered"
           },
           %{
             site_id: 4,
+            domain: "4.com",
             value: 11_000_000,
             event_timebucket: add(now, -35, :day),
             metric: "buffered"
           }
         ])
 
-        {:ok, _} = start_test_cache(test)
+        start_test_cache(test)
 
         assert SamplingCache.get(1, force?: true, cache_name: test) == nil
         assert SamplingCache.get(2, force?: true, cache_name: test) == 22_000_000
         assert SamplingCache.get(3, force?: true, cache_name: test) == nil
         assert SamplingCache.get(4, force?: true, cache_name: test) == nil
+
+        Plausible.IngestRepo.insert_all(Plausible.Ingestion.Counters.Record, [
+          %{
+            site_id: 1,
+            value: 11_000_000,
+            event_timebucket: add(now, -1, :day),
+            metric: "buffered"
+          }
+        ])
+
+        :ok = SamplingCache.refresh_all(cache_name: test)
+        assert SamplingCache.get(1, force?: true, cache_name: test) == 22_000_000
+        assert SamplingCache.get(2, force?: true, cache_name: test) == 22_000_000
       end
     end
 
@@ -59,6 +84,8 @@ defmodule Plausible.Stats.SamplingCacheTest do
     defp start_test_cache(cache_name) do
       %{start: {m, f, a}} = SamplingCache.child_spec(cache_name: cache_name)
       apply(m, f, a)
+
+      :ok = SamplingCache.refresh_all(cache_name: cache_name)
     end
   end
 end

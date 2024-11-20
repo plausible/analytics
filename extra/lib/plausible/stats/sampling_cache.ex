@@ -50,7 +50,6 @@ defmodule Plausible.Stats.SamplingCache do
   end
 
   def thirty_days_ago() do
-    Date.utc_today()
-    |> Date.add(-30)
+    Date.shift(Date.utc_today(), day: -30)
   end
 end
