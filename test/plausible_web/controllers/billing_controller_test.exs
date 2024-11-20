@@ -218,7 +218,7 @@ defmodule PlausibleWeb.BillingControllerTest do
     setup [:create_user, :log_in]
 
     test "renders preview information about the plan change", %{conn: conn, user: user} do
-      insert(:subscription, user: user, paddle_plan_id: @v4_growth_plan)
+      subscribe_to_plan(user, @v4_growth_plan)
 
       html_response =
         conn

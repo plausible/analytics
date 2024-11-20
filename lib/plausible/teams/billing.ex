@@ -47,6 +47,12 @@ defmodule Plausible.Teams.Billing do
     |> Repo.exists?()
   end
 
+  def active_subscription_for(team) do
+    team
+    |> active_subscription_query()
+    |> Repo.one()
+  end
+
   def check_needs_to_upgrade(nil), do: {:needs_to_upgrade, :no_trial}
 
   def check_needs_to_upgrade(team) do

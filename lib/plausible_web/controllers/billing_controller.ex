@@ -69,8 +69,9 @@ defmodule PlausibleWeb.BillingController do
 
   def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do
     current_user = conn.assigns.current_user
+    subscription = Plausible.Teams.Adapter.Read.Billing.active_subscription_for(current_user)
 
-    case preview_subscription(current_user, new_plan_id) do
+    case preview_subscription(subscription, new_plan_id) do
       {:ok, {subscription, preview_info}} ->
         render(conn, "change_plan_preview.html",
           back_link: Routes.billing_path(conn, :choose_plan),
@@ -138,15 +139,11 @@ defmodule PlausibleWeb.BillingController do
     end
   end
 
-  defp preview_subscription(user, new_plan_id) do
-    subscription = Billing.active_subscription_for(user)
+  defp preview_subscription(nil, _new_plan_id), do: {:error, :no_subscription}
 
-    if subscription do
-      with {:ok, preview_info} <- Billing.change_plan_preview(subscription, new_plan_id) do
-        {:ok, {subscription, preview_info}}
-      end
-    else
-      {:error, :no_subscription}
+  defp preview_subscription(subscription, new_plan_id) do
+    with {:ok, preview_info} <- Billing.change_plan_preview(subscription, new_plan_id) do
+      {:ok, {subscription, preview_info}}
     end
   end
 end
