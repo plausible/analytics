@@ -24,6 +24,12 @@ defmodule Plausible.IngestRepo.Migrations.CreateIngestCountersSiteTrafficProject
         GROUP BY site_id, toDate(event_timebucket)
       )
     """
+
+    execute """
+      ALTER TABLE ingest_counters
+      #{Plausible.MigrationUtils.on_cluster_statement("ingest_counters")}
+      MATERIALIZE PROJECTION ingest_counters_site_traffic_projection
+    """
   end
 
   def down do
