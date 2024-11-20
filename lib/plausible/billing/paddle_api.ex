@@ -83,7 +83,7 @@ defmodule Plausible.Billing.PaddleApi do
     end
   end
 
-  @spec get_invoices(Plausible.Billing.Subscription.t()) ::
+  @spec get_invoices(Plausible.Billing.Subscription.t() | nil) ::
           {:ok, list()}
           | {:error, :request_failed}
           | {:error, :no_invoices}

@@ -149,11 +149,11 @@ defmodule Plausible.Teams.Test do
     user
   end
 
-  def subscribe_to_plan(user, paddle_plan_id) do
+  def subscribe_to_plan(user, paddle_plan_id, attrs \\ []) do
     {:ok, team} = Teams.get_or_create(user)
-
-    insert(:subscription, user: user, team: team, paddle_plan_id: paddle_plan_id)
-    user
+    attrs = Keyword.merge([user: user, team: team, paddle_plan_id: paddle_plan_id], attrs)
+    subscription = insert(:subscription, attrs)
+    %{user | subscription: subscription}
   end
 
   def subscribe_to_enterprise_plan(user, attrs \\ []) do

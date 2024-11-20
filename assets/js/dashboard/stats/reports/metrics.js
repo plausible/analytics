@@ -172,7 +172,7 @@ export const createVisitDuration = (props) => {
 export const createBounceRate = (props) => {
   const renderLabel = (_query) => 'Bounce Rate'
   return new Metric({
-    width: 'w-32',
+    width: 'w-28',
     ...props,
     key: 'bounce_rate',
     renderLabel,
@@ -194,7 +194,7 @@ export const createPageviews = (props) => {
 export const createTimeOnPage = (props) => {
   const renderLabel = (_query) => 'Time on Page'
   return new Metric({
-    width: 'w-32',
+    width: 'w-28',
     ...props,
     key: 'time_on_page',
     renderLabel,
@@ -208,6 +208,17 @@ export const createExitRate = (props) => {
     width: 'w-28',
     ...props,
     key: 'exit_rate',
+    renderLabel,
+    sortable: false
+  })
+}
+
+export const createScrollDepth = (props) => {
+  const renderLabel = (_query) => 'Scroll Depth'
+  return new Metric({
+    width: 'w-28',
+    ...props,
+    key: 'scroll_depth',
     renderLabel,
     sortable: false
   })

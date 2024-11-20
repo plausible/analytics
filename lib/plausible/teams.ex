@@ -9,8 +9,9 @@ defmodule Plausible.Teams do
   alias Plausible.Repo
   use Plausible
 
-  @spec on_trial?(Teams.Team.t()) :: boolean()
+  @spec on_trial?(Teams.Team.t() | nil) :: boolean()
   on_ee do
+    def on_trial?(nil), do: false
     def on_trial?(%Teams.Team{trial_expiry_date: nil}), do: false
 
     def on_trial?(team) do
@@ -36,6 +37,19 @@ defmodule Plausible.Teams do
 
   def owned_sites(team) do
     Repo.preload(team, :sites).sites
+  end
+
+  def owned_sites_ids(nil) do
+    []
+  end
+
+  def owned_sites_ids(team) do
+    Repo.all(
+      from s in Plausible.Site,
+        where: s.team_id == ^team.id,
+        select: s.id,
+        order_by: [desc: s.id]
+    )
   end
 
   @doc """
@@ -110,6 +124,19 @@ defmodule Plausible.Teams do
     end
   end
 
+  def last_subscription_join_query() do
+    from(subscription in last_subscription_query(),
+      where: subscription.team_id == parent_as(:team).id
+    )
+  end
+
+  def last_subscription_query() do
+    from(subscription in Plausible.Billing.Subscription,
+      order_by: [desc: subscription.inserted_at, desc: subscription.id],
+      limit: 1
+    )
+  end
+
   defp create_my_team(user) do
     team =
       "My Team"
@@ -134,12 +161,5 @@ defmodule Plausible.Teams do
       Repo.delete!(team)
       {:error, :exists_already}
     end
-  end
-
-  defp last_subscription_query() do
-    from(subscription in Plausible.Billing.Subscription,
-      order_by: [desc: subscription.inserted_at, desc: subscription.id],
-      limit: 1
-    )
   end
 end

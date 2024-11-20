@@ -123,7 +123,8 @@ defmodule PlausibleWeb.UserAuth do
   defp get_session_by_token(token) do
     now = NaiveDateTime.utc_now(:second)
 
-    last_subscription_query = Plausible.Users.last_subscription_join_query()
+    last_user_subscription_query = Plausible.Users.last_subscription_join_query()
+    last_team_subscription_query = Plausible.Teams.last_subscription_join_query()
 
     token_query =
       from(us in Auth.UserSession,
@@ -132,10 +133,13 @@ defmodule PlausibleWeb.UserAuth do
         left_join: tm in assoc(u, :team_memberships),
         on: tm.role != :guest,
         left_join: t in assoc(tm, :team),
-        left_lateral_join: s in subquery(last_subscription_query),
+        as: :team,
+        left_lateral_join: ts in subquery(last_team_subscription_query),
+        on: true,
+        left_lateral_join: s in subquery(last_user_subscription_query),
         on: true,
         where: us.token == ^token and us.timeout_at > ^now,
-        preload: [user: {u, subscription: s, team_memberships: {tm, team: t}}]
+        preload: [user: {u, subscription: s, team_memberships: {tm, team: {t, subscription: ts}}}]
       )
 
     case Repo.one(token_query) do

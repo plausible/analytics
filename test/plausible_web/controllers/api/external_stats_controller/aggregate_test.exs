@@ -126,6 +126,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    test "scroll depth metric is not recognized in the legacy API v1", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "30d",
+          "metrics" => "scroll_depth"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "The metric `scroll_depth` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#metrics"
+             }
+    end
+
     for property <- ["event:name", "event:goal", "event:props:custom_prop"] do
       test "validates that session metrics cannot be used with #{property} filter", %{
         conn: conn,
@@ -1628,12 +1642,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       populate_stats(site, [
         build(:pageview, user_id: 1234, timestamp: ~N[2021-01-01 12:00:00], pathname: "/1"),
         build(:pageview, user_id: 1234, timestamp: ~N[2021-01-01 12:00:05], pathname: "/2"),
-        build(:event,
-          name: "pageleave",
-          user_id: 1234,
-          timestamp: ~N[2021-01-01 12:01:00],
-          pathname: "/1"
-        )
+        build(:pageleave, user_id: 1234, timestamp: ~N[2021-01-01 12:01:00], pathname: "/1")
       ])
 
       conn =

@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Dashboard shows comparisons for all reports
+- UTM Medium report and API shows (gclid) and (msclkid) for paid searches when no explicit utm medium present.
 
 ### Removed
 ### Changed

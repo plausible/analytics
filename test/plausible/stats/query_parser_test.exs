@@ -1416,6 +1416,81 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
   end
 
+  describe "scroll_depth metric" do
+    test "fails validation on its own", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["scroll_depth"],
+        "date_range" => "all"
+      }
+      |> check_error(
+        site,
+        "Metric `scroll_depth` can only be queried with event:page filters or dimensions.",
+        :internal
+      )
+    end
+
+    test "fails with only a non-top-level event:page filter", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["scroll_depth"],
+        "date_range" => "all",
+        "filters" => [["not", ["is", "event:page", ["/"]]]]
+      }
+      |> check_error(
+        site,
+        "Metric `scroll_depth` can only be queried with event:page filters or dimensions.",
+        :internal
+      )
+    end
+
+    test "succeeds with top-level event:page filter", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["scroll_depth"],
+        "date_range" => "all",
+        "filters" => [["is", "event:page", ["/"]]]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:scroll_depth],
+          utc_time_range: @date_range_day,
+          filters: [[:is, "event:page", ["/"]]],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
+    end
+
+    test "succeeds with event:page dimension", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["scroll_depth"],
+        "date_range" => "all",
+        "dimensions" => ["event:page"]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:scroll_depth],
+          utc_time_range: @date_range_day,
+          filters: [],
+          dimensions: ["event:page"],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
+    end
+  end
+
   describe "views_per_visit metric" do
     test "succeeds with normal filters", %{site: site} do
       insert(:goal, %{site: site, event_name: "Signup"})

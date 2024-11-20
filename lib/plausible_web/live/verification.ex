@@ -18,7 +18,7 @@ defmodule PlausibleWeb.Live.Verification do
         socket
       ) do
     site =
-      Plausible.Sites.get_for_user!(socket.assigns.current_user, domain, [
+      Plausible.Teams.Adapter.Read.Sites.get_for_user!(socket.assigns.current_user, domain, [
         :owner,
         :admin,
         :super_admin,

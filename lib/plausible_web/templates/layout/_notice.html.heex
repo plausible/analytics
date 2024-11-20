@@ -6,7 +6,9 @@
   <div class="flex flex-col gap-y-2">
     <Notice.active_grace_period
       :if={Plausible.Auth.GracePeriod.active?(@conn.assigns.current_user)}
-      enterprise?={Plausible.Auth.enterprise_configured?(@conn.assigns.current_user)}
+      enterprise?={
+        Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(@conn.assigns.current_user)
+      }
       grace_period_end={grace_period_end(@conn.assigns.current_user)}
     />
 
