@@ -10,6 +10,7 @@ import {
 } from '../components/dropdown'
 import { FilterPillsList, PILL_X_GAP } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
+import { AppNavigationLink } from '../navigation/use-app-navigate'
 
 const LEFT_ACTIONS_GAP_PX = 16
 const SEE_MORE_GAP_PX = 16
@@ -210,6 +211,7 @@ export const FiltersBar = () => {
                       start: visibility.visibleCount
                     }}
                   />
+                  <ClearAction />
                 </DropdownMenuWrapper>
               ) : null}
             </ToggleDropdownButton>
@@ -218,3 +220,18 @@ export const FiltersBar = () => {
     </div>
   )
 }
+
+
+const ClearAction = () => (
+  <AppNavigationLink
+    title="Clear all filters"
+    className="flex mt-2 px-3 py-2 text-sm text-gray-500 hover:text-indigo-700 dark:hover:text-indigo-500"
+    search={(search) => ({
+      ...search,
+      filters: null,
+      labels: null
+    })}
+  >
+    Clear all filters
+  </AppNavigationLink>
+)
