@@ -1,44 +1,63 @@
 /** @format */
 
-import React, { useMemo, useState } from 'react'
+import React, { ReactNode, useMemo, useState } from 'react'
 import ModalWithRouting from '../stats/modals/modal'
 import classNames from 'classnames'
 import {
   formatSegmentIdAsLabelKey,
+  getFilterSegmentsByNameInsensitive,
   isSegmentFilter,
   SavedSegment,
   SegmentType
 } from './segments'
 import { ColumnConfiguraton, Table } from '../components/table'
-import { useSegmentPrefetch, useSegmentsListQuery } from './segments-dropdown'
+import {
+  ExpandSegment,
+  useSegmentPrefetch,
+  useSegmentsListQuery
+} from './segments-dropdown'
 import { SearchInput } from '../components/search-input'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 import { cleanLabels } from '../util/filters'
 import { rootRoute } from '../router'
-import { ArrowsPointingOutIcon } from '@heroicons/react/24/solid'
+// import { ArrowsPointingOutIcon } from '@heroicons/react/24/solid'
 
 const buttonClass =
   'h-12 text-md font-medium py-2 px-3 rounded border dark:border-gray-100 dark:text-gray-100'
 
-export const ExpandSegmentButton = ({ id }: Pick<SavedSegment, 'id'>) => {
+const ExpandSegmentButton = ({ id }: Pick<SavedSegment, 'id'>) => {
   const { prefetchSegment, expandSegment } = useSegmentPrefetch({ id })
   return (
-    <button className="block" onMouseEnter={prefetchSegment} onClick={expandSegment}>
-      <ArrowsPointingOutIcon className="w-4 h-4 shrink-0" />
-    </button>
+    <ExpandSegment onClick={expandSegment} onMouseEnter={prefetchSegment} />
   )
 }
 
+const SegmentActionModal = ({
+  children,
+  onClose
+}: {
+  children: ReactNode
+  onClose: () => void
+}) => (
+  <ModalWithRouting
+    maxWidth="460px"
+    className="p-6 min-h-fit"
+    onClose={onClose}
+  >
+    {children}
+  </ModalWithRouting>
+)
+
 export const CreateSegmentModal = ({
   segment,
-  close,
+  onClose,
   onSave,
   canTogglePersonal,
   namePlaceholder
 }: {
   segment?: SavedSegment
-  close: () => void
+  onClose: () => void
   onSave: (input: Pick<SavedSegment, 'name' | 'type'>) => void
   canTogglePersonal: boolean
   namePlaceholder: string
@@ -46,65 +65,27 @@ export const CreateSegmentModal = ({
   const [name, setName] = useState(
     segment?.name ? `Copy of ${segment.name}` : ''
   )
-  const [type, setType] = useState<SegmentType>(SegmentType.personal)
+  const [type, setType] = useState<SegmentType>(
+    segment?.type === SegmentType.site && canTogglePersonal
+      ? SegmentType.site
+      : SegmentType.personal
+  )
 
   return (
-    <ModalWithRouting maxWidth="460px" className="p-6 min-h-fit" close={close}>
-      <h1 className="text-xl font-extrabold	dark:text-gray-100">
-        Create segment
-      </h1>
-      <label
-        htmlFor="name"
-        className="block mt-2 text-md font-medium text-gray-700 dark:text-gray-300"
-      >
-        Segment name
-      </label>
-      <input
-        autoComplete="off"
-        // ref={inputRef}
+    <SegmentActionModal onClose={onClose}>
+      <FormTitle>Create segment</FormTitle>
+      <SegmentNameInput
         value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder={namePlaceholder}
-        id="name"
-        className="block mt-2 p-2 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500"
+        onChange={setName}
+        namePlaceholder={namePlaceholder}
       />
-      <div className="mt-1 text-sm">
-        Add a name to your segment to make it easier to find
-      </div>
-      <div className="mt-4 flex items-center">
-        <button
-          className={classNames(
-            'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full transition-colors ease-in-out duration-200 focus:outline-none focus:ring',
-            type === SegmentType.personal
-              ? 'bg-gray-200 dark:bg-gray-700'
-              : 'bg-indigo-600',
-            !canTogglePersonal && 'cursor-not-allowed'
-          )}
-          onClick={
-            canTogglePersonal
-              ? () =>
-                  setType((current) =>
-                    current === SegmentType.personal
-                      ? SegmentType.site
-                      : SegmentType.personal
-                  )
-              : () => {}
-          }
-        >
-          <span
-            aria-hidden="true"
-            className={classNames(
-              'inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200',
-              type === SegmentType.personal ? 'translate-x-0' : 'translate-x-5'
-            )}
-          />
-        </button>
-        <span className="ml-2 font-medium leading-5 text-sm text-gray-900 dark:text-gray-100">
-          Show this segment for all site users
-        </span>
-      </div>
-      <div className="mt-8 flex gap-x-2 items-center justify-end">
-        <button className={buttonClass} onClick={close}>
+      <SegmentTypeInput
+        value={type}
+        onChange={setType}
+        disabled={!canTogglePersonal}
+      />
+      <ButtonsRow>
+        <button className={buttonClass} onClick={onClose}>
           Cancel
         </button>
         <button
@@ -119,22 +100,22 @@ export const CreateSegmentModal = ({
         >
           Save
         </button>
-      </div>
-    </ModalWithRouting>
+      </ButtonsRow>
+    </SegmentActionModal>
   )
 }
 
 export const DeleteSegmentModal = ({
-  close,
+  onClose,
   onSave,
   segment
 }: {
-  close: () => void
+  onClose: () => void
   onSave: (input: Pick<SavedSegment, 'id'>) => void
   segment: SavedSegment
 }) => {
   return (
-    <ModalWithRouting maxWidth="460px" className="p-6 min-h-fit" close={close}>
+    <SegmentActionModal onClose={onClose}>
       <h1 className="text-xl font-extrabold	dark:text-gray-100">
         {
           { personal: 'Delete personal segment', site: 'Delete site segment' }[
@@ -143,8 +124,8 @@ export const DeleteSegmentModal = ({
         }
         {` "${segment.name}"?`}
       </h1>
-      <div className="mt-8 flex gap-x-2 items-center justify-end">
-        <button className={buttonClass} onClick={close}>
+      <ButtonsRow>
+        <button className={buttonClass} onClick={onClose}>
           Cancel
         </button>
         <button
@@ -155,10 +136,95 @@ export const DeleteSegmentModal = ({
         >
           Delete
         </button>
-      </div>
-    </ModalWithRouting>
+      </ButtonsRow>
+    </SegmentActionModal>
   )
 }
+
+const FormTitle = ({ children }: { children?: ReactNode }) => (
+  <h1 className="text-xl font-extrabold	dark:text-gray-100">{children}</h1>
+)
+
+const ButtonsRow = ({ children }: { children?: ReactNode }) => (
+  <div className="mt-8 flex gap-x-2 items-center justify-end">{children}</div>
+)
+
+const SegmentNameInput = ({
+  namePlaceholder,
+  value,
+  onChange
+}: {
+  namePlaceholder: string
+  value: string
+  onChange: (value: string) => void
+}) => {
+  return (
+    <>
+      <label
+        htmlFor="name"
+        className="block mt-2 text-md font-medium text-gray-700 dark:text-gray-300"
+      >
+        Segment name
+      </label>
+      <input
+        autoComplete="off"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={namePlaceholder}
+        id="name"
+        className="block mt-2 p-2 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500"
+      />
+      <div className="mt-1 text-sm">
+        Add a name to your segment to make it easier to find
+      </div>
+    </>
+  )
+}
+
+const SegmentTypeInput = ({
+  value,
+  onChange,
+  disabled
+}: {
+  value: SegmentType
+  onChange: (value: SegmentType) => void
+  disabled?: boolean
+}) => (
+  <>
+    <div className="mt-4 flex items-center">
+      <button
+        className={classNames(
+          'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full transition-colors ease-in-out duration-200 focus:outline-none focus:ring',
+          value === SegmentType.personal
+            ? 'bg-gray-200 dark:bg-gray-700'
+            : 'bg-indigo-600',
+          disabled && 'cursor-not-allowed'
+        )}
+        onClick={
+          disabled
+            ? () => {}
+            : () =>
+                onChange(
+                  value === SegmentType.personal
+                    ? SegmentType.site
+                    : SegmentType.personal
+                )
+        }
+      >
+        <span
+          aria-hidden="true"
+          className={classNames(
+            'inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200',
+            value === SegmentType.personal ? 'translate-x-0' : 'translate-x-5'
+          )}
+        />
+      </button>
+      <span className="ml-2 font-medium leading-5 text-sm text-gray-900 dark:text-gray-100">
+        Show this segment for all site users
+      </span>
+    </div>
+  </>
+)
 
 export const UpdateSegmentModal = ({
   close,
@@ -178,59 +244,18 @@ export const UpdateSegmentModal = ({
 
   return (
     <ModalWithRouting maxWidth="460px" className="p-6 min-h-fit" close={close}>
-      <h1 className="text-xl font-extrabold	dark:text-gray-100">
-        Update segment
-      </h1>
-      <label
-        htmlFor="name"
-        className="block mt-2 text-md font-medium text-gray-700 dark:text-gray-300"
-      >
-        Segment name
-      </label>
-      <input
-        autoComplete="off"
+      <FormTitle>Update segment</FormTitle>
+      <SegmentNameInput
         value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder={namePlaceholder}
-        id="name"
-        className="block mt-2 p-2 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500"
+        onChange={setName}
+        namePlaceholder={namePlaceholder}
       />
-      <div className="mt-1 text-sm">
-        Add a name to your segment to make it easier to find
-      </div>
-      <div className="mt-4 flex items-center">
-        <button
-          className={classNames(
-            'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full transition-colors ease-in-out duration-200 focus:outline-none focus:ring',
-            type === SegmentType.personal
-              ? 'bg-gray-200 dark:bg-gray-700'
-              : 'bg-indigo-600',
-            !canTogglePersonal && 'cursor-not-allowed'
-          )}
-          onClick={
-            canTogglePersonal
-              ? () =>
-                  setType((current) =>
-                    current === SegmentType.personal
-                      ? SegmentType.site
-                      : SegmentType.personal
-                  )
-              : () => {}
-          }
-        >
-          <span
-            aria-hidden="true"
-            className={classNames(
-              'inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200',
-              type === SegmentType.personal ? 'translate-x-0' : 'translate-x-5'
-            )}
-          />
-        </button>
-        <span className="ml-2 font-medium leading-5 text-sm text-gray-900 dark:text-gray-100">
-          Show this segment for all site users
-        </span>
-      </div>
-      <div className="mt-8 flex gap-x-2 items-center justify-end">
+      <SegmentTypeInput
+        value={type}
+        onChange={setType}
+        disabled={!canTogglePersonal}
+      />
+      <ButtonsRow>
         <button className={buttonClass} onClick={close}>
           Cancel
         </button>
@@ -246,7 +271,7 @@ export const UpdateSegmentModal = ({
         >
           Save
         </button>
-      </div>
+      </ButtonsRow>
     </ModalWithRouting>
   )
 }
@@ -265,7 +290,7 @@ export const AllSegmentsModal = () => {
       () => [
         {
           key: 'name',
-          label: 'Segment',
+          label: 'Name',
           width: 'w-60',
           align: 'left',
           renderItem: ({ id, name, selected }) => (
@@ -296,7 +321,7 @@ export const AllSegmentsModal = () => {
         },
         {
           key: 'owner_id',
-          width: 'w-10',
+          width: 'w-8',
           align: 'right',
           label: '',
           renderItem: ExpandSegmentButton
@@ -323,11 +348,7 @@ export const AllSegmentsModal = () => {
                 ...i,
                 selected: selectedSegmentIds.includes(i.id)
               }))
-              .filter((i) =>
-                search?.trim().length
-                  ? i.name.toLowerCase().includes(search.trim().toLowerCase())
-                  : true
-              ) ?? []
+              .filter(getFilterSegmentsByNameInsensitive(search)) ?? []
           }
         />
         <div className="mt-6 flex items-center justify-start">

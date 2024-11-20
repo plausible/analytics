@@ -23,7 +23,10 @@ export const DropdownSubtitle = ({
   className?: string
 }) => (
   <div
-    className={classNames('text-xs px-4 pt-2 pb-1 font-bold uppercase', className)}
+    className={classNames(
+      'text-xs px-4 pt-2 pb-1 font-bold uppercase text-indigo-500 dark:text-indigo-400',
+      className
+    )}
   >
     {children}
   </div>
@@ -167,7 +170,7 @@ export const DropdownNavigationLink = ({
         'hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-gray-100':
           !props['aria-disabled']
       },
-      { 'cursor-not-allowed text-gray-500': props['aria-disabled'] },
+      'aria-disabled:cursor-not-allowed aria-disabled:text-gray-500',
       !!actions && 'pr-4',
       className
     )}

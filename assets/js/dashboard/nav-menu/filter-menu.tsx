@@ -274,7 +274,7 @@ export const FilterMenu = () => {
           )}
           segment={expandedSegment!}
           namePlaceholder={getSegmentNamePlaceholder(query)}
-          close={() =>
+          onClose={() =>
             navigate({
               search: (s) => s,
               state: { expandedSegment: expandedSegment, modal: null }
@@ -295,7 +295,7 @@ export const FilterMenu = () => {
       {user.loggedIn && modal === 'delete' && expandedSegment && (
         <DeleteSegmentModal
           segment={expandedSegment}
-          close={() =>
+          onClose={() =>
             navigate({
               search: (s) => s,
               state: { expandedSegment: expandedSegment, modal: null }

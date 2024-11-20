@@ -22,6 +22,15 @@ export type SegmentData = {
 
 const SEGMENT_LABEL_KEY_PREFIX = 'segment-'
 
+export function getFilterSegmentsByNameInsensitive(
+  search?: string
+): (s: SavedSegment) => boolean {
+  return (s) =>
+    search?.trim().length
+      ? s.name.toLowerCase().includes(search.trim().toLowerCase())
+      : true
+}
+
 export const getSegmentNamePlaceholder = (query: DashboardQuery) =>
   query.filters.reduce(
     (combinedName, filter) =>
