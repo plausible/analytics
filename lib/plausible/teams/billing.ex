@@ -12,9 +12,27 @@ defmodule Plausible.Teams.Billing do
   alias Plausible.Billing.{Plan, Plans, EnterprisePlan, Feature}
   alias Plausible.Billing.Feature.{Goals, Props, StatsAPI}
 
+  require Plausible.Billing.Subscription.Status
+
   @team_member_limit_for_trials 3
   @limit_sites_since ~D[2021-05-05]
   @site_limit_for_trials 10
+
+  def enterprise_configured?(nil), do: false
+
+  def enterprise_configured?(%Teams.Team{} = team) do
+    team
+    |> Ecto.assoc(:enterprise_plan)
+    |> Repo.exists?()
+  end
+
+  def has_active_subscription?(nil), do: false
+
+  def has_active_subscription?(team) do
+    team
+    |> active_subscription_query()
+    |> Repo.exists?()
+  end
 
   def check_needs_to_upgrade(nil), do: {:needs_to_upgrade, :no_trial}
 
@@ -349,5 +367,14 @@ defmodule Plausible.Teams.Billing do
           [Goals]
         end
     end
+  end
+
+  defp active_subscription_query(team) do
+    from(s in Plausible.Billing.Subscription,
+      where:
+        s.team_id == ^team.id and s.status == ^Plausible.Billing.Subscription.Status.active(),
+      order_by: [desc: s.inserted_at],
+      limit: 1
+    )
   end
 end

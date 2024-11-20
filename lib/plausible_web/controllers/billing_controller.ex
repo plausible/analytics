@@ -9,14 +9,16 @@ defmodule PlausibleWeb.BillingController do
   plug PlausibleWeb.RequireAccountPlug
 
   def ping_subscription(%Plug.Conn{} = conn, _params) do
-    subscribed? = Billing.has_active_subscription?(conn.assigns.current_user.id)
+    subscribed? =
+      Plausible.Teams.Adapter.Read.Billing.has_active_subscription?(conn.assigns.current_user)
+
     json(conn, %{is_subscribed: subscribed?})
   end
 
   def choose_plan(conn, _params) do
     current_user = conn.assigns.current_user
 
-    if Plausible.Auth.enterprise_configured?(current_user) do
+    if Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(current_user) do
       redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
     else
       render(conn, "choose_plan.html",
@@ -135,8 +137,8 @@ defmodule PlausibleWeb.BillingController do
     end
   end
 
-  defp preview_subscription(%{id: user_id}, new_plan_id) do
-    subscription = Billing.active_subscription_for(user_id)
+  defp preview_subscription(user, new_plan_id) do
+    subscription = Billing.active_subscription_for(user)
 
     if subscription do
       with {:ok, preview_info} <- Billing.change_plan_preview(subscription, new_plan_id) do
