@@ -13,7 +13,7 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
 
   def allow_next_upgrade_override?(user) do
     switch(user,
-      team_fn: & &1 && &1.allow_next_upgrade_override,
+      team_fn: &(&1 && &1.allow_next_upgrade_override),
       user_fn: & &1.allow_next_upgrade_override
     )
   end

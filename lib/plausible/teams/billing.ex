@@ -252,7 +252,8 @@ defmodule Plausible.Teams.Billing do
   end
 
   def team_member_usage(team, opts) do
-    exclude_emails = Keyword.get(opts, :exclude_emails, [])
+    {:ok, owner} = Teams.Sites.get_owner(team)
+    exclude_emails = Keyword.get(opts, :exclude_emails, []) ++ [owner.email]
 
     pending_site_ids = Keyword.get(opts, :pending_ownership_site_ids, [])
 
@@ -358,39 +359,32 @@ defmodule Plausible.Teams.Billing do
     pending_memberships_q =
       from tm in Teams.Membership,
         inner_join: u in assoc(tm, :user),
-        inner_join: gm in assoc(tm, :guest_memberships),
-        where: gm.site_id in ^pending_ownership_site_ids and tm.role != :owner,
+        left_join: gm in assoc(tm, :guest_memberships),
+        where: gm.site_id in ^pending_ownership_site_ids or tm.role == :owner,
         where: u.email not in ^exclude_emails,
         select: %{email: u.email}
 
     pending_invitations_q =
       from ti in Teams.Invitation,
         inner_join: gi in assoc(ti, :guest_invitations),
-        where: gi.site_id in ^pending_ownership_site_ids and ti.role != :owner,
+        where: gi.site_id in ^pending_ownership_site_ids,
         where: ti.email not in ^exclude_emails,
         select: %{email: ti.email}
 
     team_memberships_q =
       from tm in Teams.Membership,
         inner_join: u in assoc(tm, :user),
-        where: tm.team_id == ^team.id and tm.role != :owner,
+        where: tm.team_id == ^team.id,
         where: u.email not in ^exclude_emails,
         select: %{email: u.email}
 
     team_invitations_q =
       from ti in Teams.Invitation,
-        where: ti.team_id == ^team.id and ti.role != :owner,
+        where: ti.team_id == ^team.id,
         where: ti.email not in ^exclude_emails,
         select: %{email: ti.email}
 
-    site_transfers_q =
-      from st in Teams.SiteTransfer,
-        where: st.site_id in ^pending_ownership_site_ids,
-        where: st.email not in ^exclude_emails,
-        select: %{email: st.email}
-
     pending_memberships_q
-    |> union(^site_transfers_q)
     |> union(^pending_invitations_q)
     |> union(^team_memberships_q)
     |> union(^team_invitations_q)
