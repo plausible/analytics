@@ -18,7 +18,8 @@ export type Metric =
   | "group_conversion_rate"
   | "time_on_page"
   | "total_revenue"
-  | "average_revenue";
+  | "average_revenue"
+  | "scroll_depth";
 export type DateRangeShorthand = "30m" | "realtime" | "all" | "day" | "7d" | "30d" | "month" | "6mo" | "12mo" | "year";
 /**
  * @minItems 2

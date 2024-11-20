@@ -15,7 +15,8 @@ export function getGraphableMetrics(query, site) {
   } else if (isGoalFilter) {
     return ["visitors", "events", "conversion_rate"]
   } else if (isPageFilter) {
-    return ["visitors", "visits", "pageviews", "bounce_rate"]
+    const pageFilterMetrics = ["visitors", "visits", "pageviews", "bounce_rate"]
+    return site.flags.scroll_depth ? [...pageFilterMetrics, "scroll_depth"] : pageFilterMetrics
   } else {
     return ["visitors", "visits", "pageviews", "views_per_visit", "bounce_rate", "visit_duration"]
   }

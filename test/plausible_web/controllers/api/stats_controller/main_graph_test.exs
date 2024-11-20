@@ -584,6 +584,56 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
+  describe "GET /api/stats/main-graph - scroll_depth plot" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "returns 400 when scroll_depth is queried without a page filter", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=scroll_depth"
+        )
+
+      assert %{"error" => error} = json_response(conn, 400)
+      assert error =~ "can only be queried with a page filter"
+    end
+
+    test "returns scroll depth per day", %{conn: conn, site: site} do
+      t0 = ~N[2020-01-01 00:00:00]
+      [t1, t2, t3] = for i <- 1..3, do: NaiveDateTime.add(t0, i, :minute)
+
+      populate_stats(site, [
+        build(:pageview, user_id: 12, timestamp: t0),
+        build(:pageleave, user_id: 12, timestamp: t1, scroll_depth: 20),
+        build(:pageview, user_id: 34, timestamp: t0),
+        build(:pageleave, user_id: 34, timestamp: t1, scroll_depth: 17),
+        build(:pageview, user_id: 34, timestamp: t2),
+        build(:pageleave, user_id: 34, timestamp: t3, scroll_depth: 60),
+        build(:pageview, user_id: 56, timestamp: NaiveDateTime.add(t0, 1, :day)),
+        build(:pageleave,
+          user_id: 56,
+          timestamp: NaiveDateTime.add(t1, 1, :day),
+          scroll_depth: 20
+        )
+      ])
+
+      filters = Jason.encode!(%{page: "/"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=7d&date=2020-01-07&metric=scroll_depth&filters=#{filters}"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert plot == [40, 20, 0, 0, 0, 0, 0]
+    end
+  end
+
   describe "GET /api/stats/main-graph - conversion_rate plot" do
     setup [:create_user, :log_in, :create_site]
 

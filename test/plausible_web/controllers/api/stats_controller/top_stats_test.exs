@@ -892,7 +892,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
     } do
       filters = Jason.encode!(%{page: "/A"})
 
-      [visitors, visits, pageviews, bounce_rate, time_on_page] =
+      [visitors, visits, pageviews, bounce_rate, time_on_page, scroll_depth] =
         conn
         |> get("/api/stats/#{site.domain}/top-stats?filters=#{filters}")
         |> json_response(200)
@@ -903,6 +903,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert %{"graph_metric" => "pageviews"} = pageviews
       assert %{"graph_metric" => "bounce_rate"} = bounce_rate
       assert %{"graph_metric" => "time_on_page"} = time_on_page
+      assert %{"graph_metric" => "scroll_depth"} = scroll_depth
     end
 
     test "returns graph_metric key for top stats with a goal filter", %{
@@ -956,6 +957,31 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res = json_response(conn, 200)
 
       assert %{"name" => "Unique visitors", "value" => 2, "graph_metric" => "visitors"} in res[
+               "top_stats"
+             ]
+    end
+
+    test "returns scroll_depth with a page filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 40),
+        build(:pageview, user_id: 123, timestamp: ~N[2021-01-01 00:00:10]),
+        build(:pageleave, user_id: 123, timestamp: ~N[2021-01-01 00:00:20], scroll_depth: 60),
+        build(:pageview, user_id: 456, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageleave, user_id: 456, timestamp: ~N[2021-01-01 00:00:10], scroll_depth: 80)
+      ])
+
+      filters = Jason.encode!(%{page: "/"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+
+      assert %{"name" => "Scroll depth", "value" => 70, "graph_metric" => "scroll_depth"} in res[
                "top_stats"
              ]
     end

@@ -721,7 +721,7 @@ defmodule Plausible.Billing.QuotaTest do
       populate_stats(site, [
         build(:event, timestamp: Timex.shift(now, days: -8), name: "custom"),
         build(:pageview, user_id: 199, timestamp: Timex.shift(now, days: -5, minutes: -2)),
-        build(:event, user_id: 199, timestamp: Timex.shift(now, days: -5), name: "pageleave")
+        build(:pageleave, user_id: 199, timestamp: Timex.shift(now, days: -5))
       ])
 
       assert %{

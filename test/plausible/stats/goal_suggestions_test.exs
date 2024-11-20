@@ -63,7 +63,7 @@ defmodule Plausible.Stats.GoalSuggestionsTest do
           user_id: 1,
           timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.add(-1, :minute)
         ),
-        build(:event, name: "pageleave", user_id: 1, timestamp: NaiveDateTime.utc_now())
+        build(:pageleave, user_id: 1, timestamp: NaiveDateTime.utc_now())
       ])
 
       assert GoalSuggestions.suggest_event_names(site, "") == ["Signup"]
