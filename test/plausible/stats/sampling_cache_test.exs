@@ -45,10 +45,10 @@ defmodule Plausible.Stats.SamplingCacheTest do
 
         {:ok, _} = start_test_cache(test)
 
-        assert SamplingCache.get(1) == nil
-        assert SamplingCache.get(2) == 22_000_000
-        assert SamplingCache.get(3) == nil
-        assert SamplingCache.get(4) == nil
+        assert SamplingCache.get(1, force?: true, cache_name: test) == nil
+        assert SamplingCache.get(2, force?: true, cache_name: test) == 22_000_000
+        assert SamplingCache.get(3, force?: true, cache_name: test) == nil
+        assert SamplingCache.get(4, force?: true, cache_name: test) == nil
       end
     end
 
