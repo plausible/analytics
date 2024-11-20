@@ -6,14 +6,14 @@ defmodule Plausible.Billing do
   alias Plausible.Billing.{Subscription, Plans, Quota}
   alias Plausible.Auth.User
 
-  @spec active_subscription_for(integer()) :: Subscription.t() | nil
-  def active_subscription_for(user_id) do
-    user_id |> active_subscription_query() |> Repo.one()
+  @spec active_subscription_for(User.t()) :: Subscription.t() | nil
+  def active_subscription_for(user) do
+    user |> active_subscription_query() |> Repo.one()
   end
 
-  @spec has_active_subscription?(integer()) :: boolean()
-  def has_active_subscription?(user_id) do
-    user_id |> active_subscription_query() |> Repo.exists?()
+  @spec has_active_subscription?(User.t()) :: boolean()
+  def has_active_subscription?(user) do
+    user |> active_subscription_query() |> Repo.exists?()
   end
 
   def subscription_created(params) do
@@ -41,7 +41,7 @@ defmodule Plausible.Billing do
   end
 
   def change_plan(user, new_plan_id) do
-    subscription = active_subscription_for(user.id)
+    subscription = active_subscription_for(user)
     plan = Plans.find(new_plan_id)
 
     limit_checking_opts =
@@ -55,7 +55,8 @@ defmodule Plausible.Billing do
          do: do_change_plan(subscription, new_plan_id)
   end
 
-  defp do_change_plan(subscription, new_plan_id) do
+  @doc false
+  def do_change_plan(subscription, new_plan_id) do
     res =
       paddle_api().update_subscription(subscription.paddle_subscription_id, %{
         plan_id: new_plan_id
@@ -283,9 +284,9 @@ defmodule Plausible.Billing do
     "subscription_cancelled__#{user.id}"
   end
 
-  defp active_subscription_query(user_id) do
+  defp active_subscription_query(user) do
     from(s in Subscription,
-      where: s.user_id == ^user_id and s.status == ^Subscription.Status.active(),
+      where: s.user_id == ^user.id and s.status == ^Subscription.Status.active(),
       order_by: [desc: s.inserted_at],
       limit: 1
     )

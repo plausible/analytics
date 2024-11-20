@@ -12,9 +12,64 @@ defmodule Plausible.Teams.Billing do
   alias Plausible.Billing.{Plan, Plans, EnterprisePlan, Feature}
   alias Plausible.Billing.Feature.{Goals, Props, StatsAPI}
 
+  require Plausible.Billing.Subscription.Status
+
   @team_member_limit_for_trials 3
   @limit_sites_since ~D[2021-05-05]
   @site_limit_for_trials 10
+
+  def change_plan(team, new_plan_id) do
+    subscription = active_subscription_for(team)
+    plan = Plausible.Billing.Plans.find(new_plan_id)
+
+    limit_checking_opts =
+      if team.allow_next_upgrade_override do
+        [ignore_pageview_limit: true]
+      else
+        []
+      end
+
+    usage = quota_usage(team)
+
+    with :ok <-
+           Plausible.Billing.Quota.ensure_within_plan_limits(usage, plan, limit_checking_opts),
+         do: Plausible.Billing.do_change_plan(subscription, new_plan_id)
+  end
+
+  def enterprise_configured?(nil), do: false
+
+  def enterprise_configured?(%Teams.Team{} = team) do
+    team
+    |> Ecto.assoc(:enterprise_plan)
+    |> Repo.exists?()
+  end
+
+  def latest_enterprise_plan_with_price(team, customer_ip) do
+    enterprise_plan =
+      Repo.one!(
+        from(e in EnterprisePlan,
+          where: e.team_id == ^team.id,
+          order_by: [desc: e.inserted_at],
+          limit: 1
+        )
+      )
+
+    {enterprise_plan, Plausible.Billing.Plans.get_price_for(enterprise_plan, customer_ip)}
+  end
+
+  def has_active_subscription?(nil), do: false
+
+  def has_active_subscription?(team) do
+    team
+    |> active_subscription_query()
+    |> Repo.exists?()
+  end
+
+  def active_subscription_for(team) do
+    team
+    |> active_subscription_query()
+    |> Repo.one()
+  end
 
   def check_needs_to_upgrade(nil), do: {:needs_to_upgrade, :no_trial}
 
@@ -114,7 +169,7 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
-  def quota_usage(team, opts) do
+  def quota_usage(team, opts \\ []) do
     team = Teams.with_subscription(team)
     with_features? = Keyword.get(opts, :with_features, false)
     pending_site_ids = Keyword.get(opts, :pending_ownership_site_ids, [])
@@ -349,5 +404,14 @@ defmodule Plausible.Teams.Billing do
           [Goals]
         end
     end
+  end
+
+  defp active_subscription_query(team) do
+    from(s in Plausible.Billing.Subscription,
+      where:
+        s.team_id == ^team.id and s.status == ^Plausible.Billing.Subscription.Status.active(),
+      order_by: [desc: s.inserted_at],
+      limit: 1
+    )
   end
 end

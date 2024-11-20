@@ -43,12 +43,20 @@ defmodule Plausible.AuthTest do
   end
 
   test "enterprise_configured?/1 returns whether the user has an enterprise plan" do
-    user_without_plan = insert(:user)
-    user_with_plan = insert(:user, enterprise_plan: build(:enterprise_plan))
+    user_without_plan = new_user()
+    user_with_plan = new_user() |> subscribe_to_enterprise_plan()
 
-    assert Auth.enterprise_configured?(user_with_plan)
-    refute Auth.enterprise_configured?(user_without_plan)
-    refute Auth.enterprise_configured?(nil)
+    user_with_plan_no_subscription =
+      new_user() |> subscribe_to_enterprise_plan(subscription?: false)
+
+    assert Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(user_with_plan)
+
+    assert Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(
+             user_with_plan_no_subscription
+           )
+
+    refute Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(user_without_plan)
+    refute Plausible.Teams.Adapter.Read.Billing.enterprise_configured?(nil)
   end
 
   describe "create_api_key/3" do
