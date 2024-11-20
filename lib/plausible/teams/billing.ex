@@ -253,6 +253,7 @@ defmodule Plausible.Teams.Billing do
 
   def team_member_usage(team, opts) do
     exclude_emails = Keyword.get(opts, :exclude_emails, [])
+
     pending_site_ids = Keyword.get(opts, :pending_ownership_site_ids, [])
 
     team
@@ -320,7 +321,7 @@ defmodule Plausible.Teams.Billing do
     }
   end
 
-  def features_usage(user, site_ids \\ nil)
+  def features_usage(team, site_ids \\ nil)
 
   def features_usage(%Teams.Team{} = team, nil) do
     owned_site_ids = team |> Teams.owned_sites() |> Enum.map(& &1.id)
@@ -331,8 +332,16 @@ defmodule Plausible.Teams.Billing do
     site_scoped_feature_usage = features_usage(nil, owned_site_ids)
 
     stats_api_used? =
-      from(a in Plausible.Auth.ApiKey, where: a.team_id == ^team.id)
-      |> Plausible.Repo.exists?()
+      Plausible.Repo.exists?(
+        from tm in Plausible.Teams.Membership,
+          as: :team_membership,
+          where: tm.team_id == ^team.id,
+          where:
+            exists(
+              from ak in Plausible.Auth.ApiKey,
+                where: ak.user_id == parent_as(:team_membership).user_id
+            )
+      )
 
     if stats_api_used? do
       site_scoped_feature_usage ++ [Feature.StatsAPI]
@@ -345,19 +354,19 @@ defmodule Plausible.Teams.Billing do
     Plausible.Billing.Quota.Usage.features_usage(nil, owned_site_ids)
   end
 
-  defp query_team_member_emails(team, site_ids, exclude_emails) do
+  defp query_team_member_emails(team, pending_ownership_site_ids, exclude_emails) do
     pending_memberships_q =
       from tm in Teams.Membership,
         inner_join: u in assoc(tm, :user),
         inner_join: gm in assoc(tm, :guest_memberships),
-        where: gm.site_id in ^site_ids and tm.role != :owner,
+        where: gm.site_id in ^pending_ownership_site_ids and tm.role != :owner,
         where: u.email not in ^exclude_emails,
         select: %{email: u.email}
 
     pending_invitations_q =
       from ti in Teams.Invitation,
         inner_join: gi in assoc(ti, :guest_invitations),
-        where: gi.site_id in ^site_ids and ti.role != :owner,
+        where: gi.site_id in ^pending_ownership_site_ids and ti.role != :owner,
         where: ti.email not in ^exclude_emails,
         select: %{email: ti.email}
 
@@ -374,7 +383,14 @@ defmodule Plausible.Teams.Billing do
         where: ti.email not in ^exclude_emails,
         select: %{email: ti.email}
 
+    site_transfers_q =
+      from st in Teams.SiteTransfer,
+        where: st.site_id in ^pending_ownership_site_ids,
+        where: st.email not in ^exclude_emails,
+        select: %{email: st.email}
+
     pending_memberships_q
+    |> union(^site_transfers_q)
     |> union(^pending_invitations_q)
     |> union(^team_memberships_q)
     |> union(^team_invitations_q)

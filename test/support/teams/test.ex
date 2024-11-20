@@ -60,7 +60,7 @@ defmodule Plausible.Teams.Test do
     role = Keyword.fetch!(args, :role)
     team = Repo.preload(site, :team).team
 
-    insert(:site_membership, user: user, role: translate_role_to_old_model(role), site: site)
+    # insert(:site_membership, user: user, role: translate_role_to_old_model(role), site: site)
 
     team_membership = insert(:team_membership, team: team, user: user, role: :guest)
     insert(:guest_membership, team_membership: team_membership, site: site, role: role)
@@ -79,15 +79,14 @@ defmodule Plausible.Teams.Test do
         email when is_binary(email) -> email
       end
 
+    # insert(:invitation,
+    #   email: email,
+    #   inviter: inviter,
+    #   role: translate_role_to_old_model(role),
+    #   site: site
+    # )
     old_model_invitation =
-      insert(:invitation,
-        email: email,
-        inviter: inviter,
-        role: translate_role_to_old_model(role),
-        site: site
-      )
-
-    team_invitation =
+      team_invitation =
       insert(:team_invitation,
         team: team,
         email: email,
@@ -152,7 +151,10 @@ defmodule Plausible.Teams.Test do
   def subscribe_to_plan(user, paddle_plan_id, attrs \\ []) do
     {:ok, team} = Teams.get_or_create(user)
     attrs = Keyword.merge([user: user, team: team, paddle_plan_id: paddle_plan_id], attrs)
-    subscription = insert(:subscription, attrs)
+
+    subscription =
+      insert(:subscription, attrs)
+
     %{user | subscription: subscription}
   end
 

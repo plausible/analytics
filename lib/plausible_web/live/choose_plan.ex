@@ -25,7 +25,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
                                  current_user: current_user,
                                  pending_ownership_site_ids: pending_ownership_site_ids
                                } ->
-        Quota.Usage.usage(current_user,
+        Plausible.Teams.Adapter.Read.Billing.quota_usage(current_user,
           with_features: true,
           pending_ownership_site_ids: pending_ownership_site_ids
         )

@@ -4,6 +4,20 @@ defmodule Plausible.Teams.Adapter.Read.Billing do
   """
   use Plausible.Teams.Adapter
 
+  def quota_usage(user, opts \\ []) do
+    switch(user,
+      team_fn: &Plausible.Teams.Billing.quota_usage(&1, opts),
+      user_fn: &Plausible.Billing.Quota.Usage.usage(&1, opts)
+    )
+  end
+
+  def allow_next_upgrade_override?(user) do
+    switch(user,
+      team_fn: & &1 && &1.allow_next_upgrade_override,
+      user_fn: & &1.allow_next_upgrade_override
+    )
+  end
+
   def change_plan(user, new_plan_id) do
     switch(user,
       team_fn: &Plausible.Teams.Billing.change_plan(&1, new_plan_id),
