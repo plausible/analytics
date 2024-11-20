@@ -39,6 +39,7 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAppNavigate } from '../navigation/use-app-navigate'
 import { DashboardQuery } from '../query'
+import { AdjustmentsHorizontalIcon } from '@heroicons/react/24/solid'
 
 export function getFilterListItems({
   propsAvailable
@@ -315,10 +316,21 @@ export const FilterMenu = () => {
         }}
         onClick={() => setOpened((opened) => !opened)}
         currentOption={
-          <span className="flex items-center">
-            <MagnifyingGlassIcon className="block h-4 w-4" />
-            <span className="block ml-1">Filter</span>
-          </span>
+          <div className="flex items-center gap-1 ">
+            {!expandedSegment && (
+              <>
+                <MagnifyingGlassIcon className="block h-4 w-4" />
+                Filter
+              </>
+            )}
+            {!!expandedSegment && (
+              <>
+                <AdjustmentsHorizontalIcon className="block h-4 w-4" />
+                Segment
+              </>
+            )}
+            {/* <span className="block ml-1">{expandedSegment ? 'Segment' : 'Filter'}</span> */}
+          </div>
         }
       >
         {opened && (
