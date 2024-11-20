@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-A3DEA188.js"></script>
+    <script src="dist/sidebar_items-3C1005E7.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -157,7 +157,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#active_subscription_for/1" translate="no">active_subscription_for(user_id)</a>
+        <a href="#active_subscription_for/1" translate="no">active_subscription_for(user)</a>
 
       </div>
 
@@ -205,7 +205,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#has_active_subscription?/1" translate="no">has_active_subscription?(user_id)</a>
+        <a href="#has_active_subscription?/1" translate="no">has_active_subscription?(user)</a>
 
       </div>
 
@@ -271,7 +271,7 @@ Pages
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">active_subscription_for(user_id)</h1>
+    <h1 class="signature" translate="no">active_subscription_for(user)</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L10" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -285,7 +285,8 @@ Pages
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> active_subscription_for(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: Plausible.Billing.Subscription.t() | nil</pre>
+          <pre translate="no"><span class="attribute">@spec</span> active_subscription_for(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) ::
+  Plausible.Billing.Subscription.t() | nil</pre>
 
       </div>
 
@@ -423,7 +424,7 @@ Pages
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">has_active_subscription?(user_id)</h1>
+    <h1 class="signature" translate="no">has_active_subscription?(user)</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/billing.ex#L15" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -437,7 +438,7 @@ Pages
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> has_active_subscription?(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> has_active_subscription?(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
 
       </div>
 
