@@ -24,11 +24,10 @@ defmodule Plausible.Teams.Invitations do
   end
 
   def invite(site, inviter, invitee_email, role, opts) do
-    check_permissions? = opts[:check_permissions]
     site = Repo.preload(site, :team)
     role = translate_role(role)
 
-    with :ok <- check_invitation_permissions(site.team, inviter, check_permissions?),
+    with :ok <- check_invitation_permissions(site.team, inviter, opts),
          :ok <- check_team_member_limit(site.team, role, invitee_email),
          invitee = Auth.find_user_by(email: invitee_email),
          :ok <- ensure_new_membership(site, invitee, role),
@@ -469,14 +468,16 @@ defmodule Plausible.Teams.Invitations do
   end
 
   @doc false
-  def check_invitation_permissions(_site, _inviter, false = _check_permission?) do
-    :ok
-  end
+  def check_invitation_permissions(site, inviter, opts) do
+    check_permissions? = Keyword.get(opts, :check_permissions, true)
 
-  def check_invitation_permissions(site, inviter, _) do
-    case Teams.Memberships.site_role(site, inviter) do
-      {:ok, role} when role in [:owner, :editor, :admin] -> :ok
-      _ -> {:error, :forbidden}
+    if check_permissions? do
+      case Teams.Memberships.site_role(site, inviter) do
+        {:ok, role} when role in [:owner, :editor, :admin] -> :ok
+        _ -> {:error, :forbidden}
+      end
+    else
+      :ok
     end
   end
 

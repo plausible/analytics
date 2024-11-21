@@ -77,7 +77,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
              site,
              inviter,
              role,
-             Keyword.get(opts, :check_permissions, true)
+             opts
            ),
          :ok <-
            Plausible.Teams.Adapter.Read.Invitations.check_team_member_limit(
