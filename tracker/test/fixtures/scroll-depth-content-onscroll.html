@@ -23,12 +23,10 @@
         if (!loadedMore && window.innerHeight + window.scrollY >= document.body.offsetHeight) {
           loadedMore = true
           
-          setTimeout(() => {
-            const newDiv = document.createElement("div")
-            newDiv.setAttribute("id", "more-content")
-            newDiv.setAttribute("style", "height: 2000px; background-color: lightcoral;")
-            document.body.appendChild(newDiv);
-          }, 100)
+          const newDiv = document.createElement("div")
+          newDiv.setAttribute("id", "more-content")
+          newDiv.setAttribute("style", "height: 2000px; background-color: lightcoral;")
+          document.body.appendChild(newDiv);
         }
       });
     });
