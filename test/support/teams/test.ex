@@ -62,8 +62,15 @@ defmodule Plausible.Teams.Test do
 
     insert(:site_membership, user: user, role: translate_role_to_old_model(role), site: site)
 
-    team_membership = insert(:team_membership, team: team, user: user, role: :guest)
-    insert(:guest_membership, team_membership: team_membership, site: site, role: role)
+    team_membership =
+      build(:team_membership, team: team, user: user, role: :guest)
+      |> Repo.insert!(
+        on_conflict: [set: [updated_at: NaiveDateTime.utc_now()]],
+        conflict_target: [:team_id, :user_id],
+        returning: true
+      )
+
+    insert(:guest_membership, site: site, team_membership: team_membership, role: role)
 
     user |> Repo.preload([:site_memberships, :team_memberships])
   end
@@ -152,7 +159,10 @@ defmodule Plausible.Teams.Test do
   def subscribe_to_plan(user, paddle_plan_id, attrs \\ []) do
     {:ok, team} = Teams.get_or_create(user)
     attrs = Keyword.merge([user: user, team: team, paddle_plan_id: paddle_plan_id], attrs)
-    subscription = insert(:subscription, attrs)
+
+    subscription =
+      insert(:subscription, attrs)
+
     %{user | subscription: subscription}
   end
 

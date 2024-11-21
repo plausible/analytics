@@ -174,7 +174,8 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     paddle_product_id = get_paddle_product_id(assigns.plan_to_render, assigns.selected_interval)
     change_plan_link_text = change_plan_link_text(assigns)
 
-    subscription = assigns.current_user.subscription
+    subscription =
+      Plausible.Teams.Adapter.Read.Billing.get_subscription(assigns.current_user)
 
     billing_details_expired =
       Subscription.Status.in?(subscription, [
@@ -270,15 +271,15 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     # because in the past we've let users upgrade without that constraint, as
     # well as transfer sites to those accounts. to these accounts we won't be
     # offering an extra pageview limit allowance margin though.
-    invited_user? = is_nil(current_user.trial_expiry_date)
+    invited_user? = is_nil(Plausible.Teams.Adapter.Read.Teams.trial_expiry_date(current_user))
 
     trial_active_or_ended_recently? =
       not invited_user? &&
-        Date.diff(Date.utc_today(), current_user.trial_expiry_date) <= 10
+        Plausible.Teams.Adapter.Read.Teams.trial_days_left(current_user) >= -10
 
     limit_checking_opts =
       cond do
-        current_user.allow_next_upgrade_override ->
+        Plausible.Teams.Adapter.Read.Billing.allow_next_upgrade_override?(current_user) ->
           [ignore_pageview_limit: true]
 
         trial_active_or_ended_recently? && plan.volume == "10k" ->
@@ -357,7 +358,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       |> Enum.map(fn feature_mod -> feature_mod.display_name() end)
       |> PlausibleWeb.TextHelpers.pretty_join()
 
-    "This plan does not support #{features_list_str}, which you are currently using. Please note that by subscribing to this plan you will lose access to #{if length(features) == 1, do: "this feature", else: "these features"}."
+    "This plan does not support #{features_list_str}, which you have been using. By subscribing to this plan, you will not have access to #{if length(features) == 1, do: "this feature", else: "these features"}."
   end
 
   defp contact_button(assigns) do

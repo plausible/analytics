@@ -221,7 +221,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, _lv, doc} = get_liveview(conn)
 
       assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
-               "if (confirm(\"This plan does not support Custom Properties, which you are currently using. Please note that by subscribing to this plan you will lose access to this feature.\")) {Paddle.Checkout.open"
+               "if (confirm(\"This plan does not support Custom Properties, which you have been using. By subscribing to this plan, you will not have access to this feature.\")) {Paddle.Checkout.open"
     end
 
     test "recommends Growth tier when no premium features were used", %{conn: conn} do
@@ -280,8 +280,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       conn: conn,
       user: user
     } do
-      insert_list(9, :site, members: [user])
-      assert 10 = Plausible.Billing.Quota.Usage.site_usage(user)
+      for _ <- 1..9, do: new_site(owner: user)
+      assert 10 = Plausible.Teams.Adapter.Read.Billing.site_usage(user)
 
       another_user = new_user()
       pending_ownership_site = new_site(owner: another_user)
@@ -323,6 +323,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       user
       |> Plausible.Auth.User.changeset(%{trial_expiry_date: Timex.shift(Timex.today(), days: -10)})
       |> Repo.update!()
+      |> Plausible.Teams.sync_team()
 
       generate_usage_for(site, 13_000)
 
@@ -349,6 +350,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       user
       |> Plausible.Auth.User.changeset(%{trial_expiry_date: Timex.shift(Timex.today(), days: -11)})
       |> Repo.update!()
+      |> Plausible.Teams.sync_team()
 
       generate_usage_for(site, 11_000)
 
@@ -484,7 +486,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert doc =~ "Your account has been invited to become the owner of a site"
 
       assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
-               "if (confirm(\"This plan does not support Custom Properties, which you are currently using. Please note that by subscribing to this plan you will lose access to this feature.\")) {window.location = "
+               "if (confirm(\"This plan does not support Custom Properties, which you have been using. By subscribing to this plan, you will not have access to this feature.\")) {window.location ="
 
       assert text_of_element(doc, @business_highlight_pill) == "Recommended"
       refute element_exists?(doc, @growth_highlight_pill)
@@ -613,7 +615,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
         new_site(owner: user)
       end
 
-      assert 50 = Plausible.Billing.Quota.Usage.site_usage(user)
+      assert 50 = Plausible.Teams.Adapter.Read.Billing.quota_usage(user).sites
 
       another_user = new_user()
       pending_ownership_site = new_site(owner: another_user)
@@ -655,15 +657,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       conn: conn,
       user: user
     } do
-      insert(:site,
-        memberships: [
-          build(:site_membership, user: user, role: :owner),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user))
-        ]
-      )
+      site = new_site(owner: user)
+      for _ <- 1..4, do: add_guest(site, role: :viewer)
 
       {:ok, _lv, doc} = get_liveview(conn)
 
@@ -678,7 +673,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       conn: conn,
       user: user
     } do
-      for _ <- 1..11, do: insert(:site, members: [user])
+      for _ <- 1..11, do: new_site(owner: user)
 
       {:ok, _lv, doc} = get_liveview(conn)
 
@@ -693,17 +688,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       conn: conn,
       user: user
     } do
-      for _ <- 1..11, do: insert(:site, members: [user])
+      for _ <- 1..11, do: new_site(owner: user)
 
-      insert(:site,
-        memberships: [
-          build(:site_membership, user: user, role: :owner),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user)),
-          build(:site_membership, user: build(:user))
-        ]
-      )
+      site = new_site(owner: user)
+      for _ <- 1..4, do: add_guest(site, role: :viewer)
 
       {:ok, _lv, doc} = get_liveview(conn)
 
@@ -740,7 +728,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, _lv, doc} = get_liveview(conn)
 
       assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
-               "if (confirm(\"This plan does not support Custom Properties, Revenue Goals and Stats API, which you are currently using. Please note that by subscribing to this plan you will lose access to these features.\")) {window.location = "
+               "if (confirm(\"This plan does not support Custom Properties, Revenue Goals and Stats API, which you have been using. By subscribing to this plan, you will not have access to these features.\")) {window.location = "
     end
   end
 
@@ -1111,7 +1099,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
   defp create_subscription_for(user, subscription_opts) do
     {paddle_plan_id, subscription_opts} = Keyword.pop(subscription_opts, :paddle_plan_id)
-    user = subscribe_to_plan(user, paddle_plan_id, subscription_opts)
+
+    user =
+      subscribe_to_plan(user, paddle_plan_id, subscription_opts)
+
     {:ok, user: user}
   end
 

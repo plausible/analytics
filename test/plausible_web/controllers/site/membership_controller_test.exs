@@ -293,9 +293,6 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       put(conn, "/sites/#{site.domain}/memberships/u/#{collaborator.id}/role/viewer")
 
       assert_team_membership(collaborator, site.team, :viewer)
-
-      old_model_membership = Repo.get_by(Plausible.Site.Membership, user_id: collaborator.id)
-      assert old_model_membership.role == :viewer
     end
 
     @tag :teams
