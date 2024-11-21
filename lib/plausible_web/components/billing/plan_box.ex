@@ -275,7 +275,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
     trial_active_or_ended_recently? =
       not invited_user? &&
-        Plausible.Teams.Adapter.Read.Teams.trial_days_left(current_user) <= 10
+        Plausible.Teams.Adapter.Read.Teams.trial_days_left(current_user) >= -10
 
     limit_checking_opts =
       cond do

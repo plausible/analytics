@@ -350,6 +350,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       user
       |> Plausible.Auth.User.changeset(%{trial_expiry_date: Timex.shift(Timex.today(), days: -11)})
       |> Repo.update!()
+      |> Plausible.Teams.sync_team()
 
       generate_usage_for(site, 11_000)
 
