@@ -544,7 +544,17 @@ defmodule Plausible.Teams.Invitations do
   end
 
   @doc false
-  def send_invitation_email(guest_invitation, invitee) do
+  def send_invitation_email(%Teams.SiteTransfer{} = transfer, invitee) do
+    email =PlausibleWeb.Email.ownership_transfer_request(
+      transfer.email,
+      transfer.transfer_id,
+      transfer.site,
+      transfer.initiator,
+      invitee
+    )
+    Plausible.Mailer.send(email)
+  end
+  def send_invitation_email(%Teams.GuestInvitation{} = guest_invitation, invitee) do
     team_invitation = guest_invitation.team_invitation
 
     email =

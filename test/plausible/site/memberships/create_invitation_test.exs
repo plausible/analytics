@@ -117,8 +117,8 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
     end
 
     test "sends ownership transfer email when invitation role is owner" do
-      inviter = insert(:user)
-      site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
+      inviter = new_user()
+      site = new_site(owner: inviter)
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :owner)
@@ -130,34 +130,20 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
     end
 
     test "only allows owners to transfer ownership" do
-      inviter = insert(:user)
+      inviter = new_user()
 
-      site =
-        insert(:site,
-          memberships: [
-            build(:site_membership, user: build(:user), role: :owner),
-            build(:site_membership, user: inviter, role: :admin)
-          ]
-        )
+      site = new_site()
+      add_guest(site, role: :editor)
 
       assert {:error, :forbidden} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :owner)
     end
 
     test "allows ownership transfer to existing site members" do
-      inviter = insert(:user)
-      invitee = insert(:user)
-
-      site =
-        insert(:site,
-          memberships: [
-            build(:site_membership, user: inviter, role: :owner),
-            build(:site_membership, user: invitee, role: :viewer)
-          ]
-        )
-        |> Plausible.Teams.load_for_site()
-
-      insert(:team_membership, team: site.team, user: invitee, role: :viewer)
+      inviter = new_user()
+      invitee = new_user()
+      site = new_site(owner: inviter)
+      add_guest(site, user: invitee, role: :viewer)
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :owner)

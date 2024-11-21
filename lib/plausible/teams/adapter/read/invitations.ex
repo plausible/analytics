@@ -96,10 +96,17 @@ defmodule Plausible.Teams.Adapter.Read.Invitations do
     switch(
       inviter,
       team_fn: fn _ ->
-        Teams.GuestInvitation
-        |> Repo.get_by!(invitation_id: invitation.invitation_id)
-        |> Repo.preload([:site, team_invitation: :inviter])
-        |> Plausible.Teams.Invitations.send_invitation_email(invitee)
+        if invitation.role == :owner do
+          Teams.SiteTransfer
+          |> Repo.get_by!(transfer_id: invitation.invitation_id)
+          |> Repo.preload([:site, :initiator])
+          |> Plausible.Teams.Invitations.send_invitation_email(invitee)
+        else
+          Teams.GuestInvitation
+          |> Repo.get_by!(invitation_id: invitation.invitation_id)
+          |> Repo.preload([:site, team_invitation: :inviter])
+          |> Plausible.Teams.Invitations.send_invitation_email(invitee)
+        end
       end,
       user_fn: fn _ ->
         Plausible.Site.Memberships.CreateInvitation.send_invitation_email(
