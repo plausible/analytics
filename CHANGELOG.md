@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 ### Changed
+
+- Provide more inforamtion in error logs for failed emails plausible/analytics#4846
+
 ### Fixed
 
 - Fix returning filter suggestions for multiple custom property values in the dashboard Filter modal
