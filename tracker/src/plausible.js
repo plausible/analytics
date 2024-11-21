@@ -83,6 +83,7 @@
   })
 
   document.addEventListener('scroll', function() {
+    currentDocumentHeight = getDocumentHeight()
     var currentScrollDepthPx = getCurrentScrollDepthPx()
 
     if (currentScrollDepthPx > maxScrollDepthPx) {
