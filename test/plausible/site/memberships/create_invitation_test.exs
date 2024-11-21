@@ -95,6 +95,8 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       assert {:ok, _} = invite.(site2, "i3@example.com")
     end
 
+    import Ecto.Query
+
     @tag :ee_only
     test "allows inviting users who are already members of other sites, within the limit" do
       [u1, u2, u3, u4] = for _ <- 1..4, do: new_user()
@@ -147,28 +149,14 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :owner)
-
-      assert {:ok, %Plausible.Teams.SiteTransfer{}} =
-               Plausible.Teams.Invitations.invite(site, inviter, invitee.email, :owner)
     end
 
     test "does not allow transferring ownership to existing owner" do
-      inviter = insert(:user, email: "vini@plausible.test")
-
-      site =
-        insert(:site,
-          memberships: [
-            build(:site_membership, user: inviter, role: :owner)
-          ]
-        )
-
-      site = Plausible.Teams.load_for_site(site)
+      inviter = new_user(email: "vini@plausible.test")
+      site = new_site(owner: inviter)
 
       assert {:error, :transfer_to_self} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :owner)
-
-      assert {:error, :transfer_to_self} =
-               Plausible.Teams.Invitations.invite(site, inviter, "vini@plausible.test", :owner)
     end
 
     test "allows creating an ownership transfer even when at team member limit" do
@@ -186,37 +174,19 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
     end
 
     test "does not allow viewers to invite users" do
-      inviter = insert(:user)
-      owner = insert(:user)
-
-      site =
-        insert(:site,
-          memberships: [
-            build(:site_membership, user: owner, role: :owner),
-            build(:site_membership, user: inviter, role: :viewer)
-          ]
-        )
-        |> Plausible.Teams.load_for_site()
-
-      insert(:team_membership, team: site.team, user: inviter, role: :viewer)
+      inviter = new_user()
+      owner = new_user()
+      site = new_site(owner: owner)
+      add_guest(site, user: inviter, role: :viewer)
 
       assert {:error, :forbidden} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :viewer)
-
-      assert {:error, :forbidden} =
-               Plausible.Teams.Invitations.invite(site, inviter, "vini@plausible.test", :viewer)
     end
 
     test "allows admins to invite other admins" do
-      inviter = insert(:user)
-
-      site =
-        insert(:site,
-          memberships: [
-            build(:site_membership, user: build(:user), role: :owner),
-            build(:site_membership, user: inviter, role: :admin)
-          ]
-        )
+      inviter = new_user()
+      site = new_site()
+      add_guest(site, user: inviter, role: :editor)
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :admin)

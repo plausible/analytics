@@ -60,10 +60,17 @@ defmodule Plausible.Teams.Test do
     role = Keyword.fetch!(args, :role)
     team = Repo.preload(site, :team).team
 
-    # insert(:site_membership, user: user, role: translate_role_to_old_model(role), site: site)
+    insert(:site_membership, user: user, role: translate_role_to_old_model(role), site: site)
 
-    team_membership = build(:team_membership, team: team, user: user, role: :guest)
-    Repo.insert!(team_membership, on_conflict: :nothing, conflict_target: [:team_id, :user_id])
+    team_membership =
+      build(:team_membership, team: team, user: user, role: :guest)
+      |> Repo.insert!(
+        on_conflict: [set: [updated_at: NaiveDateTime.utc_now()]],
+        conflict_target: [:team_id, :user_id],
+        returning: true
+      )
+
+    insert(:guest_membership, site: site, team_membership: team_membership, role: role)
 
     user |> Repo.preload([:site_memberships, :team_memberships])
   end
@@ -79,14 +86,15 @@ defmodule Plausible.Teams.Test do
         email when is_binary(email) -> email
       end
 
-    # insert(:invitation,
-    #   email: email,
-    #   inviter: inviter,
-    #   role: translate_role_to_old_model(role),
-    #   site: site
-    # )
     old_model_invitation =
-      team_invitation =
+      insert(:invitation,
+        email: email,
+        inviter: inviter,
+        role: translate_role_to_old_model(role),
+        site: site
+      )
+
+    team_invitation =
       insert(:team_invitation,
         team: team,
         email: email,

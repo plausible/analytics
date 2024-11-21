@@ -1,6 +1,7 @@
 defmodule Plausible.Site.AdminTest do
   use Plausible
   use Plausible.DataCase, async: true
+  use Plausible.Teams.Test
   use Bamboo.Test
 
   @subject_prefix if ee?(), do: "[Plausible Analytics] ", else: "[Plausible CE] "
@@ -38,9 +39,8 @@ defmodule Plausible.Site.AdminTest do
     end
 
     test "new owner can't be the same as old owner", %{conn: conn, transfer_action: action} do
-      current_owner = insert(:user)
-
-      site = insert(:site, members: [current_owner])
+      current_owner = new_user()
+      site = new_site(owner: current_owner)
 
       assert {:error, "User is already an owner of one of the sites"} =
                action.(conn, [site], %{"email" => current_owner.email})
@@ -50,14 +50,10 @@ defmodule Plausible.Site.AdminTest do
       conn: conn,
       transfer_action: action
     } do
-      current_owner = insert(:user)
-      new_owner = insert(:user)
-
-      site1 =
-        insert(:site, memberships: [build(:site_membership, user: current_owner, role: :owner)])
-
-      site2 =
-        insert(:site, memberships: [build(:site_membership, user: current_owner, role: :owner)])
+      current_owner = new_user()
+      new_owner = new_user()
+      site1 = new_site(owner: current_owner)
+      site2 = new_site(owner: current_owner)
 
       assert :ok = action.(conn, [site1, site2], %{"email" => new_owner.email})
 

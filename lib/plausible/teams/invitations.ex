@@ -484,6 +484,8 @@ defmodule Plausible.Teams.Invitations do
   defp translate_role(role), do: role
 
   @doc false
+  def check_team_member_limit(_team, :owner, _invitee_email), do: :ok
+
   def check_team_member_limit(team, _role, invitee_email) do
     limit = Teams.Billing.team_member_limit(team)
     usage = Teams.Billing.team_member_usage(team, exclude_emails: [invitee_email])
@@ -545,15 +547,18 @@ defmodule Plausible.Teams.Invitations do
 
   @doc false
   def send_invitation_email(%Teams.SiteTransfer{} = transfer, invitee) do
-    email =PlausibleWeb.Email.ownership_transfer_request(
-      transfer.email,
-      transfer.transfer_id,
-      transfer.site,
-      transfer.initiator,
-      invitee
-    )
+    email =
+      PlausibleWeb.Email.ownership_transfer_request(
+        transfer.email,
+        transfer.transfer_id,
+        transfer.site,
+        transfer.initiator,
+        invitee
+      )
+
     Plausible.Mailer.send(email)
   end
+
   def send_invitation_email(%Teams.GuestInvitation{} = guest_invitation, invitee) do
     team_invitation = guest_invitation.team_invitation
 

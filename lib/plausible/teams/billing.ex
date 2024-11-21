@@ -356,11 +356,21 @@ defmodule Plausible.Teams.Billing do
   end
 
   defp query_team_member_emails(team, pending_ownership_site_ids, exclude_emails) do
+    pending_owner_memberships_q =
+      from s in Plausible.Site,
+        inner_join: t in assoc(s, :team),
+        inner_join: tm in assoc(t, :team_memberships),
+        inner_join: u in assoc(tm, :user),
+        where: s.id in ^pending_ownership_site_ids,
+        where: tm.role == :owner,
+        where: u.email not in ^exclude_emails,
+        select: %{email: u.email}
+
     pending_memberships_q =
       from tm in Teams.Membership,
         inner_join: u in assoc(tm, :user),
         left_join: gm in assoc(tm, :guest_memberships),
-        where: gm.site_id in ^pending_ownership_site_ids or tm.role == :owner,
+        where: gm.site_id in ^pending_ownership_site_ids,
         where: u.email not in ^exclude_emails,
         select: %{email: u.email}
 
@@ -385,6 +395,7 @@ defmodule Plausible.Teams.Billing do
         select: %{email: ti.email}
 
     pending_memberships_q
+    |> union(^pending_owner_memberships_q)
     |> union(^pending_invitations_q)
     |> union(^team_memberships_q)
     |> union(^team_invitations_q)
