@@ -63,4 +63,27 @@ test.describe('scroll depth', () => {
       {n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-dynamic-content-load.html`, sd: 14}
     ])
   })
+
+  test('document height gets reevaluated on scroll', async ({ page }) => {
+    const pageviewRequestMock = mockRequest(page, '/api/event')
+    await page.goto('/scroll-depth-content-onscroll.html')
+    await pageviewRequestMock
+
+    // During the first 3 seconds, the script periodically updates document height
+    // to account for dynamically loaded content. Since we want to test document
+    // height also getting updated on scroll, we need to just wait for 3 seconds.
+    await page.waitForTimeout(3100)
+
+    // scroll to the bottom of the page
+    await page.evaluate(() => window.scrollBy(0, document.body.scrollHeight))
+    
+    // Wait until documentHeight gets increased by the fixture JS
+    await page.waitForSelector('#more-content')
+
+    await page.evaluate(() => window.scrollBy(0, 1000))
+
+    await clickPageElementAndExpectEventRequests(page, '#navigate-away', [
+      {n: 'pageleave', u: `${LOCAL_SERVER_ADDR}/scroll-depth-content-onscroll.html`, sd: 80}
+    ])
+  })
 })
