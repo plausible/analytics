@@ -225,14 +225,11 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
   describe "bulk_create_invitation/5" do
     test "initiates ownership transfer for multiple sites in one action" do
-      admin_user = insert(:user)
-      new_owner = insert(:user)
+      admin_user = new_user()
+      new_owner = new_user()
 
-      site1 =
-        insert(:site, memberships: [build(:site_membership, user: admin_user, role: :owner)])
-
-      site2 =
-        insert(:site, memberships: [build(:site_membership, user: admin_user, role: :owner)])
+      site1 = new_site(owner: admin_user)
+      site2 = new_site(owner: admin_user)
 
       assert {:ok, _} =
                CreateInvitation.bulk_create_invitation(
@@ -265,11 +262,11 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
     end
 
     test "initiates ownership transfer for multiple sites in one action skipping permission checks" do
-      superadmin_user = insert(:user)
-      new_owner = insert(:user)
+      superadmin_user = new_user()
+      new_owner = new_user()
 
-      site1 = insert(:site)
-      site2 = insert(:site)
+      site1 = new_site()
+      site2 = new_site()
 
       assert {:ok, _} =
                CreateInvitation.bulk_create_invitation(

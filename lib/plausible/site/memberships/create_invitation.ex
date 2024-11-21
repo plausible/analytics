@@ -77,7 +77,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
              site,
              inviter,
              role,
-             opts
+             Keyword.get(opts, :check_permissions, true)
            ),
          :ok <-
            Plausible.Teams.Adapter.Read.Invitations.check_team_member_limit(
@@ -104,7 +104,6 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
          %Ecto.Changeset{} = changeset <- Invitation.new(attrs),
          {:ok, invitation} <- Plausible.Repo.insert(changeset) do
       Plausible.Teams.Invitations.invite_sync(site, invitation)
-           invitation
 
       Plausible.Teams.Adapter.Read.Invitations.send_invitation_email(inviter, invitation, invitee)
 
