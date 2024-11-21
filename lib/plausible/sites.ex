@@ -6,7 +6,6 @@ defmodule Plausible.Sites do
   import Ecto.Query
 
   alias Plausible.Auth
-  alias Plausible.Billing.Quota
   alias Plausible.Repo
   alias Plausible.Site
   alias Plausible.Site.SharedLink
@@ -56,7 +55,7 @@ defmodule Plausible.Sites do
 
   @spec set_option(Auth.User.t(), Site.t(), atom(), any()) :: Site.UserPreference.t()
   def set_option(user, site, option, value) when option in Site.UserPreference.options() do
-    get_for_user!(user.id, site.domain)
+    Plausible.Teams.Adapter.Read.Sites.get_for_user!(user, site.domain)
 
     user
     |> Site.UserPreference.changeset(site, %{option => value})
@@ -84,7 +83,7 @@ defmodule Plausible.Sites do
   end
 
   def create(user, params) do
-    with :ok <- Quota.ensure_can_add_new_site(user) do
+    with :ok <- Plausible.Teams.Adapter.Read.Billing.ensure_can_add_new_site(user) do
       Ecto.Multi.new()
       |> Ecto.Multi.put(:site_changeset, Site.new(params))
       |> Ecto.Multi.run(:create_team, fn _repo, _context ->
@@ -92,7 +91,7 @@ defmodule Plausible.Sites do
       end)
       |> Ecto.Multi.run(:clear_changed_from, fn
         _repo, %{site_changeset: %{changes: %{domain: domain}}} ->
-          case get_for_user(user.id, domain, [:owner]) do
+          case Plausible.Teams.Adapter.Read.Sites.get_for_user(user, domain, [:owner]) do
             %Site{domain_changed_from: ^domain} = site ->
               site
               |> Ecto.Changeset.change()
@@ -205,62 +204,11 @@ defmodule Plausible.Sites do
     base <> domain <> "?auth=" <> link.slug
   end
 
-  @spec get_for_user!(Auth.User.t() | pos_integer(), String.t(), [
-          :super_admin | :owner | :admin | :viewer
-        ]) ::
-          Site.t()
-  def get_for_user!(user, domain, roles \\ [:owner, :admin, :viewer])
-
-  def get_for_user!(%Auth.User{id: user_id}, domain, roles) do
-    get_for_user!(user_id, domain, roles)
-  end
-
-  def get_for_user!(user_id, domain, roles) do
-    if :super_admin in roles and Auth.is_super_admin?(user_id) do
-      get_by_domain!(domain)
-    else
-      user_id
-      |> get_for_user_q(domain, List.delete(roles, :super_admin))
-      |> Repo.one!()
-    end
-  end
-
-  @spec get_for_user(Auth.User.t() | pos_integer(), String.t(), [
-          :super_admin | :owner | :admin | :viewer
-        ]) ::
-          Site.t() | nil
-  def get_for_user(user, domain, roles \\ [:owner, :admin, :viewer])
-
-  def get_for_user(%Auth.User{id: user_id}, domain, roles) do
-    get_for_user(user_id, domain, roles)
-  end
-
-  def get_for_user(user_id, domain, roles) do
-    if :super_admin in roles and Auth.is_super_admin?(user_id) do
-      get_by_domain(domain)
-    else
-      user_id
-      |> get_for_user_q(domain, List.delete(roles, :super_admin))
-      |> Repo.one()
-    end
-  end
-
   def update_installation_meta!(site, meta) do
     site
     |> Ecto.Changeset.change()
     |> Ecto.Changeset.put_change(:installation_meta, meta)
     |> Repo.update!()
-  end
-
-  defp get_for_user_q(user_id, domain, roles) do
-    from(s in Site,
-      join: sm in Site.Membership,
-      on: sm.site_id == s.id,
-      where: sm.user_id == ^user_id,
-      where: sm.role in ^roles,
-      where: s.domain == ^domain or s.domain_changed_from == ^domain,
-      select: s
-    )
   end
 
   def has_goals?(site) do

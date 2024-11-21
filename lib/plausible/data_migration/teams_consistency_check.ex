@@ -290,6 +290,7 @@ defmodule Plausible.DataMigration.TeamsConsitencyCheck do
         where:
           (i.role == :viewer and parent_as(:guest_invitation).role == :viewer) or
             (i.role == :admin and parent_as(:guest_invitation).role == :editor),
+        where: i.invitation_id == parent_as(:guest_invitation).invitation_id,
         select: 1
       )
 

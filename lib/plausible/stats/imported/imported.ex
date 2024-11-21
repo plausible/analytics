@@ -197,6 +197,7 @@ defmodule Plausible.Stats.Imported do
 
   @filter_suggestions_mapping %{
     referrer_source: :source,
+    acquisition_channel: :channel,
     screen_size: :device,
     pathname: :page
   }

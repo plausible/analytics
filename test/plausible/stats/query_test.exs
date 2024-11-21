@@ -2,6 +2,7 @@ defmodule Plausible.Stats.QueryTest do
   use Plausible.DataCase, async: true
   alias Plausible.Stats.Query
   alias Plausible.Stats.Legacy.QueryBuilder
+  alias Plausible.Stats.DateTimeRange
 
   doctest Plausible.Stats.Legacy.QueryBuilder
 
@@ -206,6 +207,72 @@ defmodule Plausible.Stats.QueryTest do
       q = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
       assert q.filters == [[:is, "visit:source", ["Twitter"]]]
+    end
+  end
+
+  describe "&date_range/2" do
+    defp date_range({first, last}, timezone, now \\ nil, opts \\ []) do
+      %Query{
+        utc_time_range: DateTimeRange.new!(first, last),
+        timezone: timezone,
+        now: now || last
+      }
+      |> Query.date_range(opts)
+    end
+
+    test "with no options" do
+      assert date_range({~U[2024-05-05 00:00:00Z], ~U[2024-05-07 23:59:59Z]}, "Etc/UTC") ==
+               Date.range(~D[2024-05-05], ~D[2024-05-07])
+
+      assert date_range({~U[2024-05-05 12:00:00Z], ~U[2024-05-08 11:59:59Z]}, "Etc/GMT+12") ==
+               Date.range(~D[2024-05-05], ~D[2024-05-07])
+
+      assert date_range({~U[2024-05-04 12:00:00Z], ~U[2024-05-07 11:59:59Z]}, "Etc/GMT-12") ==
+               Date.range(~D[2024-05-05], ~D[2024-05-07])
+    end
+
+    test "trim_trailing: true" do
+      assert date_range(
+               {~U[2024-05-05 00:00:00Z], ~U[2024-05-07 23:59:59Z]},
+               "Etc/UTC",
+               ~U[2024-05-08 12:00:00Z],
+               trim_trailing: true
+             ) == Date.range(~D[2024-05-05], ~D[2024-05-07])
+
+      assert date_range(
+               {~U[2024-05-05 00:00:00Z], ~U[2024-05-07 23:59:59Z]},
+               "Etc/UTC",
+               ~U[2024-05-07 12:00:00Z],
+               trim_trailing: true
+             ) == Date.range(~D[2024-05-05], ~D[2024-05-07])
+
+      assert date_range(
+               {~U[2024-05-05 00:00:00Z], ~U[2024-05-07 23:59:59Z]},
+               "Etc/UTC",
+               ~U[2024-05-06 12:00:00Z],
+               trim_trailing: true
+             ) == Date.range(~D[2024-05-05], ~D[2024-05-06])
+
+      assert date_range(
+               {~U[2024-05-05 12:00:00Z], ~U[2024-05-08 11:59:59Z]},
+               "Etc/GMT+12",
+               ~U[2024-05-09 00:00:00Z],
+               trim_trailing: true
+             ) == Date.range(~D[2024-05-05], ~D[2024-05-07])
+
+      assert date_range(
+               {~U[2024-05-05 12:00:00Z], ~U[2024-05-08 11:59:59Z]},
+               "Etc/GMT+12",
+               ~U[2024-05-07 07:00:00Z],
+               trim_trailing: true
+             ) == Date.range(~D[2024-05-05], ~D[2024-05-06])
+
+      assert date_range(
+               {~U[2024-05-05 12:00:00Z], ~U[2024-05-08 11:59:59Z]},
+               "Etc/GMT+12",
+               ~U[2024-05-03 07:00:00Z],
+               trim_trailing: true
+             ) == Date.range(~D[2024-05-05], ~D[2024-05-05])
     end
   end
 

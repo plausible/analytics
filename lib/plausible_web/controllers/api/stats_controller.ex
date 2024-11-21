@@ -193,12 +193,13 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def top_stats(conn, params) do
     site = conn.assigns[:site]
+    current_user = conn.assigns[:current_user]
 
     params = realtime_period_to_30m(params)
 
     query = Query.from(site, params, debug_metadata(conn))
 
-    {top_stats, sample_percent} = fetch_top_stats(site, query)
+    {top_stats, sample_percent} = fetch_top_stats(site, query, current_user)
     comparison_query = comparison_query(query)
 
     json(conn, %{
@@ -293,7 +294,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp fetch_top_stats(site, query) do
+  defp fetch_top_stats(site, query, current_user) do
     goal_filter? = Filters.filtering_on_dimension?(query, "event:goal")
 
     cond do
@@ -307,7 +308,7 @@ defmodule PlausibleWeb.Api.StatsController do
         fetch_goal_top_stats(site, query)
 
       true ->
-        fetch_other_top_stats(site, query)
+        fetch_other_top_stats(site, query, current_user)
     end
   end
 
@@ -391,16 +392,24 @@ defmodule PlausibleWeb.Api.StatsController do
     |> then(&{&1, 100})
   end
 
-  defp fetch_other_top_stats(site, query) do
+  defp fetch_other_top_stats(site, query, current_user) do
     page_filter? = Filters.filtering_on_dimension?(query, "event:page")
 
     metrics = [:visitors, :visits, :pageviews, :sample_percent]
 
     metrics =
       cond do
-        page_filter? && query.include_imported -> metrics
-        page_filter? -> metrics ++ [:bounce_rate, :time_on_page]
-        true -> metrics ++ [:views_per_visit, :bounce_rate, :visit_duration]
+        page_filter? && query.include_imported ->
+          metrics
+
+        page_filter? && scroll_depth_enabled?(site, current_user) ->
+          metrics ++ [:bounce_rate, :scroll_depth, :time_on_page]
+
+        page_filter? ->
+          metrics ++ [:bounce_rate, :time_on_page]
+
+        true ->
+          metrics ++ [:views_per_visit, :bounce_rate, :visit_duration]
       end
 
     current_results = Stats.aggregate(site, query, metrics)
@@ -418,7 +427,8 @@ defmodule PlausibleWeb.Api.StatsController do
             nil -> 0
             value -> value
           end
-        )
+        ),
+        top_stats_entry(current_results, "Scroll depth", :scroll_depth)
       ]
       |> Enum.filter(& &1)
 
@@ -495,11 +505,21 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, metrics, pagination)
       |> transform_keys(%{channel: :name})
 
-    json(conn, %{
-      results: res,
-      meta: Stats.Breakdown.formatted_date_ranges(query),
-      skip_imported_reason: query.skip_imported_reason
-    })
+    if params["csv"] do
+      if Filters.filtering_on_dimension?(query, "event:goal") do
+        res
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
+      else
+        res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
+      end
+    else
+      json(conn, %{
+        results: res,
+        meta: Stats.Breakdown.formatted_date_ranges(query),
+        skip_imported_reason: query.skip_imported_reason
+      })
+    end
   end
 
   on_ee do
@@ -809,13 +829,22 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def pages(conn, params) do
     site = conn.assigns[:site]
+    current_user = conn.assigns[:current_user]
+
     params = Map.put(params, "property", "event:page")
     query = Query.from(site, params, debug_metadata(conn))
 
     extra_metrics =
-      if params["detailed"],
-        do: [:pageviews, :bounce_rate, :time_on_page],
-        else: []
+      cond do
+        params["detailed"] && !query.include_imported && scroll_depth_enabled?(site, current_user) ->
+          [:pageviews, :bounce_rate, :time_on_page, :scroll_depth]
+
+        params["detailed"] ->
+          [:pageviews, :bounce_rate, :time_on_page]
+
+        true ->
+          []
+      end
 
     metrics = breakdown_metrics(query, extra_metrics)
     pagination = parse_pagination(params)
@@ -1522,11 +1551,20 @@ defmodule PlausibleWeb.Api.StatsController do
       end
 
     requires_goal_filter? = metric in [:conversion_rate, :events]
+    has_goal_filter? = Filters.filtering_on_dimension?(query, "event:goal")
 
-    if requires_goal_filter? and !Filters.filtering_on_dimension?(query, "event:goal") do
-      {:error, "Metric `#{metric}` can only be queried with a goal filter"}
-    else
-      {:ok, metric}
+    requires_page_filter? = metric == :scroll_depth
+    has_page_filter? = Filters.filtering_on_dimension?(query, "event:page")
+
+    cond do
+      requires_goal_filter? and not has_goal_filter? ->
+        {:error, "Metric `#{metric}` can only be queried with a goal filter"}
+
+      requires_page_filter? and not has_page_filter? ->
+        {:error, "Metric `#{metric}` can only be queried with a page filter"}
+
+      true ->
+        {:ok, metric}
     end
   end
 
@@ -1578,4 +1616,9 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp realtime_period_to_30m(params), do: params
+
+  defp scroll_depth_enabled?(site, user) do
+    FunWithFlags.enabled?(:scroll_depth, for: user) ||
+      FunWithFlags.enabled?(:scroll_depth, for: site)
+  end
 end

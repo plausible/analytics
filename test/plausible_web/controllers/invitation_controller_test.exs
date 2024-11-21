@@ -229,6 +229,32 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       refute Repo.reload(invitation)
     end
 
+    test "removes the invitation for ownership transfer", %{conn: conn, user: user} do
+      site =
+        insert(:site,
+          members: [build(:user)],
+          memberships: [build(:site_membership, user: user, role: :admin)]
+        )
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: build(:user),
+          email: "jane@example.com",
+          role: :owner
+        )
+
+      conn =
+        delete(
+          conn,
+          Routes.invitation_path(conn, :remove_invitation, site.domain, invitation.invitation_id)
+        )
+
+      assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/settings/people"
+
+      refute Repo.reload(invitation)
+    end
+
     test "fails to remove an invitation with insufficient permission", %{conn: conn, user: user} do
       site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
 

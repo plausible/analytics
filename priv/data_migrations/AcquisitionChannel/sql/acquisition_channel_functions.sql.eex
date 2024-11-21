@@ -1,26 +1,87 @@
+CREATE TABLE IF NOT EXISTS acquisition_channel_source_category
+<%= @on_cluster_statement %>
+(
+    referrer_source String,
+    category LowCardinality(String)
+)
+<%= if @on_cluster_statement != "" do %>
+ENGINE = ReplicatedMergeTree('/clickhouse/{cluster}/tables/{shard}/plausible_prod/acquisition_channel_source_category', '{replica}')
+<% else %>
+ENGINE = MergeTree()
+<% end %>
+ORDER BY referrer_source;
+
+TRUNCATE TABLE acquisition_channel_source_category SETTINGS alter_sync=2;
+
+INSERT INTO acquisition_channel_source_category(referrer_source, category)
+SELECT t.1 AS referrer_source, t.2 AS category
+FROM (
+    SELECT arrayJoin({source_categories:Array(Tuple(String, String))}) AS t
+)
+SETTINGS insert_quorum = <%= @insert_quorum %>;
+
+CREATE OR REPLACE DICTIONARY acquisition_channel_source_category_dict
+<%= @on_cluster_statement %>
+(
+    `referrer_source` String,
+    `category` String
+)
+PRIMARY KEY referrer_source
+SOURCE(CLICKHOUSE(TABLE acquisition_channel_source_category <%= @dictionary_connection_params %>))
+LIFETIME(0)
+LAYOUT(hashed());
+
+CREATE TABLE IF NOT EXISTS acquisition_channel_paid_sources
+<%= @on_cluster_statement %>
+(
+    referrer_source String
+)
+<%= if @on_cluster_statement != "" do %>
+ENGINE = ReplicatedMergeTree('/clickhouse/{cluster}/tables/{shard}/plausible_prod/acquisition_channel_paid_sources', '{replica}')
+<% else %>
+ENGINE = MergeTree()
+<% end %>
+ORDER BY referrer_source;
+
+TRUNCATE TABLE acquisition_channel_paid_sources SETTINGS alter_sync=2;
+
+INSERT INTO acquisition_channel_paid_sources(referrer_source)
+SELECT arrayJoin({paid_sources:Array(String)}) AS referrer_source
+SETTINGS insert_quorum = <%= @insert_quorum %>;
+
+CREATE OR REPLACE DICTIONARY acquisition_channel_paid_sources_dict
+<%= @on_cluster_statement %>
+(
+    `referrer_source` String
+)
+PRIMARY KEY referrer_source
+SOURCE(CLICKHOUSE(TABLE acquisition_channel_paid_sources <%= @dictionary_connection_params %>))
+LIFETIME(0)
+LAYOUT(hashed());
+
 CREATE OR REPLACE FUNCTION acquisition_channel_has_category_shopping <%= @on_cluster_statement %> AS
 (referrer_source) ->
-    has({source_category_shopping:Array(String)}, referrer_source);
+    dictGet('acquisition_channel_source_category_dict', 'category', referrer_source) = 'SOURCE_CATEGORY_SHOPPING';
 
 CREATE OR REPLACE FUNCTION acquisition_channel_has_category_social <%= @on_cluster_statement %> AS
 (referrer_source) ->
-    has({source_category_social:Array(String)}, referrer_source);
+    dictGet('acquisition_channel_source_category_dict', 'category', referrer_source) = 'SOURCE_CATEGORY_SOCIAL';
 
 CREATE OR REPLACE FUNCTION acquisition_channel_has_category_video <%= @on_cluster_statement %> AS
 (referrer_source) ->
-    has({source_category_video:Array(String)}, referrer_source);
+    dictGet('acquisition_channel_source_category_dict', 'category', referrer_source) = 'SOURCE_CATEGORY_VIDEO';
 
 CREATE OR REPLACE FUNCTION acquisition_channel_has_category_search <%= @on_cluster_statement %> AS
 (referrer_source) ->
-    has({source_category_search:Array(String)}, referrer_source);
+    dictGet('acquisition_channel_source_category_dict', 'category', referrer_source) = 'SOURCE_CATEGORY_SEARCH';
 
 CREATE OR REPLACE FUNCTION acquisition_channel_has_category_email <%= @on_cluster_statement %> AS
 (referrer_source) ->
-    has({source_category_email:Array(String)}, referrer_source);
+    dictGet('acquisition_channel_source_category_dict', 'category', referrer_source) = 'SOURCE_CATEGORY_EMAIL';
 
 CREATE OR REPLACE FUNCTION acquisition_channel_paid_utm_source <%= @on_cluster_statement %> AS
 (referrer_source) ->
-    has({paid_sources:Array(String)}, referrer_source);
+    dictHas('acquisition_channel_paid_sources_dict', referrer_source);
 
 CREATE OR REPLACE FUNCTION acquisition_channel_cross_network <%= @on_cluster_statement %> AS
 (utm_campaign) ->
@@ -146,11 +207,11 @@ CREATE OR REPLACE FUNCTION acquisition_channel_lowered <%= @on_cluster_statement
 (referrer_source, utm_medium, utm_campaign, utm_source, click_id_param) ->
     multiIf(
         acquisition_channel_cross_network(utm_campaign), 'Cross-network',
+        acquisition_channel_display(utm_medium), 'Display',
         acquisition_channel_paid_shopping(referrer_source, utm_medium, utm_campaign), 'Paid Shopping',
         acquisition_channel_paid_search(referrer_source, utm_medium, utm_source, click_id_param), 'Paid Search',
         acquisition_channel_paid_social(referrer_source, utm_medium, utm_source), 'Paid Social',
         acquisition_channel_paid_video(referrer_source, utm_medium, utm_source), 'Paid Video',
-        acquisition_channel_display(utm_medium), 'Display',
         acquisition_channel_paid_medium(utm_medium), 'Paid Other',
         acquisition_channel_organic_shopping(referrer_source, utm_campaign), 'Organic Shopping',
         acquisition_channel_organic_social(referrer_source, utm_medium), 'Organic Social',

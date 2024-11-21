@@ -1,10 +1,11 @@
 defmodule PlausibleWeb.Components.Billing.NoticeTest do
   use Plausible.DataCase
+  use Plausible.Teams.Test
   import Plausible.LiveViewTest, only: [render_component: 2]
   alias PlausibleWeb.Components.Billing.Notice
 
   test "premium_feature/1 does not render a notice when user is on trial" do
-    me = insert(:user)
+    me = new_user()
 
     assert render_component(&Notice.premium_feature/1,
              billable_user: me,
@@ -14,7 +15,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
   end
 
   test "premium_feature/1 renders an upgrade link when user is the site owner and does not have access to the feature" do
-    me = insert(:user, subscription: build(:growth_subscription))
+    me = new_user() |> subscribe_to_growth_plan()
 
     rendered =
       render_component(&Notice.premium_feature/1,
@@ -29,8 +30,8 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
   end
 
   test "premium_feature/1 does not render an upgrade link when user is not the site owner" do
-    me = insert(:user)
-    owner = insert(:user, subscription: build(:growth_subscription))
+    me = new_user() |> subscribe_to_growth_plan()
+    owner = new_user() |> subscribe_to_growth_plan()
 
     rendered =
       render_component(&Notice.premium_feature/1,
@@ -44,7 +45,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
   end
 
   test "premium_feature/1 does not render a notice when the user has access to the feature" do
-    me = insert(:user, subscription: build(:business_subscription))
+    me = new_user() |> subscribe_to_business_plan()
 
     rendered =
       render_component(&Notice.premium_feature/1,
@@ -57,7 +58,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
   end
 
   test "limit_exceeded/1 when billable user is on growth displays upgrade link" do
-    me = insert(:user, subscription: build(:growth_subscription))
+    me = new_user() |> subscribe_to_growth_plan()
 
     rendered =
       render_component(&Notice.limit_exceeded/1,
@@ -73,7 +74,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
   end
 
   test "limit_exceeded/1 when billable user is on growth but is not current user does not display upgrade link" do
-    me = insert(:user, subscription: build(:growth_subscription))
+    me = new_user() |> subscribe_to_growth_plan()
 
     rendered =
       render_component(&Notice.limit_exceeded/1,
@@ -89,7 +90,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
 
   @tag :ee_only
   test "limit_exceeded/1 when billable user is on trial displays upgrade link" do
-    me = insert(:user)
+    me = new_user()
 
     rendered =
       render_component(&Notice.limit_exceeded/1,
@@ -106,11 +107,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
 
   @tag :ee_only
   test "limit_exceeded/1 when billable user is on an enterprise plan displays support email" do
-    me =
-      insert(:user,
-        enterprise_plan: build(:enterprise_plan, paddle_plan_id: "123321"),
-        subscription: build(:subscription, paddle_plan_id: "123321")
-      )
+    me = new_user() |> subscribe_to_enterprise_plan()
 
     rendered =
       render_component(&Notice.limit_exceeded/1,
@@ -128,7 +125,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
 
   @tag :ee_only
   test "limit_exceeded/1 when billable user is on a business plan displays support email" do
-    me = insert(:user, subscription: build(:business_subscription))
+    me = new_user() |> subscribe_to_business_plan()
 
     rendered =
       render_component(&Notice.limit_exceeded/1,

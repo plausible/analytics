@@ -107,9 +107,21 @@ defmodule PlausibleWeb.Plugs.AuthorizeSiteAccess do
         Sentry.Context.set_extra_context(%{site_id: site.id, domain: site.domain})
         Plausible.OpenTelemetry.add_site_attributes(site)
 
-        site = Plausible.Imported.load_import_data(site)
+        site =
+          site
+          |> Plausible.Imported.load_import_data()
+          |> Repo.preload(
+            team: [subscription: Plausible.Teams.last_subscription_query()],
+            owner: [subscription: Plausible.Users.last_subscription_query()]
+          )
 
-        merge_assigns(conn, site: site, current_user_role: role)
+        conn = merge_assigns(conn, site: site, current_user_role: role)
+
+        if not is_nil(current_user) and role not in [:public, nil] do
+          assign(conn, :current_team, site.team)
+        else
+          conn
+        end
       else
         error_not_found(conn)
       end

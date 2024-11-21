@@ -123,7 +123,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
          [_, "visit:" <> key | _rest] = filter
        ) do
     # Filter events query with visit dimension if possible
-    field_name = String.to_existing_atom(key)
+    field_name = db_field_name(key)
 
     if Enum.member?(@sessions_only_visit_fields, field_name) do
       true
@@ -137,7 +137,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
   end
 
   defp add_filter(:sessions, _query, [_, "visit:" <> key | _rest] = filter) do
-    filter_field(String.to_existing_atom(key), filter)
+    filter_field(db_field_name(key), filter)
   end
 
   defp add_filter(:sessions, _query, [_, "event:" <> _ | _rest]) do
@@ -281,6 +281,9 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
 
   @no_ref "Direct / None"
   @not_set "(not set)"
+
+  defp db_field_name("channel"), do: :acquisition_channel
+  defp db_field_name(name), do: String.to_existing_atom(name)
 
   defp db_field_val(:source, @no_ref), do: ""
   defp db_field_val(:referrer, @no_ref), do: ""

@@ -236,7 +236,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   end
 
   defp select_group_fields(q, dimension, key, _query)
-       when dimension in ["visit:device", "visit:browser"] do
+       when dimension in ["visit:device", "visit:browser", "visit:channel"] do
     select_merge_as(q, [i], %{
       key =>
         fragment(

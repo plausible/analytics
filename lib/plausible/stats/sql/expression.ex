@@ -151,7 +151,7 @@ defmodule Plausible.Stats.SQL.Expression do
     do: field_or_blank_value(q, key, t.source, @no_ref)
 
   def select_dimension(q, key, "visit:channel", _table, _query),
-    do: field_or_blank_value(q, key, t.channel, @no_channel)
+    do: field_or_blank_value(q, key, t.acquisition_channel, @no_channel)
 
   def select_dimension(q, key, "visit:referrer", _table, _query),
     do: field_or_blank_value(q, key, t.referrer, @no_ref)
@@ -245,6 +245,7 @@ defmodule Plausible.Stats.SQL.Expression do
 
   def event_metric(:percentage), do: %{}
   def event_metric(:conversion_rate), do: %{}
+  def event_metric(:scroll_depth), do: %{}
   def event_metric(:group_conversion_rate), do: %{}
   def event_metric(:total_visitors), do: %{}
 

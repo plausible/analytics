@@ -50,9 +50,26 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for goals", %{conn: conn, site: site} do
-      conn = get(conn, "/api/stats/#{site.domain}/suggestions/goal?period=month&date=2019-01-01")
+      conn =
+        get(conn, "/api/stats/#{site.domain}/suggestions/goal?period=month&date=2019-01-01&q=")
 
       assert json_response(conn, 200) == []
+    end
+
+    test "returns suggestions for configured site goals but not all event names", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:event, name: "Signup", timestamp: ~N[2019-01-01 00:00:00]),
+        build(:event, name: "another", timestamp: ~N[2019-01-01 00:00:00])
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/suggestions/goal?period=day&date=2019-01-01&q=")
+
+      assert json_response(conn, 200) == [%{"label" => "Signup", "value" => "Signup"}]
     end
 
     test "returns suggestions for sources", %{conn: conn, site: site} do
@@ -76,11 +93,11 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
     test "returns suggestions for channels", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], channel: "Organic Search"),
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], channel: "Organic Search"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),
         build(:pageview,
           timestamp: ~N[2019-01-01 23:00:00],
-          channel: "Video"
+          referrer_source: "Youtube"
         )
       ])
 
@@ -89,7 +106,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
       assert json_response(conn, 200) == [
                %{"label" => "Organic Search", "value" => "Organic Search"},
-               %{"label" => "Video", "value" => "Video"}
+               %{"label" => "Organic Video", "value" => "Organic Video"}
              ]
     end
 
@@ -112,7 +129,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for regions", %{conn: conn, user: user} do
-      {:ok, [site: site]} = create_new_site(%{user: user})
+      {:ok, [site: site]} = create_site(%{user: user})
 
       populate_stats(site, [
         build(:pageview, country_code: "EE", subdivision1_code: "EE-37"),
@@ -129,7 +146,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for cities", %{conn: conn, user: user} do
-      {:ok, [site: site]} = create_new_site(%{user: user})
+      {:ok, [site: site]} = create_site(%{user: user})
 
       populate_stats(site, [
         build(:pageview,
@@ -256,7 +273,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for hostnames", %{conn: conn1, user: user} do
-      {:ok, [site: site]} = create_new_site(%{user: user})
+      {:ok, [site: site]} = create_site(%{user: user})
 
       populate_stats(site, [
         build(:pageview,
@@ -299,7 +316,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for hostnames limited by shields", %{conn: conn1, user: user} do
-      {:ok, [site: site]} = create_new_site(%{user: user})
+      {:ok, [site: site]} = create_site(%{user: user})
       Plausible.Shields.add_hostname_rule(site, %{"hostname" => "*.example.com"})
       Plausible.Shields.add_hostname_rule(site, %{"hostname" => "erin.rogue.com"})
 
@@ -378,7 +395,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
   end
 
   describe "suggestions for props" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns suggestions for prop key ordered by count", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -1140,6 +1157,31 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         assert json_response(conn, 200) == [
                  %{"value" => "Google", "label" => "Google"},
                  %{"value" => "Bing", "label" => "Bing"}
+               ]
+      end
+
+      test "merges channel suggestions from native and imported data #{label}", %{
+        conn: conn,
+        site: site,
+        site_import: site_import
+      } do
+        populate_stats(site, site_import.id, [
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], referrer_source: "Bing"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:30:01], referrer_source: "Bing"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:40:01], referrer_source: "Bing"),
+          build(:pageview, timestamp: ~N[2019-01-01 23:00:01], referrer_source: "Google"),
+          build(:imported_sources, date: ~D[2019-01-01], channel: "Organic Social", pageviews: 3)
+        ])
+
+        conn =
+          get(
+            conn,
+            "/api/stats/#{site.domain}/suggestions/channel?period=month&date=2019-01-01&q=#{unquote(q)}&with_imported=true"
+          )
+
+        assert json_response(conn, 200) == [
+                 %{"value" => "Organic Search", "label" => "Organic Search"},
+                 %{"value" => "Organic Social", "label" => "Organic Social"}
                ]
       end
     end

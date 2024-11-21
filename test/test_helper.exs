@@ -6,8 +6,11 @@ end
 Mox.defmock(Plausible.HTTPClient.Mock, for: Plausible.HTTPClient.Interface)
 Application.ensure_all_started(:double)
 
+FunWithFlags.enable(:channels)
+FunWithFlags.enable(:scroll_depth)
 # Temporary flag to test `read_team_schemas` flag on all tests.
 if System.get_env("TEST_READ_TEAM_SCHEMAS") == "1" do
+  IO.puts("READS TEAM SCHEMAS")
   FunWithFlags.enable(:read_team_schemas)
 else
   FunWithFlags.disable(:read_team_schemas)

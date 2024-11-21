@@ -12,9 +12,64 @@ defmodule Plausible.Teams.Billing do
   alias Plausible.Billing.{Plan, Plans, EnterprisePlan, Feature}
   alias Plausible.Billing.Feature.{Goals, Props, StatsAPI}
 
+  require Plausible.Billing.Subscription.Status
+
   @team_member_limit_for_trials 3
   @limit_sites_since ~D[2021-05-05]
   @site_limit_for_trials 10
+
+  def change_plan(team, new_plan_id) do
+    subscription = active_subscription_for(team)
+    plan = Plausible.Billing.Plans.find(new_plan_id)
+
+    limit_checking_opts =
+      if team.allow_next_upgrade_override do
+        [ignore_pageview_limit: true]
+      else
+        []
+      end
+
+    usage = quota_usage(team)
+
+    with :ok <-
+           Plausible.Billing.Quota.ensure_within_plan_limits(usage, plan, limit_checking_opts),
+         do: Plausible.Billing.do_change_plan(subscription, new_plan_id)
+  end
+
+  def enterprise_configured?(nil), do: false
+
+  def enterprise_configured?(%Teams.Team{} = team) do
+    team
+    |> Ecto.assoc(:enterprise_plan)
+    |> Repo.exists?()
+  end
+
+  def latest_enterprise_plan_with_price(team, customer_ip) do
+    enterprise_plan =
+      Repo.one!(
+        from(e in EnterprisePlan,
+          where: e.team_id == ^team.id,
+          order_by: [desc: e.inserted_at],
+          limit: 1
+        )
+      )
+
+    {enterprise_plan, Plausible.Billing.Plans.get_price_for(enterprise_plan, customer_ip)}
+  end
+
+  def has_active_subscription?(nil), do: false
+
+  def has_active_subscription?(team) do
+    team
+    |> active_subscription_query()
+    |> Repo.exists?()
+  end
+
+  def active_subscription_for(team) do
+    team
+    |> active_subscription_query()
+    |> Repo.one()
+  end
 
   def check_needs_to_upgrade(nil), do: {:needs_to_upgrade, :no_trial}
 
@@ -42,6 +97,10 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
+  def ensure_can_add_new_site(nil) do
+    :ok
+  end
+
   def ensure_can_add_new_site(team) do
     team = Teams.with_subscription(team)
 
@@ -61,6 +120,10 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
+  def site_limit(nil) do
+    @site_limit_for_trials
+  end
+
   def site_limit(team) do
     if Timex.before?(team.inserted_at, @limit_sites_since) do
       :unlimited
@@ -69,20 +132,31 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
+  def site_usage(nil), do: 0
+
   def site_usage(team) do
     team
     |> Teams.owned_sites()
     |> length()
   end
 
+  defp get_site_limit_from_plan(nil) do
+    @site_limit_for_trials
+  end
+
   defp get_site_limit_from_plan(team) do
-    team = Teams.with_subscription(team)
+    team =
+      Teams.with_subscription(team)
 
     case Plans.get_subscription_plan(team.subscription) do
       %{site_limit: site_limit} -> site_limit
       :free_10k -> 50
       nil -> @site_limit_for_trials
     end
+  end
+
+  def team_member_limit(nil) do
+    @team_member_limit_for_trials
   end
 
   def team_member_limit(team) do
@@ -95,11 +169,11 @@ defmodule Plausible.Teams.Billing do
     end
   end
 
-  def quota_usage(team, opts) do
+  def quota_usage(team, opts \\ []) do
     team = Teams.with_subscription(team)
     with_features? = Keyword.get(opts, :with_features, false)
     pending_site_ids = Keyword.get(opts, :pending_ownership_site_ids, [])
-    team_site_ids = team |> Teams.owned_sites() |> Enum.map(& &1.id)
+    team_site_ids = Teams.owned_sites_ids(team)
     all_site_ids = pending_site_ids ++ team_site_ids
 
     monthly_pageviews = monthly_pageview_usage(team, all_site_ids)
@@ -116,6 +190,50 @@ defmodule Plausible.Teams.Billing do
     else
       basic_usage
     end
+  end
+
+  @monthly_pageview_limit_for_free_10k 10_000
+  @monthly_pageview_limit_for_trials :unlimited
+
+  def monthly_pageview_limit(nil) do
+    @monthly_pageview_limit_for_trials
+  end
+
+  def monthly_pageview_limit(%Teams.Team{} = team) do
+    team = Teams.with_subscription(team)
+    monthly_pageview_limit(team.subscription)
+  end
+
+  def monthly_pageview_limit(subscription) do
+    case Plans.get_subscription_plan(subscription) do
+      %EnterprisePlan{monthly_pageview_limit: limit} ->
+        limit
+
+      %Plan{monthly_pageview_limit: limit} ->
+        limit
+
+      :free_10k ->
+        @monthly_pageview_limit_for_free_10k
+
+      _any ->
+        if subscription do
+          Sentry.capture_message("Unknown monthly pageview limit for plan",
+            extra: %{paddle_plan_id: subscription.paddle_plan_id}
+          )
+        end
+
+        @monthly_pageview_limit_for_trials
+    end
+  end
+
+  def monthly_pageview_usage(team, site_ids \\ nil)
+
+  def monthly_pageview_usage(team, nil) do
+    monthly_pageview_usage(team, Teams.owned_sites_ids(team))
+  end
+
+  def monthly_pageview_usage(nil, _site_ids) do
+    %{last_30_days: usage_cycle(nil, :last_30_days, [])}
   end
 
   def monthly_pageview_usage(team, site_ids) do
@@ -286,5 +404,14 @@ defmodule Plausible.Teams.Billing do
           [Goals]
         end
     end
+  end
+
+  defp active_subscription_query(team) do
+    from(s in Plausible.Billing.Subscription,
+      where:
+        s.team_id == ^team.id and s.status == ^Plausible.Billing.Subscription.Status.active(),
+      order_by: [desc: s.inserted_at],
+      limit: 1
+    )
   end
 end

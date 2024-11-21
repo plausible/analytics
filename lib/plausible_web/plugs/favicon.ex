@@ -37,7 +37,8 @@ defmodule PlausibleWeb.Favicon do
     "Wikipedia" => "en.wikipedia.org",
     "Discord" => "discord.com",
     "Perplexity" => "perplexity.ai",
-    "Microsoft Teams" => "microsoft.com"
+    "Microsoft Teams" => "microsoft.com",
+    "LinkedIn" => "linkedin.com"
   }
 
   def init(_) do

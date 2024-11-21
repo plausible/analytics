@@ -1,61 +1,68 @@
 defmodule Plausible.Teams.Adapter.Read.Ownership do
   @moduledoc """
-  Transition adapter for new schema reads 
+  Transition adapter for new schema reads
   """
   use Plausible
+  use Plausible.Teams.Adapter
   alias Plausible.Site
   alias Plausible.Auth
-  alias Plausible.Teams
   alias Plausible.Site.Memberships.Invitations
 
-  def ensure_can_take_ownership(site, user) do
-    if Teams.read_team_schemas?(user) do
-      team =
-        case Teams.get_by_owner(user) do
-          {:ok, team} -> team
-          {:error, _} -> nil
-        end
+  def all_pending_site_transfers(email, user) do
+    switch(user,
+      team_fn: fn _ -> Plausible.Teams.Memberships.all_pending_site_transfers(email) end,
+      user_fn: fn _ -> Plausible.Site.Memberships.all_pending_ownerships(email) end
+    )
+  end
 
-      Teams.Invitations.ensure_can_take_ownership(site, team)
-    else
-      Invitations.ensure_can_take_ownership(site, user)
-    end
+  def get_owner(site, user) do
+    switch(user,
+      team_fn: fn team ->
+        case Teams.Sites.get_owner(team) do
+          {:ok, user} -> user
+          _ -> nil
+        end
+      end,
+      user_fn: fn _ ->
+        Plausible.Repo.preload(site, :owner).owner
+      end
+    )
+  end
+
+  def ensure_can_take_ownership(site, user) do
+    switch(
+      user,
+      team_fn: &Teams.Invitations.ensure_can_take_ownership(site, &1),
+      user_fn: &Invitations.ensure_can_take_ownership(site, &1)
+    )
   end
 
   def has_sites?(user) do
-    if Teams.read_team_schemas?(user) do
-      Teams.Users.has_sites?(user, include_pending?: true)
-    else
-      Site.Memberships.any_or_pending?(user)
-    end
+    switch(
+      user,
+      team_fn: fn _ -> Teams.Users.has_sites?(user, include_pending?: true) end,
+      user_fn: &Site.Memberships.any_or_pending?/1
+    )
   end
 
   def owns_sites?(user, sites) do
-    if Teams.read_team_schemas?(user) do
-      Teams.Users.owns_sites?(user, include_pending?: true)
-    else
-      Enum.any?(sites.entries, fn site ->
-        length(site.invitations) > 0 && List.first(site.invitations).role == :owner
-      end) ||
-        Auth.user_owns_sites?(user)
-    end
+    switch(
+      user,
+      team_fn: fn _ -> Teams.Users.owns_sites?(user, include_pending?: true) end,
+      user_fn: fn user ->
+        Enum.any?(sites.entries, fn site ->
+          length(site.invitations) > 0 && List.first(site.invitations).role == :owner
+        end) ||
+          Auth.user_owns_sites?(user)
+      end
+    )
   end
 
   on_ee do
     def check_feature_access(site, new_owner) do
-      user_or_team =
-        if Teams.read_team_schemas?(new_owner) do
-          case Teams.get_by_owner(new_owner) do
-            {:ok, team} -> team
-            {:error, _} -> nil
-          end
-        else
-          new_owner
-        end
-
       missing_features =
         Plausible.Billing.Quota.Usage.features_usage(nil, [site.id])
-        |> Enum.filter(&(&1.check_availability(user_or_team) != :ok))
+        |> Enum.filter(&(&1.check_availability(new_owner) != :ok))
 
       if missing_features == [] do
         :ok

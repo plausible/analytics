@@ -312,7 +312,7 @@ defmodule Plausible.Ingestion.EventTest do
                )
     end)
 
-    Process.sleep(100)
+    Process.sleep(200)
 
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(second_request)
     assert dropped.drop_reason == :lock_timeout

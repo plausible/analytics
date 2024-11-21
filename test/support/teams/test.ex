@@ -11,6 +11,12 @@ defmodule Plausible.Teams.Test do
 
   import Plausible.Factory
 
+  defmacro __using__(_) do
+    quote do
+      import Plausible.Teams.Test
+    end
+  end
+
   def new_site(args \\ []) do
     args =
       if user = args[:owner] do
@@ -83,14 +89,18 @@ defmodule Plausible.Teams.Test do
 
     team_invitation =
       insert(:team_invitation,
-        invitation_id: old_model_invitation.invitation_id,
         team: team,
         email: email,
         inviter: inviter,
         role: :guest
       )
 
-    insert(:guest_invitation, team_invitation: team_invitation, site: site, role: role)
+    insert(:guest_invitation,
+      invitation_id: old_model_invitation.invitation_id,
+      team_invitation: team_invitation,
+      site: site,
+      role: role
+    )
 
     old_model_invitation
   end
@@ -129,12 +139,39 @@ defmodule Plausible.Teams.Test do
     {:ok, team} = Teams.get_or_create(user)
 
     insert(:growth_subscription, user: user, team: team)
+    user
   end
 
-  defmacro __using__(_) do
-    quote do
-      import Plausible.Teams.Test
+  def subscribe_to_business_plan(user) do
+    {:ok, team} = Teams.get_or_create(user)
+
+    insert(:business_subscription, user: user, team: team)
+    user
+  end
+
+  def subscribe_to_plan(user, paddle_plan_id, attrs \\ []) do
+    {:ok, team} = Teams.get_or_create(user)
+    attrs = Keyword.merge([user: user, team: team, paddle_plan_id: paddle_plan_id], attrs)
+    subscription = insert(:subscription, attrs)
+    %{user | subscription: subscription}
+  end
+
+  def subscribe_to_enterprise_plan(user, attrs \\ []) do
+    {:ok, team} = Teams.get_or_create(user)
+
+    {subscription?, attrs} = Keyword.pop(attrs, :subscription?, true)
+
+    enterprise_plan = insert(:enterprise_plan, Keyword.merge([user: user, team: team], attrs))
+
+    if subscription? do
+      insert(:subscription,
+        team: team,
+        user: user,
+        paddle_plan_id: enterprise_plan.paddle_plan_id
+      )
     end
+
+    user
   end
 
   def assert_team_exists(user, team_id \\ nil) do
@@ -157,14 +194,31 @@ defmodule Plausible.Teams.Test do
   end
 
   def assert_team_membership(user, team, role \\ :owner) do
-    assert membership =
-             Repo.get_by(Plausible.Teams.Membership,
-               team_id: team.id,
-               user_id: user.id,
-               role: role
-             )
+    if role == :owner do
+      assert membership =
+               Repo.get_by(Teams.Membership,
+                 team_id: team.id,
+                 user_id: user.id,
+                 role: role
+               )
 
-    membership
+      membership
+    else
+      assert team_membership =
+               Repo.get_by(Teams.Membership,
+                 team_id: team.id,
+                 user_id: user.id,
+                 role: :guest
+               )
+
+      assert membership =
+               Repo.get_by(Teams.GuestMembership,
+                 team_membership_id: team_membership.id,
+                 role: role
+               )
+
+      membership
+    end
   end
 
   def assert_team_attached(site, team_id \\ nil) do

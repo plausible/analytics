@@ -1,11 +1,12 @@
 defmodule Plausible.Stats.Filters.QueryParserTest do
   use Plausible.DataCase
+  use Plausible.Teams.Test
 
   alias Plausible.Stats.DateTimeRange
   alias Plausible.Stats.Filters
   import Plausible.Stats.Filters.QueryParser
 
-  setup [:create_user, :create_new_site]
+  setup [:create_user, :create_site]
 
   @now DateTime.new!(~D[2021-05-05], ~T[12:30:00], "Etc/UTC")
   @date_range_realtime %DateTimeRange{
@@ -1289,10 +1290,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
 
   describe "custom props access" do
     test "filters - no access", %{site: site, user: user} do
-      ep =
-        insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
-
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.StatsAPI])
 
       %{
         "site_id" => site.domain,
@@ -1307,10 +1305,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
 
     test "dimensions - no access", %{site: site, user: user} do
-      ep =
-        insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
-
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.StatsAPI])
 
       %{
         "site_id" => site.domain,
@@ -1421,6 +1416,81 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
   end
 
+  describe "scroll_depth metric" do
+    test "fails validation on its own", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["scroll_depth"],
+        "date_range" => "all"
+      }
+      |> check_error(
+        site,
+        "Metric `scroll_depth` can only be queried with event:page filters or dimensions.",
+        :internal
+      )
+    end
+
+    test "fails with only a non-top-level event:page filter", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["scroll_depth"],
+        "date_range" => "all",
+        "filters" => [["not", ["is", "event:page", ["/"]]]]
+      }
+      |> check_error(
+        site,
+        "Metric `scroll_depth` can only be queried with event:page filters or dimensions.",
+        :internal
+      )
+    end
+
+    test "succeeds with top-level event:page filter", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["scroll_depth"],
+        "date_range" => "all",
+        "filters" => [["is", "event:page", ["/"]]]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:scroll_depth],
+          utc_time_range: @date_range_day,
+          filters: [[:is, "event:page", ["/"]]],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
+    end
+
+    test "succeeds with event:page dimension", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["scroll_depth"],
+        "date_range" => "all",
+        "dimensions" => ["event:page"]
+      }
+      |> check_success(
+        site,
+        %{
+          metrics: [:scroll_depth],
+          utc_time_range: @date_range_day,
+          filters: [],
+          dimensions: ["event:page"],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        },
+        :internal
+      )
+    end
+  end
+
   describe "views_per_visit metric" do
     test "succeeds with normal filters", %{site: site} do
       insert(:goal, %{site: site, event_name: "Signup"})
@@ -1523,10 +1593,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     test "no access", %{site: site, user: user, subscription: subscription} do
       Repo.delete!(subscription)
 
-      plan =
-        insert(:enterprise_plan, features: [Plausible.Billing.Feature.StatsAPI], user_id: user.id)
-
-      insert(:subscription, user: user, paddle_plan_id: plan.paddle_plan_id)
+      subscribe_to_enterprise_plan(user, features: [Plausible.Billing.Feature.StatsAPI])
 
       %{
         "site_id" => site.domain,

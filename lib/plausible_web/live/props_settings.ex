@@ -11,7 +11,11 @@ defmodule PlausibleWeb.Live.PropsSettings do
     socket =
       socket
       |> assign_new(:site, fn %{current_user: current_user} ->
-        Plausible.Sites.get_for_user!(current_user, domain, [:owner, :admin, :super_admin])
+        Plausible.Teams.Adapter.Read.Sites.get_for_user!(current_user, domain, [
+          :owner,
+          :admin,
+          :super_admin
+        ])
       end)
       |> assign_new(:all_props, fn %{site: site} ->
         site.allowed_event_props || []

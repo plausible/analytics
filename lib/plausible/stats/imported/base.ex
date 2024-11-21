@@ -12,6 +12,7 @@ defmodule Plausible.Stats.Imported.Base do
 
   @property_to_table_mappings %{
     "visit:source" => "imported_sources",
+    "visit:channel" => "imported_sources",
     "visit:referrer" => "imported_sources",
     "visit:utm_source" => "imported_sources",
     "visit:utm_medium" => "imported_sources",

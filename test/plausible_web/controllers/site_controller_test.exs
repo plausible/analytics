@@ -284,7 +284,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:site, members: [user])
+      new_site(owner: user)
 
       post(conn, "/sites", %{
         "site" => %{
@@ -301,7 +301,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      insert_list(10, :site, members: [user])
+      for _ <- 1..10, do: new_site(owner: user)
 
       conn =
         post(conn, "/sites", %{
@@ -444,13 +444,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      :site
-      |> insert(
-        domain: "example.com",
-        memberships: [
-          build(:site_membership, user: user, role: :owner)
-        ]
-      )
+      new_site(domain: "example.com", owner: user)
       |> Plausible.Site.Domain.change("new.example.com")
 
       conn =
@@ -500,9 +494,9 @@ defmodule PlausibleWeb.SiteControllerTest do
     @tag :ee_only
     test "shows members page with links to CRM for super admin", %{
       conn: conn,
-      user: user,
-      site: site
+      user: user
     } do
+      site = new_site(owner: user)
       patch_env(:super_admin_user_ids, [user.id])
 
       conn = get(conn, "/#{site.domain}/settings/people")
@@ -511,11 +505,52 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "/crm/auth/user/#{user.id}"
     end
 
-    test "does not show CRM links to non-super admin user", %{conn: conn, user: user, site: site} do
+    test "does not show CRM links to non-super admin user", %{conn: conn, user: user} do
+      site = new_site(owner: user)
       conn = get(conn, "/#{site.domain}/settings/people")
       resp = html_response(conn, 200)
 
       refute resp =~ "/crm/auth/user/#{user.id}"
+    end
+
+    test "lists current members", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      editor = add_guest(site, role: :editor)
+      viewer = add_guest(site, role: :viewer)
+      conn = get(conn, "/#{site.domain}/settings/people")
+      resp = html_response(conn, 200)
+
+      owner_row =
+        text_of_element(resp, "#membership-#{user.id}")
+
+      editor_row = text_of_element(resp, "#membership-#{editor.id}")
+      editor_row_button = text_of_element(resp, "#membership-#{editor.id} button")
+      viewer_row = text_of_element(resp, "#membership-#{viewer.id}")
+      viewer_row_button = text_of_element(resp, "#membership-#{viewer.id} button")
+
+      assert owner_row =~ user.email
+      assert owner_row =~ "Owner"
+
+      assert editor_row =~ editor.email
+      assert editor_row_button == "Admin"
+      refute editor_row =~ "Owner"
+
+      assert viewer_row =~ viewer.email
+      assert viewer_row_button == "Viewer"
+      refute viewer_row =~ "Owner"
+    end
+
+    test "lists pending invitations", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      i1 = invite_guest(site, "admin@example.com", role: :editor, inviter: user)
+      i2 = invite_guest(site, "viewer@example.com", role: :viewer, inviter: user)
+      conn = get(conn, "/#{site.domain}/settings/people")
+      resp = html_response(conn, 200)
+
+      assert text_of_element(resp, "#invitation-#{i1.invitation_id}") == "admin@example.com Admin"
+
+      assert text_of_element(resp, "#invitation-#{i2.invitation_id}") ==
+               "viewer@example.com Viewer"
     end
   end
 
@@ -1491,7 +1526,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   end
 
   describe "DELETE /:domain/settings/:forget_import/:import_id" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "removes site import, associated data and cancels oban job for a particular import", %{
       conn: conn,
@@ -1569,7 +1604,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   end
 
   describe "DELETE /:domain/settings/forget_imported" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "removes actual imported data from Clickhouse", %{conn: conn, user: user, site: site} do
       Plausible.Imported.NoopImporter.new_import(

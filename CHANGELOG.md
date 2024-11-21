@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Dashboard shows comparisons for all reports
+- UTM Medium report and API shows (gclid) and (msclkid) for paid searches when no explicit utm medium present.
 
 ### Removed
 ### Changed
@@ -12,6 +13,7 @@ All notable changes to this project will be documented in this file.
 
 - Fix returning filter suggestions for multiple custom property values in the dashboard Filter modal
 - Fix typo on login screen
+- Fix Direct / None details modal not opening
 
 ## v2.1.4 - 2024-10-08
 

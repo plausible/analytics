@@ -1,0 +1,4 @@
+ALTER TABLE <%= @table %>
+<%= @on_cluster_statement %>
+MODIFY COLUMN acquisition_channel LowCardinality(String)
+MATERIALIZED acquisition_channel(referrer_source, utm_medium, utm_campaign, utm_source, click_id_param)

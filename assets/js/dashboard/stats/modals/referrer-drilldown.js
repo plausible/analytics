@@ -19,7 +19,8 @@ function ReferrerDrilldownModal() {
   const reportInfo = {
     title: "Referrer Drilldown",
     dimension: 'referrer',
-    endpoint: url.apiPath(site, `/referrers/${referrer}`),
+    endpoint: url.apiPath(site, `/referrers/${url.maybeEncodeRouteParam(referrer)}`
+  ),
     dimensionLabel: "Referrer",
     defaultOrder: ["visitors", SortDirection.desc]
   }

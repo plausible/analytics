@@ -15,6 +15,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         user
         |> Plausible.Auth.User.end_trial()
         |> Plausible.Repo.update!()
+        |> Plausible.Teams.sync_team()
 
         conn = get(conn, "/#{site.domain}/settings/funnels")
         resp = conn |> html_response(200) |> text()

@@ -32,7 +32,7 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
       ])
     end
 
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import, :seed]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import, :seed]
 
     test "returns top cities by new visitors", %{conn: conn, site: site} do
       conn = get(conn, "/api/stats/#{site.domain}/regions?period=day")

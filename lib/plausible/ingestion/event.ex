@@ -119,7 +119,7 @@ defmodule Plausible.Ingestion.Event do
       put_user_agent: &put_user_agent/2,
       put_basic_info: &put_basic_info/2,
       put_source_info: &put_source_info/2,
-      put_channel: &put_channel/2,
+      maybe_infer_medium: &maybe_infer_medium/2,
       put_props: &put_props/2,
       put_revenue: &put_revenue/2,
       put_salts: &put_salts/2,
@@ -246,7 +246,8 @@ defmodule Plausible.Ingestion.Event do
       timestamp: event.request.timestamp,
       name: event.request.event_name,
       hostname: event.request.hostname,
-      pathname: event.request.pathname
+      pathname: event.request.pathname,
+      scroll_depth: event.request.scroll_depth
     })
   end
 
@@ -270,19 +271,16 @@ defmodule Plausible.Ingestion.Event do
     })
   end
 
-  defp put_channel(%__MODULE__{} = event, _context) do
-    session = event.clickhouse_session_attrs
+  defp maybe_infer_medium(%__MODULE__{} = event, _context) do
+    inferred_medium =
+      case event.clickhouse_session_attrs do
+        %{utm_medium: medium} when is_binary(medium) -> medium
+        %{utm_medium: nil, referrer_source: "Google", click_id_param: "gclid"} -> "(gclid)"
+        %{utm_medium: nil, referrer_source: "Bing", click_id_param: "msclkid"} -> "(msclkid)"
+        _ -> nil
+      end
 
-    channel =
-      Plausible.Ingestion.Acquisition.get_channel(
-        session[:referrer_source],
-        session[:utm_medium],
-        session[:utm_campaign],
-        session[:utm_source],
-        session[:click_id_param]
-      )
-
-    update_session_attrs(event, %{channel: channel})
+    update_session_attrs(event, %{utm_medium: inferred_medium})
   end
 
   defp put_geolocation(%__MODULE__{} = event, _context) do

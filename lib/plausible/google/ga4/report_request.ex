@@ -51,6 +51,7 @@ defmodule Plausible.Google.GA4.ReportRequest do
         dimensions: [
           "date",
           "sessionSource",
+          "sessionDefaultChannelGroup",
           "sessionMedium",
           "sessionCampaignName",
           "sessionManualAdContent",

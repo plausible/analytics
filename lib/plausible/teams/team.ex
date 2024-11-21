@@ -16,7 +16,7 @@ defmodule Plausible.Teams.Team do
     field :name, :string
     field :trial_expiry_date, :date
     field :accept_traffic_until, :date
-    field :allow_next_upgrade_override, :boolean
+    field :allow_next_upgrade_override, :boolean, default: false
 
     embeds_one :grace_period, Plausible.Auth.GracePeriod, on_replace: :update
 

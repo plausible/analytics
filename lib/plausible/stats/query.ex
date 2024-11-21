@@ -23,7 +23,7 @@ defmodule Plausible.Stats.Query do
             pagination: nil
 
   require OpenTelemetry.Tracer, as: Tracer
-  alias Plausible.Stats.{Filters, Imported, Legacy}
+  alias Plausible.Stats.{DateTimeRange, Filters, Imported, Legacy}
 
   @type t :: %__MODULE__{}
 
@@ -50,20 +50,26 @@ defmodule Plausible.Stats.Query do
   end
 
   def date_range(query, options \\ []) do
-    date_range = Plausible.Stats.DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
+    date_range = DateTimeRange.to_date_range(query.utc_time_range, query.timezone)
 
     if Keyword.get(options, :trim_trailing) do
+      today = query.now |> DateTime.shift_zone!(query.timezone) |> DateTime.to_date()
+
       Date.range(
         date_range.first,
-        earliest(date_range.last, query.now)
+        clamp(today, date_range)
       )
     else
       date_range
     end
   end
 
-  defp earliest(a, b) do
-    if Date.compare(a, b) in [:eq, :lt], do: a, else: b
+  defp clamp(date, date_range) do
+    cond do
+      date in date_range -> date
+      Date.before?(date, date_range.first) -> date_range.first
+      Date.after?(date, date_range.last) -> date_range.last
+    end
   end
 
   def set(query, keywords) do
