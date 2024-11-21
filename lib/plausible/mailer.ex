@@ -28,6 +28,16 @@ defmodule Plausible.Mailer do
     end
   end
 
+  defp handle_error(error) when is_exception(error) do
+    # this message is ignored by Sentry, but it's useful in CE
+    Logger.error("Failed to send e-mail:\n\n " <> Exception.format(:error, error),
+      # Sentry report is built entirely from crash_reason
+      crash_reason: {error, _stacktrace = []}
+    )
+
+    {:error, :unknown_error}
+  end
+
   defp handle_error(error) do
     Logger.error("Failed to send e-mail", sentry: %{extra: %{response: error}})
     {:error, :unknown_error}
