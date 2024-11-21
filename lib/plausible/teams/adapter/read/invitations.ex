@@ -98,7 +98,7 @@ defmodule Plausible.Teams.Adapter.Read.Invitations do
       team_fn: fn _ ->
         if invitation.role == :owner do
           Teams.SiteTransfer
-          |> Repo.get_by!(transfer_id: invitation.invitation_id)
+          |> Repo.get_by!(transfer_id: invitation.invitation_id, initiator_id: inviter.id)
           |> Repo.preload([:site, :initiator])
           |> Plausible.Teams.Invitations.send_invitation_email(invitee)
         else
