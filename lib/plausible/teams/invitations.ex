@@ -3,39 +3,9 @@ defmodule Plausible.Teams.Invitations do
 
   import Ecto.Query
 
-  alias Plausible.Auth
   alias Plausible.Billing
   alias Plausible.Repo
   alias Plausible.Teams
-
-  def invite(site, inviter, invitee_email, role, opts \\ [])
-
-  def invite(site, initiator, invitee_email, :owner, opts) do
-    check_permissions? = opts[:check_permissions]
-    site = Repo.preload(site, :team)
-
-    with :ok <- check_transfer_permissions(site.team, initiator, check_permissions?),
-         new_owner = Plausible.Auth.find_user_by(email: invitee_email),
-         :ok <- ensure_transfer_valid(site.team, new_owner, :owner),
-         {:ok, site_transfer} <- create_site_transfer(site, initiator, invitee_email) do
-      send_transfer_init_email(site_transfer, new_owner)
-      {:ok, site_transfer}
-    end
-  end
-
-  def invite(site, inviter, invitee_email, role, opts) do
-    site = Repo.preload(site, :team)
-    role = translate_role(role)
-
-    with :ok <- check_invitation_permissions(site.team, inviter, role, opts),
-         :ok <- check_team_member_limit(site.team, role, invitee_email),
-         invitee = Auth.find_user_by(email: invitee_email),
-         :ok <- ensure_new_membership(site, invitee, role),
-         {:ok, guest_invitation} <- create_invitation(site, invitee_email, role, inviter) do
-      send_invitation_email(guest_invitation, invitee)
-      {:ok, guest_invitation}
-    end
-  end
 
   def invite_sync(site, site_invitation) do
     site = Teams.load_for_site(site)
@@ -94,31 +64,6 @@ defmodule Plausible.Teams.Invitations do
     end
 
     :ok
-  end
-
-  def transfer_site(site, new_owner, now \\ NaiveDateTime.utc_now(:second)) do
-    site = Repo.preload(site, :team)
-
-    with :ok <- ensure_transfer_valid(site.team, new_owner, :owner),
-         {:ok, team} <- Teams.get_or_create(new_owner),
-         :ok <- ensure_can_take_ownership(site, team) do
-      site =
-        Repo.preload(site, [
-          :team,
-          :owner,
-          guest_memberships: [team_membership: :user],
-          guest_invitations: :team_invitation
-        ])
-
-      {:ok, _} =
-        Repo.transaction(fn ->
-          :ok = transfer_site_ownership(site, team, now)
-        end)
-
-      {:ok, team_membership} = Teams.Memberships.get(team, new_owner)
-
-      {:ok, team_membership}
-    end
   end
 
   def transfer_site_sync(site, user) do
@@ -218,11 +163,11 @@ defmodule Plausible.Teams.Invitations do
       end)
   end
 
-  defp check_transfer_permissions(_team, _initiator, false = _check_permissions?) do
+  def check_transfer_permissions(_team, _initiator, false = _check_permissions?) do
     :ok
   end
 
-  defp check_transfer_permissions(team, initiator, _) do
+  def check_transfer_permissions(team, initiator, _) do
     case Teams.Memberships.team_role(team, initiator) do
       {:ok, :owner} -> :ok
       _ -> {:error, :forbidden}
@@ -251,7 +196,7 @@ defmodule Plausible.Teams.Invitations do
     )
   end
 
-  defp send_transfer_init_email(site_transfer, new_owner) do
+  def send_transfer_init_email(site_transfer, new_owner) do
     email =
       PlausibleWeb.Email.ownership_transfer_request(
         site_transfer.email,
