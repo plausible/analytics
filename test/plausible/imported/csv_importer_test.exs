@@ -13,7 +13,7 @@ defmodule Plausible.Imported.CSVImporterTest do
   end
 
   describe "new_import/3 and parse_args/1" do
-    setup [:create_user, :create_new_site]
+    setup [:create_user, :create_site]
 
     test "parses job args properly", %{user: user, site: site} do
       tables = [
@@ -81,7 +81,7 @@ defmodule Plausible.Imported.CSVImporterTest do
   end
 
   describe "import_data/2" do
-    setup [:create_user, :create_new_site, :clean_buckets]
+    setup [:create_user, :create_site, :clean_buckets]
 
     @describetag :tmp_dir
 

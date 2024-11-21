@@ -87,6 +87,7 @@ defmodule Plausible.Stats.Timeseries do
         :views_per_visit -> Map.merge(row, %{views_per_visit: 0.0})
         :conversion_rate -> Map.merge(row, %{conversion_rate: 0.0})
         :group_conversion_rate -> Map.merge(row, %{group_conversion_rate: 0.0})
+        :scroll_depth -> Map.merge(row, %{scroll_depth: 0})
         :bounce_rate -> Map.merge(row, %{bounce_rate: 0.0})
         :visit_duration -> Map.merge(row, %{visit_duration: nil})
         :average_revenue -> Map.merge(row, %{average_revenue: nil})

@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
 
   @user_id Enum.random(1000..9999)
 
-  setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
+  setup [:create_user, :create_site, :create_api_key, :use_api_key]
 
   describe "aggregation with imported data" do
     setup :create_site_import

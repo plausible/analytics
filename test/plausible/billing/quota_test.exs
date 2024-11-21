@@ -510,8 +510,8 @@ defmodule Plausible.Billing.QuotaTest do
 
     on_ee do
       test "returns [Funnels] when user/site uses funnels" do
-        user = insert(:user)
-        site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
+        user = new_user()
+        site = new_site(owner: user)
 
         goals = insert_list(3, :goal, site: site, event_name: fn -> Ecto.UUID.generate() end)
         steps = Enum.map(goals, &%{"goal_id" => &1.id})
@@ -550,13 +550,13 @@ defmodule Plausible.Billing.QuotaTest do
 
     on_ee do
       test "returns multiple features used by the user" do
-        user = insert(:user)
+        user = new_user()
         insert(:api_key, user: user)
 
         site =
-          insert(:site,
+          new_site(
             allowed_event_props: ["dummy"],
-            memberships: [build(:site_membership, user: user, role: :owner)]
+            owner: user
           )
 
         insert(:goal, currency: :USD, site: site, event_name: "Purchase")
@@ -721,7 +721,7 @@ defmodule Plausible.Billing.QuotaTest do
       populate_stats(site, [
         build(:event, timestamp: Timex.shift(now, days: -8), name: "custom"),
         build(:pageview, user_id: 199, timestamp: Timex.shift(now, days: -5, minutes: -2)),
-        build(:event, user_id: 199, timestamp: Timex.shift(now, days: -5), name: "pageleave")
+        build(:pageleave, user_id: 199, timestamp: Timex.shift(now, days: -5))
       ])
 
       assert %{

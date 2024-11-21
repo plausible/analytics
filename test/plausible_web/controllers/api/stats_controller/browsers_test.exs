@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
   use PlausibleWeb.ConnCase
 
   describe "GET /api/stats/:domain/browsers" do
-    setup [:create_user, :log_in, :create_new_site, :create_site_import]
+    setup [:create_user, :log_in, :create_site, :create_site_import]
 
     test "returns top browsers by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -274,7 +274,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
   end
 
   describe "GET /api/stats/:domain/browser-versions" do
-    setup [:create_user, :log_in, :create_new_site, :create_legacy_site_import]
+    setup [:create_user, :log_in, :create_site, :create_legacy_site_import]
 
     test "returns correct conversion_rate when browser_version clashes across browsers", %{
       conn: conn,

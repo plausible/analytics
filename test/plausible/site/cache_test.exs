@@ -1,5 +1,6 @@
 defmodule Plausible.Site.CacheTest do
   use Plausible.DataCase, async: true
+  use Plausible.Teams.Test
 
   alias Plausible.{Site, Goal}
   alias Plausible.Site.Cache
@@ -60,7 +61,7 @@ defmodule Plausible.Site.CacheTest do
           name: :"cache_supervisor_#{test}"
         )
 
-      %{id: site_id} = site = insert(:site, domain: "site1.example.com")
+      %{id: site_id} = site = new_site(domain: "site1.example.com")
 
       {:ok, _goal} =
         Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => :BRL})
@@ -95,7 +96,7 @@ defmodule Plausible.Site.CacheTest do
       yesterday = DateTime.utc_now() |> DateTime.add(-1 * 60 * 60 * 24)
 
       # the site was added yesterday so full refresh will pick it up
-      %{id: site_id} = site = insert(:site, domain: "site1.example.com", updated_at: yesterday)
+      %{id: site_id} = site = new_site(domain: "site1.example.com", updated_at: yesterday)
 
       # the goal was added yesterday so full refresh will pick it up
       Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => :BRL},

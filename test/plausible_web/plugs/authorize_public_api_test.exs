@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   use PlausibleWeb.ConnCase, async: false
+  use Plausible.Teams.Test
 
   alias PlausibleWeb.Plugs.AuthorizePublicAPI
 
@@ -115,8 +116,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   test "halts with error when API key owner does not have access to the requested site", %{
     conn: conn
   } do
-    user = insert(:user)
-    site = insert(:site)
+    user = new_user()
+    site = new_site()
     api_key = insert(:api_key, user: user)
 
     conn =
@@ -183,8 +184,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePublicAPITest do
   test "passes and sets current user and site when valid API key and site ID provided", %{
     conn: conn
   } do
-    user = insert(:user)
-    site = insert(:site, members: [user])
+    user = new_user()
+    site = new_site(owner: user)
     api_key = insert(:api_key, user: user)
 
     conn =

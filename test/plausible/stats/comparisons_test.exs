@@ -3,7 +3,7 @@ defmodule Plausible.Stats.ComparisonsTest do
   alias Plausible.Stats.{DateTimeRange, Query, Comparisons}
   import Plausible.TestUtils
 
-  setup [:create_user, :create_new_site]
+  setup [:create_user, :create_site]
 
   def build_query(site, params, now) do
     query = Query.from(site, params)

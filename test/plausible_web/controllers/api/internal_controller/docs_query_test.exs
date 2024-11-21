@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Api.InternalController.DocsQueryTest do
   @user_id Enum.random(1000..9999)
 
   describe "POST /api/docs/query not logged in" do
-    setup [:create_user, :create_new_site]
+    setup [:create_user, :create_site]
 
     test "rejects request when not logged in", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -25,7 +25,7 @@ defmodule PlausibleWeb.Api.InternalController.DocsQueryTest do
   end
 
   describe "POST /api/docs/query logged in" do
-    setup [:create_user, :create_new_site, :log_in]
+    setup [:create_user, :create_site, :log_in]
 
     test "rejects when accessing any other site", %{conn: conn} do
       conn =

@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
   use PlausibleWeb.PluginsAPICase, async: true
   use Plausible
+  use Plausible.Teams.Test
 
   @moduletag :ee_only
 
@@ -249,7 +250,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.FunnelsTest do
 
       test "fails for insufficient plan", %{conn: conn, token: token, site: site} do
         site = Plausible.Repo.preload(site, :owner)
-        insert(:growth_subscription, user: site.owner)
+        subscribe_to_growth_plan(site.owner)
 
         url = Routes.plugins_api_funnels_url(PlausibleWeb.Endpoint, :create)
 

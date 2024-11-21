@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   @user_id Enum.random(1000..9999)
 
   describe "GET /api/stats/:domain/conversions" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns mixed conversions in ordered by count", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -324,9 +324,12 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       site: site,
       user: user
     } do
-      user
-      |> Plausible.Auth.User.end_trial()
-      |> Plausible.Repo.update!()
+      user =
+        user
+        |> Plausible.Auth.User.end_trial()
+        |> Plausible.Repo.update!()
+
+      Plausible.Teams.sync_team(user)
 
       populate_stats(site, [
         build(:event,
@@ -438,7 +441,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   end
 
   describe "GET /api/stats/:domain/conversions - with goal filter" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "does not consider custom event pathname as a pageview goal completion", %{
       conn: conn,
@@ -625,7 +628,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   end
 
   describe "GET /api/stats/:domain/conversions - with goal and prop=(none) filter" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_site]
 
     test "returns only the conversion that is filtered for", %{conn: conn, site: site} do
       populate_stats(site, [

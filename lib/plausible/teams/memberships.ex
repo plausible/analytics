@@ -7,6 +7,26 @@ defmodule Plausible.Teams.Memberships do
   alias Plausible.Repo
   alias Plausible.Teams
 
+  def all_pending_site_transfers(email) do
+    email
+    |> pending_site_transfers_query()
+    |> Repo.all()
+    |> Enum.map(fn transfer ->
+      %Plausible.Auth.Invitation{
+        site_id: transfer.site_id,
+        email: transfer.email,
+        invitation_id: transfer.transfer_id,
+        role: :owner
+      }
+    end)
+  end
+
+  def any_pending_site_transfers?(email) do
+    email
+    |> pending_site_transfers_query()
+    |> Repo.exists?()
+  end
+
   def get(team, user) do
     result =
       from(tm in Teams.Membership,
@@ -126,5 +146,9 @@ defmodule Plausible.Teams.Memberships do
       nil -> {:error, :no_guest}
       membership -> {:ok, membership}
     end
+  end
+
+  defp pending_site_transfers_query(email) do
+    from st in Teams.SiteTransfer, where: st.email == ^email
   end
 end

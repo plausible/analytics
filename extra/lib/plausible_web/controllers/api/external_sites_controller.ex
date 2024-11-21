@@ -206,7 +206,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   end
 
   defp get_site(user, site_id, roles) do
-    case Sites.get_for_user(user.id, site_id, roles) do
+    case Plausible.Teams.Adapter.Read.Sites.get_for_user(user, site_id, roles) do
       nil -> {:error, :site_not_found}
       site -> {:ok, site}
     end

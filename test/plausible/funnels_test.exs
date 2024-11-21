@@ -3,6 +3,7 @@ defmodule Plausible.FunnelsTest do
   @moduletag :ee_only
 
   use Plausible
+  use Plausible.Teams.Test
 
   on_ee do
     alias Plausible.Goals
@@ -10,7 +11,7 @@ defmodule Plausible.FunnelsTest do
     alias Plausible.Stats
 
     setup do
-      site = insert(:site)
+      site = new_site()
 
       {:ok, g1} = Goals.create(site, %{"page_path" => "/go/to/blog/**"})
       {:ok, g2} = Goals.create(site, %{"event_name" => "Signup"})

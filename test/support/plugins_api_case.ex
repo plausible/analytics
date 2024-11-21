@@ -34,7 +34,6 @@ defmodule PlausibleWeb.PluginsAPICase do
   end
 
   setup %{test: test} = tags do
-    import Plausible.Factory
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plausible.Repo)
 
     unless tags[:async] do
@@ -43,7 +42,7 @@ defmodule PlausibleWeb.PluginsAPICase do
 
     conn = Phoenix.ConnTest.build_conn()
 
-    site = insert(:site)
+    site = Plausible.Teams.Test.new_site()
     {:ok, _token, raw_token} = Plausible.Plugins.API.Tokens.create(site, Atom.to_string(test))
 
     {:ok, conn: conn, site: site, token: raw_token}

@@ -1,12 +1,33 @@
 defmodule Plausible.Teams.Adapter.Read.Ownership do
   @moduledoc """
-  Transition adapter for new schema reads 
+  Transition adapter for new schema reads
   """
   use Plausible
   use Plausible.Teams.Adapter
   alias Plausible.Site
   alias Plausible.Auth
   alias Plausible.Site.Memberships.Invitations
+
+  def all_pending_site_transfers(email, user) do
+    switch(user,
+      team_fn: fn _ -> Plausible.Teams.Memberships.all_pending_site_transfers(email) end,
+      user_fn: fn _ -> Plausible.Site.Memberships.all_pending_ownerships(email) end
+    )
+  end
+
+  def get_owner(site, user) do
+    switch(user,
+      team_fn: fn team ->
+        case Teams.Sites.get_owner(team) do
+          {:ok, user} -> user
+          _ -> nil
+        end
+      end,
+      user_fn: fn _ ->
+        Plausible.Repo.preload(site, :owner).owner
+      end
+    )
+  end
 
   def ensure_can_take_ownership(site, user) do
     switch(
@@ -39,11 +60,9 @@ defmodule Plausible.Teams.Adapter.Read.Ownership do
 
   on_ee do
     def check_feature_access(site, new_owner) do
-      team_or_user = team_or_user(new_owner)
-
       missing_features =
         Plausible.Billing.Quota.Usage.features_usage(nil, [site.id])
-        |> Enum.filter(&(&1.check_availability(team_or_user) != :ok))
+        |> Enum.filter(&(&1.check_availability(new_owner) != :ok))
 
       if missing_features == [] do
         :ok

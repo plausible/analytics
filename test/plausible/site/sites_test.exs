@@ -157,16 +157,20 @@ defmodule Plausible.SitesTest do
   describe "get_for_user/2" do
     @tag :ee_only
     test "get site for super_admin" do
-      user1 = insert(:user)
-      user2 = insert(:user)
+      user1 = new_user()
+      user2 = new_user()
       patch_env(:super_admin_user_ids, [user2.id])
 
-      %{id: site_id, domain: domain} = insert(:site, members: [user1])
-      assert %{id: ^site_id} = Sites.get_for_user(user1.id, domain)
-      assert %{id: ^site_id} = Sites.get_for_user(user1.id, domain, [:owner])
+      %{id: site_id, domain: domain} = new_site(owner: user1)
+      assert %{id: ^site_id} = Plausible.Teams.Adapter.Read.Sites.get_for_user(user1, domain)
 
-      assert is_nil(Sites.get_for_user(user2.id, domain))
-      assert %{id: ^site_id} = Sites.get_for_user(user2.id, domain, [:super_admin])
+      assert %{id: ^site_id} =
+               Plausible.Teams.Adapter.Read.Sites.get_for_user(user1, domain, [:owner])
+
+      assert is_nil(Plausible.Teams.Adapter.Read.Sites.get_for_user(user2, domain))
+
+      assert %{id: ^site_id} =
+               Plausible.Teams.Adapter.Read.Sites.get_for_user(user2, domain, [:super_admin])
     end
   end
 
@@ -487,8 +491,8 @@ defmodule Plausible.SitesTest do
 
   describe "set_option/4" do
     test "allows setting option multiple times" do
-      user = insert(:user)
-      site = insert(:site, members: [user])
+      user = new_user()
+      site = new_site(owner: user)
 
       assert prefs =
                %{pinned_at: %NaiveDateTime{}} =
@@ -538,8 +542,8 @@ defmodule Plausible.SitesTest do
 
   describe "toggle_pin/2" do
     test "allows pinning and unpinning site" do
-      user = insert(:user)
-      site = insert(:site, members: [user])
+      user = new_user()
+      site = new_site(owner: user)
 
       site = %{site | pinned_at: nil}
       assert {:ok, prefs} = Sites.toggle_pin(user, site)
@@ -567,10 +571,10 @@ defmodule Plausible.SitesTest do
     end
 
     test "returns error when pins limit hit" do
-      user = insert(:user)
+      user = new_user()
 
       for _ <- 1..9 do
-        site = insert(:site, members: [user])
+        site = new_site(owner: user)
         assert {:ok, _} = Sites.toggle_pin(user, site)
       end
 

@@ -1253,6 +1253,64 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     end
   end
 
+  describe "scroll depth tests" do
+    setup do
+      site = insert(:site)
+      {:ok, site: site}
+    end
+
+    test "ingests scroll_depth as 0 when sd not in params", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+      post(conn, "/api/event", %{n: "pageleave", u: "https://test.com", d: site.domain})
+      post(conn, "/api/event", %{n: "custom", u: "https://test.com", d: site.domain})
+
+      assert [%{scroll_depth: 0}, %{scroll_depth: 0}, %{scroll_depth: 0}] = get_events(site)
+    end
+
+    test "sd field is ignored if name is not pageleave", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain, sd: 10})
+      post(conn, "/api/event", %{n: "custom_e", u: "https://test.com", d: site.domain, sd: 10})
+
+      assert [%{scroll_depth: 0}, %{scroll_depth: 0}] = get_events(site)
+    end
+
+    test "ingests valid scroll_depth for a pageleave", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+      post(conn, "/api/event", %{n: "pageleave", u: "https://test.com", d: site.domain, sd: 25})
+
+      pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
+
+      assert pageleave.scroll_depth == 25
+    end
+
+    test "ingests scroll_depth as 100 when sd > 100", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+      post(conn, "/api/event", %{n: "pageleave", u: "https://test.com", d: site.domain, sd: 101})
+
+      pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
+
+      assert pageleave.scroll_depth == 100
+    end
+
+    test "ingests scroll_depth as 0 when sd is a string", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+      post(conn, "/api/event", %{n: "pageleave", u: "https://test.com", d: site.domain, sd: "1"})
+
+      pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
+
+      assert pageleave.scroll_depth == 0
+    end
+
+    test "ingests scroll_depth as 0 when sd is a negative integer", %{conn: conn, site: site} do
+      post(conn, "/api/event", %{n: "pageview", u: "https://test.com", d: site.domain})
+      post(conn, "/api/event", %{n: "pageleave", u: "https://test.com", d: site.domain, sd: -1})
+
+      pageleave = get_events(site) |> Enum.find(&(&1.name == "pageleave"))
+
+      assert pageleave.scroll_depth == 0
+    end
+  end
+
   describe "acquisition channel tests" do
     setup do
       site = insert(:site)
@@ -1374,6 +1432,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Search"
+      assert session.utm_medium == "(gclid)"
       assert session.click_id_param == "gclid"
     end
 
@@ -1397,6 +1456,31 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Organic Search"
+      assert session.utm_medium == ""
+      assert session.click_id_param == "gclid"
+    end
+
+    test "does not override utm_medium with (gclid) if link is already tagged", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?gclid=123identifier&utm_medium=paidads",
+        referrer: "https://google.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.acquisition_channel == "Paid Search"
+      assert session.utm_medium == "paidads"
       assert session.click_id_param == "gclid"
     end
 
@@ -1417,6 +1501,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert response(conn, 202) == "ok"
       assert session.acquisition_channel == "Paid Search"
+      assert session.utm_medium == "(msclkid)"
       assert session.click_id_param == "msclkid"
     end
 
@@ -1426,8 +1511,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     } do
       params = %{
         name: "pageview",
-        url: "http://example.com?msclkid=123identifier",
-        referrer: "https://duckduckgo.com",
+        url: "http://example.com?msclkid=123identifier&utm_medium=cpc",
+        referrer: "https://bing.com",
         domain: site.domain
       }
 
@@ -1439,8 +1524,33 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.acquisition_channel == "Organic Search"
+      assert session.acquisition_channel == "Paid Search"
+      assert session.utm_medium == "cpc"
       assert session.click_id_param == "msclkid"
+    end
+
+    test "does not override utm_medium with (msclkid) if link is already tagged", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        url: "http://example.com?gclid=123identifier&utm_medium=paidads",
+        referrer: "https://google.com",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      session = get_created_session(site)
+
+      assert response(conn, 202) == "ok"
+      assert session.acquisition_channel == "Paid Search"
+      assert session.utm_medium == "paidads"
+      assert session.click_id_param == "gclid"
     end
 
     test "parses paid search channel based on utm_source and medium", %{conn: conn, site: site} do
