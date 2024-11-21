@@ -52,7 +52,16 @@ defmodule Plausible.Teams.Test do
       {:ok, _team} = Teams.get_or_create(user)
     end
 
-    Repo.preload(user, :team_memberships)
+    Repo.preload(user, team_memberships: :team)
+  end
+
+  def team_of(%{team_memberships: [%{role: :owner, team: %Teams.Team{} = team}]}) do
+    team
+  end
+
+  def team_of(user) do
+    {:ok, team} = Plausible.Teams.get_by_owner(user)
+    team
   end
 
   def add_guest(site, args \\ []) do
@@ -142,10 +151,11 @@ defmodule Plausible.Teams.Test do
     user |> Repo.preload([:site_memberships, :team_memberships])
   end
 
-  def subscribe_to_growth_plan(user) do
+  def subscribe_to_growth_plan(user, attrs \\ []) do
     {:ok, team} = Teams.get_or_create(user)
+    attrs = Keyword.merge([user: user, team: team], attrs)
 
-    insert(:growth_subscription, user: user, team: team)
+    insert(:growth_subscription, attrs)
     user
   end
 

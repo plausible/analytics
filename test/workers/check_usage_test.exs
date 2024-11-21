@@ -360,9 +360,9 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: @paddle_id_10k,
+        subscribe_to_plan(
+          user,
+          @paddle_id_10k,
           last_bill_date: Timex.shift(Timex.today(), days: -1),
           status: unquote(status)
         )

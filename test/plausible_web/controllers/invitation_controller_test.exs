@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.Site.InvitationControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
+  use Plausible.Teams.Test
   use Bamboo.Test
 
   setup [:create_user, :log_in]
@@ -107,13 +108,13 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
   describe "POST /sites/invitations/:invitation_id/accept - ownership transfer" do
     test "downgrades previous owner to admin", %{conn: conn, user: user} do
-      old_owner = insert(:user)
-      site = insert(:site, members: [old_owner])
+      old_owner = new_user()
+      site = new_site(owner: old_owner)
 
-      insert(:growth_subscription, user: user)
+      subscribe_to_growth_plan(user)
+      new_team = team_of(user)
 
-      invitation =
-        insert(:invitation, site_id: site.id, inviter: old_owner, email: user.email, role: :owner)
+      invitation = invite_transfer(site, user, inviter: old_owner)
 
       conn = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
 
@@ -122,26 +123,19 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
                "You now have access to"
 
-      refute Repo.exists?(from(i in Plausible.Auth.Invitation, where: i.email == ^user.email))
+      refute Repo.reload(invitation)
 
-      old_owner_membership =
-        Repo.get_by(Plausible.Site.Membership, user_id: old_owner.id, site_id: site.id)
+      assert_guest_membership(new_team, site, old_owner, :editor)
 
-      assert old_owner_membership.role == :admin
-
-      new_owner_membership =
-        Repo.get_by(Plausible.Site.Membership, user_id: user.id, site_id: site.id)
-
-      assert new_owner_membership.role == :owner
+      assert_team_attached(site, new_team.id)
     end
 
     @tag :ee_only
     test "fails when new owner has no plan", %{conn: conn, user: user} do
-      old_owner = insert(:user)
-      site = insert(:site, members: [old_owner])
+      old_owner = new_user()
+      site = new_site(owner: old_owner)
 
-      invitation =
-        insert(:invitation, site_id: site.id, inviter: old_owner, email: user.email, role: :owner)
+      invitation = invite_transfer(site, user, inviter: old_owner)
 
       conn = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
 
@@ -153,16 +147,15 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
     @tag :ee_only
     test "fails when new owner's plan is unsuitable", %{conn: conn, user: user} do
-      old_owner = insert(:user)
-      site = insert(:site, members: [old_owner])
+      old_owner = new_user()
+      site = new_site(owner: old_owner)
 
-      insert(:growth_subscription, user: user)
+      subscribe_to_growth_plan(user)
 
       # fill site limit quota
-      insert_list(10, :site, members: [user])
+      for _ <- 1..10, do: new_site(owner: user)
 
-      invitation =
-        insert(:invitation, site_id: site.id, inviter: old_owner, email: user.email, role: :owner)
+      invitation = invite_transfer(site, user, inviter: old_owner)
 
       conn = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
 
