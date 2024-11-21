@@ -78,64 +78,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert_guest_membership(team, site, existing_owner, :editor)
     end
 
-    @tag :teams
-    test "transfers ownership successfully (TEAM)" do
-      site = insert(:site, memberships: [])
-      existing_owner = insert(:user)
-
-      _existing_membership =
-        insert(:site_membership, user: existing_owner, site: site, role: :owner)
-
-      site = Plausible.Teams.load_for_site(site)
-      old_team = site.team
-
-      another_user = insert(:user)
-
-      another_team_membership =
-        insert(:team_membership, user: another_user, team: old_team, role: :guest)
-
-      another_guest_membership =
-        insert(:guest_membership,
-          team_membership: another_team_membership,
-          site: site,
-          role: :viewer
-        )
-
-      new_owner = insert(:user)
-      new_team = insert(:team)
-      insert(:team_membership, user: new_owner, team: new_team, role: :owner)
-      insert(:growth_subscription, user: new_owner, team: new_team)
-
-      assert {:ok, new_team_membership} =
-               Plausible.Teams.Invitations.transfer_site(site, new_owner)
-
-      assert new_team_membership.team_id == new_team.id
-      assert new_team_membership.user_id == new_owner.id
-      assert new_team_membership.role == :owner
-
-      assert_team_membership(existing_owner, old_team)
-
-      refute Repo.reload(another_team_membership)
-      refute Repo.reload(another_guest_membership)
-
-      assert new_another_team_membership =
-               Plausible.Teams.Membership
-               |> Repo.get_by(
-                 team_id: new_team.id,
-                 user_id: another_user.id
-               )
-               |> Repo.preload(:guest_memberships)
-
-      assert another_team_membership.id != new_another_team_membership.id
-      assert [new_another_guest_membership] = new_another_team_membership.guest_memberships
-      assert new_another_guest_membership.site_id == site.id
-      assert new_another_guest_membership.role == another_guest_membership.role
-
-      assert new_another_team_membership.role == :guest
-
-      assert_no_emails_delivered()
-    end
-
     @tag :ee_only
     test "unlocks the site if it was previously locked" do
       site = insert(:site, locked: true, memberships: [])

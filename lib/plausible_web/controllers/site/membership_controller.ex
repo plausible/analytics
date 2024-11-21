@@ -29,8 +29,8 @@ defmodule PlausibleWeb.Site.MembershipController do
       |> Plausible.Teams.Adapter.Read.Sites.get_for_user!(conn.assigns.site.domain)
       |> Plausible.Repo.preload(:owner)
 
-    limit = Plausible.Billing.Quota.Limits.team_member_limit(site.owner)
-    usage = Plausible.Billing.Quota.Usage.team_member_usage(site.owner)
+    limit = Plausible.Teams.Adapter.Read.Billing.team_member_limit(site.owner)
+    usage = Plausible.Teams.Adapter.Read.Billing.team_member_usage(site.owner)
     below_limit? = Plausible.Billing.Quota.below_limit?(usage, limit)
 
     render(
