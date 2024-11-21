@@ -222,10 +222,13 @@ defmodule Plausible.Stats.Imported do
   def merge_imported(q, _, %Query{include_imported: false}, _), do: q
 
   def merge_imported(q, site, %Query{dimensions: []} = query, metrics) do
+    q = paginate_optimization(q, query.pagination)
+
     imported_q =
       site
       |> Imported.Base.query_imported(query)
       |> select_imported_metrics(metrics)
+      |> paginate_optimization(query.pagination)
 
     from(
       s in subquery(q),
@@ -237,6 +240,8 @@ defmodule Plausible.Stats.Imported do
 
   def merge_imported(q, site, %Query{dimensions: ["event:goal"]} = query, metrics) do
     {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
+
+    q = paginate_optimization(q, query.pagination)
 
     Imported.Base.decide_tables(query)
     |> Enum.map(fn
@@ -275,12 +280,15 @@ defmodule Plausible.Stats.Imported do
 
   def merge_imported(q, site, query, metrics) do
     if schema_supports_query?(query) do
+      q = paginate_optimization(q, query.pagination)
+
       imported_q =
         site
         |> Imported.Base.query_imported(query)
         |> where([i], i.visitors > 0)
         |> group_imported_by(query)
         |> select_imported_metrics(metrics)
+        |> paginate_optimization(query.pagination)
 
       from(s in subquery(q),
         full_join: i in subquery(imported_q),
@@ -298,5 +306,39 @@ defmodule Plausible.Stats.Imported do
     site
     |> Imported.Base.query_imported(query)
     |> select_merge([i], %{total_visitors: fragment("sum(?)", i.visitors)})
+  end
+
+  defp naive_dimension_join(q1, q2, metrics) do
+    from(a in subquery(q1),
+      full_join: b in subquery(q2),
+      on: a.dim0 == b.dim0,
+      select: %{}
+    )
+    |> select_merge_as([a, b], %{
+      dim0: fragment("if(? != 0, ?, ?)", a.dim0, a.dim0, b.dim0)
+    })
+    |> select_joined_metrics(metrics)
+  end
+
+  # This function speeds up cases where grouping by a very high cardinality column by limiting the JOINed
+  # main and imported results.
+  #
+  # For example when grouping by pathname and every path is dynamically generated, this can reduce
+  # time spent JOINing billions of rows in ClickHouse by an order of magnitude.
+  #
+  # Mathematically, we can't limit main and imported results to LIMIT N since the true top N values
+  # can arise from outside the top N items of either subquery. Instead we multiply the limit by a
+  # reasonably large constant to ensure it _should_ be captured.
+  #
+  # This isn't always correct either as in degenerate cases but should be a reasonable trade-off that
+  # doesn't affect user experience in any conceivable realworld cases.
+  defp paginate_optimization(q, pagination) do
+    if pagination do
+      n = (pagination.limit + pagination.offset) * 100
+
+      limit(q, ^n)
+    else
+      q
+    end
   end
 end

@@ -456,17 +456,5 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
     |> select_joined_metrics(rest)
   end
 
-  def naive_dimension_join(q1, q2, metrics) do
-    from(a in subquery(q1),
-      full_join: b in subquery(q2),
-      on: a.dim0 == b.dim0,
-      select: %{}
-    )
-    |> select_merge_as([a, b], %{
-      dim0: fragment("if(? != 0, ?, ?)", a.dim0, a.dim0, b.dim0)
-    })
-    |> select_joined_metrics(metrics)
-  end
-
   defp dim(dimension), do: Plausible.Stats.Filters.without_prefix(dimension)
 end
