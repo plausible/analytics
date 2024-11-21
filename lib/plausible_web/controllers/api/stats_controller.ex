@@ -295,7 +295,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_top_stats(site, query, current_user) do
-    goal_filter? = Filters.filtering_on_dimension?(query, "event:goal")
+    goal_filter? = Filters.filtering_on_dimension?(query.filters, "event:goal")
 
     cond do
       query.period == "30m" && goal_filter? ->
@@ -393,7 +393,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_other_top_stats(site, query, current_user) do
-    page_filter? = Filters.filtering_on_dimension?(query, "event:page")
+    page_filter? = Filters.filtering_on_dimension?(query.filters, "event:page")
 
     metrics = [:visitors, :visits, :pageviews, :sample_percent]
 
@@ -1551,10 +1551,10 @@ defmodule PlausibleWeb.Api.StatsController do
       end
 
     requires_goal_filter? = metric in [:conversion_rate, :events]
-    has_goal_filter? = Filters.filtering_on_dimension?(query, "event:goal")
+    has_goal_filter? = Filters.filtering_on_dimension?(query.filters, "event:goal")
 
     requires_page_filter? = metric == :scroll_depth
-    has_page_filter? = Filters.filtering_on_dimension?(query, "event:page")
+    has_page_filter? = Filters.filtering_on_dimension?(query.filters, "event:page")
 
     cond do
       requires_goal_filter? and not has_goal_filter? ->
