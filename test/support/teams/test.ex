@@ -62,10 +62,8 @@ defmodule Plausible.Teams.Test do
 
     # insert(:site_membership, user: user, role: translate_role_to_old_model(role), site: site)
 
-    # FIXME: turn this into an upsert so that we can add the same guest
-    # to more than 1 site within a single team
-    team_membership = insert(:team_membership, team: team, user: user, role: :guest)
-    insert(:guest_membership, team_membership: team_membership, site: site, role: role)
+    team_membership = build(:team_membership, team: team, user: user, role: :guest)
+    Repo.insert!(team_membership, on_conflict: :nothing, conflict_target: [:team_id, :user_id])
 
     user |> Repo.preload([:site_memberships, :team_memberships])
   end
