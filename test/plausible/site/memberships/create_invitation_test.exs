@@ -186,12 +186,9 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
     end
 
     test "allows creating an ownership transfer even when at team member limit" do
-      inviter = insert(:user)
-
-      memberships =
-        [build(:site_membership, user: inviter, role: :owner)] ++ build_list(3, :site_membership)
-
-      site = insert(:site, memberships: memberships)
+      inviter = new_user()
+      site = new_site(owner: inviter)
+      for _ <- 1..3, do: add_guest(site, role: :viewer)
 
       assert {:ok, _invitation} =
                CreateInvitation.create_invitation(
