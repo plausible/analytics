@@ -221,7 +221,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, _lv, doc} = get_liveview(conn)
 
       assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
-               "if (confirm(\"This plan does not support Custom Properties, which you are currently using. Please note that by subscribing to this plan you will lose access to this feature.\")) {Paddle.Checkout.open"
+               "if (confirm(\"This plan does not support Custom Properties, which you have been using. By subscribing to this plan, you will not have access to this feature.\")) {Paddle.Checkout.open"
     end
 
     test "recommends Growth tier when no premium features were used", %{conn: conn} do
@@ -484,7 +484,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert doc =~ "Your account has been invited to become the owner of a site"
 
       assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
-               "if (confirm(\"This plan does not support Custom Properties, which you are currently using. Please note that by subscribing to this plan you will lose access to this feature.\")) {window.location = "
+               "if (confirm(\"This plan does not support Custom Properties, which you have been using. By subscribing to this plan, you will not have access to this feature.\")) {window.location ="
 
       assert text_of_element(doc, @business_highlight_pill) == "Recommended"
       refute element_exists?(doc, @growth_highlight_pill)
@@ -740,7 +740,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, _lv, doc} = get_liveview(conn)
 
       assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
-               "if (confirm(\"This plan does not support Custom Properties, Revenue Goals and Stats API, which you are currently using. Please note that by subscribing to this plan you will lose access to these features.\")) {window.location = "
+               "if (confirm(\"This plan does not support Custom Properties, Revenue Goals and Stats API, which you have been using. By subscribing to this plan, you will not have access to these features.\")) {window.location = "
     end
   end
 
