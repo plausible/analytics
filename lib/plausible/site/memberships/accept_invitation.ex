@@ -23,13 +23,38 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
   require Logger
 
+  @type transfer_error() ::
+          Billing.Quota.Limits.over_limits_error()
+          | Ecto.Changeset.t()
+          | :transfer_to_self
+          | :no_plan
+
+  @type accept_error() ::
+          :invitation_not_found
+          | Billing.Quota.Limits.over_limits_error()
+          | Ecto.Changeset.t()
+          | :no_plan
+
+  @spec bulk_transfer_ownership_direct([Site.t()], User.t()) ::
+          {:ok, [Membership.t()]} | {:error, transfer_error()}
+  def bulk_transfer_ownership_direct(sites, new_owner) do
+    Repo.transaction(fn ->
+      for site <- sites do
+        site = Repo.preload(site, :owner)
+
+        case transfer_ownership(site, new_owner) do
+          {:ok, membership} ->
+            membership
+
+          {:error, error} ->
+            Repo.rollback(error)
+        end
+      end
+    end)
+  end
+
   @spec transfer_ownership(Site.t(), Auth.User.t()) ::
-          {:ok, Site.Membership.t()}
-          | {:error,
-             Billing.Quota.Limits.over_limits_error()
-             | Ecto.Changeset.t()
-             | :transfer_to_self
-             | :no_plan}
+          {:ok, Site.Membership.t()} | {:error, transfer_error()}
   def transfer_ownership(site, user) do
     site = Repo.preload(site, :owner)
 
@@ -54,12 +79,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   end
 
   @spec accept_invitation(String.t(), Auth.User.t()) ::
-          {:ok, Site.Membership.t()}
-          | {:error,
-             :invitation_not_found
-             | Billing.Quota.Limits.over_limits_error()
-             | Ecto.Changeset.t()
-             | :no_plan}
+          {:ok, Site.Membership.t()} | {:error, accept_error()}
   def accept_invitation(invitation_id, user) do
     with {:ok, invitation} <- Invitations.find_for_user(invitation_id, user) do
       if invitation.role == :owner do

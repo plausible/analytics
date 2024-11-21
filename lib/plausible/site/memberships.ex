@@ -20,7 +20,7 @@ defmodule Plausible.Site.Memberships do
   defdelegate bulk_create_invitation(sites, inviter, invitee_email, role, opts),
     to: Memberships.CreateInvitation
 
-  defdelegate bulk_transfer_ownership_direct(sites, new_owner), to: Memberships.CreateInvitation
+  defdelegate bulk_transfer_ownership_direct(sites, new_owner), to: Memberships.AcceptInvitation
 
   @spec any?(Auth.User.t()) :: boolean()
   def any?(user) do
