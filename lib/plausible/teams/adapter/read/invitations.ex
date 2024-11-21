@@ -14,6 +14,7 @@ defmodule Plausible.Teams.Adapter.Read.Invitations do
         Plausible.Teams.Invitations.check_invitation_permissions(
           site,
           inviter,
+          role,
           opts
         )
       end,
