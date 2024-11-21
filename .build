@@ -222,8 +222,10 @@ Plausible.Stats.Timeseries.html
 Plausible.Stats.Util.html
 Plausible.Stats.html
 Plausible.Teams.Adapter.Read.Billing.html
+Plausible.Teams.Adapter.Read.Invitations.html
 Plausible.Teams.Adapter.Read.Ownership.html
 Plausible.Teams.Adapter.Read.Sites.html
+Plausible.Teams.Adapter.Read.Teams.html
 Plausible.Teams.Adapter.html
 Plausible.Teams.GuestInvitation.html
 Plausible.Teams.GuestMembership.html
@@ -461,8 +463,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-A23F52FF.js
-dist/sidebar_items-4BEA778F.js
+dist/search_data-D5C2181C.js
+dist/sidebar_items-DD84C8DF.js
 index.html
 readme.html
 search.html
