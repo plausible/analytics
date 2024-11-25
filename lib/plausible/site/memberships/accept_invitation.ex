@@ -37,10 +37,10 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
   @spec bulk_transfer_ownership_direct(Auth.User.t(), [Site.t()], Auth.User.t()) ::
           {:ok, [Site.Membership.t()]} | {:error, transfer_error()}
-  def bulk_transfer_ownership_direct(inviter, sites, new_owner) do
+  def bulk_transfer_ownership_direct(current_user, sites, new_owner) do
     Repo.transaction(fn ->
       for site <- sites do
-        case transfer_ownership(inviter, site, new_owner) do
+        case transfer_ownership(current_user, site, new_owner) do
           {:ok, membership} ->
             membership
 
@@ -63,24 +63,22 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     end
   end
 
-  defp transfer_ownership(inviter, site, user) do
-    site = Repo.preload(site, :owner)
-
+  defp transfer_ownership(current_user, site, new_owner) do
     with :ok <-
            Plausible.Teams.Adapter.Read.Invitations.ensure_transfer_valid(
-             inviter,
+             current_user,
              site,
-             user,
+             new_owner,
              :owner
            ),
-         :ok <- Plausible.Teams.Adapter.Read.Ownership.ensure_can_take_ownership(site, user) do
-      membership = get_or_create_owner_membership(site, user)
+         :ok <- Plausible.Teams.Adapter.Read.Ownership.ensure_can_take_ownership(site, new_owner) do
+      membership = get_or_create_owner_membership(site, new_owner)
 
-      multi = add_and_transfer_ownership(site, membership, user)
+      multi = add_and_transfer_ownership(site, membership, new_owner)
 
       case Repo.transaction(multi) do
         {:ok, changes} ->
-          Plausible.Teams.Invitations.transfer_site_sync(site, user)
+          Plausible.Teams.Invitations.transfer_site_sync(site, new_owner)
 
           membership = Repo.preload(changes.membership, [:site, :user])
 

@@ -132,12 +132,12 @@ defmodule Plausible.SiteAdmin do
   end
 
   defp transfer_ownership_direct(conn, sites, %{"email" => email}) do
-    inviter = conn.assigns.current_user
+    current_user = conn.assigns.current_user
 
     with {:ok, new_owner} <- Plausible.Auth.get_user_by(email: email),
          {:ok, _} <-
            Plausible.Site.Memberships.bulk_transfer_ownership_direct(
-             inviter,
+             current_user,
              sites,
              new_owner
            ) do
