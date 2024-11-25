@@ -222,13 +222,13 @@ defmodule Plausible.Stats.Imported do
   def merge_imported(q, _, %Query{include_imported: false}, _), do: q
 
   def merge_imported(q, site, %Query{dimensions: []} = query, metrics) do
-    q = paginate_optimization(q, query.pagination)
+    q = paginate_optimization(q, query)
 
     imported_q =
       site
       |> Imported.Base.query_imported(query)
       |> select_imported_metrics(metrics)
-      |> paginate_optimization(query.pagination)
+      |> paginate_optimization(query)
 
     from(
       s in subquery(q),
@@ -240,8 +240,6 @@ defmodule Plausible.Stats.Imported do
 
   def merge_imported(q, site, %Query{dimensions: ["event:goal"]} = query, metrics) do
     {events, page_regexes} = Filters.Utils.split_goals_query_expressions(query.preloaded_goals)
-
-    q = paginate_optimization(q, query.pagination)
 
     Imported.Base.decide_tables(query)
     |> Enum.map(fn
@@ -280,7 +278,7 @@ defmodule Plausible.Stats.Imported do
 
   def merge_imported(q, site, query, metrics) do
     if schema_supports_query?(query) do
-      q = paginate_optimization(q, query.pagination)
+      q = paginate_optimization(q, query)
 
       imported_q =
         site
@@ -288,7 +286,7 @@ defmodule Plausible.Stats.Imported do
         |> where([i], i.visitors > 0)
         |> group_imported_by(query)
         |> select_imported_metrics(metrics)
-        |> paginate_optimization(query.pagination)
+        |> paginate_optimization(query)
 
       from(s in subquery(q),
         full_join: i in subquery(imported_q),
@@ -332,13 +330,25 @@ defmodule Plausible.Stats.Imported do
   #
   # This isn't always correct either as in degenerate cases but should be a reasonable trade-off that
   # doesn't affect user experience in any conceivable realworld cases.
-  defp paginate_optimization(q, pagination) do
-    if pagination do
-      n = (pagination.limit + pagination.offset) * 100
+  #
+  # Note we only apply this optimization in cases where we can deterministically ORDER BY. This covers
+  # opening Plausible dashboard but not more complicated use-cases
+  defp paginate_optimization(q, query) do
+    if is_map(query.pagination) and can_order_by?(query) do
+      n = (query.pagination.limit + query.pagination.offset) * 100
 
-      limit(q, ^n)
+      q
+      |> QueryBuilder.build_order_by(query)
+      |> limit(^n)
     else
       q
     end
+  end
+
+  defp can_order_by?(query) do
+    Enum.all?(query.order_by, fn
+      {metric, _direction} when is_atom(metric) -> metric in query.metrics
+      _ -> true
+    end)
   end
 end

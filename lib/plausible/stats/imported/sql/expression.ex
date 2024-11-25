@@ -15,199 +15,107 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   @not_set "(not set)"
   @none "(none)"
 
-  def select_imported_metrics(q, []), do: q
-
-  def select_imported_metrics(q, [:visitors | rest]) do
-    q
-    |> select_merge_as([i], %{visitors: sum(i.visitors)})
-    |> select_imported_metrics(rest)
-  end
-
   def select_imported_metrics(
-        %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_custom_events", _}}} = q,
-        [:events | rest]
+        %Ecto.Query{from: %Ecto.Query.FromExpr{source: {table, _}}} = q,
+        metrics
       ) do
+    select_clause =
+      metrics
+      |> Enum.map(&select_metric(&1, table))
+      |> Enum.reduce(%{}, &Map.merge/2)
+
     q
-    |> select_merge_as([i], %{events: sum(i.events)})
-    |> select_imported_metrics(rest)
+    |> select_merge(q, ^select_clause)
+    |> filter_pageviews(metrics, table)
   end
 
-  def select_imported_metrics(q, [:events | rest]) do
-    q
-    |> select_merge_as([i], %{events: sum(i.pageviews)})
-    |> select_imported_metrics(rest)
+  defp filter_pageviews(q, metrics, table) do
+    should_filter = :pageviews in metrics or :views_per_visit in metrics
+
+    case {should_filter, table} do
+      {_, "imported_custom_events"} -> q
+      {true, _} -> q |> where([i], i.pageviews > 0)
+      {false, _} -> q
+    end
   end
 
-  def select_imported_metrics(
-        %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_exit_pages", _}}} = q,
-        [:visits | rest]
-      ) do
-    q
-    |> select_merge_as([i], %{visits: sum(i.exits)})
-    |> select_imported_metrics(rest)
+  defp select_metric(:visitors, _table) do
+    wrap_alias([i], %{visitors: sum(i.visitors)})
   end
 
-  def select_imported_metrics(
-        %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
-        [:visits | rest]
-      ) do
-    q
-    |> select_merge_as([i], %{visits: sum(i.entrances)})
-    |> select_imported_metrics(rest)
+  defp select_metric(:events, "imported_custom_events") do
+    wrap_alias([i], %{events: sum(i.events)})
   end
 
-  def select_imported_metrics(q, [:visits | rest]) do
-    q
-    |> select_merge_as([i], %{visits: sum(i.visits)})
-    |> select_imported_metrics(rest)
+  defp select_metric(:events, _table) do
+    wrap_alias([i], %{events: sum(i.pageviews)})
   end
 
-  def select_imported_metrics(
-        %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_custom_events", _}}} = q,
-        [:pageviews | rest]
-      ) do
-    q
-    |> select_merge_as([i], %{pageviews: 0})
-    |> select_imported_metrics(rest)
+  defp select_metric(:visits, "imported_exit_pages") do
+    wrap_alias([i], %{visits: sum(i.exits)})
   end
 
-  def select_imported_metrics(q, [:pageviews | rest]) do
-    q
-    |> where([i], i.pageviews > 0)
-    |> select_merge_as([i], %{pageviews: sum(i.pageviews)})
-    |> select_imported_metrics(rest)
+  defp select_metric(:visits, "imported_entry_pages") do
+    wrap_alias([i], %{visits: sum(i.entrances)})
   end
 
-  def select_imported_metrics(
-        %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_pages", _}}} = q,
-        [:bounce_rate | rest]
-      ) do
-    q
-    |> select_merge_as([i], %{
-      bounces: 0,
-      __internal_visits: 0
-    })
-    |> select_imported_metrics(rest)
+  defp select_metric(:visits, _table) do
+    wrap_alias([i], %{visits: sum(i.visits)})
   end
 
-  def select_imported_metrics(
-        %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
-        [:bounce_rate | rest]
-      ) do
-    q
-    |> select_merge_as([i], %{
-      bounces: sum(i.bounces),
-      __internal_visits: sum(i.entrances)
-    })
-    |> select_imported_metrics(rest)
+  defp select_metric(:pageviews, "imported_custom_events") do
+    wrap_alias([i], %{pageviews: 0})
   end
 
-  def select_imported_metrics(
-        %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_exit_pages", _}}} = q,
-        [:bounce_rate | rest]
-      ) do
-    q
-    |> select_merge_as([i], %{
-      bounces: sum(i.bounces),
-      __internal_visits: sum(i.exits)
-    })
-    |> select_imported_metrics(rest)
+  defp select_metric(:pageviews, _table) do
+    wrap_alias([i], %{pageviews: sum(i.pageviews)})
   end
 
-  def select_imported_metrics(q, [:bounce_rate | rest]) do
-    q
-    |> select_merge_as([i], %{
-      bounces: sum(i.bounces),
-      __internal_visits: sum(i.visits)
-    })
-    |> select_imported_metrics(rest)
+  defp select_metric(:bounce_rate, "imported_pages") do
+    wrap_alias([i], %{bounces: 0, __internal_visits: 0})
   end
 
-  def select_imported_metrics(
-        %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_pages", _}}} = q,
-        [:visit_duration | rest]
-      ) do
-    q
-    |> select_merge_as([i], %{
-      visit_duration: 0,
-      __internal_visits: 0
-    })
-    |> select_imported_metrics(rest)
+  defp select_metric(:bounce_rate, "imported_exit_pages") do
+    wrap_alias([i], %{bounces: sum(i.bounces), __internal_visits: sum(i.exits)})
   end
 
-  def select_imported_metrics(
-        %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
-        [:visit_duration | rest]
-      ) do
-    q
-    |> select_merge_as([i], %{
-      visit_duration: sum(i.visit_duration),
-      __internal_visits: sum(i.entrances)
-    })
-    |> select_imported_metrics(rest)
+  defp select_metric(:bounce_rate, "imported_entry_pages") do
+    wrap_alias([i], %{bounces: sum(i.bounces), __internal_visits: sum(i.entrances)})
   end
 
-  def select_imported_metrics(
-        %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_exit_pages", _}}} = q,
-        [:visit_duration | rest]
-      ) do
-    q
-    |> select_merge_as([i], %{
-      visit_duration: sum(i.visit_duration),
-      __internal_visits: sum(i.exits)
-    })
-    |> select_imported_metrics(rest)
+  defp select_metric(:bounce_rate, _table) do
+    wrap_alias([i], %{bounces: sum(i.bounces), __internal_visits: sum(i.visits)})
   end
 
-  def select_imported_metrics(q, [:visit_duration | rest]) do
-    q
-    |> select_merge_as([i], %{
-      visit_duration: sum(i.visit_duration),
-      __internal_visits: sum(i.visits)
-    })
-    |> select_imported_metrics(rest)
+  defp select_metric(:visit_duration, "imported_pages") do
+    wrap_alias([i], %{visit_duration: 0})
   end
 
-  def select_imported_metrics(
-        %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
-        [:views_per_visit | rest]
-      ) do
-    q
-    |> where([i], i.pageviews > 0)
-    |> select_merge_as([i], %{
-      pageviews: sum(i.pageviews),
-      __internal_visits: sum(i.entrances)
-    })
-    |> select_imported_metrics(rest)
+  defp select_metric(:visit_duration, "imported_exit_pages") do
+    wrap_alias([i], %{visit_duration: sum(i.visit_duration), __internal_visits: sum(i.exits)})
   end
 
-  def select_imported_metrics(
-        %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_exit_pages", _}}} = q,
-        [:views_per_visit | rest]
-      ) do
-    q
-    |> where([i], i.pageviews > 0)
-    |> select_merge_as([i], %{
-      pageviews: sum(i.pageviews),
-      __internal_visits: sum(i.exits)
-    })
-    |> select_imported_metrics(rest)
+  defp select_metric(:visit_duration, "imported_entry_pages") do
+    wrap_alias([i], %{visit_duration: sum(i.visit_duration), __internal_visits: sum(i.entrances)})
   end
 
-  def select_imported_metrics(q, [:views_per_visit | rest]) do
-    q
-    |> where([i], i.pageviews > 0)
-    |> select_merge_as([i], %{
-      pageviews: sum(i.pageviews),
-      __internal_visits: sum(i.visits)
-    })
-    |> select_imported_metrics(rest)
+  defp select_metric(:visit_duration, _table) do
+    wrap_alias([i], %{visit_duration: sum(i.visit_duration), __internal_visits: sum(i.visits)})
   end
 
-  def select_imported_metrics(q, [_ | rest]) do
-    q
-    |> select_imported_metrics(rest)
+  defp select_metric(:views_per_visit, "imported_exit_pages") do
+    wrap_alias([i], %{pageviews: sum(i.pageviews), __internal_visits: sum(i.exits)})
   end
+
+  defp select_metric(:views_per_visit, "imported_entry_pages") do
+    wrap_alias([i], %{pageviews: sum(i.pageviews), __internal_visits: sum(i.entrances)})
+  end
+
+  defp select_metric(:views_per_visit, _table) do
+    wrap_alias([i], %{pageviews: sum(i.pageviews), __internal_visits: sum(i.visits)})
+  end
+
+  defp select_metric(_metric, _table), do: %{}
 
   def group_imported_by(q, query) do
     Enum.reduce(query.dimensions, q, fn dimension, q ->

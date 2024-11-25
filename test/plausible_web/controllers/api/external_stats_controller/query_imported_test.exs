@@ -1223,5 +1223,36 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryImportedTest do
                %{"dimensions" => ["Kärdla", "Estonia"], "metrics" => [2]}
              ]
     end
+
+    test "page breakdown with paginate_optimization", %{
+      conn: conn,
+      site: site
+    } do
+      site_import = insert(:site_import, site: site)
+
+      populate_stats(
+        site,
+        site_import.id,
+        [
+          build(:pageview, pathname: "/99", timestamp: ~N[2021-01-01 00:00:00]),
+          build(:imported_pages, page: "/99", date: ~D[2021-01-01])
+        ] ++
+          Enum.map(1..200, fn i ->
+            build(:imported_pages, page: "/#{i}", pageviews: 1, date: ~D[2021-01-01])
+          end)
+      )
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "metrics" => ["pageviews"],
+          "date_range" => "all",
+          "dimensions" => ["event:page"],
+          "include" => %{"imports" => true},
+          "pagination" => %{limit: 1}
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"dimensions" => ["/99"], "metrics" => [3]}]
+    end
   end
 end

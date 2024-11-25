@@ -27,6 +27,10 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> select_total_rows(query.include.total_rows)
   end
 
+  def build_order_by(q, query) do
+    Enum.reduce(query.order_by || [], q, &build_order_by(&2, query, &1))
+  end
+
   defp build_events_query(_site, %Query{metrics: []}), do: nil
 
   defp build_events_query(site, events_query) do
@@ -153,11 +157,7 @@ defmodule Plausible.Stats.SQL.QueryBuilder do
     |> group_by([], selected_as(^key))
   end
 
-  defp build_order_by(q, query) do
-    Enum.reduce(query.order_by || [], q, &build_order_by(&2, query, &1))
-  end
-
-  def build_order_by(q, query, {metric_or_dimension, order_direction}) do
+  defp build_order_by(q, query, {metric_or_dimension, order_direction}) do
     order_by(
       q,
       [t],
