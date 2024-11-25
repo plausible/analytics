@@ -289,42 +289,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert_team_attached(site, new_team.id)
     end
 
-    @tag :teams
-    test "syncs accepted ownership transfer to teams" do
-      site = insert(:site, memberships: [])
-      existing_owner = insert(:user)
-
-      _existing_membership =
-        insert(:site_membership, user: existing_owner, site: site, role: :owner)
-
-      site = Plausible.Teams.load_for_site(site)
-      old_team = site.team
-      # site = Repo.reload!(site)
-
-      new_owner = insert(:user)
-      insert(:growth_subscription, user: new_owner)
-
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: existing_owner,
-          email: new_owner.email,
-          role: :owner
-        )
-
-      assert {:ok, _new_membership} =
-               AcceptInvitation.accept_invitation(
-                 invitation.invitation_id,
-                 new_owner
-               )
-
-      team = assert_team_exists(new_owner)
-      assert team.id != old_team.id
-      assert_team_attached(site, team.id)
-
-      assert_guest_membership(team, site, existing_owner, :editor)
-    end
-
     @tag :ee_only
     test "unlocks a previously locked site after transfer" do
       existing_owner = new_user()

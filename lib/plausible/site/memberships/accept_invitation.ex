@@ -92,7 +92,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
   defp do_accept_ownership_transfer(invitation, user) do
     membership = get_or_create_membership(invitation, user)
-    site = Repo.preload(invitation.site, :owner)
+    site = invitation.site
 
     with :ok <-
            Plausible.Teams.Adapter.Read.Invitations.ensure_transfer_valid(
@@ -101,7 +101,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
              user,
              :owner
            ),
-         :ok <- Invitations.ensure_can_take_ownership(site, user) do
+         :ok <- Plausible.Teams.Adapter.Read.Ownership.ensure_can_take_ownership(site, user) do
       site
       |> add_and_transfer_ownership(membership, user)
       |> Multi.delete(:invitation, invitation)
