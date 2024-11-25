@@ -19,7 +19,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
 
   def select_imported_metrics(q, [:visitors | rest]) do
     q
-    |> select_merge([i], %{visitors: sum(i.visitors)})
+    |> select_merge_as([i], %{visitors: sum(i.visitors)})
     |> select_imported_metrics(rest)
   end
 
@@ -28,13 +28,13 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
         [:events | rest]
       ) do
     q
-    |> select_merge([i], %{events: sum(i.events)})
+    |> select_merge_as([i], %{events: sum(i.events)})
     |> select_imported_metrics(rest)
   end
 
   def select_imported_metrics(q, [:events | rest]) do
     q
-    |> select_merge([i], %{events: sum(i.pageviews)})
+    |> select_merge_as([i], %{events: sum(i.pageviews)})
     |> select_imported_metrics(rest)
   end
 
@@ -43,7 +43,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
         [:visits | rest]
       ) do
     q
-    |> select_merge([i], %{visits: sum(i.exits)})
+    |> select_merge_as([i], %{visits: sum(i.exits)})
     |> select_imported_metrics(rest)
   end
 
@@ -52,13 +52,13 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
         [:visits | rest]
       ) do
     q
-    |> select_merge([i], %{visits: sum(i.entrances)})
+    |> select_merge_as([i], %{visits: sum(i.entrances)})
     |> select_imported_metrics(rest)
   end
 
   def select_imported_metrics(q, [:visits | rest]) do
     q
-    |> select_merge([i], %{visits: sum(i.visits)})
+    |> select_merge_as([i], %{visits: sum(i.visits)})
     |> select_imported_metrics(rest)
   end
 
@@ -67,14 +67,14 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
         [:pageviews | rest]
       ) do
     q
-    |> select_merge([i], %{pageviews: 0})
+    |> select_merge_as([i], %{pageviews: 0})
     |> select_imported_metrics(rest)
   end
 
   def select_imported_metrics(q, [:pageviews | rest]) do
     q
     |> where([i], i.pageviews > 0)
-    |> select_merge([i], %{pageviews: sum(i.pageviews)})
+    |> select_merge_as([i], %{pageviews: sum(i.pageviews)})
     |> select_imported_metrics(rest)
   end
 
@@ -83,7 +83,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
         [:bounce_rate | rest]
       ) do
     q
-    |> select_merge([i], %{
+    |> select_merge_as([i], %{
       bounces: 0,
       __internal_visits: 0
     })
@@ -95,7 +95,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
         [:bounce_rate | rest]
       ) do
     q
-    |> select_merge([i], %{
+    |> select_merge_as([i], %{
       bounces: sum(i.bounces),
       __internal_visits: sum(i.entrances)
     })
@@ -107,7 +107,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
         [:bounce_rate | rest]
       ) do
     q
-    |> select_merge([i], %{
+    |> select_merge_as([i], %{
       bounces: sum(i.bounces),
       __internal_visits: sum(i.exits)
     })
@@ -116,7 +116,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
 
   def select_imported_metrics(q, [:bounce_rate | rest]) do
     q
-    |> select_merge([i], %{
+    |> select_merge_as([i], %{
       bounces: sum(i.bounces),
       __internal_visits: sum(i.visits)
     })
@@ -128,7 +128,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
         [:visit_duration | rest]
       ) do
     q
-    |> select_merge([i], %{
+    |> select_merge_as([i], %{
       visit_duration: 0,
       __internal_visits: 0
     })
@@ -140,7 +140,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
         [:visit_duration | rest]
       ) do
     q
-    |> select_merge([i], %{
+    |> select_merge_as([i], %{
       visit_duration: sum(i.visit_duration),
       __internal_visits: sum(i.entrances)
     })
@@ -152,7 +152,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
         [:visit_duration | rest]
       ) do
     q
-    |> select_merge([i], %{
+    |> select_merge_as([i], %{
       visit_duration: sum(i.visit_duration),
       __internal_visits: sum(i.exits)
     })
@@ -161,7 +161,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
 
   def select_imported_metrics(q, [:visit_duration | rest]) do
     q
-    |> select_merge([i], %{
+    |> select_merge_as([i], %{
       visit_duration: sum(i.visit_duration),
       __internal_visits: sum(i.visits)
     })
@@ -174,7 +174,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
       ) do
     q
     |> where([i], i.pageviews > 0)
-    |> select_merge([i], %{
+    |> select_merge_as([i], %{
       pageviews: sum(i.pageviews),
       __internal_visits: sum(i.entrances)
     })
@@ -187,7 +187,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
       ) do
     q
     |> where([i], i.pageviews > 0)
-    |> select_merge([i], %{
+    |> select_merge_as([i], %{
       pageviews: sum(i.pageviews),
       __internal_visits: sum(i.exits)
     })
@@ -197,7 +197,7 @@ defmodule Plausible.Stats.Imported.SQL.Expression do
   def select_imported_metrics(q, [:views_per_visit | rest]) do
     q
     |> where([i], i.pageviews > 0)
-    |> select_merge([i], %{
+    |> select_merge_as([i], %{
       pageviews: sum(i.pageviews),
       __internal_visits: sum(i.visits)
     })
