@@ -26,26 +26,23 @@ log_level =
   |> get_var_from_path_or_env("LOG_LEVEL", default_log_level)
   |> String.to_existing_atom()
 
-config :logger,
-  level: log_level,
-  backends: [:console]
+config :logger, level: log_level
 
 config :logger, Sentry.LoggerBackend,
   capture_log_messages: true,
   level: :error
 
+logger_metadata = [:request_id]
+
 case String.downcase(log_format) do
   "standard" ->
-    config :logger, :console,
+    config :logger, :default_formatter,
       format: "$time $metadata[$level] $message\n",
-      metadata: [:request_id]
+      metadata: logger_metadata
 
   "json" ->
-    config :logger, :console,
-      format: {ExJsonLogger, :format},
-      metadata: [
-        :request_id
-      ]
+    json_formatter = Plausible.Logger.JSONFormatter.new(metadata: logger_metadata)
+    config :logger, :default_handler, formatter: json_formatter
 end
 
 # Listen IP supports IPv4 and IPv6 addresses.
