@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-DD84C8DF.js"></script>
+    <script src="dist/sidebar_items-7F40D632.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -150,16 +150,16 @@ Pages
 </span><span class="c1"># - Populate the cache with `Plausible.Cache.Warmer`</span></code></pre><p>Serves as a wrapper around <a href="Plausible.Cache.Adapter.html"><code class="inline">Plausible.Cache.Adapter</code></a>, where the underlying
 implementation can be transparently swapped.</p><p>Even though normally the relevant Adapter processes are started, cache access is disabled
 during tests via the <code class="inline">:plausible, Elixir.Plausible.Cache, enabled: bool()</code> application env key.
-This can be overridden on case by case basis, using the child specs options.</p><p>The <code class="inline">base_db_query/0</code> callback is used to generate the base query that is 
-executed on every cache refresh. </p><p>There are two modes of refresh operation: <code class="inline">:all</code> and <code class="inline">:updated_recently</code>;
+This can be overridden on case by case basis, using the child specs options.</p><p>The <code class="inline">base_db_query/0</code> callback is used to generate the base query that is
+executed on every cache refresh.</p><p>There are two modes of refresh operation: <code class="inline">:all</code> and <code class="inline">:updated_recently</code>;
 the former will invoke the query as is and clear all the existing entries,
-while the latter will attempt to limit the query to only the records that 
+while the latter will attempt to limit the query to only the records that
 have been updated in the last 15 minutes and try to merge the new results with
 existing cache entries.</p><p>Both refresh modes are normally executed periodically from within a warmer process;
-see: <a href="Plausible.Cache.Warmer.html"><code class="inline">Plausible.Cache.Warmer</code></a>. The reason for two modes is that the latter is lighter 
+see: <a href="Plausible.Cache.Warmer.html"><code class="inline">Plausible.Cache.Warmer</code></a>. The reason for two modes is that the latter is lighter
 on the database and can be executed more frequently.</p><p>When Cache is disabled via application env, the <code class="inline">get/1</code> function
-falls back to pure database lookups (implemented via <code class="inline">get_from_source/1</code> callback. 
-This should help with introducing cached lookups in existing code, 
+falls back to pure database lookups (implemented via <code class="inline">get_from_source/1</code> callback.
+This should help with introducing cached lookups in existing code,
 so that no existing tests should break.</p><p>Refreshing the cache emits telemetry event defined as per <code class="inline">telemetry_event_refresh/2</code>.</p>
   </section>
 
@@ -228,6 +228,16 @@ so that no existing tests should break.</p><p>Refreshing the cache emits telemet
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#c:repo/0" translate="no">repo()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Optional repo to use. Defaults to Plausible.Repo</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#c:unwrap_cache_keys/1" translate="no">unwrap_cache_keys(list)</a>
 
       </div>
@@ -274,7 +284,7 @@ so that no existing tests should break.</p><p>Refreshing the cache emits telemet
     </a>
     <h1 class="signature" translate="no">base_db_query()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L47" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L49" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -330,7 +340,7 @@ so that no existing tests should break.</p><p>Refreshing the cache emits telemet
     </a>
     <h1 class="signature" translate="no">count_all()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L43" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L45" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -358,7 +368,7 @@ so that no existing tests should break.</p><p>Refreshing the cache emits telemet
     </a>
     <h1 class="signature" translate="no">get_from_source(any)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L49" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L51" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -405,6 +415,34 @@ so that no existing tests should break.</p><p>Refreshing the cache emits telemet
 <p>Unique cache name, used by underlying implementation</p>
   </section>
 </section>
+<section class="detail" id="c:repo/0">
+
+  <div class="detail-header">
+    <a href="#c:repo/0" class="detail-link" title="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <h1 class="signature" translate="no">repo()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L43" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> repo() :: <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Repo.html#t:t/0">Ecto.Repo.t</a>()</pre>
+
+      </div>
+
+<p>Optional repo to use. Defaults to Plausible.Repo</p>
+  </section>
+</section>
 <section class="detail" id="c:unwrap_cache_keys/1">
 
   <div class="detail-header">
@@ -414,7 +452,7 @@ so that no existing tests should break.</p><p>Refreshing the cache emits telemet
     </a>
     <h1 class="signature" translate="no">unwrap_cache_keys(list)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L45" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L47" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -454,7 +492,7 @@ so that no existing tests should break.</p><p>Refreshing the cache emits telemet
     </a>
     <h1 class="signature" translate="no">enabled?()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L52" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L54" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
