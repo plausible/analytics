@@ -75,26 +75,13 @@ defmodule Plausible.Teams.Invitations do
         :team,
         :owner,
         guest_memberships: [team_membership: :user],
-        guest_invitations: :team_invitation
+        guest_invitations: [team_invitation: :inviter]
       ])
 
     {:ok, _} =
       Repo.transaction(fn ->
         :ok = transfer_site_ownership(site, team, NaiveDateTime.utc_now(:second))
       end)
-  end
-
-  def accept(invitation_id, user, now \\ NaiveDateTime.utc_now(:second)) do
-    case find_for_user(invitation_id, user) do
-      {:ok, %Teams.Invitation{} = team_invitation} ->
-        do_accept(team_invitation, user, now)
-
-      {:ok, %Teams.SiteTransfer{} = site_transfer} ->
-        do_transfer(site_transfer, user, now)
-
-      {:error, _} = error ->
-        error
-    end
   end
 
   def accept_invitation_sync(site_invitation, user) do
@@ -150,7 +137,7 @@ defmodule Plausible.Teams.Invitations do
         :team,
         :owner,
         guest_memberships: [team_membership: :user],
-        guest_invitations: :team_invitation
+        guest_invitations: [team_invitation: :inviter]
       ])
 
     {:ok, site_transfer} =
@@ -209,7 +196,7 @@ defmodule Plausible.Teams.Invitations do
     Plausible.Mailer.send(email)
   end
 
-  defp do_accept(team_invitation, user, now, opts \\ []) do
+  defp do_accept(team_invitation, user, now, opts) do
     send_email? = Keyword.get(opts, :send_email?, true)
     guest_invitations = Keyword.get(opts, :guest_invitations, team_invitation.guest_invitations)
 
@@ -234,34 +221,6 @@ defmodule Plausible.Teams.Invitations do
     end)
   end
 
-  defp do_transfer(site_transfer, new_owner, now) do
-    # That's probably the most involved flow of all so far
-    # - if new owner does not have a team yet, create one
-    # - ensure the new team can take ownership of the site
-    # - move site to and create guest memberships in the new team
-    # - create editor guest membership for the old owner
-    # - remove old guest memberships
-    site_transfer = Repo.preload(site_transfer, [:initiator, site: :team])
-
-    with :ok <- ensure_transfer_valid(site_transfer.site.team, new_owner, :owner),
-         {:ok, team} <- Teams.get_or_create(new_owner),
-         :ok <- ensure_can_take_ownership(site_transfer.site, team) do
-      site = Repo.preload(site_transfer.site, guest_memberships: [team_membership: :user])
-
-      {:ok, _} =
-        Repo.transaction(fn ->
-          :ok = transfer_site_ownership(site, team, now)
-          Repo.delete!(site_transfer)
-        end)
-
-      send_transfer_accepted_email(site_transfer)
-
-      {:ok, team_membership} = Teams.Memberships.get(team, new_owner)
-
-      {:ok, team_membership}
-    end
-  end
-
   defp transfer_site_ownership(site, team, now) do
     prior_team = site.team
 
@@ -275,7 +234,7 @@ defmodule Plausible.Teams.Invitations do
         old_team_invitation = old_guest_invitation.team_invitation
 
         {:ok, new_team_invitation} =
-          create_team_invitation(team, old_team_invitation.email, now)
+          create_team_invitation(team, old_team_invitation.email, old_team_invitation.inviter)
 
         {:ok, _new_guest_invitation} =
           create_guest_invitation(new_team_invitation, site, old_guest_invitation.role)
@@ -330,8 +289,6 @@ defmodule Plausible.Teams.Invitations do
         )
     end
 
-    # TODO: Update site lock status with SiteLocker
-
     :ok
   end
 
@@ -371,45 +328,13 @@ defmodule Plausible.Teams.Invitations do
     end
   end
 
-  defp send_transfer_accepted_email(site_transfer) do
+  def send_transfer_accepted_email(site_transfer) do
     PlausibleWeb.Email.ownership_transfer_accepted(
       site_transfer.email,
       site_transfer.initiator.email,
       site_transfer.site
     )
     |> Plausible.Mailer.send()
-  end
-
-  defp find_for_user(invitation_id, user) do
-    with {:error, :invitation_not_found} <- find_invitation(invitation_id, user) do
-      find_site_transfer(invitation_id, user)
-    end
-  end
-
-  defp find_invitation(invitation_id, user) do
-    invitation =
-      Teams.Invitation
-      |> Repo.get_by(invitation_id: invitation_id, email: user.email)
-      |> Repo.preload([:team, :inviter, guest_invitations: :site])
-
-    if invitation do
-      {:ok, invitation}
-    else
-      {:error, :invitation_not_found}
-    end
-  end
-
-  defp find_site_transfer(transfer_id, user) do
-    site_transfer =
-      Teams.SiteTransfer
-      |> Repo.get_by(transfer_id: transfer_id, email: user.email)
-      |> Repo.preload([:initiator, site: :team])
-
-    if site_transfer do
-      {:ok, site_transfer}
-    else
-      {:error, :invitation_not_found}
-    end
   end
 
   @doc false
