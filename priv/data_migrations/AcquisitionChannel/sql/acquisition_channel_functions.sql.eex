@@ -9,7 +9,8 @@ ENGINE = ReplicatedMergeTree('/clickhouse/{cluster}/tables/{shard}/plausible_pro
 <% else %>
 ENGINE = MergeTree()
 <% end %>
-ORDER BY referrer_source;
+ORDER BY referrer_source
+<%= @table_settings %>;
 
 TRUNCATE TABLE acquisition_channel_source_category SETTINGS alter_sync=2;
 
@@ -41,7 +42,8 @@ ENGINE = ReplicatedMergeTree('/clickhouse/{cluster}/tables/{shard}/plausible_pro
 <% else %>
 ENGINE = MergeTree()
 <% end %>
-ORDER BY referrer_source;
+ORDER BY referrer_source
+<%= @table_settings %>;
 
 TRUNCATE TABLE acquisition_channel_paid_sources SETTINGS alter_sync=2;
 

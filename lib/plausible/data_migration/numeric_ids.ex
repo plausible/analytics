@@ -18,8 +18,6 @@ defmodule Plausible.DataMigration.NumericIDs do
     end
   end
 
-  @table_settings "SETTINGS index_granularity = 8192"
-
   def run(opts \\ []) do
     interactive? = Keyword.get(opts, :interactive?, true)
 
@@ -34,7 +32,7 @@ defmodule Plausible.DataMigration.NumericIDs do
 
     table_settings =
       Keyword.get(opts, :table_settings) || System.get_env("NUMERIC_IDS_TABLE_SETTINGS") ||
-        @table_settings
+        Plausible.MigrationUtils.table_settings_expr()
 
     start_from =
       Keyword.get(opts, :start_from) || System.get_env("NUMERIC_IDS_PARTITION_START_FROM")
