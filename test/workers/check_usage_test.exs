@@ -360,16 +360,17 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        subscribe_to_plan(
-          user,
-          @paddle_id_10k,
+        insert(:subscription,
+          user: user,
+          paddle_plan_id: @paddle_id_10k,
           last_bill_date: Timex.shift(Timex.today(), days: -1),
           status: unquote(status)
         )
 
         CheckUsage.perform(nil, usage_stub)
         assert user |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
-        team = assert_team_exists(user)
+        team = user |> team_of() |> Repo.reload!()
+
         assert Plausible.Auth.GracePeriod.active?(team)
 
         usage_stub =
