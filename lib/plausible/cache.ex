@@ -15,22 +15,22 @@ defmodule Plausible.Cache do
   during tests via the `:plausible, #{__MODULE__}, enabled: bool()` application env key.
   This can be overridden on case by case basis, using the child specs options.
 
-  The `base_db_query/0` callback is used to generate the base query that is 
-  executed on every cache refresh. 
+  The `base_db_query/0` callback is used to generate the base query that is
+  executed on every cache refresh.
 
   There are two modes of refresh operation: `:all` and `:updated_recently`;
   the former will invoke the query as is and clear all the existing entries,
-  while the latter will attempt to limit the query to only the records that 
+  while the latter will attempt to limit the query to only the records that
   have been updated in the last 15 minutes and try to merge the new results with
   existing cache entries.
 
   Both refresh modes are normally executed periodically from within a warmer process;
-  see: `Plausible.Cache.Warmer`. The reason for two modes is that the latter is lighter 
+  see: `Plausible.Cache.Warmer`. The reason for two modes is that the latter is lighter
   on the database and can be executed more frequently.
 
   When Cache is disabled via application env, the `get/1` function
-  falls back to pure database lookups (implemented via `get_from_source/1` callback. 
-  This should help with introducing cached lookups in existing code, 
+  falls back to pure database lookups (implemented via `get_from_source/1` callback.
+  This should help with introducing cached lookups in existing code,
   so that no existing tests should break.
 
   Refreshing the cache emits telemetry event defined as per `telemetry_event_refresh/2`.
@@ -39,6 +39,8 @@ defmodule Plausible.Cache do
   @callback name() :: atom()
   @doc "Supervisor child id, must be unique within the supervision tree"
   @callback child_id() :: atom()
+  @doc "Optional repo to use. Defaults to Plausible.Repo"
+  @callback repo() :: Ecto.Repo.t()
   @doc "Counts all items at the source, an aggregate query most likely"
   @callback count_all() :: integer()
   @doc "Optionally unwraps the keys of the cache items, in case one item is stored under multiple keys"
@@ -88,6 +90,9 @@ defmodule Plausible.Cache do
 
       def unwrap_cache_keys(items), do: items
       defoverridable unwrap_cache_keys: 1
+
+      def repo(), do: Plausible.Repo
+      defoverridable repo: 0
 
       @spec refresh_all(Keyword.t()) :: :ok
       def refresh_all(opts \\ []) do
@@ -177,7 +182,7 @@ defmodule Plausible.Cache do
         Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
           telemetry_event_refresh(cache_name, mode),
           fn ->
-            items = Plausible.Repo.all(query)
+            items = repo().all(query)
             :ok = merge_items(items, opts)
           end
         )
