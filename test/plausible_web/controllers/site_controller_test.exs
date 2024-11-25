@@ -552,6 +552,19 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert text_of_element(resp, "#invitation-#{i2.invitation_id}") ==
                "viewer@example.com Viewer"
     end
+
+    test "lists pending site transfer", %{conn: conn, user: user} do
+      site = new_site(owner: user)
+      new_owner = new_user()
+
+      st = invite_transfer(site, new_owner, inviter: user)
+
+      conn = get(conn, "/#{site.domain}/settings/people")
+      resp = html_response(conn, 200)
+
+      assert text_of_element(resp, "#invitation-#{st.invitation_id}") ==
+               "#{new_owner.email} Owner"
+    end
   end
 
   describe "GET /:domain/settings/goals" do

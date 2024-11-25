@@ -176,7 +176,19 @@ defmodule Plausible.Teams.Adapter.Read.Sites do
         )
         |> Repo.all()
 
-      %{memberships: memberships, invitations: invitations}
+      site_transfers =
+        from(
+          st in Teams.SiteTransfer,
+          where: st.site_id == ^site.id,
+          select: %Plausible.Auth.Invitation{
+            invitation_id: st.transfer_id,
+            email: st.email,
+            role: :owner
+          }
+        )
+        |> Repo.all()
+
+      %{memberships: memberships, invitations: site_transfers ++ invitations}
     else
       site
       |> Repo.preload([:invitations, memberships: :user])
