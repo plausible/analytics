@@ -36,9 +36,9 @@ export const getSegmentNamePlaceholder = (query: DashboardQuery) =>
     (combinedName, filter) =>
       combinedName.length > 100
         ? combinedName
-        : `${combinedName}${combinedName.length ? ' and ' : ''}${plainFilterText(query, filter)}`,
+        : `${combinedName}${combinedName.length ? ' and ' : ''}${plainFilterText(query.labels, filter)}`,
     ''
-  )
+  ).slice(0,255)
 
 export function isSegmentIdLabelKey(labelKey: string): boolean {
   return labelKey.startsWith(SEGMENT_LABEL_KEY_PREFIX)

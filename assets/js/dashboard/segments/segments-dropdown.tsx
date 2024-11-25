@@ -103,10 +103,12 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
         >
           {/* <XMarkIcon className="block h-4 w-4" /> */}
           <ChevronLeftIcon className="block h-4 w-4"></ChevronLeftIcon>
-          <div>Back</div>
+          <div>Back to filters</div>
         </AppNavigationLink>
         <DropdownLinkGroup>
-          <DropdownSubtitle>{expandedSegment.name}</DropdownSubtitle>
+          <DropdownSubtitle className="break-all">
+            {expandedSegment.name}
+          </DropdownSubtitle>
           <DropdownNavigationLink
             className={linkClass}
             search={(s) => s}
@@ -157,97 +159,95 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
 
   return (
     <>
-      <DropdownLinkGroup>
-        <DropdownSubtitle>Segments</DropdownSubtitle>
-        {!!data?.length && (
+      {!!data?.length && (
+        <DropdownLinkGroup>
+          <DropdownSubtitle>Segments</DropdownSubtitle>
+
           <div className="px-4 py-1">
             <SearchInput
               className="w-full text-xs sm:text-xs"
               onSearch={setSearch}
             />
           </div>
-        )}
-        {[
-          { segments: personalSegments, title: 'Personal' },
-          { segments: siteSegments, title: 'Site' }
-        ]
-          .filter((i) => !!i.segments?.length)
-          .map(({ segments, title }) => (
-            <>
-              <DropdownSubtitle className="normal-case">
-                {title}
-              </DropdownSubtitle>
+          {[
+            { segments: personalSegments, title: 'Personal' },
+            { segments: siteSegments, title: 'Site' }
+          ]
+            .filter((i) => !!i.segments?.length)
+            .map(({ segments, title }) => (
+              <>
+                <DropdownSubtitle className="normal-case">
+                  {title}
+                </DropdownSubtitle>
 
-              {segments!.slice(0, 3).map((s) => {
-                const authorLabel = (() => {
-                  if (!site.members) {
-                    return ''
-                  }
-
-                  if (!s.owner_id || !site.members[s.owner_id]) {
-                    return '(Removed User)'
-                  }
-
-                  // if (s.owner_id === user.id) {
-                  //   return 'You'
-                  // }
-
-                  return site.members[s.owner_id]
-                })()
-
-                const showUpdatedAt = s.updated_at !== s.inserted_at
-
-                return (
-                  <Tooltip
-                    key={s.id}
-                    info={
-                      <div>
-                        <div>{s.name}</div>
-                        <div className="font-normal text-xs">
-                          {`Created at ${formatDayShort(parseUTCDate(s.inserted_at))}`}
-                          {!showUpdatedAt &&
-                            !!authorLabel &&
-                            ` by ${authorLabel}`}
-                        </div>
-                        {showUpdatedAt && (
-                          <div className="font-normal text-xs">
-                            {`Last updated at ${formatDayShort(parseUTCDate(s.updated_at))}`}
-                            {!!authorLabel && ` by ${authorLabel}`}
-                          </div>
-                        )}
-                      </div>
+                {segments!.slice(0, 3).map((s) => {
+                  const authorLabel = (() => {
+                    if (!site.members) {
+                      return ''
                     }
-                  >
-                    <SegmentLink
-                      {...s}
-                      appliedSegmentIds={appliedSegmentIds}
-                      closeList={closeList}
-                    />
-                  </Tooltip>
-                )
-              })}
-            </>
-          ))}
-        {!!data?.length && (
-          <DropdownNavigationLink
-            className={classNames(
-              linkClass,
-              'font-bold text-indigo-500 dark:text-indigo-400'
-            )}
-            path={filterRoute.path}
-            params={{ field: 'segment' }}
-            search={(s) => s}
-            onLinkClick={closeList}
-          >
-            View all
-            <ChevronRightIcon className="block w-4 h-4" />
-          </DropdownNavigationLink>
-        )}
-        <DropdownNavigationLink
-          className={classNames(
-            linkClass,
-            'font-bold text-indigo-500 dark:text-indigo-400'
+
+                    if (!s.owner_id || !site.members[s.owner_id]) {
+                      return '(Removed User)'
+                    }
+
+                    // if (s.owner_id === user.id) {
+                    //   return 'You'
+                    // }
+
+                    return site.members[s.owner_id]
+                  })()
+
+                  const showUpdatedAt = s.updated_at !== s.inserted_at
+
+                  return (
+                    <Tooltip
+                      key={s.id}
+                      info={
+                        <div className="max-w-60">
+                          <div className="break-all">{s.name}</div>
+                          <div className="font-normal text-xs">
+                            {`Created at ${formatDayShort(parseUTCDate(s.inserted_at))}`}
+                            {!showUpdatedAt &&
+                              !!authorLabel &&
+                              ` by ${authorLabel}`}
+                          </div>
+                          {showUpdatedAt && (
+                            <div className="font-normal text-xs">
+                              {`Last updated at ${formatDayShort(parseUTCDate(s.updated_at))}`}
+                              {!!authorLabel && ` by ${authorLabel}`}
+                            </div>
+                          )}
+                        </div>
+                      }
+                    >
+                      <SegmentLink
+                        {...s}
+                        appliedSegmentIds={appliedSegmentIds}
+                        closeList={closeList}
+                      />
+                    </Tooltip>
+                  )
+                })}
+              </>
+            ))}
+          {!!data?.length && (
+            <DropdownNavigationLink
+              className={classNames(linkClass, 'font-bold')}
+              path={filterRoute.path}
+              params={{ field: 'segment' }}
+              search={(s) => s}
+              onLinkClick={closeList}
+            >
+              View all
+              <ChevronRightIcon className="block w-4 h-4" />
+            </DropdownNavigationLink>
           )}
+        </DropdownLinkGroup>
+      )}
+      <DropdownLinkGroup>
+        <SaveSelectionAsSegment closeList={closeList} />
+        {/* <DropdownNavigationLink
+          className={classNames(linkClass, 'font-bold')}
           search={(s) => s}
           navigateOptions={{
             state: {
@@ -264,9 +264,47 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
           })}
         >
           Save selection as segment
-        </DropdownNavigationLink>
+        </DropdownNavigationLink> */}
       </DropdownLinkGroup>
     </>
+  )
+}
+
+const SaveSelectionAsSegment = ({ closeList }: { closeList: () => void }) => {
+  const { query } = useQueryContext()
+  const disabledReason = !query.filters.length
+    ? 'Add filters to the dashboard to save a segment.'
+    : query.filters.some(isSegmentFilter)
+      ? 'Remove the segment filter to save a segment. Segments can not contain other segments.'
+      : null
+  if (disabledReason === null) {
+    return (
+      <DropdownNavigationLink
+        className={classNames(linkClass, 'font-bold')}
+        search={(s) => s}
+        navigateOptions={{
+          state: {
+            modal: 'create',
+            expandedSegment: null
+          } as SegmentExpandedLocationState
+        }}
+        onLinkClick={closeList}
+      >
+        Save as segment
+      </DropdownNavigationLink>
+    )
+  }
+
+  return (
+    <Tooltip info={<div className="max-w-60">{disabledReason}</div>}>
+      <DropdownNavigationLink
+        className={classNames(linkClass, 'font-bold')}
+        search={(s) => s}
+        aria-disabled={true}
+      >
+        Save as segment
+      </DropdownNavigationLink>
+    </Tooltip>
   )
 }
 

@@ -174,9 +174,6 @@ const SegmentNameInput = ({
         id="name"
         className="block mt-2 p-2 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500"
       />
-      <div className="mt-1 text-sm">
-        Add a name to your segment to make it easier to find
-      </div>
     </>
   )
 }
@@ -191,37 +188,45 @@ const SegmentTypeInput = ({
   disabled?: boolean
 }) => (
   <>
-    <div className="mt-4 flex items-center">
-      <button
-        className={classNames(
-          'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full transition-colors ease-in-out duration-200 focus:outline-none focus:ring',
-          value === SegmentType.personal
-            ? 'bg-gray-200 dark:bg-gray-700'
-            : 'bg-indigo-600',
-          disabled && 'cursor-not-allowed'
-        )}
-        onClick={
-          disabled
-            ? () => {}
-            : () =>
-                onChange(
-                  value === SegmentType.personal
-                    ? SegmentType.site
-                    : SegmentType.personal
-                )
-        }
-      >
-        <span
-          aria-hidden="true"
-          className={classNames(
-            'inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200',
-            value === SegmentType.personal ? 'translate-x-0' : 'translate-x-5'
-          )}
+    <div className="mt-4">
+      <div className="flex items-center">
+        <input
+          checked={value === SegmentType.personal}
+          id="segment-type-personal"
+          type="radio"
+          value=""
+          // name="default-radio"
+          onClick={() => onChange(SegmentType.personal)}
+          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          disabled={disabled}
         />
-      </button>
-      <span className="ml-2 font-medium leading-5 text-sm text-gray-900 dark:text-gray-100">
-        Show this segment for all site users
-      </span>
+        <label
+          htmlFor="segment-type-personal"
+          className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"
+        >
+          <div className="font-bold">Personal segment</div>
+          <div className='mt-1'>Visible only to you</div>
+        </label>
+      </div>
+      <div className="flex items-center mt-4">
+        <input
+          checked={value === SegmentType.site}
+          id="segment-type-site"
+          type="radio"
+          value=""
+          // name="default-radio"
+          onClick={() => onChange(SegmentType.site)}
+          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          disabled={disabled}
+        />
+        <label
+          htmlFor="segment-type-site"
+          className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"
+        >
+          <div className="font-bold">Site segment</div>
+          <div className='mt-1'>Visible to others on the site</div>
+        </label>
+      </div>
     </div>
   </>
 )

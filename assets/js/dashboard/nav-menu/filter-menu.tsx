@@ -326,7 +326,7 @@ export const FilterMenu = () => {
             {!!expandedSegment && (
               <>
                 <AdjustmentsHorizontalIcon className="block h-4 w-4" />
-                Segment
+                Edit segment
               </>
             )}
             {/* <span className="block ml-1">{expandedSegment ? 'Segment' : 'Filter'}</span> */}

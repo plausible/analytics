@@ -148,11 +148,11 @@ export function useIsRealtimeDashboard() {
   return useMemo(() => isRealTimeDashboard({ period }), [period])
 }
 
-export function plainFilterText(query, [operation, filterKey, clauses]) {
+export function plainFilterText(labels, [operation, filterKey, clauses]) {
   const formattedFilter = formattedFilters[filterKey]
 
   if (formattedFilter) {
-    return `${formattedFilter} ${FILTER_OPERATIONS_DISPLAY_NAMES[operation]} ${clauses.map((value) => getLabel(query.labels, filterKey, value)).reduce((prev, curr) => `${prev} or ${curr}`)}`
+    return `${formattedFilter} ${FILTER_OPERATIONS_DISPLAY_NAMES[operation]} ${clauses.map((value) => getLabel(labels, filterKey, value)).reduce((prev, curr) => `${prev} or ${curr}`)}`
   } else if (filterKey.startsWith(EVENT_PROPS_PREFIX)) {
     const propKey = getPropertyKeyFromFilterKey(filterKey)
     return `Property ${propKey} ${FILTER_OPERATIONS_DISPLAY_NAMES[operation]} ${clauses.reduce((prev, curr) => `${prev} or ${curr}`)}`
@@ -161,7 +161,7 @@ export function plainFilterText(query, [operation, filterKey, clauses]) {
   throw new Error(`Unknown filter: ${filterKey}`)
 }
 
-export function styledFilterText(query, [operation, filterKey, clauses]) {
+export function styledFilterText(labels, [operation, filterKey, clauses]) {
   const formattedFilter = formattedFilters[filterKey]
 
   if (formattedFilter) {
@@ -170,7 +170,7 @@ export function styledFilterText(query, [operation, filterKey, clauses]) {
         {formattedFilter} {FILTER_OPERATIONS_DISPLAY_NAMES[operation]}{' '}
         {clauses
           .map((value) => (
-            <b key={value}>{getLabel(query.labels, filterKey, value)}</b>
+            <b key={value}>{getLabel(labels, filterKey, value)}</b>
           ))
           .reduce((prev, curr) => [prev, ' or ', curr])}{' '}
       </>

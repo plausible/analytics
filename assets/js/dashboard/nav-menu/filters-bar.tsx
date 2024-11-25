@@ -8,7 +8,7 @@ import {
   DropdownMenuWrapper,
   ToggleDropdownButton
 } from '../components/dropdown'
-import { FilterPillsList, PILL_X_GAP } from './filter-pills-list'
+import { AppliedFilterPillsList, PILL_X_GAP } from './filter-pills-list'
 import { useQueryContext } from '../query-context'
 import { AppNavigationLink } from '../navigation/use-app-navigate'
 
@@ -169,11 +169,11 @@ export const FiltersBar = () => {
       )}
       ref={containerRef}
     >
-      <FilterPillsList
+      <AppliedFilterPillsList
         ref={pillsRef}
         direction="horizontal"
         slice={{
-          type: 'hide-outside',
+          type: 'invisible-outside',
           start: 0,
           end: visibility?.visibleCount
         }}
@@ -204,7 +204,7 @@ export const FiltersBar = () => {
                   className="md:left-auto md:w-auto"
                   innerContainerClassName="p-4"
                 >
-                  <FilterPillsList
+                  <AppliedFilterPillsList
                     direction="vertical"
                     slice={{
                       type: 'no-render-outside',

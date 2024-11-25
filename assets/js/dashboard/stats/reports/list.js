@@ -46,7 +46,7 @@ export function FilterLink({
 
     return (
       <AppNavigationLink
-        title={`Add filter: ${plainFilterText({ ...query, labels: newLabels }, filter)}`}
+        title={`Add filter: ${plainFilterText(newLabels, filter)}`}
         className={className}
         path={path}
         onClick={onClick}

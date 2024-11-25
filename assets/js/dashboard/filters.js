@@ -53,18 +53,18 @@ function AppliedFilterPillVertical({filterIndex, filter}) {
     <Menu.Item key={filterIndex}>
       <div className="px-3 md:px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={filterIndex}>
         <AppNavigationLink
-          title={`Edit filter: ${plainFilterText(query, filter)}`}
+          title={`Edit filter: ${plainFilterText(query.labels, filter)}`}
           path={filterRoute.path}
           params={{field: FILTER_GROUP_TO_MODAL_TYPE[type]}}
           search={(search) => search}
           className="group flex w-full justify-between items-center"
           style={{ width: 'calc(100% - 1.5rem)' }}
         >
-          <span className="inline-block w-full truncate">{styledFilterText(query, filter)}</span>
+          <span className="inline-block w-full truncate">{styledFilterText(query.labels, filter)}</span>
           <PencilSquareIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
         </AppNavigationLink>
         <b
-          title={`Remove filter: ${plainFilterText(query, filter)}`}
+          title={`Remove filter: ${plainFilterText(query.labels, filter)}`}
           className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"
           onClick={() => removeFilter(filterIndex, navigate, query)}
         >
@@ -184,16 +184,16 @@ function Filters() {
     return (
       <span className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
         <AppNavigationLink
-          title={`Edit filter: ${plainFilterText(query, filter)}`}
+          title={`Edit filter: ${plainFilterText(query.labels, filter)}`}
           className="flex w-full h-full items-center py-2 pl-3"
           path={filterRoute.path}
           params={{field: FILTER_GROUP_TO_MODAL_TYPE[type]}}
           search={(search)=> search}
         >
-          <span className="inline-block max-w-2xs md:max-w-xs truncate">{styledFilterText(query, filter)}</span>
+          <span className="inline-block max-w-2xs md:max-w-xs truncate">{styledFilterText(query.labels, filter)}</span>
         </AppNavigationLink>
         <span
-          title={`Remove filter: ${plainFilterText(query, filter)}`}
+          title={`Remove filter: ${plainFilterText(query.labels, filter)}`}
           className="flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center"
           onClick={() => removeFilter(filterIndex, navigate, query)}
         >
