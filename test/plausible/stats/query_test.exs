@@ -183,9 +183,9 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   @tag :ee_only
-  test "adds sample_threshold :infinite to query struct", %{site: site} do
+  test "adds sample_threshold :no_sampling to query struct", %{site: site} do
     q = Query.from(site, %{"period" => "30d", "sample_threshold" => "infinite"})
-    assert q.sample_threshold == :infinite
+    assert q.sample_threshold == :no_sampling
   end
 
   @tag :ee_only
