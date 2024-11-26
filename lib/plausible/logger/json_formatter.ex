@@ -78,16 +78,16 @@ defmodule Plausible.Logger.JSONFormatter do
     Logger.Formatter.truncate(msg, truncate)
   end
 
-  # TODO ensure it works!
-  defp process_message({:report, report}, _truncate) when is_list(report) do
-    %Log{fields: report}
+  defp process_message({:report, report}, _truncate) do
+    report =
+      case report do
+        _ when is_list(report) -> report
+        _ when is_map(report) -> Map.to_list(report)
+      end
+
+    %Log{fields: process_meta_all(report)}
     |> Jason.encode_to_iodata!()
     |> Jason.Fragment.new()
-  end
-
-  # TODO ensure it works!
-  defp process_message({:report, report}, _truncate) when is_map(report) do
-    report
   end
 
   defp process_message({format, args}, truncate) do
@@ -136,6 +136,7 @@ defmodule Plausible.Logger.JSONFormatter do
     unsafe_fragment([Logger.Formatter.format_date(date), ?\s, Logger.Formatter.format_time(time)])
   end
 
+  # TODO nested maps?
   defp metadata(:time, _), do: nil
   defp metadata(:gl, _), do: nil
   defp metadata(:report_cb, _), do: nil
