@@ -21,4 +21,23 @@ defmodule Plausible.MigrationUtils do
     |> Enum.reject(&is_nil/1)
     |> Enum.join(" ")
   end
+
+  def table_settings() do
+    IngestRepo.config()
+    |> Keyword.get(:table_settings)
+    |> Enum.reject(fn {_, v} -> is_nil(v) end)
+  end
+
+  def table_settings_expr(type \\ :prefix) do
+    expr = Enum.map_join(table_settings(), ", ", fn {k, v} -> "#{k} = #{encode(v)}" end)
+
+    case {table_settings(), type} do
+      {[], _} -> ""
+      {_, :prefix} -> "SETTINGS #{expr}"
+      {_, :suffix} -> ", #{expr}"
+    end
+  end
+
+  defp encode(value) when is_number(value), do: value
+  defp encode(value) when is_binary(value), do: "'#{value}'"
 end

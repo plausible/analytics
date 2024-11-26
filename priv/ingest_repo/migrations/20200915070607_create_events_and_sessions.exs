@@ -10,8 +10,11 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateEventsAndSessions do
     create_if_not_exists table(:events,
                            primary_key: false,
                            engine: "MergeTree",
-                           options:
-                             "PARTITION BY toYYYYMM(timestamp) ORDER BY (domain, toDate(timestamp), user_id) SETTINGS index_granularity = 8192"
+                           options: """
+                           PARTITION BY toYYYYMM(timestamp)
+                           ORDER BY (domain, toDate(timestamp), user_id)
+                           #{Plausible.MigrationUtils.table_settings_expr()}
+                           """
                          ) do
       add(:name, :string)
       add(:domain, :string)
@@ -34,8 +37,11 @@ defmodule Plausible.ClickhouseRepo.Migrations.CreateEventsAndSessions do
     create_if_not_exists table(:sessions,
                            primary_key: false,
                            engine: "CollapsingMergeTree(sign)",
-                           options:
-                             "PARTITION BY toYYYYMM(start) ORDER BY (domain, toDate(start), user_id, session_id) SETTINGS index_granularity = 8192"
+                           options: """
+                           PARTITION BY toYYYYMM(start)
+                           ORDER BY (domain, toDate(start), user_id, session_id)
+                           #{Plausible.MigrationUtils.table_settings_expr()}
+                           """
                          ) do
       add(:session_id, :UInt64)
       add(:sign, :Int8)

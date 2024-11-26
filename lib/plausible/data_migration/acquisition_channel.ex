@@ -25,6 +25,7 @@ defmodule Plausible.DataMigration.AcquisitionChannel do
         "acquisition_channel_functions",
         [
           on_cluster_statement: on_cluster_statement,
+          table_settings: Plausible.MigrationUtils.table_settings_expr(),
           dictionary_connection_params: Plausible.MigrationUtils.dictionary_connection_params(),
           insert_quorum: insert_quorum
         ],

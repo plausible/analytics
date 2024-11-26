@@ -560,6 +560,9 @@ config :plausible, Plausible.IngestRepo,
   pool_size: ingest_pool_size,
   settings: [
     materialized_views_ignore_errors: 1
+  ],
+  table_settings: [
+    storage_policy: get_var_from_path_or_env(config_dir, "CLICKHOUSE_DEFAULT_STORAGE_POLICY")
   ]
 
 config :plausible, Plausible.AsyncInsertRepo,
