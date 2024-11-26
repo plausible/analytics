@@ -136,7 +136,6 @@ defmodule Plausible.Logger.JSONFormatter do
     unsafe_fragment([Logger.Formatter.format_date(date), ?\s, Logger.Formatter.format_time(time)])
   end
 
-  # TODO nested maps?
   defp metadata(:time, _), do: nil
   defp metadata(:gl, _), do: nil
   defp metadata(:report_cb, _), do: nil
@@ -186,7 +185,29 @@ defmodule Plausible.Logger.JSONFormatter do
     {k, List.to_string(v)}
   end
 
-  defp metadata(_, list) when is_list(list), do: nil
+  defp metadata(k, [{_k, _v} | _rest] = kv) do
+    fields = process_meta_all(kv)
+
+    nested =
+      %Log{fields: fields}
+      |> Jason.encode_to_iodata!()
+      |> Jason.Fragment.new()
+
+    {k, nested}
+  end
+
+  defp metadata(_, list) when is_list(list), do: _ignore = nil
+
+  defp metadata(k, map) when is_map(map) do
+    fields = process_meta_all(Map.to_list(map))
+
+    nested =
+      %Log{fields: fields}
+      |> Jason.encode_to_iodata!()
+      |> Jason.Fragment.new()
+
+    {k, nested}
+  end
 
   defp metadata(k, v) do
     cond do
