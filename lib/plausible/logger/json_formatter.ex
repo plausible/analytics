@@ -211,7 +211,7 @@ defmodule Plausible.Logger.JSONFormatter do
 
   defp metadata(k, v) do
     cond do
-      Jason.Encoder.impl_for(v) -> {k, v}
+      Jason.Encoder.impl_for(v) != Jason.Encoder.Any -> {k, v}
       impl = String.Chars.impl_for(v) -> {k, impl.to_string(v)}
       true -> _ignore = nil
     end
