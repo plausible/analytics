@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.AdminControllerTest do
   use PlausibleWeb.ConnCase, async: false
+  use Plausible.Teams.Test
 
   alias Plausible.Repo
 
@@ -37,12 +38,12 @@ defmodule PlausibleWeb.AdminControllerTest do
     } do
       patch_env(:super_admin_user_ids, [user.id])
 
-      s1 = insert(:site, inserted_at: ~N[2024-01-01 00:00:00])
-      insert_list(3, :site_membership, site: s1)
-      s2 = insert(:site, inserted_at: ~N[2024-01-02 00:00:00])
-      insert_list(3, :site_membership, site: s2)
-      s3 = insert(:site, inserted_at: ~N[2024-01-03 00:00:00])
-      insert_list(3, :site_membership, site: s3)
+      s1 = new_site(inserted_at: ~N[2024-01-01 00:00:00])
+      for _ <- 1..3, do: add_guest(s1, role: :viewer)
+      s2 = new_site(inserted_at: ~N[2024-01-02 00:00:00])
+      for _ <- 1..3, do: add_guest(s2, role: :viewer)
+      s3 = new_site(inserted_at: ~N[2024-01-03 00:00:00])
+      for _ <- 1..3, do: add_guest(s3, role: :viewer)
 
       conn1 = get(conn, "/crm/sites/site", %{"limit" => "2"})
       page1_html = html_response(conn1, 200)
@@ -128,7 +129,7 @@ defmodule PlausibleWeb.AdminControllerTest do
     } do
       patch_env(:super_admin_user_ids, [user.id])
 
-      insert(:subscription, user: user)
+      subscribe_to_growth_plan(user)
 
       conn = get(conn, "/crm/billing/user/#{user.id}/current_plan")
       assert json_response(conn, 200) == %{"features" => []}

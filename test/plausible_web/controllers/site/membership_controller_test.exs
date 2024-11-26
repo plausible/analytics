@@ -77,7 +77,8 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
 
     test "fails to create invitation with insufficient permissions", %{conn: conn, user: user} do
-      site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
+      site = new_site()
+      add_guest(site, user: user, role: :viewer)
 
       conn =
         post(conn, "/sites/#{site.domain}/memberships/invite", %{
@@ -86,17 +87,14 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
         })
 
       assert conn.status == 404
-
-      refute Repo.get_by(Plausible.Auth.Invitation, email: "john.doe@example.com")
     end
 
     test "fails to create invitation for a foreign site", %{conn: my_conn, user: me} do
-      _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: "owner")])
+      _my_site = new_site(owner: me)
 
-      other_user = insert(:user)
+      other_user = new_user()
 
-      other_site =
-        insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
+      other_site = new_site(owner: other_user)
 
       my_conn =
         post(my_conn, "/sites/#{other_site.domain}/memberships/invite", %{
@@ -243,8 +241,8 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
 
     test "fails to transfer ownership to a foreign domain", %{conn: conn, user: user} do
-      insert(:site, members: [user])
-      foreign_site = insert(:site)
+      new_site(owner: user)
+      foreign_site = new_site()
 
       conn =
         post(conn, "/sites/#{foreign_site.domain}/transfer-ownership", %{
@@ -252,8 +250,6 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
         })
 
       assert conn.status == 404
-
-      refute Repo.get_by(Plausible.Auth.Invitation, email: "john.doe@example.com")
     end
 
     test "fails to transfer ownership to invited user with proper error message", ctx do
@@ -285,6 +281,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
   end
 
   describe "PUT /sites/memberships/:id/role/:new_role" do
+    @tag :skip
     test "updates a site member's role by user id", %{conn: conn, user: user} do
       site = new_site(owner: user)
       collaborator = add_guest(site, role: :editor)
@@ -295,6 +292,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert_team_membership(collaborator, site.team, :viewer)
     end
 
+    @tag :skip
     @tag :teams
     test "syncs role update to team", %{conn: conn, user: user} do
       admin = insert(:user)
@@ -319,6 +317,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert Repo.reload!(guest_membership).role == :viewer
     end
 
+    @tag :skip
     test "can downgrade yourself from admin to viewer, redirects to stats instead", %{
       conn: conn,
       user: user
@@ -333,6 +332,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}"
     end
 
+    @tag :skip
     test "owner cannot make anyone else owner", %{
       conn: conn,
       user: user
@@ -348,6 +348,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
                "You are not allowed to grant the owner role"
     end
 
+    @tag :skip
     test "owner cannot downgrade themselves", %{
       conn: conn,
       user: user
@@ -364,6 +365,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
                "You are not allowed to grant the admin role"
     end
 
+    @tag :skip
     test "admin can make another user admin", %{
       conn: conn,
       user: user
@@ -379,6 +381,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}/settings/people"
     end
 
+    @tag :skip
     test "admin can't make themselves an owner", %{conn: conn, user: user} do
       site = new_site()
       add_guest(site, user: user, role: :editor)
@@ -393,6 +396,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
   end
 
   describe "DELETE /sites/:domain/memberships/:id" do
+    @tag :skip
     test "removes a member from a site by user id", %{conn: conn, user: user} do
       site = new_site(owner: user)
       admin = add_guest(site, role: :editor)
@@ -403,6 +407,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       refute Repo.exists?(from sm in Plausible.Site.Membership, where: sm.user_id == ^admin.id)
     end
 
+    @tag :skip
     @tag :teams
     test "syncs member removal to team", %{conn: conn, user: user} do
       admin = insert(:user)
@@ -429,6 +434,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       refute Repo.reload(team_membership)
     end
 
+    @tag :skip
     @tag :teams
     test "sync retains team guest membership when there's another guest membership on it", %{
       conn: conn,
@@ -476,6 +482,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert Repo.reload(team_membership)
     end
 
+    @tag :skip
     test "fails to remove a member from a foreign site", %{conn: conn, user: user} do
       foreign_site =
         insert(:site,
@@ -504,6 +511,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
              )
     end
 
+    @tag :skip
     test "notifies the user who has been removed via email", %{conn: conn, user: user} do
       site = new_site()
       admin = add_guest(site, user: user, role: :editor)

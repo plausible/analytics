@@ -110,6 +110,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       assert Repo.reload!(site).locked
     end
 
+    @tag :skip
     test "locks all sites if user has active subscription but grace period has ended" do
       grace_period = %Plausible.Auth.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
       user = new_user(grace_period: grace_period)

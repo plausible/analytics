@@ -63,6 +63,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
 
   attr(:billable_user, User, required: true)
   attr(:current_user, User, required: true)
+  attr(:current_team, Plausible.Teams.Team, required: true)
   attr(:feature_mod, :atom, required: true, values: Feature.list())
   attr(:grandfathered?, :boolean, default: false)
   attr(:rest, :global)
@@ -76,13 +77,18 @@ defmodule PlausibleWeb.Components.Billing.Notice do
       {@rest}
     >
       <%= account_label(@current_user, @billable_user) %> does not have access to <%= @feature_mod.display_name() %>. To get access to this feature,
-      <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
+      <.upgrade_call_to_action
+        current_team={@current_team}
+        current_user={@current_user}
+        billable_user={@billable_user}
+      />.
     </.notice>
     """
   end
 
   attr(:billable_user, User, required: true)
   attr(:current_user, User, required: true)
+  attr(:current_team, Plausible.Teams.Team, required: true)
   attr(:limit, :integer, required: true)
   attr(:resource, :string, required: true)
   attr(:rest, :global)
@@ -91,7 +97,11 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     ~H"""
     <.notice {@rest} title="Notice">
       <%= account_label(@current_user, @billable_user) %> is limited to <%= @limit %> <%= @resource %>. To increase this limit,
-      <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
+      <.upgrade_call_to_action
+        current_team={@current_team}
+        current_user={@current_user}
+        billable_user={@billable_user}
+      />.
     </.notice>
     """
   end
@@ -297,13 +307,14 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   end
 
   attr(:current_user, :map)
+  attr(:current_team, :map)
   attr(:billable_user, :map)
 
   defp upgrade_call_to_action(assigns) do
-    billable_user = Plausible.Users.with_subscription(assigns.billable_user)
+    team = Plausible.Teams.with_subscription(assigns.current_team)
 
     upgrade_assistance_required? =
-      case Plans.get_subscription_plan(billable_user.subscription) do
+      case Plans.get_subscription_plan(team.subscription) do
         %Plausible.Billing.Plan{kind: :business} -> true
         %Plausible.Billing.EnterprisePlan{} -> true
         _ -> false

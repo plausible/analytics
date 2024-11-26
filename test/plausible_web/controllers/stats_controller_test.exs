@@ -39,7 +39,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "plausible.io live demo - shows site stats", %{conn: conn} do
-      site = insert(:site, domain: "plausible.io", public: true)
+      site = new_site(domain: "plausible.io", public: true)
       populate_stats(site, [build(:pageview)])
 
       conn = get(conn, "/#{site.domain}")
@@ -66,7 +66,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "public site - no stats with skip_to_dashboard", %{
       conn: conn
     } do
-      insert(:site, domain: "some-other-public-site.io", public: true)
+      new_site(domain: "some-other-public-site.io", public: true)
 
       conn = get(conn, "/some-other-public-site.io?skip_to_dashboard=true")
       resp = html_response(conn, 200)
@@ -103,13 +103,13 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "shows locked page if page is locked", %{conn: conn, user: user} do
-      locked_site = insert(:site, locked: true, members: [user])
+      locked_site = new_site(locked: true, owner: user)
       conn = get(conn, "/" <> locked_site.domain)
       assert html_response(conn, 200) =~ "Dashboard locked"
     end
 
     test "can not view stats of someone else's website", %{conn: conn} do
-      site = insert(:site)
+      site = new_site()
       conn = get(conn, "/" <> site.domain)
       assert html_response(conn, 404) =~ "There's nothing here"
     end
@@ -125,7 +125,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     setup [:create_user, :make_user_super_admin, :log_in]
 
     test "can view a private dashboard with stats", %{conn: conn} do
-      site = insert(:site)
+      site = new_site()
       populate_stats(site, [build(:pageview)])
 
       conn = get(conn, "/" <> site.domain)
@@ -133,15 +133,15 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "can enter verification when site is without stats", %{conn: conn} do
-      site = insert(:site)
+      site = new_site()
 
       conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
       assert html_response(conn, 200) =~ "Verifying your installation"
     end
 
     test "can view a private locked dashboard with stats", %{conn: conn} do
-      user = insert(:user)
-      site = insert(:site, locked: true, members: [user])
+      user = new_user()
+      site = new_site(locked: true, owner: user)
       populate_stats(site, [build(:pageview)])
 
       conn = get(conn, "/" <> site.domain)
@@ -153,15 +153,15 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "can view private locked verification without stats", %{conn: conn} do
-      user = insert(:user)
-      site = insert(:site, locked: true, members: [user])
+      user = new_user()
+      site = new_site(locked: true, owner: user)
 
       conn = get(conn, conn |> get("/#{site.domain}") |> redirected_to())
       assert html_response(conn, 200) =~ "Verifying your installation"
     end
 
     test "can view a locked public dashboard", %{conn: conn} do
-      site = insert(:site, locked: true, public: true)
+      site = new_site(locked: true, public: true)
       populate_stats(site, [build(:pageview)])
 
       conn = get(conn, "/" <> site.domain)
@@ -172,7 +172,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "shows CRM link to the site", %{conn: conn} do
-      site = insert(:site)
+      site = new_site()
       conn = get(conn, conn |> get("/" <> site.domain) |> redirected_to())
       assert html_response(conn, 200) =~ "/crm/sites/site/#{site.id}"
     end
@@ -603,7 +603,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
   describe "GET /:domain/export - via shared link" do
     test "exports data in zipped csvs", %{conn: conn} do
-      site = insert(:site, domain: "new-site.com")
+      site = new_site(domain: "new-site.com")
       link = insert(:shared_link, site: site)
 
       populate_exported_stats(site)
@@ -875,7 +875,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "logs anonymous user in straight away if the link is not password-protected", %{
       conn: conn
     } do
-      site = insert(:site, domain: "test-site.com")
+      site = new_site(domain: "test-site.com")
       link = insert(:shared_link, site: site)
 
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
@@ -885,7 +885,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "returns page with X-Frame-Options disabled so it can be embedded in an iframe", %{
       conn: conn
     } do
-      site = insert(:site, domain: "test-site.com")
+      site = new_site(domain: "test-site.com")
       link = insert(:shared_link, site: site)
 
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
@@ -897,7 +897,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "returns page embedded page", %{
       conn: conn
     } do
-      site = insert(:site, domain: "test-site.com")
+      site = new_site(domain: "test-site.com")
       link = insert(:shared_link, site: site)
 
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}&embed=true")
@@ -959,7 +959,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
   describe "POST /share/:slug/authenticate" do
     test "logs anonymous user in with correct password", %{conn: conn} do
-      site = insert(:site, domain: "test-site.com")
+      site = new_site(domain: "test-site.com")
 
       link =
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
