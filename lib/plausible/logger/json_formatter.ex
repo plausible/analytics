@@ -35,22 +35,32 @@ defmodule Plausible.Logger.JSONFormatter do
     {__MODULE__, %{truncate: truncate, metadata: metadata, utc_log?: utc_log?}}
   end
 
-  # TODO rescue and log an error if crashes?
-  # TODO replace invalid UTF8 chars with � in msg and meta?
+  # TODO replace invalid UTF8 with � in msg and meta?
   @doc false
   @spec format(:logger.log_event(), map) :: iodata
   def format(%{meta: meta, level: level, msg: msg}, config) do
     %{metadata: metadata_keys, truncate: truncate, utc_log?: utc_log?} = config
 
     time = process_time(meta, utc_log?)
-    msg = process_message(msg, truncate)
-    meta = process_meta(meta, metadata_keys)
 
-    # TODO skip meta if empty?
-    # instead of {"level":"debug","time":"2024-11-26 12:46:36.600","msg":"hello","meta":{}}
-    # do         {"level":"debug","time":"2024-11-26 12:46:36.600","msg":"hello"}
-    log = %Log{fields: [{"level", level}, {"time", time}, {"msg", msg}, {"meta", meta}]}
-    [Jason.encode_to_iodata!(log), ?\n]
+    json =
+      try do
+        msg = process_message(msg, truncate)
+        meta = process_meta(meta, metadata_keys)
+
+        # TODO skip meta if empty?
+        # instead of {"level":"debug","time":"2024-11-26 12:46:36.600","msg":"hello","meta":{}}
+        # do         {"level":"debug","time":"2024-11-26 12:46:36.600","msg":"hello"}
+        log = %Log{fields: [{"level", level}, {"time", time}, {"msg", msg}, {"meta", meta}]}
+        Jason.encode_to_iodata!(log)
+      catch
+        kind, reason ->
+          msg = Exception.format(kind, reason, __STACKTRACE__)
+          log = %Log{fields: [{"level", "error"}, {"time", time}, {"msg", msg}]}
+          Jason.encode_to_iodata!(log)
+      end
+
+    [json, ?\n]
   end
 
   defp process_time(meta, utc_log?) do
