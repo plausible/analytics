@@ -11,29 +11,29 @@ import classNames from 'classnames'
 export type FilterPillProps = {
   className?: string
   plainText: string
-  interactive: {
-    onRemoveClick?: () => void
-    navigationTarget: AppNavigationTarget
-  }
+  interactive:
+    | {
+        onRemoveClick?: () => void
+        navigationTarget: AppNavigationTarget
+      }
+    | false
   children: ReactNode
+  actions?: ReactNode
 }
 
 export function FilterPill({
   className,
   plainText,
   children,
-  interactive
+  interactive,
+  actions
 }: FilterPillProps) {
-  const c = 'flex w-full h-full items-center py-2 pl-3 last-child:pr-3'
+  const c = 'flex w-full h-full items-center py-2 pl-3 last:pr-3'
   const inner = (
     <span className="inline-block max-w-2xs md:max-w-xs truncate">
       {children}
     </span>
   )
-
-  if (!interactive) {
-    return
-  }
 
   return (
     <div
@@ -60,11 +60,15 @@ export function FilterPill({
               <XMarkIcon className="w-4 h-4" />
             </button>
           )}
+          {actions}
         </>
       ) : (
-        <div className="c" title={plainText}>
-          {inner}
-        </div>
+        <>
+          <div className={c} title={plainText}>
+            {inner}
+          </div>
+          {actions}
+        </>
       )}
     </div>
   )

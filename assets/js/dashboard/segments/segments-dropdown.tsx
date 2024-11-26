@@ -25,7 +25,6 @@ import {
 } from '../navigation/use-app-navigate'
 import classNames from 'classnames'
 import { Tooltip } from '../util/tooltip'
-import { formatDayShort, parseUTCDate } from '../util/date'
 import { useUserContext } from '../user-context'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid'
 import {
@@ -34,6 +33,7 @@ import {
 } from './segment-expanded-context'
 import { filterRoute, rootRoute } from '../router'
 import { SearchInput } from '../components/search-input'
+import { SegmentAuthorship } from './segment-authorship'
 
 export const useSegmentsListQuery = () => {
   const site = useSiteContext()
@@ -71,7 +71,6 @@ const linkClass = 'text-xs'
 export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
   const { expandedSegment } = useSegmentExpandedContext()
   const { query } = useQueryContext()
-  const site = useSiteContext()
 
   const { data } = useSegmentsListQuery()
 
@@ -181,42 +180,16 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
                 </DropdownSubtitle>
 
                 {segments!.slice(0, 3).map((s) => {
-                  const authorLabel = (() => {
-                    if (!site.members) {
-                      return ''
-                    }
-
-                    if (!s.owner_id || !site.members[s.owner_id]) {
-                      return '(Removed User)'
-                    }
-
-                    // if (s.owner_id === user.id) {
-                    //   return 'You'
-                    // }
-
-                    return site.members[s.owner_id]
-                  })()
-
-                  const showUpdatedAt = s.updated_at !== s.inserted_at
-
                   return (
                     <Tooltip
                       key={s.id}
                       info={
                         <div className="max-w-60">
                           <div className="break-all">{s.name}</div>
-                          <div className="font-normal text-xs">
-                            {`Created at ${formatDayShort(parseUTCDate(s.inserted_at))}`}
-                            {!showUpdatedAt &&
-                              !!authorLabel &&
-                              ` by ${authorLabel}`}
-                          </div>
-                          {showUpdatedAt && (
-                            <div className="font-normal text-xs">
-                              {`Last updated at ${formatDayShort(parseUTCDate(s.updated_at))}`}
-                              {!!authorLabel && ` by ${authorLabel}`}
-                            </div>
-                          )}
+                          <SegmentAuthorship
+                            {...s}
+                            className="font-normal text-xs"
+                          />
                         </div>
                       }
                     >
@@ -232,7 +205,10 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
             ))}
           {!!data?.length && (
             <DropdownNavigationLink
-              className={classNames(linkClass, 'font-bold')}
+              className={classNames(
+                linkClass,
+                'font-bold hover:text-indigo-700 dark:hover:text-indigo-500'
+              )}
               path={filterRoute.path}
               params={{ field: 'segment' }}
               search={(s) => s}
@@ -280,7 +256,10 @@ const SaveSelectionAsSegment = ({ closeList }: { closeList: () => void }) => {
   if (disabledReason === null) {
     return (
       <DropdownNavigationLink
-        className={classNames(linkClass, 'font-bold')}
+        className={classNames(
+          linkClass,
+          'font-bold hover:text-indigo-700 dark:hover:text-indigo-500'
+        )}
         search={(s) => s}
         navigateOptions={{
           state: {
@@ -363,31 +342,33 @@ export const useSegmentPrefetch = ({ id }: Pick<SavedSegment, 'id'>) => {
     [queryClient, getSegmentFn, queryKey]
   )
 
-  const expandSegment = useCallback(async () => {
-    try {
-      const data = getSegment.data ?? (await fetchSegment())
-      navigate({
-        path: rootRoute.path,
-        search: (search) => ({
-          ...search,
-          filters: data.segment_data.filters,
-          labels: data.segment_data.labels
-        }),
-        state: {
-          expandedSegment: {
-            id: data.id,
-            name: data.name,
-            type: data.type,
-            owner_id: data.owner_id
-          }
-        } as SegmentExpandedLocationState
-      })
-    } catch (_error) {
-      return
-    }
-  }, [fetchSegment, getSegment.data, navigate])
+  const expandSegment = useCallback(
+    (segment: SavedSegment & { segment_data: SegmentData }) => {
+      try {
+        navigate({
+          path: rootRoute.path,
+          search: (search) => ({
+            ...search,
+            filters: segment.segment_data.filters,
+            labels: segment.segment_data.labels
+          }),
+          state: {
+            expandedSegment: {
+              id: segment.id,
+              name: segment.name,
+              type: segment.type,
+              owner_id: segment.owner_id
+            }
+          } as SegmentExpandedLocationState
+        })
+      } catch (_error) {
+        return
+      }
+    },
+    [navigate]
+  )
 
-  return { prefetchSegment, expandSegment }
+  return { prefetchSegment, data: getSegment.data, fetchSegment, expandSegment }
 }
 
 const SegmentLink = ({
@@ -406,7 +387,8 @@ const SegmentLink = ({
   //     (type === SegmentType.site &&
   //       ['admin', 'owner', 'super_admin'].includes(user.role)))
   const { query } = useQueryContext()
-  const { prefetchSegment, expandSegment } = useSegmentPrefetch({ id })
+  const { prefetchSegment, expandSegment, data, fetchSegment } =
+    useSegmentPrefetch({ id })
 
   return (
     <DropdownNavigationLink
@@ -447,7 +429,12 @@ const SegmentLink = ({
       actions={
         !canSeeActions ? null : (
           <>
-            <ExpandSegment className="ml-2 shrink-0" onClick={expandSegment} />
+            <EditSegment
+              className="ml-2 shrink-0"
+              onClick={async () =>
+                expandSegment(data ?? (await fetchSegment()))
+              }
+            />
           </>
         )
       }
@@ -457,7 +444,7 @@ const SegmentLink = ({
   )
 }
 
-export const ExpandSegment = ({
+export const EditSegment = ({
   className,
   onClick,
   onMouseEnter
