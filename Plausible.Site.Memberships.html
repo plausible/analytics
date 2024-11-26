@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-7F40D632.js"></script>
+    <script src="dist/sidebar_items-B8AC2CC7.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -205,11 +205,11 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bulk_transfer_ownership_direct/2" translate="no">bulk_transfer_ownership_direct(sites, new_owner)</a>
+        <a href="#bulk_transfer_ownership_direct/3" translate="no">bulk_transfer_ownership_direct(current_user, sites, new_owner)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>See <a href="Plausible.Site.Memberships.CreateInvitation.html#bulk_transfer_ownership_direct/2"><code class="inline">Plausible.Site.Memberships.CreateInvitation.bulk_transfer_ownership_direct/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>See <a href="Plausible.Site.Memberships.AcceptInvitation.html#bulk_transfer_ownership_direct/3"><code class="inline">Plausible.Site.Memberships.AcceptInvitation.bulk_transfer_ownership_direct/3</code></a>.</p></div>
 
     </div>
 
@@ -259,16 +259,6 @@ Pages
 
     </div>
 
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#transfer_ownership/2" translate="no">transfer_ownership(site, user)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>See <a href="Plausible.Site.Memberships.AcceptInvitation.html#transfer_ownership/2"><code class="inline">Plausible.Site.Memberships.AcceptInvitation.transfer_ownership/2</code></a>.</p></div>
-
-    </div>
-
 </div>
 
   </section>
@@ -291,7 +281,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">accept_invitation(invitation_id, user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L13" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L12" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -397,7 +387,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">bulk_create_invitation(sites, inviter, invitee_email, role, opts)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L20" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L19" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -410,16 +400,16 @@ Pages
 <p>See <a href="Plausible.Site.Memberships.CreateInvitation.html#bulk_create_invitation/5"><code class="inline">Plausible.Site.Memberships.CreateInvitation.bulk_create_invitation/5</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="bulk_transfer_ownership_direct/2">
+<section class="detail" id="bulk_transfer_ownership_direct/3">
 
   <div class="detail-header">
-    <a href="#bulk_transfer_ownership_direct/2" class="detail-link" title="Link to this function">
+    <a href="#bulk_transfer_ownership_direct/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">bulk_transfer_ownership_direct(sites, new_owner)</h1>
+    <h1 class="signature" translate="no">bulk_transfer_ownership_direct(current_user, sites, new_owner)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L23" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L22" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -429,7 +419,7 @@ Pages
 
   <section class="docstring">
 
-<p>See <a href="Plausible.Site.Memberships.CreateInvitation.html#bulk_transfer_ownership_direct/2"><code class="inline">Plausible.Site.Memberships.CreateInvitation.bulk_transfer_ownership_direct/2</code></a>.</p>
+<p>See <a href="Plausible.Site.Memberships.AcceptInvitation.html#bulk_transfer_ownership_direct/3"><code class="inline">Plausible.Site.Memberships.AcceptInvitation.bulk_transfer_ownership_direct/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="create_invitation/4">
@@ -441,7 +431,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">create_invitation(site, inviter, invitee_email, role)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L17" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L16" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -519,7 +509,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">reject_invitation(invitation_id, user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L14" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L13" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -541,7 +531,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">remove_invitation(invitation_id, site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L15" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L14" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -552,28 +542,6 @@ Pages
   <section class="docstring">
 
 <p>See <a href="Plausible.Site.Memberships.RemoveInvitation.html#remove_invitation/2"><code class="inline">Plausible.Site.Memberships.RemoveInvitation.remove_invitation/2</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="transfer_ownership/2">
-
-  <div class="detail-header">
-    <a href="#transfer_ownership/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">transfer_ownership(site, user)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships.ex#L12" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>See <a href="Plausible.Site.Memberships.AcceptInvitation.html#transfer_ownership/2"><code class="inline">Plausible.Site.Memberships.AcceptInvitation.transfer_ownership/2</code></a>.</p>
   </section>
 </section>
 

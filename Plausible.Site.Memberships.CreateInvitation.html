@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-7F40D632.js"></script>
+    <script src="dist/sidebar_items-B8AC2CC7.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -184,14 +184,6 @@ transfers.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#bulk_transfer_ownership_direct/2" translate="no">bulk_transfer_ownership_direct(sites, new_owner)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#create_invitation/4" translate="no">create_invitation(site, inviter, invitee_email, role)</a>
 
       </div>
@@ -272,7 +264,7 @@ this invitation.</p></div>
     </a>
     <h1 class="signature" translate="no">bulk_create_invitation(sites, inviter, invitee_email, role, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L63" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L42" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -291,37 +283,6 @@ this invitation.</p></div>
   <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
   <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()
 ) :: {:ok, [<a href="Plausible.Auth.Invitation.html#t:t/0">Plausible.Auth.Invitation.t</a>()]} | {:error, <a href="#t:invite_error/0">invite_error</a>()}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="bulk_transfer_ownership_direct/2">
-
-  <div class="detail-header">
-    <a href="#bulk_transfer_ownership_direct/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">bulk_transfer_ownership_direct(sites, new_owner)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L45" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> bulk_transfer_ownership_direct([<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()], <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) ::
-  {:ok, [<a href="Plausible.Site.Membership.html#t:t/0">Plausible.Site.Membership.t</a>()]}
-  | {:error,
-     <a href="#t:invite_error/0">invite_error</a>() | Plausible.Billing.Quota.Limits.over_limits_error()}</pre>
 
       </div>
 

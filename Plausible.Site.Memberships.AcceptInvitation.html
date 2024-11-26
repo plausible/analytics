@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-7F40D632.js"></script>
+    <script src="dist/sidebar_items-B8AC2CC7.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -159,6 +159,28 @@ the invitation and accepting it.</p>
       </a>
       <span class="text">Summary</span>
     </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:accept_error/0" translate="no">accept_error()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:transfer_error/0" translate="no">transfer_error()</a>
+
+      </div>
+
+    </div>
+
+</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -174,7 +196,7 @@ the invitation and accepting it.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#transfer_ownership/2" translate="no">transfer_ownership(site, user)</a>
+        <a href="#bulk_transfer_ownership_direct/3" translate="no">bulk_transfer_ownership_direct(current_user, sites, new_owner)</a>
 
       </div>
 
@@ -184,6 +206,82 @@ the invitation and accepting it.</p>
 
   </section>
 
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:accept_error/0">
+
+  <div class="detail-header">
+    <a href="#t:accept_error/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">accept_error()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L32" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> accept_error() ::
+  :invitation_not_found
+  | Plausible.Billing.Quota.Limits.over_limits_error()
+  | <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()
+  | :no_plan</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:transfer_error/0">
+
+  <div class="detail-header">
+    <a href="#t:transfer_error/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">transfer_error()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L26" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> transfer_error() ::
+  Plausible.Billing.Quota.Limits.over_limits_error()
+  | <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()
+  | :transfer_to_self
+  | :no_plan</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
 
   <section id="functions" class="details-list">
     <h1 class="section-heading">
@@ -202,7 +300,7 @@ the invitation and accepting it.</p>
     </a>
     <h1 class="signature" translate="no">accept_invitation(invitation_id, user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L63" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L56" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -215,28 +313,23 @@ the invitation and accepting it.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> accept_invitation(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) ::
-  {:ok, <a href="Plausible.Site.Membership.html#t:t/0">Plausible.Site.Membership.t</a>()}
-  | {:error,
-     :invitation_not_found
-     | Plausible.Billing.Quota.Limits.over_limits_error()
-     | <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()
-     | :no_plan}</pre>
+  {:ok, <a href="Plausible.Site.Membership.html#t:t/0">Plausible.Site.Membership.t</a>()} | {:error, <a href="#t:accept_error/0">accept_error</a>()}</pre>
 
       </div>
 
 
   </section>
 </section>
-<section class="detail" id="transfer_ownership/2">
+<section class="detail" id="bulk_transfer_ownership_direct/3">
 
   <div class="detail-header">
-    <a href="#transfer_ownership/2" class="detail-link" title="Link to this function">
+    <a href="#bulk_transfer_ownership_direct/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">transfer_ownership(site, user)</h1>
+    <h1 class="signature" translate="no">bulk_transfer_ownership_direct(current_user, sites, new_owner)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L33" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/accept_invitation.ex#L40" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -248,13 +341,11 @@ the invitation and accepting it.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> transfer_ownership(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) ::
-  {:ok, <a href="Plausible.Site.Membership.html#t:t/0">Plausible.Site.Membership.t</a>()}
-  | {:error,
-     Plausible.Billing.Quota.Limits.over_limits_error()
-     | <a href="https://hexdocs.pm/ecto/3.12.4/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()
-     | :transfer_to_self
-     | :no_plan}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> bulk_transfer_ownership_direct(
+  <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(),
+  [<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()],
+  <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()
+) :: {:ok, [<a href="Plausible.Site.Membership.html#t:t/0">Plausible.Site.Membership.t</a>()]} | {:error, <a href="#t:transfer_error/0">transfer_error</a>()}</pre>
 
       </div>
 
