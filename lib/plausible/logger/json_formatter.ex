@@ -189,7 +189,8 @@ defmodule Plausible.Logger.JSONFormatter do
   defp metadata(_, list) when is_list(list), do: nil
 
   defp metadata(k, v) do
-    impl = Jason.Encoder.impl_for(v) || String.Chars.impl_for(v)
+    # TODO Jason.Encoder.impl_for?
+    impl = String.Chars.impl_for(v)
     if impl, do: {k, impl.to_string(v)}
   end
 end
