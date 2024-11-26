@@ -62,10 +62,6 @@ defmodule Plausible.Stats.TableDecider do
     end
   end
 
-  # Note: This is inaccurate when filtering but required for old backwards compatibility
-  defp metric_partitioner(%Query{legacy_breakdown: true}, :pageviews), do: :either
-  defp metric_partitioner(%Query{legacy_breakdown: true}, :events), do: :either
-
   defp metric_partitioner(_, :conversion_rate), do: :either
   defp metric_partitioner(_, :group_conversion_rate), do: :either
   defp metric_partitioner(_, :visitors), do: :either
@@ -75,11 +71,23 @@ defmodule Plausible.Stats.TableDecider do
   defp metric_partitioner(_, :average_revenue), do: :event
   defp metric_partitioner(_, :total_revenue), do: :event
   defp metric_partitioner(_, :scroll_depth), do: :event
-  defp metric_partitioner(_, :pageviews), do: :event
-  defp metric_partitioner(_, :events), do: :event
   defp metric_partitioner(_, :bounce_rate), do: :session
   defp metric_partitioner(_, :visit_duration), do: :session
   defp metric_partitioner(_, :views_per_visit), do: :session
+
+  defp metric_partitioner(query, metric) when metric in [:pageviews, :events] do
+    query_days = DateTime.diff(query.utc_time_range.last, query.utc_time_range.first, :day)
+
+    cond do
+      # Note: This is inaccurate when filtering but required for old backwards compatibility
+      legacy_breakdown?(query) -> :either
+      # When querying large time window aggregates, session-level event/pageview counts
+      # are accurate enough: the amount of sessions starting/ending outside of time window
+      # doesn't matter as much.
+      query_days > 5 and empty?(query.filters) and empty?(query.dimensions) -> :either
+      true -> :event
+    end
+  end
 
   # Calculated metrics - handled on callsite separately from other metrics.
   defp metric_partitioner(_, :time_on_page), do: :other
@@ -96,6 +104,9 @@ defmodule Plausible.Stats.TableDecider do
   defp dimension_partitioner(_, "visit:" <> _), do: :either
 
   defp dimension_partitioner(_, _), do: :either
+
+  defp legacy_breakdown?(%Query{} = query), do: query.legacy_breakdown
+  defp legacy_breakdown?(query) when is_map(query), do: query[:legacy_breakdown]
 
   @default %{event: [], session: [], either: [], other: [], sample_percent: []}
   defp partition(values, query, partitioner) do

@@ -9,6 +9,9 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 ### Changed
+
+- Improved performance of top stats query with longer time windows
+
 ### Fixed
 
 - Fix returning filter suggestions for multiple custom property values in the dashboard Filter modal

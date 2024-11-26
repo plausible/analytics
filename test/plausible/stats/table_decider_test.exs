@@ -89,7 +89,8 @@ defmodule Plausible.Stats.TableDeciderTest do
       assert partition_metrics([:total_revenue, :visitors], query) ==
                {[:total_revenue, :visitors], [], []}
 
-      assert partition_metrics([:pageviews, :visits], query) == {[:pageviews, :visits], [], []}
+      assert partition_metrics([:total_revenue, :visits], query) ==
+               {[:total_revenue, :visits], [], []}
     end
 
     test "metrics that can be calculated on either when session-only metrics" do
@@ -150,13 +151,42 @@ defmodule Plausible.Stats.TableDeciderTest do
       assert partition_metrics([:visitors], make_query([], ["visit:exit_page"])) ==
                {[], [:visitors], []}
     end
+
+    test "pageviews and events metrics are event-only when short time window" do
+      query = make_query([], [], %{"period" => "day"})
+
+      assert partition_metrics([:pageviews, :events, :bounce_rate], query) ==
+               {[:pageviews, :events], [:bounce_rate], []}
+    end
+
+    test "pageviews and events metrics can be calculated via either table with longer time windows" do
+      query = make_query([], [], %{"period" => "7d"})
+
+      assert partition_metrics([:pageviews, :events, :bounce_rate], query) ==
+               {[], [:bounce_rate, :pageviews, :events], []}
+    end
+
+    test "pageviews and events metrics are event-only when filters or dimensions" do
+      query1 = make_query(["visit:exit_page"], [], %{"period" => "7d"})
+      query2 = make_query([], ["visit:exit_page"], %{"period" => "7d"})
+
+      assert partition_metrics([:pageviews, :events, :bounce_rate], query1) ==
+               {[:pageviews, :events], [:bounce_rate], []}
+
+      assert partition_metrics([:pageviews, :events, :bounce_rate], query2) ==
+               {[:pageviews, :events], [:bounce_rate], []}
+    end
   end
 
-  defp make_query(filter_keys, dimensions \\ []) do
-    Query.from(build(:site), %{
-      "filters" => Enum.map(filter_keys, fn filter_key -> ["is", filter_key, []] end),
-      "dimensions" => dimensions
-    })
+  defp make_query(filter_keys, dimensions \\ [], extra \\ %{}) do
+    params =
+      %{
+        "filters" => Enum.map(filter_keys, fn filter_key -> ["is", filter_key, []] end),
+        "dimensions" => dimensions
+      }
+      |> Map.merge(extra)
+
+    Query.from(build(:site), params)
   end
 
   defp make_query_full_filters(filters) do
