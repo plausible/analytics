@@ -52,6 +52,7 @@ defmodule Plausible.Site do
     has_one :monthly_report, Plausible.Site.MonthlyReport
     has_one :ownership, Plausible.Site.Membership, where: [role: :owner]
     has_one :owner, through: [:ownership, :user]
+    has_one :team_owner, through: [:team, :owner]
 
     # If `from_cache?` is set, the struct might be incomplete - see `Plausible.Site.Cache`.
     # Use `Plausible.Repo.reload!(cached_site)` to pre-fill missing fields if
