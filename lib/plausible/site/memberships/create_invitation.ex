@@ -37,27 +37,6 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
     end)
   end
 
-  @spec bulk_transfer_ownership_direct([Site.t()], User.t()) ::
-          {:ok, [Membership.t()]}
-          | {:error,
-             invite_error()
-             | Quota.Limits.over_limits_error()}
-  def bulk_transfer_ownership_direct(sites, new_owner) do
-    Plausible.Repo.transaction(fn ->
-      for site <- sites do
-        site = Plausible.Repo.preload(site, :owner)
-
-        case Site.Memberships.transfer_ownership(site, new_owner) do
-          {:ok, membership} ->
-            membership
-
-          {:error, error} ->
-            Plausible.Repo.rollback(error)
-        end
-      end
-    end)
-  end
-
   @spec bulk_create_invitation([Site.t()], User.t(), String.t(), atom(), Keyword.t()) ::
           {:ok, [Invitation.t()]} | {:error, invite_error()}
   def bulk_create_invitation(sites, inviter, invitee_email, role, opts \\ []) do

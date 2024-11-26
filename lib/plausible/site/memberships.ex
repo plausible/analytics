@@ -9,7 +9,6 @@ defmodule Plausible.Site.Memberships do
   alias Plausible.Repo
   alias Plausible.Site.Memberships
 
-  defdelegate transfer_ownership(site, user), to: Memberships.AcceptInvitation
   defdelegate accept_invitation(invitation_id, user), to: Memberships.AcceptInvitation
   defdelegate reject_invitation(invitation_id, user), to: Memberships.RejectInvitation
   defdelegate remove_invitation(invitation_id, site), to: Memberships.RemoveInvitation
@@ -20,7 +19,8 @@ defmodule Plausible.Site.Memberships do
   defdelegate bulk_create_invitation(sites, inviter, invitee_email, role, opts),
     to: Memberships.CreateInvitation
 
-  defdelegate bulk_transfer_ownership_direct(sites, new_owner), to: Memberships.CreateInvitation
+  defdelegate bulk_transfer_ownership_direct(current_user, sites, new_owner),
+    to: Memberships.AcceptInvitation
 
   @spec any?(Auth.User.t()) :: boolean()
   def any?(user) do

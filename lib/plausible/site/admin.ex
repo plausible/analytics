@@ -131,9 +131,16 @@ defmodule Plausible.SiteAdmin do
     {:error, "Please select at least one site from the list"}
   end
 
-  defp transfer_ownership_direct(_conn, sites, %{"email" => email}) do
+  defp transfer_ownership_direct(conn, sites, %{"email" => email}) do
+    current_user = conn.assigns.current_user
+
     with {:ok, new_owner} <- Plausible.Auth.get_user_by(email: email),
-         {:ok, _} <- Plausible.Site.Memberships.bulk_transfer_ownership_direct(sites, new_owner) do
+         {:ok, _} <-
+           Plausible.Site.Memberships.bulk_transfer_ownership_direct(
+             current_user,
+             sites,
+             new_owner
+           ) do
       :ok
     else
       {:error, :user_not_found} ->

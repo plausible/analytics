@@ -295,7 +295,7 @@ defmodule Plausible.SitesTest do
 
       site1 = new_site(owner: user1, domain: "one.example.com")
       site2 = new_site(owner: user2, domain: "two.example.com")
-      site3 = new_site(domain: "three.example.com")
+      site3 = new_site(owner: user3, domain: "three.example.com")
       site4 = new_site(domain: "four.example.com")
       site5 = new_site(owner: user3, domain: "five.example.com")
 

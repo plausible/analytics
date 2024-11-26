@@ -369,7 +369,8 @@ defmodule Plausible.Workers.CheckUsageTest do
 
         CheckUsage.perform(nil, usage_stub)
         assert user |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
-        team = assert_team_exists(user)
+        team = user |> team_of() |> Repo.reload!()
+
         assert Plausible.Auth.GracePeriod.active?(team)
 
         usage_stub =

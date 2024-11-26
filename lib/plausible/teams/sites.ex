@@ -214,6 +214,7 @@ defmodule Plausible.Teams.Sites do
               inner_join: u in assoc(tm, :user),
               where: tm.team_id == parent_as(:site).team_id,
               where: u.email == parent_as(:site_transfer).email,
+              where: tm.role == :owner,
               select: 1
           ),
         select: %{

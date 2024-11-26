@@ -23,25 +23,62 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
   require Logger
 
-  @spec transfer_ownership(Site.t(), Auth.User.t()) ::
-          {:ok, Site.Membership.t()}
-          | {:error,
-             Billing.Quota.Limits.over_limits_error()
-             | Ecto.Changeset.t()
-             | :transfer_to_self
-             | :no_plan}
-  def transfer_ownership(site, user) do
-    site = Repo.preload(site, :owner)
+  @type transfer_error() ::
+          Billing.Quota.Limits.over_limits_error()
+          | Ecto.Changeset.t()
+          | :transfer_to_self
+          | :no_plan
 
-    with :ok <- Invitations.ensure_transfer_valid(site, user, :owner),
-         :ok <- Invitations.ensure_can_take_ownership(site, user) do
-      membership = get_or_create_owner_membership(site, user)
+  @type accept_error() ::
+          :invitation_not_found
+          | Billing.Quota.Limits.over_limits_error()
+          | Ecto.Changeset.t()
+          | :no_plan
 
-      multi = add_and_transfer_ownership(site, membership, user)
+  @spec bulk_transfer_ownership_direct(Auth.User.t(), [Site.t()], Auth.User.t()) ::
+          {:ok, [Site.Membership.t()]} | {:error, transfer_error()}
+  def bulk_transfer_ownership_direct(current_user, sites, new_owner) do
+    Repo.transaction(fn ->
+      for site <- sites do
+        case transfer_ownership(current_user, site, new_owner) do
+          {:ok, membership} ->
+            membership
+
+          {:error, error} ->
+            Repo.rollback(error)
+        end
+      end
+    end)
+  end
+
+  @spec accept_invitation(String.t(), Auth.User.t()) ::
+          {:ok, Site.Membership.t()} | {:error, accept_error()}
+  def accept_invitation(invitation_id, user) do
+    with {:ok, invitation} <- Invitations.find_for_user(invitation_id, user) do
+      if invitation.role == :owner do
+        do_accept_ownership_transfer(invitation, user)
+      else
+        do_accept_invitation(invitation, user)
+      end
+    end
+  end
+
+  defp transfer_ownership(current_user, site, new_owner) do
+    with :ok <-
+           Plausible.Teams.Adapter.Read.Invitations.ensure_transfer_valid(
+             current_user,
+             site,
+             new_owner,
+             :owner
+           ),
+         :ok <- Plausible.Teams.Adapter.Read.Ownership.ensure_can_take_ownership(site, new_owner) do
+      membership = get_or_create_owner_membership(site, new_owner)
+
+      multi = add_and_transfer_ownership(site, membership, new_owner)
 
       case Repo.transaction(multi) do
         {:ok, changes} ->
-          Plausible.Teams.Invitations.transfer_site_sync(site, user)
+          Plausible.Teams.Invitations.transfer_site_sync(site, new_owner)
 
           membership = Repo.preload(changes.membership, [:site, :user])
 
@@ -53,28 +90,18 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     end
   end
 
-  @spec accept_invitation(String.t(), Auth.User.t()) ::
-          {:ok, Site.Membership.t()}
-          | {:error,
-             :invitation_not_found
-             | Billing.Quota.Limits.over_limits_error()
-             | Ecto.Changeset.t()
-             | :no_plan}
-  def accept_invitation(invitation_id, user) do
-    with {:ok, invitation} <- Invitations.find_for_user(invitation_id, user) do
-      if invitation.role == :owner do
-        do_accept_ownership_transfer(invitation, user)
-      else
-        do_accept_invitation(invitation, user)
-      end
-    end
-  end
-
   defp do_accept_ownership_transfer(invitation, user) do
     membership = get_or_create_membership(invitation, user)
-    site = Repo.preload(invitation.site, :owner)
+    site = invitation.site
 
-    with :ok <- Invitations.ensure_can_take_ownership(site, user) do
+    with :ok <-
+           Plausible.Teams.Adapter.Read.Invitations.ensure_transfer_valid(
+             user,
+             site,
+             user,
+             :owner
+           ),
+         :ok <- Plausible.Teams.Adapter.Read.Ownership.ensure_can_take_ownership(site, user) do
       site
       |> add_and_transfer_ownership(membership, user)
       |> Multi.delete(:invitation, invitation)

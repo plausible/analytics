@@ -51,9 +51,9 @@ defmodule Plausible.Teams.Adapter.Read.Invitations do
     )
   end
 
-  def ensure_transfer_valid(inviter, site, invitee, role) do
+  def ensure_transfer_valid(current_user, site, invitee, role) do
     switch(
-      inviter,
+      current_user,
       team_fn: fn _ ->
         site_team = Repo.preload(site, :team).team
 
