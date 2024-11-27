@@ -84,8 +84,8 @@ defmodule Plausible.Logger.JSONFormatter do
     format_time(date, time)
   end
 
-  defp process_message({:string, msg}, _meta, truncate) when is_binary(msg) do
-    Logger.Formatter.truncate(msg, truncate)
+  defp process_message({:string, msg}, _meta, truncate) do
+    msg |> IO.iodata_to_binary() |> Logger.Formatter.truncate(truncate)
   end
 
   defp process_message({:report, report}, %{report_cb: callback}, truncate) do
@@ -106,7 +106,9 @@ defmodule Plausible.Logger.JSONFormatter do
   end
 
   defp process_message({format, args}, _meta, truncate) do
-    format |> Logger.Utils.scan_inspect(args, truncate) |> :io_lib.build_text()
+    format
+    |> Logger.Utils.scan_inspect(args, truncate)
+    |> :io_lib.build_text()
   end
 
   defp format_report(report) do
