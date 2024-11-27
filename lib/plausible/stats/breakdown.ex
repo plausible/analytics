@@ -151,7 +151,7 @@ defmodule Plausible.Stats.Breakdown do
   @extra_filter_dimensions Map.keys(@filter_dimensions_not)
 
   defp dimension_filters(dimension) when dimension in @extra_filter_dimensions do
-    [[:is_not, dimension, Map.get(@filter_dimensions_not, dimension)]]
+    [[:is_not, dimension, Map.get(@filter_dimensions_not, dimension), %{}]]
   end
 
   defp dimension_filters(_), do: []

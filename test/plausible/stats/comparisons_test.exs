@@ -298,7 +298,7 @@ defmodule Plausible.Stats.ComparisonsTest do
         Comparisons.add_comparison_filters(query, [%{dimensions: ["Chrome"], metrics: [123]}])
 
       assert result_query.filters == [
-               [:ignore_in_totals_query, [:is, "visit:browser", ["Chrome"]]]
+               [:ignore_in_totals_query, [:is, "visit:browser", ["Chrome"], %{}]]
              ]
     end
 
@@ -323,7 +323,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       result_query = Comparisons.add_comparison_filters(query, main_query_results)
 
       assert result_query.filters == [
-               [:is, "visit:country_name", ["Estonia"]],
+               [:is, "visit:country_name", ["Estonia"], %{}],
                [
                  :ignore_in_totals_query,
                  [
@@ -332,15 +332,15 @@ defmodule Plausible.Stats.ComparisonsTest do
                      [
                        :and,
                        [
-                         [:is, "visit:browser", ["Chrome"]],
-                         [:is, "visit:browser_version", ["99.9"]]
+                         [:is, "visit:browser", ["Chrome"], %{}],
+                         [:is, "visit:browser_version", ["99.9"], %{}]
                        ]
                      ],
                      [
                        :and,
                        [
-                         [:is, "visit:browser", ["Firefox"]],
-                         [:is, "visit:browser_version", ["12.0"]]
+                         [:is, "visit:browser", ["Firefox"], %{}],
+                         [:is, "visit:browser_version", ["12.0"], %{}]
                        ]
                      ]
                    ]

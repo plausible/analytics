@@ -27,11 +27,11 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
         final_value = remove_escape_chars(raw_value)
 
         cond do
-          is_wildcard? && is_negated? -> [:matches_wildcard_not, key, [raw_value]]
-          is_wildcard? -> [:matches_wildcard, key, [raw_value]]
-          is_list? -> [:is, key, parse_member_list(raw_value)]
-          is_negated? -> [:is_not, key, [final_value]]
-          true -> [:is, key, [final_value]]
+          is_wildcard? && is_negated? -> [:matches_wildcard_not, key, [raw_value], %{}]
+          is_wildcard? -> [:matches_wildcard, key, [raw_value], %{}]
+          is_list? -> [:is, key, parse_member_list(raw_value), %{}]
+          is_negated? -> [:is_not, key, [final_value], %{}]
+          true -> [:is, key, [final_value], %{}]
         end
         |> reject_invalid_country_codes()
 
@@ -40,7 +40,7 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
     end
   end
 
-  defp reject_invalid_country_codes([_op, "visit:country", code_or_codes] = filter) do
+  defp reject_invalid_country_codes([_op, "visit:country", code_or_codes, _modifier] = filter) do
     code_or_codes
     |> List.wrap()
     |> Enum.reduce_while(filter, fn
@@ -68,6 +68,6 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
         remove_escape_chars(value)
       end
 
-    [:is, key, List.wrap(value)]
+    [:is, key, List.wrap(value), %{}]
   end
 end

@@ -4,7 +4,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
 
   test "transforms simple page filter" do
     filters = [
-      [:is, "visit:entry_page", ["/page"]]
+      [:is, "visit:entry_page", ["/page"], %{}]
     ]
 
     {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
@@ -24,7 +24,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
 
   test "transforms matches_wildcard page filter" do
     filters = [
-      [:matches_wildcard, "visit:entry_page", ["*page*"]]
+      [:matches_wildcard, "visit:entry_page", ["*page*"], %{}]
     ]
 
     {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
@@ -44,7 +44,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
 
   test "transforms is page filter" do
     filters = [
-      [:is, "visit:entry_page", ["/pageA", "/pageB"]]
+      [:is, "visit:entry_page", ["/pageA", "/pageB"], %{}]
     ]
 
     {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
@@ -64,7 +64,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
 
   test "transforms matches multiple page filter" do
     filters = [
-      [:matches_wildcard, "visit:entry_page", ["/pageA*", "/pageB*"]]
+      [:matches_wildcard, "visit:entry_page", ["/pageA*", "/pageB*"], %{}]
     ]
 
     {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
@@ -84,7 +84,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
 
   test "transforms event:page exactly like visit:entry_page" do
     filters = [
-      [:matches_wildcard, "event:page", ["/pageA*", "/pageB*"]]
+      [:matches_wildcard, "event:page", ["/pageA*", "/pageB*"], %{}]
     ]
 
     {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
@@ -104,7 +104,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
 
   test "transforms simple visit:screen filter" do
     filters = [
-      [:is, "visit:screen", ["Desktop"]]
+      [:is, "visit:screen", ["Desktop"], %{}]
     ]
 
     {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
@@ -120,7 +120,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
 
   test "transforms is visit:screen filter" do
     filters = [
-      [:is, "visit:screen", ["Mobile", "Tablet"]]
+      [:is, "visit:screen", ["Mobile", "Tablet"], %{}]
     ]
 
     {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
@@ -136,7 +136,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
 
   test "transforms simple visit:country filter to alpha3" do
     filters = [
-      [:is, "visit:country", ["EE"]]
+      [:is, "visit:country", ["EE"], %{}]
     ]
 
     {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
@@ -148,7 +148,7 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
 
   test "transforms member visit:country filter" do
     filters = [
-      [:is, "visit:country", ["EE", "PL"]]
+      [:is, "visit:country", ["EE", "PL"], %{}]
     ]
 
     {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
@@ -164,9 +164,9 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
 
   test "filters can be combined" do
     filters = [
-      [:is, "visit:country", ["EE", "PL"]],
-      [:matches_wildcard, "visit:entry_page", ["*web-analytics*"]],
-      [:is, "visit:screen", ["Desktop"]]
+      [:is, "visit:country", ["EE", "PL"], %{}],
+      [:matches_wildcard, "visit:entry_page", ["*web-analytics*"], %{}],
+      [:is, "visit:screen", ["Desktop"], %{}]
     ]
 
     {:ok, transformed} = Filters.transform("sc-domain:plausible.io", filters, "")
@@ -188,10 +188,10 @@ defmodule Plausible.Google.SearchConsole.FiltersTest do
 
   test "when unsupported filter is included the whole set becomes invalid" do
     filters = [
-      [:matches_wildcard, "visit:entry_page", "*web-analytics*"],
-      [:is, "visit:screen", "Desktop"],
-      [:member, "visit:country", ["EE", "PL"]],
-      [:is, "visit:utm_medium", "facebook"]
+      [:matches_wildcard, "visit:entry_page", "*web-analytics*", %{}],
+      [:is, "visit:screen", "Desktop", %{}],
+      [:member, "visit:country", ["EE", "PL"], %{}],
+      [:is, "visit:utm_medium", "facebook", %{}]
     ]
 
     assert :unsupported_filters = Filters.transform("sc-domain:plausible.io", filters, "")

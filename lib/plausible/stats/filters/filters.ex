@@ -61,10 +61,10 @@ defmodule Plausible.Stats.Filters do
   ### Examples:
 
       iex> Filters.parse("{\\"page\\":\\"/blog/**\\"}")
-      [[:matches_wildcard, "event:page", ["/blog/**"]]]
+      [[:matches_wildcard, "event:page", ["/blog/**"], %{}]]
 
       iex> Filters.parse("visit:browser!=Chrome")
-      [[:is_not, "visit:browser", ["Chrome"]]]
+      [[:is_not, "visit:browser", ["Chrome"], %{}]]
 
       iex> Filters.parse(nil)
       []
@@ -121,8 +121,8 @@ defmodule Plausible.Stats.Filters do
 
   def rename_dimensions_used_in_filter(filters, renames) do
     transform_filters(filters, fn
-      [operation, dimension, clauses] ->
-        [[operation, Map.get(renames, dimension, dimension), clauses]]
+      [operation, dimension, clauses, modifiers] ->
+        [[operation, Map.get(renames, dimension, dimension), clauses, modifiers]]
 
       _subtree ->
         nil

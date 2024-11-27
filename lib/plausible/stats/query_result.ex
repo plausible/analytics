@@ -31,7 +31,7 @@ defmodule Plausible.Stats.QueryResult do
             to_iso8601(query.utc_time_range.first, query.timezone),
             to_iso8601(query.utc_time_range.last, query.timezone)
           ],
-          filters: query.filters,
+          filters: query.filters |> remove_empty_modifiers(),
           dimensions: query.dimensions,
           order_by: query.order_by |> Enum.map(&Tuple.to_list/1),
           include: include(query) |> Map.filter(fn {_key, val} -> val end),
@@ -84,6 +84,13 @@ defmodule Plausible.Stats.QueryResult do
     datetime
     |> DateTime.shift_zone!(timezone)
     |> DateTime.to_iso8601(:extended)
+  end
+
+  defp remove_empty_modifiers(filters) do
+    Plausible.Stats.Filters.transform_filters(filters, fn
+      [operation, dimension, clauses, %{}] -> [operation, dimension, clauses]
+      _ -> nil
+    end)
   end
 end
 

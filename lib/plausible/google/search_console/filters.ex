@@ -24,14 +24,15 @@ defmodule Plausible.Google.SearchConsole.Filters do
     transform_filter(property, [op, "visit:entry_page" | rest])
   end
 
-  defp transform_filter(property, [:is, "visit:entry_page", pages]) when is_list(pages) do
+  # :TODO: Should also work case-insensitive
+  defp transform_filter(property, [:is, "visit:entry_page", pages, _modifiers]) when is_list(pages) do
     expression =
       Enum.map_join(pages, "|", fn page -> property_url(property, Regex.escape(page)) end)
 
     %{dimension: "page", operator: "includingRegex", expression: expression}
   end
 
-  defp transform_filter(property, [:matches_wildcard, "visit:entry_page", pages])
+  defp transform_filter(property, [:matches_wildcard, "visit:entry_page", pages, _modifiers])
        when is_list(pages) do
     expression =
       Enum.map_join(pages, "|", fn page -> page_regex(property_url(property, page)) end)
@@ -39,12 +40,12 @@ defmodule Plausible.Google.SearchConsole.Filters do
     %{dimension: "page", operator: "includingRegex", expression: expression}
   end
 
-  defp transform_filter(_property, [:is, "visit:screen", devices]) when is_list(devices) do
+  defp transform_filter(_property, [:is, "visit:screen", devices, _modifiers]) when is_list(devices) do
     expression = Enum.map_join(devices, "|", &search_console_device/1)
     %{dimension: "device", operator: "includingRegex", expression: expression}
   end
 
-  defp transform_filter(_property, [:is, "visit:country", countries])
+  defp transform_filter(_property, [:is, "visit:country", countries, _modifiers])
        when is_list(countries) do
     expression = Enum.map_join(countries, "|", &search_console_country/1)
     %{dimension: "country", operator: "includingRegex", expression: expression}

@@ -346,7 +346,7 @@
       "enum": ["is_not", "contains_not", "matches", "matches_not"],
       "description": "filter operation"
     },
-    "filter_operation_with_goals": {
+    "filter_operation_contains": {
       "type": "string",
       "enum": ["is", "contains"],
       "description": "filter operation"
@@ -375,14 +375,14 @@
         { "$ref": "#/definitions/clauses" }
       ]
     },
-    "filter_with_goals": {
+    "filter_case_sensitive": {
       "type": "array",
       "additionalItems": false,
       "minItems": 3,
-      "maxItems": 3,
+      "maxItems": 4,
       "items": [
         {
-          "$ref": "#/definitions/filter_operation_with_goals"
+          "$ref": "#/definitions/filter_operation_contains"
         },
         {
           "oneOf": [
@@ -393,13 +393,23 @@
         },
         {
           "$ref": "#/definitions/clauses"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "case_sensitive": {
+              "type": "boolean",
+              "default": true
+            }
+          }
         }
       ]
     },
     "filter_entry": {
       "oneOf": [
         { "$ref": "#/definitions/filter_without_goals" },
-        { "$ref": "#/definitions/filter_with_goals" }
+        { "$ref": "#/definitions/filter_case_sensitive" }
       ]
     },
     "filter_tree": {

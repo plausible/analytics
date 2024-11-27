@@ -199,14 +199,14 @@ defmodule Plausible.Stats.QueryTest do
       filters = Jason.encode!(%{"goal" => "Signup"})
       q = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      assert q.filters == [[:is, "event:goal", ["Signup"]]]
+      assert q.filters == [[:is, "event:goal", ["Signup"], %{}]]
     end
 
     test "parses source filter", %{site: site} do
       filters = Jason.encode!(%{"source" => "Twitter"})
       q = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      assert q.filters == [[:is, "visit:source", ["Twitter"]]]
+      assert q.filters == [[:is, "visit:source", ["Twitter"], %{}]]
     end
   end
 

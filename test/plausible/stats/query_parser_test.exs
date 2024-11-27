@@ -208,7 +208,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             metrics: [:visitors],
             utc_time_range: @date_range_day,
             filters: [
-              [unquote(operation), "event:name", ["foo"]]
+              [unquote(operation), "event:name", ["foo"], %{}]
             ],
             dimensions: [],
             order_by: nil,
@@ -333,7 +333,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         metrics: [:visitors],
         utc_time_range: @date_range_day,
         filters: [
-          [:is, "event:props:foobar", ["value"]]
+          [:is, "event:props:foobar", ["value"], %{}]
         ],
         dimensions: [],
         order_by: nil,
@@ -358,7 +358,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
             metrics: [:visitors],
             utc_time_range: @date_range_day,
             filters: [
-              [:is, "event:#{unquote(dimension)}", ["foo"]]
+              [:is, "event:#{unquote(dimension)}", ["foo"], %{}]
             ],
             dimensions: [],
             order_by: nil,
@@ -384,7 +384,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
           metrics: [:visitors],
           utc_time_range: @date_range_day,
           filters: [
-            [:is, "visit:#{unquote(dimension)}", ["ab"]]
+            [:is, "visit:#{unquote(dimension)}", ["ab"], %{}]
           ],
           dimensions: [],
           order_by: nil,
@@ -450,7 +450,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         metrics: [:visitors],
         utc_time_range: @date_range_day,
         filters: [
-          [:is, "visit:city", [123, 456]]
+          [:is, "visit:city", [123, 456], %{}]
         ],
         dimensions: [],
         order_by: nil,
@@ -469,7 +469,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         metrics: [:visitors],
         utc_time_range: @date_range_day,
         filters: [
-          [:is, "visit:city", ["123", "456"]]
+          [:is, "visit:city", ["123", "456"], %{}]
         ],
         dimensions: [],
         order_by: nil,
@@ -523,11 +523,11 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
               [
                 :and,
                 [
-                  [:is, "visit:city_name", ["Tallinn"]],
-                  [:is, "visit:country_name", ["Estonia"]]
+                  [:is, "visit:city_name", ["Tallinn"], %{}],
+                  [:is, "visit:country_name", ["Estonia"], %{}]
                 ]
               ],
-              [:not, [:is, "visit:country_name", ["Estonia"]]]
+              [:not, [:is, "visit:country_name", ["Estonia"], %{}]]
             ]
           ]
         ],
@@ -576,7 +576,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         metrics: [:visitors],
         utc_time_range: @date_range_day,
         filters: [
-          [:is, "event:hostname", ["a.plausible.io"]]
+          [:is, "event:hostname", ["a.plausible.io"], %{}]
         ],
         dimensions: [],
         order_by: nil,
@@ -596,6 +596,56 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       |> check_error(
         site,
         "Invalid filters. Dimension `event:hostname` can only be filtered at the top level."
+      )
+    end
+
+    for operation <- [:is, :contains] do
+      test "#{operation} allows case_sensitive modifier", %{site: site} do
+        %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [
+            [
+              Atom.to_string(unquote(operation)),
+              "event:page",
+              ["/foo"],
+              %{"case_sensitive" => false}
+            ],
+            [
+              Atom.to_string(unquote(operation)),
+              "event:name",
+              ["/foo"],
+              %{"case_sensitive" => true}
+            ]
+          ]
+        }
+        |> check_success(site, %{
+          metrics: [:visitors],
+          utc_time_range: @date_range_day,
+          filters: [
+            [unquote(operation), "event:page", ["/foo"], %{case_sensitive: false}],
+            [unquote(operation), "event:name", ["/foo"], %{case_sensitive: true}]
+          ],
+          dimensions: [],
+          order_by: nil,
+          timezone: site.timezone,
+          include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+          pagination: %{limit: 10_000, offset: 0}
+        })
+      end
+    end
+
+    test "case_sensitive modifier is not valid for other operations", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is_not", "event:hostname", ["a.plausible.io"], %{"case_sensitive" => false}]]
+      }
+      |> check_error(
+        site,
+        "#/filters/0: Invalid filter [\"is_not\", \"event:hostname\", [\"a.plausible.io\"], %{\"case_sensitive\" => false}]"
       )
     end
   end
@@ -846,7 +896,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
                metrics: [:visitors],
                utc_time_range: @date_range_day,
                filters: [
-                 [:is, "event:goal", ["Signup", "Visit /thank-you"]]
+                 [:is, "event:goal", ["Signup", "Visit /thank-you"], %{}]
                ],
                dimensions: [],
                order_by: nil,
@@ -1346,7 +1396,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       |> check_success(site, %{
         metrics: [:conversion_rate],
         utc_time_range: @date_range_day,
-        filters: [[:is, "event:goal", ["Signup"]]],
+        filters: [[:is, "event:goal", ["Signup"], %{}]],
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
@@ -1391,7 +1441,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         metrics: [:conversion_rate, :group_conversion_rate],
         utc_time_range: @date_range_day,
         filters: [
-          [:is, "event:props:foo", ["bar"]]
+          [:is, "event:props:foo", ["bar"], %{}]
         ],
         dimensions: ["event:goal"],
         order_by: nil,
@@ -1456,7 +1506,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         %{
           metrics: [:scroll_depth],
           utc_time_range: @date_range_day,
-          filters: [[:is, "event:page", ["/"]]],
+          filters: [[:is, "event:page", ["/"], %{}]],
           dimensions: [],
           order_by: nil,
           timezone: site.timezone,
@@ -1504,7 +1554,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       |> check_success(site, %{
         metrics: [:views_per_visit],
         utc_time_range: @date_range_day,
-        filters: [[:is, "event:goal", ["Signup"]]],
+        filters: [[:is, "event:goal", ["Signup"], %{}]],
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,
@@ -1630,7 +1680,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         %{
           metrics: [:total_revenue, :average_revenue],
           utc_time_range: @date_range_day,
-          filters: [[:is, "event:goal", ["PurchaseUSD", "Signup", "Subscription"]]],
+          filters: [[:is, "event:goal", ["PurchaseUSD", "Signup", "Subscription"], %{}]],
           dimensions: [],
           order_by: nil,
           timezone: site.timezone,
@@ -1661,7 +1711,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         %{
           metrics: [:total_revenue, :average_revenue],
           utc_time_range: @date_range_day,
-          filters: [[:is, "event:goal", ["Purchase", "Signup", "Subscription"]]],
+          filters: [[:is, "event:goal", ["Purchase", "Signup", "Subscription"], %{}]],
           dimensions: [],
           order_by: nil,
           timezone: site.timezone,
@@ -1725,7 +1775,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
         %{
           metrics: [:total_revenue, :average_revenue],
           utc_time_range: @date_range_day,
-          filters: [[:is, "event:goal", ["Purchase", "Signup"]]],
+          filters: [[:is, "event:goal", ["Purchase", "Signup"], %{}]],
           dimensions: ["event:goal"],
           order_by: nil,
           timezone: site.timezone,
@@ -1803,7 +1853,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       |> check_success(site, %{
         metrics: [:bounce_rate],
         utc_time_range: @date_range_day,
-        filters: [[:is, "event:props:foo", ["(none)"]]],
+        filters: [[:is, "event:props:foo", ["(none)"], %{}]],
         dimensions: [],
         order_by: nil,
         timezone: site.timezone,

@@ -133,31 +133,36 @@ defmodule Plausible.Stats.Filters.QueryParser do
               :matches_wildcard_not,
               :contains,
               :contains_not
-            ],
-       do: parse_clauses_list(filter)
+            ] do
+    with {:ok, clauses} <- parse_clauses_list(filter),
+      {:ok, config} <- parse_filter_modifiers(Enum.at(filter, 3))
+    do
+      {:ok, [clauses, config]}
+    end
+  end
 
   defp parse_filter_rest(operator, _filter)
        when operator in [:not, :and, :or],
        do: {:ok, []}
 
-  defp parse_clauses_list([operation, filter_key, list] = filter) when is_list(list) do
+  defp parse_clauses_list([operator, filter_key, list | _rest] = filter) when is_list(list) do
     all_strings? = Enum.all?(list, &is_binary/1)
     all_integers? = Enum.all?(list, &is_integer/1)
 
     case {filter_key, all_strings?} do
       {"visit:city", false} when all_integers? ->
-        {:ok, [list]}
+        {:ok, list}
 
-      {"visit:country", true} when operation in ["is", "is_not"] ->
+      {"visit:country", true} when operator in ["is", "is_not"] ->
         if Enum.all?(list, &(String.length(&1) == 2)) do
-          {:ok, [list]}
+          {:ok, list}
         else
           {:error,
            "Invalid visit:country filter, visit:country needs to be a valid 2-letter country code."}
         end
 
       {_, true} ->
-        {:ok, [list]}
+        {:ok, list}
 
       _ ->
         {:error, "Invalid filter '#{i(filter)}'."}
@@ -165,6 +170,10 @@ defmodule Plausible.Stats.Filters.QueryParser do
   end
 
   defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{i(filter)}'"}
+
+  defp parse_filter_modifiers(config)do
+    {:ok, atomize_keys(config || %{})}
+  end
 
   defp parse_date(_site, date_string, _date) when is_binary(date_string) do
     case Date.from_iso8601(date_string) do
@@ -459,7 +468,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     # Note: Only works since event:goal is allowed as a top level filter
     goal_filter_clauses =
       Enum.flat_map(query.filters, fn
-        [:is, "event:goal", clauses] -> clauses
+        [:is, "event:goal", clauses | _rest] -> clauses
         _ -> []
       end)
 
