@@ -55,11 +55,11 @@ defmodule Plausible.Teams.Test do
     if user.trial_expiry_date do
       {:ok, team} = Teams.get_or_create(user)
 
-      if team_args != [] do
-        team
-        |> Ecto.Changeset.change(team_args)
-        |> Repo.update!()
-      end
+      team_args = Keyword.merge(team_args, trial_expiry_date: user.trial_expiry_date)
+
+      team
+      |> Ecto.Changeset.change(team_args)
+      |> Repo.update!()
     end
 
     Repo.preload(user, team_memberships: :team)
