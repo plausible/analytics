@@ -6,7 +6,6 @@ defmodule Plausible.Site.CacheTest do
   alias Plausible.Site.Cache
 
   describe "public cache interface" do
-    @tag :skip
     test "cache caches sites", %{test: test} do
       {:ok, _} =
         Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_cache_caches_id]}],
@@ -36,7 +35,7 @@ defmodule Plausible.Site.CacheTest do
       assert %Site{from_cache?: true} =
                Cache.get("site2.example.com", force?: true, cache_name: test)
 
-      assert %Site{from_cache?: false, owner: %{accept_traffic_until: ~D[2021-01-01]}} =
+      assert %Site{from_cache?: false, team: %{accept_traffic_until: ~D[2021-01-01]}} =
                Cache.get("site2.example.com", cache_name: test)
 
       refute Cache.get("site3.example.com", cache_name: test, force?: true)
