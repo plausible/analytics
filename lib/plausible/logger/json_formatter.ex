@@ -36,6 +36,7 @@ defmodule Plausible.Logger.JSONFormatter do
   end
 
   # TODO replace invalid UTF8 with � in msg and meta?
+  #      or just use https://www.erlang.org/doc/apps/stdlib/json.html#encode_binary_escape_all/1
   @doc false
   @spec format(:logger.log_event(), map) :: iodata
   def format(%{meta: meta, level: level, msg: msg}, config) do
@@ -144,8 +145,11 @@ defmodule Plausible.Logger.JSONFormatter do
     unsafe_fragment([Logger.Formatter.format_date(date), ?\s, Logger.Formatter.format_time(time)])
   end
 
+  # TODO
   defp metadata(:time, _), do: nil
+  # TODO
   defp metadata(:level, _), do: nil
+  # TODO
   defp metadata(:msg, _), do: nil
   defp metadata(:gl, _), do: nil
   defp metadata(:report_cb, _), do: nil
