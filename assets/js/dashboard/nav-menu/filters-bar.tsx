@@ -201,7 +201,7 @@ export const FiltersBar = () => {
               {opened && typeof visibility.visibleCount === 'number' ? (
                 <DropdownMenuWrapper
                   id="more-filters-menu"
-                  className="md:left-auto md:w-auto"
+                  className="md:right-auto"
                   innerContainerClassName="p-4"
                 >
                   <AppliedFilterPillsList

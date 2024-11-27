@@ -456,7 +456,7 @@ export const EditSegment = ({
   return (
     <button
       className={classNames(
-        'block w-4 h-4 fill-current hover:fill-indigo-600',
+        'flex items-center justify-center w-5 h-5 fill-current hover:fill-indigo-600',
         className
       )}
       onClick={onClick}

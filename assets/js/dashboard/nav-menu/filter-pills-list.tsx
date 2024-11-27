@@ -34,7 +34,7 @@ type NoRenderOutsideSlice = {
 
 type AppliedFilterPillsListProps = Omit<
   FilterPillsListProps,
-  'slice' | 'pillProps'
+  'slice' | 'pillProps' | 'pills'
 > & { slice?: InvisibleOutsideSlice | NoRenderOutsideSlice }
 
 type FilterPillsListProps = {

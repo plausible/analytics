@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { ReactNode, useCallback, useState } from 'react'
+import React, { ReactNode, useCallback, useEffect, useState } from 'react'
 import ModalWithRouting from '../stats/modals/modal'
 import {
   formatSegmentIdAsLabelKey,
@@ -25,7 +25,9 @@ import {
   EyeSlashIcon,
   EyeIcon,
   XMarkIcon,
-  CheckIcon
+  CheckIcon,
+  ChevronUpIcon,
+  ChevronDownIcon
 } from '@heroicons/react/24/solid'
 import { FilterPill } from '../nav-menu/filter-pill'
 import { Filter } from '../query'
@@ -294,16 +296,16 @@ const ExpandSegmentButton = ({
   return (
     <button
       className={classNames(
-        'block w-4 h-4 fill-current hover:fill-indigo-600',
+        'flex w-5 h-5 items-center justify-center fill-current hover:fill-indigo-600 ',
         className
       )}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
     >
       {expanded ? (
-        <EyeSlashIcon className="block w-4 h-4" />
+        <ChevronUpIcon className="block w-4 h-4" />
       ) : (
-        <EyeIcon className="block w-4 h-4" />
+        <ChevronDownIcon className="block w-4 h-4" />
       )}
     </button>
   )
@@ -311,7 +313,7 @@ const ExpandSegmentButton = ({
 const SegmentRow = ({
   id,
   name,
-  type,
+  // type,
   toggleSelected,
   selected
 }: SavedSegment & { toggleSelected: () => void; selected: boolean }) => {
@@ -320,16 +322,21 @@ const SegmentRow = ({
       id
     })
   const [segmentDataVisible, setSegmentDataVisible] = useState(false)
-
   return (
     <div
-      className="grid grid-cols-[1fr_20px_20px] shadow rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm py-3 px-3 transition-all"
+      className="grid grid-cols-[1fr_20px_20px] shadow rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm py-3 px-3 transition-all"
       onMouseEnter={prefetchSegment}
     >
       {/* <button className="block" onClick={toggleSelected}>
         {selected && <CheckIcon className="block w-4 h-4" />}
       </button> */}
-      <div onClick={toggleSelected} className={classNames(selected && 'font-bold')}>
+      <div
+        onClick={toggleSelected}
+        className={classNames(
+          'cursor-pointer break-all',
+          selected && 'font-extrabold'
+        )}
+      >
         {name}
         {/* <span>{' · '}</span> */}
         {/* <span className="text-[10px] leading">
@@ -347,7 +354,7 @@ const SegmentRow = ({
                 fetchSegment()
               }
         }
-      ></ExpandSegmentButton>
+      />
       <EditSegment
         onClick={async () => {
           expandSegment(data ?? (await fetchSegment()))
@@ -408,8 +415,26 @@ export const AllSegmentsModal = () => {
         )
       )
 
+  const searchResults = data?.filter(getFilterSegmentsByNameInsensitive(search))
+
+  const personalSegments = searchResults?.filter(
+    (i) => i.type === SegmentType.personal
+  )
+  const siteSegments = searchResults?.filter((i) => i.type === SegmentType.site)
+
+  const [upToPersonalSegment, setUpToPersonalSegment] = useState(4)
+  const [upToSiteSegment, setUpToSiteSegment] = useState(4)
+
+  useEffect(() => {
+    setUpToPersonalSegment(4)
+    setUpToSiteSegment(4)
+  }, [data, search])
+
   return (
-    <ModalWithRouting maxWidth="460px" className="p-6 min-h-fit">
+    <ModalWithRouting
+      maxWidth="460px"
+      className="p-6 min-h-fit text-gray-700 dark:text-gray-300"
+    >
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-x-2">
           <h1 className="text-xl font-bold dark:text-gray-100">Segments</h1>
@@ -419,22 +444,62 @@ export const AllSegmentsModal = () => {
       <div className="my-4 border-b border-gray-300"></div>
 
       <div className="flex flex-col gap-y-2">
-        {(data?.filter(getFilterSegmentsByNameInsensitive(search)) ?? []).map(
-          (item) => (
-            <SegmentRow
-              key={item.id}
-              {...item}
-              toggleSelected={getToggleSelected(item.id)}
-              selected={selectedSegmentIds.includes(item.id)}
-            />
-          )
+        {[
+          {
+            segments: personalSegments,
+            title: 'Personal',
+            sliceEnd: upToPersonalSegment,
+            showMore: () => setUpToPersonalSegment((curr) => curr + 10)
+          },
+          {
+            segments: siteSegments,
+            title: 'Site',
+            sliceEnd: upToSiteSegment,
+            showMore: () => setUpToSiteSegment((curr) => curr + 10)
+          }
+        ]
+          .filter((i) => !!i.segments?.length)
+          .map(({ segments, title, sliceEnd, showMore }) => (
+            <>
+              <h2 className="mt-2 text-l font-bold dark:text-gray-100">
+                {title}
+              </h2>
+              {segments!.slice(0, sliceEnd).map((item) => (
+                <SegmentRow
+                  key={item.id}
+                  {...item}
+                  toggleSelected={getToggleSelected(item.id)}
+                  selected={selectedSegmentIds.includes(item.id)}
+                />
+              ))}
+              {segments?.length && sliceEnd < segments.length && (
+                <button onClick={showMore} className="button self-center	">
+                  Show more
+                </button>
+              )}
+            </>
+          ))}
+        {!personalSegments?.length && !siteSegments?.length && (
+          <span>
+            No segments found.{' '}
+            {/* {!!search?.trim().length && (
+              <button
+                className="inline cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"
+                onClick={() => setSearch('')}
+              >
+                {'Clear search to see all.'}
+              </button>
+            )} */}
+          </span>
         )}
       </div>
-      <div className="my-4 border-b border-gray-300"></div>
+      {/* <div className="my-4 border-b border-gray-300"></div> */}
 
-      <div>
+      <div className="mt-4">
+        <h2 className="text-l font-bold dark:text-gray-100">Selected filter</h2>
+
         {!!data && !!proposedSegmentFilter && (
-          <div className="mt-4 justify-self-start">
+          <div className="mt-2 justify-self-start">
             {/* <FilterPillsList
               className="flex-wrap"
               direction="horizontal"
@@ -471,6 +536,7 @@ export const AllSegmentsModal = () => {
             </FilterPill>
           </div>
         )}
+        {proposedSegmentFilter === null && <span>No segments selected.</span>}
         <div className="mt-6 flex items-center justify-start gap-x-2">
           <AppNavigationLink
             className="button"
@@ -510,7 +576,7 @@ export const AllSegmentsModal = () => {
               }
             }}
           >
-            Apply selected
+            Apply
           </AppNavigationLink>
           <AppNavigationLink
             className="button bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-700"
@@ -531,7 +597,7 @@ export const AllSegmentsModal = () => {
               }
             }}
           >
-            Clear selected
+            Clear
           </AppNavigationLink>
         </div>
       </div>

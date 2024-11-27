@@ -75,8 +75,14 @@ defmodule Plausible.Stats.TableDecider do
   defp metric_partitioner(_, :average_revenue), do: :event
   defp metric_partitioner(_, :total_revenue), do: :event
   defp metric_partitioner(_, :scroll_depth), do: :event
-  defp metric_partitioner(_, :pageviews), do: :event
-  defp metric_partitioner(_, :events), do: :event
+  defp metric_partitioner(q, :pageviews) do
+    IO.inspect([:pageviews, q.filters, q.dimensions])
+    :event
+  end
+  defp metric_partitioner(q, :events) do
+    IO.inspect([:events, q.filters, q.dimensions])
+    :event
+  end
   defp metric_partitioner(_, :bounce_rate), do: :session
   defp metric_partitioner(_, :visit_duration), do: :session
   defp metric_partitioner(_, :views_per_visit), do: :session
