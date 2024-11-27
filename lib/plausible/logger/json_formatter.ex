@@ -45,7 +45,7 @@ defmodule Plausible.Logger.JSONFormatter do
 
     json =
       try do
-        msg = process_message(msg, truncate)
+        msg = process_message(msg, meta, truncate)
         meta = process_meta(meta, metadata_keys)
         log = %Log{fields: [{"level", level}, {"time", time}, {"msg", msg} | meta]}
         Jason.encode_to_iodata!(log)
@@ -70,11 +70,32 @@ defmodule Plausible.Logger.JSONFormatter do
     format_time(date, time)
   end
 
-  defp process_message({:string, msg}, truncate) when is_binary(msg) do
+  defp process_message({:string, msg}, _meta, truncate) when is_binary(msg) do
     Logger.Formatter.truncate(msg, truncate)
   end
 
-  defp process_message({:report, report}, _truncate) do
+  defp process_message({:report, report}, %{report_cb: callback}, truncate) do
+    cond do
+      is_function(callback, 1) and callback != (&:logger.format_otp_report/1) ->
+        Logger.Formatter.truncate(callback.(report), truncate)
+
+      is_function(callback, 2) ->
+        callback.(report, %{depth: :unlimited, chars_limit: truncate, single_line: false})
+
+      true ->
+        format_report(report)
+    end
+  end
+
+  defp process_message({:report, report}, _meta, _truncate) do
+    format_report(report)
+  end
+
+  defp process_message({format, args}, _meta, truncate) do
+    format |> Logger.Utils.scan_inspect(args, truncate) |> :io_lib.build_text()
+  end
+
+  defp format_report(report) do
     report =
       case report do
         _ when is_list(report) -> report
@@ -84,10 +105,6 @@ defmodule Plausible.Logger.JSONFormatter do
     %Log{fields: process_meta_all(report)}
     |> Jason.encode_to_iodata!()
     |> Jason.Fragment.new()
-  end
-
-  defp process_message({format, args}, truncate) do
-    format |> Logger.Utils.scan_inspect(args, truncate) |> :io_lib.build_text()
   end
 
   defp process_meta(meta, keys) do
