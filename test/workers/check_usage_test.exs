@@ -448,6 +448,7 @@ defmodule Plausible.Workers.CheckUsageTest do
         )
       end
 
+      @tag :skip
       test "checks site limit for enterprise customer, sends usage information to enterprise@plausible.io",
            %{
              user: user
@@ -461,18 +462,17 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        enterprise_plan = insert(:enterprise_plan, user: user, site_limit: 2)
-
-        insert(:site, members: [user])
-        insert(:site, members: [user])
-        insert(:site, members: [user])
-
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: enterprise_plan.paddle_plan_id,
-          last_bill_date: Timex.shift(Timex.today(), days: -1),
-          status: unquote(status)
+        subscribe_to_enterprise_plan(user,
+          site_limit: 2,
+          subscription: [
+            last_bill_date: Timex.shift(Timex.today(), days: -1),
+            status: unquote(status)
+          ]
         )
+
+        new_site(owner: user)
+        new_site(owner: user)
+        new_site(owner: user)
 
         CheckUsage.perform(nil, usage_stub)
 

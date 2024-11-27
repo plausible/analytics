@@ -207,15 +207,22 @@ defmodule Plausible.Teams.Test do
     {:ok, team} = Teams.get_or_create(user)
 
     {subscription?, attrs} = Keyword.pop(attrs, :subscription?, true)
+    {subscription_attrs, attrs} = Keyword.pop(attrs, :subscription, [])
 
     # enterprise_plan = insert(:enterprise_plan, Keyword.merge([user: user, team: team], attrs))
     enterprise_plan = insert(:enterprise_plan, Keyword.merge([team: team], attrs))
 
     if subscription? do
-      insert(:subscription,
-        team: team,
-        # user: user,
-        paddle_plan_id: enterprise_plan.paddle_plan_id
+      insert(
+        :subscription,
+        Keyword.merge(
+          [
+            team: team,
+            # user: user,
+            paddle_plan_id: enterprise_plan.paddle_plan_id
+          ],
+          subscription_attrs
+        )
       )
     end
 
