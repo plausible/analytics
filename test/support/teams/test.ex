@@ -65,13 +65,24 @@ defmodule Plausible.Teams.Test do
     Repo.preload(user, team_memberships: :team)
   end
 
-  def team_of(%{team_memberships: [%{role: :owner, team: %Teams.Team{} = team}]}) do
-    team
+  def team_of(subject, opts \\ [])
+
+  def team_of(%{team_memberships: [%{role: :owner, team: %Teams.Team{} = team}]}, opts) do
+    if opts[:with_subscription?] do
+      Plausible.Teams.with_subscription(team)
+    else
+      team
+    end
   end
 
-  def team_of(user) do
+  def team_of(user, opts) do
     {:ok, team} = Plausible.Teams.get_by_owner(user)
-    team
+
+    if opts[:with_subscription?] do
+      Plausible.Teams.with_subscription(team)
+    else
+      team
+    end
   end
 
   def add_guest(site, args \\ []) do
