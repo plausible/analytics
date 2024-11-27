@@ -36,7 +36,20 @@ defmodule Plausible.Logger.JSONFormatter do
   end
 
   # TODO replace invalid UTF8 with � in msg and meta?
-  #      or just use https://www.erlang.org/doc/apps/stdlib/json.html#encode_binary_escape_all/1
+  #
+  # iex(3)> Jason.encode_to_iodata!("\x61\xF0\x80\x80\x80b", escapt: :unicode_safe)
+  # ** (Jason.EncodeError) invalid byte 0xF0 in <<97, 240, 128, 128, 128, 98>>
+  #     (jason 1.4.4) lib/jason.ex:213: Jason.encode_to_iodata!/2
+  #     iex:3: (file)
+  #
+  # iex(3)> :json.encode_binary_escape_all("\x61\xF0\x80\x80\x80b")
+  # ** (ErlangError) Erlang error: {:invalid_byte, 240}
+  #     (stdlib 6.0) json.erl:533: :json.invalid_byte/2
+  #     iex:3: (file)
+  #
+  # iex(3)> Logger.Formatter.prune "\x61\xF0\x80\x80\x80b"
+  # "a����b"
+
   @doc false
   @spec format(:logger.log_event(), map) :: iodata
   def format(%{meta: meta, level: level, msg: msg}, config) do
