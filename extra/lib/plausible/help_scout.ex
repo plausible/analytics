@@ -82,18 +82,27 @@ defmodule Plausible.HelpScout do
   def get_details_for_emails(emails, customer_id) do
     with {:ok, user} <- get_user(emails) do
       set_mapping(customer_id, user.email)
-      user = Plausible.Users.with_subscription(user.id)
-      plan = Billing.Plans.get_subscription_plan(user.subscription)
+
+      {team, subscription, plan} =
+        case Plausible.Teams.get_by_owner(user) do
+          {:ok, team} ->
+            team = Plausible.Teams.with_subscription(team)
+            plan = Billing.Plans.get_subscription_plan(team.subscription)
+            {team, team.subscription, plan}
+
+          {:error, :no_team} ->
+            {nil, nil, nil}
+        end
 
       {:ok,
        %{
          email: user.email,
          notes: user.notes,
-         status_label: status_label(user),
+         status_label: status_label(team, subscription),
          status_link:
            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :show, :auth, :user, user.id),
-         plan_label: plan_label(user.subscription, plan),
-         plan_link: plan_link(user.subscription),
+         plan_label: plan_label(subscription, plan),
+         plan_link: plan_link(subscription),
          sites_count: Plausible.Sites.owned_sites_count(user),
          sites_link:
            Routes.kaffy_resource_url(PlausibleWeb.Endpoint, :index, :sites, :site,
@@ -137,31 +146,31 @@ defmodule Plausible.HelpScout do
     ])
   end
 
-  defp status_label(user) do
-    subscription_active? = Billing.Subscriptions.active?(user.subscription)
-    trial? = Plausible.Users.on_trial?(user)
+  defp status_label(team, subscription) do
+    subscription_active? = Billing.Subscriptions.active?(subscription)
+    trial? = Plausible.Teams.on_trial?(team)
 
     cond do
-      not subscription_active? and not trial? and is_nil(user.trial_expiry_date) ->
+      not subscription_active? and not trial? and (is_nil(team) or is_nil(team.trial_expiry_date)) ->
         "None"
 
-      is_nil(user.subscription) and not trial? ->
+      is_nil(subscription) and not trial? ->
         "Expired trial"
 
       trial? ->
         "Trial"
 
-      user.subscription.status == Subscription.Status.deleted() ->
+      subscription.status == Subscription.Status.deleted() ->
         if subscription_active? do
           "Pending cancellation"
         else
           "Canceled"
         end
 
-      user.subscription.status == Subscription.Status.paused() ->
+      subscription.status == Subscription.Status.paused() ->
         "Paused"
 
-      Plausible.Sites.owned_sites_locked?(user) ->
+      Plausible.Teams.owned_sites_locked?(team) ->
         "Dashboard locked"
 
       subscription_active? ->

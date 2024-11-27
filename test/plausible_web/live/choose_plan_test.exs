@@ -867,7 +867,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "highlights recommended tier if subscription expired and no days are paid for anymore",
          %{conn: conn, user: user} do
-      user.subscription
+      user
+      |> team_of()
+      |> Repo.preload(:subscription)
+      |> Map.fetch!(:subscription)
       |> Subscription.changeset(%{next_bill_date: Timex.shift(Timex.now(), months: -2)})
       |> Repo.update()
 

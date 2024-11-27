@@ -1,23 +1,29 @@
 defmodule PlausibleWeb.AdminController do
   use PlausibleWeb, :controller
 
-  alias Plausible.Billing.Quota
+  alias Plausible.Teams
 
   def usage(conn, params) do
-    user =
-      params["user_id"]
-      |> String.to_integer()
-      |> Plausible.Users.with_subscription()
+    user_id = String.to_integer(params["user_id"])
 
-    usage = Quota.Usage.usage(user, with_features: true)
+    team =
+      case Teams.get_by_owner(user_id) do
+        {:ok, team} ->
+          Teams.with_subscription(team)
+
+        {:error, :no_team} ->
+          nil
+      end
+
+    usage = Teams.Billing.quota_usage(team, with_features: true)
 
     limits = %{
-      monthly_pageviews: Quota.Limits.monthly_pageview_limit(user.subscription),
-      sites: Quota.Limits.site_limit(user),
-      team_members: Quota.Limits.team_member_limit(user)
+      monthly_pageviews: Teams.Billing.monthly_pageview_limit(team),
+      sites: Teams.Billing.site_limit(team),
+      team_members: Teams.Billing.team_member_limit(team)
     }
 
-    html_response = usage_and_limits_html(user, usage, limits, params["embed"] == "true")
+    html_response = usage_and_limits_html(team, usage, limits, params["embed"] == "true")
 
     conn
     |> put_resp_content_type("text/html")
@@ -25,14 +31,20 @@ defmodule PlausibleWeb.AdminController do
   end
 
   def current_plan(conn, params) do
-    user =
-      params["user_id"]
-      |> String.to_integer()
-      |> Plausible.Users.with_subscription()
+    user_id = String.to_integer(params["user_id"])
+
+    team =
+      case Teams.get_by_owner(user_id) do
+        {:ok, team} ->
+          Teams.with_subscription(team)
+
+        {:error, :no_team} ->
+          nil
+      end
 
     plan =
-      case user && user.subscription &&
-             Plausible.Billing.Plans.get_subscription_plan(user.subscription) do
+      case team && team.subscription &&
+             Plausible.Billing.Plans.get_subscription_plan(team.subscription) do
         %{} = plan ->
           plan
           |> Map.take([
@@ -56,9 +68,10 @@ defmodule PlausibleWeb.AdminController do
     |> send_resp(200, json_response)
   end
 
-  defp usage_and_limits_html(user, usage, limits, embed?) do
+  defp usage_and_limits_html(team, usage, limits, embed?) do
     content = """
       <ul>
+        <li>Team: <b>#{team.name}</b></li>
         <li>Sites: <b>#{usage.sites}</b> / #{limits.sites}</li>
         <li>Team members: <b>#{usage.team_members}</b> / #{limits.team_members}</li>
         <li>Features: #{features_usage(usage.features)}</li>
@@ -76,7 +89,7 @@ defmodule PlausibleWeb.AdminController do
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Usage - user:#{user.id}</title>
+        <title>Usage - team:#{team.id}</title>
         <style>
           ul, li {margin-top: 10px;}
           body {padding-top: 10px;}

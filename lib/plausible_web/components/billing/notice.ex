@@ -106,7 +106,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     """
   end
 
-  attr(:user, :map, required: true)
+  attr(:subscription, :map, required: true)
   attr(:dismissable, :boolean, default: true)
 
   @doc """
@@ -127,18 +127,18 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   def subscription_cancelled(
         %{
           dismissable: true,
-          user: %User{subscription: %Subscription{status: Subscription.Status.deleted()}}
+          subscription: %Subscription{status: Subscription.Status.deleted()}
         } = assigns
       ) do
     ~H"""
     <aside id="global-subscription-cancelled-notice" class="container">
       <.notice
-        dismissable_id={Plausible.Billing.cancelled_subscription_notice_dismiss_id(@user)}
+        dismissable_id={Plausible.Billing.cancelled_subscription_notice_dismiss_id(@subscription.id)}
         title="Subscription cancelled"
         theme={:red}
         class="shadow-md dark:shadow-none"
       >
-        <.subscription_cancelled_notice_body user={@user} />
+        <.subscription_cancelled_notice_body subscription={@subscription} />
       </.notice>
     </aside>
     """
@@ -147,7 +147,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   def subscription_cancelled(
         %{
           dismissable: false,
-          user: %User{subscription: %Subscription{status: Subscription.Status.deleted()}}
+          subscription: %Subscription{status: Subscription.Status.deleted()}
         } = assigns
       ) do
     assigns = assign(assigns, :container_id, "local-subscription-cancelled-notice")
@@ -155,11 +155,11 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     ~H"""
     <aside id={@container_id} class="hidden">
       <.notice title="Subscription cancelled" theme={:red} class="shadow-md dark:shadow-none">
-        <.subscription_cancelled_notice_body user={@user} />
+        <.subscription_cancelled_notice_body subscription={@subscription} />
       </.notice>
     </aside>
     <script
-      data-localstorage-key={"notice_dismissed__#{Plausible.Billing.cancelled_subscription_notice_dismiss_id(assigns.user)}"}
+      data-localstorage-key={"notice_dismissed__#{Plausible.Billing.cancelled_subscription_notice_dismiss_id(@subscription.id)}"}
       data-container-id={@container_id}
     >
       const dataset = document.currentScript.dataset
@@ -261,7 +261,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
   end
 
   defp subscription_cancelled_notice_body(assigns) do
-    if Subscriptions.expired?(assigns.user.subscription) do
+    if Subscriptions.expired?(assigns.subscription) do
       ~H"""
       <.link
         class="underline inline-block"
@@ -274,7 +274,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     else
       ~H"""
       <p>
-        You have access to your stats until <span class="font-semibold inline"><%= Calendar.strftime(@user.subscription.next_bill_date, "%b %-d, %Y") %></span>.
+        You have access to your stats until <span class="font-semibold inline"><%= Calendar.strftime(@subscription.next_bill_date, "%b %-d, %Y") %></span>.
         <.link
           class="underline inline-block"
           href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
@@ -283,12 +283,12 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         </.link>
         to make sure you don't lose access.
       </p>
-      <.lose_grandfathering_warning user={@user} />
+      <.lose_grandfathering_warning subscription={@subscription} />
       """
     end
   end
 
-  defp lose_grandfathering_warning(%{user: %{subscription: subscription}} = assigns) do
+  defp lose_grandfathering_warning(%{subscription: subscription} = assigns) do
     plan = Plans.get_regular_plan(subscription, only_non_expired: true)
     loses_grandfathering = plan && plan.generation < 4
 
