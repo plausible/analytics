@@ -129,7 +129,7 @@ defmodule PlausibleWeb.AdminControllerTest do
     } do
       patch_env(:super_admin_user_ids, [user.id])
 
-      subscribe_to_growth_plan(user)
+      subscribe_to_plan(user, "does-not-exist")
 
       conn = get(conn, "/crm/billing/user/#{user.id}/current_plan")
       assert json_response(conn, 200) == %{"features" => []}
@@ -139,7 +139,7 @@ defmodule PlausibleWeb.AdminControllerTest do
     test "returns plan data for user with subscription", %{conn: conn, user: user} do
       patch_env(:super_admin_user_ids, [user.id])
 
-      insert(:subscription, user: user, paddle_plan_id: "857104")
+      subscribe_to_plan(user, "857104")
 
       conn = get(conn, "/crm/billing/user/#{user.id}/current_plan")
 

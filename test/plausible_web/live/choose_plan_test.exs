@@ -872,7 +872,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       |> Repo.preload(:subscription)
       |> Map.fetch!(:subscription)
       |> Subscription.changeset(%{next_bill_date: Timex.shift(Timex.now(), months: -2)})
-      |> Repo.update()
+      |> Repo.update!()
 
       {:ok, _lv, doc} = get_liveview(conn)
       assert text_of_element(doc, @growth_highlight_pill) == "Recommended"

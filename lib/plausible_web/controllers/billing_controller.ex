@@ -4,7 +4,7 @@ defmodule PlausibleWeb.BillingController do
   require Logger
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing
-  alias Plausible.Billing.{Plans, Subscription}
+  alias Plausible.Billing.Subscription
 
   plug PlausibleWeb.RequireAccountPlug
 
@@ -30,10 +30,14 @@ defmodule PlausibleWeb.BillingController do
 
   def upgrade_to_enterprise_plan(conn, _params) do
     current_user = conn.assigns.current_user
+    current_team = conn.assigns.current_team
     subscription = Plausible.Teams.Adapter.Read.Billing.get_subscription(current_user)
 
     {latest_enterprise_plan, price} =
-      Plans.latest_enterprise_plan_with_price(current_user, PlausibleWeb.RemoteIP.get(conn))
+      Plausible.Teams.Billing.latest_enterprise_plan_with_price(
+        current_team,
+        PlausibleWeb.RemoteIP.get(conn)
+      )
 
     subscription_resumable? =
       Plausible.Billing.Subscriptions.resumable?(subscription)

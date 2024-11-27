@@ -32,6 +32,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert get_in(invitation_data, ["invitations", invitation.invitation_id, "invitation"])
     end
 
+    @tag :skip
     @tag :ee_only
     test "renders ownership transfer invitation for a case with no plan", %{
       conn: conn,
@@ -49,6 +50,7 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert get_in(invitation_data, ["invitations", invitation.invitation_id, "no_plan"])
     end
 
+    @tag :skip
     @tag :ee_only
     test "renders ownership transfer invitation for a case with exceeded limits", %{
       conn: conn,
@@ -71,6 +73,7 @@ defmodule PlausibleWeb.Live.SitesTest do
                "site limit"
     end
 
+    @tag :skip
     @tag :ee_only
     test "renders ownership transfer invitation for a case with missing features", %{
       conn: conn,

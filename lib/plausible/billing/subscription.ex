@@ -16,11 +16,11 @@ defmodule Plausible.Billing.Subscription do
     :status,
     :next_bill_amount,
     :next_bill_date,
-    :user_id,
+    # :team_id,
     :currency_code
   ]
 
-  @optional_fields [:last_bill_date, :team_id]
+  @optional_fields [:last_bill_date, :team_id, :user_id]
 
   schema "subscriptions" do
     field :paddle_subscription_id, :string

@@ -207,9 +207,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
 
     @tag :ee_only
     test "renders cancelled subscription notice", %{conn: conn, user: user} do
-      insert(:subscription,
-        paddle_plan_id: @v4_plan_id,
-        user: user,
+      subscribe_to_plan(
+        user,
+        @v4_plan_id,
         status: :deleted,
         next_bill_date: ~D[2023-01-01]
       )
@@ -229,11 +229,9 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:subscription,
-        paddle_plan_id: @v4_plan_id,
-        user: user,
+      subscribe_to_plan(user, @v4_plan_id,
         status: :deleted,
-        next_bill_date: Timex.shift(Timex.today(), days: 10)
+        next_bill_date: Date.shift(Date.utc_today(), day: 10)
       )
 
       notice_text =
@@ -252,11 +250,11 @@ defmodule PlausibleWeb.SettingsControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:subscription,
-        paddle_plan_id: @v3_plan_id,
-        user: user,
+      subscribe_to_plan(
+        user,
+        @v3_plan_id,
         status: :deleted,
-        next_bill_date: Timex.shift(Timex.today(), days: 10)
+        next_bill_date: Date.shift(Date.utc_today(), day: 10)
       )
 
       notice_text =
@@ -353,11 +351,16 @@ defmodule PlausibleWeb.SettingsControllerTest do
         assert element_exists?(doc, "#total_pageviews_penultimate_cycle")
       end
 
+      subscribe_to_plan(user, @v4_plan_id,
+        status: :active,
+        last_bill_date: Timex.shift(Timex.now(), months: -6)
+      )
+
       subscription =
-        subscribe_to_plan(user, @v4_plan_id,
-          status: :active,
-          last_bill_date: Timex.shift(Timex.now(), months: -6)
-        ).subscription
+        user
+        |> team_of()
+        |> Plausible.Teams.with_subscription()
+        |> Map.fetch!(:subscription)
 
       get(conn, Routes.settings_path(conn, :subscription))
       |> html_response(200)
@@ -458,12 +461,17 @@ defmodule PlausibleWeb.SettingsControllerTest do
       |> html_response(200)
       |> assert_usage.()
 
+      subscribe_to_plan(user, @v4_plan_id,
+        status: :deleted,
+        last_bill_date: ~D[2022-01-01],
+        next_bill_date: ~D[2022-02-01]
+      )
+
       subscription =
-        subscribe_to_plan(user, @v4_plan_id,
-          status: :deleted,
-          last_bill_date: ~D[2022-01-01],
-          next_bill_date: ~D[2022-02-01]
-        ).subscription
+        user
+        |> team_of()
+        |> Plausible.Teams.with_subscription()
+        |> Map.fetch!(:subscription)
 
       conn
       |> get(Routes.settings_path(conn, :subscription))
