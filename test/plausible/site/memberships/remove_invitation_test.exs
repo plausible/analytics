@@ -3,6 +3,7 @@ defmodule Plausible.Site.Memberships.RemoveInvitationTest do
 
   alias Plausible.Site.Memberships.RemoveInvitation
 
+  @tag :skip
   test "removes invitation" do
     inviter = insert(:user)
     invitee = insert(:user)

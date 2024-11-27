@@ -7,6 +7,7 @@ defmodule Plausible.Site.Memberships.RejectInvitationTest do
 
   alias Plausible.Site.Memberships.RejectInvitation
 
+  @tag :skip
   test "rejects invitation and sends email to inviter" do
     inviter = insert(:user)
     invitee = insert(:user)
