@@ -47,11 +47,7 @@ defmodule Plausible.Logger.JSONFormatter do
       try do
         msg = process_message(msg, truncate)
         meta = process_meta(meta, metadata_keys)
-
-        # TODO skip meta if empty?
-        # instead of {"level":"debug","time":"2024-11-26 12:46:36.600","msg":"hello","meta":{}}
-        # do         {"level":"debug","time":"2024-11-26 12:46:36.600","msg":"hello"}
-        log = %Log{fields: [{"level", level}, {"time", time}, {"msg", msg}, {"meta", meta}]}
+        log = %Log{fields: [{"level", level}, {"time", time}, {"msg", msg} | meta]}
         Jason.encode_to_iodata!(log)
       catch
         kind, reason ->
@@ -95,15 +91,10 @@ defmodule Plausible.Logger.JSONFormatter do
   end
 
   defp process_meta(meta, keys) do
-    meta_fields =
-      case keys do
-        :all -> meta |> Map.to_list() |> process_meta_all()
-        _keys when is_list(keys) -> process_meta_keys(keys, meta)
-      end
-
-    %Log{fields: meta_fields}
-    |> Jason.encode_to_iodata!()
-    |> Jason.Fragment.new()
+    case keys do
+      :all -> meta |> Map.to_list() |> process_meta_all()
+      _keys when is_list(keys) -> process_meta_keys(keys, meta)
+    end
   end
 
   defp process_meta_all([{k, v} | rest]) do
@@ -137,6 +128,8 @@ defmodule Plausible.Logger.JSONFormatter do
   end
 
   defp metadata(:time, _), do: nil
+  defp metadata(:level, _), do: nil
+  defp metadata(:msg, _), do: nil
   defp metadata(:gl, _), do: nil
   defp metadata(:report_cb, _), do: nil
   defp metadata(_, nil), do: nil
