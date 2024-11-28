@@ -115,6 +115,7 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
                 modal: 'update'
               } as SegmentExpandedLocationState
             }}
+            onClick={closeList}
           >
             Update segment
           </DropdownNavigationLink>
@@ -127,6 +128,7 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
                 modal: 'create'
               } as SegmentExpandedLocationState
             }}
+            onClick={closeList}
           >
             Save as a new segment
           </DropdownNavigationLink>
@@ -139,6 +141,7 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
                 modal: 'delete'
               } as SegmentExpandedLocationState
             }}
+            onClick={closeList}
           >
             Delete segment
           </DropdownNavigationLink>

@@ -7,6 +7,7 @@ import {
   getFilterSegmentsByNameInsensitive,
   isSegmentFilter,
   SavedSegment,
+  SegmentData,
   SegmentType
 } from './segments'
 import {
@@ -33,22 +34,23 @@ import { Filter } from '../query'
 import { SegmentAuthorship } from './segment-authorship'
 // import { SegmentExpandedLocationState } from './segment-expanded-context'
 
-const buttonClass = 'border text-md font-medium py-3 px-4 rounded-md'
+const buttonClass =
+  'transition border text-md font-medium py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
 
 const primaryNeutralButtonClass = classNames(
   buttonClass,
-  'border-indigo-600 bg-indigo-600 text-gray-100'
+  'bg-indigo-600 hover:bg-indigo-700 text-white border-transparent'
 )
 
 const primaryNegativeButtonClass = classNames(
   buttonClass,
-  'border-red-500 bg-red-500 text-gray-100'
+  'border-transparent bg-red-500 hover:bg-red-600 text-white border-transparent'
 )
 
 const secondaryButtonClass = classNames(
   buttonClass,
-  // 'border-indigo-600 text-indigo-600',
-  'border-indigo-500 text-indigo-500'
+  'border-indigo-500 text-indigo-500 hover:border-indigo-600 hover:text-indigo-600',
+  'dark:hover:border-indigo-400 dark:hover:text-indigo-400'
 )
 
 const SegmentActionModal = ({
@@ -130,18 +132,31 @@ export const DeleteSegmentModal = ({
 }: {
   onClose: () => void
   onSave: (input: Pick<SavedSegment, 'id'>) => void
-  segment: SavedSegment
+  segment: SavedSegment & { segment_data?: SegmentData }
 }) => {
   return (
     <SegmentActionModal onClose={onClose}>
-      <h1 className="text-xl font-extrabold	dark:text-gray-100">
+      <FormTitle>
         {
           { personal: 'Delete personal segment', site: 'Delete site segment' }[
             segment.type
           ]
         }
         <span className="break-all">{` "${segment.name}"?`}</span>
-      </h1>
+      </FormTitle>
+      {segment?.segment_data && (
+        <FilterPillsList
+          className="flex-wrap"
+          direction="horizontal"
+          pills={segment.segment_data.filters.map((filter) => ({
+            // className: 'dark:!bg-gray-700',
+            plainText: plainFilterText(segment.segment_data!.labels, filter),
+            children: styledFilterText(segment.segment_data!.labels, filter),
+            interactive: false
+          }))}
+        />
+      )}
+
       <ButtonsRow>
         <button className={secondaryButtonClass} onClick={onClose}>
           Cancel
@@ -196,6 +211,10 @@ const SegmentNameInput = ({
   )
 }
 
+const radioClassName =
+  'w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:border-gray-600'
+const radioLabelClassName =
+  'ms-3 text-sm font-medium text-gray-900 dark:text-gray-300'
 const SegmentTypeInput = ({
   value,
   onChange,
@@ -214,13 +233,10 @@ const SegmentTypeInput = ({
           type="radio"
           value=""
           onClick={() => onChange(SegmentType.personal)}
-          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          className={radioClassName}
           disabled={disabled}
         />
-        <label
-          htmlFor="segment-type-personal"
-          className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"
-        >
+        <label htmlFor="segment-type-personal" className={radioLabelClassName}>
           <div className="font-bold">Personal segment</div>
           <div className="mt-1">Visible only to you</div>
         </label>
@@ -232,13 +248,10 @@ const SegmentTypeInput = ({
           type="radio"
           value=""
           onClick={() => onChange(SegmentType.site)}
-          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+          className={radioClassName}
           disabled={disabled}
         />
-        <label
-          htmlFor="segment-type-site"
-          className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"
-        >
+        <label htmlFor="segment-type-site" className={radioLabelClassName}>
           <div className="font-bold">Site segment</div>
           <div className="mt-1">Visible to others on the site</div>
         </label>
@@ -499,14 +512,20 @@ export const AllSegmentsModal = () => {
                 />
               ))}
               {segments?.length && sliceEnd < segments.length && (
-                <button onClick={showMore} className="button self-center mt-1">
+                <button
+                  onClick={showMore}
+                  className={classNames(
+                    'self-center mt-1',
+                    secondaryButtonClass
+                  )}
+                >
                   Show more
                 </button>
               )}
             </>
           ))}
         {!personalSegments?.length && !siteSegments?.length && (
-          <span>No segments found.</span>
+          <p>No segments found.</p>
         )}
       </div>
 
@@ -539,10 +558,12 @@ export const AllSegmentsModal = () => {
             </FilterPill>
           </div>
         )}
-        {proposedSegmentFilter === null && <span>No segments selected.</span>}
-        <div className="mt-6 flex items-center justify-start gap-x-2">
+        {proposedSegmentFilter === null && (
+          <p className="mt-2">No segments selected.</p>
+        )}
+        <ButtonsRow>
           <AppNavigationLink
-            className="button"
+            className={primaryNeutralButtonClass}
             path={rootRoute.path}
             search={(s) => {
               const nonSegmentFilters = query.filters.filter(
@@ -582,7 +603,7 @@ export const AllSegmentsModal = () => {
             Apply
           </AppNavigationLink>
           <AppNavigationLink
-            className="button bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-700"
+            className={primaryNegativeButtonClass}
             path={rootRoute.path}
             search={(s) => {
               const nonSegmentFilters = query.filters.filter(
@@ -602,7 +623,7 @@ export const AllSegmentsModal = () => {
           >
             Clear
           </AppNavigationLink>
-        </div>
+        </ButtonsRow>
       </div>
     </ModalWithRouting>
   )
