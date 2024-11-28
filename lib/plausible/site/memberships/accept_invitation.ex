@@ -12,6 +12,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   the invitation and accepting it.
   """
 
+  import Ecto.Query, only: [from: 2]
+
   alias Ecto.Multi
   alias Plausible.Auth
   alias Plausible.Billing
@@ -187,7 +189,14 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   defp downgrade_previous_owner(multi, site, new_owner) do
     new_owner_id = new_owner.id
 
-    previous_owner = get_previous_owner(site)
+    previous_owner =
+      Repo.one(
+        from(
+          sm in Site.Membership,
+          where: sm.site_id == ^site.id,
+          where: sm.role == :owner
+        )
+      )
 
     case previous_owner do
       %{user_id: ^new_owner_id} ->
@@ -202,23 +211,11 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
         Multi.put(multi, :previous_owner_membership, nil)
 
       previous_owner ->
-        Multi.insert_or_update(
+        Multi.update(
           multi,
           :previous_owner_membership,
           Site.Membership.set_role(previous_owner, :admin)
         )
-    end
-  end
-
-  defp get_previous_owner(site) do
-    # Disguise new team schema, as old site membership,
-    # so that we can keep switching on reads
-    case Plausible.Teams.Sites.get_owner(site.team) do
-      {:ok, user} ->
-        %Site.Membership{site_id: site.id, user_id: user.id}
-
-      _ ->
-        nil
     end
   end
 
