@@ -271,6 +271,34 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
+    test "can filter by utm_medium case insensitively", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          utm_medium: "Social",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_medium: "SOCIAL",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+          "filters" => [["is", "visit:utm_medium", ["sociaL"], %{"case_sensitive" => false}]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
+             ]
+    end
+
     test "can filter by utm_source", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -621,6 +649,43 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 200)["results"] == [%{"metrics" => [2, 3], "dimensions" => []}]
     end
 
+    test "filtering by a custom event goal (case insensitive)", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "NotConfigured",
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors", "events"],
+          "filters" => [
+            ["is", "event:goal", ["signup"], %{"case_sensitive" => false}]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [2, 3], "dimensions" => []}]
+    end
+
     test "filtering by a revenue goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event,
@@ -819,6 +884,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
     end
 
+    test "contains page filter case insensitive", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/en/page1"),
+        build(:pageview, pathname: "/EN/page2"),
+        build(:pageview, pathname: "/pl/page1")
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [
+            ["contains", "event:page", ["/En/"], %{"case_sensitive" => false}]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
+    end
+
     test "contains_not page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/en/page1"),
@@ -1007,6 +1092,47 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         })
 
       assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
+    end
+
+    test "`contains` operator with custom properties case insensitive", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["name"],
+          "meta.value": ["large-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["name"],
+          "meta.value": ["Small-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["name"],
+          "meta.value": ["mall-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["name"],
+          "meta.value": ["SMALL-2"]
+        ),
+        build(:pageview,
+          "meta.key": ["name"],
+          "meta.value": ["small-2"]
+        ),
+        build(:pageview)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [
+            ["contains", "event:props:name", ["maLL"], %{"case_sensitive" => false}]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [4], "dimensions" => []}]
     end
 
     test "`matches` and `matches_not` operator with custom properties", %{
@@ -2587,6 +2713,39 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
            ]
   end
 
+  test "goal contains filter for goal breakdown (case insensitive)", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:event, name: "Onboarding conversion: Step 1"),
+      build(:event, name: "Onboarding conversion: Step 1"),
+      build(:event, name: "Onboarding conversion: Step 2"),
+      build(:event, name: "Unrelated"),
+      build(:pageview, pathname: "/conversion")
+    ])
+
+    insert(:goal, site: site, event_name: "Onboarding conversion: Step 1")
+    insert(:goal, site: site, event_name: "Onboarding conversion: Step 2")
+    insert(:goal, site: site, event_name: "Unrelated")
+    insert(:goal, site: site, page_path: "/conversion")
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "dimensions" => ["event:goal"],
+        "filters" => [
+          ["contains", "event:goal", ["step"], %{"case_sensitive" => false}]
+        ]
+      })
+
+    %{"results" => results} = json_response(conn, 200)
+
+    assert results == [
+             %{"dimensions" => ["Onboarding conversion: Step 1"], "metrics" => [2]},
+             %{"dimensions" => ["Onboarding conversion: Step 2"], "metrics" => [1]}
+           ]
+  end
+
   test "mixed multi-goal filter for breakdown by visit:country", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview, country_code: "EE", pathname: "/en/register"),
@@ -2813,6 +2972,43 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
            ]
   end
 
+  test "IN filter for event:name case insensitive", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:event,
+        name: "Signup",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:event,
+        name: "Signup",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:event,
+        name: "Login",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:event,
+        name: "Irrelevant",
+        timestamp: ~N[2021-01-01 00:00:00]
+      )
+    ])
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [
+          ["is", "event:name", ["signup", "LOGIN"], %{"case_sensitive" => false}]
+        ]
+      })
+
+    %{"results" => results} = json_response(conn, 200)
+
+    assert results == [
+             %{"dimensions" => [], "metrics" => [3]}
+           ]
+  end
+
   test "IN filter for event:props:*", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview,
@@ -2895,7 +3091,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "date_range" => "all",
         "dimensions" => ["visit:browser"],
         "filters" => [
-          ["is", "event:props:browser", ["Chrome", "Safari"]],
+          ["is", "event:props:browser", ["CHROME", "sAFari"], %{"case_sensitive" => false}],
           ["is", "event:props:prop", ["target_value"]]
         ]
       })
@@ -3719,5 +3915,33 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
                %{"dimensions" => ["/blog", "2020-01-02"], "metrics" => [20]}
              ]
     end
+  end
+
+  test "can filter by utm_medium case insensitively", %{conn: conn, site: site} do
+    populate_stats(site, [
+      build(:pageview,
+        utm_medium: "Social",
+        user_id: @user_id,
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:pageview,
+        utm_medium: "SOCIAL",
+        user_id: @user_id,
+        timestamp: ~N[2021-01-01 00:25:00]
+      ),
+      build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+    ])
+
+    conn =
+      post(conn, "/api/v2/query", %{
+        "site_id" => site.domain,
+        "date_range" => "all",
+        "metrics" => ["pageviews", "visitors", "bounce_rate", "visit_duration"],
+        "filters" => [["is", "visit:utm_medium", ["social"], %{"case_sensitive" => false}]]
+      })
+
+    assert json_response(conn, 200)["results"] == [
+             %{"metrics" => [2, 1, 0, 1500], "dimensions" => []}
+           ]
   end
 end
