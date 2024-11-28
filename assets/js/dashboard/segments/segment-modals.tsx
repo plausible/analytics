@@ -25,16 +25,31 @@ import {
   XMarkIcon,
   ChevronUpIcon,
   ChevronDownIcon,
-  TrashIcon,
+  // TrashIcon,
   CheckIcon
 } from '@heroicons/react/24/outline'
 import { FilterPill } from '../nav-menu/filter-pill'
 import { Filter } from '../query'
 import { SegmentAuthorship } from './segment-authorship'
-import { SegmentExpandedLocationState } from './segment-expanded-context'
+// import { SegmentExpandedLocationState } from './segment-expanded-context'
 
-const buttonClass =
-  'h-12 text-md font-medium py-2 px-3 rounded border dark:border-gray-100 dark:text-gray-100'
+const buttonClass = 'border text-md font-medium py-3 px-4 rounded-md'
+
+const primaryNeutralButtonClass = classNames(
+  buttonClass,
+  'border-indigo-600 bg-indigo-600 text-gray-100'
+)
+
+const primaryNegativeButtonClass = classNames(
+  buttonClass,
+  'border-red-500 bg-red-500 text-gray-100'
+)
+
+const secondaryButtonClass = classNames(
+  buttonClass,
+  // 'border-indigo-600 text-indigo-600',
+  'border-indigo-500 text-indigo-500'
+)
 
 const SegmentActionModal = ({
   children,
@@ -88,11 +103,11 @@ export const CreateSegmentModal = ({
         disabled={!canTogglePersonal}
       />
       <ButtonsRow>
-        <button className={buttonClass} onClick={onClose}>
+        <button className={secondaryButtonClass} onClick={onClose}>
           Cancel
         </button>
         <button
-          className={buttonClass}
+          className={primaryNeutralButtonClass}
           onClick={() => {
             const trimmedName = name.trim()
             const saveableName = trimmedName.length
@@ -125,14 +140,14 @@ export const DeleteSegmentModal = ({
             segment.type
           ]
         }
-        {` "${segment.name}"?`}
+        <span className="break-all">{` "${segment.name}"?`}</span>
       </h1>
       <ButtonsRow>
-        <button className={buttonClass} onClick={onClose}>
+        <button className={secondaryButtonClass} onClick={onClose}>
           Cancel
         </button>
         <button
-          className={buttonClass}
+          className={primaryNegativeButtonClass}
           onClick={() => {
             onSave({ id: segment.id })
           }}
@@ -149,7 +164,7 @@ const FormTitle = ({ children }: { children?: ReactNode }) => (
 )
 
 const ButtonsRow = ({ children }: { children?: ReactNode }) => (
-  <div className="mt-8 flex gap-x-2 items-center justify-end">{children}</div>
+  <div className="mt-8 flex gap-x-4 items-center justify-end">{children}</div>
 )
 
 const SegmentNameInput = ({
@@ -262,11 +277,11 @@ export const UpdateSegmentModal = ({
         disabled={!canTogglePersonal}
       />
       <ButtonsRow>
-        <button className={buttonClass} onClick={close}>
+        <button className={secondaryButtonClass} onClick={close}>
           Cancel
         </button>
         <button
-          className={buttonClass}
+          className={primaryNeutralButtonClass}
           onClick={() => {
             const trimmedName = name.trim()
             const saveableName = trimmedName.length
@@ -319,7 +334,7 @@ const SegmentRow = ({
         >
           {name}
         </div>
-        <div className="flex w-5 h-5 items-center">
+        <div className="flex w-5 h-5 items-center ml-4">
           {segmentDataVisible ? (
             <ChevronUpIcon className="block w-4 h-4" />
           ) : (
@@ -348,6 +363,7 @@ const SegmentRow = ({
               className="flex-wrap"
               direction="horizontal"
               pills={data.segment_data.filters.map((filter) => ({
+                // className: 'dark:!bg-gray-700',
                 plainText: plainFilterText(data.segment_data.labels, filter),
                 children: styledFilterText(data.segment_data.labels, filter),
                 interactive: false
@@ -357,34 +373,36 @@ const SegmentRow = ({
             'loading'
           )}
           {!!data && <SegmentAuthorship {...data} className="mt-3 text-xs" />}
-          <div className="col-span-full mt-3 flex gap-x-4 gap-y-2 flex-wrap">
-            <button
-              className="flex gap-x-1 text-sm items-center hover:text-indigo-600 fill-current hover:fill-indigo-600"
-              onClick={async () => {
-                expandSegment(data ?? (await fetchSegment()))
-              }}
-            >
-              <EditSegmentIcon className="block h-4 w-4" />
-              Edit
-            </button>
-            <AppNavigationLink
-              className="flex gap-x-1 text-sm items-center hover:text-indigo-600 fill-current hover:fill-indigo-600"
-              path={rootRoute.path}
-              search={(s) => s}
-              state={
-                {
-                  expandedSegment: data,
-                  modal: 'delete'
-                } as SegmentExpandedLocationState
-              }
-              // onClick={async () => {
-              //   expandSegment(data ?? (await fetchSegment()))
-              // }}
-            >
-              <TrashIcon className="block h-4 w-4" />
-              Delete
-            </AppNavigationLink>
-          </div>
+          {!!data && (
+            <div className="col-span-full mt-3 flex gap-x-4 gap-y-2 flex-wrap">
+              <button
+                className="flex gap-x-1 text-sm items-center hover:text-indigo-600 fill-current hover:fill-indigo-600"
+                onClick={async () => {
+                  expandSegment(data ?? (await fetchSegment()))
+                }}
+              >
+                <EditSegmentIcon className="block h-4 w-4" />
+                Edit
+              </button>
+              {/* <AppNavigationLink
+                className="flex gap-x-1 text-sm items-center hover:text-indigo-600 fill-current hover:fill-indigo-600"
+                path={rootRoute.path}
+                search={(s) => s}
+                state={
+                  {
+                    expandedSegment: data,
+                    modal: 'delete'
+                  } as SegmentExpandedLocationState
+                }
+                // onClick={async () => {
+                //   expandSegment(data ?? (await fetchSegment()))
+                // }}
+              >
+                <TrashIcon className="block h-4 w-4" />
+                Delete
+              </AppNavigationLink> */}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -498,6 +516,7 @@ export const AllSegmentsModal = () => {
         {!!data && !!proposedSegmentFilter && (
           <div className="mt-2 justify-self-start">
             <FilterPill
+              // className="dark:!bg-gray-700"
               interactive={false}
               plainText={plainFilterText(
                 labelsForProposedSegmentFilter,
