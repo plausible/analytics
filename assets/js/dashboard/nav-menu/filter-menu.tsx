@@ -58,22 +58,19 @@ export function getFilterListItems({
   return [
     [
       {
-        title: 'URL',
-        modals: ['page', 'hostname']
-      },
-      {
-        title: 'Acquisition',
-        modals: ['source', 'utm']
-      }
-    ],
-    [
-      {
-        title: 'Device',
-        modals: ['location', 'screen', 'browser', 'os']
-      },
-      {
-        title: 'Behaviour',
-        modals: ['goal', !!propsAvailable && 'props']
+        title: 'Filters',
+        modals: [
+          'page',
+          'hostname',
+          'source',
+          'utm',
+          'location',
+          'screen',
+          'browser',
+          'os',
+          'goal',
+          !!propsAvailable && 'props'
+        ]
       }
     ]
   ]
@@ -394,9 +391,9 @@ export const FilterGroup = ({ closeList }: { closeList: () => void }) => {
   const columns = useMemo(() => getFilterListItems(site), [site])
   const match = useMatch(editSegmentRoute)
   return (
-    <DropdownLinkGroup className="flex flex-row">
+    <DropdownLinkGroup className="flex flex-col">
       {columns.map((filterGroups, index) => (
-        <div key={index} className="flex flex-col w-1/2">
+        <React.Fragment key={index}>
           {filterGroups.map(({ title, modals }) => (
             <div key={title}>
               <DropdownSubtitle>{title}</DropdownSubtitle>
@@ -423,7 +420,7 @@ export const FilterGroup = ({ closeList }: { closeList: () => void }) => {
                 ))}
             </div>
           ))}
-        </div>
+        </React.Fragment>
       ))}
     </DropdownLinkGroup>
   )
