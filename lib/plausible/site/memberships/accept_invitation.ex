@@ -194,7 +194,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
         Multi.put(multi, :previous_owner_membership, previous_owner)
 
       nil ->
-         Logger.warning(
+        Logger.warning(
           "Transferring ownership from a site with no owner: #{site.domain} " <>
             ", new owner ID: #{new_owner_id}"
         )
