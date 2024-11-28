@@ -226,7 +226,9 @@ defmodule Plausible.Application do
   end
 
   def setup_sentry() do
-    Logger.add_backend(Sentry.LoggerBackend)
+    :logger.add_handler(:sentry_handler, Sentry.LoggerHandler, %{
+      config: %{capture_log_messages: true, level: :error}
+    })
 
     :telemetry.attach_many(
       "oban-errors",
