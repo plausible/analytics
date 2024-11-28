@@ -14,7 +14,7 @@ import {
   isSegmentFilter,
   parseApiSegmentData,
   SavedSegment,
-  SegmentData,
+  SegmentData
 } from './segments'
 import { QueryFunction, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cleanLabels } from '../util/filters'
@@ -145,6 +145,7 @@ export const SegmentsList = ({
 
           <div className="px-4 py-1">
             <SearchInput
+              placeholderUnfocused="Press / to search segments"
               className="w-full text-xs sm:text-xs"
               onSearch={setSearch}
             />
