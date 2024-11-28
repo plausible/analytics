@@ -6,9 +6,13 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Dashboard shows comparisons for all reports
 - UTM Medium report and API shows (gclid) and (msclkid) for paid searches when no explicit utm medium present.
+- Support for `case_sensitive: false` modifiers in Stats API V2 filters for case-insensitive searches.
 
 ### Removed
 ### Changed
+
+- Details modal search inputs are now case-insensitive.
+
 ### Fixed
 
 - Fix returning filter suggestions for multiple custom property values in the dashboard Filter modal
