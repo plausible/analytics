@@ -177,8 +177,7 @@ defmodule Plausible.Stats.Imported.Base do
       |> Enum.map(&@property_to_table_mappings[&1])
 
     filter_goal_table_candidates =
-      query
-      |> get_filter_goals()
+      query.preloaded_goals
       |> Enum.map(&Plausible.Goal.type/1)
       |> Enum.map(fn
         :event -> "imported_custom_events"
@@ -191,17 +190,6 @@ defmodule Plausible.Stats.Imported.Base do
       [candidate] -> [candidate]
       _ -> []
     end
-  end
-
-  defp get_filter_goals(query) do
-    query.filters
-    |> Enum.filter(fn [_, dimension | _rest] -> dimension == "event:goal" end)
-    |> Enum.flat_map(fn [operation, _dimension, clauses | _rest] ->
-      Enum.flat_map(clauses, fn clause ->
-        query.preloaded_goals
-        |> Plausible.Goals.Filters.filter_preloaded(operation, clause)
-      end)
-    end)
   end
 
   def special_goals_for("event:props:url"), do: Imported.goals_with_url()

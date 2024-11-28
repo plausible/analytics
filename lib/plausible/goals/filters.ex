@@ -46,7 +46,7 @@ defmodule Plausible.Goals.Filters do
     end)
   end
 
-  def filter_preloaded(preloaded_goals, operation, clause) when operation in [:is, :contains] do
+  defp filter_preloaded(preloaded_goals, operation, clause) when operation in [:is, :contains] do
     Enum.filter(preloaded_goals, fn goal -> matches?(goal, operation, clause) end)
   end
 
