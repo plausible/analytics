@@ -165,6 +165,11 @@ export const customPropsRoute = {
   element: <PropsModal />
 }
 
+export const editSegmentRoute = {
+  path: 'filter/segment/:id',
+  element: <></>
+}
+
 export const filterRoute = {
   path: 'filter/:field',
   element: <FilterModal />
@@ -222,6 +227,7 @@ export function createAppRouter(site: PlausibleSite) {
           conversionsRoute,
           customPropsRoute,
           filterRoute,
+          editSegmentRoute,
           { path: '*', element: null }
         ]
       }

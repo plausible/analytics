@@ -12,7 +12,7 @@ import {
 } from './segments'
 import {
   EditSegmentIcon,
-  useSegmentPrefetch,
+  useGetSegmentById,
   useSegmentsListQuery
 } from './segments-dropdown'
 import { SearchInput } from '../components/search-input'
@@ -317,7 +317,7 @@ const SegmentRow = ({
   selected
 }: SavedSegment & { toggleSelected: () => void; selected: boolean }) => {
   const { prefetchSegment, data, expandSegment, fetchSegment } =
-    useSegmentPrefetch({
+    useGetSegmentById({
       id
     })
   const [segmentDataVisible, setSegmentDataVisible] = useState(false)

@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   DropdownLinkGroup,
   DropdownMenuWrapper,
@@ -16,14 +16,14 @@ import {
   remapToApiFilters
 } from '../util/filters'
 import { PlausibleSite, useSiteContext } from '../site-context'
-import { filterRoute } from '../router'
+import { editSegmentRoute, filterRoute, rootRoute } from '../router'
 import { useOnClickOutside } from '../util/use-on-click-outside'
-import { SegmentsList } from '../segments/segments-dropdown'
-import { useQueryContext } from '../query-context'
 import {
-  SegmentExpandedLocationState,
-  useSegmentExpandedContext
-} from '../segments/segment-expanded-context'
+  SegmentActionsList,
+  SegmentsList,
+  useGetSegmentById
+} from '../segments/segments-dropdown'
+import { useQueryContext } from '../query-context'
 import {
   CreateSegmentModal,
   DeleteSegmentModal,
@@ -40,6 +40,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAppNavigate } from '../navigation/use-app-navigate'
 import { DashboardQuery } from '../query'
 import { AdjustmentsHorizontalIcon } from '@heroicons/react/24/solid'
+import { useMatch } from 'react-router-dom'
 
 export function getFilterListItems({
   propsAvailable
@@ -74,13 +75,22 @@ export function getFilterListItems({
 }
 
 export const FilterMenu = () => {
+  const match = useMatch(editSegmentRoute.path)
+  const expandedSegmentId = match ? parseInt(match.params.id!, 10) : null
+  const [modal, setModal] = useState<'update' | 'create' | 'delete' | null>(
+    null
+  )
+  useEffect(() => {
+    setModal(null)
+  }, [match])
+  const s = useGetSegmentById({ id: expandedSegmentId! })
+  const expandedSegment = s.data
   const user = useUserContext()
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [opened, setOpened] = useState(false)
   const site = useSiteContext()
-  const columns = useMemo(() => getFilterListItems(site), [site])
   const { query } = useQueryContext()
-  const { expandedSegment, modal } = useSegmentExpandedContext()
+
   const queryClient = useQueryClient()
   const navigate = useAppNavigate()
   const patchSegment = useMutation({
@@ -125,6 +135,7 @@ export const FilterMenu = () => {
     onSuccess: async (d) => {
       queryClient.invalidateQueries({ queryKey: ['segments'] })
       navigate({
+        path: rootRoute.path,
         search: (search) => {
           const filters = [['is', 'segment', [d.id]]]
           const labels = cleanLabels(filters, {}, 'segment', {
@@ -135,13 +146,10 @@ export const FilterMenu = () => {
             filters,
             labels
           }
-        },
-        state: {
-          expandedSegment: null,
-          modal: null
-        } as SegmentExpandedLocationState
+        }
       })
       setOpened(false)
+      setModal(null)
     }
   })
 
@@ -181,6 +189,7 @@ export const FilterMenu = () => {
     },
     onSuccess: async (d) => {
       navigate({
+        path: rootRoute.path,
         search: (search) => {
           queryClient.invalidateQueries({ queryKey: ['segments'] })
           const filters = [['is', 'segment', [d.id]]]
@@ -192,13 +201,10 @@ export const FilterMenu = () => {
             filters,
             labels
           }
-        },
-        state: {
-          expandedSegment: null,
-          modal: null
-        } as SegmentExpandedLocationState
+        }
       })
       setOpened(false)
+      setModal(null)
     }
   })
   const deleteSegment = useMutation({
@@ -218,19 +224,17 @@ export const FilterMenu = () => {
     onSuccess: (_d): void => {
       queryClient.invalidateQueries({ queryKey: ['segments'] })
       navigate({
+        path: rootRoute.path,
         search: (s) => {
           return {
             ...s,
             filters: null,
             labels: null
           }
-        },
-        state: {
-          expandedSegment: null,
-          modal: null
-        } as SegmentExpandedLocationState
+        }
       })
       setOpened(false)
+      setModal(null)
     }
   })
 
@@ -249,12 +253,7 @@ export const FilterMenu = () => {
           )}
           segment={expandedSegment}
           namePlaceholder={getSegmentNamePlaceholder(query)}
-          close={() =>
-            navigate({
-              search: (s) => s,
-              state: { expandedSegment: expandedSegment, modal: null }
-            })
-          }
+          close={() => setModal(null)}
           onSave={({ id, name, type }) =>
             patchSegment.mutate({
               id,
@@ -275,12 +274,7 @@ export const FilterMenu = () => {
           )}
           segment={expandedSegment!}
           namePlaceholder={getSegmentNamePlaceholder(query)}
-          onClose={() =>
-            navigate({
-              search: (s) => s,
-              state: { expandedSegment: expandedSegment, modal: null }
-            })
-          }
+          onClose={() => setModal(null)}
           onSave={({ name, type }) =>
             createSegment.mutate({
               name,
@@ -296,12 +290,7 @@ export const FilterMenu = () => {
       {user.loggedIn && modal === 'delete' && expandedSegment && (
         <DeleteSegmentModal
           segment={expandedSegment}
-          onClose={() =>
-            navigate({
-              search: (s) => s,
-              state: { expandedSegment: expandedSegment, modal: null }
-            })
-          }
+          onClose={() => setModal(null)}
           onSave={({ id }) => deleteSegment.mutate({ id })}
         />
       )}
@@ -338,38 +327,71 @@ export const FilterMenu = () => {
             id="filter-menu"
             className="md:left-auto md:w-80"
           >
-            <SegmentsList closeList={() => setOpened(false)} />
-            <DropdownLinkGroup className="flex flex-row">
-              {columns.map((filterGroups, index) => (
-                <div key={index} className="flex flex-col w-1/2">
-                  {filterGroups.map(({ title, modals }) => (
-                    <div key={title}>
-                      <DropdownSubtitle className="pb-1">
-                        {title}
-                      </DropdownSubtitle>
-                      {modals
-                        .filter((m) => !!m)
-                        .map((modalKey) => (
-                          <DropdownNavigationLink
-                            className="text-xs"
-                            onLinkClick={() => setOpened(false)}
-                            active={false}
-                            key={modalKey}
-                            path={filterRoute.path}
-                            params={{ field: modalKey }}
-                            search={(search) => search}
-                          >
-                            {formatFilterGroup(modalKey)}
-                          </DropdownNavigationLink>
-                        ))}
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </DropdownLinkGroup>
+            {!!expandedSegment && (
+              <SegmentActionsList
+                segment={expandedSegment}
+                openDeleteModal={() => {
+                  setModal('delete')
+                  setOpened(false)
+                }}
+                // cancelEditing={}
+                openUpdateModal={() => {
+                  setModal('update')
+                  setOpened(false)
+                }}
+                openSaveAsNewModal={() => {
+                  setModal('create')
+                  setOpened(false)
+                }}
+              />
+            )}
+            {!expandedSegment && (
+              <SegmentsList
+                closeList={() => setOpened(false)}
+                openSaveModal={() => {
+                  setModal('create')
+                  setOpened(false)
+                }}
+              />
+            )}
+            <FilterGroup closeList={() => setOpened(false)} />
           </DropdownMenuWrapper>
         )}
       </ToggleDropdownButton>
     </>
+  )
+}
+
+export const FilterGroup = ({ closeList }: { closeList: () => void }) => {
+  const site = useSiteContext()
+  const columns = useMemo(() => getFilterListItems(site), [site])
+
+  return (
+    <DropdownLinkGroup className="flex flex-row">
+      {columns.map((filterGroups, index) => (
+        <div key={index} className="flex flex-col w-1/2">
+          {filterGroups.map(({ title, modals }) => (
+            <div key={title}>
+              <DropdownSubtitle className="pb-1">{title}</DropdownSubtitle>
+              {modals
+                .filter((m) => !!m)
+                .map((modalKey) => (
+                  <DropdownNavigationLink
+                    className="text-xs"
+                    onLinkClick={closeList}
+                    active={false}
+                    key={modalKey}
+                    path={filterRoute.path}
+                    params={{ field: modalKey }}
+                    search={(search) => search}
+                  >
+                    {formatFilterGroup(modalKey)}
+                  </DropdownNavigationLink>
+                ))}
+            </div>
+          ))}
+        </div>
+      ))}
+    </DropdownLinkGroup>
   )
 }

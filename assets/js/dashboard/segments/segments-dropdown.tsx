@@ -27,11 +27,7 @@ import classNames from 'classnames'
 import { Tooltip } from '../util/tooltip'
 import { useUserContext } from '../user-context'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid'
-import {
-  SegmentExpandedLocationState,
-  useSegmentExpandedContext
-} from './segment-expanded-context'
-import { filterRoute, rootRoute } from '../router'
+import { editSegmentRoute, filterRoute, rootRoute } from '../router'
 import { SearchInput } from '../components/search-input'
 import { SegmentAuthorship } from './segment-authorship'
 
@@ -68,8 +64,69 @@ export const useSegmentsListQuery = () => {
 
 const linkClass = 'text-xs'
 
-export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
-  const { expandedSegment } = useSegmentExpandedContext()
+export const SegmentActionsList = ({
+  segment,
+  // closeList,
+  // cancelEditing,
+  openUpdateModal,
+  openSaveAsNewModal,
+  openDeleteModal
+}: {
+  segment: Pick<SavedSegment, 'name' | 'id'>
+  // closeList: () => void
+  // cancelEditing: () => void
+  openUpdateModal: () => void
+  openSaveAsNewModal: () => void
+  openDeleteModal: () => void
+}) => {
+  return (
+    <>
+      <AppNavigationLink
+        className="flex text-xs px-4 py-2 gap-1 bg-gray-50 dark:bg-gray-900 rounded-t-md"
+        path={rootRoute.path}
+        search={(s) => ({ ...s, filters: null, labels: null })}
+        // onClick={cancelEditing}
+      >
+        <ChevronLeftIcon className="block h-4 w-4"></ChevronLeftIcon>
+        <div>Cancel editing</div>
+      </AppNavigationLink>
+      <DropdownLinkGroup>
+        <DropdownSubtitle className="break-all">
+          {segment.name}
+        </DropdownSubtitle>
+        <DropdownNavigationLink
+          className={classNames(linkClass)}
+          onClick={openUpdateModal}
+          search={(s) => s}
+        >
+          Update segment
+        </DropdownNavigationLink>
+        <DropdownNavigationLink
+          className={classNames(linkClass)}
+          onClick={openSaveAsNewModal}
+          search={(s) => s}
+        >
+          Save as a new segment
+        </DropdownNavigationLink>
+        <DropdownNavigationLink
+          className={classNames(linkClass)}
+          onClick={openDeleteModal}
+          search={(s) => s}
+        >
+          Delete segment
+        </DropdownNavigationLink>
+      </DropdownLinkGroup>
+    </>
+  )
+}
+
+export const SegmentsList = ({
+  closeList,
+  openSaveModal
+}: {
+  closeList: () => void
+  openSaveModal: () => void
+}) => {
   const { query } = useQueryContext()
 
   const { data } = useSegmentsListQuery()
@@ -78,77 +135,6 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
   const appliedSegmentIds = (segmentFilter ? segmentFilter[2] : []) as number[]
 
   const [search, setSearch] = useState<string>()
-
-  if (expandedSegment) {
-    return (
-      <>
-        <AppNavigationLink
-          className="flex text-xs px-4 py-2 gap-1 bg-gray-50 dark:bg-gray-900 rounded-t-md"
-          search={(s) => ({
-            ...s,
-            filters: [['is', 'segment', [expandedSegment.id]]],
-            labels: {
-              [formatSegmentIdAsLabelKey(expandedSegment.id)]:
-                expandedSegment.name
-            }
-          })}
-          state={
-            {
-              expandedSegment: null,
-              modal: null
-            } as SegmentExpandedLocationState
-          }
-        >
-          <ChevronLeftIcon className="block h-4 w-4"></ChevronLeftIcon>
-          <div>Cancel editing</div>
-        </AppNavigationLink>
-        <DropdownLinkGroup>
-          <DropdownSubtitle className="break-all">
-            {expandedSegment.name}
-          </DropdownSubtitle>
-          <DropdownNavigationLink
-            className={linkClass}
-            search={(s) => s}
-            navigateOptions={{
-              state: {
-                expandedSegment: expandedSegment,
-                modal: 'update'
-              } as SegmentExpandedLocationState
-            }}
-            onClick={closeList}
-          >
-            Update segment
-          </DropdownNavigationLink>
-          <DropdownNavigationLink
-            className={linkClass}
-            search={(s) => s}
-            navigateOptions={{
-              state: {
-                expandedSegment: expandedSegment,
-                modal: 'create'
-              } as SegmentExpandedLocationState
-            }}
-            onClick={closeList}
-          >
-            Save as a new segment
-          </DropdownNavigationLink>
-          <DropdownNavigationLink
-            className={linkClass}
-            search={(s) => s}
-            navigateOptions={{
-              state: {
-                expandedSegment: expandedSegment,
-                modal: 'delete'
-              } as SegmentExpandedLocationState
-            }}
-            onClick={closeList}
-          >
-            Delete segment
-          </DropdownNavigationLink>
-        </DropdownLinkGroup>
-      </>
-    )
-  }
 
   const filteredData = data?.filter(getFilterSegmentsByNameInsensitive(search))
 
@@ -197,7 +183,6 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
                       <SegmentLink
                         {...s}
                         appliedSegmentIds={appliedSegmentIds}
-                        closeList={closeList}
                       />
                     </Tooltip>
                   )
@@ -206,10 +191,7 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
             ))}
           {!!data?.length && (
             <DropdownNavigationLink
-              className={classNames(
-                linkClass,
-                'font-bold hover:text-indigo-700 dark:hover:text-indigo-500'
-              )}
+              className={classNames(linkClass, primaryHoverClass)}
               path={filterRoute.path}
               params={{ field: 'segment' }}
               search={(s) => s}
@@ -222,32 +204,20 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
         </DropdownLinkGroup>
       )}
       <DropdownLinkGroup>
-        <SaveSelectionAsSegment closeList={closeList} />
-        {/* <DropdownNavigationLink
-          className={classNames(linkClass, 'font-bold')}
-          search={(s) => s}
-          navigateOptions={{
-            state: {
-              modal: 'create',
-              expandedSegment: null
-            } as SegmentExpandedLocationState
-          }}
-          onLinkClick={closeList}
-          {...((query.filters.some(isSegmentFilter) ||
-            !query.filters.length) && {
-            'aria-disabled': true,
-            navigateOptions: undefined,
-            onLinkClick: undefined
-          })}
-        >
-          Save selection as segment
-        </DropdownNavigationLink> */}
+        <SaveSelectionAsSegment openSaveModal={openSaveModal} />
       </DropdownLinkGroup>
     </>
   )
 }
 
-const SaveSelectionAsSegment = ({ closeList }: { closeList: () => void }) => {
+const primaryHoverClass =
+  'font-bold hover:text-indigo-700 dark:hover:text-indigo-500'
+
+const SaveSelectionAsSegment = ({
+  openSaveModal
+}: {
+  openSaveModal: () => void
+}) => {
   const { query } = useQueryContext()
   const disabledReason = !query.filters.length
     ? 'Add filters to the dashboard to save a segment.'
@@ -257,18 +227,9 @@ const SaveSelectionAsSegment = ({ closeList }: { closeList: () => void }) => {
   if (disabledReason === null) {
     return (
       <DropdownNavigationLink
-        className={classNames(
-          linkClass,
-          'font-bold hover:text-indigo-700 dark:hover:text-indigo-500'
-        )}
+        className={classNames(linkClass, primaryHoverClass)}
+        onClick={openSaveModal}
         search={(s) => s}
-        navigateOptions={{
-          state: {
-            modal: 'create',
-            expandedSegment: null
-          } as SegmentExpandedLocationState
-        }}
-        onLinkClick={closeList}
       >
         Save as segment
       </DropdownNavigationLink>
@@ -288,7 +249,7 @@ const SaveSelectionAsSegment = ({ closeList }: { closeList: () => void }) => {
   )
 }
 
-export const useSegmentPrefetch = ({ id }: Pick<SavedSegment, 'id'>) => {
+export const useGetSegmentById = ({ id }: Pick<SavedSegment, 'id'>) => {
   const site = useSiteContext()
   const queryClient = useQueryClient()
   const queryKey = useMemo(() => ['segments', id] as const, [id])
@@ -347,20 +308,13 @@ export const useSegmentPrefetch = ({ id }: Pick<SavedSegment, 'id'>) => {
     (segment: SavedSegment & { segment_data: SegmentData }) => {
       try {
         navigate({
-          path: rootRoute.path,
+          path: editSegmentRoute.path,
+          params: { id: String(segment.id) },
           search: (search) => ({
             ...search,
             filters: segment.segment_data.filters,
             labels: segment.segment_data.labels
-          }),
-          state: {
-            expandedSegment: {
-              id: segment.id,
-              name: segment.name,
-              type: segment.type,
-              owner_id: segment.owner_id
-            }
-          } as SegmentExpandedLocationState
+          })
         })
       } catch (_error) {
         return
@@ -375,21 +329,13 @@ export const useSegmentPrefetch = ({ id }: Pick<SavedSegment, 'id'>) => {
 const SegmentLink = ({
   id,
   name,
-  // type,
-  // owner_id,
   appliedSegmentIds
-  // closeList
-}: SavedSegment & { appliedSegmentIds: number[]; closeList: () => void }) => {
+}: SavedSegment & { appliedSegmentIds: number[] }) => {
   const user = useUserContext()
   const canSeeActions = user.loggedIn
-  // const canDeleteSegment =
-  //   user.loggedIn &&
-  //   ((owner_id === user.id && type === SegmentType.personal) ||
-  //     (type === SegmentType.site &&
-  //       ['admin', 'owner', 'super_admin'].includes(user.role)))
   const { query } = useQueryContext()
-  const { prefetchSegment, expandSegment, data, fetchSegment } =
-    useSegmentPrefetch({ id })
+  const { prefetchSegment, data, fetchSegment } = useGetSegmentById({ id })
+  const navigate = useAppNavigate()
 
   return (
     <DropdownNavigationLink
@@ -397,9 +343,6 @@ const SegmentLink = ({
       key={id}
       active={appliedSegmentIds.includes(id)}
       onMouseEnter={prefetchSegment}
-      navigateOptions={{
-        state: { expandedSegment: null } as SegmentExpandedLocationState
-      }}
       search={(search) => {
         const otherFilters = query.filters.filter((f) => !isSegmentFilter(f))
         const updatedSegmentIds = appliedSegmentIds.includes(id)
@@ -433,9 +376,30 @@ const SegmentLink = ({
             <button
               title="Edit segment"
               className={classNames(iconButtonClass, 'ml-2 shrink-0')}
-              onClick={async () =>
-                expandSegment(data ?? (await fetchSegment()))
-              }
+              onClick={async () => {
+                try {
+                  const d = data ?? (await fetchSegment())
+                  navigate({
+                    path: editSegmentRoute.path,
+                    params: { id: String(id) },
+                    search: (s) => ({
+                      ...s,
+                      filters: d.segment_data.filters,
+                      labels: d.segment_data.labels
+                    })
+                  })
+                } catch (_e: unknown) {
+                  navigate({
+                    path: editSegmentRoute.path,
+                    params: { id: String(id) },
+                    search: (s) => ({
+                      ...s,
+                      filters: [],
+                      labels: []
+                    })
+                  })
+                }
+              }}
             >
               <EditSegmentIcon className="block w-4 h-4" />
             </button>
