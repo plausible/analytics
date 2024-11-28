@@ -64,7 +64,7 @@ export type CustomPropertyFilterDimensions = string;
 export type GoalDimension = "event:goal";
 export type TimeDimensions = "time" | "time:month" | "time:week" | "time:day" | "time:hour";
 export type FilterTree = FilterEntry | FilterAndOr | FilterNot;
-export type FilterEntry = FilterWithoutGoals | FilterWithGoals;
+export type FilterEntry = FilterWithoutGoals | FilterCaseSensitive;
 /**
  * @minItems 3
  * @maxItems 3
@@ -81,17 +81,22 @@ export type FilterOperationWithoutGoals = "is_not" | "contains_not" | "matches" 
 export type Clauses = (string | number)[];
 /**
  * @minItems 3
- * @maxItems 3
+ * @maxItems 4
  */
-export type FilterWithGoals = [
-  FilterOperationWithGoals,
-  GoalDimension | SimpleFilterDimensions | CustomPropertyFilterDimensions,
-  Clauses
-];
+export type FilterCaseSensitive =
+  | [FilterOperationContains, GoalDimension | SimpleFilterDimensions | CustomPropertyFilterDimensions, Clauses]
+  | [
+      FilterOperationContains,
+      GoalDimension | SimpleFilterDimensions | CustomPropertyFilterDimensions,
+      Clauses,
+      {
+        case_sensitive?: boolean;
+      }
+    ];
 /**
  * filter operation
  */
-export type FilterOperationWithGoals = "is" | "contains";
+export type FilterOperationContains = "is" | "contains";
 /**
  * @minItems 2
  * @maxItems 2
