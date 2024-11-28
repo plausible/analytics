@@ -652,6 +652,96 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
     end
   end
 
+  describe "preloading goals" do
+    setup %{site: site} do
+      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, event_name: "Purchase"})
+      insert(:goal, %{site: site, event_name: "Contact"})
+
+      :ok
+    end
+
+    test "with exact match", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["Signup", "Purchase"]]]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        utc_time_range: @date_range_day,
+        filters: [[:is, "event:goal", ["Signup", "Purchase"]]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+      |> check_goals(preloaded_goals: ["Purchase", "Signup"], revenue_currencies: %{})
+    end
+
+    test "with case insensitive match", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["is", "event:goal", ["signup", "purchase"], %{"case_sensitive" => false}]]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        utc_time_range: @date_range_day,
+        filters: [[:is, "event:goal", ["signup", "purchase"], %{case_sensitive: false}]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+      |> check_goals(preloaded_goals: ["Purchase", "Signup"], revenue_currencies: %{})
+    end
+
+    test "with contains match", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["contains", "event:goal", ["Sign", "pur"]]]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        utc_time_range: @date_range_day,
+        filters: [[:contains, "event:goal", ["Sign", "pur"]]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+      |> check_goals(preloaded_goals: ["Signup"], revenue_currencies: %{})
+    end
+
+    test "with case insensitive contains match", %{site: site} do
+      %{
+        "site_id" => site.domain,
+        "metrics" => ["visitors"],
+        "date_range" => "all",
+        "filters" => [["contains", "event:goal", ["sign", "CONT"], %{"case_sensitive" => false}]]
+      }
+      |> check_success(site, %{
+        metrics: [:visitors],
+        utc_time_range: @date_range_day,
+        filters: [[:contains, "event:goal", ["sign", "CONT"], %{case_sensitive: false}]],
+        dimensions: [],
+        order_by: nil,
+        timezone: site.timezone,
+        include: %{imports: false, time_labels: false, total_rows: false, comparisons: nil},
+        pagination: %{limit: 10_000, offset: 0}
+      })
+      |> check_goals(preloaded_goals: ["Contact", "Signup"], revenue_currencies: %{})
+    end
+  end
+
   describe "include validation" do
     test "setting include values", %{site: site} do
       %{

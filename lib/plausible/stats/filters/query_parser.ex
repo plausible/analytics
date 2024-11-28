@@ -471,7 +471,7 @@ defmodule Plausible.Stats.Filters.QueryParser do
     # Note: Only works since event:goal is allowed as a top level filter
     goal_filter_clauses =
       Enum.flat_map(query.filters, fn
-        [:is, "event:goal", clauses | _rest] -> clauses
+        [:is, "event:goal", clauses] -> clauses
         _ -> []
       end)
 

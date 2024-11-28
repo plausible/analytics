@@ -144,7 +144,7 @@ defmodule Plausible.Stats.Imported.Base do
   defp do_decide_tables(%Query{dimensions: ["event:goal"]} = query) do
     filter_dimensions = dimensions_used_in_filters(query.filters)
 
-    filter_goals = get_filter_goals(query)
+    filter_goals = query.preloaded_goals
 
     any_event_goals? = Enum.any?(filter_goals, fn goal -> Plausible.Goal.type(goal) == :event end)
 
