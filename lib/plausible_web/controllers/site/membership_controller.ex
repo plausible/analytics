@@ -198,12 +198,16 @@ defmodule PlausibleWeb.Site.MembershipController do
     end
   end
 
+  defp can_grant_role_to_self?(:editor, :viewer), do: true
   defp can_grant_role_to_self?(:admin, :viewer), do: true
   defp can_grant_role_to_self?(_, _), do: false
 
+  defp can_grant_role_to_other?(:owner, :editor), do: true
   defp can_grant_role_to_other?(:owner, :admin), do: true
   defp can_grant_role_to_other?(:owner, :viewer), do: true
+  defp can_grant_role_to_other?(:editor, :editor), do: true
   defp can_grant_role_to_other?(:admin, :admin), do: true
+  defp can_grant_role_to_other?(:editor, :viewer), do: true
   defp can_grant_role_to_other?(:admin, :viewer), do: true
   defp can_grant_role_to_other?(_, _), do: false
 

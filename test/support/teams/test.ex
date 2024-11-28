@@ -24,22 +24,19 @@ defmodule Plausible.Teams.Test do
 
         args
         |> Keyword.put(:team, team)
-
-        # |> Keyword.put(:members, [user])
+        |> Keyword.put(:members, [user])
       else
         user = new_user()
         {:ok, team} = Teams.get_or_create(user)
 
         args
         |> Keyword.put(:team, team)
-
-        # |> Keyword.put(:members, [user])
+        |> Keyword.put(:members, [user])
       end
 
     :site
     |> insert(args)
-
-    # |> Repo.preload(:memberships)
+    |> Repo.preload(:memberships)
   end
 
   def new_team() do
@@ -90,7 +87,7 @@ defmodule Plausible.Teams.Test do
     role = Keyword.fetch!(args, :role)
     team = Repo.preload(site, :team).team
 
-    # insert(:site_membership, user: user, role: translate_role_to_old_model(role), site: site)
+    insert(:site_membership, user: user, role: translate_role_to_old_model(role), site: site)
 
     team_membership =
       build(:team_membership, team: team, user: user, role: :guest)
@@ -102,8 +99,7 @@ defmodule Plausible.Teams.Test do
 
     insert(:guest_membership, site: site, team_membership: team_membership, role: role)
 
-    # user |> Repo.preload([:site_memberships, :team_memberships])
-    user |> Repo.preload([:team_memberships])
+    user |> Repo.preload([:site_memberships, :team_memberships])
   end
 
   def invite_guest(site, invitee_or_email, args \\ []) when not is_nil(invitee_or_email) do
@@ -117,13 +113,13 @@ defmodule Plausible.Teams.Test do
         email when is_binary(email) -> email
       end
 
-    # old_model_invitation =
-    #   insert(:invitation,
-    #     email: email,
-    #     inviter: inviter,
-    #     role: translate_role_to_old_model(role),
-    #     site: site
-    #   )
+    old_model_invitation =
+      insert(:invitation,
+        email: email,
+        inviter: inviter,
+        role: translate_role_to_old_model(role),
+        site: site
+      )
 
     team_invitation =
       insert(:team_invitation,
@@ -134,50 +130,54 @@ defmodule Plausible.Teams.Test do
       )
 
     insert(:guest_invitation,
-      # invitation_id: old_model_invitation.invitation_id,
+      invitation_id: old_model_invitation.invitation_id,
       team_invitation: team_invitation,
       site: site,
       role: role
     )
 
-    # old_model_invitation
+    old_model_invitation
   end
 
-  def invite_transfer(site, invitee, args \\ []) do
+  def invite_transfer(site, invitee_or_email, args \\ []) do
     inviter = Keyword.fetch!(args, :inviter)
 
-    # old_model_invitation =
-    #   insert(:invitation, email: invitee.email, inviter: inviter, role: :owner, site: site)
+    email =
+      case invitee_or_email do
+        %{email: email} -> email
+        email when is_binary(email) -> email
+      end
+
+    old_model_invitation =
+      insert(:invitation, email: email, inviter: inviter, role: :owner, site: site)
 
     insert(:site_transfer,
-      # transfer_id: old_model_invitation.invitation_id,
-      email: invitee.email,
+      transfer_id: old_model_invitation.invitation_id,
+      email: email,
       site: site,
       initiator: inviter
     )
 
-    # old_model_invitation
+    old_model_invitation
   end
 
   def revoke_membership(site, user) do
-    # Repo.delete_all(
-    #   from sm in Plausible.Site.Membership,
-    #     where: sm.user_id == ^user.id and sm.site_id == ^site.id
-    # )
+    Repo.delete_all(
+      from sm in Plausible.Site.Membership,
+        where: sm.user_id == ^user.id and sm.site_id == ^site.id
+    )
 
     Repo.delete_all(
       from tm in Plausible.Teams.Membership,
         where: tm.user_id == ^user.id and tm.team_id == ^site.team.id
     )
 
-    # user |> Repo.preload([:site_memberships, :team_memberships])
-    user |> Repo.preload([:team_memberships])
+    user |> Repo.preload([:site_memberships, :team_memberships])
   end
 
   def subscribe_to_growth_plan(user, attrs \\ []) do
     {:ok, team} = Teams.get_or_create(user)
-    # attrs = Keyword.merge([user: user, team: team], attrs)
-    attrs = Keyword.merge([team: team], attrs)
+    attrs = Keyword.merge([user: user, team: team], attrs)
 
     insert(:growth_subscription, attrs)
     user
@@ -186,21 +186,17 @@ defmodule Plausible.Teams.Test do
   def subscribe_to_business_plan(user) do
     {:ok, team} = Teams.get_or_create(user)
 
-    # insert(:business_subscription, user: user, team: team)
-    insert(:business_subscription, team: team)
+    insert(:business_subscription, user: user, team: team)
     user
   end
 
   def subscribe_to_plan(user, paddle_plan_id, attrs \\ []) do
     {:ok, team} = Teams.get_or_create(user)
-    # attrs = Keyword.merge([user: user, team: team, paddle_plan_id: paddle_plan_id], attrs)
-    attrs = Keyword.merge([team: team, paddle_plan_id: paddle_plan_id], attrs)
+    attrs = Keyword.merge([user: user, team: team, paddle_plan_id: paddle_plan_id], attrs)
 
-    # subscription =
-    insert(:subscription, attrs)
+    subscription = insert(:subscription, attrs)
 
-    # %{user | subscription: subscription}
-    user
+    %{user | subscription: subscription}
   end
 
   def subscribe_to_enterprise_plan(user, attrs \\ []) do
@@ -209,8 +205,7 @@ defmodule Plausible.Teams.Test do
     {subscription?, attrs} = Keyword.pop(attrs, :subscription?, true)
     {subscription_attrs, attrs} = Keyword.pop(attrs, :subscription, [])
 
-    # enterprise_plan = insert(:enterprise_plan, Keyword.merge([user: user, team: team], attrs))
-    enterprise_plan = insert(:enterprise_plan, Keyword.merge([team: team], attrs))
+    enterprise_plan = insert(:enterprise_plan, Keyword.merge([user: user, team: team], attrs))
 
     if subscription? do
       insert(
@@ -218,7 +213,7 @@ defmodule Plausible.Teams.Test do
         Keyword.merge(
           [
             team: team,
-            # user: user,
+            user: user,
             paddle_plan_id: enterprise_plan.paddle_plan_id
           ],
           subscription_attrs
@@ -320,6 +315,6 @@ defmodule Plausible.Teams.Test do
            )
   end
 
-  # defp translate_role_to_old_model(:editor), do: :admin
-  # defp translate_role_to_old_model(role), do: role
+  defp translate_role_to_old_model(:editor), do: :admin
+  defp translate_role_to_old_model(role), do: role
 end

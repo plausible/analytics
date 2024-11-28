@@ -562,7 +562,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/people")
       resp = html_response(conn, 200)
 
-      assert text_of_element(resp, "#invitation-#{st.transfer_id}") ==
+      assert text_of_element(resp, "#invitation-#{st.invitation_id}") ==
                "#{new_owner.email} Owner"
     end
   end

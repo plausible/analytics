@@ -7,17 +7,12 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
   setup [:create_user, :log_in]
 
   describe "POST /sites/invitations/:invitation_id/accept" do
-    @tag :skip
     test "converts the invitation into a membership", %{conn: conn, user: user} do
-      site = insert(:site)
+      owner = new_user()
+      site = new_site(owner: owner)
 
       invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: build(:user),
-          email: user.email,
-          role: :admin
-        )
+        invite_guest(site, user.email, inviter: owner, role: :editor)
 
       conn = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
 
@@ -32,7 +27,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert membership.role == :admin
     end
 
-    @tag :team
+    @tag :teams
     test "multiple invites per same team sync regression", %{conn: conn, user: user} do
       inviter = insert(:user)
       {:ok, team} = Plausible.Teams.get_or_create(inviter)
@@ -108,7 +103,6 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
   end
 
   describe "POST /sites/invitations/:invitation_id/accept - ownership transfer" do
-    @tag :skip
     test "downgrades previous owner to admin", %{conn: conn, user: user} do
       old_owner = new_user()
       site = new_site(owner: old_owner)
@@ -132,7 +126,6 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert_team_attached(site, new_team.id)
     end
 
-    @tag :skip
     @tag :ee_only
     test "fails when new owner has no plan", %{conn: conn, user: user} do
       old_owner = new_user()
@@ -148,7 +141,6 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
                "No existing subscription"
     end
 
-    @tag :skip
     @tag :ee_only
     test "fails when new owner's plan is unsuitable", %{conn: conn, user: user} do
       old_owner = new_user()
@@ -171,17 +163,11 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
   end
 
   describe "POST /sites/invitations/:invitation_id/reject" do
-    @tag :skip
     test "rejects the invitation", %{conn: conn, user: user} do
-      site = insert(:site)
+      owner = new_user()
+      site = new_site(owner: owner)
 
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: build(:user),
-          email: user.email,
-          role: :admin
-        )
+      invitation = invite_guest(site, user.email, inviter: owner, role: :editor)
 
       conn = post(conn, "/sites/invitations/#{invitation.invitation_id}/reject")
 
@@ -201,21 +187,11 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
   end
 
   describe "DELETE /sites/:domain/invitations/:invitation_id" do
-    @tag :skip
     test "removes the invitation", %{conn: conn, user: user} do
-      site =
-        insert(:site,
-          members: [build(:user)],
-          memberships: [build(:site_membership, user: user, role: :admin)]
-        )
-
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: build(:user),
-          email: "jane@example.com",
-          role: :admin
-        )
+      owner = new_user()
+      site = new_site(owner: owner)
+      add_guest(site, user: user, role: :editor)
+      invitation = invite_guest(site, "jane@example.com", inviter: owner, role: :editor)
 
       conn =
         delete(
@@ -228,21 +204,11 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       refute Repo.reload(invitation)
     end
 
-    @tag :skip
     test "removes the invitation for ownership transfer", %{conn: conn, user: user} do
-      site =
-        insert(:site,
-          members: [build(:user)],
-          memberships: [build(:site_membership, user: user, role: :admin)]
-        )
-
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: build(:user),
-          email: "jane@example.com",
-          role: :owner
-        )
+      owner = new_user()
+      site = new_site(owner: owner)
+      add_guest(site, user: user, role: :editor)
+      invitation = invite_transfer(site, "jane@example.com", inviter: owner)
 
       conn =
         delete(
@@ -255,17 +221,12 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       refute Repo.reload(invitation)
     end
 
-    @tag :skip
     test "fails to remove an invitation with insufficient permission", %{conn: conn, user: user} do
-      site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
+      owner = new_user()
+      site = new_site(owner: owner)
+      add_guest(site, user: user, role: :viewer)
 
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: build(:user),
-          email: "jane@example.com",
-          role: :admin
-        )
+      invitation = invite_guest(site, "jane@example.com", inviter: owner, role: :editor)
 
       delete(
         conn,
@@ -275,22 +236,15 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert Repo.reload(invitation)
     end
 
-    @tag :skip
     test "fails to remove an invitation from the outside", %{conn: my_conn, user: me} do
-      _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: "owner")])
+      new_site(owner: me)
 
-      other_user = insert(:user)
+      other_user = new_user()
 
-      other_site =
-        insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
+      other_site = new_site(owner: other_user)
 
       invitation =
-        insert(:invitation,
-          site_id: other_site.id,
-          inviter: other_user,
-          email: "jane@example.com",
-          role: :admin
-        )
+        invite_guest(other_site, "jane@example.com", role: :editor, inviter: other_user)
 
       remove_invitation_path =
         Routes.invitation_path(

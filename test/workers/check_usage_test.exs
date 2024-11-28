@@ -418,7 +418,6 @@ defmodule Plausible.Workers.CheckUsageTest do
         assert Repo.reload(user).grace_period.id == existing_grace_period.id
       end
 
-      @tag :skip
       test "checks billable pageview usage for enterprise customer, sends usage information to enterprise@plausible.io",
            %{
              user: user
@@ -432,13 +431,13 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        enterprise_plan = insert(:enterprise_plan, user: user, monthly_pageview_limit: 1_000_000)
-
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: enterprise_plan.paddle_plan_id,
-          last_bill_date: Timex.shift(Timex.today(), days: -1),
-          status: unquote(status)
+        subscribe_to_enterprise_plan(
+          user,
+          monthly_pageview_limit: 1_000_000,
+          subscription: [
+            last_bill_date: Timex.shift(Timex.today(), days: -1),
+            status: unquote(status)
+          ]
         )
 
         CheckUsage.perform(nil, usage_stub)
@@ -449,7 +448,6 @@ defmodule Plausible.Workers.CheckUsageTest do
         )
       end
 
-      @tag :skip
       test "checks site limit for enterprise customer, sends usage information to enterprise@plausible.io",
            %{
              user: user
@@ -483,7 +481,6 @@ defmodule Plausible.Workers.CheckUsageTest do
         )
       end
 
-      @tag :skip
       test "manual lock grace period is synced with teams", %{user: user} do
         usage_stub =
           Plausible.Billing.Quota.Usage
@@ -494,13 +491,13 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        enterprise_plan = insert(:enterprise_plan, user: user, monthly_pageview_limit: 1_000_000)
-
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: enterprise_plan.paddle_plan_id,
-          last_bill_date: Timex.shift(Timex.today(), days: -1),
-          status: unquote(status)
+        subscribe_to_enterprise_plan(
+          user,
+          monthly_pageview_limit: 1_000_000,
+          subscription: [
+            last_bill_date: Timex.shift(Timex.today(), days: -1),
+            status: unquote(status)
+          ]
         )
 
         CheckUsage.perform(nil, usage_stub)
@@ -511,7 +508,6 @@ defmodule Plausible.Workers.CheckUsageTest do
         assert team.grace_period.manual_lock == true
       end
 
-      @tag :skip
       test "starts grace period when plan is outgrown", %{user: user} do
         usage_stub =
           Plausible.Billing.Quota.Usage
@@ -522,13 +518,13 @@ defmodule Plausible.Workers.CheckUsageTest do
             }
           end)
 
-        enterprise_plan = insert(:enterprise_plan, user: user, monthly_pageview_limit: 1_000_000)
-
-        insert(:subscription,
-          user: user,
-          paddle_plan_id: enterprise_plan.paddle_plan_id,
-          last_bill_date: Timex.shift(Timex.today(), days: -1),
-          status: unquote(status)
+        subscribe_to_enterprise_plan(
+          user,
+          monthly_pageview_limit: 1_000_000,
+          subscription: [
+            last_bill_date: Timex.shift(Timex.today(), days: -1),
+            status: unquote(status)
+          ]
         )
 
         CheckUsage.perform(nil, usage_stub)
