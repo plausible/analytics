@@ -2,7 +2,12 @@ defmodule Plausible.Site.Membership do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @roles [:owner, :admin, :viewer]
+  # `editor` is only here because of dialyzer;
+  # since we're now querying for `Teams.Memberships.site_role`
+  # in `PlausibleWeb.Plugs.AuthorizeSiteAccess`
+  # - see all `current_user_role` references.
+  # They may now contain `editor` instead of `admin`.
+  @roles [:owner, :admin, :editor, :viewer]
 
   @type t() :: %__MODULE__{}
 

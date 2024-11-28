@@ -40,7 +40,7 @@
               Manage my subscription
             </.button_link>
           </div>
-        <% role when role in [:admin, :viewer] -> %>
+        <% role when role in [:admin, :viewer, :editor] -> %>
           <div class="mt-3 text-gray-600 dark:text-gray-300 text-center">
             <p>
               This dashboard is currently locked and cannot be accessed. The site owner
