@@ -19,7 +19,7 @@ export const FILTER_MODAL_TO_FILTER_GROUP = {
   goal: ['goal'],
   props: ['props'],
   hostname: ['hostname'],
-  segment: ['segment']
+  segments: ['segment']
 }
 
 export const FILTER_GROUP_TO_MODAL_TYPE = Object.fromEntries(

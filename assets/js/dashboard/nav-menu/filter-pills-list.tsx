@@ -12,7 +12,12 @@ import {
 } from '../util/filters'
 import { useAppNavigate } from '../navigation/use-app-navigate'
 import classNames from 'classnames'
-import { filterRoute } from '../router'
+import {
+  editSegmentFilterRoute,
+  editSegmentRoute,
+  filterRoute
+} from '../router'
+import { useMatch } from 'react-router-dom'
 
 export const PILL_X_GAP = 16
 export const PILL_Y_GAP = 8
@@ -47,6 +52,7 @@ export const AppliedFilterPillsList = React.forwardRef<
   HTMLDivElement,
   AppliedFilterPillsListProps
 >(({ className, style, slice, direction }, ref) => {
+  const match = useMatch(editSegmentRoute)
   const { query } = useQueryContext()
   const navigate = useAppNavigate()
 
@@ -72,16 +78,32 @@ export const AppliedFilterPillsList = React.forwardRef<
         plainText: plainFilterText(query.labels, filter),
         children: styledFilterText(query.labels, filter),
         interactive: {
-          navigationTarget: {
-            path: filterRoute.path,
-            search: (s) => s,
-            params: {
-              field:
-                FILTER_GROUP_TO_MODAL_TYPE[
-                  filter[1].startsWith(EVENT_PROPS_PREFIX) ? 'props' : filter[1]
-                ]
-            }
-          },
+          navigationTarget: match
+            ? {
+                path: editSegmentFilterRoute.path,
+                search: (s) => s,
+                params: {
+                  id: match.params.id!,
+                  field:
+                    FILTER_GROUP_TO_MODAL_TYPE[
+                      filter[1].startsWith(EVENT_PROPS_PREFIX)
+                        ? 'props'
+                        : filter[1]
+                    ]
+                }
+              }
+            : {
+                path: filterRoute.path,
+                search: (s) => s,
+                params: {
+                  field:
+                    FILTER_GROUP_TO_MODAL_TYPE[
+                      filter[1].startsWith(EVENT_PROPS_PREFIX)
+                        ? 'props'
+                        : filter[1]
+                    ]
+                }
+              },
           onRemoveClick: () => {
             const newFilters = query.filters.filter(
               (_, i) => i !== index + indexAdjustment

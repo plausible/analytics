@@ -16,7 +16,12 @@ import {
   remapToApiFilters
 } from '../util/filters'
 import { PlausibleSite, useSiteContext } from '../site-context'
-import { editSegmentRoute, filterRoute, rootRoute } from '../router'
+import {
+  editSegmentFilterRoute,
+  editSegmentRoute,
+  filterRoute,
+  rootRoute
+} from '../router'
 import { useOnClickOutside } from '../util/use-on-click-outside'
 import {
   SegmentActionsList,
@@ -89,7 +94,6 @@ export const FilterMenu = () => {
   }, [match])
   const { fetchSegment, data } = useGetSegmentById(expandedSegmentId)
   useEffect(() => {
-    console.log(expandedSegmentId, data)
     if (!data && expandedSegmentId) {
       fetchSegment().then((res) =>
         navigate({
@@ -276,7 +280,7 @@ export const FilterMenu = () => {
           )}
           segment={expandedSegment}
           namePlaceholder={getSegmentNamePlaceholder(query)}
-          close={() => setModal(null)}
+          onClose={() => setModal(null)}
           onSave={({ id, name, type }) =>
             patchSegment.mutate({
               id,
@@ -341,7 +345,6 @@ export const FilterMenu = () => {
                 Edit segment
               </>
             )}
-            {/* <span className="block ml-1">{expandedSegment ? 'Segment' : 'Filter'}</span> */}
           </div>
         }
       >
@@ -352,6 +355,7 @@ export const FilterMenu = () => {
           >
             {!!expandedSegment && (
               <SegmentActionsList
+                closeList={() => setOpened(false)}
                 segment={expandedSegment}
                 openDeleteModal={() => {
                   setModal('delete')
@@ -388,14 +392,14 @@ export const FilterMenu = () => {
 export const FilterGroup = ({ closeList }: { closeList: () => void }) => {
   const site = useSiteContext()
   const columns = useMemo(() => getFilterListItems(site), [site])
-
+  const match = useMatch(editSegmentRoute)
   return (
     <DropdownLinkGroup className="flex flex-row">
       {columns.map((filterGroups, index) => (
         <div key={index} className="flex flex-col w-1/2">
           {filterGroups.map(({ title, modals }) => (
             <div key={title}>
-              <DropdownSubtitle className="pb-1">{title}</DropdownSubtitle>
+              <DropdownSubtitle>{title}</DropdownSubtitle>
               {modals
                 .filter((m) => !!m)
                 .map((modalKey) => (
@@ -404,8 +408,14 @@ export const FilterGroup = ({ closeList }: { closeList: () => void }) => {
                     onLinkClick={closeList}
                     active={false}
                     key={modalKey}
-                    path={filterRoute.path}
-                    params={{ field: modalKey }}
+                    path={
+                      match ? editSegmentFilterRoute.path : filterRoute.path
+                    }
+                    params={
+                      match
+                        ? { id: match.params.id, field: modalKey }
+                        : { field: modalKey }
+                    }
                     search={(search) => search}
                   >
                     {formatFilterGroup(modalKey)}

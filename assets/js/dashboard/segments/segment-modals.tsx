@@ -1,6 +1,12 @@
 /** @format */
 
-import React, { ReactNode, useCallback, useEffect, useState } from 'react'
+import React, {
+  Fragment,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useState
+} from 'react'
 import ModalWithRouting from '../stats/modals/modal'
 import {
   formatSegmentIdAsLabelKey,
@@ -23,16 +29,12 @@ import { rootRoute } from '../router'
 import { FilterPillsList } from '../nav-menu/filter-pills-list'
 import classNames from 'classnames'
 import {
-  XMarkIcon,
   ChevronUpIcon,
   ChevronDownIcon,
-  // TrashIcon,
   CheckIcon
 } from '@heroicons/react/24/outline'
-import { FilterPill } from '../nav-menu/filter-pill'
 import { Filter } from '../query'
 import { SegmentAuthorship } from './segment-authorship'
-// import { SegmentExpandedLocationState } from './segment-expanded-context'
 
 const buttonClass =
   'transition border text-md font-medium py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
@@ -41,6 +43,11 @@ const primaryNeutralButtonClass = classNames(
   buttonClass,
   'bg-indigo-600 hover:bg-indigo-700 text-white border-transparent'
 )
+
+// const disabledButtonClass = classNames(
+//   buttonClass,
+//   'bg-gray-400 dark:bg-gray-600 text-white border-transparent cursor-not-allowed'
+// )
 
 const primaryNegativeButtonClass = classNames(
   buttonClass,
@@ -62,7 +69,7 @@ const SegmentActionModal = ({
 }) => (
   <ModalWithRouting
     maxWidth="460px"
-    className="p-6 min-h-fit"
+    className="p-6 min-h-fit text-gray-700 dark:text-gray-300"
     onClose={onClose}
   >
     {children}
@@ -145,16 +152,19 @@ export const DeleteSegmentModal = ({
         <span className="break-all">{` "${segment.name}"?`}</span>
       </FormTitle>
       {segment?.segment_data && (
-        <FilterPillsList
-          className="flex-wrap"
-          direction="horizontal"
-          pills={segment.segment_data.filters.map((filter) => ({
-            // className: 'dark:!bg-gray-700',
-            plainText: plainFilterText(segment.segment_data!.labels, filter),
-            children: styledFilterText(segment.segment_data!.labels, filter),
-            interactive: false
-          }))}
-        />
+        <div className="mt-3">
+          <h2 className="font-medium">Filters in segment</h2>
+          <FilterPillsList
+            className="flex-wrap mt-3"
+            direction="horizontal"
+            pills={segment.segment_data.filters.map((filter) => ({
+              // className: 'dark:!bg-gray-700',
+              plainText: plainFilterText(segment.segment_data!.labels, filter),
+              children: styledFilterText(segment.segment_data!.labels, filter),
+              interactive: false
+            }))}
+          />
+        </div>
       )}
 
       <ButtonsRow>
@@ -232,7 +242,7 @@ const SegmentTypeInput = ({
           id="segment-type-personal"
           type="radio"
           value=""
-          onClick={() => onChange(SegmentType.personal)}
+          onChange={() => onChange(SegmentType.personal)}
           className={radioClassName}
           disabled={disabled}
         />
@@ -247,7 +257,7 @@ const SegmentTypeInput = ({
           id="segment-type-site"
           type="radio"
           value=""
-          onClick={() => onChange(SegmentType.site)}
+          onChange={() => onChange(SegmentType.site)}
           className={radioClassName}
           disabled={disabled}
         />
@@ -261,13 +271,13 @@ const SegmentTypeInput = ({
 )
 
 export const UpdateSegmentModal = ({
-  close,
+  onClose,
   onSave,
   segment,
   canTogglePersonal,
   namePlaceholder
 }: {
-  close: () => void
+  onClose: () => void
   onSave: (input: Pick<SavedSegment, 'id' | 'name' | 'type'>) => void
   segment: SavedSegment
   canTogglePersonal: boolean
@@ -277,7 +287,11 @@ export const UpdateSegmentModal = ({
   const [type, setType] = useState<SegmentType>(segment.type)
 
   return (
-    <ModalWithRouting maxWidth="460px" className="p-6 min-h-fit" close={close}>
+    <ModalWithRouting
+      maxWidth="460px"
+      className="p-6 min-h-fit"
+      onClose={onClose}
+    >
       <FormTitle>Update segment</FormTitle>
       <SegmentNameInput
         value={name}
@@ -290,7 +304,7 @@ export const UpdateSegmentModal = ({
         disabled={!canTogglePersonal}
       />
       <ButtonsRow>
-        <button className={secondaryButtonClass} onClick={close}>
+        <button className={secondaryButtonClass} onClick={onClose}>
           Cancel
         </button>
         <button
@@ -442,16 +456,6 @@ export const AllSegmentsModal = () => {
     ? ['is', 'segment', selectedSegmentIds]
     : null
 
-  const labelsForProposedSegmentFilter = !data
-    ? {}
-    : Object.fromEntries(
-        data?.flatMap((d) =>
-          selectedSegmentIds.includes(d.id)
-            ? [[formatSegmentIdAsLabelKey(d.id), d.name]]
-            : []
-        )
-      )
-
   const searchResults = data?.filter(getFilterSegmentsByNameInsensitive(search))
 
   const personalSegments = searchResults?.filter(
@@ -497,7 +501,7 @@ export const AllSegmentsModal = () => {
         ]
           .filter((i) => !!i.segments?.length)
           .map(({ segments, title, sliceEnd, showMore }) => (
-            <>
+            <Fragment key={title}>
               <h2 className="mt-2 text-l font-bold dark:text-gray-100">
                 {title}
               </h2>
@@ -520,49 +524,23 @@ export const AllSegmentsModal = () => {
                   Show more
                 </button>
               )}
-            </>
+            </Fragment>
           ))}
         {!personalSegments?.length && !siteSegments?.length && (
           <p>No segments found.</p>
         )}
       </div>
-
-      <div className="mt-4">
-        <h2 className="text-l font-bold dark:text-gray-100">Selected filter</h2>
-
-        {!!data && !!proposedSegmentFilter && (
-          <div className="mt-2 justify-self-start">
-            <FilterPill
-              // className="dark:!bg-gray-700"
-              interactive={false}
-              plainText={plainFilterText(
-                labelsForProposedSegmentFilter,
-                proposedSegmentFilter
-              )}
-              actions={
-                <button
-                  title={`Remove filter: ${plainFilterText(labelsForProposedSegmentFilter, proposedSegmentFilter)}`}
-                  className="flex items-center h-full px-2 mr-1 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 "
-                  onClick={() => setSelectedSegmentIds([])}
-                >
-                  <XMarkIcon className="block w-4 h-4" />
-                </button>
-              }
-            >
-              {styledFilterText(
-                labelsForProposedSegmentFilter,
-                proposedSegmentFilter
-              )}
-            </FilterPill>
-          </div>
-        )}
-        {proposedSegmentFilter === null && (
-          <p className="mt-2">No segments selected.</p>
-        )}
+      <div>
         <ButtonsRow>
           <AppNavigationLink
             className={primaryNeutralButtonClass}
+            // onClick={(e) => {
+            //   if (selectedSegmentIds.length === 0) {
+            //     e.preventDefault()
+            //   }
+            // }}
             path={rootRoute.path}
+            aria-disabled={selectedSegmentIds.length === 0}
             search={(s) => {
               const nonSegmentFilters = query.filters.filter(
                 (f) => !isSegmentFilter(f)
@@ -598,7 +576,8 @@ export const AllSegmentsModal = () => {
               }
             }}
           >
-            Apply
+            Apply {selectedSegmentIds.length}{' '}
+            {selectedSegmentIds.length === 1 ? 'segment' : 'segments'}
           </AppNavigationLink>
           <AppNavigationLink
             className={primaryNegativeButtonClass}
@@ -619,7 +598,7 @@ export const AllSegmentsModal = () => {
               }
             }}
           >
-            Clear
+            Clear filter
           </AppNavigationLink>
         </ButtonsRow>
       </div>

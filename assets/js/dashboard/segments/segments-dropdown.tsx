@@ -15,7 +15,6 @@ import {
   parseApiSegmentData,
   SavedSegment,
   SegmentData,
-  SegmentType
 } from './segments'
 import { QueryFunction, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cleanLabels } from '../util/filters'
@@ -66,14 +65,14 @@ const linkClass = 'text-xs'
 
 export const SegmentActionsList = ({
   segment,
-  // closeList,
+  closeList,
   // cancelEditing,
   openUpdateModal,
   openSaveAsNewModal,
   openDeleteModal
 }: {
   segment: Pick<SavedSegment, 'name' | 'id'>
-  // closeList: () => void
+  closeList: () => void
   // cancelEditing: () => void
   openUpdateModal: () => void
   openSaveAsNewModal: () => void
@@ -85,7 +84,7 @@ export const SegmentActionsList = ({
         className="flex text-xs px-4 py-2 gap-1 bg-gray-50 dark:bg-gray-900 rounded-t-md"
         path={rootRoute.path}
         search={(s) => ({ ...s, filters: null, labels: null })}
-        // onClick={cancelEditing}
+        onClick={closeList}
       >
         <ChevronLeftIcon className="block h-4 w-4"></ChevronLeftIcon>
         <div>Cancel editing</div>
@@ -138,11 +137,6 @@ export const SegmentsList = ({
 
   const filteredData = data?.filter(getFilterSegmentsByNameInsensitive(search))
 
-  const personalSegments = filteredData?.filter(
-    (i) => i.type === SegmentType.personal
-  )
-  const siteSegments = filteredData?.filter((i) => i.type === SegmentType.site)
-
   return (
     <>
       {!!data?.length && (
@@ -155,45 +149,36 @@ export const SegmentsList = ({
               onSearch={setSearch}
             />
           </div>
-          {[
-            { segments: personalSegments, title: 'Personal' },
-            { segments: siteSegments, title: 'Site' }
-          ]
-            .filter((i) => !!i.segments?.length)
-            .map(({ segments, title }) => (
-              <>
-                <DropdownSubtitle className="normal-case">
-                  {title}
-                </DropdownSubtitle>
-
-                {segments!.slice(0, 3).map((s) => {
-                  return (
-                    <Tooltip
-                      key={s.id}
-                      info={
-                        <div className="max-w-60">
-                          <div className="break-all">{s.name}</div>
-                          <SegmentAuthorship
-                            {...s}
-                            className="font-normal text-xs"
-                          />
-                        </div>
-                      }
-                    >
-                      <SegmentLink
-                        {...s}
-                        appliedSegmentIds={appliedSegmentIds}
-                      />
-                    </Tooltip>
-                  )
-                })}
-              </>
-            ))}
+          {filteredData?.slice(0, 5).map((s) => (
+            <Tooltip
+              key={s.id}
+              info={
+                <div className="max-w-60">
+                  <div className="break-all">{s.name}</div>
+                  <div className="font-normal text-xs">
+                    {
+                      {
+                        personal: 'Personal segment',
+                        site: 'Site segment'
+                      }[s.type]
+                    }
+                  </div>
+                  <SegmentAuthorship {...s} className="font-normal text-xs" />
+                </div>
+              }
+            >
+              <SegmentLink
+                closeList={closeList}
+                {...s}
+                appliedSegmentIds={appliedSegmentIds}
+              />
+            </Tooltip>
+          ))}
           {!!data?.length && (
             <DropdownNavigationLink
               className={classNames(linkClass, primaryHoverClass)}
               path={filterRoute.path}
-              params={{ field: 'segment' }}
+              params={{ field: 'segments' }}
               search={(s) => s}
               onLinkClick={closeList}
             >
@@ -329,8 +314,9 @@ export const useGetSegmentById = (id?: number) => {
 const SegmentLink = ({
   id,
   name,
-  appliedSegmentIds
-}: SavedSegment & { appliedSegmentIds: number[] }) => {
+  appliedSegmentIds,
+  closeList
+}: SavedSegment & { appliedSegmentIds: number[]; closeList: () => void }) => {
   const user = useUserContext()
   const canSeeActions = user.loggedIn
   const { query } = useQueryContext()
@@ -345,9 +331,7 @@ const SegmentLink = ({
       onMouseEnter={prefetchSegment}
       search={(search) => {
         const otherFilters = query.filters.filter((f) => !isSegmentFilter(f))
-        const updatedSegmentIds = appliedSegmentIds.includes(id)
-          ? appliedSegmentIds.filter((i) => i !== id)
-          : [...appliedSegmentIds, id]
+        const updatedSegmentIds = [id]
 
         if (!updatedSegmentIds.length) {
           return {
@@ -370,6 +354,7 @@ const SegmentLink = ({
           })
         }
       }}
+      onLinkClick={closeList}
       actions={
         !canSeeActions ? null : (
           <>

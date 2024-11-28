@@ -1,5 +1,5 @@
 import React from 'react'
-import { useParams } from 'react-router-dom';
+import { useMatch, useParams } from 'react-router-dom';
 
 import Modal from './modal';
 import { EVENT_PROPS_PREFIX, FILTER_GROUP_TO_MODAL_TYPE, formatFilterGroup, FILTER_OPERATIONS, getFilterGroup, FILTER_MODAL_TO_FILTER_GROUP, cleanLabels } from '../../util/filters';
@@ -7,7 +7,7 @@ import { useQueryContext } from '../../query-context';
 import { useSiteContext } from '../../site-context';
 import { isModifierPressed, isTyping } from '../../keybinding';
 import FilterModalGroup from "./filter-modal-group";
-import { rootRoute } from '../../router';
+import { editSegmentFilterRoute, editSegmentRoute, rootRoute } from '../../router';
 import { useAppNavigate } from '../../navigation/use-app-navigate';
 import { AllSegmentsModal } from '../../segments/segment-modals';
 
@@ -86,7 +86,7 @@ class FilterModal extends React.Component {
 
   selectFiltersAndCloseModal(filters) {
     this.props.navigate({
-      path: rootRoute.path,
+      ...this.props.applyFiltersTo,
       search: (search) => ({
         ...search,
         filters: filters,
@@ -146,7 +146,7 @@ class FilterModal extends React.Component {
 
   render() {
     return (
-      <Modal maxWidth="460px">
+      <Modal maxWidth="460px" onClose={this.props.onClose}>
         <h1 className="text-xl font-bold dark:text-gray-100">
           Filter by {formatFilterGroup(this.props.modalType)}
         </h1>
@@ -195,17 +195,32 @@ class FilterModal extends React.Component {
   }
 }
 
-export default function FilterModalWithRouter(props) {
+export default function FilterModalWithRouter() {
   const navigate = useAppNavigate();
   const { field } = useParams()
   const { query } = useQueryContext()
   const site = useSiteContext()
-  if (field === 'segment') {
+  const match = useMatch(editSegmentFilterRoute)
+  if (field === 'segments') {
     return <AllSegmentsModal />
   }
   return (
     <FilterModal
-      {...props}
+      applyFiltersTo={
+        match
+          ? { path: `/${editSegmentRoute.path}`, params: { id: match.params.id } }
+          : { path: rootRoute.path, replace: true }
+      }
+      onClose={
+        match
+          ? () =>
+              navigate({
+                path: `/${editSegmentRoute.path}`,
+                params: { id: match.params.id },
+                search: (s) => s
+              })
+          : undefined
+      }
       modalType={field || 'page'}
       query={query}
       navigate={navigate}
