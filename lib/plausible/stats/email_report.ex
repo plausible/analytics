@@ -48,7 +48,7 @@ defmodule Plausible.Stats.EmailReport do
   defp put_top_5_sources(stats, site, query) do
     query =
       query
-      |> Query.add_filter([:is_not, "visit:source", ["Direct / None"], %{}])
+      |> Query.add_filter([:is_not, "visit:source", ["Direct / None"]])
       |> Query.set(dimensions: ["visit:source"])
 
     sources = Stats.breakdown(site, query, [:visitors], {5, 1})

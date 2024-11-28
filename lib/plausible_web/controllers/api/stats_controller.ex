@@ -951,7 +951,7 @@ defmodule PlausibleWeb.Api.StatsController do
         query
         |> struct!(order_by: [])
         |> Query.remove_top_level_filters(["visit:exit_page"])
-        |> Query.add_filter([:is, "event:page", pages, %{}])
+        |> Query.add_filter([:is, "event:page", pages])
         |> Query.set(dimensions: ["event:page"])
 
       total_pageviews =

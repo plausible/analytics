@@ -135,9 +135,8 @@ defmodule Plausible.Stats.Filters.QueryParser do
               :contains_not
             ] do
     with {:ok, clauses} <- parse_clauses_list(filter),
-      {:ok, config} <- parse_filter_modifiers(Enum.at(filter, 3))
-    do
-      {:ok, [clauses, config]}
+         {:ok, modifiers} <- parse_filter_modifiers(Enum.at(filter, 3)) do
+      {:ok, [clauses | modifiers]}
     end
   end
 
@@ -171,8 +170,12 @@ defmodule Plausible.Stats.Filters.QueryParser do
 
   defp parse_clauses_list(filter), do: {:error, "Invalid filter '#{i(filter)}'"}
 
-  defp parse_filter_modifiers(config)do
-    {:ok, atomize_keys(config || %{})}
+  defp parse_filter_modifiers(modifiers) when is_map(modifiers) do
+    {:ok, [atomize_keys(modifiers)]}
+  end
+
+  defp parse_filter_modifiers(nil) do
+    {:ok, []}
   end
 
   defp parse_date(_site, date_string, _date) when is_binary(date_string) do

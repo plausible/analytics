@@ -117,8 +117,8 @@ defmodule Plausible.Stats.Imported.Base do
     has_required_name_filter? =
       query.filters
       |> Enum.flat_map(fn
-        [:is, "event:name", names, _] -> names
-        [:is, "event:goal", names, _] -> names
+        [:is, "event:name", names | _rest] -> names
+        [:is, "event:goal", names | _rest] -> names
         _ -> []
       end)
       |> Enum.any?(&(&1 in special_goals_for(property)))
@@ -196,7 +196,7 @@ defmodule Plausible.Stats.Imported.Base do
   defp get_filter_goals(query) do
     query.filters
     |> Enum.filter(fn [_, dimension | _rest] -> dimension == "event:goal" end)
-    |> Enum.flat_map(fn [operation, _dimension, clauses, _modifiers] ->
+    |> Enum.flat_map(fn [operation, _dimension, clauses | _rest] ->
       Enum.flat_map(clauses, fn clause ->
         query.preloaded_goals
         |> Plausible.Goals.Filters.filter_preloaded(operation, clause)

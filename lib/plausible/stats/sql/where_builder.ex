@@ -93,7 +93,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     |> Enum.reduce(fn condition, acc -> dynamic([], ^acc or ^condition) end)
   end
 
-  defp add_filter(:events, _query, [:is, "event:name", clauses, _modifiers]) do
+  defp add_filter(:events, _query, [:is, "event:name", clauses | _rest]) do
     dynamic([e], e.name in ^clauses)
   end
 
@@ -154,7 +154,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     false
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:is, _, clauses, _modifiers]) do
+  defp filter_custom_prop(prop_name, column_name, [:is, _, clauses | _rest]) do
     none_value_included = Enum.member?(clauses, "(none)")
 
     dynamic(
@@ -164,7 +164,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:is_not, _, clauses, _modifiers]) do
+  defp filter_custom_prop(prop_name, column_name, [:is_not, _, clauses | _rest]) do
     none_value_included = Enum.member?(clauses, "(none)")
 
     dynamic(
@@ -178,19 +178,23 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:matches_wildcard, dimension, clauses, modifiers]) do
+  defp filter_custom_prop(prop_name, column_name, [:matches_wildcard, dimension, clauses | rest]) do
     regexes = Enum.map(clauses, &page_regex/1)
 
-    filter_custom_prop(prop_name, column_name, [:matches, dimension, regexes, modifiers])
+    filter_custom_prop(prop_name, column_name, [:matches, dimension, regexes | rest])
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:matches_wildcard_not, dimension, clauses, modifiers]) do
+  defp filter_custom_prop(prop_name, column_name, [
+         :matches_wildcard_not,
+         dimension,
+         clauses | rest
+       ]) do
     regexes = Enum.map(clauses, &page_regex/1)
 
-    filter_custom_prop(prop_name, column_name, [:matches_not, dimension, regexes, modifiers])
+    filter_custom_prop(prop_name, column_name, [:matches_not, dimension, regexes | rest])
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:matches, _dimension, clauses, _modifiers]) do
+  defp filter_custom_prop(prop_name, column_name, [:matches, _dimension, clauses | _rest]) do
     dynamic(
       [t],
       has_key(t, column_name, ^prop_name) and
@@ -202,7 +206,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:matches_not, _dimension, clauses, _modifiers]) do
+  defp filter_custom_prop(prop_name, column_name, [:matches_not, _dimension, clauses | _rest]) do
     dynamic(
       [t],
       has_key(t, column_name, ^prop_name) and
@@ -214,7 +218,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:contains, _dimension, clauses, _modifiers]) do
+  defp filter_custom_prop(prop_name, column_name, [:contains, _dimension, clauses | _rest]) do
     dynamic(
       [t],
       has_key(t, column_name, ^prop_name) and
@@ -226,7 +230,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:contains_not, _dimension, clauses, _modifiers]) do
+  defp filter_custom_prop(prop_name, column_name, [:contains_not, _dimension, clauses | _rest]) do
     dynamic(
       [t],
       has_key(t, column_name, ^prop_name) and
@@ -238,7 +242,7 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_field(db_field, [:matches_wildcard, _dimension, glob_exprs, _modifiers]) do
+  defp filter_field(db_field, [:matches_wildcard, _dimension, glob_exprs | _rest]) do
     page_regexes = Enum.map(glob_exprs, &page_regex/1)
 
     dynamic(
@@ -247,36 +251,36 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_field(db_field, [:matches_wildcard_not, dimension, clauses, modifiers]) do
-    dynamic([], not (^filter_field(db_field, [:matches_wildcard, dimension, clauses, modifiers])))
+  defp filter_field(db_field, [:matches_wildcard_not | rest]) do
+    dynamic([], not (^filter_field(db_field, [:matches_wildcard | rest])))
   end
 
-  defp filter_field(db_field, [:contains, _dimension, values, _modifiers]) do
+  defp filter_field(db_field, [:contains, _dimension, values | _rest]) do
     dynamic([x], fragment("multiSearchAny(?, ?)", type(field(x, ^db_field), :string), ^values))
   end
 
-  defp filter_field(db_field, [:contains_not, dimension, clauses, modifiers]) do
-    dynamic([], not (^filter_field(db_field, [:contains, dimension, clauses, modifiers])))
+  defp filter_field(db_field, [:contains_not | rest]) do
+    dynamic([], not (^filter_field(db_field, [:contains | rest])))
   end
 
-  defp filter_field(db_field, [:matches, _dimension, clauses, _modifiers]) do
+  defp filter_field(db_field, [:matches, _dimension, clauses | _rest]) do
     dynamic(
       [x],
       fragment("multiMatchAny(?, ?)", type(field(x, ^db_field), :string), ^clauses)
     )
   end
 
-  defp filter_field(db_field, [:matches_not, dimension, clauses, modifiers]) do
-    dynamic([], not (^filter_field(db_field, [:matches, dimension, clauses, modifiers])))
+  defp filter_field(db_field, [:matches_not | rest]) do
+    dynamic([], not (^filter_field(db_field, [:matches | rest])))
   end
 
-  defp filter_field(db_field, [:is, _dimension, clauses, _modifiers]) do
+  defp filter_field(db_field, [:is, _dimension, clauses | _rest]) do
     list = Enum.map(clauses, &db_field_val(db_field, &1))
     dynamic([x], field(x, ^db_field) in ^list)
   end
 
-  defp filter_field(db_field, [:is_not, dimension, clauses, modifiers]) do
-    dynamic([], not (^filter_field(db_field, [:is, dimension, clauses, modifiers])))
+  defp filter_field(db_field, [:is_not | rest]) do
+    dynamic([], not (^filter_field(db_field, [:is | rest])))
   end
 
   @no_ref "Direct / None"

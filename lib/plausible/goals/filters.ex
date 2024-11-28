@@ -20,7 +20,7 @@ defmodule Plausible.Goals.Filters do
   * `imported?` - when `true`, builds conditions on the `page` db field rather than
     `pathname`, and also skips the `e.name == "pageview"` check.
   """
-  def add_filter(query, [operation, "event:goal", clauses, _modifiers], opts \\ [])
+  def add_filter(query, [operation, "event:goal", clauses | _], opts \\ [])
       when operation in [:is, :contains] do
     imported? = Keyword.get(opts, :imported?, false)
 

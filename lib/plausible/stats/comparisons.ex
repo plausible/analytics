@@ -87,7 +87,7 @@ defmodule Plausible.Stats.Comparisons do
       query.dimensions
       |> Enum.zip(dimension_labels)
       |> Enum.reject(fn {dimension, _label} -> Time.time_dimension?(dimension) end)
-      |> Enum.map(fn {dimension, label} -> [:is, dimension, [label], %{}] end)
+      |> Enum.map(fn {dimension, label} -> [:is, dimension, [label]] end)
 
     case query_filters do
       [] -> []
