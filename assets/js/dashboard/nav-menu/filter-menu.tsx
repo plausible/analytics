@@ -63,7 +63,7 @@ export function getFilterListItems({
     [
       {
         title: 'Device',
-        modals: ['screen', 'browser', 'os']
+        modals: ['location', 'screen', 'browser', 'os']
       },
       {
         title: 'Behaviour',
