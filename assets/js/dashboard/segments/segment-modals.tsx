@@ -10,7 +10,7 @@ import {
   SegmentType
 } from './segments'
 import {
-  EditSegment,
+  EditSegmentIcon,
   useSegmentPrefetch,
   useSegmentsListQuery
 } from './segments-dropdown'
@@ -22,16 +22,16 @@ import { rootRoute } from '../router'
 import { FilterPillsList } from '../nav-menu/filter-pills-list'
 import classNames from 'classnames'
 import {
-  EyeSlashIcon,
-  EyeIcon,
   XMarkIcon,
-  CheckIcon,
   ChevronUpIcon,
-  ChevronDownIcon
-} from '@heroicons/react/24/solid'
+  ChevronDownIcon,
+  TrashIcon,
+  CheckIcon
+} from '@heroicons/react/24/outline'
 import { FilterPill } from '../nav-menu/filter-pill'
 import { Filter } from '../query'
 import { SegmentAuthorship } from './segment-authorship'
+import { SegmentExpandedLocationState } from './segment-expanded-context'
 
 const buttonClass =
   'h-12 text-md font-medium py-2 px-3 rounded border dark:border-gray-100 dark:text-gray-100'
@@ -282,38 +282,9 @@ export const UpdateSegmentModal = ({
   )
 }
 
-const ExpandSegmentButton = ({
-  className,
-  onClick,
-  onMouseEnter,
-  expanded
-}: {
-  className?: string
-  onClick: () => Promise<void>
-  onMouseEnter?: () => Promise<void>
-  expanded: boolean
-}) => {
-  return (
-    <button
-      className={classNames(
-        'flex w-5 h-5 items-center justify-center fill-current hover:fill-indigo-600 ',
-        className
-      )}
-      onClick={onClick}
-      onMouseEnter={onMouseEnter}
-    >
-      {expanded ? (
-        <ChevronUpIcon className="block w-4 h-4" />
-      ) : (
-        <ChevronDownIcon className="block w-4 h-4" />
-      )}
-    </button>
-  )
-}
 const SegmentRow = ({
   id,
   name,
-  // type,
   toggleSelected,
   selected
 }: SavedSegment & { toggleSelected: () => void; selected: boolean }) => {
@@ -322,44 +293,53 @@ const SegmentRow = ({
       id
     })
   const [segmentDataVisible, setSegmentDataVisible] = useState(false)
+  const toggleSegmentDataVisible = useCallback(async () => {
+    setSegmentDataVisible((currentVisible) => {
+      if (currentVisible) {
+        return false
+      }
+      fetchSegment()
+      return true
+    })
+  }, [fetchSegment])
   return (
     <div
-      className="grid grid-cols-[1fr_20px_20px] shadow rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm py-3 px-3 transition-all"
+      className="grid grid-cols-[1fr_20px] shadow rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm py-3 px-3 transition-all"
       onMouseEnter={prefetchSegment}
     >
-      {/* <button className="block" onClick={toggleSelected}>
-        {selected && <CheckIcon className="block w-4 h-4" />}
-      </button> */}
-      <div
-        onClick={toggleSelected}
-        className={classNames(
-          'cursor-pointer break-all',
-          selected && 'font-extrabold'
-        )}
+      <button
+        className="group flex justify-between text-left"
+        onClick={toggleSegmentDataVisible}
       >
-        {name}
-        {/* <span>{' · '}</span> */}
-        {/* <span className="text-[10px] leading">
-          {{ personal: 'personal', site: 'site' }[type]}
-        </span> */}
-      </div>
-      <ExpandSegmentButton
-        className=""
-        expanded={segmentDataVisible}
-        onClick={
-          segmentDataVisible
-            ? async () => setSegmentDataVisible(false)
-            : async () => {
-                setSegmentDataVisible(true)
-                fetchSegment()
-              }
-        }
-      />
-      <EditSegment
-        onClick={async () => {
-          expandSegment(data ?? (await fetchSegment()))
-        }}
-      />
+        <div
+          className={classNames(
+            'cursor-pointer break-all',
+            selected && 'font-extrabold'
+          )}
+        >
+          {name}
+        </div>
+        <div className="flex w-5 h-5 items-center">
+          {segmentDataVisible ? (
+            <ChevronUpIcon className="block w-4 h-4" />
+          ) : (
+            <ChevronDownIcon className="block w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+          )}
+        </div>
+      </button>
+
+      <button
+        className="flex items-center justify-center w-5 h-5 group"
+        title={selected ? 'Unselect segment' : 'Select segment'}
+        onClick={toggleSelected}
+      >
+        <CheckIcon
+          className={classNames(
+            'w-4 h-4 block opacity-0 transition-opacity',
+            selected ? 'opacity-100' : 'opacity-30 group-hover:opacity-100'
+          )}
+        />
+      </button>
 
       {segmentDataVisible && (
         <div className="col-span-full mt-3">
@@ -376,7 +356,35 @@ const SegmentRow = ({
           ) : (
             'loading'
           )}
-          <SegmentAuthorship {...data} className="mt-3 text-xs" />
+          {!!data && <SegmentAuthorship {...data} className="mt-3 text-xs" />}
+          <div className="col-span-full mt-3 flex gap-x-4 gap-y-2 flex-wrap">
+            <button
+              className="flex gap-x-1 text-sm items-center hover:text-indigo-600 fill-current hover:fill-indigo-600"
+              onClick={async () => {
+                expandSegment(data ?? (await fetchSegment()))
+              }}
+            >
+              <EditSegmentIcon className="block h-4 w-4" />
+              Edit
+            </button>
+            <AppNavigationLink
+              className="flex gap-x-1 text-sm items-center hover:text-indigo-600 fill-current hover:fill-indigo-600"
+              path={rootRoute.path}
+              search={(s) => s}
+              state={
+                {
+                  expandedSegment: data,
+                  modal: 'delete'
+                } as SegmentExpandedLocationState
+              }
+              // onClick={async () => {
+              //   expandSegment(data ?? (await fetchSegment()))
+              // }}
+            >
+              <TrashIcon className="block h-4 w-4" />
+              Delete
+            </AppNavigationLink>
+          </div>
         </div>
       )}
     </div>
@@ -473,46 +481,22 @@ export const AllSegmentsModal = () => {
                 />
               ))}
               {segments?.length && sliceEnd < segments.length && (
-                <button onClick={showMore} className="button self-center	">
+                <button onClick={showMore} className="button self-center mt-1">
                   Show more
                 </button>
               )}
             </>
           ))}
         {!personalSegments?.length && !siteSegments?.length && (
-          <span>
-            No segments found.{' '}
-            {/* {!!search?.trim().length && (
-              <button
-                className="inline cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"
-                onClick={() => setSearch('')}
-              >
-                {'Clear search to see all.'}
-              </button>
-            )} */}
-          </span>
+          <span>No segments found.</span>
         )}
       </div>
-      {/* <div className="my-4 border-b border-gray-300"></div> */}
 
       <div className="mt-4">
         <h2 className="text-l font-bold dark:text-gray-100">Selected filter</h2>
 
         {!!data && !!proposedSegmentFilter && (
           <div className="mt-2 justify-self-start">
-            {/* <FilterPillsList
-              className="flex-wrap"
-              direction="horizontal"
-              pills={proposedSegmentFilter[2].map((c) => ({
-                children: styledFilterText(labelsForProposedSegmentFilter, [
-                  proposedSegmentFilter[0],
-                  proposedSegmentFilter[1],
-                  [c]
-                ]),
-                plainText: 'hi',
-                interactive: false
-              }))}
-            /> */}
             <FilterPill
               interactive={false}
               plainText={plainFilterText(

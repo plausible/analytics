@@ -29,7 +29,7 @@ export const SegmentAuthorship = ({
   owner_id,
   inserted_at,
   updated_at
-}: SavedSegment & { inserted_at: string; updated_at: string } & {
+}: SavedSegment & {
   className?: string
 }) => {
   const site = useSiteContext()

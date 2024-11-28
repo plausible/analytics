@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { ReactNode, useCallback, useMemo, useState } from 'react'
 import {
   DropdownLinkGroup,
   DropdownNavigationLink,
@@ -37,6 +37,11 @@ import { SegmentAuthorship } from './segment-authorship'
 
 export const useSegmentsListQuery = () => {
   const site = useSiteContext()
+  const { query } = useQueryContext()
+  const segmentsFilter = query.filters.find(isSegmentFilter)
+  const appliedSegmentIds = segmentsFilter
+    ? (segmentsFilter[2] as number[])
+    : []
   return useQuery({
     queryKey: ['segments'],
     placeholderData: (previousData) => previousData,
@@ -50,18 +55,13 @@ export const useSegmentsListQuery = () => {
             accept: 'application/json'
           }
         }
-      ).then(
-        (
-          res
-        ): Promise<
-          (SavedSegment & {
-            owner_id: number
-            inserted_at: string
-            updated_at: string
-          })[]
-        > => res.json()
+      ).then((res): Promise<SavedSegment[]> => res.json())
+
+      return response.sort(
+        (a, b) =>
+          appliedSegmentIds.findIndex((id) => id === b.id) -
+          appliedSegmentIds.findIndex((id) => id === a.id)
       )
-      return response
     }
   })
 }
@@ -98,11 +98,9 @@ export const SegmentsList = ({ closeList }: { closeList: () => void }) => {
               modal: null
             } as SegmentExpandedLocationState
           }
-          // onClick={closeList}
         >
-          {/* <XMarkIcon className="block h-4 w-4" /> */}
           <ChevronLeftIcon className="block h-4 w-4"></ChevronLeftIcon>
-          <div>Back to filters</div>
+          <div>Cancel editing</div>
         </AppNavigationLink>
         <DropdownLinkGroup>
           <DropdownSubtitle className="break-all">
@@ -294,7 +292,7 @@ export const useSegmentPrefetch = ({ id }: Pick<SavedSegment, 'id'>) => {
   const navigate = useAppNavigate()
 
   const getSegmentFn: QueryFunction<
-    { segment_data: SegmentData } & SavedSegment,
+    SavedSegment & { segment_data: SegmentData },
     typeof queryKey
   > = useCallback(
     async ({ queryKey: [_, id] }) => {
@@ -429,12 +427,15 @@ const SegmentLink = ({
       actions={
         !canSeeActions ? null : (
           <>
-            <EditSegment
-              className="ml-2 shrink-0"
+            <button
+              title="Edit segment"
+              className={classNames(iconButtonClass, 'ml-2 shrink-0')}
               onClick={async () =>
                 expandSegment(data ?? (await fetchSegment()))
               }
-            />
+            >
+              <EditSegmentIcon className="block w-4 h-4" />
+            </button>
           </>
         )
       }
@@ -444,11 +445,16 @@ const SegmentLink = ({
   )
 }
 
+export const iconButtonClass =
+  'flex items-center justify-center w-5 h-5 fill-current hover:fill-indigo-600'
+
 export const EditSegment = ({
+  children,
   className,
   onClick,
   onMouseEnter
 }: {
+  children?: ReactNode
   onClick: () => Promise<void>
   onMouseEnter?: () => Promise<void>
   className?: string
@@ -462,13 +468,13 @@ export const EditSegment = ({
       onClick={onClick}
       onMouseEnter={onMouseEnter}
     >
-      {/* <ChevronRightIcon className="w-4 h-4"></ChevronRightIcon> */}
-      <EditSegmentIcon className="w-4 h-4" />
+      {children}
+      <EditSegmentIcon className="block w-4 h-4" />
     </button>
   )
 }
 
-const EditSegmentIcon = ({ className }: { className?: string }) => (
+export const EditSegmentIcon = ({ className }: { className?: string }) => (
   <svg
     className={className}
     viewBox="0 0 16 16"

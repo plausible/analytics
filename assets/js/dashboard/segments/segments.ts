@@ -13,6 +13,8 @@ export type SavedSegment = {
   name: string
   type: SegmentType
   owner_id: number
+  inserted_at: string
+  updated_at: string
 }
 
 export type SegmentData = {
@@ -32,13 +34,15 @@ export function getFilterSegmentsByNameInsensitive(
 }
 
 export const getSegmentNamePlaceholder = (query: DashboardQuery) =>
-  query.filters.reduce(
-    (combinedName, filter) =>
-      combinedName.length > 100
-        ? combinedName
-        : `${combinedName}${combinedName.length ? ' and ' : ''}${plainFilterText(query.labels, filter)}`,
-    ''
-  ).slice(0,255)
+  query.filters
+    .reduce(
+      (combinedName, filter) =>
+        combinedName.length > 100
+          ? combinedName
+          : `${combinedName}${combinedName.length ? ' and ' : ''}${plainFilterText(query.labels, filter)}`,
+      ''
+    )
+    .slice(0, 255)
 
 export function isSegmentIdLabelKey(labelKey: string): boolean {
   return labelKey.startsWith(SEGMENT_LABEL_KEY_PREFIX)
