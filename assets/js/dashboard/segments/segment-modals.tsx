@@ -317,9 +317,7 @@ const SegmentRow = ({
   selected
 }: SavedSegment & { toggleSelected: () => void; selected: boolean }) => {
   const { prefetchSegment, data, expandSegment, fetchSegment } =
-    useGetSegmentById({
-      id
-    })
+    useGetSegmentById(id)
   const [segmentDataVisible, setSegmentDataVisible] = useState(false)
   const toggleSegmentDataVisible = useCallback(async () => {
     setSegmentDataVisible((currentVisible) => {

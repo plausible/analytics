@@ -249,7 +249,7 @@ const SaveSelectionAsSegment = ({
   )
 }
 
-export const useGetSegmentById = ({ id }: Pick<SavedSegment, 'id'>) => {
+export const useGetSegmentById = (id?: number) => {
   const site = useSiteContext()
   const queryClient = useQueryClient()
   const queryKey = useMemo(() => ['segments', id] as const, [id])
@@ -308,7 +308,7 @@ export const useGetSegmentById = ({ id }: Pick<SavedSegment, 'id'>) => {
     (segment: SavedSegment & { segment_data: SegmentData }) => {
       try {
         navigate({
-          path: editSegmentRoute.path,
+          path: `/${editSegmentRoute.path}`,
           params: { id: String(segment.id) },
           search: (search) => ({
             ...search,
@@ -334,7 +334,7 @@ const SegmentLink = ({
   const user = useUserContext()
   const canSeeActions = user.loggedIn
   const { query } = useQueryContext()
-  const { prefetchSegment, data, fetchSegment } = useGetSegmentById({ id })
+  const { prefetchSegment, data, fetchSegment } = useGetSegmentById(id)
   const navigate = useAppNavigate()
 
   return (

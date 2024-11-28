@@ -75,24 +75,47 @@ export function getFilterListItems({
 }
 
 export const FilterMenu = () => {
+  const site = useSiteContext()
+  const { query } = useQueryContext()
+  const navigate = useAppNavigate()
+
   const match = useMatch(editSegmentRoute.path)
-  const expandedSegmentId = match ? parseInt(match.params.id!, 10) : null
+  const expandedSegmentId = match ? parseInt(match.params.id!, 10) : undefined
   const [modal, setModal] = useState<'update' | 'create' | 'delete' | null>(
     null
   )
   useEffect(() => {
     setModal(null)
   }, [match])
-  const s = useGetSegmentById({ id: expandedSegmentId! })
-  const expandedSegment = s.data
+  const { fetchSegment, data } = useGetSegmentById(expandedSegmentId)
+  useEffect(() => {
+    console.log(expandedSegmentId, data)
+    if (!data && expandedSegmentId) {
+      fetchSegment().then((res) =>
+        navigate({
+          search: (search) => ({
+            ...search,
+            filters: res.segment_data.filters,
+            labels: res.segment_data.labels
+          }),
+          replace: true
+        })
+      )
+    }
+  }, [navigate, data, expandedSegmentId, fetchSegment])
+  // useEffect(() => {
+  //   if (match && query.filters.length) {
+  //     navigate({
+  //       search: (s) => ({})
+  //     })
+  //   }
+  // })
+  const expandedSegment = data
   const user = useUserContext()
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [opened, setOpened] = useState(false)
-  const site = useSiteContext()
-  const { query } = useQueryContext()
 
   const queryClient = useQueryClient()
-  const navigate = useAppNavigate()
   const patchSegment = useMutation({
     mutationFn: ({
       id,
