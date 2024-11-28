@@ -27,11 +27,6 @@ log_level =
   |> String.to_existing_atom()
 
 config :logger, level: log_level
-
-config :logger, Sentry.LoggerBackend,
-  capture_log_messages: true,
-  level: :error
-
 config :logger, :default_formatter, metadata: [:request_id]
 
 case String.downcase(log_format) do
