@@ -42,12 +42,11 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      ep = insert(:enterprise_plan, user: user)
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+      subscribe_to_enterprise_plan(user)
 
-      insert(:site, members: [user])
-      insert(:site, members: [user])
-      insert(:site, members: [user])
+      new_site(owner: user)
+      new_site(owner: user)
+      new_site(owner: user)
 
       conn = get(conn, "/sites/new")
       refute html_response(conn, 200) =~ "is limited to"
@@ -342,9 +341,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      ep = insert(:enterprise_plan, user: user, site_limit: 1)
-      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
-      insert_list(2, :site, members: [user])
+      subscribe_to_enterprise_plan(user, site_limit: 1)
+      new_site(owner: user)
+      new_site(owner: user)
 
       conn =
         post(conn, "/sites", %{
