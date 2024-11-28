@@ -229,7 +229,7 @@ export function cleanLabels(filters, labels, mergedFilterKey, mergedLabels) {
 const EVENT_FILTER_KEYS = new Set(['name', 'page', 'goal', 'hostname'])
 
 export function serializeApiFilters(filters) {
-  const apiFilters = filters.map(([operation, filterKey, clauses]) => {
+  const apiFilters = filters.map(([operation, filterKey, clauses, ...modifiers]) => {
     let apiFilterKey = `visit:${filterKey}`
     if (
       filterKey.startsWith(EVENT_PROPS_PREFIX) ||
@@ -237,7 +237,7 @@ export function serializeApiFilters(filters) {
     ) {
       apiFilterKey = `event:${filterKey}`
     }
-    return [operation, apiFilterKey, clauses]
+    return [operation, apiFilterKey, clauses, ...modifiers]
   })
 
   return JSON.stringify(apiFilters)

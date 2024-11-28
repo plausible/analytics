@@ -29,7 +29,7 @@ function BrowsersModal() {
   }, [reportInfo.dimension])
 
   const addSearchFilter = useCallback((query, searchString) => {
-    return addFilter(query, ['contains', reportInfo.dimension, [searchString]])
+    return addFilter(query, ['contains', reportInfo.dimension, [searchString], { case_sensitive: false }])
   }, [reportInfo.dimension])
 
   const renderIcon = useCallback((listItem) => browserIconFor(listItem.name), [])

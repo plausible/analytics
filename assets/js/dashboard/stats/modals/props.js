@@ -36,7 +36,7 @@ function PropsModal() {
   }, [propKey])
 
   const addSearchFilter = useCallback((query, searchString) => {
-    return addFilter(query, ['contains', `${EVENT_PROPS_PREFIX}${propKey}`, [searchString]])
+    return addFilter(query, ['contains', `${EVENT_PROPS_PREFIX}${propKey}`, [searchString], { case_sensitive: false }])
   }, [propKey])
 
   function chooseMetrics() {

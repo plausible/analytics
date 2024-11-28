@@ -57,7 +57,7 @@ function SourcesModal({ currentView }) {
   }, [reportInfo.dimension])
 
   const addSearchFilter = useCallback((query, searchString) => {
-    return addFilter(query, ['contains', reportInfo.dimension, [searchString]])
+    return addFilter(query, ['contains', reportInfo.dimension, [searchString], { case_sensitive: false }])
   }, [reportInfo.dimension])
 
   function chooseMetrics() {
