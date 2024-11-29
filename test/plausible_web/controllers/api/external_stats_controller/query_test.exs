@@ -299,6 +299,34 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
              ]
     end
 
+    test "can filter by is_not utm_medium case insensitively", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          utm_medium: "Social",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_medium: "SOCIAL",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["pageviews"],
+          "filters" => [["is_not", "visit:utm_medium", ["sociaL"], %{"case_sensitive" => false}]]
+        })
+
+      assert json_response(conn, 200)["results"] == [
+               %{"metrics" => [1], "dimensions" => []}
+             ]
+    end
+
     test "can filter by utm_source", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -904,6 +932,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
       assert json_response(conn, 200)["results"] == [%{"metrics" => [2], "dimensions" => []}]
     end
 
+    test "contains_not page filter case insensitive", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/en/page1"),
+        build(:pageview, pathname: "/EN/page2"),
+        build(:pageview, pathname: "/pl/page1")
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [
+            ["contains_not", "event:page", ["/En/"], %{"case_sensitive" => false}]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
+    end
+
     test "contains_not page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/en/page1"),
@@ -1133,6 +1181,47 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         })
 
       assert json_response(conn, 200)["results"] == [%{"metrics" => [4], "dimensions" => []}]
+    end
+
+    test "`contains_not` operator with custom properties case insensitive", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["name"],
+          "meta.value": ["large-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["name"],
+          "meta.value": ["Small-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["name"],
+          "meta.value": ["mall-1"]
+        ),
+        build(:pageview,
+          "meta.key": ["name"],
+          "meta.value": ["SMALL-2"]
+        ),
+        build(:pageview,
+          "meta.key": ["name"],
+          "meta.value": ["small-2"]
+        ),
+        build(:pageview)
+      ])
+
+      conn =
+        post(conn, "/api/v2/query", %{
+          "site_id" => site.domain,
+          "date_range" => "all",
+          "metrics" => ["visitors"],
+          "filters" => [
+            ["contains_not", "event:props:name", ["maLL"], %{"case_sensitive" => false}]
+          ]
+        })
+
+      assert json_response(conn, 200)["results"] == [%{"metrics" => [1], "dimensions" => []}]
     end
 
     test "`matches` and `matches_not` operator with custom properties", %{
@@ -3077,6 +3166,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         timestamp: ~N[2021-01-01 00:00:00]
       ),
       build(:pageview,
+        browser: "Chrome",
+        "meta.key": ["browser", "prop"],
+        "meta.value": ["Chrome", "target_value"],
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:pageview,
         browser: "Firefox",
         "meta.key": ["browser", "prop"],
         "meta.value": ["Firefox", "target_value"],
@@ -3092,6 +3187,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.QueryTest do
         "dimensions" => ["visit:browser"],
         "filters" => [
           ["is", "event:props:browser", ["CHROME", "sAFari"], %{"case_sensitive" => false}],
+          ["is_not", "event:props:browser", ["Chrome"], %{"case_sensitive" => false}],
           ["is", "event:props:prop", ["target_value"]]
         ]
       })

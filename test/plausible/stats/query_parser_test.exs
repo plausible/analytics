@@ -599,7 +599,7 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       )
     end
 
-    for operation <- [:is, :contains] do
+    for operation <- [:is, :contains, :is_not, :contains_not] do
       test "#{operation} allows case_sensitive modifier", %{site: site} do
         %{
           "site_id" => site.domain,
@@ -636,19 +636,27 @@ defmodule Plausible.Stats.Filters.QueryParserTest do
       end
     end
 
-    test "case_sensitive modifier is not valid for other operations", %{site: site} do
-      %{
-        "site_id" => site.domain,
-        "metrics" => ["visitors"],
-        "date_range" => "all",
-        "filters" => [
-          ["is_not", "event:hostname", ["a.plausible.io"], %{"case_sensitive" => false}]
-        ]
-      }
-      |> check_error(
-        site,
-        "#/filters/0: Invalid filter [\"is_not\", \"event:hostname\", [\"a.plausible.io\"], %{\"case_sensitive\" => false}]"
-      )
+    for operation <- [:matches, :matches_not, :matches_wildcard, :matches_wildcard_not] do
+      test "case_sensitive modifier is not valid for #{operation}", %{site: site} do
+        %{
+          "site_id" => site.domain,
+          "metrics" => ["visitors"],
+          "date_range" => "all",
+          "filters" => [
+            [
+              Atom.to_string(unquote(operation)),
+              "event:hostname",
+              ["a.plausible.io"],
+              %{"case_sensitive" => false}
+            ]
+          ]
+        }
+        |> check_error(
+          site,
+          "#/filters/0: Invalid filter [\"#{unquote(operation)}\", \"event:hostname\", [\"a.plausible.io\"], %{\"case_sensitive\" => false}]",
+          :internal
+        )
+      end
     end
   end
 

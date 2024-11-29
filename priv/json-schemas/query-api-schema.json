@@ -341,9 +341,14 @@
       "enum": ["matches_wildcard", "matches_wildcard_not"],
       "description": "filter operation"
     },
+    "filter_operation_regex": {
+      "type": "string",
+      "enum": ["matches", "matches_not"],
+      "description": "filter operation"
+    },
     "filter_operation_without_goals": {
       "type": "string",
-      "enum": ["is_not", "contains_not", "matches", "matches_not"],
+      "enum": ["is_not", "contains_not"],
       "description": "filter operation"
     },
     "filter_operation_contains": {
@@ -351,7 +356,7 @@
       "enum": ["is", "contains"],
       "description": "filter operation"
     },
-    "filter_without_goals": {
+    "filter_with_pattern": {
       "type": "array",
       "additionalItems": false,
       "minItems": 3,
@@ -359,7 +364,7 @@
       "items": [
         {
           "oneOf": [
-            { "$ref": "#/definitions/filter_operation_without_goals" },
+            { "$ref": "#/definitions/filter_operation_regex" },
             {
               "$ref": "#/definitions/filter_operation_wildcard",
               "$comment": "only :internal"
@@ -375,7 +380,33 @@
         { "$ref": "#/definitions/clauses" }
       ]
     },
-    "filter_case_sensitive": {
+    "filter_without_goals": {
+      "type": "array",
+      "additionalItems": false,
+      "minItems": 3,
+      "maxItems": 4,
+      "items": [
+        { "$ref": "#/definitions/filter_operation_without_goals" },
+        {
+          "oneOf": [
+            { "$ref": "#/definitions/simple_filter_dimensions" },
+            { "$ref": "#/definitions/custom_property_filter_dimensions" }
+          ]
+        },
+        { "$ref": "#/definitions/clauses" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "case_sensitive": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        }
+      ]
+    },
+    "filter_with_goals": {
       "type": "array",
       "additionalItems": false,
       "minItems": 3,
@@ -409,7 +440,8 @@
     "filter_entry": {
       "oneOf": [
         { "$ref": "#/definitions/filter_without_goals" },
-        { "$ref": "#/definitions/filter_case_sensitive" }
+        { "$ref": "#/definitions/filter_with_goals" },
+        { "$ref": "#/definitions/filter_with_pattern" }
       ]
     },
     "filter_tree": {

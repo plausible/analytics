@@ -165,16 +165,17 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:is_not, _, clauses | _rest]) do
+  defp filter_custom_prop(prop_name, column_name, [:is_not, _, clauses | _rest] = filter) do
     none_value_included = Enum.member?(clauses, "(none)")
+    prop_value_expr = custom_prop_value(column_name, prop_name)
 
     dynamic(
       [t],
       (has_key(t, column_name, ^prop_name) and
-         get_by_key(t, column_name, ^prop_name) not in ^clauses) or
+         not (^is_in_clause(prop_value_expr, filter))) or
         (^none_value_included and
            has_key(t, column_name, ^prop_name) and
-           get_by_key(t, column_name, ^prop_name) not in ^clauses) or
+           not (^is_in_clause(prop_value_expr, filter))) or
         (not (^none_value_included) and not has_key(t, column_name, ^prop_name))
     )
   end
@@ -227,15 +228,11 @@ defmodule Plausible.Stats.SQL.WhereBuilder do
     )
   end
 
-  defp filter_custom_prop(prop_name, column_name, [:contains_not, _dimension, clauses | _rest]) do
+  defp filter_custom_prop(prop_name, column_name, [:contains_not | _] = filter) do
     dynamic(
       [t],
       has_key(t, column_name, ^prop_name) and
-        fragment(
-          "not(multiSearchAny(?, ?))",
-          get_by_key(t, column_name, ^prop_name),
-          ^clauses
-        )
+        not (^contains_clause(custom_prop_value(column_name, prop_name), filter))
     )
   end
 
